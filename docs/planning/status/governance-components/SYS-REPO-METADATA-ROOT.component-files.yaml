@@ -1,0 +1,790 @@
+version: 1
+componentUnit: SYS-REPO-METADATA-ROOT
+rootUnit: SYS-DVT
+domainUnit: SYS-DVT
+status: canonical
+governanceState: governed
+dddOwner: INFRA
+cqRails: none - repository metadata
+childrenRequired: true
+fileCount: 111
+driftFileCount: 0
+legacyFileCount: 0
+files:
+  - path: .arc-policy.yaml
+    fileId: F-7C0FAC63D273
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .claude/settings.local.json
+    fileId: F-F305D06CE81F
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .editorconfig
+    fileId: F-DF09B586B9AE
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .gh-comments/normalize_issues_v2.ps1
+    fileId: F-5C2AD57F14DF
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .gh-comments/pr-117.md
+    fileId: F-6642FD66F5C1
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .gh-comments/pr-221.md
+    fileId: F-FE3524FC745C
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .gh-comments/pr-226-glossary-and-postgres-hardening-2026-02-19.md
+    fileId: F-6CBF1602CE6B
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .gh-comments/pr-9.md
+    fileId: F-5E2428142127
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .gh-comments/pr-closure-notes-14-15.md
+    fileId: F-4121CC3E9D26
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .gh-comments/pr-postgres-hardening-p0-p2-2026-02-19.md
+    fileId: F-73383A3D35F6
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .gh-comments/pr-roadmap-status-refresh-2026-02-15.md
+    fileId: F-894FE61C703E
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .git.bfg-report/2026-02-19/14-48-28/cache-stats.txt
+    fileId: F-BDD7895D43DF
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .git.bfg-report/2026-02-19/14-48-28/object-id-map.old-new.txt
+    fileId: F-13EE6A05E4B2
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .gitattributes
+    fileId: F-B282623D682B
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .gitignore
+    fileId: F-7E1405087E27
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .gitmessage
+    fileId: F-CE29E11C42A8
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .golden/hashes.json
+    fileId: F-479612B85848
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .golden/README.md
+    fileId: F-375B6D9020A7
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .markdownlint-cli2.jsonc
+    fileId: F-A009592B8F5A
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .markdownlint.json
+    fileId: F-FEDDC240FF88
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .markdownlintignore
+    fileId: F-E8E020D1DA5E
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .node-version
+    fileId: F-F9F6F5720AF6
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .npmrc
+    fileId: F-8CE6D2AE6330
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .nvmrc
+    fileId: F-65B3EC7DCA4E
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .prettierignore
+    fileId: F-DF56843DB37E
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .prettierrc.json
+    fileId: F-43E210606E2B
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .versionrc.json
+    fileId: F-2346F86ED641
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .vscode/extensions.json
+    fileId: F-657BAB8DACB9
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: .vscode/settings.json
+    fileId: F-41CA6153AEAF
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: artifacts/canary/g5-canary-trigger.sql
+    fileId: F-164D6E620D5D
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260421-codex-fowler-branch-analysis-http-error-translation-stack.md
+    fileId: F-4FE2003E964E
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260421-codex-fowler-http-entrypoint-component-analysis-and-remediation.md
+    fileId: F-34300E6F81F8
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260421-codex-fowler-http-runtime-error-translation-analysis.md
+    fileId: F-58DFA7B78671
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260422-codex-fowler-apps-api-runtime-composition-analysis-and-remediation.md
+    fileId: F-5C4C5157638C
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260422-codex-fowler-start-run-application-component-analysis-and-remediation.md
+    fileId: F-9BBB9A96B52E
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260422-codex-fowler-start-run-boundary-and-admission-analysis.md
+    fileId: F-22E4ABE692C5
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260423-codex-fowler-access-decision-component-analysis-and-remediation.md
+    fileId: F-833F897ADFDE
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260423-codex-fowler-ar-c3-execution-capacity-admission-analysis-and-remediation.md
+    fileId: F-0DFE5DAB70C0
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260423-codex-fowler-branch-start-run-control-boundary-analysis-and-remediation.md
+    fileId: F-BD91CBC4012D
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260423-codex-fowler-run-id-uuidv7-migration-analysis-and-remediation.md
+    fileId: F-D9FDC70155D8
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260423-codex-fowler-tenant-run-identity-analysis-and-remediation.md
+    fileId: F-A74C8DE91A0B
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260423-codex-fowler-workspace-authoring-draft-aggregate-analysis.md
+    fileId: F-B845C0474658
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260424-codex-fowler-ar-c3-admission-observability-analysis-and-remediation.md
+    fileId: F-BA07A90E68FF
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260424-codex-fowler-provider-vocabulary-hard-cut-qa.md
+    fileId: F-10A678DE9255
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260424-codex-fowler-temporal-plan-ref-contract-qa.md
+    fileId: F-E166B8BCA772
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260428-codex-fowler-temporal-dbt-core-decoupling-analysis-and-remediation.md
+    fileId: F-FB76C442FC2C
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260428-codex-fowler-temporal-planref-workflow-boundary-analysis-and-remediation.md
+    fileId: F-BB6138F1CD0E
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260428-codex-fowler-web-graph-startup-and-draft-recovery-analysis.md
+    fileId: F-2D74862886FB
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260429-codex-canvas-operability-auth-and-drag-fowler-review.md
+    fileId: F-1178FACCBB92
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260429-codex-fowler-branch-architecture-post-codescene-analysis-and-remediation.md
+    fileId: F-D72F32520A22
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260429-codex-fowler-plan-admission-hard-cut-analysis-and-remediation.md
+    fileId: F-38EDE52E24DE
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260429-codex-fowler-temporal-step-plugin-architecture-analysis-and-remediation.md
+    fileId: F-03F58915694E
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260429-codex-static-analysis-followup-fowler-architecture-review.md
+    fileId: F-18F4B512A5BF
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260430-codex-fowler-ar-d-continuation-safety-analysis-and-remediation.md
+    fileId: F-5278401078A0
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260430-codex-fowler-ar-d2-temporal-capacity-sla-analysis-and-remediation.md
+    fileId: F-A72ECEEFCD17
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260430-codex-fowler-canvas-ready-node-authoring-analysis.md
+    fileId: F-D7A93A960A68
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260430-codex-fowler-we-hx-2-facade-use-cases-analysis-and-remediation.md
+    fileId: F-37EE0C47982A
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260430-codex-frontend-operability-fowler-review.md
+    fileId: F-72ACE0CDA1A5
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260502-tf-e2-m-b-canvas-draft-access-posture-fowler-review.md
+    fileId: F-23678C141142
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260502-tf-e2-m-d-startup-route-readiness-fowler-review.md
+    fileId: F-85BD5B352DE5
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: commitlint.config.cjs
+    fileId: F-54CE1B6002DA
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: dev.sh
+    fileId: F-D92DECAEAD0D
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: eslint.config.cjs
+    fileId: F-48FF668751ED
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/db/migrations/2026-03-04_g3_start_run_intent.sql
+    fileId: F-74C7CAEE2AE0
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/db/migrations/2026-03-06_artifact_store.sql
+    fileId: F-A5A52F113A29
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/docker/postgres/docker-compose.yml
+    fileId: F-29F9E637EA58
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/docker/postgres/init/001_bootstrap.sql
+    fileId: F-FD2D84B25958
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/docker/postgres/redpanda/docker-compose.yml
+    fileId: F-9A6DFCE4617D
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/docker/postgres/redpanda/docs/adr/ADR-0001-sse-first.md
+    fileId: F-1B62CD1EA3F7
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/docker/postgres/redpanda/docs/adr/ADR-0002-postgres-authority-kafka-bus.md
+    fileId: F-5EF8B563F787
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/docker/postgres/redpanda/docs/adr/ADR-0003-transactional-outbox.md
+    fileId: F-3A7C1BB23005
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/docker/postgres/redpanda/docs/adr/ADR-0004-run-seq-allocation.md
+    fileId: F-D97CDF125A53
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/docker/postgres/redpanda/docs/adr/ADR-0005-single-service-mvp.md
+    fileId: F-87020F88EEB6
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/docker/postgres/redpanda/docs/adr/ADR-0006-debian-node-image.md
+    fileId: F-0AD25AD4421E
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/docker/postgres/redpanda/docs/ai/AI-OPERATIONS.md
+    fileId: F-D559B6429A12
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/docker/postgres/redpanda/docs/DECISIONS.md
+    fileId: F-880D53C85B4B
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/docker/postgres/redpanda/migrations/001_init.sql
+    fileId: F-13A9C489FBF6
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/docker/postgres/redpanda/README.md
+    fileId: F-4FCBA2FA0395
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/prototypes/api/package.json
+    fileId: F-6A6007215F4F
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/prototypes/api/pnpm-lock.yaml
+    fileId: F-096DEBC175C9
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/prototypes/api/README.md
+    fileId: F-25F3C0DBE720
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/prototypes/api/src/catchup.ts
+    fileId: F-F9BF6A8CA7F5
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/prototypes/api/src/config.ts
+    fileId: F-457C0B344D21
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/prototypes/api/src/connections/kafkaConnection.ts
+    fileId: F-9B101D8143AC
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/prototypes/api/src/connections/pgConnection.ts
+    fileId: F-0F23275AB069
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/prototypes/api/src/contracts.ts
+    fileId: F-0CA9D7ADBD64
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/prototypes/api/src/db.ts
+    fileId: F-E9BEE9F19BA5
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/prototypes/api/src/kafka.ts
+    fileId: F-05B27B24A608
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/prototypes/api/src/kafkaTail.ts
+    fileId: F-DA774D75A9E2
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/prototypes/api/src/outboxPublisher.ts
+    fileId: F-EDCC8F955E15
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/prototypes/api/src/reconciler.test.ts
+    fileId: F-B3C06B67F94A
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/prototypes/api/src/reconciler.ts
+    fileId: F-B9A3B46F84AE
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/prototypes/api/src/runEventsRepo.ts
+    fileId: F-646E46524DC4
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/prototypes/api/src/runStreamHub.ts
+    fileId: F-5C76E5F09C87
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/prototypes/api/src/runtimeIntegration.ts
+    fileId: F-57AA4F2F97DE
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/prototypes/api/src/server.ts
+    fileId: F-E0D455784A4D
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/prototypes/api/src/sse.ts
+    fileId: F-4571D6EC79C9
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/prototypes/api/src/wiring.ts
+    fileId: F-E392D1910D41
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/prototypes/api/tsconfig.json
+    fileId: F-FEC6BAAEBFBA
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/README.md
+    fileId: F-F56E0FB00FE4
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: package.json
+    fileId: F-06DED848F0B8
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: pnpm-lock.yaml
+    fileId: F-0C0FA331D146
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: pnpm-workspace.yaml
+    fileId: F-2921AC30634E
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: tsconfig.eslint.base.json
+    fileId: F-61FB8C089B5F
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: tsconfig.eslint.json
+    fileId: F-0C1E0581AD5B
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: tsconfig.json
+    fileId: F-04CBAD199A0C
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: tsconfig.node-runtime.base.json
+    fileId: F-2DD60FA0595D
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: tsconfig.package-bundler.base.json
+    fileId: F-644D7EBD3BD9
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: tsconfig.test.json
+    fileId: F-C427E7500E06
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: turbo.json
+    fileId: F-EE033928FEDD
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: zensical.yml
+    fileId: F-B21003528A26
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false

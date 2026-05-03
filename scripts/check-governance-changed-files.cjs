@@ -18,8 +18,12 @@ const gitOutputMaxBuffer = 16 * 1024 * 1024;
 const selfNormalizedGeneratedPaths = new Set([
   baselineRepoPath,
   'docs/planning/status/system-governance-file-index.files.yaml',
+  'docs/planning/status/system-governance-component-file-map.components.yaml',
 ]);
-const selfNormalizedGeneratedPrefixes = ['docs/planning/status/governance-files/'];
+const selfNormalizedGeneratedPrefixes = [
+  'docs/planning/status/governance-files/',
+  'docs/planning/status/governance-components/',
+];
 
 function toPosix(filePath) {
   return filePath.replace(/\\/g, '/');

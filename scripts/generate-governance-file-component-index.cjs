@@ -13,10 +13,19 @@ const { findOwnerMatches, readManifest } = require('./check-governance-unit-cove
 const repoRoot = path.resolve(__dirname, '..');
 const statusDir = path.join(repoRoot, 'docs', 'planning', 'status');
 const shardDir = path.join(statusDir, 'governance-files');
+const componentShardDir = path.join(statusDir, 'governance-components');
 const fileYamlPath = path.join(statusDir, 'system-governance-file-index.files.yaml');
 const fileMarkdownPath = path.join(statusDir, 'system-governance-file-index-20260501.md');
 const componentYamlPath = path.join(statusDir, 'system-governance-component-index.components.yaml');
 const componentMarkdownPath = path.join(statusDir, 'system-governance-component-index-20260501.md');
+const componentFileMapYamlPath = path.join(
+  statusDir,
+  'system-governance-component-file-map.components.yaml'
+);
+const componentFileMapMarkdownPath = path.join(
+  statusDir,
+  'system-governance-component-file-map-20260503.md'
+);
 const fingerprintBaselinePath = path.join(
   statusDir,
   'system-governance-file-fingerprint-baseline.yaml'
@@ -31,12 +40,18 @@ const generatedOutputPaths = [
   fileMarkdownPath,
   componentYamlPath,
   componentMarkdownPath,
+  componentFileMapYamlPath,
+  componentFileMapMarkdownPath,
   fingerprintBaselinePath,
   fingerprintImpactReportPath,
 ].map((filePath) => toPosix(path.relative(repoRoot, filePath)));
 
 const generatedFileYamlRelativePath = toPosix(path.relative(repoRoot, fileYamlPath));
+const generatedComponentFileMapYamlRelativePath = toPosix(
+  path.relative(repoRoot, componentFileMapYamlPath)
+);
 const generatedShardDirRelativePath = toPosix(path.relative(repoRoot, shardDir));
+const generatedComponentShardDirRelativePath = toPosix(path.relative(repoRoot, componentShardDir));
 const fingerprintBaselineRelativePath = toPosix(path.relative(repoRoot, fingerprintBaselinePath));
 const fingerprintImpactReportRelativePath = toPosix(
   path.relative(repoRoot, fingerprintImpactReportPath)
@@ -93,6 +108,20 @@ function getTrackedFiles() {
         continue;
       }
       const generatedShardPath = toPosix(path.relative(repoRoot, path.join(shardDir, entry.name)));
+      if (!trackedFiles.includes(generatedShardPath)) {
+        trackedFiles.push(generatedShardPath);
+      }
+    }
+  }
+
+  if (fs.existsSync(componentShardDir)) {
+    for (const entry of fs.readdirSync(componentShardDir, { withFileTypes: true })) {
+      if (!entry.isFile() || !entry.name.endsWith('.component-files.yaml')) {
+        continue;
+      }
+      const generatedShardPath = toPosix(
+        path.relative(repoRoot, path.join(componentShardDir, entry.name))
+      );
       if (!trackedFiles.includes(generatedShardPath)) {
         trackedFiles.push(generatedShardPath);
       }
@@ -175,8 +204,10 @@ function readTrackedFileBytes(filePath) {
 
   if (
     filePath === generatedFileYamlRelativePath ||
+    filePath === generatedComponentFileMapYamlRelativePath ||
     filePath === fingerprintBaselineRelativePath ||
-    filePath.startsWith(`${generatedShardDirRelativePath}/`)
+    filePath.startsWith(`${generatedShardDirRelativePath}/`) ||
+    filePath.startsWith(`${generatedComponentShardDirRelativePath}/`)
   ) {
     return normalizeGeneratedIndexBytesForHash(contentBytes);
   }
@@ -426,6 +457,149 @@ function buildFileIndexManifest(fileEntries, options = {}) {
   };
 }
 
+function componentShardPath(componentId, shardDirectory) {
+  return `${shardDirectory}/${componentId}.component-files.yaml`;
+}
+
+function buildComponentFileRows(files) {
+  return [...files]
+    .sort((left, right) => left.path.localeCompare(right.path))
+    .map((file) => ({
+      path: file.path,
+      fileId: file.fileId,
+      owningUnit: file.owningUnit,
+      unitStatus: file.unitStatus,
+      governanceState: file.governanceState,
+      isDrift: Boolean(file.isDrift),
+      isLegacy: Boolean(file.isLegacy),
+    }));
+}
+
+function buildComponentFileShardPayload(component, files) {
+  const fileRows = buildComponentFileRows(files);
+
+  return {
+    version: 1,
+    componentUnit: component.id,
+    rootUnit: component.rootUnit,
+    domainUnit: component.domainUnit,
+    status: component.status,
+    governanceState: component.governanceState,
+    dddOwner: component.dddOwner,
+    cqRails: component.cqRails,
+    childrenRequired: Boolean(component.childrenRequired),
+    fileCount: fileRows.length,
+    driftFileCount: fileRows.filter((file) => file.isDrift).length,
+    legacyFileCount: fileRows.filter((file) => file.isLegacy).length,
+    files: fileRows,
+  };
+}
+
+function buildComponentFileMapManifest(componentEntries, fileEntries, options = {}) {
+  const shardDirectory = options.shardDirectory || generatedComponentShardDirRelativePath;
+  const filesByComponent = new Map();
+  for (const entry of fileEntries) {
+    const componentId = entry.componentUnit || entry.owningUnit || 'UNOWNED';
+    const files = filesByComponent.get(componentId) || [];
+    files.push(entry);
+    filesByComponent.set(componentId, files);
+  }
+
+  const shards = {};
+  const componentRows = [...componentEntries]
+    .sort((left, right) => left.id.localeCompare(right.id))
+    .map((component) => {
+      const files = filesByComponent.get(component.id) || [];
+      const shardPath = componentShardPath(component.id, shardDirectory);
+      const payload = buildComponentFileShardPayload(component, files);
+      const content = renderYaml(payload);
+
+      shards[shardPath] = payload;
+
+      return {
+        id: component.id,
+        path: shardPath,
+        fileCount: payload.fileCount,
+        driftFileCount: payload.driftFileCount,
+        legacyFileCount: payload.legacyFileCount,
+        contentHash: sha256(content),
+      };
+    });
+
+  return {
+    manifest: {
+      version: 1,
+      generatedFrom: [
+        'docs/planning/status/system-governance-file-index.files.yaml',
+        'docs/planning/status/system-governance-component-index.components.yaml',
+      ],
+      shardDirectory,
+      componentCount: componentRows.length,
+      fileCount: componentRows.reduce((sum, component) => sum + component.fileCount, 0),
+      components: componentRows,
+    },
+    shards,
+  };
+}
+
+function expandComponentFileMapFromManifest(manifest, shardsByPath) {
+  const componentRows = Array.isArray(manifest.components) ? manifest.components : [];
+  const components = [];
+  const seenComponentIds = new Set();
+  let fileCount = 0;
+
+  for (const component of componentRows) {
+    if (seenComponentIds.has(component.id)) {
+      throw new Error(
+        `Duplicate component shard in governance component file map: ${component.id}`
+      );
+    }
+    seenComponentIds.add(component.id);
+
+    const shardPayload = shardsByPath[component.path];
+    if (!shardPayload) {
+      throw new Error(`Missing governance component shard: ${component.path}`);
+    }
+    if (shardPayload.componentUnit !== component.id) {
+      throw new Error(
+        `Governance component shard ${component.path} declares ${shardPayload.componentUnit} but manifest expected ${component.id}`
+      );
+    }
+
+    const files = Array.isArray(shardPayload.files) ? shardPayload.files : [];
+    if (component.fileCount !== files.length || shardPayload.fileCount !== files.length) {
+      throw new Error(
+        `Governance component shard ${component.path} expected ${component.fileCount} files but contained ${files.length}`
+      );
+    }
+
+    for (const file of files) {
+      if (file.componentUnit && file.componentUnit !== component.id) {
+        throw new Error(
+          `File ${file.path} is in component shard ${component.id} but belongs to ${file.componentUnit}`
+        );
+      }
+    }
+
+    fileCount += files.length;
+    components.push(shardPayload);
+  }
+
+  if (manifest.componentCount !== components.length) {
+    throw new Error(
+      `Governance component file manifest expected ${manifest.componentCount} components but shards contained ${components.length}`
+    );
+  }
+
+  if (manifest.fileCount !== fileCount) {
+    throw new Error(
+      `Governance component file manifest expected ${manifest.fileCount} files but shards contained ${fileCount}`
+    );
+  }
+
+  return components;
+}
+
 function expandFileIndexFromManifest(manifest, shardsByPath, options = {}) {
   if (Array.isArray(manifest.files)) {
     return manifest.files;
@@ -587,6 +761,7 @@ ${driftRows || '| _None_ | _None_ | _None_ |'}
 ## Related Surfaces
 
 - [System Governance Component Index](./system-governance-component-index-20260501.md)
+- [System Governance Component File Map](./system-governance-component-file-map-20260503.md)
 - [System Governance Unit Index](./system-governance-unit-index-20260501.md)
 - [System Governance Unit Taxonomy](./system-governance-unit-taxonomy-20260501.md)
 - [System Governance Document Unit Map](./system-governance-document-unit-map-20260501.md)
@@ -693,8 +868,104 @@ ${componentRows}
 ## Related Surfaces
 
 - [System Governance File Index](./system-governance-file-index-20260501.md)
+- [System Governance Component File Map](./system-governance-component-file-map-20260503.md)
 - [System Governance Unit Index](./system-governance-unit-index-20260501.md)
 - [System Governance Unit Taxonomy](./system-governance-unit-taxonomy-20260501.md)
+`;
+}
+
+function renderComponentFileMapMarkdown(componentFileMap) {
+  const driftComponents = componentFileMap.manifest.components
+    .filter((component) => component.driftFileCount > 0 || component.legacyFileCount > 0)
+    .sort(
+      (left, right) =>
+        right.driftFileCount +
+          right.legacyFileCount -
+          (left.driftFileCount + left.legacyFileCount) || left.id.localeCompare(right.id)
+    );
+  const largestComponents = [...componentFileMap.manifest.components]
+    .sort((left, right) => right.fileCount - left.fileCount || left.id.localeCompare(right.id))
+    .slice(0, 20);
+
+  const componentRows = componentFileMap.manifest.components
+    .map(
+      (component) =>
+        `| \`${component.id}\` | ${component.fileCount} | ${component.driftFileCount} | ${component.legacyFileCount} | [shard](./${path.relative(statusDir, path.join(repoRoot, component.path)).replace(/\\/g, '/')}) |`
+    )
+    .join('\n');
+  const driftRows = driftComponents
+    .map(
+      (component) =>
+        `| \`${component.id}\` | ${component.fileCount} | ${component.driftFileCount} | ${component.legacyFileCount} | [shard](./${path.relative(statusDir, path.join(repoRoot, component.path)).replace(/\\/g, '/')}) |`
+    )
+    .join('\n');
+  const largestRows = largestComponents
+    .map(
+      (component) =>
+        `| \`${component.id}\` | ${component.fileCount} | ${component.driftFileCount} | ${component.legacyFileCount} |`
+    )
+    .join('\n');
+
+  return `---
+title: System Governance Component File Map
+status: Review
+owner: Architecture / Docs / Delivery
+last_reviewed: 2026-05-03
+planning_type: status
+---
+
+# System Governance Component File Map
+
+> This page is auto-generated by \`pnpm docs:governance:file-component-index\`. Do not edit manually.
+
+## Purpose
+
+This map is the component-level work surface for the governed file index. It
+keeps the root manifest small and writes one deterministic shard per component,
+so reviewers and agents can inspect the exact files owned by a component without
+opening the full repository file index.
+
+Machine-readable sources:
+
+- [system-governance-component-file-map.components.yaml](./system-governance-component-file-map.components.yaml)
+- [governance-components/](./governance-components/)
+
+## Totals
+
+- Components: ${componentFileMap.manifest.componentCount}
+- Files mapped: ${componentFileMap.manifest.fileCount}
+- Components with drift or legacy files: ${driftComponents.length}
+
+## Largest Components
+
+<!-- prettier-ignore-start -->
+| Component | Files | Drift files | Legacy files |
+| --- | ---: | ---: | ---: |
+${largestRows || '| _None_ | 0 | 0 | 0 |'}
+<!-- prettier-ignore-end -->
+
+## Drift And Legacy Components
+
+<!-- prettier-ignore-start -->
+| Component | Files | Drift files | Legacy files | Shard |
+| --- | ---: | ---: | ---: | --- |
+${driftRows || '| _None_ | 0 | 0 | 0 | _None_ |'}
+<!-- prettier-ignore-end -->
+
+## Component Shards
+
+<!-- prettier-ignore-start -->
+| Component | Files | Drift files | Legacy files | Shard |
+| --- | ---: | ---: | ---: | --- |
+${componentRows}
+<!-- prettier-ignore-end -->
+
+## Related Surfaces
+
+- [System Governance File Index](./system-governance-file-index-20260501.md)
+- [System Governance Component Index](./system-governance-component-index-20260501.md)
+- [System Governance Coverage Report](./system-governance-coverage-report-20260502.md)
+- [System Governance Remediation Queue](./system-governance-remediation-queue-20260502.md)
 `;
 }
 
@@ -714,6 +985,7 @@ function buildOutputs() {
   const fileEntries = buildFileEntries(getTrackedFiles(), units, {}, unitById);
   const componentEntries = buildComponentEntries(units, fileEntries, unitById);
   const fileIndex = buildFileIndexManifest(fileEntries);
+  const componentFileMap = buildComponentFileMapManifest(componentEntries, fileEntries);
 
   return {
     fileEntries,
@@ -732,8 +1004,16 @@ function buildOutputs() {
       componentCount: componentEntries.length,
       components: componentEntries,
     }),
+    componentFileMapYaml: renderYaml(componentFileMap.manifest),
+    componentFileMapShards: Object.fromEntries(
+      Object.entries(componentFileMap.shards).map(([shardPath, payload]) => [
+        shardPath,
+        renderYaml(payload),
+      ])
+    ),
     fileMarkdown: renderFileMarkdown(fileEntries, componentEntries),
     componentMarkdown: renderComponentMarkdown(componentEntries),
+    componentFileMapMarkdown: renderComponentFileMapMarkdown(componentFileMap),
   };
 }
 
@@ -741,8 +1021,12 @@ function main() {
   const checkOnly = process.argv.includes('--check');
   const outputs = buildOutputs();
   fs.mkdirSync(shardDir, { recursive: true });
+  fs.mkdirSync(componentShardDir, { recursive: true });
   const shardWrites = Object.entries(outputs.fileShards).map(([relativePath, content]) =>
     writeIfChanged(path.join(repoRoot, relativePath), content)
+  );
+  const componentShardWrites = Object.entries(outputs.componentFileMapShards).map(
+    ([relativePath, content]) => writeIfChanged(path.join(repoRoot, relativePath), content)
   );
   const changed = [
     writeIfChanged(fileYamlPath, outputs.fileYaml),
@@ -750,6 +1034,9 @@ function main() {
     writeIfChanged(fileMarkdownPath, outputs.fileMarkdown),
     writeIfChanged(componentYamlPath, outputs.componentYaml),
     writeIfChanged(componentMarkdownPath, outputs.componentMarkdown),
+    writeIfChanged(componentFileMapYamlPath, outputs.componentFileMapYaml),
+    ...componentShardWrites,
+    writeIfChanged(componentFileMapMarkdownPath, outputs.componentFileMapMarkdown),
   ].some(Boolean);
 
   if (checkOnly && changed) {
@@ -770,14 +1057,17 @@ if (require.main === module) {
 
 module.exports = {
   buildComponentEntries,
+  buildComponentFileMapManifest,
   buildFileIndexManifest,
   buildFileEntries,
   buildFileFingerprints,
   buildOutputs,
   deriveGovernanceSemantics,
+  expandComponentFileMapFromManifest,
   expandFileIndexFromManifest,
   normalizeGeneratedIndexBytesForHash,
   normalizeTextBytesForHash,
+  renderComponentFileMapMarkdown,
   readFileIndexFromDisk,
   stableStringify,
   renderComponentMarkdown,

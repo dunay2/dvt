@@ -1,0 +1,125 @@
+version: 1
+componentUnit: SYS-API-APPLICATION-PORTS
+rootUnit: SYS-DVT
+domainUnit: SYS-DVT
+status: coverage-required
+governanceState: coverage-required
+dddOwner: PORT
+cqRails: API application command/query ports
+childrenRequired: false
+fileCount: 16
+driftFileCount: 0
+legacyFileCount: 0
+files:
+  - path: apps/api/src/application/ports/accessDecision.ts
+    fileId: F-209CDC707539
+    owningUnit: SYS-API-APPLICATION-PORTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/ports/AdmissionTelemetry.ts
+    fileId: F-D39328F6F6C3
+    owningUnit: SYS-API-APPLICATION-PORTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/ports/auth.ts
+    fileId: F-FD9E6AAC5601
+    owningUnit: SYS-API-APPLICATION-PORTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/ports/authContract.ts
+    fileId: F-BC982286150A
+    owningUnit: SYS-API-APPLICATION-PORTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/ports/DuplicateRunProbe.ts
+    fileId: F-DC52DD06CC1D
+    owningUnit: SYS-API-APPLICATION-PORTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/ports/IAdmissionGuard.ts
+    fileId: F-8BC97D824055
+    owningUnit: SYS-API-APPLICATION-PORTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/ports/IAdmissionMode.ts
+    fileId: F-97DC10199A03
+    owningUnit: SYS-API-APPLICATION-PORTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/ports/IBackpressureCapacityTelemetry.ts
+    fileId: F-699EA82E9B05
+    owningUnit: SYS-API-APPLICATION-PORTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/ports/IStartRunExecutionCapacityPort.ts
+    fileId: F-C1E0A5F8F39B
+    owningUnit: SYS-API-APPLICATION-PORTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/ports/IStartRunTargetAdapterRegistry.ts
+    fileId: F-DCEBB903DBF5
+    owningUnit: SYS-API-APPLICATION-PORTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/ports/runtime.ts
+    fileId: F-A7BFE1F2C8E9
+    owningUnit: SYS-API-APPLICATION-PORTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/ports/startRunEngineError.ts
+    fileId: F-5323773C9AFC
+    owningUnit: SYS-API-APPLICATION-PORTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/ports/startRunFacadePort.ts
+    fileId: F-83993369B1B8
+    owningUnit: SYS-API-APPLICATION-PORTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/ports/StartRunSlaTelemetry.ts
+    fileId: F-AF5408280599
+    owningUnit: SYS-API-APPLICATION-PORTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/ports/startRunUseCasePort.ts
+    fileId: F-01D7171B2B40
+    owningUnit: SYS-API-APPLICATION-PORTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/ports/workspaceGraphDraft.ts
+    fileId: F-176D52C3D59C
+    owningUnit: SYS-API-APPLICATION-PORTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false

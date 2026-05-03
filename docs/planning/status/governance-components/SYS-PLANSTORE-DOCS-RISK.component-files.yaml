@@ -1,0 +1,256 @@
+version: 1
+componentUnit: SYS-PLANSTORE-DOCS-RISK
+rootUnit: SYS-DVT
+domainUnit: SYS-PLANSTORE
+status: review
+governanceState: review
+dddOwner: INFRA
+cqRails: none - governance and evidence
+childrenRequired: true
+fileCount: 34
+driftFileCount: 0
+legacyFileCount: 0
+files:
+  - path: docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+    fileId: F-D7C67291E852
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/adr/adr-0052-planref-continuation-safety.md
+    fileId: F-032F5F48B416
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/engine/adapters/temporal/temporal-planref-capacity-sla.md
+    fileId: F-21A8A7922224
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary-user-stories.md
+    fileId: F-95EDA4995D50
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
+    fileId: F-26EBDDEF0DFB
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/ED-20260402-s08-contract-layer-hardening.md
+    fileId: F-280A759EBA86
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/ED-20260403-s08-4-ci-regression-fix.md
+    fileId: F-BD05C45F6631
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/ED-20260403-s08-4-postgres-three-part-model-arc2.md
+    fileId: F-0776511D57ED
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/ED-20260403-s08-5-b-run-execution-context-boundary.md
+    fileId: F-363C97CD4BDC
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/ed-20260427-temporal-planref-config-hardening.md
+    fileId: F-DDEABC93BD2E
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/ed-20260427-temporal-planref-qa1-readiness.md
+    fileId: F-FAE6F1878D03
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/ed-20260430-ar-d2-temporal-planref-capacity-sla.md
+    fileId: F-7F52034F6ACE
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/evidence/ed-20260502-s08-temporal-legacy-removal.md
+    fileId: F-EA92BD48853B
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/guides/postgres-plan-store-technical-manual-20260403.md
+    fileId: F-01E656513E11
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/guides/postgres-plan-store-user-manual-20260403.md
+    fileId: F-EC304B2A1404
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/closeouts/20260402-s08-contract-layer-hardening-closeout.md
+    fileId: F-7D63D8716708
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
+    fileId: F-138BC0C4C1BC
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/closeouts/20260406-s08-4c-fail-closed-admission-coverage-closeout.md
+    fileId: F-92E5868F4E7E
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/closeouts/20260406-s08-5c-plugin-compatibility-fingerprint-closeout.md
+    fileId: F-84EA6571985E
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/closeouts/20260427-temporal-planref-spec-config-hardening-closeout.md
+    fileId: F-7B125CA72988
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
+    fileId: F-75119D249562
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md
+    fileId: F-22B3B608AEEC
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+    fileId: F-5DB8E210931B
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/reviews/20260402-s08-plan-record-plan-store-gap-review.md
+    fileId: F-2882DDF8E84A
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260403-postgres-plan-store-srp-remediation-target.md
+    fileId: F-9E10625297EF
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md
+    fileId: F-4237BB1E7711
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/status/system-governance-planstore-file-ownership-20260501.md
+    fileId: F-04D13818BC81
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml
+    fileId: F-02E0F7A67550
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/risk-register/quality/R-20260403-S08-4-CI-REGRESSION-FIX.yaml
+    fileId: F-9240F14C0BA9
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/risk-register/quality/R-20260403-S08-4-POSTGRES-THREE-PART-MODEL.yaml
+    fileId: F-6D1A1B496920
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/risk-register/quality/R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml
+    fileId: F-98F09EC5D494
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
+    fileId: F-55938154F80B
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
+    fileId: F-7BF3464566A6
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: docs/risk-register/quality/r-20260502-s08-temporal-dispatch-scope.yaml
+    fileId: F-3354F659981A
+    owningUnit: SYS-PLANSTORE-DOCS-RISK
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false

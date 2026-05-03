@@ -1,0 +1,153 @@
+version: 1
+componentUnit: SYS-PLANSTORE-API-COMPOSITION
+rootUnit: SYS-DVT
+domainUnit: SYS-PLANSTORE
+status: drift
+governanceState: drift
+dddOwner: AS
+cqRails: PS-Q03, PS-C02
+childrenRequired: true
+fileCount: 20
+driftFileCount: 20
+legacyFileCount: 0
+files:
+  - path: apps/api/src/application/errors/ManifestArtifactResolutionError.ts
+    fileId: F-A1CFFA6F1622
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: apps/api/src/application/ports/storedPlan.ts
+    fileId: F-F8569DF8443D
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: apps/api/src/application/services/StoredExecutablePlanResolver.ts
+    fileId: F-2E614BC38C0A
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
+    fileId: F-6EF1886E2357
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: apps/api/src/application/services/WorkflowEngineFactory.ts
+    fileId: F-9081E19C97C8
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: apps/api/src/entrypoints/http/planRefHttpMapper.ts
+    fileId: F-679B0A61B9DB
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: apps/api/src/entrypoints/http/planRoutePlanRefParser.ts
+    fileId: F-71412BDB89AE
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts
+    fileId: F-33D700BB33A0
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts
+    fileId: F-934B7BE6FAE6
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts
+    fileId: F-2BC34B27BB08
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: apps/api/test/application/services/StoredExecutablePlanResolver.test.ts
+    fileId: F-FEB615BE555C
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts
+    fileId: F-7B210CC05844
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: apps/api/test/application/services/storedPlanExecutabilityValidator/capabilities.cases.ts
+    fileId: F-4DE9531159D3
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: apps/api/test/application/services/storedPlanExecutabilityValidator/fetchAndAlignment.cases.ts
+    fileId: F-C64E09854515
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: apps/api/test/application/services/storedPlanExecutabilityValidator/harness.ts
+    fileId: F-B411AE175CFA
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: apps/api/test/application/services/storedPlanExecutabilityValidator/registry.cases.ts
+    fileId: F-10084A3099E8
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: apps/api/test/application/services/WorkflowEngineFactory.test.ts
+    fileId: F-E6462049F467
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts
+    fileId: F-25C5D96CF336
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: apps/api/test/infrastructure/planner/ManifestArtifactResolver.test.ts
+    fileId: F-637BBD9DF5D5
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false
+  - path: apps/api/test/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.test.ts
+    fileId: F-B8BAA092F981
+    owningUnit: SYS-PLANSTORE-API-COMPOSITION
+    unitStatus: drift
+    governanceState: drift
+    isDrift: true
+    isLegacy: false

@@ -66,6 +66,19 @@ const componentIndex = {
   ],
 };
 
+const componentFileMap = {
+  components: [
+    {
+      id: 'SYS-RUNTIME-ROOT',
+      path: 'docs/planning/status/governance-components/SYS-RUNTIME-ROOT.component-files.yaml',
+    },
+    {
+      id: 'SYS-PLANSTORE-POSTGRES',
+      path: 'docs/planning/status/governance-components/SYS-PLANSTORE-POSTGRES.component-files.yaml',
+    },
+  ],
+};
+
 const documentMap = {
   documents: [
     {
@@ -88,6 +101,7 @@ test('buildRemediationQueue groups drift, subdivision, rail and doc tasks', () =
     coverageReport,
     fileIndex,
     componentIndex,
+    componentFileMap,
     documentMap,
   });
 
@@ -97,6 +111,10 @@ test('buildRemediationQueue groups drift, subdivision, rail and doc tasks', () =
   const tasksByType = new Map(queue.tasks.map((task) => [task.type, task]));
   assert.equal(tasksByType.get('drift-removal').priority, 'P0');
   assert.equal(tasksByType.get('drift-removal').componentUnit, 'SYS-RUNTIME-ROOT');
+  assert.equal(
+    tasksByType.get('drift-removal').componentFileMap,
+    'docs/planning/status/governance-components/SYS-RUNTIME-ROOT.component-files.yaml'
+  );
   assert.equal(tasksByType.get('drift-removal').fileCount, 1);
   assert.equal(tasksByType.get('cq-rail-gap').priority, 'P1');
   assert.equal(tasksByType.get('component-subdivision').priority, 'P1');
@@ -114,6 +132,7 @@ test('renderMarkdown declares the generated artifact marker', () => {
     coverageReport,
     fileIndex,
     componentIndex,
+    componentFileMap,
     documentMap,
   });
 

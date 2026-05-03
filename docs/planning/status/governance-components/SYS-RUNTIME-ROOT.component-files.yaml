@@ -1,0 +1,2016 @@
+version: 1
+componentUnit: SYS-RUNTIME-ROOT
+rootUnit: SYS-DVT
+domainUnit: SYS-RUNTIME
+status: coverage-required
+governanceState: coverage-required
+dddOwner: AS
+cqRails: runtime commands and queries
+childrenRequired: true
+fileCount: 286
+driftFileCount: 0
+legacyFileCount: 0
+files:
+  - path: packages/@dvt/canonical/package.json
+    fileId: F-E0BCA2C44471
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/canonical/README.md
+    fileId: F-D4BDA01896F5
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/canonical/src/index.ts
+    fileId: F-2656E1D68857
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/canonical/src/jcs.ts
+    fileId: F-AE676327A545
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/canonical/src/sha256.ts
+    fileId: F-1F89D8C19B53
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/canonical/test/canonical.test.ts
+    fileId: F-F3C2B616815F
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/canonical/tsconfig.json
+    fileId: F-A7941C533181
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/cli/compare-hashes.cjs
+    fileId: F-84D384786221
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/cli/db-migrate.cjs
+    fileId: F-DB39C0E2FECD
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/cli/enable-workflow.sh
+    fileId: F-3F58428A83F1
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/cli/package.json
+    fileId: F-6EF652D52A1A
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/cli/README.md
+    fileId: F-51FE1DBB7829
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/cli/run-golden-paths.cjs
+    fileId: F-568FECC25D28
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/cli/src/index.ts
+    fileId: F-BD8979360215
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/cli/test/smoke.test.ts
+    fileId: F-0520D78F4A05
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/cli/tsconfig.json
+    fileId: F-83B26AC86B7B
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/cli/validate-contracts.cjs
+    fileId: F-B37EE6AB0E1D
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/delivery/package.json
+    fileId: F-6E02D3699426
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/delivery/src/application/OutboxWorker.ts
+    fileId: F-24B9B5328A36
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts
+    fileId: F-1795A79B8CC3
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/delivery/src/application/outboxWorkerRuntimeErrorSupport.ts
+    fileId: F-1D4FDB1A9656
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/delivery/src/application/OutboxWorkerRuntimeHookRunner.ts
+    fileId: F-3A6F9D23AE70
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/delivery/src/application/OutboxWorkerRuntimeLoopController.ts
+    fileId: F-529A79DE8F4A
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/delivery/src/application/ProjectorWorkerRuntime.ts
+    fileId: F-EEAA7952CEB2
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/delivery/src/backpressure/StartRunAdmissionGuard.ts
+    fileId: F-4498E9118317
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/delivery/src/contracts.ts
+    fileId: F-5189E48140D1
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/delivery/src/index.ts
+    fileId: F-458577CF341B
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/delivery/src/testing.ts
+    fileId: F-3CAA487BD05E
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/delivery/src/testing/InMemoryEventBus.ts
+    fileId: F-DF1F229E6AC2
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/delivery/src/testing/InMemoryOutboxStorage.ts
+    fileId: F-A558294AA5F7
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/delivery/src/testing/outboxSharding.ts
+    fileId: F-7E9AFADC0E9D
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/delivery/test/gaps/StartRunAdmissionGuard.test.ts
+    fileId: F-8C00CC9BAB4B
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/delivery/test/OutboxWorker.deadLetter.test.ts
+    fileId: F-A346A2C9AF6B
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/delivery/test/OutboxWorker.delivery.test.ts
+    fileId: F-A51BAB0E6D3F
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/delivery/test/OutboxWorker.observer.test.ts
+    fileId: F-34B1436D01DD
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/delivery/test/OutboxWorker.retry.test.ts
+    fileId: F-C394315FACDB
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/delivery/test/OutboxWorker.sharding.test.ts
+    fileId: F-889FE7DFBF5E
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/delivery/test/ProjectorWorkerRuntime.test.ts
+    fileId: F-2E734FCF27A0
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/delivery/test/support/outboxWorkerTestSupport.ts
+    fileId: F-1B60B0869467
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/delivery/tsconfig.json
+    fileId: F-EFB8C54C0723
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/delivery/vitest.config.ts
+    fileId: F-6B721360FAB6
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/dsl/package.json
+    fileId: F-726BBE3C974B
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/dsl/README.md
+    fileId: F-40F57AAD1ACF
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/dsl/src/index.ts
+    fileId: F-59CFEAD3D110
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/dsl/src/v1/ast.ts
+    fileId: F-509E32BFC54A
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/dsl/src/v1/evaluator.ts
+    fileId: F-43C3E0EAA9E1
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/dsl/src/v1/parser.ts
+    fileId: F-A1E55DCFB468
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/dsl/test/dsl-v1.test.ts
+    fileId: F-139CFB83FCFA
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/dsl/tsconfig.json
+    fileId: F-25E20962B2BB
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/dsl/vitest.config.ts
+    fileId: F-9343F2F2BD28
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/package.json
+    fileId: F-3F1C586C38C3
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/adapters/inMemory/InMemoryProviderAdapter.ts
+    fileId: F-B365E24BF20A
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/adapters/IProviderAdapter.ts
+    fileId: F-BA01226D68F5
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/application/IStartRunApplicationService.ts
+    fileId: F-F50DA470E70A
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/application/providerSelection.ts
+    fileId: F-DEBE87274FB5
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/application/RecoverRunApplicationService.ts
+    fileId: F-8CFEE0C922C2
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/application/StartRunAdmissionGuard.ts
+    fileId: F-8EE07EDAA62F
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/application/StartRunApplicationService.ts
+    fileId: F-AD8FBA23F531
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/application/workflow-engine-use-cases/buildWorkflowEngineUseCases.ts
+    fileId: F-79A29A6629A5
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/application/workflow-engine-use-cases/index.ts
+    fileId: F-984FD66FC6ED
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/application/workflow-engine-use-cases/types.ts
+    fileId: F-B1CD82C91567
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowCancelRunUseCase.ts
+    fileId: F-61F0EFB20DF1
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowRecoverRunUseCase.ts
+    fileId: F-2204779968D1
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowRunStatusUseCase.ts
+    fileId: F-60E42E46587C
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowSignalRunUseCase.ts
+    fileId: F-765381353D95
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowStartRunUseCase.ts
+    fileId: F-C040CD98F6F8
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/contracts/engine/ExecutionPlan.v1.ts
+    fileId: F-03F27A047936
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/contracts/engine/ExecutionSemantics.v1.ts
+    fileId: F-3278AF964072
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/contracts/engine/index.ts
+    fileId: F-CA7BBBCC1A9A
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/contracts/engine/IPlanResolver.v1.ts
+    fileId: F-DDDE666709E5
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/contracts/engine/IProvider.v1.ts
+    fileId: F-CA1C9FA5B565
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/contracts/engine/IRunEnrichmentService.v1.ts
+    fileId: F-A51DBA3FCE55
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/contracts/engine/RunEvents.v1.ts
+    fileId: F-19E75B8A7401
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/contracts/errors.ts
+    fileId: F-6B00012235BA
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/contracts/errors/adapterErrors.ts
+    fileId: F-D12AA4848738
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/contracts/errors/baseError.ts
+    fileId: F-163B1B570484
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/contracts/errors/errorCodes.ts
+    fileId: F-FA9408A68FBE
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/contracts/errors/errorMessages.ts
+    fileId: F-AE0EDB6CF6BE
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/contracts/errors/planErrors.ts
+    fileId: F-E1AAAE580C15
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/contracts/errors/runErrors.ts
+    fileId: F-3A75BF619A06
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/contracts/executionPlan.ts
+    fileId: F-974745E542FC
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/contracts/index.ts
+    fileId: F-9EE414777BD5
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/contracts/intentErrors.ts
+    fileId: F-CFEE7FAAC8A5
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/contracts/IRunEnrichmentService.v1.ts
+    fileId: F-A51F0F1C2841
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts
+    fileId: F-051E16284E7E
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/contracts/planUriPolicyViolation.ts
+    fileId: F-C68EA93E4F8B
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/contracts/runEvents.ts
+    fileId: F-AEF0DC088303
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/contracts/types.ts
+    fileId: F-2BBE01EECE91
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/core/buildWorkflowEngineFacade.ts
+    fileId: F-7BB3E92BC0CA
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/core/idempotency.ts
+    fileId: F-20C6CDA87330
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/core/index.ts
+    fileId: F-16B255FB7827
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/core/lifecycle/coreDomainConstants.ts
+    fileId: F-67EE639576BC
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/core/lifecycle/coreRuntime.ts
+    fileId: F-CACD170941F2
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/core/lifecycle/StartRunTraceContext.ts
+    fileId: F-071E54084FB0
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/core/SnapshotProjector.ts
+    fileId: F-8480A1A39408
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/core/types.ts
+    fileId: F-09579B349F98
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/core/WorkflowEngine.ts
+    fileId: F-23E7662AF16E
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
+    fileId: F-3F234C2AED10
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/domain/IRunControlService.ts
+    fileId: F-52BAF3A663CB
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/domain/IRunHealthService.ts
+    fileId: F-DE8C6B0E6CEC
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/domain/IRunRecoveryService.ts
+    fileId: F-9B6C94A5E59F
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/domain/IRunStatusQueryService.ts
+    fileId: F-481930EAF4F8
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/domain/startRunIntentPolicy.ts
+    fileId: F-8D342559C2B5
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/index.ts
+    fileId: F-EC3F805CFFDE
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/metrics/IMetricsCollector.ts
+    fileId: F-3A573192B030
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/outbox/IOutboxRateLimiter.ts
+    fileId: F-B24F5FEDF71D
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/outbox/TokenBucketRateLimiter.ts
+    fileId: F-D316BB23B779
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/ports/IPlanResolver.ts
+    fileId: F-2E7E1093148F
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/ports/IProjector.ts
+    fileId: F-2545674EC6CB
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/ports/IRunExecutionContextBindingPolicy.ts
+    fileId: F-A630318B2762
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/ports/IRunExecutionContextResolver.ts
+    fileId: F-92021600D513
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/ports/IRunMaintenanceService.ts
+    fileId: F-211ADF34CF28
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/ports/IRunSnapshotStalenessQuery.ts
+    fileId: F-1237A80D96DC
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/ports/IRunStateStore.ts
+    fileId: F-264679182C56
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/ports/IStartRunIntentStore.ts
+    fileId: F-FB793784CF2F
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/ports/IWorkflowEngine.ts
+    fileId: F-3B2436B9548B
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/security/AuthorizationError.ts
+    fileId: F-3F0B96337F8F
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/security/authorizer.ts
+    fileId: F-C4B66E35A39F
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/security/hostRiskClassifier.ts
+    fileId: F-9DA52C2E4F1A
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/security/planIntegrity.ts
+    fileId: F-C77157F4513E
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/security/planUri.ts
+    fileId: F-F0FA98F56350
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/security/RunAccessPolicy.ts
+    fileId: F-58069CD7EF4D
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/services/RunEnrichmentService.ts
+    fileId: F-CCA6D50CC07D
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/services/RunHealthService.ts
+    fileId: F-17EC16283E37
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/services/runMaintenance/DispatchedIntentReconciliationPolicy.ts
+    fileId: F-BA7EDA970566
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/services/runMaintenance/PendingIntentReconciliationPolicy.ts
+    fileId: F-3499055EEA42
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/services/runMaintenance/RunMaintenanceContracts.ts
+    fileId: F-1E2C6DEED17F
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/services/runMaintenance/RunMaintenanceDomainConstants.ts
+    fileId: F-CFDC2216EAD5
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/services/runMaintenance/RunMaintenanceEventFactory.ts
+    fileId: F-342750DC85E3
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/services/runMaintenance/RunMaintenanceObservabilityFacade.ts
+    fileId: F-CD221B26622C
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/services/runMaintenance/RunMaintenanceOrphanedIntentService.ts
+    fileId: F-16D7ABB2990B
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/services/runMaintenance/RunMaintenanceStuckRunService.ts
+    fileId: F-8C731D0B6E78
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/services/RunMaintenanceService.ts
+    fileId: F-90A6F4464BCE
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/services/RunStatusQueryService.ts
+    fileId: F-8DB33326A54E
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/services/signal/SignalTransitionGuard.ts
+    fileId: F-4048F2C9AA30
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/services/startRun/RunExecutionContextAdmissionPolicy.ts
+    fileId: F-8DE63B61F22C
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/services/startRun/StartRunDomainConstants.ts
+    fileId: F-08DE0F5C2E7D
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/services/startRun/StartRunEventFactory.ts
+    fileId: F-B4D4FD1A9287
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts
+    fileId: F-314BE338D2B2
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/services/startRun/StartRunFailurePolicy.ts
+    fileId: F-685344A4096B
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/services/startRun/StartRunTypes.ts
+    fileId: F-E7609C20F0A3
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/services/startRun/StartRunValidationPolicy.ts
+    fileId: F-39C115AF5AF1
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/state/InMemoryOutboxState.ts
+    fileId: F-08A1CCC0EB16
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/state/InMemoryRunStateAdminSupport.ts
+    fileId: F-4102688B743F
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/state/InMemoryRunStateCore.ts
+    fileId: F-9E781F7FFB31
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/state/InMemoryRunStateReadSupport.ts
+    fileId: F-27AA4EC303C4
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/state/InMemoryRunStateSnapshotSupport.ts
+    fileId: F-A7998A6A1490
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/state/InMemoryRunStateStore.ts
+    fileId: F-5DB0FB780FA3
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/state/InMemoryStartRunIntentStore.ts
+    fileId: F-D642190BC226
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/state/InMemoryTxStore.ts
+    fileId: F-A15361F19F7E
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/state/outboxSharding.ts
+    fileId: F-98C4AFA949C8
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/state/retryLineagePolicy.ts
+    fileId: F-23335C14715D
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/state/runEventWritePolicy.ts
+    fileId: F-70DA0093C275
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/state/snapshotStaleness.ts
+    fileId: F-9C654A8946AD
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/testing.ts
+    fileId: F-4441D3B67FC4
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/types/index.ts
+    fileId: F-C654ADA5EADD
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/types/types.ts
+    fileId: F-854B5CABF0A7
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/utils/clock.ts
+    fileId: F-CBEE8BC18E79
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/utils/errorUtils.ts
+    fileId: F-F3991E6B2C95
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/utils/jcs.ts
+    fileId: F-9DC28D6860A9
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/utils/sha256.ts
+    fileId: F-CF2BE777536A
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/src/workers/IntentReconcilerWorker.ts
+    fileId: F-BC4AD8E7B357
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/adapters/InMemoryProviderAdapter.cancel.test.ts
+    fileId: F-D8A95C1E1806
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/application/providerSelection.test.ts
+    fileId: F-4A5467333337
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/application/workflowEngineUseCases.factory.test.ts
+    fileId: F-692AEE69DE08
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts
+    fileId: F-462A358D37F2
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/architecture/workflowEngineFacadeUseCases.architecture.test.ts
+    fileId: F-4C9717AF310A
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/contracts/capabilities.contract.test.ts
+    fileId: F-859305F52C3C
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/contracts/engine.test.ts
+    fileId: F-91502552BA1F
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/contracts/errorI18n.contract.test.ts
+    fileId: F-53E3186F80A0
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/contracts/executionPlan.contract.test.ts
+    fileId: F-6B23DED948BF
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/contracts/helpers.ts
+    fileId: F-DB61C52FC7C3
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/contracts/IWorkflowEngine.types.test.ts
+    fileId: F-4C166579F5CD
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/contracts/package-surface.test.ts
+    fileId: F-A226C526E834
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/contracts/plans/plan-cancel-and-resume.json
+    fileId: F-7D5BA011917B
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/contracts/plans/plan-minimal.json
+    fileId: F-AEAA5670F75F
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/contracts/plans/plan-parallel.json
+    fileId: F-6F7845A95375
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/contracts/run-golden-paths.hash.test.ts
+    fileId: F-6FDFDF393BF9
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/core/SnapshotProjector.transitions.test.ts
+    fileId: F-3853C56AA7B2
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/core/WorkflowEngine.helpers.ts
+    fileId: F-99FC27F8B936
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/core/WorkflowEngine.intent-id-deterministic.test.ts
+    fileId: F-807F946CB7A2
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/core/WorkflowEngine.intentLog.test.ts
+    fileId: F-91E0F15D63B2
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/core/WorkflowEngine.observability.test.ts
+    fileId: F-53AA859A5D23
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/core/WorkflowEngine.test.ts
+    fileId: F-144D7C33B73A
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
+    fileId: F-6A12C83D6606
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/domain/startRunIntentPolicy.test.ts
+    fileId: F-F803FFE28F48
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/gaps/PlanAdmissionPolicy.test.ts
+    fileId: F-0F593C7E0A1D
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/helpers/runLifecycle.fixture.ts
+    fileId: F-FDC125CFA676
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/helpers/workflowEngine.fixture.ts
+    fileId: F-DBE3421B0061
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/idempotency.vectors.test.ts
+    fileId: F-16153B628610
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/security/authorizer.allowAll.test.ts
+    fileId: F-25AFB90D7959
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/security/authorizer.deny.test.ts
+    fileId: F-29EB0B51240B
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/services/RunEnrichmentService.test.ts
+    fileId: F-9ABB582312B5
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy.acceptance.test.ts
+    fileId: F-F4038D73FDAC
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy.compatibility.test.ts
+    fileId: F-0100FF4594FF
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/services/runExecutionContextAdmissionPolicy.fixtures.ts
+    fileId: F-4D2EC43222B5
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy.plugin-requirements.test.ts
+    fileId: F-AC69CCD83AE9
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy.provenance.test.ts
+    fileId: F-1B84D8AD919D
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy.srp.architecture.test.ts
+    fileId: F-98CE2A17BCB8
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/services/RunMaintenanceService.test.ts
+    fileId: F-35F5087156B3
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/services/RunStatusQueryService.test.ts
+    fileId: F-33C895212D65
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/services/SignalTransitionGuard.test.ts
+    fileId: F-A704BEBC6B69
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
+    fileId: F-0FEBB1D445B9
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/services/StartRunEventFactory.test.ts
+    fileId: F-965EE772AB8F
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/state/bootstrapRunTx.atomicity.test.ts
+    fileId: F-D3A5A2D414B4
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/state/InMemoryRunStateStore.appendInvariants.test.ts
+    fileId: F-4C17725C5B3C
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/state/InMemoryRunStateStore.rebuildSnapshot.test.ts
+    fileId: F-BF7566DE0585
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/state/InMemoryRunStateStore.staleSnapshotRuns.test.ts
+    fileId: F-5F0CF6E7A0FB
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/state/InMemoryStartRunIntentStore.test.ts
+    fileId: F-14F7384FF307
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/state/InMemoryTxStore.outbox.test.ts
+    fileId: F-B12F4E9247E3
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/state/InMemoryTxStore.rebuildSnapshot.test.ts
+    fileId: F-EF931E40D485
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/state/InMemoryTxStore.retryLineage.test.ts
+    fileId: F-073526A7F574
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/state/InMemoryTxStore.staleSnapshotRuns.test.ts
+    fileId: F-7F37068B7481
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/state/providerRefPersistence.test.ts
+    fileId: F-6E1F203D1CAD
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/state/runBootstrapTestSupport.ts
+    fileId: F-FF4741240C35
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/types/engine-types.test.ts
+    fileId: F-9983E4DC8D5C
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/utils/clock.test.ts
+    fileId: F-3BF28572F0DF
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/test/workers/IntentReconcilerWorker.test.ts
+    fileId: F-70ADA94DCD52
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/tsconfig.eslint.json
+    fileId: F-DC7D4E2A69AD
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/tsconfig.json
+    fileId: F-D6799E79A6A2
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/tsconfig.test.eslint.json
+    fileId: F-E9B6C1B307BD
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/tsconfig.test.json
+    fileId: F-F7600800DDF1
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/engine/vitest.config.ts
+    fileId: F-E82B3AFEA229
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/plan-interpreter/package.json
+    fileId: F-C98D2FE577EA
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/plan-interpreter/README.md
+    fileId: F-E7A9DD761504
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/plan-interpreter/src/dagAnalyzer.ts
+    fileId: F-761908A38B3F
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/plan-interpreter/src/errors.ts
+    fileId: F-72FDEF8E164C
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/plan-interpreter/src/index.ts
+    fileId: F-F6ABA01129E9
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/plan-interpreter/src/types.ts
+    fileId: F-32FD8356B5D4
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/plan-interpreter/test/dagAnalyzer.test.ts
+    fileId: F-5CCE9D03F5D4
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/plan-interpreter/tsconfig.json
+    fileId: F-29DBC370FA37
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/plan-interpreter/vitest.config.ts
+    fileId: F-93F4167BD6B3
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/plan-verifier/package.json
+    fileId: F-270AD193B743
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/plan-verifier/README.md
+    fileId: F-D82D455CD3C6
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/plan-verifier/src/crypto.ts
+    fileId: F-401594EAAE69
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/plan-verifier/src/errors.ts
+    fileId: F-2E2DC7E6810A
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/plan-verifier/src/index.ts
+    fileId: F-D96625CD49CD
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/plan-verifier/src/planVersion.ts
+    fileId: F-DBCC48C09369
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/plan-verifier/src/stepTypeConfig.ts
+    fileId: F-4E280969407B
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/plan-verifier/src/verify.ts
+    fileId: F-0FB03CBB85E0
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/plan-verifier/test/planVersionAdmission.architecture.test.ts
+    fileId: F-F68C0DF9FD38
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/plan-verifier/test/planVersionAdmission.test.ts
+    fileId: F-9C21FCAB2BEF
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/plan-verifier/test/verify.test.ts
+    fileId: F-4DCC1185381C
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/plan-verifier/tsconfig.json
+    fileId: F-8FC5A1C1091E
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/plan-verifier/tsconfig.test.json
+    fileId: F-DC1A239AD20D
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/plan-verifier/vitest.config.ts
+    fileId: F-8C56FF045989
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/run-domain/package.json
+    fileId: F-BB30DD3B52BA
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/run-domain/src/applyRunEvent.ts
+    fileId: F-2A3E361A8F89
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/run-domain/src/errors.ts
+    fileId: F-2FB4CC7C85F1
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/run-domain/src/index.ts
+    fileId: F-E589CD2A89C7
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/run-domain/src/mapEventEnvelopeToProjectableEvent.ts
+    fileId: F-2B84F69A963F
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/run-domain/src/transitionPolicy.ts
+    fileId: F-B670B9485F13
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/run-domain/test/applyRunEvent.test.ts
+    fileId: F-6CD66D81A37E
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/run-domain/tsconfig.json
+    fileId: F-18A55FF6E3C2
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/run-domain/vitest.config.ts
+    fileId: F-CA4E5ACAFD53
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/package.json
+    fileId: F-87E2A1F6CD32
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/src/archiveLifecycle.ts
+    fileId: F-3649FA7D6789
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/src/index.ts
+    fileId: F-4BD83CE9D875
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/src/inMemoryRunStateCommandPort.ts
+    fileId: F-749A0808CB1B
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/src/lifecycle/adapters/FileSystemArchiveObjectStore.ts
+    fileId: F-810E53E67A14
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/src/lifecycle/adapters/S3ArchiveObjectStore.ts
+    fileId: F-8AC6314EDE18
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/src/lifecycle/archiveArtifacts.ts
+    fileId: F-26A4B90AC260
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/src/lifecycle/archiveRuntime.ts
+    fileId: F-1ABEF387EC84
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/src/lifecycle/DeliveryBufferPurger.ts
+    fileId: F-41A1DEF91187
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/src/lifecycle/deliveryBufferRuntime.ts
+    fileId: F-B111F801D42A
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/src/lifecycle/ObjectStorageRunArchiveExporter.ts
+    fileId: F-C7597A750B25
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/src/lifecycle/RunArchiveCoordinator.ts
+    fileId: F-507C6C659F7A
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/src/lifecycle/RunArchiveDeleter.ts
+    fileId: F-BCA2B9CF7804
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/src/lifecycle/RunArchiveRestorer.ts
+    fileId: F-B6DFFE18E796
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/src/lifecycle/RunArchiveVerifier.ts
+    fileId: F-06740F43BAC6
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/src/types.ts
+    fileId: F-346F27185224
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/test/archiveArtifacts.test.ts
+    fileId: F-1E3C3B251D55
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/test/archiveLifecycle.test.ts
+    fileId: F-E41E0F8B937B
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/test/archiveRuntime.test.ts
+    fileId: F-C23FE08E0D36
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/test/command-port.test.ts
+    fileId: F-11FFA5754DF5
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/test/DeliveryBufferPurger.test.ts
+    fileId: F-44929D75E3EC
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/test/FileSystemArchiveObjectStore.test.ts
+    fileId: F-0A6205D4828A
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/test/ObjectStorageRunArchiveExporter.test.ts
+    fileId: F-30D0937CD959
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/test/RunArchiveCoordinator.test.ts
+    fileId: F-B0F5BC170351
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/test/RunArchiveDeleter.test.ts
+    fileId: F-2115949955C8
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/test/RunArchiveLifecycleIntegration.test.ts
+    fileId: F-12551C2C1727
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/test/RunArchiveRestorer.test.ts
+    fileId: F-27A68377295C
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/test/S3ArchiveObjectStore.test.ts
+    fileId: F-C48D539A9B26
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/tsconfig.json
+    fileId: F-B8CFF9EA47E4
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/state-store/vitest.config.ts
+    fileId: F-8A9678790F38
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/cli/validate-contracts.cjs
+    fileId: F-C5E46476CB48
+    owningUnit: SYS-RUNTIME-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false

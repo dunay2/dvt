@@ -1,0 +1,13 @@
+version: 1
+componentUnit: SYS-API-OPS-HEALTH
+rootUnit: SYS-DVT
+domainUnit: SYS-DVT
+status: review
+governanceState: review
+dddOwner: ENTRY
+cqRails: ApiOperationalReadinessQuery
+childrenRequired: false
+fileCount: 0
+driftFileCount: 0
+legacyFileCount: 0
+files: []

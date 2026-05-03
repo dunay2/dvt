@@ -1,0 +1,90 @@
+version: 1
+componentUnit: SYS-API-OPS-ROUTES
+rootUnit: SYS-DVT
+domainUnit: SYS-DVT
+status: coverage-required
+governanceState: coverage-required
+dddOwner: INFRA
+cqRails: none - grouping component for operational route source units
+childrenRequired: true
+fileCount: 11
+driftFileCount: 0
+legacyFileCount: 0
+files:
+  - path: apps/api/src/routes/capabilities.ts
+    fileId: F-4015F841B57C
+    owningUnit: SYS-API-OPS-HEALTH
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/routes/dbReady.ts
+    fileId: F-25FD3E34272F
+    owningUnit: SYS-API-OPS-HEALTH
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/routes/health.ts
+    fileId: F-E4ABC9FB6069
+    owningUnit: SYS-API-OPS-HEALTH
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/routes/healthContract.ts
+    fileId: F-1CD8B10FFC9E
+    owningUnit: SYS-API-OPS-HEALTH
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/routes/healthContractMapper.ts
+    fileId: F-C418C2E65805
+    owningUnit: SYS-API-OPS-HEALTH
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/routes/healthPresenter.ts
+    fileId: F-065B6AC3F585
+    owningUnit: SYS-API-OPS-HEALTH
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/routes/healthReadinessPolicy.ts
+    fileId: F-08173C80286E
+    owningUnit: SYS-API-OPS-HEALTH
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/routes/healthReadinessPorts.ts
+    fileId: F-10FD06CCF21E
+    owningUnit: SYS-API-OPS-HEALTH
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/routes/httpStatus.ts
+    fileId: F-DC653613A2C6
+    owningUnit: SYS-API-OPS-HEALTH
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/routes/registerOperationalRoutes.ts
+    fileId: F-7F96E6A41BEF
+    owningUnit: SYS-API-OPS-HEALTH
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/routes/version.ts
+    fileId: F-9735328DD649
+    owningUnit: SYS-API-OPS-HEALTH
+    unitStatus: review
+    governanceState: review
+    isDrift: false
+    isLegacy: false
