@@ -23,7 +23,6 @@ describe('useUiLayoutStore', () => {
       canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
       activeTabs: [{ id: 'main-canvas', type: 'canvas', label: 'Main Graph' }],
       activeTabId: 'main-canvas',
-      connectionStatus: { rest: 'ok', liveEvents: 'connected' },
     });
   });
 
@@ -50,5 +49,23 @@ describe('useUiLayoutStore', () => {
     expect(useUiLayoutStore.getState().canvasPalette).toBe(DEFAULT_CANVAS_PALETTE_ID);
     expect(useUiLayoutStore.getState().gridSize).toBe(30);
     expect(useUiLayoutStore.getState().focusMode).toBe(true);
+  });
+
+  it('does not own platform connection status inside shell layout state', async () => {
+    localStorage.setItem(
+      UI_LAYOUT_STORAGE_KEY,
+      JSON.stringify({
+        state: {
+          connectionStatus: { rest: 'offline', liveEvents: 'disconnected' },
+          gridSize: 30,
+        },
+      })
+    );
+
+    await useUiLayoutStore.persist.rehydrate();
+
+    expect('connectionStatus' in useUiLayoutStore.getState()).toBe(false);
+    expect('setConnectionStatus' in useUiLayoutStore.getState()).toBe(false);
+    expect(useUiLayoutStore.getState().gridSize).toBe(30);
   });
 });

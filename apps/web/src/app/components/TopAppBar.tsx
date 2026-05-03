@@ -1,6 +1,7 @@
 import { useLocation } from 'react-router';
 
 import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
+import { usePlatformConnectionStore } from '../stores/platformConnectionStore';
 import { useSessionStore } from '../stores/sessionStore';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
 import AppBrandMark from './AppBrandMark';
@@ -27,7 +28,7 @@ export function ShellTopBar({
   const setSelectedTenant = useSessionStore((state) => state.setTenantId);
   const setSelectedProject = useSessionStore((state) => state.setProjectId);
   const setSelectedEnvironment = useSessionStore((state) => state.setEnvironmentId);
-  const connectionStatus = useUiLayoutStore((state) => state.connectionStatus);
+  const connectionStatus = usePlatformConnectionStore((state) => state.connectionStatus);
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const toggleFocusMode = useUiLayoutStore((state) => state.toggleFocusMode);
   const explorerPanelVisible = useUiLayoutStore((state) => state.explorerPanelVisible);

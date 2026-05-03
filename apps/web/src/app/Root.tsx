@@ -35,6 +35,7 @@ import {
 } from './bootstrap/routeBootstrapStartupReadiness';
 import { useActiveRouteBootstrapRegistration } from './bootstrap/useActiveRouteBootstrapRegistration';
 import { useCapabilitiesQuery } from './queries/useCapabilitiesQuery';
+import { usePlatformConnectionStore } from './stores/platformConnectionStore';
 import { useUiLayoutStore } from './stores/uiLayoutStore';
 import '@xyflow/react/dist/style.css';
 
@@ -46,8 +47,8 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const consolePanelHeight = useUiLayoutStore((state) => state.consolePanelHeight);
   const consolePanelVisible = useUiLayoutStore((state) => state.consolePanelVisible);
-  const connectionStatus = useUiLayoutStore((state) => state.connectionStatus);
-  const setConnectionStatus = useUiLayoutStore((state) => state.setConnectionStatus);
+  const connectionStatus = usePlatformConnectionStore((state) => state.connectionStatus);
+  const setConnectionStatus = usePlatformConnectionStore((state) => state.setConnectionStatus);
   const capabilitiesQuery = useCapabilitiesQuery();
   const platformHealth = usePlatformHealthSnapshotQuery(platformHealthCapability);
   const shellHealth = buildShellHealthPresentationModel({

@@ -45,7 +45,6 @@ describe('BottomConsoleDrawer', () => {
       gridSize: 20,
       activeTabs: [{ id: 'main-canvas', type: 'canvas', label: 'Main Graph' }],
       activeTabId: 'main-canvas',
-      connectionStatus: { rest: 'ok', liveEvents: 'connected' },
     });
     container = document.createElement('div');
     document.body.appendChild(container);

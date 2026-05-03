@@ -7528,9 +7528,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-1F29E3A80D83
     pathHash: 558051c7359a78caf0d1c9fa8645a649baf95ee6514ee70c9f5e2294294bd716
-    contentHash: 510130375869a6d55aee64bd173e5e17c1076ddcb3474479773ce2e3c9b50b1d
+    contentHash: ad9092ed647f4e0942718b7d661c4338daf87fe2dfaba57a8eb603d8241d292f
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 9cda4fd92d0d68101543042295bf88c9b3780fd68f09480768e339fb7fb6d6cb
+    stateFingerprint: 35960dd415d29777c85823ebc88e014f169a5eb49268290ba400e574eed06f64
     path: docs/architecture/components/web/web-store-domain-ownership-component.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -32038,9 +32038,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-636F2B1BDCCD
     pathHash: 18813bb0f3f6edcce8a03cee4e1d0837e777ff95c0bdd7bfe006aaeaae6fff31
-    contentHash: 81241a7389aa932c2b52ed8a68bf34161d2738b115db6fccf1e612341aa423e1
+    contentHash: 26981342143680014f35bfe7c12da3a2fc9f3c00e671aaf10a7891db54079093
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 36beaa047c3ac4df0c8ff94e86e1f8ba75fc87277823c69d53a51a2aab5bd338
+    stateFingerprint: 6a32342b948eea8f00d97053d613e1287a6b61940374a3ee61e2f9727e354a37
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -38942,9 +38942,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-3F8A5537DF6A
     pathHash: 23fee4584ae56d429bbb54476f895c4b88635857bb1b51814b4f5c0b49d2ee67
-    contentHash: bd797e1be89acd063b6ead779cac86ec0d219569d0f0e26fce51cfa43544beff
+    contentHash: 1ee97962ce088249766aaa4cc3f94fab4afaba764b51309061a171d5106b3535
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: b92b98604e70b1414f5ca5291e78ae277ab8cc483cdf2381fe7dc0745ecb5244
+    stateFingerprint: 7e204487d56e96df64b42a62bd2668eac516664eaf1f706b602427629af71d5f
     path: docs/planning/status/generated-code-state.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT

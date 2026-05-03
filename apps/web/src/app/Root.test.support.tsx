@@ -2,6 +2,7 @@ import { waitFor } from '@testing-library/dom';
 import { expect } from 'vitest';
 
 import { useAppDataSourceMode } from './services/AppServicesContext';
+import { usePlatformConnectionStore } from './stores/platformConnectionStore';
 import { useUiLayoutStore } from './stores/uiLayoutStore';
 import { DEFAULT_CANVAS_PALETTE_ID } from './views/canvas/canvasPalette';
 
@@ -24,6 +25,8 @@ export function resetRootShellStores(): void {
     canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
     activeTabs: [{ id: 'main-canvas', type: 'canvas', label: 'Main Graph' }],
     activeTabId: 'main-canvas',
+  });
+  usePlatformConnectionStore.setState({
     connectionStatus: { rest: 'ok', liveEvents: 'connected' },
   });
 }
@@ -32,10 +35,7 @@ export function setRootShellFocusMode(enabled: boolean): void {
   useUiLayoutStore.setState({ focusMode: enabled });
 }
 
-export function setRootShellConsoleDrawer(args: {
-  visible: boolean;
-  height: number;
-}): void {
+export function setRootShellConsoleDrawer(args: { visible: boolean; height: number }): void {
   useUiLayoutStore.setState({
     consolePanelVisible: args.visible,
     consolePanelHeight: args.height,
