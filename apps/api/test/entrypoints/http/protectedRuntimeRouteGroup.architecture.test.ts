@@ -15,19 +15,26 @@ const CATALOG_PATH = join(
   '../../../src/application/ports/protectedRuntimeCommandQueryRails.ts'
 );
 
+const RUNTIME_ROUTE_METHOD_BY_KEY = {
+  start: ['POST'],
+  plansCompile: ['POST'],
+  plansPreview: ['POST'],
+  plansImport: ['POST'],
+  workspaceGraphDraft: ['GET', 'PUT'],
+  list: ['GET'],
+  get: ['GET'],
+  events: ['GET'],
+  signal: ['POST'],
+  cancel: ['POST'],
+  recover: ['POST'],
+} as const satisfies Record<keyof typeof RUNTIME_ROUTE_PATH, readonly ('GET' | 'POST' | 'PUT')[]>;
+
 const PROTECTED_RUNTIME_ADAPTER_SURFACES = new Set([
-  `POST ${RUNTIME_ROUTE_PATH.start}`,
-  `POST ${RUNTIME_ROUTE_PATH.plansPreview}`,
-  `POST ${RUNTIME_ROUTE_PATH.plansCompile}`,
-  `POST ${RUNTIME_ROUTE_PATH.plansImport}`,
-  `GET ${RUNTIME_ROUTE_PATH.workspaceGraphDraft}`,
-  `PUT ${RUNTIME_ROUTE_PATH.workspaceGraphDraft}`,
-  `GET ${RUNTIME_ROUTE_PATH.list}`,
-  `GET ${RUNTIME_ROUTE_PATH.get}`,
-  `GET ${RUNTIME_ROUTE_PATH.events}`,
-  `POST ${RUNTIME_ROUTE_PATH.signal}`,
-  `POST ${RUNTIME_ROUTE_PATH.cancel}`,
-  `POST ${RUNTIME_ROUTE_PATH.recover}`,
+  ...Object.entries(RUNTIME_ROUTE_METHOD_BY_KEY).flatMap(([routeKey, methods]) =>
+    methods.map(
+      (method) => `${method} ${RUNTIME_ROUTE_PATH[routeKey as keyof typeof RUNTIME_ROUTE_PATH]}`
+    )
+  ),
   'POST /admin/runs/:runId/rebuild-snapshot',
 ]);
 
@@ -52,9 +59,11 @@ describe('protected runtime route group architecture', () => {
     const docText = readFileSync(DOC_PATH, 'utf8');
 
     for (const rail of PROTECTED_RUNTIME_COMMAND_QUERY_RAILS) {
-      expect(docText).toContain(`\`${rail.adapterSurface}\``);
-      expect(docText).toContain(rail.kind === 'command' ? '| Command |' : '| Query   |');
-      expect(docText).toContain(rail.applicationPort);
+      const matrixRow = findCommandQueryMatrixRow(docText, rail.adapterSurface);
+
+      expect(matrixRow).toContain(`\`${rail.adapterSurface}\``);
+      expect(matrixRow).toContain(rail.kind === 'command' ? '| Command |' : '| Query   |');
+      expect(matrixRow).toContain(rail.applicationPort);
     }
   });
 
@@ -126,3 +135,12 @@ describe('protected runtime route group architecture', () => {
     expect(docText).toContain('No protected runtime rail accepts legacy behavior as canonical');
   });
 });
+
+function findCommandQueryMatrixRow(docText: string, adapterSurface: string): string {
+  const row = docText
+    .split('\n')
+    .find((line) => line.startsWith('|') && line.includes(`\`${adapterSurface}\``));
+
+  expect(row, `missing command/query matrix row for ${adapterSurface}`).toBeDefined();
+  return row ?? '';
+}

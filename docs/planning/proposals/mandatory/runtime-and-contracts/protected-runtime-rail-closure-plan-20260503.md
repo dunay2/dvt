@@ -475,7 +475,31 @@ symbols:
     cypressCoverage: N/A - API architecture guard
     unitTests:
       - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - name: RUNTIME_ROUTE_METHOD_BY_KEY
+    path: apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    dddOwner: Protected runtime route group architecture test
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+      - Divergent change
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
   - name: PROTECTED_RUNTIME_ADAPTER_SURFACES
+    path: apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    dddOwner: Protected runtime route group architecture test
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+      - Divergent change
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - name: findCommandQueryMatrixRow
     path: apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
     dddOwner: Protected runtime route group architecture test
     cqRails:

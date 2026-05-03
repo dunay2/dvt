@@ -33495,9 +33495,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-E6CB1F688A41
     pathHash: e55e45240c4894d2626a56992afe7106d0318b58326fcbbef5e33942434b8fe7
-    contentHash: 162cd412aacf45aafd3ed8bc3fda4a132b256d167ab49aa4882f816dc2540d43
+    contentHash: 0d80bc8ad9be12e4e51e27df87db177804a69723682fb920e82fb440424ceaa4
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 3eb2a93efa7a9fc749cf955b56e19ff8ad43ac9034ad33d675ac63aafeb20b5d
+    stateFingerprint: caa594339f053ec4f35b1a05b99548141dcbe4b5c1262250fc595aabeb12f196
     path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT

@@ -8808,9 +8808,9 @@ files:
       - docs/architecture/command-query-rail-governance.md
   - fileId: F-4BD92CDCD2AC
     pathHash: b84a1a97942bcee1df8a92ffc766a67b53e908c47550f2341116a76a102da795
-    contentHash: c9ac1ae540bce9cb75d2825f6ab4bb2471453d4f4b8009c50242309fee5a91c2
+    contentHash: c9530334450e7ce79d48bd5579e54c82d7366e4590420def4ec22d31943629b7
     governanceHash: 873a3e8188b761eed0fdc743a443315e07f0d3f7ea5ff164faedccc3e1f7964e
-    stateFingerprint: eebe8e87c6d0dcc62af556cb0c52095ad4ee1bac39defa7dfdfcbeaea5ead616
+    stateFingerprint: e9e7798722773974d5f36834b5d46d3e405b7e09e60cd3a9f30aaaa14d6f4fe9
     path: apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
     owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
     rootUnit: SYS-DVT

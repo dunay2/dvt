@@ -3435,9 +3435,9 @@ files:
     owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
   - fileId: F-4BD92CDCD2AC
     path: apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
-    contentHash: c9ac1ae540bce9cb75d2825f6ab4bb2471453d4f4b8009c50242309fee5a91c2
+    contentHash: c9530334450e7ce79d48bd5579e54c82d7366e4590420def4ec22d31943629b7
     governanceHash: 873a3e8188b761eed0fdc743a443315e07f0d3f7ea5ff164faedccc3e1f7964e
-    stateFingerprint: eebe8e87c6d0dcc62af556cb0c52095ad4ee1bac39defa7dfdfcbeaea5ead616
+    stateFingerprint: e9e7798722773974d5f36834b5d46d3e405b7e09e60cd3a9f30aaaa14d6f4fe9
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
@@ -24564,9 +24564,9 @@ files:
   - fileId: F-E6CB1F688A41
     path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
-    contentHash: 162cd412aacf45aafd3ed8bc3fda4a132b256d167ab49aa4882f816dc2540d43
+    contentHash: 0d80bc8ad9be12e4e51e27df87db177804a69723682fb920e82fb440424ceaa4
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 3eb2a93efa7a9fc749cf955b56e19ff8ad43ac9034ad33d675ac63aafeb20b5d
+    stateFingerprint: caa594339f053ec4f35b1a05b99548141dcbe4b5c1262250fc595aabeb12f196
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
