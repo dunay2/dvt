@@ -33495,9 +33495,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-E6CB1F688A41
     pathHash: e55e45240c4894d2626a56992afe7106d0318b58326fcbbef5e33942434b8fe7
-    contentHash: 3fec96afa1d6f5a9eef2721bd66d706f3ae0e4242af8e1d5a13d2c704ca550a9
+    contentHash: 0a3d72551fb0d079f0ad3c7eac10bdec8a30735fc93f78ca3589cbd43ff8f402
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 8d89042737a67b0d7ae68239529aa22b54eabf200bedb446b077e28805da8831
+    stateFingerprint: 2b2759d51160d1ee274ece0cdf1daa41c3a1b8e507c9dcc168dffdf148b58fbc
     path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -38422,9 +38422,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-5B14954FF979
     pathHash: 43a750f71146dffa7f4cce85a4d5bf18fdc069900f189383388eeda0499cbcdc
-    contentHash: c13b2b6da49080d7f68b5c422d2fa82766e40445f3a1c9a01c8a3dc5ae4af869
+    contentHash: 315907f876ab5e4f12f0c3a29653990655f46984434f8e1fe0bae98decd93c91
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 485c5edde67f1bf5c84fdca37ef2dbb76ea0f08bd2a6b1969db040ba67cc8619
+    stateFingerprint: 94c1ae2502afbbce28f26bd33082a21edfa8741159819217ea6cdb790f641018
     path: docs/planning/state/agent-lane-c.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
