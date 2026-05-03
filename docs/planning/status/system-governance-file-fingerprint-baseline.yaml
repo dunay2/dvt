@@ -1,6 +1,6 @@
 version: 1
 source: docs/planning/status/system-governance-file-index.files.yaml
-fileCount: 4154
+fileCount: 4155
 files:
   - fileId: F-7C0FAC63D273
     path: .arc-policy.yaml
@@ -24534,6 +24534,16 @@ files:
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+  - fileId: F-E6CB1F688A41
+    path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
+    contentHash: 3fec96afa1d6f5a9eef2721bd66d706f3ae0e4242af8e1d5a13d2c704ca550a9
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: 8d89042737a67b0d7ae68239529aa22b54eabf200bedb446b077e28805da8831
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-48EEAEE5627C
     path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/rc-c2-shared-preflight-and-ci-log-first-triage-plan-20260401.md
@@ -26349,9 +26359,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-5B14954FF979
     path: docs/planning/state/agent-lane-c.yaml
-    contentHash: 86e413ce1f2ec77ac92e6d9b08098be71e5121ab08668c304e1f2ea51bff5d0c
+    contentHash: 08d071069289de273890cc5ac96bfb86060a6065ec4dc87396ea22e62217e717
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: af5e4bd5981f39982281059a3858bced83ee4395cc288c8dc791a1faf3c5263b
+    stateFingerprint: 998e73a866fcaaf3c4f54a9472ff920301647f347fc957abc8b4089d97baf48f
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -27061,18 +27071,18 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-5D25269D1180
     path: docs/planning/status/system-governance-document-unit-map-20260501.md
-    contentHash: 6b70671c3c4999459c4c1b38e9ac253b39e8750b9ba985fd9d5c5d2176b1730b
+    contentHash: e2e1e48ae0fef8a6e27f8381e65f109b5a19b5ca52f5f7924d5b7fc606ae2b14
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 1faebfa2e29fd1caac20c9b33c6fec2d4a7d7712f9830ad50c06f35a3530877d
+    stateFingerprint: a083b14f999932b75926cd0fb96f1984791a8ccaefde73b7e8b3eb588e2099d9
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-E7EC54670607
     path: docs/planning/status/system-governance-document-unit-map.docs.yaml
-    contentHash: e51fc44f0658ca59f8c6a1b8c5b7129330014596c41d3849c1e8d216e552cfd8
+    contentHash: 66270f80ea2944f3ccc9aabb5fe9ecf0b026a8455908bc17ae4f64774e0934c1
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 39a73cc336edeafc01594729afa03b5070175cc505a2c02f0f8f081c54e82e09
+    stateFingerprint: 20688f988a775f1a35984c821079475470bc79204f0084b035d596682de3db5f
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -28538,9 +28548,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-91F77F4BD54D
     path: docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
-    contentHash: d7be56808417e0a7b6a958ce7f5b6fa0340df4698461ad0f2335612ccece0700
+    contentHash: ad4c9b37a34844434e97e5080cdc4d85d0be222d14e81ce13031d49f63755744
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 510f37fe65c54c2d5ce5e703dab2d796dd46da4792779932c5d24ff7c5c378b4
+    stateFingerprint: 2b5f89c287a2d7e095ed4582652ec87769eea13c42b5ccad49860a7a3c2238ca
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
