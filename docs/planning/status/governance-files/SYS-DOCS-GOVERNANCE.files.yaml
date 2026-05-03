@@ -40529,9 +40529,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-6B8271C2051C
     pathHash: 4bd0ab5904eb54e02bb9f0957eed059b06dfd5cb253044a2b0c01cad2eb3a7ca
-    contentHash: ba745a5884e79efa4266eff8ccc9c6f1be8e2e347e7c01dc913b1ae0746198b2
+    contentHash: 29af194ecdd2762f4615c4eafe83917995bca2d5b9cf9c0f700075b8d0db1256
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: da7e1033fc77b71359d32f0e43eb4db394641f928a9536010752bd6b7f3f5d38
+    stateFingerprint: 312fe63ce03252002c261648b2ab6629910548b8b811e9b4677ab46083e6a98b
     path: docs/planning/status/system-governance-file-fingerprint-baseline.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
