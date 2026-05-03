@@ -30001,9 +30001,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-887D7CD99F1B
     pathHash: cfe8ab2fae14dbb9bad8acbd17475eaeffafad58d5cf226c260cef513323e1fc
-    contentHash: 5158f076a37fae31da2b97b949e54b734f6b1e29fc484bf5688fac725b7f6118
+    contentHash: 1ba3114631344f950536bbfe358f7ab7ff445618bbc82a662ad65abc71e72386
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 9808f2a784763dbc6b27c813a69bdaa84ee0809f22f5d8f6fc6c994057cacfb3
+    stateFingerprint: 70a77a72c9a86bd94c2d38a0854887882c6809e5c826fe36581083b805c74786
     path: docs/planning/closeouts/20260503-tf-e2-a-authoring-draft-hard-cut-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -38500,9 +38500,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-BE72D9875033
     pathHash: 243f2fed3b766fd91464d8f5fd7c8236758e98801e91b0c59ebc309d8d0ecc6f
-    contentHash: b4c47829e88cd55c22d97f09c24570cf573588782f1c90a5deb77b41632176d5
+    contentHash: 4c3d1b95b6ca273a44eaa139ac2fcc9b15ad068c4b349acb7df10bcb9ac4288f
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 3b3e47f0b17da5c0dd6c833c1b69d250666fe1a52d06b154f1274e05790d30fb
+    stateFingerprint: 475015882b5b254b1fffafa1e6a653c7422e131e005ce9ead84cf099013e7ee0
     path: docs/planning/state/agent-lane-e.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
