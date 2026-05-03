@@ -1992,6 +1992,9 @@ tasks:
       - docs/planning/closeouts/20260417-graph-architecture-doc-pack-split-closeout.md
       - docs/planning/closeouts/20260418-tf-e2-canvas-interaction-command-seam-closeout.md
       - docs/planning/closeouts/20260420-tf-e2-canvas-typed-authoring-port-hard-cut-closeout.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-a-authoring-draft-hard-cut-implementation-plan-20260503.md
+      - docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md
+      - buzon/20260503-tf-e2-a-authoring-draft-hard-cut-fowler-review.md
       - docs/runbooks/index.md
     status_reason: >-
       The productization route remains active, but the core Canvas authoring path has materially
@@ -2000,9 +2003,11 @@ tasks:
       matrix, `TF-E2-K` closed the typed host and first-canvas cycle, `TF-E2-B/C` now close
       duplicate-node and reconnect-edge semantics without inflating passive adapters or the draft
       aggregate component, and `TF-E2-L` now closes the 2026-04-25 Fowler hard QA graph-strategy
-      ownership drift. Remaining TF-E2 movement should focus on parent-level acceptance and any
-      explicitly open protected-draft boundary work, not on reopening graph-strategy ownership.
-    last_verified: '2026-04-26'
+      ownership drift. `TF-E2-M` is now closed as the startup and browser-operability backlog. The
+      next productizing cut is `TF-E2-A`: remove the remaining web-local projected
+      `WorkspaceGraphDraft` DTO from the active save path so Canvas consumes
+      `WorkspaceGraphAuthoringDraft` directly.
+    last_verified: '2026-05-03'
   - task_id: TF-E2-A
     parent_task: TF-E2
     priority: P0
@@ -2023,14 +2028,17 @@ tasks:
       editable payload.
     complexity: S
     effort_points: 3
-    progress_pct: 90
+    progress_pct: 92
     evidence_refs:
       - docs/planning/closeouts/20260418-tf-e2-canvas-draft-repository-seam-closeout.md
       - docs/planning/closeouts/20260418-tf-e2-canvas-srp-seams-closeout.md
       - docs/planning/closeouts/20260420-tf-e2-canvas-typed-authoring-port-hard-cut-closeout.md
       - docs/planning/closeouts/20260422-tf-e2-semantic-protected-draft-projection-cut-closeout.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-empty-authoring-entrypoint-design-20260422.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-a-authoring-draft-hard-cut-implementation-plan-20260503.md
       - docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md
+      - docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md
+      - buzon/20260503-tf-e2-a-authoring-draft-hard-cut-fowler-review.md
       - docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md
       - apps/web/src/app/services/AppServicesContext.tsx
       - apps/web/src/app/services/composition/appServices.ts
@@ -2044,15 +2052,14 @@ tasks:
       remain in place, `AppServices` composes `workspaceGraphDraftAuthoringPort`,
       `useCanvasController` threads it through the authoring runtime, the route renders explicit
       `read_only`, `forbidden`, and typed `format_error` postures from boundary outcomes, and
-      snapshot-backed active-authoring fallback has been cut back substantially. However, this slice
-      is not near closure: the current save path in `canvasDraftAuthoring.ts` still builds governed
-      `DesignGraphDraft` payloads, which means the active edit model is still compile-shaped and
-      cannot support graph-first incomplete states such as “create first node on an empty Canvas.”
-      The empty-state authoring-entry proposal is therefore now coupled to a deeper contract reset:
-      `TF-E2-A` must adopt the corrected `TF-A2`/`TF-C4` editable authoring-draft boundary and stop
-      treating `DesignGraphDraft` as the persisted edit payload before the route-owned `Add first
-      node` command can land honestly.
-    last_verified: '2026-04-23'
+      snapshot-backed active-authoring fallback has been cut back substantially. The 2026-05-03
+      Fowler review found the current code no longer saves compile-shaped `DesignGraphDraft`
+      payloads, but it still passes active saves through a web-local `WorkspaceGraphDraft`
+      projection and reconstructs `WorkspaceGraphAuthoringDraft` from side-channel semantic graph
+      arrays. The next hard cut is therefore mechanical: make the active save path authoring-draft
+      native, keep projections read-only, and add architecture tests preventing route-local draft
+      DTO authority from returning.
+    last_verified: '2026-05-03'
   - task_id: TF-E2-B
     parent_task: TF-E2
     priority: P0
@@ -2584,7 +2591,7 @@ tasks:
   - task_id: TF-E2-M
     parent_task: TF-E2
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       convert the accepted Canvas startup, draft-recovery, and playground stories into an
       operator-visible browser-operability backlog so the live interface proves the same behavior
@@ -2597,7 +2604,7 @@ tasks:
       setup.
     complexity: M
     effort_points: 5
-    progress_pct: 65
+    progress_pct: 100
     evidence_refs:
       - docs/architecture/components/web/screen-manuals-and-user-stories.md
       - docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md
@@ -2605,20 +2612,19 @@ tasks:
       - docs/architecture/components/web/app-bootstrap-screen-component.md
       - docs/architecture/components/web/api-client-auth-component.md
       - docs/architecture/components/web/graph/canvas-layout-persistence-component.md
+      - docs/planning/closeouts/20260503-tf-e2-m-b-canvas-draft-access-posture-closeout.md
+      - docs/planning/closeouts/20260502-tf-e2-m-c-first-authoring-live-proof-closeout.md
+      - docs/planning/closeouts/20260503-tf-e2-m-d-startup-route-readiness-closeout.md
       - buzon/20260429-codex-canvas-operability-auth-and-drag-fowler-review.md
       - docs/runbooks/backend-mvp-control-plane-runbook-20260329.md
     status_reason: >-
-      Active backlog. Browser review on 2026-04-29 showed that the accepted host and recovery
-      stories were not enough as operator evidence when the local protected-runtime token expired:
-      `/workspace/graph/draft` returned `401 unauthenticated`, Canvas revealed a denied draft
-      surface, and the toolbar still looked synchronized but inert. The protected-runtime token
-      freshness blocker is now fixed and the restarted local app can read draft state, load
-      capabilities, show the create-canvas entrypoint, and keep dragged cards stable. The current
-      follow-up adds local component guides and user stories for protected-token refresh and layout
-      persistence. `TF-E2-M-C` now closes the complete first-canvas/first-node live proof through a
-      mandatory protected-runtime Cypress runner. Remaining backlog work covers truthful
-      denied-draft recovery copy and any additional startup diagnostics.
-    last_verified: '2026-05-02'
+      Closed. The 2026-04-29 browser review produced four operator-visible gaps: expired
+      protected-runtime auth, false draft-denial posture, first-canvas/first-node live proof, and
+      unstable fifth startup readiness. `TF-E2-M-A`, `TF-E2-M-B`, `TF-E2-M-C`, and `TF-E2-M-D` now
+      close those gaps with component guides, command/query rails, architecture tests, Cypress proof
+      surfaces, and closeouts. Further Canvas work should continue through `TF-E2-A` and parent
+      `TF-E2`, not reopen the startup operability backlog.
+    last_verified: '2026-05-03'
   - task_id: TF-E2-M-A
     parent_task: TF-E2-M
     priority: P0
@@ -2653,7 +2659,7 @@ tasks:
   - task_id: TF-E2-M-B
     parent_task: TF-E2-M
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       make Canvas draft-denial posture action-oriented and truthful when protected draft access is
       unauthenticated, forbidden, or read-only.
@@ -2664,12 +2670,13 @@ tasks:
       or restart guidance without enabling unsafe mutation controls.
     complexity: S
     effort_points: 3
-    progress_pct: 20
+    progress_pct: 100
     evidence_refs:
       - docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md
       - docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md
       - docs/architecture/components/web/graph/canvas-draft-access-posture-component.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-b-canvas-draft-denial-posture-implementation-plan-20260501.md
+      - docs/planning/closeouts/20260503-tf-e2-m-b-canvas-draft-access-posture-closeout.md
       - buzon/20260502-tf-e2-m-b-canvas-draft-access-posture-fowler-review.md
       - apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts
       - apps/web/src/app/views/canvas/canvasDraftAuthTransportPosture.ts
@@ -2680,13 +2687,12 @@ tasks:
       - apps/web/src/app/views/canvas/canvasRecoveryBannerModel.ts
       - apps/web/src/app/views/canvas/canvasToolbarViewModel.ts
     status_reason: >-
-      Implementation review is active. `CanvasDraftAccessPosture` now drives toolbar copy, recovery
-      banner state, center-surface transport state, mutation admission, and Plan/Run command inputs.
-      Unit, route-composition, architecture, typecheck, and feature-mechanization checks have passed
-      locally. The Cypress spec for unauthenticated, forbidden-scope, and read-only browser posture
-      has been added and mechanically checked for no draft intercepts or direct draft PUT seeding;
-      local Cypress execution is still blocked by the machine Cypress binary before specs run.
-    last_verified: '2026-05-02'
+      Closed. `CanvasDraftAccessPosture` drives toolbar copy, recovery banner state, center-surface
+      transport state, mutation admission, and Plan/Run command inputs. PR #1080 merged the final
+      review fixes, including the native Cypress runner hardening and the refresh-session recovery
+      wiring. The closeout records the merged proof and keeps any future authoring-draft aggregate
+      hard cut under `TF-E2-A`.
+    last_verified: '2026-05-03'
   - task_id: TF-E2-M-C
     parent_task: TF-E2-M
     priority: P0
@@ -2730,7 +2736,7 @@ tasks:
   - task_id: TF-E2-M-D
     parent_task: TF-E2-M
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
       harden startup observability for the fifth bootstrap step so route readiness cannot look like
       a bouncing or half-loaded startup module.
@@ -2742,9 +2748,10 @@ tasks:
       progress display.
     complexity: S
     effort_points: 2
-    progress_pct: 45
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-d-startup-route-readiness-implementation-plan-20260502.md
+      - docs/planning/closeouts/20260503-tf-e2-m-d-startup-route-readiness-closeout.md
       - docs/architecture/components/web/app-bootstrap-screen-component.md
       - buzon/20260502-tf-e2-m-d-startup-route-readiness-fowler-review.md
       - apps/web/src/app/bootstrap/routeBootstrapStartupReadiness.ts
@@ -2754,11 +2761,12 @@ tasks:
       - apps/web/src/app/Root.bootstrapFlow.test.tsx
       - apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts
     status_reason: >-
-      Implemented. The route-readiness policy now keeps the fifth startup check pending while
-      runtime capabilities are still in cold-start pending, prevents same-route stable posture
-      demotion back to pending, and is covered by unit, Root integration, architecture,
-      mechanization, typecheck, and Cypress startup-route-readiness proof.
-    last_verified: '2026-05-02'
+      Closed. The route-readiness policy now keeps the fifth startup check pending while runtime
+      capabilities are still in cold-start pending, prevents same-route stable posture demotion back
+      to pending, and is covered by unit, Root integration, architecture, mechanization, typecheck,
+      and Cypress startup-route-readiness proof. PR #1080 merged the branch and the closeout records
+      the accepted startup route-readiness posture.
+    last_verified: '2026-05-03'
   - task_id: TF-E2-E-B
     parent_task: TF-E2-E
     priority: P0

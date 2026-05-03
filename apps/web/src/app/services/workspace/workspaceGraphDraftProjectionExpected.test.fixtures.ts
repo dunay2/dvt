@@ -1,7 +1,7 @@
 /** Owned concern: build expected workspace graph draft projection fixtures. */
-import type { WorkspaceGraphDraftSemanticGraph } from './workspaceGraphDraftProjection';
+import type { CanvasAuthoringSemanticGraph } from './workspaceGraphDraftProjection';
 
-export function buildExpectedWorkspaceGraphDraftSemanticGraph(): WorkspaceGraphDraftSemanticGraph {
+export function buildExpectedCanvasAuthoringSemanticGraph(): CanvasAuthoringSemanticGraph {
   return {
     canonicalNodes: [
       {

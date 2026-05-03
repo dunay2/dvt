@@ -8,7 +8,7 @@ import type {
   GraphAuthorityQueryState,
 } from './canvasDraftLifecycle.types';
 import type { CanvasDraftLifecycleCanonicalSnapshot } from './canvasDraftLifecycleSnapshot';
-import type { WorkspaceGraphDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
+import type { CanvasAuthoringSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 import { useCanvasDraftInitialBootstrap } from './useCanvasDraftInitialBootstrap';
 import { useCanvasDraftMissingRemoteSync } from './useCanvasDraftMissingRemoteSync';
 
@@ -25,7 +25,7 @@ type UseCanvasDraftBootstrappingArgs = {
   invalidateInFlightSaveAttempt: () => void;
   lastSavedSignatureRef: { current: string | null };
   lastAuthoritativeSemanticGraphRef: {
-    current: WorkspaceGraphDraftSemanticGraph | null;
+    current: CanvasAuthoringSemanticGraph | null;
   };
 };
 

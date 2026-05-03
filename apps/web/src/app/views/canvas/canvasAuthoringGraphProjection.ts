@@ -1,5 +1,5 @@
 /** Owned concern: compose semantic authoring truth from protected draft semantics and explicit route-local additions. */
-import type { WorkspaceGraphDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
+import type { CanvasAuthoringSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
 type CanvasAuthoringVisibleEdge = {
@@ -11,7 +11,7 @@ type CanvasAuthoringEdgeRef = Pick<CanvasAuthoringVisibleEdge, 'sourceId' | 'tar
 type BuildCanvasAuthoringGraphProjectionArgs = {
   visibleNodeIds: readonly string[];
   visibleEdges: readonly CanvasAuthoringVisibleEdge[];
-  draftSemanticGraph: WorkspaceGraphDraftSemanticGraph | null;
+  draftSemanticGraph: CanvasAuthoringSemanticGraph | null;
   localCanonicalNodes: readonly CanonicalNode[];
 };
 
@@ -31,7 +31,7 @@ function edgeSignature(edge: CanvasAuthoringEdgeRef): string {
 }
 
 function mergeDraftSemanticNodes(args: {
-  draftSemanticGraph: WorkspaceGraphDraftSemanticGraph | null;
+  draftSemanticGraph: CanvasAuthoringSemanticGraph | null;
   localCanonicalNodes: readonly CanonicalNode[];
   scopedNodeIds: readonly string[];
 }): CanonicalNode[] {
@@ -52,7 +52,7 @@ function mergeDraftSemanticNodes(args: {
 }
 
 function indexScopedDraftSemanticNodes(args: {
-  draftSemanticGraph: WorkspaceGraphDraftSemanticGraph | null;
+  draftSemanticGraph: CanvasAuthoringSemanticGraph | null;
   scopedNodeIdSet: ReadonlySet<string>;
 }): Map<string, CanonicalNode> {
   const { draftSemanticGraph, scopedNodeIdSet } = args;
@@ -114,7 +114,7 @@ function buildVisibleFallbackCanonicalEdge(edge: CanvasAuthoringVisibleEdge): Ca
 
 function appendProtectedSemanticEdges(args: {
   mergedEdges: Map<string, CanonicalEdge>;
-  draftSemanticGraph: WorkspaceGraphDraftSemanticGraph | null;
+  draftSemanticGraph: CanvasAuthoringSemanticGraph | null;
   knownNodeIds: ReadonlySet<string>;
 }): void {
   const { mergedEdges, draftSemanticGraph, knownNodeIds } = args;
@@ -150,7 +150,7 @@ function appendVisibleFallbackEdges(args: {
 }
 
 function mergeDraftSemanticEdges(args: {
-  draftSemanticGraph: WorkspaceGraphDraftSemanticGraph | null;
+  draftSemanticGraph: CanvasAuthoringSemanticGraph | null;
   visibleEdges: readonly CanvasAuthoringVisibleEdge[];
   knownNodeIds: ReadonlySet<string>;
 }): CanonicalEdge[] {

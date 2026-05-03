@@ -1,13 +1,13 @@
 import { useCallback, type Dispatch, type SetStateAction } from 'react';
 
-import type { WorkspaceGraphDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
+import type { CanvasAuthoringSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 import type { CanvasNodePositions } from './canvasAuthoringRuntime.types';
 import { shouldSeedCanvasLayoutFromRemoteDraft } from './canvasDraftLayoutHydrationPolicy';
 import type { DraftSaveStatus } from './canvasDraftLifecycle.types';
 import type { CanvasDraftLifecycleCanonicalSnapshot } from './canvasDraftLifecycleSnapshot';
 import { buildLocalNodeCatalogFromSemanticGraph } from './canvasDraftLocalNodeCatalog';
 import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
-import type { CanvasDraftReadModel } from './canvasDraftReadModel';
+import type { CanvasAuthoringDraftReadModel } from './canvasDraftReadModel';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import { serializeCanvasDraftAuthoringBaselineSignature } from './canvasDraftAuthoring';
 
@@ -20,7 +20,7 @@ type UseCanvasDraftReloadHydrationArgs = {
   setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
   lastSavedSignatureRef: { current: string | null };
   lastAuthoritativeSemanticGraphRef: {
-    current: WorkspaceGraphDraftSemanticGraph | null;
+    current: CanvasAuthoringSemanticGraph | null;
   };
 };
 
@@ -36,7 +36,7 @@ export function useCanvasDraftReloadHydration({
 }: UseCanvasDraftReloadHydrationArgs) {
   return useCallback(
     (
-      remoteDraftState: CanvasDraftReadModel,
+      remoteDraftState: CanvasAuthoringDraftReadModel,
       reloadedCanonicalSnapshot: CanvasDraftLifecycleCanonicalSnapshot
     ) => {
       draftQueryCache.replaceRemoteDraftState(remoteDraftState);
@@ -67,7 +67,6 @@ export function useCanvasDraftReloadHydration({
       }
       lastSavedSignatureRef.current = serializeCanvasDraftAuthoringBaselineSignature({
         record: remoteDraft,
-        semanticGraph: remoteDraftState.semanticGraph,
       });
       setDraftSession((currentSession) =>
         canvasDraftSession.workingSet.reconcileSnapshot(

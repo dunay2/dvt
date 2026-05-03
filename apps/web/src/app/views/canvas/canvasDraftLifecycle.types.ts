@@ -9,7 +9,7 @@ import type {
 } from './canvasAuthoringRuntime.types';
 import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
 import type { CanvasDraftRepository } from './canvasDraftRepository';
-import type { CanvasDraftReadModel } from './canvasDraftReadModel';
+import type { CanvasAuthoringDraftReadModel } from './canvasDraftReadModel';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type {
   CanvasDraftLifecycleCanonicalSnapshot,
@@ -23,7 +23,7 @@ export type GraphAuthorityQueryState = {
 };
 
 export type GraphDraftQueryState = {
-  data: CanvasDraftReadModel | undefined;
+  data: CanvasAuthoringDraftReadModel | undefined;
   isPending: boolean;
   isError: boolean;
 };
@@ -41,7 +41,7 @@ export type DraftAttemptRefs = {
 export type CanvasCurrentDraftPayloadDto = {
   graphNodes: CanvasDraftLifecycleGraphNode[];
   draftSession: CanvasDraftSession;
-  canvasDocument: NonNullable<CanvasDraftReadModel['record']>['draft']['canvas'] | null;
+  canvasDocument: NonNullable<CanvasAuthoringDraftReadModel['record']>['draft']['canvas'] | null;
   canonicalNodes: readonly CanonicalNode[];
   canonicalEdges: readonly CanonicalEdge[];
   workspaceScope: WorkspaceScope;
@@ -91,8 +91,6 @@ export type CanvasCreateCanvasDocumentCommandDto = {
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
   setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
   lastSavedSignatureRef: { current: string | null };
-  workspaceScope: WorkspaceScope;
-  previewProvenanceConfig: CanvasAuthoringRuntimePreviewProvenanceConfig;
 };
 
 export type CanvasDraftLifecycleDto = {

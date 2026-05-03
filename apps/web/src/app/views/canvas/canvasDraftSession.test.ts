@@ -1,29 +1,55 @@
 import { describe, expect, it } from 'vitest';
+import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
-import type { WorkspaceGraphDraftRecord } from '../../ports/workspace';
-import {
-  canvasDraftSession,
-} from './canvasDraftSession';
+import type { CanvasAuthoringDraftRecord } from './canvasDraftReadModel';
+import { canvasDraftSession } from './canvasDraftSession';
 
 function buildRemoteDraftRecord(
-  overrides?: Partial<WorkspaceGraphDraftRecord>
-): WorkspaceGraphDraftRecord {
+  overrides?: Partial<CanvasAuthoringDraftRecord>
+): CanvasAuthoringDraftRecord {
+  const defaultDraft = buildAuthoringDraft({
+    canvas: {
+      kind: 'transformation',
+      title: 'Main canvas',
+    },
+    nodeIds: ['node_1', 'node_2'],
+    nodePositions: {
+      node_1: { x: 0, y: 0 },
+      node_2: { x: 100, y: 0 },
+    },
+    edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
+  });
+
   return {
     revision: 'rev-1',
     savedAt: '2026-04-17T00:00:00Z',
-    draft: {
-      canvas: {
-        kind: 'transformation',
-        title: 'Main canvas',
-      },
-      nodeIds: ['node_1', 'node_2'],
-      nodePositions: {
-        node_1: { x: 0, y: 0 },
-        node_2: { x: 100, y: 0 },
-      },
-      edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
-    },
+    draft: defaultDraft,
     ...overrides,
+  };
+}
+
+function buildAuthoringDraft(
+  overrides: Pick<WorkspaceGraphAuthoringDraft, 'canvas' | 'nodeIds' | 'nodePositions'> & {
+    edges: ReadonlyArray<{ sourceId: string; targetId: string }>;
+  }
+): WorkspaceGraphAuthoringDraft {
+  return {
+    ...overrides,
+    nodes: overrides.nodeIds.map((nodeId) => ({
+      id: nodeId,
+      name: nodeId,
+      pluginId: 'dvt',
+      kind: 'source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+    })),
+    edges: overrides.edges.map((edge) => ({
+      id: `edge_${edge.sourceId}_${edge.targetId}`,
+      sourceId: edge.sourceId,
+      targetId: edge.targetId,
+      relation: 'lineage',
+    })),
   };
 }
 
@@ -47,7 +73,7 @@ describe('canvasDraftSession', () => {
   it('bootstraps to the persisted draft subset when a remote draft exists', () => {
     const session = canvasDraftSession.machine.bootstrap({
       remoteDraft: buildRemoteDraftRecord({
-        draft: {
+        draft: buildAuthoringDraft({
           canvas: {
             kind: 'transformation',
             title: 'Main canvas',
@@ -58,7 +84,7 @@ describe('canvasDraftSession', () => {
             node_remote_only: { x: 320, y: 160 },
           },
           edges: [{ sourceId: 'node_2', targetId: 'node_remote_only' }],
-        },
+        }),
       }),
       canonicalNodeIds: ['node_1', 'node_2'],
       canonicalEdges: [{ sourceId: 'node_1', targetId: 'node_2' }],
@@ -76,7 +102,7 @@ describe('canvasDraftSession', () => {
     const queuedSession = canvasDraftSession.workingSet.queueExplicitNodeIds(
       canvasDraftSession.machine.bootstrap({
         remoteDraft: buildRemoteDraftRecord({
-          draft: {
+          draft: buildAuthoringDraft({
             canvas: {
               kind: 'transformation',
               title: 'Main canvas',
@@ -86,7 +112,7 @@ describe('canvasDraftSession', () => {
               node_1: { x: 0, y: 0 },
             },
             edges: [],
-          },
+          }),
         }),
         canonicalNodeIds: ['node_1'],
         canonicalEdges: [],
@@ -109,7 +135,7 @@ describe('canvasDraftSession', () => {
   it('does not auto-merge unrelated new snapshot nodes into an active draft', () => {
     const session = canvasDraftSession.machine.bootstrap({
       remoteDraft: buildRemoteDraftRecord({
-        draft: {
+        draft: buildAuthoringDraft({
           canvas: {
             kind: 'transformation',
             title: 'Main canvas',
@@ -119,7 +145,7 @@ describe('canvasDraftSession', () => {
             node_1: { x: 0, y: 0 },
           },
           edges: [],
-        },
+        }),
       }),
       canonicalNodeIds: ['node_1'],
       canonicalEdges: [],
@@ -152,7 +178,7 @@ describe('canvasDraftSession', () => {
   it('preserves authoritative remote members when the current snapshot is behind', () => {
     const session = canvasDraftSession.machine.bootstrap({
       remoteDraft: buildRemoteDraftRecord({
-        draft: {
+        draft: buildAuthoringDraft({
           canvas: {
             kind: 'transformation',
             title: 'Main canvas',
@@ -163,7 +189,7 @@ describe('canvasDraftSession', () => {
             node_remote_only: { x: 220, y: 140 },
           },
           edges: [{ sourceId: 'node_1', targetId: 'node_remote_only' }],
-        },
+        }),
       }),
       canonicalNodeIds: ['node_1', 'node_remote_only'],
       canonicalEdges: [{ sourceId: 'node_1', targetId: 'node_remote_only' }],
@@ -183,7 +209,7 @@ describe('canvasDraftSession', () => {
   it('stores local overrides for visible persisted nodes without changing the working set', () => {
     const session = canvasDraftSession.machine.bootstrap({
       remoteDraft: buildRemoteDraftRecord({
-        draft: {
+        draft: buildAuthoringDraft({
           canvas: {
             kind: 'transformation',
             title: 'Main canvas',
@@ -193,7 +219,7 @@ describe('canvasDraftSession', () => {
             node_1: { x: 0, y: 0 },
           },
           edges: [],
-        },
+        }),
       }),
       canonicalNodeIds: ['node_1'],
       canonicalEdges: [],
@@ -292,5 +318,4 @@ describe('canvasDraftSession', () => {
       }),
     });
   });
-
 });

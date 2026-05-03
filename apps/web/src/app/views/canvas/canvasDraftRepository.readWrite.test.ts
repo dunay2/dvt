@@ -4,11 +4,12 @@ import type {
   IWorkspaceGraphDraftAuthoringPort,
   WorkspaceGraphDraftAuthoringSaveResult,
 } from '../../ports/workspaceGraphDraftAuthoring';
+import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 import { createCanvasDraftRepository } from './canvasDraftRepository';
 import {
+  buildAuthoringDraft,
   buildAuthoringPort,
   buildSaveInput,
-  PROJECTED_DRAFT,
   WORKSPACE_SCOPE,
 } from './canvasDraftRepository.test.fixtures';
 
@@ -33,101 +34,25 @@ function buildDeniedSaveResult(): WorkspaceGraphDraftAuthoringSaveResult {
 }
 
 type CanvasDraftRepository = ReturnType<typeof createCanvasDraftRepository>;
-type ProjectedReadRecord = Exclude<
+type AuthoringReadRecord = Exclude<
   Awaited<ReturnType<CanvasDraftRepository['readGraphDraft']>>,
   null
 >;
-type ProjectedReadState = Awaited<ReturnType<CanvasDraftRepository['readGraphDraftState']>>;
+type AuthoringReadState = Awaited<ReturnType<CanvasDraftRepository['readGraphDraftState']>>;
 
-function buildExpectedProjectedReadRecord(): ProjectedReadRecord {
+function buildExpectedAuthoringReadRecord(): AuthoringReadRecord {
   return {
     revision: 'rev-1',
     savedAt: '2026-04-18T00:00:00Z',
-    draft: {
-      canvas: {
-        kind: 'transformation',
-        title: 'Main canvas',
-      },
-      nodeIds: ['source-node', 'transform-node', 'sink-node'],
-      nodePositions: PROJECTED_DRAFT.nodePositions,
-      edges: [
-        { sourceId: 'source-node', targetId: 'transform-node' },
-        { sourceId: 'transform-node', targetId: 'sink-node' },
-      ],
-    },
+    draft: buildAuthoringDraft(),
   };
 }
 
-function buildExpectedProjectedSemanticGraph(): NonNullable<ProjectedReadState['semanticGraph']> {
-  return {
-    canonicalNodes: [
-      {
-        id: 'source-node',
-        name: 'Source',
-        pluginId: 'dvt',
-        kind: 'dvt:source',
-        role: 'input',
-        status: 'idle',
-        tags: [],
-        metadata: {
-          config: {
-            schema: 'raw',
-            table: 'orders',
-            alias: 'orders',
-          },
-        },
-      },
-      {
-        id: 'transform-node',
-        name: 'Transform',
-        pluginId: 'dvt',
-        kind: 'dvt:sql_transform',
-        role: 'transform',
-        status: 'idle',
-        tags: [],
-        path: 'models/transform.sql',
-        metadata: {
-          config: {
-            dialect: 'postgres',
-          },
-        },
-      },
-      {
-        id: 'sink-node',
-        name: 'Sink',
-        pluginId: 'dvt',
-        kind: 'dvt:sink',
-        role: 'output',
-        status: 'idle',
-        tags: [],
-        metadata: {
-          config: {
-            schema: 'analytics',
-            table: 'orders_dashboard',
-            materialization: 'table',
-            writeMode: 'replace',
-          },
-        },
-      },
-    ],
-    canonicalEdges: [
-      {
-        id: 'edge-1',
-        sourceId: 'source-node',
-        targetId: 'transform-node',
-        relation: 'lineage',
-      },
-      {
-        id: 'edge-2',
-        sourceId: 'transform-node',
-        targetId: 'sink-node',
-        relation: 'lineage',
-      },
-    ],
-  };
+function buildExpectedAuthoringSemanticGraph(): NonNullable<AuthoringReadState['semanticGraph']> {
+  return projectWorkspaceGraphAuthoringDraftSemanticGraph(buildAuthoringDraft());
 }
 
-function buildExpectedProjectedReadState(): ProjectedReadState {
+function buildExpectedAuthoringReadState(): AuthoringReadState {
   return {
     accessMode: 'writable' as const,
     capabilityReason: 'authorized' as const,
@@ -137,8 +62,8 @@ function buildExpectedProjectedReadState(): ProjectedReadState {
       storedSchemaVersion: 'workspace-graph-draft.v1',
       migrationState: 'native',
     },
-    record: buildExpectedProjectedReadRecord(),
-    semanticGraph: buildExpectedProjectedSemanticGraph(),
+    record: buildExpectedAuthoringReadRecord(),
+    semanticGraph: buildExpectedAuthoringSemanticGraph(),
   };
 }
 
@@ -164,16 +89,16 @@ async function expectSaveGraphDraftToFailClosed(
 }
 
 describe('canvasDraftRepository read/write', () => {
-  it('projects protected draft reads into the route-facing record model', async () => {
+  it('projects protected draft reads into the Canvas authoring record model', async () => {
     const repository = createCanvasDraftRepository(buildAuthoringPort());
 
     await expect(repository.readGraphDraftState()).resolves.toEqual(
-      buildExpectedProjectedReadState()
+      buildExpectedAuthoringReadState()
     );
-    await expect(repository.readGraphDraft()).resolves.toEqual(buildExpectedProjectedReadRecord());
+    await expect(repository.readGraphDraft()).resolves.toEqual(buildExpectedAuthoringReadRecord());
   });
 
-  it('builds typed authoring saves and preserves the projected draft locally on success', async () => {
+  it('builds typed authoring saves and preserves the authoring draft locally on success', async () => {
     const authoringPort = buildAuthoringPort();
     const repository = createCanvasDraftRepository(authoringPort);
 
@@ -182,7 +107,7 @@ describe('canvasDraftRepository read/write', () => {
       record: {
         revision: 'rev-2',
         savedAt: expect.any(String),
-        draft: PROJECTED_DRAFT,
+        draft: buildAuthoringDraft(),
       },
       remoteDraftState: {
         accessMode: 'writable',
@@ -192,12 +117,9 @@ describe('canvasDraftRepository read/write', () => {
         record: {
           revision: 'rev-2',
           savedAt: expect.any(String),
-          draft: PROJECTED_DRAFT,
+          draft: buildAuthoringDraft(),
         },
-        semanticGraph: {
-          canonicalNodes: buildSaveInput().draft.canonicalNodes,
-          canonicalEdges: buildSaveInput().draft.canonicalEdges,
-        },
+        semanticGraph: projectWorkspaceGraphAuthoringDraftSemanticGraph(buildAuthoringDraft()),
       },
     });
 
@@ -207,11 +129,11 @@ describe('canvasDraftRepository read/write', () => {
         idempotencyKey: 'idem-1',
         draft: expect.objectContaining({
           nodeIds: ['source-node', 'transform-node', 'sink-node'],
-          nodePositions: PROJECTED_DRAFT.nodePositions,
+          nodePositions: buildAuthoringDraft().nodePositions,
           nodes: expect.arrayContaining([
-            expect.objectContaining({ id: 'source-node', kind: 'dvt:source' }),
-            expect.objectContaining({ id: 'transform-node', kind: 'dvt:sql_transform' }),
-            expect.objectContaining({ id: 'sink-node', kind: 'dvt:sink' }),
+            expect.objectContaining({ id: 'source-node', kind: 'source' }),
+            expect.objectContaining({ id: 'transform-node', kind: 'sql_transform' }),
+            expect.objectContaining({ id: 'sink-node', kind: 'sink' }),
           ]),
           edges: [
             {

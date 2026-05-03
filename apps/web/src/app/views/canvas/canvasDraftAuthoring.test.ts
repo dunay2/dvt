@@ -1,32 +1,41 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  canPersistCanvasDraftAuthoringPayload,
+  buildCanvasAuthoringDraft,
+  canPersistWorkspaceGraphAuthoringDraft,
   serializeCanvasDraftAuthoringBaselineSignature,
   serializeCanvasDraftAuthoringSignature,
 } from './canvasDraftAuthoring';
-import { buildSaveInput } from './canvasDraftRepository.test.fixtures';
+import { buildAuthoringDraft, buildSaveInput } from './canvasDraftRepository.test.fixtures';
+import type { CanonicalNode } from '../../types/canonical';
+
+function toCanonicalNodes(draft: ReturnType<typeof buildAuthoringDraft>): CanonicalNode[] {
+  return draft.nodes.map((node) => ({
+    ...node,
+    kind: `${node.pluginId}:${node.kind}`,
+  })) as CanonicalNode[];
+}
 
 describe('canvasDraftAuthoring', () => {
-  it('returns false instead of throwing when projected drafts reference unknown canonical nodes', () => {
-    const payload = buildSaveInput().draft;
-    let result: boolean | undefined;
-
+  it('rejects authoring draft builds that reference unknown canonical nodes', () => {
+    const draft = buildAuthoringDraft();
     expect(() => {
-      result = canPersistCanvasDraftAuthoringPayload({
-        ...payload,
-        canonicalNodes: payload.canonicalNodes.filter((node) => node.id !== 'sink-node'),
+      buildCanvasAuthoringDraft({
+        canvas: draft.canvas,
+        nodeIds: draft.nodeIds,
+        nodePositions: draft.nodePositions,
+        visibleEdges: draft.edges,
+        canonicalNodes: toCanonicalNodes(draft).filter((node) => node.id !== 'sink-node'),
+        canonicalEdges: draft.edges,
       });
-    }).not.toThrow();
-
-    expect(result).toBe(false);
+    }).toThrow('Workspace graph draft references unknown node sink-node.');
   });
 
   it('changes the persistence signature when canonical node details change', () => {
-    const payload = buildSaveInput().draft;
-    const editedPayload = {
-      ...payload,
-      canonicalNodes: payload.canonicalNodes.map((node) =>
+    const draft = buildSaveInput().draft;
+    const editedDraft = {
+      ...draft,
+      nodes: draft.nodes.map((node) =>
         node.id === 'source-node'
           ? {
               ...node,
@@ -37,75 +46,95 @@ describe('canvasDraftAuthoring', () => {
       ),
     };
 
-    expect(serializeCanvasDraftAuthoringSignature(editedPayload)).not.toBe(
-      serializeCanvasDraftAuthoringSignature(payload)
+    expect(serializeCanvasDraftAuthoringSignature(editedDraft)).not.toBe(
+      serializeCanvasDraftAuthoringSignature(draft)
     );
   });
 
+  it('stores authoring node kinds as plugin-local kinds', () => {
+    const draft = buildAuthoringDraft();
+
+    const result = buildCanvasAuthoringDraft({
+      canvas: draft.canvas,
+      nodeIds: draft.nodeIds,
+      nodePositions: draft.nodePositions,
+      visibleEdges: draft.edges,
+      canonicalNodes: toCanonicalNodes(draft),
+      canonicalEdges: draft.edges,
+    });
+
+    expect(result.nodes.map((node) => node.kind)).toEqual(['source', 'sql_transform', 'sink']);
+  });
+
   it('keeps the persistence signature stable for layout-only position changes', () => {
-    const payload = buildSaveInput().draft;
-    const layoutOnlyPayload = {
-      ...payload,
-      projectedDraft: {
-        ...payload.projectedDraft,
-        nodePositions: {
-          ...payload.projectedDraft.nodePositions,
-          'source-node': { x: 640, y: 480 },
-        },
+    const draft = buildSaveInput().draft;
+    const layoutOnlyDraft = {
+      ...draft,
+      nodePositions: {
+        ...draft.nodePositions,
+        'source-node': { x: 640, y: 480 },
       },
     };
 
-    expect(serializeCanvasDraftAuthoringSignature(layoutOnlyPayload)).toBe(
-      serializeCanvasDraftAuthoringSignature(payload)
+    expect(serializeCanvasDraftAuthoringSignature(layoutOnlyDraft)).toBe(
+      serializeCanvasDraftAuthoringSignature(draft)
     );
   });
 
   it('keeps the persistence signature stable when edge transport order changes only', () => {
-    const payload = buildSaveInput().draft;
-    const reorderedEdgesPayload = {
-      ...payload,
-      projectedDraft: {
-        ...payload.projectedDraft,
-        edges: [...payload.projectedDraft.edges].reverse(),
-      },
+    const draft = buildSaveInput().draft;
+    const reorderedEdgesDraft = {
+      ...draft,
+      edges: [...draft.edges].reverse(),
     };
 
-    expect(serializeCanvasDraftAuthoringSignature(reorderedEdgesPayload)).toBe(
-      serializeCanvasDraftAuthoringSignature(payload)
+    expect(serializeCanvasDraftAuthoringSignature(reorderedEdgesDraft)).toBe(
+      serializeCanvasDraftAuthoringSignature(draft)
+    );
+  });
+
+  it('keeps the persistence signature stable when node transport order changes only', () => {
+    const draft = buildSaveInput().draft;
+    const reorderedNodesDraft = {
+      ...draft,
+      nodes: [...draft.nodes].reverse(),
+    };
+
+    expect(serializeCanvasDraftAuthoringSignature(reorderedNodesDraft)).toBe(
+      serializeCanvasDraftAuthoringSignature(draft)
     );
   });
 
   it('uses the same semantic signature policy for remote draft baselines', () => {
-    const payload = buildSaveInput().draft;
+    const draft = buildSaveInput().draft;
 
     expect(
       serializeCanvasDraftAuthoringBaselineSignature({
         record: {
           revision: 'rev-1',
           savedAt: '2026-04-25T00:00:00Z',
-          draft: payload.projectedDraft,
-        },
-        semanticGraph: {
-          canonicalNodes: payload.canonicalNodes,
-          canonicalEdges: payload.canonicalEdges,
+          draft,
         },
       })
-    ).toBe(serializeCanvasDraftAuthoringSignature(payload));
+    ).toBe(serializeCanvasDraftAuthoringSignature(draft));
   });
 
-  it('serializes missing canonical node references without throwing', () => {
-    const payload = buildSaveInput().draft;
+  it('returns false for structurally invalid authoring drafts without throwing', () => {
+    const draft = buildSaveInput().draft;
+    let result: boolean | undefined;
 
-    expect(() =>
-      serializeCanvasDraftAuthoringSignature({
-        ...payload,
-        canonicalNodes: payload.canonicalNodes.filter((node) => node.id !== 'source-node'),
-      })
+    expect(
+      () =>
+        (result = canPersistWorkspaceGraphAuthoringDraft({
+          ...draft,
+          nodePositions: {},
+        }))
     ).not.toThrow();
+    expect(result).toBe(false);
   });
 
   it('omits non-serializable metadata from semantic signatures without throwing', () => {
-    const payload = buildSaveInput().draft;
+    const draft = buildSaveInput().draft;
     const metadata: Record<string, unknown> = {
       config: {
         schema: 'raw',
@@ -117,8 +146,8 @@ describe('canvasDraftAuthoring', () => {
     metadata.self = metadata;
 
     const signature = serializeCanvasDraftAuthoringSignature({
-      ...payload,
-      canonicalNodes: payload.canonicalNodes.map((node) =>
+      ...draft,
+      nodes: draft.nodes.map((node) =>
         node.id === 'source-node'
           ? {
               ...node,

@@ -46,7 +46,9 @@ function assertDraftReadScope(
   });
 }
 
-function buildDeniedDraftReadResponse(reason: DraftDeniedReason) {
+function buildDeniedDraftReadResponse(
+  reason: DraftDeniedReason
+): ReturnType<typeof buildDraftReadDeniedResponse> {
   return buildDraftReadDeniedResponse(E2E_WORKSPACE_SESSION, {
     capability: {
       scope: E2E_WORKSPACE_SESSION,

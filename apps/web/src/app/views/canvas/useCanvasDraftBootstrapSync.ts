@@ -9,7 +9,7 @@ import type {
   GraphAuthorityQueryState,
 } from './canvasDraftLifecycle.types';
 import type { CanvasDraftLifecycleCanonicalSnapshot } from './canvasDraftLifecycleSnapshot';
-import type { WorkspaceGraphDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
+import type { CanvasAuthoringSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 import { useCanvasDraftBootstrapping } from './useCanvasDraftBootstrapping';
 import { useCanvasDraftCanonicalReconcile } from './useCanvasDraftCanonicalReconcile';
 import { useCanvasDraftReloadHydration } from './useCanvasDraftReloadHydration';
@@ -43,7 +43,7 @@ export function useCanvasDraftBootstrapSync({
   invalidateInFlightSaveAttempt,
   lastSavedSignatureRef,
 }: UseCanvasDraftBootstrapSyncArgs) {
-  const lastAuthoritativeSemanticGraphRef = useRef<WorkspaceGraphDraftSemanticGraph | null>(null);
+  const lastAuthoritativeSemanticGraphRef = useRef<CanvasAuthoringSemanticGraph | null>(null);
 
   const applyReloadedRemoteDraft = useCanvasDraftReloadHydration({
     draftQueryCache,

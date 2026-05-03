@@ -48,6 +48,7 @@ planning_type: proposal
 
 - [F-04 Frontend Data Boundary Hexagonal Convergence](./mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md)
 - [TF-E2 Canvas Target Architecture Execution Plan 2026-04-17](./mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md)
+- [TF-E2-A Authoring Draft Hard Cut Implementation Plan 2026-05-03](./mandatory/frontend-and-ux/tf-e2-a-authoring-draft-hard-cut-implementation-plan-20260503.md)
 - [TF-E2 project playground and multi-canvas host plan 2026-04-23](./mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md)
 - [TF-E2-K playground complete-cycle stories 2026-04-24](./mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md)
 - [TF-E2-E selected-closure UX proof stories 2026-04-23](./mandatory/frontend-and-ux/tf-e2-e-selected-closure-ux-proof-stories-20260423.md)

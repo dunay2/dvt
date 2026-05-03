@@ -1,24 +1,44 @@
 /**
- * Owned concern: provide deterministic structural signatures for projected
- * workspace graph drafts when semantic graph detail is unavailable.
+ * Owned concern: provide deterministic structural signatures for protected
+ * workspace graph authoring drafts from the aggregate's semantic truth.
  */
-import type { WorkspaceGraphDraft } from '../../ports/workspace';
+import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
-export function serializeWorkspaceGraphDraftStructuralSignature(
-  draft: WorkspaceGraphDraft
+import { toCanvasAuthoringSerializableValue } from './canvasAuthoringMetadata';
+
+function compareAuthoringEdges(
+  left: WorkspaceGraphAuthoringDraft['edges'][number],
+  right: WorkspaceGraphAuthoringDraft['edges'][number]
+): number {
+  return (
+    left.sourceId.localeCompare(right.sourceId) ||
+    left.targetId.localeCompare(right.targetId) ||
+    left.relation.localeCompare(right.relation) ||
+    left.id.localeCompare(right.id)
+  );
+}
+
+function compareAuthoringNodes(
+  left: WorkspaceGraphAuthoringDraft['nodes'][number],
+  right: WorkspaceGraphAuthoringDraft['nodes'][number]
+): number {
+  return left.id.localeCompare(right.id);
+}
+
+export function serializeWorkspaceGraphAuthoringDraftStructuralSignature(
+  draft: WorkspaceGraphAuthoringDraft
 ): string {
-  return JSON.stringify({
+  const nodes = [...draft.nodes].sort(compareAuthoringNodes);
+  const edges = [...draft.edges].sort(compareAuthoringEdges);
+  const signaturePayload = toCanvasAuthoringSerializableValue({
     canvas: {
       kind: draft.canvas.kind,
       title: draft.canvas.title,
     },
     nodeIds: [...draft.nodeIds],
-    edges: [...draft.edges]
-      .map((edge) => ({ sourceId: edge.sourceId, targetId: edge.targetId }))
-      .sort(
-        (left, right) =>
-          left.sourceId.localeCompare(right.sourceId) ||
-          left.targetId.localeCompare(right.targetId)
-      ),
+    nodes,
+    edges,
   });
+
+  return JSON.stringify(signaturePayload);
 }

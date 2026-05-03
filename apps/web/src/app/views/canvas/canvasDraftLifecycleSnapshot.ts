@@ -1,5 +1,10 @@
-import type { WorkspaceGraphDraft, WorkspaceGraphSnapshot } from '../../ports/workspace';
+import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
+
+import type { WorkspaceGraphSnapshot } from '../../ports/workspace';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { buildCanvasAuthoringDraft } from './canvasDraftAuthoring';
 import type { CanvasDraftEdge, CanvasDraftSession } from './canvasDraftSession';
+import type { CanvasAuthoringCanvasDocument } from './canvasDraftReadModel';
 
 export type CanvasDraftLifecycleCanonicalSnapshot = {
   canonicalNodeIds: string[];
@@ -66,43 +71,50 @@ export function buildCanonicalSnapshotFromWorkspaceSnapshot(
 export function buildCurrentDraftPayload(
   graphNodes: CanvasDraftLifecycleGraphNode[],
   draftSession: CanvasDraftSession,
-  canvasDocument: WorkspaceGraphDraft['canvas']
-): WorkspaceGraphDraft {
+  canvasDocument: CanvasAuthoringCanvasDocument,
+  canonicalNodes: readonly CanonicalNode[],
+  canonicalEdges: readonly CanonicalEdge[]
+): WorkspaceGraphAuthoringDraft {
   const currentNodePositions = Object.fromEntries(
     graphNodes.map((node) => [node.id, { x: node.position.x, y: node.position.y }])
   );
   const visibleNodeIds = draftSession.workingSet.visibleNodeIds.filter(
     (nodeId) => currentNodePositions[nodeId] != null
   );
-  const visibleNodeIdSet = new Set(visibleNodeIds);
+  const knownCanonicalNodeIds = new Set(canonicalNodes.map((node) => node.id));
+  const buildableNodeIds = visibleNodeIds.filter((nodeId) => knownCanonicalNodeIds.has(nodeId));
+  const visibleNodeIdSet = new Set(buildableNodeIds);
   const nodePositions: Record<string, { x: number; y: number }> = {};
 
-  for (const nodeId of visibleNodeIds) {
+  for (const nodeId of buildableNodeIds) {
     const position = currentNodePositions[nodeId];
     if (position != null) {
       nodePositions[nodeId] = position;
     }
   }
 
-  return {
+  return buildCanvasAuthoringDraft({
     canvas: {
       kind: canvasDocument.kind,
       title: canvasDocument.title,
     },
-    nodeIds: visibleNodeIds,
+    nodeIds: buildableNodeIds,
     nodePositions,
-    edges: draftSession.workingSet.visibleEdges.filter(
+    visibleEdges: draftSession.workingSet.visibleEdges.filter(
       (edge) => visibleNodeIdSet.has(edge.sourceId) && visibleNodeIdSet.has(edge.targetId)
     ),
-  };
+    canonicalNodes,
+    canonicalEdges,
+  });
 }
 
 export function isCurrentDraftProjectable(
-  currentDraftPayload: WorkspaceGraphDraft,
+  currentDraftPayload: WorkspaceGraphAuthoringDraft,
   draftSession: CanvasDraftSession
 ): boolean {
   return (
     currentDraftPayload.nodeIds.length === draftSession.workingSet.visibleNodeIds.length &&
+    currentDraftPayload.nodes.length === draftSession.workingSet.visibleNodeIds.length &&
     currentDraftPayload.edges.length === draftSession.workingSet.visibleEdges.length
   );
 }

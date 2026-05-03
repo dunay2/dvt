@@ -22,11 +22,7 @@ export function applyCanvasDocumentSaveSuccess({
 > & {
   result: SavedGraphDraftResult;
 }): void {
-  lastSavedSignatureRef.current = serializeCanvasDraftAuthoringSignature({
-    projectedDraft: result.record.draft,
-    canonicalNodes: [],
-    canonicalEdges: [],
-  });
+  lastSavedSignatureRef.current = serializeCanvasDraftAuthoringSignature(result.record.draft);
   draftQueryCache.replaceRemoteDraftState(result.remoteDraftState);
   setDraftSession((currentSession) =>
     canvasDraftSession.machine.applySaveSuccess(currentSession, result.record)

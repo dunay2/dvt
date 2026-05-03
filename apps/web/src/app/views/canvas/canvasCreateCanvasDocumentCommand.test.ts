@@ -1,30 +1,19 @@
 import type { SetStateAction } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { WorkspaceGraphDraft } from '../../ports/workspace';
+import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 import { serializeCanvasDraftAuthoringSignature } from './canvasDraftAuthoring';
 import { canvasDraftSession } from './canvasDraftSession';
 import {
-  createUnknownCanvasDraftReadModel,
-  createWritableCanvasDraftReadModel,
+  createUnknownCanvasAuthoringDraftReadModel,
+  createWritableCanvasAuthoringDraftReadModel,
 } from './canvasDraftReadModel';
 import { executeCreateCanvasDocumentCommand } from './canvasCreateCanvasDocumentCommand';
 import type { CanvasCreateCanvasDocumentCommandDto } from './canvasDraftLifecycle.types';
 
-const WORKSPACE_SCOPE = {
-  tenantId: 'tenant',
-  projectId: 'project',
-  environmentId: 'env',
-  targetAdapter: 'temporal' as const,
-};
-
-const PREVIEW_PROVENANCE_CONFIG = {
-  gitRepo: 'repo',
-  gitBranch: 'main',
-  gitSha: 'abc123',
-};
-
-function buildEmptyDraft(overrides: Partial<WorkspaceGraphDraft> = {}): WorkspaceGraphDraft {
+function buildEmptyDraft(
+  overrides: Partial<WorkspaceGraphAuthoringDraft> = {}
+): WorkspaceGraphAuthoringDraft {
   return {
     canvas: {
       kind: 'transformation',
@@ -32,6 +21,7 @@ function buildEmptyDraft(overrides: Partial<WorkspaceGraphDraft> = {}): Workspac
     },
     nodeIds: [],
     nodePositions: {},
+    nodes: [],
     edges: [],
     ...overrides,
   };
@@ -40,11 +30,11 @@ function buildEmptyDraft(overrides: Partial<WorkspaceGraphDraft> = {}): Workspac
 type DraftRecordFixture = {
   revision: string;
   savedAt: string;
-  draft: WorkspaceGraphDraft;
+  draft: WorkspaceGraphAuthoringDraft;
 };
 
 function buildRecord(
-  overrides: Partial<{ revision: string; draft: WorkspaceGraphDraft }> = {}
+  overrides: Partial<{ revision: string; draft: WorkspaceGraphAuthoringDraft }> = {}
 ): DraftRecordFixture {
   return {
     revision: overrides.revision ?? 'rev-1',
@@ -96,7 +86,7 @@ function buildCommandArgs(overrides: BuildCommandOverrides = {}): BuildCommandAr
       return {
         outcome: 'saved' as const,
         record,
-        remoteDraftState: createWritableCanvasDraftReadModel(record),
+        remoteDraftState: createWritableCanvasAuthoringDraftReadModel(record),
       };
     }),
   };
@@ -121,7 +111,7 @@ function buildCommandArgs(overrides: BuildCommandOverrides = {}): BuildCommandAr
       },
       draftRepository: effectiveDraftRepository,
       graphDraftQuery: {
-        data: createUnknownCanvasDraftReadModel(),
+        data: createUnknownCanvasAuthoringDraftReadModel(),
         isPending: false,
         isError: false,
       },
@@ -130,8 +120,6 @@ function buildCommandArgs(overrides: BuildCommandOverrides = {}): BuildCommandAr
       setDraftSession: effectiveSetDraftSession,
       setDraftSaveStatus: effectiveSetDraftSaveStatus,
       lastSavedSignatureRef: { current: null },
-      workspaceScope: WORKSPACE_SCOPE,
-      previewProvenanceConfig: PREVIEW_PROVENANCE_CONFIG,
       ...overrides,
     },
     draftRepository: effectiveDraftRepository,
@@ -153,19 +141,14 @@ describe('canvasCreateCanvasDocumentCommand', () => {
       expectedRevision: null,
       idempotencyKey: expect.any(String),
       draft: {
-        projectedDraft: {
-          canvas: {
-            kind: 'transformation',
-            title: 'Transformation canvas',
-          },
-          nodeIds: [],
-          nodePositions: {},
-          edges: [],
+        canvas: {
+          kind: 'transformation',
+          title: 'Transformation canvas',
         },
-        canonicalNodes: [],
-        canonicalEdges: [],
-        workspaceScope: WORKSPACE_SCOPE,
-        previewProvenanceConfig: PREVIEW_PROVENANCE_CONFIG,
+        nodeIds: [],
+        nodePositions: {},
+        nodes: [],
+        edges: [],
       },
     });
     expect(draftQueryCache.replaceRemoteDraftState).toHaveBeenCalledTimes(1);
@@ -181,11 +164,7 @@ describe('canvasCreateCanvasDocumentCommand', () => {
     expect(nextSession.syncState).toBe('editing');
     expect(nextSession.draftRevision).toBe('rev-saved');
     expect(args.lastSavedSignatureRef.current).toBe(
-      serializeCanvasDraftAuthoringSignature({
-        projectedDraft: buildEmptyDraft(),
-        canonicalNodes: [],
-        canonicalEdges: [],
-      })
+      serializeCanvasDraftAuthoringSignature(buildEmptyDraft())
     );
   });
 
@@ -199,7 +178,7 @@ describe('canvasCreateCanvasDocumentCommand', () => {
           saveGraphDraft: vi.fn(async () => ({
             outcome: 'conflict' as const,
             current: currentRecord,
-            remoteDraftState: createWritableCanvasDraftReadModel(currentRecord),
+            remoteDraftState: createWritableCanvasAuthoringDraftReadModel(currentRecord),
           })),
         },
       });
@@ -229,10 +208,32 @@ describe('canvasCreateCanvasDocumentCommand', () => {
         nodePositions: {
           src_orders: { x: 120, y: 80 },
         },
+        nodes: [
+          {
+            id: 'src_orders',
+            name: 'src_orders',
+            pluginId: 'dvt',
+            kind: 'source',
+            role: 'input',
+            status: 'idle',
+            tags: [],
+          },
+          {
+            id: 'model_orders',
+            name: 'model_orders',
+            pluginId: 'dvt',
+            kind: 'sql_transform',
+            role: 'transform',
+            status: 'idle',
+            tags: [],
+          },
+        ],
         edges: [
           {
+            id: 'edge-src-model',
             sourceId: 'src_orders',
             targetId: 'model_orders',
+            relation: 'lineage',
           },
         ],
       }),
@@ -244,7 +245,7 @@ describe('canvasCreateCanvasDocumentCommand', () => {
         mode: 'replace_current',
       },
       graphDraftQuery: {
-        data: createWritableCanvasDraftReadModel(existingRecord),
+        data: createWritableCanvasAuthoringDraftReadModel(existingRecord),
         isPending: false,
         isError: false,
       },
@@ -257,19 +258,14 @@ describe('canvasCreateCanvasDocumentCommand', () => {
       expectedRevision: 'rev-existing',
       idempotencyKey: expect.any(String),
       draft: {
-        projectedDraft: {
-          canvas: {
-            kind: 'dbt',
-            title: 'DBT canvas',
-          },
-          nodeIds: [],
-          nodePositions: {},
-          edges: [],
+        canvas: {
+          kind: 'dbt',
+          title: 'DBT canvas',
         },
-        canonicalNodes: [],
-        canonicalEdges: [],
-        workspaceScope: WORKSPACE_SCOPE,
-        previewProvenanceConfig: PREVIEW_PROVENANCE_CONFIG,
+        nodeIds: [],
+        nodePositions: {},
+        nodes: [],
+        edges: [],
       },
     });
     expect(draftQueryCache.replaceRemoteDraftState).toHaveBeenCalledTimes(1);
@@ -285,7 +281,7 @@ describe('canvasCreateCanvasDocumentCommand', () => {
       name: 'draft query is still pending',
       overrides: {
         graphDraftQuery: {
-          data: createUnknownCanvasDraftReadModel(),
+          data: createUnknownCanvasAuthoringDraftReadModel(),
           isPending: true,
           isError: false,
         },
@@ -295,7 +291,7 @@ describe('canvasCreateCanvasDocumentCommand', () => {
       name: 'draft query is in error',
       overrides: {
         graphDraftQuery: {
-          data: createUnknownCanvasDraftReadModel(),
+          data: createUnknownCanvasAuthoringDraftReadModel(),
           isPending: false,
           isError: true,
         },
@@ -305,7 +301,7 @@ describe('canvasCreateCanvasDocumentCommand', () => {
       name: 'an authoritative draft already exists',
       overrides: {
         graphDraftQuery: {
-          data: createWritableCanvasDraftReadModel(buildRecord()),
+          data: createWritableCanvasAuthoringDraftReadModel(buildRecord()),
           isPending: false,
           isError: false,
         },

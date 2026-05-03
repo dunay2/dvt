@@ -2,7 +2,7 @@
 import { canvasViewCopy } from './copy';
 import type { CanvasWorkbenchSurfaceArgs } from './canvasCenterSurface.types';
 import type { CanvasKindRegistration, NodeKindRegistration } from '../../plugins/nodeTypeContracts';
-import type { WorkspaceGraphDraft } from '../../ports/workspace';
+import type { CanvasAuthoringCanvasDocument } from './canvasDraftReadModel';
 
 type CreateCanvasDocumentCommand = CanvasWorkbenchSurfaceArgs['onCreateCanvasDocument'];
 type CreateAuthoringNodeCommand = CanvasWorkbenchSurfaceArgs['onCreateAuthoringNode'];
@@ -24,7 +24,7 @@ export type CanvasHostCycleState =
     }
   | {
       kind: 'graph_ready';
-      canvasDocument: WorkspaceGraphDraft['canvas'];
+      canvasDocument: CanvasAuthoringCanvasDocument;
     };
 
 function resolveCanvasKindRegistration(

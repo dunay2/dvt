@@ -1,13 +1,13 @@
 /** Owned concern: derive host-visible Canvas tab state from the authoritative workspace draft. */
 import type { CanvasKindRegistration } from '../../plugins/nodeTypeContracts';
-import type { WorkspaceGraphDraft } from '../../ports/workspace';
+import type { CanvasAuthoringCanvasDocument } from './canvasDraftReadModel';
 
 export const WORKSPACE_DRAFT_CANVAS_TAB_ID = 'workspace-draft-canvas';
 
 export type CanvasPlaygroundTab = Readonly<{
   id: typeof WORKSPACE_DRAFT_CANVAS_TAB_ID;
   title: string;
-  kind: WorkspaceGraphDraft['canvas']['kind'];
+  kind: CanvasAuthoringCanvasDocument['kind'];
   kindLabel: string;
   source: 'workspace_draft';
 }>;
@@ -18,7 +18,7 @@ export type CanvasPlaygroundTabState = Readonly<{
 }>;
 
 function resolveCanvasKindLabel(args: {
-  canvasKind: WorkspaceGraphDraft['canvas']['kind'];
+  canvasKind: CanvasAuthoringCanvasDocument['kind'];
   availableCanvasKinds: readonly CanvasKindRegistration[];
 }): string {
   const { canvasKind, availableCanvasKinds } = args;
@@ -29,7 +29,7 @@ function resolveCanvasKindLabel(args: {
 }
 
 export function deriveCanvasPlaygroundTabState(args: {
-  canvasDocument: WorkspaceGraphDraft['canvas'] | null;
+  canvasDocument: CanvasAuthoringCanvasDocument | null;
   availableCanvasKinds: readonly CanvasKindRegistration[];
 }): CanvasPlaygroundTabState {
   const { canvasDocument, availableCanvasKinds } = args;
