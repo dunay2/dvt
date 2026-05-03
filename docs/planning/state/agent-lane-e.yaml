@@ -717,27 +717,35 @@ tasks:
     priority: P0
     status: in_progress
     objective: >-
-      finish decomposing the current appStore surface into domain-scoped stores (shellStore,
-      sessionStore, graphStore, runStore, statusStore).
+      close store domain ownership after the former appStore surface was removed, reconciling active
+      docs, Lane E tracking, and the remaining mixed store fields in session, Canvas, execution,
+      layout, status, and authorization ownership.
     dependency: F-04
     target: >-
-      Each store has a single declared responsibility. Cross-store reads are explicit. No store
-      reads mock data directly. appStore stops acting as a mixed shell, canvas, run, and permission
-      registry.
+      Each active store field has a single declared DDD owner and command/query role. Cross-store
+      reads are explicit through route facades or ports. Active docs no longer describe
+      `appStore.ts` as live runtime truth, and remaining status/execution/authorization drift is
+      either removed or captured as a governed follow-up.
     complexity: M
     effort_points: 5
-    progress_pct: 90
+    progress_pct: 70
     evidence_refs:
       - docs/planning/proposals/frontend-roadmap-20260219.md
       - docs/planning/state/lane-e-shell-baseline-target-guide.md
       - docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md
       - apps/web/src/app/stores/sessionStore.ts
-      - apps/web/src/app/stores/appStore.ts
+      - apps/web/src/app/stores/canvasInteractionStore.ts
+      - apps/web/src/app/stores/executionStore.ts
+      - apps/web/src/app/stores/uiLayoutStore.ts
     status_reason: >-
-      A dedicated sessionStore already exists, but appStore still concentrates shell layout, canvas
-      interaction, run state, and permissions into one mutable surface.
-    last_verified: '2026-04-03'
+      `appStore.ts` is no longer present in active `apps/web` code and architecture tests guard
+      against its return. The live F-05 gap is now truth reconciliation plus the remaining mixed
+      store fields: `uiLayoutStore.connectionStatus` carries platform status under shell layout, and
+      `executionStore` still combines current run/plan evidence with permission projection. The
+      2026-05-03 closure plan defines the governed sequence before implementation changes.
+    last_verified: '2026-05-03'
   - task_id: F-05-CANVAS-CTRL-DOC
     parent_task: F-05
     priority: P0

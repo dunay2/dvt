@@ -542,6 +542,116 @@ redGreenCycles:
       - scripts/run-canvas-first-authoring-live-proof.cjs
     greenTest: pnpm --filter @dvt/web test:e2e:first-authoring:live
 symbols:
+  - name: DragPoint
+    path: apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
+    dddOwner: Canvas happy-path draggable Cypress proof
+    cqRails:
+      - CreateCanvas
+      - CreateCanvasNode
+      - PersistCanvasLayout
+    fowlerSignals:
+      - browser-level regression proof
+      - writable Canvas happy path
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - canvasDraftSession.test.ts
+  - name: addSourceNodeIfMissing
+    path: apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
+    dddOwner: Canvas happy-path draggable Cypress proof
+    cqRails:
+      - CreateCanvasNode
+    fowlerSignals:
+      - browser-level regression proof
+      - writable Canvas happy path
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - canvasDraftSession.test.ts
+  - name: assertSourceNodeMovedFrom
+    path: apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
+    dddOwner: Canvas happy-path draggable Cypress proof
+    cqRails:
+      - PersistCanvasLayout
+    fowlerSignals:
+      - browser-level regression proof
+      - writable Canvas happy path
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - canvasDraftSession.test.ts
+  - name: buildMouseDragEvent
+    path: apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
+    dddOwner: Canvas happy-path draggable Cypress proof
+    cqRails:
+      - PersistCanvasLayout
+    fowlerSignals:
+      - browser-level regression proof
+      - writable Canvas happy path
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - canvasDraftSession.test.ts
+  - name: createTransformationCanvasIfEmpty
+    path: apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
+    dddOwner: Canvas happy-path draggable Cypress proof
+    cqRails:
+      - CreateCanvas
+    fowlerSignals:
+      - browser-level regression proof
+      - writable Canvas happy path
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - canvasDraftSession.test.ts
+  - name: dispatchMouseDragEvent
+    path: apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
+    dddOwner: Canvas happy-path draggable Cypress proof
+    cqRails:
+      - PersistCanvasLayout
+    fowlerSignals:
+      - browser-level regression proof
+      - writable Canvas happy path
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - canvasDraftSession.test.ts
+  - name: dragSourceNode
+    path: apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
+    dddOwner: Canvas happy-path draggable Cypress proof
+    cqRails:
+      - PersistCanvasLayout
+    fowlerSignals:
+      - browser-level regression proof
+      - writable Canvas happy path
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - canvasDraftSession.test.ts
+  - name: stubRuntimeCapabilities
+    path: apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
+    dddOwner: Canvas happy-path draggable Cypress proof
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - browser-level regression proof
+      - protected backend capability stub
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - canvasDraftSession.test.ts
+  - name: visitCanvasWithStubbedBackend
+    path: apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
+    dddOwner: Canvas happy-path draggable Cypress proof
+    cqRails:
+      - GetWorkspaceGraphDraft
+    fowlerSignals:
+      - browser-level regression proof
+      - protected backend capability stub
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - canvasDraftSession.test.ts
   - name: FeatureImplementationGuard
     path: scripts/check-feature-mechanization.cjs
     dddOwner: Repository feature mechanization guard

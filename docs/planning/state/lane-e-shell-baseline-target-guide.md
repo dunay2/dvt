@@ -133,17 +133,22 @@ Primary capabilities:
 
 ### Current Shell Composition
 
-| Component                          | Current responsibility                                                                       | Location                                         |
-| ---------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| `Root`                             | Mounts top bar, left navigation, resizable workspace, and console drawer                     | `apps/web/src/app/Root.tsx`                      |
-| `TopAppBar`                        | Mixes primary context (tenant/project/env/status) and secondary controls (panels/grid/focus) | `apps/web/src/app/components/TopAppBar.tsx`      |
-| `LeftNavigation`                   | Icon-only navigation with tooltips and route links                                           | `apps/web/src/app/components/LeftNavigation.tsx` |
-| `useAppStore`                      | Single global Zustand store for shell, graph, run, status, and session concerns              | `apps/web/src/app/stores/appStore.ts`            |
-| Views (`Canvas`, `RunsView`, etc.) | Consume state plus direct mock datasets                                                      | `apps/web/src/app/views/*`                       |
+| Component                          | Current responsibility                                                                       | Location                                            |
+| ---------------------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `Root`                             | Mounts top bar, left navigation, resizable workspace, and console drawer                     | `apps/web/src/app/Root.tsx`                         |
+| `TopAppBar`                        | Mixes primary context (tenant/project/env/status) and secondary controls (panels/grid/focus) | `apps/web/src/app/components/TopAppBar.tsx`         |
+| `LeftNavigation`                   | Icon-only navigation with tooltips and route links                                           | `apps/web/src/app/components/LeftNavigation.tsx`    |
+| `sessionStore`                     | Workspace scope and run context construction                                                 | `apps/web/src/app/stores/sessionStore.ts`           |
+| `canvasInteractionStore`           | Canvas interaction state, overlays, persisted viewport, and node positions                   | `apps/web/src/app/stores/canvasInteractionStore.ts` |
+| `executionStore`                   | Current run/plan evidence plus permissions projection                                        | `apps/web/src/app/stores/executionStore.ts`         |
+| `uiLayoutStore`                    | Shell panels, tabs, focus mode, visual preferences, and current status drift                 | `apps/web/src/app/stores/uiLayoutStore.ts`          |
+| Views (`Canvas`, `RunsView`, etc.) | Consume state plus direct mock datasets                                                      | `apps/web/src/app/views/*`                          |
 
 ### Current Data And Dependency Shape
 
-- Store boundary is broad (`useAppStore` owns many domains).
+- The former `useAppStore` monolith has been removed from active runtime code.
+- Store ownership is now split across four stores, but residual mixed fields remain:
+  `uiLayoutStore.connectionStatus` and `executionStore.userPermissions`.
 - Several views import mock data directly from `app/data`.
 - Top bar currently carries high control density that competes with vertical workspace.
 
@@ -154,10 +159,12 @@ flowchart LR
   Root --> Workspace[Canvas and Views]
   Root --> Console
 
-  TopAppBar --> AppStore[useAppStore]
-  LeftNavigation --> AppStore
-  Workspace --> AppStore
-  Console --> AppStore
+  TopAppBar --> Session[sessionStore]
+  TopAppBar --> Layout[uiLayoutStore]
+  Workspace --> Session
+  Workspace --> CanvasStore[canvasInteractionStore]
+  Workspace --> Execution[executionStore]
+  Console --> Layout
 
   Workspace --> MockData[app/data/mockDbtData.ts]
 ```
@@ -166,7 +173,7 @@ flowchart LR
 
 1. UI noise in the top bar reduces scan speed and canvas prominence.
 2. Direct view-to-mock imports make API migration harder (`F-04` blocker).
-3. Global store coupling increases regression risk when changing one domain.
+3. Residual store coupling remains around platform connection status and permission projection.
 
 ## Target State (To-Be)
 
@@ -187,7 +194,8 @@ flowchart LR
 
 1. `Views -> Services -> API Client` (no direct fetch in views).
 2. Explicit `VITE_DATA_SOURCE=mock|api` boundary (`F-04`).
-3. Domain stores by responsibility (`shell/session/graph/run/status`) (`F-05`).
+3. Store domain ownership closure for session, Canvas interaction, shell layout, runtime evidence,
+   platform status, and authorization projections (`F-05`).
 4. Query orchestration through TanStack Query (`F-06`).
 5. Startup bootstrap is composition-owned rather than distributed across route shells, route views,
    and fallback boundaries.
@@ -281,7 +289,7 @@ flowchart TD
 2. Add typed API client for health endpoints (`F-02`).
 3. Bind health state to shell status UI (`F-03`).
 4. Introduce data source flag and service boundary (`F-04`).
-5. Split store by domain responsibilities (`F-05`).
+5. Close store domain ownership and stale `appStore` documentation drift (`F-05`).
 6. Standardize remote data flow with query patterns (`F-06`).
 
 ```mermaid
@@ -290,7 +298,7 @@ flowchart TD
   F02[F-02 Typed platform client]
   F03[F-03 Real health wiring]
   F04[F-04 Data-source split]
-  F05[F-05 Store decomposition]
+  F05[F-05 Store ownership closure]
   F06[F-06 Query layer]
 
   F01 --> F03
@@ -300,12 +308,12 @@ flowchart TD
 
 ## Component Decomposition Plan
 
-| Current component           | Decomposes into                                                       | Why                                                    | Affects                                                         |
-| --------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------- |
-| `TopAppBar`                 | `PrimaryTopBar` + `ShellContextMenu`                                  | Reduce persistent noise and isolate secondary controls | Shell layout, keyboard navigation, focus mode and panel toggles |
-| `useAppStore`               | `shellStore`, `sessionStore`, `graphStore`, `runStore`, `statusStore` | Domain isolation and safer changes                     | All shell/view selectors and actions                            |
-| View direct mock imports    | `services/*` + typed adapters                                         | Remove direct data coupling from views                 | Canvas, Runs, Diff, Plugins, Admin                              |
-| Health status display logic | `platform-client` + health query/service                              | Real backend signal in top bar/banner                  | Status chips, offline/degraded behavior                         |
+| Current component           | Decomposes into                                                                                       | Why                                                    | Affects                                                          |
+| --------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------- |
+| `TopAppBar`                 | `PrimaryTopBar` + `ShellContextMenu`                                                                  | Reduce persistent noise and isolate secondary controls | Shell layout, keyboard navigation, focus mode and panel toggles  |
+| Store ownership drift       | `sessionStore`, `canvasInteractionStore`, `uiLayoutStore`, execution/status/authorization projections | Domain isolation and safer changes                     | Shell/view selectors, Canvas facade, status display, permissions |
+| View direct mock imports    | `services/*` + typed adapters                                                                         | Remove direct data coupling from views                 | Canvas, Runs, Diff, Plugins, Admin                               |
+| Health status display logic | `platform-client` + health query/service                                                              | Real backend signal in top bar/banner                  | Status chips, offline/degraded behavior                          |
 
 ## Impact Analysis
 
@@ -314,7 +322,10 @@ flowchart TD
 - `apps/web/src/app/Root.tsx`
 - `apps/web/src/app/components/TopAppBar.tsx`
 - `apps/web/src/app/components/LeftNavigation.tsx`
-- `apps/web/src/app/stores/appStore.ts` (and future store split files)
+- `apps/web/src/app/stores/sessionStore.ts`
+- `apps/web/src/app/stores/canvasInteractionStore.ts`
+- `apps/web/src/app/stores/executionStore.ts`
+- `apps/web/src/app/stores/uiLayoutStore.ts`
 - `apps/web/src/app/views/*` that currently import mock data directly
 - `apps/web/src/app/data/*` (consumer migration, not removal by default)
 

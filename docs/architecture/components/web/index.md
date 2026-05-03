@@ -44,6 +44,7 @@ out of the active tree.
   [Frontend runtime contract user manual](./runs/frontend-runtime-contract-user-manual.md)
 - cross-cutting UX:
   [UX implementation guide](./ux-implementation-guide.md),
+  [Web store domain ownership component](./web-store-domain-ownership-component.md),
   [Workbench UI contract and component inventory](./workbench-ui-contract-and-component-inventory.md),
   [Library and open-source reference stack](./library-and-open-source-reference-stack.md),
   [Plugin Contributions Developer Guide](./plugin-contributions-developer-guide.md)

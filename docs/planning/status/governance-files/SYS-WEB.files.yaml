@@ -2,7 +2,7 @@ version: 1
 shardId: SYS-WEB
 generatedFrom: git ls-files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-fileCount: 797
+fileCount: 798
 files:
   - fileId: F-76C868437FA7
     pathHash: 0e84cc225ac7ad73b75b40d07ec39fc3d385993334ceac8c74e6901de6549d41
@@ -140,6 +140,32 @@ files:
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
     stateFingerprint: 8bc61cb787ccb14693b4d009bc0c150cd2092759a8d42a4b5cd22bda95eff35a
     path: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    owningUnit: SYS-WEB-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-WEB-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-WEB
+      - SYS-WEB-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ENTRY
+    cqRails: UI actions and API queries
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+  - fileId: F-FE8B4ADB66FF
+    pathHash: 33c795eed2c355c506d8d440be1536d2b80617b78c901c70338b3340d70a66d6
+    contentHash: 2fed51da1f0fd2094b47f1d0c15af26a524a8f40e30af6b3db86e3f159a348f2
+    governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
+    stateFingerprint: 72d40e003b8a650b96bc497e8166977582eb82e15adf6d01bb5572efe26fe3c8
+    path: apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -12382,9 +12408,9 @@ files:
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-1845A445CDF7
     pathHash: bcaf6b31503f19c752427244c556090c0703eb5e19a4392478f5946399868159
-    contentHash: a74d568b3a67533230e6302c365827d3788c6ad1d392aeee8b8da4838c05ed93
+    contentHash: bbc3062a57cc6071178e40c1d55dad50ff492403173050ddd9e0f9fd2df0b373
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: a9b50a7e7ef6938af4eb8b1dc66a27de94f0ffc5b0eb8e53c642bef3b71a8911
+    stateFingerprint: 0916df5fdfacd9304b264ea3b7c09690afa07ce496eadb8f5e17e88de15ef54d
     path: apps/web/src/app/views/canvas/canvasDraftSession.test.ts
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT
@@ -12486,9 +12512,9 @@ files:
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-D914329F7320
     pathHash: 58f07aa132e1588d86bb76c9606c845ad9dd61b50f73c8f4af9189ac46a1c29b
-    contentHash: b7624a59638b915faa248c1ba2325d515faab500059a2ec17ef4ad063e2d41df
+    contentHash: ace981b625d16488cf6efd7b0ce9239274297b300c4ee06d90145227652c9275
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 0d8b4895016b28d26654380e717f404b3b26ac0b81e5332738f62641d7ce7794
+    stateFingerprint: 143b340f633992556ed6198a4cd4f1610fd0c1ecce40b1ab56a0527eb18ac54f
     path: apps/web/src/app/views/canvas/canvasDraftSessionMachine.ts
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT
