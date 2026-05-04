@@ -32333,9 +32333,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-FA77E00DF09A
     pathHash: 803bc970219794af1c256aca0e00cea9733ea7a06047ace74b8fcb387f95cc82
-    contentHash: 26632c16babe97f704e468ca8064df6fe580b260023d943cd8fb1bb27f7cde82
+    contentHash: 53736c24e62e20d737133cdc10388814677d294d0495540257ad05413ede5f37
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: cf96112251d859a4ec2a153787181d704545c537599e31781f76ee0e9974e2bf
+    stateFingerprint: 22e36cc8544d7587b85bb82ad36193d1895e44f78e01f3e158c210b602db53cd
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
