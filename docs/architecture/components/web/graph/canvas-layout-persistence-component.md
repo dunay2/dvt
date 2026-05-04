@@ -20,6 +20,34 @@ This distinction matters because Canvas has two truths:
 - graph meaning and draft persistence belong to the protected authoring draft;
 - viewport and card coordinates belong to route-local layout state.
 
+## Governing Sources
+
+- `AGENTS.md`
+- `docs/planning/status/governance-document-rule-inventory.md`
+- `docs/guides/ai-work-protocol.md`
+- `docs/architecture/command-query-rail-governance.md`
+- `docs/architecture/fowler-opportunity-planning-governance.md`
+- `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
+- `docs/architecture/components/web/graph/canvas-layout-persistence-user-stories.md`
+- `buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md`
+
+## Owned Concern
+
+Owned concern: persist route-local Canvas viewport and coordinate projection
+state without becoming protected draft authority.
+
+Canonical local C&Q catalog:
+`docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`.
+
+## Local Traceability
+
+- C&Q catalog:
+  `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
+- User stories:
+  `docs/architecture/components/web/graph/canvas-layout-persistence-user-stories.md`
+- Fowler mailbox:
+  `buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md`
+
 ## Public API
 
 | API                                          | Owner                                 | Responsibility                                                                               |
@@ -72,6 +100,9 @@ This distinction matters because Canvas has two truths:
   layout is a coordinate projection, not a node replacement authority.
 
 ## Command And Query Rails
+
+Canonical local catalog:
+`docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`.
 
 | Rail                                 | Type    | DDD owner                                | Application surface                              | Negative coverage                                                       |
 | ------------------------------------ | ------- | ---------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------- |
@@ -199,7 +230,7 @@ auto-layout coordinates, and semantic boundary rules.
   that already contains local card positions.
 - Do not re-enable drag gestures outside `CanvasViewport` permission policy.
 - Do not store grid visibility, grid color, or snap preferences in protected
-  graph drafts.
+  graph drafts; they are explicitly not in protected graph drafts.
 - Do not let auto-layout replace node data/type fields or reintroduce
   handle-only dragging.
 - Do not treat Canvas grid visibility, grid color, or snap-to-grid as draft

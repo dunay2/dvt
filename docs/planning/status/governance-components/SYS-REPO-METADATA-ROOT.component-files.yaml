@@ -7,7 +7,7 @@ governanceState: governed
 dddOwner: INFRA
 cqRails: none - repository metadata
 childrenRequired: true
-fileCount: 116
+fileCount: 117
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -454,6 +454,13 @@ files:
     isLegacy: false
   - path: buzon/20260503-tf-e2-a-fowler-hard-qa-review-followup.md
     fileId: F-F6722E96C038
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md
+    fileId: F-C87BC51680F3
     owningUnit: SYS-REPO-METADATA-ROOT
     unitStatus: canonical
     governanceState: governed

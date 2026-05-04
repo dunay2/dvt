@@ -25,6 +25,9 @@ that does not make the route a global shell destination.
 - `docs/architecture/reference-architecture.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
+- `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
+- `docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md`
+- `buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-tabs-placement-design-plan-20260503.md`
 
 ## Owned Concern
@@ -39,6 +42,15 @@ The component does not own:
 - internals of Code, Lineage, Diff, Artifacts, or Runs views;
 - backend routes, contracts, adapters, or storage;
 - Project Assets persistence or source import provider expansion.
+
+## Local Traceability
+
+- C&Q catalog:
+  `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
+- User stories:
+  `docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md`
+- Fowler mailbox:
+  `buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md`
 
 ## Public API
 
@@ -58,6 +70,9 @@ The component does not own:
 | `CanvasWorkbenchTabPanel`                         | `CanvasWorkbenchTabPanel.tsx`  | Renders the selected Canvas tab view or unavailable recovery surface.  |
 
 ## Command And Query Rails
+
+Canonical local catalog:
+`docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`.
 
 | Rail                            | Type    | DDD owner or read model              | Application port                          | Adapter surface                           | Negative tests                                                            |
 | ------------------------------- | ------- | ------------------------------------ | ----------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------- |
@@ -91,6 +106,9 @@ The component does not own:
 - `CanvasPlaygroundTabStrip` owns Canvas document tabs only.
 - `CanvasWorkbenchTabStrip` owns Graph/Code/Lineage/Diff/Artifacts/Runs view
   tabs only.
+- `CanvasWorkbenchTabStrip` must render those tabs as a horizontal,
+  header-scoped strip with readable labels; it must not compress labels into
+  truncated shell-rail captions.
 - `/canvas` resolves to Graph.
 - `/canvas/:workbenchTab` resolves only known Canvas tab IDs.
 - Unknown tab route segments render unavailable state with a Graph recovery
@@ -230,7 +248,8 @@ projection, tab rendering, and Canvas-scoped Runs.
   shell nav and `CanvasPlaygroundTabStrip`.
 - `routes.test.tsx` proves `/canvas/:workbenchTab` is registered and retired
   global Canvas-dependent paths are absent.
-- `canvas-workbench-tabs.cy.ts` proves the browser user flow for scoped tabs.
+- `canvas-workbench-tabs.cy.ts` proves the browser user flow, shell-rail
+  exclusion, header-scoped geometry, and unclipped tab labels for scoped tabs.
 
 ## Negative Coverage
 
@@ -242,7 +261,9 @@ projection, tab rendering, and Canvas-scoped Runs.
 - Unknown `/canvas/:workbenchTab` fails closed.
 - Unavailable Canvas context renders Graph recovery rather than fake tab data.
 - Cypress verifies the shell does not expose retired global Code, Lineage,
-  Diff, or Artifacts links.
+  Diff, or Artifacts links or captions.
+- Cypress verifies the Canvas workbench tabs remain horizontal, route-scoped,
+  and readable instead of being compressed into abbreviated labels.
 
 ## Current-To-Target Map
 

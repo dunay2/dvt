@@ -18,14 +18,36 @@ describe('Canvas workbench tabs architecture', () => {
       ),
       'utf8'
     );
+    const commandQueryCatalog = readFileSync(
+      path.join(
+        APP_ROOT,
+        '../../../../docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md'
+      ),
+      'utf8'
+    );
+    const userStories = readFileSync(
+      path.join(
+        APP_ROOT,
+        '../../../../docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md'
+      ),
+      'utf8'
+    );
     const mailboxReview = readFileSync(
-      path.join(APP_ROOT, '../../../../buzon/20260503-branch-fowler-hard-qa-review.md'),
+      path.join(
+        APP_ROOT,
+        '../../../../buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md'
+      ),
+      'utf8'
+    );
+    const cypressSpec = readFileSync(
+      path.join(APP_ROOT, '../../cypress/e2e/canvas/canvas-workbench-tabs.cy.ts'),
       'utf8'
     );
 
     for (const requiredSection of [
       '## Public API',
       '## Invariants',
+      '## Local Traceability',
       '## Transitions',
       '## Consumers',
       '## User Stories',
@@ -37,19 +59,52 @@ describe('Canvas workbench tabs architecture', () => {
       'CanvasWorkbenchTabsReadModel',
       'US-CANVAS-WORKBENCH-001',
       'US-CANVAS-WORKBENCH-007',
+      'canvas-workbench-command-query-catalog.md',
+      'canvas-workbench-tabs-user-stories.md',
+      '20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md',
     ]) {
       expect(componentGuide).toContain(requiredSection);
     }
 
+    for (const requiredCatalogSection of [
+      '## Bounded Context',
+      '## Detailed Catalog',
+      '## Fowler / DDD Mapping',
+      '## Exhaustiveness Rule',
+      'VerifyCanvasWorkbenchVisualPosture',
+      'CanvasWorkbenchVisualPostureReadModel',
+    ]) {
+      expect(commandQueryCatalog).toContain(requiredCatalogSection);
+    }
+
+    for (const requiredStory of [
+      'US-CANVAS-WORKBENCH-001',
+      'US-CANVAS-WORKBENCH-009',
+      '## Scenario Matrix',
+      'VerifyCanvasWorkbenchVisualPosture',
+    ]) {
+      expect(userStories).toContain(requiredStory);
+    }
+
     for (const requiredMailboxSection of [
-      '## Fowler Verdict',
-      '## Comparison With Mature Systems',
+      '## Mature-System Comparison',
       '## Antipatterns Detected',
       '## Component Grouping',
-      '## User-Story Coverage',
+      '## Repetitions',
+      '## Code And Documentation Drift',
       '## ADR Decision',
     ]) {
       expect(mailboxReview).toContain(requiredMailboxSection);
+    }
+
+    for (const requiredCypressProof of [
+      'assertCanvasWorkbenchTabsAreHeaderScoped',
+      'left-navigation-rail',
+      'app-shell-outlet',
+      'scrollWidth',
+      'clientWidth',
+    ]) {
+      expect(cypressSpec).toContain(requiredCypressProof);
     }
 
     for (const modulePath of [

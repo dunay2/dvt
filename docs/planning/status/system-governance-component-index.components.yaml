@@ -1089,7 +1089,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: true
-    fileCount: 1733
+    fileCount: 1737
     dddOwner: INFRA
     cqRails: none - documentation governance
     owns:
@@ -1774,7 +1774,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: true
-    fileCount: 116
+    fileCount: 117
     dddOwner: INFRA
     cqRails: none - repository metadata
     owns:
@@ -1978,7 +1978,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: true
-    fileCount: 821
+    fileCount: 822
     dddOwner: ENTRY
     cqRails: UI actions and API queries
     owns:
