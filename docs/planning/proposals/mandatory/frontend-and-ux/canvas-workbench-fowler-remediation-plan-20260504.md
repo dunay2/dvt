@@ -484,7 +484,8 @@ The final response must include:
 ## Implementation Closeout Evidence
 
 Status: implemented on `main` and ready for review. The branch is ahead of
-`origin/main`; it has not been pushed by this plan closeout.
+`origin/main`; it was published for review as
+`https://github.com/dunay2/dvt/pull/1104`.
 
 Commits:
 
