@@ -25,6 +25,7 @@ that does not make the route a global shell destination.
 - `docs/architecture/reference-architecture.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
+- `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-tabs-placement-design-plan-20260503.md`
 
 ## Owned Concern
@@ -58,6 +59,9 @@ The component does not own:
 | `CanvasWorkbenchTabPanel`                         | `CanvasWorkbenchTabPanel.tsx`  | Renders the selected Canvas tab view or unavailable recovery surface.  |
 
 ## Command And Query Rails
+
+Canonical local catalog:
+`docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`.
 
 | Rail                            | Type    | DDD owner or read model              | Application port                          | Adapter surface                           | Negative tests                                                            |
 | ------------------------------- | ------- | ------------------------------------ | ----------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------- |

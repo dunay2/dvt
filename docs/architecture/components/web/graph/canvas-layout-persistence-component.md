@@ -20,6 +20,9 @@ This distinction matters because Canvas has two truths:
 - graph meaning and draft persistence belong to the protected authoring draft;
 - viewport and card coordinates belong to route-local layout state.
 
+Canonical local C&Q catalog:
+`docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`.
+
 ## Public API
 
 | API                                          | Owner                                 | Responsibility                                                                               |
@@ -72,6 +75,9 @@ This distinction matters because Canvas has two truths:
   layout is a coordinate projection, not a node replacement authority.
 
 ## Command And Query Rails
+
+Canonical local catalog:
+`docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`.
 
 | Rail                                 | Type    | DDD owner                                | Application surface                              | Negative coverage                                                       |
 | ------------------------------------ | ------- | ---------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------- |
