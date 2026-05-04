@@ -31,7 +31,7 @@ itself prove verified semantic maturity. `governanceState`,
 
 ## Totals
 
-- Tracked files indexed: 4170
+- Tracked files indexed: 4172
 - Component/source owner units: 32
 - Ungoverned files: 0
 - Drift files: 41
@@ -43,7 +43,7 @@ itself prove verified semantic maturity. `governanceState`,
 | Status | Files |
 | --- | ---: |
 | `canonical` | 114 |
-| `coverage-required` | 3933 |
+| `coverage-required` | 3935 |
 | `drift` | 41 |
 | `review` | 82 |
 <!-- prettier-ignore-end -->
@@ -53,7 +53,7 @@ itself prove verified semantic maturity. `governanceState`,
 <!-- prettier-ignore-start -->
 | Governance state | Files |
 | --- | ---: |
-| `coverage-required` | 3933 |
+| `coverage-required` | 3935 |
 | `drift` | 41 |
 | `governed` | 114 |
 | `review` | 82 |
@@ -65,7 +65,7 @@ itself prove verified semantic maturity. `governanceState`,
 | Canonical role | Files |
 | --- | ---: |
 | `implementation-owner` | 114 |
-| `none` | 4056 |
+| `none` | 4058 |
 <!-- prettier-ignore-end -->
 
 ## By Owning Unit
@@ -101,7 +101,7 @@ itself prove verified semantic maturity. `governanceState`,
 | `SYS-REPO-METADATA-ROOT` | 114 |
 | `SYS-RUNTIME-ROOT` | 286 |
 | `SYS-TRACEABILITY-ROOT` | 65 |
-| `SYS-WEB-ROOT` | 804 |
+| `SYS-WEB-ROOT` | 806 |
 | `SYS-WORKERS-ROOT` | 103 |
 <!-- prettier-ignore-end -->
 

@@ -26,8 +26,13 @@ const STORE_MODULES: readonly StoreModuleExpectation[] = [
   {
     label: 'execution store',
     relativePath: 'apps/web/src/app/stores/executionStore.ts',
+    ownedConcern: 'Owned concern: expose current runtime evidence for plan and run selection',
+  },
+  {
+    label: 'authorization store',
+    relativePath: 'apps/web/src/app/stores/authorizationStore.ts',
     ownedConcern:
-      'Owned concern: expose current runtime evidence and the pending authorization projection',
+      'Owned concern: expose effective web UI authorization capabilities outside runtime evidence',
   },
   {
     label: 'UI layout store',
@@ -64,6 +69,7 @@ describe('web store domain ownership architecture', () => {
     expect(repoFileExists(mailboxPath)).toBe(true);
     expect(repoFileExists(localGuidePath)).toBe(true);
     expect(repoFileExists(userStoriesPath)).toBe(true);
+    expect(repoFileExists('apps/web/src/app/stores/authorizationStore.ts')).toBe(true);
 
     const mailbox = readRepoFile(mailboxPath);
     const componentGuide = readRepoFile(componentGuidePath);
@@ -89,7 +95,7 @@ describe('web store domain ownership architecture', () => {
       '## Local Guide Boundary',
       '## Current Component Map',
       '## Store Method Inventory',
-      '## Residual Drift',
+      '## Closed Drift',
       '## Verification Surfaces',
       '```mermaid',
     ]) {
@@ -120,6 +126,8 @@ describe('web store domain ownership architecture', () => {
     expect(componentGuide).toContain('ProjectPlatformConnectionStatus');
     expect(componentGuide).toContain('PlatformConnectionState');
     expect(componentGuide).toContain('Authorization projection');
+    expect(componentGuide).toContain('## Closed Drift');
+    expect(componentGuide).not.toContain('## Residual Drift');
     expect(componentGuide).toContain(localGuidePath);
     expect(componentGuide).toContain(userStoriesPath);
     expect(componentGuide).toContain(mailboxPath);
@@ -129,7 +137,13 @@ describe('web store domain ownership architecture', () => {
     expect(localGuide).toContain('useCanvasInteractionStore');
     expect(localGuide).toContain('useSessionStore');
     expect(localGuide).toContain('useExecutionStore');
+    expect(localGuide).toContain('useAuthorizationStore');
     expect(localGuide).toContain('connectionStatus is not layout state');
+    expect(localGuide).toContain('Authorization capability display');
+
+    expect(mailbox).toContain('No open F-05 store ownership drift remains in this branch');
+    expect(mailbox).not.toContain('`executionStore.userPermissions` still');
+    expect(mailbox).not.toContain('authorization split is a future F-05 implementation task');
 
     for (const storyId of [
       'US-WEB-STORE-001',
@@ -138,11 +152,13 @@ describe('web store domain ownership architecture', () => {
       'US-WEB-STORE-004',
       'US-WEB-STORE-005',
       'US-WEB-STORE-006',
+      'US-WEB-STORE-007',
     ]) {
       expect(userStories).toContain(storyId);
     }
     expect(userStories).toContain('## Scenario Coverage Matrix');
     expect(userStories).toContain('platformConnectionStore.test.ts');
+    expect(userStories).toContain('authorizationStore.test.ts');
     expect(userStories).toContain('webStoreDomainOwnership.architecture.test.ts');
   });
 
@@ -161,6 +177,8 @@ describe('web store domain ownership architecture', () => {
       'apps/web/src/app/stores/platformConnectionStore.ts'
     );
     const executionStore = readRepoFile('apps/web/src/app/stores/executionStore.ts');
+    const authorizationStore = readRepoFile('apps/web/src/app/stores/authorizationStore.ts');
+    const canvasStoreFacade = readRepoFile('apps/web/src/app/views/canvas/useCanvasStoreFacade.ts');
     const componentGuide = readRepoFile(
       'docs/architecture/components/web/web-store-domain-ownership-component.md'
     );
@@ -175,8 +193,21 @@ describe('web store domain ownership architecture', () => {
     expect(platformConnectionStore).toContain('setConnectionStatus');
     expect(componentGuide).toContain('connectionStatus is not layout state');
 
-    expect(executionStore).toContain('userPermissions');
-    expect(componentGuide).toContain('Active F-05 drift');
+    expect(executionStore).not.toContain('userPermissions');
+    expect(executionStore).not.toContain('Authorization');
+    expect(authorizationStore).toContain('userPermissions');
+    expect(authorizationStore).toContain('setUserPermissions');
+    expect(canvasStoreFacade.trimStart().startsWith('/** Owned concern:'), 'canvas facade').toBe(
+      true
+    );
+    expect(canvasStoreFacade).toContain(
+      'Owned concern: compose Canvas route stores without becoming a replacement aggregate store'
+    );
+    expect(canvasStoreFacade).toContain("from '../../stores/authorizationStore'");
+    expect(canvasStoreFacade).not.toContain(
+      "ReturnType<typeof useExecutionStore.getState>['userPermissions']"
+    );
+    expect(componentGuide).toContain('Hard cut');
     expect(componentGuide).toContain('Authorization projection');
   });
 });

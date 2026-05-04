@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => ({
   findCanvasGraphStrategy: vi.fn(),
   findCanvasRuntimeRegistration: vi.fn(),
   resolveCanvasGraphStrategy: vi.fn(),
+  useAuthorizationStore: vi.fn(),
   useCanvasInteractionStore: vi.fn(),
   useExecutionStore: vi.fn(),
   useSessionStore: vi.fn(),
@@ -101,6 +102,9 @@ vi.mock('../../plugins/graphStrategyRegistry', () => ({
   findCanvasGraphStrategy: mocks.findCanvasGraphStrategy,
   findCanvasRuntimeRegistration: mocks.findCanvasRuntimeRegistration,
   resolveCanvasGraphStrategy: mocks.resolveCanvasGraphStrategy,
+}));
+vi.mock('../../stores/authorizationStore', () => ({
+  useAuthorizationStore: mocks.useAuthorizationStore,
 }));
 vi.mock('../../stores/canvasInteractionStore', () => ({
   useCanvasInteractionStore: mocks.useCanvasInteractionStore,

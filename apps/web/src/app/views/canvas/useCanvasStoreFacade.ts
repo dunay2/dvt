@@ -1,4 +1,6 @@
+/** Owned concern: compose Canvas route stores without becoming a replacement aggregate store. */
 import { useCallback } from 'react';
+import { useAuthorizationStore, type UserPermissions } from '../../stores/authorizationStore';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import { useExecutionStore } from '../../stores/executionStore';
 import { useSessionStore } from '../../stores/sessionStore';
@@ -24,7 +26,7 @@ type CanvasStoreFacade = {
   setCurrentPlan: (plan: ReturnType<typeof useExecutionStore.getState>['currentPlan']) => void;
   currentPlan: ReturnType<typeof useExecutionStore.getState>['currentPlan'];
   currentRun: ReturnType<typeof useExecutionStore.getState>['currentRun'];
-  userPermissions: ReturnType<typeof useExecutionStore.getState>['userPermissions'];
+  userPermissions: UserPermissions;
   setConsolePanelHeight: (height: number) => void;
   consolePanelVisible: boolean;
   toggleConsolePanel: () => void;
@@ -72,7 +74,7 @@ export function useCanvasStoreFacade(): CanvasStoreView {
   const setCurrentPlan = useExecutionStore((state) => state.setCurrentPlan);
   const currentPlan = useExecutionStore((state) => state.currentPlan);
   const currentRun = useExecutionStore((state) => state.currentRun);
-  const userPermissions = useExecutionStore((state) => state.userPermissions);
+  const userPermissions = useAuthorizationStore((state) => state.userPermissions);
   const setConsolePanelHeight = useUiLayoutStore((state) => state.setConsolePanelHeight);
   const consolePanelVisible = useUiLayoutStore((state) => state.consolePanelVisible);
   const showExplorerPanelStore = useUiLayoutStore((state) => state.showExplorerPanel);
@@ -147,8 +149,7 @@ export function useCanvasStoreFacade(): CanvasStoreView {
     selectedNodeIds: selectedNodes,
     workspaceLayoutKey,
     persistedViewport: workspaceCanvasLayout?.viewport ?? null,
-    persistedNodePositions:
-      workspaceCanvasLayout?.nodePositions ?? EMPTY_PERSISTED_NODE_POSITIONS,
+    persistedNodePositions: workspaceCanvasLayout?.nodePositions ?? EMPTY_PERSISTED_NODE_POSITIONS,
     hideExplorerPanel,
     showExplorerPanel,
     hideInspectorPanel,
