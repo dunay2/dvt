@@ -98,6 +98,10 @@ positional tuples directly.
 - Backend/offline readiness in API runtime blocks unsafe Canvas interactions
   inside the Canvas route, but it does not keep the pre-React startup gate
   visible once the route can render that blocker as its first useful surface.
+- Public routes such as `/login` settle the startup gate through
+  `PublishAppBootstrapStepStatus` and `CompleteAppBootstrapScreen` without
+  resolving workspace runtime capabilities or platform health, and without
+  changing protected-route authentication semantics.
 - Once a platform-health probe has failed, automatic retries must not demote
   the visible startup posture back to cold-start `pending`; retries update
   detail copy in place while the gate stays settled.
@@ -187,6 +191,8 @@ flowchart LR
 - `apps/web/src/app/AppProviders.tsx` publishes service/provider readiness.
 - `apps/web/src/app/Root.tsx` publishes capability, platform health, and active
   route posture.
+- `apps/web/src/app/routes.ts` publishes public-route bootstrap completion for
+  `/login` before protected workspace runtime concerns are mounted.
 - `apps/web/src/app/AppRouteErrorBoundary.tsx` uses visibility state to avoid a
   second failure surface while bootstrap is still visible.
 
@@ -201,6 +207,8 @@ flowchart LR
 - `apps/web/src/app/Root.bootstrapFlow.test.tsx` covers root-to-bootstrap
   integration for health, capabilities, route blocks, route completion, and
   route completion suppression while capabilities are pending.
+- `apps/web/src/app/routes.test.tsx` covers the public login route completing
+  the startup gate without invoking protected route bootstrap publication.
 - `apps/web/src/app/bootstrap/routeBootstrapStartupReadiness.test.ts` covers
   policy-level negative paths for capability ordering, same-route pending
   demotion, failure recovery, and route-id reset.
@@ -208,7 +216,7 @@ flowchart LR
   guards policy ownership, Root wiring, and documentation alignment.
 - `apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts` proves the
   user-visible startup gate does not show the fifth check as ready before
-  runtime capabilities settle.
+  runtime capabilities settle and closes on the public login route.
 
 ## Command/Query Rail
 

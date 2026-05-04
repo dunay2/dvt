@@ -11,6 +11,14 @@ describe('Startup route readiness', () => {
     stubShellBootstrapApis();
   });
 
+  it('settles the startup gate for the public login route', () => {
+    cy.visit('/login?returnTo=%2F');
+
+    cy.contains('Login required').should('be.visible');
+    cy.get('#app-loading-screen').should('have.attr', 'data-state', 'complete');
+    cy.get('#app-loading-screen').should('not.be.visible');
+  });
+
   it('keeps the fifth startup check pending until capabilities settle', () => {
     let releaseCapabilities: () => void = () => undefined;
     stubE2eApi(
