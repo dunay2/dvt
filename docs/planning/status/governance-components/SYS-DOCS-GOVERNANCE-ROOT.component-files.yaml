@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - documentation governance
 childrenRequired: true
-fileCount: 1727
+fileCount: 1731
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -1780,6 +1780,13 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: docs/architecture/components/web/graph/canvas-layout-persistence-user-stories.md
+    fileId: F-ABF945DE5950
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: docs/architecture/components/web/graph/canvas-playground-host-component.md
     fileId: F-7EDA21155A3C
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -1836,8 +1843,22 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
+    fileId: F-8085D63C79AA
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
     fileId: F-B863220D9695
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md
+    fileId: F-B1EE215AE751
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -8835,6 +8856,14 @@ files:
   - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/canvas-draft-persistence-runtime-debt-plan-20260503.md
     fileId: F-DC232A640423
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md
+    fileId: F-5747AC855FEA
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
