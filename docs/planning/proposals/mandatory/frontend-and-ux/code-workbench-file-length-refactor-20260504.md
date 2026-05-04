@@ -70,7 +70,12 @@ allowedImplementationSurfaces:
   - apps/api/src/entrypoints/http/protectedRuntimeRouteDependencies.ts
   - apps/api/src/entrypoints/http/protectedRuntimeRunRoutes.ts
   - apps/api/src/entrypoints/http/protectedRuntimeWorkspaceGraphDraftRouteGroup.ts
+  - apps/api/test/application/services/applicationArchitectureAst.support.ts
+  - apps/api/test/application/services/executableSubgraphResolutionComponent.architecture.test.ts
+  - apps/api/test/entrypoints/http/httpRuntimeErrorTranslation.architecture.test.ts
   - docs/planning/proposals/mandatory/frontend-and-ux/code-workbench-file-length-refactor-20260504.md
+  - apps/api/test/entrypoints/http/startRunControlBoundary.architecture.test.ts
+  - apps/api/test/modules/protectedRuntimeAndPlanCompileArchitecture.cases.ts
 forbiddenImplementationSurfaces:
   - packages/@dvt/contracts/**
   - packages/@dvt/engine/**
@@ -89,6 +94,10 @@ fowlerSignals:
 architectureGuards:
   - apps/api/test/architecture/workspaceFilesQueryRail.architecture.test.ts
   - apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - apps/api/test/application/services/executableSubgraphResolutionComponent.architecture.test.ts
+  - apps/api/test/entrypoints/http/httpRuntimeErrorTranslation.architecture.test.ts
+  - apps/api/test/entrypoints/http/startRunControlBoundary.architecture.test.ts
+  - apps/api/test/modules/protectedRuntimeAndPlanCompileArchitecture.cases.ts
 cypressFlows:
   - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
 completionGate:

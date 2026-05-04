@@ -89,8 +89,10 @@ describe('Executable-subgraph resolution component architecture', () => {
     expect(artifacts.startRunRuntimeBuilder.readText()).toContain(
       'workspaceGraphDraftStore: deps.workspaceGraphDraftStore'
     );
-    expect(artifacts.appRoot.readText()).toContain('new ResolveAuthorizedExecutableSubgraphService({');
-    expect(artifacts.appRoot.readText()).toContain(
+    expect(artifacts.routeDependencies.readText()).toContain(
+      'new ResolveAuthorizedExecutableSubgraphService({'
+    );
+    expect(artifacts.routeDependencies.readText()).toContain(
       'workspaceGraphDraftStore: protectedModule.workspaceGraphDraftStore'
     );
   });

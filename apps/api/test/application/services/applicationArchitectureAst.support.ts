@@ -23,7 +23,7 @@ export const START_RUN_EXECUTION_CAPACITY_ADMISSION_COMPONENT = {
       'start-run-execution-capacity-admission-component.md'
     ),
     concreteBinding: defineArtifact(
-      join(import.meta.dirname, '../../../src/infrastructure'),
+      INFRA_ROOT,
       'executionCapacity/TemporalWorkerReadyzExecutionCapacityPort.ts'
     ),
     decisions: defineArtifact(APPLICATION_ROOT, 'services/startRunAdmissionDecisions.ts'),
@@ -198,9 +198,9 @@ export const EXECUTABLE_SUBGRAPH_RESOLUTION_COMPONENT = {
       MODULES_ROOT,
       'startRun/buildProtectedStartRunRuntime.ts'
     ),
-    appRoot: defineArtifact(
-      join(import.meta.dirname, '../../../src/entrypoints/http'),
-      'registerProtectedRuntimeRoutes.ts'
+    routeDependencies: defineArtifact(
+      ENTRYPOINTS_HTTP_ROOT,
+      'protectedRuntimeRouteDependencies.ts'
     ),
   },
   contracts: {

@@ -32351,9 +32351,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-EBDA1613BE72
     pathHash: b949bf1fcb4eab2da97b50a28a89e23f2846165d8a34bc3bdbc0d89cdc83aeeb
-    contentHash: 79f4709d9afdf5c9b439190d878e8d3781629e4f53b7f5f5009bd5ed27501930
+    contentHash: 00475087134c9ecfb287bf3324c0188d3244e4c46a86f2e1399336ccb357179c
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 3d6372d5393c9357c6180fc9e29e7eaa89ce1924ba3951db9b33fd1f07a068dd
+    stateFingerprint: 0dbca84ca59dfe1fe61e8d09baa65ba1e7fad8230bf4cd82d1f7a19129d0202e
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/code-workbench-file-length-refactor-20260504.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT

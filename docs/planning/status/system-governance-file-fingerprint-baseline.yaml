@@ -2929,9 +2929,9 @@ files:
     owningUnit: SYS-API-TESTS
   - fileId: F-BA6A126B9428
     path: apps/api/test/application/services/applicationArchitectureAst.support.ts
-    contentHash: 4617fdc9651729d9115f09770641604adbddc6cd9acc8e1422f3a0159aa79b89
+    contentHash: 4264d82a93ee3126be7239d7f4ca8deaea8a2f19dd0cf4d65631eb03fa255a70
     governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
-    stateFingerprint: 5d84ef1b4485ed66bc2d23deb9d1f9e82f3feaa58c2fd79d49dc3c339139b541
+    stateFingerprint: e499d5e83b9abc4f2d9606ccfacc7d2e793b6f2a4a280e9e23f5c4aeadaa7c4a
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-API-TESTS
@@ -3056,9 +3056,9 @@ files:
     owningUnit: SYS-API-TESTS
   - fileId: F-F0C9FDD98D17
     path: apps/api/test/application/services/executableSubgraphResolutionComponent.architecture.test.ts
-    contentHash: b6236ae5775a1ab6ed904510294bf529d46d9ea75e8a0b94faa0477acc378660
+    contentHash: f405f12b301f71afe776225b7727384ed0875bd0350493b29f96110018eeed85
     governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
-    stateFingerprint: dc2e86d61dfb43b7184d876609deea67032dfa24851e64c58dc7577b363f6624
+    stateFingerprint: d33e3a5ceec7deb565d9d55754be4c46cfee6c6d2ce1672f8460bb0b9f087e72
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-API-TESTS
@@ -3471,9 +3471,9 @@ files:
     owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
   - fileId: F-8877D27CD02B
     path: apps/api/test/entrypoints/http/httpRuntimeErrorTranslation.architecture.test.ts
-    contentHash: 67176e0be8dcfc6280535392c5e165046879ad71cf3e8dede18ef6c29a276d7c
+    contentHash: 217e3de6982e5e90ba07f97c80af99eeafb5c7bd0e601dc37094313406f5f3a0
     governanceHash: 873a3e8188b761eed0fdc743a443315e07f0d3f7ea5ff164faedccc3e1f7964e
-    stateFingerprint: f27a00e2393eba316d0b151c47751f6a890590cde83013e3d79de19516083444
+    stateFingerprint: d71d4ee8e76b3ebece194d8afc6b29a7d8b71c6dcd49c75d5f64e4c655c7c5cf
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
@@ -3705,9 +3705,9 @@ files:
     owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
   - fileId: F-9C10C7A1CF71
     path: apps/api/test/entrypoints/http/startRunControlBoundary.architecture.test.ts
-    contentHash: 10c4a5b72c2ffd9eff3876cd6a5c2c641960641ca748abe6de10f532831bfb61
+    contentHash: 16fb05d5ea9b8c8fa6f18793f86c5304b3e847363af137cdf93aea8033ed6617
     governanceHash: 873a3e8188b761eed0fdc743a443315e07f0d3f7ea5ff164faedccc3e1f7964e
-    stateFingerprint: 3024af3604729c11ba7690d1e97116b867dca8d33c433187a4e6acdd7346bc96
+    stateFingerprint: b989abed520e628488b723d476f240573d5285b89f6629f496a187b4de9d4972
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
@@ -4175,9 +4175,9 @@ files:
     owningUnit: SYS-API-TESTS
   - fileId: F-EA0F53FD16EE
     path: apps/api/test/modules/protectedRuntimeAndPlanCompileArchitecture.cases.ts
-    contentHash: 3b2ac543f76f119222d971d1bbcea1e7ce603f54e811fd89fd449ef6e7ca11e2
+    contentHash: 7d32170e4ec2745f6ac54f1c5b328f7392a1a8613e8f160c85246e477fae25ef
     governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
-    stateFingerprint: 970370d8ec9eb41a6a84d7acc580724b4ab77ec3296932cc901def6e201f25e3
+    stateFingerprint: d27549c2afaeefa5d1b1d0f5710c9e34baec0e9ba8552c0f7f82184d8e89ab7d
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-API-TESTS
@@ -24584,9 +24584,9 @@ files:
   - fileId: F-EBDA1613BE72
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/code-workbench-file-length-refactor-20260504.md
-    contentHash: 79f4709d9afdf5c9b439190d878e8d3781629e4f53b7f5f5009bd5ed27501930
+    contentHash: 00475087134c9ecfb287bf3324c0188d3244e4c46a86f2e1399336ccb357179c
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 3d6372d5393c9357c6180fc9e29e7eaa89ce1924ba3951db9b33fd1f07a068dd
+    stateFingerprint: 0dbca84ca59dfe1fe61e8d09baa65ba1e7fad8230bf4cd82d1f7a19129d0202e
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
