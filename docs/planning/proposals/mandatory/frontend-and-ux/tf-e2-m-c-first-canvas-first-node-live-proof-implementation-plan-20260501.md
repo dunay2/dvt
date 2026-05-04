@@ -312,6 +312,7 @@ componentGuides:
   - docs/architecture/components/web/graph/canvas-first-authoring-live-proof-component.md
 userStories:
   - docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md
+  - docs/planning/proposals/web-frontend-operability-backlog-20260430.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -406,6 +407,7 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md
   - docs/architecture/components/web/graph/graph-frontend-architecture.md
   - docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md
+  - docs/planning/proposals/web-frontend-operability-backlog-20260430.md
   - docs/architecture/components/web/graph/index.md
   - docs/guides/canvas-authoring-user-manual-20260501.md
   - docs/evidence/assets/20260503-canvas-happy-path-draggable/**
