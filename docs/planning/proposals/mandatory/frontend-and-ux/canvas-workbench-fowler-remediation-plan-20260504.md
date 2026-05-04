@@ -162,7 +162,7 @@ Component guide destinations:
 - Create:
   `buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md`
 
-- [ ] **Step 1: Write the analysis document**
+- [x] **Step 1: Write the analysis document**
 
 The document must include these sections exactly:
 
@@ -180,7 +180,7 @@ The document must include these sections exactly:
 - `## TDD Evidence`
 - `## Validation Plan`
 
-- [ ] **Step 2: Run markdown lint**
+- [x] **Step 2: Run markdown lint**
 
 Run:
 
@@ -190,7 +190,7 @@ pnpm exec markdownlint-cli2 buzon/20260504-codex-fowler-canvas-workbench-tabs-an
 
 Expected: `0 error(s)`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 Run:
 
@@ -212,11 +212,11 @@ pnpm commit docs docs "Add Canvas workbench Fowler mailbox"
 - Create:
   `docs/architecture/components/web/graph/canvas-layout-persistence-user-stories.md`
 
-- [ ] **Step 1: Add explicit local guide links**
+- [x] **Step 1: Add explicit local guide links**
 
 Both component docs must link their mailbox and local user-story document.
 
-- [ ] **Step 2: Add or normalize sections**
+- [x] **Step 2: Add or normalize sections**
 
 Each component guide must contain:
 
@@ -229,7 +229,7 @@ Each component guide must contain:
 - `## Negative Coverage`
 - `## Drift To Watch`
 
-- [ ] **Step 3: Add user stories**
+- [x] **Step 3: Add user stories**
 
 Canvas workbench tab stories must cover:
 
@@ -254,7 +254,7 @@ Canvas layout stories must cover:
 - auto-layout not disabling drag;
 - new nodes inside visible viewport if implemented in this slice.
 
-- [ ] **Step 4: Run markdown lint**
+- [x] **Step 4: Run markdown lint**
 
 Run:
 
@@ -264,7 +264,7 @@ pnpm lint:md:changed
 
 Expected: pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 Run:
 
@@ -282,7 +282,7 @@ pnpm commit docs docs "Document Canvas workbench component scenarios"
 - Modify or create:
   `apps/web/src/app/views/canvas/canvasLayoutPersistence.architecture.test.ts`
 
-- [ ] **Step 1: Add failing semantic assertions**
+- [x] **Step 1: Add failing semantic assertions**
 
 The tests must assert:
 
@@ -293,7 +293,7 @@ The tests must assert:
 - Cypress spec asserts geometry and label readability;
 - layout persistence docs keep visual preferences out of protected drafts.
 
-- [ ] **Step 2: Run tests and record red**
+- [x] **Step 2: Run tests and record red**
 
 Run:
 
@@ -311,12 +311,12 @@ assertion before implementation.
 - Modify only files named by Task 2 and Task 3 unless the red test proves an
   owned-concern docblock is missing in a touched module.
 
-- [ ] **Step 1: Add missing docs and docblocks**
+- [x] **Step 1: Add missing docs and docblocks**
 
 Apply the minimal change that satisfies the failing semantic tests. Do not add
 runtime behavior during this task.
 
-- [ ] **Step 2: Run architecture tests**
+- [x] **Step 2: Run architecture tests**
 
 Run:
 
@@ -326,7 +326,7 @@ pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.architec
 
 Expected: pass.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 Run:
 
@@ -344,7 +344,7 @@ pnpm commit test web "Guard Canvas workbench semantics"
 - Modify if required:
   `apps/web/src/app/views/canvas/CanvasWorkbenchTabStrip.tsx`
 
-- [ ] **Step 1: Confirm red coverage on unpatched behavior**
+- [x] **Step 1: Confirm red coverage on unpatched behavior**
 
 If the current branch already includes the readable-label implementation,
 record the earlier red evidence:
@@ -356,7 +356,7 @@ expected label.scrollWidth to be less than label.clientWidth + 2
 If evidence must be reproduced, use `git show f30e3c14^:` to create a temporary
 scratch comparison without committing it, then restore the working tree.
 
-- [ ] **Step 2: Run Cypress**
+- [x] **Step 2: Run Cypress**
 
 Run:
 
@@ -367,7 +367,7 @@ pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workb
 Expected: pass with no generated screenshots after the temporary
 `cy.screenshot` line is removed.
 
-- [ ] **Step 3: Record visual inspection**
+- [x] **Step 3: Record visual inspection**
 
 Use the Cypress screenshot or Playwright capture during investigation only.
 Delete generated screenshots before commit unless the repo has an explicit
@@ -382,7 +382,7 @@ evidence artifact path for them.
 - Create ADR only if this task introduces a new long-lived decision not already
   covered by accepted component docs and existing planning proposal.
 
-- [ ] **Step 1: Decide ADR need**
+- [x] **Step 1: Decide ADR need**
 
 Expected decision for the current known scope:
 
@@ -392,11 +392,11 @@ does not change backend contracts, adapters, protected draft authority, or
 cross-context ownership.
 ```
 
-- [ ] **Step 2: Add drift/repetition closeout**
+- [x] **Step 2: Add drift/repetition closeout**
 
 The mailbox must name the fixed repetitions and remaining opportunities.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 Run:
 
@@ -411,7 +411,7 @@ pnpm commit docs docs "Record Canvas workbench drift closure"
 
 - Modify generated governance files as required by the scripts.
 
-- [ ] **Step 1: Regenerate docs indexes if docs were added**
+- [x] **Step 1: Regenerate docs indexes if docs were added**
 
 Run:
 
@@ -421,7 +421,7 @@ pnpm docs:sync
 
 Expected: docs indexes update or remain unchanged.
 
-- [ ] **Step 2: Regenerate governance file indexes**
+- [x] **Step 2: Regenerate governance file indexes**
 
 Run:
 
@@ -435,7 +435,7 @@ pnpm docs:governance:remediation-queue
 
 Expected: generated governance surfaces align with the new docs and tests.
 
-- [ ] **Step 3: Run touched web validation**
+- [x] **Step 3: Run touched web validation**
 
 Run:
 
@@ -448,7 +448,7 @@ pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workb
 
 Expected: all pass.
 
-- [ ] **Step 4: Run final gate**
+- [x] **Step 4: Run final gate**
 
 Run:
 
@@ -459,7 +459,7 @@ pnpm verify:prepush
 Expected: pass. If interrupted, say it was interrupted and do not claim
 completion.
 
-- [ ] **Step 5: Commit generated governance artifacts**
+- [x] **Step 5: Commit generated governance artifacts**
 
 Run:
 
@@ -480,3 +480,59 @@ The final response must include:
 - no-stub evidence;
 - explicit note that no hooks were bypassed;
 - explicit note whether `pnpm verify:prepush` passed.
+
+## Implementation Closeout Evidence
+
+Status: implemented on `main` and ready for review. The branch is ahead of
+`origin/main`; it has not been pushed by this plan closeout.
+
+Commits:
+
+- `f30e3c149 fix(web): Keep Canvas workbench tab labels readable`
+- `b6b0f4692 docs(docs): Accept Canvas tab fingerprint baseline`
+- `cbf90a8cf docs(docs): Add Canvas workbench Fowler plan`
+- `baa53872d docs(docs): Add Canvas workbench Fowler mailbox`
+- `264802c24 docs(docs): Document Canvas workbench component scenarios`
+- `8b5cd8bca test(web): Guard Canvas workbench C&Q semantics`
+- `b917a5c5e docs(docs): Record Canvas workbench drift closure`
+- `faa4939ca docs(docs): Update Canvas workbench governance artifacts`
+- `16cba55ec docs(docs): Update Canvas workbench document unit map`
+- `95bb0d42d docs(docs): Refresh Canvas workbench governance indexes`
+- `362f92a1d docs(docs): Declare Canvas workbench Fowler surfaces`
+
+Validation evidence:
+
+- `pnpm exec markdownlint-cli2 buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md --config .markdownlint-cli2.jsonc --ignore-path .markdownlintignore`
+  passed with `0 error(s)`.
+- `pnpm lint:md:changed` passed.
+- `pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts src/app/views/canvas/canvasLayoutPersistence.architecture.test.ts`
+  first failed on the missing C&Q `## Exhaustiveness Rule`, then passed with
+  2 files and 6 tests.
+- `pnpm --filter @dvt/web test -- src/app/plugins/registry.test.ts src/app/shell/shellNavigationModel.test.ts src/app/views/canvas/CanvasShell.test.tsx src/app/views/canvas/CanvasShell.architecture.test.tsx src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts src/app/views/canvas/canvasLayoutPersistence.architecture.test.ts`
+  passed with 6 files and 21 tests.
+- `pnpm --filter @dvt/web typecheck` passed.
+- `pnpm exec eslint apps/web/src/app/views/canvas/CanvasWorkbenchTabStrip.tsx apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts --max-warnings 0`
+  passed.
+- `pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workbench-tabs.cy.ts`
+  passed with 1 spec, 1 test, 0 screenshots, and video disabled.
+- `pnpm docs:sync` passed.
+- `pnpm docs:governance:document-unit-map`,
+  `pnpm docs:governance:file-component-index`,
+  `pnpm docs:governance:file-fingerprint-baseline`,
+  `pnpm docs:governance:file-fingerprint-impact`,
+  `pnpm docs:governance:coverage-report`, and
+  `pnpm docs:governance:remediation-queue` passed.
+- `pnpm docs:feature-mechanization:implementation` passed after the feature
+  manifest declared the Fowler remediation surfaces and new test symbols.
+- `pnpm verify:prepush` passed.
+
+No-debt and no-stub evidence:
+
+- No debt entry was added.
+- No lint, type, test, Cypress, governance, or pre-push rule was relaxed.
+- No hook was bypassed.
+- No stub, placeholder, fake adapter, fake success path, or unfinished branch
+  was added.
+- No ADR was created because the slice reuses local Web Graph presentation
+  rails and does not change backend contracts, adapters, protected draft
+  authority, or cross-context ownership.
