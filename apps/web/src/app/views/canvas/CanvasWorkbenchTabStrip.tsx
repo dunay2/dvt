@@ -20,10 +20,10 @@ export function CanvasWorkbenchTabStrip({
   return (
     <div
       data-slot="canvas-workbench-tab-strip"
-      className="flex shrink-0 items-center gap-3 overflow-x-auto border-b border-[color:var(--border-default)] bg-[var(--surface-panel)] px-4 py-2"
+      className="flex shrink-0 items-center gap-2 overflow-x-auto border-b border-[color:var(--border-default)] bg-[var(--surface-panel)] px-3 py-1.5"
     >
       <Tabs value={tabsState.activeTabId} className="min-w-max flex-none">
-        <TabsList className={cn(routeWorkbenchTabListClassName, 'h-auto min-w-max gap-2 p-1')}>
+        <TabsList className={cn(routeWorkbenchTabListClassName, 'h-auto min-w-max gap-1 p-1')}>
           {tabsState.tabs.map((tab) => {
             const Icon = tab.icon;
 
@@ -34,12 +34,12 @@ export function CanvasWorkbenchTabStrip({
                 data-slot="canvas-workbench-tab-trigger"
                 className={cn(
                   routeWorkbenchTabTriggerClassName,
-                  'flex h-auto flex-none items-center gap-2 rounded-md px-3 py-2 whitespace-nowrap'
+                  'flex h-auto flex-none items-center gap-1.5 rounded-md px-2 py-1.5 whitespace-nowrap'
                 )}
                 onClick={() => onSelectTab(tab.id)}
               >
                 <Icon className="size-4 shrink-0" />
-                <span className="text-sm font-medium whitespace-nowrap">{tab.label}</span>
+                <span className="text-[13px] font-medium whitespace-nowrap">{tab.label}</span>
               </TabsTrigger>
             );
           })}

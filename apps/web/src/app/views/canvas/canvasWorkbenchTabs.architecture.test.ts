@@ -136,6 +136,8 @@ describe('Canvas workbench tabs architecture', () => {
     expect(shellNavigationSource).not.toContain("['nav']");
     expect(tabStripSource).toContain('CanvasWorkbenchTabsReadModel');
     expect(tabStripSource).not.toContain('buildShellNavigationModel');
+    expect(tabStripSource).not.toContain('truncate');
+    expect(tabStripSource).not.toContain('min-w-0');
     expect(playgroundTabStripSource).not.toContain('CanvasWorkbenchTabsReadModel');
   });
 
