@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files docs
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-documentCount: 1469
+documentCount: 1473
 documents:
   - path: docs/CONTRIBUTING.md
     classification: governs unit
@@ -913,6 +913,10 @@ documents:
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-WEB
+  - path: docs/architecture/components/web/graph/canvas-layout-persistence-user-stories.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-WEB
   - path: docs/architecture/components/web/graph/canvas-playground-host-component.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -945,7 +949,15 @@ documents:
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-WEB
+  - path: docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-WEB
   - path: docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-WEB
+  - path: docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-WEB
@@ -4650,6 +4662,11 @@ documents:
     subjectUnit: SYS-WEB
   - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/canvas-draft-persistence-runtime-debt-plan-20260503.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-WEB
+  - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-WEB
