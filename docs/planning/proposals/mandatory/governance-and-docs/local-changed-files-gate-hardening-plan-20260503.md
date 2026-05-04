@@ -30,6 +30,7 @@ governingSources:
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
 allowedImplementationSurfaces:
+  - .gitignore
   - scripts/git-local-changes.cjs
   - scripts/git-local-changes.test.cjs
   - scripts/check-changed.cjs

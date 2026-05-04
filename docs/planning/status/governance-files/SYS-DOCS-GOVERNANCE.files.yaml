@@ -32949,9 +32949,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-D47D38349445
     pathHash: 7f6c4a09b760c10199ba29aa3c696463942733cfb94d94509fee74d9444ebfc3
-    contentHash: 7c50a805ce217e34018cf6fb1ef4311ddefd0645d3f7b7dbd0805271653a02fa
+    contentHash: e13d7de0417fce8008d81b8ad59224fe972e4a87418cbc7d28509644a5afc479
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 63c3aa19bb801f314d5980a98b07ea97700bd2bf96165f1c9f0f172cee5b7c73
+    stateFingerprint: ca814b1bf03db6c6c0ddd2f8ade565a87adf299cf4e848169f20ffd94022bda5
     path: >-
       docs/planning/proposals/mandatory/governance-and-docs/local-changed-files-gate-hardening-plan-20260503.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -33002,9 +33002,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-EF1F0DBBB1D8
     pathHash: d2ebbe3b36b0d4c10247d0bef16fe8e5b65b52ed226557be52d5d634cdd48c9c
-    contentHash: 6b1e05c13c60c529afa1628689dd57a70bf30ec625daa4a45ec56e8e6a910c4a
+    contentHash: 88a5ac6d96352229d8da9d3a5152731d08c411140dc2061e97cef5dbd90e992a
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: e0583124fec6b9b1e70e302a9bb7a6ef0e1c4ef4f9d9712f6f535936bc1bee57
+    stateFingerprint: e9a9727e0f395536513efe949bdbabbcafa7ed5b0cf3d22e4b45c36a44c790dc
     path: >-
       docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT

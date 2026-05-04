@@ -375,6 +375,7 @@ governingSources:
   - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/adr/ADR-0053-file-state-fingerprint-governance.md
 allowedImplementationSurfaces:
+  - .gitignore
   - .github/workflows/pr-quality-gate.yml
   - apps/api/package.json
   - apps/api/src/app.ts
