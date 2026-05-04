@@ -16,7 +16,7 @@ baseline changes.
 
 | Change type  | Files |
 | ------------ | ----: |
-| `content`    |     3 |
+| `content`    |     0 |
 | `governance` |     0 |
 | `both`       |     0 |
 | `added`      |     0 |
@@ -24,15 +24,12 @@ baseline changes.
 
 ## Impacted Components
 
-| Root unit | Domain unit | Component unit             | Flags | Files |
-| --------- | ----------- | -------------------------- | ----- | ----: |
-| `SYS-DVT` | `SYS-DVT`   | `SYS-DOCS-GOVERNANCE-ROOT` | `web` |     1 |
-| `SYS-DVT` | `SYS-DVT`   | `SYS-WEB-ROOT`             | `web` |     2 |
+| Root unit | Domain unit | Component unit | Flags  | Files |
+| --------- | ----------- | -------------- | ------ | ----: |
+| _None_    | _None_      | _None_         | _None_ |     0 |
 
 ## File Changes
 
-| Type      | File                                                                        | File ID          | Root      | Domain    | Component                  | Owning unit                |
-| --------- | --------------------------------------------------------------------------- | ---------------- | --------- | --------- | -------------------------- | -------------------------- |
-| `content` | `docs/architecture/components/web/graph/canvas-workbench-tabs-component.md` | `F-B863220D9695` | `SYS-DVT` | `SYS-DVT` | `SYS-DOCS-GOVERNANCE-ROOT` | `SYS-DOCS-GOVERNANCE-ROOT` |
-| `content` | `apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts`                   | `F-E3C5CEE03490` | `SYS-DVT` | `SYS-DVT` | `SYS-WEB-ROOT`             | `SYS-WEB-ROOT`             |
-| `content` | `apps/web/src/app/views/canvas/CanvasWorkbenchTabStrip.tsx`                 | `F-19E5B7C2D104` | `SYS-DVT` | `SYS-DVT` | `SYS-WEB-ROOT`             | `SYS-WEB-ROOT`             |
+| Type   | File   | File ID | Root   | Domain | Component | Owning unit |
+| ------ | ------ | ------- | ------ | ------ | --------- | ----------- |
+| _None_ | _None_ | _None_  | _None_ | _None_ | _None_    | _None_      |
