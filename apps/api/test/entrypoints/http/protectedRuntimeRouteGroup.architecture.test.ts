@@ -22,6 +22,8 @@ const RUNTIME_ROUTE_METHOD_BY_KEY = {
   plansPreview: ['POST'],
   plansImport: ['POST'],
   workspaceGraphDraft: ['GET', 'PUT'],
+  workspaceFiles: ['GET'],
+  workspaceFileContent: ['GET'],
   list: ['GET'],
   get: ['GET'],
   events: ['GET'],

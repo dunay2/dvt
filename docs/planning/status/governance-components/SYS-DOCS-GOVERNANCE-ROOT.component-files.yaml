@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - documentation governance
 childrenRequired: true
-fileCount: 1731
+fileCount: 1737
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -1621,6 +1621,20 @@ files:
     isLegacy: false
   - path: docs/architecture/components/web/astproposal.md
     fileId: F-EFC38936EC6F
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/web/code-workbench-workspace-files-component.md
+    fileId: F-977EACBD1691
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/web/code-workbench-workspace-files-user-stories.md
+    fileId: F-1596406506D4
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -8878,6 +8892,22 @@ files:
     isDrift: false
     isLegacy: false
   - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/code-workbench-file-length-refactor-20260504.md
+    fileId: F-EBDA1613BE72
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/code-workbench-workspace-files-query-rail-plan-20260504.md
+    fileId: F-751C27AB71BB
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
     fileId: F-09D8F50F6E96
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -10150,6 +10180,20 @@ files:
   - path: >-
       docs/planning/reviews/architecture-and-governance/20260503-source-import-provider-extensibility-debt-review.md
     fileId: F-8BA49DE6919A
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/reviews/architecture-and-governance/20260504-dvt-deep-architectural-review.md
+    fileId: F-00AE2A0ABC9A
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/reviews/architecture-and-governance/20260504-internal-alpha-evolution-route.md
+    fileId: F-F1BC07018193
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

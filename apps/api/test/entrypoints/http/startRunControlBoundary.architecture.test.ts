@@ -18,7 +18,7 @@ import {
 
 const APP_SOURCE_PATH = join(
   import.meta.dirname,
-  '../../../src/entrypoints/http/registerProtectedRuntimeRoutes.ts'
+  '../../../src/entrypoints/http/protectedRuntimePlanRoutes.ts'
 );
 const APP_SOURCE_TEXT = readFileSync(APP_SOURCE_PATH, 'utf8');
 const CONTROL_BOUNDARY_DOC_PATH = join(

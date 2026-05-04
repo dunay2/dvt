@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: API HTTP command/query route validation
 childrenRequired: false
-fileCount: 52
+fileCount: 54
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -48,6 +48,13 @@ files:
     isLegacy: false
   - path: apps/api/test/entrypoints/http/executePlanRouteFacade.test.ts
     fileId: F-B4C3401AC808
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/extractBearerToken.test.ts
+    fileId: F-CB5E1E5BD65D
     owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -363,6 +370,13 @@ files:
     isLegacy: false
   - path: apps/api/test/entrypoints/http/startRunRouteTargetAdapterParser.test.ts
     fileId: F-A9E2E80F25B2
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/entrypoints/http/workspaceFilesRoutes.test.ts
+    fileId: F-2BC9CE59B73D
     owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
     unitStatus: coverage-required
     governanceState: coverage-required

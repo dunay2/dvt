@@ -510,7 +510,7 @@ tasks:
     blocking: reporting-only
     reason: Documents track drift or require disposition and need alignment with active units.
     fileCount: 0
-    documentCount: 260
+    documentCount: 262
     files: []
     documents:
       - path: docs/planning/closeouts/20260315-architecture-components-map-closeout.md
@@ -1039,6 +1039,12 @@ tasks:
         classification: tracks drift
       - path: >-
           docs/planning/reviews/architecture-and-governance/20260503-source-import-provider-extensibility-debt-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260504-dvt-deep-architectural-review.md
+        classification: tracks drift
+      - path: >-
+          docs/planning/reviews/architecture-and-governance/20260504-internal-alpha-evolution-route.md
         classification: tracks drift
       - path: docs/planning/reviews/architecture-and-governance/index.md
         classification: tracks drift

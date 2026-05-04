@@ -5,8 +5,15 @@ import { createWorkspaceService } from './workspaceService';
 import { flattenWorkspaceEntries } from './workspaceFileTree.test.fixtures';
 import { createApiWorkspaceServiceHarness } from './workspaceServiceApi.test.harness';
 import { WorkspaceFileLoadError, WORKSPACE_HTTP_ERROR_REASON } from './workspaceErrors';
+import {
+  buildWorkspaceScope,
+  installWorkspaceScopeHarness,
+  setWorkspaceScope,
+} from './workspaceScope.test.harness';
 
 describe('workspaceService files', () => {
+  installWorkspaceScopeHarness();
+
   it('keeps file-content edits local to each default mock service instance', async () => {
     const firstService = createWorkspaceService('mock');
     const secondService = createWorkspaceService('mock');
@@ -87,6 +94,41 @@ describe('workspaceService files', () => {
         kind: 'not_found',
         path: 'models/missing.sql',
       })
+    );
+  });
+
+  it('lists files through the scoped workspace files query endpoint', async () => {
+    const scope = buildWorkspaceScope();
+    setWorkspaceScope(scope);
+    const { getJson, service } = createApiWorkspaceServiceHarness({
+      getJson: async <TResponse>() => [] as TResponse,
+    });
+
+    await service.listFiles();
+
+    expect(getJson).toHaveBeenCalledWith(
+      `/workspace/files?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}`
+    );
+  });
+
+  it('loads file content through the scoped workspace file content query endpoint', async () => {
+    const scope = buildWorkspaceScope();
+    setWorkspaceScope(scope);
+    const { getJson, service } = createApiWorkspaceServiceHarness({
+      getJson: async <TResponse>() =>
+        ({
+          path: 'models/staging/stg_orders.sql',
+          name: 'stg_orders.sql',
+          language: 'sql',
+          content: 'select 1',
+          lastModified: '2026-05-04T00:00:00Z',
+        }) as TResponse,
+    });
+
+    await service.getFileContent('models/staging/stg_orders.sql');
+
+    expect(getJson).toHaveBeenCalledWith(
+      `/workspace/files/models%2Fstaging%2Fstg_orders.sql?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}`
     );
   });
 

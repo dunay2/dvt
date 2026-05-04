@@ -86,6 +86,14 @@ export const httpErrorTranslation = {
       },
     },
   },
+  workspaceFiles: {
+    notFound(): HttpResponseModel {
+      return createHttpErrorResponse({
+        type: HTTP_ERROR_TYPE.notFound,
+        reason: HTTP_ERROR_REASON.workspaceFileNotFound,
+      });
+    },
+  },
   runtime: {
     domainError: mapRuntimeDomainError,
   },

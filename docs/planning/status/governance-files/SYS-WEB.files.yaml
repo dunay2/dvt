@@ -2,7 +2,7 @@ version: 1
 shardId: SYS-WEB
 generatedFrom: git ls-files plus untracked non-ignored local files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-fileCount: 820
+fileCount: 822
 files:
   - fileId: F-76C868437FA7
     pathHash: 0e84cc225ac7ad73b75b40d07ec39fc3d385993334ceac8c74e6901de6549d41
@@ -270,6 +270,32 @@ files:
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
     stateFingerprint: c2c84585a6b4d6a1896664558e8c68771cc4f12026315f1eb635f4d362eccf0e
     path: apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+    owningUnit: SYS-WEB-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-WEB-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-WEB
+      - SYS-WEB-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ENTRY
+    cqRails: UI actions and API queries
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+  - fileId: F-F80DBDC6E8F7
+    pathHash: 43bf3e8339b1a9a83ffd07a0d550129a8cbb93cad9ff6e927cfe9cf4ab3a45ee
+    contentHash: b206f31af3c23c467d0ac069795acd79d039a2011643c9fe8e27c64f60674bf6
+    governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
+    stateFingerprint: 35e846a160971cf3188a11b04bb5bc856265d5c37954b5f43f003536cf958c4e
+    path: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -7180,6 +7206,32 @@ files:
     governance:
       - >-
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+  - fileId: F-796A58FE67D3
+    pathHash: 63a73e6de78a1ddca1b5baa4483ca1e5fafe2975359288c74794c985ef4c3eb8
+    contentHash: 1c653be52381e309ba2a5f1fd1d7909062b0dfc3943f59a84f7ac18143b4dc2c
+    governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
+    stateFingerprint: 75a6d4781500603df0c73770c1f210c22135950c862ffbb59cd126ba450255fe
+    path: apps/web/src/app/services/workspace/workspaceFilesHttp.ts
+    owningUnit: SYS-WEB-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-WEB-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-WEB
+      - SYS-WEB-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ENTRY
+    cqRails: UI actions and API queries
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-A417980E5F47
     pathHash: 63b91c159972a3cb6d68ee211b71794c9d18d0b631ad781e6caf5e0cc4fbfb27
     contentHash: aa3c65e83cc29728156969803b6914fbc38d3b96112c90250f1a4f14437d0074
@@ -7624,9 +7676,9 @@ files:
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-018770FDD15B
     pathHash: 16e9ab7b0bfbd10771dda1ba6fe2472bc424b3485fdb16bfa4648fd735205dbf
-    contentHash: 71996ed62804105a27200a66f75da2bd9724049ce892bd1a5da8210599f35aee
+    contentHash: 2494720562e4ceceee2eb86a9cb1e5ace075741b5d072dec5cdb3ff947b9b70c
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: f6440c4dba34fa9c227950e47a8f5c1913a63a9ae0f4826fe4bb3d1bfe6b5020
+    stateFingerprint: 2504e6271f665747bf563508ad9d8521e8ab8a7cb38f728c4b0057832f6f8d56
     path: apps/web/src/app/services/workspace/workspaceService.api.ts
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT
@@ -7650,9 +7702,9 @@ files:
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-F1CE818EDF4C
     pathHash: ab7701793a86597396a1aa71ee2b7fe16c0b95a2d4dc9a79811aeb15beb85ad4
-    contentHash: bd352a0ff8176a4e7c4e6e0fd3b3f514afcbf89c769fcf537228069d25963b3d
+    contentHash: fb21946503c0f7d05f787cfcc0bcfa082491a24229180ffd61f6ee64f5deac67
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: e2bfb459afdc9d3357f26bad5baf060017d044875ab5a6e8180d5c6d83805357
+    stateFingerprint: d093d5d40b1046db7e7c05d7d065592bf0a833faee54d1099c947d5081b61458
     path: apps/web/src/app/services/workspace/workspaceService.files.test.ts
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT

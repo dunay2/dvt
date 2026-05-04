@@ -10,7 +10,13 @@ import type {
 } from '../../ports/workspace';
 import { ApiError, type ApiClient } from '../api/createApiClient';
 import { detectWorkspaceServiceLocale, resolveWorkspaceServiceCopy } from './workspaceServiceCopy';
-import { WorkspaceFileLoadError, WORKSPACE_HTTP_ERROR_REASON } from './workspaceErrors';
+import { WorkspaceFileLoadError } from './workspaceErrors';
+import {
+  buildWorkspaceFileContentEndpoint,
+  buildWorkspaceFilesEndpoint,
+  readWorkspaceFilesScope,
+  WORKSPACE_FILES_HTTP_ERROR_REASON,
+} from './workspaceFilesHttp';
 import {
   buildWorkspaceGraphDraftEndpoint,
   createRequestFailedApiError,
@@ -32,7 +38,7 @@ function isWorkspaceFileNotFoundApiError(error: ApiError): boolean {
 
   return (
     error.responseBody.error.type === 'not_found' &&
-    error.responseBody.error.reason === WORKSPACE_HTTP_ERROR_REASON.fileNotFound
+    error.responseBody.error.reason === WORKSPACE_FILES_HTTP_ERROR_REASON.fileNotFound
   );
 }
 
@@ -81,10 +87,15 @@ export function createApiWorkspaceService(apiClient: ApiClient): IWorkspacePort 
           .warehouseImportApiModeUnavailable
       );
     },
-    listFiles: () => apiClient.getJson<WorkspaceFileEntry[]>('/workspace/files'),
+    listFiles: () =>
+      apiClient.getJson<WorkspaceFileEntry[]>(
+        buildWorkspaceFilesEndpoint(readWorkspaceFilesScope())
+      ),
     getFileContent: async (path) => {
       try {
-        return await apiClient.getJson<FileContent>(`/workspace/files/${encodeURIComponent(path)}`);
+        return await apiClient.getJson<FileContent>(
+          buildWorkspaceFileContentEndpoint(path, readWorkspaceFilesScope())
+        );
       } catch (error) {
         if (error instanceof ApiError && isWorkspaceFileNotFoundApiError(error)) {
           throw new WorkspaceFileLoadError('not_found', path);

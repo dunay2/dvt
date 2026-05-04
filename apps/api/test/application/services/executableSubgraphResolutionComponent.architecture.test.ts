@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { EXECUTABLE_SUBGRAPH_RESOLUTION_COMPONENT } from './applicationArchitectureAst.support.js';
+import { EXECUTABLE_SUBGRAPH_RESOLUTION_COMPONENT } from './executableSubgraphResolutionArchitecture.support.js';
 
 const { artifacts, contracts } = EXECUTABLE_SUBGRAPH_RESOLUTION_COMPONENT;
 
@@ -89,8 +89,10 @@ describe('Executable-subgraph resolution component architecture', () => {
     expect(artifacts.startRunRuntimeBuilder.readText()).toContain(
       'workspaceGraphDraftStore: deps.workspaceGraphDraftStore'
     );
-    expect(artifacts.appRoot.readText()).toContain('new ResolveAuthorizedExecutableSubgraphService({');
-    expect(artifacts.appRoot.readText()).toContain(
+    expect(artifacts.routeDependencies.readText()).toContain(
+      'new ResolveAuthorizedExecutableSubgraphService({'
+    );
+    expect(artifacts.routeDependencies.readText()).toContain(
       'workspaceGraphDraftStore: protectedModule.workspaceGraphDraftStore'
     );
   });

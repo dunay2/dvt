@@ -112,7 +112,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: false
-    fileCount: 17
+    fileCount: 26
     dddOwner: PORT
     cqRails: API application command/query ports
     owns:
@@ -178,7 +178,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: false
-    fileCount: 34
+    fileCount: 36
     dddOwner: AS
     cqRails: API application commands and queries
     owns:
@@ -438,7 +438,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: false
-    fileCount: 52
+    fileCount: 54
     dddOwner: INFRA
     cqRails: API HTTP command/query route validation
     owns:
@@ -508,7 +508,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: false
-    fileCount: 76
+    fileCount: 83
     dddOwner: ENTRY
     cqRails: API HTTP command/query route rails
     owns:
@@ -577,7 +577,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: false
-    fileCount: 27
+    fileCount: 28
     dddOwner: ADP
     cqRails: API adapter-backed command/query support
     owns:
@@ -919,7 +919,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: false
-    fileCount: 99
+    fileCount: 101
     dddOwner: INFRA
     cqRails: API validation suites
     owns:
@@ -1089,7 +1089,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: true
-    fileCount: 1731
+    fileCount: 1737
     dddOwner: INFRA
     cqRails: none - documentation governance
     owns:
@@ -1774,7 +1774,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: true
-    fileCount: 116
+    fileCount: 117
     dddOwner: INFRA
     cqRails: none - repository metadata
     owns:
@@ -1978,7 +1978,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: true
-    fileCount: 820
+    fileCount: 822
     dddOwner: ENTRY
     cqRails: UI actions and API queries
     owns:

@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: AS
 cqRails: API application commands and queries
 childrenRequired: false
-fileCount: 34
+fileCount: 36
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -109,6 +109,13 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: apps/api/src/application/services/getWorkspaceFileContentUseCase.ts
+    fileId: F-C82BED2A6D86
+    owningUnit: SYS-API-APPLICATION-SERVICES
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts
     fileId: F-EE6EF204AEFF
     owningUnit: SYS-API-APPLICATION-SERVICES
@@ -118,6 +125,13 @@ files:
     isLegacy: false
   - path: apps/api/src/application/services/listRunsUseCase.ts
     fileId: F-3ADA6E1C5ECA
+    owningUnit: SYS-API-APPLICATION-SERVICES
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/application/services/listWorkspaceFilesUseCase.ts
+    fileId: F-8E4D74A2BEA9
     owningUnit: SYS-API-APPLICATION-SERVICES
     unitStatus: coverage-required
     governanceState: coverage-required

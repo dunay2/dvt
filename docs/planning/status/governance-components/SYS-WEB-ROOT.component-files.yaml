@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: ENTRY
 cqRails: UI actions and API queries
 childrenRequired: true
-fileCount: 820
+fileCount: 822
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -83,6 +83,13 @@ files:
     isLegacy: false
   - path: apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
     fileId: F-E3C5CEE03490
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    fileId: F-F80DBDC6E8F7
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -1938,6 +1945,13 @@ files:
     isLegacy: false
   - path: apps/web/src/app/services/workspace/workspaceFileTree.test.fixtures.ts
     fileId: F-D401976BD32F
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/services/workspace/workspaceFilesHttp.ts
+    fileId: F-796A58FE67D3
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

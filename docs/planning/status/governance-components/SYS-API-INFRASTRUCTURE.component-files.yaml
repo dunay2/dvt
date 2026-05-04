@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: ADP
 cqRails: API adapter-backed command/query support
 childrenRequired: false
-fileCount: 27
+fileCount: 28
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -160,6 +160,13 @@ files:
     isLegacy: false
   - path: apps/api/src/infrastructure/telemetry/startRunSlaMetrics.ts
     fileId: F-DEDF38930CAB
+    owningUnit: SYS-API-INFRASTRUCTURE
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileRepository.ts
+    fileId: F-06126179C029
     owningUnit: SYS-API-INFRASTRUCTURE
     unitStatus: coverage-required
     governanceState: coverage-required

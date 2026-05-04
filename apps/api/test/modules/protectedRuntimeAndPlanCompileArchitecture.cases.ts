@@ -20,7 +20,7 @@ const PLAN_COMPILE_BOUNDARY_SOURCE = readFileSync(
   'utf8'
 );
 const PROTECTED_RUNTIME_ROUTES_SOURCE = readFileSync(
-  new URL('../../src/entrypoints/http/registerProtectedRuntimeRoutes.ts', import.meta.url),
+  new URL('../../src/entrypoints/http/protectedRuntimeRouteDependencies.ts', import.meta.url),
   'utf8'
 );
 const START_RUN_TARGET_ADAPTER_REGISTRY_SOURCE = readFileSync(
@@ -78,7 +78,7 @@ export function describeProtectedRuntimeAndPlanCompileArchitectureCases(): void 
         /const previewPlanUseCase = new PreviewPlanUseCase\(\{\s*planner: protectedModule\.planCompilePlanner,/s
       );
       expect(PROTECTED_RUNTIME_ROUTES_SOURCE).toMatch(
-        /const compilePlanUseCase = new CompilePlanUseCase\(\{\s*planner: protectedModule\.planCompilePlanner,/s
+        /compilePlanUseCase: new CompilePlanUseCase\(\{\s*planner: protectedModule\.planCompilePlanner/s
       );
     });
 

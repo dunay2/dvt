@@ -23,7 +23,7 @@ export const START_RUN_EXECUTION_CAPACITY_ADMISSION_COMPONENT = {
       'start-run-execution-capacity-admission-component.md'
     ),
     concreteBinding: defineArtifact(
-      join(import.meta.dirname, '../../../src/infrastructure'),
+      INFRA_ROOT,
       'executionCapacity/TemporalWorkerReadyzExecutionCapacityPort.ts'
     ),
     decisions: defineArtifact(APPLICATION_ROOT, 'services/startRunAdmissionDecisions.ts'),
@@ -179,32 +179,5 @@ export const WORKSPACE_GRAPH_DRAFT_APPLICATION_COMPONENT = {
   },
   contracts: {
     canonicalBoundaryModule: '@dvt/contracts',
-  },
-} as const;
-
-export const EXECUTABLE_SUBGRAPH_RESOLUTION_COMPONENT = {
-  artifacts: {
-    componentGuide: defineArtifact(DOCS_ROOT, 'executable-subgraph-resolution-component.md'),
-    plannerBackedUseCase: defineArtifact(
-      APPLICATION_ROOT,
-      'services/PlannerBackedStartRunUseCase.ts'
-    ),
-    previewUseCase: defineArtifact(APPLICATION_ROOT, 'services/PreviewPlanUseCase.ts'),
-    resolverService: defineArtifact(
-      APPLICATION_ROOT,
-      'services/resolveAuthorizedExecutableSubgraph.ts'
-    ),
-    startRunRuntimeBuilder: defineArtifact(
-      MODULES_ROOT,
-      'startRun/buildProtectedStartRunRuntime.ts'
-    ),
-    appRoot: defineArtifact(
-      join(import.meta.dirname, '../../../src/entrypoints/http'),
-      'registerProtectedRuntimeRoutes.ts'
-    ),
-  },
-  contracts: {
-    canonicalBoundaryModule: '@dvt/contracts',
-    workspaceGraphDraftPortsModule: '../ports/workspaceGraphDraft.js',
   },
 } as const;
