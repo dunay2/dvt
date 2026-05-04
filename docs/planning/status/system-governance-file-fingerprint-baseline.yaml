@@ -24330,9 +24330,9 @@ files:
   - fileId: F-5747AC855FEA
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md
-    contentHash: 92d964e79318f2edf1bba8b96a8179cab446e35a0372cea003b608bf73a5eef8
+    contentHash: b19cc468a3941a565f1775c7cdcf8aeab0e9b1c692dd8283fbf0987f5e2c4bfb
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 92d0c40833e2b43bfa337a149a07d957d6c6d4c3e8244089f5ecd01c196d20ae
+    stateFingerprint: 625901c9d5b84db6832c524ee4026630b685d63a3d29957f3b60c0fb48014d88
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
