@@ -1,3 +1,4 @@
+/** Owned concern: project static plugin contributions into route, shell, and workbench query rails. */
 import type React from 'react';
 
 import type { PluginPortDescriptor, PluginPortMap } from './contracts/ConnectionRules';
@@ -12,14 +13,17 @@ import type {
   NodeRendererRegistration,
 } from './contracts/NodeRendering';
 import type {
+  CanvasWorkbenchTabPlacement,
   InspectorContext,
   InspectorPanelContribution,
   LocalizableString,
   PluginCapabilityId,
   PluginConnectionRule,
   PluginDataPort,
+  ShellNavigationPlacement,
   ViewContribution,
 } from './contracts/PluginManifest';
+import type { AppRouteHandle } from '../bootstrap/routeBootstrapContract';
 import type {
   CanvasKindRegistration,
   CanvasRuntimeRegistration,
@@ -146,23 +150,53 @@ export function getAllViews(capabilities?: RuntimeCapabilities): ViewContributio
   return getRuntimePlugins(capabilities).flatMap((p) => p.views ?? []);
 }
 
-export function getNavigationViews(
+export type RouteViewContribution = ViewContribution & {
+  path: string;
+  handle: AppRouteHandle;
+};
+
+export type ShellNavigationViewContribution = RouteViewContribution & {
+  placement: ShellNavigationPlacement;
+};
+
+export type CanvasWorkbenchTabViewContribution = ViewContribution & {
+  placement: CanvasWorkbenchTabPlacement;
+};
+
+function hasRouteRegistration(view: ViewContribution): view is RouteViewContribution {
+  return typeof view.path === 'string' && view.handle != null;
+}
+
+export function getRouteViews(capabilities?: RuntimeCapabilities): RouteViewContribution[] {
+  return getAllViews(capabilities).filter(hasRouteRegistration);
+}
+
+export function getShellNavigationViews(
   capabilities?: RuntimeCapabilities
-): Array<ViewContribution & { nav: NonNullable<ViewContribution['nav']> }> {
+): ShellNavigationViewContribution[] {
   return getAllViews(capabilities)
     .filter(
-      (
-        view
-      ): view is ViewContribution & {
-        nav: NonNullable<ViewContribution['nav']>;
-      } => view.nav != null
+      (view): view is ShellNavigationViewContribution =>
+        hasRouteRegistration(view) && view.placement?.kind === 'shell-nav'
     )
-    .sort((a, b) => a.nav.order - b.nav.order);
+    .sort((a, b) => a.placement.order - b.placement.order);
+}
+
+export function getCanvasWorkbenchTabViews(
+  capabilities?: RuntimeCapabilities
+): CanvasWorkbenchTabViewContribution[] {
+  return getAllViews(capabilities)
+    .filter(
+      (view): view is CanvasWorkbenchTabViewContribution =>
+        view.placement?.kind === 'workbench-tab' && view.placement.workbench === 'canvas'
+    )
+    .sort((a, b) => a.placement.order - b.placement.order);
 }
 
 export function getDefaultCoreViewPath(capabilities?: RuntimeCapabilities): string {
   return (
-    getNavigationViews(capabilities).find((view) => view.nav.level === 'core')?.path ?? '/canvas'
+    getShellNavigationViews(capabilities).find((view) => view.placement.level === 'core')?.path ??
+    '/canvas'
   );
 }
 

@@ -1,7 +1,7 @@
 import type { RuntimeCapabilitiesDto } from '../../capabilities/runtime-capabilities';
 import {
   getDefaultCoreViewPath,
-  getNavigationViews,
+  getShellNavigationViews,
   getRegisteredPluginIds,
 } from '../plugins/registry';
 import { buildShellNavigationModel } from './shellNavigationModel';
@@ -18,7 +18,7 @@ function normalizeCapabilities(
 
 export function buildShellRuntimeState(capabilities: RuntimeCapabilitiesDto | undefined) {
   const runtimeCapabilities = normalizeCapabilities(capabilities);
-  const navigationViews = getNavigationViews(runtimeCapabilities);
+  const navigationViews = getShellNavigationViews(runtimeCapabilities);
   const defaultCoreViewPath = getDefaultCoreViewPath(runtimeCapabilities);
   const registeredPluginIds = getRegisteredPluginIds(runtimeCapabilities);
   const navigationModel = buildShellNavigationModel(navigationViews);

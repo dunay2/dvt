@@ -115,7 +115,11 @@ describe('app routes', () => {
     const rootRoute = getRootRoute(createAppRoutes());
     const redirectRoute = findChildRouteById(rootRoute, 'shell.default-core-redirect');
     const canvasRoute = findChildRouteByPath(rootRoute, 'canvas');
+    const canvasWorkbenchRoute = findChildRouteByPath(rootRoute, 'canvas/:workbenchTab');
     const lineageRoute = findChildRouteByPath(rootRoute, 'lineage');
+    const codeRoute = findChildRouteByPath(rootRoute, 'code');
+    const diffRoute = findChildRouteByPath(rootRoute, 'diff');
+    const artifactsRoute = findChildRouteByPath(rootRoute, 'artifacts');
     const runsRoute = findChildRouteByPath(rootRoute, 'runs');
     const costRoute = findChildRouteByPath(rootRoute, 'cost');
     const pluginsRoute = findChildRouteByPath(rootRoute, 'plugins');
@@ -134,12 +138,14 @@ describe('app routes', () => {
     expect(canvasRoute?.handle).toEqual({
       routeBootstrap: CANVAS_ROUTE_BOOTSTRAP_HANDLE,
     });
-    expect(lineageRoute?.id).toBe('dbt.lineage');
-    expect(lineageRoute?.handle).toMatchObject({
-      routeBootstrap: {
-        mode: 'published',
-      },
+    expect(canvasWorkbenchRoute?.id).toBe('dbt.canvas.workbench-tab');
+    expect(canvasWorkbenchRoute?.handle).toEqual({
+      routeBootstrap: CANVAS_ROUTE_BOOTSTRAP_HANDLE,
     });
+    expect(codeRoute).toBeUndefined();
+    expect(lineageRoute).toBeUndefined();
+    expect(diffRoute).toBeUndefined();
+    expect(artifactsRoute).toBeUndefined();
     expect(runsRoute?.id).toBe('monitoring.runs');
     expect(runsRoute?.handle).toMatchObject({
       routeBootstrap: {

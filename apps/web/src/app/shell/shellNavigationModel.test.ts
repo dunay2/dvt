@@ -17,7 +17,8 @@ describe('buildShellNavigationModel', () => {
             pendingDetail: 'Preparing code route',
           }),
         },
-        nav: {
+        placement: {
+          kind: 'shell-nav',
           label: 'Code',
           icon: FileCode2,
           order: 30,
@@ -34,7 +35,8 @@ describe('buildShellNavigationModel', () => {
             pendingDetail: 'Preparing diff route',
           }),
         },
-        nav: {
+        placement: {
+          kind: 'shell-nav',
           label: { key: 'nav.diff', fallback: 'Diff' },
           icon: GitCompareArrows,
           order: 40,
@@ -48,5 +50,26 @@ describe('buildShellNavigationModel', () => {
     expect(model.primaryItems.every((item) => item.source === 'runtime')).toBe(true);
     expect(model.footerItems.map((item) => item.to)).toEqual(['/plugins', '/admin']);
     expect(model.footerItems.every((item) => item.source === 'shell')).toBe(true);
+  });
+
+  it('refuses Canvas workbench tab placements at the shell navigation boundary', () => {
+    expect(() =>
+      buildShellNavigationModel([
+        {
+          pluginId: 'dbt',
+          id: 'code.view',
+          component: (() => null) as never,
+          placement: {
+            kind: 'workbench-tab',
+            workbench: 'canvas',
+            tabId: 'code',
+            label: 'Code',
+            icon: FileCode2,
+            order: 20,
+            scope: 'selection',
+          },
+        },
+      ] as never)
+    ).toThrow(/shell navigation/i);
   });
 });

@@ -22,6 +22,10 @@ import {
 } from './runs/runsRouteBootstrap';
 import { buildRunsWorkbenchState } from './runs/runWorkbenchStateModel';
 
+type RunsWorkbenchSurfaceProps = Readonly<{
+  resolveRouteBootstrapId: (runId: string | undefined) => string;
+}>;
+
 function toFocusedRunModel(workspace: RunWorkspaceViewModel): Run {
   const { snapshot } = workspace;
   const completedAtMs =
@@ -51,7 +55,7 @@ function toFocusedRunModel(workspace: RunWorkspaceViewModel): Run {
   } as Run;
 }
 
-export default function RunsView() {
+export function RunsWorkbenchSurface({ resolveRouteBootstrapId }: RunsWorkbenchSurfaceProps) {
   const { runId } = useParams();
   const setCurrentRun = useExecutionStore((state) => state.setCurrentRun);
   const {
@@ -89,7 +93,7 @@ export default function RunsView() {
     workspaceErrorMessage,
   });
   usePublishedRouteBootstrap(
-    runId ? RUN_DETAIL_ROUTE_ID : RUNS_ROUTE_ID,
+    resolveRouteBootstrapId(runId),
     deriveRunsRouteBootstrapPresentation(state)
   );
 
@@ -109,4 +113,12 @@ export default function RunsView() {
     case 'run-workspace':
       return <RunWorkspaceState workspace={state.workspace} />;
   }
+}
+
+export default function RunsView() {
+  return (
+    <RunsWorkbenchSurface
+      resolveRouteBootstrapId={(runId) => (runId ? RUN_DETAIL_ROUTE_ID : RUNS_ROUTE_ID)}
+    />
+  );
 }

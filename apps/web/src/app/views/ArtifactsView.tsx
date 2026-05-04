@@ -19,14 +19,12 @@ import {
 import { ArtifactsInfoCard } from './artifacts/ArtifactsInfoCard';
 import { ArtifactsList } from './artifacts/ArtifactsList';
 import { getArtifactsWorkbenchState } from './artifacts/artifactsWorkbenchStateModel';
-import {
-  ARTIFACTS_ROUTE_ID,
-  deriveArtifactsRouteBootstrapPresentation,
-} from './artifacts/artifactsRouteBootstrap';
+import { deriveArtifactsRouteBootstrapPresentation } from './artifacts/artifactsRouteBootstrap';
 import { artifactsViewCopy } from './artifacts/copy';
 import { ManifestImportPanel } from './artifacts/ManifestImportPanel';
 import { useArtifactsViewModel } from './artifacts/useArtifactsViewModel';
 import { useLocalManifestImport } from './artifacts/useLocalManifestImport';
+import { CANVAS_WORKBENCH_ROUTE_ID } from './canvas/canvasDraftPresentationStore';
 
 export default function ArtifactsView() {
   const panelClassName = cn(routeWorkbenchPanelClassName, 'p-4');
@@ -41,7 +39,7 @@ export default function ArtifactsView() {
     workspaceArtifactsErrorMessage: errorMessage,
   });
   usePublishedRouteBootstrap(
-    ARTIFACTS_ROUTE_ID,
+    CANVAS_WORKBENCH_ROUTE_ID,
     deriveArtifactsRouteBootstrapPresentation(workbenchState)
   );
 

@@ -1,11 +1,8 @@
+/** Owned concern: define plugin manifest vocabulary, including closed view placement variants. */
 import type { LucideIcon } from 'lucide-react';
 import type { AppRouteHandle } from '../../bootstrap/routeBootstrapContract';
 
-import type {
-  CanonicalNode,
-  CoreNodeRole,
-  PluginNodeKind,
-} from '../../types/canonical';
+import type { CanonicalNode, CoreNodeRole, PluginNodeKind } from '../../types/canonical';
 import type { PluginContext } from './PluginContext';
 import type { PluginServices } from './PluginServices';
 
@@ -62,19 +59,36 @@ export interface PluginConnectionRule {
 // View contributions
 // ---------------------------------------------------------------------------
 
+export type ShellNavigationPlacement = Readonly<{
+  kind: 'shell-nav';
+  label: LocalizableString;
+  icon: LucideIcon;
+  order: number;
+  level: 'core' | 'extended' | 'admin';
+}>;
+
+export type CanvasWorkbenchTabId = 'graph' | 'code' | 'lineage' | 'diff' | 'artifacts' | 'runs';
+
+export type CanvasWorkbenchTabPlacement = Readonly<{
+  kind: 'workbench-tab';
+  workbench: 'canvas';
+  tabId: Exclude<CanvasWorkbenchTabId, 'graph'>;
+  label: LocalizableString;
+  icon: LucideIcon;
+  order: number;
+  scope: 'canvas' | 'selection' | 'run';
+}>;
+
+export type ViewPlacement = ShellNavigationPlacement | CanvasWorkbenchTabPlacement;
+
 export interface ViewContribution {
   pluginId: string;
   id: string;
-  path: string;
+  path?: string;
   // Lazily loaded component — plugins use React.lazy
   component: React.ComponentType;
-  handle: AppRouteHandle;
-  nav?: {
-    label: LocalizableString;
-    icon: LucideIcon;
-    order: number;
-    level: 'core' | 'extended' | 'admin';
-  };
+  handle?: AppRouteHandle;
+  placement?: ViewPlacement;
 }
 
 // ---------------------------------------------------------------------------
@@ -215,4 +229,3 @@ export interface PluginManifest {
 
   createServices: (deps: PluginServiceDeps) => PluginServices;
 }
-

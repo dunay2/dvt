@@ -14,17 +14,7 @@ type RootShellMountedHarness = {
   queryClient: Pick<QueryClient, 'getQueryState'>;
 };
 
-const ROOT_SHELL_NAVIGATION_HREFS = [
-  '/canvas',
-  '/lineage',
-  '/code',
-  '/diff',
-  '/artifacts',
-  '/runs',
-  '/cost',
-  '/plugins',
-  '/admin',
-] as const;
+const ROOT_SHELL_NAVIGATION_HREFS = ['/canvas', '/runs', '/cost', '/plugins', '/admin'] as const;
 
 function requireElement<T extends Element>(container: ParentNode, selector: string): T {
   const element = container.querySelector<T>(selector);
@@ -45,7 +35,10 @@ function expectRootShellHeaderChrome(container: ParentNode): void {
     container,
     '[data-slot="shell-workspace-selectors"]'
   );
-  const shellMenuTrigger = requireElement<HTMLElement>(container, '[data-slot="shell-menu-trigger"]');
+  const shellMenuTrigger = requireElement<HTMLElement>(
+    container,
+    '[data-slot="shell-menu-trigger"]'
+  );
 
   expect(shellTopBar.textContent).toContain('Raven');
   expect(shellTopBar.textContent).toContain('View');
@@ -66,9 +59,7 @@ export function createHealthyPlatformCapability(): PlatformHealthCapabilityApi {
   };
 }
 
-export async function waitForHealthyShellChrome(
-  mounted: RootShellMountedHarness
-): Promise<void> {
+export async function waitForHealthyShellChrome(mounted: RootShellMountedHarness): Promise<void> {
   await waitForShellBootstrapSurface(mounted);
   await waitForReactQuery(
     () =>
@@ -80,7 +71,8 @@ export async function waitForHealthyShellChrome(
   );
   await waitFor(() => {
     expect(
-      requireElement<HTMLElement>(mounted.container, '[data-slot="shell-connection-status"]').className
+      requireElement<HTMLElement>(mounted.container, '[data-slot="shell-connection-status"]')
+        .className
     ).not.toContain('text-[var(--text-subtle)]');
   });
 }
@@ -106,15 +98,17 @@ export function expectRootShellFrameChrome(
   expectRootShellHeaderChrome(container);
 }
 
-export function expectRootShellNavigationChrome(
-  container: ParentNode,
-  activeHref: string
-): void {
-  const leftNavigationRail = requireElement<HTMLElement>(container, '[data-slot="left-navigation-rail"]');
+export function expectRootShellNavigationChrome(container: ParentNode, activeHref: string): void {
+  const leftNavigationRail = requireElement<HTMLElement>(
+    container,
+    '[data-slot="left-navigation-rail"]'
+  );
   const leftNavigationLinks = [
     ...container.querySelectorAll<HTMLAnchorElement>('[data-slot="left-navigation-link"]'),
   ];
-  const activeNavigationLink = leftNavigationLinks.find((link) => link.getAttribute('href') === activeHref);
+  const activeNavigationLink = leftNavigationLinks.find(
+    (link) => link.getAttribute('href') === activeHref
+  );
   if (!activeNavigationLink) {
     throw new Error(`Expected left navigation link for "${activeHref}".`);
   }
@@ -134,9 +128,9 @@ export function expectActiveRootShellNavigationLink(
   container: ParentNode,
   activeHref: string
 ): void {
-  const activeNavigationLink = [...container.querySelectorAll<HTMLAnchorElement>('[data-slot="left-navigation-link"]')].find(
-    (link) => link.getAttribute('href') === activeHref
-  );
+  const activeNavigationLink = [
+    ...container.querySelectorAll<HTMLAnchorElement>('[data-slot="left-navigation-link"]'),
+  ].find((link) => link.getAttribute('href') === activeHref);
   if (!activeNavigationLink) {
     throw new Error(`Expected left navigation link for "${activeHref}".`);
   }
