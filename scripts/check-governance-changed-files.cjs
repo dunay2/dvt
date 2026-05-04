@@ -81,7 +81,6 @@ function readNameStatusDiff(base, head, git = execGit) {
 function readLocalNameStatusDiff(base, head, git = execGit) {
   const changes = [
     ...parseNameStatus(git(['diff', '--name-status', '--find-renames', `${base}...${head}`])),
-    ...parseNameStatus(git(['diff', '--name-status', '--find-renames', base])),
     ...parseNameStatus(git(['diff', '--cached', '--name-status', '--find-renames'])),
     ...parseNameStatus(git(['diff', '--name-status', '--find-renames'])),
     ...readUntrackedNameStatus(git),

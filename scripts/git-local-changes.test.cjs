@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 
 const { listLocalChangedFiles } = require('./git-local-changes.cjs');
 
-test('listLocalChangedFiles includes unstaged and untracked files when branch diff is empty', () => {
+test('listLocalChangedFiles excludes upstream-only base-vs-worktree changes', () => {
   const calls = [];
   const runGitLines = (args) => {
     calls.push(args.join(' '));
@@ -22,7 +22,7 @@ test('listLocalChangedFiles includes unstaged and untracked files when branch di
     }
 
     if (args.join(' ') === 'diff --name-only --diff-filter=ACMR origin/main') {
-      return ['apps/web/src/app/views/Canvas.tsx'];
+      return ['apps/api/src/upstream-only.ts'];
     }
 
     if (args.join(' ') === 'diff --cached --name-only --diff-filter=ACMR') {
@@ -52,6 +52,11 @@ test('listLocalChangedFiles includes unstaged and untracked files when branch di
     ]
   );
   assert.ok(calls.includes('ls-files --others --exclude-standard'));
+  assert.equal(
+    calls.includes('diff --name-only --diff-filter=ACMR origin/main'),
+    false,
+    'base-vs-worktree diff adds upstream-only files when the branch is behind'
+  );
   assert.equal(
     calls.some((call) => call.includes('HEAD~1')),
     false

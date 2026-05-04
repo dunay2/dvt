@@ -1231,9 +1231,9 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-29F5B2A2EF39
     pathHash: e34092d87391689639a7813bd0abf34911cd78d52409cc6d78d5b2aca42c966e
-    contentHash: 4c352c85b731e65a04e31cdbdbc0177ef98fcab711b4be617dd5ec4a39adc76e
+    contentHash: 33bb24c924707013fd4368edd7e2b030cb60d2fbc783d2526e798d6c48324bea
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: 7e08047c14abe744fb36ead16c9d47572c723de20af7a02236c96024e25f567e
+    stateFingerprint: 92020967c71c42d407d9a97986dafd09b5a848ba7a7eadf2c2292aaf22bf4805
     path: scripts/check-governance-changed-files.cjs
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -1256,9 +1256,9 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-2108831C9F5F
     pathHash: fed77374b96d541e02a780f4977c262e6f5478bdd63de7caac833cc7f502351a
-    contentHash: 8f9a78c79215c9aa662ce41ac0d7597d11b328560b469dd1b36b1405e4512ada
+    contentHash: fe3271176ae324ac77515b1ac31b8c14e8c150c0ec820891ab86c98544e00f28
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: 1ccef69d66c1f474d5bd916a3bedcefc4f1526139c250dffbf7dbfd7083435f2
+    stateFingerprint: 600e3689eb3465cda34143990f621ca42e20bd1c775e9577c1219b9d58645c40
     path: scripts/check-governance-changed-files.test.cjs
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -2156,9 +2156,9 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-360C875CAB1C
     pathHash: ddda38662e76b8625616298934838928be4126e22ac5a73b40415672f1b6240e
-    contentHash: 2ee9ab7b9511a5691ee08899db60182b239f2e1acd383459ca194d4544291255
+    contentHash: e5cb8bef8aed1a17b44df804ff002ca731696bbe73a92f040edd5b16d30ec267
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: 1cb539203d98ddf51f3d71a1b9bc512aa54d4df918286b934f27804be00d2e68
+    stateFingerprint: b849885e98e29b3164a3a94ec1a2d74ed9b81d0aac753cc320c9bdfe329c6cb2
     path: scripts/git-local-changes.cjs
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -2181,9 +2181,9 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-1FF9DFD727B0
     pathHash: b2b28cc423d390d345e3510149fc67782e1736950b44948e0afb3b4503e73c23
-    contentHash: 6442ea749e44639d29b547d20996637e5a0727afd960613752f222eafd02170a
+    contentHash: 9004fe02eabad24f1801b165560aecce4953716fd0682dbd02acdc95f7e8553e
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: b4718fcf88872ec29a606dfdb5e0d7c2192b3e842a0054222e8019f9777f275c
+    stateFingerprint: 67a62420526e0455e1c41e8c20c52ec3183ce85d55f7e996f31f70a7eca6e2da
     path: scripts/git-local-changes.test.cjs
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     rootUnit: SYS-DVT

@@ -109,14 +109,6 @@ function listLocalChangedFiles(options = {}) {
     )) {
       changedFiles.add(filePath);
     }
-
-    for (const filePath of safeGitLines(
-      runGitLines,
-      withPathspec([...diffArgs, baseRef], pathspecs),
-      repoOptions
-    )) {
-      changedFiles.add(filePath);
-    }
   }
 
   for (const filePath of safeGitLines(
