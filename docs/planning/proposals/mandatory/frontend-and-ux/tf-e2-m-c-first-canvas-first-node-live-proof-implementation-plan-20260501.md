@@ -18,8 +18,8 @@ task_ids:
 
 **Goal:** Ship the first clean Canvas authoring lane through the live protected
 runtime. A user opens `/canvas` with no selected document, creates the first
-`transformation` or `dbt` canvas, adds the first node, drags it from the
-intended handle, saves through the authoritative draft boundary, reloads, and
+`transformation` or `dbt` canvas, adds the first node, drags it from the node
+card body, saves through the authoritative draft boundary, reloads, and
 sees the same document and layout without Cypress intercepting draft requests.
 
 **Architecture:** Canvas remains a hexagonal route module. The route consumes
@@ -63,8 +63,8 @@ In scope:
 - `transformation` and `dbt` first-canvas variants;
 - first-node creation only after an authoritative empty canvas save has
   settled;
-- explicit drag-handle movement and route-local layout persistence;
-- replacing the current whole-card drag surface with a named node drag handle;
+- explicit whole-node movement and route-local layout persistence;
+- keeping the whole-card drag surface as the governed operator gesture;
 - hard reload or route revisit proving authoritative draft and layout restore;
 - live Cypress proof with no intercepted draft reads or writes;
 - unit tests, architecture tests, component guide, user stories, and feature
@@ -90,7 +90,7 @@ semantic feature. Existing tests prove parts of the path: create-canvas command
 eligibility, stale React Flow drag payload handling, viewport projection, and
 selected closure proof. They do not prove that a clean live workspace can create
 the first document, add the first node after authoritative save, persist a drag
-from the intended handle, and restore through the same protected draft boundary.
+from the node card body, and restore through the same protected draft boundary.
 
 The product risk is high because a user can see Canvas and still have no
 actionable first-authoring path. Mature systems normally protect this with a
@@ -159,14 +159,14 @@ Rejected alternatives:
 No implementation is valid unless every externally visible behavior below is
 represented by this rail catalog and owned by a DDD object.
 
-| Rail                      | Type    | DDD owner                             | Slice rule                                                      |
-| ------------------------- | ------- | ------------------------------------- | --------------------------------------------------------------- |
-| `GetWorkspaceGraphDraft`  | query   | `WorkspaceGraphDraft` read boundary   | authoritative source for empty, created, and restored truth     |
-| `CreateCanvas`            | command | `CanvasDocument` aggregate            | creates exactly one typed first canvas from `needs_canvas`      |
-| `CreateCanvasNode`        | command | `CanvasAuthoringGraph` aggregate      | creates the first node only for an existing writable canvas     |
-| `SaveWorkspaceGraphDraft` | command | `WorkspaceGraphDraft` write boundary  | persists canvas and node graph through existing CAS policy      |
-| `PersistCanvasLayout`     | command | `CanvasLayoutProjection` value object | persists route-local drag-stop coordinates from intended handle |
-| `GetCanvasLayout`         | query   | `CanvasLayoutProjection` value object | restores route-local coordinates after reload or route revisit  |
+| Rail                      | Type    | DDD owner                             | Slice rule                                                     |
+| ------------------------- | ------- | ------------------------------------- | -------------------------------------------------------------- |
+| `GetWorkspaceGraphDraft`  | query   | `WorkspaceGraphDraft` read boundary   | authoritative source for empty, created, and restored truth    |
+| `CreateCanvas`            | command | `CanvasDocument` aggregate            | creates exactly one typed first canvas from `needs_canvas`     |
+| `CreateCanvasNode`        | command | `CanvasAuthoringGraph` aggregate      | creates the first node only for an existing writable canvas    |
+| `SaveWorkspaceGraphDraft` | command | `WorkspaceGraphDraft` write boundary  | persists canvas and node graph through existing CAS policy     |
+| `PersistCanvasLayout`     | command | `CanvasLayoutProjection` value object | persists route-local drag-stop coordinates from node card body |
+| `GetCanvasLayout`         | query   | `CanvasLayoutProjection` value object | restores route-local coordinates after reload or route revisit |
 
 `PersistCanvasLayout` and `GetCanvasLayout` are route-local Canvas rails. If
 implementation moves layout authority to backend storage, the command-query
@@ -259,11 +259,11 @@ creating the expected backend state outside the route.
 | `apps/web/src/app/views/canvas/useCanvasNodeAuthoringHandlers.ts`                                                         | Modify | Keep first-node creation behind writable draft posture and active canvas guard.              |
 | `apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.test.tsx`                                                      | Modify | Prove drag-stop payload coordinates survive stale React Flow node arrays.                    |
 | `apps/web/src/app/views/canvas/useCanvasViewportGraphModel.test.tsx`                                                      | Modify | Prove restored draft and local layout project into one visible node.                         |
-| `apps/web/src/app/views/canvas/canvasNodeMapper.ts`                                                                       | Modify | Point React Flow drag handle at a semantic node-handle selector.                             |
-| `apps/web/src/app/components/canvas/DbtNodeComponent.architecture.test.ts`                                                | Modify | Prove the drag selector points to a semantic visible handle.                                 |
-| `apps/web/src/app/components/canvas/DbtNodeComponent.tsx`                                                                 | Modify | Render a visible semantic drag handle inside the node shell.                                 |
-| `apps/web/src/app/components/canvas/DbtNodeComponent.module.css`                                                          | Modify | Keep the drag handle stable without changing graph semantics.                                |
-| `apps/web/src/app/views/canvas/CanvasViewport.test.tsx`                                                                   | Modify | Prove node drag uses the intended handle, not the whole card.                                |
+| `apps/web/src/app/views/canvas/canvasNodeMapper.ts`                                                                       | Modify | Keep React Flow node drag on the whole node by omitting a drag-handle selector.              |
+| `apps/web/src/app/components/canvas/DbtNodeComponent.architecture.test.ts`                                                | Modify | Prove no grip-only drag selector is reintroduced.                                            |
+| `apps/web/src/app/components/canvas/DbtNodeComponent.tsx`                                                                 | Modify | Render the node shell without a separate grip-only drag affordance.                          |
+| `apps/web/src/app/components/canvas/DbtNodeComponent.module.css`                                                          | Modify | Avoid stale drag-handle styling.                                                             |
+| `apps/web/src/app/views/canvas/CanvasViewport.test.tsx`                                                                   | Modify | Prove node drag stays governed by viewport permissions.                                      |
 | `apps/web/src/app/views/Canvas.test.controller.defaults.ts`                                                               | Modify | Keep Canvas controller test defaults aligned with required drag callbacks.                   |
 | `apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts`                                        | Modify | Guard semantic first-authoring proof ownership and no seeded startup nodes.                  |
 | `apps/web/cypress/support/canvasFirstAuthoring.ts`                                                                        | Create | Cypress helpers for live draft-node assertions and route-local layout assertions.            |
@@ -271,8 +271,8 @@ creating the expected backend state outside the route.
 | `apps/web/package.json`                                                                                                   | Modify | Expose the package-level mandatory first-authoring live proof script.                        |
 | `docs/architecture/components/web/graph/canvas-first-authoring-live-proof-component.md`                                   | Create | Component API, invariants, transitions, consumers, and diagrams.                             |
 | `docs/architecture/components/web/graph/canvas-layout-persistence-component.md`                                           | Modify | Align route-local layout hydration and active drag persistence invariants.                   |
-| `docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md`                                   | Modify | Keep drag-handle component semantics aligned with implementation.                            |
-| `docs/architecture/components/web/graph/graph-frontend-architecture.md`                                                   | Modify | Keep graph-level drag-handle topology aligned with implementation.                           |
+| `docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md`                                   | Modify | Keep whole-node drag surface semantics aligned with implementation.                          |
+| `docs/architecture/components/web/graph/graph-frontend-architecture.md`                                                   | Modify | Keep graph-level drag-surface topology aligned with implementation.                          |
 | `docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md`                                | Modify | Add TF-E2-M-C user stories and scenario matrix rows.                                         |
 | `docs/architecture/components/web/graph/index.md`                                                                         | Modify | Keep component navigation aligned.                                                           |
 | `docs/.manifest.json`                                                                                                     | Modify | Keep generated governance manifest aligned.                                                  |
@@ -325,14 +325,28 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/CanvasEmptyAuthoringEntrypoint.architecture.test.ts
   - apps/web/src/app/views/canvas/CanvasShell.test.tsx
   - apps/web/src/app/views/canvas/CanvasShellMainPanel.tsx
+  - apps/web/src/app/views/canvas/CanvasToolbar.test.tsx
+  - apps/web/src/app/views/canvas/CanvasToolbar.tsx
+  - apps/web/src/app/views/canvas/CanvasToolbarPrimaryControls.tsx
   - apps/web/src/app/views/canvas/CanvasViewport.tsx
   - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
   - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
   - apps/web/src/app/views/canvas/canvasCenterSurface.types.ts
   - apps/web/src/app/views/canvas/canvasCenterSurfaceWorkbench.tsx
   - apps/web/src/app/views/canvas/canvasControllerViewModel.ts
+  - apps/web/src/app/views/canvas/canvasAuthoringNodeCommand.ts
+  - apps/web/src/app/views/canvas/canvasAuthoringNodeCommand.test.ts
+  - apps/web/src/app/views/canvas/canvasCopy.types.ts
+  - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.ts
+  - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.es.ts
+  - apps/web/src/app/views/canvas/canvasGraphHandlerContractBuilders.ts
+  - apps/web/src/app/views/canvas/canvasGraphHandlerContracts.ts
+  - apps/web/src/app/views/canvas/canvasGraphUtils.ts
   - apps/web/src/app/views/canvas/canvasHostCycleState.ts
   - apps/web/src/app/views/canvas/canvasHostCycleState.test.ts
+  - apps/web/src/app/views/canvas/canvasPalette.ts
+  - apps/web/src/app/views/canvas/canvasShellChromeCommandsBuilder.ts
+  - apps/web/src/app/views/canvas/canvasShellGraphBuilder.ts
   - apps/web/src/app/views/canvas/canvasMutationHandlerContractBuilders.ts
   - apps/web/src/app/views/canvas/canvasMutationHandlerContracts.ts
   - apps/web/src/app/views/canvas/canvasRouteViewState.ts
@@ -354,13 +368,21 @@ allowedImplementationSurfaces:
   - apps/web/src/app/stores/canvasInteractionStore.ts
   - apps/web/src/app/stores/canvasInteractionStore.test.ts
   - apps/web/src/app/views/canvas/useCanvasLayoutPersistence.ts
+  - apps/web/src/app/views/canvas/useCanvasGraphHandlers.ts
+  - apps/web/src/app/views/canvas/useCanvasGraphHandlers.types.ts
+  - apps/web/src/app/views/canvas/useCanvasGraphHandlers.test.support.tsx
+  - apps/web/src/app/views/canvas/useCanvasGraphHandlers.layout.test.tsx
+  - apps/web/src/app/views/canvas/useCanvasLayoutHandlers.ts
   - apps/web/src/app/views/canvas/useCanvasMutationHandlers.ts
   - apps/web/src/app/views/canvas/useCanvasNodeAuthoringHandlers.ts
   - apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.ts
   - apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.architecture.test.ts
   - apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.test.tsx
   - apps/web/src/app/views/canvas/useCanvasViewportGraphModel.test.tsx
+  - apps/web/src/app/views/canvas/useCanvasStoreFacade.ts
   - apps/web/src/app/views/canvas/canvasNodeMapper.ts
+  - apps/web/src/app/stores/uiLayoutStore.ts
+  - apps/web/src/app/stores/uiLayoutStore.test.ts
   - apps/web/src/app/components/canvas/DbtNodeComponent.architecture.test.ts
   - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
   - apps/web/src/app/components/canvas/DbtNodeComponent.module.css
@@ -393,6 +415,9 @@ allowedImplementationSurfaces:
   - docs/planning/reviews/architecture-and-governance/20260501-tf-e2-m-c-fowler-hard-qa-review.md
   - docs/planning/status/generated-code-state.md
   - docs/planning/status/governance-document-rule-inventory.md
+  - docs/planning/status/governance-files/SYS-DOCS-GOVERNANCE.files.yaml
+  - docs/planning/status/governance-files/SYS-REPO-METADATA.files.yaml
+  - docs/planning/status/governance-files/SYS-WEB.files.yaml
   - docs/planning/status/system-governance-component-index-20260501.md
   - docs/planning/status/system-governance-component-index.components.yaml
   - docs/planning/status/system-governance-document-unit-map-20260501.md
@@ -404,6 +429,7 @@ allowedImplementationSurfaces:
   - scripts/run-canvas-first-authoring-live-proof.cjs
   - scripts/check-feature-mechanization.cjs
   - scripts/check-feature-mechanization.test.cjs
+  - buzon/20260428-codex-fowler-web-graph-startup-and-draft-recovery-analysis.md
 forbiddenImplementationSurfaces:
   - apps/web/src/app/services/api/** token refresh behavior
   - apps/api/src/services/auth/** backend authorization behavior
@@ -430,6 +456,9 @@ commandQueryRails:
   - name: GetCanvasLayout
     type: query
     dddOwner: CanvasLayoutProjection value object
+  - name: ConfigureCanvasViewportPreferences
+    type: command
+    dddOwner: CanvasViewportPreferences value object
   - name: ValidateFeatureMechanizationImplementation
     type: command
     dddOwner: Repository feature mechanization guard
@@ -442,6 +471,7 @@ domainObjects:
   - CanvasAuthoringGraph
   - CanvasNodeDraft
   - CanvasLayoutProjection
+  - CanvasViewportPreferences
   - CanvasFirstAuthoringLiveProof
   - CanvasDraftAccessPosture
   - WorkspaceGraphDraftRevision
@@ -506,7 +536,7 @@ redGreenCycles:
     greenTest: pnpm --filter @dvt/web test -- canvasHostCycleState.test.ts canvasCreateCanvasDocumentCommand.test.ts
   - id: first-node-and-layout-persistence
     redTest: pnpm --filter @dvt/web test -- useCanvasController.core.test.tsx useCanvasController.persistence.test.tsx useCanvasNodeChangeHandlers.test.tsx useCanvasViewportGraphModel.test.tsx CanvasViewport.test.tsx canvasInteractionStore.test.ts
-    expectedFailure: first-node creation after authoritative first-canvas save, semantic drag-handle behavior, automatic layout-store hydration, and layout persistence are not closed.
+    expectedFailure: first-node creation after authoritative first-canvas save, whole-node drag behavior, automatic layout-store hydration, and layout persistence are not closed.
     patchSurfaces:
       - apps/web/src/app/views/canvas/useCanvasController.ts
       - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
@@ -548,6 +578,96 @@ redGreenCycles:
       - scripts/run-canvas-first-authoring-live-proof.cjs
     greenTest: pnpm --filter @dvt/web test:e2e:first-authoring:live
 symbols:
+  - name: buildToolbarProps
+    path: apps/web/src/app/views/canvas/CanvasToolbar.test.tsx
+    dddOwner: CanvasViewportPreferences test fixture
+    cqRails:
+      - ConfigureCanvasViewportPreferences
+    fowlerSignals:
+      - test-data-builder for route chrome command contract
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - CanvasToolbar.test.tsx
+  - name: FIRST_AUTHORING_NODE_POSITION
+    path: apps/web/src/app/views/canvas/canvasAuthoringNodeCommand.ts
+    dddOwner: CanvasAuthoringGraph aggregate
+    cqRails:
+      - CreateCanvasNode
+    fowlerSignals:
+      - visible first authoring slot instead of hidden origin default
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-first-authoring-live.cy.ts
+    unitTests:
+      - canvasAuthoringNodeCommand.test.ts
+  - name: LayoutOptions
+    path: apps/web/src/app/views/canvas/canvasGraphUtils.ts
+    dddOwner: CanvasLayoutProjection value object
+    cqRails:
+      - PersistCanvasLayout
+      - ConfigureCanvasViewportPreferences
+    fowlerSignals:
+      - explicit coordinate projection policy
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - useCanvasGraphHandlers.layout.test.tsx
+  - name: getLayoutedElements
+    path: apps/web/src/app/views/canvas/canvasGraphUtils.ts
+    dddOwner: CanvasLayoutProjection value object
+    cqRails:
+      - PersistCanvasLayout
+    fowlerSignals:
+      - preserve node semantics while projecting coordinates
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - useCanvasGraphHandlers.layout.test.tsx
+  - name: resolveLayoutPosition
+    path: apps/web/src/app/views/canvas/canvasGraphUtils.ts
+    dddOwner: CanvasLayoutProjection value object
+    cqRails:
+      - PersistCanvasLayout
+      - ConfigureCanvasViewportPreferences
+    fowlerSignals:
+      - policy object for snapped coordinate projection
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - useCanvasGraphHandlers.layout.test.tsx
+  - name: snapCoordinate
+    path: apps/web/src/app/views/canvas/canvasGraphUtils.ts
+    dddOwner: CanvasLayoutProjection value object
+    cqRails:
+      - ConfigureCanvasViewportPreferences
+    fowlerSignals:
+      - deterministic value-object helper
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - useCanvasGraphHandlers.layout.test.tsx
+  - name: DEFAULT_CANVAS_GRID_COLOR
+    path: apps/web/src/app/views/canvas/canvasPalette.ts
+    dddOwner: CanvasViewportPreferences value object
+    cqRails:
+      - ConfigureCanvasViewportPreferences
+    fowlerSignals:
+      - canonical default for visual preference normalization
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - uiLayoutStore.test.ts
+  - name: normalizeCanvasHexColor
+    path: apps/web/src/app/views/canvas/canvasPalette.ts
+    dddOwner: CanvasViewportPreferences value object
+    cqRails:
+      - ConfigureCanvasViewportPreferences
+    fowlerSignals:
+      - validation boundary for persisted visual preferences
+    architectureGuard: canvasStartupAndDraftRecovery.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - uiLayoutStore.test.ts
   - name: DragPoint
     path: apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
     dddOwner: Canvas happy-path draggable Cypress proof
@@ -1219,7 +1339,7 @@ symbols:
       - apps/web/src/app/views/canvas/useCanvasController.persistence.test.tsx
       - apps/web/src/app/views/canvas/useCanvasNodeChangeHandlers.test.tsx
       - apps/web/src/app/views/canvas/useCanvasViewportGraphModel.test.tsx
-  - name: CANVAS_NODE_DRAG_HANDLE_SELECTOR
+  - name: WholeNodeDragSurface
     path: apps/web/src/app/views/canvas/canvasNodeMapper.ts
     dddOwner: CanvasLayoutProjection value object
     cqRails:
@@ -1635,8 +1755,8 @@ symbols:
       React Flow node arrays and hard reload restoration.
 - [x] Extend route-local store tests so automatic persistence hydration marks
       the layout store ready without manual test-only rehydrate calls.
-- [x] Replace whole-card drag with a visible semantic handle and extend
-      viewport tests so the node moves from that handle only.
+- [x] Keep whole-card drag as the governed surface and extend tests so the node
+      moves from the card body while permissions remain fail-closed.
 - [x] Add semantic architecture guard assertions for proof ownership, no seeded
       startup nodes, first-node defaults, no direct Cypress draft seeding, no
       draft endpoint intercepts, and docs/implementation traceability.
@@ -1679,9 +1799,9 @@ pnpm verify:prepush
   settled.
 - The first transformation node is `dvt-source-1`; the first dbt node is
   `dbt-source-1`.
-- The node shell exposes a semantic drag handle; the whole card is not the drag
-  handle.
-- Dragging the first card from the intended handle persists the dropped
+- The node shell does not expose a separate grip-only drag handle; the whole
+  card is the drag surface when mutation is allowed.
+- Dragging the first card from the node body persists the dropped
   coordinate and restores it after reload.
 - Cypress proves the full flow against live protected runtime draft requests
   through `pnpm --filter @dvt/web test:e2e:first-authoring:live`.
@@ -1713,7 +1833,7 @@ Antipatterns this plan forbids:
   command;
 - JSX-level command branching;
 - duplicate first-canvas semantics in host, tab strip, and controller;
-- whole-card drag semantics hidden behind a misleading handle name;
+- grip-only drag semantics hidden behind a misleading handle name;
 - layout persistence code that overwrites graph authority;
 - plan/run behavior changes inside this authoring slice.
 

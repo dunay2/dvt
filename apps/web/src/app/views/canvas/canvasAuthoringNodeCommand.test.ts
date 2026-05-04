@@ -5,13 +5,13 @@ import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
 import { buildAuthoringNodeCommand } from './canvasAuthoringNodeCommand';
 
 describe('buildAuthoringNodeCommand', () => {
-  it('starts empty canvases from the canonical origin', () => {
+  it('starts empty canvases from the first visible authoring slot', () => {
     const command = buildAuthoringNodeCommand(
       buildTestNodeKind('dvt:sql_transform', 'SQL transform'),
       []
     );
 
-    expect(command.position).toEqual({ x: 0, y: 0 });
+    expect(command.position).toEqual({ x: 160, y: 120 });
   });
 
   it('places catalog-created nodes in the matching loaded graph column instead of resetting to origin', () => {

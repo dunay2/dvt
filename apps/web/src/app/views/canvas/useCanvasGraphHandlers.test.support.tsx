@@ -5,10 +5,7 @@ import { vi } from 'vitest';
 
 import type { Edge, Node } from '@xyflow/react';
 
-import type {
-  ConnectionRuleResult,
-  PluginPortMap,
-} from '../../plugins/contracts/ConnectionRules';
+import type { ConnectionRuleResult, PluginPortMap } from '../../plugins/contracts/ConnectionRules';
 import type { RuntimeCapabilities } from '../../plugins/registry';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
@@ -109,6 +106,8 @@ type RenderGraphHandlersHookArgs = {
   focusMode?: boolean;
   inspectorPanelVisible?: boolean;
   columnLevelLineageEnabled?: boolean;
+  gridSize?: number;
+  canvasSnapToGrid?: boolean;
   setNodes?: ReturnType<typeof vi.fn>;
   setEdges?: ReturnType<typeof vi.fn>;
   setDraftSession?: ReturnType<typeof vi.fn>;
@@ -123,7 +122,10 @@ export function renderGraphHandlersHook({
   allowsCanonicalNode = () => true,
   runtimeCapabilities,
   graphStrategy,
-  canonicalNodes = [buildCanonicalNode('source-node', 'input'), buildCanonicalNode('sink-node', 'output')],
+  canonicalNodes = [
+    buildCanonicalNode('source-node', 'input'),
+    buildCanonicalNode('sink-node', 'output'),
+  ],
   nodes = [
     { id: 'source-node', data: { name: 'source-node' }, position: { x: 0, y: 0 } },
     { id: 'sink-node', data: { name: 'sink-node' }, position: { x: 1, y: 1 } },
@@ -135,6 +137,8 @@ export function renderGraphHandlersHook({
   focusMode = false,
   inspectorPanelVisible = true,
   columnLevelLineageEnabled = false,
+  gridSize = 20,
+  canvasSnapToGrid = false,
   setNodes = vi.fn(),
   setEdges = vi.fn(),
   setDraftSession = vi.fn(),
@@ -175,6 +179,8 @@ export function renderGraphHandlersHook({
       inspectorNodeId,
       draftSession,
       canEditEdges,
+      gridSize,
+      canvasSnapToGrid,
       runtimeCapabilities,
       allowsCanonicalNode,
       focusMode,
@@ -249,7 +255,9 @@ export function evaluateGraphHandlerConnectionWith(
   graphHandlersTestDoubles.evaluateConnection.mockImplementation(implementation);
 }
 
-export function rejectTransformationConnectionWith(reasonCode: TransformationConnectionGuardReasonCode) {
+export function rejectTransformationConnectionWith(
+  reasonCode: TransformationConnectionGuardReasonCode
+) {
   graphHandlersTestDoubles.guardTransformationConnection.mockReturnValue({
     allowed: false,
     reasonCode,

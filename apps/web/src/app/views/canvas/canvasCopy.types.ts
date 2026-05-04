@@ -70,6 +70,9 @@ export type CanvasViewCopy = {
   readonly toolbarImpactLabel: string;
   readonly toolbarColumnsLabel: string;
   readonly toolbarCostLabel: string;
+  readonly toolbarGridLabel: string;
+  readonly toolbarGridColorLabel: string;
+  readonly toolbarSnapToGridLabel: string;
   readonly toolbarPlanLabel: string;
   readonly toolbarRunLabel: string;
   readonly newCanvasLabel: string;

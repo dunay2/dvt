@@ -158,6 +158,8 @@ export function useCanvasController() {
     inspectorNodeId: uiScope.inspectorNodeId,
     draftSession,
     canEditEdges: canMutateActiveCanvas,
+    gridSize: store.gridSize,
+    canvasSnapToGrid: store.canvasSnapToGrid,
     runtimeCapabilities: capabilities,
     allowsCanonicalNode: runtimePolicy.admission.allowsCanonicalNode,
     focusMode: store.focusMode,

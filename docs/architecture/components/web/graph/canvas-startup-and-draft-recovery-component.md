@@ -19,7 +19,7 @@ Use this page when changing:
 - route bootstrap posture for graph-adjacent routes
 - workspace graph draft read-model projection
 - host-owned create or replace canvas commands
-- React Flow node drag handle wiring
+- React Flow whole node drag surface wiring
 - scenario coverage for Canvas startup and draft recovery
 
 Do not use it as the multi-canvas architecture. The current model still has one
@@ -67,7 +67,7 @@ changes from `Proposed` to `Active`.
 | `deriveCanvasDraftAuthTransportPosture(...)`          | `canvasDraftAuthTransportPosture.ts`         | Planned: normalize final draft auth errors for Canvas posture.                    |
 | `CanvasDraftAccessPosture`                            | `canvasDraftAccessPostureModel.ts`           | Planned: resolve protected draft access into one posture.                         |
 | `deriveCanvasDraftAccessPosture(...)`                 | `canvasDraftAccessPostureModel.ts`           | Planned: project draft read outcomes into one route-visible posture model.        |
-| `CANVAS_NODE_DRAG_HANDLE_SELECTOR`                    | `canvasNodeMapper.ts`                        | Name the React Flow drag handle shared by mapped nodes and rendered node shell.   |
+| Whole node drag surface                               | `canvasNodeMapper.ts`                        | Leave React Flow node drag scoped to the node card when mutation is allowed.      |
 
 ## Invariants
 
@@ -132,8 +132,8 @@ changes from `Proposed` to `Active`.
   no recovery, access-denial, read-only, format, or pending state is active.
 - The tab-strip replacement action must stay disabled when effective route
   permissions deny graph editing.
-- Node drag remains permission-gated by `CanvasViewport`; the drag handle only
-  names the gesture surface when dragging is already allowed.
+- Node drag remains permission-gated by `CanvasViewport`; the whole node drag
+  surface is active only when dragging is already allowed.
 - `DbtNodeComponent.tsx` renders node shell and plugin decorations only; it must
   not own graph mutation policy or draft persistence.
 
@@ -186,15 +186,14 @@ flowchart LR
   Snapshot --> RouteConsumers["graph snapshot route consumers"]
 ```
 
-### Drag handle ownership
+### Whole node drag surface
 
 ```mermaid
 flowchart LR
   Policy["effectiveUserPermissions.canEditEdges"] --> Viewport["CanvasViewport nodesDraggable"]
-  Mapper["canvasNodeMapper.ts"] --> Selector[".canvas-node-drag-handle"]
-  Selector --> NodeHandle["DbtNodeComponent visible drag handle"]
-  Viewport --> Gesture["React Flow drag gesture"]
-  NodeHandle --> Gesture
+  Mapper["canvasNodeMapper.ts"] --> Node["React Flow node without dragHandle selector"]
+  Viewport --> Gesture["React Flow whole node drag gesture"]
+  Node --> Gesture
 ```
 
 ### Recovery banner presentation
@@ -300,7 +299,7 @@ flowchart LR
 | Presentation Model            | `CanvasDraftAccessPosture`                   | keep draft access truth in one posture object      |
 | Policy Object                 | `isCanvasDraftPostureMutationBlocked`        | gate unsafe mutations from one semantic policy     |
 | Separated Domain Model        | `canvasPlaygroundTabStripModel.ts`           | test command and i18n state without React          |
-| Intention Revealing Interface | `CANVAS_NODE_DRAG_HANDLE_SELECTOR`           | gesture ownership is named and testable            |
+| Intention Revealing Interface | whole node drag surface                      | gesture ownership is named and testable            |
 | Parameter Object              | `MapCanonicalNodeToCanvasNodeArgs`           | viewport projection options are named at callsite  |
 | Extract Component             | `CanvasReplacementAction`                    | destructive action UI is isolated and testable     |
 
@@ -342,7 +341,7 @@ It validates semantics, not only barrel thinness:
 - `CanvasRecoveryBanner.tsx` delegates recovery state resolution and renders
   through `CanvasRecoveryBanner.templates.tsx`;
 - tab strip confirmation stays tied to edit permission;
-- mapped and dropped nodes carry the explicit drag handle;
+- mapped and dropped nodes do not carry a React Flow `dragHandle` selector;
 - branch-owned modules keep owned-concern docblocks;
 - protected-runtime auth refresh stays inside the API client component;
 - Canvas layout persistence does not import draft-authoring ports;

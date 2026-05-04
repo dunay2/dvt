@@ -109,6 +109,9 @@ function buildProps(
     nodeTypes: {},
     gridSize: 24,
     canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
+    canvasGridVisible: true,
+    canvasGridColor: '#94a3b8',
+    canvasSnapToGrid: false,
     viewport: null,
     onNodesChange: vi.fn(),
     onNodeDrag: vi.fn(),
@@ -239,7 +242,12 @@ describe('CanvasViewport', () => {
       className: 'bg-(--canvas-surface)',
       nodesDraggable: true,
       nodesConnectable: true,
+      snapToGrid: false,
+      snapGrid: [32, 32],
     });
+    expect(container.querySelector('[data-testid="background"]')?.textContent).toBe(
+      'color:#94a3b8|gap:32'
+    );
     expect(xyflowState.miniMapMaskColor).toBe('var(--canvas-minimap-mask)');
     expect(xyflowState.miniMapMaskStrokeColor).toBe('var(--canvas-minimap-mask-stroke)');
     expect(xyflowState.miniMapClassName).toBe('rounded-lg');
@@ -305,6 +313,49 @@ describe('CanvasViewport', () => {
     expect(xyflowState.lastReactFlowProps).toMatchObject({
       multiSelectionKeyCode: 'Shift',
       selectNodesOnDrag: true,
+    });
+  });
+
+  it('uses the governed grid preferences for background visibility, color, and snap policy', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasViewport
+          {...buildProps({
+            gridSize: 16,
+            canvasGridVisible: true,
+            canvasGridColor: '#f97316',
+            canvasSnapToGrid: true,
+          })}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-testid="background"]')?.textContent).toBe(
+      'color:#f97316|gap:16'
+    );
+    expect(xyflowState.lastReactFlowProps).toMatchObject({
+      snapToGrid: true,
+      snapGrid: [16, 16],
+      nodesDraggable: true,
+    });
+  });
+
+  it('can hide the canvas grid without disabling node dragging', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasViewport
+          {...buildProps({
+            canvasGridVisible: false,
+            canvasSnapToGrid: true,
+          })}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-testid="background"]')).toBeNull();
+    expect(xyflowState.lastReactFlowProps).toMatchObject({
+      snapToGrid: true,
+      nodesDraggable: true,
     });
   });
 

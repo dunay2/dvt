@@ -58,6 +58,9 @@ export type CanvasShellGraph = {
   nodeTypes: NodeTypes;
   gridSize: number;
   canvasPalette: CanvasPaletteId;
+  canvasGridVisible: boolean;
+  canvasGridColor: CanvasPaletteId;
+  canvasSnapToGrid: boolean;
   viewport: CanvasViewport | null;
 };
 
@@ -100,6 +103,9 @@ export type CanvasShellChromeCommands = {
   onToggleCostOverlay: () => void;
   onToggleImpact: () => void;
   onToggleColumns: () => void;
+  onToggleGridVisible: () => void;
+  onGridColorChange: (color: CanvasPaletteId) => void;
+  onToggleSnapToGrid: () => void;
   onReloadLatestDraft: () => void;
   onPlan: () => void;
   onRun: () => void;

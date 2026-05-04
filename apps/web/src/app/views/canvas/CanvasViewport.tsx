@@ -1,5 +1,6 @@
 /** Owned concern: render the Canvas viewport over React Flow and forward governed gesture callbacks only. */
 import {
+  Background,
   Controls,
   MiniMap,
   ReactFlow,
@@ -69,6 +70,9 @@ type CanvasViewportProps = {
   readonly nodeTypes: NodeTypes;
   readonly gridSize: number;
   readonly canvasPalette: CanvasPaletteId;
+  readonly canvasGridVisible: boolean;
+  readonly canvasGridColor: CanvasPaletteId;
+  readonly canvasSnapToGrid: boolean;
   readonly viewport: { x: number; y: number; zoom: number } | null;
   readonly onNodesChange: NonNullable<ReactFlowProps<Node, Edge>['onNodesChange']>;
   readonly onEdgesChange: NonNullable<ReactFlowProps<Node, Edge>['onEdgesChange']>;
@@ -230,6 +234,10 @@ type CanvasViewportReactFlowSurfaceProps = Readonly<
     | 'nodesWithImpact'
     | 'edges'
     | 'nodeTypes'
+    | 'gridSize'
+    | 'canvasGridVisible'
+    | 'canvasGridColor'
+    | 'canvasSnapToGrid'
     | 'viewport'
     | 'onNodesChange'
     | 'onEdgesChange'
@@ -250,6 +258,10 @@ function CanvasViewportReactFlowSurface({
   nodesWithImpact,
   edges,
   nodeTypes,
+  gridSize,
+  canvasGridVisible,
+  canvasGridColor,
+  canvasSnapToGrid,
   viewport,
   onNodesChange,
   onEdgesChange,
@@ -277,6 +289,8 @@ function CanvasViewportReactFlowSurface({
       nodeTypes={nodeTypes}
       nodesDraggable={canEditEdges}
       nodesConnectable={canEditEdges}
+      snapToGrid={canvasSnapToGrid}
+      snapGrid={[gridSize, gridSize]}
       nodesFocusable={canEditEdges}
       edgesFocusable={canEditEdges}
       edgesReconnectable={canEditEdges}
@@ -295,6 +309,7 @@ function CanvasViewportReactFlowSurface({
       onDragOver={onDragOver}
       className="bg-(--canvas-surface)"
     >
+      {canvasGridVisible ? <Background color={canvasGridColor} gap={gridSize} /> : null}
       <Controls />
       <MiniMap
         pannable
@@ -313,7 +328,7 @@ function CanvasViewportReactFlowSurface({
 type CanvasViewportSurfaceProps = Readonly<
   Omit<
     CanvasViewportProps,
-    'gridSize' | 'canvasPalette' | 'importedNodeFocusIds' | 'onImportedNodeFocusComplete'
+    'canvasPalette' | 'importedNodeFocusIds' | 'onImportedNodeFocusComplete'
   > & {
     viewportRef: RefObject<HTMLDivElement>;
     resolvedCanvasPalette: CanvasPaletteId;
@@ -330,6 +345,10 @@ function CanvasViewportSurface({
   nodesWithImpact,
   edges,
   nodeTypes,
+  gridSize,
+  canvasGridVisible,
+  canvasGridColor,
+  canvasSnapToGrid,
   viewport,
   onNodesChange,
   onEdgesChange,
@@ -365,6 +384,10 @@ function CanvasViewportSurface({
         nodesWithImpact={nodesWithImpact}
         edges={edges}
         nodeTypes={nodeTypes}
+        gridSize={gridSize}
+        canvasGridVisible={canvasGridVisible}
+        canvasGridColor={canvasGridColor}
+        canvasSnapToGrid={canvasSnapToGrid}
         viewport={viewport}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
@@ -409,6 +432,10 @@ export default function CanvasViewport(props: CanvasViewportProps): JSX.Element 
       nodesWithImpact={props.nodesWithImpact}
       edges={props.edges}
       nodeTypes={props.nodeTypes}
+      gridSize={props.gridSize}
+      canvasGridVisible={props.canvasGridVisible}
+      canvasGridColor={props.canvasGridColor}
+      canvasSnapToGrid={props.canvasSnapToGrid}
       viewport={props.viewport}
       onNodesChange={props.onNodesChange}
       onEdgesChange={props.onEdgesChange}

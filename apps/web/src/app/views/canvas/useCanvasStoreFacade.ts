@@ -34,6 +34,12 @@ type CanvasStoreFacade = {
   inspectorPanelVisible: boolean;
   gridSize: number;
   canvasPalette: CanvasPaletteId;
+  canvasGridVisible: boolean;
+  canvasGridColor: CanvasPaletteId;
+  canvasSnapToGrid: boolean;
+  setCanvasGridVisible: (visible: boolean) => void;
+  setCanvasGridColor: (color: CanvasPaletteId) => void;
+  setCanvasSnapToGrid: (enabled: boolean) => void;
   canvasLayouts: ReturnType<typeof useCanvasInteractionStore.getState>['canvasLayouts'];
   setCanvasViewport: ReturnType<typeof useCanvasInteractionStore.getState>['setCanvasViewport'];
   setCanvasNodePositions: ReturnType<
@@ -87,6 +93,12 @@ export function useCanvasStoreFacade(): CanvasStoreView {
   const inspectorPanelVisible = useUiLayoutStore((state) => state.inspectorPanelVisible);
   const gridSize = useUiLayoutStore((state) => state.gridSize);
   const canvasPalette = useUiLayoutStore((state) => state.canvasPalette);
+  const canvasGridVisible = useUiLayoutStore((state) => state.canvasGridVisible);
+  const canvasGridColor = useUiLayoutStore((state) => state.canvasGridColor);
+  const canvasSnapToGrid = useUiLayoutStore((state) => state.canvasSnapToGrid);
+  const setCanvasGridVisible = useUiLayoutStore((state) => state.setCanvasGridVisible);
+  const setCanvasGridColor = useUiLayoutStore((state) => state.setCanvasGridColor);
+  const setCanvasSnapToGrid = useUiLayoutStore((state) => state.setCanvasSnapToGrid);
   const canvasLayouts = useCanvasInteractionStore((state) => state.canvasLayouts);
   const setCanvasViewport = useCanvasInteractionStore((state) => state.setCanvasViewport);
   const setCanvasNodePositions = useCanvasInteractionStore((state) => state.setCanvasNodePositions);
@@ -143,6 +155,12 @@ export function useCanvasStoreFacade(): CanvasStoreView {
     inspectorPanelVisible,
     gridSize,
     canvasPalette,
+    canvasGridVisible,
+    canvasGridColor,
+    canvasSnapToGrid,
+    setCanvasGridVisible,
+    setCanvasGridColor,
+    setCanvasSnapToGrid,
     canvasLayouts,
     setCanvasViewport,
     setCanvasNodePositions,

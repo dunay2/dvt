@@ -9,6 +9,47 @@ import { canvasViewCopy } from './copy';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 
+function buildToolbarProps(
+  overrides?: Partial<React.ComponentProps<typeof CanvasToolbar>>
+): React.ComponentProps<typeof CanvasToolbar> {
+  return {
+    placement: 'top-bar',
+    onAutoLayout: vi.fn(),
+    onToggleCostOverlay: vi.fn(),
+    onToggleImpact: vi.fn(),
+    onToggleColumns: vi.fn(),
+    onToggleGridVisible: vi.fn(),
+    onGridColorChange: vi.fn(),
+    onToggleSnapToGrid: vi.fn(),
+    onReloadLatestDraft: vi.fn(),
+    onPlan: vi.fn(),
+    onRun: vi.fn(),
+    routeState: 'ready',
+    draftToolbarState: {
+      label: canvasViewCopy.draftSyncedLabel,
+      tone: 'neutral',
+      showReloadAction: false,
+    },
+    canPlan: true,
+    canRun: true,
+    canEditEdges: true,
+    canStartRun: false,
+    planStatusSummary: canvasViewCopy.planStatusPreviewRequiredMessage,
+    canvasAuthoringMode: 'transformation',
+    exclusiveOverlayMode: 'runtime',
+    canUseCostOverlay: true,
+    impactOverlayEnabled: false,
+    columnLevelLineageEnabled: false,
+    canvasGridVisible: true,
+    canvasGridColor: '#94a3b8',
+    canvasSnapToGrid: false,
+    transformationValidation: buildValidationResult(),
+    nodeCount: 3,
+    edgeCount: 2,
+    ...overrides,
+  };
+}
+
 function buildValidationResult(
   overrides?: Partial<TransformationGraphValidationResult>
 ): TransformationGraphValidationResult {
@@ -61,29 +102,9 @@ describe('CanvasToolbar', () => {
     await act(async () => {
       root.render(
         <CanvasToolbar
-          placement="top-bar"
-          onAutoLayout={vi.fn()}
-          onToggleCostOverlay={vi.fn()}
-          onToggleImpact={vi.fn()}
-          onToggleColumns={vi.fn()}
-          onReloadLatestDraft={vi.fn()}
-          onPlan={vi.fn()}
-          onRun={vi.fn()}
-          routeState="ready"
-          draftToolbarState={defaultDraftToolbarState}
-          canPlan={true}
-          canRun={true}
-          canEditEdges={true}
-          canStartRun={false}
-          planStatusSummary={canvasViewCopy.planStatusPreviewRequiredMessage}
-          canvasAuthoringMode="transformation"
-          exclusiveOverlayMode="runtime"
-          canUseCostOverlay={true}
-          impactOverlayEnabled={false}
-          columnLevelLineageEnabled={false}
-          transformationValidation={buildValidationResult()}
-          nodeCount={3}
-          edgeCount={2}
+          {...buildToolbarProps({
+            draftToolbarState: defaultDraftToolbarState,
+          })}
         />
       );
     });
@@ -94,41 +115,75 @@ describe('CanvasToolbar', () => {
     expect(portalHost.textContent).toContain(canvasViewCopy.toolbarImpactLabel);
     expect(portalHost.textContent).toContain(canvasViewCopy.toolbarColumnsLabel);
     expect(portalHost.textContent).toContain(canvasViewCopy.toolbarCostLabel);
+    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarGridLabel);
+    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarSnapToGridLabel);
     expect(portalHost.textContent).toContain(canvasViewCopy.toolbarPlanLabel);
     expect(portalHost.textContent).toContain(canvasViewCopy.toolbarRunLabel);
     expect(portalHost.textContent).toContain(canvasViewCopy.draftSyncedLabel);
+  });
+
+  it('applies canvas grid preference commands from the toolbar', async () => {
+    const onToggleGridVisible = vi.fn();
+    const onGridColorChange = vi.fn();
+    const onToggleSnapToGrid = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <CanvasToolbar
+          {...buildToolbarProps({
+            onToggleGridVisible,
+            onGridColorChange,
+            onToggleSnapToGrid,
+            canvasGridVisible: false,
+            canvasGridColor: '#f97316',
+            canvasSnapToGrid: true,
+          })}
+        />
+      );
+    });
+
+    const gridButton = Array.from(portalHost.querySelectorAll('button')).find(
+      (button) => button.ariaLabel === canvasViewCopy.toolbarGridLabel
+    );
+    const snapButton = Array.from(portalHost.querySelectorAll('button')).find(
+      (button) => button.ariaLabel === canvasViewCopy.toolbarSnapToGridLabel
+    );
+    const colorInput = portalHost.querySelector(
+      `input[aria-label="${canvasViewCopy.toolbarGridColorLabel}"]`
+    ) as HTMLInputElement | null;
+
+    expect(gridButton).not.toBeNull();
+    expect(snapButton).not.toBeNull();
+    expect(colorInput?.value).toBe('#f97316');
+
+    await act(async () => {
+      gridButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      snapButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      if (colorInput != null) {
+        colorInput.value = '#22c55e';
+      }
+      colorInput?.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
+    expect(onToggleGridVisible).toHaveBeenCalledTimes(1);
+    expect(onToggleSnapToGrid).toHaveBeenCalledTimes(1);
+    expect(onGridColorChange).toHaveBeenCalledWith('#22c55e');
   });
 
   it('keeps plan button disabled when transformation validation is invalid', async () => {
     await act(async () => {
       root.render(
         <CanvasToolbar
-          placement="top-bar"
-          onAutoLayout={vi.fn()}
-          onToggleCostOverlay={vi.fn()}
-          onToggleImpact={vi.fn()}
-          onToggleColumns={vi.fn()}
-          onReloadLatestDraft={vi.fn()}
-          onPlan={vi.fn()}
-          onRun={vi.fn()}
-          routeState="ready"
-          draftToolbarState={defaultDraftToolbarState}
-          canPlan={true}
-          canRun={true}
-          canEditEdges={true}
-          canStartRun={false}
-          planStatusSummary={canvasViewCopy.planStatusPreviewRequiredMessage}
-          canvasAuthoringMode="transformation"
-          exclusiveOverlayMode="runtime"
-          canUseCostOverlay={false}
-          impactOverlayEnabled={false}
-          columnLevelLineageEnabled={false}
-          transformationValidation={buildValidationResult({
-            valid: false,
-            summaryCode: 'requires_three_nodes',
+          {...buildToolbarProps({
+            draftToolbarState: defaultDraftToolbarState,
+            canUseCostOverlay: false,
+            transformationValidation: buildValidationResult({
+              valid: false,
+              summaryCode: 'requires_three_nodes',
+            }),
+            nodeCount: 2,
+            edgeCount: 1,
           })}
-          nodeCount={2}
-          edgeCount={1}
         />
       );
     });
@@ -144,29 +199,12 @@ describe('CanvasToolbar', () => {
     await act(async () => {
       root.render(
         <CanvasToolbar
-          placement="top-bar"
-          onAutoLayout={vi.fn()}
-          onToggleCostOverlay={vi.fn()}
-          onToggleImpact={vi.fn()}
-          onToggleColumns={vi.fn()}
-          onReloadLatestDraft={vi.fn()}
-          onPlan={vi.fn()}
-          onRun={vi.fn()}
-          routeState="ready"
-          draftToolbarState={defaultDraftToolbarState}
-          canPlan={true}
-          canRun={true}
-          canEditEdges={true}
-          canStartRun={true}
-          planStatusSummary={canvasViewCopy.planStatusPreviewReadyMessage}
-          canvasAuthoringMode="transformation"
-          exclusiveOverlayMode="runtime"
-          canUseCostOverlay={false}
-          impactOverlayEnabled={false}
-          columnLevelLineageEnabled={false}
-          transformationValidation={buildValidationResult()}
-          nodeCount={3}
-          edgeCount={2}
+          {...buildToolbarProps({
+            draftToolbarState: defaultDraftToolbarState,
+            canStartRun: true,
+            planStatusSummary: canvasViewCopy.planStatusPreviewReadyMessage,
+            canUseCostOverlay: false,
+          })}
         />
       );
     });
@@ -178,29 +216,14 @@ describe('CanvasToolbar', () => {
     await act(async () => {
       root.render(
         <CanvasToolbar
-          placement="top-bar"
-          onAutoLayout={vi.fn()}
-          onToggleCostOverlay={vi.fn()}
-          onToggleImpact={vi.fn()}
-          onToggleColumns={vi.fn()}
-          onReloadLatestDraft={vi.fn()}
-          onPlan={vi.fn()}
-          onRun={vi.fn()}
-          routeState="ready"
-          draftToolbarState={defaultDraftToolbarState}
-          canPlan={false}
-          canRun={false}
-          canEditEdges={false}
-          canStartRun={false}
-          planStatusSummary={canvasViewCopy.planStatusRunUnavailableMessage}
-          canvasAuthoringMode="transformation"
-          exclusiveOverlayMode="runtime"
-          canUseCostOverlay={false}
-          impactOverlayEnabled={false}
-          columnLevelLineageEnabled={false}
-          transformationValidation={buildValidationResult()}
-          nodeCount={3}
-          edgeCount={2}
+          {...buildToolbarProps({
+            draftToolbarState: defaultDraftToolbarState,
+            canPlan: false,
+            canRun: false,
+            canEditEdges: false,
+            planStatusSummary: canvasViewCopy.planStatusRunUnavailableMessage,
+            canUseCostOverlay: false,
+          })}
         />
       );
     });
@@ -228,33 +251,20 @@ describe('CanvasToolbar', () => {
     await act(async () => {
       root.render(
         <CanvasToolbar
-          placement="top-bar"
-          onAutoLayout={vi.fn()}
-          onToggleCostOverlay={vi.fn()}
-          onToggleImpact={vi.fn()}
-          onToggleColumns={vi.fn()}
-          onReloadLatestDraft={onReloadLatestDraft}
-          onPlan={vi.fn()}
-          onRun={vi.fn()}
-          routeState="recovery"
-          draftToolbarState={{
-            label: canvasViewCopy.draftMissingLabel,
-            tone: 'warning',
-            showReloadAction: true,
-          }}
-          canPlan={false}
-          canRun={false}
-          canEditEdges={false}
-          canStartRun={false}
-          planStatusSummary={canvasViewCopy.planStatusRunUnavailableMessage}
-          canvasAuthoringMode="transformation"
-          exclusiveOverlayMode="runtime"
-          canUseCostOverlay={false}
-          impactOverlayEnabled={false}
-          columnLevelLineageEnabled={false}
-          transformationValidation={buildValidationResult()}
-          nodeCount={3}
-          edgeCount={2}
+          {...buildToolbarProps({
+            onReloadLatestDraft,
+            routeState: 'recovery',
+            draftToolbarState: {
+              label: canvasViewCopy.draftMissingLabel,
+              tone: 'warning',
+              showReloadAction: true,
+            },
+            canPlan: false,
+            canRun: false,
+            canEditEdges: false,
+            planStatusSummary: canvasViewCopy.planStatusRunUnavailableMessage,
+            canUseCostOverlay: false,
+          })}
         />
       );
     });
@@ -277,33 +287,19 @@ describe('CanvasToolbar', () => {
     await act(async () => {
       root.render(
         <CanvasToolbar
-          placement="top-bar"
-          onAutoLayout={vi.fn()}
-          onToggleCostOverlay={vi.fn()}
-          onToggleImpact={vi.fn()}
-          onToggleColumns={vi.fn()}
-          onReloadLatestDraft={vi.fn()}
-          onPlan={vi.fn()}
-          onRun={vi.fn()}
-          routeState="blocked_backend"
-          draftToolbarState={{
-            label: canvasViewCopy.draftMissingLabel,
-            tone: 'warning',
-            showReloadAction: true,
-          }}
-          canPlan={false}
-          canRun={false}
-          canEditEdges={false}
-          canStartRun={false}
-          planStatusSummary={canvasViewCopy.planStatusRunUnavailableMessage}
-          canvasAuthoringMode="transformation"
-          exclusiveOverlayMode="runtime"
-          canUseCostOverlay={false}
-          impactOverlayEnabled={false}
-          columnLevelLineageEnabled={false}
-          transformationValidation={buildValidationResult()}
-          nodeCount={3}
-          edgeCount={2}
+          {...buildToolbarProps({
+            routeState: 'blocked_backend',
+            draftToolbarState: {
+              label: canvasViewCopy.draftMissingLabel,
+              tone: 'warning',
+              showReloadAction: true,
+            },
+            canPlan: false,
+            canRun: false,
+            canEditEdges: false,
+            planStatusSummary: canvasViewCopy.planStatusRunUnavailableMessage,
+            canUseCostOverlay: false,
+          })}
         />
       );
     });

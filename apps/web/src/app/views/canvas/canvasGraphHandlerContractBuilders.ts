@@ -8,9 +8,7 @@ import type {
   CanvasSelectionContracts,
 } from './canvasGraphHandlerContracts';
 
-function edgeAuthoring(
-  contracts: CanvasGraphInteractionContracts
-): CanvasEdgeAuthoringContracts {
+function edgeAuthoring(contracts: CanvasGraphInteractionContracts): CanvasEdgeAuthoringContracts {
   return {
     state: {
       canonicalNodesById: contracts.state.canonicalNodesById,
@@ -28,18 +26,14 @@ function edgeAuthoring(
   };
 }
 
-function selection(
-  contracts: CanvasGraphInteractionContracts
-): CanvasSelectionContracts {
+function selection(contracts: CanvasGraphInteractionContracts): CanvasSelectionContracts {
   return {
     state: contracts.state,
     effects: contracts.effects,
   };
 }
 
-function layout(
-  contracts: CanvasGraphInteractionContracts
-): CanvasLayoutContracts {
+function layout(contracts: CanvasGraphInteractionContracts): CanvasLayoutContracts {
   return {
     state: {
       nodes: contracts.state.nodes,
@@ -52,13 +46,13 @@ function layout(
     },
     policy: {
       canEditEdges: contracts.policy.canEditEdges,
+      gridSize: contracts.policy.gridSize,
+      canvasSnapToGrid: contracts.policy.canvasSnapToGrid,
     },
   };
 }
 
-function nodeAuthoring(
-  contracts: CanvasGraphInteractionContracts
-): CanvasNodeAuthoringContracts {
+function nodeAuthoring(contracts: CanvasGraphInteractionContracts): CanvasNodeAuthoringContracts {
   return {
     state: {
       canonicalNodesById: contracts.state.canonicalNodesById,

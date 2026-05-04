@@ -1,7 +1,7 @@
 /** Owned concern: render canonical Canvas nodes with plugin decorations and governed node-shell gestures. */
 import styles from './DbtNodeComponent.module.css';
 import { Handle, Node, NodeProps, Position } from '@xyflow/react';
-import { Copy, GripVertical, Info, MousePointer, Trash2 } from 'lucide-react';
+import { Copy, Info, MousePointer, Trash2 } from 'lucide-react';
 import { memo, type CSSProperties } from 'react';
 
 import { mapDbtTypeToKind } from '../../plugins/nodeTypeCatalog.dbt';
@@ -186,14 +186,6 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <div className={cn(styles.root, 'relative')}>
-          <div
-            className={cn(styles.dragHandle, 'canvas-node-drag-handle')}
-            aria-label="Drag canvas node"
-            title="Drag canvas node"
-          >
-            <GripVertical className="size-3" aria-hidden="true" />
-          </div>
-
           {/* Target Handle (input) */}
           {shouldShowTargetHandle && (
             <Handle

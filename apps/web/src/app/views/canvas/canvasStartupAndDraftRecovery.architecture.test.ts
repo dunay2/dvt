@@ -10,7 +10,6 @@ import {
 } from '../../services/workspace/workspaceGraphDraftHttp';
 import type { CanonicalNode } from '../../types/canonical';
 import {
-  CANVAS_NODE_DRAG_HANDLE_SELECTOR,
   mapCanonicalNodeToCanvasNode,
   mapDroppedCanonicalNodeToCanvasNode,
 } from './canvasNodeMapper';
@@ -236,7 +235,7 @@ describe('canvas startup and draft recovery architecture', () => {
     expect(componentGuide).toContain('failed route posture');
     expect(componentGuide).toContain('replace_current');
     expect(componentGuide).toContain('workspace graph draft read-model');
-    expect(componentGuide).toContain('drag handle');
+    expect(componentGuide).toContain('whole node drag surface');
 
     expect(userStories).toContain('## User Stories');
     expect(userStories).toContain('US-CANVAS-BOOTSTRAP-001');
@@ -341,9 +340,8 @@ describe('canvas startup and draft recovery architecture', () => {
       { x: 120, y: 80 },
       false
     );
-    expect(CANVAS_NODE_DRAG_HANDLE_SELECTOR).toBe('.canvas-node-drag-handle');
-    expect(mappedNode.dragHandle).toBe(CANVAS_NODE_DRAG_HANDLE_SELECTOR);
-    expect(droppedNode.dragHandle).toBe(CANVAS_NODE_DRAG_HANDLE_SELECTOR);
+    expect(mappedNode.dragHandle).toBeUndefined();
+    expect(droppedNode.dragHandle).toBeUndefined();
 
     const tabStripSource = readAppSource('CanvasPlaygroundTabStrip.tsx');
     const tabStripModelSource = readAppSource('canvasPlaygroundTabStripModel.ts');
@@ -423,7 +421,7 @@ describe('canvas startup and draft recovery architecture', () => {
     expect(cypressHelperSource).toContain('workspace_graph_draft_not_found');
     expect(cypressHelperSource).toContain('dvt-web-canvas-interaction');
     expect(cypressHelperSource).toContain('waitForLiveFirstAuthoringLayoutPositionChange');
-    expect(cypressSpecSource).toContain('canvas-node-drag-handle');
+    expect(cypressSpecSource).toContain('dragSourceNodeFromCardBody');
     expect(cypressSpecSource).toContain('skipWhenFirstAuthoringLiveEnvIsMissing');
     expect(cypressSpecSource).not.toContain('this.skip()');
     expect(cypressSpecSource).toContain('waitForLiveFirstAuthoringLayoutPositionChange');

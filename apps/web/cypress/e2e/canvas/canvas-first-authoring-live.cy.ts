@@ -108,32 +108,27 @@ describe('Canvas first-authoring live protected runtime', () => {
     target.dispatchEvent(new view.MouseEvent(type, buildMouseDragEvent(point, buttons, view)));
   }
 
-  function dragSourceNodeFromSemanticHandle(): void {
+  function dragSourceNodeFromCardBody(): void {
     cy.contains('.react-flow__node', 'Source 1')
       .should('be.visible')
       .then(($node) => {
-        cy.wrap($node)
-          .find('.canvas-node-drag-handle')
-          .should('be.visible')
-          .then(($handle) => {
-            const handleRect = $handle[0].getBoundingClientRect();
-            const start = {
-              x: handleRect.left + handleRect.width / 2,
-              y: handleRect.top + handleRect.height / 2,
-            };
-            const middle = { x: start.x + 24, y: start.y + 18 };
-            const end = { x: start.x + 96, y: start.y + 72 };
+        const rect = $node[0].getBoundingClientRect();
+        const start = {
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2,
+        };
+        const middle = { x: start.x + 24, y: start.y + 18 };
+        const end = { x: start.x + 96, y: start.y + 72 };
 
-            cy.window().then((window) => {
-              dispatchMouseDragEvent($handle[0], window, 'mousedown', start, 1);
-              dispatchMouseDragEvent(window, window, 'mousemove', middle, 1);
-            });
-            cy.contains('.react-flow__node', 'Source 1').should('have.class', 'dragging');
-            cy.window().then((window) => {
-              dispatchMouseDragEvent(window, window, 'mousemove', end, 1);
-              dispatchMouseDragEvent(window, window, 'mouseup', end, 0);
-            });
-          });
+        cy.window().then((window) => {
+          dispatchMouseDragEvent($node[0], window, 'mousedown', start, 1);
+          dispatchMouseDragEvent(window, window, 'mousemove', middle, 1);
+        });
+        cy.contains('.react-flow__node', 'Source 1').should('have.class', 'dragging');
+        cy.window().then((window) => {
+          dispatchMouseDragEvent(window, window, 'mousemove', end, 1);
+          dispatchMouseDragEvent(window, window, 'mouseup', end, 0);
+        });
       });
   }
 
@@ -190,7 +185,7 @@ describe('Canvas first-authoring live protected runtime', () => {
         waitForLiveFirstAuthoringDraftNode(variant.id, before.nodeId).as('beforeDragDraftPosition')
       );
 
-      dragSourceNodeFromSemanticHandle();
+      dragSourceNodeFromCardBody();
       assertSourceNodeMovedFrom('beforeDragState');
       captureSourceNodeState('afterDragState');
       cy.get<SourceNodeState>('@beforeDragState').then((before) => {

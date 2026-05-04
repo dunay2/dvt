@@ -13,6 +13,9 @@ export function buildCanvasShellGraph({
     nodeTypes: graphState.nodeTypes,
     gridSize: graphState.gridSize,
     canvasPalette: graphState.canvasPalette,
+    canvasGridVisible: graphState.canvasGridVisible,
+    canvasGridColor: graphState.canvasGridColor,
+    canvasSnapToGrid: graphState.canvasSnapToGrid,
     viewport: graphState.viewport,
   };
 }

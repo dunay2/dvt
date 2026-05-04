@@ -11,8 +11,9 @@ planning_type: architecture
 ## Purpose
 
 This guide defines the local component that persists route-local Canvas layout
-observations: viewport position and node coordinates. It does not own
-authoritative graph draft state.
+observations and viewport presentation preferences: viewport position, node
+coordinates, grid visibility, grid color, and snap-to-grid behavior. It does
+not own authoritative graph draft state.
 
 This distinction matters because Canvas has two truths:
 
@@ -31,6 +32,10 @@ This distinction matters because Canvas has two truths:
 | `shouldSeedCanvasLayoutFromRemoteDraft(...)` | `canvasDraftLayoutHydrationPolicy.ts` | Allow remote draft coordinates to seed local layout only when no local card positions exist. |
 | `useCanvasViewportGraphModel(...)`           | `useCanvasViewportGraphModel.ts`      | Project canonical graph nodes into live React Flow viewport nodes.                           |
 | `CanvasViewport` callbacks                   | `CanvasViewport.tsx`                  | Forward governed React Flow gesture callbacks only.                                          |
+| `setCanvasGridVisible(...)`                  | `uiLayoutStore.ts`                    | Persist whether the viewport grid is rendered.                                               |
+| `setCanvasGridColor(...)`                    | `uiLayoutStore.ts`                    | Persist the grid line color as a normalized hex color.                                       |
+| `setCanvasSnapToGrid(...)`                   | `uiLayoutStore.ts`                    | Persist whether React Flow drag and auto-layout coordinates snap to the grid.                |
+| `ConfigureCanvasViewportPreferences`         | Canvas shell chrome command rail      | Apply grid visibility, color, and snap preferences without changing graph authority.         |
 
 ## Invariants
 
@@ -55,6 +60,30 @@ This distinction matters because Canvas has two truths:
 - The controller must pass both `graphModel.nodes` and
   `store.persistedNodePositions`; layout persistence must not reconstruct graph
   truth itself.
+- Grid preferences are workbench visual preferences. They must be persisted in
+  `uiLayoutStore`, not in the protected draft and not in
+  `canvasInteractionStore`.
+- `CanvasViewport` may hide the React Flow background grid, but that must not
+  disable node dragging, edge editing, or layout persistence.
+- Snap-to-grid may adjust renderer coordinates produced by drag or auto-layout,
+  but it must not modify canonical node identity, node kind, graph edges, or
+  protected draft authority.
+- Auto-layout must preserve React Flow node type, data, and gesture capability;
+  layout is a coordinate projection, not a node replacement authority.
+
+## Command And Query Rails
+
+| Rail                                 | Type    | DDD owner                                | Application surface                              | Negative coverage                                                       |
+| ------------------------------------ | ------- | ---------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------- |
+| `PersistCanvasLayout`                | command | `CanvasLayoutProjection` value object    | `useCanvasLayoutPersistence(...)`                | pending query and pre-hydration persistence are blocked or queued       |
+| `GetCanvasLayout`                    | query   | `CanvasLayoutProjection` value object    | `canvasInteractionStore` hydration               | local layout is not overwritten when protected draft coordinates reload |
+| `ConfigureCanvasViewportPreferences` | command | `CanvasViewportPreferences` value object | `uiLayoutStore` plus Canvas toolbar and viewport | invalid colors normalize; hidden grid and snap do not disable node drag |
+
+`ConfigureCanvasViewportPreferences` is intentionally local to the Web Graph
+bounded frontend context. It changes operator presentation preferences only.
+Any backend draft write, graph mutation, or workspace-wide settings API for the
+same intent would be a new rail and must be planned separately before code is
+added.
 
 ## Transitions
 
@@ -74,6 +103,19 @@ sequenceDiagram
   Viewport->>Layout: onNodeDragStop(event, draggedNode, allNodes)
   Layout->>Layout: mergeDraggedNodePosition(allNodes, draggedNode)
   Layout->>Store: setCanvasNodePositions(layoutKey, positions)
+```
+
+### Viewport preference command
+
+```mermaid
+flowchart LR
+  Toolbar["CanvasToolbar grid controls"] --> Command["ConfigureCanvasViewportPreferences"]
+  Command --> Store["uiLayoutStore persisted visual preferences"]
+  Store --> Viewport["CanvasViewport"]
+  Viewport --> Background["React Flow Background visibility and color"]
+  Viewport --> Snap["React Flow snapToGrid and snapGrid"]
+  Snap --> Layout["auto-layout snapped coordinates when enabled"]
+  Layout --> Projection["CanvasLayoutProjection"]
 ```
 
 ### Settled live viewport persistence
@@ -121,13 +163,15 @@ Indirect consumers:
 
 ## Fowler Reading
 
-| Pattern                       | Local expression                   | Maturity rule                                             |
-| ----------------------------- | ---------------------------------- | --------------------------------------------------------- |
-| Presentation Model            | viewport graph model               | Keep renderer coordinates separate from graph semantics.  |
-| Application Controller seam   | `useCanvasLayoutPersistence()`     | Coordinate layout effects without owning draft authority. |
-| Intention-Revealing Interface | `handleNodeDrag` payload merge     | Name active UI gesture persistence directly.              |
-| Intention-Revealing Interface | `handleNodeDragStop` payload merge | Name the stale snapshot hazard directly.                  |
-| Policy Object                 | hydration and equality guards      | Persist only when hydrated and materially changed.        |
+| Pattern                       | Local expression                   | Maturity rule                                              |
+| ----------------------------- | ---------------------------------- | ---------------------------------------------------------- |
+| Presentation Model            | viewport graph model               | Keep renderer coordinates separate from graph semantics.   |
+| Application Controller seam   | `useCanvasLayoutPersistence()`     | Coordinate layout effects without owning draft authority.  |
+| Intention-Revealing Interface | `handleNodeDrag` payload merge     | Name active UI gesture persistence directly.               |
+| Intention-Revealing Interface | `handleNodeDragStop` payload merge | Name the stale snapshot hazard directly.                   |
+| Policy Object                 | hydration and equality guards      | Persist only when hydrated and materially changed.         |
+| Value Object                  | `CanvasViewportPreferences`        | Keep grid and snap preferences immutable from graph truth. |
+| Application Controller seam   | `CanvasToolbar` command callbacks  | Route visual commands without making toolbar own state.    |
 
 ## Negative Coverage
 
@@ -141,7 +185,9 @@ Primary tests:
 The tests cover automatic store hydration, pre-hydration node-position queueing,
 pending-query viewport denial, stale drag-stop payload replacement, active live
 drag persistence, settled live drag persistence, remote-draft hydration not
-overwriting local layout after refresh/reload, and semantic boundary rules.
+overwriting local layout after refresh/reload, grid preference persistence,
+grid background visibility/color, snap-to-grid propagation, snapped
+auto-layout coordinates, and semantic boundary rules.
 
 ## Drift To Watch
 
@@ -152,3 +198,7 @@ overwriting local layout after refresh/reload, and semantic boundary rules.
 - Do not let protected draft bootstrap or reload overwrite a workspace layout
   that already contains local card positions.
 - Do not re-enable drag gestures outside `CanvasViewport` permission policy.
+- Do not store grid visibility, grid color, or snap preferences in protected
+  graph drafts.
+- Do not let auto-layout replace node data/type fields or reintroduce
+  handle-only dragging.

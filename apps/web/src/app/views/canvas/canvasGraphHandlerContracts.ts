@@ -36,6 +36,8 @@ export type CanvasGraphInteractionEffects = {
 export type CanvasGraphInteractionPolicy = {
   graphStrategy: CanvasGraphStrategy | null;
   canEditEdges: boolean;
+  gridSize: number;
+  canvasSnapToGrid: boolean;
   runtimeCapabilities?: RuntimeCapabilities;
   columnLevelLineageEnabled: boolean;
   allowsCanonicalNode: (node: CanonicalNode) => boolean;
@@ -216,6 +218,8 @@ export type CanvasLayoutEffects = {
 
 export type CanvasLayoutPolicy = {
   canEditEdges: boolean;
+  gridSize: number;
+  canvasSnapToGrid: boolean;
 };
 
 export type CanvasLayoutContracts = {

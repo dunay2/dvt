@@ -5,7 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import CanvasShell from './CanvasShell';
-import { DEFAULT_CANVAS_PALETTE_ID } from './canvasPalette';
+import { DEFAULT_CANVAS_GRID_COLOR, DEFAULT_CANVAS_PALETTE_ID } from './canvasPalette';
 import { canvasViewCopy } from './copy';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
 import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
@@ -119,6 +119,9 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
       nodeTypes: {},
       gridSize: 24,
       canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
+      canvasGridVisible: true,
+      canvasGridColor: DEFAULT_CANVAS_GRID_COLOR,
+      canvasSnapToGrid: false,
       viewport: null,
       ...overrides?.graph,
     },
@@ -168,6 +171,9 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
       onToggleCostOverlay: vi.fn(),
       onToggleImpact: vi.fn(),
       onToggleColumns: vi.fn(),
+      onToggleGridVisible: vi.fn(),
+      onGridColorChange: vi.fn(),
+      onToggleSnapToGrid: vi.fn(),
       onReloadLatestDraft: vi.fn(),
       onPlan: vi.fn(),
       onRun: vi.fn(),

@@ -3,9 +3,7 @@
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 
-import type {
-  CanvasLayoutContracts,
-} from './canvasGraphHandlerContracts';
+import type { CanvasLayoutContracts } from './canvasGraphHandlerContracts';
 import { getLayoutedElements } from './canvasGraphUtils';
 import { canvasViewCopy } from './copy';
 
@@ -22,7 +20,7 @@ export function useCanvasLayoutHandlers({
 }: UseCanvasLayoutHandlersArgs): UseCanvasLayoutHandlersResult {
   const { nodes, edges } = state;
   const { setNodes, setEdges, onLayoutComplete } = effects;
-  const { canEditEdges } = policy;
+  const { canEditEdges, gridSize, canvasSnapToGrid } = policy;
 
   const handleAutoLayout = useCallback(() => {
     if (!canEditEdges) {
@@ -30,14 +28,28 @@ export function useCanvasLayoutHandlers({
       return;
     }
 
-    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(nodes, edges);
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(nodes, edges, {
+      gridSize,
+      snapToGrid: canvasSnapToGrid,
+    });
     setNodes(layoutedNodes);
     setEdges(layoutedEdges);
     toast.success(canvasViewCopy.layoutAppliedMessage);
     onLayoutComplete(
-      Object.fromEntries(layoutedNodes.map((node) => [node.id, { x: node.position.x, y: node.position.y }]))
+      Object.fromEntries(
+        layoutedNodes.map((node) => [node.id, { x: node.position.x, y: node.position.y }])
+      )
     );
-  }, [canEditEdges, edges, nodes, onLayoutComplete, setEdges, setNodes]);
+  }, [
+    canEditEdges,
+    canvasSnapToGrid,
+    edges,
+    gridSize,
+    nodes,
+    onLayoutComplete,
+    setEdges,
+    setNodes,
+  ]);
 
   return {
     handleAutoLayout,

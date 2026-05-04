@@ -59,6 +59,9 @@ function CanvasShellViewport({
       nodeTypes={graph.nodeTypes}
       gridSize={graph.gridSize}
       canvasPalette={graph.canvasPalette}
+      canvasGridVisible={graph.canvasGridVisible}
+      canvasGridColor={graph.canvasGridColor}
+      canvasSnapToGrid={graph.canvasSnapToGrid}
       viewport={graph.viewport}
       onNodesChange={graphCommands.onNodesChange}
       onNodeDrag={graphCommands.onNodeDrag}
@@ -135,6 +138,9 @@ export function CanvasShellMainPanel({
           onToggleCostOverlay={chromeCommands.onToggleCostOverlay}
           onToggleImpact={chromeCommands.onToggleImpact}
           onToggleColumns={chromeCommands.onToggleColumns}
+          onToggleGridVisible={chromeCommands.onToggleGridVisible}
+          onGridColorChange={chromeCommands.onGridColorChange}
+          onToggleSnapToGrid={chromeCommands.onToggleSnapToGrid}
           onReloadLatestDraft={chromeCommands.onReloadLatestDraft}
           onPlan={chromeCommands.onPlan}
           onRun={chromeCommands.onRun}
@@ -150,6 +156,9 @@ export function CanvasShellMainPanel({
           canUseCostOverlay={toolbar.canUseCostOverlay}
           impactOverlayEnabled={toolbar.impactOverlayEnabled}
           columnLevelLineageEnabled={toolbar.columnLevelLineageEnabled}
+          canvasGridVisible={graph.canvasGridVisible}
+          canvasGridColor={graph.canvasGridColor}
+          canvasSnapToGrid={graph.canvasSnapToGrid}
           transformationValidation={toolbar.transformationValidation}
           nodeCount={graph.nodesWithImpact.length}
           edgeCount={graph.edges.length}

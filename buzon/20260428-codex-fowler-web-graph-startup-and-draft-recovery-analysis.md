@@ -101,9 +101,9 @@ side of the command boundary.
 
 ### Intention Revealing Interface
 
-React Flow dragging now has a named selector:
-`.canvas-node-drag-surface`. The mapper and rendered node shell share that
-contract instead of depending on incidental event propagation.
+React Flow dragging now has a governed whole-node surface: mapped nodes omit a
+`dragHandle` selector, so the node body is the operator drag target whenever
+viewport permissions allow mutation.
 
 ## Antipatterns detected
 
@@ -113,8 +113,8 @@ contract instead of depending on incidental event propagation.
   project from the protected workspace draft endpoint.
 - Hidden local reset for stale drafts: Avoided. Replacement is explicit,
   confirmed, and CAS-guarded.
-- UI event coincidence as drag contract: Fixed. React Flow drag handle is a
-  named selector owned by mapper and node shell.
+- UI event coincidence as drag contract: Fixed. React Flow drag is owned by the
+  viewport permission gate and the node mapper's no-selector projection.
 - Semantic promise without component boundary: Fixed in this slice. Added a
   local component guide and semantic architecture test.
 - Copy drift around destructive action: Reduced. Replacement copy is
@@ -169,8 +169,8 @@ Semantic architecture test:
   `workspaceGraphDraftHttp.ts` for scope, endpoint, and HTTP error matching.
 - Canvas replacement reuses the existing draft save boundary instead of adding
   a separate local clear path.
-- Drag wiring is not repeated per node. The selector is exported once from
-  `canvasNodeMapper.ts` and consumed by every mapped node.
+- Drag wiring is not repeated per node. `canvasNodeMapper.ts` owns the absence
+  of a `dragHandle` selector for every mapped node.
 - DBT type inference no longer repeats `kind.includes(...)` checks in a method.
   It is a declarative rule list with one matcher.
 - Draft replacement no longer repeats cache/session/status mutation in the
@@ -190,7 +190,7 @@ Semantic architecture test:
 
 - Documentation now states that `failed` route posture is non-blocking for
   shell reveal when the route owns a governed failure surface.
-- Graph architecture now describes protected draft replacement and drag-handle
+- Graph architecture now describes protected draft replacement and whole-node
   ownership as current behavior.
 - The new component guide ties the code, diagrams, public API, invariants,
   transitions, and consumers together.
@@ -206,8 +206,8 @@ Semantic architecture test:
   code treats it as authoritative graph truth, the projection layer regresses.
 - `failed` route posture is for controlled route-local failures only. Startup
   contract violations must continue using `error`.
-- Node drag must remain permission-gated by the viewport. The drag selector is
-  not permission by itself.
+- Node drag must remain permission-gated by the viewport. The whole-node drag
+  surface is not permission by itself.
 
 ## Opportunities
 
@@ -233,7 +233,7 @@ Semantic architecture test:
   source of truth.
 - UI gesture fixes should end in a named contract, not a CSS coincidence.
 - Architecture tests should validate behavior words such as `failed`,
-  `replace_current`, protected draft endpoint, and drag handle ownership.
+  `replace_current`, protected draft endpoint, and drag-surface ownership.
 - Complexity warnings are useful when they point at missing domain vocabulary.
   The durable fix is to name the transition or rule, not only to split lines.
 - Argument-count warnings are useful when an application boundary is carrying

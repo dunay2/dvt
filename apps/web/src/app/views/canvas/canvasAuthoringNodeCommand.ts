@@ -10,6 +10,7 @@ type CanvasAuthoringNodeCommand = Readonly<{
 }>;
 
 const CATALOG_NODE_VERTICAL_OFFSET = 220;
+const FIRST_AUTHORING_NODE_POSITION = { x: 160, y: 120 } as const;
 
 function slugifyNodeKind(kind: string): string {
   const lastSegment = kind.slice(kind.lastIndexOf(':') + 1);
@@ -104,7 +105,7 @@ function resolveCatalogAuthoringNodePosition(args: {
   const anchorNode = resolveBottommostNode(sameKindNodes) ?? resolveBottommostNode(existingNodes);
 
   if (anchorNode == null) {
-    return { x: 0, y: 0 };
+    return FIRST_AUTHORING_NODE_POSITION;
   }
 
   return {

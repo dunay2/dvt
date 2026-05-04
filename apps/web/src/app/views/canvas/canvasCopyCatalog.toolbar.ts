@@ -45,6 +45,18 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.toolbar.costLabel',
     fallback: 'Cost',
   },
+  toolbarGridLabel: {
+    key: 'canvas.toolbar.gridLabel',
+    fallback: 'Grid',
+  },
+  toolbarGridColorLabel: {
+    key: 'canvas.toolbar.gridColorLabel',
+    fallback: 'Grid color',
+  },
+  toolbarSnapToGridLabel: {
+    key: 'canvas.toolbar.snapToGridLabel',
+    fallback: 'Snap',
+  },
   toolbarPlanLabel: {
     key: 'canvas.toolbar.planLabel',
     fallback: 'Plan',
