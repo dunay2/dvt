@@ -17400,9 +17400,9 @@ files:
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-7B52B91C6C26
     pathHash: 46b90491e930ab1ce00304dac5984016a49b2db825047e8ff840d2ef0a97604d
-    contentHash: 107660f57586afc5151a98959c10aed5ff36c4e8ef06e5e8b8c613531aeb17d4
+    contentHash: 74ee23128b58fb2174fd56801179a276bba6c1ec748c81e3553d1d2a74e9076a
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 9b304993810ed5089123e42d6ff3731d4004c12a09f955df640cf5b4e806fe9e
+    stateFingerprint: cc8a17354ca494e607346ddf8e0e2fc101a83662618d948b65d53cae76f46ead
     path: apps/web/src/app/views/canvas/useCanvasGraphHandlers.nodeDrop.test.tsx
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT
