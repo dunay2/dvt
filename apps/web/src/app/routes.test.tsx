@@ -19,9 +19,34 @@ import {
   getRootRoute,
   readLeftNavigationCaptions,
 } from './appRoute.test.support';
+import { createHydrationCompleteBootstrapCommand } from './bootstrap/appBootstrapCommands';
+import { setBootstrapStepStatus, startBootstrapScreen } from './bootstrap/appBootstrapScreen';
 import { createAppRoutes } from './routes';
 import { createTestQueryClient, waitForReactQuery } from '../testing/reactQueryHarness';
 import { CANVAS_ROUTE_BOOTSTRAP_HANDLE } from './views/canvas/canvasDraftPresentationStore';
+
+function mountBootstrapDom(): void {
+  document.body.insertAdjacentHTML(
+    'beforeend',
+    `
+      <div id="app-loading-screen" data-state="loading">
+        <output id="app-loading-announcement"></output>
+        <h1 id="app-loading-title"></h1>
+        <p id="app-loading-message"></p>
+        <ul id="app-loading-steps">
+          <li data-bootstrap-step="hydrate" data-status="pending"><span data-bootstrap-detail></span></li>
+          <li data-bootstrap-step="services" data-status="pending"><span data-bootstrap-detail></span></li>
+          <li data-bootstrap-step="capabilities" data-status="pending"><span data-bootstrap-detail></span></li>
+          <li data-bootstrap-step="health" data-status="pending"><span data-bootstrap-detail></span></li>
+          <li data-bootstrap-step="route" data-status="pending"><span data-bootstrap-detail></span></li>
+        </ul>
+        <div id="app-loading-progress"></div>
+        <span id="app-loading-version"></span>
+        <span id="app-loading-build-date"></span>
+      </div>
+    `
+  );
+}
 
 describe('app routes', () => {
   let container: HTMLDivElement;
@@ -46,6 +71,7 @@ describe('app routes', () => {
     });
     container.remove();
     consoleErrorSpy.mockRestore();
+    vi.useRealTimers();
 
     const globalObject = globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean };
     if (previousActEnvironment === undefined) {
@@ -74,6 +100,34 @@ describe('app routes', () => {
     });
 
     expect(container.textContent).toContain('Login required');
+  });
+
+  it('settles the startup gate for the public login route without resolving workspace runtime', async () => {
+    vi.useFakeTimers();
+    mountBootstrapDom();
+    startBootstrapScreen();
+    setBootstrapStepStatus(createHydrationCompleteBootstrapCommand());
+    const router = createMemoryRouter(createAppRoutes(), {
+      initialEntries: ['/login?returnTo=%2F'],
+    });
+
+    await act(async () => {
+      root.render(
+        <AppProviders overrides={{ mode: 'api' }}>
+          <RouterProvider router={router} />
+        </AppProviders>
+      );
+    });
+
+    await waitForReactQuery(() => container.textContent?.includes('Login required') === true, {
+      description: 'public login route',
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(120);
+    });
+
+    expect(document.getElementById('app-loading-screen')).toBeNull();
+    expect(mockUsePublishedRouteBootstrap).not.toHaveBeenCalled();
   });
 
   it('renders the canvas route when app providers are present', async () => {

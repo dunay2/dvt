@@ -5861,9 +5861,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-CF3F14FE8AFF
     pathHash: b4a03aa3ec876cb3f8cd8799472b52e01d1a239e307602ef78d2f5b82787edce
-    contentHash: 33a3d6182e82e100ee77fb2aa3b2fce2b4f7656ad52adea6af4770c6ce27e99a
+    contentHash: ca2dd2ef30fbeb0c0ccb10c474c8d243cbe3ea035b6c4cae4f3639242d9ce4f6
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 95bbcd6f2ebf9c0462c202a7212e2a2ab2f5624ee64dedfa8a310dd7fcef1aba
+    stateFingerprint: 7911124ffd9b01867c12a24dc2cac1599936fed845e4fcfdba0471709946d980
     path: docs/architecture/components/web/app-bootstrap-screen-component.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -32702,9 +32702,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-D63DECECB8D8
     pathHash: d2f6602acb2d1a89b9cfb32af72456ee7aaa56f6cba52b57e0fcb88d1396015b
-    contentHash: bf508a25bac9e0034d10506837a34363ec88273c2c43845009ab30579957df1c
+    contentHash: c258734c2da50a918f39068a094a7f5f2a27e0df074f1ed415147373010661f9
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: bb89eae4b832d10295e56adff43762111518591c14ed828eac9bb6d8a880c6d7
+    stateFingerprint: 6fb23421a049721da94fb556e108c5600d6b89ab5a1cefed3d568ed62e28c375
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-d-startup-route-readiness-implementation-plan-20260502.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
