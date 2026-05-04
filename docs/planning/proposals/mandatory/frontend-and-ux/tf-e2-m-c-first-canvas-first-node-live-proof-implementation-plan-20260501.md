@@ -578,6 +578,62 @@ redGreenCycles:
       - scripts/run-canvas-first-authoring-live-proof.cjs
     greenTest: pnpm --filter @dvt/web test:e2e:first-authoring:live
 symbols:
+  - name: edgeAuthoring
+    path: apps/web/src/app/views/canvas/canvasGraphHandlerContractBuilders.ts
+    dddOwner: Canvas graph interaction contract builder
+    cqRails:
+      - CreateCanvasNode
+    fowlerSignals:
+      - contract mapper for edge command seam
+    architectureGuard: useCanvasGraphHandlers.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - useCanvasGraphHandlers.layout.test.tsx
+  - name: layout
+    path: apps/web/src/app/views/canvas/canvasGraphHandlerContractBuilders.ts
+    dddOwner: CanvasLayoutProjection value object
+    cqRails:
+      - PersistCanvasLayout
+      - ConfigureCanvasViewportPreferences
+    fowlerSignals:
+      - contract mapper for layout command seam
+    architectureGuard: useCanvasGraphHandlers.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - useCanvasGraphHandlers.layout.test.tsx
+  - name: nodeAuthoring
+    path: apps/web/src/app/views/canvas/canvasGraphHandlerContractBuilders.ts
+    dddOwner: CanvasAuthoringGraph aggregate
+    cqRails:
+      - CreateCanvasNode
+    fowlerSignals:
+      - contract mapper for node authoring command seam
+    architectureGuard: useCanvasGraphHandlers.architecture.test.ts
+    cypressCoverage: canvas-first-authoring-live.cy.ts
+    unitTests:
+      - canvasAuthoringNodeCommand.test.ts
+  - name: selection
+    path: apps/web/src/app/views/canvas/canvasGraphHandlerContractBuilders.ts
+    dddOwner: Canvas selection projection
+    cqRails:
+      - GetCanvasLayout
+    fowlerSignals:
+      - query-side contract mapper for selection state
+    architectureGuard: useCanvasGraphHandlers.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - useCanvasGraphHandlers.layout.test.tsx
+  - name: rejectTransformationConnectionWith
+    path: apps/web/src/app/views/canvas/useCanvasGraphHandlers.test.support.tsx
+    dddOwner: Canvas graph interaction test support
+    cqRails:
+      - CreateCanvasNode
+    fowlerSignals:
+      - negative test fixture for transformation connection policy
+    architectureGuard: useCanvasGraphHandlers.architecture.test.ts
+    cypressCoverage: canvas-happy-path-draggable.cy.ts
+    unitTests:
+      - useCanvasGraphHandlers.layout.test.tsx
   - name: buildToolbarProps
     path: apps/web/src/app/views/canvas/CanvasToolbar.test.tsx
     dddOwner: CanvasViewportPreferences test fixture
