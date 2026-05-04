@@ -37,13 +37,14 @@ into `ProjectPlatformConnectionStatus` is owned by the local guide.
 
 ## Current Component Map
 
-| Store                        | Component role              | DDD owner                          | Command/query role | Reason to exist                                                                                                     |
-| ---------------------------- | --------------------------- | ---------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------- |
-| `sessionStore.ts`            | Workspace session state     | Web shell session aggregate        | command/query      | Owns tenant, project, environment, target adapter, and `RunContext` construction for route and API calls.           |
-| `canvasInteractionStore.ts`  | Canvas interaction state    | Canvas authoring session aggregate | command            | Owns selected nodes, inspector focus, overlays, viewport, and node position persistence by workspace key.           |
-| `executionStore.ts`          | Runtime evidence projection | Runtime evidence read model        | query              | Carries current plan/run selections for Canvas, Runs, Cost, and Console while F-05 decides the authorization split. |
-| `uiLayoutStore.ts`           | Workbench shell layout      | Web shell layout aggregate         | command            | Owns panel visibility, focus mode, tabs, grid size, and canvas palette.                                             |
-| `platformConnectionStore.ts` | Platform connection status  | Platform health read model         | query              | Owns `ProjectPlatformConnectionStatus` for shell presentation without persisting it as layout.                      |
+| Store                        | Component role              | DDD owner                          | Command/query role | Reason to exist                                                                                           |
+| ---------------------------- | --------------------------- | ---------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------- |
+| `sessionStore.ts`            | Workspace session state     | Web shell session aggregate        | command/query      | Owns tenant, project, environment, target adapter, and `RunContext` construction for route and API calls. |
+| `canvasInteractionStore.ts`  | Canvas interaction state    | Canvas authoring session aggregate | command            | Owns selected nodes, inspector focus, overlays, viewport, and node position persistence by workspace key. |
+| `executionStore.ts`          | Runtime evidence projection | Runtime evidence read model        | query              | Carries current plan/run selections for Canvas, Runs, Cost, and Console.                                  |
+| `authorizationStore.ts`      | Authorization projection    | Web authorization read model       | query              | Owns effective UI permissions after the hard cut; no compatibility through `executionStore.ts`.           |
+| `uiLayoutStore.ts`           | Workbench shell layout      | Web shell layout aggregate         | command            | Owns panel visibility, focus mode, tabs, grid size, and canvas palette.                                   |
+| `platformConnectionStore.ts` | Platform connection status  | Platform health read model         | query              | Owns `ProjectPlatformConnectionStatus` for shell presentation without persisting it as layout.            |
 
 ## Component Diagram
 
@@ -59,7 +60,8 @@ flowchart TB
     end
 
     subgraph Queries["Query/read-model state"]
-      Execution["executionStore<br/>Runtime evidence read model<br/>plus open authorization drift"]
+      Execution["executionStore<br/>Runtime evidence read model"]
+      Authorization["authorizationStore<br/>Authorization capability display"]
       PlatformStatus["platformConnectionStore<br/>ProjectPlatformConnectionStatus"]
     end
   end
@@ -81,6 +83,7 @@ flowchart TB
   Layout -- "shell controls" --> TopBar
   Execution -- "current run/plan query" --> CanvasRoute
   Execution -- "runtime evidence query" --> RunViews
+  Authorization -- "effective permissions query" --> CanvasRoute
   PlatformStatus -- "connection query" --> Root
   PlatformStatus -- "connection query" --> TopBar
 ```
@@ -145,11 +148,12 @@ here before implementation so the DDD owner and C&Q rail are explicit.
 | `uiLayoutStore.ts`           | `setActiveTab`              | command | Web shell layout aggregate         | Shell panel/layout updates        | Sets active shell tab.                                                |
 | `platformConnectionStore.ts` | `connectionStatus`          | query   | Platform health read model         | `ProjectPlatformConnectionStatus` | Current REST and live-event connection projection for shell display.  |
 | `platformConnectionStore.ts` | `setConnectionStatus`       | command | Platform health read model         | `ProjectPlatformConnectionStatus` | Updates the local projection from the authoritative health query.     |
-| `executionStore.ts`          | `currentPlan`               | query   | Runtime evidence read model        | Current run/plan display          | Current plan projection; still shares store with authorization drift. |
+| `executionStore.ts`          | `currentPlan`               | query   | Runtime evidence read model        | Current run/plan display          | Current plan projection.                                              |
 | `executionStore.ts`          | `currentRun`                | query   | Runtime evidence read model        | Current run/plan display          | Current run projection.                                               |
-| `executionStore.ts`          | `userPermissions`           | query   | Authorization projection           | Authorization capability display  | Active F-05 drift until split or deliberately documented projection.  |
 | `executionStore.ts`          | `setCurrentPlan`            | command | Runtime evidence read model        | Current run/plan display          | Updates current plan projection.                                      |
 | `executionStore.ts`          | `setCurrentRun`             | command | Runtime evidence read model        | Current run/plan display          | Updates current run projection.                                       |
+| `authorizationStore.ts`      | `userPermissions`           | query   | Web authorization read model       | Authorization capability display  | Effective UI permissions for Canvas and shell authoring controls.     |
+| `authorizationStore.ts`      | `setUserPermissions`        | command | Web authorization read model       | Authorization capability display  | Replaces the effective permissions projection; no execution fallback. |
 
 ## Current Cross-Store Composition
 
@@ -162,7 +166,8 @@ for `appStore.ts`.
 flowchart LR
   Session["sessionStore<br/>workspace scope"]
   Canvas["canvasInteractionStore<br/>Canvas interaction"]
-  Execution["executionStore<br/>current plan/run + permissions"]
+  Execution["executionStore<br/>current plan/run"]
+  Auth["authorizationStore<br/>effective permissions"]
   Layout["uiLayoutStore<br/>layout + visual prefs"]
   Status["platformConnectionStore<br/>connection status query"]
   Facade["useCanvasStoreFacade"]
@@ -172,24 +177,23 @@ flowchart LR
   Session --> Facade
   Canvas --> Facade
   Execution --> Facade
+  Auth --> Facade
   Layout --> Facade
   Status --> Root
   Facade --> Controller
 ```
 
-## Residual Drift
+## Closed Drift
 
-| Drift                                         | Current file                                | Why it is drift                                                                     | Target owner                                          |
-| --------------------------------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| Permission projection inside runtime evidence | `apps/web/src/app/stores/executionStore.ts` | Authorization capabilities are not the same aggregate as current plan/run evidence. | Authorization projection or guarded capability query. |
+| Closed drift                                  | Previous file                               | Current owner                                        | Guardrail                                                                     |
+| --------------------------------------------- | ------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Platform connection inside shell layout       | `apps/web/src/app/stores/uiLayoutStore.ts`  | `apps/web/src/app/stores/platformConnectionStore.ts` | `uiLayoutStore.test.ts`, `platformConnectionStore.test.ts`.                   |
+| Permission projection inside runtime evidence | `apps/web/src/app/stores/executionStore.ts` | `apps/web/src/app/stores/authorizationStore.ts`      | `authorizationStore.test.ts`, `webStoreDomainOwnership.architecture.test.ts`. |
+| Retired global aggregate store                | `apps/web/src/app/stores/appStore.ts`       | No active owner; surface remains absent.             | `canvasStartupAndDraftRecovery.architecture.test.ts`, query-key guard.        |
 
-The previous platform connection status drift is closed: `uiLayoutStore.ts`
-does not own or hydrate `connectionStatus`, and `platformConnectionStore.ts`
-owns the `ProjectPlatformConnectionStatus` query projection.
-
-The remaining row is the only active F-05 store ownership drift found in the
-current store map. It must be removed or explicitly documented as a projection
-before F-05 can close.
+Hard cut complete: no open F-05 store ownership drift remains in this branch.
+Historical documents may still mention retired surfaces as historical evidence,
+but active component governance routes through this page and the local guide.
 
 ## Legacy And Barrel Rules
 
@@ -202,24 +206,27 @@ before F-05 can close.
 
 ## Verification Surfaces
 
-| Rule                                    | Current proof                                                                              |
-| --------------------------------------- | ------------------------------------------------------------------------------------------ |
-| No legacy aggregate store               | `canvasStartupAndDraftRecovery.architecture.test.ts` asserts `appStore.ts` does not exist. |
-| No query imports from retired aggregate | `queryKeyPolicy.architecture.test.ts` forbids `stores/appStore` imports in query surfaces. |
-| Canvas layout remains route-local       | `canvasInteractionStore.test.ts` covers persisted layout hydration.                        |
-| Shell layout remains bounded            | `uiLayoutStore.test.ts` covers persisted layout normalization.                             |
-| Platform status is not shell layout     | `platformConnectionStore.test.ts` and `uiLayoutStore.test.ts` cover the ownership split.   |
+| Rule                                    | Current proof                                                                                       |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| No legacy aggregate store               | `canvasStartupAndDraftRecovery.architecture.test.ts` asserts `appStore.ts` does not exist.          |
+| No query imports from retired aggregate | `queryKeyPolicy.architecture.test.ts` forbids `stores/appStore` imports in query surfaces.          |
+| Canvas layout remains route-local       | `canvasInteractionStore.test.ts` covers persisted layout hydration.                                 |
+| Shell layout remains bounded            | `uiLayoutStore.test.ts` covers persisted layout normalization.                                      |
+| Platform status is not shell layout     | `platformConnectionStore.test.ts` and `uiLayoutStore.test.ts` cover the ownership split.            |
+| Authorization is not runtime evidence   | `authorizationStore.test.ts` and `webStoreDomainOwnership.architecture.test.ts` cover the hard cut. |
 
-## Required Next Design
+## Closed Ownership Topology
 
-The status ownership cut now has this target shape:
+The closed ownership topology now has this shape:
 
 ```mermaid
 flowchart LR
   Health["platform-health capability"] --> Status["status projection"]
+  AuthSource["authorization capability source"] --> Auth["authorization projection"]
   Status --> TopBar["TopAppBar status UI"]
+  Auth --> Canvas["Canvas runtime policy"]
   Layout["uiLayoutStore"] --> Shell["panels, tabs, focus, visual prefs"]
 ```
 
-This preserves the current product behavior while moving connection state out
-of layout ownership.
+This preserves current product behavior while keeping connection state out of
+layout ownership and authorization state out of runtime evidence ownership.

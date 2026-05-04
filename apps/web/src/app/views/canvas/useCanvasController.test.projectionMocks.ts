@@ -32,6 +32,7 @@ export function configureCanvasHarnessHookAndProjectionMocks(
     parseDropPayload: vi.fn(() => null),
   };
 
+  mocks.useAuthorizationStore.mockImplementation(selectFromStore);
   mocks.useCanvasInteractionStore.mockImplementation(selectFromStore);
   mocks.useExecutionStore.mockImplementation(selectFromStore);
   mocks.useSessionStore.mockImplementation(selectFromStore);

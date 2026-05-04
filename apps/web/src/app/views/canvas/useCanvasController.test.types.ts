@@ -64,6 +64,7 @@ export type CanvasHarnessMocks = {
   findCanvasGraphStrategy: MockFn;
   findCanvasRuntimeRegistration: MockFn;
   resolveCanvasGraphStrategy: MockFn;
+  useAuthorizationStore: MockFn;
   useCanvasInteractionStore: MockFn;
   useExecutionStore: MockFn;
   useSessionStore: MockFn;

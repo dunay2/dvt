@@ -71,10 +71,22 @@ Acceptance:
   evidence read-model fields.
 - Runs, Cost, Console, and Canvas facade consumers read evidence through the
   explicit store.
-- Authorization does not become accepted architecture merely because it shares
-  the current store.
+- Authorization does not share this store after the hard cut.
 
-### US-WEB-STORE-006 - Reviewer Semantic Guard
+### US-WEB-STORE-006 - Authorization Capability Display
+
+As a Canvas user, I want planning, run, edge-edit, plugin, and RBAC actions to
+follow one explicit authorization projection rather than hidden runtime
+evidence defaults.
+
+Acceptance:
+
+- `useAuthorizationStore.userPermissions` owns effective UI capabilities.
+- `useExecutionStore.userPermissions` is forbidden; no compatibility path is
+  accepted.
+- Canvas route facades compose runtime evidence and authorization explicitly.
+
+### US-WEB-STORE-007 - Reviewer Semantic Guard
 
 As a reviewer, I want store ownership to be guarded semantically so a future
 change cannot reintroduce an aggregate store, hidden barrel, or layout/status
@@ -86,18 +98,31 @@ Acceptance:
 - The local component guide names public API, invariants, transitions, and
   consumers.
 - `webStoreDomainOwnership.architecture.test.ts` validates semantic ownership,
-  documentation, and drift language.
+  documentation, and hard-cut language.
 
 ## Scenario Coverage Matrix
 
-| Story            | Primary files                                             | Required proof                                                              |
-| ---------------- | --------------------------------------------------------- | --------------------------------------------------------------------------- |
-| US-WEB-STORE-001 | `sessionStore.ts`                                         | `webStoreDomainOwnership.architecture.test.ts`, `Root.shellChrome.test.tsx` |
-| US-WEB-STORE-002 | `canvasInteractionStore.ts`                               | `canvasInteractionStore.test.ts`, Canvas facade architecture tests          |
-| US-WEB-STORE-003 | `uiLayoutStore.ts`                                        | `uiLayoutStore.test.ts`, `webStoreDomainOwnership.architecture.test.ts`     |
-| US-WEB-STORE-004 | `platformConnectionStore.ts`, `Root.tsx`, `TopAppBar.tsx` | `platformConnectionStore.test.ts`, `Root.platformHealthBanner.test.tsx`     |
-| US-WEB-STORE-005 | `executionStore.ts`                                       | F-05 drift row and future authorization split tests                         |
-| US-WEB-STORE-006 | Component guide, local guide, mailbox, architecture test  | `webStoreDomainOwnership.architecture.test.ts`                              |
+| Story            | Primary files                                             | Required proof                                                               |
+| ---------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| US-WEB-STORE-001 | `sessionStore.ts`                                         | `webStoreDomainOwnership.architecture.test.ts`, `Root.shellChrome.test.tsx`  |
+| US-WEB-STORE-002 | `canvasInteractionStore.ts`                               | `canvasInteractionStore.test.ts`, Canvas facade architecture tests           |
+| US-WEB-STORE-003 | `uiLayoutStore.ts`                                        | `uiLayoutStore.test.ts`, `webStoreDomainOwnership.architecture.test.ts`      |
+| US-WEB-STORE-004 | `platformConnectionStore.ts`, `Root.tsx`, `TopAppBar.tsx` | `platformConnectionStore.test.ts`, `Root.platformHealthBanner.test.tsx`      |
+| US-WEB-STORE-005 | `executionStore.ts`                                       | `webStoreDomainOwnership.architecture.test.ts`, runtime view tests           |
+| US-WEB-STORE-006 | `authorizationStore.ts`, Canvas facade                    | `authorizationStore.test.ts`, `webStoreDomainOwnership.architecture.test.ts` |
+| US-WEB-STORE-007 | Component guide, local guide, mailbox, architecture test  | `webStoreDomainOwnership.architecture.test.ts`                               |
+
+## Scenario Catalog
+
+| Scenario                                            | Story            | Expected result                                                                  | Negative proof                                                                        |
+| --------------------------------------------------- | ---------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| User changes workspace scope.                       | US-WEB-STORE-001 | Run context reads the same tenant/project/environment/adapter from session.      | Layout, Canvas interaction, and execution stores do not define workspace scope.       |
+| Canvas persists node positions per workspace key.   | US-WEB-STORE-002 | Positions and viewport hydrate only for the matching workspace key.              | A different workspace key does not reuse the previous Canvas layout.                  |
+| User toggles shell panels and visual preferences.   | US-WEB-STORE-003 | Layout commands update shell-only state.                                         | Persisted layout cannot restore `connectionStatus` or authorization fields.           |
+| Platform health changes while the shell is mounted. | US-WEB-STORE-004 | Root writes `ProjectPlatformConnectionStatus`; TopBar displays that projection.  | `uiLayoutStore` has no `connectionStatus` command, state field, or type import.       |
+| A plan or run becomes current.                      | US-WEB-STORE-005 | Runtime views and Canvas read current plan/run from `useExecutionStore`.         | `executionStore` does not expose authorization types, defaults, or `userPermissions`. |
+| Canvas policy reads effective user capabilities.    | US-WEB-STORE-006 | Planning, running, edge editing, plugins, and RBAC read `useAuthorizationStore`. | No compatibility selector, bridge, alias, or barrel can route through execution.      |
+| Reviewer checks future store changes.               | US-WEB-STORE-007 | Docs, owned-concern docblocks, and semantic architecture tests agree.            | A thin-file-only change cannot pass without matching owner, rail, and story docs.     |
 
 ## TDD Traceability
 
@@ -105,5 +130,7 @@ Acceptance:
   model owns partial status updates.
 - `uiLayoutStore.test.ts` proved layout hydration does not revive legacy
   `connectionStatus`.
+- `authorizationStore.test.ts` proved effective UI permissions live outside
+  runtime evidence.
 - `webStoreDomainOwnership.architecture.test.ts` proves the semantic component
-  docs, owned-concern docblocks, and drift language remain aligned.
+  docs, owned-concern docblocks, and hard-cut language remain aligned.
