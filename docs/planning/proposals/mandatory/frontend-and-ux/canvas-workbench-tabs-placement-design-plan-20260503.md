@@ -521,6 +521,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasWorkbenchRouteState.test.ts
   - apps/web/src/app/views/canvas/canvasWorkbenchRouteState.ts
   - apps/web/src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
+  - apps/web/src/app/views/canvas/canvasLayoutPersistence.architecture.test.ts
   - apps/web/src/app/views/canvas/canvasWorkbenchTabs.test.ts
   - apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts
   - apps/web/src/app/views/canvas/useCanvasRoutePresentationSync.ts
@@ -529,10 +530,16 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/lineage/lineageRouteBootstrap.ts
   - apps/web/src/app/views/runs/CanvasRunsTabView.tsx
   - docs/architecture/components/web/appshell/app-shell.md
+  - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
+  - docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md
+  - docs/architecture/components/web/graph/canvas-layout-persistence-component.md
+  - docs/architecture/components/web/graph/canvas-layout-persistence-user-stories.md
+  - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md
   - docs/planning/proposals/dvt-canvas-workbench-proposal-v2-repo-validated.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-tabs-placement-design-plan-20260503.md
   - docs/planning/proposals/portfolio-map-20260403.md
+  - buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md
   - docs/planning/status/generated-code-state.md
   - docs/planning/status/governance-files/**
   - docs/planning/status/system-governance-file-fingerprint-baseline.yaml
@@ -1009,6 +1016,38 @@ symbols:
     architectureGuard: pnpm docs:feature-mechanization:implementation
     cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
     unitTests: [pnpm docs:feature-mechanization:implementation]
+  - name: RETIRED_SHELL_WORKBENCH_LABELS
+    path: apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+    dddOwner: Canvas workbench Cypress flow
+    cqRails: [ListShellNavigationItems]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+    unitTests: [pnpm docs:feature-mechanization:implementation]
+  - name: assertCanvasWorkbenchTabsAreHeaderScoped
+    path: apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+    dddOwner: Canvas workbench Cypress flow
+    cqRails: [VerifyCanvasWorkbenchVisualPosture]
+    fowlerSignals: [Test-only confidence, Documentation drift]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
+    cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+    unitTests: [pnpm docs:feature-mechanization:implementation]
+  - name: APP_ROOT
+    path: apps/web/src/app/views/canvas/canvasLayoutPersistence.architecture.test.ts
+    dddOwner: Canvas layout persistence architecture guard
+    cqRails: [PersistCanvasLayout, GetCanvasLayout, ConfigureCanvasViewportPreferences]
+    fowlerSignals: [Hidden authority, Documentation drift]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasLayoutPersistence.architecture.test.ts
+    cypressCoverage: N/A - architecture test helper
+    unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/canvasLayoutPersistence.architecture.test.ts]
+  - name: readDoc
+    path: apps/web/src/app/views/canvas/canvasLayoutPersistence.architecture.test.ts
+    dddOwner: Canvas layout persistence architecture guard
+    cqRails: [PersistCanvasLayout, GetCanvasLayout, ConfigureCanvasViewportPreferences]
+    fowlerSignals: [Hidden authority, Documentation drift]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasLayoutPersistence.architecture.test.ts
+    cypressCoverage: N/A - architecture test helper
+    unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/canvasLayoutPersistence.architecture.test.ts]
 ```
 
 ## Allowed Implementation Surfaces
@@ -1052,6 +1091,7 @@ first:
 - `apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts`
 - `apps/web/src/app/views/canvas/canvasWorkbenchTabs.test.ts`
 - `apps/web/src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts`
+- `apps/web/src/app/views/canvas/canvasLayoutPersistence.architecture.test.ts`
 - `apps/web/src/app/views/canvas/CanvasWorkbenchTabStrip.tsx`
 - `apps/web/src/app/views/canvas/CanvasWorkbenchTabStrip.templates.tsx`
 - `apps/web/src/app/views/canvas/CanvasWorkbenchTabPanel.tsx`
@@ -1059,9 +1099,15 @@ first:
 - `apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts`
 - `apps/web/cypress/support/workspaceSession.ts`
 - `docs/architecture/components/web/appshell/app-shell.md`
+- `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
 - `docs/architecture/components/web/graph/canvas-workbench-tabs-component.md`
+- `docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md`
+- `docs/architecture/components/web/graph/canvas-layout-persistence-component.md`
+- `docs/architecture/components/web/graph/canvas-layout-persistence-user-stories.md`
+- `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-tabs-placement-design-plan-20260503.md`
 - `docs/planning/proposals/portfolio-map-20260403.md`
+- `buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md`
 - generated docs indexes and governance status files required by validation
 
 Forbidden surfaces for this slice:
