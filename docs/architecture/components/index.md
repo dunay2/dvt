@@ -39,6 +39,9 @@ that component's public surface.
   operational surface.
 - [web](./web/index.md): canonical frontend workspace component home for the
   `apps/web` deployable shell and `@dvt/web` package surface.
+- [ci-governance](./ci-governance/index.md): repository automation component
+  for local changed-file gates, feature mechanization, generated governance
+  checks, and CI readiness scripts.
 
 ## Component Rules
 
