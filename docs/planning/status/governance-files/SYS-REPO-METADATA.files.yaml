@@ -1,8 +1,8 @@
 version: 1
 shardId: SYS-REPO-METADATA
-generatedFrom: git ls-files
+generatedFrom: git ls-files plus untracked non-ignored local files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-fileCount: 114
+fileCount: 115
 files:
   - fileId: F-7C0FAC63D273
     pathHash: 16228f9cd18f5479d183ab61cb01d3cfc66645b3053a3d23dd9aef2069c3410a
@@ -370,9 +370,9 @@ files:
       - pnpm-workspace.yaml
   - fileId: F-7E1405087E27
     pathHash: 53cf590556fb0261ef6baed1bd24e9a5d9e9e09ee1c3b211391f1d5ccd775afb
-    contentHash: 6fbe5fa7e0be84cb89bfa3101a8c7ad9941ecec52c78af919e6dde19f86f9ba9
+    contentHash: cc2eec8fd69ef008a1d0b932fedd693a048ff1ebdc70fc22f073e35697d15c79
     governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
-    stateFingerprint: 91849bec904f1a5129c2e2a950d02642cd8b131c8ac14df250e75c13dcc6b63c
+    stateFingerprint: 9e099ebf19c9d850f246d91e1382dd36047db34abfd462dcaa275e2f9628c5a4
     path: .gitignore
     owningUnit: SYS-REPO-METADATA-ROOT
     rootUnit: SYS-DVT
@@ -1544,6 +1544,32 @@ files:
     governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
     stateFingerprint: bee84d54b255112a3d8c3542b2eaf1f31f5caa6f0f2e3de34495bfd2d145586c
     path: buzon/20260502-tf-e2-m-d-startup-route-readiness-fowler-review.md
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-D2CAC9C2F327
+    pathHash: 6db211da9f0000c052999abd12406fdfad82800b0571efacef42bfaf4c96f051
+    contentHash: e8e0357b581c07f75f662c48318ced174c196135d8390bbb7156905ea6a0a957
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: dc16b3a8d4fa9bd070e38707f7a2e743a5a11e2b7e5c456298cfd7e38ab6e8e0
+    path: buzon/20260503-branch-fowler-hard-qa-review.md
     owningUnit: SYS-REPO-METADATA-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT

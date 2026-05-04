@@ -3,7 +3,6 @@ import {
   createCompleteRouteBootstrapPresentation,
   createFailedRouteBootstrapPresentation,
   createPendingRouteBootstrapPresentation,
-  createPublishedRouteBootstrapHandle,
   type RouteBootstrapPresentation,
 } from '../../bootstrap/routeBootstrapContract';
 import type {
@@ -11,12 +10,6 @@ import type {
   DiffSqlContextState,
   DiffWorkbenchState,
 } from './diffWorkbenchStateModel';
-
-export const DIFF_ROUTE_ID = 'dbt.diff';
-
-export const DIFF_ROUTE_BOOTSTRAP_HANDLE = createPublishedRouteBootstrapHandle({
-  pendingDetail: 'Preparing Diff route',
-});
 
 type DiffRouteBootstrapArgs = {
   workbenchState: DiffWorkbenchState;

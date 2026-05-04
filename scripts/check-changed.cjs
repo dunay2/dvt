@@ -1,9 +1,12 @@
 #!/usr/bin/env node
-const { execSync, spawnSync } = require('child_process');
+/** Owned concern: run changed-only lint and format checks from the local changed-file set. */
+const { spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const { listLocalChangedFiles } = require('./git-local-changes.cjs');
 
 const DEFAULT_BATCH_SIZE = 40;
+const repoRoot = path.resolve(__dirname, '..');
 
 function resolveCliPath(candidates) {
   for (const candidate of candidates) {
@@ -39,42 +42,6 @@ const PRETTIER_CLI =
 const ESLINT_CLI =
   resolveCliPath(['eslint/bin/eslint.js', 'eslint/bin/eslint.mjs', 'eslint/bin/eslint.cjs']) ??
   resolvePackageBin('eslint', ['bin/eslint.js', 'bin/eslint.mjs', 'bin/eslint.cjs']);
-
-function parseChangedFiles(output) {
-  return output
-    .split('\n')
-    .map((s) => s.trim())
-    .filter(Boolean);
-}
-
-function runGit(command) {
-  return execSync(command, {
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'ignore'],
-  });
-}
-
-function hasUpstream() {
-  try {
-    execSync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', {
-      stdio: ['ignore', 'ignore', 'ignore'],
-    });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function hasRef(ref) {
-  try {
-    execSync(`git rev-parse --verify ${ref}`, {
-      stdio: ['ignore', 'ignore', 'ignore'],
-    });
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 function chunk(items, size) {
   const out = [];
@@ -130,31 +97,15 @@ function runNodeCli(toolName, cliPath, args) {
   return spawnSync(process.execPath, [cliPath, ...args], { stdio: 'inherit' });
 }
 
-function resolveDiffCommand() {
-  if (hasRef('origin/main')) return 'git diff --name-only origin/main...HEAD';
-  if (hasUpstream()) return 'git diff --name-only @{u}...HEAD';
-  return 'git diff --name-only HEAD~1..HEAD';
-}
-
-function gitChangedFiles() {
-  try {
-    return parseChangedFiles(runGit(resolveDiffCommand()));
-  } catch {
-    // All diff strategies failed (e.g. single-commit repo with no upstream).
-    // Return empty so prettier/eslint are skipped rather than crashing.
-    return [];
-  }
-}
-
-const changed = gitChangedFiles();
+const changed = listLocalChangedFiles({ repoRootPath: repoRoot });
 if (changed.length === 0) {
   console.log('No changed files detected. Skipping format/lint checks.');
   process.exit(0);
 }
 
-const prettierFiles = changed.filter((f) => /\\.(ts|tsx|js|cjs|mjs|json|md|yml|yaml)$/.test(f));
+const prettierFiles = changed.filter((f) => /\.(ts|tsx|js|cjs|mjs|json|md|yml|yaml)$/.test(f));
 const eslintFiles = changed
-  .filter((f) => /\\.(ts|tsx|js|cjs|mjs)$/.test(f))
+  .filter((f) => /\.(ts|tsx|js|cjs|mjs)$/.test(f))
   // Exclude declaration files: ESLint typically ignores them and emits
   // "File ignored because of a matching ignore pattern" warnings.
   .filter((f) => !f.endsWith('.d.ts'))
@@ -163,8 +114,8 @@ const eslintFiles = changed
   .filter((f) => !f.startsWith('packages/frontend/'));
 
 // remove deleted files from the lists
-const existingPrettierFiles = prettierFiles.filter((f) => fs.existsSync(f));
-const existingEslintFiles = eslintFiles.filter((f) => fs.existsSync(f));
+const existingPrettierFiles = prettierFiles.filter((f) => fs.existsSync(path.join(repoRoot, f)));
+const existingEslintFiles = eslintFiles.filter((f) => fs.existsSync(path.join(repoRoot, f)));
 
 if (existingPrettierFiles.length) {
   console.log('Running Prettier check on changed files:');

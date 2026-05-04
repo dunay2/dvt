@@ -141,6 +141,15 @@ export async function renderCanvasRouteWithController(
 }
 
 export function findCanvasButton(container: ParentNode, label: string) {
+  const topBarControls = document.getElementById('shell-top-bar-canvas-controls');
+  const inTopBar = Array.from(topBarControls?.querySelectorAll('button') ?? []).find((button) =>
+    button.textContent?.includes(label)
+  );
+
+  if (inTopBar) {
+    return inTopBar;
+  }
+
   const inContainer = Array.from(container.querySelectorAll('button')).find((button) =>
     button.textContent?.includes(label)
   );

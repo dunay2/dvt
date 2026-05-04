@@ -13,11 +13,9 @@ import {
   buildDiffSqlContextState,
   buildDiffWorkbenchState,
 } from './diff/diffWorkbenchStateModel';
-import {
-  DIFF_ROUTE_ID,
-  deriveDiffRouteBootstrapPresentation,
-} from './diff/diffRouteBootstrap';
+import { deriveDiffRouteBootstrapPresentation } from './diff/diffRouteBootstrap';
 import { useDiffData } from './diff/useDiffData';
+import { CANVAS_WORKBENCH_ROUTE_ID } from './canvas/canvasDraftPresentationStore';
 
 export default function DiffView() {
   const {
@@ -74,7 +72,7 @@ export default function DiffView() {
     hasFileContent: fileContentQuery.data != null,
   });
   usePublishedRouteBootstrap(
-    DIFF_ROUTE_ID,
+    CANVAS_WORKBENCH_ROUTE_ID,
     deriveDiffRouteBootstrapPresentation({
       workbenchState,
       compareContextState,

@@ -103,6 +103,10 @@ function CanvasShellMainSurface({
   );
 
   if (layout.centerSurface == null) {
+    if (layout.workbenchTabPanel != null) {
+      return <>{layout.workbenchTabPanel}</>;
+    }
+
     return viewport;
   }
 
@@ -132,6 +136,9 @@ export function CanvasShellMainPanel({
     <ResizablePanel defaultSize={resolveCanvasShellMainPanelDefaultSize(layout)}>
       <div className="h-full flex flex-col bg-(--surface-panel)">
         {layout.hostTabStrip ? <div className="shrink-0">{layout.hostTabStrip}</div> : null}
+        {layout.workbenchTabStrip ? (
+          <div className="shrink-0">{layout.workbenchTabStrip}</div>
+        ) : null}
         <CanvasToolbar
           placement="top-bar"
           onAutoLayout={chromeCommands.onAutoLayout}

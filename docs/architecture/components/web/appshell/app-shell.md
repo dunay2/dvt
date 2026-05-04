@@ -68,7 +68,7 @@ Current flow:
 flowchart LR
   Query["useCapabilitiesQuery()"] --> Runtime["useShellRuntime()"]
   Runtime --> State["buildShellRuntimeState(capabilities)"]
-  State --> Views["getNavigationViews(capabilities)"]
+  State --> Views["getShellNavigationViews(capabilities)"]
   Views --> Model["buildShellNavigationModel(navigationViews)"]
   Model --> Primary["primaryItems"]
   Model --> Footer["footerItems"]
@@ -163,7 +163,10 @@ Rules for this seam:
 
 - `LeftNavigation.tsx` must not import `resolveString`, plugin manifests, or
   fixed shell footer item definitions;
-- plugin-contributed views become `primaryItems` inside the shell model;
+- only plugin-contributed `placement.kind === 'shell-nav'` views become
+  `primaryItems` inside the shell model;
+- Canvas-scoped Code, Lineage, Diff, Artifacts, and Canvas Runs are owned by
+  the Canvas workbench tab rail, not by shell navigation;
 - shell-owned routes such as `Plugins` and `Admin` stay in `footerItems`;
 - the rail consumes render-ready `{ to, label, icon }` items and stays focused
   on navigation chrome and routing behavior.
@@ -257,3 +260,4 @@ state must be placed in the smallest named slice that owns the concern.
 - [Workbench UI Contract And Component Inventory](../workbench-ui-contract-and-component-inventory.md)
 - [Data Source Service Boundary](./data-source-service-boundary.md)
 - [Library And Open-Source Reference Stack](../library-and-open-source-reference-stack.md)
+- [Canvas Workbench Tabs Component](../graph/canvas-workbench-tabs-component.md)

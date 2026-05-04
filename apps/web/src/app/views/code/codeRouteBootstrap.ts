@@ -3,15 +3,8 @@ import {
   createCompleteRouteBootstrapPresentation,
   createFailedRouteBootstrapPresentation,
   createPendingRouteBootstrapPresentation,
-  createPublishedRouteBootstrapHandle,
   type RouteBootstrapPresentation,
 } from '../../bootstrap/routeBootstrapContract';
-
-export const CODE_ROUTE_ID = 'dbt.code';
-
-export const CODE_ROUTE_BOOTSTRAP_HANDLE = createPublishedRouteBootstrapHandle({
-  pendingDetail: 'Preparing Code route',
-});
 
 type CodeRouteBootstrapArgs = {
   isLoadingFileTree: boolean;

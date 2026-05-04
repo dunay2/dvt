@@ -375,6 +375,10 @@ describe('canvas startup and draft recovery architecture', () => {
 
   it('guards first-authoring live proof against Cypress draft-boundary shortcuts', () => {
     const proofModelSource = readAppSource('canvasFirstAuthoringLiveProof.ts');
+    const proofTypesSource = readAppSource('canvasFirstAuthoringLiveProof.types.ts');
+    const firstNodePolicySource = readAppSource('canvasFirstAuthoringFirstNodePolicy.ts');
+    const restoredLayoutPolicySource = readAppSource('canvasFirstAuthoringRestoredLayoutPolicy.ts');
+    const proofInvariantSource = readAppSource('canvasFirstAuthoringProofInvariant.ts');
     const cypressHelperPath = 'apps/web/cypress/support/canvasFirstAuthoring.ts';
     const cypressSpecPath = 'apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts';
     const liveRunnerPath = 'scripts/run-canvas-first-authoring-live-proof.cjs';
@@ -387,14 +391,38 @@ describe('canvas startup and draft recovery architecture', () => {
     const implementationPlanSource = readRepoFile(
       'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md'
     );
+    const componentGuide = readRepoFile(
+      'docs/architecture/components/web/graph/canvas-first-authoring-live-proof-component.md'
+    );
 
-    expect(proofModelSource).toContain('export type CanvasFirstAuthoringLiveProof');
-    expect(proofModelSource).toContain('export type CanvasFirstAuthoringBlockedReason');
-    expect(proofModelSource).not.toContain('| string;');
+    expect(proofTypesSource).toContain('Owned concern: name first-authoring proof vocabulary');
+    expect(proofTypesSource).toContain('export type CanvasFirstAuthoringLiveProof');
+    expect(proofTypesSource).toContain('export type CanvasFirstAuthoringBlockedReason');
+    expect(proofTypesSource).not.toContain('| string;');
+    expect(proofTypesSource).not.toContain('FIRST_AUTHORING_DEFAULTS');
+
+    expect(firstNodePolicySource).toContain('Owned concern: resolve the expected first node');
+    expect(firstNodePolicySource).toContain('FIRST_AUTHORING_DEFAULTS');
+    expect(firstNodePolicySource).toContain('export function resolveExpectedFirstNode');
+    expect(firstNodePolicySource).toContain('export function matchesExpectedFirstNode');
+    expect(firstNodePolicySource).toContain("canvasKind: 'transformation'");
+    expect(firstNodePolicySource).toContain("canvasKind: 'dbt'");
+
+    expect(restoredLayoutPolicySource).toContain(
+      'Owned concern: decide whether restored route-local layout matches'
+    );
+    expect(restoredLayoutPolicySource).toContain('export function hasRestoredLayout');
+
+    expect(proofInvariantSource).toContain(
+      'Owned concern: assert completed first-authoring proof invariants'
+    );
+    expect(proofInvariantSource).toContain('export function isCanvasFirstAuthoringProofComplete');
+    expect(proofInvariantSource).toContain('export function assertCanvasFirstAuthoringInvariant');
+
     expect(proofModelSource).toContain('export function deriveCanvasFirstAuthoringLiveProof');
-    expect(proofModelSource).toContain('FIRST_AUTHORING_DEFAULTS');
-    expect(proofModelSource).toContain("canvasKind: 'transformation'");
-    expect(proofModelSource).toContain("canvasKind: 'dbt'");
+    expect(proofModelSource).not.toContain('FIRST_AUTHORING_DEFAULTS');
+    expect(proofModelSource).not.toContain('export type CanvasFirstAuthoringLiveProof');
+    expect(proofModelSource).not.toContain('function hasRestoredLayout');
 
     expect(repoFileExists(cypressHelperPath)).toBe(true);
     expect(repoFileExists(cypressSpecPath)).toBe(true);
@@ -433,6 +461,11 @@ describe('canvas startup and draft recovery architecture', () => {
     expect(implementationPlanSource).toContain(
       'pnpm --filter @dvt/web test:e2e:first-authoring:live'
     );
+    expect(componentGuide).toContain('## User Stories');
+    expect(componentGuide).toContain('## Scenario Coverage Matrix');
+    expect(componentGuide).toContain('## TDD Traceability');
+    expect(componentGuide).toContain('US-CANVAS-FIRST-AUTHORING-001');
+    expect(componentGuide).toContain('US-CANVAS-FIRST-AUTHORING-008');
 
     for (const source of cypressSources) {
       expect(source).not.toContain('cy.intercept(');

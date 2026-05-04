@@ -1,6 +1,6 @@
 version: 1
 shardId: SYS-ADAPTERS
-generatedFrom: git ls-files
+generatedFrom: git ls-files plus untracked non-ignored local files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
 fileCount: 196
 files:

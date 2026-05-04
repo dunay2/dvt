@@ -1,58 +1,58 @@
 version: 1
-generatedFrom: git ls-files
+generatedFrom: git ls-files plus untracked non-ignored local files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
 shardDirectory: docs/planning/status/governance-files
-fileCount: 4172
+fileCount: 4194
 shards:
   - id: SYS-ADAPTERS
     path: docs/planning/status/governance-files/SYS-ADAPTERS.files.yaml
     fileCount: 196
-    contentHash: 4cf38ccc8f9b0d3e29f94420e51d3cbaeab09224bee92be734c03486ad1fdf3b
+    contentHash: c7e79e4371d3ddbb8903f899a67d40edc5f589d2412f0327d7a8eeb671f285e7
   - id: SYS-API
     path: docs/planning/status/governance-files/SYS-API.files.yaml
     fileCount: 371
-    contentHash: 9e5412bdba16d3e8ca7f18e6aae08f7fd9f1fe670d332d8859e18b8e89a13e84
+    contentHash: 77ac56a7a7ec932f66166628f36a70477f362091b4fc7c7f89119a02d630d0c1
   - id: SYS-CI-GOVERNANCE
     path: docs/planning/status/governance-files/SYS-CI-GOVERNANCE.files.yaml
-    fileCount: 180
-    contentHash: 2cbbfdd28f2d5a6425a459f306e073bb6de4c8479a427f117ef8c5008ef1c5e8
+    fileCount: 182
+    contentHash: 0bb6430d3bd39074949eb992e2fa50256b8bad82a09761f736babe9a508611ac
   - id: SYS-CONTRACTS
     path: docs/planning/status/governance-files/SYS-CONTRACTS.files.yaml
     fileCount: 127
-    contentHash: 42800f035fcd96c0dd877fbf1657fcf41f075e9e59bd4d17e53f962b8e7169b3
+    contentHash: 2a8c3cf65256fc34d8709a27a391cf13493edcf0809fd609f4652fa90c0eb29a
   - id: SYS-DOCS-GOVERNANCE
     path: docs/planning/status/governance-files/SYS-DOCS-GOVERNANCE.files.yaml
-    fileCount: 1721
-    contentHash: 3478904381bd05e025f64bef4821420b351ac7a5283dc40c5016a5923ed76e80
+    fileCount: 1727
+    contentHash: 4d4c3760f0e0d39936ebd7b1daca406141b8cbdefc5ffd7284fc63f2f3cef42f
   - id: SYS-OBSERVABILITY
     path: docs/planning/status/governance-files/SYS-OBSERVABILITY.files.yaml
     fileCount: 15
-    contentHash: c7926880c4bd5ad143a1e8f30f5fda8a578c18039fe8e229d9285841be0790a9
+    contentHash: b509a6fd6a23d18afe4eac4563cad11070620f94750a2cf7ed6ee9045d4b6af0
   - id: SYS-PLANNER
     path: docs/planning/status/governance-files/SYS-PLANNER.files.yaml
     fileCount: 76
-    contentHash: 4e76f61f83610eae0532c137e2263451b76c525ae08c57e4aad2ed7fb2e1250c
+    contentHash: c93f30c7e92ae657bae8ee6415226171f2400a5533b3ae8543e312c62b80ae31
   - id: SYS-PLANSTORE
     path: docs/planning/status/governance-files/SYS-PLANSTORE.files.yaml
     fileCount: 112
-    contentHash: 950aa898f47c65fe332f8695df7551caa08a831e0d192f5d81dd7a0be9022eaa
+    contentHash: 5ea34df0d117fb799d66846d0654bc6341eedad24b6ac0909040e82c9addef02
   - id: SYS-REPO-METADATA
     path: docs/planning/status/governance-files/SYS-REPO-METADATA.files.yaml
-    fileCount: 114
-    contentHash: e0dc72917b8ae64eb77217077fd3f0be7311610e8d67744f23fe9438299c8164
+    fileCount: 115
+    contentHash: ab57fe55adf4014902d117b05918e41dd93cefdfdf33bf8a7cd73dd5db573a09
   - id: SYS-RUNTIME
     path: docs/planning/status/governance-files/SYS-RUNTIME.files.yaml
     fileCount: 286
-    contentHash: e0c70b090f2b94982bc4004c3c435f6ce72f719b7ac0a7d261934920e7c13bbc
+    contentHash: 5bd40a004210c0bf119f324ab47f0e1afe55cd24aa719bdc504d4e55718a6614
   - id: SYS-TRACEABILITY
     path: docs/planning/status/governance-files/SYS-TRACEABILITY.files.yaml
     fileCount: 65
-    contentHash: 28c604c9c6b9d737cc7cae1aade9baebaca3778e930e5ccf0fb1c367d011c57e
+    contentHash: 00fa1131bc7b591f035c74c473b2ac6252e8a78bc4f95d62b3df685288d87749
   - id: SYS-WEB
     path: docs/planning/status/governance-files/SYS-WEB.files.yaml
-    fileCount: 806
-    contentHash: 61b9b6530782b367ab2a95a5e8b5a16a7e0f8d2b3c2f94d60b54a844f8bed9ff
+    fileCount: 819
+    contentHash: 3a8d92cd2d6816a4f2c41681fb3472b84e850e4bb5991d0860b620c7c1563d4a
   - id: SYS-WORKERS
     path: docs/planning/status/governance-files/SYS-WORKERS.files.yaml
     fileCount: 103
-    contentHash: 52f3f135e1580be267daa0d2647b81c07bc2bd5d511e4b5f527a2fbea7d12a79
+    contentHash: 6636a1693bfca1098b3ee64846f0b1b0c60b38c9814522eabd4bd456edcb3196

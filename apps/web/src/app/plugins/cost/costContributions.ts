@@ -43,7 +43,8 @@ export const costContributions: PluginContributions = {
       handle: {
         routeBootstrap: COST_ROUTE_BOOTSTRAP_HANDLE,
       },
-      nav: {
+      placement: {
+        kind: 'shell-nav',
         label: 'Cost',
         icon: DollarSign,
         order: 25,

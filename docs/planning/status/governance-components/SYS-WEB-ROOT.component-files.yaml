@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: ENTRY
 cqRails: UI actions and API queries
 childrenRequired: true
-fileCount: 806
+fileCount: 819
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -76,6 +76,13 @@ files:
     isLegacy: false
   - path: apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
     fileId: F-DAA56E47F16F
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+    fileId: F-E3C5CEE03490
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -2923,6 +2930,20 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: apps/web/src/app/views/canvas/CanvasWorkbenchTabPanel.tsx
+    fileId: F-73AA0E869363
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/CanvasWorkbenchTabStrip.tsx
+    fileId: F-19E5B7C2D104
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: apps/web/src/app/views/canvas/canvasActiveGraphStrategy.test.ts
     fileId: F-BC58329F2294
     owningUnit: SYS-WEB-ROOT
@@ -3525,6 +3546,13 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: apps/web/src/app/views/canvas/canvasFirstAuthoringFirstNodePolicy.ts
+    fileId: F-44F191CAC43E
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
     fileId: F-60805BE945F9
     owningUnit: SYS-WEB-ROOT
@@ -3534,6 +3562,27 @@ files:
     isLegacy: false
   - path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
     fileId: F-59BB2109B99E
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.types.ts
+    fileId: F-3C49B060211F
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/canvasFirstAuthoringProofInvariant.ts
+    fileId: F-FA0D675D0306
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/canvasFirstAuthoringRestoredLayoutPolicy.ts
+    fileId: F-15A455A159A5
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -4064,6 +4113,20 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: apps/web/src/app/views/canvas/canvasWorkbenchRouteState.test.ts
+    fileId: F-6EB730FC7B8A
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/canvasWorkbenchRouteState.ts
+    fileId: F-F1199AADC005
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: apps/web/src/app/views/canvas/canvasWorkbenchStateModel.test.ts
     fileId: F-1F7DF0D1FCF2
     owningUnit: SYS-WEB-ROOT
@@ -4073,6 +4136,27 @@ files:
     isLegacy: false
   - path: apps/web/src/app/views/canvas/canvasWorkbenchStateModel.ts
     fileId: F-6A6F86A3D096
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
+    fileId: F-ED3393E79468
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/canvasWorkbenchTabs.test.ts
+    fileId: F-768A7FCC425B
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts
+    fileId: F-88DFC51AFE68
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -5312,6 +5396,13 @@ files:
     isLegacy: false
   - path: apps/web/src/app/views/lineage/useLineageViewData.ts
     fileId: F-1BBA0C19FBC8
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/views/runs/CanvasRunsTabView.tsx
+    fileId: F-1FFE48701A42
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

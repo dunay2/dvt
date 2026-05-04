@@ -202,3 +202,24 @@ auto-layout coordinates, and semantic boundary rules.
   graph drafts.
 - Do not let auto-layout replace node data/type fields or reintroduce
   handle-only dragging.
+- Do not treat Canvas grid visibility, grid color, or snap-to-grid as draft
+  semantics; they are route-local presentation preferences until a governed
+  slice says otherwise.
+- Do not let auto-layout become an edit-permission toggle. Layout may project
+  positions, but graph editability remains owned by Canvas interaction policy.
+
+## Backlog Signals
+
+The following sanitized proposals are tracked in
+`docs/planning/proposals/web-frontend-operability-backlog-20260430.md` and must
+not live as scratch files under `apps/**`:
+
+- new Canvas nodes should be placed inside the visible viewport;
+- auto-layout should not make nodes immovable after it runs;
+- Canvas should expose governed grid visibility and grid color preferences;
+- Canvas should support optional snap-to-grid for node creation and dragging.
+
+Future implementation must add command/query rails before code changes. Likely
+rails are `ResolveCanvasNodeInitialPosition`, `ApplyCanvasLayout`,
+`SetCanvasGridPresentation`, and `SetCanvasSnapToGridPreference`, all owned by
+Canvas route-local presentation rather than protected draft persistence.

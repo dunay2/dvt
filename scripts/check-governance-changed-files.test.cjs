@@ -1,8 +1,10 @@
+/** Owned concern: prove governance changed-file parsing and local worktree inclusion. */
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
   parseNameStatus,
+  readLocalNameStatusDiff,
   readNameStatusDiff,
   resolveBaseRef,
   validateChangedFiles,
@@ -133,6 +135,42 @@ test('readNameStatusDiff scans only the committed revision range by default', ()
 
   assert.deepEqual(result, [{ status: 'M', path: 'apps/api/src/app.ts' }]);
   assert.deepEqual(calls, [['diff', '--name-status', '--find-renames', 'origin/main...HEAD']]);
+});
+
+test('readLocalNameStatusDiff includes worktree, staged and untracked files without base-vs-worktree diff', () => {
+  const calls = [];
+  const result = readLocalNameStatusDiff('origin/main', 'HEAD', (args) => {
+    calls.push(args.join(' '));
+    const command = args.join(' ');
+    if (command === 'diff --name-status --find-renames origin/main...HEAD') {
+      return '';
+    }
+    if (command === 'diff --name-status --find-renames origin/main') {
+      throw new Error('bad tree object origin/main');
+    }
+    if (command === 'diff --cached --name-status --find-renames') {
+      return 'A\tapps/web/src/new.ts\n';
+    }
+    if (command === 'diff --name-status --find-renames') {
+      return 'M\tapps/api/src/app.ts\n';
+    }
+    if (command === 'ls-files --others --exclude-standard') {
+      return 'apps/web/src/untracked.ts\n';
+    }
+    return '';
+  });
+
+  assert.deepEqual(result, [
+    { status: 'A', path: 'apps/web/src/new.ts' },
+    { status: 'M', path: 'apps/api/src/app.ts' },
+    { status: 'A', path: 'apps/web/src/untracked.ts' },
+  ]);
+  assert.ok(calls.includes('ls-files --others --exclude-standard'));
+  assert.equal(
+    calls.includes('diff --name-status --find-renames origin/main'),
+    false,
+    'raw base diff must not run as part of local changed-file detection'
+  );
 });
 
 test('validateChangedFiles accepts governed added, modified, deleted and renamed files', () => {

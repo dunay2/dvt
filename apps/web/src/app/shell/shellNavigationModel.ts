@@ -1,13 +1,14 @@
+/** Owned concern: normalize shell navigation views into render-ready shell rail items. */
 import { Shield, Puzzle } from 'lucide-react';
 
 import { resolveString } from '../plugins/contracts/PluginManifest';
-import type { ViewContribution } from '../plugins/contracts/PluginManifest';
+import type { ShellNavigationViewContribution } from '../plugins/registry';
 
 export type ShellNavigationItem = {
   readonly to: string;
-  readonly icon: NonNullable<ViewContribution['nav']>['icon'];
+  readonly icon: ShellNavigationViewContribution['placement']['icon'];
   readonly label: string;
-  readonly level: 'core' | 'extended' | 'admin';
+  readonly level: ShellNavigationViewContribution['placement']['level'];
   readonly source: 'runtime' | 'shell';
 };
 
@@ -34,14 +35,20 @@ const SHELL_NAV: readonly ShellNavigationItem[] = [
 ] as const;
 
 export function buildShellNavigationModel(
-  navigationViews: Array<ViewContribution & { nav: NonNullable<ViewContribution['nav']> }>
+  navigationViews: readonly ShellNavigationViewContribution[]
 ): ShellNavigationModel {
+  for (const view of navigationViews) {
+    if (view.placement.kind !== 'shell-nav') {
+      throw new Error(`View contribution ${view.id} is not a shell navigation placement.`);
+    }
+  }
+
   return {
     primaryItems: navigationViews.map((view) => ({
       to: view.path,
-      icon: view.nav.icon,
-      label: resolveString(view.nav.label),
-      level: view.nav.level,
+      icon: view.placement.icon,
+      label: resolveString(view.placement.label),
+      level: view.placement.level,
       source: 'runtime',
     })),
     footerItems: SHELL_NAV,

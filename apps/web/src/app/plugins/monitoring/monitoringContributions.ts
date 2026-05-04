@@ -48,11 +48,26 @@ export const monitoringContributions: PluginContributions = {
       handle: {
         routeBootstrap: RUNS_ROUTE_BOOTSTRAP_HANDLE,
       },
-      nav: {
+      placement: {
+        kind: 'shell-nav',
         label: 'Runs',
         icon: Activity,
         order: 20,
         level: 'core',
+      },
+    },
+    {
+      pluginId: MONITORING_PLUGIN_ID,
+      id: 'monitoring.runs.canvas',
+      component: React.lazy(() => import('../../views/runs/CanvasRunsTabView')),
+      placement: {
+        kind: 'workbench-tab',
+        workbench: 'canvas',
+        tabId: 'runs',
+        label: 'Runs',
+        icon: Activity,
+        order: 60,
+        scope: 'run',
       },
     },
     {

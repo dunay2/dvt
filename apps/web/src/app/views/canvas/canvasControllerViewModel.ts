@@ -73,6 +73,7 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
     inspectorNode,
     activeRunId: overlayModel.activeRunId,
     registeredPlugins: getRegisteredPluginIds(capabilities),
+    runtimeCapabilities: capabilities,
     availableCanvasKinds: getAllCanvasKinds(capabilities),
     canvasDocument: draftReadModel?.record?.draft.canvas ?? null,
     userPermissions: {

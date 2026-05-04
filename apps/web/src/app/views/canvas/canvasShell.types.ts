@@ -36,6 +36,8 @@ export type CanvasShellLayout = {
   canOpenSourceImport: boolean;
   hostTabState: CanvasPlaygroundTabState;
   hostTabStrip?: React.ReactNode;
+  workbenchTabStrip?: React.ReactNode;
+  workbenchTabPanel?: React.ReactNode;
   centerSurfaceMode: 'replace' | 'overlay';
   centerSurface?: React.ReactNode;
   readOnlyBanner?: React.ReactNode;

@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 /**
+ * Owned concern: validate feature mechanization manifests and real implementation diffs.
+ *
  * Validate feature mechanization manifests.
  */
 
@@ -280,6 +282,7 @@ class FeatureMechanizationGitDiffReader {
   constructor(options = {}) {
     this.baseRef = options.baseRef || process.env.GIT_BASE || 'origin/main';
     this.repoRootPath = options.repoRootPath || repoRoot;
+    this.lastUntrackedFiles = new Set();
   }
 
   read() {
@@ -307,6 +310,14 @@ class FeatureMechanizationGitDiffReader {
       }
     }
 
+    const untrackedFiles = this.readGitLines(['ls-files', '--others', '--exclude-standard']).map(
+      toPosix
+    );
+    this.lastUntrackedFiles = new Set(untrackedFiles);
+    for (const filePath of untrackedFiles) {
+      changedFiles.add(filePath);
+    }
+
     return Array.from(changedFiles).sort();
   }
 
@@ -325,6 +336,11 @@ class FeatureMechanizationGitDiffReader {
 
     for (const filePath of changedFiles) {
       const absolutePath = path.join(this.repoRootPath, filePath);
+      if (this.lastUntrackedFiles.has(filePath) && fs.existsSync(absolutePath)) {
+        addedLinesByPath[filePath] = fs.readFileSync(absolutePath, 'utf8').split(/\r?\n/);
+        continue;
+      }
+
       if (fs.existsSync(absolutePath) && !addedLinesByPath[filePath]) {
         addedLinesByPath[filePath] = [];
       }

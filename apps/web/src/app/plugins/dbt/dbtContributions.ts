@@ -1,10 +1,6 @@
 import React from 'react';
 import { FileCode2, FileText, GitCompare, GitGraph, LayoutDashboard } from 'lucide-react';
 
-import { ARTIFACTS_ROUTE_BOOTSTRAP_HANDLE } from '../../views/artifacts/artifactsRouteBootstrap';
-import { CODE_ROUTE_BOOTSTRAP_HANDLE } from '../../views/code/codeRouteBootstrap';
-import { DIFF_ROUTE_BOOTSTRAP_HANDLE } from '../../views/diff/diffRouteBootstrap';
-import { LINEAGE_ROUTE_BOOTSTRAP_HANDLE } from '../../views/lineage/lineageRouteBootstrap';
 import { CANVAS_ROUTE_BOOTSTRAP_HANDLE } from '../../views/canvas/canvasDraftPresentationStore';
 import type { PluginContributions } from '../registry';
 import { DBT_NODE_KINDS } from '../nodeTypeCatalog.dbt';
@@ -51,7 +47,7 @@ export const dbtContributions: PluginContributions = {
   nodeKinds: DBT_NODE_KINDS,
   nodeRenderers,
   inspectorPanels: dbtInspectorPanels,
-  // Route contributions define the dbt workbenches exposed in shell navigation.
+  // View placements define shell navigation and Canvas-scoped workbench tabs.
   views: [
     {
       pluginId: DBT_PLUGIN_ID,
@@ -61,7 +57,8 @@ export const dbtContributions: PluginContributions = {
       handle: {
         routeBootstrap: CANVAS_ROUTE_BOOTSTRAP_HANDLE,
       },
-      nav: {
+      placement: {
+        kind: 'shell-nav',
         label: 'Canvas',
         icon: LayoutDashboard,
         order: 10,
@@ -71,61 +68,57 @@ export const dbtContributions: PluginContributions = {
     {
       pluginId: DBT_PLUGIN_ID,
       id: 'dbt.lineage',
-      path: '/lineage',
       component: React.lazy(() => import('../../views/LineageView')),
-      handle: {
-        routeBootstrap: LINEAGE_ROUTE_BOOTSTRAP_HANDLE,
-      },
-      nav: {
+      placement: {
+        kind: 'workbench-tab',
+        workbench: 'canvas',
+        tabId: 'lineage',
         label: 'Lineage',
         icon: GitGraph,
-        order: 15,
-        level: 'core',
+        order: 30,
+        scope: 'canvas',
       },
     },
     {
       pluginId: DBT_PLUGIN_ID,
       id: 'dbt.code',
-      path: '/code',
       component: React.lazy(() => import('../../views/CodeView')),
-      handle: {
-        routeBootstrap: CODE_ROUTE_BOOTSTRAP_HANDLE,
-      },
-      nav: {
+      placement: {
+        kind: 'workbench-tab',
+        workbench: 'canvas',
+        tabId: 'code',
         label: 'Code',
         icon: FileCode2,
-        order: 16,
-        level: 'core',
+        order: 20,
+        scope: 'selection',
       },
     },
     {
       pluginId: DBT_PLUGIN_ID,
       id: 'dbt.diff',
-      path: '/diff',
       component: React.lazy(() => import('../../views/DiffView')),
-      handle: {
-        routeBootstrap: DIFF_ROUTE_BOOTSTRAP_HANDLE,
-      },
-      nav: {
+      placement: {
+        kind: 'workbench-tab',
+        workbench: 'canvas',
+        tabId: 'diff',
         label: 'Diff',
         icon: GitCompare,
-        order: 17,
-        level: 'core',
+        order: 40,
+        scope: 'canvas',
       },
     },
     {
       pluginId: DBT_PLUGIN_ID,
       id: 'dbt.artifacts',
-      path: '/artifacts',
       component: React.lazy(() => import('../../views/ArtifactsView')),
-      handle: {
-        routeBootstrap: ARTIFACTS_ROUTE_BOOTSTRAP_HANDLE,
-      },
-      nav: {
+      placement: {
+        kind: 'workbench-tab',
+        workbench: 'canvas',
+        tabId: 'artifacts',
         label: 'Artifacts',
         icon: FileText,
-        order: 18,
-        level: 'extended',
+        order: 50,
+        scope: 'run',
       },
     },
   ],

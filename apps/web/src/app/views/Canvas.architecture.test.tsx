@@ -28,10 +28,17 @@ describe('Canvas route architecture', () => {
     expect(CANVAS_ROUTE_SOURCE).toContain(
       'const modalHostProps = buildCanvasModalHostProps(controller);'
     );
-    expect(CANVAS_ROUTE_SOURCE).toContain('<CanvasShell {...shellProps} />');
+    expect(CANVAS_ROUTE_SOURCE).toContain('<CanvasShell {...shellProps} layout={layout} />');
     expect(CANVAS_ROUTE_SOURCE).toContain('<CanvasModalHost {...modalHostProps} />');
     expect(CANVAS_ROUTE_SOURCE).not.toContain('CanvasModalLayer');
     expect(CANVAS_ROUTE_SOURCE).not.toContain('renderCanvasCenterSurface');
     expect(CANVAS_ROUTE_SOURCE).not.toContain('CanvasRecoveryBanner');
+  });
+
+  it('resolves Canvas workbench tabs from the route controller runtime capabilities', () => {
+    expect(CANVAS_ROUTE_SOURCE).toContain(
+      'getCanvasWorkbenchTabViews(controller.runtimeCapabilities)'
+    );
+    expect(CANVAS_ROUTE_SOURCE).not.toContain('useShellRuntime(');
   });
 });

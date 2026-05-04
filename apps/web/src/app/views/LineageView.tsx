@@ -16,11 +16,9 @@ import {
   buildLineageColumnState,
   buildLineageWorkbenchState,
 } from './lineage/lineageWorkbenchStateModel';
-import {
-  LINEAGE_ROUTE_ID,
-  deriveLineageRouteBootstrapPresentation,
-} from './lineage/lineageRouteBootstrap';
+import { deriveLineageRouteBootstrapPresentation } from './lineage/lineageRouteBootstrap';
 import { useLineageViewData } from './lineage/useLineageViewData';
+import { CANVAS_WORKBENCH_ROUTE_ID } from './canvas/canvasDraftPresentationStore';
 
 export default function LineageView() {
   const {
@@ -65,7 +63,7 @@ export default function LineageView() {
     snapshotErrorMessage: snapshotError?.message ?? copy.routeErrorFallbackMessage,
   });
   usePublishedRouteBootstrap(
-    LINEAGE_ROUTE_ID,
+    CANVAS_WORKBENCH_ROUTE_ID,
     deriveLineageRouteBootstrapPresentation(workbenchState)
   );
 

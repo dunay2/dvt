@@ -3,16 +3,9 @@ import {
   createCompleteRouteBootstrapPresentation,
   createFailedRouteBootstrapPresentation,
   createPendingRouteBootstrapPresentation,
-  createPublishedRouteBootstrapHandle,
   type RouteBootstrapPresentation,
 } from '../../bootstrap/routeBootstrapContract';
 import type { ArtifactsWorkbenchState } from './artifactsWorkbenchStateModel';
-
-export const ARTIFACTS_ROUTE_ID = 'dbt.artifacts';
-
-export const ARTIFACTS_ROUTE_BOOTSTRAP_HANDLE = createPublishedRouteBootstrapHandle({
-  pendingDetail: 'Preparing Artifacts route',
-});
 
 export function deriveArtifactsRouteBootstrapPresentation(
   workbenchState: ArtifactsWorkbenchState

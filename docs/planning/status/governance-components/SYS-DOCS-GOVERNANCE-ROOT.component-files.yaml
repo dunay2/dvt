@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - documentation governance
 childrenRequired: true
-fileCount: 1721
+fileCount: 1727
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -636,6 +636,20 @@ files:
     isLegacy: false
   - path: docs/architecture/components/api/protected-runtime-and-plan-compile-component.md
     fileId: F-9BD62A2B9EA1
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/ci-governance/index.md
+    fileId: F-0200F11400C7
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/ci-governance/local-changed-files-gate-component.md
+    fileId: F-71B27FCCBB86
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -1817,6 +1831,13 @@ files:
     isLegacy: false
   - path: docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md
     fileId: F-574D2BC3E01A
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
+    fileId: F-B863220D9695
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -8630,6 +8651,13 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: docs/planning/proposals/dvt-canvas-workbench-proposal-v2-repo-validated.md
+    fileId: F-924C146641B6
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/README.md
     fileId: F-B95AB2DAA21F
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -8807,6 +8835,14 @@ files:
   - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/canvas-draft-persistence-runtime-debt-plan-20260503.md
     fileId: F-DC232A640423
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-tabs-placement-design-plan-20260503.md
+    fileId: F-98488AC50DC6
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -9030,6 +9066,14 @@ files:
   - path: >-
       docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md
     fileId: F-6B7109FAC413
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/planning/proposals/mandatory/governance-and-docs/local-changed-files-gate-hardening-plan-20260503.md
+    fileId: F-D47D38349445
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

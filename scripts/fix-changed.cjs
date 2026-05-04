@@ -1,51 +1,12 @@
 #!/usr/bin/env node
-const { execSync, spawnSync } = require('node:child_process');
+/** Owned concern: apply safe autofixes to files in the local changed-file set. */
+const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
+const { listLocalChangedFiles } = require('./git-local-changes.cjs');
 
 const DEFAULT_BATCH_SIZE = 40;
-
-function parseChangedFiles(output) {
-  return output
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean);
-}
-
-function gitExec(command) {
-  return execSync(command, {
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'ignore'],
-  });
-}
-
-function hasUpstream() {
-  try {
-    execSync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', {
-      stdio: ['ignore', 'ignore', 'ignore'],
-    });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function hasRef(ref) {
-  try {
-    execSync(`git rev-parse --verify ${ref}`, {
-      stdio: ['ignore', 'ignore', 'ignore'],
-    });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function resolveDiffCommand() {
-  if (hasRef('origin/main')) return 'git diff --name-only --diff-filter=ACMR origin/main...HEAD';
-  if (hasUpstream()) return 'git diff --name-only --diff-filter=ACMR @{u}...HEAD';
-  return 'git diff --name-only --diff-filter=ACMR HEAD~1..HEAD';
-}
+const repoRoot = path.resolve(__dirname, '..');
 
 function resolveCliPath(candidates) {
   for (const candidate of candidates) {
@@ -118,12 +79,7 @@ const ESLINT_CLI =
   resolveCliPath(['eslint/bin/eslint.js', 'eslint/bin/eslint.mjs', 'eslint/bin/eslint.cjs']) ??
   resolvePackageBin('eslint', ['bin/eslint.js', 'bin/eslint.mjs', 'bin/eslint.cjs']);
 
-let changedFiles;
-try {
-  changedFiles = parseChangedFiles(gitExec(resolveDiffCommand()));
-} catch {
-  changedFiles = [];
-}
+const changedFiles = listLocalChangedFiles({ repoRootPath: repoRoot });
 
 if (changedFiles.length === 0) {
   console.log('No changed files detected. Skipping fix:changed.');
@@ -131,14 +87,14 @@ if (changedFiles.length === 0) {
 }
 
 const prettierFiles = changedFiles
-  .filter((filePath) => /\.(ts|tsx|js|jsx|json|md|yml|yaml|html|css)$/.test(filePath))
-  .filter((filePath) => fs.existsSync(filePath));
+  .filter((filePath) => /\.(ts|tsx|js|jsx|cjs|mjs|json|md|yml|yaml|html|css)$/.test(filePath))
+  .filter((filePath) => fs.existsSync(path.join(repoRoot, filePath)));
 
 const eslintFiles = changedFiles
-  .filter((filePath) => /\.(ts|tsx|js|jsx)$/.test(filePath))
+  .filter((filePath) => /\.(ts|tsx|js|jsx|cjs|mjs)$/.test(filePath))
   .filter((filePath) => !filePath.endsWith('.d.ts'))
   .filter((filePath) => !filePath.startsWith('packages/frontend/'))
-  .filter((filePath) => fs.existsSync(filePath));
+  .filter((filePath) => fs.existsSync(path.join(repoRoot, filePath)));
 
 if (prettierFiles.length > 0) {
   console.log('Auto-fixing with Prettier on changed files:');

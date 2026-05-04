@@ -1,6 +1,7 @@
 #!/usr/bin/env tsx
 /**
  * @file tools/docs/check-frontmatter.ts
+ * Owned concern: enforce docs frontmatter policy for the local changed-file set.
  * Frontmatter / header contract gate.
  *
  * Checked document types:
@@ -22,7 +23,7 @@
  * Usage:
  *   tsx tools/docs/check-frontmatter.ts [--changed-only]
  */
-import { execFileSync } from 'node:child_process';
+import { createRequire } from 'node:module';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -42,6 +43,10 @@ const DOCS_DIR = join(REPO_ROOT, 'docs');
 const ADR_DIR = join(DOCS_DIR, 'adr');
 const EVIDENCE_DIR = join(DOCS_DIR, 'evidence');
 const CHANGED_ONLY = process.argv.includes('--changed-only');
+const require = createRequire(import.meta.url);
+const { listLocalChangedFiles } = require('../../scripts/git-local-changes.cjs') as {
+  listLocalChangedFiles: (options?: { repoRootPath?: string }) => string[];
+};
 
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const VALID_EVIDENCE_STATUSES = new Set(['final', 'draft', 'pending', 'accepted']);
@@ -189,23 +194,9 @@ function getChangedMarkdownFiles(): string[] {
     return override.split(/\r?\n|;/).flatMap((entry) => normalizeChangedPath(entry));
   }
 
-  const base = process.env['GIT_BASE'] ?? 'origin/main';
-  try {
-    const output = execFileSync(
-      'git',
-      ['diff', '--name-only', '--diff-filter=AM', base, '--', 'docs/**/*.md'],
-      {
-        cwd: REPO_ROOT,
-        encoding: 'utf8',
-      }
-    );
-    return output
-      .trim()
-      .split(/\r?\n/)
-      .flatMap((entry) => normalizeChangedPath(entry));
-  } catch {
-    return walkMarkdown(DOCS_DIR);
-  }
+  return listLocalChangedFiles({ repoRootPath: REPO_ROOT }).flatMap((entry) =>
+    normalizeChangedPath(entry)
+  );
 }
 
 function normalizeChangedPath(entry: string): string[] {

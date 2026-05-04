@@ -22,12 +22,10 @@ import {
   CodeRouteLoadingStateView,
 } from './code/CodeStateViews';
 import { resolveCodeWorkbenchErrorPresentation } from './code/codeWorkbenchErrorModel';
-import {
-  CODE_ROUTE_ID,
-  deriveCodeRouteBootstrapPresentation,
-} from './code/codeRouteBootstrap';
+import { deriveCodeRouteBootstrapPresentation } from './code/codeRouteBootstrap';
 import { codeViewCopy as copy } from './code/codeViewCopy';
 import FileTreePanel from './code/FileTreePanel';
+import { CANVAS_WORKBENCH_ROUTE_ID } from './canvas/canvasDraftPresentationStore';
 
 function flattenFiles(entries: WorkspaceFileEntry[]): WorkspaceFileEntry[] {
   return entries.flatMap((entry) =>
@@ -67,7 +65,7 @@ export default function CodeView() {
     : null;
 
   usePublishedRouteBootstrap(
-    CODE_ROUTE_ID,
+    CANVAS_WORKBENCH_ROUTE_ID,
     deriveCodeRouteBootstrapPresentation({
       isLoadingFileTree: fileTreeQuery.isPending,
       fileTreeErrorMessage: fileTreeErrorPresentation?.message ?? null,
@@ -82,11 +80,7 @@ export default function CodeView() {
   }
 
   if (fileTreeQuery.isError) {
-    return (
-      <CodeRouteErrorStateView
-        error={fileTreeErrorPresentation!}
-      />
-    );
+    return <CodeRouteErrorStateView error={fileTreeErrorPresentation!} />;
   }
 
   if (!hasWorkspaceFiles(workspaceFileTree)) {
@@ -98,9 +92,7 @@ export default function CodeView() {
       {copy.previewLoadingMessage}
     </div>
   ) : fileContentQuery.isError ? (
-    <CodePreviewErrorStateView
-      error={filePreviewErrorPresentation!}
-    />
+    <CodePreviewErrorStateView error={filePreviewErrorPresentation!} />
   ) : !fileContentQuery.data ? (
     <CodePreviewEmptyStateView />
   ) : (

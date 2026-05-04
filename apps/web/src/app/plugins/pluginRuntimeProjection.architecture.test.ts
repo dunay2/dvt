@@ -13,6 +13,8 @@ import {
   getAllNodeKinds,
   getAllOverlays,
   getAllViews,
+  getCanvasWorkbenchTabViews,
+  getShellNavigationViews,
   getNodeBadges,
   getNodeRenderer,
   getPluginPortMap,
@@ -56,9 +58,9 @@ describe('plugin runtime projection architecture', () => {
     expect(
       getAllCanvasRuntimeRegistrations(capabilities).map((registration) => registration.kind)
     ).not.toContain('dbt');
-    expect(getAllNodeKinds(capabilities).map((registration) => registration.pluginId)).not.toContain(
-      'dbt'
-    );
+    expect(
+      getAllNodeKinds(capabilities).map((registration) => registration.pluginId)
+    ).not.toContain('dbt');
     expect(getPluginPortMap(capabilities).has('dbt')).toBe(false);
     expect(getNodeRenderer('dbt:model', FallbackRenderer, capabilities)).toBe(FallbackRenderer);
   });
@@ -80,6 +82,23 @@ describe('plugin runtime projection architecture', () => {
 
     expect(costDashboard?.handle?.routeBootstrap).toBe(COST_ROUTE_BOOTSTRAP_HANDLE);
     expect(getAllViews().find((view) => view.id === 'cost.dashboard')).toBe(costDashboard);
+  });
+
+  it('separates shell navigation query rail from Canvas workbench tab query rail', () => {
+    const shellViewIds = getShellNavigationViews().map((view) => view.id);
+    const canvasTabIds = getCanvasWorkbenchTabViews().map((view) => view.placement.tabId);
+
+    expect(shellViewIds).toContain('dbt.canvas');
+    expect(shellViewIds).toContain('monitoring.runs');
+    expect(shellViewIds).not.toContain('dbt.code');
+    expect(shellViewIds).not.toContain('dbt.lineage');
+    expect(shellViewIds).not.toContain('dbt.diff');
+    expect(shellViewIds).not.toContain('dbt.artifacts');
+
+    expect(canvasTabIds).toEqual(['code', 'lineage', 'diff', 'artifacts', 'runs']);
+    expect(
+      getCanvasWorkbenchTabViews().every((view) => view.placement.workbench === 'canvas')
+    ).toBe(true);
   });
 
   it('decorates Cost overlay nodes at explicit cost-risk thresholds', () => {
