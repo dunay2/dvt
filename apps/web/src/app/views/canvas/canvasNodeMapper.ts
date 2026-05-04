@@ -6,8 +6,6 @@ import type { MergedNodeDecoration } from '../../plugins/contracts/NodeRendering
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 
-export const CANVAS_NODE_DRAG_HANDLE_SELECTOR = '.canvas-node-drag-handle';
-
 type ColumnMeta = Array<{ name: string; type: string }>;
 type CanvasNodePosition = { x: number; y: number };
 type MapCanonicalNodeToCanvasNodeArgs = {
@@ -34,7 +32,6 @@ export function mapCanonicalNodeToCanvasNode({
   return {
     id: canonicalNode.id,
     type: 'dbtNode',
-    dragHandle: CANVAS_NODE_DRAG_HANDLE_SELECTOR,
     position: persistedPosition ?? { x: (index % 3) * 250, y: Math.floor(index / 3) * 150 },
     data: {
       name: canonicalNode.name,
@@ -106,7 +103,6 @@ export function mapDroppedCanonicalNodeToCanvasNode(
   return {
     id: canonicalNode.id,
     type: 'dbtNode',
-    dragHandle: CANVAS_NODE_DRAG_HANDLE_SELECTOR,
     position,
     data: {
       name: canonicalNode.name,

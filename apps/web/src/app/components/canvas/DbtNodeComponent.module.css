@@ -3,29 +3,6 @@
   min-height: 80px;
 }
 
-.dragHandle {
-  position: absolute;
-  top: 4px;
-  left: 50%;
-  z-index: 20;
-  display: inline-flex;
-  height: 18px;
-  width: 30px;
-  transform: translateX(-50%);
-  cursor: grab;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgb(148 163 184 / 55%);
-  border-radius: 6px;
-  background: rgb(15 23 42 / 88%);
-  color: rgb(226 232 240);
-  box-shadow: 0 4px 10px rgb(0 0 0 / 18%);
-}
-
-.dragHandle:active {
-  cursor: grabbing;
-}
-
 /* Applied when a plugin overlay sets a dynamic border color */
 .overlayBorder {
   border-color: var(--overlay-border-color);

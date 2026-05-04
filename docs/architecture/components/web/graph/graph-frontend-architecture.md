@@ -164,9 +164,17 @@ As of 2026-04-25:
   host tab strip: the action creates a blank canvas through the protected draft
   save boundary with the current revision as the compare-and-swap guard, so
   stale local demo data does not require manual database cleanup
-- React Flow node drag uses an explicit visible node drag handle inside the
-  node shell, keeping drag affordance tied to effective mutation permission
-  instead of depending on incidental child event propagation
+- React Flow node drag uses the whole node card when effective mutation
+  permission allows it, keeping the expected operator gesture simple while
+  preserving the same fail-closed permission gate
+- Canvas viewport preferences now have a named route-local command rail:
+  `ConfigureCanvasViewportPreferences` owns grid visibility, grid color, and
+  snap-to-grid state in `uiLayoutStore`, while `PersistCanvasLayout` continues
+  to own renderer coordinates and protected draft rails remain graph-authority
+  only
+- newly authored catalog nodes start from a visible first authoring slot instead
+  of the React Flow origin, and auto-layout preserves node drag capability while
+  optionally snapping computed coordinates to the configured grid
 
 ## Protected Draft Semantic Projection
 
@@ -347,22 +355,22 @@ Invariants:
 - read-only, backend-blocked, runtime-blocked, or recovery-blocked postures keep
   the replacement action disabled through effective route permissions.
 
-## Node Drag Handle
+## Node Drag Surface
 
 Graph mutation remains governed by `CanvasRuntimePolicy` and the effective route
 permissions. When mutation is allowed, the viewport passes
-`nodesDraggable=true`; each projected React Flow node declares
-`.canvas-node-drag-handle` as its drag handle, and the rendered DVT node shell
-owns a visible handle with that class.
+`nodesDraggable=true`; projected React Flow nodes do not declare a `dragHandle`
+selector, so the whole node card is draggable except for React Flow connection
+handles and other controls that own their own gesture.
 
 ```mermaid
 flowchart LR
   Policy["CanvasRuntimePolicy"] --> Effective["effectiveUserPermissions.canEditEdges"]
   Effective --> Viewport["ReactFlow nodesDraggable"]
   Effective --> Toolbar["Layout / New canvas enabled state"]
-  Mapper["canvasNodeMapper dragHandle"] --> Viewport
-  Viewport --> DragHandle["dragHandle=.canvas-node-drag-handle"]
-  Node["DbtNodeComponent visible handle"] --> DragHandle
+  Mapper["canvasNodeMapper no dragHandle selector"] --> Viewport
+  Viewport --> Node["Whole React Flow node card"]
+  Node --> Gesture["Drag gesture"]
 ```
 
 This keeps drag behavior explicit while preserving the fail-closed rule: if the
@@ -582,8 +590,8 @@ string checks. Current semantic coverage includes:
 - explicit persisted-draft replacement through CAS saves, including the
   negative path that existing drafts are not overwritten without
   `replace_current`;
-- explicit node drag handle wiring between React Flow and the rendered node
-  shell.
+- explicit whole node drag surface wiring between React Flow and the rendered
+  node shell.
 
 Source-text assertions are retained only as narrow import-boundary tripwires
 where runtime behavior cannot observe ownership directly.

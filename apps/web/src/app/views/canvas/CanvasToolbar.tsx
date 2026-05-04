@@ -4,6 +4,7 @@ import { Separator } from '../../components/ui/separator';
 import { CanvasToolbarDraftStatus } from './CanvasToolbarDraftStatus';
 import { CanvasToolbarPrimaryControls } from './CanvasToolbarPrimaryControls';
 import type { CanvasGraphAuthoringMode } from '../../plugins/nodeTypeContracts';
+import type { CanvasPaletteId } from './canvasPalette';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
 import { deriveCanvasToolbarViewModel } from './canvasToolbarViewModel';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
@@ -16,6 +17,9 @@ export type CanvasToolbarProps = {
   readonly onToggleCostOverlay: () => void;
   readonly onToggleImpact: () => void;
   readonly onToggleColumns: () => void;
+  readonly onToggleGridVisible: () => void;
+  readonly onGridColorChange: (color: CanvasPaletteId) => void;
+  readonly onToggleSnapToGrid: () => void;
   readonly onReloadLatestDraft: () => void;
   readonly onPlan: () => void;
   readonly onRun: () => void;
@@ -31,6 +35,9 @@ export type CanvasToolbarProps = {
   readonly canUseCostOverlay: boolean;
   readonly impactOverlayEnabled: boolean;
   readonly columnLevelLineageEnabled: boolean;
+  readonly canvasGridVisible: boolean;
+  readonly canvasGridColor: CanvasPaletteId;
+  readonly canvasSnapToGrid: boolean;
   readonly transformationValidation: TransformationGraphValidationResult;
   readonly nodeCount: number;
   readonly edgeCount: number;
@@ -48,6 +55,9 @@ export default function CanvasToolbar(props: CanvasToolbarProps) {
         onToggleCostOverlay={props.onToggleCostOverlay}
         onToggleImpact={props.onToggleImpact}
         onToggleColumns={props.onToggleColumns}
+        onToggleGridVisible={props.onToggleGridVisible}
+        onGridColorChange={props.onGridColorChange}
+        onToggleSnapToGrid={props.onToggleSnapToGrid}
         onPlan={props.onPlan}
         onRun={props.onRun}
         canPlan={props.canPlan}
@@ -58,6 +68,9 @@ export default function CanvasToolbar(props: CanvasToolbarProps) {
         canUseCostOverlay={props.canUseCostOverlay}
         impactOverlayEnabled={props.impactOverlayEnabled}
         columnLevelLineageEnabled={props.columnLevelLineageEnabled}
+        canvasGridVisible={props.canvasGridVisible}
+        canvasGridColor={props.canvasGridColor}
+        canvasSnapToGrid={props.canvasSnapToGrid}
         workflowStatusLabel={viewModel.workflowStatusLabel}
         workflowStatusClass={viewModel.workflowStatusClass}
         workflowStatusTitle={viewModel.workflowStatusTitle}

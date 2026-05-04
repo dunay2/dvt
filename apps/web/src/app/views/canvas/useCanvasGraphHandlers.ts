@@ -7,7 +7,10 @@ import type {
   CanvasGraphInteractionState,
 } from './canvasGraphHandlerContracts';
 import { canvasGraphHandlerContractBuilders } from './canvasGraphHandlerContractBuilders';
-import type { UseCanvasGraphHandlersParams, UseCanvasGraphHandlersResult } from './useCanvasGraphHandlers.types';
+import type {
+  UseCanvasGraphHandlersParams,
+  UseCanvasGraphHandlersResult,
+} from './useCanvasGraphHandlers.types';
 import { useCanvasEdgeAuthoringHandlers } from './useCanvasEdgeAuthoringHandlers';
 import { useCanvasLayoutHandlers } from './useCanvasLayoutHandlers';
 import { useCanvasNodeAuthoringHandlers } from './useCanvasNodeAuthoringHandlers';
@@ -22,6 +25,8 @@ export function useCanvasGraphHandlers({
   inspectorNodeId,
   draftSession,
   canEditEdges,
+  gridSize = 20,
+  canvasSnapToGrid = false,
   runtimeCapabilities,
   allowsCanonicalNode,
   focusMode,
@@ -57,6 +62,8 @@ export function useCanvasGraphHandlers({
   const interactionPolicy: CanvasGraphInteractionPolicy = {
     graphStrategy,
     canEditEdges,
+    gridSize,
+    canvasSnapToGrid,
     runtimeCapabilities,
     allowsCanonicalNode,
     columnLevelLineageEnabled,

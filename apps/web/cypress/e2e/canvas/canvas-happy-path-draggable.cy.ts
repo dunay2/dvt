@@ -84,25 +84,19 @@ function dragSourceNode(alias: string): void {
       const rect = $node[0].getBoundingClientRect();
       cy.wrap({ left: rect.left, top: rect.top }).as(alias);
 
-      cy.wrap($node)
-        .find('.canvas-node-drag-handle')
-        .should('be.visible')
-        .then(($handle) => {
-          const handleRect = $handle[0].getBoundingClientRect();
-          const start = {
-            x: handleRect.left + handleRect.width / 2,
-            y: handleRect.top + handleRect.height / 2,
-          };
-          const middle = { x: start.x + 30, y: start.y + 20 };
-          const end = { x: start.x + 110, y: start.y + 80 };
+      const start = {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+      };
+      const middle = { x: start.x + 30, y: start.y + 20 };
+      const end = { x: start.x + 110, y: start.y + 80 };
 
-          cy.window().then((window) => {
-            dispatchMouseDragEvent($handle[0], window, 'mousedown', start, 1);
-            dispatchMouseDragEvent(window, window, 'mousemove', middle, 1);
-            dispatchMouseDragEvent(window, window, 'mousemove', end, 1);
-            dispatchMouseDragEvent(window, window, 'mouseup', end, 0);
-          });
-        });
+      cy.window().then((window) => {
+        dispatchMouseDragEvent($node[0], window, 'mousedown', start, 1);
+        dispatchMouseDragEvent(window, window, 'mousemove', middle, 1);
+        dispatchMouseDragEvent(window, window, 'mousemove', end, 1);
+        dispatchMouseDragEvent(window, window, 'mouseup', end, 0);
+      });
     });
 }
 

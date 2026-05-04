@@ -1,9 +1,19 @@
-import { Columns, DollarSign, FileCheck, LayoutGrid, Play, Target } from 'lucide-react';
+import {
+  Columns,
+  DollarSign,
+  FileCheck,
+  Grid3X3,
+  LayoutGrid,
+  Magnet,
+  Play,
+  Target,
+} from 'lucide-react';
 
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Separator } from '../../components/ui/separator';
 import { cn } from '../../components/ui/utils';
+import type { CanvasPaletteId } from './canvasPalette';
 import { canvasViewCopy } from './copy';
 
 type CanvasToolbarPrimaryControlsProps = {
@@ -11,6 +21,9 @@ type CanvasToolbarPrimaryControlsProps = {
   onToggleCostOverlay: () => void;
   onToggleImpact: () => void;
   onToggleColumns: () => void;
+  onToggleGridVisible: () => void;
+  onGridColorChange: (color: CanvasPaletteId) => void;
+  onToggleSnapToGrid: () => void;
   onPlan: () => void;
   onRun: () => void;
   canPlan: boolean;
@@ -21,6 +34,9 @@ type CanvasToolbarPrimaryControlsProps = {
   canUseCostOverlay: boolean;
   impactOverlayEnabled: boolean;
   columnLevelLineageEnabled: boolean;
+  canvasGridVisible: boolean;
+  canvasGridColor: CanvasPaletteId;
+  canvasSnapToGrid: boolean;
   workflowStatusLabel: string;
   workflowStatusClass: string;
   workflowStatusTitle: string;
@@ -32,6 +48,9 @@ export function CanvasToolbarPrimaryControls({
   onToggleCostOverlay,
   onToggleImpact,
   onToggleColumns,
+  onToggleGridVisible,
+  onGridColorChange,
+  onToggleSnapToGrid,
   onPlan,
   onRun,
   canPlan,
@@ -42,6 +61,9 @@ export function CanvasToolbarPrimaryControls({
   canUseCostOverlay,
   impactOverlayEnabled,
   columnLevelLineageEnabled,
+  canvasGridVisible,
+  canvasGridColor,
+  canvasSnapToGrid,
   workflowStatusLabel,
   workflowStatusClass,
   workflowStatusTitle,
@@ -117,6 +139,54 @@ export function CanvasToolbarPrimaryControls({
           {canvasViewCopy.toolbarCostLabel}
         </Button>
       ) : null}
+      <Separator orientation="vertical" className="h-5 bg-slate-700" />
+
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={onToggleGridVisible}
+        aria-label={canvasViewCopy.toolbarGridLabel}
+        title={canvasViewCopy.toolbarGridLabel}
+        className={cn(
+          'h-8 gap-1.5 px-3 text-xs text-slate-300 hover:bg-slate-800 hover:text-white',
+          canvasGridVisible && 'bg-slate-700 text-white'
+        )}
+      >
+        <Grid3X3 className="size-4" />
+        {canvasViewCopy.toolbarGridLabel}
+      </Button>
+
+      <label
+        className="flex h-8 items-center gap-2 rounded-md border border-slate-700 bg-slate-950/40 px-2 text-xs text-slate-300"
+        title={canvasViewCopy.toolbarGridColorLabel}
+      >
+        <span>{canvasViewCopy.toolbarGridColorLabel}</span>
+        <input
+          type="color"
+          value={canvasGridColor}
+          aria-label={canvasViewCopy.toolbarGridColorLabel}
+          onInput={(event) => onGridColorChange(event.currentTarget.value as CanvasPaletteId)}
+          className="size-5 cursor-pointer rounded border border-slate-600 bg-transparent p-0"
+        />
+      </label>
+
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={onToggleSnapToGrid}
+        aria-label={canvasViewCopy.toolbarSnapToGridLabel}
+        title={canvasViewCopy.toolbarSnapToGridLabel}
+        className={cn(
+          'h-8 gap-1.5 px-3 text-xs text-slate-300 hover:bg-slate-800 hover:text-white',
+          canvasSnapToGrid && 'bg-slate-700 text-white'
+        )}
+      >
+        <Magnet className="size-4" />
+        {canvasViewCopy.toolbarSnapToGridLabel}
+      </Button>
+
       <Separator orientation="vertical" className="h-5 bg-slate-700" />
       <Button
         type="button"

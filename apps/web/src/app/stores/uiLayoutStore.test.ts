@@ -21,6 +21,9 @@ describe('useUiLayoutStore', () => {
       focusMode: false,
       gridSize: 20,
       canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
+      canvasGridVisible: true,
+      canvasGridColor: '#94a3b8',
+      canvasSnapToGrid: false,
       activeTabs: [{ id: 'main-canvas', type: 'canvas', label: 'Main Graph' }],
       activeTabId: 'main-canvas',
     });
@@ -67,5 +70,40 @@ describe('useUiLayoutStore', () => {
     expect('connectionStatus' in useUiLayoutStore.getState()).toBe(false);
     expect('setConnectionStatus' in useUiLayoutStore.getState()).toBe(false);
     expect(useUiLayoutStore.getState().gridSize).toBe(30);
+  });
+
+  it('owns canvas grid preferences as visual layout commands', async () => {
+    useUiLayoutStore.getState().setCanvasGridVisible(false);
+    useUiLayoutStore.getState().setCanvasGridColor('#f97316');
+    useUiLayoutStore.getState().setCanvasSnapToGrid(true);
+
+    expect(useUiLayoutStore.getState().canvasGridVisible).toBe(false);
+    expect(useUiLayoutStore.getState().canvasGridColor).toBe('#f97316');
+    expect(useUiLayoutStore.getState().canvasSnapToGrid).toBe(true);
+
+    await useUiLayoutStore.persist.rehydrate();
+
+    expect(useUiLayoutStore.getState().canvasGridVisible).toBe(false);
+    expect(useUiLayoutStore.getState().canvasGridColor).toBe('#f97316');
+    expect(useUiLayoutStore.getState().canvasSnapToGrid).toBe(true);
+  });
+
+  it('normalizes invalid persisted grid preferences back to canonical defaults', async () => {
+    localStorage.setItem(
+      UI_LAYOUT_STORAGE_KEY,
+      JSON.stringify({
+        state: {
+          canvasGridVisible: false,
+          canvasGridColor: 'not-a-color',
+          canvasSnapToGrid: true,
+        },
+      })
+    );
+
+    await useUiLayoutStore.persist.rehydrate();
+
+    expect(useUiLayoutStore.getState().canvasGridVisible).toBe(false);
+    expect(useUiLayoutStore.getState().canvasGridColor).toBe('#94a3b8');
+    expect(useUiLayoutStore.getState().canvasSnapToGrid).toBe(true);
   });
 });

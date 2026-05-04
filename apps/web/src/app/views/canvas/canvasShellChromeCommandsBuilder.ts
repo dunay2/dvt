@@ -16,6 +16,13 @@ export function buildCanvasShellChromeCommands({
     onToggleCostOverlay: chromeCommands.handleToggleCostOverlay,
     onToggleImpact: chromeCommands.toggleImpactOverlay,
     onToggleColumns: chromeCommands.toggleColumnLevelLineage,
+    onToggleGridVisible: () => {
+      chromeCommands.setCanvasGridVisible(!chromeCommands.canvasGridVisible);
+    },
+    onGridColorChange: chromeCommands.setCanvasGridColor,
+    onToggleSnapToGrid: () => {
+      chromeCommands.setCanvasSnapToGrid(!chromeCommands.canvasSnapToGrid);
+    },
     onReloadLatestDraft: chromeCommands.reloadLatestDraft,
     onPlan: () => {
       void chromeCommands.handlePlan();

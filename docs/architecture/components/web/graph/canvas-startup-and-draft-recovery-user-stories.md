@@ -299,18 +299,17 @@ Acceptance criteria:
 - The created node is persisted through `SaveWorkspaceGraphDraft`.
 - Reloaded protected draft truth contains the created node.
 
-### US-CANVAS-FIRST-AUTHORING-004: persist first-node drag from the intended handle
+### US-CANVAS-FIRST-AUTHORING-004: persist first-node drag from the node card
 
 As an operator moving the first node, I want Canvas to persist the dropped
-coordinate only from the intended drag handle, so the card does not move or
-snap back from accidental clicks.
+coordinate when I grab the node card itself, so the product matches the natural
+graph-editing gesture.
 
 Acceptance criteria:
 
-- Dragging outside the handle does not count as first-authoring proof.
-- Dragging from the visible semantic handle uses the drag-stop payload
-  coordinate.
-- The whole node card is not the React Flow drag handle.
+- Dragging from the node card body counts as first-authoring proof.
+- Dragging uses the drag-stop payload coordinate.
+- The whole node card is the React Flow drag surface when mutation is allowed.
 - `PersistCanvasLayout` writes only route-local layout projection data.
 - `GetCanvasLayout` restores the coordinate after reload.
 
@@ -404,13 +403,14 @@ Acceptance criteria:
 
 ### US-CANVAS-PRESENTATION-003: keep node drag gesture ownership explicit
 
-As an operator, I want Canvas cards to drag only from the intended surface, so
-selecting text or interacting with ports does not accidentally move nodes.
+As an operator, I want Canvas cards to drag from the whole node body while ports
+keep their own connection behavior, so moving a node does not depend on a tiny
+grip target.
 
 Acceptance criteria:
 
-- Mapped and dropped nodes include `CANVAS_NODE_DRAG_HANDLE_SELECTOR`.
-- `DbtNodeComponent.tsx` renders the named visible drag handle.
+- Mapped and dropped nodes omit a React Flow `dragHandle` selector.
+- `DbtNodeComponent.tsx` does not render a separate grip-only drag handle.
 - Drag enablement remains governed by `CanvasViewport` permissions.
 
 ### US-CANVAS-ARCH-001: validate semantics, not only barrels
@@ -424,7 +424,7 @@ Acceptance criteria:
 
 - Architecture tests read the local component guide and this story document.
 - Tests check semantic strings such as `/workspace/graph/draft`,
-  `replace_current`, and `.canvas-node-drag-handle`.
+  `replace_current`, and `dragSourceNodeFromCardBody`.
 - Tests reject retired-route shims and duplicated authority paths.
 
 ### US-CANVAS-ARCH-002: keep workspace draft test fixtures bounded
@@ -465,7 +465,7 @@ Acceptance criteria:
 | US-CANVAS-FIRST-AUTHORING-001 | Live transformation first canvas                | `canvasFirstAuthoringLiveProof.ts`, `canvasCreateCanvasDocumentCommand.ts`     | proof test, create-canvas command test, Cypress live first-authoring spec                 |
 | US-CANVAS-FIRST-AUTHORING-002 | Live dbt first canvas                           | `canvasFirstAuthoringLiveProof.ts`, `canvasCreateCanvasDocumentCommand.ts`     | proof test, create-canvas command test, Cypress live first-authoring spec                 |
 | US-CANVAS-FIRST-AUTHORING-003 | First node after authoritative save             | `useCanvasController.ts`, `useCanvasNodeAuthoringHandlers.ts`                  | controller core test, first-authoring proof test                                          |
-| US-CANVAS-FIRST-AUTHORING-004 | First-node drag-handle layout persistence       | `canvasNodeMapper.ts`, `DbtNodeComponent.tsx`, layout persistence              | layout tests, viewport drag-handle test, Cypress live first-authoring spec                |
+| US-CANVAS-FIRST-AUTHORING-004 | First-node card-body layout persistence         | `canvasNodeMapper.ts`, `DbtNodeComponent.tsx`, layout persistence              | layout tests, viewport drag-surface test, Cypress live first-authoring spec               |
 | US-CANVAS-FIRST-AUTHORING-005 | Reload restores first authored canvas           | protected draft query and layout projection                                    | controller persistence test, viewport graph model test, Cypress live proof                |
 | US-CANVAS-FIRST-AUTHORING-006 | Unsafe draft access blocks first authoring      | `CanvasDraftAccessPosture`, first-authoring proof model                        | draft access posture tests, first-authoring proof negative tests                          |
 | US-CANVAS-LAYOUT-001          | Drag-stop payload coordinates persist           | `useCanvasLayoutPersistence.ts`                                                | `useCanvasController.persistence.test.tsx`                                                |
@@ -473,7 +473,7 @@ Acceptance criteria:
 | US-CANVAS-LAYOUT-003          | Pending route state blocks layout writes        | `useCanvasLayoutPersistence.ts`                                                | `useCanvasController.persistence.test.tsx`                                                |
 | US-CANVAS-PRESENTATION-001    | Passive host template                           | `CanvasPlaygroundHost.templates.tsx`                                           | `canvasStartupAndDraftRecovery.architecture.test.ts`                                      |
 | US-CANVAS-PRESENTATION-002    | Passive tab-strip template                      | `CanvasPlaygroundTabStrip.templates.tsx`                                       | `CanvasPlaygroundTabStrip.test.tsx`, `canvasStartupAndDraftRecovery.architecture.test.ts` |
-| US-CANVAS-PRESENTATION-003    | Drag handle is explicit                         | `canvasNodeMapper.ts`, `DbtNodeComponent.tsx`                                  | `canvasStartupAndDraftRecovery.architecture.test.ts`                                      |
+| US-CANVAS-PRESENTATION-003    | Drag surface is explicit                        | `canvasNodeMapper.ts`, `DbtNodeComponent.tsx`                                  | `canvasStartupAndDraftRecovery.architecture.test.ts`                                      |
 | US-CANVAS-ARCH-001            | Semantic architecture guard                     | `canvasStartupAndDraftRecovery.architecture.test.ts`                           | `canvasStartupAndDraftRecovery.architecture.test.ts`                                      |
 | US-CANVAS-ARCH-002            | Fixture boundaries                              | `workspaceGraphDraftFixtureBoundaries.architecture.test.ts`                    | `workspaceGraphDraftFixtureBoundaries.architecture.test.ts`                               |
 
@@ -524,7 +524,7 @@ Red case for `TF-E2-M-C` first-authoring mechanization:
 - no local component guide named the first-authoring proof API, invariants,
   transitions, or consumers;
 - the story catalog did not cover transformation/dbt first-canvas creation,
-  first-node creation, drag-handle persistence, reload restore, and unsafe
+  first-node creation, drag-surface persistence, reload restore, and unsafe
   posture denial as one feature lane.
 
 Green case for `TF-E2-M-C` planning:

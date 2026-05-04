@@ -58,7 +58,15 @@ export type CanvasShellPanelsBuilderArgs = Readonly<{
 export type CanvasShellGraphBuilderArgs = Readonly<{
   graphState: Pick<
     CanvasRouteController,
-    'nodesWithImpact' | 'edges' | 'nodeTypes' | 'gridSize' | 'canvasPalette' | 'viewport'
+    | 'nodesWithImpact'
+    | 'edges'
+    | 'nodeTypes'
+    | 'gridSize'
+    | 'canvasPalette'
+    | 'canvasGridVisible'
+    | 'canvasGridColor'
+    | 'canvasSnapToGrid'
+    | 'viewport'
   >;
 }>;
 
@@ -108,6 +116,11 @@ export type CanvasShellChromeCommandsBuilderArgs = Readonly<{
     | 'handleToggleCostOverlay'
     | 'toggleImpactOverlay'
     | 'toggleColumnLevelLineage'
+    | 'canvasGridVisible'
+    | 'canvasSnapToGrid'
+    | 'setCanvasGridVisible'
+    | 'setCanvasGridColor'
+    | 'setCanvasSnapToGrid'
     | 'reloadLatestDraft'
     | 'handlePlan'
     | 'handleStartRun'

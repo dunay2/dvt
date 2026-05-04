@@ -11,7 +11,8 @@ import type {
 
 export type UseCanvasGraphHandlersParams = CanvasGraphInteractionState &
   CanvasGraphInteractionEffects &
-  CanvasGraphInteractionPolicy;
+  Omit<CanvasGraphInteractionPolicy, 'gridSize' | 'canvasSnapToGrid'> &
+  Partial<Pick<CanvasGraphInteractionPolicy, 'gridSize' | 'canvasSnapToGrid'>>;
 
 export type UseCanvasGraphHandlersResult = {
   confirmEdgeModal: ConfirmEdgeModalState;

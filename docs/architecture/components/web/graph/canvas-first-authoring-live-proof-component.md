@@ -92,15 +92,16 @@ outside the UI-owned command flow.
 
 ## Command And Query Rails
 
-| Rail                               | Type    | DDD owner                             | Component rule                                                       |
-| ---------------------------------- | ------- | ------------------------------------- | -------------------------------------------------------------------- |
-| `GetWorkspaceGraphDraft`           | query   | `WorkspaceGraphDraft` read boundary   | source of clean, created, and restored graph-authoritative truth     |
-| `CreateCanvas`                     | command | `CanvasDocument` aggregate            | creates the first typed document from `needs_canvas`                 |
-| `CreateCanvasNode`                 | command | `CanvasAuthoringGraph` aggregate      | creates a node inside an existing active canvas                      |
-| `SaveWorkspaceGraphDraft`          | command | `WorkspaceGraphDraft` write boundary  | persists document and node graph through existing CAS behavior       |
-| `PersistCanvasLayout`              | command | `CanvasLayoutProjection` value object | persists active and stopped drag coordinates outside graph authority |
-| `GetCanvasLayout`                  | query   | `CanvasLayoutProjection` value object | restores coordinates after route revisit or hard reload              |
-| `RunCanvasFirstAuthoringLiveProof` | command | repository proof runner               | executes the protected-runtime Cypress proof without zero-pass skips |
+| Rail                                 | Type    | DDD owner                                | Component rule                                                                     |
+| ------------------------------------ | ------- | ---------------------------------------- | ---------------------------------------------------------------------------------- |
+| `GetWorkspaceGraphDraft`             | query   | `WorkspaceGraphDraft` read boundary      | source of clean, created, and restored graph-authoritative truth                   |
+| `CreateCanvas`                       | command | `CanvasDocument` aggregate               | creates the first typed document from `needs_canvas`                               |
+| `CreateCanvasNode`                   | command | `CanvasAuthoringGraph` aggregate         | creates a node inside an existing active canvas                                    |
+| `SaveWorkspaceGraphDraft`            | command | `WorkspaceGraphDraft` write boundary     | persists document and node graph through existing CAS behavior                     |
+| `PersistCanvasLayout`                | command | `CanvasLayoutProjection` value object    | persists active and stopped drag coordinates outside graph authority               |
+| `GetCanvasLayout`                    | query   | `CanvasLayoutProjection` value object    | restores coordinates after route revisit or hard reload                            |
+| `RunCanvasFirstAuthoringLiveProof`   | command | repository proof runner                  | executes the protected-runtime Cypress proof without zero-pass skips               |
+| `ConfigureCanvasViewportPreferences` | command | `CanvasViewportPreferences` value object | changes grid visibility, grid color, and snap-to-grid locally without graph writes |
 
 No new command or query may be implemented for this component unless the
 implementation plan and repo command-query catalog are updated first.
@@ -135,8 +136,16 @@ implementation plan and repo command-query catalog are updated first.
   layout key.
 - Drag persistence uses active `onNodeDrag` and `onNodeDragStop` payload
   coordinates, not stale React Flow node arrays.
-- `CANVAS_NODE_DRAG_HANDLE_SELECTOR` points to a visible semantic handle inside
-  the node shell, not to the whole node card.
+- React Flow nodes omit a `dragHandle` selector, so the whole node card is the
+  governed drag surface when `CanvasViewport` allows node mutation.
+- The first catalog-created node on an empty canvas starts at the visible
+  authoring slot `{ x: 160, y: 120 }`; `0,0` is not the first-node default
+  because it can land under chrome or outside the operator's current focus.
+- Grid visibility, grid color, and snap-to-grid preferences are route-local
+  viewport preferences. They are not written to `SaveWorkspaceGraphDraft`.
+- When snap-to-grid is enabled, drag and auto-layout coordinates may align to
+  the configured grid, but node ids, node kinds, edge semantics, and protected
+  draft authority remain unchanged.
 - The restored route state must be derived from a real protected draft query
   and route-local layout read.
 - Cypress proof must not intercept draft read or write endpoints.
@@ -186,7 +195,7 @@ sequenceDiagram
     User->>CanvasRoute: Add first node
     CanvasRoute->>DraftSave: Save node graph
     DraftSave-->>CanvasRoute: Saved revision
-    User->>CanvasRoute: Drag node from semantic handle
+    User->>CanvasRoute: Drag node from card body
     CanvasRoute->>Layout: Persist active and stopped drag coordinates
     Layout->>LocalStore: Store route-local node position
     User->>CanvasRoute: Reload route
@@ -203,9 +212,9 @@ sequenceDiagram
   proof inputs to tests and diagnostics.
 - `useCanvasNodeAuthoringHandlers.ts` sends first-node command intent through
   controller seams.
-- `canvasNodeMapper.ts` owns the React Flow drag-handle selector.
-- `DbtNodeComponent.tsx` renders the visible node drag handle consumed by the
-  selector.
+- `canvasNodeMapper.ts` owns the absence of a React Flow drag-handle selector.
+- `DbtNodeComponent.tsx` renders the node shell without a separate grip-only
+  drag affordance.
 - `useCanvasLayoutPersistence.ts` persists route-local coordinates after
   automatic store hydration.
 - `canvasStartupAndDraftRecovery.architecture.test.ts` guards semantic
@@ -225,8 +234,7 @@ The implementation proves these failures:
   transformation or `dbt:source` for dbt fails proof;
 - read-only, unauthenticated, forbidden-scope, pending, and format-error draft
   postures block first authoring;
-- drag attempts outside the intended handle do not count as first-authoring
-  proof;
+- drag attempts from the node card body count as first-authoring proof;
 - layout persistence remains queued rather than lost if a drag observation is
   captured before local store hydration finishes;
 - restored draft without the created node fails proof;
@@ -247,8 +255,8 @@ The implementation proves these failures:
   objects with explicit invariants.
 - Fowler walking skeleton: one real product route crosses browser, route,
   query, command, persistence, and reload boundaries.
-- Interaction boundary: dragging is a semantic node-shell affordance, not an
-  accidental side effect of the whole card being draggable.
+- Interaction boundary: dragging is a governed whole-node affordance, not a
+  hidden grip-only gesture.
 
 ## Drift Watch
 
@@ -260,7 +268,7 @@ The implementation proves these failures:
   movement. The protected draft proves graph authority only; route-local layout
   proof belongs to `dvt-web-canvas-interaction`.
 - Route-local layout state must not become graph authority.
-- The drag-handle selector must not drift back to the whole node card.
+- The whole node drag surface must not drift back to a grip-only selector.
 - Copy-only changes must not claim this feature is implemented.
 - Planner preview and run behavior must stay outside this component unless a
   new plan extends the command-query rails.

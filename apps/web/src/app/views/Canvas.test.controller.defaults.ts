@@ -3,7 +3,7 @@ import { vi } from 'vitest';
 
 import { DVT_AUTHORING_NODE_KINDS } from '../plugins/dvt/dvtNodeTypeCatalog';
 import { DBT_NODE_KINDS } from '../plugins/nodeTypeCatalog.dbt';
-import { DEFAULT_CANVAS_PALETTE_ID } from './canvas/canvasPalette';
+import { DEFAULT_CANVAS_GRID_COLOR, DEFAULT_CANVAS_PALETTE_ID } from './canvas/canvasPalette';
 import { deriveCanvasDraftAccessPosture } from './canvas/canvasDraftAccessPostureModel';
 import type { CanvasDraftAuthTransportPosture } from './canvas/canvasDraftAuthTransportPosture';
 import type { CanvasDraftToolbarState } from './canvas/canvasDraftToolbarState';
@@ -34,6 +34,9 @@ type CanvasWorkbenchDefaultsDto = {
   nodeTypes: CanvasController['nodeTypes'];
   gridSize: CanvasController['gridSize'];
   canvasPalette: CanvasController['canvasPalette'];
+  canvasGridVisible: CanvasController['canvasGridVisible'];
+  canvasGridColor: CanvasController['canvasGridColor'];
+  canvasSnapToGrid: CanvasController['canvasSnapToGrid'];
   viewport: CanvasController['viewport'];
 };
 
@@ -175,6 +178,9 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
     nodeTypes: {},
     gridSize: 24,
     canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
+    canvasGridVisible: true,
+    canvasGridColor: DEFAULT_CANVAS_GRID_COLOR,
+    canvasSnapToGrid: false,
     viewport: null,
   } satisfies CanvasWorkbenchDefaultsDto;
 }
@@ -255,6 +261,9 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'handleToggleCostOverlay'
   | 'toggleImpactOverlay'
   | 'toggleColumnLevelLineage'
+  | 'setCanvasGridVisible'
+  | 'setCanvasGridColor'
+  | 'setCanvasSnapToGrid'
   | 'handlePlan'
   | 'handleStartRun'
   | 'reloadLatestDraft'
@@ -289,6 +298,9 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     handleToggleCostOverlay: vi.fn(),
     toggleImpactOverlay: vi.fn(),
     toggleColumnLevelLineage: vi.fn(),
+    setCanvasGridVisible: vi.fn(),
+    setCanvasGridColor: vi.fn(),
+    setCanvasSnapToGrid: vi.fn(),
     handlePlan: vi.fn(),
     handleStartRun: vi.fn(),
     reloadLatestDraft: vi.fn(),

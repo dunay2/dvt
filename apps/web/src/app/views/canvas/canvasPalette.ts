@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 export type CanvasPaletteId = `#${string}`;
 
 export const DEFAULT_CANVAS_PALETTE_ID: CanvasPaletteId = '#101826';
+export const DEFAULT_CANVAS_GRID_COLOR: CanvasPaletteId = '#94a3b8';
 
 type Rgb = {
   readonly r: number;
@@ -59,6 +60,17 @@ export function normalizeCanvasPaletteId(value: unknown): CanvasPaletteId {
   }
 
   return resolveHexPaletteId(value) ?? DEFAULT_CANVAS_PALETTE_ID;
+}
+
+export function normalizeCanvasHexColor(
+  value: unknown,
+  fallback: CanvasPaletteId
+): CanvasPaletteId {
+  if (typeof value !== 'string') {
+    return fallback;
+  }
+
+  return resolveHexPaletteId(value) ?? fallback;
 }
 
 function clampChannel(value: number): number {
