@@ -2,7 +2,7 @@ version: 1
 shardId: SYS-WEB
 generatedFrom: git ls-files plus untracked non-ignored local files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-fileCount: 819
+fileCount: 820
 files:
   - fileId: F-76C868437FA7
     pathHash: 0e84cc225ac7ad73b75b40d07ec39fc3d385993334ceac8c74e6901de6549d41
@@ -13888,6 +13888,32 @@ files:
     governance:
       - >-
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+  - fileId: F-F4C359E5101F
+    pathHash: 780de5547f136ce07991e438cb9a0a0c7ebcf039aed4ba2c6c770aaa2a336d96
+    contentHash: 118610eb1b53c859ddf58d98ab32e3d16b1949109acda968887fe30f7ef35348
+    governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
+    stateFingerprint: cb6f0039ec8334c69c44ef4577b9fce1600ffd781bc1dae9cb8a45c25d1bc952
+    path: apps/web/src/app/views/canvas/canvasLayoutPersistence.architecture.test.ts
+    owningUnit: SYS-WEB-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-WEB-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-WEB
+      - SYS-WEB-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ENTRY
+    cqRails: UI actions and API queries
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-054D3F958714
     pathHash: 71d172055d5cd28e0b861fca075ac3d0efd1ecb340f3b220ac61033b973f37ca
     contentHash: cef355b546d130672eb2358ced857249fcd052d7e83cdfcdee7071630019e63f
@@ -15346,9 +15372,9 @@ files:
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-ED3393E79468
     pathHash: f1afe2248f37563fc5298ed559db037f5c74d2386131f7f0b6679f9af266b6c7
-    contentHash: 2752e39706fec15bf3c67c5ad0619aaf2b5038e29733bd9d395cd4222a09df9d
+    contentHash: 941a2919d9a204143c51779805b33d4d36e664efdc3ac71e6c2144d68e78ba4c
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: ddfe9c114751ac73d5722c5f9b8e46af964514920830745e346b80787ef1a9d7
+    stateFingerprint: 00b7f352ea7131579297f3bd50ec4ec3620fb480b5966855f830dc8429ce8218
     path: apps/web/src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT

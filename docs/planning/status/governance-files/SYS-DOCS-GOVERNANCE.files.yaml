@@ -2,7 +2,7 @@ version: 1
 shardId: SYS-DOCS-GOVERNANCE
 generatedFrom: git ls-files plus untracked non-ignored local files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-fileCount: 1727
+fileCount: 1731
 files:
   - fileId: F-6B19C055239D
     pathHash: 32c3974a4420d61351195186e55593d26f0b6371acb5769789646423ee1557ce
@@ -6537,10 +6537,36 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-F18C8A20BCD4
     pathHash: 6b5a68187f0a5c45d0ab6e64e71f74d937dd21bac0a0a5f7c5687e0334089ab3
-    contentHash: 02a76ab20d26c6df9e2f0bcc91750eec7951cdfed1a84a38d4b8ed862743684b
+    contentHash: 650d680504f1a498a45b1eb3397eb6791a8bf439dfb64959173c2255aee79663
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 57a6432b11b61b4ad9429311ed9b6311bd6cfc7aa44df35e3a15a718a9372a3a
+    stateFingerprint: a73a0272b4f8d68f453ddcd6b0e922dc6d04f5d3e132d01841696e0fb390a109
     path: docs/architecture/components/web/graph/canvas-layout-persistence-component.md
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-DOCS-GOVERNANCE
+      - SYS-DOCS-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - documentation governance
+    governance:
+      - docs/DOCS_README.md
+      - docs/planning/status/governance-document-rule-inventory.md
+  - fileId: F-ABF945DE5950
+    pathHash: b7d91150b1051c6de20712a2185cea969ccf678feaa855a948958ca49da19efd
+    contentHash: 55608b0a0dac7a10b77c84434f55f1a61c3d177c8c1454f50effea40159bf00d
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: eb1f20a76f1f4d716eb1e911cfdcbee8ab7a8c774e373fb1a58b60d267aa7711
+    path: docs/architecture/components/web/graph/canvas-layout-persistence-user-stories.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -6769,12 +6795,64 @@ files:
     governance:
       - docs/DOCS_README.md
       - docs/planning/status/governance-document-rule-inventory.md
+  - fileId: F-8085D63C79AA
+    pathHash: 7339f635fa255865b8fa7c5b7ced6cf3e2e937b93b85ed868d555bcac41d81a6
+    contentHash: 8dd16e899c7e98488c33fc6b3c9ccf0a2700170e6b4a07d1980d239d1f5a42ba
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: 7b48b2455878410f7169e21da157faac7c9a91099596da2917a7de31a1465e80
+    path: docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-DOCS-GOVERNANCE
+      - SYS-DOCS-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - documentation governance
+    governance:
+      - docs/DOCS_README.md
+      - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-B863220D9695
     pathHash: 6d65b9948a837472f92e68314054fb851d9b86e49009b4c9df484ee8e4d67235
-    contentHash: bb08e6cf78f9ded60be8827bc83f82cf476d2aaf9f68ff90ac3615ad9b0326b8
+    contentHash: 589cbd3b017e583938c41314a819baf469e8ccaefe3b03867c8ba6d16f2dc731
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 7cfb75ebc8d8ed84dda22996d0269153ed81f7d4b654b64a3159411b81fbc80d
+    stateFingerprint: 81a6a0fee6cf44636b9d2f33bf374b99deb78abb328d1626bb258f504d2f0d38
     path: docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-DOCS-GOVERNANCE
+      - SYS-DOCS-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - documentation governance
+    governance:
+      - docs/DOCS_README.md
+      - docs/planning/status/governance-document-rule-inventory.md
+  - fileId: F-B1EE215AE751
+    pathHash: 62732b91fb4097c768fa822d35d63fac0dd4ff6e4f556f72eb2007da17da09ab
+    contentHash: 58119007a608b64e2f6ccfbbfc42f0435f6e3bcef163f56751d9183bb556159f
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: b59509c88b92615e5512125181ba19b3fb3ed776f270fa0010d84a6ea02910e2
+    path: docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -32145,6 +32223,33 @@ files:
     stateFingerprint: 005952292c2f5606f1e3ce67bbc0cb5a9ea4b6afd0bc46cd7183562ca9704085
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/canvas-draft-persistence-runtime-debt-plan-20260503.md
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-DOCS-GOVERNANCE
+      - SYS-DOCS-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - documentation governance
+    governance:
+      - docs/DOCS_README.md
+      - docs/planning/status/governance-document-rule-inventory.md
+  - fileId: F-5747AC855FEA
+    pathHash: 111bd5025c2aa41038cf1dc6d670d54404e6619e479418712c2421ceccd9e28a
+    contentHash: 92d964e79318f2edf1bba8b96a8179cab446e35a0372cea003b608bf73a5eef8
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: 92d0c40833e2b43bfa337a149a07d957d6c6d4c3e8244089f5ecd01c196d20ae
+    path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
