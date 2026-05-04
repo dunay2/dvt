@@ -4,7 +4,7 @@ generatedFrom:
   - docs/planning/status/system-governance-component-index.components.yaml
 shardDirectory: docs/planning/status/governance-components
 componentCount: 32
-fileCount: 4231
+fileCount: 4232
 components:
   - id: SYS-ADAPTERS-ROOT
     path: docs/planning/status/governance-components/SYS-ADAPTERS-ROOT.component-files.yaml
@@ -44,10 +44,10 @@ components:
     contentHash: f72cd78c2c1436c8ddb35cd89d9ce8a6b62353e29eb26c1438201dcfd4ec043c
   - id: SYS-API-HTTP-ENTRYPOINT-TESTS
     path: docs/planning/status/governance-components/SYS-API-HTTP-ENTRYPOINT-TESTS.component-files.yaml
-    fileCount: 53
+    fileCount: 54
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 9a924d15bc79e97eccf2b71bd5340b02f501f2d56fef0a81acc3973017a33199
+    contentHash: fa0213a6083e28f418844e3744ed0869beb0df6ad326fa96c1bc04a72df78373
   - id: SYS-API-HTTP-ENTRYPOINTS
     path: docs/planning/status/governance-components/SYS-API-HTTP-ENTRYPOINTS.component-files.yaml
     fileCount: 83

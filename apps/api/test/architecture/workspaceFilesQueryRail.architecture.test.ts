@@ -36,8 +36,9 @@ describe('workspace files query rail architecture', () => {
     expect(routeGroup).toContain('LocalWorkspaceFileRepository');
     expect(routeGroup).toContain('ListWorkspaceFilesUseCase');
     expect(routeGroup).toContain('GetWorkspaceFileContentUseCase');
-    expect(routeModule).toContain('/workspace/files');
-    expect(routeModule).toContain('/workspace/files/:path');
+    expect(routeModule).toContain('RUNTIME_ROUTE_PATH.workspaceFiles');
+    expect(routeModule).toContain('RUNTIME_ROUTE_PATH.workspaceFileContent');
+    expect(routeModule).toContain('config: { rateLimit: deps.rateLimit }');
     expect(routeModule).toContain('AUTHORIZATION_ACTION.workspaceFilesView');
   });
 

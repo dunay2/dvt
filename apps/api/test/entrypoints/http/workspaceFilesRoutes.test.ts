@@ -79,6 +79,7 @@ describe('workspaceFilesRoutes', () => {
       authorizer: { authorize } as never,
       getUseCase: new GetWorkspaceFileContentUseCase(repository),
       listUseCase: new ListWorkspaceFilesUseCase(repository),
+      rateLimit: { max: 100, timeWindow: 60_000 },
     });
 
     return { app, authorize };

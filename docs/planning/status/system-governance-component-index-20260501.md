@@ -104,7 +104,7 @@ Components with `childrenRequired: true` and more than 100 files:
 | `SYS-API-BOOTSTRAP` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 2 | `ENTRY` | `SYS-API-ROOT` |
 | `SYS-API-DOCS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 15 | `INFRA` | `SYS-API-ROOT` |
 | `SYS-API-DOMAIN-AUTH` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 1 | `DS` | `SYS-API-ROOT` |
-| `SYS-API-HTTP-ENTRYPOINT-TESTS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 53 | `INFRA` | `SYS-API-ROOT` |
+| `SYS-API-HTTP-ENTRYPOINT-TESTS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 54 | `INFRA` | `SYS-API-ROOT` |
 | `SYS-API-HTTP-ENTRYPOINTS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 83 | `ENTRY` | `SYS-API-ROOT` |
 | `SYS-API-INFRASTRUCTURE` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 28 | `ADP` | `SYS-API-ROOT` |
 | `SYS-API-OPS-HEALTH` | `source` | `review` | `review` | `none` | `review-required` | 11 | `ENTRY` | `SYS-API-OPS-ROUTES` |

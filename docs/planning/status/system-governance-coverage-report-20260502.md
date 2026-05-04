@@ -29,8 +29,8 @@ Upstream indexes:
 
 ## Totals
 
-- Files: 4231
-- Governed files: 4231
+- Files: 4232
+- Governed files: 4232
 - Ungoverned files: 0
 - Drift files: 41
 - Legacy files: 0
@@ -49,7 +49,7 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Root unit | Files |
 | --- | ---: |
-| `SYS-DVT` | 4231 |
+| `SYS-DVT` | 4232 |
 <!-- prettier-ignore-end -->
 
 ## By Domain Unit
@@ -58,7 +58,7 @@ Upstream indexes:
 | Domain unit | Files |
 | --- | ---: |
 | `SYS-ADAPTERS` | 196 |
-| `SYS-DVT` | 3454 |
+| `SYS-DVT` | 3455 |
 | `SYS-OBSERVABILITY` | 15 |
 | `SYS-PLANSTORE` | 112 |
 | `SYS-RUNTIME` | 286 |
@@ -75,7 +75,7 @@ Upstream indexes:
 | `AS` | 471 |
 | `DS` | 142 |
 | `ENTRY` | 918 |
-| `INFRA` | 2250 |
+| `INFRA` | 2251 |
 | `PORT` | 199 |
 <!-- prettier-ignore-end -->
 
@@ -85,7 +85,7 @@ Upstream indexes:
 | Status | Files |
 | --- | ---: |
 | `canonical` | 117 |
-| `coverage-required` | 3991 |
+| `coverage-required` | 3992 |
 | `drift` | 41 |
 | `review` | 82 |
 <!-- prettier-ignore-end -->
@@ -95,7 +95,7 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Governance state | Files |
 | --- | ---: |
-| `coverage-required` | 3991 |
+| `coverage-required` | 3992 |
 | `drift` | 41 |
 | `governed` | 117 |
 | `review` | 82 |
@@ -107,7 +107,7 @@ Upstream indexes:
 | Canonical role | Files |
 | --- | ---: |
 | `implementation-owner` | 117 |
-| `none` | 4114 |
+| `none` | 4115 |
 <!-- prettier-ignore-end -->
 
 ## By Evidence State
@@ -116,7 +116,7 @@ Upstream indexes:
 | Evidence state | Files |
 | --- | ---: |
 | `classification-only` | 117 |
-| `coverage-required` | 3991 |
+| `coverage-required` | 3992 |
 | `remediation-required` | 41 |
 | `review-required` | 82 |
 <!-- prettier-ignore-end -->
@@ -212,10 +212,10 @@ Upstream indexes:
 | `docs/planning/status/governance-document-rule-inventory.md` | 1737 |
 | `docs/planning/status/system-operations-inventory-20260501.md` | 971 |
 | `docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md` | 822 |
-| `docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md` | 367 |
-| `docs/guides/testing-and-ci-capabilities.md` | 347 |
-| `docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md` | 237 |
-| `docs/architecture/command-query-rail-governance.md` | 172 |
+| `docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md` | 368 |
+| `docs/guides/testing-and-ci-capabilities.md` | 348 |
+| `docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md` | 238 |
+| `docs/architecture/command-query-rail-governance.md` | 173 |
 | `docs/contracts/index.md` | 127 |
 | `package.json` | 117 |
 | `pnpm-workspace.yaml` | 117 |

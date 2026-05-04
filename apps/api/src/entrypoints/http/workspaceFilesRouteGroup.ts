@@ -33,6 +33,10 @@ export function registerProtectedWorkspaceFilesRouteGroup(
     ...options.runtimeAuth,
     getUseCase: new GetWorkspaceFileContentUseCase(repository),
     listUseCase: new ListWorkspaceFilesUseCase(repository),
+    rateLimit: {
+      max: options.env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,
+      timeWindow: options.env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS,
+    },
   });
 }
 

@@ -22,6 +22,7 @@ import { extractBearerToken } from './extractBearerToken.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { httpErrorTranslation } from './httpErrorTranslation.js';
 import { badRequestIssue, type RouteParseResult } from './routeParseIssue.js';
+import { RUNTIME_ROUTE_PATH } from './runtimeRoutes.constants.js';
 
 type WorkspaceFilesQuery = {
   readonly tenantId?: string;
@@ -38,21 +39,27 @@ type WorkspaceFilesRouteDeps = {
   readonly authorizer: AuthorizeCommandScopeService;
   readonly listUseCase: ListWorkspaceFilesUseCase;
   readonly getUseCase: GetWorkspaceFileContentUseCase;
+  readonly rateLimit: { readonly max: number; readonly timeWindow: number };
 };
 
 export function registerWorkspaceFilesRoutes(
   app: FastifyInstance,
   deps: WorkspaceFilesRouteDeps
 ): void {
-  app.get<{ Querystring: WorkspaceFilesQuery }>('/workspace/files', async (request, reply) => {
-    const authorized = await authorizeWorkspaceFilesRequest(request, reply, deps);
-    if (!authorized) return;
+  app.get<{ Querystring: WorkspaceFilesQuery }>(
+    RUNTIME_ROUTE_PATH.workspaceFiles,
+    { config: { rateLimit: deps.rateLimit } },
+    async (request, reply) => {
+      const authorized = await authorizeWorkspaceFilesRequest(request, reply, deps);
+      if (!authorized) return;
 
-    reply.code(200).send(await deps.listUseCase.execute());
-  });
+      reply.code(200).send(await deps.listUseCase.execute());
+    }
+  );
 
   app.get<{ Params: WorkspaceFilePathParams; Querystring: WorkspaceFilesQuery }>(
-    '/workspace/files/:path',
+    RUNTIME_ROUTE_PATH.workspaceFileContent,
+    { config: { rateLimit: deps.rateLimit } },
     async (request, reply) => {
       const authorized = await authorizeWorkspaceFilesRequest(request, reply, deps);
       if (!authorized) return;

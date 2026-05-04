@@ -41,6 +41,7 @@ allowedImplementationSurfaces:
   - apps/api/src/application/services/listWorkspaceFilesUseCase.ts
   - apps/api/src/entrypoints/http/httpErrorReasonCatalog.ts
   - apps/api/src/entrypoints/http/httpErrorTranslation.ts
+  - apps/api/src/entrypoints/http/extractBearerToken.ts
   - apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
   - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
   - apps/api/src/entrypoints/http/workspaceFilesRouteGroup.ts
@@ -48,6 +49,7 @@ allowedImplementationSurfaces:
   - apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileRepository.ts
   - apps/api/src/plugins/env.ts
   - apps/api/test/architecture/workspaceFilesQueryRail.architecture.test.ts
+  - apps/api/test/entrypoints/http/extractBearerToken.test.ts
   - apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
   - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
   - apps/api/test/entrypoints/http/workspaceFilesRoutes.test.ts

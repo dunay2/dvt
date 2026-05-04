@@ -25,7 +25,7 @@ Machine-readable sources:
 ## Totals
 
 - Components: 32
-- Files mapped: 4231
+- Files mapped: 4232
 - Components with drift or legacy files: 3
 
 ## Largest Components
@@ -45,7 +45,7 @@ Machine-readable sources:
 | `SYS-API-HTTP-ENTRYPOINTS` | 83 | 0 | 0 |
 | `SYS-PLANNER-ROOT` | 76 | 0 | 0 |
 | `SYS-TRACEABILITY-ROOT` | 65 | 0 | 0 |
-| `SYS-API-HTTP-ENTRYPOINT-TESTS` | 53 | 0 | 0 |
+| `SYS-API-HTTP-ENTRYPOINT-TESTS` | 54 | 0 | 0 |
 | `SYS-API-APPLICATION-SERVICES` | 36 | 0 | 0 |
 | `SYS-PLANSTORE-DOCS-RISK` | 34 | 0 | 0 |
 | `SYS-API-INFRASTRUCTURE` | 28 | 0 | 0 |
@@ -76,7 +76,7 @@ Machine-readable sources:
 | `SYS-API-BOOTSTRAP` | 2 | 0 | 0 | [shard](./governance-components/SYS-API-BOOTSTRAP.component-files.yaml) |
 | `SYS-API-DOCS` | 15 | 0 | 0 | [shard](./governance-components/SYS-API-DOCS.component-files.yaml) |
 | `SYS-API-DOMAIN-AUTH` | 1 | 0 | 0 | [shard](./governance-components/SYS-API-DOMAIN-AUTH.component-files.yaml) |
-| `SYS-API-HTTP-ENTRYPOINT-TESTS` | 53 | 0 | 0 | [shard](./governance-components/SYS-API-HTTP-ENTRYPOINT-TESTS.component-files.yaml) |
+| `SYS-API-HTTP-ENTRYPOINT-TESTS` | 54 | 0 | 0 | [shard](./governance-components/SYS-API-HTTP-ENTRYPOINT-TESTS.component-files.yaml) |
 | `SYS-API-HTTP-ENTRYPOINTS` | 83 | 0 | 0 | [shard](./governance-components/SYS-API-HTTP-ENTRYPOINTS.component-files.yaml) |
 | `SYS-API-INFRASTRUCTURE` | 28 | 0 | 0 | [shard](./governance-components/SYS-API-INFRASTRUCTURE.component-files.yaml) |
 | `SYS-API-OPS-HEALTH` | 11 | 0 | 0 | [shard](./governance-components/SYS-API-OPS-HEALTH.component-files.yaml) |

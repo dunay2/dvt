@@ -2,7 +2,7 @@ version: 1
 shardId: SYS-API
 generatedFrom: git ls-files plus untracked non-ignored local files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-fileCount: 393
+fileCount: 394
 files:
   - fileId: F-CD95C55B5B9C
     pathHash: 751eb3d622d669d3b3ff7b8ab9240132ac4f3bbd70ebc4541d40ac15d83b1844
@@ -2790,9 +2790,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-2087A96858B8
     pathHash: 71ed71b4b19ecf788cb27443e1f3b846c0c824a684f7100902f5d0a50ee2bf66
-    contentHash: 7902a996cac1ce1d54ff8b950e5de80208aeed14136004f9c1b31ba46b55ee97
+    contentHash: 0c311d1f257d9084351742cde00699dc6ed68a13469a0f2d479130f3981f2a91
     governanceHash: 951b6623c89f0f7b1639e266272b3a82a5073e07f14871601afcb4dcfc9c274e
-    stateFingerprint: f4d58d8796a79b7e9ad7432e6094db514f979713191a3cefaef196f34c899c9f
+    stateFingerprint: d7c9ce9d0fc6acf179356eca92966abe4f4ae839b6c5237123d0f0853ee94db3
     path: apps/api/src/entrypoints/http/extractBearerToken.ts
     owningUnit: SYS-API-HTTP-ENTRYPOINTS
     rootUnit: SYS-DVT
@@ -4991,9 +4991,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-EB3ED5A90EDB
     pathHash: 2b372a3ce65e587b7f14904eb59d9d47451be60c47e15eedaf8886ec24b09189
-    contentHash: 9ed889ca369a4f466bd9727104ef849abef9ff97f3c710a27b576b557332d177
+    contentHash: ec73d370c1a65823386dd814cdc20fa2ae468f203ca674d737319e3edc1c8af8
     governanceHash: 951b6623c89f0f7b1639e266272b3a82a5073e07f14871601afcb4dcfc9c274e
-    stateFingerprint: 424fbc91e248eb933da280101c012a5e3345e2f08bd00bd92cb8aac7868ae8da
+    stateFingerprint: aeed4e548222e6a83e87396ace977280a6184d4e7409a9700c51c38e924c6762
     path: apps/api/src/entrypoints/http/workspaceFilesRouteGroup.ts
     owningUnit: SYS-API-HTTP-ENTRYPOINTS
     rootUnit: SYS-DVT
@@ -5022,9 +5022,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-45EA13760C9B
     pathHash: 4e68ecd7f1cac49b1a16d1437346e88d88cc7d29c027dbb483c45845f5a1cc2c
-    contentHash: 3b2c1a1e023d70b570a3911c78d177d2ac6bea50e9079e037ec58ef00c1cde8d
+    contentHash: b2ef7dacb305103bedef9d4f1a5f8076cc42f313d92b98241bf48f2eebf12592
     governanceHash: 951b6623c89f0f7b1639e266272b3a82a5073e07f14871601afcb4dcfc9c274e
-    stateFingerprint: 65cf5a0cc2e0c1ee53960f684ef48f8a8541fad619a7447e094fa0c1c3d89d28
+    stateFingerprint: d8c3532f74c1c6c145e199b73228894d308e13307790ddd6b7fdd15f7380b102
     path: apps/api/src/entrypoints/http/workspaceFilesRoutes.ts
     owningUnit: SYS-API-HTTP-ENTRYPOINTS
     rootUnit: SYS-DVT
@@ -8443,9 +8443,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-55A2E435B05E
     pathHash: 0e030b0d5f670772229de54b21bb41de3adfd97cd3f5567d5bced499397abf3e
-    contentHash: b4f4d9e3420b68529f4c03d2c53e79ea9a6d4bb108a577403b47557f833e891c
+    contentHash: 3a5c3b8907f05c3de8a887688eb37fd2af67f7cc117cdf3d85b353ee6fc730b6
     governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
-    stateFingerprint: be769f53431f78ac29fb80dd4fd9aa90ea0562b1a706ae30f6e72f1d23c9eee1
+    stateFingerprint: 8571bbdb732909eadfc6db3feef54fa8a507de84a08405029f69f0df7cd0ce4b
     path: apps/api/test/architecture/workspaceFilesQueryRail.architecture.test.ts
     owningUnit: SYS-API-TESTS
     rootUnit: SYS-DVT
@@ -8664,6 +8664,37 @@ files:
     governanceHash: 873a3e8188b761eed0fdc743a443315e07f0d3f7ea5ff164faedccc3e1f7964e
     stateFingerprint: 331cbdde05e15b0c855f1b3f3163d05caf9376901df28f506535ad6b9c48683b
     path: apps/api/test/entrypoints/http/executePlanRouteFacade.test.ts
+    owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
+    unitPath:
+      - SYS-DVT
+      - SYS-API
+      - SYS-API-ROOT
+      - SYS-API-HTTP-ENTRYPOINT-TESTS
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: API HTTP command/query route validation
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - >-
+        docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
+      - docs/guides/testing-and-ci-capabilities.md
+      - docs/architecture/command-query-rail-governance.md
+  - fileId: F-CB5E1E5BD65D
+    pathHash: 59d6c6d0c67ea956a22e566c8c33a8ba6e06487bee2af83438e66a976670647b
+    contentHash: 1406c18c2298bb7e4c579eaa1299c60e171b45dfceab4dd18ae634dea208cc29
+    governanceHash: 873a3e8188b761eed0fdc743a443315e07f0d3f7ea5ff164faedccc3e1f7964e
+    stateFingerprint: fdab4564e0bec45d611e7e8349f2a898e375e8be142e5bc40938c0b4da565ab1
+    path: apps/api/test/entrypoints/http/extractBearerToken.test.ts
     owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -10086,9 +10117,9 @@ files:
       - docs/architecture/command-query-rail-governance.md
   - fileId: F-2BC9CE59B73D
     pathHash: bfa5ffe2c8a167d1a5fcf3791d9183a26ae4d31507e97fae77edbe0aa44639db
-    contentHash: f4c820a90fa4dff7dee35ef3dcd0f97181444ca9d685e3831b7f0f7e4e8808f1
+    contentHash: 9ce2b21a647d1b8da8e7b8dcecdc375a5fddd65e7f990d0492c43a9a4a816a24
     governanceHash: 873a3e8188b761eed0fdc743a443315e07f0d3f7ea5ff164faedccc3e1f7964e
-    stateFingerprint: 3c42bf6a395a7a104fb202b22b6580748ddbd08a62bbb95af945709bb06faebd
+    stateFingerprint: 6bf5b62851fb69a63466e10e83bcd4977a25ae9e76d82d9008ef54fa1784e51e
     path: apps/api/test/entrypoints/http/workspaceFilesRoutes.test.ts
     owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
     rootUnit: SYS-DVT

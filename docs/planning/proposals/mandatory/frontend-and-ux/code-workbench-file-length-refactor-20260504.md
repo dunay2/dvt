@@ -64,6 +64,7 @@ allowedImplementationSurfaces:
   - apps/api/src/application/ports/protectedRuntimeRunCommandQueryRails.ts
   - apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts
   - apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts
+  - apps/api/src/entrypoints/http/extractBearerToken.ts
   - apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
   - apps/api/src/entrypoints/http/protectedRuntimeAdminRouteGroup.ts
   - apps/api/src/entrypoints/http/protectedRuntimePlanRoutes.ts
@@ -73,6 +74,7 @@ allowedImplementationSurfaces:
   - apps/api/test/application/services/applicationArchitectureAst.support.ts
   - apps/api/test/application/services/executableSubgraphResolutionArchitecture.support.ts
   - apps/api/test/application/services/executableSubgraphResolutionComponent.architecture.test.ts
+  - apps/api/test/entrypoints/http/extractBearerToken.test.ts
   - apps/api/test/entrypoints/http/httpRuntimeErrorTranslation.architecture.test.ts
   - docs/planning/proposals/mandatory/frontend-and-ux/code-workbench-file-length-refactor-20260504.md
   - apps/api/test/entrypoints/http/startRunControlBoundary.architecture.test.ts
