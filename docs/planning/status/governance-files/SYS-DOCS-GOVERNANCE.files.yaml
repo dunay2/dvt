@@ -7528,9 +7528,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-1F29E3A80D83
     pathHash: 558051c7359a78caf0d1c9fa8645a649baf95ee6514ee70c9f5e2294294bd716
-    contentHash: ed124ca463891789d8162723c9accca2d08cbf95ddacecef0f20304e5a39124d
+    contentHash: 94452907525b2a2e3f8b93b8d2644eaab3a5df653555d22230630fdd84663782
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: cdc8cfe84c0a54e54e2a6eb8ab7660a6756c28c43064773f1815e940ff457343
+    stateFingerprint: 41ad8fc34e500a4a5d5861519a159b5359323c1209eec3b8cc30401c24327e13
     path: docs/architecture/components/web/web-store-domain-ownership-component.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -7554,9 +7554,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-760483516079
     pathHash: 41f829e7da23f0e9a5baa37cc395be5c5c89c36ff3253089acf2891965047e8e
-    contentHash: 51e15615f0959d5549a9730bbd5869861cea81b0114d3ca4527dea018324a00d
+    contentHash: 1bbed7f1e9e975cabe36b52ec172125416f6f42bab0984ed1a102b1efc5c9100
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 939802a197c56b16e3fd0ff3059bce189d88a0965cb95765ceb4a8df66295be4
+    stateFingerprint: 382cdd97433183e36e45fc829d72df19c91488f95196d5f77faa07d8b4f2f592
     path: docs/architecture/components/web/web-store-domain-ownership-local-guide.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -7580,9 +7580,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-4DF126137DB0
     pathHash: dd904a1ade73065414fa57a4f5337a0a2eebbbfa1f56bd9a2c87e36d03c0a80d
-    contentHash: a0b0bcae58f483cf49250be1b3a62451762009209e65b2c3751ce6c8e86d8961
+    contentHash: d985feb3e91db1b0f647b11cbae0baca28435d8b6ca336f111f750266ae04312
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: a62427ea8013d1fb6860e8e1ca72041bd28987220f1bf1fd0757a74038cbf79b
+    stateFingerprint: 06ab98688691b12cd9e8f17b97da571d6c3be057eb7a368c5fc9761130d8aa61
     path: docs/architecture/components/web/web-store-domain-ownership-user-stories.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -32090,9 +32090,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-636F2B1BDCCD
     pathHash: 18813bb0f3f6edcce8a03cee4e1d0837e777ff95c0bdd7bfe006aaeaae6fff31
-    contentHash: 22baaa77189b6567d5c571f4e5aa3e8eab0ab5bf951ae9ad61391c5ba13492e0
+    contentHash: 3ebc7bad52375326994899efd7bb9599416fd22b67d0f37e3ffbfdfd264efb0d
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 04c5494fdb0fb316ce4cc932a6adf8c9634fbda74d0b36a3853a207d7f76fd38
+    stateFingerprint: fc4174d275e5fab8c857c517d467d9721fde32afa349d557c8156acca86ef4ed
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT

@@ -7946,9 +7946,9 @@ files:
     owningUnit: SYS-WEB-ROOT
   - fileId: F-9A67B7BA44D2
     path: apps/web/src/app/stores/webStoreDomainOwnership.architecture.test.ts
-    contentHash: 0dd8eb74a94e27b9ef2790586ec748125b8ba5ae7bc88a6980162fd8b2077b0d
+    contentHash: e27da894af32c2a6ca12021bd31f399db42fcea3946b028521077ab48f7a9baa
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 56a52696a188e9f66af9ddbf854e067e5f399dae7be31056a0afb7728a5d318b
+    stateFingerprint: 5129f7b3a3045b09da24495e5c243daa14ab000a33b6dcb30f1d53fcb4a482ea
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
@@ -11321,9 +11321,9 @@ files:
     owningUnit: SYS-WEB-ROOT
   - fileId: F-AF66981B8ACC
     path: apps/web/src/app/views/canvas/useCanvasStoreFacade.ts
-    contentHash: 691483ae9e0b797b7fff2d1e1d07835c77270b2dc7e037c445ed7145c86c22ac
+    contentHash: d7e65c7002bedc3b59dde4e92d07aadcf81adf6a315479e2e3822cb7dbcbc523
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: f63b314bc1493d0fc1588d04ccf33c4b9ea438b36282fec3dc5123872c2d00ef
+    stateFingerprint: 4e253461bf542fee8dabaf781e1a01c77c0afdf3287ae8fecfb3f9a1929e8105
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
@@ -12647,9 +12647,9 @@ files:
     owningUnit: SYS-REPO-METADATA-ROOT
   - fileId: F-8FCEC8AD9756
     path: buzon/20260503-codex-fowler-web-store-domain-ownership-analysis-and-remediation.md
-    contentHash: bedb618b5e3052c7cacb5e53e2d772eeaee675861aafe1ff9bf5dba999c2ae17
+    contentHash: 0a7cb31ea7eee6aae2560c8564491d14369d43b474d23de96e1d17b5c3f87f5c
     governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
-    stateFingerprint: e7359b61e655aec81948f0cebad25ab91042a1bc92d46df7c631336fbf3d3d5e
+    stateFingerprint: ed5215af66875a84aca3405b7a803bfbce485f6309be17b01c2f3e334ef4dfdd
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-REPO-METADATA-ROOT
@@ -15320,27 +15320,27 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-1F29E3A80D83
     path: docs/architecture/components/web/web-store-domain-ownership-component.md
-    contentHash: ed124ca463891789d8162723c9accca2d08cbf95ddacecef0f20304e5a39124d
+    contentHash: 94452907525b2a2e3f8b93b8d2644eaab3a5df653555d22230630fdd84663782
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: cdc8cfe84c0a54e54e2a6eb8ab7660a6756c28c43064773f1815e940ff457343
+    stateFingerprint: 41ad8fc34e500a4a5d5861519a159b5359323c1209eec3b8cc30401c24327e13
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-760483516079
     path: docs/architecture/components/web/web-store-domain-ownership-local-guide.md
-    contentHash: 51e15615f0959d5549a9730bbd5869861cea81b0114d3ca4527dea018324a00d
+    contentHash: 1bbed7f1e9e975cabe36b52ec172125416f6f42bab0984ed1a102b1efc5c9100
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 939802a197c56b16e3fd0ff3059bce189d88a0965cb95765ceb4a8df66295be4
+    stateFingerprint: 382cdd97433183e36e45fc829d72df19c91488f95196d5f77faa07d8b4f2f592
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-4DF126137DB0
     path: docs/architecture/components/web/web-store-domain-ownership-user-stories.md
-    contentHash: a0b0bcae58f483cf49250be1b3a62451762009209e65b2c3751ce6c8e86d8961
+    contentHash: d985feb3e91db1b0f647b11cbae0baca28435d8b6ca336f111f750266ae04312
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: a62427ea8013d1fb6860e8e1ca72041bd28987220f1bf1fd0757a74038cbf79b
+    stateFingerprint: 06ab98688691b12cd9e8f17b97da571d6c3be057eb7a368c5fc9761130d8aa61
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -24133,9 +24133,9 @@ files:
   - fileId: F-636F2B1BDCCD
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md
-    contentHash: 22baaa77189b6567d5c571f4e5aa3e8eab0ab5bf951ae9ad61391c5ba13492e0
+    contentHash: 3ebc7bad52375326994899efd7bb9599416fd22b67d0f37e3ffbfdfd264efb0d
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 04c5494fdb0fb316ce4cc932a6adf8c9634fbda74d0b36a3853a207d7f76fd38
+    stateFingerprint: fc4174d275e5fab8c857c517d467d9721fde32afa349d557c8156acca86ef4ed
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT

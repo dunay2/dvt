@@ -8196,9 +8196,9 @@ files:
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-9A67B7BA44D2
     pathHash: 19fd6b15fda4031fc28a33ccf345d7bbfb7d1325e34c453d8e965844bbf31519
-    contentHash: 0dd8eb74a94e27b9ef2790586ec748125b8ba5ae7bc88a6980162fd8b2077b0d
+    contentHash: e27da894af32c2a6ca12021bd31f399db42fcea3946b028521077ab48f7a9baa
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 56a52696a188e9f66af9ddbf854e067e5f399dae7be31056a0afb7728a5d318b
+    stateFingerprint: 5129f7b3a3045b09da24495e5c243daa14ab000a33b6dcb30f1d53fcb4a482ea
     path: apps/web/src/app/stores/webStoreDomainOwnership.architecture.test.ts
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT
@@ -18284,9 +18284,9 @@ files:
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-AF66981B8ACC
     pathHash: 252755b0144721b0f31da41ae84231733d8f0349f7e70de827dffc7253e0bd22
-    contentHash: 691483ae9e0b797b7fff2d1e1d07835c77270b2dc7e037c445ed7145c86c22ac
+    contentHash: d7e65c7002bedc3b59dde4e92d07aadcf81adf6a315479e2e3822cb7dbcbc523
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: f63b314bc1493d0fc1588d04ccf33c4b9ea438b36282fec3dc5123872c2d00ef
+    stateFingerprint: 4e253461bf542fee8dabaf781e1a01c77c0afdf3287ae8fecfb3f9a1929e8105
     path: apps/web/src/app/views/canvas/useCanvasStoreFacade.ts
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT
