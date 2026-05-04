@@ -164,6 +164,9 @@ Remediation:
 - keep the existing readable-label implementation only if it remains supported
   by this mailbox, the plan, the C&Q catalog, and Cypress;
 - add semantic docs and user stories before claiming completion;
+- close C&Q drift by adding an explicit catalog exhaustiveness rule for routes,
+  tabs, toolbar commands, plugin placements, layout preferences, and Cypress
+  workflows;
 - run the visual Cypress spec and final `pnpm verify:prepush`;
 - record any remaining drift as explicit opportunity, not hidden debt.
 
@@ -202,19 +205,23 @@ ADR need before implementation.
 
 ## TDD Evidence
 
-Current known red/green evidence:
+Completed red/green evidence:
 
 - RED: enhanced `canvas-workbench-tabs.cy.ts` failed when a label-readability
   geometry assertion observed truncated tab labels.
 - GREEN: `CanvasWorkbenchTabStrip.tsx` was changed to keep tab labels
   horizontal and readable; the same Cypress spec passed.
-
-Required remaining red/green evidence:
-
-- RED: semantic architecture tests must fail before local user-story docs and
-  mailbox links are complete.
-- GREEN: semantic architecture tests must pass after the docs, stories, and
-  owned-concern checks are in place.
+- RED: `canvasWorkbenchTabs.architecture.test.ts` and
+  `canvasLayoutPersistence.architecture.test.ts` failed because
+  `canvas-workbench-command-query-catalog.md` lacked
+  `## Exhaustiveness Rule`.
+- GREEN: the C&Q catalog now contains `## Exhaustiveness Rule`, and the layout
+  component guide explicitly states grid preferences are not in protected graph
+  drafts.
+- GREEN: `pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts src/app/views/canvas/canvasLayoutPersistence.architecture.test.ts`
+  passed with 2 files and 6 tests.
+- GREEN: `pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workbench-tabs.cy.ts`
+  passed with 1 spec, 1 test, 0 screenshots, and video disabled.
 
 ## Validation Plan
 
