@@ -111,7 +111,7 @@ Components with `childrenRequired: true` and more than 100 files:
 | `SYS-API-OPS-ROUTES` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 0 | `INFRA` | `SYS-API-ROOT` |
 | `SYS-API-REPO-CONFIG` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 11 | `INFRA` | `SYS-API-ROOT` |
 | `SYS-API-RUNTIME-COMPOSITION` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 26 | `AS` | `SYS-API-ROOT` |
-| `SYS-API-TESTS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 100 | `INFRA` | `SYS-API-ROOT` |
+| `SYS-API-TESTS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 101 | `INFRA` | `SYS-API-ROOT` |
 | `SYS-CI-GOVERNANCE-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 182 | `INFRA` | `SYS-CI-GOVERNANCE` |
 | `SYS-CONTRACTS-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 127 | `PORT` | `SYS-CONTRACTS` |
 | `SYS-DOCS-GOVERNANCE-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 1737 | `INFRA` | `SYS-DOCS-GOVERNANCE` |

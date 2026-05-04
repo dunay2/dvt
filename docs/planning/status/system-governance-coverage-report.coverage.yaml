@@ -3,8 +3,8 @@ generatedFrom:
   - docs/planning/status/system-governance-file-index.files.yaml
   - docs/planning/status/system-governance-component-index.components.yaml
 totals:
-  files: 4230
-  governedFiles: 4230
+  files: 4231
+  governedFiles: 4231
   ungovernedFiles: 0
   driftFiles: 41
   legacyFiles: 0
@@ -22,12 +22,12 @@ ciPosture:
     - legacyFiles records removal targets until owning work removes them
 byRootUnit:
   - name: SYS-DVT
-    count: 4230
+    count: 4231
 byDomainUnit:
   - name: SYS-ADAPTERS
     count: 196
   - name: SYS-DVT
-    count: 3453
+    count: 3454
   - name: SYS-OBSERVABILITY
     count: 15
   - name: SYS-PLANSTORE
@@ -64,7 +64,7 @@ byComponentUnit:
   - name: SYS-API-RUNTIME-COMPOSITION
     count: 26
   - name: SYS-API-TESTS
-    count: 100
+    count: 101
   - name: SYS-CI-GOVERNANCE-ROOT
     count: 182
   - name: SYS-CONTRACTS-ROOT
@@ -103,14 +103,14 @@ byStatus:
   - name: canonical
     count: 117
   - name: coverage-required
-    count: 3990
+    count: 3991
   - name: drift
     count: 41
   - name: review
     count: 82
 byGovernanceState:
   - name: coverage-required
-    count: 3990
+    count: 3991
   - name: drift
     count: 41
   - name: governed
@@ -121,12 +121,12 @@ byCanonicalRole:
   - name: implementation-owner
     count: 117
   - name: none
-    count: 4113
+    count: 4114
 byEvidenceState:
   - name: classification-only
     count: 117
   - name: coverage-required
-    count: 3990
+    count: 3991
   - name: remediation-required
     count: 41
   - name: review-required
@@ -141,7 +141,7 @@ byDddOwner:
   - name: ENTRY
     count: 918
   - name: INFRA
-    count: 2249
+    count: 2250
   - name: PORT
     count: 199
 governanceDocuments:
@@ -150,18 +150,18 @@ governanceDocuments:
   - path: docs/planning/status/governance-document-rule-inventory.md
     fileCount: 1737
   - path: docs/planning/status/system-operations-inventory-20260501.md
-    fileCount: 970
+    fileCount: 971
   - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
     fileCount: 822
   - path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-    fileCount: 366
+    fileCount: 367
   - path: docs/guides/testing-and-ci-capabilities.md
-    fileCount: 346
+    fileCount: 347
   - path: >-
       docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
-    fileCount: 236
+    fileCount: 237
   - path: docs/architecture/command-query-rail-governance.md
     fileCount: 172
   - path: docs/contracts/index.md
@@ -350,7 +350,7 @@ componentCoverage:
     evidenceState: coverage-required
     dddOwner: INFRA
     cqRails: API validation suites
-    fileCount: 100
+    fileCount: 101
     isDrift: false
     isLegacy: false
     childrenRequired: false

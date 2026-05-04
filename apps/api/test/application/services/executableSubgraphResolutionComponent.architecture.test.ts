@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { EXECUTABLE_SUBGRAPH_RESOLUTION_COMPONENT } from './applicationArchitectureAst.support.js';
+import { EXECUTABLE_SUBGRAPH_RESOLUTION_COMPONENT } from './executableSubgraphResolutionArchitecture.support.js';
 
 const { artifacts, contracts } = EXECUTABLE_SUBGRAPH_RESOLUTION_COMPONENT;
 

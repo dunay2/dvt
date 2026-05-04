@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: API validation suites
 childrenRequired: false
-fileCount: 100
+fileCount: 101
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -203,6 +203,13 @@ files:
     isLegacy: false
   - path: apps/api/test/application/services/engineStartRunUseCase.test.support.ts
     fileId: F-9C010D55112D
+    owningUnit: SYS-API-TESTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/test/application/services/executableSubgraphResolutionArchitecture.support.ts
+    fileId: F-11D779D6117A
     owningUnit: SYS-API-TESTS
     unitStatus: coverage-required
     governanceState: coverage-required
