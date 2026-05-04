@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest';
 
 import {
   assertCanvasFirstAuthoringInvariant,
-  deriveCanvasFirstAuthoringLiveProof,
   isCanvasFirstAuthoringProofComplete,
-  type CanvasFirstAuthoringLiveProof,
-  type CanvasFirstAuthoringLiveProofInput,
-} from './canvasFirstAuthoringLiveProof';
+} from './canvasFirstAuthoringProofInvariant';
+import { deriveCanvasFirstAuthoringLiveProof } from './canvasFirstAuthoringLiveProof';
+import type {
+  CanvasFirstAuthoringLiveProof,
+  CanvasFirstAuthoringLiveProofInput,
+} from './canvasFirstAuthoringLiveProof.types';
 
 describe('canvasFirstAuthoringLiveProof', () => {
   const transformationCanvas = {

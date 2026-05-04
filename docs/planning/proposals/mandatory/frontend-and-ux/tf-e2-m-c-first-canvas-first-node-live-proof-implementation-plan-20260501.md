@@ -241,7 +241,11 @@ creating the expected backend state outside the route.
 | ------------------------------------------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------- |
 | `apps/api/src/app.ts`                                                                                                     | Modify | Allow browser CORS preflight for protected draft writes used by Canvas authoring.            |
 | `apps/api/test/app.test.ts`                                                                                               | Modify | Prove workspace graph draft write preflight exposes the required browser method and headers. |
-| `apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts`                                                          | Create | Pure proof model for first canvas, first node, layout persistence, and restore.              |
+| `apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.types.ts`                                                    | Create | Closed proof vocabulary and input/output data shapes only.                                   |
+| `apps/web/src/app/views/canvas/canvasFirstAuthoringFirstNodePolicy.ts`                                                    | Create | Expected first-node defaults and first-node match policy.                                    |
+| `apps/web/src/app/views/canvas/canvasFirstAuthoringRestoredLayoutPolicy.ts`                                               | Create | Restored route-local layout match policy.                                                    |
+| `apps/web/src/app/views/canvas/canvasFirstAuthoringProofInvariant.ts`                                                     | Create | Completed proof invariant and completion predicate.                                          |
+| `apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts`                                                          | Create | Pure transition derivation for first canvas, first node, layout persistence, and restore.    |
 | `apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts`                                                     | Create | Exhaustive positive and negative proof-state tests.                                          |
 | `apps/web/src/app/views/canvas/canvasHostCycleState.ts`                                                                   | Modify | Keep clean `needs_canvas` state distinct from seeded or restored document state.             |
 | `apps/web/src/app/views/canvas/canvasHostCycleState.test.ts`                                                              | Modify | Prove clean startup has no seeded nodes before document creation.                            |
@@ -329,8 +333,12 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/CanvasToolbar.tsx
   - apps/web/src/app/views/canvas/CanvasToolbarPrimaryControls.tsx
   - apps/web/src/app/views/canvas/CanvasViewport.tsx
+  - apps/web/src/app/views/canvas/canvasFirstAuthoringFirstNodePolicy.ts
   - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+  - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.types.ts
   - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
+  - apps/web/src/app/views/canvas/canvasFirstAuthoringProofInvariant.ts
+  - apps/web/src/app/views/canvas/canvasFirstAuthoringRestoredLayoutPolicy.ts
   - apps/web/src/app/views/canvas/canvasCenterSurface.types.ts
   - apps/web/src/app/views/canvas/canvasCenterSurfaceWorkbench.tsx
   - apps/web/src/app/views/canvas/canvasControllerViewModel.ts
@@ -884,7 +892,7 @@ symbols:
     unitTests:
       - scripts/check-feature-mechanization.test.cjs
   - name: CanvasFirstAuthoringLiveProofTransition
-    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.types.ts
     dddOwner: Canvas first-authoring proof domain service
     cqRails:
       - GetWorkspaceGraphDraft
@@ -900,7 +908,7 @@ symbols:
     unitTests:
       - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
   - name: CanvasFirstAuthoringCanvas
-    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.types.ts
     dddOwner: CanvasDocument aggregate
     cqRails:
       - CreateCanvas
@@ -912,7 +920,7 @@ symbols:
     unitTests:
       - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
   - name: CanvasFirstAuthoringNode
-    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.types.ts
     dddOwner: CanvasNodeDraft entity
     cqRails:
       - CreateCanvasNode
@@ -924,7 +932,7 @@ symbols:
     unitTests:
       - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
   - name: CanvasFirstAuthoringLayout
-    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.types.ts
     dddOwner: CanvasLayoutProjection value object
     cqRails:
       - PersistCanvasLayout
@@ -937,7 +945,7 @@ symbols:
     unitTests:
       - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
   - name: CanvasFirstAuthoringRestoredDraft
-    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.types.ts
     dddOwner: WorkspaceGraphDraft read boundary
     cqRails:
       - GetWorkspaceGraphDraft
@@ -950,7 +958,7 @@ symbols:
     unitTests:
       - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
   - name: CanvasFirstAuthoringDraftAccess
-    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.types.ts
     dddOwner: CanvasDraftAccessPosture policy model
     cqRails:
       - CreateCanvas
@@ -962,7 +970,7 @@ symbols:
     unitTests:
       - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
   - name: CanvasFirstAuthoringDraftAccessBlockedReason
-    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.types.ts
     dddOwner: CanvasDraftAccessPosture policy model
     cqRails:
       - GetWorkspaceGraphDraft
@@ -975,7 +983,7 @@ symbols:
     unitTests:
       - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
   - name: CanvasFirstAuthoringBlockedReason
-    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.types.ts
     dddOwner: Canvas first-authoring proof domain service
     cqRails:
       - GetWorkspaceGraphDraft
@@ -991,7 +999,7 @@ symbols:
     unitTests:
       - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
   - name: CanvasFirstAuthoringLiveProofInput
-    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.types.ts
     dddOwner: Canvas first-authoring proof domain service
     cqRails:
       - GetWorkspaceGraphDraft
@@ -1008,7 +1016,7 @@ symbols:
     unitTests:
       - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
   - name: CanvasFirstAuthoringDefault
-    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringFirstNodePolicy.ts
     dddOwner: Canvas first-authoring proof domain service
     cqRails:
       - CreateCanvasNode
@@ -1020,7 +1028,7 @@ symbols:
     unitTests:
       - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
   - name: FIRST_AUTHORING_DEFAULTS
-    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringFirstNodePolicy.ts
     dddOwner: Canvas first-authoring proof domain service
     cqRails:
       - CreateCanvasNode
@@ -1032,7 +1040,7 @@ symbols:
     unitTests:
       - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
   - name: CanvasFirstAuthoringLiveProof
-    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.types.ts
     dddOwner: Canvas first-authoring proof domain service
     cqRails:
       - GetWorkspaceGraphDraft
@@ -1061,7 +1069,7 @@ symbols:
     unitTests:
       - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
   - name: isCanvasFirstAuthoringProofComplete
-    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringProofInvariant.ts
     dddOwner: Canvas first-authoring proof domain service
     cqRails:
       - GetWorkspaceGraphDraft
@@ -1074,7 +1082,7 @@ symbols:
     unitTests:
       - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
   - name: assertCanvasFirstAuthoringInvariant
-    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringProofInvariant.ts
     dddOwner: Canvas first-authoring proof domain service
     cqRails:
       - GetWorkspaceGraphDraft
@@ -1087,7 +1095,7 @@ symbols:
     unitTests:
       - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
   - name: resolveExpectedFirstNode
-    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringFirstNodePolicy.ts
     dddOwner: Canvas first-authoring proof domain service
     cqRails:
       - CreateCanvasNode
@@ -1099,7 +1107,7 @@ symbols:
     unitTests:
       - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
   - name: matchesExpectedFirstNode
-    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringFirstNodePolicy.ts
     dddOwner: CanvasNodeDraft entity
     cqRails:
       - CreateCanvasNode
@@ -1111,7 +1119,7 @@ symbols:
     unitTests:
       - apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.test.ts
   - name: hasRestoredLayout
-    path: apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts
+    path: apps/web/src/app/views/canvas/canvasFirstAuthoringRestoredLayoutPolicy.ts
     dddOwner: CanvasLayoutProjection value object
     cqRails:
       - GetCanvasLayout
@@ -1798,8 +1806,10 @@ symbols:
       `needs_canvas`, typed canvas creation, first-node creation, persisted
       layout, reload restore, missing active canvas, read-only posture, and
       duplicate first-canvas attempts.
-- [x] Add `canvasFirstAuthoringLiveProof.ts` with the closed discriminated
-      model and no React, HTTP, or Cypress imports.
+- [x] Add the `canvasFirstAuthoringLiveProof*` module family with closed
+      discriminated vocabulary, first-node policy, restored-layout policy,
+      invariant checks, and transition derivation with no React, HTTP, or
+      Cypress imports.
 - [x] Extend clean host-cycle tests so a protected empty draft produces an
       empty entrypoint and no seeded project nodes.
 - [x] Extend first-canvas command tests so `transformation` and `dbt` create

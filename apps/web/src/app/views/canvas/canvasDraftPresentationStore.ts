@@ -19,6 +19,7 @@ const INITIAL_CANVAS_DRAFT_PRESENTATION_STATE: CanvasDraftPresentationState = {
 };
 
 export const CANVAS_ROUTE_ID = 'dbt.canvas';
+export const CANVAS_WORKBENCH_ROUTE_ID = 'dbt.canvas.workbench-tab';
 
 export const CANVAS_ROUTE_BOOTSTRAP_HANDLE: RouteBootstrapHandle =
   createPublishedRouteBootstrapHandle({
@@ -55,9 +56,7 @@ export function subscribeCanvasDraftPresentationState(listener: () => void): () 
   };
 }
 
-export function publishCanvasDraftPresentationState(
-  nextState: CanvasDraftPresentationState
-): void {
+export function publishCanvasDraftPresentationState(nextState: CanvasDraftPresentationState): void {
   if (arePresentationStatesEqual(canvasDraftPresentationState, nextState)) {
     return;
   }

@@ -65,24 +65,30 @@ a different node kind without updating the rail and tests.
 
 ## Public API
 
-The implementation owns one pure proof module and Cypress-owned live proof
-helpers.
+The implementation owns a small pure proof module family and Cypress-owned
+live proof helpers. Each proof module has one owned concern: vocabulary,
+first-node defaults, restored-layout matching, invariant checks, or transition
+derivation.
 
-| API                                                 | Owner                              | Responsibility                                                           |
-| --------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------ |
-| `CanvasFirstAuthoringLiveProof`                     | `canvasFirstAuthoringLiveProof.ts` | Closed discriminated state for first-authoring proof.                    |
-| `CanvasFirstAuthoringLiveProofInput`                | `canvasFirstAuthoringLiveProof.ts` | Named input object for draft, active canvas, node, layout, and reload.   |
-| `CanvasFirstAuthoringLiveProofTransition`           | `canvasFirstAuthoringLiveProof.ts` | Allowed transition names used by tests and diagnostics.                  |
-| `deriveCanvasFirstAuthoringLiveProof(input)`        | `canvasFirstAuthoringLiveProof.ts` | Pure decision function for current proof state.                          |
-| `isCanvasFirstAuthoringProofComplete(proof)`        | `canvasFirstAuthoringLiveProof.ts` | Boolean completion helper for tests and route diagnostics.               |
-| `assertCanvasFirstAuthoringInvariant(proof)`        | `canvasFirstAuthoringLiveProof.ts` | Test helper that fails on impossible transition combinations.            |
-| `requireLiveProtectedRuntimeEnv()`                  | `canvasFirstAuthoring.ts`          | Fails the mandatory live proof when API runtime env is missing.          |
-| `skipWhenFirstAuthoringLiveEnvIsMissing(ctx)`       | `canvasFirstAuthoring.ts`          | Allows optional local Cypress runs to skip only when live env is absent. |
-| `resolveLiveFirstAuthoringWorkspaceSession()`       | `canvasFirstAuthoring.ts`          | Cypress-only test-owned, run-unique workspace session resolver.          |
-| `assertLiveFirstAuthoringDraftScopeIsClean()`       | `canvasFirstAuthoring.ts`          | Cypress-only preflight that fails dirty scopes without mutating them.    |
-| `waitForLiveFirstAuthoringDraftNode()`              | `canvasFirstAuthoring.ts`          | Cypress-only protected query wait for the created graph node.            |
-| `waitForLiveFirstAuthoringLayoutPositionChange()`   | `canvasFirstAuthoring.ts`          | Cypress-only route-local layout wait using `dvt-web-canvas-interaction`. |
-| `scripts/run-canvas-first-authoring-live-proof.cjs` | proof runner                       | Boots protected runtime, web, grants, and Cypress for mandatory proof.   |
+| API                                                 | Owner                                         | Responsibility                                                           |
+| --------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------ |
+| `CanvasFirstAuthoringLiveProof`                     | `canvasFirstAuthoringLiveProof.types.ts`      | Closed discriminated state for first-authoring proof.                    |
+| `CanvasFirstAuthoringLiveProofInput`                | `canvasFirstAuthoringLiveProof.types.ts`      | Named input object for draft, active canvas, node, layout, and reload.   |
+| `CanvasFirstAuthoringLiveProofTransition`           | `canvasFirstAuthoringLiveProof.types.ts`      | Allowed transition names used by tests and diagnostics.                  |
+| `FIRST_AUTHORING_DEFAULTS`                          | `canvasFirstAuthoringFirstNodePolicy.ts`      | Closed first-node defaults for supported first-authored canvas kinds.    |
+| `resolveExpectedFirstNode(canvas)`                  | `canvasFirstAuthoringFirstNodePolicy.ts`      | Maps a supported canvas kind to the expected first node.                 |
+| `matchesExpectedFirstNode(node, expectedNode)`      | `canvasFirstAuthoringFirstNodePolicy.ts`      | Compares actual first-node identity, kind, and label.                    |
+| `hasRestoredLayout(restoredDraft, layout)`          | `canvasFirstAuthoringRestoredLayoutPolicy.ts` | Verifies restored route-local coordinates match persisted coordinates.   |
+| `deriveCanvasFirstAuthoringLiveProof(input)`        | `canvasFirstAuthoringLiveProof.ts`            | Pure decision function for current proof transition state.               |
+| `isCanvasFirstAuthoringProofComplete(proof)`        | `canvasFirstAuthoringProofInvariant.ts`       | Boolean completion helper for tests and route diagnostics.               |
+| `assertCanvasFirstAuthoringInvariant(proof)`        | `canvasFirstAuthoringProofInvariant.ts`       | Test helper that fails on impossible transition combinations.            |
+| `requireLiveProtectedRuntimeEnv()`                  | `canvasFirstAuthoring.ts`                     | Fails the mandatory live proof when API runtime env is missing.          |
+| `skipWhenFirstAuthoringLiveEnvIsMissing(ctx)`       | `canvasFirstAuthoring.ts`                     | Allows optional local Cypress runs to skip only when live env is absent. |
+| `resolveLiveFirstAuthoringWorkspaceSession()`       | `canvasFirstAuthoring.ts`                     | Cypress-only test-owned, run-unique workspace session resolver.          |
+| `assertLiveFirstAuthoringDraftScopeIsClean()`       | `canvasFirstAuthoring.ts`                     | Cypress-only preflight that fails dirty scopes without mutating them.    |
+| `waitForLiveFirstAuthoringDraftNode()`              | `canvasFirstAuthoring.ts`                     | Cypress-only protected query wait for the created graph node.            |
+| `waitForLiveFirstAuthoringLayoutPositionChange()`   | `canvasFirstAuthoring.ts`                     | Cypress-only route-local layout wait using `dvt-web-canvas-interaction`. |
+| `scripts/run-canvas-first-authoring-live-proof.cjs` | proof runner                                  | Boots protected runtime, web, grants, and Cypress for mandatory proof.   |
 
 The pure proof module is intentionally passive. It does not mutate graph state,
 call HTTP, call TanStack Query, or read browser storage. The Cypress helpers
@@ -223,6 +229,67 @@ sequenceDiagram
 - `scripts/run-canvas-first-authoring-live-proof.cjs` executes the mandatory
   protected-runtime proof lane.
 
+## User Stories
+
+- `US-CANVAS-FIRST-AUTHORING-001`: as a user, I open a clean protected Canvas
+  draft. The route shows the create-canvas entrypoint, no seeded project nodes
+  appear, and blocked draft postures prevent creation.
+- `US-CANVAS-FIRST-AUTHORING-002`: as a user, I create the first transformation
+  canvas. The document is typed `transformation`, saves through
+  `SaveWorkspaceGraphDraft`, and duplicate creation is rejected.
+- `US-CANVAS-FIRST-AUTHORING-003`: as a user, I create the first dbt canvas.
+  The document is typed `dbt`, uses the same draft CAS path, and unsupported
+  canvas kinds block first-node proof.
+- `US-CANVAS-FIRST-AUTHORING-004`: as a user, I add the first node after the
+  canvas save settles. Transformation creates `dvt:source`, dbt creates
+  `dbt:source`, both render `Source 1`, and premature or wrong-kind nodes fail.
+- `US-CANVAS-FIRST-AUTHORING-005`: as a user, I drag the first node from the
+  semantic drag handle. Active and stopped coordinates persist to route-local
+  layout state, and dragging outside the handle does not count as proof.
+- `US-CANVAS-FIRST-AUTHORING-006`: as a user, I reload after moving the node.
+  Protected draft truth restores the canvas and node, route-local layout
+  restores position, and missing restored truth blocks completion.
+- `US-CANVAS-FIRST-AUTHORING-007`: as a maintainer, I run the mandatory live
+  proof. The proof uses live protected runtime configuration and missing live
+  runtime environment fails the mandatory command rather than skipping.
+- `US-CANVAS-FIRST-AUTHORING-008`: as a reviewer, I inspect Cypress proof
+  boundaries. Cypress polls protected `GET` draft reads and route-local layout
+  storage only; `cy.intercept()` and direct draft `PUT` seeding are forbidden.
+
+## Scenario Coverage Matrix
+
+- Clean draft startup:
+  `GetWorkspaceGraphDraft`, `deriveCanvasFirstAuthoringLiveProof()`,
+  `canvasFirstAuthoringLiveProof.test.ts`.
+- First canvas command:
+  `CreateCanvas`, `SaveWorkspaceGraphDraft`, Canvas controller command seams,
+  `canvasStartupAndDraftRecovery.architecture.test.ts`.
+- First-node defaults:
+  `CreateCanvasNode`, `resolveExpectedFirstNode()`,
+  `matchesExpectedFirstNode()`, `canvasFirstAuthoringLiveProof.test.ts`.
+- Layout persistence:
+  `PersistCanvasLayout`, `hasRestoredLayout()`,
+  `canvasFirstAuthoringLiveProof.test.ts`, and Cypress live proof.
+- Restored route state:
+  `GetWorkspaceGraphDraft`, `GetCanvasLayout`,
+  `CanvasFirstAuthoringLiveProof` restored state, and
+  `canvasFirstAuthoringLiveProof.test.ts`.
+- Protected-runtime proof boundary:
+  `RunCanvasFirstAuthoringLiveProof`, Cypress support helpers, live proof
+  runner, and `canvasStartupAndDraftRecovery.architecture.test.ts`.
+- No seeded draft shortcuts:
+  `SaveWorkspaceGraphDraft`, UI-owned command path only,
+  `check-feature-mechanization.test.cjs`, and Cypress guard checks.
+
+## TDD Traceability
+
+The semantic architecture assertion for this guide was added red before these
+stories existed. The expected failure was:
+`expected component guide to contain ## User Stories`. The green step added
+local user stories, scenario coverage, and TDD traceability so the component
+guide now records public API, invariants, transitions, consumers, scenarios,
+negative paths, and proof boundaries in one local surface.
+
 ## Negative Coverage
 
 The implementation proves these failures:
@@ -245,8 +312,9 @@ The implementation proves these failures:
 
 ## Fowler And SOLID Alignment
 
-- SRP: proof logic stays in one pure module; controller and templates only
-  orchestrate and render.
+- SRP: proof logic is split by owned concern; the transition derivation does
+  not own proof vocabulary, first-node defaults, restored-layout matching, or
+  invariant assertions.
 - Open/Closed: adding a new canvas type updates command data and tests without
   changing proof semantics.
 - Hexagonal boundary: protected draft read/write and local layout projection

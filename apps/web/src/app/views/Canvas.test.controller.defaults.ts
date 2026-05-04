@@ -25,6 +25,7 @@ type CanvasWorkbenchDefaultsDto = {
   canEditInspectorNode: CanvasController['canEditInspectorNode'];
   activeRunId: CanvasController['activeRunId'];
   registeredPlugins: CanvasController['registeredPlugins'];
+  runtimeCapabilities: CanvasController['runtimeCapabilities'];
   availableCanvasKinds: CanvasController['availableCanvasKinds'];
   canvasDocument: CanvasController['canvasDocument'];
   userPermissions: CanvasController['userPermissions'];
@@ -133,6 +134,7 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
     canEditInspectorNode: true,
     activeRunId: null,
     registeredPlugins: new Set(['dbt']),
+    runtimeCapabilities: undefined,
     availableCanvasKinds: [
       {
         kind: 'dbt',
