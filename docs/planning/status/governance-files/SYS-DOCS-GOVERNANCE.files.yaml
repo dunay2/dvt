@@ -6771,9 +6771,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-B863220D9695
     pathHash: 6d65b9948a837472f92e68314054fb851d9b86e49009b4c9df484ee8e4d67235
-    contentHash: d999cf82ebb60fb146efe16fec073e68133c9f9f17e4894e1f5451575ec0d9b5
+    contentHash: bb08e6cf78f9ded60be8827bc83f82cf476d2aaf9f68ff90ac3615ad9b0326b8
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 559eff69e0cf0f7ad26349f1cb59c83cf48b4fc9c1e5f424ea88f6357281a5bc
+    stateFingerprint: 7cfb75ebc8d8ed84dda22996d0269153ed81f7d4b654b64a3159411b81fbc80d
     path: docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT

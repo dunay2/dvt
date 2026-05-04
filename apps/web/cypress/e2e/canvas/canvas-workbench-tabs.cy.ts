@@ -7,6 +7,7 @@ import {
 
 const WORKBENCH_TAB_LABELS = ['Graph', 'Code', 'Lineage', 'Diff', 'Artifacts', 'Runs'] as const;
 const GLOBAL_REMOVED_WORKBENCH_HREFS = ['/code', '/lineage', '/diff', '/artifacts'] as const;
+const RETIRED_SHELL_WORKBENCH_LABELS = ['Code', 'Lineage', 'Diff', 'Artifacts'] as const;
 
 function stubRuntimeCapabilities(): void {
   stubE2eJsonApi('GET', '/capabilities', {
@@ -34,6 +35,14 @@ function assertGlobalWorkbenchRoutesAreAbsent(): void {
   for (const href of GLOBAL_REMOVED_WORKBENCH_HREFS) {
     cy.get('[data-slot="left-navigation-rail"]').find(`a[href="${href}"]`).should('not.exist');
   }
+
+  cy.get('[data-slot="left-navigation-rail"]').within(() => {
+    for (const label of RETIRED_SHELL_WORKBENCH_LABELS) {
+      cy.contains('[data-slot="left-navigation-caption"]', new RegExp(`^${label}$`)).should(
+        'not.exist'
+      );
+    }
+  });
 }
 
 function assertCanvasWorkbenchTabsAreVisible(): void {
@@ -41,6 +50,44 @@ function assertCanvasWorkbenchTabsAreVisible(): void {
     for (const label of WORKBENCH_TAB_LABELS) {
       cy.contains('button', label).should('be.visible');
     }
+  });
+}
+
+function assertCanvasWorkbenchTabsAreHeaderScoped(): void {
+  cy.get('[data-slot="left-navigation-rail"]').then(($rail) => {
+    const railRect = $rail[0].getBoundingClientRect();
+
+    cy.get('[data-slot="shell-top-bar"]').then(($topBar) => {
+      const topBarRect = $topBar[0].getBoundingClientRect();
+
+      cy.get('[data-slot="canvas-workbench-tab-strip"]').then(($strip) => {
+        const strip = $strip[0];
+        const stripRect = strip.getBoundingClientRect();
+        const tabRects = Array.from(
+          strip.querySelectorAll<HTMLElement>('[data-slot="canvas-workbench-tab-trigger"]')
+        );
+
+        expect(strip.closest('[data-slot="left-navigation-rail"]')).to.equal(null);
+        expect(strip.closest('[data-slot="app-shell-outlet"]')).not.to.equal(null);
+        expect(stripRect.left).to.be.greaterThan(railRect.right - 1);
+        expect(stripRect.top).to.be.greaterThan(topBarRect.bottom - 1);
+        expect(stripRect.width).to.be.greaterThan(500);
+        expect(stripRect.height).to.be.lessThan(80);
+        expect(
+          new Set(tabRects.map((tab) => Math.round(tab.getBoundingClientRect().top))).size
+        ).to.equal(1);
+        expect(tabRects.at(-1)?.getBoundingClientRect().left ?? 0).to.be.greaterThan(
+          tabRects[0]?.getBoundingClientRect().left ?? 0
+        );
+
+        for (const tab of tabRects) {
+          const label = tab.querySelector<HTMLElement>('span');
+          expect(label?.scrollWidth ?? 0, tab.textContent ?? 'tab').to.be.lessThan(
+            (label?.clientWidth ?? 0) + 2
+          );
+        }
+      });
+    });
   });
 }
 
@@ -54,6 +101,7 @@ describe('Canvas workbench tabs', () => {
 
     assertGlobalWorkbenchRoutesAreAbsent();
     assertCanvasWorkbenchTabsAreVisible();
+    assertCanvasWorkbenchTabsAreHeaderScoped();
     cy.get('.react-flow').should('be.visible');
 
     cy.get('[data-slot="canvas-workbench-tab-strip"]').contains('button', 'Lineage').click();
