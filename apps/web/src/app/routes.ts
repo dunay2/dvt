@@ -1,7 +1,15 @@
-import { Fragment, Suspense, createElement, type ComponentType, type ReactNode } from 'react';
+import {
+  Fragment,
+  Suspense,
+  createElement,
+  useEffect,
+  type ComponentType,
+  type ReactNode,
+} from 'react';
 import { Navigate, createBrowserRouter, type RouteObject } from 'react-router';
 
 import AppRouteErrorBoundary from './AppRouteErrorBoundary';
+import { completeBootstrapScreen, setBootstrapStepStatus } from './bootstrap/appBootstrapScreen';
 import StaticRouteBootstrapBoundary from './bootstrap/StaticRouteBootstrapBoundary';
 import {
   type AppRouteHandle,
@@ -60,6 +68,31 @@ function DefaultCoreRouteRedirect() {
   const { defaultCoreViewPath } = useShellRuntime();
 
   return createElement(Navigate, { to: defaultCoreViewPath, replace: true });
+}
+
+function PublicRouteBootstrapBoundary({ children }: Readonly<{ children: ReactNode }>) {
+  useEffect(() => {
+    setBootstrapStepStatus({
+      step: 'capabilities',
+      status: 'complete',
+      detail: 'Runtime capabilities are not required for this public route.',
+    });
+    setBootstrapStepStatus({
+      step: 'health',
+      status: 'complete',
+      detail: 'Platform health is not required for this public route.',
+    });
+    setBootstrapStepStatus({
+      step: 'route',
+      status: 'complete',
+      detail: 'Public route is ready.',
+    });
+    globalThis.setTimeout(() => {
+      completeBootstrapScreen();
+    }, 0);
+  }, []);
+
+  return createElement(Fragment, null, children);
 }
 
 function createStaticShellRouteHandle(routeLabel: string): AppRouteHandle {
@@ -190,7 +223,9 @@ export function createAppRoutes(): RouteObject[] {
     },
     {
       path: '/login',
-      Component: LoginView,
+      element: createElement(PublicRouteBootstrapBoundary, {
+        children: createElement(LoginView),
+      }),
     },
   ];
 }
