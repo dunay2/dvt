@@ -91,6 +91,9 @@ The component does not own:
 - `CanvasPlaygroundTabStrip` owns Canvas document tabs only.
 - `CanvasWorkbenchTabStrip` owns Graph/Code/Lineage/Diff/Artifacts/Runs view
   tabs only.
+- `CanvasWorkbenchTabStrip` must render those tabs as a horizontal,
+  header-scoped strip with readable labels; it must not compress labels into
+  truncated shell-rail captions.
 - `/canvas` resolves to Graph.
 - `/canvas/:workbenchTab` resolves only known Canvas tab IDs.
 - Unknown tab route segments render unavailable state with a Graph recovery
@@ -230,7 +233,8 @@ projection, tab rendering, and Canvas-scoped Runs.
   shell nav and `CanvasPlaygroundTabStrip`.
 - `routes.test.tsx` proves `/canvas/:workbenchTab` is registered and retired
   global Canvas-dependent paths are absent.
-- `canvas-workbench-tabs.cy.ts` proves the browser user flow for scoped tabs.
+- `canvas-workbench-tabs.cy.ts` proves the browser user flow, shell-rail
+  exclusion, header-scoped geometry, and unclipped tab labels for scoped tabs.
 
 ## Negative Coverage
 
@@ -242,7 +246,9 @@ projection, tab rendering, and Canvas-scoped Runs.
 - Unknown `/canvas/:workbenchTab` fails closed.
 - Unavailable Canvas context renders Graph recovery rather than fake tab data.
 - Cypress verifies the shell does not expose retired global Code, Lineage,
-  Diff, or Artifacts links.
+  Diff, or Artifacts links or captions.
+- Cypress verifies the Canvas workbench tabs remain horizontal, route-scoped,
+  and readable instead of being compressed into abbreviated labels.
 
 ## Current-To-Target Map
 
