@@ -995,6 +995,9 @@ function writeIfChanged(filePath, next, options = {}) {
     return false;
   }
   if (options.checkOnly) {
+    if (Array.isArray(options.changedPaths)) {
+      options.changedPaths.push(toPosix(path.relative(repoRoot, filePath)));
+    }
     return true;
   }
   fs.writeFileSync(filePath, next, 'utf8');
@@ -1045,27 +1048,35 @@ function main() {
   const outputs = buildOutputs();
   fs.mkdirSync(shardDir, { recursive: true });
   fs.mkdirSync(componentShardDir, { recursive: true });
+  const changedPaths = [];
+  const writeOptions = { checkOnly, changedPaths };
   const shardWrites = Object.entries(outputs.fileShards).map(([relativePath, content]) =>
-    writeIfChanged(path.join(repoRoot, relativePath), content, { checkOnly })
+    writeIfChanged(path.join(repoRoot, relativePath), content, writeOptions)
   );
   const componentShardWrites = Object.entries(outputs.componentFileMapShards).map(
     ([relativePath, content]) =>
-      writeIfChanged(path.join(repoRoot, relativePath), content, { checkOnly })
+      writeIfChanged(path.join(repoRoot, relativePath), content, writeOptions)
   );
   const changed = [
-    writeIfChanged(fileYamlPath, outputs.fileYaml, { checkOnly }),
+    writeIfChanged(fileYamlPath, outputs.fileYaml, writeOptions),
     ...shardWrites,
-    writeIfChanged(fileMarkdownPath, outputs.fileMarkdown, { checkOnly }),
-    writeIfChanged(componentYamlPath, outputs.componentYaml, { checkOnly }),
-    writeIfChanged(componentMarkdownPath, outputs.componentMarkdown, { checkOnly }),
-    writeIfChanged(componentFileMapYamlPath, outputs.componentFileMapYaml, { checkOnly }),
+    writeIfChanged(fileMarkdownPath, outputs.fileMarkdown, writeOptions),
+    writeIfChanged(componentYamlPath, outputs.componentYaml, writeOptions),
+    writeIfChanged(componentMarkdownPath, outputs.componentMarkdown, writeOptions),
+    writeIfChanged(componentFileMapYamlPath, outputs.componentFileMapYaml, writeOptions),
     ...componentShardWrites,
-    writeIfChanged(componentFileMapMarkdownPath, outputs.componentFileMapMarkdown, { checkOnly }),
+    writeIfChanged(componentFileMapMarkdownPath, outputs.componentFileMapMarkdown, writeOptions),
   ].some(Boolean);
 
   if (checkOnly && changed) {
     console.error('[docs:governance:file-component-index] FAILED');
     console.error('File/component governance indexes were stale. Regenerate and commit outputs.');
+    for (const changedPath of changedPaths.slice(0, 50)) {
+      console.error(`- ${changedPath}`);
+    }
+    if (changedPaths.length > 50) {
+      console.error(`- ... ${changedPaths.length - 50} more`);
+    }
     process.exitCode = 1;
     return;
   }

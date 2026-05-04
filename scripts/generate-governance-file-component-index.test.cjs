@@ -392,7 +392,7 @@ test('buildFileIndexManifest splits file rows into deterministic unit shards', (
 
   assert.deepEqual(output.manifest, {
     version: 1,
-    generatedFrom: 'git ls-files',
+    generatedFrom: 'git ls-files plus untracked non-ignored local files',
     unitManifest: 'docs/planning/status/system-governance-unit-index.units.yaml',
     shardDirectory: 'docs/planning/status/governance-files',
     fileCount: 3,
