@@ -5192,9 +5192,9 @@ files:
     owningUnit: SYS-WEB-ROOT
   - fileId: F-E3C5CEE03490
     path: apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
-    contentHash: ceed21ed3c3b2a40ec04bca1dfe8d5d01a4821f125bcc1364dbdfb40afc7ed24
+    contentHash: 2dab678a6ff1686e8aaae30c93b39adc21add1d4dc148bd8bb9cd5bf45452544
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 464ab9583a578a865466893898cc17574dae62c9ee8813a407c68df80603c8b5
+    stateFingerprint: c2c84585a6b4d6a1896664558e8c68771cc4f12026315f1eb635f4d362eccf0e
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
@@ -10322,9 +10322,9 @@ files:
     owningUnit: SYS-WEB-ROOT
   - fileId: F-19E5B7C2D104
     path: apps/web/src/app/views/canvas/CanvasWorkbenchTabStrip.tsx
-    contentHash: f7a3deb48b89e679f787fa53c4c00d49aaf92ba98f2804053ed319b7770eee12
+    contentHash: 2a32fa36dc65ce43d6f7931bd3d8064c09cb84dce8a8e06850cd3bdc33fd82b4
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: ac832f33b4489e34a67fa971c27dcb5c4b214c0d24c86ba22ee3c208ad6b2b52
+    stateFingerprint: 75b030b512094540888589e4da24a493463e9e7df82218093adb157223460d97
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
@@ -15182,9 +15182,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-B863220D9695
     path: docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
-    contentHash: d999cf82ebb60fb146efe16fec073e68133c9f9f17e4894e1f5451575ec0d9b5
+    contentHash: bb08e6cf78f9ded60be8827bc83f82cf476d2aaf9f68ff90ac3615ad9b0326b8
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 559eff69e0cf0f7ad26349f1cb59c83cf48b4fc9c1e5f424ea88f6357281a5bc
+    stateFingerprint: 7cfb75ebc8d8ed84dda22996d0269153ed81f7d4b654b64a3159411b81fbc80d
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
