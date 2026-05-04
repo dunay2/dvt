@@ -32,7 +32,7 @@ itself prove verified semantic maturity. `governanceState`,
 
 ## Totals
 
-- Repository files indexed: 4194
+- Repository files indexed: 4224
 - Component/source owner units: 32
 - Ungoverned files: 0
 - Drift files: 41
@@ -43,8 +43,8 @@ itself prove verified semantic maturity. `governanceState`,
 <!-- prettier-ignore-start -->
 | Status | Files |
 | --- | ---: |
-| `canonical` | 115 |
-| `coverage-required` | 3956 |
+| `canonical` | 116 |
+| `coverage-required` | 3985 |
 | `drift` | 41 |
 | `review` | 82 |
 <!-- prettier-ignore-end -->
@@ -54,9 +54,9 @@ itself prove verified semantic maturity. `governanceState`,
 <!-- prettier-ignore-start -->
 | Governance state | Files |
 | --- | ---: |
-| `coverage-required` | 3956 |
+| `coverage-required` | 3985 |
 | `drift` | 41 |
-| `governed` | 115 |
+| `governed` | 116 |
 | `review` | 82 |
 <!-- prettier-ignore-end -->
 
@@ -65,8 +65,8 @@ itself prove verified semantic maturity. `governanceState`,
 <!-- prettier-ignore-start -->
 | Canonical role | Files |
 | --- | ---: |
-| `implementation-owner` | 115 |
-| `none` | 4079 |
+| `implementation-owner` | 116 |
+| `none` | 4108 |
 <!-- prettier-ignore-end -->
 
 ## By Owning Unit
@@ -75,21 +75,21 @@ itself prove verified semantic maturity. `governanceState`,
 | Owning unit | Files |
 | --- | ---: |
 | `SYS-ADAPTERS-ROOT` | 196 |
-| `SYS-API-APPLICATION-PORTS` | 17 |
-| `SYS-API-APPLICATION-SERVICES` | 34 |
+| `SYS-API-APPLICATION-PORTS` | 26 |
+| `SYS-API-APPLICATION-SERVICES` | 36 |
 | `SYS-API-BOOTSTRAP` | 2 |
 | `SYS-API-DOCS` | 15 |
 | `SYS-API-DOMAIN-AUTH` | 1 |
-| `SYS-API-HTTP-ENTRYPOINT-TESTS` | 52 |
-| `SYS-API-HTTP-ENTRYPOINTS` | 76 |
-| `SYS-API-INFRASTRUCTURE` | 27 |
+| `SYS-API-HTTP-ENTRYPOINT-TESTS` | 53 |
+| `SYS-API-HTTP-ENTRYPOINTS` | 83 |
+| `SYS-API-INFRASTRUCTURE` | 28 |
 | `SYS-API-OPS-HEALTH` | 11 |
 | `SYS-API-REPO-CONFIG` | 11 |
 | `SYS-API-RUNTIME-COMPOSITION` | 26 |
-| `SYS-API-TESTS` | 99 |
+| `SYS-API-TESTS` | 100 |
 | `SYS-CI-GOVERNANCE-ROOT` | 182 |
 | `SYS-CONTRACTS-ROOT` | 127 |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1727 |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1733 |
 | `SYS-OBSERVABILITY-ROOT` | 15 |
 | `SYS-PLANNER-ROOT` | 76 |
 | `SYS-PLANSTORE-API-COMPOSITION` | 20 |
@@ -99,10 +99,10 @@ itself prove verified semantic maturity. `governanceState`,
 | `SYS-PLANSTORE-ENGINE-FETCH` | 5 |
 | `SYS-PLANSTORE-POSTGRES` | 16 |
 | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | 11 |
-| `SYS-REPO-METADATA-ROOT` | 115 |
+| `SYS-REPO-METADATA-ROOT` | 116 |
 | `SYS-RUNTIME-ROOT` | 286 |
 | `SYS-TRACEABILITY-ROOT` | 65 |
-| `SYS-WEB-ROOT` | 819 |
+| `SYS-WEB-ROOT` | 821 |
 | `SYS-WORKERS-ROOT` | 103 |
 <!-- prettier-ignore-end -->
 

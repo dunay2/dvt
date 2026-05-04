@@ -18,6 +18,7 @@ export const HTTP_ERROR_REASON = Object.freeze({
   invalidPlanRef: 'invalid_plan_ref',
   invalidPlanSource: 'invalid_plan_source',
   invalidProjectId: 'invalid_project_id',
+  invalidWorkspacePath: 'invalid_workspace_path',
   invalidRunExecutionContextRef: 'invalid_run_execution_context_ref',
   invalidRunId: 'invalid_run_id',
   invalidSelection: 'invalid_selection',
@@ -39,6 +40,7 @@ export const HTTP_ERROR_REASON = Object.freeze({
   workspaceGraphDraftIdempotencyKeyReused: 'workspace_graph_draft_idempotency_key_reused',
   workspaceGraphDraftNotFound: 'workspace_graph_draft_not_found',
   workspaceGraphDraftUnsupportedSchemaVersion: 'workspace_graph_draft_unsupported_schema_version',
+  workspaceFileNotFound: 'workspace_file_not_found',
 } as const);
 
 export type HttpErrorReason = (typeof HTTP_ERROR_REASON)[keyof typeof HTTP_ERROR_REASON];

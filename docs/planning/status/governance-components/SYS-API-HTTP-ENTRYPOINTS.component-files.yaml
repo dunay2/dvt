@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: ENTRY
 cqRails: API HTTP command/query route rails
 childrenRequired: false
-fileCount: 76
+fileCount: 83
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -396,6 +396,41 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: apps/api/src/entrypoints/http/protectedRuntimeAdminRouteGroup.ts
+    fileId: F-80DCE79E0A28
+    owningUnit: SYS-API-HTTP-ENTRYPOINTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/entrypoints/http/protectedRuntimePlanRoutes.ts
+    fileId: F-5616FBCC5757
+    owningUnit: SYS-API-HTTP-ENTRYPOINTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/entrypoints/http/protectedRuntimeRouteDependencies.ts
+    fileId: F-36BA340326B9
+    owningUnit: SYS-API-HTTP-ENTRYPOINTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/entrypoints/http/protectedRuntimeRunRoutes.ts
+    fileId: F-7AA70A7431DA
+    owningUnit: SYS-API-HTTP-ENTRYPOINTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/entrypoints/http/protectedRuntimeWorkspaceGraphDraftRouteGroup.ts
+    fileId: F-A7D6700B78F6
+    owningUnit: SYS-API-HTTP-ENTRYPOINTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: apps/api/src/entrypoints/http/recoverRunRoute.ts
     fileId: F-BB1C64153B1D
     owningUnit: SYS-API-HTTP-ENTRYPOINTS
@@ -531,6 +566,20 @@ files:
     isLegacy: false
   - path: apps/api/src/entrypoints/http/startRunRouteTargetAdapterParser.ts
     fileId: F-CBDEC91E932C
+    owningUnit: SYS-API-HTTP-ENTRYPOINTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/entrypoints/http/workspaceFilesRouteGroup.ts
+    fileId: F-EB3ED5A90EDB
+    owningUnit: SYS-API-HTTP-ENTRYPOINTS
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/api/src/entrypoints/http/workspaceFilesRoutes.ts
+    fileId: F-45EA13760C9B
     owningUnit: SYS-API-HTTP-ENTRYPOINTS
     unitStatus: coverage-required
     governanceState: coverage-required

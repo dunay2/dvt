@@ -3,8 +3,8 @@ generatedFrom:
   - docs/planning/status/system-governance-file-index.files.yaml
   - docs/planning/status/system-governance-component-index.components.yaml
 totals:
-  files: 4194
-  governedFiles: 4194
+  files: 4224
+  governedFiles: 4224
   ungovernedFiles: 0
   driftFiles: 41
   legacyFiles: 0
@@ -22,12 +22,12 @@ ciPosture:
     - legacyFiles records removal targets until owning work removes them
 byRootUnit:
   - name: SYS-DVT
-    count: 4194
+    count: 4224
 byDomainUnit:
   - name: SYS-ADAPTERS
     count: 196
   - name: SYS-DVT
-    count: 3417
+    count: 3447
   - name: SYS-OBSERVABILITY
     count: 15
   - name: SYS-PLANSTORE
@@ -42,9 +42,9 @@ byComponentUnit:
   - name: SYS-ADAPTERS-ROOT
     count: 196
   - name: SYS-API-APPLICATION-PORTS
-    count: 17
+    count: 26
   - name: SYS-API-APPLICATION-SERVICES
-    count: 34
+    count: 36
   - name: SYS-API-BOOTSTRAP
     count: 2
   - name: SYS-API-DOCS
@@ -52,11 +52,11 @@ byComponentUnit:
   - name: SYS-API-DOMAIN-AUTH
     count: 1
   - name: SYS-API-HTTP-ENTRYPOINT-TESTS
-    count: 52
+    count: 53
   - name: SYS-API-HTTP-ENTRYPOINTS
-    count: 76
+    count: 83
   - name: SYS-API-INFRASTRUCTURE
-    count: 27
+    count: 28
   - name: SYS-API-OPS-ROUTES
     count: 11
   - name: SYS-API-REPO-CONFIG
@@ -64,13 +64,13 @@ byComponentUnit:
   - name: SYS-API-RUNTIME-COMPOSITION
     count: 26
   - name: SYS-API-TESTS
-    count: 99
+    count: 100
   - name: SYS-CI-GOVERNANCE-ROOT
     count: 182
   - name: SYS-CONTRACTS-ROOT
     count: 127
   - name: SYS-DOCS-GOVERNANCE-ROOT
-    count: 1727
+    count: 1733
   - name: SYS-OBSERVABILITY-ROOT
     count: 15
   - name: SYS-PLANNER-ROOT
@@ -90,95 +90,95 @@ byComponentUnit:
   - name: SYS-PLANSTORE-TEMPORAL-COMPOSITION
     count: 11
   - name: SYS-REPO-METADATA-ROOT
-    count: 115
+    count: 116
   - name: SYS-RUNTIME-ROOT
     count: 286
   - name: SYS-TRACEABILITY-ROOT
     count: 65
   - name: SYS-WEB-ROOT
-    count: 819
+    count: 821
   - name: SYS-WORKERS-ROOT
     count: 103
 byStatus:
   - name: canonical
-    count: 115
+    count: 116
   - name: coverage-required
-    count: 3956
+    count: 3985
   - name: drift
     count: 41
   - name: review
     count: 82
 byGovernanceState:
   - name: coverage-required
-    count: 3956
+    count: 3985
   - name: drift
     count: 41
   - name: governed
-    count: 115
+    count: 116
   - name: review
     count: 82
 byCanonicalRole:
   - name: implementation-owner
-    count: 115
+    count: 116
   - name: none
-    count: 4079
+    count: 4108
 byEvidenceState:
   - name: classification-only
-    count: 115
+    count: 116
   - name: coverage-required
-    count: 3956
+    count: 3985
   - name: remediation-required
     count: 41
   - name: review-required
     count: 82
 byDddOwner:
   - name: ADP
-    count: 250
+    count: 251
   - name: AS
-    count: 469
+    count: 471
   - name: DS
     count: 142
   - name: ENTRY
-    count: 908
+    count: 917
   - name: INFRA
-    count: 2235
+    count: 2244
   - name: PORT
-    count: 190
+    count: 199
 governanceDocuments:
   - path: docs/DOCS_README.md
-    fileCount: 1742
+    fileCount: 1748
   - path: docs/planning/status/governance-document-rule-inventory.md
-    fileCount: 1727
+    fileCount: 1733
   - path: docs/planning/status/system-operations-inventory-20260501.md
-    fileCount: 950
+    fileCount: 970
   - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
-    fileCount: 819
+    fileCount: 821
   - path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-    fileCount: 345
+    fileCount: 366
   - path: docs/guides/testing-and-ci-capabilities.md
-    fileCount: 344
+    fileCount: 346
   - path: >-
       docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
-    fileCount: 227
+    fileCount: 236
   - path: docs/architecture/command-query-rail-governance.md
-    fileCount: 162
+    fileCount: 172
   - path: docs/contracts/index.md
     fileCount: 127
   - path: package.json
-    fileCount: 115
+    fileCount: 116
   - path: pnpm-workspace.yaml
-    fileCount: 115
+    fileCount: 116
   - path: docs/contracts/planner/index.md
     fileCount: 76
   - path: docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
     fileCount: 65
+  - path: docs/architecture/reference-architecture.md
+    fileCount: 55
   - path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
     fileCount: 46
-  - path: docs/architecture/reference-architecture.md
-    fileCount: 45
   - path: docs/planning/status/system-governance-document-unit-map-20260501.md
     fileCount: 34
   - path: docs/planning/status/system-governance-unit-index-20260501.md
@@ -219,7 +219,7 @@ componentCoverage:
     evidenceState: coverage-required
     dddOwner: INFRA
     cqRails: none - documentation governance
-    fileCount: 1727
+    fileCount: 1733
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -236,7 +236,7 @@ componentCoverage:
     evidenceState: coverage-required
     dddOwner: ENTRY
     cqRails: UI actions and API queries
-    fileCount: 819
+    fileCount: 821
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -317,7 +317,7 @@ componentCoverage:
     evidenceState: classification-only
     dddOwner: INFRA
     cqRails: none - repository metadata
-    fileCount: 115
+    fileCount: 116
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -350,7 +350,7 @@ componentCoverage:
     evidenceState: coverage-required
     dddOwner: INFRA
     cqRails: API validation suites
-    fileCount: 99
+    fileCount: 100
     isDrift: false
     isLegacy: false
     childrenRequired: false
@@ -371,7 +371,7 @@ componentCoverage:
     evidenceState: coverage-required
     dddOwner: ENTRY
     cqRails: API HTTP command/query route rails
-    fileCount: 76
+    fileCount: 83
     isDrift: false
     isLegacy: false
     childrenRequired: false
@@ -424,7 +424,7 @@ componentCoverage:
     evidenceState: coverage-required
     dddOwner: INFRA
     cqRails: API HTTP command/query route validation
-    fileCount: 52
+    fileCount: 53
     isDrift: false
     isLegacy: false
     childrenRequired: false
@@ -445,7 +445,7 @@ componentCoverage:
     evidenceState: coverage-required
     dddOwner: AS
     cqRails: API application commands and queries
-    fileCount: 34
+    fileCount: 36
     isDrift: false
     isLegacy: false
     childrenRequired: false
@@ -481,7 +481,26 @@ componentCoverage:
     evidenceState: coverage-required
     dddOwner: ADP
     cqRails: API adapter-backed command/query support
-    fileCount: 27
+    fileCount: 28
+    isDrift: false
+    isLegacy: false
+    childrenRequired: false
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - docs/architecture/reference-architecture.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+  - id: SYS-API-APPLICATION-PORTS
+    name: API application ports
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    status: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    dddOwner: PORT
+    cqRails: API application command/query ports
+    fileCount: 26
     isDrift: false
     isLegacy: false
     childrenRequired: false
@@ -544,25 +563,6 @@ componentCoverage:
       - docs/planning/status/system-operations-inventory-20260501.md
       - >-
         docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
-  - id: SYS-API-APPLICATION-PORTS
-    name: API application ports
-    rootUnit: SYS-DVT
-    domainUnit: SYS-DVT
-    status: coverage-required
-    governanceState: coverage-required
-    canonicalRole: none
-    evidenceState: coverage-required
-    dddOwner: PORT
-    cqRails: API application command/query ports
-    fileCount: 17
-    isDrift: false
-    isLegacy: false
-    childrenRequired: false
-    governance:
-      - >-
-        docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
-      - docs/architecture/reference-architecture.md
-      - docs/planning/status/system-operations-inventory-20260501.md
   - id: SYS-PLANSTORE-POSTGRES
     name: Postgres plan-store adapter implementation
     rootUnit: SYS-DVT
@@ -952,11 +952,11 @@ findings:
   legacyFiles: []
   componentsRequiringSubdivision:
     - id: SYS-DOCS-GOVERNANCE-ROOT
-      fileCount: 1727
+      fileCount: 1733
       status: coverage-required
       dddOwner: INFRA
     - id: SYS-WEB-ROOT
-      fileCount: 819
+      fileCount: 821
       status: coverage-required
       dddOwner: ENTRY
     - id: SYS-RUNTIME-ROOT
@@ -976,7 +976,7 @@ findings:
       status: coverage-required
       dddOwner: PORT
     - id: SYS-REPO-METADATA-ROOT
-      fileCount: 115
+      fileCount: 116
       status: canonical
       dddOwner: INFRA
     - id: SYS-WORKERS-ROOT

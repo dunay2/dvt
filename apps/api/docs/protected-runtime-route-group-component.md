@@ -57,6 +57,13 @@ It does **not** own:
   for this route group.
 - `registerWorkspaceGraphDraftRoutes(...)`
   Delegated route group for the workspace graph draft read/write boundary.
+- `registerProtectedWorkspaceFilesRouteGroup(...)`
+  Delegated composition root for the read-only workspace files query boundary.
+  It owns route-local construction of the repository adapter and query use
+  cases so `registerProtectedRuntimeRoutes.ts` does not absorb component
+  internals.
+- `registerWorkspaceFilesRoutes(...)`
+  HTTP adapter for the read-only workspace files operational evidence boundary.
 - `registerAdminRoutes(...)`
   Explicitly enabled admin repair route group.
 
@@ -95,6 +102,10 @@ flowchart LR
   Plan --> Import["POST /plans/import"]
   Draft --> DraftRead["GET /workspace/graph/draft"]
   Draft --> DraftSave["PUT /workspace/graph/draft"]
+  Register --> FilesComposer["Workspace files route group composer"]
+  FilesComposer --> Files["Workspace files HTTP routes"]
+  Files --> FilesTree["GET /workspace/files"]
+  Files --> FilesContent["GET /workspace/files/:path"]
   Runs --> RunReads["GET /runs, /runs/:runId, /runs/:runId/events"]
   Runs --> RunCommands["POST /runs/:runId/signal|cancel|recover"]
   Admin --> Repair["POST /admin/runs/:runId/rebuild-snapshot"]
@@ -111,6 +122,8 @@ flowchart LR
 | `ImportExecutablePlan`    | `POST /plans/import`                       | Command | Runtime plan ingestion       | Imported executable plan    | ImportPlanUseCase                    | `run:start` compatibility authorization, tenant scope         | missing token, missing action, tenant mismatch, invalid plan ref                           |
 | `GetWorkspaceGraphDraft`  | `GET /workspace/graph/draft`               | Query   | Workspace graph drafting     | Workspace draft read model  | getWorkspaceGraphDraftUseCase        | `workspace:graph-draft:view`, tenant/project/environment      | missing token, missing action, tenant/workspace mismatch                                   |
 | `SaveWorkspaceGraphDraft` | `PUT /workspace/graph/draft`               | Command | Workspace graph drafting     | Workspace draft aggregate   | saveWorkspaceGraphDraftUseCase       | `workspace:graph-draft:save`, tenant/project/environment      | missing token, missing action, tenant/workspace mismatch, stale authority                  |
+| `ListWorkspaceFiles`      | `GET /workspace/files`                     | Query   | Operational evidence reads   | WorkspaceFileTree           | ListWorkspaceFilesUseCase            | `workspace:files:view`, tenant/project/environment            | missing token, missing action, missing scope                                               |
+| `GetWorkspaceFileContent` | `GET /workspace/files/:path`               | Query   | Operational evidence reads   | WorkspaceFileContent        | GetWorkspaceFileContentUseCase       | `workspace:files:view`, tenant/project/environment            | missing token, missing action, missing file, invalid path                                  |
 | `ListRuns`                | `GET /runs`                                | Query   | Runtime read model           | Run list read model         | ListRunsUseCase                      | `run:list`, tenant scope                                      | missing token, missing action, tenant mismatch                                             |
 | `GetRunStatus`            | `GET /runs/:runId`                         | Query   | Runtime read model           | Run status read model       | GetRunStatusUseCase                  | `run:view`, tenant scope                                      | missing token, missing action, tenant mismatch, unknown run                                |
 | `GetRunEvents`            | `GET /runs/:runId/events`                  | Query   | Runtime read model           | Run event stream read model | GetRunEventsUseCase                  | `run:logs:view`, tenant scope                                 | missing token, missing action, tenant mismatch, unknown run                                |
@@ -170,5 +183,7 @@ sequenceDiagram
 - Add route behavior only through the owning command/query rail.
 - Keep route-group registration focused on composition; route-specific parsing
   and response mapping belong in the route handler component.
+- Keep route-specific adapter construction in a delegated route-group composer
+  when the component has its own outbound port and infrastructure adapter.
 - Keep compatibility paths explicit and named as compatibility, not canonical
   product rails.
