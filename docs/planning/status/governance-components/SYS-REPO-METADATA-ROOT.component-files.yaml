@@ -7,7 +7,7 @@ governanceState: governed
 dddOwner: INFRA
 cqRails: none - repository metadata
 childrenRequired: true
-fileCount: 114
+fileCount: 115
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -426,6 +426,13 @@ files:
     isLegacy: false
   - path: buzon/20260502-tf-e2-m-d-startup-route-readiness-fowler-review.md
     fileId: F-85BD5B352DE5
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260503-branch-fowler-hard-qa-review.md
+    fileId: F-D2CAC9C2F327
     owningUnit: SYS-REPO-METADATA-ROOT
     unitStatus: canonical
     governanceState: governed

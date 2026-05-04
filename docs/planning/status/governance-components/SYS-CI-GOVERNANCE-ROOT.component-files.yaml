@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - repository automation
 childrenRequired: true
-fileCount: 180
+fileCount: 182
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -608,6 +608,20 @@ files:
     isLegacy: false
   - path: scripts/generated-doc-date.cjs
     fileId: F-4A57036E661E
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/git-local-changes.cjs
+    fileId: F-360C875CAB1C
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/git-local-changes.test.cjs
+    fileId: F-1FF9DFD727B0
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

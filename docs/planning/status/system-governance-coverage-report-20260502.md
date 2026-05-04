@@ -29,8 +29,8 @@ Upstream indexes:
 
 ## Totals
 
-- Files: 4172
-- Governed files: 4172
+- Files: 4194
+- Governed files: 4194
 - Ungoverned files: 0
 - Drift files: 41
 - Legacy files: 0
@@ -49,7 +49,7 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Root unit | Files |
 | --- | ---: |
-| `SYS-DVT` | 4172 |
+| `SYS-DVT` | 4194 |
 <!-- prettier-ignore-end -->
 
 ## By Domain Unit
@@ -58,7 +58,7 @@ Upstream indexes:
 | Domain unit | Files |
 | --- | ---: |
 | `SYS-ADAPTERS` | 196 |
-| `SYS-DVT` | 3395 |
+| `SYS-DVT` | 3417 |
 | `SYS-OBSERVABILITY` | 15 |
 | `SYS-PLANSTORE` | 112 |
 | `SYS-RUNTIME` | 286 |
@@ -74,8 +74,8 @@ Upstream indexes:
 | `ADP` | 250 |
 | `AS` | 469 |
 | `DS` | 142 |
-| `ENTRY` | 895 |
-| `INFRA` | 2226 |
+| `ENTRY` | 908 |
+| `INFRA` | 2235 |
 | `PORT` | 190 |
 <!-- prettier-ignore-end -->
 
@@ -84,8 +84,8 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Status | Files |
 | --- | ---: |
-| `canonical` | 114 |
-| `coverage-required` | 3935 |
+| `canonical` | 115 |
+| `coverage-required` | 3956 |
 | `drift` | 41 |
 | `review` | 82 |
 <!-- prettier-ignore-end -->
@@ -95,9 +95,9 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Governance state | Files |
 | --- | ---: |
-| `coverage-required` | 3935 |
+| `coverage-required` | 3956 |
 | `drift` | 41 |
-| `governed` | 114 |
+| `governed` | 115 |
 | `review` | 82 |
 <!-- prettier-ignore-end -->
 
@@ -106,8 +106,8 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Canonical role | Files |
 | --- | ---: |
-| `implementation-owner` | 114 |
-| `none` | 4058 |
+| `implementation-owner` | 115 |
+| `none` | 4079 |
 <!-- prettier-ignore-end -->
 
 ## By Evidence State
@@ -115,8 +115,8 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Evidence state | Files |
 | --- | ---: |
-| `classification-only` | 114 |
-| `coverage-required` | 3935 |
+| `classification-only` | 115 |
+| `coverage-required` | 3956 |
 | `remediation-required` | 41 |
 | `review-required` | 82 |
 <!-- prettier-ignore-end -->
@@ -182,13 +182,13 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Component | Files | Status | DDD owner |
 | --- | ---: | --- | --- |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1721 | `coverage-required` | `INFRA` |
-| `SYS-WEB-ROOT` | 806 | `coverage-required` | `ENTRY` |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1727 | `coverage-required` | `INFRA` |
+| `SYS-WEB-ROOT` | 819 | `coverage-required` | `ENTRY` |
 | `SYS-RUNTIME-ROOT` | 286 | `coverage-required` | `AS` |
 | `SYS-ADAPTERS-ROOT` | 196 | `coverage-required` | `ADP` |
-| `SYS-CI-GOVERNANCE-ROOT` | 180 | `coverage-required` | `INFRA` |
+| `SYS-CI-GOVERNANCE-ROOT` | 182 | `coverage-required` | `INFRA` |
 | `SYS-CONTRACTS-ROOT` | 127 | `coverage-required` | `PORT` |
-| `SYS-REPO-METADATA-ROOT` | 114 | `canonical` | `INFRA` |
+| `SYS-REPO-METADATA-ROOT` | 115 | `canonical` | `INFRA` |
 | `SYS-WORKERS-ROOT` | 103 | `coverage-required` | `AS` |
 | `SYS-PLANNER-ROOT` | 76 | `coverage-required` | `DS` |
 | `SYS-TRACEABILITY-ROOT` | 65 | `coverage-required` | `DS` |
@@ -208,17 +208,17 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Governance source | Files |
 | --- | ---: |
-| `docs/DOCS_README.md` | 1736 |
-| `docs/planning/status/governance-document-rule-inventory.md` | 1721 |
+| `docs/DOCS_README.md` | 1742 |
+| `docs/planning/status/governance-document-rule-inventory.md` | 1727 |
 | `docs/planning/status/system-operations-inventory-20260501.md` | 950 |
-| `docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md` | 806 |
+| `docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md` | 819 |
 | `docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md` | 345 |
-| `docs/guides/testing-and-ci-capabilities.md` | 342 |
+| `docs/guides/testing-and-ci-capabilities.md` | 344 |
 | `docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md` | 227 |
 | `docs/architecture/command-query-rail-governance.md` | 162 |
 | `docs/contracts/index.md` | 127 |
-| `package.json` | 114 |
-| `pnpm-workspace.yaml` | 114 |
+| `package.json` | 115 |
+| `pnpm-workspace.yaml` | 115 |
 | `docs/contracts/planner/index.md` | 76 |
 | `docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md` | 65 |
 | `docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md` | 46 |
