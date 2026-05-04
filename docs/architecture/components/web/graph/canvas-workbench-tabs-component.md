@@ -26,6 +26,8 @@ that does not make the route a global shell destination.
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
+- `docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md`
+- `buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-tabs-placement-design-plan-20260503.md`
 
 ## Owned Concern
@@ -40,6 +42,15 @@ The component does not own:
 - internals of Code, Lineage, Diff, Artifacts, or Runs views;
 - backend routes, contracts, adapters, or storage;
 - Project Assets persistence or source import provider expansion.
+
+## Local Traceability
+
+- C&Q catalog:
+  `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
+- User stories:
+  `docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md`
+- Fowler mailbox:
+  `buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md`
 
 ## Public API
 
