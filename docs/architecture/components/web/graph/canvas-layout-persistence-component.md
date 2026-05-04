@@ -20,8 +20,33 @@ This distinction matters because Canvas has two truths:
 - graph meaning and draft persistence belong to the protected authoring draft;
 - viewport and card coordinates belong to route-local layout state.
 
+## Governing Sources
+
+- `AGENTS.md`
+- `docs/planning/status/governance-document-rule-inventory.md`
+- `docs/guides/ai-work-protocol.md`
+- `docs/architecture/command-query-rail-governance.md`
+- `docs/architecture/fowler-opportunity-planning-governance.md`
+- `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
+- `docs/architecture/components/web/graph/canvas-layout-persistence-user-stories.md`
+- `buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md`
+
+## Owned Concern
+
+Owned concern: persist route-local Canvas viewport and coordinate projection
+state without becoming protected draft authority.
+
 Canonical local C&Q catalog:
 `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`.
+
+## Local Traceability
+
+- C&Q catalog:
+  `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
+- User stories:
+  `docs/architecture/components/web/graph/canvas-layout-persistence-user-stories.md`
+- Fowler mailbox:
+  `buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md`
 
 ## Public API
 
