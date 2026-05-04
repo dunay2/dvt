@@ -32245,9 +32245,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-5747AC855FEA
     pathHash: 111bd5025c2aa41038cf1dc6d670d54404e6619e479418712c2421ceccd9e28a
-    contentHash: b19cc468a3941a565f1775c7cdcf8aeab0e9b1c692dd8283fbf0987f5e2c4bfb
+    contentHash: 04300040111e91ac8ef33413584d941f2709c62a0df73e254d998eee3172c7f0
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 625901c9d5b84db6832c524ee4026630b685d63a3d29957f3b60c0fb48014d88
+    stateFingerprint: e0fc4554c021da4c222430bf123043695f4776a5fb1639368ae46ca614d0ee8a
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
