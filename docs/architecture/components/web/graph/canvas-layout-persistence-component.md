@@ -230,7 +230,7 @@ auto-layout coordinates, and semantic boundary rules.
   that already contains local card positions.
 - Do not re-enable drag gestures outside `CanvasViewport` permission policy.
 - Do not store grid visibility, grid color, or snap preferences in protected
-  graph drafts.
+  graph drafts; they are explicitly not in protected graph drafts.
 - Do not let auto-layout replace node data/type fields or reintroduce
   handle-only dragging.
 - Do not treat Canvas grid visibility, grid color, or snap-to-grid as draft

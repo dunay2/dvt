@@ -120,6 +120,25 @@ flowchart TD
   VisualProof --> Cypress
 ```
 
+## Exhaustiveness Rule
+
+Every externally observable Canvas workbench behavior must map to one rail in
+this catalog before implementation. This includes route entries, workbench
+tabs, toolbar commands, plugin view placements, layout-preference controls, and
+browser verification workflows.
+
+Route paths, React components, plugin manifest fields, Cypress helper names,
+and local store actions are implementation surfaces. They must not become
+parallel command or query names for the same product intent.
+
+Runtime rails and test-only rails must stay explicit:
+
+- product behavior uses accepted runtime command/query rails;
+- browser-only visual proof uses `VerifyCanvasWorkbenchVisualPosture`;
+- new backend persistence, adapter authority, protected draft behavior, or
+  cross-context ownership requires a catalog update and an ADR check before
+  implementation.
+
 ## Drift Rules
 
 - Do not add a route, tab, toolbar command, Cypress workflow, or plugin view
