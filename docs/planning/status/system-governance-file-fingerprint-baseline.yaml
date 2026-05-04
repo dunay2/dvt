@@ -24340,9 +24340,9 @@ files:
   - fileId: F-98488AC50DC6
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-tabs-placement-design-plan-20260503.md
-    contentHash: 8bd01ed12cfe0b46689c6fac4a3bbe9708a93bbb69e579ec25d49054587ab0e2
+    contentHash: cf76a3c0fb0087694df0c46a061f237466b88b97183fa4f7dc58cf39a6cfdd51
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: fb9e0f5889d038ac3a8d16e952c0622e4f9e0b3f9f70cbd34bbba54c35252048
+    stateFingerprint: 7c05089045aa5acdc66a1431ba4f10d52b75f33072923cd22260bab96217857e
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
