@@ -1,5 +1,9 @@
+/** Owned concern: prove feature mechanization manifest and implementation guard behavior. */
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 
 const {
   extractFeatureMechanizationManifests,
@@ -401,7 +405,7 @@ test('validateFeatureImplementationManifests allows Cypress draft GET preflight 
   assert.deepEqual(result.errors, []);
 });
 
-test('FeatureMechanizationGitDiffReader excludes untracked scratch files from implementation diffs', () => {
+test('FeatureMechanizationGitDiffReader includes untracked files in implementation diffs', () => {
   const reader = new FeatureMechanizationGitDiffReader({
     baseRef: 'origin/main',
     repoRootPath: process.cwd(),
@@ -416,7 +420,7 @@ test('FeatureMechanizationGitDiffReader excludes untracked scratch files from im
     }
 
     if (args[0] === 'ls-files') {
-      return ['scratch/local-note.md'];
+      return ['apps/web/src/app/views/canvas/newCanvasRail.ts'];
     }
 
     return [];
@@ -426,9 +430,49 @@ test('FeatureMechanizationGitDiffReader excludes untracked scratch files from im
 
   assert.deepEqual(changedFiles, [
     'apps/web/src/app/views/canvas/canvasFirstAuthoringLiveProof.ts',
+    'apps/web/src/app/views/canvas/newCanvasRail.ts',
   ]);
   assert.equal(
     readGitCalls.some((call) => call.startsWith('ls-files --others')),
-    false
+    true
   );
+});
+
+test('FeatureMechanizationGitDiffReader treats untracked file contents as added lines', () => {
+  const repoRootPath = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-feature-mechanization-'));
+  const relativePath = 'apps/web/src/app/views/canvas/newCanvasRail.ts';
+  const absolutePath = path.join(repoRootPath, ...relativePath.split('/'));
+  fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
+  fs.writeFileSync(
+    absolutePath,
+    [
+      '/** Owned concern: validate untracked feature symbols. */',
+      'export function createNewCanvasRail() {',
+      "  return 'canvas';",
+      '}',
+    ].join('\n')
+  );
+
+  try {
+    const reader = new FeatureMechanizationGitDiffReader({
+      baseRef: 'origin/main',
+      repoRootPath,
+    });
+    reader.readGitLines = (args) => {
+      if (args[0] === 'ls-files') {
+        return [relativePath];
+      }
+
+      return [];
+    };
+
+    const diff = reader.read();
+
+    assert.deepEqual(diff.changedFiles, [relativePath]);
+    assert.ok(
+      diff.addedLinesByPath[relativePath].includes('export function createNewCanvasRail() {')
+    );
+  } finally {
+    fs.rmSync(repoRootPath, { recursive: true, force: true });
+  }
 });

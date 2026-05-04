@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 /**
+ * Owned concern: generate governance file and component indexes from repository files.
+ *
  * Generate the global governance file and component indexes.
  */
 
@@ -87,25 +89,35 @@ function stableStringify(value) {
   return JSON.stringify(value);
 }
 
-function getTrackedFiles() {
-  const output = execFileSync('git', ['ls-files'], {
+function readGitFileList(args) {
+  const output = execFileSync('git', args, {
     cwd: repoRoot,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
   });
 
-  const trackedFiles = output
+  return output
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean)
     .map(toPosix);
+}
+
+function getRepositoryFiles() {
+  const repositoryFiles = [...readGitFileList(['ls-files'])];
+
+  for (const filePath of readGitFileList(['ls-files', '--others', '--exclude-standard'])) {
+    if (!repositoryFiles.includes(filePath)) {
+      repositoryFiles.push(filePath);
+    }
+  }
 
   for (const generatedPath of generatedOutputPaths) {
     if (
       fs.existsSync(path.join(repoRoot, generatedPath)) &&
-      !trackedFiles.includes(generatedPath)
+      !repositoryFiles.includes(generatedPath)
     ) {
-      trackedFiles.push(generatedPath);
+      repositoryFiles.push(generatedPath);
     }
   }
 
@@ -115,8 +127,8 @@ function getTrackedFiles() {
         continue;
       }
       const generatedShardPath = toPosix(path.relative(repoRoot, path.join(shardDir, entry.name)));
-      if (!trackedFiles.includes(generatedShardPath)) {
-        trackedFiles.push(generatedShardPath);
+      if (!repositoryFiles.includes(generatedShardPath)) {
+        repositoryFiles.push(generatedShardPath);
       }
     }
   }
@@ -129,13 +141,13 @@ function getTrackedFiles() {
       const generatedShardPath = toPosix(
         path.relative(repoRoot, path.join(componentShardDir, entry.name))
       );
-      if (!trackedFiles.includes(generatedShardPath)) {
-        trackedFiles.push(generatedShardPath);
+      if (!repositoryFiles.includes(generatedShardPath)) {
+        repositoryFiles.push(generatedShardPath);
       }
     }
   }
 
-  return trackedFiles.sort();
+  return repositoryFiles.sort();
 }
 
 function buildUnitIndex(units) {
@@ -414,7 +426,7 @@ function buildShardPayload(shardId, files) {
   return {
     version: 1,
     shardId,
-    generatedFrom: 'git ls-files',
+    generatedFrom: 'git ls-files plus untracked non-ignored local files',
     unitManifest: 'docs/planning/status/system-governance-unit-index.units.yaml',
     fileCount: files.length,
     files,
@@ -454,7 +466,7 @@ function buildFileIndexManifest(fileEntries, options = {}) {
   return {
     manifest: {
       version: 1,
-      generatedFrom: 'git ls-files',
+      generatedFrom: 'git ls-files plus untracked non-ignored local files',
       unitManifest: 'docs/planning/status/system-governance-unit-index.units.yaml',
       shardDirectory,
       fileCount: fileEntries.length,
@@ -713,7 +725,8 @@ machine-readable source is the compact manifest plus deterministic shard files:
 - [governance-files/](./governance-files/)
 - [system-governance-file-fingerprint-baseline.yaml](./system-governance-file-fingerprint-baseline.yaml)
 
-Every tracked repository file has one row in exactly one shard. Each row
+Every tracked repository file and every untracked non-ignored local file has
+one row in exactly one shard during local generation. Each row
 records the stable file id, path hash, content hash, governance hash, state
 fingerprint, root unit, domain unit, component unit, owning unit, unit path,
 governing documents, DDD owner, command/query rail posture, drift status, and
@@ -727,7 +740,7 @@ itself prove verified semantic maturity. \`governanceState\`,
 
 ## Totals
 
-- Tracked files indexed: ${fileEntries.length}
+- Repository files indexed: ${fileEntries.length}
 - Component/source owner units: ${componentEntries.length}
 - Ungoverned files: ${unowned.length}
 - Drift files: ${fileEntries.filter((entry) => entry.isDrift).length}
@@ -976,10 +989,13 @@ ${componentRows}
 `;
 }
 
-function writeIfChanged(filePath, next) {
+function writeIfChanged(filePath, next, options = {}) {
   const current = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : null;
   if (current === next) {
     return false;
+  }
+  if (options.checkOnly) {
+    return true;
   }
   fs.writeFileSync(filePath, next, 'utf8');
   return true;
@@ -989,7 +1005,7 @@ function buildOutputs() {
   const manifest = readManifest();
   const units = Array.isArray(manifest.units) ? manifest.units : [];
   const unitById = buildUnitIndex(units);
-  const fileEntries = buildFileEntries(getTrackedFiles(), units, {}, unitById);
+  const fileEntries = buildFileEntries(getRepositoryFiles(), units, {}, unitById);
   const componentEntries = buildComponentEntries(units, fileEntries, unitById);
   const fileIndex = buildFileIndexManifest(fileEntries);
   const componentFileMap = buildComponentFileMapManifest(componentEntries, fileEntries);
@@ -1030,20 +1046,21 @@ function main() {
   fs.mkdirSync(shardDir, { recursive: true });
   fs.mkdirSync(componentShardDir, { recursive: true });
   const shardWrites = Object.entries(outputs.fileShards).map(([relativePath, content]) =>
-    writeIfChanged(path.join(repoRoot, relativePath), content)
+    writeIfChanged(path.join(repoRoot, relativePath), content, { checkOnly })
   );
   const componentShardWrites = Object.entries(outputs.componentFileMapShards).map(
-    ([relativePath, content]) => writeIfChanged(path.join(repoRoot, relativePath), content)
+    ([relativePath, content]) =>
+      writeIfChanged(path.join(repoRoot, relativePath), content, { checkOnly })
   );
   const changed = [
-    writeIfChanged(fileYamlPath, outputs.fileYaml),
+    writeIfChanged(fileYamlPath, outputs.fileYaml, { checkOnly }),
     ...shardWrites,
-    writeIfChanged(fileMarkdownPath, outputs.fileMarkdown),
-    writeIfChanged(componentYamlPath, outputs.componentYaml),
-    writeIfChanged(componentMarkdownPath, outputs.componentMarkdown),
-    writeIfChanged(componentFileMapYamlPath, outputs.componentFileMapYaml),
+    writeIfChanged(fileMarkdownPath, outputs.fileMarkdown, { checkOnly }),
+    writeIfChanged(componentYamlPath, outputs.componentYaml, { checkOnly }),
+    writeIfChanged(componentMarkdownPath, outputs.componentMarkdown, { checkOnly }),
+    writeIfChanged(componentFileMapYamlPath, outputs.componentFileMapYaml, { checkOnly }),
     ...componentShardWrites,
-    writeIfChanged(componentFileMapMarkdownPath, outputs.componentFileMapMarkdown),
+    writeIfChanged(componentFileMapMarkdownPath, outputs.componentFileMapMarkdown, { checkOnly }),
   ].some(Boolean);
 
   if (checkOnly && changed) {

@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 /**
+ * Owned concern: validate changed files against governance indexes and fingerprints.
+ *
  * Validate that every changed file is covered by the governance indexes.
  */
 
@@ -18,7 +20,13 @@ const gitOutputMaxBuffer = 16 * 1024 * 1024;
 const selfNormalizedGeneratedPaths = new Set([
   baselineRepoPath,
   'docs/planning/status/system-governance-file-index.files.yaml',
+  'docs/planning/status/system-governance-file-index-20260501.md',
+  'docs/planning/status/system-governance-component-index-20260501.md',
+  'docs/planning/status/system-governance-component-index.components.yaml',
+  'docs/planning/status/system-governance-component-file-map-20260503.md',
   'docs/planning/status/system-governance-component-file-map.components.yaml',
+  'docs/planning/status/system-governance-coverage-report-20260502.md',
+  'docs/planning/status/system-governance-coverage-report.coverage.yaml',
 ]);
 const selfNormalizedGeneratedPrefixes = [
   'docs/planning/status/governance-files/',
@@ -68,6 +76,29 @@ function readNameStatusDiff(base, head, git = execGit) {
   return dedupeChanges(
     parseNameStatus(git(['diff', '--name-status', '--find-renames', `${base}...${head}`]))
   );
+}
+
+function readLocalNameStatusDiff(base, head, git = execGit) {
+  const changes = [
+    ...parseNameStatus(git(['diff', '--name-status', '--find-renames', `${base}...${head}`])),
+    ...parseNameStatus(git(['diff', '--name-status', '--find-renames', base])),
+    ...parseNameStatus(git(['diff', '--cached', '--name-status', '--find-renames'])),
+    ...parseNameStatus(git(['diff', '--name-status', '--find-renames'])),
+    ...readUntrackedNameStatus(git),
+  ];
+
+  return dedupeChanges(changes);
+}
+
+function readUntrackedNameStatus(git = execGit) {
+  return git(['ls-files', '--others', '--exclude-standard'])
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((filePath) => ({
+      status: 'A',
+      path: toPosix(filePath),
+    }));
 }
 
 function resolveBaseRef(candidates, git = execGit) {
@@ -326,7 +357,7 @@ function printResult(result) {
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const base = resolveBaseRef([args.base, 'origin/main', 'upstream/main', 'main']);
-  const changes = readNameStatusDiff(base, args.head);
+  const changes = readLocalNameStatusDiff(base, args.head);
   const result = validateChangedFiles({
     changes,
     baseBaseline: readYamlFromGit(base, baselineRepoPath),
@@ -347,6 +378,7 @@ if (require.main === module) {
 
 module.exports = {
   parseNameStatus,
+  readLocalNameStatusDiff,
   readNameStatusDiff,
   resolveBaseRef,
   validateChangedFiles,

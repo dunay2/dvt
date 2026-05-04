@@ -1,6 +1,7 @@
 #!/usr/bin/env tsx
 /**
  * @file tools/docs/check-filenames.ts
+ * Owned concern: enforce docs filename policy for the local changed-file set.
  * Filename naming-policy gate for the docs/ tree.
  *
  * Rules enforced:
@@ -15,7 +16,7 @@
  * Usage:
  *   tsx tools/docs/check-filenames.ts [--strict] [--changed-only]
  */
-import { execFileSync } from 'node:child_process';
+import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -25,6 +26,10 @@ import { walkMarkdown } from './lib/walkDocs.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..', '..');
 const DOCS_DIR = join(REPO_ROOT, 'docs');
+const require = createRequire(import.meta.url);
+const { listLocalChangedFiles } = require('../../scripts/git-local-changes.cjs') as {
+  listLocalChangedFiles: (options?: { repoRootPath?: string }) => string[];
+};
 
 const STRICT = process.argv.includes('--strict');
 const CHANGED_ONLY = process.argv.includes('--changed-only');
@@ -72,7 +77,11 @@ function reportSpaces(filePath: string, name: string, report: Report): void {
     return;
   }
 
-  report.error(filePath, 'Filename contains spaces', `Suggested rename: ${name.replaceAll(' ', '-')}`);
+  report.error(
+    filePath,
+    'Filename contains spaces',
+    `Suggested rename: ${name.replaceAll(' ', '-')}`
+  );
 }
 
 function reportAdrPattern(filePath: string, name: string, report: Report): void {
@@ -149,23 +158,9 @@ function getChangedMarkdownFiles(): string[] {
     return override.split(/\r?\n|;/).flatMap((entry) => normalizeChangedPath(entry));
   }
 
-  const base = process.env['GIT_BASE'] ?? 'origin/main';
-  try {
-    const output = execFileSync(
-      'git',
-      ['diff', '--name-only', '--diff-filter=AM', base, '--', 'docs/**/*.md'],
-      {
-        cwd: REPO_ROOT,
-        encoding: 'utf8',
-      }
-    );
-    return output
-      .trim()
-      .split(/\r?\n/)
-      .flatMap((entry) => normalizeChangedPath(entry));
-  } catch {
-    return walkMarkdown(DOCS_DIR);
-  }
+  return listLocalChangedFiles({ repoRootPath: REPO_ROOT }).flatMap((entry) =>
+    normalizeChangedPath(entry)
+  );
 }
 
 function normalizeChangedPath(entry: string): string[] {
