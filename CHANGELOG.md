@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.20.0](https://github.com/dunay2/dvt/compare/v5.19.0...v5.20.0) (2026-05-04)
+
+
+### Features
+
+* **web:** Add protected session gate and login route ([#1093](https://github.com/dunay2/dvt/issues/1093)) ([3b445ac](https://github.com/dunay2/dvt/commit/3b445ac79e97397558e6193737f0f6d2fa1305b8))
+* **web:** Complete TF-E2-A authoring draft hard cut and debt capture ([#1087](https://github.com/dunay2/dvt/issues/1087)) ([ee4c51a](https://github.com/dunay2/dvt/commit/ee4c51a54b0dad620b124cb1a18900d17cd1af02))
+
 ## [5.19.0](https://github.com/dunay2/dvt/compare/v5.18.0...v5.19.0) (2026-05-03)
 
 
