@@ -167,10 +167,7 @@ describe('useCanvasGraphHandlers node drop', () => {
     expect(setDraftSession).toHaveBeenCalledTimes(2);
     const latestDraftSession = setDraftSession.mock.calls.at(-1)?.[0];
     expect(typeof latestDraftSession).not.toBe('function');
-    expect(latestDraftSession.workingSet.visibleNodeIds).toEqual([
-      'drop-source',
-      'drop-transform',
-    ]);
+    expect(latestDraftSession.workingSet.visibleNodeIds).toEqual(['drop-source', 'drop-transform']);
     expect(latestDraftSession.localNodeCatalog?.['drop-source']).toEqual(
       expect.objectContaining({ id: 'drop-source' })
     );
@@ -256,9 +253,7 @@ describe('useCanvasGraphHandlers node drop', () => {
     await harness.render();
 
     act(() => {
-      harness.latest()?.handleCreateAuthoringNode(
-        requireAuthoringNodeKind('dvt:sql_transform')
-      );
+      harness.latest()?.handleCreateAuthoringNode(requireAuthoringNodeKind('dvt:sql_transform'));
     });
 
     expect(setNodes).not.toHaveBeenCalled();
@@ -294,9 +289,7 @@ describe('useCanvasGraphHandlers node drop', () => {
     await harness.render();
 
     act(() => {
-      harness.latest()?.handleCreateAuthoringNode(
-        requireAuthoringNodeKind('dvt:sql_transform')
-      );
+      harness.latest()?.handleCreateAuthoringNode(requireAuthoringNodeKind('dvt:sql_transform'));
     });
 
     expect(setNodes).toHaveBeenCalledTimes(1);
@@ -304,7 +297,7 @@ describe('useCanvasGraphHandlers node drop', () => {
     expect(currentNodes).toEqual([
       expect.objectContaining({
         id: 'dvt-sql-transform-1',
-        position: { x: 0, y: 0 },
+        position: { x: 160, y: 120 },
         data: expect.objectContaining({
           name: 'SQL transform 1',
           pluginKind: 'dvt:sql_transform',
