@@ -32,9 +32,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-3AD69D0E1547
     pathHash: f8f3c51a4793c4d6e3526e3572eabc789d10a0ba579f8de7d6a8fdcd729b9ec1
-    contentHash: 6fe14232b2b16b525ae797fcbd4327866c037daac46326c281f44a839e886298
+    contentHash: c789ffcf3ad93a59c72ee073787532966e1a9900728c8f992e1b1b9e7ae7000e
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 09e31e14e924453baf6e23fa2f1bcbae366920be1f033391663e98f2bbc38e68
+    stateFingerprint: 92b871bb087e703788397f82f37ec6d1dac2af53961bba4ac9fd92b20abddcb8
     path: CHANGELOG.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
