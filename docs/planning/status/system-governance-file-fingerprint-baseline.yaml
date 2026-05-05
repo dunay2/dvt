@@ -24612,9 +24612,9 @@ files:
   - fileId: F-751C27AB71BB
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/code-workbench-workspace-files-query-rail-plan-20260504.md
-    contentHash: 6683c3c548055426dc7af6fbf32ea4433cceef537ed89361d5a47cde4f41c72c
+    contentHash: 135ece0b4e993415840374c4fd8e57406bce629c8a0812df72046aad5cc8b1e4
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 7e79a830c7c0a774ee36b966ccee686d98b7f8c5d1f56d7a2a9458e6ddb3ae5c
+    stateFingerprint: eb570c390295250055ca6c428bed90b12ee1b965421c4915cc887699048f3589
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -37645,18 +37645,18 @@ files:
     owningUnit: SYS-CI-GOVERNANCE-ROOT
   - fileId: F-8E49752209D6
     path: scripts/run-dev-stack.auth.cjs
-    contentHash: 4e88b19b22be8415babe54ee97fec32bb8f40942fb85d8683377f3cacbe09926
+    contentHash: c7b77c361c0f770e53cd4b7aeee085e5efc9b91ea71ef768c297541a891222b2
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: 04f59de6e970d3dba295e59516f51710354ec5cb2cf443fb2852c4bcc94a5155
+    stateFingerprint: 5bb01deffa2aeb01f029ddce8ba0857ad8b1250ba52bdd7236cc10cf965b56c5
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-CI-GOVERNANCE-ROOT
     owningUnit: SYS-CI-GOVERNANCE-ROOT
   - fileId: F-DEF8B571A2CC
     path: scripts/run-dev-stack.auth.test.cjs
-    contentHash: 7d7a164737c915c2fbb0b9e2a096f4c19dc8ff71e2773924f9014fe1645e1242
+    contentHash: ed61e867156190511d2d99a85b180eae280d7885b24169ed543eb1d122be3521
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: 6048d585d7bb29abfcdc364c7a16595caf4949e1c1a141f34505106bb5019a90
+    stateFingerprint: 6cbb9063618bd191a04dd765115d900ccc59d1453305d09f75a86dee7516e4cf
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-CI-GOVERNANCE-ROOT

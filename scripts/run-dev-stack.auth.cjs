@@ -27,6 +27,7 @@ const LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS = Object.freeze([
   'run:retry',
   'workspace:graph-draft:view',
   'workspace:graph-draft:save',
+  'workspace:files:view',
 ]);
 
 let joseModulePromise;

@@ -49,9 +49,10 @@ test('shouldBootstrapLocalProtectedRuntimeAuth only when the protected-runtime O
   );
 });
 
-test('local protected-runtime tenant actions include workspace graph draft read and write', () => {
+test('local protected-runtime tenant actions include workspace graph draft and file reads', () => {
   assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:graph-draft:view'));
   assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:graph-draft:save'));
+  assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:files:view'));
 });
 
 test('startLocalProtectedRuntimeAuth provides OIDC env and a bearer token for the coordinated dev stack', async () => {
