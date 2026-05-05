@@ -19836,9 +19836,9 @@ files:
     owningUnit: SYS-PLANSTORE-DOCS-RISK
   - fileId: F-C7194880ACC5
     path: docs/evidence/ed-20260503-canvas-happy-path-draggable-proof.md
-    contentHash: ea8dd333b145c440ce0c8dadccc50dd74caadba1cc2f24d7b7c54835ea221470
+    contentHash: 138ec3bc9ad4fbf0262d4901699d8f495a8daf38495c4f3af22cda41aaeee819
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: b32bf6d5178c7f19d2d47c3aa03a4e2c2afa518a6dedacd39f61f61b722fb577
+    stateFingerprint: bb882dc2bd3a4461ad980d6b5fe53b3906283718ff9fbdcc2f08f7e8d7518d0a
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
