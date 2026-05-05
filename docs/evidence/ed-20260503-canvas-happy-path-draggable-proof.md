@@ -5,6 +5,10 @@ date: 2026-05-03
 owners:
   - web
   - frontend-and-ui
+arc_level: ARC-1
+breaking: false
+code_refs:
+  - apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
 evidence:
   tests:
     - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts
