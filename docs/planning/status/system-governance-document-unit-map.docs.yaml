@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files docs
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-documentCount: 1479
+documentCount: 1482
 documents:
   - path: docs/CONTRIBUTING.md
     classification: governs unit
@@ -4704,6 +4704,11 @@ documents:
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-WEB
   - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-WEB
+  - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/source-import-provider-extensibility-debt-plan-20260503.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -5504,6 +5509,16 @@ documents:
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-DOCS-GOVERNANCE
   - path: docs/planning/reviews/architecture-and-governance/20260504-internal-alpha-evolution-route.md
+    classification: tracks drift
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260505-alpha-evolution-route-v3-critique.md
+    classification: tracks drift
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260505-internal-alpha-architecture-view-review.md
     classification: tracks drift
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-DOCS-GOVERNANCE

@@ -16,6 +16,14 @@ The governing analysis and implementation plan live in:
 - `docs/architecture/components/web/code-workbench-workspace-files-component.md`
 - `docs/architecture/components/web/code-workbench-workspace-files-user-stories.md`
 
+Route-level alpha context now lives outside this child-slice manifest:
+
+- `docs/planning/proposals/mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md`
+- `docs/planning/reviews/architecture-and-governance/20260504-internal-alpha-evolution-route.md`
+
+This proposal remains the implementation authority only for the workspace-files
+child slice.
+
 ```feature-mechanization
 version: 1
 featureId: CODE-WORKBENCH-WORKSPACE-FILES
@@ -64,7 +72,6 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/code-workbench-workspace-files-user-stories.md
   - docs/planning/proposals/mandatory/frontend-and-ux/code-workbench-workspace-files-query-rail-plan-20260504.md
   - docs/planning/reviews/architecture-and-governance/20260504-dvt-deep-architectural-review.md
-  - docs/planning/reviews/architecture-and-governance/20260504-internal-alpha-evolution-route.md
 forbiddenImplementationSurfaces:
   - packages/**
   - specs/**
