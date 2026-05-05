@@ -1,20 +1,23 @@
-FROM node:22-alpine AS deps
+# Build from the repository root:
+# docker build -f apps/api/Dockerfile .
+FROM node:22-alpine AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
 WORKDIR /app
-COPY package.json ./
-RUN npm i
+RUN corepack enable
 
-FROM node:22-alpine AS build
+FROM base AS build
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY tsconfig.json ./
-COPY src ./src
-RUN npm run build
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig*.json ./
+COPY scripts ./scripts
+COPY packages ./packages
+COPY apps/api ./apps/api
+RUN pnpm install --frozen-lockfile --filter dvt-api...
+RUN pnpm --filter dvt-api build
 
-FROM node:22-alpine
+FROM base
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=build /app/dist ./dist
-COPY package.json ./
-COPY --from=deps /app/node_modules ./node_modules
+COPY --from=build /app ./
 EXPOSE 3000
-CMD ["npm", "run", "start"]
+CMD ["pnpm", "--filter", "dvt-api", "start"]

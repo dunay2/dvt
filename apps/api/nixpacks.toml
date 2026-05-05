@@ -1,13 +1,13 @@
 # Railway uses Nixpacks by default for Node projects.
-# This file makes build/start explicit and stable.
+# Build this service from the repository root so workspace dependencies resolve.
 [phases.setup]
-nixPkgs = ["nodejs_22"]
+nixPkgs = ["nodejs_22", "pnpm"]
 
 [phases.install]
-cmds = ["npm ci"]
+cmds = ["corepack enable", "pnpm install --frozen-lockfile --filter dvt-api..."]
 
 [phases.build]
-cmds = ["npm run build"]
+cmds = ["pnpm --filter dvt-api build"]
 
 [start]
-cmd = "npm run start"
+cmd = "pnpm --filter dvt-api start"

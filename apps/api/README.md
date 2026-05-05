@@ -49,11 +49,28 @@ pnpm --filter dvt-api dev
 
 ## Deploy notes
 
+`dvt-api` is a monorepo workspace package. Deploy from the repository root so
+`workspace:*` dependencies resolve through `pnpm`.
+
+Canonical commands:
+
+```bash
+pnpm install --frozen-lockfile --filter dvt-api...
+pnpm --filter dvt-api build
+pnpm --filter dvt-api start
+```
+
 ### Railway
 
 1. Push the repo to GitHub.
-2. Create a new Railway project from the repository.
-3. Set environment variables:
+2. Create a new Railway project from the repository root.
+3. Use the repo-root build/start posture from `apps/api/nixpacks.toml`, or set
+   equivalent custom commands:
+
+- build: `pnpm install --frozen-lockfile --filter dvt-api... && pnpm --filter dvt-api build`
+- start: `pnpm --filter dvt-api start`
+
+1. Set environment variables:
 
 - `NODE_ENV=production`
 - `LOG_LEVEL=info`
@@ -65,8 +82,13 @@ Railway injects `PORT` automatically.
 ### Render
 
 1. Push the repo to GitHub.
-2. Create a new Web service in Render from this repository.
-3. Configure environment variables using `.env.example` as the baseline:
+2. Create a new Web service in Render from the repository root.
+3. Set commands:
+
+- build: `pnpm install --frozen-lockfile --filter dvt-api... && pnpm --filter dvt-api build`
+- start: `pnpm --filter dvt-api start`
+
+1. Configure environment variables using `.env.example` as the baseline:
 
 - `NODE_ENV=production`
 - `LOG_LEVEL=info`
@@ -75,6 +97,15 @@ Railway injects `PORT` automatically.
 
 Render injects `PORT` automatically and commonly uses `HOST=0.0.0.0`.
 
+### Docker
+
+Build from the repository root so the image can resolve workspace packages:
+
+```bash
+docker build -f apps/api/Dockerfile -t dvt-api .
+docker run --rm -p 3000:3000 --env-file apps/api/.env dvt-api
+```
+
 ## Health checks
 
 - liveness: `/healthz`
@@ -82,5 +113,6 @@ Render injects `PORT` automatically and commonly uses `HOST=0.0.0.0`.
 
 ## Notes
 
-- `nixpacks.toml` pins the Railway build and start posture.
+- `nixpacks.toml` pins the Railway build and start posture to repo-root
+  `pnpm` commands.
 - TypeScript is strict and local docs for subcomponents live under `apps/api/docs/`.
