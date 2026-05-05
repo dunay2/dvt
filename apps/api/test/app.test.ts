@@ -18,17 +18,20 @@ function expectNoNpmCommand(text: string): void {
 describe('dvt-api deployment command posture', () => {
   it('keeps deploy entrypoints on monorepo pnpm commands', () => {
     const procfile = readApiDeployFile('../Procfile');
-    const nixpacks = readApiDeployFile('../nixpacks.toml');
+    const rootNixpacks = readApiDeployFile('../../../nixpacks.toml');
+    const apiNixpacks = readApiDeployFile('../nixpacks.toml');
     const dockerfile = readApiDeployFile('../Dockerfile');
 
     expect(procfile).toContain('pnpm');
     expect(procfile).toContain('--filter dvt-api start');
     expectNoNpmCommand(procfile);
 
-    expect(nixpacks).toContain('pnpm install --frozen-lockfile --filter dvt-api...');
-    expect(nixpacks).toContain('pnpm --filter dvt-api build');
-    expect(nixpacks).toContain('pnpm --filter dvt-api start');
-    expectNoNpmCommand(nixpacks);
+    for (const nixpacks of [rootNixpacks, apiNixpacks]) {
+      expect(nixpacks).toContain('pnpm install --frozen-lockfile --filter dvt-api...');
+      expect(nixpacks).toContain('pnpm --filter dvt-api build');
+      expect(nixpacks).toContain('pnpm --filter dvt-api start');
+      expectNoNpmCommand(nixpacks);
+    }
 
     expect(dockerfile).toContain('corepack enable');
     expect(dockerfile).toContain('tsconfig*.json');

@@ -4,7 +4,7 @@ generatedFrom:
   - docs/planning/status/system-governance-component-index.components.yaml
 shardDirectory: docs/planning/status/governance-components
 componentCount: 32
-fileCount: 4245
+fileCount: 4246
 components:
   - id: SYS-ADAPTERS-ROOT
     path: docs/planning/status/governance-components/SYS-ADAPTERS-ROOT.component-files.yaml
@@ -171,10 +171,10 @@ components:
     contentHash: 921ab5c7caa9f5ed9f061513a84192bdf155c79d5b8f66af044563f6968b28ab
   - id: SYS-REPO-METADATA-ROOT
     path: docs/planning/status/governance-components/SYS-REPO-METADATA-ROOT.component-files.yaml
-    fileCount: 117
+    fileCount: 118
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 85ebdc2ce7abc46350bfb36936e8f28b5cc99099272d7b225985546a7eb7f194
+    contentHash: d4de35ea3a12aa19c3b39d2f77c8394f8c2fe77afb03da8e9259b18c8e9ff2a6
   - id: SYS-RUNTIME-ROOT
     path: docs/planning/status/governance-components/SYS-RUNTIME-ROOT.component-files.yaml
     fileCount: 286

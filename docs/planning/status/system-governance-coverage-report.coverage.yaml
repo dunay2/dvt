@@ -3,8 +3,8 @@ generatedFrom:
   - docs/planning/status/system-governance-file-index.files.yaml
   - docs/planning/status/system-governance-component-index.components.yaml
 totals:
-  files: 4245
-  governedFiles: 4245
+  files: 4246
+  governedFiles: 4246
   ungovernedFiles: 0
   driftFiles: 41
   legacyFiles: 0
@@ -22,12 +22,12 @@ ciPosture:
     - legacyFiles records removal targets until owning work removes them
 byRootUnit:
   - name: SYS-DVT
-    count: 4245
+    count: 4246
 byDomainUnit:
   - name: SYS-ADAPTERS
     count: 196
   - name: SYS-DVT
-    count: 3466
+    count: 3467
   - name: SYS-OBSERVABILITY
     count: 15
   - name: SYS-PLANSTORE
@@ -90,7 +90,7 @@ byComponentUnit:
   - name: SYS-PLANSTORE-TEMPORAL-COMPOSITION
     count: 11
   - name: SYS-REPO-METADATA-ROOT
-    count: 117
+    count: 118
   - name: SYS-RUNTIME-ROOT
     count: 286
   - name: SYS-TRACEABILITY-ROOT
@@ -101,7 +101,7 @@ byComponentUnit:
     count: 103
 byStatus:
   - name: canonical
-    count: 117
+    count: 118
   - name: coverage-required
     count: 4005
   - name: drift
@@ -114,17 +114,17 @@ byGovernanceState:
   - name: drift
     count: 41
   - name: governed
-    count: 117
+    count: 118
   - name: review
     count: 82
 byCanonicalRole:
   - name: implementation-owner
-    count: 117
+    count: 118
   - name: none
     count: 4128
 byEvidenceState:
   - name: classification-only
-    count: 117
+    count: 118
   - name: coverage-required
     count: 4005
   - name: remediation-required
@@ -141,7 +141,7 @@ byDddOwner:
   - name: ENTRY
     count: 918
   - name: INFRA
-    count: 2262
+    count: 2263
   - name: PORT
     count: 199
 governanceDocuments:
@@ -167,9 +167,9 @@ governanceDocuments:
   - path: docs/contracts/index.md
     fileCount: 127
   - path: package.json
-    fileCount: 117
+    fileCount: 118
   - path: pnpm-workspace.yaml
-    fileCount: 117
+    fileCount: 118
   - path: docs/contracts/planner/index.md
     fileCount: 76
   - path: docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
@@ -317,7 +317,7 @@ componentCoverage:
     evidenceState: classification-only
     dddOwner: INFRA
     cqRails: none - repository metadata
-    fileCount: 117
+    fileCount: 118
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -976,7 +976,7 @@ findings:
       status: coverage-required
       dddOwner: PORT
     - id: SYS-REPO-METADATA-ROOT
-      fileCount: 117
+      fileCount: 118
       status: canonical
       dddOwner: INFRA
     - id: SYS-WORKERS-ROOT

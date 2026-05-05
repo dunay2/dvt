@@ -141,9 +141,9 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-80AA08DF329D
     pathHash: f31c38bd147e62b7aa7626a55473f43274f02778706a2572a6553e86a94041ef
-    contentHash: 9352cb97d21c87bf73b7ec4da1f48c5b06f3f54b2ec150f2f5eabc518c485d42
+    contentHash: 7fda470c1fe175eb8de9fde2ae3e0ec6640592534309bf9f66b73dccc9480321
     governanceHash: a2b44182281a0cb85047c82c32eb5b7971f481f8a2fe031dd88ab4bf0a449af3
-    stateFingerprint: 733a95463711d499cf6575ff1726b5a086594f89412122c84624909f08e16847
+    stateFingerprint: 3aedd156988c7022a8e1be6b0f177b32751f36c046b4f1d7173c302b6be77984
     path: apps/api/README.md
     owningUnit: SYS-API-REPO-CONFIG
     rootUnit: SYS-DVT
@@ -573,9 +573,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-5E334BA6055A
     pathHash: b07ba2b68550b195dc2fa335931f182a22b712df7855875f24ce1c2229c10a43
-    contentHash: b7884a8ebcb91e31f5851cf43778e9e438b1f2265de68ef510f3096886f4de47
+    contentHash: 59c542af6159f33e4bd24ab98c19f44368152cdfaaae57773b92a94e8f4be203
     governanceHash: a2b44182281a0cb85047c82c32eb5b7971f481f8a2fe031dd88ab4bf0a449af3
-    stateFingerprint: ccb38861635dfd2b27d2d13cb4927dfdf1e5a6aa0fe016c199b21423d051490d
+    stateFingerprint: 89355176c137a69a6aa940fc2bae98a8e9647947fc593e13bbc7b2a85ead0f71
     path: apps/api/nixpacks.toml
     owningUnit: SYS-API-REPO-CONFIG
     rootUnit: SYS-DVT
@@ -6953,9 +6953,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-3EC198DA9D3E
     pathHash: 8d739a1c4f26096db70de7330af547e193a8779d92b99d5b021b472fcfaa64b0
-    contentHash: 4bc3c6e692fd2cf8ce1dd80df05316c957ece64e7226027495690163e7db9716
+    contentHash: 4c6843632d10b982a8cd157325d7fdaa052a65aa39fb4ac0c9d69be060914b9b
     governanceHash: c689088998e690c4fa4111c9fed8b3b010bc43c35045201ed844a73b327d3b31
-    stateFingerprint: 0dddff9762af65a2c4f1af704628a1a22aa76947b9e4691a36ab1f8887d47767
+    stateFingerprint: 8d35b0ea907983beed35e57b3ecc77e18e3b4f1968052b0cf437721632f3577d
     path: apps/api/test/app.test.ts
     owningUnit: SYS-API-TESTS
     rootUnit: SYS-DVT

@@ -21,6 +21,7 @@ repo-root `pnpm` commands instead of isolated `npm` commands.
 In scope:
 
 - `apps/api/Procfile`;
+- root `nixpacks.toml`;
 - `apps/api/nixpacks.toml`;
 - `apps/api/Dockerfile`;
 - `apps/api/README.md`;
@@ -46,7 +47,8 @@ posture.
 
 ## Acceptance
 
-- `Procfile`, `nixpacks.toml`, and `Dockerfile` use `pnpm` monorepo commands.
+- `Procfile`, root `nixpacks.toml`, API service `nixpacks.toml`, and
+  `Dockerfile` use `pnpm` monorepo commands.
 - README deployment instructions match executable config.
 - API tests fail if deploy config regresses to `npm run`, `npm ci`, or `npm i`
   as standalone commands.
@@ -73,6 +75,7 @@ governingSources:
 allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/runtime-and-contracts/api-deploy-start-posture-plan-20260505.md
   - docs/planning/closeouts/20260505-api-deploy-start-posture-closeout.md
+  - nixpacks.toml
   - apps/api/Procfile
   - apps/api/nixpacks.toml
   - apps/api/Dockerfile
@@ -118,6 +121,7 @@ redGreenCycles:
     expectedFailure: New deploy posture guard detects apps/api/Procfile still using npm run start.
     patchSurfaces:
       - apps/api/test/app.test.ts
+      - nixpacks.toml
       - apps/api/Procfile
       - apps/api/nixpacks.toml
       - apps/api/Dockerfile

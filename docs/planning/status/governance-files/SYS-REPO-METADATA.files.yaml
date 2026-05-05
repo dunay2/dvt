@@ -2,7 +2,7 @@ version: 1
 shardId: SYS-REPO-METADATA
 generatedFrom: git ls-files plus untracked non-ignored local files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-fileCount: 117
+fileCount: 118
 files:
   - fileId: F-7C0FAC63D273
     pathHash: 16228f9cd18f5479d183ab61cb01d3cfc66645b3053a3d23dd9aef2069c3410a
@@ -2740,6 +2740,32 @@ files:
     governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
     stateFingerprint: ac10732ebb932bb7cc5f8f4f58e889907f21b4d7548d6d4de78b3e9074ecd04d
     path: infra/prototypes/api/tsconfig.json
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
+  - fileId: F-3326ECFA4B7A
+    pathHash: a42f7d5d2ca002f3ccd300f4f76d79024f7dab89f4059a2f29740e6b47e2d46e
+    contentHash: aae9323d7f7dddfa98e9452e9380dace8a8cfa5ec3a335a45cd5ef09340c446a
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: d2e3bfa8d7e99f4549e7c8e6fa2cdd6a7b27ff731b6b78afedaed0dd6d734afe
+    path: nixpacks.toml
     owningUnit: SYS-REPO-METADATA-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT

@@ -64,8 +64,9 @@ pnpm --filter dvt-api start
 
 1. Push the repo to GitHub.
 2. Create a new Railway project from the repository root.
-3. Use the repo-root build/start posture from `apps/api/nixpacks.toml`, or set
-   equivalent custom commands:
+3. Use the repository-root `nixpacks.toml`; Railway/Nixpacks applies it from
+   the app root. `apps/api/nixpacks.toml` is kept aligned for explicit
+   service-directory configuration. If custom commands are required, use:
 
 - build: `pnpm install --frozen-lockfile --filter dvt-api... && pnpm --filter dvt-api build`
 - start: `pnpm --filter dvt-api start`
@@ -115,4 +116,6 @@ docker run --rm -p 3000:3000 --env-file apps/api/.env dvt-api
 
 - `nixpacks.toml` pins the Railway build and start posture to repo-root
   `pnpm` commands.
+- `apps/api/nixpacks.toml` mirrors the root Nixpacks config for platforms that
+  are explicitly pointed at the API service directory.
 - TypeScript is strict and local docs for subcomponents live under `apps/api/docs/`.

@@ -29,8 +29,8 @@ Upstream indexes:
 
 ## Totals
 
-- Files: 4245
-- Governed files: 4245
+- Files: 4246
+- Governed files: 4246
 - Ungoverned files: 0
 - Drift files: 41
 - Legacy files: 0
@@ -49,7 +49,7 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Root unit | Files |
 | --- | ---: |
-| `SYS-DVT` | 4245 |
+| `SYS-DVT` | 4246 |
 <!-- prettier-ignore-end -->
 
 ## By Domain Unit
@@ -58,7 +58,7 @@ Upstream indexes:
 | Domain unit | Files |
 | --- | ---: |
 | `SYS-ADAPTERS` | 196 |
-| `SYS-DVT` | 3466 |
+| `SYS-DVT` | 3467 |
 | `SYS-OBSERVABILITY` | 15 |
 | `SYS-PLANSTORE` | 112 |
 | `SYS-RUNTIME` | 286 |
@@ -75,7 +75,7 @@ Upstream indexes:
 | `AS` | 471 |
 | `DS` | 144 |
 | `ENTRY` | 918 |
-| `INFRA` | 2262 |
+| `INFRA` | 2263 |
 | `PORT` | 199 |
 <!-- prettier-ignore-end -->
 
@@ -84,7 +84,7 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Status | Files |
 | --- | ---: |
-| `canonical` | 117 |
+| `canonical` | 118 |
 | `coverage-required` | 4005 |
 | `drift` | 41 |
 | `review` | 82 |
@@ -97,7 +97,7 @@ Upstream indexes:
 | --- | ---: |
 | `coverage-required` | 4005 |
 | `drift` | 41 |
-| `governed` | 117 |
+| `governed` | 118 |
 | `review` | 82 |
 <!-- prettier-ignore-end -->
 
@@ -106,7 +106,7 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Canonical role | Files |
 | --- | ---: |
-| `implementation-owner` | 117 |
+| `implementation-owner` | 118 |
 | `none` | 4128 |
 <!-- prettier-ignore-end -->
 
@@ -115,7 +115,7 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Evidence state | Files |
 | --- | ---: |
-| `classification-only` | 117 |
+| `classification-only` | 118 |
 | `coverage-required` | 4005 |
 | `remediation-required` | 41 |
 | `review-required` | 82 |
@@ -188,7 +188,7 @@ Upstream indexes:
 | `SYS-ADAPTERS-ROOT` | 196 | `coverage-required` | `ADP` |
 | `SYS-CI-GOVERNANCE-ROOT` | 182 | `coverage-required` | `INFRA` |
 | `SYS-CONTRACTS-ROOT` | 127 | `coverage-required` | `PORT` |
-| `SYS-REPO-METADATA-ROOT` | 117 | `canonical` | `INFRA` |
+| `SYS-REPO-METADATA-ROOT` | 118 | `canonical` | `INFRA` |
 | `SYS-WORKERS-ROOT` | 103 | `coverage-required` | `AS` |
 | `SYS-PLANNER-ROOT` | 76 | `coverage-required` | `DS` |
 | `SYS-TRACEABILITY-ROOT` | 67 | `coverage-required` | `DS` |
@@ -217,8 +217,8 @@ Upstream indexes:
 | `docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md` | 238 |
 | `docs/architecture/command-query-rail-governance.md` | 173 |
 | `docs/contracts/index.md` | 127 |
-| `package.json` | 117 |
-| `pnpm-workspace.yaml` | 117 |
+| `package.json` | 118 |
+| `pnpm-workspace.yaml` | 118 |
 | `docs/contracts/planner/index.md` | 76 |
 | `docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md` | 67 |
 | `docs/architecture/reference-architecture.md` | 55 |

@@ -43,7 +43,9 @@ operational drift, not runtime behavior.
 - Keep deployment files as-is and document commands only in the README.
   Rejected because the executable config would keep advertising stale `npm`
   behavior.
-- Convert deploy config to monorepo-root `pnpm --filter dvt-api ...` commands.
+- Convert deploy config to monorepo-root `pnpm --filter dvt-api ...` commands
+  and place the automatic Nixpacks config at the repository root used by
+  Railway root builds.
   Selected because it matches the existing package scripts and validation
   model.
 - Change API runtime code or database pool behavior in the same slice.
@@ -58,7 +60,9 @@ caught by the API test suite.
 
 ### Rejected alternatives
 
-- Add root-level deploy files in this round.
+- Rely only on `apps/api/nixpacks.toml` for Railway root builds.
+  Rejected because Nixpacks auto-loads `nixpacks.toml` from the app root unless
+  a config override is explicitly supplied.
 - Change protected runtime readiness, health, auth, or database pool behavior.
 - Touch contracts, adapters, or engine packages.
 
@@ -71,6 +75,7 @@ caught by the API test suite.
   - add a focused API test guard for deploy config drift
 - Touched files or paths:
   - `apps/api/Procfile`
+  - `nixpacks.toml`
   - `apps/api/nixpacks.toml`
   - `apps/api/Dockerfile`
   - `apps/api/README.md`
@@ -118,7 +123,8 @@ caught by the API test suite.
 | File                                                                                                | Change                                                                                                                                                         | Why                                                                                                        |
 | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | `apps/api/Procfile`                                                                                 | Replaced `npm run start` with `pnpm --filter dvt-api start`.                                                                                                   | Keep platform start command aligned with the monorepo package manager.                                     |
-| `apps/api/nixpacks.toml`                                                                            | Replaced `npm ci`, `npm run build`, and `npm run start` with repo-root `pnpm` commands.                                                                        | Railway/Nixpacks must build the workspace package through the same command posture used locally and in CI. |
+| `nixpacks.toml`                                                                                     | Added the root Nixpacks config with repo-root `pnpm` install, build, and start commands.                                                                       | Railway/Nixpacks root builds auto-load config from the app root, so the executable config must live there. |
+| `apps/api/nixpacks.toml`                                                                            | Replaced `npm ci`, `npm run build`, and `npm run start` with repo-root `pnpm` commands and kept it aligned with the root config.                               | Explicit service-directory Nixpacks config must use the same command posture as root deployment.           |
 | `apps/api/Dockerfile`                                                                               | Reworked the image build to use repo-root context, `corepack`, filtered `pnpm install`, copied root `tsconfig*.json`, and `pnpm --filter dvt-api build/start`. | The API depends on `workspace:*` packages and cannot be built as an isolated `npm` package.                |
 | `apps/api/README.md`                                                                                | Documented repo-root deployment commands for Railway, Render, and Docker.                                                                                      | Make the operator path match the executable config.                                                        |
 | `apps/api/test/app.test.ts`                                                                         | Added a deploy command posture guard.                                                                                                                          | Prevent regressions back to stale isolated `npm` deployment commands.                                      |

@@ -1,5 +1,5 @@
-# Service-directory Nixpacks deployments can use this file explicitly.
-# Keep this aligned with the repository-root nixpacks.toml.
+# Railway and root-context Nixpacks deployments use this file automatically.
+# Keep this aligned with apps/api/nixpacks.toml.
 [phases.setup]
 nixPkgs = ["nodejs_22", "pnpm"]
 
