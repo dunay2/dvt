@@ -27835,18 +27835,18 @@ files:
     owningUnit: SYS-PLANSTORE-DOCS-RISK
   - fileId: F-F36907BA18F7
     path: docs/planning/status/system-governance-remediation-queue-20260502.md
-    contentHash: 6a94e9fbf2f8e06d68dbb9b6830c8c602b74a8ba5899b74b82cd2624892c3672
+    contentHash: 155df0c5bb56c1fa6fcb09467a4fc71c2f12f86859f0aef0e079892d70074c66
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 77607e1f1c3c807ffcb92936e774198b3ba14f60d36597bae42665f23711350e
+    stateFingerprint: beb9eab018aad88d876002ade5762e821f0604871bb09a5375eb2e5b3fcb8344
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-E5771D91E8FF
     path: docs/planning/status/system-governance-remediation-queue.queue.yaml
-    contentHash: e27163135317c35c8614dcef2f3eed94b6b1ae2906f254f6bac058967aae1bfb
+    contentHash: 563c3548ba474d2e9d9aef34cf7e9cf500049a45bb254b8d6e9b7ca6113e152d
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 30e1b056defb6d1459a985b8c323a14f1dabd6b8f5ad98037cacaac8d6af9567
+    stateFingerprint: 38195816d919a922b7ca8a58518ea0ccc5b24f965303af216c2768ab1ead94ec
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
