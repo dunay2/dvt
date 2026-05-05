@@ -66,10 +66,11 @@ flowchart LR
 ```
 
 Current implementation has a real executable rail catalog and an architecture
-test that binds the catalog to the route inventory. The remaining architecture
-risk is documentation source-of-truth drift: manual component and planning
-tables can diverge from the executable catalog even when each local file still
-looks coherent.
+test that binds the catalog to the route inventory. Before this closure slice,
+the primary architecture risk was documentation source-of-truth drift: manual
+component and planning tables could diverge from the executable catalog even
+when each local file still looked coherent. That risk is now mitigated by the
+catalog-owned rail model, component-doc binding, and architecture test guard.
 
 ## Target State
 

@@ -13871,9 +13871,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-883D6CB88D1A
     path: docs/architecture/components/api/protected-runtime-command-query-rail-design.md
-    contentHash: 315ef5f7d23d10e5d3c714ba1ecb0c3a897592838648ef4c451a88ccd9fbf02d
+    contentHash: f141d98aabaf8c16ddba08468e957ce436467c632261cfda33e4a8aadf6f0410
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 380dcbd12cd9630b14ff08a801cf8cdfaca2d9ed36f9d4bb00e51da34926427e
+    stateFingerprint: 6d2964c9195f37510893b4e0e56eb06729ec28fe35b73554c160c509871d9759
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
