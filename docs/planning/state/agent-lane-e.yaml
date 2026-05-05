@@ -3186,20 +3186,20 @@ verification_summary:
     authority, with explicit Lane C dependencies for protected runtime route governance and
     graph-draft persistence. `F-28` now records the Canvas workbench shell/save/export sequence as a
     separate product-planning slice so it does not collide with the internal alpha route gate.
-    `TF-E2` is now the active production-authoring follow-up that freezes
-    canonical node, edge, property, and reload expectations before implementation. The 2026-04-23
-    update first added `TF-E2-E-A..D` to isolate the remaining selected-closure UX proof gaps and
-    then added `TF-E2-K` to freeze the missing host prerequisite above those proofs: workspace
-    playground, multi-canvas tabs, typed canvas kinds, and a real create-canvas/create-first-node
-    route before browser end-to-end claims are treated as credible. The full `TF-E2-K` host family
-    is now closed through `TF-E2-K-I`: typed host cycles, preview/run continuation,
-    blocked/read-only posture, and authoritative first-canvas lifecycle proof now have accepted
-    closeouts. `TF-E2-POL` is also closed as the accepted runtime-policy boundary route: command
-    posture, admission, execution availability, Inspector editability, and plugin projections now
-    consume one policy boundary. The 2026-04-29 browser review added `TF-E2-M` as the live Canvas
-    operability backlog that converts accepted front stories into visible UI proof, starting with
-    the protected-runtime dev-auth freshness blocker and the fifth bootstrap-step diagnostics. The
-    next active prerequisite before browser proof work can credibly resume is the selected-closure
-    UX/browser lane under `TF-E2-E`, after `TF-E2-M-A` restores authenticated local Canvas
-    operation. The summary values were recomputed from the current task registry on 2026-05-01 to
-    realign the YAML with the actual lane contents.
+    `TF-E2` is now the active production-authoring follow-up that freezes canonical node, edge,
+    property, and reload expectations before implementation. The 2026-04-23 update first added
+    `TF-E2-E-A..D` to isolate the remaining selected-closure UX proof gaps and then added `TF-E2-K`
+    to freeze the missing host prerequisite above those proofs: workspace playground, multi-canvas
+    tabs, typed canvas kinds, and a real create-canvas/create-first-node route before browser
+    end-to-end claims are treated as credible. The full `TF-E2-K` host family is now closed through
+    `TF-E2-K-I`: typed host cycles, preview/run continuation, blocked/read-only posture, and
+    authoritative first-canvas lifecycle proof now have accepted closeouts. `TF-E2-POL` is also
+    closed as the accepted runtime-policy boundary route: command posture, admission, execution
+    availability, Inspector editability, and plugin projections now consume one policy boundary. The
+    2026-04-29 browser review added `TF-E2-M` as the live Canvas operability backlog that converts
+    accepted front stories into visible UI proof, starting with the protected-runtime dev-auth
+    freshness blocker and the fifth bootstrap-step diagnostics. The next active prerequisite before
+    browser proof work can credibly resume is the selected-closure UX/browser lane under `TF-E2-E`,
+    after `TF-E2-M-A` restores authenticated local Canvas operation. The summary values were
+    recomputed from the current task registry on 2026-05-01 to realign the YAML with the actual lane
+    contents.
