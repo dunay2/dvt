@@ -1470,10 +1470,15 @@ dependency_notes:
     `TF-C4` is the protected workspace graph-draft follow-up. It depends on `TF-A2` for the shared
     contract freeze and on the `read-your-writes contract` for caller-visible freshness so Lane E
     adopts a real backend-owned write path instead of continuing on UI-local persistence.
+  - >-
+    `F-27` in Lane E is the internal alpha route consumer for Lane C runtime safety inputs. Lane C
+    does not own route UI completion, but alpha cannot close plan/run readiness, Canvas draft
+    recovery, or protected route authorization until `AR-C10` and `TF-C4` expose the needed rail,
+    denial, freshness, and degraded-mode vocabulary.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-23'
+  verified_on: '2026-05-05'
   total_tasks: 50
   total_effort_points: 183
   completed_weighted_points: 158.15
@@ -1490,4 +1495,6 @@ verification_summary:
     `RunExecutionContext` resolver slice plus adapter-temporal DBT seam and fixture hardening, while
     production plugin-host composition still remains open. `TF-C4` reserves the protected workspace
     graph-draft read/write boundary so backend-owned persistence is a blocking dependency for
-    `TF-E2` instead of an implicit future assumption.
+    `TF-E2` instead of an implicit future assumption. `F-27` now names the internal alpha route as a
+    Lane E consumer of Lane C rail, authorization, freshness, and degraded-mode vocabulary rather
+    than a new Lane C UI task.

@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - documentation governance
 childrenRequired: true
-fileCount: 1737
+fileCount: 1740
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -8924,6 +8924,14 @@ files:
     isDrift: false
     isLegacy: false
   - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md
+    fileId: F-FC394409A3BE
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/source-import-provider-extensibility-debt-plan-20260503.md
     fileId: F-7FB5ECA7FE1D
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -10194,6 +10202,22 @@ files:
     isLegacy: false
   - path: docs/planning/reviews/architecture-and-governance/20260504-internal-alpha-evolution-route.md
     fileId: F-F1BC07018193
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260505-alpha-evolution-route-v3-critique.md
+    fileId: F-FB43D3793603
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/planning/reviews/architecture-and-governance/20260505-internal-alpha-architecture-view-review.md
+    fileId: F-FCDFA4C5938E
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

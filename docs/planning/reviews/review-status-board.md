@@ -2,7 +2,7 @@
 title: Review Status Board
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-29
+last_reviewed: 2026-05-05
 planning_type: review
 ---
 
@@ -56,6 +56,27 @@ Sprint execution board:
 | [20260422 Environment configuration audit](./ci-and-delivery/20260422-environment-configuration-audit-review.md)                                  | `ci-and-delivery`                 | current monorepo environment and tooling audit baseline | `none`                                     | reference        | `n/a`              |
 
 Additional active rationale:
+
+- [20260504 Internal alpha product route review](./architecture-and-governance/20260504-internal-alpha-evolution-route.md)
+  - domain: `architecture-and-governance`
+  - role: current route-level alpha gate review covering startup, context, Canvas, Code, plan/run readiness, recovery, risk, and cadence
+  - linkage: `F-27`, `AR-C10`, `TF-C4`, `TF-E2-M`
+  - status: `review`
+  - progress: `15%`
+
+- [20260505 Internal alpha architecture view review](./architecture-and-governance/20260505-internal-alpha-architecture-view-review.md)
+  - domain: `architecture-and-governance`
+  - role: architecture boundary lens for F-27 covering route, rail, state, evidence, and risk posture without creating a parallel backlog
+  - linkage: `F-27`, `AR-C10`, `TF-C4`, `TF-E2-M`
+  - status: `review`
+  - progress: `15%`
+
+- [20260505 Alpha route v3 critique](./architecture-and-governance/20260505-alpha-evolution-route-v3-critique.md)
+  - domain: `architecture-and-governance`
+  - role: accepted source-grounded intake absorbed by the internal alpha route review and route plan
+  - linkage: `F-27`
+  - status: `accepted`
+  - progress: `100%`
 
 - [20260422 Canvas component governance follow-up review](./architecture-and-governance/20260422-canvas-component-governance-follow-up-review.md)
   - domain: `architecture-and-governance`
