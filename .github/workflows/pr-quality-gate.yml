@@ -188,6 +188,12 @@ jobs:
           == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:governance:remediation-queue:check
 
+      - name: ADR-0000 traceability gate
+        if:
+          github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
+          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+        run: pnpm traceability:adr0
+
       - name: Validate governed changed files
         if: github.event_name == 'pull_request'
         run: pnpm docs:governance:changed-files:check

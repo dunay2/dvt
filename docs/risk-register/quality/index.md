@@ -24,6 +24,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Adapter-temporal still owns DBT plugin and CLI surfaces inside the package](R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING.yaml)
 - [Admission telemetry contract drift and partial shutdown leaks](R-20260401-ADMISSION-TELEMETRY-TEARDOWN-RESILIENCE.yaml)
 - [ADR-0000 traceability gate can drift from workspace build closure](R-20260423-ADR0-TRACEABILITY-GATE-DRIFT.yaml)
+- [ADR-0000 traceability gate scope can drift from repository governance scope](R-20260505-ADR0-TRACEABILITY-GATE.yaml)
 - [API start-run transport could drift back into app-local shadow contracts](R-20260412-AR-A10-START-RUN-BOUNDARY-CONTRACT-DRIFT.yaml)
 - [AR-C2 can be overstated as complete without dashboard and alert evidence](R-20260404-AR-C2-OPERABILITY-EVIDENCE-GAP.yaml)
 - [AR-D continuation safety residual capacity tuning](r-20260430-ar-d-continuation-safety.yaml)

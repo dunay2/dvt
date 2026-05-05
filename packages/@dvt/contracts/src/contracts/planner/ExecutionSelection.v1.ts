@@ -4,6 +4,11 @@
  *
  * This contract describes operator intent only. It does not own auth,
  * compare-and-swap, audit, runtime admission, or mutable draft state.
+ *
+ * @baseline ADR-0035: Planner Public Contract Evolution Protocol
+ * @decision Keep executable-selection intent as a canonical planner contract instead of UI-local state.
+ * @consequence API, web, and planner callers share one selection vocabulary for preview and run paths.
+ * @version 1.0.0
  */
 import { z } from 'zod';
 

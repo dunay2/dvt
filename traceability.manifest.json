@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-04-23",
+  "generated": "2026-05-05",
   "repo": {
     "sha": "local"
   },
@@ -74,7 +74,7 @@
         "Section 5 — Time-skipping semantics",
         "Serialize continue-as-new cursor state explicitly from DVT workflow progress",
         "Transformation-flow verification lives outside the Temporal baseline suite",
-        "Type-check activity dependency fixtures against the DVT engine and plan-fetcher ports",
+        "Type-check activity dependency fixtures against the scoped engine-dispatch plan query",
         "Type-check workflow mapping fixtures against canonical execution plan and task queue contracts",
         "Verify workflow layer order follows resolved DVT execution segments and lifecycle guards"
       ],
@@ -112,7 +112,7 @@
         "AllowAllAuthorizer can reject instantiation in production mode via explicit constructor options",
         "Batch maintenance operations (detectStuckRuns) separated from IWorkflowEngine lifecycle",
         "Build run terminal event payloads from DVT runtime evidence instead of Temporal provider metadata",
-        "Decision - The engine contract defines run lifecycle operations as the domain's normative API",
+        "Compose facade use cases through explicit dependencies instead of a multi-reason facade module.",
         "Decision - The engine's error hierarchy encodes domain failures with stable codes",
         "Decision â€” Expose a stable public surface of the engine for orchestration decoupled from the runtime",
         "Decision — Authorization is abstracted behind a port so the engine does not depend on a specific IAM provider",
@@ -124,38 +124,52 @@
         "Decision — Provider selection is resolved in the application layer to keep runtime independence",
         "Decision — Reserve a typed core module to evolve internal semantics without exposing implementation",
         "Decision — Tenant access rejections are represented with a typed error and stable code",
-        "Decision — The Conductor provider remains behind an adapter stub until full runtime integration is completed",
-        "Decision — The Temporal provider remains encapsulated behind an adapter stub while full integration is implemented",
         "Decision — The engine exposes an abstract metrics port for observability without coupling to a specific provider",
-        "Decision — The engine resolves and delivers normalized plans to adapters via an explicit port",
-        "Decision — The mock adapter executes steps and emits canonical events to validate engine semantics without an external runtime",
         "Decision — The plan resolver defines an explicit port for fetching bytes/text under domain control",
         "Decision — The token-bucket rate limiter controls outbox write pressure per tenant in memory",
         "Define an adapter contract oriented to run-driven execution and explicit signaling",
         "Define local write/read repository ports for run events",
         "Define workflow ports and cursor contracts at the DVT boundary before Temporal-specific execution",
+        "Delegate recover-run facade input to the recovery application service.",
         "Delivery-facing port delegation remains the stable aggregate entrypoint for PostgreSQL state storage",
         "Drive Temporal layer execution from resolved DVT execution segments and canonical workflow state",
         "Emit StepStarted artifact references before executing DVT-owned step activities with explicit retry handling",
         "Engine entry-point plan integrity verification resolves the executable plan,",
-        "Extract artifact references and retry policy from execution-plan step configuration before event emission",
+        "Extract plugin-agnostic artifact references and retry policy before event emission",
         "Groups authorizer, planRefPolicy, and outboxRateLimiter into a single",
         "Implement in-memory run-state writes through event-log authority and port-owned lifecycle state",
         "In-memory intent store for unit tests; mirrors InMemoryTxStore patterns",
         "Intent errors are defined in the canonical contracts package",
+        "Isolate bundle reading, archive extraction, project discovery, and cleanup",
+        "Keep DBT CLI helper contracts plugin-local instead of leaking them into core dispatch",
+        "Keep DBT CLI invocation behind a plugin runner instead of core activity dispatch",
+        "Keep DBT execution contracts outside the Temporal core activity dispatcher",
+        "Keep DBT plan-step support in one plugin-owned manifest instead of scattered allowlists",
+        "Keep DBT process failure mapping separate from runner orchestration",
+        "Keep DBT step-kind ownership in the worker plugin profile instead of core Temporal dispatch",
         "Keep layer cursor, skipped-step emission, and continue-as-new handoff derived from DVT workflow state",
+        "Keep process execution behind a DBT CLI command runner seam",
         "Keep provider-ref and retry-attempt administration behind DVT-owned in-memory run-state support",
+        "Keep provider-test behavior behind the real provider adapter contract.",
+        "Keep recent control-signal ids in continue-as-new cursor state without making cursor size unbounded",
+        "Keep the facade use-case export surface local to the component boundary.",
         "Keep workflow side effects behind Temporal activities while DVT-owned retry policy drives step execution attempts",
+        "Model executable plugin runtimes behind a generic runner port",
+        "Model facade operations as explicit command and query use-case ports.",
+        "Normalize facade start-run input before delegating to the start application service.",
         "Normalize workflow-side unknown errors before they become canonical failure event payloads",
         "Parse workflow control input into DVT-owned cursor and materialization state before Temporal execution",
         "Parse workflow cursor and control values with deterministic validation before execution",
         "Provide contract-backed Temporal fixtures for tests that exercise DVT-owned run and plan boundaries",
         "Re-export canonical types from @dvt/contracts — single source of truth",
         "Re-export event types from @dvt/contracts with engine-legacy aliases",
+        "Represent executor plugins as explicit step-activity profile inputs",
+        "Resolve DBT command arguments from the DBT plugin manifest",
         "Resolve executable workflow segments from the canonical DVT execution plan, not from Temporal provider state",
         "Resolve terminal, cancellation, and continue-as-new workflow outcomes through DVT lifecycle events",
         "Run-state contract delegation is isolated from snapshot-queue and delivery concerns",
         "Run-state writes are exposed via command port bridge, avoiding direct adapter/runtime coupling to concrete persistence callers.",
+        "Runtime bootstrap may require both core state-store and start-run intent schema migrations",
         "Section 1 â€” Enforce explicit Temporal runtime configuration preconditions",
         "Section 2 — Provider adapter lifecycle/status/signal operations are formalized as a stable contract",
         "Section 2 — Worker lifecycle ownership is centralized in a single host",
@@ -175,9 +189,11 @@
         "Serve in-memory run reads from DVT-owned metadata, events, and projections under tenant scope",
         "Snapshot staleness queries and repair queue operations stay together as one maintenance slice",
         "The snapshot projection is derived exclusively from events for deterministic state reads",
+        "The workflow engine behavior port lives in the engine-owned ports surface",
         "Transformation execution remains capability-led: runtime dispatches StepKind and Postgres provides one relational SQL implementation",
         "Translate layer activity outcomes into canonical run events and gateway facts owned by DVT",
-        "Type-check activity dependency fixtures against the DVT engine and plan-fetcher ports",
+        "Translate runtime error evidence into DVT RunFailed reasons at the workflow boundary",
+        "Type-check activity dependency fixtures against the scoped engine-dispatch plan query",
         "Type-check workflow mapping fixtures against canonical execution plan and task queue contracts",
         "Validate and evaluate gateway dependencies from canonical execution-plan facts",
         "Verify execution segment resolution exposes only bounded layer metadata needed by the workflow",
@@ -194,6 +210,7 @@
         "packages/@dvt/adapter-postgres/src/PostgresStateStoreRuntime.ts",
         "packages/@dvt/adapter-postgres/src/RunEventWriteRepository.ts",
         "packages/@dvt/adapter-postgres/src/index.ts",
+        "packages/@dvt/adapter-postgres/src/migratePostgresRuntimeStores.ts",
         "packages/@dvt/adapter-postgres/src/runStateCommandPortBridge.ts",
         "packages/@dvt/adapter-postgres/src/sqlUtils.ts",
         "packages/@dvt/adapter-temporal/src/TemporalAdapter.ts",
@@ -202,6 +219,17 @@
         "packages/@dvt/adapter-temporal/src/WorkflowMapper.ts",
         "packages/@dvt/adapter-temporal/src/config.ts",
         "packages/@dvt/adapter-temporal/src/index.ts",
+        "packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginProfile.ts",
+        "packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginRunner.ts",
+        "packages/@dvt/adapter-temporal/src/plugins/dbt/DbtCliPluginRunner.ts",
+        "packages/@dvt/adapter-temporal/src/plugins/dbt/DbtStepActivity.ts",
+        "packages/@dvt/adapter-temporal/src/plugins/dbt/dbtCliArguments.ts",
+        "packages/@dvt/adapter-temporal/src/plugins/dbt/dbtCliFailures.ts",
+        "packages/@dvt/adapter-temporal/src/plugins/dbt/dbtCliProcess.ts",
+        "packages/@dvt/adapter-temporal/src/plugins/dbt/dbtCliProjectMaterializer.ts",
+        "packages/@dvt/adapter-temporal/src/plugins/dbt/dbtCliTypes.ts",
+        "packages/@dvt/adapter-temporal/src/plugins/dbt/dbtPluginManifest.ts",
+        "packages/@dvt/adapter-temporal/src/plugins/dbt/dbtPluginTypes.ts",
         "packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts",
         "packages/@dvt/adapter-temporal/src/workflows/executionSegmentResolver.ts",
         "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts",
@@ -213,25 +241,30 @@
         "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.stepExecution.ts",
         "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.types.ts",
         "packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts",
+        "packages/@dvt/adapter-temporal/src/workflows/workflowControlSignalRetentionPolicy.ts",
         "packages/@dvt/adapter-temporal/src/workflows/workflowCursorHelpers.ts",
         "packages/@dvt/adapter-temporal/src/workflows/workflowErrorHelpers.ts",
+        "packages/@dvt/adapter-temporal/src/workflows/workflowFailureReasonPolicy.ts",
         "packages/@dvt/adapter-temporal/src/workflows/workflowGatewayHelpers.ts",
         "packages/@dvt/adapter-temporal/src/workflows/workflowInputParsingHelpers.ts",
         "packages/@dvt/adapter-temporal/src/workflows/workflowRuntimePayloadHelpers.ts",
         "packages/@dvt/adapter-temporal/test/TemporalAdapter.getProviderStatusView.test.ts",
         "packages/@dvt/adapter-temporal/test/activityDeps.typecheck.ts",
+        "packages/@dvt/adapter-temporal/test/dbt-core-decoupling.architecture.test.ts",
+        "packages/@dvt/adapter-temporal/test/dbtCliProjectMaterializer.test.ts",
         "packages/@dvt/adapter-temporal/test/helpers/contractFixtures.ts",
         "packages/@dvt/adapter-temporal/test/runPlanWorkflow.layers.order.test.ts",
         "packages/@dvt/adapter-temporal/test/workflow-execution-segment.test.ts",
         "packages/@dvt/adapter-temporal/test/workflowMapper.typecheck.ts",
         "packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts",
-        "packages/@dvt/engine/src/adapters/IPlanFetcher.ts",
         "packages/@dvt/engine/src/adapters/IProviderAdapter.ts",
-        "packages/@dvt/engine/src/adapters/conductor/ConductorAdapterStub.ts",
-        "packages/@dvt/engine/src/adapters/mock/MockAdapter.ts",
-        "packages/@dvt/engine/src/adapters/temporal/TemporalAdapterStub.ts",
+        "packages/@dvt/engine/src/adapters/inMemory/InMemoryProviderAdapter.ts",
         "packages/@dvt/engine/src/application/providerSelection.ts",
-        "packages/@dvt/engine/src/contracts/IWorkflowEngine.v1.ts",
+        "packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowRecoverRunUseCase.ts",
+        "packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowStartRunUseCase.ts",
+        "packages/@dvt/engine/src/application/workflow-engine-use-cases/buildWorkflowEngineUseCases.ts",
+        "packages/@dvt/engine/src/application/workflow-engine-use-cases/index.ts",
+        "packages/@dvt/engine/src/application/workflow-engine-use-cases/types.ts",
         "packages/@dvt/engine/src/contracts/errors.ts",
         "packages/@dvt/engine/src/contracts/index.ts",
         "packages/@dvt/engine/src/contracts/intentErrors.ts",
@@ -247,6 +280,7 @@
         "packages/@dvt/engine/src/outbox/IOutboxRateLimiter.ts",
         "packages/@dvt/engine/src/outbox/TokenBucketRateLimiter.ts",
         "packages/@dvt/engine/src/ports/IPlanResolver.ts",
+        "packages/@dvt/engine/src/ports/IWorkflowEngine.ts",
         "packages/@dvt/engine/src/security/AuthorizationError.ts",
         "packages/@dvt/engine/src/security/RunAccessPolicy.ts",
         "packages/@dvt/engine/src/security/authorizer.ts",
@@ -281,7 +315,6 @@
         "Centralize SQL text used by PostgresSnapshotStalenessQuery",
         "Centralize SQL used by PostgresSchemaManager orchestration methods",
         "Decision — Idempotency keys are derived from the logical identity of the event and the logical attempt",
-        "Decision — The mock adapter executes steps and emits canonical events to validate engine semantics without an external runtime",
         "Delivery-facing port delegation remains the stable aggregate entrypoint for PostgreSQL state storage",
         "Derive stable outbox shard ownership from runId using deterministic hashing",
         "Extract state/outbox transactional orchestration from facade adapter",
@@ -304,6 +337,7 @@
         "Terminal archive pinning metadata lives on run_snapshots as warm derived state",
         "The snapshot projection is derived exclusively from events for deterministic state reads",
         "Translate layer activity outcomes into canonical run events and gateway facts owned by DVT",
+        "Translate runtime error evidence into DVT RunFailed reasons at the workflow boundary",
         "Use typed, stable errors for run-event write-boundary violations",
         "reconcileOrphanedIntents detects and cancels orphaned provider workflows per ADR-0030"
       ],
@@ -330,8 +364,9 @@
         "packages/@dvt/adapter-postgres/src/runStateCommandPortBridge.ts",
         "packages/@dvt/adapter-postgres/src/sqlUtils.ts",
         "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layerResults.ts",
+        "packages/@dvt/adapter-temporal/src/workflows/workflowFailureReasonPolicy.ts",
         "packages/@dvt/adapter-temporal/src/workflows/workflowRuntimePayloadHelpers.ts",
-        "packages/@dvt/engine/src/adapters/mock/MockAdapter.ts",
+        "packages/@dvt/adapter-temporal/test/workflowRuntimePayloadHelpers.test.ts",
         "packages/@dvt/engine/src/contracts/runEvents.ts",
         "packages/@dvt/engine/src/core/SnapshotProjector.ts",
         "packages/@dvt/engine/src/core/idempotency.ts",
@@ -411,6 +446,7 @@
         "Apply pause, resume, and cancel signals idempotently against runtime-owned workflow state",
         "Finalize pause, resume, and cancellation transitions through canonical run events emitted from workflow lifecycle control",
         "Mock Temporal workflow handles through the adapter read/control boundary",
+        "Route facade cancellation requests through the canonical run-control service.",
         "The snapshot projection is derived exclusively from events for deterministic state reads",
         "Validate adapter control operations against canonical signal and cancellation semantics",
         "Verify signal handlers deduplicate control signals and preserve first-writer lifecycle state",
@@ -423,6 +459,7 @@
         "packages/@dvt/adapter-temporal/test/helpers/lookupRunRefHarness.ts",
         "packages/@dvt/adapter-temporal/test/runPlanWorkflow.cancellation.test.ts",
         "packages/@dvt/adapter-temporal/test/runPlanWorkflow.signals.test.ts",
+        "packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowCancelRunUseCase.ts",
         "packages/@dvt/engine/src/core/SnapshotProjector.ts"
       ],
       "title": "ADR-0007: Run Cancellation Semantics and Event Ownership"
@@ -431,13 +468,17 @@
       "number": "ADR-0008",
       "decisions": [
         "Apply pause, resume, and cancel signals idempotently against runtime-owned workflow state",
+        "Keep recent control-signal ids in continue-as-new cursor state without making cursor size unbounded",
+        "Route signal facade commands through the canonical run-control service.",
         "Validate adapter control operations against canonical signal and cancellation semantics",
         "Verify signal handlers deduplicate control signals and preserve first-writer lifecycle state"
       ],
       "implemented_by": [
         "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.signals.ts",
+        "packages/@dvt/adapter-temporal/src/workflows/workflowControlSignalRetentionPolicy.ts",
         "packages/@dvt/adapter-temporal/test/TemporalAdapter.control.test.ts",
-        "packages/@dvt/adapter-temporal/test/runPlanWorkflow.signals.test.ts"
+        "packages/@dvt/adapter-temporal/test/runPlanWorkflow.signals.test.ts",
+        "packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowSignalRunUseCase.ts"
       ],
       "title": "ADR-0008: Signal Idempotency Key Derivation"
     },
@@ -489,13 +530,11 @@
     {
       "number": "ADR-0012",
       "decisions": [
-        "Decision — The Conductor provider remains behind an adapter stub until full runtime integration is completed",
         "Define an adapter contract oriented to run-driven execution and explicit signaling",
         "Engine entry-point plan integrity verification resolves the executable plan,"
       ],
       "implemented_by": [
         "packages/@dvt/engine/src/adapters/IProviderAdapter.ts",
-        "packages/@dvt/engine/src/adapters/conductor/ConductorAdapterStub.ts",
         "packages/@dvt/engine/src/security/planIntegrity.ts"
       ],
       "title": "ADR-0012 - Plan Integrity Ownership"
@@ -513,17 +552,33 @@
     {
       "number": "ADR-0014",
       "decisions": [
-        "Decision — The Conductor provider remains behind an adapter stub until full runtime integration is completed",
         "Define an adapter contract oriented to run-driven execution and explicit signaling",
+        "Isolate bundle reading, archive extraction, project discovery, and cleanup",
+        "Keep DBT CLI helper contracts plugin-local instead of leaking them into core dispatch",
+        "Keep DBT process failure mapping separate from runner orchestration",
+        "Keep process execution behind a DBT CLI command runner seam",
+        "Keep provider-test behavior behind the real provider adapter contract.",
+        "Model executable plugin runtimes behind a generic runner port",
+        "Normalize facade start-run input before delegating to the start application service.",
+        "Represent executor plugins as explicit step-activity profile inputs",
+        "Resolve DBT command arguments from the DBT plugin manifest",
         "Signal-to-event derivation semantics are versioned as a contract shared by engine and adapters",
         "Transformation execution remains capability-led: runtime dispatches StepKind and Postgres provides one relational SQL implementation",
         "WorkflowEngine is an application-facing facade that delegates"
       ],
       "implemented_by": [
         "packages/@dvt/adapter-postgres/src/PostgresRelationalExecutionCapability.ts",
+        "packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginProfile.ts",
+        "packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginRunner.ts",
+        "packages/@dvt/adapter-temporal/src/plugins/dbt/dbtCliArguments.ts",
+        "packages/@dvt/adapter-temporal/src/plugins/dbt/dbtCliFailures.ts",
+        "packages/@dvt/adapter-temporal/src/plugins/dbt/dbtCliProcess.ts",
+        "packages/@dvt/adapter-temporal/src/plugins/dbt/dbtCliProjectMaterializer.ts",
+        "packages/@dvt/adapter-temporal/src/plugins/dbt/dbtCliTypes.ts",
         "packages/@dvt/contracts/src/contracts/engine/SignalSemantics.v1.ts",
         "packages/@dvt/engine/src/adapters/IProviderAdapter.ts",
-        "packages/@dvt/engine/src/adapters/conductor/ConductorAdapterStub.ts",
+        "packages/@dvt/engine/src/adapters/inMemory/InMemoryProviderAdapter.ts",
+        "packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowStartRunUseCase.ts",
         "packages/@dvt/engine/src/core/WorkflowEngine.ts"
       ],
       "title": "ADR-0014 — Run-Driven Adapter Model"
@@ -531,12 +586,14 @@
     {
       "number": "ADR-0015",
       "decisions": [
+        "Delegate facade status reads to the run-status query service.",
         "Mock Temporal workflow handles through the adapter read/control boundary",
         "Serve in-memory run reads from DVT-owned metadata, events, and projections under tenant scope",
         "The enrichment boundary is explicit and separate from the engine facade"
       ],
       "implemented_by": [
         "packages/@dvt/adapter-temporal/test/helpers/lookupRunRefHarness.ts",
+        "packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowRunStatusUseCase.ts",
         "packages/@dvt/engine/src/contracts/IRunEnrichmentService.v1.ts",
         "packages/@dvt/engine/src/state/InMemoryRunStateReadSupport.ts"
       ],
@@ -558,11 +615,13 @@
       "number": "ADR-0018",
       "decisions": [
         "Contract-level error types are centralized for deterministic cross-module semantics",
-        "Shared-kernel contract errors expose stable code/messageKey/messageParams metadata"
+        "Shared-kernel contract errors expose stable code/messageKey/messageParams metadata",
+        "The workflow engine behavior port lives in the engine-owned ports surface"
       ],
       "implemented_by": [
         "packages/@dvt/contracts/src/errorContract.ts",
-        "packages/@dvt/contracts/src/errors.ts"
+        "packages/@dvt/contracts/src/errors.ts",
+        "packages/@dvt/engine/src/ports/IWorkflowEngine.ts"
       ],
       "title": "ADR-0018 — Shared Kernel Ownership Governance (`@dvt/contracts`)"
     },
@@ -599,6 +658,7 @@
         "In-memory intent store for unit tests; mirrors InMemoryTxStore patterns",
         "Intent errors are defined in the canonical contracts package",
         "Periodic reconciler with single-flight execution and infra-only backoff",
+        "Runtime bootstrap may require both core state-store and start-run intent schema migrations",
         "SQL-backed intent store with explicit status-transition guards",
         "Section 3 - Provider adapter delegates run lifecycle to Temporal workflow primitives",
         "Section 5 - Provider status uses workflow handle.describe() and returns provider-native live status",
@@ -610,6 +670,7 @@
       "implemented_by": [
         "packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts",
         "packages/@dvt/adapter-postgres/src/StartRunIntentSchemaManager.ts",
+        "packages/@dvt/adapter-postgres/src/migratePostgresRuntimeStores.ts",
         "packages/@dvt/adapter-temporal/src/TemporalAdapter.ts",
         "packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts",
         "packages/@dvt/engine/src/adapters/IProviderAdapter.ts",
@@ -640,27 +701,32 @@
         "Normalize lineage outbox claim, tenant, and query bounds at the PostgreSQL adapter boundary",
         "Run metadata persistence extracted from PostgresStateStoreAdapter",
         "Run-state contract delegation is isolated from snapshot-queue and delivery concerns",
+        "Runtime bootstrap may require both core state-store and start-run intent schema migrations",
         "SQL-backed intent store with explicit status-transition guards",
         "Section 2.1 - Append-only event persistence with monotonic sequence semantics",
         "Section 2.2 - Read model snapshot projection derived from persisted event stream",
-        "Snapshot staleness queries and repair queue operations stay together as one maintenance slice"
+        "Service access owners are constrained to a closed adapter-internal capability catalog.",
+        "Service-mode transaction context is entered only through an approved maintenance capability.",
+        "Snapshot staleness queries and repair queue operations stay together as one maintenance slice",
+        "Tenant-owned Postgres tables use forced RLS with tenant context or approved service owners."
       ],
       "implemented_by": [
         "packages/@dvt/adapter-postgres/src/PostgresAdapterClientSession.ts",
         "packages/@dvt/adapter-postgres/src/PostgresAdapterClientSessionConstants.ts",
         "packages/@dvt/adapter-postgres/src/PostgresAdapterConstants.ts",
+        "packages/@dvt/adapter-postgres/src/PostgresMaintenanceAccess.ts",
         "packages/@dvt/adapter-postgres/src/PostgresRunMetadataRepository.ts",
         "packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts",
         "packages/@dvt/adapter-postgres/src/PostgresRunStateStoreAdapter.ts",
-        "packages/@dvt/adapter-postgres/src/PostgresSnapshotQueueAdapter.ts",
-        "packages/@dvt/adapter-postgres/src/PostgresMaintenanceAccess.ts",
         "packages/@dvt/adapter-postgres/src/PostgresServiceAccessCapability.ts",
+        "packages/@dvt/adapter-postgres/src/PostgresSnapshotQueueAdapter.ts",
         "packages/@dvt/adapter-postgres/src/PostgresStartRunIntentStore.ts",
         "packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts",
         "packages/@dvt/adapter-postgres/src/PostgresStateStoreAdminAdapter.ts",
         "packages/@dvt/adapter-postgres/src/PostgresStateStoreRuntime.ts",
         "packages/@dvt/adapter-postgres/src/PostgresTenantIsolationPolicy.ts",
         "packages/@dvt/adapter-postgres/src/lineageOutboxStorePolicy.ts",
+        "packages/@dvt/adapter-postgres/src/migratePostgresRuntimeStores.ts",
         "packages/@dvt/engine/src/security/RunAccessPolicy.ts",
         "packages/@dvt/engine/src/security/authorizer.ts"
       ],
@@ -672,7 +738,7 @@
         "Define stable lineage error codes, reason codes, and message keys for compiled-code resolution",
         "Define stable lineage warning codes, message keys, and parameters for fail-open compiled-code resolution",
         "Emit StepStarted artifact references before executing DVT-owned step activities with explicit retry handling",
-        "Extract artifact references and retry policy from execution-plan step configuration before event emission",
+        "Extract plugin-agnostic artifact references and retry policy before event emission",
         "Keep lineage runtime log message keys explicit and separate from published lineage warning contracts",
         "Manage lineage dead-letter counting, alerting, and replay as worker-owned recovery behavior",
         "Map compiled-code resolution failures into stable lineage warnings",
@@ -740,13 +806,37 @@
       "number": "ADR-0035",
       "decisions": [
         "Define plan-compile step-type configuration schemas as explicit planner contract surface",
-        "Publish plan-compile request and response schemas as a bounded planner contract pack"
+        "Keep executable-selection intent as a canonical planner contract instead of UI-local state.",
+        "Model workspace graph edits as aggregate commands instead of transport-specific patches.",
+        "Persist workspace authoring as a graph-first aggregate, not as UI widget state.",
+        "Publish execution-selection schemas as a focused schema pack for external validators.",
+        "Publish plan-compile request and response schemas as a bounded planner contract pack",
+        "Publish selected executable closure as a derived read model separate from editable authoring truth.",
+        "Re-export only the execution-selection component contracts through this local barrel."
       ],
       "implemented_by": [
+        "packages/@dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/ExecutionSelection.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/PlanCompileStepTypeConfigs.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringCommand.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/index.ts",
+        "packages/@dvt/contracts/src/schema-packs/execution-selection.ts",
         "packages/@dvt/contracts/src/schema-packs/plan-compile.ts"
       ],
       "title": "ADR-0035 - Planner Public Contract Evolution Protocol"
+    },
+    {
+      "number": "ADR-0036",
+      "decisions": [
+        "Enforce the shared plan admission matrix before provider dispatch.",
+        "Publish admitted planVersion/schemaVersion pairs as executable shared-kernel contract data."
+      ],
+      "implemented_by": [
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts",
+        "packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts"
+      ],
+      "title": "ADR-0036 - ExecutionPlan planVersion registry and runtime admission matrix"
     },
     {
       "number": "ADR-0037",
@@ -777,11 +867,13 @@
       "number": "ADR-0040",
       "decisions": [
         "Emit StepStarted artifact references before executing DVT-owned step activities with explicit retry handling",
-        "Extract artifact references and retry policy from execution-plan step configuration before event emission",
+        "Extract plugin-agnostic artifact references and retry policy before event emission",
+        "Keep DBT CLI invocation behind a plugin runner instead of core activity dispatch",
         "Keep provider-ref and retry-attempt administration behind DVT-owned in-memory run-state support",
         "Keep workflow side effects behind Temporal activities while DVT-owned retry policy drives step execution attempts"
       ],
       "implemented_by": [
+        "packages/@dvt/adapter-temporal/src/plugins/dbt/DbtCliPluginRunner.ts",
         "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts",
         "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.stepExecution.ts",
         "packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts",
@@ -790,19 +882,38 @@
       "title": "ADR-0040 - Retry Ownership and Attempt Authority"
     },
     {
+      "number": "ADR-0043",
+      "decisions": [
+        "Fetch engine dispatch artifacts through the engine-owned integrity port before segment projection."
+      ],
+      "implemented_by": [
+        "packages/@dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts",
+        "packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts"
+      ],
+      "title": "ADR-0043 - Plan record, plan store, and artifacts ownership"
+    },
+    {
       "number": "ADR-0046",
       "decisions": [
         "Define plan-compile step-type configuration schemas as explicit planner contract surface",
         "Define workflow ports and cursor contracts at the DVT boundary before Temporal-specific execution",
         "Drive Temporal layer execution from resolved DVT execution segments and canonical workflow state",
+        "Enforce the shared plan admission matrix before provider dispatch.",
+        "Fetch engine dispatch artifacts through the engine-owned integrity port before segment projection.",
+        "Keep DBT execution contracts outside the Temporal core activity dispatcher",
+        "Keep DBT step-kind ownership in the worker plugin profile instead of core Temporal dispatch",
         "Keep layer cursor, skipped-step emission, and continue-as-new handoff derived from DVT workflow state",
         "Parse workflow control input into DVT-owned cursor and materialization state before Temporal execution",
+        "Publish admitted planVersion/schemaVersion pairs as executable shared-kernel contract data.",
         "Publish plan-compile request and response schemas as a bounded planner contract pack",
         "Resolve executable workflow segments from the canonical DVT execution plan, not from Temporal provider state",
         "Validate and evaluate gateway dependencies from canonical execution-plan facts",
         "Verify execution segment resolution exposes only bounded layer metadata needed by the workflow"
       ],
       "implemented_by": [
+        "packages/@dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts",
+        "packages/@dvt/adapter-temporal/src/plugins/dbt/DbtStepActivity.ts",
+        "packages/@dvt/adapter-temporal/src/plugins/dbt/dbtPluginTypes.ts",
         "packages/@dvt/adapter-temporal/src/workflows/executionSegmentResolver.ts",
         "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layerHelpers.ts",
         "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layers.ts",
@@ -810,8 +921,10 @@
         "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.types.ts",
         "packages/@dvt/adapter-temporal/src/workflows/workflowGatewayHelpers.ts",
         "packages/@dvt/adapter-temporal/test/workflow-execution-segment.test.ts",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/PlanCompileStepTypeConfigs.v1.ts",
-        "packages/@dvt/contracts/src/schema-packs/plan-compile.ts"
+        "packages/@dvt/contracts/src/schema-packs/plan-compile.ts",
+        "packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts"
       ],
       "title": "ADR-0046 - Execution plan definition and run execution policy separation"
     },
@@ -822,8 +935,11 @@
         "Build run terminal event payloads from DVT runtime evidence instead of Temporal provider metadata",
         "Finalize pause, resume, and cancellation transitions through canonical run events emitted from workflow lifecycle control",
         "Keep layer cursor, skipped-step emission, and continue-as-new handoff derived from DVT workflow state",
+        "Keep recent control-signal ids in continue-as-new cursor state without making cursor size unbounded",
         "Parse workflow control input into DVT-owned cursor and materialization state before Temporal execution",
         "Resolve terminal, cancellation, and continue-as-new workflow outcomes through DVT lifecycle events",
+        "Route facade cancellation requests through the canonical run-control service.",
+        "Route signal facade commands through the canonical run-control service.",
         "Serialize continue-as-new cursor state explicitly from DVT workflow progress",
         "Translate layer activity outcomes into canonical run events and gateway facts owned by DVT",
         "Verify signal handlers deduplicate control signals and preserve first-writer lifecycle state",
@@ -836,12 +952,40 @@
         "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.lifecycle.ts",
         "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.signals.ts",
         "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.state.ts",
+        "packages/@dvt/adapter-temporal/src/workflows/workflowControlSignalRetentionPolicy.ts",
         "packages/@dvt/adapter-temporal/src/workflows/workflowCursorHelpers.ts",
         "packages/@dvt/adapter-temporal/src/workflows/workflowRuntimePayloadHelpers.ts",
         "packages/@dvt/adapter-temporal/test/runPlanWorkflow.cancellation.test.ts",
-        "packages/@dvt/adapter-temporal/test/runPlanWorkflow.signals.test.ts"
+        "packages/@dvt/adapter-temporal/test/runPlanWorkflow.signals.test.ts",
+        "packages/@dvt/adapter-temporal/test/workflowRuntimePayloadHelpers.test.ts",
+        "packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowCancelRunUseCase.ts",
+        "packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowSignalRunUseCase.ts"
       ],
       "title": "ADR-0047 - Runtime-owned realized lifecycle for signal-driven transitions"
+    },
+    {
+      "number": "ADR-0049",
+      "decisions": [
+        "Delegate recover-run facade input to the recovery application service."
+      ],
+      "implemented_by": [
+        "packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowRecoverRunUseCase.ts"
+      ],
+      "title": "ADR-0049 - RETRY_RUN is a separate recovery use case, not a canonical signal"
+    },
+    {
+      "number": "ADR-0052",
+      "decisions": [
+        "Evaluate continue-as-new, history, segment, payload, and retention budgets as explicit readiness evidence.",
+        "Translate runtime error evidence into DVT RunFailed reasons at the workflow boundary"
+      ],
+      "implemented_by": [
+        "packages/@dvt/adapter-temporal/src/temporalPlanRefCapacitySlaPolicy.ts",
+        "packages/@dvt/adapter-temporal/src/workflows/workflowFailureReasonPolicy.ts",
+        "packages/@dvt/adapter-temporal/test/temporalPlanRefCapacitySlaPolicy.test.ts",
+        "packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts"
+      ],
+      "title": "ADR-0052: PlanRef Continuation Safety"
     }
   ]
 }

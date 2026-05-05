@@ -638,6 +638,10 @@
     },
     {
       "code": "MISSING_BASELINE",
+      "filePath": "packages/@dvt/engine/src/ports/IPlanArtifactReader.ts"
+    },
+    {
+      "code": "MISSING_BASELINE",
       "filePath": "packages/@dvt/engine/src/ports/IProjector.ts"
     },
     {
@@ -971,6 +975,18 @@
     {
       "code": "REVERSE_COVERAGE_FAIL",
       "adrNumber": "ADR-0049"
+    },
+    {
+      "code": "REVERSE_COVERAGE_FAIL",
+      "adrNumber": "ADR-0050"
+    },
+    {
+      "code": "REVERSE_COVERAGE_FAIL",
+      "adrNumber": "ADR-0051"
+    },
+    {
+      "code": "REVERSE_COVERAGE_FAIL",
+      "adrNumber": "ADR-0053"
     }
   ]
 }

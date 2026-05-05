@@ -14,7 +14,7 @@ const policyPath = 'tools/ci/policy/adapter-postgres-relevance.json';
 const policy = JSON.parse(readFileSync(policyPath, 'utf8'));
 const workflowScopePolicyPath = 'tools/ci/policy/workflow-scope.json';
 const workflowScopePolicy = JSON.parse(readFileSync(workflowScopePolicyPath, 'utf8'));
-const PR_QUALITY_PREPUSH_GOVERNANCE_COMMANDS = [
+const PR_QUALITY_GOVERNANCE_COMMANDS = [
   'pnpm docs:gov:filenames:changed',
   'pnpm docs:gov:frontmatter:changed',
   'pnpm docs:governance:unit-coverage',
@@ -24,6 +24,7 @@ const PR_QUALITY_PREPUSH_GOVERNANCE_COMMANDS = [
   'pnpm docs:governance:file-fingerprint-impact:check',
   'pnpm docs:governance:coverage-report:check',
   'pnpm docs:governance:remediation-queue:check',
+  'pnpm traceability:adr0',
   'pnpm docs:feature-mechanization',
   'pnpm docs:feature-mechanization:implementation',
   'pnpm qa:artifact:check',
@@ -191,10 +192,10 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
   });
 });
 
-test('PR quality gate mirrors the merge-blocking governance prepush baseline', () => {
+test('PR quality gate keeps merge-blocking governance commands wired', () => {
   const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
 
-  for (const command of PR_QUALITY_PREPUSH_GOVERNANCE_COMMANDS) {
+  for (const command of PR_QUALITY_GOVERNANCE_COMMANDS) {
     assertWorkflowContains(prQualityGate, command);
   }
 });

@@ -1,3 +1,6 @@
+/**
+ * @baseline ADR-0052: PlanRef Continuation Safety
+ */
 import { describe, expect, it } from 'vitest';
 
 import {

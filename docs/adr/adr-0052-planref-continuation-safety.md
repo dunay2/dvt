@@ -10,6 +10,8 @@ owners:
 
 # ADR-0052: PlanRef Continuation Safety
 
+Status: Accepted
+
 ## Context
 
 `AR-D-PLAN-POINTER` moved Temporal workflow start and `continueAsNew` input to

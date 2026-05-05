@@ -4,6 +4,7 @@
  * @baseline ADR-0003: Execution Model
  * @decision Keep DBT plan-step support in one plugin-owned manifest instead of scattered allowlists
  * @consequence DBT can evolve like SQL or future plugins without changing Temporal core dispatch
+ * @version 1.0.0
  */
 export const DBT_PLUGIN_ID = 'dbt' as const;
 

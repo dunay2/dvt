@@ -756,9 +756,9 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-20E5B75B2EF2
     pathHash: 8d082605f9f2307af4fc5af00b1035f9c85eb9737f84ff71535023c4405a42ce
-    contentHash: 3ac391b00822547c0c6b404262d5710c67980f6031da6d67cd8e24b9d2b44f5f
+    contentHash: 6cf55d37cfaabf50dd0bb26dd6f9bb3ad7ecf8ac79a4961b6a966fab86c5d579
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: 460c8aafcb16eed8ce039bbb904b9024c8c04d3583bfbc89cb25feab126e72d2
+    stateFingerprint: 177e952d4411ea9e804dfeb93cc122e82dd1d4f0373550691bcc99eaad423937
     path: .github/workflows/pr-quality-gate.yml
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -4031,9 +4031,9 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-2E787BCE617D
     pathHash: 192f7c3bc3fb65ebe3de5e7ca55b3cc4bd1645e7284956b1a8a74ccbb785c333
-    contentHash: f8681e14de39760b40f8736b79cb8f991078facfe0ea12d4742de2b5e964f7b5
+    contentHash: a746a691db77313f2a9c39c8934a99f0cfd7013390141969851e88b3af064bd3
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: 1354514527b0016cba731ed8d5e16e6f4f1b132571a98fd63695cc0ecbf8dd6e
+    stateFingerprint: 95d776a3d6590f1c2900f153ea9b8f68cf4045b7468afc6b184b04b98ae9196a
     path: tools/ci/workflow-pattern-parity.test.mjs
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     rootUnit: SYS-DVT

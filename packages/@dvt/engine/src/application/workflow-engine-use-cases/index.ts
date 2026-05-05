@@ -1,5 +1,9 @@
 /**
  * @ownedConcern Publish the WorkflowEngine facade use-case component API from one local barrel.
+ * @baseline ADR-0003: Execution Model
+ * @decision Keep the facade use-case export surface local to the component boundary.
+ * @consequence Engine consumers import named use cases without widening the component API.
+ * @version 1.0.0
  */
 export {
   WorkflowStartRunUseCase,

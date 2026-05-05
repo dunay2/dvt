@@ -1,6 +1,12 @@
 /**
  * Owned concern: provide an in-memory IProviderAdapter test double without
  * adding a synthetic provider to the runtime contract vocabulary.
+ *
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0014: Run-Driven Adapter Model
+ * @decision Keep provider-test behavior behind the real provider adapter contract.
+ * @consequence Engine tests exercise runtime semantics without publishing an extra runtime provider.
+ * @version 1.0.0
  */
 import {
   asNonBlankString,

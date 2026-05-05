@@ -712,9 +712,9 @@ files:
       - docs/planning/status/system-governance-document-unit-map-20260501.md
   - fileId: F-032F5F48B416
     pathHash: e641d9e4b998c3aa92bdf7986ba5f1f9a41b677ccbdf1712aa84dcd7f02fdf4e
-    contentHash: 8939ff210446836de2dec4c6b6d052c50eaadc15c09e72dff49e8c23f7696845
+    contentHash: e14eeb7ce6470c53a6fbfd928b3f012cc590466fe1b9723872f7255a77f33226
     governanceHash: 34b4c9841cf358c2da3550b3f784889c7148ae4f3bcaf11542c8cfd8d96029c1
-    stateFingerprint: ea67842fa390538ae1f6b2bd11ab67c8711ce3b5cb1be0237adb80e3016b0df2
+    stateFingerprint: 98746c62dc7cf0318a9cff916306bdd46408741fb89aae571ad7572ce4e82f45
     path: docs/adr/adr-0052-planref-continuation-safety.md
     owningUnit: SYS-PLANSTORE-DOCS-RISK
     rootUnit: SYS-DVT
@@ -2051,9 +2051,9 @@ files:
       - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
   - fileId: F-6EF8ECA412B2
     pathHash: a44d8a7cfe88c4e6826d14c840dec02fd8436d8397a5ee17309abcf0cec2db69
-    contentHash: 2851d86667b67e152a2abce520587e89ad3e6318295cdbd758d6d5e76f2a515e
+    contentHash: ea5c9e740a128dd1c60f2989c710bc2bcc9f43a687abdd6ad25147ad3878e59d
     governanceHash: 9fd18f455a27b78379f51bc03a695d6a37a33af50ae41c9dad5f8c6b31ec8cee
-    stateFingerprint: 4d931d8f1987674316ae53ed8e212f385864ab9a7f9a159f0fda36c7ff2f62c8
+    stateFingerprint: bb26762a03c7930b767025d2157c63337206f2ff546ad3fbddda03c0982c7bed
     path: packages/@dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts
     owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
     rootUnit: SYS-DVT
@@ -2079,9 +2079,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-86690133B407
     pathHash: 04c4438e28172d670b1dd21f953a6a7addb9c683c22e642f2caf58774b1a1ae5
-    contentHash: e48cfa9e851dd275670e1c37fa6593b89f22430a9b16c58b7feaae4fd58758b4
+    contentHash: e9d908ccf58dbe16919752fa9b7cb97c3a23b01d60f515ef2000ac34571f0798
     governanceHash: 9fd18f455a27b78379f51bc03a695d6a37a33af50ae41c9dad5f8c6b31ec8cee
-    stateFingerprint: fabdb7053b6d0f7716944f11b9a0119c5c0bba7684b82937feadb9f2321cf3a0
+    stateFingerprint: 22cde87a2b1c658b569c043a08278a8797ae8f28128f6ff4ffffe7f10fb62722
     path: packages/@dvt/adapter-temporal/src/temporalPlanRefCapacitySlaPolicy.ts
     owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
     rootUnit: SYS-DVT
@@ -2135,9 +2135,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-7DF2E77D03D3
     pathHash: df79ab1e04edfaed8208ea4db344222515148a6eb8d26148b84aa73d44136e14
-    contentHash: e29637f10a11e9f47fde0c79009da45151be4998925747df4d1920025763777b
+    contentHash: ca0a1e25300a8c3ee686f1e096d7a33a182f1fa3943abb8180b239412e5890c0
     governanceHash: 9fd18f455a27b78379f51bc03a695d6a37a33af50ae41c9dad5f8c6b31ec8cee
-    stateFingerprint: 37d060e9bf7d738bc13490b4bdaff6300626e32a26ea248129ec47a351ebf195
+    stateFingerprint: 5d780499b4bd2c204099717cec7d78daa71e6ac941468939970ca98e00dd1cc6
     path: packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
     owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
     rootUnit: SYS-DVT
@@ -2163,9 +2163,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-9F17D16D08A4
     pathHash: bda403e74b4bb181c00ea4a939986f98474fc9d798560c50f0b3791682af89f2
-    contentHash: d6122622035cc56b2c796350447d720d2942a72478d675ccdc1f9f64ebf63560
+    contentHash: cf387a9bf8b70220a6049dd7c51097aa0d2be1f9e7102eb0134b6cb9d2bab3df
     governanceHash: 9fd18f455a27b78379f51bc03a695d6a37a33af50ae41c9dad5f8c6b31ec8cee
-    stateFingerprint: 1431704d178fcb0cc7ae024a06ea038fd1dec0d79bafe69486cd1231ac9b8426
+    stateFingerprint: 85f1017840dc41698e738fb6087c1a959e35ccb6ee2fd34cb98fa26cef0b7c3f
     path: packages/@dvt/adapter-temporal/test/temporalPlanRefCapacitySlaPolicy.test.ts
     owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
     rootUnit: SYS-DVT
@@ -2191,9 +2191,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-A3422F8EFF35
     pathHash: 246fd0787eb957f328158a98a15f48104b69f023c54f22a5b50a8c15241c7005
-    contentHash: bb3eaff6da6236c47ff3cd4adcc0cac9fae3b1c545c0ff414cdef3e9d7260fe4
+    contentHash: 284891b31be8536c18a998339744ec240db82bbef8534a5b5e9e27fb8a680bda
     governanceHash: 9fd18f455a27b78379f51bc03a695d6a37a33af50ae41c9dad5f8c6b31ec8cee
-    stateFingerprint: 2f049b8f65b11f1da44d95fa4e929d05af9fcce472ccdd8b566d05534ae58692
+    stateFingerprint: 7b418793f40eba435d83e1909e5aba872767492411831da4154245eede4bf250
     path: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
     owningUnit: SYS-PLANSTORE-TEMPORAL-COMPOSITION
     rootUnit: SYS-DVT

@@ -456,9 +456,9 @@ files:
       - docs/contracts/index.md
   - fileId: F-9DA240ED7E2A
     pathHash: 18b150da447e5acef77ab8d68be03ef865f66cff872423614070308011c30f88
-    contentHash: 8712562b31d198c1f13235ccdd78b747a3c360f26ed358fa822f475a4e33ade1
+    contentHash: b007e303340edb6294c97c787bf264b19df0dedf7fa42a9a7d258ae5f123c0f1
     governanceHash: 63491c80713509ac3cf47404f263dc7b0a139c8fbde0fa75ca9934149bd7d518
-    stateFingerprint: 63204b6d61b12926ab379112336a74393803dfc390304317628550e809b4a8a5
+    stateFingerprint: c07b1f865934d128af92b5754ea87a1c02c412fecd32981fb5977e06e3bd7613
     path: packages/@dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts
     owningUnit: SYS-CONTRACTS-ROOT
     rootUnit: SYS-DVT
@@ -531,9 +531,9 @@ files:
       - docs/contracts/index.md
   - fileId: F-E478892F0AA7
     pathHash: d3a25aed620d74c045f58cd780032c32afb649fb4d69c336b1900af2b21b6cfd
-    contentHash: 2ae06bd321b9759e5b0ca444746939f0ae3b50e1894bb3758d0460bd9eb30a60
+    contentHash: 9378b63c7e772ff4999400107d66e4c7073ae723147bc009a3ba6c531941e42a
     governanceHash: 63491c80713509ac3cf47404f263dc7b0a139c8fbde0fa75ca9934149bd7d518
-    stateFingerprint: 6fb34f4ba467cb15401a5cfdb6359ccc65ad1c5baaa8353d65d2ea92cc6e932c
+    stateFingerprint: e65be65f04493550bc80bb16d6e4fc7b59e9ed2f67fe59fd8c5d6df33439f1a9
     path: packages/@dvt/contracts/src/contracts/planner/ExecutionSelection.v1.ts
     owningUnit: SYS-CONTRACTS-ROOT
     rootUnit: SYS-DVT
@@ -581,9 +581,9 @@ files:
       - docs/contracts/index.md
   - fileId: F-57747982CFFF
     pathHash: 42b402b6364a12a27b587c391d75d3f8352056750cf49b5845ecff9ac7187601
-    contentHash: 52f13be61e278ff3c79ca68b03772377b5d84a75ed057343833023b5d87246af
+    contentHash: 1d1d7b910aefee8f9e04616af2d8ad17338177a87c58e2cfb5d5af0ae11f7ba6
     governanceHash: 63491c80713509ac3cf47404f263dc7b0a139c8fbde0fa75ca9934149bd7d518
-    stateFingerprint: 0b6e6f50ec6279a239ae5a626af8c735d69586b890de6323b4547fe7efad9dc4
+    stateFingerprint: 78748d4de8602ad4d9f6aa6c2ec052e55b940b205b1dc5b84c471b73c441c7a1
     path: packages/@dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts
     owningUnit: SYS-CONTRACTS-ROOT
     rootUnit: SYS-DVT
@@ -1131,9 +1131,9 @@ files:
       - docs/contracts/index.md
   - fileId: F-AB973A4423D9
     pathHash: eb36baddc7a8e9ec3676d843a6a3d9aa93e950eb1cf0166c0ff053f3765ef884
-    contentHash: a72d0f78f9bc31e94ec4e8c1f2ad68594d765f8a7f87d56bebfd11cccf04e889
+    contentHash: 4b3575aef46a0bfe5b993154b7c17288004403ad28a729b34688d85d0d15e19d
     governanceHash: 63491c80713509ac3cf47404f263dc7b0a139c8fbde0fa75ca9934149bd7d518
-    stateFingerprint: b34a5518cbd768bca428df785ed88154b9c1bf025405b2885672370f3350680c
+    stateFingerprint: cdccf810031a1ada1f452fd9532c5cd562ca355222324bd3c0de6709b6fd0cc3
     path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringCommand.v1.ts
     owningUnit: SYS-CONTRACTS-ROOT
     rootUnit: SYS-DVT
@@ -1156,9 +1156,9 @@ files:
       - docs/contracts/index.md
   - fileId: F-6B76AE095412
     pathHash: da40835318636a75dcf702dd73f0869ce51d236d258ecb3b48a6347738aa050d
-    contentHash: 7810f63b1193fb78ff71af5420929847ac1f1a26bccc93553cdb11fbd210b329
+    contentHash: d5546dff324bb87720cb9d7a60f5b1b38865186d813c791cfbed60cef7ab3d76
     governanceHash: 63491c80713509ac3cf47404f263dc7b0a139c8fbde0fa75ca9934149bd7d518
-    stateFingerprint: c6d0d4cf065ba20f18a36eb7c5250f56fd241fcafced7724170057150dfb0d22
+    stateFingerprint: a265c2e8c946cca19f7d51c8f75eb88242a6c2eb0fdd33ddcddadfaa0a8cf5c4
     path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts
     owningUnit: SYS-CONTRACTS-ROOT
     rootUnit: SYS-DVT
@@ -1206,9 +1206,9 @@ files:
       - docs/contracts/index.md
   - fileId: F-D9B12049DC82
     pathHash: 64bfc3f2f112bc19c6bd39c10112317921371ab91dc9da519fa88294ffe3e744
-    contentHash: f69a14c209c8d9411fd4aba45d2041de06b56e49a10120db2d049f4442b85605
+    contentHash: 8d042d0b0f6493338b593689ec76f8c4814b264c7c56ac7565895ec83b9ff1e2
     governanceHash: 63491c80713509ac3cf47404f263dc7b0a139c8fbde0fa75ca9934149bd7d518
-    stateFingerprint: b31cb754b9560d95aaf74099731b19c01bd01f58e67ee61e03d46a2c0dac7f02
+    stateFingerprint: 048176ae08552f09993fc3ec3db74c67000c3e6cb8e4d6e96d88e77403509157
     path: packages/@dvt/contracts/src/contracts/planner/index.ts
     owningUnit: SYS-CONTRACTS-ROOT
     rootUnit: SYS-DVT
@@ -1406,9 +1406,9 @@ files:
       - docs/contracts/index.md
   - fileId: F-0632B4E90B10
     pathHash: 05e4be3f2241f0c7830a3ad5931ff5ee7524ba08c8bd33886e41ae54994ac527
-    contentHash: 7b890a6ae3fe29e845ac0e826031bd273f5c2a871b7b12a8431a114fc196e6e1
+    contentHash: ba6c66b5bbbd1c94ed835deba449f113b64fcaf0edb11c4e69a331c193bc191c
     governanceHash: 63491c80713509ac3cf47404f263dc7b0a139c8fbde0fa75ca9934149bd7d518
-    stateFingerprint: db3183b9a07065b74e0f89f000720b584210d8ae9c53c6c75c3dcc8ed28ea42f
+    stateFingerprint: 1dceb9b44b684ae2111f94aeca70ddc7c6e644ee2369d29a7771994db8748459
     path: packages/@dvt/contracts/src/schema-packs/execution-selection.ts
     owningUnit: SYS-CONTRACTS-ROOT
     rootUnit: SYS-DVT

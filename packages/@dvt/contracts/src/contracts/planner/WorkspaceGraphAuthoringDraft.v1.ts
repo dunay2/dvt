@@ -5,6 +5,11 @@
  * This contract owns visible nodes, positions, semantic nodes, and semantic
  * edges. It does not own auth, audit, compare-and-swap, React Flow state,
  * compile projection, or runtime execution eligibility.
+ *
+ * @baseline ADR-0035: Planner Public Contract Evolution Protocol
+ * @decision Persist workspace authoring as a graph-first aggregate, not as UI widget state.
+ * @consequence Planner and canvas boundaries share one editable authoring truth.
+ * @version 1.0.0
  */
 import { z } from 'zod';
 

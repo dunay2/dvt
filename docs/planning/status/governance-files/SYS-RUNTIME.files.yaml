@@ -1306,9 +1306,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-B365E24BF20A
     pathHash: 56bda80527f9793e70b7113fc47ea76d628507a6d9252e0f2dc2eade73e9bd09
-    contentHash: 9d672510feccfa1cc0908f4e890eca8d0adffc24cec60738f742491aa6cb7ac4
+    contentHash: b4088d87fad380a89a4e86cf799a77a0285b89dbf6e957ad421a654332a71eae
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: ecce3de3f28679905280e7181c77a062e3e40561f239f267bb12cccddf1fca1e
+    stateFingerprint: 47130f0fa9fc0e61e5870fceab56333b6889c30185bcf667401d590a44d66872
     path: packages/@dvt/engine/src/adapters/inMemory/InMemoryProviderAdapter.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
@@ -1456,9 +1456,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-61F0EFB20DF1
     pathHash: 835ddf024785135ecb1a8c97b2abf3d1525134c53d04d253ce696a56e07310d2
-    contentHash: 1c60cb858d1fee59f7f18dfc83fbfb05b7cd9955892901c6ee6f4a5b062ecd89
+    contentHash: 5cdecb548ddafaa985243909ee92800238b39ee0fb0b07cece9b56979bc26578
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 004df1ce7c109529f69e2e2a6844c42955a674093bdf5b76c5ca6e6815601f92
+    stateFingerprint: 779f9d2598bae4ae6ac6ba1ac8bb06b6815ab90f4f3f5f7fdea93f74fb963bd8
     path: packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowCancelRunUseCase.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
@@ -1481,9 +1481,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-2204779968D1
     pathHash: 4bf58bb14425877b98ecd1e5d21807427195ab3ba24c59dd51921d4159df7eae
-    contentHash: be40e0b4a6056d0668d01abaccd09907d14216d3c9c61a3f7fdecc9b5e853d5b
+    contentHash: 64dbffdbd8a2873ef3df453d841a7806e3f49454d1456bf47affc9906babc404
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: c4f063c441563c3af572493463020ddd3e701c2720fbdbb5b7cf3100d7beea74
+    stateFingerprint: 57c383269646785804000cf1a53f3d574133eff485b5f0aed7b06bc02609d81a
     path: packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowRecoverRunUseCase.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
@@ -1506,9 +1506,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-60E42E46587C
     pathHash: 5ab881d79104343c6c3cc80897541d7131ac554f670c4fef99c7bd59784e96f4
-    contentHash: 09a3f647ad805dec1d61ba2b7c56fe95a5866c9a5cead885854c21941c6ba074
+    contentHash: 4085b8cfdf2e196895142a646e41f0dbe44f0458f5fa60e947b0b982f5747919
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: af14516ef5465a885b7f8cb4f442d7c10beedb0d57b98f746a851423c48131e5
+    stateFingerprint: 02c81fe6ad399e17b82755bc15879bcf39cb6661cee0ec3552670ccac2b6d307
     path: packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowRunStatusUseCase.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
@@ -1531,9 +1531,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-765381353D95
     pathHash: db51a109f54c38a09c08a628526e6c22cc4601945556f31d9f174ed7ad0b6665
-    contentHash: 6b27bfd980fe128fa6a1c2896b0497411ac450ec5983b7b81cf4c96272ab56a6
+    contentHash: e00a454346c01d7c15d56b8f836ef1158eb2a1374008394ac844a2775dc07432
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: b47516989a82ea5d1541038079e86df4a12b6722a10e962779ac6f114a03819c
+    stateFingerprint: 469a915a99f396d534c4ca09ff9f793d249df9309acb55e362d0aa33d080678e
     path: packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowSignalRunUseCase.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
@@ -1556,9 +1556,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-C040CD98F6F8
     pathHash: 3aa77b62e5d4ffc817c352bc8634f359407232d76a0edf04535e093d70d67389
-    contentHash: 5573cea26d8da997f561c4e497caec11ff502dbd4d216005d5bb83b95701975d
+    contentHash: 49359105e0caee1c9316d24369228d1e3512412fbe0b03df9983a04ec02b7d51
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 2b6bcf41c94ca6a589c56e020ec2474dafa14b5979ca0841dffa37e8115cac5c
+    stateFingerprint: e7c678bd340609e0812f257fd1d9f16c076089f8d6b44734fd4bb5b6b1d1191d
     path: packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowStartRunUseCase.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
@@ -1581,9 +1581,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-79A29A6629A5
     pathHash: a4dab40c6235efe9c6ac84c392fafbfc90e1d11015cb66fb7e1e9edd51faa872
-    contentHash: 64fbb50d79d867fb12cb1d13d4800e697a3b5b0f309cd1e3d6b22beedb416ad2
+    contentHash: 67d91aea04e83e463e76f12311ce5cfc083a70d52920a7102c6b0250af89b095
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 216e7a1c5145780e5e144a200e804ee744b66cc1271410d90b8340b3eda4582a
+    stateFingerprint: 5641844984e6f5579b6128d128bae8302ca9ba78446d0c6ef095be08fdf5999c
     path: packages/@dvt/engine/src/application/workflow-engine-use-cases/buildWorkflowEngineUseCases.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
@@ -1606,9 +1606,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-984FD66FC6ED
     pathHash: 313f6d59376914a2f58f48950440a65f72ee98337996f7b70269711c53bbd2f8
-    contentHash: 7a95d9e0c697d4c6ce3be400b28d73e55eccf0bce8162204000e2be743f35e5a
+    contentHash: dc0b0cfccf8e4333ee009f9cd0dd5b568771d5fc6547a5d0e0d443ab403772d0
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: ae6c311405e05dd26e7762c62eb4b4c570893ac63403dbfe0122f77d273963df
+    stateFingerprint: 146a3a32127da423ae7308554199c4dc286bd35786e1ac4d878a98df68e01a09
     path: packages/@dvt/engine/src/application/workflow-engine-use-cases/index.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
@@ -1631,9 +1631,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-B1CD82C91567
     pathHash: ca54c2f8a2150322c11047886b7968c131eb30a0ca731eeb0c9c0e1dd6139d32
-    contentHash: a347a498ac0aeec8a4319c8824344476e1968745596a6430368bd2da5f41c650
+    contentHash: 2a7ef2dbf2a3ed41632697c188950dbc41de3bed39aa8b4e05f9f26acedd6163
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: b516badcb6743643f83efb954f0dab60c9c574283ad65036aea9d01d4072ca6c
+    stateFingerprint: fd336e94a3609c27dece888ad668a5a03aaf5195543e67be01adb1abeba11d74
     path: packages/@dvt/engine/src/application/workflow-engine-use-cases/types.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT
@@ -1681,9 +1681,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-051E16284E7E
     pathHash: 8f1c24c2cc832befc822f0b18d694a44f1c39f9cc5bc07339d2f700e7a478f65
-    contentHash: 214923ff6c1636ee3d0baa6221e07797caea835aa531070cf26e912199a6e714
+    contentHash: 792f7041608590c943624d581164ab340fade8b53e3c3de909afc76b398dcea1
     governanceHash: 378dff3befac5c84aa6e0b95deea0cd7ad949a439353c9082bcacaac8c495570
-    stateFingerprint: 505e96a689b9dfe72ad0c2bf30e3d6a7d7a38f6076dd2f9d6286f73958f41001
+    stateFingerprint: c9a112471f9330bc7c60b87a5aa78c398d25305454d01f8f5327be0c693c380c
     path: packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts
     owningUnit: SYS-RUNTIME-ROOT
     rootUnit: SYS-DVT

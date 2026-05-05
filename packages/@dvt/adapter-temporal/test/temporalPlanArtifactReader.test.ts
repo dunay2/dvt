@@ -1,3 +1,6 @@
+/**
+ * @baseline ADR-0043: Plan Record, Plan Store, And Artifacts Ownership
+ */
 import type { RunExecutionPolicy } from '@dvt/contracts';
 import type { IPlanFetcher, IPlanIntegrityValidator } from '@dvt/engine';
 import { describe, expect, it } from 'vitest';
