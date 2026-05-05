@@ -58,6 +58,9 @@ allowedImplementationSurfaces:
   - packages/@dvt/engine/src/adapters/inMemory/InMemoryProviderAdapter.ts
   - packages/@dvt/engine/src/application/workflow-engine-use-cases/**
   - packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts
+  - packages/@dvt/traceability-service/src/cli.ts
+  - packages/@dvt/traceability-service/src/core/manifest-json.ts
+  - packages/@dvt/traceability-service/test/manifestJson.test.ts
   - tools/ci/workflow-pattern-parity.test.mjs
   - traceability.config.json
   - traceability.issue-baseline.json
@@ -108,6 +111,9 @@ redGreenCycles:
       - packages/@dvt/adapter-temporal/**
       - packages/@dvt/contracts/**
       - packages/@dvt/engine/**
+      - packages/@dvt/traceability-service/src/cli.ts
+      - packages/@dvt/traceability-service/src/core/manifest-json.ts
+      - packages/@dvt/traceability-service/test/manifestJson.test.ts
     greenTest: pnpm traceability:adr0
   - id: pr-quality-traceability-parity
     redTest: pnpm test:ci-tools
@@ -148,4 +154,27 @@ symbols:
     cypressCoverage: N/A - repository governance gate only
     unitTests:
       - pnpm traceability:adr0
+  - name: formatTraceabilityManifestJson
+    path: packages/@dvt/traceability-service/src/core/manifest-json.ts
+    dddOwner: ADR-0000 traceability governance
+    cqRails:
+      - CheckAdr0TraceabilityRegression
+    fowlerSignals:
+      - Configuration drift
+      - Hidden authority
+    architectureGuard: pnpm traceability:adr0
+    cypressCoverage: N/A - repository governance gate only
+    unitTests:
+      - pnpm --filter @dvt/traceability-service test -- test/manifestJson.test.ts
+  - name: jsonPrintWidth
+    path: packages/@dvt/traceability-service/src/core/manifest-json.ts
+    dddOwner: ADR-0000 traceability governance
+    cqRails:
+      - CheckAdr0TraceabilityRegression
+    fowlerSignals:
+      - Configuration drift
+    architectureGuard: pnpm traceability:adr0
+    cypressCoverage: N/A - repository governance gate only
+    unitTests:
+      - pnpm --filter @dvt/traceability-service test -- test/manifestJson.test.ts
 ```

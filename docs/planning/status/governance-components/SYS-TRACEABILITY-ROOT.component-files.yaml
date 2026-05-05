@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: DS
 cqRails: traceability commands and lineage queries
 childrenRequired: true
-fileCount: 65
+fileCount: 67
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -104,6 +104,13 @@ files:
     isLegacy: false
   - path: packages/@dvt/traceability-service/src/core/issue-baseline.ts
     fileId: F-CBA89F7A46CE
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/core/manifest-json.ts
+    fileId: F-E9EAC3C259F3
     owningUnit: SYS-TRACEABILITY-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -419,6 +426,13 @@ files:
     isLegacy: false
   - path: packages/@dvt/traceability-service/test/lineage/support/lineageRuntimeTestSupport.ts
     fileId: F-5F587CD786FB
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/test/manifestJson.test.ts
+    fileId: F-1B67579BD466
     owningUnit: SYS-TRACEABILITY-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

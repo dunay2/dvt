@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - documentation governance
 childrenRequired: true
-fileCount: 1743
+fileCount: 1746
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -8875,6 +8875,14 @@ files:
     isDrift: false
     isLegacy: false
   - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/assets/canvas-workbench-stage-1-mockup-20260505.png
+    fileId: F-A197C2802A1D
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/canvas-draft-persistence-runtime-debt-plan-20260503.md
     fileId: F-DC232A640423
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -8885,6 +8893,14 @@ files:
   - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md
     fileId: F-5747AC855FEA
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md
+    fileId: F-82E6E180FA7D
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -8909,6 +8925,14 @@ files:
   - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/code-workbench-workspace-files-query-rail-plan-20260504.md
     fileId: F-751C27AB71BB
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md
+    fileId: F-BFBC41D8F214
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

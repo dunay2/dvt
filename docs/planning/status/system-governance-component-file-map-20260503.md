@@ -25,7 +25,7 @@ Machine-readable sources:
 ## Totals
 
 - Components: 32
-- Files mapped: 4238
+- Files mapped: 4243
 - Components with drift or legacy files: 3
 
 ## Largest Components
@@ -33,7 +33,7 @@ Machine-readable sources:
 <!-- prettier-ignore-start -->
 | Component | Files | Drift files | Legacy files |
 | --- | ---: | ---: | ---: |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1743 | 0 | 0 |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1746 | 0 | 0 |
 | `SYS-WEB-ROOT` | 822 | 0 | 0 |
 | `SYS-RUNTIME-ROOT` | 286 | 0 | 0 |
 | `SYS-ADAPTERS-ROOT` | 196 | 0 | 0 |
@@ -44,7 +44,7 @@ Machine-readable sources:
 | `SYS-API-TESTS` | 101 | 0 | 0 |
 | `SYS-API-HTTP-ENTRYPOINTS` | 83 | 0 | 0 |
 | `SYS-PLANNER-ROOT` | 76 | 0 | 0 |
-| `SYS-TRACEABILITY-ROOT` | 65 | 0 | 0 |
+| `SYS-TRACEABILITY-ROOT` | 67 | 0 | 0 |
 | `SYS-API-HTTP-ENTRYPOINT-TESTS` | 54 | 0 | 0 |
 | `SYS-API-APPLICATION-SERVICES` | 36 | 0 | 0 |
 | `SYS-PLANSTORE-DOCS-RISK` | 34 | 0 | 0 |
@@ -86,7 +86,7 @@ Machine-readable sources:
 | `SYS-API-TESTS` | 101 | 0 | 0 | [shard](./governance-components/SYS-API-TESTS.component-files.yaml) |
 | `SYS-CI-GOVERNANCE-ROOT` | 182 | 0 | 0 | [shard](./governance-components/SYS-CI-GOVERNANCE-ROOT.component-files.yaml) |
 | `SYS-CONTRACTS-ROOT` | 127 | 0 | 0 | [shard](./governance-components/SYS-CONTRACTS-ROOT.component-files.yaml) |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1743 | 0 | 0 | [shard](./governance-components/SYS-DOCS-GOVERNANCE-ROOT.component-files.yaml) |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1746 | 0 | 0 | [shard](./governance-components/SYS-DOCS-GOVERNANCE-ROOT.component-files.yaml) |
 | `SYS-OBSERVABILITY-ROOT` | 15 | 0 | 0 | [shard](./governance-components/SYS-OBSERVABILITY-ROOT.component-files.yaml) |
 | `SYS-PLANNER-ROOT` | 76 | 0 | 0 | [shard](./governance-components/SYS-PLANNER-ROOT.component-files.yaml) |
 | `SYS-PLANSTORE-API-COMPOSITION` | 20 | 20 | 0 | [shard](./governance-components/SYS-PLANSTORE-API-COMPOSITION.component-files.yaml) |
@@ -99,7 +99,7 @@ Machine-readable sources:
 | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | 11 | 0 | 0 | [shard](./governance-components/SYS-PLANSTORE-TEMPORAL-COMPOSITION.component-files.yaml) |
 | `SYS-REPO-METADATA-ROOT` | 117 | 0 | 0 | [shard](./governance-components/SYS-REPO-METADATA-ROOT.component-files.yaml) |
 | `SYS-RUNTIME-ROOT` | 286 | 0 | 0 | [shard](./governance-components/SYS-RUNTIME-ROOT.component-files.yaml) |
-| `SYS-TRACEABILITY-ROOT` | 65 | 0 | 0 | [shard](./governance-components/SYS-TRACEABILITY-ROOT.component-files.yaml) |
+| `SYS-TRACEABILITY-ROOT` | 67 | 0 | 0 | [shard](./governance-components/SYS-TRACEABILITY-ROOT.component-files.yaml) |
 | `SYS-WEB-ROOT` | 822 | 0 | 0 | [shard](./governance-components/SYS-WEB-ROOT.component-files.yaml) |
 | `SYS-WORKERS-ROOT` | 103 | 0 | 0 | [shard](./governance-components/SYS-WORKERS-ROOT.component-files.yaml) |
 <!-- prettier-ignore-end -->

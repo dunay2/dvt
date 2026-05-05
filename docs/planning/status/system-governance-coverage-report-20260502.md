@@ -29,8 +29,8 @@ Upstream indexes:
 
 ## Totals
 
-- Files: 4238
-- Governed files: 4238
+- Files: 4243
+- Governed files: 4243
 - Ungoverned files: 0
 - Drift files: 41
 - Legacy files: 0
@@ -49,7 +49,7 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Root unit | Files |
 | --- | ---: |
-| `SYS-DVT` | 4238 |
+| `SYS-DVT` | 4243 |
 <!-- prettier-ignore-end -->
 
 ## By Domain Unit
@@ -58,11 +58,11 @@ Upstream indexes:
 | Domain unit | Files |
 | --- | ---: |
 | `SYS-ADAPTERS` | 196 |
-| `SYS-DVT` | 3461 |
+| `SYS-DVT` | 3464 |
 | `SYS-OBSERVABILITY` | 15 |
 | `SYS-PLANSTORE` | 112 |
 | `SYS-RUNTIME` | 286 |
-| `SYS-TRACEABILITY` | 65 |
+| `SYS-TRACEABILITY` | 67 |
 | `SYS-WORKERS` | 103 |
 <!-- prettier-ignore-end -->
 
@@ -73,9 +73,9 @@ Upstream indexes:
 | --- | ---: |
 | `ADP` | 251 |
 | `AS` | 471 |
-| `DS` | 142 |
+| `DS` | 144 |
 | `ENTRY` | 918 |
-| `INFRA` | 2257 |
+| `INFRA` | 2260 |
 | `PORT` | 199 |
 <!-- prettier-ignore-end -->
 
@@ -85,7 +85,7 @@ Upstream indexes:
 | Status | Files |
 | --- | ---: |
 | `canonical` | 117 |
-| `coverage-required` | 3998 |
+| `coverage-required` | 4003 |
 | `drift` | 41 |
 | `review` | 82 |
 <!-- prettier-ignore-end -->
@@ -95,7 +95,7 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Governance state | Files |
 | --- | ---: |
-| `coverage-required` | 3998 |
+| `coverage-required` | 4003 |
 | `drift` | 41 |
 | `governed` | 117 |
 | `review` | 82 |
@@ -107,7 +107,7 @@ Upstream indexes:
 | Canonical role | Files |
 | --- | ---: |
 | `implementation-owner` | 117 |
-| `none` | 4121 |
+| `none` | 4126 |
 <!-- prettier-ignore-end -->
 
 ## By Evidence State
@@ -116,7 +116,7 @@ Upstream indexes:
 | Evidence state | Files |
 | --- | ---: |
 | `classification-only` | 117 |
-| `coverage-required` | 3998 |
+| `coverage-required` | 4003 |
 | `remediation-required` | 41 |
 | `review-required` | 82 |
 <!-- prettier-ignore-end -->
@@ -182,7 +182,7 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Component | Files | Status | DDD owner |
 | --- | ---: | --- | --- |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1743 | `coverage-required` | `INFRA` |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1746 | `coverage-required` | `INFRA` |
 | `SYS-WEB-ROOT` | 822 | `coverage-required` | `ENTRY` |
 | `SYS-RUNTIME-ROOT` | 286 | `coverage-required` | `AS` |
 | `SYS-ADAPTERS-ROOT` | 196 | `coverage-required` | `ADP` |
@@ -191,7 +191,7 @@ Upstream indexes:
 | `SYS-REPO-METADATA-ROOT` | 117 | `canonical` | `INFRA` |
 | `SYS-WORKERS-ROOT` | 103 | `coverage-required` | `AS` |
 | `SYS-PLANNER-ROOT` | 76 | `coverage-required` | `DS` |
-| `SYS-TRACEABILITY-ROOT` | 65 | `coverage-required` | `DS` |
+| `SYS-TRACEABILITY-ROOT` | 67 | `coverage-required` | `DS` |
 | `SYS-PLANSTORE-DOCS-RISK` | 34 | `review` | `INFRA` |
 | `SYS-PLANSTORE-ARTIFACTS-PORTS` | 23 | `review` | `PORT` |
 | `SYS-PLANSTORE-API-COMPOSITION` | 20 | `drift` | `AS` |
@@ -208,8 +208,8 @@ Upstream indexes:
 <!-- prettier-ignore-start -->
 | Governance source | Files |
 | --- | ---: |
-| `docs/DOCS_README.md` | 1758 |
-| `docs/planning/status/governance-document-rule-inventory.md` | 1743 |
+| `docs/DOCS_README.md` | 1761 |
+| `docs/planning/status/governance-document-rule-inventory.md` | 1746 |
 | `docs/planning/status/system-operations-inventory-20260501.md` | 971 |
 | `docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md` | 822 |
 | `docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md` | 368 |
@@ -220,7 +220,7 @@ Upstream indexes:
 | `package.json` | 117 |
 | `pnpm-workspace.yaml` | 117 |
 | `docs/contracts/planner/index.md` | 76 |
-| `docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md` | 65 |
+| `docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md` | 67 |
 | `docs/architecture/reference-architecture.md` | 55 |
 | `docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md` | 46 |
 | `docs/planning/status/system-governance-document-unit-map-20260501.md` | 34 |
