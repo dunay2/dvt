@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files docs
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-documentCount: 1484
+documentCount: 1486
 documents:
   - path: docs/CONTRIBUTING.md
     classification: governs unit
@@ -4683,6 +4683,11 @@ documents:
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-WEB
   - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-WEB
+  - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-tabs-placement-design-plan-20260503.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -4694,6 +4699,11 @@ documents:
     subjectUnit: SYS-WEB
   - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/code-workbench-workspace-files-query-rail-plan-20260504.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-WEB
+  - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-WEB
