@@ -2,7 +2,7 @@ version: 1
 generatedFrom: git ls-files plus untracked non-ignored local files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
 shardDirectory: docs/planning/status/governance-files
-fileCount: 4240
+fileCount: 4248
 shards:
   - id: SYS-ADAPTERS
     path: docs/planning/status/governance-files/SYS-ADAPTERS.files.yaml
@@ -11,7 +11,7 @@ shards:
   - id: SYS-API
     path: docs/planning/status/governance-files/SYS-API.files.yaml
     fileCount: 394
-    contentHash: 4e1296092673d4d13c4600cac5c4a07cb0a438145e80571cbe01da1c8f9fb47f
+    contentHash: f7f7a375056b44e33b201a56221eb92c409608d28c2d9eec675e76079ba1ab8a
   - id: SYS-CI-GOVERNANCE
     path: docs/planning/status/governance-files/SYS-CI-GOVERNANCE.files.yaml
     fileCount: 182
@@ -22,8 +22,8 @@ shards:
     contentHash: b1b61186991da3ff32b3c221887c7edf88ce9d26b0c78025b2eb82687c357523
   - id: SYS-DOCS-GOVERNANCE
     path: docs/planning/status/governance-files/SYS-DOCS-GOVERNANCE.files.yaml
-    fileCount: 1745
-    contentHash: aeae5ed628565be045aa01cdf9477c2d8723761517ec9c9a9535438b6cf5399c
+    fileCount: 1750
+    contentHash: 9516696067faa164bbdd1206d11060350dbe2bbcb50e1771d626396a216c612d
   - id: SYS-OBSERVABILITY
     path: docs/planning/status/governance-files/SYS-OBSERVABILITY.files.yaml
     fileCount: 15
@@ -38,16 +38,16 @@ shards:
     contentHash: cb34f48a52e11e504eaa8a79322e85df2ea975ba9b6e01936a94148f7f11802b
   - id: SYS-REPO-METADATA
     path: docs/planning/status/governance-files/SYS-REPO-METADATA.files.yaml
-    fileCount: 117
-    contentHash: 3e82828bc2ddcc09d297c9f906bf2596bc4236f272feebc9603862fce6561312
+    fileCount: 118
+    contentHash: d8b0aadc84af8ab5b5cf5ebbe1bedad7d35a6efd757c0c71717cdb4fff101d30
   - id: SYS-RUNTIME
     path: docs/planning/status/governance-files/SYS-RUNTIME.files.yaml
     fileCount: 286
     contentHash: 29a78e327cf0af33ef81f3a7507f4d8be4b79868b46e23575406a09cf448541b
   - id: SYS-TRACEABILITY
     path: docs/planning/status/governance-files/SYS-TRACEABILITY.files.yaml
-    fileCount: 65
-    contentHash: 3bdb1f29f9f8d9039c9f0941fa959ddf3dd24cac23e1b3927596915503cd9daa
+    fileCount: 67
+    contentHash: f19dd7ec70344d97c89467052a0f157181d3bc2b545b18227320981a907fa49e
   - id: SYS-WEB
     path: docs/planning/status/governance-files/SYS-WEB.files.yaml
     fileCount: 822

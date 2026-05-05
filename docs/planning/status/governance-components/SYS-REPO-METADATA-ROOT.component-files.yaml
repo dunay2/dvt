@@ -7,7 +7,7 @@ governanceState: governed
 dddOwner: INFRA
 cqRails: none - repository metadata
 childrenRequired: true
-fileCount: 117
+fileCount: 118
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -748,6 +748,13 @@ files:
     isLegacy: false
   - path: infra/prototypes/api/tsconfig.json
     fileId: F-FEC6BAAEBFBA
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: nixpacks.toml
+    fileId: F-3326ECFA4B7A
     owningUnit: SYS-REPO-METADATA-ROOT
     unitStatus: canonical
     governanceState: governed

@@ -30,8 +30,11 @@ That means:
 
 - one persistent shell;
 - one active route-level work surface at a time;
-- optional left and right contextual panels;
+- no fixed left navigation rail inside the Canvas workbench;
+- optional contextual panels, drawers, or overlays only when justified by
+  active context or explicit user pinning;
 - an optional bottom drawer for dense supporting context;
+- top menu and command palette discovery for global/workbench commands;
 - fast transitions between authoring, code generation, review, and monitoring
   surfaces;
 - explicit empty, loading, error, degraded, and read-only states.
@@ -71,7 +74,8 @@ Every route-level workbench must fit this shell contract:
 
 ```mermaid
 flowchart LR
-  Nav["LeftNavigation"] --> Workbench["Active route-level workbench"]
+  Shell["Top shell menus and command palette"] --> Workbench["Active route-level workbench"]
+  Workbench --> Strip["Workbench view strip"]
   Workbench --> LeftPanel["Optional left panel"]
   Workbench --> Center["Primary surface"]
   Workbench --> RightPanel["Optional right panel"]
@@ -82,11 +86,12 @@ Implementation rules:
 
 1. Keep one persistent shell.
 2. Keep one active route-level workbench at a time.
-3. Use side panels for context, not as hidden second applications.
-4. Keep domain semantics in DVT adapters, not in third-party component objects.
-5. Reuse mature libraries for hard interaction problems before writing custom
+3. Do not introduce a fixed left navigation rail inside Canvas.
+4. Use side panels for context, not as hidden second applications.
+5. Keep domain semantics in DVT adapters, not in third-party component objects.
+6. Reuse mature libraries for hard interaction problems before writing custom
    versions.
-6. Treat the per-screen manuals and user stories as the acceptance contract for
+7. Treat the per-screen manuals and user stories as the acceptance contract for
    each route-level workbench.
 
 ## Ownership Model
@@ -97,7 +102,8 @@ Owns:
 
 - top bar;
 - health banner;
-- left navigation;
+- command/menu discovery and any remaining shell navigation compatibility
+  surface;
 - route outlet;
 - bottom drawer visibility;
 - focus mode and global shell controls.

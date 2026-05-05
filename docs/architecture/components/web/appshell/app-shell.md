@@ -28,6 +28,10 @@ Primary code anchors:
 - [Console.tsx](../../../../../apps/web/src/app/components/Console.tsx)
 - [bottomConsoleDrawerModel.ts](../../../../../apps/web/src/app/components/shell/bottomConsoleDrawerModel.ts)
 
+`LeftNavigation.tsx` is a current implementation anchor, not the target Canvas
+workbench direction. `F-28` governs the next Canvas shell sequence and requires
+Canvas to render without a fixed left navigation rail.
+
 Current shell regions:
 
 ```mermaid
@@ -55,12 +59,21 @@ reading `resolveDataSource()` directly.
 
 ## Shell Navigation Ownership
 
-The left rail now follows the same boundary rule as the rest of the shell:
+The current left navigation implementation follows the same boundary rule as
+the rest of the shell:
 
 - runtime capability data decides which plugin-contributed views are available;
 - the shell normalizes those runtime views into a render-ready navigation model;
 - the rail renders plain navigation items and does not know plugin manifest
   structure, label resolution, or shell footer ownership.
+
+Target direction for Canvas workbench:
+
+- top menus and command palette provide command discovery;
+- Canvas view strip owns route-local projections;
+- fixed left navigation must not occupy the Canvas workbench surface;
+- on-demand context surfaces, drawers, and pinned user presentation preferences
+  must not become a second permanent navigation rail.
 
 Current flow:
 

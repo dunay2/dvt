@@ -935,6 +935,7 @@ units:
       - dev.sh
       - eslint.config.cjs
       - infra/**
+      - nixpacks.toml
       - package.json
       - pnpm-lock.yaml
       - pnpm-workspace.yaml

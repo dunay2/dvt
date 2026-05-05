@@ -3,8 +3,8 @@ generatedFrom:
   - docs/planning/status/system-governance-file-index.files.yaml
   - docs/planning/status/system-governance-component-index.components.yaml
 totals:
-  files: 4240
-  governedFiles: 4240
+  files: 4248
+  governedFiles: 4248
   ungovernedFiles: 0
   driftFiles: 41
   legacyFiles: 0
@@ -22,12 +22,12 @@ ciPosture:
     - legacyFiles records removal targets until owning work removes them
 byRootUnit:
   - name: SYS-DVT
-    count: 4240
+    count: 4248
 byDomainUnit:
   - name: SYS-ADAPTERS
     count: 196
   - name: SYS-DVT
-    count: 3463
+    count: 3469
   - name: SYS-OBSERVABILITY
     count: 15
   - name: SYS-PLANSTORE
@@ -35,7 +35,7 @@ byDomainUnit:
   - name: SYS-RUNTIME
     count: 286
   - name: SYS-TRACEABILITY
-    count: 65
+    count: 67
   - name: SYS-WORKERS
     count: 103
 byComponentUnit:
@@ -70,7 +70,7 @@ byComponentUnit:
   - name: SYS-CONTRACTS-ROOT
     count: 127
   - name: SYS-DOCS-GOVERNANCE-ROOT
-    count: 1745
+    count: 1750
   - name: SYS-OBSERVABILITY-ROOT
     count: 15
   - name: SYS-PLANNER-ROOT
@@ -90,43 +90,43 @@ byComponentUnit:
   - name: SYS-PLANSTORE-TEMPORAL-COMPOSITION
     count: 11
   - name: SYS-REPO-METADATA-ROOT
-    count: 117
+    count: 118
   - name: SYS-RUNTIME-ROOT
     count: 286
   - name: SYS-TRACEABILITY-ROOT
-    count: 65
+    count: 67
   - name: SYS-WEB-ROOT
     count: 822
   - name: SYS-WORKERS-ROOT
     count: 103
 byStatus:
   - name: canonical
-    count: 117
+    count: 118
   - name: coverage-required
-    count: 4000
+    count: 4007
   - name: drift
     count: 41
   - name: review
     count: 82
 byGovernanceState:
   - name: coverage-required
-    count: 4000
+    count: 4007
   - name: drift
     count: 41
   - name: governed
-    count: 117
+    count: 118
   - name: review
     count: 82
 byCanonicalRole:
   - name: implementation-owner
-    count: 117
+    count: 118
   - name: none
-    count: 4123
+    count: 4130
 byEvidenceState:
   - name: classification-only
-    count: 117
+    count: 118
   - name: coverage-required
-    count: 4000
+    count: 4007
   - name: remediation-required
     count: 41
   - name: review-required
@@ -137,18 +137,18 @@ byDddOwner:
   - name: AS
     count: 471
   - name: DS
-    count: 142
+    count: 144
   - name: ENTRY
     count: 918
   - name: INFRA
-    count: 2259
+    count: 2265
   - name: PORT
     count: 199
 governanceDocuments:
   - path: docs/DOCS_README.md
-    fileCount: 1760
+    fileCount: 1765
   - path: docs/planning/status/governance-document-rule-inventory.md
-    fileCount: 1745
+    fileCount: 1750
   - path: docs/planning/status/system-operations-inventory-20260501.md
     fileCount: 971
   - path: >-
@@ -167,13 +167,13 @@ governanceDocuments:
   - path: docs/contracts/index.md
     fileCount: 127
   - path: package.json
-    fileCount: 117
+    fileCount: 118
   - path: pnpm-workspace.yaml
-    fileCount: 117
+    fileCount: 118
   - path: docs/contracts/planner/index.md
     fileCount: 76
   - path: docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
-    fileCount: 65
+    fileCount: 67
   - path: docs/architecture/reference-architecture.md
     fileCount: 55
   - path: >-
@@ -219,7 +219,7 @@ componentCoverage:
     evidenceState: coverage-required
     dddOwner: INFRA
     cqRails: none - documentation governance
-    fileCount: 1745
+    fileCount: 1750
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -317,7 +317,7 @@ componentCoverage:
     evidenceState: classification-only
     dddOwner: INFRA
     cqRails: none - repository metadata
-    fileCount: 117
+    fileCount: 118
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -408,7 +408,7 @@ componentCoverage:
     evidenceState: coverage-required
     dddOwner: DS
     cqRails: traceability commands and lineage queries
-    fileCount: 65
+    fileCount: 67
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -952,7 +952,7 @@ findings:
   legacyFiles: []
   componentsRequiringSubdivision:
     - id: SYS-DOCS-GOVERNANCE-ROOT
-      fileCount: 1745
+      fileCount: 1750
       status: coverage-required
       dddOwner: INFRA
     - id: SYS-WEB-ROOT
@@ -976,7 +976,7 @@ findings:
       status: coverage-required
       dddOwner: PORT
     - id: SYS-REPO-METADATA-ROOT
-      fileCount: 117
+      fileCount: 118
       status: canonical
       dddOwner: INFRA
     - id: SYS-WORKERS-ROOT
@@ -988,7 +988,7 @@ findings:
       status: coverage-required
       dddOwner: DS
     - id: SYS-TRACEABILITY-ROOT
-      fileCount: 65
+      fileCount: 67
       status: coverage-required
       dddOwner: DS
     - id: SYS-PLANSTORE-DOCS-RISK

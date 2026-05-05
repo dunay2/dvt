@@ -37,7 +37,8 @@ same screen repeated.
 
 Shared rules:
 
-- persistent shell and left navigation;
+- persistent top shell with command/menu discovery;
+- no fixed left navigation rail inside the Canvas workbench;
 - one route owns the center at a time;
 - route-local toolbar below the shell header;
 - side panels for context and secondary detail;

@@ -1611,7 +1611,7 @@ tasks:
     blocking: reporting-only
     reason: Documents track drift or require disposition and need alignment with active units.
     fileCount: 0
-    documentCount: 18
+    documentCount: 19
     files: []
     documents:
       - path: docs/planning/closeouts/20260315-api-protected-runtime-closeout.md
@@ -1651,6 +1651,8 @@ tasks:
       - path: docs/planning/closeouts/20260422-api-start-run-execution-capacity-admission-closeout.md
         classification: tracks drift
       - path: docs/planning/closeouts/20260426-api-tenant-qa-hardening-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260505-api-deploy-start-posture-closeout.md
         classification: tracks drift
       - path: docs/planning/reviews/architecture-and-governance/20260426-api-tenant-review.md
         classification: tracks drift

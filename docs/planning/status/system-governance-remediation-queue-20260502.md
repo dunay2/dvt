@@ -92,7 +92,7 @@ Machine-readable source:
 | `GRQ-COMPONENT_SUBDIVISION-SYS-REPO-METADATA-ROOT` | `P3` | `component-subdivision` | `SYS-REPO-METADATA-ROOT` | 0 | 0 | Component is known but still too broad for source-level governance. |
 | `GRQ-COMPONENT_SUBDIVISION-SYS-TRACEABILITY-ROOT` | `P3` | `component-subdivision` | `SYS-TRACEABILITY-ROOT` | 0 | 0 | Component is known but still too broad for source-level governance. |
 | `GRQ-COMPONENT_SUBDIVISION-SYS-WORKERS-ROOT` | `P3` | `component-subdivision` | `SYS-WORKERS-ROOT` | 0 | 0 | Component is known but still too broad for source-level governance. |
-| `GRQ-DOC_ALIGNMENT-SYS-API` | `P3` | `doc-alignment` | `SYS-API` | 0 | 18 | Documents track drift or require disposition and need alignment with active units. |
+| `GRQ-DOC_ALIGNMENT-SYS-API` | `P3` | `doc-alignment` | `SYS-API` | 0 | 19 | Documents track drift or require disposition and need alignment with active units. |
 | `GRQ-DOC_ALIGNMENT-SYS-ADAPTERS` | `P3` | `doc-alignment` | `SYS-ADAPTERS` | 0 | 17 | Documents track drift or require disposition and need alignment with active units. |
 | `GRQ-DOC_ALIGNMENT-SYS-WEB` | `P3` | `doc-alignment` | `SYS-WEB` | 0 | 12 | Documents track drift or require disposition and need alignment with active units. |
 | `GRQ-DOC_ALIGNMENT-SYS-PLANSTORE` | `P3` | `doc-alignment` | `SYS-PLANSTORE` | 0 | 9 | Documents track drift or require disposition and need alignment with active units. |

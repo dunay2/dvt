@@ -99,10 +99,15 @@ current plugin view contract has only one visual placement concept:
 ViewContribution.nav;
 ```
 
-That single field means "this view appears in the shell sidebar". There is no
+That single field means "this view appears in shell navigation". There is no
 canonical way for a plugin to say "this view is a tab inside the Canvas
 workbench". The result is duplicate semantics: route registration, shell
 navigation, and contextual workbench placement are collapsed into one property.
+
+This plan predates the F-27 Stage 1 UX direction. Any mention of a sidebar in
+this document describes the legacy/current shell navigation surface that Canvas
+workbench tabs must leave behind; it is not approval for a fixed left navigation
+rail inside the Canvas workbench.
 
 ## Current State Map
 
@@ -114,7 +119,7 @@ flowchart TD
   Routes["createAppRoutes()"]
   ShellRuntime["buildShellRuntimeState()"]
   ShellNav["buildShellNavigationModel()"]
-  Sidebar["Global shell sidebar"]
+  ShellSurface["Global shell navigation"]
   Canvas["/canvas route"]
   RouteViews["/code /lineage /diff /artifacts /runs"]
   CanvasTabs["CanvasPlaygroundTabStrip"]
@@ -124,9 +129,9 @@ flowchart TD
   Views --> Nav
   Nav --> ShellRuntime
   ShellRuntime --> ShellNav
-  ShellNav --> Sidebar
-  Sidebar --> Canvas
-  Sidebar --> RouteViews
+  ShellNav --> ShellSurface
+  ShellSurface --> Canvas
+  ShellSurface --> RouteViews
   Canvas --> CanvasTabs
 ```
 
@@ -136,7 +141,7 @@ Current implementation facts:
 | ----------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | `ViewContribution.nav`        | Declares global shell navigation.                             | Also acts as the only placement concept.                                   |
 | `getNavigationViews()`        | Returns all views with `nav`.                                 | Cannot distinguish global shell views from Canvas workbench tabs.          |
-| `buildShellNavigationModel()` | Maps navigation views to sidebar items.                       | Receives already-filtered views, so it cannot enforce placement semantics. |
+| `buildShellNavigationModel()` | Maps navigation views to shell navigation items.              | Receives already-filtered views, so it cannot enforce placement semantics. |
 | `dbtContributions.ts`         | Declares Canvas, Lineage, Code, Diff, Artifacts as shell nav. | Canvas-scoped views are presented as global siblings.                      |
 | `monitoringContributions.ts`  | Declares global Runs and run detail.                          | No separate Canvas-scoped Runs tab.                                        |
 | `CanvasPlaygroundTabStrip`    | Renders active Canvas document tabs and replacement action.   | It must not be reused for workbench view tabs.                             |
@@ -153,7 +158,7 @@ flowchart TD
   Routes["createAppRoutes()"]
   ShellModel["ShellNavigationReadModel"]
   WorkbenchModel["CanvasWorkbenchTabsReadModel"]
-  Sidebar["Global shell sidebar"]
+  ShellSurface["Global shell navigation"]
   CanvasRoute["/canvas route"]
   CanvasHeader["Canvas shell header"]
   WorkbenchTabs["Canvas workbench tabs"]
@@ -165,7 +170,7 @@ flowchart TD
   Placement --> ShellViews
   Placement --> WorkbenchViews
   ShellViews --> ShellModel
-  ShellModel --> Sidebar
+  ShellModel --> ShellSurface
   WorkbenchViews --> WorkbenchModel
   WorkbenchModel --> CanvasHeader
   CanvasRoute --> CanvasHeader
@@ -220,13 +225,13 @@ alias that lets new views continue using `nav`.
 | ---------------------------------------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------------- |
 | `ViewContribution.nav`                               | `ViewContribution.placement`                                    | One field cannot represent both shell destinations and contextual tabs. |
 | `getNavigationViews()`                               | `getShellNavigationViews()` plus `getCanvasWorkbenchTabViews()` | Avoids duplicate local filters and makes placement semantic.            |
-| `ShellNavigationItem.icon: ViewContribution['nav']`  | `ShellNavigationItem.icon: ShellNavigationPlacement['icon']`    | Type-level proof that sidebar reads shell placements only.              |
+| `ShellNavigationItem.icon: ViewContribution['nav']`  | `ShellNavigationItem.icon: ShellNavigationPlacement['icon']`    | Type-level proof that shell navigation reads shell placements only.     |
 | `dbt.lineage` shell nav                              | `dbt.lineage` Canvas workbench tab placement                    | Lineage is Canvas/project context-dependent in this slice.              |
 | `dbt.code` shell nav                                 | `dbt.code` Canvas workbench tab placement                       | Code is selection/canvas context-dependent.                             |
 | `dbt.diff` shell nav                                 | `dbt.diff` Canvas workbench tab placement                       | Diff depends on Canvas graph and revision context.                      |
 | `dbt.artifacts` shell nav                            | `dbt.artifacts` Canvas workbench tab placement                  | Artifacts are useful as Canvas/run-scoped evidence.                     |
 | One `monitoring.runs` meaning                        | Two placements: global Runs shell view and Canvas Runs tab      | Global run search is not the same intent as Canvas-scoped runs.         |
-| Visual reliance on the left sidebar for Canvas views | Canvas-owned tab strip inside the Canvas route                  | Keeps related view changes in the same workbench location.              |
+| Visual reliance on shell navigation for Canvas views | Canvas-owned tab strip inside the Canvas route                  | Keeps related view changes in the same workbench location.              |
 
 `CanvasPlaygroundTabStrip` is not replaced by this slice. It keeps owning
 Canvas document tabs and replacement behavior. The new workbench tab strip is a
@@ -260,7 +265,7 @@ Rail notes:
 | Object                               | Kind                 | Owner                         | Invariants                                                                |
 | ------------------------------------ | -------------------- | ----------------------------- | ------------------------------------------------------------------------- |
 | `ViewPlacement`                      | value object         | Plugin contribution registry  | A view has exactly one visual placement.                                  |
-| `ShellNavigationPlacement`           | value object         | Web shell navigation          | Only `kind: 'shell-nav'` can become a sidebar item.                       |
+| `ShellNavigationPlacement`           | value object         | Web shell navigation          | Only `kind: 'shell-nav'` can become a shell navigation item.              |
 | `CanvasWorkbenchTabPlacement`        | value object         | Canvas workbench presentation | Only `workbench: 'canvas'` can become a Canvas tab.                       |
 | `ShellNavigationReadModel`           | read model           | Web shell navigation          | Sorted by placement order; contains no Canvas workbench tabs.             |
 | `CanvasWorkbenchTabsReadModel`       | read model           | Canvas workbench presentation | Sorted by placement order; contains Graph plus enabled tab contributions. |
@@ -270,13 +275,13 @@ Rail notes:
 
 ## Fowler Opportunity Matrix
 
-| Scenario                                                              | Opportunity         | Fowler pattern                          | DDD owner                            | Command/query rail            | Implementation surfaces                                       | Unit or package test           | Architecture test                                | User-flow test                                                                  | Out of scope                    |
-| --------------------------------------------------------------------- | ------------------- | --------------------------------------- | ------------------------------------ | ----------------------------- | ------------------------------------------------------------- | ------------------------------ | ------------------------------------------------ | ------------------------------------------------------------------------------- | ------------------------------- |
-| Sidebar shows Canvas-dependent views as global siblings.              | Boundary drift      | Presentation Model + Service Layer      | `ShellNavigationReadModel`           | `ListShellNavigationItems`    | `PluginManifest.ts`, `registry.ts`, `shellNavigationModel.ts` | `shellNavigationModel.test.ts` | `canvasWorkbenchTabs.architecture.test.ts`       | Cypress validates sidebar no longer lists Code/Lineage/Diff/Artifacts as global | Project Assets split            |
-| Plugin view contract has only `nav`.                                  | Primitive obsession | Replace Type Code with Value Object     | `ViewPlacement`                      | `RegisterPluginViewPlacement` | `PluginManifest.ts`, plugin contribution files                | registry tests                 | architecture guard rejects `nav` usage           | N/A                                                                             | External plugin versioning      |
-| Canvas needs Graph/Code/Lineage/Diff/Artifacts/Runs in one workbench. | Duplicate semantics | Composite View / Application Controller | `CanvasWorkbenchTabsReadModel`       | `ListCanvasWorkbenchTabs`     | Canvas workbench tab model and rendering files                | `canvasWorkbenchTabs.test.ts`  | architecture guard keeps tab read model pure     | `canvas-workbench-tabs.cy.ts`                                                   | Rewriting each tab internals    |
-| User switches workbench tabs.                                         | Hidden authority    | Command object                          | `CanvasWorkbenchTabSelectionCommand` | `SelectCanvasWorkbenchTab`    | `canvasWorkbenchRouteState.ts`                                | route state tests              | architecture guard rejects ad hoc tab ID strings | Cypress tab selection stays under Canvas                                        | Browser persistence of last tab |
-| Runs appears both globally and under Canvas.                          | Duplicate semantics | Explicit Context Object                 | `CanvasScopedRunSelection`           | `OpenCanvasScopedRunTab`      | monitoring contribution and Canvas tab read model             | scoped run tab tests           | architecture guard names global vs scoped runs   | Cypress opens Canvas Runs tab without opening global Runs route                 | Run detail redesign             |
+| Scenario                                                              | Opportunity         | Fowler pattern                          | DDD owner                            | Command/query rail            | Implementation surfaces                                       | Unit or package test           | Architecture test                                | User-flow test                                                                           | Out of scope                    |
+| --------------------------------------------------------------------- | ------------------- | --------------------------------------- | ------------------------------------ | ----------------------------- | ------------------------------------------------------------- | ------------------------------ | ------------------------------------------------ | ---------------------------------------------------------------------------------------- | ------------------------------- |
+| Shell navigation shows Canvas-dependent views as global siblings.     | Boundary drift      | Presentation Model + Service Layer      | `ShellNavigationReadModel`           | `ListShellNavigationItems`    | `PluginManifest.ts`, `registry.ts`, `shellNavigationModel.ts` | `shellNavigationModel.test.ts` | `canvasWorkbenchTabs.architecture.test.ts`       | Cypress validates shell navigation no longer lists Code/Lineage/Diff/Artifacts as global | Project Assets split            |
+| Plugin view contract has only `nav`.                                  | Primitive obsession | Replace Type Code with Value Object     | `ViewPlacement`                      | `RegisterPluginViewPlacement` | `PluginManifest.ts`, plugin contribution files                | registry tests                 | architecture guard rejects `nav` usage           | N/A                                                                                      | External plugin versioning      |
+| Canvas needs Graph/Code/Lineage/Diff/Artifacts/Runs in one workbench. | Duplicate semantics | Composite View / Application Controller | `CanvasWorkbenchTabsReadModel`       | `ListCanvasWorkbenchTabs`     | Canvas workbench tab model and rendering files                | `canvasWorkbenchTabs.test.ts`  | architecture guard keeps tab read model pure     | `canvas-workbench-tabs.cy.ts`                                                            | Rewriting each tab internals    |
+| User switches workbench tabs.                                         | Hidden authority    | Command object                          | `CanvasWorkbenchTabSelectionCommand` | `SelectCanvasWorkbenchTab`    | `canvasWorkbenchRouteState.ts`                                | route state tests              | architecture guard rejects ad hoc tab ID strings | Cypress tab selection stays under Canvas                                                 | Browser persistence of last tab |
+| Runs appears both globally and under Canvas.                          | Duplicate semantics | Explicit Context Object                 | `CanvasScopedRunSelection`           | `OpenCanvasScopedRunTab`      | monitoring contribution and Canvas tab read model             | scoped run tab tests           | architecture guard names global vs scoped runs   | Cypress opens Canvas Runs tab without opening global Runs route                          | Run detail redesign             |
 
 ## Target Route And Placement Rules
 
@@ -287,7 +292,7 @@ Rail notes:
    - shell nav; or
    - Canvas workbench tab.
 4. Canvas workbench tab views render inside the Canvas route, not as global
-   sidebar destinations.
+   shell navigation destinations.
 5. Direct old global paths for Canvas-dependent views are retired in this
    hard-cut slice. If a deep-link strategy is required, it must use the new
    Canvas workbench route state, not compatibility redirects.
@@ -427,7 +432,8 @@ export function buildCanvasWorkbenchTabsReadModel(args: {
   - `CanvasWorkbenchTabStrip` does not import shell navigation;
   - `CanvasPlaygroundTabStrip` does not import workbench tab state.
 - Add Cypress spec proving:
-  - sidebar no longer exposes Code, Lineage, Diff, Artifacts as global items;
+  - shell navigation no longer exposes Code, Lineage, Diff, Artifacts as global
+    items;
   - Canvas shows Graph, Code, Lineage, Diff, Artifacts, Runs tabs;
   - selecting Code/Lineage/Diff/Artifacts/Runs keeps the user in Canvas route
     context;
@@ -1126,7 +1132,7 @@ Forbidden surfaces for this slice:
 
 | Story                   | Scenario                                                                                                  | Acceptance                                                                                                          |
 | ----------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `US-CANVAS-WB-TABS-001` | As a user, I open Canvas and see Graph, Code, Lineage, Diff, Artifacts, Runs inside the Canvas workbench. | Tabs render in the Canvas header; shell sidebar does not list Code, Lineage, Diff, or Artifacts globally.           |
+| `US-CANVAS-WB-TABS-001` | As a user, I open Canvas and see Graph, Code, Lineage, Diff, Artifacts, Runs inside the Canvas workbench. | Tabs render in the Canvas header; shell navigation does not list Code, Lineage, Diff, or Artifacts globally.        |
 | `US-CANVAS-WB-TABS-002` | As a user, I select Code from the Canvas workbench.                                                       | The route stays in Canvas context and renders the Code tab or an explicit unavailable state if no selection exists. |
 | `US-CANVAS-WB-TABS-003` | As a user, I select Lineage from the Canvas workbench.                                                    | The route stays in Canvas context and renders Canvas-scoped lineage.                                                |
 | `US-CANVAS-WB-TABS-004` | As a user, I open global Runs from the shell.                                                             | I see global run search/list, not the Canvas scoped Runs tab.                                                       |
