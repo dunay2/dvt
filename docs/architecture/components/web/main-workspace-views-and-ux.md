@@ -21,7 +21,8 @@ The current shell is composed from:
 - a persistent top bar with tenant, project, environment, git context, and
   shell controls;
 - a health banner that reports platform-health probe state;
-- a left navigation rail populated by plugin-contributed core views;
+- a current `LeftNavigation` implementation that is being converged away from
+  fixed Canvas workbench navigation under `F-28`;
 - a central route outlet where the active product view renders;
 - an optional bottom console drawer;
 - focus mode, explorer visibility, and inspector visibility controls stored in
@@ -226,14 +227,19 @@ flowchart TB
 - the top bar is always visible;
 - the health banner is visible when health is being checked, degraded, or
   offline;
-- the left navigation is hidden in focus mode;
+- Canvas workbench must not render a fixed left navigation rail;
+- route and command discovery should converge on the top menu, command palette,
+  and route-local workbench view strip;
 - the bottom console is optional and should never hide the current route state.
 
 ### Canvas UX
 
-- explorer and inspector can be hidden or restored from side reveal buttons;
+- explorer and inspector can be hidden or restored from contextual reveal
+  controls;
 - graph operations live in the toolbar, not in the top bar;
 - planning and run actions belong to Canvas because they are graph-contextual;
+- Add/create behavior is command-driven and unpinned by default;
+- context labels remain reference indicators, not active workbench dropdowns;
 - graph overlays must remain visual layers over canonical structure, not mutate
   graph truth.
 

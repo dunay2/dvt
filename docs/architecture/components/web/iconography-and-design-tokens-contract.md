@@ -137,15 +137,15 @@ first implementation maps them onto the current variables in
 
 ### Surface tokens
 
-| Token                | Meaning                                    |
-| -------------------- | ------------------------------------------ |
-| `--surface-app`      | full-screen shell background               |
-| `--surface-shell`    | top bar, left rail, bottom drawer chrome   |
-| `--surface-route`    | default route background                   |
-| `--surface-panel`    | explorer, inspector, side panels           |
-| `--surface-elevated` | popover, dialog, raised cards              |
-| `--surface-selected` | selected row, node, or nav item background |
-| `--surface-overlay`  | overlay tint on graph and modal backdrops  |
+| Token                | Meaning                                         |
+| -------------------- | ----------------------------------------------- |
+| `--surface-app`      | full-screen shell background                    |
+| `--surface-shell`    | top bar, command surfaces, bottom drawer chrome |
+| `--surface-route`    | default route background                        |
+| `--surface-panel`    | explorer, inspector, side panels                |
+| `--surface-elevated` | popover, dialog, raised cards                   |
+| `--surface-selected` | selected row, node, or nav item background      |
+| `--surface-overlay`  | overlay tint on graph and modal backdrops       |
 
 ### Text tokens
 
@@ -361,12 +361,12 @@ Registry rule:
 
 ### Shell chrome
 
-| Surface       | Visual rule                                                                |
-| ------------- | -------------------------------------------------------------------------- |
-| top bar       | darkest stable chrome, quiet borders, global context only                  |
-| left rail     | slightly separated from route surface, clear active state, icon plus label |
-| health banner | status-first, compact, never a decorative announcement bar                 |
-| bottom drawer | same shell family, not a second route navigation                           |
+| Surface                                | Visual rule                                                       |
+| -------------------------------------- | ----------------------------------------------------------------- |
+| top bar                                | darkest stable chrome, quiet borders, global context only         |
+| shell navigation compatibility surface | separated from route surface, clear active state, icon plus label |
+| health banner                          | status-first, compact, never a decorative announcement bar        |
+| bottom drawer                          | same shell family, not a second route navigation                  |
 
 ### Route chrome
 

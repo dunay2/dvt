@@ -97,15 +97,16 @@ Acceptance:
 - the recovery command targets Graph;
 - no plugin tab is guessed from the unknown string.
 
-### US-CANVAS-WORKBENCH-008 - Shell Rail Exclusion
+### US-CANVAS-WORKBENCH-008 - Shell Navigation Exclusion
 
-As a reviewer, I want Canvas-only tabs excluded from the shell rail so a future
-plugin cannot reintroduce Code, Lineage, Diff, or Artifacts as global siblings.
+As a reviewer, I want Canvas-only tabs excluded from fixed shell navigation so a
+future plugin cannot reintroduce Code, Lineage, Diff, or Artifacts as global
+siblings.
 
 Acceptance:
 
 - `ListShellNavigationItems` returns only shell placements;
-- Cypress checks both retired hrefs and retired rail captions;
+- Cypress checks both retired hrefs and retired shell navigation captions;
 - architecture tests forbid compatibility through `ViewContribution.nav`.
 
 ### US-CANVAS-WORKBENCH-009 - Readable Horizontal Labels
@@ -115,7 +116,7 @@ to be readable in a horizontal tab strip.
 
 Acceptance:
 
-- tabs render outside the left navigation rail;
+- tabs render outside fixed left navigation;
 - tabs render inside the Canvas outlet;
 - labels are not truncated in the desktop workbench viewport;
 - Cypress proves `scrollWidth <= clientWidth + tolerance` for each label.
@@ -125,10 +126,10 @@ Acceptance:
 | Story                   | Rail                                 | DDD owner                               | Primary proof                              | Negative proof                                     |
 | ----------------------- | ------------------------------------ | --------------------------------------- | ------------------------------------------ | -------------------------------------------------- |
 | US-CANVAS-WORKBENCH-001 | `ListCanvasWorkbenchTabs`            | `CanvasWorkbenchTabsReadModel`          | `canvasWorkbenchTabs.test.ts`              | Graph default cannot select plugin tab by accident |
-| US-CANVAS-WORKBENCH-002 | `SelectCanvasWorkbenchTab`           | `CanvasWorkbenchTabSelectionCommand`    | `canvas-workbench-tabs.cy.ts`              | Code absent from shell rail                        |
+| US-CANVAS-WORKBENCH-002 | `SelectCanvasWorkbenchTab`           | `CanvasWorkbenchTabSelectionCommand`    | `canvas-workbench-tabs.cy.ts`              | Code absent from fixed shell navigation            |
 | US-CANVAS-WORKBENCH-003 | `SelectCanvasWorkbenchTab`           | `CanvasWorkbenchTabSelectionCommand`    | `canvas-workbench-tabs.cy.ts`              | retired Lineage route ID absent                    |
-| US-CANVAS-WORKBENCH-004 | `SelectCanvasWorkbenchTab`           | `CanvasWorkbenchTabSelectionCommand`    | `canvasWorkbenchRouteState.test.ts`        | Diff absent from shell rail                        |
-| US-CANVAS-WORKBENCH-005 | `SelectCanvasWorkbenchTab`           | `CanvasWorkbenchTabSelectionCommand`    | `canvasWorkbenchTabs.test.ts`              | Artifacts absent from shell rail                   |
+| US-CANVAS-WORKBENCH-004 | `SelectCanvasWorkbenchTab`           | `CanvasWorkbenchTabSelectionCommand`    | `canvasWorkbenchRouteState.test.ts`        | Diff absent from fixed shell navigation            |
+| US-CANVAS-WORKBENCH-005 | `SelectCanvasWorkbenchTab`           | `CanvasWorkbenchTabSelectionCommand`    | `canvasWorkbenchTabs.test.ts`              | Artifacts absent from fixed shell navigation       |
 | US-CANVAS-WORKBENCH-006 | `OpenCanvasScopedRunTab`             | `CanvasScopedRunSelection`              | `canvasWorkbenchTabs.architecture.test.ts` | global Runs remains shell-owned                    |
 | US-CANVAS-WORKBENCH-007 | `ResolveCanvasWorkbenchContext`      | `CanvasWorkbenchContext`                | `canvasWorkbenchRouteState.test.ts`        | unknown tab fails closed                           |
 | US-CANVAS-WORKBENCH-008 | `ListShellNavigationItems`           | `ShellNavigationReadModel`              | `shellNavigationModel.test.ts`             | workbench placement rejected                       |

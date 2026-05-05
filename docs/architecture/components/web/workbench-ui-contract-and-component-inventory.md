@@ -34,7 +34,7 @@ The product should behave like a mature operator control panel:
 
 - full-screen persistent shell;
 - one active workbench route at a time;
-- coherent left-to-right navigation and context model;
+- coherent top-menu, workbench-tab, and contextual command model;
 - dense but readable information design;
 - fast route-level actions without hidden state changes;
 - explicit `loading`, `empty`, `error`, `degraded`, and `read-only` states.
@@ -55,9 +55,10 @@ flowchart TB
   App["Full-screen app shell"] --> Top["Top bar"]
   App --> Health["Health banner"]
   App --> Body["Main shell body"]
-  Body --> Nav["Left navigation rail"]
   Body --> Route["Active route workbench"]
-  Route --> Left["Optional left context panel"]
+  Top --> Menu["Top menu and command palette"]
+  Route --> Views["Workbench view strip"]
+  Route --> Overlay["On-demand context surfaces"]
   Route --> Center["Primary surface"]
   Route --> Right["Optional right context panel"]
   App --> Bottom["Optional bottom console drawer"]
@@ -67,20 +68,29 @@ Layout rules:
 
 - the shell fills the viewport;
 - the top bar stays persistent;
-- the navigation rail is the primary route switcher;
+- the top menu and command palette are the canonical command discovery
+  surfaces;
+- the Canvas workbench must not include a fixed left navigation rail;
+- workbench views are route-local projections, not global navigation;
 - route workbenches own their own toolbar and contextual panels;
-- side panels are collapsible and resizable with sensible min/max widths;
+- side panels are contextual, collapsible, and resizable with sensible min/max
+  widths;
 - the bottom drawer is optional and never replaces the current route.
 
 ## Navigation And Menus
 
-| Surface                         | Ownership        | What belongs there                                                                   | What does not belong there                                 |
-| ------------------------------- | ---------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
-| Top bar                         | Global shell     | tenant, project, environment, health, global search or command, user/session actions | graph commands, route-local filters, route-local mutations |
-| Left navigation rail            | Global shell     | route switching, route badges, plugin-contributed route entries                      | route-local inspector tabs, node actions                   |
-| Route toolbar                   | Active workbench | route-local commands, toggles, filters, mode switches                                | tenant switch, shell health, user settings                 |
-| Context menus                   | Local surface    | node actions, row actions, artifact actions, inline route actions                    | global navigation                                          |
-| Right or left contextual panels | Active workbench | explorer, inspector, filters, metadata, secondary detail                             | primary route navigation                                   |
+| Surface                         | Ownership        | What belongs there                                                             | What does not belong there                                  |
+| ------------------------------- | ---------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| Top bar                         | Global shell     | compact context labels, health, global menus or commands, user/session actions | dominant scope selectors, graph-local mutations             |
+| Top menu and command palette    | Global shell     | File/Edit/View/Insert/Export/Run/Admin/Help commands and command discovery     | parallel command semantics or route-local service shortcuts |
+| Workbench view strip            | Active workbench | route-local projections such as Graph, SQL, Lineage, Logs, Metrics, and More   | global route navigation                                     |
+| Route toolbar                   | Active workbench | route-local commands, toggles, filters, mode switches                          | tenant switch, shell health, user settings                  |
+| Context menus                   | Local surface    | node actions, row actions, artifact actions, inline route actions              | global navigation                                           |
+| Right or left contextual panels | Active workbench | explorer, inspector, filters, metadata, secondary detail                       | primary route navigation                                    |
+
+Workbench view-strip labels are presentation labels resolved by the active
+workbench read model and capability registry. They must not imply independent
+route IDs or route-local hard-coded view lists.
 
 Primary route inventory:
 
@@ -255,24 +265,25 @@ The main screen should be `Canvas` inside the persistent shell.
 That means the operator lands in:
 
 - shell top bar;
-- left navigation rail;
+- top menu and command palette access;
 - `Canvas` workbench as the default primary route;
+- Canvas workbench view strip;
 - optional bottom console drawer.
 
 Main screen composition:
 
-| Area         | Component                                        | Behavior                                                    |
-| ------------ | ------------------------------------------------ | ----------------------------------------------------------- |
-| Shell top    | `ShellTopBar`                                    | shows tenant, project, environment, health, global controls |
-| Shell left   | `LeftNavigationRail`                             | switches between route workbenches                          |
-| Route top    | `CanvasToolbar` or `RouteToolbar` specialization | owns graph-local actions and toggles                        |
-| Route left   | `CanvasExplorerPanel`                            | optional, restorable, resizable                             |
-| Route center | `CanvasViewport`                                 | primary graph interaction surface                           |
-| Route right  | `CanvasInspectorPanel`                           | optional, selection-driven, restorable                      |
-| Route modal  | `PlanPreviewModal`                               | explicit plan review before run                             |
-| Route modal  | `ConfirmEdgeModal`                               | explicit graph mutation confirmation                        |
-| Route modal  | `SourceImportWizard`                             | source import flow                                          |
-| Shell bottom | `BottomConsoleDrawer`                            | execution and supporting context, not main navigation       |
+| Area          | Component                                        | Behavior                                                     |
+| ------------- | ------------------------------------------------ | ------------------------------------------------------------ |
+| Shell top     | `ShellTopBar`                                    | shows compact context labels, health, menus, global controls |
+| Route top     | `CanvasToolbar` or `RouteToolbar` specialization | owns graph-local actions and toggles                         |
+| Route strip   | `CanvasWorkbenchTabs`                            | switches Canvas projections without global navigation        |
+| Route overlay | `CanvasExplorerPanel`                            | optional, contextual, restorable, never a fixed nav rail     |
+| Route center  | `CanvasViewport`                                 | primary graph interaction surface                            |
+| Route right   | `CanvasInspectorPanel`                           | optional, selection-driven, restorable                       |
+| Route modal   | `PlanPreviewModal`                               | explicit plan review before run                              |
+| Route modal   | `ConfirmEdgeModal`                               | explicit graph mutation confirmation                         |
+| Route modal   | `SourceImportWizard`                             | source import flow                                           |
+| Shell bottom  | `BottomConsoleDrawer`                            | execution and supporting context, not main navigation        |
 
 ## Main Screen Behavior Rules
 
@@ -478,9 +489,12 @@ interaction model.
 
 1. The interface is a full-screen workbench, not a set of fixed windows.
 2. The main screen is `Canvas` inside the persistent shell.
-3. Primary navigation lives in the left rail.
-4. Global context lives in the top bar.
-5. Route-local commands live in each route toolbar.
-6. Side panels are contextual and resizable.
-7. The bottom drawer is supporting context, not route navigation.
-8. `lucide-react` is the standard icon family.
+3. Canvas does not use a fixed left navigation rail.
+4. Top menus and the command palette are the canonical command discovery
+   surfaces.
+5. Global context lives in compact top-bar labels, not dominant dropdowns.
+6. Route-local commands live in each route toolbar and workbench command
+   surfaces.
+7. Side panels are contextual and resizable.
+8. The bottom drawer is supporting context, not route navigation.
+9. `lucide-react` is the standard icon family.

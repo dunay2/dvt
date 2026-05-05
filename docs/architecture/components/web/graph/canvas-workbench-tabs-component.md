@@ -57,7 +57,7 @@ The component does not own:
 | API                                               | Owner                          | Responsibility                                                         |
 | ------------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------- |
 | `ViewPlacement`                                   | `PluginManifest.ts`            | Closed value object for shell or Canvas workbench placement.           |
-| `ShellNavigationPlacement`                        | `PluginManifest.ts`            | Placement variant allowed to become a left-rail shell item.            |
+| `ShellNavigationPlacement`                        | `PluginManifest.ts`            | Placement variant allowed to become a shell navigation item.           |
 | `CanvasWorkbenchTabPlacement`                     | `PluginManifest.ts`            | Placement variant allowed to become a Canvas tab.                      |
 | `getShellNavigationViews(capabilities)`           | `registry.ts`                  | Query rail for shell navigation views only.                            |
 | `getCanvasWorkbenchTabViews(capabilities)`        | `registry.ts`                  | Query rail for Canvas workbench tab views only.                        |
@@ -100,7 +100,8 @@ Canonical local catalog:
 - `ViewContribution.nav` is removed. New code must use `ViewContribution.placement`.
 - `getNavigationViews()` is removed. Callers must use a placement-specific query.
 - Shell navigation cannot render Code, Lineage, Diff, or Artifacts as global
-  siblings of Canvas.
+  siblings of Canvas, and the Canvas workbench must not introduce a fixed left
+  navigation rail for those views.
 - Global Runs and Canvas-scoped Runs are separate placements and separate
   product intents.
 - `CanvasPlaygroundTabStrip` owns Canvas document tabs only.
@@ -185,7 +186,8 @@ sequenceDiagram
   `/canvas` does not select Code, Lineage, Diff, Artifacts, or Runs by default.
 - `US-CANVAS-WORKBENCH-002`: as a Canvas user, I select the Code tab from the
   Canvas workbench. The route becomes `/canvas/code`, Code renders inside the
-  Canvas shell, and Code cannot appear as a global left-rail sibling of Canvas.
+  Canvas shell, and Code cannot appear as a global shell-navigation sibling of
+  Canvas.
 - `US-CANVAS-WORKBENCH-003`: as a Canvas user, I select Lineage, Diff, and
   Artifacts from the same workbench rail. Each scoped view uses the same Canvas
   context and retired global route IDs or bootstrap aliases must not return.
@@ -291,7 +293,7 @@ flowchart TD
 - SRP: plugin placement, shell nav projection, Canvas tab read model, and tab
   rendering are separate modules.
 - Open/Closed: new Canvas workbench tabs are added through plugin placement
-  records, not by editing the shell sidebar.
+  records, not by editing the shell navigation model.
 - Dependency inversion: Canvas consumes registry query results and route
   command results, not shell navigation internals.
 - Hexagonal boundary: plugin registry and React Router are adapters around the
