@@ -39,7 +39,7 @@ Canonical truth for shipped behavior remains in:
 This is a planning synthesis document.
 
 It is not the canonical implementation spec for frontend behavior.
-For Canvas workbench shell direction, `F-27` supersedes this proposal wherever
+For Canvas workbench shell direction, `F-28` supersedes this proposal wherever
 this file still describes a fixed left rail or primary left-rail navigation.
 
 Use it to:

@@ -25515,9 +25515,9 @@ files:
   - fileId: F-BE0A96F6FA6C
     path: >-
       docs/planning/proposals/nice-to-have/frontend-and-ux/dvt-ui-workbench-architecture-proposal-20260404.md
-    contentHash: 9cdef3936433c3c54b2356c141257a17ffe51b24aa70b21275bd3794f15cf4fd
+    contentHash: 464d2622ae66133a0d6217c85f42da6b6cbdf3e4253cd0ddd65837ebddf5b60d
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: e0c526398beb375e9ef2ac4c098529c854dee5cdce4afc4024efd104044817f5
+    stateFingerprint: d736ab8a356be3afb451ea8c27cf6ccce2c49793fd3efb8e3a06da38a86216a3
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
