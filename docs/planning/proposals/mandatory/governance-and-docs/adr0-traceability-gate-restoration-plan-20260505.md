@@ -124,7 +124,7 @@ redGreenCycles:
       - docs/planning/status/**
     greenTest: pnpm docs:feature-mechanization:implementation
 symbols:
-  - name: PR_QUALITY_PREPUSH_GOVERNANCE_COMMANDS
+  - name: PR_QUALITY_GOVERNANCE_COMMANDS
     path: tools/ci/workflow-pattern-parity.test.mjs
     dddOwner: Repository CI governance baseline
     cqRails:
