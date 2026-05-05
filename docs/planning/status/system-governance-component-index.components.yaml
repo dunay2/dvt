@@ -1089,7 +1089,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: true
-    fileCount: 1746
+    fileCount: 1748
     dddOwner: INFRA
     cqRails: none - documentation governance
     owns:
@@ -1774,7 +1774,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: true
-    fileCount: 117
+    fileCount: 118
     dddOwner: INFRA
     cqRails: none - repository metadata
     owns:
@@ -1803,6 +1803,7 @@ components:
       - dev.sh
       - eslint.config.cjs
       - infra/**
+      - nixpacks.toml
       - package.json
       - pnpm-lock.yaml
       - pnpm-workspace.yaml

@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - documentation governance
 childrenRequired: true
-fileCount: 1746
+fileCount: 1748
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -8330,6 +8330,13 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: docs/planning/closeouts/20260505-api-deploy-start-posture-closeout.md
+    fileId: F-61C88D0A3DFA
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: docs/planning/closeouts/F-02-closeout.md
     fileId: F-917A85C3F19A
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -9195,6 +9202,14 @@ files:
   - path: >-
       docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
     fileId: F-EF1F0DBBB1D8
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/api-deploy-start-posture-plan-20260505.md
+    fileId: F-5F901B570328
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
