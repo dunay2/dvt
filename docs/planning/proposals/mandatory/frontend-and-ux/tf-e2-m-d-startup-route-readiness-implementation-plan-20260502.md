@@ -139,6 +139,8 @@ governingSources:
   - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/architecture/components/web/app-bootstrap-screen-component.md
 allowedImplementationSurfaces:
+  - apps/web/src/app/routes.ts
+  - apps/web/src/app/routes.test.tsx
   - apps/web/src/app/Root.tsx
   - apps/web/src/app/Root.bootstrapFlow.test.tsx
   - apps/web/src/app/bootstrap/appBootstrapCopy.ts
@@ -348,6 +350,30 @@ symbols:
     cypressCoverage: startup-route-readiness.cy.ts
     unitTests:
       - routeBootstrapStartupReadiness.test.ts
+  - name: PublicRouteBootstrapBoundary
+    path: apps/web/src/app/routes.ts
+    dddOwner: BootstrapScreenState presentation aggregate
+    cqRails:
+      - PublishAppBootstrapStepStatus
+      - CompleteAppBootstrapScreen
+    fowlerSignals:
+      - Boundary drift
+      - Documentation drift
+    architectureGuard: routeBootstrapStartupReadiness.architecture.test.ts
+    cypressCoverage: startup-route-readiness.cy.ts
+    unitTests:
+      - routes.test.tsx
+  - name: mountBootstrapDom
+    path: apps/web/src/app/routes.test.tsx
+    dddOwner: BootstrapScreenState test fixture
+    cqRails:
+      - CompleteAppBootstrapScreen
+    fowlerSignals:
+      - Test-only confidence
+    architectureGuard: routeBootstrapStartupReadiness.architecture.test.ts
+    cypressCoverage: startup-route-readiness.cy.ts
+    unitTests:
+      - routes.test.tsx
 ```
 
 ## Implementation Order

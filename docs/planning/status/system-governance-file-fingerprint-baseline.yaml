@@ -5399,9 +5399,9 @@ files:
     owningUnit: SYS-WEB-ROOT
   - fileId: F-E3C5CEE03490
     path: apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
-    contentHash: 2dab678a6ff1686e8aaae30c93b39adc21add1d4dc148bd8bb9cd5bf45452544
+    contentHash: bf5c017378582e5bb39f02ea774e566e94cf8e7c022131bdf9bcd5691626b338
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: c2c84585a6b4d6a1896664558e8c68771cc4f12026315f1eb635f4d362eccf0e
+    stateFingerprint: e2905af4247a75c50af71bf3a62becd154e55ed29203380a425acb23471c3eb8
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
@@ -5435,9 +5435,9 @@ files:
     owningUnit: SYS-WEB-ROOT
   - fileId: F-F8F9384F3A28
     path: apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts
-    contentHash: f77bf9321f9aea38c872e6a82f4604b74712505d502e0b3c3da81b9b5c4722e3
+    contentHash: 13ac1eeb8c6485e33ca1d7077419dce5512003a4248697634eba0a4cb0c4223c
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 1664a10cbd286d3cfea3ae61a2dca9c0ba3fd494cd6eb7e4fed888ec03f27288
+    stateFingerprint: a5caefc7dca367da9ee013c7d504b607fb8a44982efdcb9634498e854114d9fd
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
@@ -5858,9 +5858,9 @@ files:
     owningUnit: SYS-WEB-ROOT
   - fileId: F-7CBA387308D5
     path: apps/web/src/app/bootstrap/routeBootstrapStartupReadiness.architecture.test.ts
-    contentHash: a7cf5bd53d8565c30494c901ba242c7a65c5e75cb19edab4b0cf76139c61a847
+    contentHash: 4e96e4e7155fd0dbbb40b4844e192aeee6162e8c297aa05a12caba9d621c832c
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: a4e2fbe795a5fb990e08c0e06384a011be63e1e41118c1a6c69d1604e3e4b47e
+    stateFingerprint: ede87fa06a33b69f8552e4981c898840f73a17116b88be10f2640993cac5a403
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
@@ -7478,18 +7478,18 @@ files:
     owningUnit: SYS-WEB-ROOT
   - fileId: F-DD76DC44810E
     path: apps/web/src/app/routes.test.tsx
-    contentHash: 4c678f93f6cba029c750946a8ea03663f6d0508ba8c353f445d721427e28e152
+    contentHash: c865b75c53f6bfcc13943e015f725ef1e4f317ac3b8067f6cbfa5f3a110e4a62
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 4a9c161e775e04e20fdbd37c481917bb71c70c4aa12f0ac3c3a51c3681c171e3
+    stateFingerprint: 3e879b0a3c3c313dfa1da34fcf4fbc6ec854eb22ba8edba9c21a3381d5e84e61
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
     owningUnit: SYS-WEB-ROOT
   - fileId: F-1B7C88EFEB87
     path: apps/web/src/app/routes.ts
-    contentHash: dc2a7a6004e375169d2dcab7b1567df60d6936042f2d5b3ceb78333ed0f13a28
+    contentHash: c30bab2d3cadd29efe979ddf0aeea1f43fe61c5dc05eea62cf693c71ce5b6573
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 1f880f5e03f82fefbd24b564bd4b7c934064f66848c9d336fe14660194307d31
+    stateFingerprint: d6bf5478fb7e5a7b7aa9221ff96b83810a64f2c6c1a990a1463359920e92b194
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
@@ -10529,9 +10529,9 @@ files:
     owningUnit: SYS-WEB-ROOT
   - fileId: F-ED3393E79468
     path: apps/web/src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
-    contentHash: 941a2919d9a204143c51779805b33d4d36e664efdc3ac71e6c2144d68e78ba4c
+    contentHash: 27d1a9489967afaae5867774cf72901c9111eda49f4f9711c37a88f46b965de7
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 00b7f352ea7131579297f3bd50ec4ec3620fb480b5966855f830dc8429ce8218
+    stateFingerprint: 8896849ffb470a3691fc85c323a31d05b0d414ac1236fa6b8425bc405fb608b5
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
@@ -10556,9 +10556,9 @@ files:
     owningUnit: SYS-WEB-ROOT
   - fileId: F-19E5B7C2D104
     path: apps/web/src/app/views/canvas/CanvasWorkbenchTabStrip.tsx
-    contentHash: 2a32fa36dc65ce43d6f7931bd3d8064c09cb84dce8a8e06850cd3bdc33fd82b4
+    contentHash: 261a8ef2fc1b1da1ffce8f65f025604b5f2d3058111b35f504ad38d7731b7b95
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 75b030b512094540888589e4da24a493463e9e7df82218093adb157223460d97
+    stateFingerprint: 2832a94ad3a37e8da0ba67faae28003581d4db6c91998ff7945bd89b29824235
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
@@ -15119,9 +15119,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-CF3F14FE8AFF
     path: docs/architecture/components/web/app-bootstrap-screen-component.md
-    contentHash: 33a3d6182e82e100ee77fb2aa3b2fce2b4f7656ad52adea6af4770c6ce27e99a
+    contentHash: ca2dd2ef30fbeb0c0ccb10c474c8d243cbe3ea035b6c4cae4f3639242d9ce4f6
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 95bbcd6f2ebf9c0462c202a7212e2a2ab2f5624ee64dedfa8a310dd7fcef1aba
+    stateFingerprint: 7911124ffd9b01867c12a24dc2cac1599936fed845e4fcfdba0471709946d980
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -24612,9 +24612,9 @@ files:
   - fileId: F-751C27AB71BB
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/code-workbench-workspace-files-query-rail-plan-20260504.md
-    contentHash: 0be5d9fbe1274d8b3e9784555d298c1cb89d08eead9cf032d96c65b20eeff3e1
+    contentHash: 796aaeddc06db7e561b514cbd51533769fa92471fae6c8e8bc9ec3e978fa7edb
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 6cc166b78bd3765c5df125d74f6ca190c210cccac919984a69038ada533efd8c
+    stateFingerprint: f919e21c5ecdf73bca874e6083da31cb4fb6203c9a8cbd07f1ae434985d455de
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -24742,9 +24742,9 @@ files:
   - fileId: F-D63DECECB8D8
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-d-startup-route-readiness-implementation-plan-20260502.md
-    contentHash: bf508a25bac9e0034d10506837a34363ec88273c2c43845009ab30579957df1c
+    contentHash: c258734c2da50a918f39068a094a7f5f2a27e0df074f1ed415147373010661f9
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: bb89eae4b832d10295e56adff43762111518591c14ed828eac9bb6d8a880c6d7
+    stateFingerprint: 6fb23421a049721da94fb556e108c5600d6b89ab5a1cefed3d568ed62e28c375
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -37675,18 +37675,18 @@ files:
     owningUnit: SYS-CI-GOVERNANCE-ROOT
   - fileId: F-8E49752209D6
     path: scripts/run-dev-stack.auth.cjs
-    contentHash: 4e88b19b22be8415babe54ee97fec32bb8f40942fb85d8683377f3cacbe09926
+    contentHash: c7b77c361c0f770e53cd4b7aeee085e5efc9b91ea71ef768c297541a891222b2
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: 04f59de6e970d3dba295e59516f51710354ec5cb2cf443fb2852c4bcc94a5155
+    stateFingerprint: 5bb01deffa2aeb01f029ddce8ba0857ad8b1250ba52bdd7236cc10cf965b56c5
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-CI-GOVERNANCE-ROOT
     owningUnit: SYS-CI-GOVERNANCE-ROOT
   - fileId: F-DEF8B571A2CC
     path: scripts/run-dev-stack.auth.test.cjs
-    contentHash: 7d7a164737c915c2fbb0b9e2a096f4c19dc8ff71e2773924f9014fe1645e1242
+    contentHash: ed61e867156190511d2d99a85b180eae280d7885b24169ed543eb1d122be3521
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: 6048d585d7bb29abfcdc364c7a16595caf4949e1c1a141f34505106bb5019a90
+    stateFingerprint: 6cbb9063618bd191a04dd765115d900ccc59d1453305d09f75a86dee7516e4cf
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-CI-GOVERNANCE-ROOT

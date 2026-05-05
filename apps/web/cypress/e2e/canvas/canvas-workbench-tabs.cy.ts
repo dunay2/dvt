@@ -46,6 +46,7 @@ function assertGlobalWorkbenchRoutesAreAbsent(): void {
 }
 
 function assertCanvasWorkbenchTabsAreVisible(): void {
+  cy.get('#app-loading-screen').should('not.exist');
   cy.get('[data-slot="canvas-workbench-tab-strip"]').within(() => {
     for (const label of WORKBENCH_TAB_LABELS) {
       cy.contains('button', label).should('be.visible');
@@ -82,6 +83,7 @@ function assertCanvasWorkbenchTabsAreHeaderScoped(): void {
 
         for (const tab of tabRects) {
           const label = tab.querySelector<HTMLElement>('span');
+          expect(tab.scrollWidth, tab.textContent ?? 'tab').to.be.lessThan(tab.clientWidth + 2);
           expect(label?.scrollWidth ?? 0, tab.textContent ?? 'tab').to.be.lessThan(
             (label?.clientWidth ?? 0) + 2
           );
@@ -92,11 +94,34 @@ function assertCanvasWorkbenchTabsAreHeaderScoped(): void {
 }
 
 describe('Canvas workbench tabs', () => {
-  beforeEach(() => {
-    cy.viewport(1400, 900);
-  });
+  for (const viewport of [
+    { width: 1400, height: 900 },
+    { width: 820, height: 768 },
+    { width: 700, height: 768 },
+  ] as const) {
+    it(`keeps workbench tabs scoped, readable, and startup-ready at ${viewport.width}px`, () => {
+      cy.viewport(viewport.width, viewport.height);
+
+      visitCanvasWorkbench();
+
+      assertGlobalWorkbenchRoutesAreAbsent();
+      assertCanvasWorkbenchTabsAreVisible();
+      assertCanvasWorkbenchTabsAreHeaderScoped();
+      cy.get('.react-flow').should('be.visible');
+
+      cy.get('[data-slot="canvas-workbench-tab-strip"]').contains('button', 'Lineage').click();
+      cy.location('pathname').should('eq', '/canvas/lineage');
+      cy.contains('Column-level').should('be.visible');
+
+      cy.get('[data-slot="canvas-workbench-tab-strip"]').contains('button', 'Graph').click();
+      cy.location('pathname').should('eq', '/canvas');
+      cy.get('.react-flow').should('be.visible');
+    });
+  }
 
   it('keeps workbench tabs scoped to Canvas instead of publishing global shell routes', () => {
+    cy.viewport(1400, 900);
+
     visitCanvasWorkbench();
 
     assertGlobalWorkbenchRoutesAreAbsent();

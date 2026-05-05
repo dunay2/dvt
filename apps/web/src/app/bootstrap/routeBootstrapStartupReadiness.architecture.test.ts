@@ -55,4 +55,21 @@ describe('route bootstrap startup readiness architecture', () => {
     expect(implementationPlan).toContain('RouteBootstrapStartupReadinessState');
     expect(implementationPlan).toContain('CompleteAppBootstrapScreen');
   });
+
+  it('documents the public-route bootstrap completion policy outside auth semantics', () => {
+    const componentGuide = readFileSync(
+      path.resolve(
+        import.meta.dirname,
+        '../../../../../docs/architecture/components/web/app-bootstrap-screen-component.md'
+      ),
+      'utf8'
+    );
+    const routesSource = readFileSync(path.resolve(import.meta.dirname, '../routes.ts'), 'utf8');
+
+    expect(routesSource).toContain('PublicRouteBootstrapBoundary');
+    expect(routesSource).toContain('Runtime capabilities are not required for this public route.');
+    expect(routesSource).not.toContain('/session');
+    expect(componentGuide).toContain('Public routes such as `/login` settle');
+    expect(componentGuide).toContain('changing protected-route authentication semantics');
+  });
 });
