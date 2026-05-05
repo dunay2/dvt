@@ -51,7 +51,7 @@ shards:
   - id: SYS-WEB
     path: docs/planning/status/governance-files/SYS-WEB.files.yaml
     fileCount: 822
-    contentHash: 440f01bcd5c2385db56038cbc7a783b8e4e35e33f8fba757634061f64284db9f
+    contentHash: 451517520bc1e440b1a590d69d1ffa28d60ae64717cd88b54a062457f22b51e4
   - id: SYS-WORKERS
     path: docs/planning/status/governance-files/SYS-WORKERS.files.yaml
     fileCount: 103
