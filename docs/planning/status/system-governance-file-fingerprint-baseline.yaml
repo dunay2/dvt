@@ -24820,9 +24820,9 @@ files:
   - fileId: F-378E7549F627
     path: >-
       docs/planning/proposals/mandatory/governance-and-docs/adr0-traceability-gate-restoration-plan-20260505.md
-    contentHash: eeb9e01d99b6e8014aea8cc4e156dd4f34aec0054da436da99d22b2eb072c077
+    contentHash: b463dc8235fb41946b3dc6048c5ea42b7cbeed30cc05065c9c7c0022782f9bd5
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: b2ff92a8393ae9dc562d1e0edf6ec1783b6455f2bfe7f43464084ac51bb8fd00
+    stateFingerprint: f58527fa1cbece40e5a2ec8a6a566a0a58830f35251bf4c752bd212da3069e72
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
