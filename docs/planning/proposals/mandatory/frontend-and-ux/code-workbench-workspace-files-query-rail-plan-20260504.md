@@ -57,6 +57,8 @@ allowedImplementationSurfaces:
   - apps/web/src/app/services/workspace/workspaceFilesHttp.ts
   - apps/web/src/app/services/workspace/workspaceService.api.ts
   - apps/web/src/app/services/workspace/workspaceService.files.test.ts
+  - scripts/run-dev-stack.auth.cjs
+  - scripts/run-dev-stack.auth.test.cjs
   - buzon/20260504-codex-fowler-code-tab-workspace-files-analysis-and-plan.md
   - docs/architecture/components/web/code-workbench-workspace-files-component.md
   - docs/architecture/components/web/code-workbench-workspace-files-user-stories.md
