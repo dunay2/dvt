@@ -14,6 +14,7 @@ import path from 'node:path';
 import { FileSystemAdrCatalog } from './adapters/adr-catalog-filesystem.js';
 import { GlobHeaderScanner } from './adapters/header-scanner-glob.js';
 import { toValidationIssueBaselineEntry } from './core/issue-baseline.js';
+import { formatTraceabilityManifestJson } from './core/manifest-json.js';
 import { ManifestBuilder } from './core/manifest.js';
 import { TraceValidator } from './core/validator.js';
 import { TraceabilityService } from './service.js';
@@ -208,7 +209,7 @@ async function main(): Promise<void> {
   }
 
   const manifestPath = path.resolve(repoRoot, 'traceability.manifest.json');
-  await fs.writeFile(manifestPath, JSON.stringify(result.manifest, null, 2) + '\n', 'utf-8');
+  await fs.writeFile(manifestPath, formatTraceabilityManifestJson(result.manifest), 'utf-8');
   process.stdout.write(`OK. Manifest written: ${manifestPath}\n`);
 }
 

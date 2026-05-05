@@ -2,7 +2,7 @@ version: 1
 shardId: SYS-TRACEABILITY
 generatedFrom: git ls-files plus untracked non-ignored local files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-fileCount: 65
+fileCount: 67
 files:
   - fileId: F-4DEEC440215C
     pathHash: 8975c7766e8c874d5189be3395e5d9e56653b44bd16a7e1993ecc6c380fd986a
@@ -256,9 +256,9 @@ files:
       - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
   - fileId: F-0F6F099A304E
     pathHash: 225dfddaef912d596d539d769e4a5c8c8c8d9e1e7e6c3c6713810fae50700d7d
-    contentHash: c6d80c860e670d92fea14c7e54904679e03e9cb61980c4c91ce3ce4b32aa8380
+    contentHash: 2e42b7f0decb2da2129e9d8f28631ed5a5c6729f9e373916353872179d5913a5
     governanceHash: 0967d35e0846d38b639c654c831365c8c2b648fe2b458572b7c475ed4860d082
-    stateFingerprint: 583e3fa3da179235a8f805f1129696a2cdf8f1fd582965b6623776650f14530d
+    stateFingerprint: ac36a19cda2f9b6a8ea40a8e31cc9e9c9a32a6f5b3e36b247e53126570e4683b
     path: packages/@dvt/traceability-service/src/cli.ts
     owningUnit: SYS-TRACEABILITY-ROOT
     rootUnit: SYS-DVT
@@ -335,6 +335,31 @@ files:
     governanceHash: 0967d35e0846d38b639c654c831365c8c2b648fe2b458572b7c475ed4860d082
     stateFingerprint: 921573f6016278969866e52c372fff91f34670782f72f2fe306033be2fc6b97b
     path: packages/@dvt/traceability-service/src/core/issue-baseline.ts
+    owningUnit: SYS-TRACEABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-TRACEABILITY
+    componentUnit: SYS-TRACEABILITY-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-TRACEABILITY
+      - SYS-TRACEABILITY-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: DS
+    cqRails: traceability commands and lineage queries
+    governance:
+      - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
+  - fileId: F-E9EAC3C259F3
+    pathHash: 40282a7cb773db40612297bb7bd98af874dcc6e7c9d0050394d0afe9f7399ca8
+    contentHash: ec6996c7126a3cc0df2dd1be269ac356bbe5261c65f1ad9f1f55824551f133b1
+    governanceHash: 0967d35e0846d38b639c654c831365c8c2b648fe2b458572b7c475ed4860d082
+    stateFingerprint: 8d5cac8c9432bbbf060ce7ec75562b35d0dd83ea3f8487382ba7ef79585381ab
+    path: packages/@dvt/traceability-service/src/core/manifest-json.ts
     owningUnit: SYS-TRACEABILITY-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-TRACEABILITY
@@ -1479,6 +1504,31 @@ files:
     cqRails: traceability commands and lineage queries
     governance:
       - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
+  - fileId: F-1B67579BD466
+    pathHash: f112e150fa8fd8bd65df5f9639d57f312135709329dd71169bc922e799cbbf23
+    contentHash: 72b1da140cf90f059db9898176acb86322c216db890f7fb0f894e44ef9fdaa90
+    governanceHash: 0967d35e0846d38b639c654c831365c8c2b648fe2b458572b7c475ed4860d082
+    stateFingerprint: b5d0465f2e7904360d7a87b2b9c62193ab4bb692901274d5ee9bc37a5c1a0b60
+    path: packages/@dvt/traceability-service/test/manifestJson.test.ts
+    owningUnit: SYS-TRACEABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-TRACEABILITY
+    componentUnit: SYS-TRACEABILITY-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-TRACEABILITY
+      - SYS-TRACEABILITY-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: DS
+    cqRails: traceability commands and lineage queries
+    governance:
+      - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
   - fileId: F-FA337368EA19
     pathHash: 29505a770cd2a2df912278c8ac298e36303ec375af7838c9675188e1d3238760
     contentHash: 04f4e00af2713e1b13da1eaaa2c4588e0ce4f854f5c3a4a393e30c64cd501e9c
@@ -1606,9 +1656,9 @@ files:
       - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
   - fileId: F-93999BE64A07
     pathHash: bbf52efdd2b5cc166f1a892055e0d728a16062e29005f2616d1085896a85824d
-    contentHash: 343c22b2ca677b81042bd3ce5c3c9cab0de43ba89208079b9e53a49cc4e763d3
+    contentHash: 8c5224daafd27f4ca70792c306a5f902d36bb5fd1893e90d9a91d8d29fa02fa1
     governanceHash: 0967d35e0846d38b639c654c831365c8c2b648fe2b458572b7c475ed4860d082
-    stateFingerprint: 0e3c09f7c608b035e8dd77c9d8e240293194e2c4970494195a50f09de3d870ec
+    stateFingerprint: 91313c903515a3f1234d1e9c883a18ea44904cbdcdd6153f855e48d77890226f
     path: traceability.manifest.json
     owningUnit: SYS-TRACEABILITY-ROOT
     rootUnit: SYS-DVT

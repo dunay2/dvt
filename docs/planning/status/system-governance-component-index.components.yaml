@@ -1924,7 +1924,7 @@ components:
     isDrift: false
     isLegacy: false
     childrenRequired: true
-    fileCount: 65
+    fileCount: 67
     dddOwner: DS
     cqRails: traceability commands and lineage queries
     owns:
