@@ -1,5 +1,24 @@
 # Changelog
 
+## [5.21.0](https://github.com/dunay2/dvt/compare/v5.20.0...v5.21.0) (2026-05-05)
+
+
+### Features
+
+* **api:** Add code workbench workspace file rails ([#1105](https://github.com/dunay2/dvt/issues/1105)) ([112b3c9](https://github.com/dunay2/dvt/commit/112b3c912ff6bc5144158ebbeebdf8a32ac8f50e))
+* **web:** Add Canvas workbench tab placement ([#1101](https://github.com/dunay2/dvt/issues/1101)) ([aa457d7](https://github.com/dunay2/dvt/commit/aa457d74410505c61ad699470e8216cdb166e5f2))
+* **web:** Improve Canvas node dragging and grid controls ([#1102](https://github.com/dunay2/dvt/issues/1102)) ([c156e1f](https://github.com/dunay2/dvt/commit/c156e1fffd9dc03a3d46ca79d27e04c143fb3652))
+
+
+### Bug Fixes
+
+* **api:** Align deploy entrypoints with workspace build ([#1112](https://github.com/dunay2/dvt/issues/1112)) ([582c11c](https://github.com/dunay2/dvt/commit/582c11cb6f6445963f581602af4c10c60086ec8e))
+* **ci:** Restore ADR-0000 traceability gate ([d8bac2e](https://github.com/dunay2/dvt/commit/d8bac2ec801de9fbb43a66d72de446c127c9e7fd))
+* **web:** Grant workspace files in local dev stack ([#1108](https://github.com/dunay2/dvt/issues/1108)) ([8c5eee9](https://github.com/dunay2/dvt/commit/8c5eee92d5f8f35a13989f67f0984e705ed9555f))
+* **web:** Keep Canvas workbench tab labels readable ([8c14e75](https://github.com/dunay2/dvt/commit/8c14e75763c48afc743765d536852dea9fbffe70))
+* **web:** Keep Canvas workbench tabs readable live ([#1106](https://github.com/dunay2/dvt/issues/1106)) ([986b192](https://github.com/dunay2/dvt/commit/986b19209f8d40196e57a5c55b6e2cd45754a7a5))
+* **web:** Settle public login startup gate ([#1107](https://github.com/dunay2/dvt/issues/1107)) ([27d5749](https://github.com/dunay2/dvt/commit/27d5749d06af0924dbd6ede6d7c582c4663c7b4f))
+
 ## [5.20.0](https://github.com/dunay2/dvt/compare/v5.19.0...v5.20.0) (2026-05-04)
 
 
