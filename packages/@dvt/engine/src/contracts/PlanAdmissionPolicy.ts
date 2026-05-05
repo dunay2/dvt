@@ -1,6 +1,12 @@
 /**
  * Owned concern: fail closed at engine ingress when a PlanRef names a
  * planVersion/schemaVersion pair that the runtime admission matrix does not admit.
+ *
+ * @baseline ADR-0036: ExecutionPlan PlanVersion Registry And Runtime Compatibility Matrix
+ * @baseline ADR-0046: Execution Plan Definition And Run Execution Policy Separation
+ * @decision Enforce the shared plan admission matrix before provider dispatch.
+ * @consequence Unsupported plan/schema pairs fail closed at engine ingress.
+ * @version 1.0.0
  */
 import {
   SUPPORTED_EXECUTION_PLAN_VERSIONS,

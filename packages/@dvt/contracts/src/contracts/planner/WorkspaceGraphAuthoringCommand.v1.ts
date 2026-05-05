@@ -5,6 +5,11 @@
  * These commands describe pure aggregate mutations only. Application concerns
  * such as auth, idempotency, audit, compare-and-swap, and transport metadata
  * belong outside this contract.
+ *
+ * @baseline ADR-0035: Planner Public Contract Evolution Protocol
+ * @decision Model workspace graph edits as aggregate commands instead of transport-specific patches.
+ * @consequence Canvas authoring can evolve without duplicating planner command semantics.
+ * @version 1.0.0
  */
 import { z } from 'zod';
 

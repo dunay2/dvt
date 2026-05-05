@@ -1,5 +1,9 @@
 /**
  * @ownedConcern Evaluate Temporal PlanRef workflow budgets against governed production capacity SLAs
+ * @baseline ADR-0052: PlanRef Continuation Safety
+ * @decision Evaluate continue-as-new, history, segment, payload, and retention budgets as explicit readiness evidence.
+ * @consequence Production Temporal deployments expose capacity drift before PlanRef continuation safety is at risk.
+ * @version 1.0.0
  */
 
 export type TemporalPlanRefCapacityProfileName = 'standard';

@@ -1,5 +1,10 @@
 /**
  * @ownedConcern Adapt normalized recover-run facade input to the recovery application service.
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0049: Retry-Run As Separate Recovery Use Case
+ * @decision Delegate recover-run facade input to the recovery application service.
+ * @consequence Recovery remains a separate use case instead of a synthetic canonical signal.
+ * @version 1.0.0
  */
 import type { EngineRunRef, PlanRef, RunContext } from '@dvt/contracts';
 

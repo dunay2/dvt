@@ -5,6 +5,11 @@
  * This contract owns selected closure ids, executability posture, and
  * diagnostics. It does not own persistence, auth, runtime admission, or the
  * editable draft aggregate itself.
+ *
+ * @baseline ADR-0035: Planner Public Contract Evolution Protocol
+ * @decision Publish selected executable closure as a derived read model separate from editable authoring truth.
+ * @consequence Preview and run callers can validate selection intent without persisting a second draft family.
+ * @version 1.0.0
  */
 import { z } from 'zod';
 

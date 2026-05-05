@@ -1,3 +1,6 @@
+/**
+ * @baseline ADR-0003: Execution Model
+ */
 import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';

@@ -1,0 +1,31 @@
+---
+id: R-20260505-ADR0-TRACEABILITY-GATE
+title: ADR-0000 traceability gate scope can drift from repository governance scope
+status: Open
+date: 2026-05-05
+owners:
+  - '@dvt/contracts'
+  - '@dvt/engine'
+  - '@dvt/adapter-temporal'
+  - ci
+severity: Medium
+probability: Medium
+---
+summary: >
+  The ADR-0000 traceability gate validates the current configured package scope, while some accepted
+  ADRs are implemented in apps, scripts, or docs-governance surfaces outside that scope. If the ADR
+  catalog expands without a matching governed-path expansion or explicit baseline entry, CI can
+  report reverse coverage failures that are scope mismatches rather than missing runtime work.
+
+mitigations:
+  - Keep `traceability.config.json` and `traceability.issue-baseline.json` reviewed together
+    whenever ADR catalog matching changes.
+  - Prefer adding governed headers to package files for real package-scope regressions instead of
+    expanding the baseline.
+  - Treat reverse-coverage baseline additions as explicit scope records, not as permission to skip
+    ADR implementation.
+
+validation:
+  - pnpm traceability:adr0
+  - pnpm test:ci-tools
+  - pnpm verify:prepush

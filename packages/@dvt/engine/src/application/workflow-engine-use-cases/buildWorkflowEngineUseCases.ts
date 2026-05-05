@@ -1,5 +1,9 @@
 /**
  * @ownedConcern Compose WorkflowEngine facade use-case implementations from internal engine services.
+ * @baseline ADR-0003: Execution Model
+ * @decision Compose facade use cases through explicit dependencies instead of a multi-reason facade module.
+ * @consequence WorkflowEngine delegates behavior without owning every command and query path directly.
+ * @version 1.0.0
  */
 import type { IObservability } from '@dvt/observability';
 

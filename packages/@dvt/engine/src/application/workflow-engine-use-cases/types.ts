@@ -1,5 +1,9 @@
 /**
  * @ownedConcern Declare facade-facing WorkflowEngine use-case ports and their composition shape.
+ * @baseline ADR-0003: Execution Model
+ * @decision Model facade operations as explicit command and query use-case ports.
+ * @consequence The WorkflowEngine facade can delegate without hiding application-service boundaries.
+ * @version 1.0.0
  */
 import type {
   CanonicalRunStatus,

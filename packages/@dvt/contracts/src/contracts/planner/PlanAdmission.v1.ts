@@ -1,6 +1,12 @@
 /**
  * Owned concern: publish the executable admission truth that binds
  * `ExecutionPlan.metadata.planVersion` to `ExecutionPlan.metadata.schemaVersion`.
+ *
+ * @baseline ADR-0036: ExecutionPlan PlanVersion Registry And Runtime Compatibility Matrix
+ * @baseline ADR-0046: Execution Plan Definition And Run Execution Policy Separation
+ * @decision Publish admitted planVersion/schemaVersion pairs as executable shared-kernel contract data.
+ * @consequence Runtime ingress rejects unsupported plan pairs from one canonical matrix.
+ * @version 1.0.0
  */
 import {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,

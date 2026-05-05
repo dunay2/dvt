@@ -20,7 +20,7 @@
   },
   "adrCatalog": {
     "path": "docs/adr",
-    "pattern": "ADR-.*\\.md$"
+    "pattern": "[Aa][Dd][Rr]-.*\\.md$"
   },
   "regressionBaseline": {
     "path": "traceability.issue-baseline.json"

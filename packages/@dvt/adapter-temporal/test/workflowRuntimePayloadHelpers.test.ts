@@ -1,3 +1,7 @@
+/**
+ * @baseline ADR-0004: Event Sourcing Strategy
+ * @baseline ADR-0047: Runtime-Owned Realized Lifecycle For Signal-Driven Transitions
+ */
 import { describe, expect, it } from 'vitest';
 
 import {

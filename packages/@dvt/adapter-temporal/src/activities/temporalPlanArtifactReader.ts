@@ -1,5 +1,10 @@
 /**
  * @ownedConcern Resolve scoped Temporal plan artifacts for engine dispatch.
+ * @baseline ADR-0043: Plan Record, Plan Store, And Artifacts Ownership
+ * @baseline ADR-0046: Execution Plan Definition And Run Execution Policy Separation
+ * @decision Fetch engine dispatch artifacts through the engine-owned integrity port before segment projection.
+ * @consequence Temporal activity composition cannot bypass plan ownership or execution-policy validation.
+ * @version 1.0.0
  */
 import type { PlanRef, ResolvedRunContext, RunExecutionPolicy } from '@dvt/contracts';
 import type { ExecutionPlan, IPlanFetcher, IPlanIntegrityValidator } from '@dvt/engine';

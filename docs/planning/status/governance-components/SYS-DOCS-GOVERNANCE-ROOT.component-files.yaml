@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - documentation governance
 childrenRequired: true
-fileCount: 1740
+fileCount: 1743
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -5222,6 +5222,13 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: docs/evidence/ed-20260505-adr0-traceability-gate.md
+    fileId: F-AC0F084B7F09
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: docs/evidence/index.md
     fileId: F-ED7F62424DAF
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -9059,6 +9066,14 @@ files:
     isDrift: false
     isLegacy: false
   - path: >-
+      docs/planning/proposals/mandatory/governance-and-docs/adr0-traceability-gate-restoration-plan-20260505.md
+    fileId: F-378E7549F627
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
       docs/planning/proposals/mandatory/governance-and-docs/architecture-dependency-boundary-guard-implementation-plan-20260502.md
     fileId: F-0610B6D71F77
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -12427,6 +12442,13 @@ files:
     isLegacy: false
   - path: docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-SSOT-DEBT.yaml
     fileId: F-0CE6D624C7C7
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/risk-register/quality/R-20260505-ADR0-TRACEABILITY-GATE.yaml
+    fileId: F-351103E1201F
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

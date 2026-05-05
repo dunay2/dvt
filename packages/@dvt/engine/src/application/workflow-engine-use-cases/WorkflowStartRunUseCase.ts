@@ -1,5 +1,10 @@
 /**
  * @ownedConcern Adapt normalized start-run facade input to resolved context, tracing, and start application service execution.
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0014: Run-Driven Adapter Model
+ * @decision Normalize facade start-run input before delegating to the start application service.
+ * @consequence Start-run orchestration stays behind the engine application boundary.
+ * @version 1.0.0
  */
 import type { EngineRunRef, PlanRef, ResolvedRunContext, RunContext } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';

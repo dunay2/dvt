@@ -1,6 +1,8 @@
 /**
  * Owned concern: verify the Temporal PlanRef workflow boundary keeps semantic
  * ownership, public API, invariants, transitions, and consumer documentation.
+ *
+ * @baseline ADR-0052: PlanRef Continuation Safety
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';

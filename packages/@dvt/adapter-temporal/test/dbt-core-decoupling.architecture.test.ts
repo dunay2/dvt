@@ -1,6 +1,8 @@
 /**
  * Owned concern: verify DBT runtime ownership stays outside the Temporal core
  * activity dispatcher/factory boundary.
+ *
+ * @baseline ADR-0003: Execution Model
  */
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';

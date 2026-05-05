@@ -5,6 +5,7 @@
  * @baseline ADR-0014: Run-Driven Adapter Model
  * @decision Represent executor plugins as explicit step-activity profile inputs
  * @consequence The Temporal core dispatcher stays generic while worker composition proves plugin extensibility
+ * @version 1.0.0
  */
 import type { StepActivity, StepActivityRegistry } from '../activities/activityTypes.js';
 

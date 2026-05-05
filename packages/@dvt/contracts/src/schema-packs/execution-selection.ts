@@ -1,3 +1,9 @@
+/**
+ * @baseline ADR-0035: Planner Public Contract Evolution Protocol
+ * @decision Publish execution-selection schemas as a focused schema pack for external validators.
+ * @consequence Contract consumers validate executable selection without importing unrelated planner schemas.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 export {
