@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - documentation governance
 childrenRequired: true
-fileCount: 1743
+fileCount: 1745
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -636,6 +636,13 @@ files:
     isLegacy: false
   - path: docs/architecture/components/api/protected-runtime-and-plan-compile-component.md
     fileId: F-9BD62A2B9EA1
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/api/protected-runtime-command-query-rail-design.md
+    fileId: F-883D6CB88D1A
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -8325,6 +8332,13 @@ files:
     isLegacy: false
   - path: docs/planning/closeouts/20260503-tf-e2-m-d-startup-route-readiness-closeout.md
     fileId: F-9878E81F7B83
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/closeouts/20260505-ar-c10-protected-runtime-rail-closure-closeout.md
+    fileId: F-7FA1CFCE3278
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

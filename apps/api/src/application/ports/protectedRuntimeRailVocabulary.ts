@@ -71,7 +71,7 @@ export const PROTECTED_RUNTIME_PLAN_RAIL = {
     dddObject: 'Compiled plan read model',
     applicationPort: 'CompilePlanUseCase',
     adapterSurface: 'POST /plans/compile',
-    scopeAndAuthorization: 'run:start compatibility authorization, tenant scope',
+    scopeAndAuthorization: 'run:start authorization, tenant scope',
   },
   getRuntimeSession: {
     name: 'GetRuntimeSession',
@@ -87,7 +87,7 @@ export const PROTECTED_RUNTIME_PLAN_RAIL = {
     dddObject: 'Imported executable plan',
     applicationPort: 'ImportPlanUseCase',
     adapterSurface: 'POST /plans/import',
-    scopeAndAuthorization: 'run:start compatibility authorization, tenant scope',
+    scopeAndAuthorization: 'run:start authorization, tenant scope',
   },
   previewExecutablePlan: {
     name: 'PreviewExecutablePlan',
@@ -95,7 +95,7 @@ export const PROTECTED_RUNTIME_PLAN_RAIL = {
     dddObject: 'Executable plan draft',
     applicationPort: 'PreviewPlanUseCase',
     adapterSurface: 'POST /plans/preview',
-    scopeAndAuthorization: 'run:start compatibility authorization, tenant scope',
+    scopeAndAuthorization: 'run:start authorization, tenant scope',
   },
   startRun: {
     name: 'StartRun',

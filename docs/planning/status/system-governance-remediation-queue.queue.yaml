@@ -1117,7 +1117,7 @@ tasks:
     blocking: reporting-only
     reason: Documents track drift or require disposition and need alignment with active units.
     fileCount: 0
-    documentCount: 44
+    documentCount: 45
     files: []
     documents:
       - path: docs/planning/closeouts/20260316-engine-docs-current-state-closeout.md
@@ -1150,6 +1150,8 @@ tasks:
       - path: docs/planning/closeouts/20260422-tf-e2-protected-runtime-dev-auth-alignment-closeout.md
         classification: tracks drift
       - path: docs/planning/closeouts/20260423-engine-capability-validation-fail-closed-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260505-ar-c10-protected-runtime-rail-closure-closeout.md
         classification: tracks drift
       - path: docs/planning/closeouts/engine-deps-refactor-closeout.md
         classification: tracks drift

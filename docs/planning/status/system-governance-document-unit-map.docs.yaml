@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files docs
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-documentCount: 1484
+documentCount: 1486
 documents:
   - path: docs/CONTRIBUTING.md
     classification: governs unit
@@ -340,6 +340,10 @@ documents:
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-API
   - path: docs/architecture/components/api/protected-runtime-and-plan-compile-component.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-API
+  - path: docs/architecture/components/api/protected-runtime-command-query-rail-design.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-API
@@ -4465,6 +4469,10 @@ documents:
     classification: tracks drift
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: docs/planning/closeouts/20260505-ar-c10-protected-runtime-rail-closure-closeout.md
+    classification: tracks drift
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-RUNTIME
   - path: docs/planning/closeouts/F-02-closeout.md
     classification: tracks drift
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT

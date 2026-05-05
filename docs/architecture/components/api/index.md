@@ -15,8 +15,10 @@ process.
 
 ## Current Responsibilities
 
-- expose protected runtime routes for start, list, get, events, signal, and cancel;
-- expose plan preview/import routes used by the frontend planning flow;
+- expose protected runtime routes for session, start, list, get, events,
+  signal, cancel, recover, workspace files, and workspace draft boundaries;
+- expose plan preview, compile, and import routes used by the frontend
+  planning flow;
 - expose optional admin rebuild routes when operationally enabled;
 - compose planner, engine, delivery, and operational dependencies;
 - surface readiness, health, version, and reconciler state;
@@ -82,6 +84,7 @@ Use the main walkthrough below for the real current system, the target API
 shape, and the governed transition route:
 
 - [API Current To Target Architecture](./api-current-to-target-architecture.md)
+- [Protected Runtime Command/Query Rail Design](./protected-runtime-command-query-rail-design.md)
 - [Protected Runtime And Plan Compile Component](./protected-runtime-and-plan-compile-component.md)
 - [Temporal Fowler provider-truth follow-up review](../../../planning/reviews/architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md)
 - [API Control-Plane User Manual](../../../guides/api-control-plane-user-manual-20260404.md)
@@ -90,9 +93,16 @@ shape, and the governed transition route:
 
 ## Local Component Guides
 
+- [Protected Runtime Command/Query Rail Design](./protected-runtime-command-query-rail-design.md):
+  canonical architecture/design view for the protected runtime rail source of
+  truth, route family ownership, compatibility posture, and remaining SSOT
+  design gaps.
 - [Protected Runtime And Plan Compile Component](./protected-runtime-and-plan-compile-component.md):
   public API, invariants, transitions, consumers, focused file map, and
   semantic test anchors for the protected runtime composition seam.
+- [Protected runtime route group component](../../../../apps/api/docs/protected-runtime-route-group-component.md):
+  local API maintainer guide for route registration, route-family mapping,
+  invariants, and compatibility posture.
 - [HTTP runtime error translation component](../../../../apps/api/docs/http-runtime-error-translation-component.md):
   local guide for the HTTP error-envelope boundary with public API,
   invariants, transitions, consumers, and focused diagrams.

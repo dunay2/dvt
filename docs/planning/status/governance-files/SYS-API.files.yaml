@@ -276,9 +276,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-69DC2D5403A1
     pathHash: aa0683860e3e8d9e287039885738eb1953d8d37b19c94481fe3e61cd4d24097b
-    contentHash: 3c47a20bb4e39bbd7fec0d8da3df580ee1acb47f0d8e060d8dd1647fddf9f148
+    contentHash: f14826a27fc007fb6ebd9e76d1bc5d9a3fa9e46a0f06721d8480974c6e6a5cd7
     governanceHash: 9e036ab883eceba766b232f57216ba1ec58666aa399b148c02e4e894f13951ac
-    stateFingerprint: 62e2930eab9be66ab0a42e962a59bacecf0e1e609d0c6ca2b9361ce176538e86
+    stateFingerprint: c0dd9017b167d03c251da6853154cb5b5644d94a1340d6fb4374c8cb72f9c15a
     path: apps/api/docs/protected-runtime-route-group-component.md
     owningUnit: SYS-API-DOCS
     rootUnit: SYS-DVT
@@ -1119,9 +1119,9 @@ files:
       - docs/planning/status/system-operations-inventory-20260501.md
   - fileId: F-90F0BEEE4F80
     pathHash: 05cebd6463af912d100941f0a9caa3df5ead492a934b4ec29e8c9d24de15c2ed
-    contentHash: 71c7114bb36a588f8f41474929edd76f9a6368d27dde5b16278377cda94a5621
+    contentHash: c735aa199d8a6f1d19cc4d810ab8771a27768a49e82f317167a4e00e335e9876
     governanceHash: 1387389fa277ea5c65a5742be079571cbccb7468809328bf23814e0c5ec2da3b
-    stateFingerprint: d145b32057daab54f3d282d8057492ed6c360ec91229a6b66faae0d9261496fd
+    stateFingerprint: 99ff102a9db1236c5507bc95a0b18e90f2ad21ba467bbda2b41a1f82761ff5fe
     path: apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts
     owningUnit: SYS-API-APPLICATION-PORTS
     rootUnit: SYS-DVT
@@ -9497,9 +9497,9 @@ files:
       - docs/architecture/command-query-rail-governance.md
   - fileId: F-4BD92CDCD2AC
     pathHash: b84a1a97942bcee1df8a92ffc766a67b53e908c47550f2341116a76a102da795
-    contentHash: c16062ec5e0f2635d18f9b621785f1e4ef99171bed433598f2c36f1ccd8febb6
+    contentHash: 8f5089493a8e7d9eaf9006efba9ed5556489676f180f63ea6c3ae4a9d723b5ea
     governanceHash: 873a3e8188b761eed0fdc743a443315e07f0d3f7ea5ff164faedccc3e1f7964e
-    stateFingerprint: fb71387d628b438f9628f5025aeb096c124c4b6dbb31fc2e76602969c033bbd1
+    stateFingerprint: 22afb94502cd28fe1d86951621be9c00642c7c2be171b628e588fd1342efecf5
     path: apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
     owningUnit: SYS-API-HTTP-ENTRYPOINT-TESTS
     rootUnit: SYS-DVT
