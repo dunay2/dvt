@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files docs
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-documentCount: 1482
+documentCount: 1484
 documents:
   - path: docs/CONTRIBUTING.md
     classification: governs unit
@@ -2672,6 +2672,10 @@ documents:
     classification: proves evidence
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: docs/evidence/ed-20260505-adr0-traceability-gate.md
+    classification: proves evidence
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-TRACEABILITY
   - path: docs/evidence/index.md
     classification: proves evidence
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -4787,6 +4791,11 @@ documents:
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-WEB
+  - path: >-
+      docs/planning/proposals/mandatory/governance-and-docs/adr0-traceability-gate-restoration-plan-20260505.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-TRACEABILITY
   - path: >-
       docs/planning/proposals/mandatory/governance-and-docs/architecture-dependency-boundary-guard-implementation-plan-20260502.md
     classification: governs unit

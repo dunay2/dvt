@@ -1606,9 +1606,9 @@ files:
       - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
   - fileId: F-93999BE64A07
     pathHash: bbf52efdd2b5cc166f1a892055e0d728a16062e29005f2616d1085896a85824d
-    contentHash: 343c22b2ca677b81042bd3ce5c3c9cab0de43ba89208079b9e53a49cc4e763d3
+    contentHash: a19326e05f70d02d35579db87206d4d6328a7c04871b6bb7e4a6c6d38cedf21b
     governanceHash: 0967d35e0846d38b639c654c831365c8c2b648fe2b458572b7c475ed4860d082
-    stateFingerprint: 0e3c09f7c608b035e8dd77c9d8e240293194e2c4970494195a50f09de3d870ec
+    stateFingerprint: bb41bc7315f50fe6f91419a5c0a9bfa145ce92f085ab24b630a4204fe8b22dcb
     path: traceability.manifest.json
     owningUnit: SYS-TRACEABILITY-ROOT
     rootUnit: SYS-DVT
