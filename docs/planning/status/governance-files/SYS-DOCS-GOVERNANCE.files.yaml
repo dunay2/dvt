@@ -33426,9 +33426,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-42AD27333924
     pathHash: de1647eea772a1681b89a5cd92eaf77b4c98744778c7497eb867a73ca434ce26
-    contentHash: d21084b19179d8407d9278170a8a30368adad33c8daec23b6c0fd75115f991db
+    contentHash: a08693cd238702a257702979fdff798faf4a4422650217d5ee5f27b25ca803d5
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 680a5b651ece1b67135d510db6cb2420dfa1d2f4e9e0332ea58aedbae5b8220a
+    stateFingerprint: aaba01ae8e367080230a8beae2d052ae20a665dcb00676c53b31107c68430d7d
     path: >-
       docs/planning/proposals/mandatory/governance-and-docs/governed-changed-slice-closeout-plan-20260506.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -45747,9 +45747,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-9B5B9E93448F
     pathHash: 14343aec9684e462934f768ba8498a432ebe7a1bbbc09800f1b028187081d0c6
-    contentHash: bc06f6845e0f354b2f915f8e3604c0b91dbfefede0fc665d37696885d094e0e7
+    contentHash: 26add1d2d8b3ecf5209f93430d36037c47069c57b6fc638e7325e19776014990
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 3e0f9f1d76989525d9ae4607f5ef61c1f323ce10091434ee4ecd5a370484035a
+    stateFingerprint: 12e980eebf78501f006cdcef8b399d3c3f9f7b7fa4ab16030ea225f34f772e71
     path: docs/runbooks/governed-changed-slice-closeout-20260506.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT

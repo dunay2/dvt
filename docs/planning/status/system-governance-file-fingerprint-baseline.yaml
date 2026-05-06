@@ -24997,9 +24997,9 @@ files:
   - fileId: F-42AD27333924
     path: >-
       docs/planning/proposals/mandatory/governance-and-docs/governed-changed-slice-closeout-plan-20260506.md
-    contentHash: d21084b19179d8407d9278170a8a30368adad33c8daec23b6c0fd75115f991db
+    contentHash: a08693cd238702a257702979fdff798faf4a4422650217d5ee5f27b25ca803d5
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 680a5b651ece1b67135d510db6cb2420dfa1d2f4e9e0332ea58aedbae5b8220a
+    stateFingerprint: aaba01ae8e367080230a8beae2d052ae20a665dcb00676c53b31107c68430d7d
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -29474,9 +29474,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-9B5B9E93448F
     path: docs/runbooks/governed-changed-slice-closeout-20260506.md
-    contentHash: bc06f6845e0f354b2f915f8e3604c0b91dbfefede0fc665d37696885d094e0e7
+    contentHash: 26add1d2d8b3ecf5209f93430d36037c47069c57b6fc638e7325e19776014990
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 3e0f9f1d76989525d9ae4607f5ef61c1f323ce10091434ee4ecd5a370484035a
+    stateFingerprint: 12e980eebf78501f006cdcef8b399d3c3f9f7b7fa4ab16030ea225f34f772e71
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -37450,18 +37450,18 @@ files:
     owningUnit: SYS-CI-GOVERNANCE-ROOT
   - fileId: F-2DFD1EEA72D7
     path: scripts/closeout-changed.cjs
-    contentHash: fe49041af5243177917a1abf22444be9de26fffdb8b4972ffec37dd9ea79f03a
+    contentHash: c0df205865ee87ad49f4af40bb949772cdcd5adf0a7c05fe27e5f7e70b13377d
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: 6fc8948cca9661bc45a9b8d0a833700b5b0faf5c836e95fa2891877378b61927
+    stateFingerprint: a254ec00a77004205eea7da172188e35184bd9d647e932004002c4d64aeec924
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-CI-GOVERNANCE-ROOT
     owningUnit: SYS-CI-GOVERNANCE-ROOT
   - fileId: F-8EE0B5596066
     path: scripts/closeout-changed.test.cjs
-    contentHash: 2252f67b21500e4b8e8d5b8aeeeb7c3618ac799356c8867f575a2418adb08a43
+    contentHash: 9eca5074761bfe80611465ac46567a63ef41b7a556dd5f2cb32e77b3682d0631
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: 5e271660eedfc74d1e098f9ee5050b999c60d312ece2314dedd8ca99c2e0070f
+    stateFingerprint: adcd2d3707a0c546f12afaa9c56616705bf8227de731990429bb5e680cc41f9e
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-CI-GOVERNANCE-ROOT

@@ -139,6 +139,11 @@ function buildCloseoutPlan(changedFiles) {
     args: ['diff', '--check'],
   });
   pushStepOnce(steps, {
+    id: 'git-diff-cached-check',
+    command: 'git',
+    args: ['diff', '--cached', '--check'],
+  });
+  pushStepOnce(steps, {
     id: 'conflict-marker-scan',
     internal: 'conflict-marker-scan',
   });
