@@ -2,7 +2,7 @@ version: 1
 generatedFrom: git ls-files plus untracked non-ignored local files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
 shardDirectory: docs/planning/status/governance-files
-fileCount: 4268
+fileCount: 4270
 shards:
   - id: SYS-ADAPTERS
     path: docs/planning/status/governance-files/SYS-ADAPTERS.files.yaml
@@ -14,8 +14,8 @@ shards:
     contentHash: f7f7a375056b44e33b201a56221eb92c409608d28c2d9eec675e76079ba1ab8a
   - id: SYS-CI-GOVERNANCE
     path: docs/planning/status/governance-files/SYS-CI-GOVERNANCE.files.yaml
-    fileCount: 197
-    contentHash: ea53226bdb4e1ac906d012c68cb4857a5c659ea14c75f90a63dad557bac7fc41
+    fileCount: 199
+    contentHash: d1b6f3cd06f81eb17101a63a5c388274fb0f648006e1d76531870f6765608c76
   - id: SYS-CONTRACTS
     path: docs/planning/status/governance-files/SYS-CONTRACTS.files.yaml
     fileCount: 127
@@ -23,7 +23,7 @@ shards:
   - id: SYS-DOCS-GOVERNANCE
     path: docs/planning/status/governance-files/SYS-DOCS-GOVERNANCE.files.yaml
     fileCount: 1754
-    contentHash: f54ffaacba877fe38b4ad018800434fd296906c044907feec5ff1c464c76e970
+    contentHash: acef3137697c00ebb67d210cf4de3fc962e9ebfdbc8a8536dd79f746ad01500b
   - id: SYS-OBSERVABILITY
     path: docs/planning/status/governance-files/SYS-OBSERVABILITY.files.yaml
     fileCount: 15
@@ -39,7 +39,7 @@ shards:
   - id: SYS-REPO-METADATA
     path: docs/planning/status/governance-files/SYS-REPO-METADATA.files.yaml
     fileCount: 119
-    contentHash: 2446ed257282453287ba388e163af3f5de265436888d82228f9f3f74b3ea51a5
+    contentHash: 1c08bd90c90d066be73fb5fbb5f911157ec07e099a947abfc4d9430a58ed8156
   - id: SYS-RUNTIME
     path: docs/planning/status/governance-files/SYS-RUNTIME.files.yaml
     fileCount: 286

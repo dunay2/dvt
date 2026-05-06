@@ -3,8 +3,8 @@ generatedFrom:
   - docs/planning/status/system-governance-file-index.files.yaml
   - docs/planning/status/system-governance-component-index.components.yaml
 totals:
-  files: 4268
-  governedFiles: 4268
+  files: 4270
+  governedFiles: 4270
   ungovernedFiles: 0
   driftFiles: 41
   legacyFiles: 0
@@ -22,12 +22,12 @@ ciPosture:
     - legacyFiles records removal targets until owning work removes them
 byRootUnit:
   - name: SYS-DVT
-    count: 4268
+    count: 4270
 byDomainUnit:
   - name: SYS-ADAPTERS
     count: 196
   - name: SYS-DVT
-    count: 3489
+    count: 3491
   - name: SYS-OBSERVABILITY
     count: 15
   - name: SYS-PLANSTORE
@@ -66,7 +66,7 @@ byComponentUnit:
   - name: SYS-API-TESTS
     count: 101
   - name: SYS-CI-GOVERNANCE-ROOT
-    count: 197
+    count: 199
   - name: SYS-CONTRACTS-ROOT
     count: 127
   - name: SYS-DOCS-GOVERNANCE-ROOT
@@ -103,14 +103,14 @@ byStatus:
   - name: canonical
     count: 119
   - name: coverage-required
-    count: 4026
+    count: 4028
   - name: drift
     count: 41
   - name: review
     count: 82
 byGovernanceState:
   - name: coverage-required
-    count: 4026
+    count: 4028
   - name: drift
     count: 41
   - name: governed
@@ -121,12 +121,12 @@ byCanonicalRole:
   - name: implementation-owner
     count: 119
   - name: none
-    count: 4149
+    count: 4151
 byEvidenceState:
   - name: classification-only
     count: 119
   - name: coverage-required
-    count: 4026
+    count: 4028
   - name: remediation-required
     count: 41
   - name: review-required
@@ -141,7 +141,7 @@ byDddOwner:
   - name: ENTRY
     count: 918
   - name: INFRA
-    count: 2285
+    count: 2287
   - name: PORT
     count: 199
 governanceDocuments:
@@ -158,7 +158,7 @@ governanceDocuments:
       docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
     fileCount: 368
   - path: docs/guides/testing-and-ci-capabilities.md
-    fileCount: 363
+    fileCount: 365
   - path: >-
       docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
     fileCount: 238
@@ -269,7 +269,7 @@ componentCoverage:
     evidenceState: coverage-required
     dddOwner: INFRA
     cqRails: none - repository automation
-    fileCount: 197
+    fileCount: 199
     isDrift: false
     isLegacy: false
     childrenRequired: true
@@ -964,7 +964,7 @@ findings:
       status: coverage-required
       dddOwner: AS
     - id: SYS-CI-GOVERNANCE-ROOT
-      fileCount: 197
+      fileCount: 199
       status: coverage-required
       dddOwner: INFRA
     - id: SYS-ADAPTERS-ROOT

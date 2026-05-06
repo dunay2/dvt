@@ -136,6 +136,37 @@ flowchart TD
 | Remediation queue       | `pnpm docs:governance:remediation-queue`         | `scripts/generate-governance-remediation-queue.cjs`               | coverage report, file index, component index, component map, document map            | `system-governance-remediation-queue.queue.yaml`, `system-governance-remediation-queue-20260502.md` | `:check` fails on stale generated output                                         |
 | Changed-file validation | `pnpm docs:governance:changed-files:check`       | `scripts/check-governance-changed-files.cjs`                      | base baseline from Git, current baseline, current file index, local name-status diff | None                                                                                                | Fails when changed files lack active governance or expected fingerprint movement |
 
+## Canonical Refresh Command
+
+`pnpm governance:refresh` is the canonical local command for refreshing the
+generated governance read side before query-store import and drift checks.
+Agents and contributors should prefer this command over manually remembering the
+individual generator order.
+
+The command runs the docs and governance generation stages in this order:
+
+1. `docs:sync`
+2. `docs:workboard:generate`
+3. `docs:status:generate`
+4. `docs:capability:generate`
+5. `docs:gov:manifest`
+6. `docs:governance:document-unit-map`
+7. `docs:governance:file-component-index`
+8. `docs:governance:file-fingerprint-baseline`
+9. `docs:governance:file-fingerprint-impact`
+10. `docs:governance:coverage-report`
+11. `docs:governance:remediation-queue`
+
+After each generation pass, the runner hashes staged, unstaged, and untracked
+non-ignored worktree state. It repeats generation until that fingerprint stops
+changing, with a small maximum pass count. Only after generated outputs are
+stable does it run `planning:db:import`, `planning:db:check`, and
+`governance:db:check`.
+
+The fingerprint is a convergence guard, not a new source of truth. Git-tracked
+sources, generated-docs policy, unit ownership, and generator scripts remain
+authoritative.
+
 ## Current Fan-Out
 
 One accepted source change can legitimately update all of these tracked output
@@ -198,10 +229,11 @@ policy, and the generator scripts.
 This component formalizes existing repository automation and the proposed
 GOV-S3 read model rails. It does not add product runtime behavior.
 
-| Rail                                         | Type  | Bounded context | DDD object                      | Adapter surface                                       | Negative tests                                                                                   |
-| -------------------------------------------- | ----- | --------------- | ------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `QuerySystemGovernanceGenerationWorkflow`    | query | Docs governance | `GovernanceGenerationWorkflow`  | file-system manifest and generated-docs policy reader | Missing generator ownership for a tracked generated artifact fails closed.                       |
-| `ValidateSystemGovernanceGenerationWorkflow` | query | Docs governance | `GovernanceWorkflowDriftReport` | generator/check command adapter                       | A generated artifact changed without its owning source or accepted baseline update fails closed. |
+| Rail                                         | Type    | Bounded context | DDD object                      | Adapter surface                                       | Negative tests                                                                                   |
+| -------------------------------------------- | ------- | --------------- | ------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `RefreshGovernanceDerivedSurfaces`           | command | Docs governance | `GovernanceRefreshWorkflow`     | package script runner and Git worktree fingerprint    | Repeated generation that does not stabilize fails before database import or drift checks.        |
+| `QuerySystemGovernanceGenerationWorkflow`    | query   | Docs governance | `GovernanceGenerationWorkflow`  | file-system manifest and generated-docs policy reader | Missing generator ownership for a tracked generated artifact fails closed.                       |
+| `ValidateSystemGovernanceGenerationWorkflow` | query   | Docs governance | `GovernanceWorkflowDriftReport` | generator/check command adapter                       | A generated artifact changed without its owning source or accepted baseline update fails closed. |
 
 These rails are documentation and tooling rails. Runtime packages, API routes,
 web UI actions, engine contracts, and adapters must not depend on them.

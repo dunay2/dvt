@@ -318,6 +318,7 @@ pnpm planning:db:import
 pnpm planning:db:query
 pnpm planning:db:check
 pnpm governance:db:check
+pnpm governance:refresh
 pnpm test:planning:db
 pnpm test:planning:db:integration
 ```
@@ -350,6 +351,7 @@ Once import/export and drift commands exist, implementation PRs should also
 include:
 
 ```bash
+pnpm governance:refresh
 pnpm planning:db:check
 pnpm governance:db:check
 pnpm docs:workboard:generate
@@ -422,20 +424,21 @@ introducing a large platform:
 This plan defines planning-tooling rails. It does not change product runtime
 behavior.
 
-| Rail                               | Type    | Bounded context       | DDD object                   | Adapter surface      |
-| ---------------------------------- | ------- | --------------------- | ---------------------------- | -------------------- |
-| `ImportPlanningStateQueryStore`    | command | Planning registry     | `PlanningStateImport`        | file-system + SQL    |
-| `QueryPlanningStateReadModel`      | query   | Planning registry     | `PlanningStateReadModel`     | SQL query adapter    |
-| `ExportPlanningStateSnapshot`      | command | Planning registry     | `PlanningStateExport`        | SQL + file-system    |
-| `ValidatePlanningStateDrift`       | query   | Planning governance   | `PlanningStateDriftReport`   | SQL + Git comparison |
-| `GeneratePlanningDerivedSurfaces`  | command | Documentation tooling | `PlanningGeneratedArtifact`  | docs generator       |
-| `MigratePlanningQueryStoreSchema`  | command | Planning tooling      | `PlanningQueryStoreSchema`   | SQL migration runner |
-| `ManagePlanningQueryStoreRuntime`  | command | Planning tooling      | `PlanningQueryStoreRuntime`  | Docker Compose       |
-| `InspectPlanningQueryStoreRuntime` | query   | Planning tooling      | `PlanningQueryStoreRuntime`  | Docker Compose + env |
-| `ImportGovernanceStateQueryStore`  | command | Docs governance       | `GovernanceStateImport`      | file-system + SQL    |
-| `QueryGovernanceStateReadModel`    | query   | Docs governance       | `GovernanceStateReadModel`   | SQL query adapter    |
-| `ExportGovernanceStateSnapshot`    | command | Docs governance       | `GovernanceStateExport`      | SQL + file-system    |
-| `ValidateGovernanceStateDrift`     | query   | Docs governance       | `GovernanceStateDriftReport` | SQL + Git comparison |
+| Rail                               | Type    | Bounded context       | DDD object                   | Adapter surface                   |
+| ---------------------------------- | ------- | --------------------- | ---------------------------- | --------------------------------- |
+| `ImportPlanningStateQueryStore`    | command | Planning registry     | `PlanningStateImport`        | file-system + SQL                 |
+| `QueryPlanningStateReadModel`      | query   | Planning registry     | `PlanningStateReadModel`     | SQL query adapter                 |
+| `ExportPlanningStateSnapshot`      | command | Planning registry     | `PlanningStateExport`        | SQL + file-system                 |
+| `ValidatePlanningStateDrift`       | query   | Planning governance   | `PlanningStateDriftReport`   | SQL + Git comparison              |
+| `GeneratePlanningDerivedSurfaces`  | command | Documentation tooling | `PlanningGeneratedArtifact`  | docs generator                    |
+| `MigratePlanningQueryStoreSchema`  | command | Planning tooling      | `PlanningQueryStoreSchema`   | SQL migration runner              |
+| `ManagePlanningQueryStoreRuntime`  | command | Planning tooling      | `PlanningQueryStoreRuntime`  | Docker Compose                    |
+| `InspectPlanningQueryStoreRuntime` | query   | Planning tooling      | `PlanningQueryStoreRuntime`  | Docker Compose + env              |
+| `ImportGovernanceStateQueryStore`  | command | Docs governance       | `GovernanceStateImport`      | file-system + SQL                 |
+| `QueryGovernanceStateReadModel`    | query   | Docs governance       | `GovernanceStateReadModel`   | SQL query adapter                 |
+| `ExportGovernanceStateSnapshot`    | command | Docs governance       | `GovernanceStateExport`      | SQL + file-system                 |
+| `ValidateGovernanceStateDrift`     | query   | Docs governance       | `GovernanceStateDriftReport` | SQL + Git comparison              |
+| `RefreshGovernanceDerivedSurfaces` | command | Docs governance       | `GovernanceRefreshWorkflow`  | package scripts + Git fingerprint |
 
 Implementation must not create parallel planning task semantics outside these
 rails. If a future slice adds a UI, API, or GitHub mirror, it must reuse these
@@ -471,6 +474,15 @@ hash, file path, component id, `(component_id, path)` identity, fingerprint
 path, coverage id, and remediation task id. It fails closed when any imported
 governance read model no longer matches the repository state.
 
+`governance:refresh` implements `RefreshGovernanceDerivedSurfaces`. It runs the
+canonical generation order from the system-governance workflow component,
+repeats generation until staged, unstaged, and untracked non-ignored worktree
+fingerprints stop changing, then imports and checks the planning/governance
+query store. Scope is local developer tooling only; authorization is local OS
+and Docker/Postgres access. Negative tests in
+`scripts/governance-refresh.test.cjs` prove the stage order, repeat-until-stable
+behavior, and fail-closed posture when generated output does not converge.
+
 ### W4 Implementation Plan
 
 1. Correct this plan so the W4 drift checks are no longer described as future
@@ -488,6 +500,25 @@ governance read model no longer matches the repository state.
 6. Validate W4 with `pnpm test:planning:db`, `pnpm planning:db:import`,
    `pnpm planning:db:check`, `pnpm governance:db:check`, `pnpm ci:docs`, and
    `pnpm verify:prepush`.
+
+### W5 Implementation Plan
+
+1. Add a focused red test in `scripts/governance-refresh.test.cjs` that fixes
+   the canonical generation order, requires repeat-until-stable behavior, and
+   fails before database import when generation does not converge.
+2. Add `scripts/governance-refresh.cjs` as the single local orchestration
+   command for docs/governance generation plus planning/governance DB drift
+   checks.
+3. Use a Git worktree fingerprint only as a convergence guard. Git remains the
+   canonical source boundary; the fingerprint does not replace reviewed
+   generated artifacts or `contentSha256` DB drift checks.
+4. Document the workflow in the ci-governance component so agents no longer
+   rely on memory for regeneration sequence.
+5. Keep any proposal to reduce non-code check cost as a later CI policy slice.
+   This implementation records the cost gap but does not silently relax docs,
+   feature mechanization, fingerprint, or prepush gates.
+6. Validate W5 with `pnpm test:governance:refresh`, `pnpm test:planning:db`,
+   `pnpm governance:refresh`, `pnpm ci:docs`, and `pnpm verify:prepush`.
 
 ## GitHub Issues Role
 
@@ -518,15 +549,18 @@ surfaces without network access.
    Postgres tables.
 6. Add query and drift checks that compare Postgres output to Git-tracked lane
    and governance state.
-7. Move workboard and open-task-route generation to read from the query store
+7. Add `governance:refresh` as the canonical local refresh sequence for docs
+   and system-governance generated surfaces, with query-store import/checks
+   gated on stable generated output.
+8. Move workboard and open-task-route generation to read from the query store
    when available, with deterministic file fallback during transition.
-8. Move governance report generation to read from the query store only after
+9. Move governance report generation to read from the query store only after
    parity proves it matches the current generators.
-9. Split large lane YAML files into smaller Git-tracked task shards only after
-   the import/export checks prove parity.
-10. Consider compacting generated governance shards after query-store parity
+10. Split large lane YAML files into smaller Git-tracked task shards only after
+    the import/export checks prove parity.
+11. Consider compacting generated governance shards after query-store parity
     proves reviewers can inspect root causes without losing deterministic output.
-11. Consider an optional GitHub Issues mirror after local and CI query-store
+12. Consider an optional GitHub Issues mirror after local and CI query-store
     workflows are stable.
 
 Current implementation status on 2026-05-06:
@@ -535,9 +569,11 @@ Current implementation status on 2026-05-06:
 - `pnpm planning:db:query` now exposes summary counts for lanes, tasks,
   governance files, governance components, component-file memberships,
   fingerprints, coverage rows, and remediation tasks;
-- step 6 is the current W4 slice: add deterministic drift checks that compare
-  the imported Postgres state back to Git-tracked planning and governance
-  sources before later export or generator migration work starts.
+- step 6 is implemented: deterministic drift checks compare the imported
+  Postgres state back to Git-tracked planning and governance sources before
+  later export or generator migration work starts;
+- step 7 is the current W5 slice: add a canonical local refresh command so the
+  regeneration order is encoded, tested, and repeatable.
 
 ## Failure Modes And Guardrails
 
@@ -547,6 +583,8 @@ Current implementation status on 2026-05-06:
 | Docker volume lost                   | Rebuild from Git with import command                          |
 | Import order affects output          | Stable ordering and hash checks                               |
 | Generated artifact churn returns     | Artifact hashes recorded in `planning_artifacts`              |
+| Agents forget refresh order          | `governance:refresh` owns order and repeats until stable      |
+| Non-code gate cost grows unchecked   | Treat CI policy reduction as a separate governed optimization |
 | Governance report churn is hidden    | Governance artifact hashes and source causes are queryable    |
 | DB treated as hidden authority       | No committed database files; export must match Git            |
 | GitHub mirror edits bypass PR review | Mirror is read-only or imports as reviewed repo changes first |
@@ -568,6 +606,8 @@ Current implementation status on 2026-05-06:
 - Generated planning views remain deterministic and traceable to source hashes.
 - Generated governance reports remain deterministic and traceable to source
   hashes.
+- The governance refresh sequence is executable through one local command and
+  fails closed if generated output does not stabilize before DB import/check.
 
 ## Non-Goals
 
@@ -612,6 +652,7 @@ allowedImplementationSurfaces:
   - tools/governance-db/**
   - scripts/planning-db-*.cjs
   - scripts/governance-db-*.cjs
+  - scripts/governance-refresh*.cjs
   - scripts/check-feature-mechanization.cjs
   - scripts/check-feature-mechanization.test.cjs
   - docs/DOCS_README.md
@@ -667,6 +708,9 @@ commandQueryRails:
   - name: ValidateGovernanceStateDrift
     type: query
     dddOwner: GovernanceStateDriftReport
+  - name: RefreshGovernanceDerivedSurfaces
+    type: command
+    dddOwner: GovernanceRefreshWorkflow
   - name: QuerySystemGovernanceGenerationWorkflow
     type: query
     dddOwner: GovernanceGenerationWorkflow
@@ -707,6 +751,9 @@ domainObjects:
   - name: GovernanceStateDriftReport
     type: read model
     owner: Docs governance
+  - name: GovernanceRefreshWorkflow
+    type: command model
+    owner: Docs governance
   - name: GovernanceGenerationWorkflow
     type: read model
     owner: Docs governance
@@ -720,6 +767,7 @@ fowlerSignals:
   - Hidden query model inside governance shards
   - Mutable external tracker authority risk
 architectureGuards:
+  - pnpm test:governance:refresh
   - pnpm test:planning:db
   - pnpm test:planning:db:integration
   - pnpm docs:feature-mechanization --feature GOV-S3-PLANNING-STATE-QUERY-STORE
@@ -727,6 +775,7 @@ architectureGuards:
 cypressFlows:
   - N/A - planning query-store proposal has no browser workflow.
 completionGate:
+  - pnpm test:governance:refresh
   - pnpm test:planning:db
   - pnpm test:planning:db:integration
   - pnpm planning:db:migrate
@@ -734,6 +783,7 @@ completionGate:
   - pnpm planning:db:query
   - pnpm planning:db:check
   - pnpm governance:db:check
+  - pnpm governance:refresh
   - pnpm docs:sync
   - pnpm docs:workboard:generate
   - pnpm docs:feature-mechanization --feature GOV-S3-PLANNING-STATE-QUERY-STORE
@@ -815,6 +865,16 @@ redGreenCycles:
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
       - docs/planning/status/**
     greenTest: pnpm governance:db:check
+  - id: governance-refresh-orchestrator
+    redTest: pnpm test:governance:refresh
+    expectedFailure: Governance refresh runner does not exist before the W5 orchestrator slice.
+    patchSurfaces:
+      - package.json
+      - scripts/governance-refresh*.cjs
+      - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+      - docs/planning/status/**
+    greenTest: pnpm test:governance:refresh
 symbols:
   - name: PlanningAndGovernanceQueryStorePlan
     path: docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
@@ -832,6 +892,7 @@ symbols:
       - QueryGovernanceStateReadModel
       - ExportGovernanceStateSnapshot
       - ValidateGovernanceStateDrift
+      - RefreshGovernanceDerivedSurfaces
       - QuerySystemGovernanceGenerationWorkflow
       - ValidateSystemGovernanceGenerationWorkflow
     fowlerSignals:
@@ -1288,10 +1349,89 @@ symbols:
   - <<: *governanceDbDriftSymbol
     name: assert
     path: scripts/governance-db-check.test.cjs
+  - &governanceRefreshSymbol
+    name: GovernanceRefreshRunner
+    path: scripts/governance-refresh.cjs
+    dddOwner: GovernanceRefreshWorkflow
+    cqRails:
+      - RefreshGovernanceDerivedSurfaces
+      - ImportPlanningStateQueryStore
+      - ValidatePlanningStateDrift
+      - ValidateGovernanceStateDrift
+    fowlerSignals:
+      - Generated artifact churn
+      - Hidden query model inside governance shards
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - governance refresh tooling has no browser workflow.
+    unitTests:
+      - pnpm test:governance:refresh
+      - pnpm test:planning:db
+      - pnpm governance:refresh
+  - <<: *governanceRefreshSymbol
+    name: childProcess
+    path: scripts/governance-refresh.cjs
+  - <<: *governanceRefreshSymbol
+    name: crypto
+    path: scripts/governance-refresh.cjs
+  - <<: *governanceRefreshSymbol
+    name: fs
+    path: scripts/governance-refresh.cjs
+  - <<: *governanceRefreshSymbol
+    name: path
+    path: scripts/governance-refresh.cjs
+  - <<: *governanceRefreshSymbol
+    name: repoRoot
+    path: scripts/governance-refresh.cjs
+  - <<: *governanceRefreshSymbol
+    name: defaultMaxPasses
+    path: scripts/governance-refresh.cjs
+  - <<: *governanceRefreshSymbol
+    name: buildRefreshStages
+    path: scripts/governance-refresh.cjs
+  - <<: *governanceRefreshSymbol
+    name: pnpmCommand
+    path: scripts/governance-refresh.cjs
+  - <<: *governanceRefreshSymbol
+    name: runPnpmScript
+    path: scripts/governance-refresh.cjs
+  - <<: *governanceRefreshSymbol
+    name: runText
+    path: scripts/governance-refresh.cjs
+  - <<: *governanceRefreshSymbol
+    name: sha256
+    path: scripts/governance-refresh.cjs
+  - <<: *governanceRefreshSymbol
+    name: readUntrackedFileHashes
+    path: scripts/governance-refresh.cjs
+  - <<: *governanceRefreshSymbol
+    name: readWorktreeFingerprint
+    path: scripts/governance-refresh.cjs
+  - <<: *governanceRefreshSymbol
+    name: assertPositiveInteger
+    path: scripts/governance-refresh.cjs
+  - <<: *governanceRefreshSymbol
+    name: runGovernanceRefresh
+    path: scripts/governance-refresh.cjs
+  - <<: *governanceRefreshSymbol
+    name: parseArgs
+    path: scripts/governance-refresh.cjs
+  - <<: *governanceRefreshSymbol
+    name: printHelp
+    path: scripts/governance-refresh.cjs
+  - <<: *governanceRefreshSymbol
+    name: main
+    path: scripts/governance-refresh.cjs
+  - <<: *governanceRefreshSymbol
+    name: test
+    path: scripts/governance-refresh.test.cjs
+  - <<: *governanceRefreshSymbol
+    name: assert
+    path: scripts/governance-refresh.test.cjs
   - name: SystemGovernanceGenerationWorkflowComponent
     path: docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
     dddOwner: GovernanceGenerationWorkflow
     cqRails:
+      - RefreshGovernanceDerivedSurfaces
       - QuerySystemGovernanceGenerationWorkflow
       - ValidateSystemGovernanceGenerationWorkflow
       - ImportGovernanceStateQueryStore

@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - repository automation
 childrenRequired: true
-fileCount: 197
+fileCount: 199
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -636,6 +636,20 @@ files:
     isLegacy: false
   - path: scripts/governance-db-check.test.cjs
     fileId: F-9DAC1A61C72B
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/governance-refresh.cjs
+    fileId: F-200E5D9F0FA1
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/governance-refresh.test.cjs
+    fileId: F-7C49EAEF4AC8
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
