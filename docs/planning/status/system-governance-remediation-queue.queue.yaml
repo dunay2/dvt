@@ -1122,7 +1122,7 @@ tasks:
     blocking: reporting-only
     reason: Documents track drift or require disposition and need alignment with active units.
     fileCount: 0
-    documentCount: 45
+    documentCount: 46
     files: []
     documents:
       - path: docs/planning/closeouts/20260316-engine-docs-current-state-closeout.md
@@ -1191,6 +1191,8 @@ tasks:
       - path: docs/planning/reviews/ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md
         classification: tracks drift
       - path: docs/planning/reviews/ci-and-delivery/20260422-environment-configuration-audit-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/ci-and-delivery/20260506-ci-build-audit-review.md
         classification: tracks drift
       - path: docs/planning/reviews/ci-and-delivery/index.md
         classification: tracks drift
