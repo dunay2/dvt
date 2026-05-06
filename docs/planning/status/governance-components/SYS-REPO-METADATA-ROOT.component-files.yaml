@@ -7,7 +7,7 @@ governanceState: governed
 dddOwner: INFRA
 cqRails: none - repository metadata
 childrenRequired: true
-fileCount: 119
+fileCount: 120
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -468,6 +468,13 @@ files:
     isLegacy: false
   - path: buzon/20260504-codex-fowler-code-tab-workspace-files-analysis-and-plan.md
     fileId: F-707C95D2DC0A
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: buzon/20260506-codex-fowler-canvas-workbench-shell-context-review-and-risk.md
+    fileId: F-CF056AE5058A
     owningUnit: SYS-REPO-METADATA-ROOT
     unitStatus: canonical
     governanceState: governed

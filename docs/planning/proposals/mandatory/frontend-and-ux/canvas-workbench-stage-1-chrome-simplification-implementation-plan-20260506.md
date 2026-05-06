@@ -568,6 +568,7 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md
   - buzon/20260506-codex-fowler-canvas-workbench-stage-1-text-only-tabs-review.md
+  - buzon/20260506-codex-fowler-canvas-workbench-shell-context-review-and-risk.md
   - docs/planning/state/agent-lane-e.yaml
   - docs/planning/state/agent-lane-e.md
   - docs/planning/state/execution-workboard.md
@@ -577,6 +578,8 @@ allowedImplementationSurfaces:
   - docs/**/index.md
   - apps/web/src/app/Root.tsx
   - apps/web/src/app/components/TopAppBar.tsx
+  - apps/web/src/app/components/TopAppBar.test.tsx
+  - apps/web/src/app/components/TopAppBar.architecture.test.ts
   - apps/web/src/app/components/LeftNavigation.tsx
   - apps/web/src/app/components/InspectorPanel.tsx
   - apps/web/src/app/components/Console.tsx
@@ -788,6 +791,71 @@ symbols:
     cypressCoverage: canvas-workbench-tabs.cy.ts
     unitTests:
       - pnpm --filter @dvt/web test -- TopAppBar
+  - name: WorkspaceOption
+    path: apps/web/src/app/shell/projectIdentityBadge.ts
+    dddOwner: ProjectIdentityBadge option projection
+    cqRails:
+      - ResolveCanvasWorkbenchContext
+      - RefreshSessionGrants
+    fowlerSignals:
+      - Presentation Model
+      - Boundary drift
+    architectureGuard: pnpm --filter @dvt/web test -- TopAppBar
+    cypressCoverage: canvas-workbench-tabs.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- projectIdentityBadge
+  - name: ProjectIdentityBadgeInput
+    path: apps/web/src/app/shell/projectIdentityBadge.ts
+    dddOwner: ProjectIdentityBadge input contract
+    cqRails:
+      - ResolveCanvasWorkbenchContext
+      - RefreshSessionGrants
+    fowlerSignals:
+      - Presentation Model
+      - Boundary drift
+    architectureGuard: pnpm --filter @dvt/web test -- TopAppBar
+    cypressCoverage: canvas-workbench-tabs.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- projectIdentityBadge
+  - name: resolveWorkspaceOptionLabel
+    path: apps/web/src/app/shell/projectIdentityBadge.ts
+    dddOwner: ProjectIdentityBadge option projection
+    cqRails:
+      - ResolveCanvasWorkbenchContext
+      - RefreshSessionGrants
+    fowlerSignals:
+      - Presentation Model
+      - Boundary drift
+    architectureGuard: pnpm --filter @dvt/web test -- TopAppBar
+    cypressCoverage: canvas-workbench-tabs.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- projectIdentityBadge
+  - name: buildProjectIdentityBadge
+    path: apps/web/src/app/shell/projectIdentityBadge.ts
+    dddOwner: ProjectIdentityBadge projection
+    cqRails:
+      - ResolveCanvasWorkbenchContext
+      - RefreshSessionGrants
+    fowlerSignals:
+      - Presentation Model
+      - Boundary drift
+    architectureGuard: pnpm --filter @dvt/web test -- TopAppBar
+    cypressCoverage: canvas-workbench-tabs.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- projectIdentityBadge
+  - name: WORKSPACE_BOOTSTRAP
+    path: apps/web/src/app/shell/projectIdentityBadge.test.ts
+    dddOwner: ProjectIdentityBadge test fixture
+    cqRails:
+      - ResolveCanvasWorkbenchContext
+      - RefreshSessionGrants
+    fowlerSignals:
+      - Presentation Model
+      - Boundary drift
+    architectureGuard: pnpm --filter @dvt/web test -- TopAppBar
+    cypressCoverage: canvas-workbench-tabs.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- projectIdentityBadge
   - name: ShellProjectIdentityBadge
     path: apps/web/src/app/components/shell/ShellProjectIdentityBadge.tsx
     dddOwner: ProjectIdentityBadge renderer
@@ -801,9 +869,52 @@ symbols:
     cypressCoverage: canvas-workbench-tabs.cy.ts
     unitTests:
       - pnpm --filter @dvt/web test -- TopAppBar
+  - name: ShellProjectIdentityBadgeProps
+    path: apps/web/src/app/components/shell/ShellProjectIdentityBadge.tsx
+    dddOwner: ProjectIdentityBadge renderer contract
+    cqRails:
+      - ResolveCanvasWorkbenchContext
+      - RefreshSessionGrants
+    fowlerSignals:
+      - Presentation Model
+      - Boundary drift
+    architectureGuard: pnpm --filter @dvt/web test -- TopAppBar
+    cypressCoverage: canvas-workbench-tabs.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- TopAppBar
   - name: ShellWorkspaceContextMenu
     path: apps/web/src/app/components/shell/ShellWorkspaceContextMenu.tsx
     dddOwner: ShellWorkspaceContextMenu
+    cqRails:
+      - setTenantId
+      - setProjectId
+      - setEnvironmentId
+      - RefreshSessionGrants
+    fowlerSignals:
+      - Command Query Separation
+      - Hidden authority
+    architectureGuard: pnpm --filter @dvt/web test -- TopAppBar
+    cypressCoverage: canvas-workbench-tabs.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- TopAppBar
+  - name: ShellWorkspaceContextMenuProps
+    path: apps/web/src/app/components/shell/ShellWorkspaceContextMenu.tsx
+    dddOwner: ShellWorkspaceContextMenu contract
+    cqRails:
+      - setTenantId
+      - setProjectId
+      - setEnvironmentId
+      - RefreshSessionGrants
+    fowlerSignals:
+      - Command Query Separation
+      - Hidden authority
+    architectureGuard: pnpm --filter @dvt/web test -- TopAppBar
+    cypressCoverage: canvas-workbench-tabs.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- TopAppBar
+  - name: ShellWorkspaceSelectorsProps
+    path: apps/web/src/app/components/shell/ShellWorkspaceSelectors.tsx
+    dddOwner: ShellWorkspaceContextMenu selector contract
     cqRails:
       - setTenantId
       - setProjectId
@@ -867,4 +978,71 @@ symbols:
     cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
     unitTests:
       - pnpm docs:feature-mechanization:implementation
+  - name: assertShellWorkspaceContextIsRelocated
+    path: apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+    dddOwner: CanvasWorkbenchVisualPostureReadModel
+    cqRails:
+      - VerifyCanvasWorkbenchVisualPosture
+      - setTenantId
+      - setProjectId
+      - setEnvironmentId
+    fowlerSignals:
+      - Semantic Fitness Function
+      - Boundary drift
+    architectureGuard: pnpm --filter @dvt/web test -- TopAppBar
+    cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+    unitTests:
+      - pnpm docs:feature-mechanization:implementation
+  - name: APP_ROOT
+    path: apps/web/src/app/components/TopAppBar.architecture.test.ts
+    dddOwner: ShellTopBar architecture guard fixture
+    cqRails:
+      - ResolveCanvasWorkbenchContext
+      - VerifyCanvasWorkbenchVisualPosture
+    fowlerSignals:
+      - Semantic Fitness Function
+      - Documentation drift
+    architectureGuard: pnpm --filter @dvt/web test -- TopAppBar
+    cypressCoverage: canvas-workbench-tabs.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- TopAppBar
+  - name: REPO_ROOT
+    path: apps/web/src/app/components/TopAppBar.architecture.test.ts
+    dddOwner: ShellTopBar architecture guard fixture
+    cqRails:
+      - ResolveCanvasWorkbenchContext
+      - VerifyCanvasWorkbenchVisualPosture
+    fowlerSignals:
+      - Semantic Fitness Function
+      - Documentation drift
+    architectureGuard: pnpm --filter @dvt/web test -- TopAppBar
+    cypressCoverage: canvas-workbench-tabs.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- TopAppBar
+  - name: readAppSource
+    path: apps/web/src/app/components/TopAppBar.architecture.test.ts
+    dddOwner: ShellTopBar architecture guard fixture
+    cqRails:
+      - ResolveCanvasWorkbenchContext
+      - VerifyCanvasWorkbenchVisualPosture
+    fowlerSignals:
+      - Semantic Fitness Function
+      - Documentation drift
+    architectureGuard: pnpm --filter @dvt/web test -- TopAppBar
+    cypressCoverage: canvas-workbench-tabs.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- TopAppBar
+  - name: readRepoSource
+    path: apps/web/src/app/components/TopAppBar.architecture.test.ts
+    dddOwner: ShellTopBar architecture guard fixture
+    cqRails:
+      - ResolveCanvasWorkbenchContext
+      - VerifyCanvasWorkbenchVisualPosture
+    fowlerSignals:
+      - Semantic Fitness Function
+      - Documentation drift
+    architectureGuard: pnpm --filter @dvt/web test -- TopAppBar
+    cypressCoverage: canvas-workbench-tabs.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- TopAppBar
 ```

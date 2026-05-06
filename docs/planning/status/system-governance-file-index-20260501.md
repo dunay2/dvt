@@ -32,7 +32,7 @@ itself prove verified semantic maturity. `governanceState`,
 
 ## Totals
 
-- Repository files indexed: 4260
+- Repository files indexed: 4267
 - Component/source owner units: 32
 - Ungoverned files: 0
 - Drift files: 41
@@ -43,8 +43,8 @@ itself prove verified semantic maturity. `governanceState`,
 <!-- prettier-ignore-start -->
 | Status | Files |
 | --- | ---: |
-| `canonical` | 119 |
-| `coverage-required` | 4018 |
+| `canonical` | 120 |
+| `coverage-required` | 4024 |
 | `drift` | 41 |
 | `review` | 82 |
 <!-- prettier-ignore-end -->
@@ -54,9 +54,9 @@ itself prove verified semantic maturity. `governanceState`,
 <!-- prettier-ignore-start -->
 | Governance state | Files |
 | --- | ---: |
-| `coverage-required` | 4018 |
+| `coverage-required` | 4024 |
 | `drift` | 41 |
-| `governed` | 119 |
+| `governed` | 120 |
 | `review` | 82 |
 <!-- prettier-ignore-end -->
 
@@ -65,8 +65,8 @@ itself prove verified semantic maturity. `governanceState`,
 <!-- prettier-ignore-start -->
 | Canonical role | Files |
 | --- | ---: |
-| `implementation-owner` | 119 |
-| `none` | 4141 |
+| `implementation-owner` | 120 |
+| `none` | 4147 |
 <!-- prettier-ignore-end -->
 
 ## By Owning Unit
@@ -99,10 +99,10 @@ itself prove verified semantic maturity. `governanceState`,
 | `SYS-PLANSTORE-ENGINE-FETCH` | 5 |
 | `SYS-PLANSTORE-POSTGRES` | 16 |
 | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | 11 |
-| `SYS-REPO-METADATA-ROOT` | 119 |
+| `SYS-REPO-METADATA-ROOT` | 120 |
 | `SYS-RUNTIME-ROOT` | 286 |
 | `SYS-TRACEABILITY-ROOT` | 67 |
-| `SYS-WEB-ROOT` | 822 |
+| `SYS-WEB-ROOT` | 828 |
 | `SYS-WORKERS-ROOT` | 103 |
 <!-- prettier-ignore-end -->
 

@@ -184,6 +184,78 @@ Rules for this seam:
 - the rail consumes render-ready `{ to, label, icon }` items and stays focused
   on navigation chrome and routing behavior.
 
+## Shell Workspace Context Component
+
+The shell workspace context is the bounded replacement for tenant, project, and
+environment dropdowns that previously consumed the main top bar.
+
+It uses a Fowler Presentation Model split:
+
+- `buildProjectIdentityBadge(...)` resolves workspace scope into read-only
+  labels;
+- `ShellProjectIdentityBadge` renders those labels without mutation affordance;
+- `ShellWorkspaceContextMenu` owns the on-demand shell context surface;
+- `ShellWorkspaceSelectors` renders the existing `setTenantId`,
+  `setProjectId`, and `setEnvironmentId` commands inside that surface only.
+
+### Public API
+
+| API                         | Kind          | Owner                    | Contract                                                                      |
+| --------------------------- | ------------- | ------------------------ | ----------------------------------------------------------------------------- |
+| `ProjectIdentityBadge`      | read model    | Web shell presentation   | Carries tenant, project, environment, compact id, slug, and draft-scope label |
+| `buildProjectIdentityBadge` | query adapter | Web shell presentation   | Resolves granted option labels and falls back to raw ids without fabricating  |
+| `ShellProjectIdentityBadge` | passive view  | Shell top-bar rendering  | Displays read-only project identity in the persistent shell bar               |
+| `ShellWorkspaceContextMenu` | controller UI | Shell context commands   | Makes scope commands reachable from an on-demand surface                      |
+| `ShellWorkspaceSelectors`   | command view  | Session-scope command UI | Dispatches the existing session aggregate commands only                       |
+
+### Invariants
+
+- the main top bar renders no `role="combobox"` workspace controls;
+- `ProjectIdentityBadge` is read-only and cannot dispatch session commands;
+- scope changes reuse `setTenantId`, `setProjectId`, and `setEnvironmentId`;
+- the menu may expose selectors, but it must not create a parallel auth, RBAC,
+  tenant-admin, or project-switching rail;
+- Git context remains read-only in this slice and does not become a branch
+  command surface.
+
+### Transitions
+
+```mermaid
+stateDiagram-v2
+  [*] --> ResolvedScope
+  ResolvedScope --> TopBarBadge: buildProjectIdentityBadge
+  TopBarBadge --> ScopeMenuClosed: render read-only context
+  ScopeMenuClosed --> ScopeMenuOpen: user opens Scope
+  ScopeMenuOpen --> TenantChanged: setTenantId
+  ScopeMenuOpen --> ProjectChanged: setProjectId
+  ScopeMenuOpen --> EnvironmentChanged: setEnvironmentId
+  TenantChanged --> ResolvedScope
+  ProjectChanged --> ResolvedScope
+  EnvironmentChanged --> ResolvedScope
+```
+
+### Consumers
+
+| Consumer                   | Use                                                                   |
+| -------------------------- | --------------------------------------------------------------------- |
+| `ShellTopBar`              | Composes badge, context menu, health, Git reference, and View menu    |
+| Canvas workbench route     | Reads the same session scope through its existing query/controller    |
+| Runs and other workbenches | React to session-scope changes through their existing route queries   |
+| Cypress posture proof      | Verifies badge presence, no top-bar comboboxes, and menu reachability |
+
+### Component Flow
+
+```mermaid
+flowchart LR
+  Store["sessionStore scope"] --> Model["buildProjectIdentityBadge"]
+  Config["WorkspaceBootstrapConfig"] --> Model
+  Model --> Badge["ShellProjectIdentityBadge"]
+  Model --> Menu["ShellWorkspaceContextMenu"]
+  Config --> Selectors["ShellWorkspaceSelectors"]
+  Selectors --> Commands["setTenantId / setProjectId / setEnvironmentId"]
+  Commands --> Store
+```
+
 ## UX Rules
 
 - the top bar stays visible across all routed views;

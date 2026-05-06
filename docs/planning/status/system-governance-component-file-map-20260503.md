@@ -25,7 +25,7 @@ Machine-readable sources:
 ## Totals
 
 - Components: 32
-- Files mapped: 4260
+- Files mapped: 4267
 - Components with drift or legacy files: 3
 
 ## Largest Components
@@ -34,12 +34,12 @@ Machine-readable sources:
 | Component | Files | Drift files | Legacy files |
 | --- | ---: | ---: | ---: |
 | `SYS-DOCS-GOVERNANCE-ROOT` | 1759 | 0 | 0 |
-| `SYS-WEB-ROOT` | 822 | 0 | 0 |
+| `SYS-WEB-ROOT` | 828 | 0 | 0 |
 | `SYS-RUNTIME-ROOT` | 286 | 0 | 0 |
 | `SYS-ADAPTERS-ROOT` | 196 | 0 | 0 |
 | `SYS-CI-GOVERNANCE-ROOT` | 184 | 0 | 0 |
 | `SYS-CONTRACTS-ROOT` | 127 | 0 | 0 |
-| `SYS-REPO-METADATA-ROOT` | 119 | 0 | 0 |
+| `SYS-REPO-METADATA-ROOT` | 120 | 0 | 0 |
 | `SYS-WORKERS-ROOT` | 103 | 0 | 0 |
 | `SYS-API-TESTS` | 101 | 0 | 0 |
 | `SYS-API-HTTP-ENTRYPOINTS` | 83 | 0 | 0 |
@@ -97,10 +97,10 @@ Machine-readable sources:
 | `SYS-PLANSTORE-POSTGRES` | 16 | 16 | 0 | [shard](./governance-components/SYS-PLANSTORE-POSTGRES.component-files.yaml) |
 | `SYS-PLANSTORE-ROOT` | 0 | 0 | 0 | [shard](./governance-components/SYS-PLANSTORE-ROOT.component-files.yaml) |
 | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | 11 | 0 | 0 | [shard](./governance-components/SYS-PLANSTORE-TEMPORAL-COMPOSITION.component-files.yaml) |
-| `SYS-REPO-METADATA-ROOT` | 119 | 0 | 0 | [shard](./governance-components/SYS-REPO-METADATA-ROOT.component-files.yaml) |
+| `SYS-REPO-METADATA-ROOT` | 120 | 0 | 0 | [shard](./governance-components/SYS-REPO-METADATA-ROOT.component-files.yaml) |
 | `SYS-RUNTIME-ROOT` | 286 | 0 | 0 | [shard](./governance-components/SYS-RUNTIME-ROOT.component-files.yaml) |
 | `SYS-TRACEABILITY-ROOT` | 67 | 0 | 0 | [shard](./governance-components/SYS-TRACEABILITY-ROOT.component-files.yaml) |
-| `SYS-WEB-ROOT` | 822 | 0 | 0 | [shard](./governance-components/SYS-WEB-ROOT.component-files.yaml) |
+| `SYS-WEB-ROOT` | 828 | 0 | 0 | [shard](./governance-components/SYS-WEB-ROOT.component-files.yaml) |
 | `SYS-WORKERS-ROOT` | 103 | 0 | 0 | [shard](./governance-components/SYS-WORKERS-ROOT.component-files.yaml) |
 <!-- prettier-ignore-end -->
 
