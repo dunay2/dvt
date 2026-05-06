@@ -41,6 +41,7 @@ verification.
 - `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
 - `docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md`
 - `docs/architecture/components/web/graph/canvas-layout-persistence-component.md`
+- `docs/architecture/components/api/protected-runtime-command-query-rail-design.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md`
@@ -251,16 +252,15 @@ Stage 1 should reuse existing rails.
 | `ListCanvasWorkbenchTabs`       | query   | Canvas workbench presentation | reuse  | Return tab labels without forcing icon rendering.            |
 | `SelectCanvasWorkbenchTab`      | command | Canvas workbench presentation | reuse  | Preserve current route-scoped tab navigation.                |
 | `ResolveCanvasWorkbenchContext` | query   | Canvas workbench presentation | reuse  | Resolve visible Canvas title, slug, and draft posture.       |
-| `SelectTenantScope`             | command | Web auth / workspace scope    | reuse  | Move tenant choice out of the top bar without changing auth. |
-| `SelectProjectScope`            | command | Web auth / workspace scope    | reuse  | Move project choice out of the top bar.                      |
+| `setTenantId`                   | command | Web auth / workspace scope    | reuse  | Move tenant choice out of the top bar without changing auth. |
+| `setProjectId`                  | command | Web auth / workspace scope    | reuse  | Move project choice out of the top bar.                      |
+| `setEnvironmentId`              | command | Web auth / workspace scope    | reuse  | Move environment choice out of the top bar.                  |
 | `RefreshSessionGrants`          | query   | Web auth / workspace scope    | reuse  | Keep the selector limited to granted scopes.                 |
 
 Environment and Git posture:
 
-- Environment selection currently exists as workspace session state rather than
-  a named accepted rail in this plan. Stage 1 implementation must either map it
-  to an existing workspace-scope command catalog or add `SelectEnvironmentScope`
-  before moving the control.
+- Environment selection reuses the existing workspace session command
+  `setEnvironmentId`. Stage 1 must not invent a parallel environment rail.
 - Git remains a read-only reference indicator in Stage 1. No Git selection,
   branch switching, staging, commit, or source-control workflow is accepted by
   this slice unless a separate source-control rail is added first.
@@ -333,9 +333,13 @@ version, validation, error, and compatibility rules.
 - Stage 3 is an anti-corruption and value-object boundary: imported project
   snapshots need validation before becoming workspace authority.
 
-## First Implementation Plan To Write Next
+## Stage 1 Implementation Plan
 
-The next implementation plan should cover Stage 1 only.
+The Stage 1 implementation plan is:
+
+- `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-1-chrome-simplification-implementation-plan-20260506.md`
+
+That implementation plan covers Stage 1 only.
 
 It should include:
 
@@ -345,6 +349,8 @@ It should include:
 - architecture and Cypress proof for the UX invariants, progressive disclosure,
   command palette, Add palette pinning, responsive behavior, accessibility, and
   implementation boundary rules that Stage 1 touches;
+- frontend folder-structure guardrails so shell chrome, workbench primitives,
+  Canvas route code, stores, and UI primitives land in their owning folders;
 - Cypress proof for Canvas tab readability and reachable scope selection;
 - no backend, save, export, or import changes;
 - governance regeneration and `pnpm verify:prepush`.
