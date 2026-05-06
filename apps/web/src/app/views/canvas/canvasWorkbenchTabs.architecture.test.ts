@@ -57,6 +57,7 @@ describe('Canvas workbench tabs architecture', () => {
       'ListCanvasWorkbenchTabs',
       'SelectCanvasWorkbenchTab',
       'CanvasWorkbenchTabsReadModel',
+      'text-only',
       'US-CANVAS-WORKBENCH-001',
       'US-CANVAS-WORKBENCH-007',
       'canvas-workbench-command-query-catalog.md',
@@ -99,8 +100,10 @@ describe('Canvas workbench tabs architecture', () => {
 
     for (const requiredCypressProof of [
       'assertCanvasWorkbenchTabsAreHeaderScoped',
+      'assertCanvasWorkbenchTabsAreTextOnly',
       'left-navigation-rail',
       'app-shell-outlet',
+      "querySelector('svg')",
       'scrollWidth',
       'clientWidth',
     ]) {
@@ -136,6 +139,9 @@ describe('Canvas workbench tabs architecture', () => {
     expect(shellNavigationSource).not.toContain("['nav']");
     expect(tabStripSource).toContain('CanvasWorkbenchTabsReadModel');
     expect(tabStripSource).not.toContain('buildShellNavigationModel');
+    expect(tabStripSource).not.toContain('tab.icon');
+    expect(tabStripSource).not.toContain('const Icon');
+    expect(tabStripSource).not.toContain('<Icon');
     expect(tabStripSource).not.toContain('truncate');
     expect(tabStripSource).not.toContain('min-w-0');
     expect(playgroundTabStripSource).not.toContain('CanvasWorkbenchTabsReadModel');

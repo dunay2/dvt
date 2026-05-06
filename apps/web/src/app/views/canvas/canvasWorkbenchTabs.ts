@@ -1,6 +1,4 @@
 /** Owned concern: project Canvas workbench tab placements into a route-owned read model. */
-import { LayoutDashboard } from 'lucide-react';
-
 import { resolveString } from '../../plugins/contracts/PluginManifest';
 import type {
   CanvasWorkbenchTabId,
@@ -21,7 +19,6 @@ export type CanvasWorkbenchContext =
 export type CanvasWorkbenchTabReadModel = Readonly<{
   id: CanvasWorkbenchTabId;
   label: string;
-  icon: CanvasWorkbenchTabPlacement['icon'];
   order: number;
   scope: 'canvas' | 'selection' | 'run';
   isEnabled: boolean;
@@ -49,7 +46,6 @@ export function createGraphCanvasWorkbenchTab(): CanvasWorkbenchTabReadModel {
   return {
     id: 'graph',
     label: 'Graph',
-    icon: LayoutDashboard,
     order: 10,
     scope: 'canvas',
     isEnabled: true,
@@ -74,7 +70,6 @@ function projectPlacementToTab(
   return {
     id: placement.tabId,
     label: resolveString(placement.label),
-    icon: placement.icon,
     order: placement.order,
     scope: placement.scope,
     isEnabled: true,
