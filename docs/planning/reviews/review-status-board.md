@@ -54,6 +54,7 @@ Sprint execution board:
 | [20260401 Lane C RC-C2 efficiency institutionalization review](./ci-and-delivery/20260401-lane-c-rc-c2-efficiency-institutionalization-review.md) | `ci-and-delivery`                 | RC-C2 phase-2 institutionalization review               | `RC-C2`                                    | `review`         | `67%`              |
 | [20260402 RC-C2 operational friction intake review](./ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md)                       | `ci-and-delivery`                 | current RC-C2 intake review                             | `RC-C2`                                    | `review`         | `67%`              |
 | [20260422 Environment configuration audit](./ci-and-delivery/20260422-environment-configuration-audit-review.md)                                  | `ci-and-delivery`                 | current monorepo environment and tooling audit baseline | `none`                                     | reference        | `n/a`              |
+| [20260506 CI build config audit](./ci-and-delivery/20260506-ci-build-audit-review.md)                                                             | `ci-and-delivery`                 | current CI/build/config audit intake                    | `none`                                     | `review`         | `0%`               |
 
 Additional active rationale:
 
