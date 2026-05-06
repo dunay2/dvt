@@ -81,8 +81,12 @@ function assertShellWorkspaceContextIsRelocated(): void {
 
   cy.get('[data-slot="shell-workspace-context-trigger"]').click();
   cy.get('[data-slot="shell-workspace-context-menu"]').within(() => {
-    cy.get('[data-slot="shell-workspace-selectors"]').should('be.visible');
-    cy.get('[role="combobox"]').should('have.length', 3);
+    cy.get('[data-slot="shell-workspace-context-details"]').should('be.visible');
+    cy.get('[data-slot="shell-workspace-tenant-context"]').should('be.visible');
+    cy.get('[aria-label="Tenant scope (read only)"]').should('be.visible');
+    cy.get('[aria-label="Project scope (read only)"]').should('be.visible');
+    cy.get('[aria-label="Environment scope (read only)"]').should('be.visible');
+    cy.get('[role="combobox"]').should('not.exist');
     cy.contains('Tenant').should('be.visible');
     cy.contains('Project').should('be.visible');
     cy.contains('Environment').should('be.visible');

@@ -4,7 +4,7 @@ generatedFrom:
   - docs/planning/status/system-governance-component-index.components.yaml
 shardDirectory: docs/planning/status/governance-components
 componentCount: 32
-fileCount: 4267
+fileCount: 4270
 components:
   - id: SYS-ADAPTERS-ROOT
     path: docs/planning/status/governance-components/SYS-ADAPTERS-ROOT.component-files.yaml
@@ -104,10 +104,10 @@ components:
     contentHash: fa1299dd144e2f14a9e3b3491fd17636c0f59e41f50e1195db9bd9b50111eb0e
   - id: SYS-DOCS-GOVERNANCE-ROOT
     path: docs/planning/status/governance-components/SYS-DOCS-GOVERNANCE-ROOT.component-files.yaml
-    fileCount: 1759
+    fileCount: 1761
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 530e1f84a4b209c4b8a800947ff0fe8cf636ce1fbef5a1ae81ce1cfe5c587a40
+    contentHash: 5784bfcc994631642e904e51f2c4dfdfdedd2b4a67ff0fcd70ee7a31f227487f
   - id: SYS-OBSERVABILITY-ROOT
     path: docs/planning/status/governance-components/SYS-OBSERVABILITY-ROOT.component-files.yaml
     fileCount: 15
@@ -171,10 +171,10 @@ components:
     contentHash: 921ab5c7caa9f5ed9f061513a84192bdf155c79d5b8f66af044563f6968b28ab
   - id: SYS-REPO-METADATA-ROOT
     path: docs/planning/status/governance-components/SYS-REPO-METADATA-ROOT.component-files.yaml
-    fileCount: 120
+    fileCount: 121
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: bc4571a5425c72009d8abd73c181838b3578ab5c40d75d514d06bee17e82e2e9
+    contentHash: 2bf21c022d84fb8e6caa7f26bb87215bdff81872721612a473e4f9c79ac6b900
   - id: SYS-RUNTIME-ROOT
     path: docs/planning/status/governance-components/SYS-RUNTIME-ROOT.component-files.yaml
     fileCount: 286
@@ -192,7 +192,7 @@ components:
     fileCount: 828
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 225d91f6bbf1e13eda18be554ab9478d5ebf49b92e33088d34b50414d0c74293
+    contentHash: e2e5e70895465ec7ce566039a90f382e7d0394dd33b11f993414a7e32b0d138f
   - id: SYS-WORKERS-ROOT
     path: docs/planning/status/governance-components/SYS-WORKERS-ROOT.component-files.yaml
     fileCount: 103

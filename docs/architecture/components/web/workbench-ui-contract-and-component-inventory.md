@@ -27,6 +27,8 @@ Use it with:
 - [Screen Layout And Cross-Surface Behavior Rules](./screen-layout-and-cross-surface-behavior-rules.md)
 - [UX Implementation Guide](./ux-implementation-guide.md)
 - [Screen Manuals And User Stories](./screen-manuals-and-user-stories.md)
+- [Shell Workspace Context Component](./appshell/shell-workspace-context-component.md)
+- [Shell Workspace Context User Stories](./appshell/shell-workspace-context-user-stories.md)
 
 ## Design Position
 
@@ -137,7 +139,7 @@ These are the cross-route UI building blocks that should exist once and be reuse
 | ------------------------- | ------------------------------------------------------------------------- | ----------------------------------- |
 | `AppShellFrame`           | Full-screen shell layout wrapper                                          | Current, v1 shell frame primitive   |
 | `ShellTopBar`             | Global context and global actions                                         | Current, should be hardened         |
-| `Shell workspace context` | Read-only project identity plus on-demand session-scope commands          | Current Stage 1 split               |
+| `Shell workspace context` | Read-only project identity plus on-demand read-only context details       | Current Stage 1 split               |
 | `ShellHealthBanner`       | Health and degraded-state visibility                                      | Current                             |
 | `LeftNavigationRail`      | Primary route navigation                                                  | Current, should be standardized     |
 | `RouteWorkbenchFrame`     | Shared route layout with header plus body or scroll ownership contract    | Current, v1 frame primitive         |
@@ -190,10 +192,13 @@ Shell-specific current fit:
 - `Shell workspace context`
   Current implementation: [projectIdentityBadge.ts](../../../../apps/web/src/app/shell/projectIdentityBadge.ts), [ShellProjectIdentityBadge.tsx](../../../../apps/web/src/app/components/shell/ShellProjectIdentityBadge.tsx), and [ShellWorkspaceContextMenu.tsx](../../../../apps/web/src/app/components/shell/ShellWorkspaceContextMenu.tsx)
   Reuse decision: treat `ProjectIdentityBadge` as the stable read-only top-bar
-  projection and `ShellWorkspaceContextMenu` as the only Stage 1 selector
-  surface.
-  Current gap: the menu still delegates to the existing sessionStore commands;
-  grant refresh and richer unavailable-state copy remain future auth work.
+  projection and `ShellWorkspaceContextMenu` as an on-demand read-only context
+  detail surface.
+  Current gap: project selection belongs to a separate governed screen outside
+  this Stage 1 main-workbench shell boundary; grant refresh and richer
+  unavailable-state copy remain future auth work.
+  Local guide: [shell-workspace-context-component.md](./appshell/shell-workspace-context-component.md)
+  Scenario guide: [shell-workspace-context-user-stories.md](./appshell/shell-workspace-context-user-stories.md)
 - `ShellHealthBanner`
   Current implementation: [ShellHealthBanner.tsx](../../../../apps/web/src/app/components/ShellHealthBanner.tsx)
   Reuse decision: reuse as-is with styling cleanup.

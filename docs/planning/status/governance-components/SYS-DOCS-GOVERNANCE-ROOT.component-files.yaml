@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - documentation governance
 childrenRequired: true
-fileCount: 1759
+fileCount: 1761
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -1614,6 +1614,20 @@ files:
     isLegacy: false
   - path: docs/architecture/components/web/appshell/data-source-service-boundary.md
     fileId: F-B1360D6D0523
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/web/appshell/shell-workspace-context-component.md
+    fileId: F-986AA5084618
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/web/appshell/shell-workspace-context-user-stories.md
+    fileId: F-4D35F9F3EC8C
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

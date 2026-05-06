@@ -1,3 +1,4 @@
+/** Owned concern: verify root shell chrome posture through render-level test helpers. */
 import type { QueryClient } from '@tanstack/react-query';
 import { waitFor } from '@testing-library/dom';
 import { expect, vi } from 'vitest';
@@ -62,7 +63,7 @@ function expectRootShellHeaderChrome(container: ParentNode): void {
     shellProjectIdentityBadge.querySelector('[data-slot="shell-project-identity-env"]')
   ).not.toBeNull();
   expect(shellProjectIdentityBadge.className).toContain('bg-[var(--surface-app)]');
-  expect(shellWorkspaceContextTrigger.textContent).toContain('Scope');
+  expect(shellWorkspaceContextTrigger.textContent).toContain('Context');
   expect(shellMenuTrigger.textContent).toContain('View');
 }
 

@@ -1,34 +1,17 @@
-/** Owned concern: expose workspace-scope commands from an on-demand shell context surface. */
+/** Owned concern: expose active workspace scope as read-only shell context. */
 import { ChevronsUpDown } from 'lucide-react';
 
-import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { ProjectIdentityBadge } from '../../shell/projectIdentityBadge';
 import { Button } from '../ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { topAppBarClasses } from './chrome';
-import { ShellWorkspaceSelectors } from './ShellWorkspaceSelectors';
+import { ShellWorkspaceContextDetails } from './ShellWorkspaceContextDetails';
 
 export type ShellWorkspaceContextMenuProps = {
   readonly badge: ProjectIdentityBadge;
-  readonly workspaceBootstrap: WorkspaceBootstrapConfig;
-  readonly selectedTenant: string;
-  readonly selectedProject: string;
-  readonly selectedEnvironment: string;
-  readonly setSelectedTenant: (tenantId: string) => void;
-  readonly setSelectedProject: (projectId: string) => void;
-  readonly setSelectedEnvironment: (environmentId: string) => void;
 };
 
-export function ShellWorkspaceContextMenu({
-  badge,
-  workspaceBootstrap,
-  selectedTenant,
-  selectedProject,
-  selectedEnvironment,
-  setSelectedTenant,
-  setSelectedProject,
-  setSelectedEnvironment,
-}: ShellWorkspaceContextMenuProps) {
+export function ShellWorkspaceContextMenu({ badge }: ShellWorkspaceContextMenuProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -37,10 +20,10 @@ export function ShellWorkspaceContextMenu({
           variant="ghost"
           size="sm"
           className={topAppBarClasses.menuButton}
-          aria-label="Change workspace scope"
+          aria-label="Show workspace context"
         >
           <ChevronsUpDown className="size-4" />
-          Scope
+          Context
         </Button>
       </PopoverTrigger>
       <PopoverContent data-slot="shell-workspace-context-menu" align="start" className="w-80 p-3">
@@ -58,15 +41,7 @@ export function ShellWorkspaceContextMenu({
             {badge.tenantLabel} / {badge.environmentLabel} / {badge.draftPostureLabel}
           </div>
         </div>
-        <ShellWorkspaceSelectors
-          workspaceBootstrap={workspaceBootstrap}
-          selectedTenant={selectedTenant}
-          selectedProject={selectedProject}
-          selectedEnvironment={selectedEnvironment}
-          setSelectedTenant={setSelectedTenant}
-          setSelectedProject={setSelectedProject}
-          setSelectedEnvironment={setSelectedEnvironment}
-        />
+        <ShellWorkspaceContextDetails badge={badge} />
       </PopoverContent>
     </Popover>
   );

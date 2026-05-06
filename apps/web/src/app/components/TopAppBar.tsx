@@ -28,9 +28,6 @@ export function ShellTopBar({
   const selectedTenant = useSessionStore((state) => state.tenantId);
   const selectedProject = useSessionStore((state) => state.projectId);
   const selectedEnvironment = useSessionStore((state) => state.environmentId);
-  const setSelectedTenant = useSessionStore((state) => state.setTenantId);
-  const setSelectedProject = useSessionStore((state) => state.setProjectId);
-  const setSelectedEnvironment = useSessionStore((state) => state.setEnvironmentId);
   const connectionStatus = usePlatformConnectionStore((state) => state.connectionStatus);
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const toggleFocusMode = useUiLayoutStore((state) => state.toggleFocusMode);
@@ -62,16 +59,7 @@ export function ShellTopBar({
         </div>
 
         <ShellProjectIdentityBadge badge={projectIdentityBadge} />
-        <ShellWorkspaceContextMenu
-          badge={projectIdentityBadge}
-          workspaceBootstrap={workspaceBootstrap}
-          selectedTenant={selectedTenant}
-          selectedProject={selectedProject}
-          selectedEnvironment={selectedEnvironment}
-          setSelectedTenant={setSelectedTenant}
-          setSelectedProject={setSelectedProject}
-          setSelectedEnvironment={setSelectedEnvironment}
-        />
+        <ShellWorkspaceContextMenu badge={projectIdentityBadge} />
         <ShellGitRef
           gitBranch={workspaceBootstrap.gitBranch}
           gitSha={workspaceBootstrap.gitSha}

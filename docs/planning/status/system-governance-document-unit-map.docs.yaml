@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files docs
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-documentCount: 1499
+documentCount: 1501
 documents:
   - path: docs/CONTRIBUTING.md
     classification: governs unit
@@ -818,6 +818,14 @@ documents:
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-WEB
   - path: docs/architecture/components/web/appshell/data-source-service-boundary.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-WEB
+  - path: docs/architecture/components/web/appshell/shell-workspace-context-component.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-WEB
+  - path: docs/architecture/components/web/appshell/shell-workspace-context-user-stories.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-WEB

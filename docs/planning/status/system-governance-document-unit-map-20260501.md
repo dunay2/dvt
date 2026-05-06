@@ -47,12 +47,12 @@ unit.
 
 ## Counts
 
-- Documents indexed: 1499
+- Documents indexed: 1501
 
 ### By Classification
 
 - `describes unit`: 75
-- `governs unit`: 556
+- `governs unit`: 558
 - `historical/reference only`: 254
 - `proves evidence`: 154
 - `tracks drift`: 428
@@ -70,7 +70,7 @@ unit.
 - `SYS-PLANSTORE`: 31
 - `SYS-RUNTIME`: 140
 - `SYS-TRACEABILITY`: 58
-- `SYS-WEB`: 158
+- `SYS-WEB`: 160
 - `SYS-WORKERS`: 29
 
 ## Diagram
