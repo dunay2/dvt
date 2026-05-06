@@ -4,7 +4,7 @@ generatedFrom:
   - docs/planning/status/system-governance-component-index.components.yaml
 shardDirectory: docs/planning/status/governance-components
 componentCount: 32
-fileCount: 4248
+fileCount: 4250
 components:
   - id: SYS-ADAPTERS-ROOT
     path: docs/planning/status/governance-components/SYS-ADAPTERS-ROOT.component-files.yaml
@@ -104,10 +104,10 @@ components:
     contentHash: fa1299dd144e2f14a9e3b3491fd17636c0f59e41f50e1195db9bd9b50111eb0e
   - id: SYS-DOCS-GOVERNANCE-ROOT
     path: docs/planning/status/governance-components/SYS-DOCS-GOVERNANCE-ROOT.component-files.yaml
-    fileCount: 1750
+    fileCount: 1752
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 92fa6b5b2c9bafb9a3245d82a82d78502d3ec569e1944ef51a1aa90538420c1e
+    contentHash: fd44418ddcd7f8b5200fd25342636020cbfbf1e5391a84f23b332617b75177c6
   - id: SYS-OBSERVABILITY-ROOT
     path: docs/planning/status/governance-components/SYS-OBSERVABILITY-ROOT.component-files.yaml
     fileCount: 15

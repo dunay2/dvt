@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - documentation governance
 childrenRequired: true
-fileCount: 1750
+fileCount: 1752
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -9254,6 +9254,14 @@ files:
     isDrift: false
     isLegacy: false
   - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/ar-a5-plan-identity-determinism-verification-20260506.md
+    fileId: F-3DE32BC3CE02
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/ar-b1-run-status-write-boundary-plan-20260404.md
     fileId: F-10578A504015
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -9344,6 +9352,14 @@ files:
   - path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/f-07-frontend-runtime-contract-baseline-plan-20260404.md
     fileId: F-F50B7ED02A3E
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/lane-c-review-state-reconciliation-20260506.md
+    fileId: F-64521CC6F81B
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

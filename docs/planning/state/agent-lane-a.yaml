@@ -1299,21 +1299,30 @@ tasks:
     last_verified: '2026-04-02'
   - task_id: AR-A5
     priority: P2
-    status: queued
+    status: done
     objective: >-
       verify that createdAtIso is excluded from the planCore JCS input for planId computation; if
       included, the same logical plan at different times produces different identity.
     dependency: none
     target: >-
-      Determinism test confirms createdAtIso exclusion from planId hash; if included, fix and add
-      golden vector regression test.
+      Determinism tests confirm `createdAtIso` is excluded from the planId hash. No code fix was
+      required because `PlanAssembler` already derives `planId` from `sha256(JCS(planCore))` before
+      adding `createdAtIso` to the final `ExecutionPlan` metadata.
     complexity: S
     effort_points: 1
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
-    status_reason: Potential determinism violation identified in review; requires verification.
-    last_verified: '2026-04-02'
+      - packages/@dvt/planner/src/domain/PlanAssembler.ts
+      - packages/@dvt/planner/test/unit/determinism.test.ts
+      - packages/@dvt/contracts/src/schema-packs/planner-build.ts
+      - packages/@dvt/engine/src/security/planIntegrity.ts
+    status_reason: >-
+      Verified existing implementation: `canonicalPlanCoreJson` excludes `createdAtIso`, planner
+      tests prove differing build timestamps keep the same `planId`, the planner-build contract
+      validates `plan.metadata.planId === sha256(canonicalPlanCoreJson)`, and engine integrity
+      recomputes the same plan-core identity.
+    last_verified: '2026-05-06'
   - task_id: AR-A6
     priority: P2
     status: queued
