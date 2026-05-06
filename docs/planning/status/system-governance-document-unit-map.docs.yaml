@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files docs
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-documentCount: 1493
+documentCount: 1494
 documents:
   - path: docs/CONTRIBUTING.md
     classification: governs unit
@@ -352,6 +352,10 @@ documents:
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-CI-GOVERNANCE
   - path: docs/architecture/components/ci-governance/local-changed-files-gate-component.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-CI-GOVERNANCE
+  - path: docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-CI-GOVERNANCE
