@@ -25,7 +25,7 @@ Machine-readable sources:
 ## Totals
 
 - Components: 32
-- Files mapped: 4264
+- Files mapped: 4268
 - Components with drift or legacy files: 3
 
 ## Largest Components
@@ -36,8 +36,8 @@ Machine-readable sources:
 | `SYS-DOCS-GOVERNANCE-ROOT` | 1754 | 0 | 0 |
 | `SYS-WEB-ROOT` | 822 | 0 | 0 |
 | `SYS-RUNTIME-ROOT` | 286 | 0 | 0 |
+| `SYS-CI-GOVERNANCE-ROOT` | 197 | 0 | 0 |
 | `SYS-ADAPTERS-ROOT` | 196 | 0 | 0 |
-| `SYS-CI-GOVERNANCE-ROOT` | 193 | 0 | 0 |
 | `SYS-CONTRACTS-ROOT` | 127 | 0 | 0 |
 | `SYS-REPO-METADATA-ROOT` | 119 | 0 | 0 |
 | `SYS-WORKERS-ROOT` | 103 | 0 | 0 |
@@ -84,7 +84,7 @@ Machine-readable sources:
 | `SYS-API-REPO-CONFIG` | 11 | 0 | 0 | [shard](./governance-components/SYS-API-REPO-CONFIG.component-files.yaml) |
 | `SYS-API-RUNTIME-COMPOSITION` | 26 | 0 | 0 | [shard](./governance-components/SYS-API-RUNTIME-COMPOSITION.component-files.yaml) |
 | `SYS-API-TESTS` | 101 | 0 | 0 | [shard](./governance-components/SYS-API-TESTS.component-files.yaml) |
-| `SYS-CI-GOVERNANCE-ROOT` | 193 | 0 | 0 | [shard](./governance-components/SYS-CI-GOVERNANCE-ROOT.component-files.yaml) |
+| `SYS-CI-GOVERNANCE-ROOT` | 197 | 0 | 0 | [shard](./governance-components/SYS-CI-GOVERNANCE-ROOT.component-files.yaml) |
 | `SYS-CONTRACTS-ROOT` | 127 | 0 | 0 | [shard](./governance-components/SYS-CONTRACTS-ROOT.component-files.yaml) |
 | `SYS-DOCS-GOVERNANCE-ROOT` | 1754 | 0 | 0 | [shard](./governance-components/SYS-DOCS-GOVERNANCE-ROOT.component-files.yaml) |
 | `SYS-OBSERVABILITY-ROOT` | 15 | 0 | 0 | [shard](./governance-components/SYS-OBSERVABILITY-ROOT.component-files.yaml) |

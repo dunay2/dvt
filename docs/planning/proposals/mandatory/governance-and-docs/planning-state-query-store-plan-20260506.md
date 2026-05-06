@@ -43,6 +43,13 @@ be the first canonical task store because they introduce network dependency,
 mutable state outside PR review, API/rate-limit behavior, and weaker offline
 determinism for agents.
 
+MongoDB remains rejected for this slice. A document database would match the raw
+YAML shape, but GOV-S3's current correctness problem is not document storage; it
+is deterministic comparison across Git-tracked sources, imported rows, hashes,
+counts, and composite identities. Postgres keeps those checks explicit with SQL
+constraints, joins, transactions, and `jsonb` columns that preserve the full
+source document without making the database canonical.
+
 ## System Governance Scope
 
 This proposal explicitly includes the `system-governance-*` family under the
@@ -296,7 +303,8 @@ planning source. Operators may still override the data location with
 
 ## Proposed Commands
 
-Implemented in the local Docker substrate slice:
+Implemented through the local Docker, content-import, and W4 drift-check
+slices:
 
 ```bash
 pnpm planning:db:up
@@ -308,6 +316,8 @@ pnpm planning:db:health
 pnpm planning:db:migrate
 pnpm planning:db:import
 pnpm planning:db:query
+pnpm planning:db:check
+pnpm governance:db:check
 pnpm test:planning:db
 pnpm test:planning:db:integration
 ```
@@ -316,11 +326,9 @@ Planned for later export and parity slices:
 
 ```bash
 pnpm planning:db:export
-pnpm planning:db:check
 pnpm governance:db:import
 pnpm governance:db:query
 pnpm governance:db:export
-pnpm governance:db:check
 ```
 
 The closeout baseline for the local Docker substrate slice includes:
@@ -331,6 +339,8 @@ pnpm test:planning:db:integration
 pnpm planning:db:migrate
 pnpm planning:db:import
 pnpm planning:db:query
+pnpm planning:db:check
+pnpm governance:db:check
 pnpm docs:feature-mechanization --feature GOV-S3-PLANNING-STATE-QUERY-STORE
 pnpm docs:feature-mechanization:implementation
 pnpm verify:prepush
@@ -450,6 +460,35 @@ Negative tests cover migration checksum mismatch, unknown query names, content
 extraction from real lane YAML, and governance file-count parity with the
 Git-tracked file index.
 
+`planning:db:check` implements `ValidatePlanningStateDrift`. It compares the
+current Git-tracked planning lane snapshot with imported Postgres rows by source
+hash, lane id, and `(lane_id, task_id)` identity. It fails closed when a source
+hash is stale, a row is missing, or an unexpected imported row exists.
+
+`governance:db:check` implements `ValidateGovernanceStateDrift`. It compares the
+current Git-tracked governance snapshot with imported Postgres rows by source
+hash, file path, component id, `(component_id, path)` identity, fingerprint
+path, coverage id, and remediation task id. It fails closed when any imported
+governance read model no longer matches the repository state.
+
+### W4 Implementation Plan
+
+1. Correct this plan so the W4 drift checks are no longer described as future
+   work and the Postgres-versus-Mongo decision is explicit.
+2. Keep the existing TDD red tests in `scripts/planning-db-check.test.cjs` and
+   `scripts/governance-db-check.test.cjs`, then run `pnpm test:planning:db` to
+   prove the missing runners fail before implementation.
+3. Add focused check runners in `scripts/planning-db-check.cjs` and
+   `scripts/governance-db-check.cjs`; reuse the canonical snapshot builders from
+   `scripts/planning-db-import.cjs` rather than reparsing YAML differently.
+4. Keep the database read side read-only for checks: compare Postgres rows to
+   Git snapshots and never mutate canonical state from a check command.
+5. Regenerate the affected governance/status projections after adding files and
+   updating package scripts.
+6. Validate W4 with `pnpm test:planning:db`, `pnpm planning:db:import`,
+   `pnpm planning:db:check`, `pnpm governance:db:check`, `pnpm ci:docs`, and
+   `pnpm verify:prepush`.
+
 ## GitHub Issues Role
 
 GitHub Issues may be useful as a collaboration mirror after the query store is
@@ -496,8 +535,9 @@ Current implementation status on 2026-05-06:
 - `pnpm planning:db:query` now exposes summary counts for lanes, tasks,
   governance files, governance components, component-file memberships,
   fingerprints, coverage rows, and remediation tasks;
-- step 6 is the next slice: add deterministic drift checks that compare the
-  imported Postgres state back to Git-tracked planning and governance sources.
+- step 6 is the current W4 slice: add deterministic drift checks that compare
+  the imported Postgres state back to Git-tracked planning and governance
+  sources before later export or generator migration work starts.
 
 ## Failure Modes And Guardrails
 
@@ -692,6 +732,8 @@ completionGate:
   - pnpm planning:db:migrate
   - pnpm planning:db:import
   - pnpm planning:db:query
+  - pnpm planning:db:check
+  - pnpm governance:db:check
   - pnpm docs:sync
   - pnpm docs:workboard:generate
   - pnpm docs:feature-mechanization --feature GOV-S3-PLANNING-STATE-QUERY-STORE
@@ -759,22 +801,18 @@ redGreenCycles:
     redTest: pnpm planning:db:check
     expectedFailure: Drift check fails when imported Postgres state differs from Git-tracked planning state.
     patchSurfaces:
-      - .gitignore
       - package.json
-      - infra/planning-db/**
-      - tools/planning-db/**
       - scripts/planning-db-*.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     greenTest: pnpm planning:db:check
   - id: governance-query-store-drift-check
     redTest: pnpm governance:db:check
     expectedFailure: Drift check fails when imported Postgres state differs from Git-tracked governance state.
     patchSurfaces:
-      - .gitignore
       - package.json
-      - infra/planning-db/**
-      - tools/planning-db/**
-      - tools/governance-db/**
       - scripts/governance-db-*.cjs
+      - scripts/planning-db-*.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
       - docs/planning/status/**
     greenTest: pnpm governance:db:check
 symbols:
@@ -1138,6 +1176,118 @@ symbols:
   - <<: *planningDbContentSymbol
     name: dbUrl
     path: scripts/planning-db-content.integration.test.cjs
+  - &planningDbDriftSymbol
+    name: PlanningDbDriftCheckRunner
+    path: scripts/planning-db-check.cjs
+    dddOwner: PlanningStateDriftReport
+    cqRails:
+      - ValidatePlanningStateDrift
+    fowlerSignals:
+      - Large planning file operating cost
+      - Hidden query model inside YAML
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - planning DB drift check has no browser workflow.
+    unitTests:
+      - pnpm test:planning:db
+      - pnpm planning:db:check
+  - <<: *planningDbDriftSymbol
+    name: Client
+    path: scripts/planning-db-check.cjs
+  - <<: *planningDbDriftSymbol
+    name: buildPlanningContentSnapshot
+    path: scripts/planning-db-check.cjs
+  - <<: *planningDbDriftSymbol
+    name: schemaName
+    path: scripts/planning-db-check.cjs
+  - <<: *planningDbDriftSymbol
+    name: normalizeComparable
+    path: scripts/planning-db-check.cjs
+  - <<: *planningDbDriftSymbol
+    name: formatValue
+    path: scripts/planning-db-check.cjs
+  - <<: *planningDbDriftSymbol
+    name: buildPlanningExpectedState
+    path: scripts/planning-db-check.cjs
+  - <<: *planningDbDriftSymbol
+    name: sortUnique
+    path: scripts/planning-db-check.cjs
+  - <<: *planningDbDriftSymbol
+    name: indexBy
+    path: scripts/planning-db-check.cjs
+  - <<: *planningDbDriftSymbol
+    name: compareRows
+    path: scripts/planning-db-check.cjs
+  - <<: *planningDbDriftSymbol
+    name: comparePlanningDatabaseState
+    path: scripts/planning-db-check.cjs
+  - <<: *planningDbDriftSymbol
+    name: readPlanningDatabaseState
+    path: scripts/planning-db-check.cjs
+  - <<: *planningDbDriftSymbol
+    name: formatSection
+    path: scripts/planning-db-check.cjs
+  - <<: *planningDbDriftSymbol
+    name: formatDriftReport
+    path: scripts/planning-db-check.cjs
+  - <<: *planningDbDriftSymbol
+    name: checkPlanningDatabase
+    path: scripts/planning-db-check.cjs
+  - <<: *planningDbDriftSymbol
+    name: main
+    path: scripts/planning-db-check.cjs
+  - <<: *planningDbDriftSymbol
+    name: test
+    path: scripts/planning-db-check.test.cjs
+  - <<: *planningDbDriftSymbol
+    name: assert
+    path: scripts/planning-db-check.test.cjs
+  - &governanceDbDriftSymbol
+    name: GovernanceDbDriftCheckRunner
+    path: scripts/governance-db-check.cjs
+    dddOwner: GovernanceStateDriftReport
+    cqRails:
+      - ValidateGovernanceStateDrift
+    fowlerSignals:
+      - Generated artifact churn
+      - Hidden query model inside governance shards
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - governance DB drift check has no browser workflow.
+    unitTests:
+      - pnpm test:planning:db
+      - pnpm governance:db:check
+  - <<: *governanceDbDriftSymbol
+    name: Client
+    path: scripts/governance-db-check.cjs
+  - <<: *governanceDbDriftSymbol
+    name: buildGovernanceFileSnapshot
+    path: scripts/governance-db-check.cjs
+  - <<: *governanceDbDriftSymbol
+    name: schemaName
+    path: scripts/governance-db-check.cjs
+  - <<: *governanceDbDriftSymbol
+    name: buildGovernanceExpectedState
+    path: scripts/governance-db-check.cjs
+  - <<: *governanceDbDriftSymbol
+    name: compareGovernanceDatabaseState
+    path: scripts/governance-db-check.cjs
+  - <<: *governanceDbDriftSymbol
+    name: readGovernanceDatabaseState
+    path: scripts/governance-db-check.cjs
+  - <<: *governanceDbDriftSymbol
+    name: checkGovernanceDatabase
+    path: scripts/governance-db-check.cjs
+  - <<: *governanceDbDriftSymbol
+    name: formatDriftReport
+    path: scripts/governance-db-check.cjs
+  - <<: *governanceDbDriftSymbol
+    name: main
+    path: scripts/governance-db-check.cjs
+  - <<: *governanceDbDriftSymbol
+    name: test
+    path: scripts/governance-db-check.test.cjs
+  - <<: *governanceDbDriftSymbol
+    name: assert
+    path: scripts/governance-db-check.test.cjs
   - name: SystemGovernanceGenerationWorkflowComponent
     path: docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
     dddOwner: GovernanceGenerationWorkflow

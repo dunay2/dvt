@@ -4,7 +4,7 @@ generatedFrom:
   - docs/planning/status/system-governance-component-index.components.yaml
 shardDirectory: docs/planning/status/governance-components
 componentCount: 32
-fileCount: 4264
+fileCount: 4268
 components:
   - id: SYS-ADAPTERS-ROOT
     path: docs/planning/status/governance-components/SYS-ADAPTERS-ROOT.component-files.yaml
@@ -92,10 +92,10 @@ components:
     contentHash: 28ccb558502079e59111bd3db572979cbd3ac19d6dd86992093b5cd3d46e7011
   - id: SYS-CI-GOVERNANCE-ROOT
     path: docs/planning/status/governance-components/SYS-CI-GOVERNANCE-ROOT.component-files.yaml
-    fileCount: 193
+    fileCount: 197
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: d690cf2459336b4c0f078f0d94e5653f936829894bab02bfd36497db1aab6d40
+    contentHash: fb340d7e30d115716692fdd79f9e5259947988223a73bbdb03ce81464c6a0092
   - id: SYS-CONTRACTS-ROOT
     path: docs/planning/status/governance-components/SYS-CONTRACTS-ROOT.component-files.yaml
     fileCount: 127
