@@ -33452,9 +33452,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-2144BB3902E3
     pathHash: e0d5034163481b94a80773c59ea2609fff1a52b98730b45d178516c84de7c167
-    contentHash: 9cbed90f8b88436c3a600771403860fc3a8d41355defb65363dfadb759b83dd2
+    contentHash: a7bfda04cceaa99ca7d78b7f7a2bf02e81ea262b84c6966d7afd7d4dce0835a1
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 318db1abd2d279a0f9ffb69e493ddf987abf6bd61b9278bce9b46bc2ce40fcb6
+    stateFingerprint: 6c5a3818a68046fa931f117cd86f5b4319ee03cc36fe8e2be9ba70f6a19d3118
     path: >-
       docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
