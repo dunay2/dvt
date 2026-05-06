@@ -326,6 +326,26 @@ pnpm docs:sync
 
 and commit the result before pushing. This updates all `docs/*/index.md` files and the governed docs navigation surfaces. This is **not** automatic — it does not run on pre-commit. The agent is responsible for running it manually whenever docs structure changes.
 
+## Governance Refresh Rule
+
+When a task changes docs/planning/governance source surfaces, governance
+workflow documentation, governance generator/check scripts, package scripts, or
+adds/removes files that affect `system-governance-*` indexes, the agent MUST
+run:
+
+```bash
+pnpm governance:refresh
+```
+
+Run it near final closeout, after the content/code slice is materially done and
+before `pnpm ci:docs` or `pnpm verify:prepush`. The command owns the final
+quadrature for docs indexes, workboard views, docs manifests,
+`system-governance-*` indexes, fingerprints, coverage, remediation outputs, and
+planning/governance query-store import/checks.
+
+`pnpm governance:refresh` is not a replacement for `pnpm verify:prepush`; it is
+the canonical refresh sequence that makes the later gates meaningful.
+
 ## Planning State Rule
 
 Agent task assignments live in `docs/planning/state/agent-lane-*.yaml`.

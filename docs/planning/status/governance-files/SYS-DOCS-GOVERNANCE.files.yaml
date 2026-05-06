@@ -6,9 +6,9 @@ fileCount: 1754
 files:
   - fileId: F-6B19C055239D
     pathHash: 32c3974a4420d61351195186e55593d26f0b6371acb5769789646423ee1557ce
-    contentHash: e516b011634eb05e9eefc7ffe3feb18de3fa881b0465aed014842e7ad321411e
+    contentHash: cb543b14cf508532962ce5da36d23b387fb1eeffdbc6a6c67f9c0baf656aabde
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 593bb4d7f652406c0a4c861f0a5059dabd7780eccde1e327752a02de60c4c287
+    stateFingerprint: b63ecf5ae321615aab14edc8ba3f9dfa712ede7cdec3f9b7031c728ecc4a551c
     path: AGENTS.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -19292,9 +19292,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-E9752E4147DE
     pathHash: 0bdcbfbffa16147d4894c5d950fe1caa6fb21cb62ad8dbe3aa30b9526f635f3a
-    contentHash: fa5df0fff9d3568dbc2bb66d2d631318cba74d66a0f0b2bd15638e8d78f9ebab
+    contentHash: 68d46a3dadbc137578da2c2460a37f33016370150d7d0903912c51d4c458f92e
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: e3f7cffaa148de592d782ce5ca69da85e4809f6d1b71115e425698d763f5f081
+    stateFingerprint: 6bcbc54a93af72fc1e349cb4958982f874fe1c3568336559e295ce1d8f6b978b
     path: docs/guides/ai-work-protocol.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -33452,9 +33452,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-2144BB3902E3
     pathHash: e0d5034163481b94a80773c59ea2609fff1a52b98730b45d178516c84de7c167
-    contentHash: 51dbdd7f9d32349537a744c4694e1192b98134f118623bcc86429855c2526403
+    contentHash: b857eb36df7ab9aeadea86135bbeef4206529a265e4b0af43456e8d7fd6090f1
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: c4148634701cbbb795801930fbe67ed99513e8932022e3b98f7b83960d2aba85
+    stateFingerprint: 045c11ffb3dc78fd346f1eb57680cb3d3e4720e558462678eb4a7a7a2a62c464
     path: >-
       docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -40727,9 +40727,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-E95A113239EF
     pathHash: 2a4867da8b009cabff6c3a2005008924f463e9fd8bbeb109a8d246a4fd6d10ac
-    contentHash: 2c23c8848751ed827fba0ded115d1ca4d7f73262ce775b7c02f6ee028815db6b
+    contentHash: 281f35c1aa956366ed1771341d11e9c79ec86b01e0c94fa4243a6fd737bd82ec
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: e39c4cb1f1a688cc311f47089547862b9e84f7a42a6ba79470851f3ed51d5be6
+    stateFingerprint: af31f956c9896c6d8ec8b074df869fd4954ef8a3665ea19ae433a3de1cb2c7e2
     path: docs/planning/status/governance-document-rule-inventory.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT

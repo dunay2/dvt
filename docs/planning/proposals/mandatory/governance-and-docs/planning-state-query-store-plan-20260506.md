@@ -646,6 +646,7 @@ governingSources:
   - docs/architecture/fowler-opportunity-planning-governance.md
 allowedImplementationSurfaces:
   - .gitignore
+  - AGENTS.md
   - package.json
   - infra/planning-db/**
   - tools/planning-db/**
@@ -656,6 +657,7 @@ allowedImplementationSurfaces:
   - scripts/check-feature-mechanization.cjs
   - scripts/check-feature-mechanization.test.cjs
   - docs/DOCS_README.md
+  - docs/guides/ai-work-protocol.md
   - docs/architecture/components/ci-governance/index.md
   - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
   - docs/planning/state/planning-control-tower.md
@@ -869,8 +871,10 @@ redGreenCycles:
     redTest: pnpm test:governance:refresh
     expectedFailure: Governance refresh runner does not exist before the W5 orchestrator slice.
     patchSurfaces:
+      - AGENTS.md
       - package.json
       - scripts/governance-refresh*.cjs
+      - docs/guides/ai-work-protocol.md
       - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
       - docs/planning/status/**

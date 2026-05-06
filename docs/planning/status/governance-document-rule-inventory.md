@@ -236,6 +236,11 @@ Usage rules already declared in the ADR index:
   Enforces: root type-check, planning workboard drift check, changed-markdown
   validation, governance file-index freshness, accepted file-fingerprint
   baseline validation, and changed-file checks.
+- [package.json `governance:refresh`](../../../package.json)
+  Role: `canonical governance refresh orchestrator`
+  Enforces: ordered docs/planning/governance generation, repeat-until-stable
+  worktree convergence, planning query-store import, planning drift check, and
+  governance drift check before final docs and pre-push gates.
 - [package.json `docs:pr:fast`](../../../package.json)
   Role: `local docs preflight`
   Enforces: local fast-path docs PR validation before push or PR creation.
