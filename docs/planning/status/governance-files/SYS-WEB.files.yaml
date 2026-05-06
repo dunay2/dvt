@@ -266,9 +266,9 @@ files:
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-E3C5CEE03490
     pathHash: 1269ac2d0dfe2d413ad59dca0755e6822561906fda159a473d7b69c9998a4cf3
-    contentHash: 1c607e1f9bfd6e140a03b41ea9d94dfcc58497ead25c4d3d3805f7a104282363
+    contentHash: c801355d2006140238eca81d7c5294810a2f8e754a1b54e0835952de953ca524
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 73fbda16fdbc9b9114880266bece066c4833e4ff3ff2abf99b8225345a6ac315
+    stateFingerprint: 5a2c1b210327bcd0d2876cb31aabbf382d6ef53cb0011b21e79a4fe7c52588a4
     path: apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT
@@ -15424,9 +15424,9 @@ files:
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-ED3393E79468
     pathHash: f1afe2248f37563fc5298ed559db037f5c74d2386131f7f0b6679f9af266b6c7
-    contentHash: f3b84bbf29a0d9cf88c2731feb6b311e03f5986779b82461406e8d71e4c2728a
+    contentHash: 8193af7ea134e07cf68549d5c547ae9d063362bcdd11d57b5d29404ff87257d7
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 551bee46f5420e7dbe5ab85aa379817c1196e5872cd003547edead8d254465c6
+    stateFingerprint: 09d5d9ff9c8334e84d4ff0d26765f4d592f24d30ddea3c5befce9eff8a636197
     path: apps/web/src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT
@@ -15450,9 +15450,9 @@ files:
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-768A7FCC425B
     pathHash: 7a9a6e9165cb5eb707c60f935fec00be39cf783fd68b20ea1db0ef5734950c15
-    contentHash: 8c26ecd3070a2bdf61249a91cdd1a2616fdc7e9e618f5a171451a20e09a29f3e
+    contentHash: e756426742de13963d127a022cf7566b85ed567c48492f49abe0617a01bbc8e1
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: e5c7c2f4e0365d2c81221497a61059dc2c1d7eba3faa660b0500f2645db0f2c0
+    stateFingerprint: 31f0d30bf0b47c9c1b01850e944cc1e0c78809bbb003b95125b79cf03b53f568
     path: apps/web/src/app/views/canvas/canvasWorkbenchTabs.test.ts
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT
