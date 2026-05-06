@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files docs
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-documentCount: 1492
+documentCount: 1494
 documents:
   - path: docs/CONTRIBUTING.md
     classification: governs unit
@@ -4869,6 +4869,11 @@ documents:
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-DOCS-GOVERNANCE
   - path: >-
+      docs/planning/proposals/mandatory/governance-and-docs/governed-changed-slice-closeout-plan-20260506.md
+    classification: tracks drift
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: >-
       docs/planning/proposals/mandatory/governance-and-docs/local-changed-files-gate-hardening-plan-20260503.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -6230,6 +6235,10 @@ documents:
     subjectUnit: SYS-API
   - path: docs/runbooks/gap-5-archive-operations-runbook-20260319.md
     classification: describes unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: docs/runbooks/governed-changed-slice-closeout-20260506.md
+    classification: tracks drift
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-DOCS-GOVERNANCE
   - path: docs/runbooks/index.md

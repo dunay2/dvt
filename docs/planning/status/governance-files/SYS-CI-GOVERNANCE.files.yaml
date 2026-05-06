@@ -1431,9 +1431,9 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-8EE0B5596066
     pathHash: 742a8906ab71efd2443ae07548ed7508cdb64cfeed1d1e218be8348c599d3c0c
-    contentHash: 88c12738b1ffd40b5e9c51195077daf7160129ebf2920b3f954cda9fbd9efcfe
+    contentHash: 2252f67b21500e4b8e8d5b8aeeeb7c3618ac799356c8867f575a2418adb08a43
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: fa9e8495d6d57a0af8481a36d5c746b81f0f1bd6ec3ed6beef94970066086c23
+    stateFingerprint: 5e271660eedfc74d1e098f9ee5050b999c60d312ece2314dedd8ca99c2e0070f
     path: scripts/closeout-changed.test.cjs
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     rootUnit: SYS-DVT

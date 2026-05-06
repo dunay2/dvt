@@ -510,7 +510,7 @@ tasks:
     blocking: reporting-only
     reason: Documents track drift or require disposition and need alignment with active units.
     fileCount: 0
-    documentCount: 264
+    documentCount: 266
     files: []
     documents:
       - path: docs/planning/closeouts/20260315-architecture-components-map-closeout.md
@@ -901,6 +901,9 @@ tasks:
         classification: tracks drift
       - path: docs/planning/gaps/index.md
         classification: tracks drift
+      - path: >-
+          docs/planning/proposals/mandatory/governance-and-docs/governed-changed-slice-closeout-plan-20260506.md
+        classification: tracks drift
       - path: docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md
         classification: tracks drift
       - path: docs/planning/reviews/20260407-f04-f-capabilities-port-hard-qa-review.md
@@ -1100,6 +1103,8 @@ tasks:
       - path: docs/reviews/DVT+_Architectural_Review_20260319.md
         classification: tracks drift
       - path: docs/reviews/prioritized-gaps-20260319.md
+        classification: tracks drift
+      - path: docs/runbooks/governed-changed-slice-closeout-20260506.md
         classification: tracks drift
     expectedValidation:
       - pnpm docs:governance:remediation-queue:check
