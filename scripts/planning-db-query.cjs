@@ -26,6 +26,12 @@ function buildSummaryRows(summary) {
     ['governance.files', summary.governanceFiles],
     ['governance.files.drift', summary.driftFiles],
     ['governance.files.legacy', summary.legacyFiles],
+    ['governance.components', summary.governanceComponents],
+    ['governance.component_files', summary.governanceComponentFiles],
+    ['governance.fingerprints', summary.governanceFingerprints],
+    ['governance.coverage_rows', summary.governanceCoverageRows],
+    ['governance.remediation_tasks', summary.governanceRemediationTasks],
+    ['governance.remediation_tasks.p0', summary.governanceRemediationP0],
   ];
 }
 
@@ -37,7 +43,13 @@ async function readSummary(client) {
       (select count(*)::int from ${schemaName}.planning_tasks where status = 'review') as "reviewTasks",
       (select count(*)::int from ${schemaName}.governance_files) as "governanceFiles",
       (select count(*)::int from ${schemaName}.governance_files where is_drift = true) as "driftFiles",
-      (select count(*)::int from ${schemaName}.governance_files where is_legacy = true) as "legacyFiles"
+      (select count(*)::int from ${schemaName}.governance_files where is_legacy = true) as "legacyFiles",
+      (select count(*)::int from ${schemaName}.governance_components) as "governanceComponents",
+      (select count(*)::int from ${schemaName}.governance_component_files) as "governanceComponentFiles",
+      (select count(*)::int from ${schemaName}.governance_fingerprints) as "governanceFingerprints",
+      (select count(*)::int from ${schemaName}.governance_coverage) as "governanceCoverageRows",
+      (select count(*)::int from ${schemaName}.governance_remediation) as "governanceRemediationTasks",
+      (select count(*)::int from ${schemaName}.governance_remediation where priority = 'P0') as "governanceRemediationP0"
   `);
 
   return result.rows[0];

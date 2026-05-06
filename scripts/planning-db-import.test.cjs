@@ -38,6 +38,25 @@ test('governance file snapshot preserves every file entry declared by the index'
   assert.equal(typeof packageJson.isDrift, 'boolean');
 });
 
+test('governance snapshot preserves component, fingerprint, coverage, and remediation content', () => {
+  const snapshot = buildGovernanceFileSnapshot();
+
+  assert.equal(snapshot.components.length, snapshot.componentIndex.componentCount);
+  assert.equal(snapshot.componentFileShards.length, snapshot.componentFileMap.componentCount);
+  assert.equal(snapshot.componentFiles.length, snapshot.componentFileMap.fileCount);
+  assert.equal(snapshot.fingerprints.length, snapshot.fingerprintBaseline.fileCount);
+  assert.equal(snapshot.coverageRows.length > 0, true);
+  assert.equal(snapshot.remediationTasks.length, snapshot.remediationQueue.totals.tasks);
+
+  const planstoreDrift = snapshot.remediationTasks.find(
+    (task) => task.taskId === 'GRQ-DRIFT_REMOVAL-SYS-PLANSTORE-API-COMPOSITION'
+  );
+  assert.ok(planstoreDrift);
+  assert.equal(planstoreDrift.priority, 'P0');
+  assert.equal(planstoreDrift.fileCount, 20);
+  assert.equal(planstoreDrift.files.length, 20);
+});
+
 test('normalizeText keeps structured lane fields queryable without dropping content', () => {
   assert.equal(normalizeText(undefined), '');
   assert.equal(normalizeText(['one', 'two']), 'one\ntwo');

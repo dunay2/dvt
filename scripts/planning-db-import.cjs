@@ -16,6 +16,41 @@ const governanceFileIndexPath = path.join(
   'status',
   'system-governance-file-index.files.yaml'
 );
+const governanceComponentIndexPath = path.join(
+  repoRoot,
+  'docs',
+  'planning',
+  'status',
+  'system-governance-component-index.components.yaml'
+);
+const governanceComponentFileMapPath = path.join(
+  repoRoot,
+  'docs',
+  'planning',
+  'status',
+  'system-governance-component-file-map.components.yaml'
+);
+const governanceFingerprintBaselinePath = path.join(
+  repoRoot,
+  'docs',
+  'planning',
+  'status',
+  'system-governance-file-fingerprint-baseline.yaml'
+);
+const governanceCoverageReportPath = path.join(
+  repoRoot,
+  'docs',
+  'planning',
+  'status',
+  'system-governance-coverage-report.coverage.yaml'
+);
+const governanceRemediationQueuePath = path.join(
+  repoRoot,
+  'docs',
+  'planning',
+  'status',
+  'system-governance-remediation-queue.queue.yaml'
+);
 
 function databaseUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
@@ -110,6 +145,151 @@ function normalizeDate(value) {
   return String(value).slice(0, 10);
 }
 
+function addGovernanceSource(sources, source, sourceType, metadata = {}) {
+  if (sources.some((entry) => entry.sourcePath === source.sourcePath)) {
+    return;
+  }
+
+  sources.push({
+    sourcePath: source.sourcePath,
+    sourceType,
+    contentSha256: source.contentSha256,
+    sourceBytes: source.sourceBytes,
+    metadata,
+  });
+}
+
+function buildCoverageRows(coverageSource) {
+  const report = coverageSource.parsed;
+  const rows = [];
+
+  function pushRow({
+    coverageId,
+    coverageKind,
+    name,
+    countValue = null,
+    fileCount = null,
+    componentId = null,
+    metadata = {},
+    rawCoverage,
+  }) {
+    rows.push({
+      coverageId,
+      sourcePath: coverageSource.sourcePath,
+      coverageKind,
+      name,
+      countValue,
+      fileCount,
+      componentId,
+      metadata,
+      sourceContentSha256: coverageSource.contentSha256,
+      rawCoverage,
+    });
+  }
+
+  for (const [name, value] of Object.entries(report.totals || {})) {
+    pushRow({
+      coverageId: `total.${name}`,
+      coverageKind: 'total',
+      name,
+      countValue: normalizeNumber(value),
+      rawCoverage: { name, count: value },
+    });
+  }
+
+  if (report.ciPosture) {
+    pushRow({
+      coverageId: 'ci_posture',
+      coverageKind: 'ci_posture',
+      name: normalizeText(report.ciPosture.blockingStatus || 'ci_posture'),
+      metadata: report.ciPosture,
+      rawCoverage: report.ciPosture,
+    });
+  }
+
+  const groupedCoverage = [
+    ['root_unit', 'byRootUnit'],
+    ['domain_unit', 'byDomainUnit'],
+    ['component_unit', 'byComponentUnit'],
+    ['status', 'byStatus'],
+    ['governance_state', 'byGovernanceState'],
+    ['canonical_role', 'byCanonicalRole'],
+    ['evidence_state', 'byEvidenceState'],
+    ['ddd_owner', 'byDddOwner'],
+  ];
+
+  for (const [coverageKind, key] of groupedCoverage) {
+    for (const item of report[key] || []) {
+      const name = normalizeText(item.name);
+      pushRow({
+        coverageId: `${coverageKind}.${name}`,
+        coverageKind,
+        name,
+        countValue: normalizeNumber(item.count),
+        rawCoverage: item,
+      });
+    }
+  }
+
+  for (const document of report.governanceDocuments || []) {
+    const documentPath = normalizeText(document.path);
+    pushRow({
+      coverageId: `governance_document.${sha256(documentPath).slice(0, 16)}`,
+      coverageKind: 'governance_document',
+      name: documentPath,
+      fileCount: normalizeNumber(document.fileCount),
+      rawCoverage: document,
+    });
+  }
+
+  for (const component of report.componentCoverage || []) {
+    const componentId = normalizeText(component.id);
+    pushRow({
+      coverageId: `component.${componentId}`,
+      coverageKind: 'component',
+      name: componentId,
+      countValue: normalizeNumber(component.fileCount),
+      fileCount: normalizeNumber(component.fileCount),
+      componentId,
+      metadata: {
+        rootUnit: normalizeText(component.rootUnit),
+        domainUnit: normalizeText(component.domainUnit),
+        governanceState: normalizeText(component.governanceState),
+        evidenceState: normalizeText(component.evidenceState),
+        childrenRequired: Boolean(component.childrenRequired),
+      },
+      rawCoverage: component,
+    });
+  }
+
+  if (Array.isArray(report.findings)) {
+    for (const [index, finding] of report.findings.entries()) {
+      pushRow({
+        coverageId: `finding.${index + 1}`,
+        coverageKind: 'finding',
+        name: normalizeText(finding.id || finding.type || `finding-${index + 1}`),
+        metadata: finding,
+        rawCoverage: finding,
+      });
+    }
+  } else if (report.findings && typeof report.findings === 'object') {
+    for (const [findingKind, findings] of Object.entries(report.findings)) {
+      const rows = Array.isArray(findings) ? findings : [findings];
+      for (const [index, finding] of rows.entries()) {
+        pushRow({
+          coverageId: `finding.${findingKind}.${index + 1}`,
+          coverageKind: `finding_${findingKind}`,
+          name: normalizeText(finding.path || finding.id || `${findingKind}-${index + 1}`),
+          metadata: { findingKind },
+          rawCoverage: finding,
+        });
+      }
+    }
+  }
+
+  return rows;
+}
+
 function planningLaneFiles() {
   return fs
     .readdirSync(laneDirectory)
@@ -182,34 +362,53 @@ function buildPlanningContentSnapshot() {
 function buildGovernanceFileSnapshot() {
   const indexSource = readYamlSource(governanceFileIndexPath);
   const index = indexSource.parsed;
-  const sources = [
-    {
-      sourcePath: indexSource.sourcePath,
-      sourceType: 'governance_file_index',
-      contentSha256: indexSource.contentSha256,
-      sourceBytes: indexSource.sourceBytes,
-      metadata: {
-        fileCount: index.fileCount,
-        shardCount: Array.isArray(index.shards) ? index.shards.length : 0,
-      },
-    },
-  ];
+  const componentIndexSource = readYamlSource(governanceComponentIndexPath);
+  const componentIndex = componentIndexSource.parsed;
+  const componentFileMapSource = readYamlSource(governanceComponentFileMapPath);
+  const componentFileMap = componentFileMapSource.parsed;
+  const fingerprintBaselineSource = readYamlSource(governanceFingerprintBaselinePath);
+  const fingerprintBaseline = fingerprintBaselineSource.parsed;
+  const coverageReportSource = readYamlSource(governanceCoverageReportPath);
+  const coverageReport = coverageReportSource.parsed;
+  const remediationQueueSource = readYamlSource(governanceRemediationQueuePath);
+  const remediationQueue = remediationQueueSource.parsed;
+
+  const sources = [];
   const fileShards = [];
   const files = [];
+  const components = [];
+  const componentFileShards = [];
+  const componentFiles = [];
+  const fingerprints = [];
+
+  addGovernanceSource(sources, indexSource, 'governance_file_index', {
+    fileCount: index.fileCount,
+    shardCount: Array.isArray(index.shards) ? index.shards.length : 0,
+  });
+  addGovernanceSource(sources, componentIndexSource, 'governance_component_index', {
+    componentCount: componentIndex.componentCount,
+  });
+  addGovernanceSource(sources, componentFileMapSource, 'governance_component_file_map', {
+    componentCount: componentFileMap.componentCount,
+    fileCount: componentFileMap.fileCount,
+  });
+  addGovernanceSource(sources, fingerprintBaselineSource, 'governance_fingerprint_baseline', {
+    fileCount: fingerprintBaseline.fileCount,
+  });
+  addGovernanceSource(sources, coverageReportSource, 'governance_coverage_report', {
+    totals: coverageReport.totals || {},
+  });
+  addGovernanceSource(sources, remediationQueueSource, 'governance_remediation_queue', {
+    totals: remediationQueue.totals || {},
+  });
 
   for (const shard of index.shards || []) {
     const shardSource = readYamlSource(path.join(repoRoot, shard.path));
     const shardDoc = shardSource.parsed;
 
-    sources.push({
-      sourcePath: shardSource.sourcePath,
-      sourceType: 'governance_file_shard',
-      contentSha256: shardSource.contentSha256,
-      sourceBytes: shardSource.sourceBytes,
-      metadata: {
-        shardId: shardDoc.shardId,
-        fileCount: shardDoc.fileCount,
-      },
+    addGovernanceSource(sources, shardSource, 'governance_file_shard', {
+      shardId: shardDoc.shardId,
+      fileCount: shardDoc.fileCount,
     });
 
     fileShards.push({
@@ -251,7 +450,133 @@ function buildGovernanceFileSnapshot() {
     }
   }
 
-  return { index, sources, fileShards, files };
+  for (const component of componentIndex.components || []) {
+    components.push({
+      componentId: normalizeText(component.id),
+      sourcePath: componentIndexSource.sourcePath,
+      name: normalizeText(component.name),
+      level: normalizeText(component.level),
+      parentId: component.parent === undefined ? null : normalizeText(component.parent),
+      rootUnit: normalizeText(component.rootUnit),
+      domainUnit: normalizeText(component.domainUnit),
+      unitPath: normalizeArray(component.unitPath),
+      status: normalizeText(component.status),
+      governanceState: normalizeText(component.governanceState),
+      canonicalRole: normalizeText(component.canonicalRole),
+      evidenceState: normalizeText(component.evidenceState),
+      isDrift: Boolean(component.isDrift),
+      isLegacy: Boolean(component.isLegacy),
+      childrenRequired: Boolean(component.childrenRequired),
+      fileCount: normalizeNumber(component.fileCount) ?? 0,
+      dddOwner: normalizeText(component.dddOwner),
+      cqRails: normalizeText(component.cqRails),
+      owns: normalizeArray(component.owns),
+      excludes: normalizeArray(component.excludes),
+      governanceRefs: normalizeArray(component.governance),
+      fowlerSignals: normalizeArray(component.fowlerSignals),
+      sourceContentSha256: componentIndexSource.contentSha256,
+      rawComponent: component,
+    });
+  }
+
+  for (const componentShard of componentFileMap.components || []) {
+    const shardSource = readYamlSource(path.join(repoRoot, componentShard.path));
+    const shardDoc = shardSource.parsed;
+    const componentId = normalizeText(componentShard.id || shardDoc.componentUnit);
+
+    addGovernanceSource(sources, shardSource, 'governance_component_shard', {
+      componentId,
+      fileCount: shardDoc.fileCount,
+      driftFileCount: shardDoc.driftFileCount,
+      legacyFileCount: shardDoc.legacyFileCount,
+    });
+
+    componentFileShards.push({
+      componentId,
+      sourcePath: shardSource.sourcePath,
+      fileCount: normalizeNumber(shardDoc.fileCount) ?? 0,
+      driftFileCount: normalizeNumber(shardDoc.driftFileCount) ?? 0,
+      legacyFileCount: normalizeNumber(shardDoc.legacyFileCount) ?? 0,
+      contentHash: normalizeText(componentShard.contentHash),
+      sourceContentSha256: shardSource.contentSha256,
+      rawShard: shardDoc,
+    });
+
+    for (const file of shardDoc.files || []) {
+      componentFiles.push({
+        componentId,
+        path: normalizeText(file.path),
+        fileId: normalizeText(file.fileId),
+        owningUnit: normalizeText(file.owningUnit),
+        unitStatus: normalizeText(file.unitStatus),
+        governanceState: normalizeText(file.governanceState),
+        isDrift: Boolean(file.isDrift),
+        isLegacy: Boolean(file.isLegacy),
+        sourcePath: shardSource.sourcePath,
+        sourceContentSha256: shardSource.contentSha256,
+        rawComponentFile: file,
+      });
+    }
+  }
+
+  for (const fingerprint of fingerprintBaseline.files || []) {
+    fingerprints.push({
+      path: normalizeText(fingerprint.path),
+      fileId: normalizeText(fingerprint.fileId),
+      sourcePath: fingerprintBaselineSource.sourcePath,
+      contentHash: normalizeText(fingerprint.contentHash),
+      governanceHash: normalizeText(fingerprint.governanceHash),
+      stateFingerprint: normalizeText(fingerprint.stateFingerprint),
+      rootUnit: normalizeText(fingerprint.rootUnit),
+      domainUnit: normalizeText(fingerprint.domainUnit),
+      componentUnit: normalizeText(fingerprint.componentUnit),
+      owningUnit: normalizeText(fingerprint.owningUnit),
+      sourceContentSha256: fingerprintBaselineSource.contentSha256,
+      rawFingerprint: fingerprint,
+    });
+  }
+
+  const coverageRows = buildCoverageRows(coverageReportSource);
+  const remediationTasks = (remediationQueue.tasks || []).map((task) => ({
+    taskId: normalizeText(task.id),
+    sourcePath: remediationQueueSource.sourcePath,
+    taskType: normalizeText(task.type),
+    priority: normalizeText(task.priority),
+    componentUnit: normalizeText(task.componentUnit),
+    componentFileMap:
+      task.componentFileMap === undefined ? null : normalizeText(task.componentFileMap),
+    rootUnit: normalizeText(task.rootUnit),
+    domainUnit: normalizeText(task.domainUnit),
+    dddOwner: normalizeText(task.dddOwner),
+    cqRails: normalizeText(task.cqRails),
+    blocking: normalizeText(task.blocking),
+    reason: normalizeText(task.reason),
+    fileCount: normalizeNumber(task.fileCount) ?? 0,
+    documentCount: normalizeNumber(task.documentCount) ?? 0,
+    files: normalizeArray(task.files),
+    documents: normalizeArray(task.documents),
+    expectedValidation: normalizeArray(task.expectedValidation),
+    sourceContentSha256: remediationQueueSource.contentSha256,
+    rawTask: task,
+  }));
+
+  return {
+    index,
+    componentIndex,
+    componentFileMap,
+    fingerprintBaseline,
+    coverageReport,
+    remediationQueue,
+    sources,
+    fileShards,
+    files,
+    components,
+    componentFileShards,
+    componentFiles,
+    fingerprints,
+    coverageRows,
+    remediationTasks,
+  };
 }
 
 async function insertPlanningSnapshot(client, snapshot) {
@@ -395,6 +720,163 @@ async function insertGovernanceSnapshot(client, snapshot) {
       ]
     );
   }
+
+  for (const component of snapshot.components) {
+    await client.query(
+      `insert into ${schemaName}.governance_components
+        (component_id, source_path, name, level, parent_id, root_unit, domain_unit,
+         unit_path, status, governance_state, canonical_role, evidence_state, is_drift,
+         is_legacy, children_required, file_count, ddd_owner, cq_rails, owns, excludes,
+         governance_refs, fowler_signals, source_content_sha256, raw_component)
+       values ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13, $14,
+         $15, $16, $17, $18, $19::jsonb, $20::jsonb, $21::jsonb, $22::jsonb, $23, $24::jsonb)`,
+      [
+        component.componentId,
+        component.sourcePath,
+        component.name,
+        component.level,
+        component.parentId,
+        component.rootUnit,
+        component.domainUnit,
+        toJson(component.unitPath),
+        component.status,
+        component.governanceState,
+        component.canonicalRole,
+        component.evidenceState,
+        component.isDrift,
+        component.isLegacy,
+        component.childrenRequired,
+        component.fileCount,
+        component.dddOwner,
+        component.cqRails,
+        toJson(component.owns),
+        toJson(component.excludes),
+        toJson(component.governanceRefs),
+        toJson(component.fowlerSignals),
+        component.sourceContentSha256,
+        toJson(component.rawComponent),
+      ]
+    );
+  }
+
+  for (const shard of snapshot.componentFileShards) {
+    await client.query(
+      `insert into ${schemaName}.governance_component_file_shards
+        (component_id, source_path, file_count, drift_file_count, legacy_file_count,
+         content_hash, source_content_sha256, raw_shard)
+       values ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)`,
+      [
+        shard.componentId,
+        shard.sourcePath,
+        shard.fileCount,
+        shard.driftFileCount,
+        shard.legacyFileCount,
+        shard.contentHash,
+        shard.sourceContentSha256,
+        toJson(shard.rawShard),
+      ]
+    );
+  }
+
+  for (const file of snapshot.componentFiles) {
+    await client.query(
+      `insert into ${schemaName}.governance_component_files
+        (component_id, path, file_id, owning_unit, unit_status, governance_state,
+         is_drift, is_legacy, source_path, source_content_sha256, raw_component_file)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb)`,
+      [
+        file.componentId,
+        file.path,
+        file.fileId,
+        file.owningUnit,
+        file.unitStatus,
+        file.governanceState,
+        file.isDrift,
+        file.isLegacy,
+        file.sourcePath,
+        file.sourceContentSha256,
+        toJson(file.rawComponentFile),
+      ]
+    );
+  }
+
+  for (const fingerprint of snapshot.fingerprints) {
+    await client.query(
+      `insert into ${schemaName}.governance_fingerprints
+        (path, file_id, source_path, content_hash, governance_hash, state_fingerprint,
+         root_unit, domain_unit, component_unit, owning_unit, source_content_sha256,
+         raw_fingerprint)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb)`,
+      [
+        fingerprint.path,
+        fingerprint.fileId,
+        fingerprint.sourcePath,
+        fingerprint.contentHash,
+        fingerprint.governanceHash,
+        fingerprint.stateFingerprint,
+        fingerprint.rootUnit,
+        fingerprint.domainUnit,
+        fingerprint.componentUnit,
+        fingerprint.owningUnit,
+        fingerprint.sourceContentSha256,
+        toJson(fingerprint.rawFingerprint),
+      ]
+    );
+  }
+
+  for (const row of snapshot.coverageRows) {
+    await client.query(
+      `insert into ${schemaName}.governance_coverage
+        (coverage_id, source_path, coverage_kind, name, count_value, file_count,
+         component_id, metadata, source_content_sha256, raw_coverage)
+       values ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10::jsonb)`,
+      [
+        row.coverageId,
+        row.sourcePath,
+        row.coverageKind,
+        row.name,
+        row.countValue,
+        row.fileCount,
+        row.componentId,
+        toJson(row.metadata),
+        row.sourceContentSha256,
+        toJson(row.rawCoverage),
+      ]
+    );
+  }
+
+  for (const task of snapshot.remediationTasks) {
+    await client.query(
+      `insert into ${schemaName}.governance_remediation
+        (task_id, source_path, task_type, priority, component_unit, component_file_map,
+         root_unit, domain_unit, ddd_owner, cq_rails, blocking, reason, file_count,
+         document_count, files, documents, expected_validation, source_content_sha256,
+         raw_task)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14,
+         $15::jsonb, $16::jsonb, $17::jsonb, $18, $19::jsonb)`,
+      [
+        task.taskId,
+        task.sourcePath,
+        task.taskType,
+        task.priority,
+        task.componentUnit,
+        task.componentFileMap,
+        task.rootUnit,
+        task.domainUnit,
+        task.dddOwner,
+        task.cqRails,
+        task.blocking,
+        task.reason,
+        task.fileCount,
+        task.documentCount,
+        toJson(task.files),
+        toJson(task.documents),
+        toJson(task.expectedValidation),
+        task.sourceContentSha256,
+        toJson(task.rawTask),
+      ]
+    );
+  }
 }
 
 async function importContent(options = {}) {
@@ -428,11 +910,16 @@ async function importContent(options = {}) {
     lanes: planningSnapshot.lanes.length,
     tasks: planningSnapshot.tasks.length,
     governanceFiles: governanceSnapshot.files.length,
+    governanceComponents: governanceSnapshot.components.length,
+    governanceComponentFiles: governanceSnapshot.componentFiles.length,
+    governanceFingerprints: governanceSnapshot.fingerprints.length,
+    governanceCoverageRows: governanceSnapshot.coverageRows.length,
+    governanceRemediationTasks: governanceSnapshot.remediationTasks.length,
   };
 
   if (!silent) {
     console.log(
-      `[planning:db:import] lanes=${result.lanes} tasks=${result.tasks} governanceFiles=${result.governanceFiles}`
+      `[planning:db:import] lanes=${result.lanes} tasks=${result.tasks} governanceFiles=${result.governanceFiles} governanceComponents=${result.governanceComponents} governanceRemediationTasks=${result.governanceRemediationTasks}`
     );
   }
 

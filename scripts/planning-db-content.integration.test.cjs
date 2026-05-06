@@ -39,6 +39,10 @@ test('live planning DB imports lane tasks and governance files with Git-count pa
       summary.driftFiles,
       governanceSnapshot.files.filter((file) => file.isDrift).length
     );
+    assert.equal(summary.governanceComponents, governanceSnapshot.components.length);
+    assert.equal(summary.governanceComponentFiles, governanceSnapshot.componentFiles.length);
+    assert.equal(summary.governanceFingerprints, governanceSnapshot.fingerprints.length);
+    assert.equal(summary.governanceRemediationTasks, governanceSnapshot.remediationTasks.length);
   } finally {
     await client.end();
   }

@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const {
   buildMigrationRecords,
   detectChecksumMismatch,
+  readMigrationFiles,
   schemaName,
 } = require('./planning-db-migrate.cjs');
 
@@ -39,5 +40,22 @@ test('detectChecksumMismatch catches edited migrations after apply', () => {
   assert.equal(
     mismatch,
     'Migration 001_init was already applied with checksum old-checksum but now has checksum new-checksum.'
+  );
+});
+
+test('tracked migrations include governance content read-model tables after W2', () => {
+  const migrations = readMigrationFiles();
+  const governanceMigration = migrations.find(
+    (migration) => migration.fileName === '002_governance_content_read_model.sql'
+  );
+
+  assert.ok(governanceMigration);
+  assert.match(
+    governanceMigration.sql,
+    /create table if not exists planning_query_store\.governance_components/
+  );
+  assert.match(
+    governanceMigration.sql,
+    /create table if not exists planning_query_store\.governance_remediation/
   );
 });

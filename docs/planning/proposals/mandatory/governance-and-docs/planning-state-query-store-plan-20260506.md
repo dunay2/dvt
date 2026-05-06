@@ -365,17 +365,18 @@ The first schema should cover two derived read-model families.
 
 ### Governance tables
 
-| Table                         | W2 status   | Purpose                                                     |
-| ----------------------------- | ----------- | ----------------------------------------------------------- |
-| `governance_sources`          | implemented | Source path, source type, content hash, byte size           |
-| `governance_file_shards`      | implemented | File-index shard id, path, count, and upstream content hash |
-| `governance_files`            | implemented | Tracked path, owning unit, component, root, drift flags     |
-| `governance_components`       | planned     | Component/source units and ownership metadata               |
-| `governance_component_files`  | planned     | File-to-component membership and shard provenance           |
-| `governance_fingerprints`     | planned     | File identity, content hash, governance hash, and state     |
-| `governance_coverage`         | planned     | Governed, ungoverned, drift, legacy, and summary counters   |
-| `governance_remediation`      | planned     | Remediation queue items, priority, owner, and source cause  |
-| `governance_generated_assets` | planned     | Generated report path, source hash, and artifact hash       |
+| Table                              | Status      | Purpose                                                     |
+| ---------------------------------- | ----------- | ----------------------------------------------------------- |
+| `governance_sources`               | implemented | Source path, source type, content hash, byte size           |
+| `governance_file_shards`           | implemented | File-index shard id, path, count, and upstream content hash |
+| `governance_files`                 | implemented | Tracked path, owning unit, component, root, drift flags     |
+| `governance_components`            | implemented | Component/source units and ownership metadata               |
+| `governance_component_file_shards` | implemented | Component shard provenance, file counts, and content hashes |
+| `governance_component_files`       | implemented | File-to-component membership and shard provenance           |
+| `governance_fingerprints`          | implemented | File identity, content hash, governance hash, and state     |
+| `governance_coverage`              | implemented | Governed, ungoverned, drift, legacy, and summary counters   |
+| `governance_remediation`           | implemented | Remediation queue items, priority, owner, and source cause  |
+| `governance_generated_assets`      | planned     | Generated report path, source hash, and artifact hash       |
 
 The W2 schema is intentionally content-first. It stores the source hash for each
 imported YAML file and keeps `raw_lane`, `raw_task`, `raw_shard`, and `raw_file`
@@ -384,6 +385,12 @@ first typed query columns stabilize. Typed columns are added only for fields tha
 already drive repeated operational questions: lane/status/priority/progress,
 task objective/target/evidence, file ownership, component unit, governance
 state, drift, legacy, and content hashes.
+
+The W3 governance-content slice extends the same posture to component indexes,
+component-file shards, fingerprint baselines, coverage reports, and remediation
+queues. The import still treats Git-tracked YAML as authority and stores raw
+JSONB next to typed query columns so the database can double-check counts and
+hashes without hiding any source content outside PR review.
 
 These tables are enough to answer high-value operational questions without
 introducing a large platform:
@@ -482,6 +489,15 @@ surfaces without network access.
     proves reviewers can inspect root causes without losing deterministic output.
 11. Consider an optional GitHub Issues mirror after local and CI query-store
     workflows are stable.
+
+Current implementation status on 2026-05-06:
+
+- steps 1 through 5 are implemented in the local query-store branch;
+- `pnpm planning:db:query` now exposes summary counts for lanes, tasks,
+  governance files, governance components, component-file memberships,
+  fingerprints, coverage rows, and remediation tasks;
+- step 6 is the next slice: add deterministic drift checks that compare the
+  imported Postgres state back to Git-tracked planning and governance sources.
 
 ## Failure Modes And Guardrails
 
@@ -723,6 +739,22 @@ redGreenCycles:
       - scripts/planning-db-*.cjs
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     greenTest: pnpm test:planning:db:integration
+  - id: governance-db-content-schema-and-import
+    redTest: pnpm test:planning:db
+    expectedFailure: Governance component, fingerprint, coverage, and remediation content is not yet queryable from Postgres.
+    patchSurfaces:
+      - tools/planning-db/**
+      - scripts/planning-db-*.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: pnpm test:planning:db
+  - id: governance-db-live-content-parity
+    redTest: pnpm test:planning:db:integration
+    expectedFailure: Live Postgres does not yet preserve governance component, fingerprint, coverage, and remediation counts from Git-tracked YAML.
+    patchSurfaces:
+      - tools/planning-db/**
+      - scripts/planning-db-*.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: pnpm test:planning:db:integration
   - id: planning-query-store-drift-check
     redTest: pnpm planning:db:check
     expectedFailure: Drift check fails when imported Postgres state differs from Git-tracked planning state.
@@ -903,6 +935,9 @@ symbols:
       - pnpm test:planning:db
       - pnpm test:planning:db:integration
   - <<: *planningDbContentSymbol
+    name: PlanningDbGovernanceContentMigration
+    path: tools/planning-db/migrations/002_governance_content_read_model.sql
+  - <<: *planningDbContentSymbol
     name: PlanningDbMigrateRunner
     path: scripts/planning-db-migrate.cjs
   - <<: *planningDbContentSymbol
@@ -981,6 +1016,21 @@ symbols:
     name: governanceFileIndexPath
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
+    name: governanceComponentIndexPath
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: governanceComponentFileMapPath
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: governanceFingerprintBaselinePath
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: governanceCoverageReportPath
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: governanceRemediationQueuePath
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
     name: databaseUrl
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
@@ -1012,6 +1062,12 @@ symbols:
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
     name: normalizeDate
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: addGovernanceSource
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: buildCoverageRows
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
     name: planningLaneFiles
