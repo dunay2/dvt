@@ -25006,9 +25006,9 @@ files:
   - fileId: F-2144BB3902E3
     path: >-
       docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
-    contentHash: e5820af916b96eaad94e30eb033e9cab7f5ea5b3a5c68b841fb04f73d68f685b
+    contentHash: 5e8fe338265801b703d824b982ec91c3d531e773e1cf7c86927268735665d3cd
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 372989aa8ec7070949f755c2ac0ab93a479675c8db6effd9f2c6e8591045c1f9
+    stateFingerprint: 523ecebbc1617eddf9b0d2dc683028476c4c1d2cf5322b5378a8af611dc47d42
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -37773,9 +37773,9 @@ files:
     owningUnit: SYS-CI-GOVERNANCE-ROOT
   - fileId: F-00C7F0BCBB25
     path: scripts/planning-db-content.integration.test.cjs
-    contentHash: 4df0cd31ce2e1f595a7ccfd2dbf1d295961c23e832be99f77bb7ef4bcdaa0942
+    contentHash: e6db387c3728f7fb2999fc2f54ea9a335a7c6756802bc07f1d8aaa7dcd6b4009
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: c048f0575cdbbf7df6c1c9d00e321e86784f78fa09f5cc941700e28bfe787469
+    stateFingerprint: 3e405aa8776c378d1f7e91e8e1384f524bea1c2e0c527d3b31772590cb229cdd
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-CI-GOVERNANCE-ROOT
@@ -37791,9 +37791,9 @@ files:
     owningUnit: SYS-CI-GOVERNANCE-ROOT
   - fileId: F-93AF019524B5
     path: scripts/planning-db-import.test.cjs
-    contentHash: ed6534f5ee0fe72211a1cc17e96429ff298164eb7e77664d4b52344908d6556f
+    contentHash: d54e2027e4c2a0350835e17275416855db40144e8a5d56a632ab5d424af7a3ca
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: a9db63acc16f56fd874f852a75f7b8a7eab640e62a7b64245d93baaed91d54e3
+    stateFingerprint: 54c987b3716fcdf7b769aaf607c4288c75a022151688baa14da5549eff4527db
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-CI-GOVERNANCE-ROOT
@@ -37818,9 +37818,9 @@ files:
     owningUnit: SYS-CI-GOVERNANCE-ROOT
   - fileId: F-09A1C46FAD9C
     path: scripts/planning-db-query.cjs
-    contentHash: 3496b0ee0bd4b33680747d29df7542dee09d2789209c4c84c34ec24259a374a9
+    contentHash: 9417515c2e50e1fd6964a17f9991cb64c07078cab16d7d614c0912a60b87d8ad
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: 0b4c5078131adcb9e8aa07e081ac33f492af23eb13686c4be1c64d42462aff84
+    stateFingerprint: bddf507f5195eafa678ec8bf7a6e47ec3be982d971e78d797659ecee75247fa0
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-CI-GOVERNANCE-ROOT
