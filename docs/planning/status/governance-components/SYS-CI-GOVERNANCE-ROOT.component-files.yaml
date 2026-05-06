@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - repository automation
 childrenRequired: true
-fileCount: 182
+fileCount: 184
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -398,6 +398,20 @@ files:
     isLegacy: false
   - path: scripts/check-markdown-locations.cjs
     fileId: F-75A72AEE023B
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/closeout-changed.cjs
+    fileId: F-2DFD1EEA72D7
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/closeout-changed.test.cjs
+    fileId: F-8EE0B5596066
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

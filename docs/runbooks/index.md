@@ -18,6 +18,7 @@ Operational runbooks for incidents, recovery, and maintenance.
 - [AR-C2 SLA Signal Threshold Mapping](ar-c2-sla-signal-threshold-mapping-20260404.md)
 - [Backend MVP Control-Plane Runbook](backend-mvp-control-plane-runbook-20260329.md)
 - [Gap 5 Archive Operations Runbook](gap-5-archive-operations-runbook-20260319.md)
+- [Governed Changed Slice Closeout](governed-changed-slice-closeout-20260506.md)
 - [Outbox Worker Runbook](outbox-worker-g5.md)
 - [Planning Generated Artifacts Operations](planning-generated-artifacts-operations-20260403.md)
 - [Read-Your-Writes Freshness SLO](read-your-writes-freshness-slo-20260330.md)
