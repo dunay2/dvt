@@ -2,7 +2,7 @@ version: 1
 shardId: SYS-CI-GOVERNANCE
 generatedFrom: git ls-files plus untracked non-ignored local files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-fileCount: 182
+fileCount: 184
 files:
   - fileId: F-80B99D37F6EB
     pathHash: 80447532cb5366e8cb4a64e0bfee2f37470cbbe4cd91304510c8bf02e79a976b
@@ -2285,6 +2285,56 @@ files:
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
     stateFingerprint: a473fecdb4b1536a43b17d4cfd178dcfcf752bf52b2fd2b28884236392487435
     path: scripts/outbox-worker-canary-evidence.ps1
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-161608EF057D
+    pathHash: 46bd53c1e26e73ea9f38761455012aabf7a95f453e8545b7229f19f1a8847822
+    contentHash: aa8b0720885c02380346e0403d8351e349244a3f297ab1973c6072548a6edd38
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 917ee1f91e05151f1ed58e684c7eaa69eef2057bbb307cb32739f1a77f976bdb
+    path: scripts/planning-db-run.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-57021A810F3C
+    pathHash: 87afd9b62231fb501674fc6a73ea255ff53a7f9f5aa27e552a480529df405555
+    contentHash: 3ed2a8687f88222c63752434f3600dbdd7a9ac75fad79c78e25202b21eb7bbb2
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: f8ded235f9b0cc63c44ede50ad93478d80bf8898386f7856ea36ac242d5726bd
+    path: scripts/planning-db-run.test.cjs
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT

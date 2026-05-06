@@ -87,9 +87,9 @@ Components with `childrenRequired: true` and more than 100 files:
 | `SYS-WEB-ROOT` | 822 | `coverage-required` |
 | `SYS-RUNTIME-ROOT` | 286 | `coverage-required` |
 | `SYS-ADAPTERS-ROOT` | 196 | `coverage-required` |
-| `SYS-CI-GOVERNANCE-ROOT` | 182 | `coverage-required` |
+| `SYS-CI-GOVERNANCE-ROOT` | 184 | `coverage-required` |
 | `SYS-CONTRACTS-ROOT` | 127 | `coverage-required` |
-| `SYS-REPO-METADATA-ROOT` | 118 | `canonical` |
+| `SYS-REPO-METADATA-ROOT` | 119 | `canonical` |
 | `SYS-WORKERS-ROOT` | 103 | `coverage-required` |
 <!-- prettier-ignore-end -->
 
@@ -112,7 +112,7 @@ Components with `childrenRequired: true` and more than 100 files:
 | `SYS-API-REPO-CONFIG` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 11 | `INFRA` | `SYS-API-ROOT` |
 | `SYS-API-RUNTIME-COMPOSITION` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 26 | `AS` | `SYS-API-ROOT` |
 | `SYS-API-TESTS` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 101 | `INFRA` | `SYS-API-ROOT` |
-| `SYS-CI-GOVERNANCE-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 182 | `INFRA` | `SYS-CI-GOVERNANCE` |
+| `SYS-CI-GOVERNANCE-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 184 | `INFRA` | `SYS-CI-GOVERNANCE` |
 | `SYS-CONTRACTS-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 127 | `PORT` | `SYS-CONTRACTS` |
 | `SYS-DOCS-GOVERNANCE-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 1754 | `INFRA` | `SYS-DOCS-GOVERNANCE` |
 | `SYS-OBSERVABILITY-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 15 | `PORT` | `SYS-OBSERVABILITY` |
@@ -125,7 +125,7 @@ Components with `childrenRequired: true` and more than 100 files:
 | `SYS-PLANSTORE-POSTGRES` | `component` | `drift` | `drift` | `none` | `remediation-required` | 16 | `ADP` | `SYS-PLANSTORE` |
 | `SYS-PLANSTORE-ROOT` | `component` | `superseded` | `superseded` | `none` | `retired` | 0 | `PORT` | `SYS-PLANSTORE` |
 | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` | `component` | `review` | `review` | `none` | `review-required` | 11 | `ADP` | `SYS-PLANSTORE` |
-| `SYS-REPO-METADATA-ROOT` | `component` | `canonical` | `governed` | `implementation-owner` | `classification-only` | 118 | `INFRA` | `SYS-REPO-METADATA` |
+| `SYS-REPO-METADATA-ROOT` | `component` | `canonical` | `governed` | `implementation-owner` | `classification-only` | 119 | `INFRA` | `SYS-REPO-METADATA` |
 | `SYS-RUNTIME-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 286 | `AS` | `SYS-RUNTIME` |
 | `SYS-TRACEABILITY-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 67 | `DS` | `SYS-TRACEABILITY` |
 | `SYS-WEB-ROOT` | `component` | `coverage-required` | `coverage-required` | `none` | `coverage-required` | 822 | `ENTRY` | `SYS-WEB` |

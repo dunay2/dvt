@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - repository automation
 childrenRequired: true
-fileCount: 182
+fileCount: 184
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -650,6 +650,20 @@ files:
     isLegacy: false
   - path: scripts/outbox-worker-canary-evidence.ps1
     fileId: F-17B0417AAFE4
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/planning-db-run.cjs
+    fileId: F-161608EF057D
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/planning-db-run.test.cjs
+    fileId: F-57021A810F3C
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

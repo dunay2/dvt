@@ -268,6 +268,8 @@ Out of scope:
 
 ```text
 infra/planning-db/docker-compose.yml
+scripts/planning-db-run.cjs
+scripts/planning-db-run.test.cjs
 tools/planning-db/migrations/
 tools/planning-db/import-planning-state.mjs
 tools/planning-db/export-planning-state.mjs
@@ -277,17 +279,32 @@ tools/planning-db/import-governance-state.mjs
 tools/planning-db/export-governance-state.mjs
 tools/planning-db/check-governance-state-drift.mjs
 tools/planning-db/query-governance-state.mjs
-.local/planning-postgres/
+C:\dvt\planning-db\postgres-data
 ```
 
-`.local/planning-postgres/` must be ignored by Git. Operators may override the
-data location with an environment variable such as `DVT_PLANNING_DB_DATA_DIR`
-when they want the database volume on a different disk.
+`C:\dvt\planning-db\postgres-data` is the shared machine-local volume for all
+agents and worktrees on the same Windows PC. It is outside the repository and
+must remain untracked. The data directory is a persistent cache, not a canonical
+planning source. Operators may still override the data location with
+`DVT_PLANNING_DB_DATA_DIR` when they intentionally need a different local disk.
 
 ## Proposed Commands
 
+Implemented in the local Docker substrate slice:
+
 ```bash
 pnpm planning:db:up
+pnpm planning:db:down
+pnpm planning:db:logs
+pnpm planning:db:ps
+pnpm planning:db:env
+pnpm planning:db:health
+pnpm test:planning:db
+```
+
+Planned for the import/export and parity slices:
+
+```bash
 pnpm planning:db:migrate
 pnpm planning:db:import
 pnpm planning:db:query
@@ -299,7 +316,17 @@ pnpm governance:db:export
 pnpm governance:db:check
 ```
 
-The closeout baseline for implementation PRs should include:
+The closeout baseline for the local Docker substrate slice includes:
+
+```bash
+pnpm test:planning:db
+pnpm docs:feature-mechanization --feature GOV-S3-PLANNING-STATE-QUERY-STORE
+pnpm docs:feature-mechanization:implementation
+pnpm verify:prepush
+```
+
+Once import/export and drift commands exist, implementation PRs should also
+include:
 
 ```bash
 pnpm planning:db:check
@@ -358,21 +385,32 @@ introducing a large platform:
 This plan defines planning-tooling rails. It does not change product runtime
 behavior.
 
-| Rail                              | Type    | Bounded context       | DDD object                   | Adapter surface      |
-| --------------------------------- | ------- | --------------------- | ---------------------------- | -------------------- |
-| `ImportPlanningStateQueryStore`   | command | Planning registry     | `PlanningStateImport`        | file-system + SQL    |
-| `QueryPlanningStateReadModel`     | query   | Planning registry     | `PlanningStateReadModel`     | SQL query adapter    |
-| `ExportPlanningStateSnapshot`     | command | Planning registry     | `PlanningStateExport`        | SQL + file-system    |
-| `ValidatePlanningStateDrift`      | query   | Planning governance   | `PlanningStateDriftReport`   | SQL + Git comparison |
-| `GeneratePlanningDerivedSurfaces` | command | Documentation tooling | `PlanningGeneratedArtifact`  | docs generator       |
-| `ImportGovernanceStateQueryStore` | command | Docs governance       | `GovernanceStateImport`      | file-system + SQL    |
-| `QueryGovernanceStateReadModel`   | query   | Docs governance       | `GovernanceStateReadModel`   | SQL query adapter    |
-| `ExportGovernanceStateSnapshot`   | command | Docs governance       | `GovernanceStateExport`      | SQL + file-system    |
-| `ValidateGovernanceStateDrift`    | query   | Docs governance       | `GovernanceStateDriftReport` | SQL + Git comparison |
+| Rail                               | Type    | Bounded context       | DDD object                   | Adapter surface      |
+| ---------------------------------- | ------- | --------------------- | ---------------------------- | -------------------- |
+| `ImportPlanningStateQueryStore`    | command | Planning registry     | `PlanningStateImport`        | file-system + SQL    |
+| `QueryPlanningStateReadModel`      | query   | Planning registry     | `PlanningStateReadModel`     | SQL query adapter    |
+| `ExportPlanningStateSnapshot`      | command | Planning registry     | `PlanningStateExport`        | SQL + file-system    |
+| `ValidatePlanningStateDrift`       | query   | Planning governance   | `PlanningStateDriftReport`   | SQL + Git comparison |
+| `GeneratePlanningDerivedSurfaces`  | command | Documentation tooling | `PlanningGeneratedArtifact`  | docs generator       |
+| `ManagePlanningQueryStoreRuntime`  | command | Planning tooling      | `PlanningQueryStoreRuntime`  | Docker Compose       |
+| `InspectPlanningQueryStoreRuntime` | query   | Planning tooling      | `PlanningQueryStoreRuntime`  | Docker Compose + env |
+| `ImportGovernanceStateQueryStore`  | command | Docs governance       | `GovernanceStateImport`      | file-system + SQL    |
+| `QueryGovernanceStateReadModel`    | query   | Docs governance       | `GovernanceStateReadModel`   | SQL query adapter    |
+| `ExportGovernanceStateSnapshot`    | command | Docs governance       | `GovernanceStateExport`      | SQL + file-system    |
+| `ValidateGovernanceStateDrift`     | query   | Docs governance       | `GovernanceStateDriftReport` | SQL + Git comparison |
 
 Implementation must not create parallel planning task semantics outside these
 rails. If a future slice adds a UI, API, or GitHub mirror, it must reuse these
 rails or extend the catalog explicitly.
+
+The local runtime rails are operational only. `planning:db:up` and
+`planning:db:down` implement `ManagePlanningQueryStoreRuntime`.
+`planning:db:ps`, `planning:db:env`, `planning:db:logs`, and
+`planning:db:health` implement `InspectPlanningQueryStoreRuntime`. Scope is
+local machine operation; authorization is the developer's local OS and Docker
+access. Negative tests live in `scripts/planning-db-run.test.cjs` and verify the
+shared Windows data directory, fixed Compose project, environment override
+policy, Docker command selection, and rejection of unknown actions.
 
 ## GitHub Issues Role
 
@@ -393,8 +431,8 @@ surfaces without network access.
 2. Extract the current `system-governance-*` generation workflow into the
    `ci-governance` component contract, including stages, inputs, outputs,
    check modes, and review fan-out.
-3. Add Docker Compose, ignored local volume configuration, and schema
-   migrations.
+3. Add Docker Compose with the shared `C:\dvt\planning-db\postgres-data`
+   machine-local volume and local runtime scripts.
 4. Import existing `agent-lane-*.yaml` files into read-only Postgres tables.
 5. Import existing `system-governance-*` indexes, component maps,
    fingerprints, coverage reports, and remediation queues into read-only
@@ -519,6 +557,12 @@ commandQueryRails:
   - name: GeneratePlanningDerivedSurfaces
     type: command
     dddOwner: PlanningGeneratedArtifact
+  - name: ManagePlanningQueryStoreRuntime
+    type: command
+    dddOwner: PlanningQueryStoreRuntime
+  - name: InspectPlanningQueryStoreRuntime
+    type: query
+    dddOwner: PlanningQueryStoreRuntime
   - name: ImportGovernanceStateQueryStore
     type: command
     dddOwner: GovernanceStateImport
@@ -553,6 +597,9 @@ domainObjects:
   - name: PlanningGeneratedArtifact
     type: generated artifact
     owner: Docs governance
+  - name: PlanningQueryStoreRuntime
+    type: local runtime
+    owner: Product / Architecture / Delivery / Docs
   - name: GovernanceStateImport
     type: command model
     owner: Docs governance
@@ -578,11 +625,13 @@ fowlerSignals:
   - Hidden query model inside governance shards
   - Mutable external tracker authority risk
 architectureGuards:
+  - pnpm test:planning:db
   - pnpm docs:feature-mechanization --feature GOV-S3-PLANNING-STATE-QUERY-STORE
   - pnpm docs:feature-mechanization:implementation
 cypressFlows:
   - N/A - planning query-store proposal has no browser workflow.
 completionGate:
+  - pnpm test:planning:db
   - pnpm docs:sync
   - pnpm docs:workboard:generate
   - pnpm docs:feature-mechanization --feature GOV-S3-PLANNING-STATE-QUERY-STORE
@@ -603,6 +652,15 @@ redGreenCycles:
       - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     greenTest: pnpm docs:feature-mechanization:implementation
+  - id: planning-db-common-docker-runtime
+    redTest: pnpm test:planning:db
+    expectedFailure: Shared machine-local Docker runtime contract is missing before the wrapper and Compose file exist.
+    patchSurfaces:
+      - package.json
+      - infra/planning-db/**
+      - scripts/planning-db-*.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: pnpm test:planning:db
   - id: planning-query-store-drift-check
     redTest: pnpm planning:db:check
     expectedFailure: Drift check fails when imported Postgres state differs from Git-tracked planning state.
@@ -635,6 +693,8 @@ symbols:
       - ExportPlanningStateSnapshot
       - ValidatePlanningStateDrift
       - GeneratePlanningDerivedSurfaces
+      - ManagePlanningQueryStoreRuntime
+      - InspectPlanningQueryStoreRuntime
       - ImportGovernanceStateQueryStore
       - QueryGovernanceStateReadModel
       - ExportGovernanceStateSnapshot
@@ -650,8 +710,115 @@ symbols:
     architectureGuard: pnpm docs:feature-mechanization:implementation
     cypressCoverage: N/A - planning query-store proposal has no browser workflow.
     unitTests:
+      - pnpm test:planning:db
       - pnpm docs:feature-mechanization --feature GOV-S3-PLANNING-STATE-QUERY-STORE
       - pnpm docs:feature-mechanization:implementation
+  - &planningDbRuntimeSymbol
+    name: PlanningDbDockerCompose
+    path: infra/planning-db/docker-compose.yml
+    dddOwner: PlanningQueryStoreRuntime
+    cqRails:
+      - ManagePlanningQueryStoreRuntime
+      - InspectPlanningQueryStoreRuntime
+    fowlerSignals:
+      - Large planning file operating cost
+      - Generated artifact churn
+      - Hidden query model inside YAML
+      - Hidden query model inside governance shards
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - planning DB runtime has no browser workflow.
+    unitTests:
+      - pnpm test:planning:db
+  - name: PlanningDbRunWrapper
+    path: scripts/planning-db-run.cjs
+    dddOwner: PlanningQueryStoreRuntime
+    cqRails:
+      - ManagePlanningQueryStoreRuntime
+      - InspectPlanningQueryStoreRuntime
+    fowlerSignals:
+      - Large planning file operating cost
+      - Generated artifact churn
+      - Hidden query model inside YAML
+      - Hidden query model inside governance shards
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - planning DB runtime has no browser workflow.
+    unitTests:
+      - pnpm test:planning:db
+  - <<: *planningDbRuntimeSymbol
+    name: childProcess
+    path: scripts/planning-db-run.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: fs
+    path: scripts/planning-db-run.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: path
+    path: scripts/planning-db-run.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: repoRoot
+    path: scripts/planning-db-run.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: composeFile
+    path: scripts/planning-db-run.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: projectName
+    path: scripts/planning-db-run.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: defaultDataDir
+    path: scripts/planning-db-run.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: defaultPgUrl
+    path: scripts/planning-db-run.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: containerName
+    path: scripts/planning-db-run.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: composeCommandCache
+    path: scripts/planning-db-run.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: run
+    path: scripts/planning-db-run.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: buildPgEnv
+    path: scripts/planning-db-run.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: ensureDataDir
+    path: scripts/planning-db-run.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: buildComposeArgs
+    path: scripts/planning-db-run.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: resolveComposeCommand
+    path: scripts/planning-db-run.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: resetComposeCommandCache
+    path: scripts/planning-db-run.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: runCompose
+    path: scripts/planning-db-run.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: printEnv
+    path: scripts/planning-db-run.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: main
+    path: scripts/planning-db-run.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: test
+    path: scripts/planning-db-run.test.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: assert
+    path: scripts/planning-db-run.test.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: childProcess
+    path: scripts/planning-db-run.test.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: fs
+    path: scripts/planning-db-run.test.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: path
+    path: scripts/planning-db-run.test.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: scriptPath
+    path: scripts/planning-db-run.test.cjs
   - name: SystemGovernanceGenerationWorkflowComponent
     path: docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
     dddOwner: GovernanceGenerationWorkflow

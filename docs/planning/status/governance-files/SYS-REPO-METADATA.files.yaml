@@ -2,7 +2,7 @@ version: 1
 shardId: SYS-REPO-METADATA
 generatedFrom: git ls-files plus untracked non-ignored local files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-fileCount: 118
+fileCount: 119
 files:
   - fileId: F-7C0FAC63D273
     pathHash: 16228f9cd18f5479d183ab61cb01d3cfc66645b3053a3d23dd9aef2069c3410a
@@ -2214,6 +2214,32 @@ files:
     governance:
       - package.json
       - pnpm-workspace.yaml
+  - fileId: F-A1337CAD9087
+    pathHash: fed9261d4e4ec92fa5462f755087f8415d5ed6dc3cbeb49d08cf525d6b577f08
+    contentHash: a1572d156e592f0655c6e466fd28b2e8084263e5941206f527857d0b1c6cf145
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 29eede1032ad0efe8cda56f5fab23aca305a5d2a12b4421274c6bbe4fb87d0f8
+    path: infra/planning-db/docker-compose.yml
+    owningUnit: SYS-REPO-METADATA-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-REPO-METADATA
+      - SYS-REPO-METADATA-ROOT
+    ownerLevel: component
+    unitStatus: canonical
+    governanceState: governed
+    canonicalRole: implementation-owner
+    evidenceState: classification-only
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository metadata
+    governance:
+      - package.json
+      - pnpm-workspace.yaml
   - fileId: F-25F3C0DBE720
     pathHash: 4223a99f4fa1f1f54a3da759948bf3b1346a6fbf926d927b5b49d5e3f707e5dc
     contentHash: 6399a486d724de84a30931a4a2e06eb6b00156b895fa9dd6f1d5b7a4eefd79b5
@@ -2788,9 +2814,9 @@ files:
       - pnpm-workspace.yaml
   - fileId: F-06DED848F0B8
     pathHash: 848123a09f55c65b5ffef9e5ceb2956d2504d1465ee8d33859bc542035c55aee
-    contentHash: 968f028707069dbffbdff77450c38dc8e08bd3abf8a676b67aa7c8534738f265
+    contentHash: 438174e83feadd1841d863dc78455649e9838dcc23fb968467fd462aad26ed59
     governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
-    stateFingerprint: 14e2961967abd108f3dc131b5ac594ec8950a9cdcbbaa60c8d12b8c47ccebf10
+    stateFingerprint: a1a740082d4778b0bd34f4acc50dcf4d680165da96cc57649afa96d0ca5329a5
     path: package.json
     owningUnit: SYS-REPO-METADATA-ROOT
     rootUnit: SYS-DVT
