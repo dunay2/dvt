@@ -252,16 +252,15 @@ Stage 1 should reuse existing rails.
 | `ListCanvasWorkbenchTabs`       | query   | Canvas workbench presentation | reuse  | Return tab labels without forcing icon rendering.            |
 | `SelectCanvasWorkbenchTab`      | command | Canvas workbench presentation | reuse  | Preserve current route-scoped tab navigation.                |
 | `ResolveCanvasWorkbenchContext` | query   | Canvas workbench presentation | reuse  | Resolve visible Canvas title, slug, and draft posture.       |
-| `SelectTenantScope`             | command | Web auth / workspace scope    | reuse  | Move tenant choice out of the top bar without changing auth. |
-| `SelectProjectScope`            | command | Web auth / workspace scope    | reuse  | Move project choice out of the top bar.                      |
+| `setTenantId`                   | command | Web auth / workspace scope    | reuse  | Move tenant choice out of the top bar without changing auth. |
+| `setProjectId`                  | command | Web auth / workspace scope    | reuse  | Move project choice out of the top bar.                      |
+| `setEnvironmentId`              | command | Web auth / workspace scope    | reuse  | Move environment choice out of the top bar.                  |
 | `RefreshSessionGrants`          | query   | Web auth / workspace scope    | reuse  | Keep the selector limited to granted scopes.                 |
 
 Environment and Git posture:
 
-- Environment selection currently exists as workspace session state rather than
-  a named accepted rail in this plan. Stage 1 implementation must either map it
-  to an existing workspace-scope command catalog or add `SelectEnvironmentScope`
-  before moving the control.
+- Environment selection reuses the existing workspace session command
+  `setEnvironmentId`. Stage 1 must not invent a parallel environment rail.
 - Git remains a read-only reference indicator in Stage 1. No Git selection,
   branch switching, staging, commit, or source-control workflow is accepted by
   this slice unless a separate source-control rail is added first.

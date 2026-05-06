@@ -24638,9 +24638,9 @@ files:
   - fileId: F-82E6E180FA7D
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md
-    contentHash: 4d211b8ed858a787ecb955bd61577e123dff5d85c179fe76d897779ac51764a3
+    contentHash: ffb8e63a73552536bd9386dc0eb0a46b5c1df7595e4eeaab1c3546e8dfd1c47f
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 38bac01f3f666705ce7600210f6e7d79b77b68f16a1fce1227bafa17af4e54f4
+    stateFingerprint: db27d3c3a13b2068727662e020cf6af2933b74f5358e6751c64e18227c6aec32
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -24648,9 +24648,9 @@ files:
   - fileId: F-BCC1F9B3F745
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-1-chrome-simplification-implementation-plan-20260506.md
-    contentHash: 7375d50b84b20bd415312c1467a7209b65b20d583acd36cbe3eb173cf496f518
+    contentHash: 7b5e7c2b73816e9d9d64ec62f973ff3a1d00ede7baa24449871df322c0e53239
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 7a029e892015a278d5010ad55690a61764e2419b9c2b5cc9a6de6a13f55e2703
+    stateFingerprint: 542c76e64f40045aba839e3eb13de463639154f7092c44b2ade33878ce8db843
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT

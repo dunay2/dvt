@@ -151,15 +151,16 @@ updated before code changes continue.
 | `SelectCanvasWorkbenchTab`           | command | Canvas workbench presentation | `CanvasWorkbenchTabSelectionCommand`    | Preserve route-scoped tab navigation.                                           |
 | `ResolveCanvasWorkbenchContext`      | query   | Canvas workbench presentation | `CanvasWorkbenchContext`                | Resolve title, slug, compact project id, draft posture, and unavailable state.  |
 | `ListShellNavigationItems`           | query   | Web shell navigation          | `ShellNavigationReadModel`              | Keep global destinations separated from Canvas workbench projections.           |
-| `SelectTenantScope`                  | command | Web auth / workspace scope    | Tenant scope command value object       | Move tenant choice out of the main top bar without changing auth.               |
-| `SelectProjectScope`                 | command | Web auth / workspace scope    | Project scope command value object      | Move project choice out of the main top bar without changing project authority. |
+| `setTenantId`                        | command | Web auth / workspace scope    | `Web shell session aggregate`           | Move tenant choice out of the main top bar without changing auth.               |
+| `setProjectId`                       | command | Web auth / workspace scope    | `Web shell session aggregate`           | Move project choice out of the main top bar without changing project authority. |
+| `setEnvironmentId`                   | command | Web auth / workspace scope    | `Web shell session aggregate`           | Move environment choice out of the main top bar without changing run context.   |
 | `RefreshSessionGrants`               | query   | Web auth / workspace scope    | Session grants read model               | Limit scope choices to granted tenant/project/environment context.              |
 | `VerifyCanvasWorkbenchVisualPosture` | query   | Browser verification          | `CanvasWorkbenchVisualPostureReadModel` | Prove tab readability, top-bar relocation, and no fixed Canvas left rail.       |
 
-Stage 1 has one rail gate before code: environment selection must map to an
-existing environment-scope command or the command/query catalog must be updated
-with that rail. Git context is read-only in Stage 1 unless a separate accepted
-Git rail is added before implementation.
+Stage 1 reuses the existing workspace-scope commands documented by
+`sessionStore.ts`: `setTenantId`, `setProjectId`, and `setEnvironmentId`. Git
+context is read-only in Stage 1 unless a separate accepted Git rail is added
+before implementation.
 
 ## DDD Object Map
 
@@ -217,17 +218,17 @@ Folder guardrails:
 
 ## Fowler Opportunity Matrix
 
-| Scenario                                             | Opportunity                                          | Fowler response                                            | DDD owner                                                         | Rail                                                                                               | Tests                                                                              | Out of scope                                   |
-| ---------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------- |
-| Canvas tabs show icons and risk visual noise.        | Presentation drift and primitive visual confidence.  | Presentation Model with text-only tab projection.          | `CanvasWorkbenchTabsReadModel`                                    | `ListCanvasWorkbenchTabs`                                                                          | Unit read-model test, architecture guard, Cypress label readability.               | New routes or tab semantics.                   |
-| Canvas tabs must stay horizontal and readable.       | Test-only confidence.                                | Semantic Fitness Function.                                 | `CanvasWorkbenchVisualPostureReadModel`                           | `VerifyCanvasWorkbenchVisualPosture`                                                               | Cypress rectangle and text overflow assertions.                                    | Screenshot-only proof.                         |
-| Scope selectors dominate the main top bar.           | Boundary drift between shell context and route work. | Application Controller plus read-only context read model.  | `ProjectIdentityBadge`                                            | `ResolveCanvasWorkbenchContext`, `SelectTenantScope`, `SelectProjectScope`, `RefreshSessionGrants` | Top-bar unit/architecture guard and Cypress reachable scope selection.             | New auth, tenant admin, RBAC.                  |
-| Environment selection lacks an explicit mapped rail. | Hidden command creation risk.                        | Command Query Separation gate.                             | Environment scope command value object                            | Catalog update required before code if no rail exists.                                             | Architecture test fails if environment selection is moved without catalog mapping. | Ad hoc store action names.                     |
-| Git reference controls sit in the top bar.           | Feature envy and UI authority drift.                 | Read-only reference projection.                            | Shell Git context read model, if present                          | Query only unless a Git command rail is accepted.                                                  | Architecture guard prevents branch-switch command from this slice.                 | Browser Git client.                            |
-| Canvas still has fixed left navigation.              | Duplicate navigation semantics.                      | Semantic Fitness Function and bounded shell layout policy. | `CanvasWorkbenchChrome`                                           | `ListShellNavigationItems`, `ListCanvasWorkbenchTabs`                                              | Cypress no fixed Canvas rail; architecture guard for shell/workbench split.        | Removing all global destinations from the app. |
-| Insert/Add becomes a permanent panel.                | Hidden authority and panel sprawl.                   | Command Query Separation plus Presentation Preference.     | `AddPalettePresentationPreference`, `WorkbenchCapabilityRegistry` | Existing or cataloged Insert command rails                                                         | Architecture guard: Add is unpinned/closed by default and capability-driven.       | Full Add palette redesign unless touched.      |
-| Inspector, Runtime, and minimap compete with graph.  | Responsibility overload.                             | Progressive Disclosure presentation models.                | `CanvasInspectorPanelState`, `RuntimeEvidencePanelState`          | Existing panel toggle or run evidence rails                                                        | Cypress/architecture checks for default collapsed or contextual posture.           | Runtime diagnostics redesign.                  |
-| Admin appears as Canvas content.                     | Bounded-context leak.                                | Separate shell destination.                                | `ShellNavigationReadModel`                                        | `ListShellNavigationItems`                                                                         | Architecture guard: Admin remains shell-level destination.                         | Admin feature implementation.                  |
+| Scenario                                            | Opportunity                                          | Fowler response                                            | DDD owner                                                         | Rail                                                                                                       | Tests                                                                              | Out of scope                                   |
+| --------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Canvas tabs show icons and risk visual noise.       | Presentation drift and primitive visual confidence.  | Presentation Model with text-only tab projection.          | `CanvasWorkbenchTabsReadModel`                                    | `ListCanvasWorkbenchTabs`                                                                                  | Unit read-model test, architecture guard, Cypress label readability.               | New routes or tab semantics.                   |
+| Canvas tabs must stay horizontal and readable.      | Test-only confidence.                                | Semantic Fitness Function.                                 | `CanvasWorkbenchVisualPostureReadModel`                           | `VerifyCanvasWorkbenchVisualPosture`                                                                       | Cypress rectangle and text overflow assertions.                                    | Screenshot-only proof.                         |
+| Scope selectors dominate the main top bar.          | Boundary drift between shell context and route work. | Application Controller plus read-only context read model.  | `ProjectIdentityBadge`                                            | `ResolveCanvasWorkbenchContext`, `setTenantId`, `setProjectId`, `setEnvironmentId`, `RefreshSessionGrants` | Top-bar unit/architecture guard and Cypress reachable scope selection.             | New auth, tenant admin, RBAC.                  |
+| Environment selection risks an ad hoc rail.         | Hidden command creation risk.                        | Command Query Separation gate.                             | `Web shell session aggregate`                                     | Reuse `setEnvironmentId`; catalog update required before code only if a different rail is needed.          | Architecture test fails if environment selection is moved without catalog mapping. | Ad hoc store action names.                     |
+| Git reference controls sit in the top bar.          | Feature envy and UI authority drift.                 | Read-only reference projection.                            | Shell Git context read model, if present                          | Query only unless a Git command rail is accepted.                                                          | Architecture guard prevents branch-switch command from this slice.                 | Browser Git client.                            |
+| Canvas still has fixed left navigation.             | Duplicate navigation semantics.                      | Semantic Fitness Function and bounded shell layout policy. | `CanvasWorkbenchChrome`                                           | `ListShellNavigationItems`, `ListCanvasWorkbenchTabs`                                                      | Cypress no fixed Canvas rail; architecture guard for shell/workbench split.        | Removing all global destinations from the app. |
+| Insert/Add becomes a permanent panel.               | Hidden authority and panel sprawl.                   | Command Query Separation plus Presentation Preference.     | `AddPalettePresentationPreference`, `WorkbenchCapabilityRegistry` | Existing or cataloged Insert command rails                                                                 | Architecture guard: Add is unpinned/closed by default and capability-driven.       | Full Add palette redesign unless touched.      |
+| Inspector, Runtime, and minimap compete with graph. | Responsibility overload.                             | Progressive Disclosure presentation models.                | `CanvasInspectorPanelState`, `RuntimeEvidencePanelState`          | Existing panel toggle or run evidence rails                                                                | Cypress/architecture checks for default collapsed or contextual posture.           | Runtime diagnostics redesign.                  |
+| Admin appears as Canvas content.                    | Bounded-context leak.                                | Separate shell destination.                                | `ShellNavigationReadModel`                                        | `ListShellNavigationItems`                                                                                 | Architecture guard: Admin remains shell-level destination.                         | Admin feature implementation.                  |
 
 ## Target State Diagram
 
@@ -237,7 +238,7 @@ flowchart TB
   Shell --> Context["Read-only context labels"]
   Shell --> Canvas["Canvas workbench route"]
   Context --> ContextMenu["On-demand workspace context menu"]
-  ContextMenu --> ScopeCommands["SelectTenantScope / SelectProjectScope / environment rail"]
+  ContextMenu --> ScopeCommands["setTenantId / setProjectId / setEnvironmentId"]
   Canvas --> Title["Canvas title, slug, project id, draft posture"]
   Canvas --> Strip["Text-only view strip"]
   Canvas --> Commands["Route toolbar and command surfaces"]
@@ -280,9 +281,11 @@ Initial command groups:
 - Insert node;
 - Open view;
 - Run command;
-- Export command;
 - Toggle panel;
 - Admin destination.
+
+Export remains future-disabled in Stage 1 and belongs to Stage 3 project I/O
+work unless a separate accepted export rail is added first.
 
 Add palette pinning is allowed only as a user presentation preference:
 
@@ -391,8 +394,8 @@ Green:
 - move tenant/project/environment choice to a bounded shell context menu;
 - keep shell React chrome in `components/shell` and pure shell models in
   `app/shell`;
-- keep scope changes backed by `SelectTenantScope`, `SelectProjectScope`,
-  `RefreshSessionGrants`, and the accepted environment rail.
+- keep scope changes backed by `setTenantId`, `setProjectId`,
+  `setEnvironmentId`, and `RefreshSessionGrants`.
 
 ### Task 4: No Fixed Canvas Left Rail Guard
 
@@ -605,12 +608,15 @@ commandQueryRails:
   - name: ListShellNavigationItems
     type: query
     dddOwner: ShellNavigationReadModel
-  - name: SelectTenantScope
+  - name: setTenantId
     type: command
-    dddOwner: Tenant scope command value object
-  - name: SelectProjectScope
+    dddOwner: Web shell session aggregate
+  - name: setProjectId
     type: command
-    dddOwner: Project scope command value object
+    dddOwner: Web shell session aggregate
+  - name: setEnvironmentId
+    type: command
+    dddOwner: Web shell session aggregate
   - name: RefreshSessionGrants
     type: query
     dddOwner: Session grants read model
@@ -782,8 +788,9 @@ symbols:
     path: apps/web/src/app/components/shell/ShellWorkspaceContextMenu.tsx
     dddOwner: ShellWorkspaceContextMenu
     cqRails:
-      - SelectTenantScope
-      - SelectProjectScope
+      - setTenantId
+      - setProjectId
+      - setEnvironmentId
       - RefreshSessionGrants
     fowlerSignals:
       - Command Query Separation
