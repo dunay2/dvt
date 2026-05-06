@@ -39584,9 +39584,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-BE72D9875033
     pathHash: 243f2fed3b766fd91464d8f5fd7c8236758e98801e91b0c59ebc309d8d0ecc6f
-    contentHash: a997a4ad4ccdeb1987e20f7ab7e2fce506a22983def1e06a399305bd5caf945d
+    contentHash: 71493d0f999f544d20f5e07cee0106a943a42c28e8222bfb6daeb6b605126ce5
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 1a0fdd3524f78baa1ed5018f87d4d4c831fbd095a337bf95f7359d2c346e23b7
+    stateFingerprint: ba965da6a0a099f7c9643661908fc60c4abaae45477aadfe21d90c0deee2f4d9
     path: docs/planning/state/agent-lane-e.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
