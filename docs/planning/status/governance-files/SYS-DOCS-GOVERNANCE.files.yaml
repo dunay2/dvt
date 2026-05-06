@@ -37540,9 +37540,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-465750894817
     pathHash: fcae6f744c9c0a8ee1bfa97bcd7b79400ff3d0609a4dcb6664a791b1268c895f
-    contentHash: fdc824b93d60a4e5b68e67132977dc82283a4e61da9b6c85c414cd2e9934d862
+    contentHash: db094ed1e4a67e3b58e29f480cb606a87b81a45e6d2f25b947b378be216888a1
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 30f1093870820c2576e6789005e9c11595b83a3bfdcbe66d27e75e5df729a018
+    stateFingerprint: 5d3a7d8c6dc8cb82dfb5fb293ebbf0bc6dca7e2dc6649301b2cf75bd9d55cf7a
     path: docs/planning/reviews/ci-and-delivery/20260506-ci-build-audit-review.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
