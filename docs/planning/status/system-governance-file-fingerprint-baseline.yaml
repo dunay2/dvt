@@ -24648,9 +24648,9 @@ files:
   - fileId: F-BCC1F9B3F745
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-1-chrome-simplification-implementation-plan-20260506.md
-    contentHash: 7b5e7c2b73816e9d9d64ec62f973ff3a1d00ede7baa24449871df322c0e53239
+    contentHash: 1944cb34362eb1f41c6371d292e31d94fb60be4f60b411b929fdae61d9369c30
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 542c76e64f40045aba839e3eb13de463639154f7092c44b2ade33878ce8db843
+    stateFingerprint: 2b191fc6cebc53bd0776ab0c0b0f9f25e92e1146699f89adadcf8a66b6651637
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
