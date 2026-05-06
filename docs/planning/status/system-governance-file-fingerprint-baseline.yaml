@@ -1,6 +1,6 @@
 version: 1
 source: docs/planning/status/system-governance-file-index.files.yaml
-fileCount: 4270
+fileCount: 4290
 files:
   - fileId: F-7C0FAC63D273
     path: .arc-policy.yaml
@@ -5399,9 +5399,9 @@ files:
     owningUnit: SYS-WEB-ROOT
   - fileId: F-E3C5CEE03490
     path: apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
-    contentHash: bf5c017378582e5bb39f02ea774e566e94cf8e7c022131bdf9bcd5691626b338
+    contentHash: e9f92fa1b47ec5f96fa99c85e24b7b7d42a25196dab294121dd05583cc3d52e7
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: e2905af4247a75c50af71bf3a62becd154e55ed29203380a425acb23471c3eb8
+    stateFingerprint: bbc808e66a61abe019570b62cb5131ba18053cc42f1458e07016c706add82333
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
@@ -6218,9 +6218,9 @@ files:
     owningUnit: SYS-WEB-ROOT
   - fileId: F-08196DF3AF7A
     path: apps/web/src/app/components/shell/chrome.ts
-    contentHash: 09fa658b20f27a8006324f5a2526d83d926f7db9c4eeee59fc355cbce7919fdf
+    contentHash: 9d347b13a3e3be398dac0e181a25b5a3b19e6582dd36b393c61ee0f1a5ec5278
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: f540be44ba0ace621942507a9e9f664ffb5cc754f4e801203d81596e0759ae4f
+    stateFingerprint: 9fbf812e3cf972da70fbe39b2a2562be0f043c3e834756bba73800be847a3696
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
@@ -6261,11 +6261,29 @@ files:
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
     owningUnit: SYS-WEB-ROOT
-  - fileId: F-1F86202A11BF
-    path: apps/web/src/app/components/shell/ShellWorkspaceSelectors.tsx
-    contentHash: bada54e182c7c5f6b2fd73708daf80b27e139dcf151bfc4a1cfacc61dd9374d0
+  - fileId: F-134868945E66
+    path: apps/web/src/app/components/shell/ShellProjectIdentityBadge.tsx
+    contentHash: b655b0e58ffa806e89b10ee41d8209db7c5e288c6a56e35523e87814d49f2a24
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: c4f8cdaca9292aadf7680425b18d95254d37fd0fff489074e3a729f57621cc62
+    stateFingerprint: e8e4d07637028908e76aeb96d22c6634d97010c504e8bf208e796868693f37b9
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-WEB-ROOT
+    owningUnit: SYS-WEB-ROOT
+  - fileId: F-41430A657214
+    path: apps/web/src/app/components/shell/ShellWorkspaceContextDetails.tsx
+    contentHash: f0f4eb4bafc2a1c42ff4c8fd52458a02f5eb7eb9548ab387a1704591096d6822
+    governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
+    stateFingerprint: 1987449722dffbc0a5bcbc61846ee7a0ceb31cb7ac9b76f57e4fa8f38d2597d6
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-WEB-ROOT
+    owningUnit: SYS-WEB-ROOT
+  - fileId: F-8D220025A149
+    path: apps/web/src/app/components/shell/ShellWorkspaceContextMenu.tsx
+    contentHash: c5f659115d3286951c3f8c3729fc1eddf3270e025eee214bd49b6b5ef2519101
+    governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
+    stateFingerprint: 47c7c1e2dd9760ed79765d8cb822d79c02530a6eaf6c5a00b19ea28a5b93eed7
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
@@ -6450,11 +6468,29 @@ files:
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
     owningUnit: SYS-WEB-ROOT
+  - fileId: F-F06C167F51DC
+    path: apps/web/src/app/components/TopAppBar.architecture.test.ts
+    contentHash: 585bbd250dde125f0788b7f65067e9fbb50d92b01904e938217ce86a6b203903
+    governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
+    stateFingerprint: a8ea65a418aa3a0be47fd0e2b7fad30c64d7a1a813ba402f46c4796b792429ed
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-WEB-ROOT
+    owningUnit: SYS-WEB-ROOT
+  - fileId: F-3EF7DCA05395
+    path: apps/web/src/app/components/TopAppBar.test.tsx
+    contentHash: 261d03f9dc1373218e77f27b0c1c903722ced0646395fcacd1e59eb3eec082a1
+    governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
+    stateFingerprint: 24a07d359367724942d7c33f75ab3865583dd42c5b53c286726ae6b543673fca
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-WEB-ROOT
+    owningUnit: SYS-WEB-ROOT
   - fileId: F-D674640041D0
     path: apps/web/src/app/components/TopAppBar.tsx
-    contentHash: e0167d16c086eae5ec426e4856b45fa25c35b8b0d21c22fcfb1336323e30e517
+    contentHash: 38e56d5aaf81dfd21e763a64c927f80211fe6a1f476e160362c41cbb7ee3f424
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 86b79b06ac08f39b6517c99218a047766a5869248844d4ee87cab24e19758e25
+    stateFingerprint: 0b0bd860706525bd47675183c50faeaeb63243b9f762d407299172f741dac343
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
@@ -7433,9 +7469,9 @@ files:
     owningUnit: SYS-WEB-ROOT
   - fileId: F-9FF121564259
     path: apps/web/src/app/Root.shellChrome.test.support.ts
-    contentHash: 39eb1069548ba80fb0c32cfeb095211cb14bf26db373534f18600607b360ac7b
+    contentHash: 8918aba2ea49821eb5b37a550bf5e949c406205aae83e26da46dfb1a54676544
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: c84307b3dd0a3b7985e17fd973e4ff3809d7291f73186b415406741470506e1f
+    stateFingerprint: e34c0af0d2332713fb46ab46352d07ef16cfc959515b4357afcdf578722da403
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
@@ -8030,6 +8066,24 @@ files:
     contentHash: 6b65abb59931949220c485d70e1406cd2ae2a9227d93a1b87ec0cf9503e0fa8a
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
     stateFingerprint: f901dc415845dfa1e3f1e5d3d613a7d68df31405bf3d00c4918f81aa20fbc856
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-WEB-ROOT
+    owningUnit: SYS-WEB-ROOT
+  - fileId: F-E1B8C1ED968C
+    path: apps/web/src/app/shell/projectIdentityBadge.test.ts
+    contentHash: 8f31a428eaaae3f2b5b3528f4914932ea06c0d48f2c8684b213a0ae2b2368ffc
+    governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
+    stateFingerprint: c880eddab4715e3fe098a2ad1c63553c024ca3270f05fdb98c81b050192ddf8e
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-WEB-ROOT
+    owningUnit: SYS-WEB-ROOT
+  - fileId: F-0328DA845E72
+    path: apps/web/src/app/shell/projectIdentityBadge.ts
+    contentHash: 671a17f3c3cde573607dd062a36196257b3896d5f25e7bb92d5f9fe3eab96925
+    governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
+    stateFingerprint: c8316ff812a97026fdaaea9ce3f428c3a3df10d35ced0a9c55e55e8fe4632e41
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
@@ -10529,36 +10583,36 @@ files:
     owningUnit: SYS-WEB-ROOT
   - fileId: F-ED3393E79468
     path: apps/web/src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
-    contentHash: 27d1a9489967afaae5867774cf72901c9111eda49f4f9711c37a88f46b965de7
+    contentHash: 8193af7ea134e07cf68549d5c547ae9d063362bcdd11d57b5d29404ff87257d7
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 8896849ffb470a3691fc85c323a31d05b0d414ac1236fa6b8425bc405fb608b5
+    stateFingerprint: 09d5d9ff9c8334e84d4ff0d26765f4d592f24d30ddea3c5befce9eff8a636197
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
     owningUnit: SYS-WEB-ROOT
   - fileId: F-768A7FCC425B
     path: apps/web/src/app/views/canvas/canvasWorkbenchTabs.test.ts
-    contentHash: bdf9e0bef8e9e01173b138f93b413d35c34a30d4f838bc2fcdf397947183faa0
+    contentHash: e756426742de13963d127a022cf7566b85ed567c48492f49abe0617a01bbc8e1
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 31153e881891e522ec7b7022b9d1a09f137b6912c9702574d1e9b71c1fd7248d
+    stateFingerprint: 31f0d30bf0b47c9c1b01850e944cc1e0c78809bbb003b95125b79cf03b53f568
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
     owningUnit: SYS-WEB-ROOT
   - fileId: F-88DFC51AFE68
     path: apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts
-    contentHash: 5dd759d35f6f88270aa163f4d7f05a5c2891c84b049230515efff2d8645886a0
+    contentHash: 85ba5ba73ba382d362d4656017c233e7ba638af6d5563be414e3434926b6b818
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 523730a831024660f61cd5f99cb26e5726d5f975ca859c66682158f57aeaa6a5
+    stateFingerprint: aec9f057e2ed863e86b9c7801e521dada82df0d9a84f0824006c6202082bfb48
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
     owningUnit: SYS-WEB-ROOT
   - fileId: F-19E5B7C2D104
     path: apps/web/src/app/views/canvas/CanvasWorkbenchTabStrip.tsx
-    contentHash: 261a8ef2fc1b1da1ffce8f65f025604b5f2d3058111b35f504ad38d7731b7b95
+    contentHash: e93d7beb4540fa5a76ffe8f71495b40d4fc18892581ecb3d8972902de76807c8
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 2832a94ad3a37e8da0ba67faae28003581d4db6c91998ff7945bd89b29824235
+    stateFingerprint: 60fe70a7470e6d6eab342c159a00229a67984aacc94b7922d4001f83c91aee28
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-WEB-ROOT
@@ -13050,6 +13104,33 @@ files:
     domainUnit: SYS-DVT
     componentUnit: SYS-REPO-METADATA-ROOT
     owningUnit: SYS-REPO-METADATA-ROOT
+  - fileId: F-4B53AC6B6DE0
+    path: buzon/20260506-codex-fowler-canvas-workbench-shell-context-hardening-review.md
+    contentHash: 4eed94188851d0a92487700a352e4dbaf680f0f9805348a8ffa11dd7c29bf9f2
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: c294cf6e85e8001ee47205505b6ad7ffdd7b5d731fe7abef4f65568b64b065c0
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    owningUnit: SYS-REPO-METADATA-ROOT
+  - fileId: F-CF056AE5058A
+    path: buzon/20260506-codex-fowler-canvas-workbench-shell-context-review-and-risk.md
+    contentHash: 09ee1f77c0c833427ff3c4b167977ad9fcb20577d0e27b6dbf879ceccbd579d4
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 62b28066e9ad2499fa1ed265a9c7a791f7c0d3711e801939730327dc47eb0bec
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    owningUnit: SYS-REPO-METADATA-ROOT
+  - fileId: F-347CCE5E5BAB
+    path: buzon/20260506-codex-fowler-canvas-workbench-stage-1-text-only-tabs-review.md
+    contentHash: 9d0c53cd4652d315cd0a61e6aab006474a9ca0829939bb9883ff098224750ef7
+    governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
+    stateFingerprint: 540d3167973c2ea7cae2bdf82ad049f54d6f45ac4901d25b61b72152e0a698b3
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-REPO-METADATA-ROOT
+    owningUnit: SYS-REPO-METADATA-ROOT
   - fileId: F-3AD69D0E1547
     path: CHANGELOG.md
     contentHash: c789ffcf3ad93a59c72ee073787532966e1a9900728c8f992e1b1b9e7ae7000e
@@ -13115,9 +13196,9 @@ files:
     owningUnit: SYS-REPO-METADATA-ROOT
   - fileId: F-F3E0D3EF3EDF
     path: docs/.manifest.json
-    contentHash: 0cb2c18081a76e28f4f2034129c8c9d434568bf8f9376f252b41d06c265ecd02
+    contentHash: 8f6de3e5b946cd1d783e6e842a2aa0993d5afdb31103d6c16d435b1b0486d9fe
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 0db81e8cf7ffd1b77627c76d734e18d78ccc173b7a81b31f111a5195bfab44a9
+    stateFingerprint: 36f074f4d5e1ab4d5448734b5e733a43e97dd3ffaeabab4914dc34da3c69401b
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -15146,9 +15227,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-833391A2F0DB
     path: docs/architecture/components/web/appshell/app-shell.md
-    contentHash: e6aec35b8811c0ca2fe37178e6fd29f22ea068726f29bbfa2dc5a96c534fd96b
+    contentHash: fb00344c9e0bf146ca21ba61385742a1570769ac88beab3ad270670621f78c45
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: aeaf3b503c43e74e7d5c9dd06174ef1ec00356a14a87c0425e9a14a57a6bb564
+    stateFingerprint: 507e1621b923dfe874b24c32659d09ad63ece70d96e363a9ac4702a1ef152f37
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -15158,6 +15239,24 @@ files:
     contentHash: d8f3c95f92d50b130d5b0edff7055aea203db2ff3073c45b9551ba909e708cee
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
     stateFingerprint: 26b4ef7f60085ebf40ea23f5b85e606c99c0ce52823b7a8e70d9f15cc2f0a623
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+  - fileId: F-986AA5084618
+    path: docs/architecture/components/web/appshell/shell-workspace-context-component.md
+    contentHash: 44e6dbb334e05d36a93d810244a52675aa1645aae5c9fdb9327f52a1bacb92fd
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: 40573574b424ef6a1f397752264d0f366c424942caf2e4132bb69e697fba8333
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+  - fileId: F-4D35F9F3EC8C
+    path: docs/architecture/components/web/appshell/shell-workspace-context-user-stories.md
+    contentHash: b64877895c0ff197e2634a14396d684cdb78153f3f18ea2935fbc0bbb50bcc67
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: 49b107dd8e1e567bd4dfa6d199b7e5feb442cd8c78a7bd7ab2ef3b9aa2b85531
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -15486,20 +15585,29 @@ files:
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+  - fileId: F-448981A33C8D
+    path: docs/architecture/components/web/graph/canvas-workbench-tab-strip-component.md
+    contentHash: bd51b70ec255801e2804f72837898b9adc4501b47e9306d487fe1dddb86afdd6
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: df49b24b4764685603e6c65f744c97ac3bd8dcd58ab09f9b805c8b6a5df112ca
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-B863220D9695
     path: docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
-    contentHash: e0fc1e26c03eede2c48d57747a12452bb270b92f840b92c4c83809c091d86fdd
+    contentHash: ab9a972f8f42898ef9d41fa2a0055512d1e441f608b1a5a2a56df66ccae4f2c7
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: c223a99139b1bbe1977b37d4d7bd9963ac80ee141ece74e14b216f7ec552bc73
+    stateFingerprint: 576852b7b9a0f4fa8c65a2d210d63b7d6bffcc84a6164de92b2df2a6d112537e
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-B1EE215AE751
     path: docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md
-    contentHash: 3c1d18846d65b94598a205a8e863285fd98931fcf5fd8a586e25387531bfb843
+    contentHash: a794d8dd868a7c78c60c63133979fe8bb565628b9a7c1b7b04fed6583d5f2231
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: ac8143ad2f16c44d0b8da5dc45ee0a0d46caf133232bba80650718f0223961d3
+    stateFingerprint: 94c861cf00340ad59560cc341ba626a7ca5805803b4369a35ffdccce7b9c487c
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -15551,9 +15659,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-82112F46B8B5
     path: docs/architecture/components/web/graph/index.md
-    contentHash: fe7488b7285c4f6e175eb76b80fb831789ca660d0bb7491ab832c83971bec0f7
+    contentHash: 0ca03264549d438ea97ddd250d42eb04cbbcce1ab030c4d6679316b2d0c16f90
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: a28b2ec7b6f8ab549edaa4aa1abc9e7620a2249551ed8e366774fa70976d0fc9
+    stateFingerprint: a624493b781833f82b33bb168c6643573b7b4feff8180b132027cb4e35b33ca7
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -15815,9 +15923,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-38F53B94BCA0
     path: docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
-    contentHash: 3ff485b8c537668f3022dbac1cb8067044725f6cbb386de38a872edaa198efbd
+    contentHash: 33499925cb6202419199a2ad74be333736990a6a310f715cb510122f2ba38971
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 71f99857db01aa7d8500c42e85792887e270b1143780006a2f39b7d67163e1ce
+    stateFingerprint: 0ccd96c8a509b0e8ca4514142a64c9c639a43896c2fc493de82416bfe014fe54
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -24647,9 +24755,19 @@ files:
   - fileId: F-82E6E180FA7D
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md
-    contentHash: c857feb01e8007949ad754d70acdac07935bb91dc807b94d388d664b6e63944d
+    contentHash: ffb8e63a73552536bd9386dc0eb0a46b5c1df7595e4eeaab1c3546e8dfd1c47f
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 754b329d681c1cc32f0cc8f61200efb45237ef3752b6710b9dc2bd745a317385
+    stateFingerprint: db27d3c3a13b2068727662e020cf6af2933b74f5358e6751c64e18227c6aec32
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+  - fileId: F-BCC1F9B3F745
+    path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-1-chrome-simplification-implementation-plan-20260506.md
+    contentHash: 42a704b6709d7aa82f25b215ea5d1260656b73806ff0a78b28ae13a637d7281b
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: 465498a6749fbd5bc355ccaac1d288e3d7b9bdc446dbc9edbc6cfbb12966ea03
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -24913,6 +25031,15 @@ files:
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+  - fileId: F-0AC753974FC4
+    path: docs/planning/proposals/mandatory/governance-and-docs/audit-doc-intake-plan-20260506.md
+    contentHash: c7cdd8a5900b37f6a325c9726acf0d48a51e29d33503ac524dea30376a29e4f6
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: ff8d23860c2877dd772580f0c384a9a151bf45a2e06168ec23fe8e4db2c6f784
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-B2B608B25782
     path: >-
       docs/planning/proposals/mandatory/governance-and-docs/autogenerated-pages-extraction-plan-20260403.md
@@ -24989,6 +25116,16 @@ files:
     contentHash: ec2e5133cf067ab442efb104d5327b3f9d43048657eeb0a9686d116212440b2e
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
     stateFingerprint: d6f64bdb3b6fe3746c617da214b54da88be30a17f4615c10b4b35a8c8a15ae4d
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+  - fileId: F-42AD27333924
+    path: >-
+      docs/planning/proposals/mandatory/governance-and-docs/governed-changed-slice-closeout-plan-20260506.md
+    contentHash: a08693cd238702a257702979fdff798faf4a4422650217d5ee5f27b25ca803d5
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: aaba01ae8e367080230a8beae2d052ae20a665dcb00676c53b31107c68430d7d
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -26538,6 +26675,15 @@ files:
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+  - fileId: F-465750894817
+    path: docs/planning/reviews/ci-and-delivery/20260506-ci-build-audit-review.md
+    contentHash: db094ed1e4a67e3b58e29f480cb606a87b81a45e6d2f25b947b378be216888a1
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: 5d3a7d8c6dc8cb82dfb5fb293ebbf0bc6dca7e2dc6649301b2cf75bd9d55cf7a
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-66B07E588CFF
     path: docs/planning/reviews/ci-and-delivery/index.md
     contentHash: e700aaf400b536c944e8d317f8a9ea246a8adabee9cd504dbfd09295b3554eb5
@@ -26804,9 +26950,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-7A762461AB62
     path: docs/planning/reviews/review-status-board.md
-    contentHash: ec3a450b8c2884a286563136c1515143c7b0aa9248e94f1ef0870cef57e1fa54
+    contentHash: c65d02dd95814e7c8f7ea1776702dda3e0b170860306b1da16ad0a3764513e29
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 1b1f8efe549b90a1a3162633f9d8a70a0027a96a1330f82736f22eddbe446eef
+    stateFingerprint: 71d70c91b0d414e8137745018ccbdec3057a6e6db8792fa747319a79cb4f211a
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -27203,9 +27349,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-BE72D9875033
     path: docs/planning/state/agent-lane-e.yaml
-    contentHash: 33397445c027bdb4531e809bd82e47b6c33103ea1409abb66ffb810cf093659c
+    contentHash: a997a4ad4ccdeb1987e20f7ab7e2fce506a22983def1e06a399305bd5caf945d
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 48321a74500496a2ac8ca4e3f5dca99038c8b970905438251976de2abca14d7f
+    stateFingerprint: 1a0fdd3524f78baa1ed5018f87d4d4c831fbd095a337bf95f7359d2c346e23b7
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -27327,6 +27473,15 @@ files:
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+  - fileId: F-D5EE7CB1FB83
+    path: docs/planning/status/docs-staleness-audit-20260505.md
+    contentHash: 6cc825625b4c7ebb6af0d07a8b5e4f883781ad1de60bc395d60b9de311d38106
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: c588826a8cda54e79d6cb5a4ea2e47c0875baf757a9892b7b452b627c5aca98d
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-6E71ACA57C98
     path: docs/planning/status/documentation-information-architecture-current-vs-target-20260407.md
     contentHash: c4310472893c96f540b47e37fd069172c61fde3a251e8da5e72ec6dac3f9a046
@@ -27356,9 +27511,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-3F8A5537DF6A
     path: docs/planning/status/generated-code-state.md
-    contentHash: 2412a8e0a4d8bf16545a8f47e99161db3c47e0e8744c459fa4c9fa1e6b627512
+    contentHash: 82edf5b271f0d4a91bcb053092c9e5d0226341bcd81f7ca5ee8895e70c945b49
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 6c28274776b96262e08b5759317278fd992ffc503ac2b1233d722fad8a5ee195
+    stateFingerprint: 24e895507644543ebd3e3b03284ddd5656372f9376c4220b9c0db0a561e80f8f
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -27500,9 +27655,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-11E992554AA9
     path: docs/planning/status/governance-components/SYS-CI-GOVERNANCE-ROOT.component-files.yaml
-    contentHash: 79f68b28e88df8350c216c4a6bbdff3a3d5c6d2a18f25bd3f8e97d7902108df0
+    contentHash: d1f0246f562592973c3cad9335443d9c3c7f32d0bc0117631b137f547f50b581
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 6d02c46d59f4ed62647708cc1276baa89eae61670c4f0d74ec532e5d78582712
+    stateFingerprint: 44bbf69b8d1147b6d0e74453cd31e8dde116671d3a208f56420cebee7ddb284e
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -27518,9 +27673,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-00CF901F73E8
     path: docs/planning/status/governance-components/SYS-DOCS-GOVERNANCE-ROOT.component-files.yaml
-    contentHash: 917d3801b1a1906dbb03215326bd9a54efff07650f23e67abbebb6fe909348bb
+    contentHash: 3ee67f7220cfffbfbf9571eda58820587bbf99b34ba902c75dd2ef3638702233
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 14e3c63cfacfac1722d6f95bc18068ac64874f36ea1f1d732a8f2a51f1eedada
+    stateFingerprint: 73c852210d48c5e559a078acbb8541c77efdf5492444608d41e4496d69dd4139
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -27618,9 +27773,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-452348564A69
     path: docs/planning/status/governance-components/SYS-REPO-METADATA-ROOT.component-files.yaml
-    contentHash: 556c1e5700538c6bcda5d219915ac9007e99a37ae284aba2835bba5d1c4348d2
+    contentHash: 02a1dbe087a35931f5532ba8b39ec1ae4bae2bf40e0abb7222f17dce7c02615b
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: f1dd2b5b7bba91053914710f808f1013412a23abaf1babcaefd43aadc7ccb361
+    stateFingerprint: 1c80b129ce2cfbaeb9cb0339e84e0137623a3f26518f4fd6168ad0012baf6a54
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -27645,9 +27800,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-6763C678E240
     path: docs/planning/status/governance-components/SYS-WEB-ROOT.component-files.yaml
-    contentHash: ae91fe7dabf1ca8ce66d0b4c2086f52ac4540050aa8c150c088d64cd7e619564
+    contentHash: e2e5e70895465ec7ce566039a90f382e7d0394dd33b11f993414a7e32b0d138f
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: ad9b08f321c757f4b3a58dc9d7f092e18463cc26fc386299c47e1b351f1133ae
+    stateFingerprint: 985dd8f67d647e01e775c0fac028b453c78bbafbe6f0ecd54737aee48d9da756
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -27690,9 +27845,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-BC9F6D048BDE
     path: docs/planning/status/governance-files/SYS-CI-GOVERNANCE.files.yaml
-    contentHash: 3d9070b9192ac3e8c6b47bde531f7f7072f0934bd8186fe185a884e991605375
+    contentHash: cb948ea35b1960682fa09d94918388ec6b74838d3e9a0bb88dab9e93d86599fa
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: e3b5f760940aa9d4afd587d9b780ce7422529549f778a0b2e07d90897b28e9ba
+    stateFingerprint: dcb99a400aa1677d5905378e5f6515d5f1edf3dd9d7a7ef195234382f0219f19
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -27708,9 +27863,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-781675A6593B
     path: docs/planning/status/governance-files/SYS-DOCS-GOVERNANCE.files.yaml
-    contentHash: 725ae8d1eb1e5c6903a686d91d0f9f8fea03ad957b8b2e3bd5054a6557cfb8d3
+    contentHash: e8f781de4f4fca89b31ee3717db4bb40b05f0c0821e00a665f0e62ff35735550
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 80913ff35f8ca1145163fe21f0ba6c37ae49ff5c1c4e28ec0c5defcc6c8935b7
+    stateFingerprint: 6c0971e2893af27699144c50fe4fc6986afd45546ef028d3bcbbeb3154c3d727
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -27744,9 +27899,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-6BEAAF0A5093
     path: docs/planning/status/governance-files/SYS-REPO-METADATA.files.yaml
-    contentHash: 520e71b23ab809a1271f9a94211875f04c130aa28ee91eaac0bc5292584857bd
+    contentHash: 0c29b9c9d54504009373b3dfe2ca60ef971edf7956242d8e8d81b526d0ee6e56
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 4348c2ddbdb3464926f3806efc43279853d7f42256162849d97fc34e64c9b70f
+    stateFingerprint: 9f60b3302b8ba1b2299db3471dbbc1dd7faee4c2b93d8eff5b43be2290bb9d87
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -27771,9 +27926,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-DD3E3AB9F13D
     path: docs/planning/status/governance-files/SYS-WEB.files.yaml
-    contentHash: b481d8db88092c2222e21deb11a2c223b57fd6569d168a29df79ea85f06cae9c
+    contentHash: 8b1bc38481db40786cf7f4e16d1febdcaf68c16e5931560fbee2ea24e55720bc
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 782266d2694e44b41fddb7cf2c055d76155a8d789fa725294260733c445638fe
+    stateFingerprint: 99493724e7ab9c29063e2cb71040bd87495fc749f6b2bcc2ea9307daf1eccbc5
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -27843,81 +27998,81 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-B9E9126015C3
     path: docs/planning/status/system-governance-component-file-map-20260503.md
-    contentHash: c09a818df39d73ac5b2c1a401f66059d7525eca3ea82873a2006b607ab9cffd7
+    contentHash: 0259bf49fbd56d2db3feb09f2c3826d15d1fd938f24e807d90c7068ec59a3f09
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 4a221fbf774e7ae7df1453fd199d4ca087c850be60704c00d9ac69e87392d3f9
+    stateFingerprint: 3c847ac8f084b54434542f51764a5b6a66873cfba684616afef18a2db983506b
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-0F3FC4384ABC
     path: docs/planning/status/system-governance-component-file-map.components.yaml
-    contentHash: fbc3238fb2d580fd02c44d3ee3fe593f3419f388c26349359452e1d451175d41
+    contentHash: 860030b9f59edf5ac8f66bf1f9131f3957a64e658093d9a8347c5e73b6c3d4d0
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 6d246175427ca28a748fd09c922fd756c7e95bcfcf8ab810c2931ad3eee86d4c
+    stateFingerprint: bd170bf321981c40c56a07c12d9b1fb72d51019a59620f581e5b2103159ba3ba
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-5293EA43A26A
     path: docs/planning/status/system-governance-component-index-20260501.md
-    contentHash: a64b30ae76dbeef7114ab59e1c6d6b4725d0c15be1e11527818895f5ffcb5211
+    contentHash: 25623ad7547df93e0ce4eb5b325d17dc30cb288eb55360e53c8b69013af04cc9
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: ad0a0931f7b33776014dc252e97481d4659c103b4053e8d6a4c3c901a56f7577
+    stateFingerprint: d8bac7c5606aba9dd5dc5df2e1366b671c36fe1a050a8e507541d2e2e256e036
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-65470A9009F7
     path: docs/planning/status/system-governance-component-index.components.yaml
-    contentHash: fc70fdc97d081334c04a37ef6c6f1f83cb73c652909c64fe2422c504aef4877c
+    contentHash: 1fb515df06d9d71c3e4fd9f4a143c0e4ffc63c743ddef23d9318a137b11f139b
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 28c7cb5e241add282897ed324ef06e0792e8a8196859a5d342c6505f0906bc30
+    stateFingerprint: 89666d0b34dc18afaf9532a5aea5e87232546025245b9301035ea0ed7f3853e0
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-990BF10AAD94
     path: docs/planning/status/system-governance-coverage-report-20260502.md
-    contentHash: d28c32f99abc037361f836db3b80a90cced792f8f82d69c952f5ea8a298a8685
+    contentHash: 1d9c7d5a3300126c7e14932011244cefc4038a249226f9bfba0e2e3d4597b09a
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: ae1b6477e08d571b8dbc1b5ef41e5c1563187dd41f52c020c731c4bfe84a29bc
+    stateFingerprint: 600cc5de255de718e23f98f1d4c813cb3f41f5ddc39893631457494d05978e4d
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-ACC58DCFEB8C
     path: docs/planning/status/system-governance-coverage-report.coverage.yaml
-    contentHash: e71b1b8c30b7c08634439d113bdbe9c2b1f21d22fc4521cafce398e91ac93bc0
+    contentHash: fd6a7e7807380d2e5bc31fbdd16e8bfd71977e0c56b177c36f907552303f4c68
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: c03a041b3c5481b237a0812d6fae5c865fb3323c4e69176c771116e926bec4a2
+    stateFingerprint: fb4d632717d2ab444f39ca24736fac17ef81de98f3a676cdcf3f41addd32b8e6
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-5D25269D1180
     path: docs/planning/status/system-governance-document-unit-map-20260501.md
-    contentHash: ed8fcb8547a34725120068cb57330cf20788ff27448f27afa7d9cd17cf504489
+    contentHash: b339aa4527beea280d7ddd8ef8ca989e3b093311c4a11cba2c4e7d777e305e81
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 6409720d03ca890cf770547092d03683753898c7b6e5b80ac5dcde93e90bef4d
+    stateFingerprint: 43c922662d9a75497ff287bc76db73851555dc04fb57834c52653692650d2057
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-E7EC54670607
     path: docs/planning/status/system-governance-document-unit-map.docs.yaml
-    contentHash: 7b36afbce21ab1d542a062dca01eaa02f217ca45947b3fce809f6b428b74b3e9
+    contentHash: 01cbcc49cfab5ff6ea4d9eab800bd5e89c3d753940f21c6b4ca728086cc9c15d
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: de6f077d6451d739861306748f48ec8eebee3dee6aab952e69dcdf5c983cbabb
+    stateFingerprint: b8cfd57605408760fb1c1aa36697c512066941ded2ea4e6165945c52d7d758c4
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-6B8271C2051C
     path: docs/planning/status/system-governance-file-fingerprint-baseline.yaml
-    contentHash: 8500371c80a20daeb7491e9d8c60b571ce7aea7b42c31e9f0fd366513d899b89
+    contentHash: 46c9884c20bbedaf7ba4d313864f6d19fd81b44e6f82d8871b39223b8cfc4347
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 940bed183d493102343817bea3b64678a34ba75294ead3457f84462321414514
+    stateFingerprint: 00d29d6ca9038911dfce44eb8b314c037ab81368161a9bf6533de3a0d8f9db85
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -27933,18 +28088,18 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-8C3905234D4D
     path: docs/planning/status/system-governance-file-index-20260501.md
-    contentHash: bbc25d15fac77624cc3860fc35597652502f06cd5e7baf92dc22a79fcbc09c08
+    contentHash: c5fae9d24446c27837813ac2e94847795ae06700b3350fae2c050b32590181ee
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 89b82842033db4a3faca2f938a88b2d27b8282f4b3ed2d89fc09ff9192cfb196
+    stateFingerprint: e253ad49eefc2180ad6cc699bb9ca67c57b12c809852666c1fc947de189c819e
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-9B87FBC12CBD
     path: docs/planning/status/system-governance-file-index.files.yaml
-    contentHash: f6e7a8a6a63797dd02757a571620a99b76d0c7e46867f0443387ef4325568dbf
+    contentHash: 55446e654f226e0b8ad26e47d533edd271248a7b37569bb6391ae6bb34153278
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: a67a89f81a2bfc54d1e97afb22a29c14905c1813a27272e758572b886e7013e4
+    stateFingerprint: e728ad59b11e384c079812d12f22a0d74a29d3a72c396b6c0581a2d938218811
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -27960,18 +28115,18 @@ files:
     owningUnit: SYS-PLANSTORE-DOCS-RISK
   - fileId: F-F36907BA18F7
     path: docs/planning/status/system-governance-remediation-queue-20260502.md
-    contentHash: 417a7bca6cb1d28e7857716eb0563b090af51f916b85533b5828be3750cc7660
+    contentHash: 071eb012cf2aa5f14835559da7a5d72cf5f271e1b27ecb4470bc6c05ee88acc9
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 7af5dffc7cee5dd6487678ef53dcf4fa2b89996a14834bcd2c16ad79ea54ed33
+    stateFingerprint: ba51661d9adc9c117f53f61a0665326ca7ac55b2a97ddd66f82a2bc07c56c04f
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-E5771D91E8FF
     path: docs/planning/status/system-governance-remediation-queue.queue.yaml
-    contentHash: a720e4ee7b9a6c359a555d4e56494a2e76d859d034dfab9dc92aadd2fad025f3
+    contentHash: 2efd507f9920c56a126b5d8279facdeb0a7ae1b29e5c06fd26a063e42945e300
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 05fd5167935e7b48835b646be17a08021036ff3f6d1cbc984c3e1541e1bf1f4a
+    stateFingerprint: b3a00b49813f66c7b587dac9b2b70914711d07c87713bbd4f471f6ee035d7616
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -29471,11 +29626,20 @@ files:
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+  - fileId: F-9B5B9E93448F
+    path: docs/runbooks/governed-changed-slice-closeout-20260506.md
+    contentHash: 26add1d2d8b3ecf5209f93430d36037c47069c57b6fc638e7325e19776014990
+    governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
+    stateFingerprint: 12e980eebf78501f006cdcef8b399d3c3f9f7b7fa4ab16030ea225f34f772e71
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-DOCS-GOVERNANCE-ROOT
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-94217784FFEC
     path: docs/runbooks/index.md
-    contentHash: 4ff4779493462ba070a948d74ad08e7e62db7838cec40516fd2520694db4203a
+    contentHash: 71d891b561b8e42a184cf1227d521d7fd83d634d93cd0efadc92f926204e5e6f
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 7f606c6b328e917cb5f5b77aff187d450900f9c8453dd766762e1feeac1f928f
+    stateFingerprint: 083c7f95416955134882b8d4b76304cd437ea5a70b24359caf8a5ac84567a9ed
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -29923,9 +30087,9 @@ files:
     owningUnit: SYS-REPO-METADATA-ROOT
   - fileId: F-06DED848F0B8
     path: package.json
-    contentHash: 72b6a546ad9809b9280534fbfdcd3aa8633d8cc997d34e2b41282b282426639b
+    contentHash: d51c6bea86848799ea06092317e444bee23f842f1d740c280ada9683cec79344
     governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
-    stateFingerprint: b8f72b673b37ce5a078de0d64a8e7080cb4686e39183a6c8d2dcee26cacc2df5
+    stateFingerprint: 3237bce118ad12523c3d5836629213206a3a3dbe27f5cdea7b5d04f549721ff6
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-REPO-METADATA-ROOT
@@ -37443,6 +37607,24 @@ files:
     contentHash: 4f43c5793beaf175776724334b85924c67ac9078c2b61777d0c8f76e5f16ef57
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
     stateFingerprint: b14518b9a438a1f258bd1dbc775562ea822eb8256c242e24964877bb1de12a6f
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+  - fileId: F-2DFD1EEA72D7
+    path: scripts/closeout-changed.cjs
+    contentHash: c0df205865ee87ad49f4af40bb949772cdcd5adf0a7c05fe27e5f7e70b13377d
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: a254ec00a77004205eea7da172188e35184bd9d647e932004002c4d64aeec924
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+  - fileId: F-8EE0B5596066
+    path: scripts/closeout-changed.test.cjs
+    contentHash: 9eca5074761bfe80611465ac46567a63ef41b7a556dd5f2cb32e77b3682d0631
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: adcd2d3707a0c546f12afaa9c56616705bf8227de731990429bb5e680cc41f9e
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-CI-GOVERNANCE-ROOT

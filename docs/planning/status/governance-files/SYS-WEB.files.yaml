@@ -2,7 +2,7 @@ version: 1
 shardId: SYS-WEB
 generatedFrom: git ls-files plus untracked non-ignored local files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-fileCount: 822
+fileCount: 828
 files:
   - fileId: F-76C868437FA7
     pathHash: 0e84cc225ac7ad73b75b40d07ec39fc3d385993334ceac8c74e6901de6549d41
@@ -266,9 +266,9 @@ files:
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-E3C5CEE03490
     pathHash: 1269ac2d0dfe2d413ad59dca0755e6822561906fda159a473d7b69c9998a4cf3
-    contentHash: bf5c017378582e5bb39f02ea774e566e94cf8e7c022131bdf9bcd5691626b338
+    contentHash: e9f92fa1b47ec5f96fa99c85e24b7b7d42a25196dab294121dd05583cc3d52e7
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: e2905af4247a75c50af71bf3a62becd154e55ed29203380a425acb23471c3eb8
+    stateFingerprint: bbc808e66a61abe019570b62cb5131ba18053cc42f1458e07016c706add82333
     path: apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT
@@ -1098,9 +1098,9 @@ files:
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-9FF121564259
     pathHash: 4cbc10a4a0967d0a470551835418ef6ba3644d68afa3a00bb549417dd461cc12
-    contentHash: 39eb1069548ba80fb0c32cfeb095211cb14bf26db373534f18600607b360ac7b
+    contentHash: 8918aba2ea49821eb5b37a550bf5e949c406205aae83e26da46dfb1a54676544
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: c84307b3dd0a3b7985e17fd973e4ff3809d7291f73186b415406741470506e1f
+    stateFingerprint: e34c0af0d2332713fb46ab46352d07ef16cfc959515b4357afcdf578722da403
     path: apps/web/src/app/Root.shellChrome.test.support.ts
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT
@@ -2292,11 +2292,63 @@ files:
     governance:
       - >-
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+  - fileId: F-F06C167F51DC
+    pathHash: cb09b10925aef149357ebc99a38458c84e9a0b750c5008afeab4579f0852c980
+    contentHash: 585bbd250dde125f0788b7f65067e9fbb50d92b01904e938217ce86a6b203903
+    governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
+    stateFingerprint: a8ea65a418aa3a0be47fd0e2b7fad30c64d7a1a813ba402f46c4796b792429ed
+    path: apps/web/src/app/components/TopAppBar.architecture.test.ts
+    owningUnit: SYS-WEB-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-WEB-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-WEB
+      - SYS-WEB-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ENTRY
+    cqRails: UI actions and API queries
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+  - fileId: F-3EF7DCA05395
+    pathHash: 78583352453a2c9a5623fbdb87e059ed0fb7ea422f042dfcdf6d20acd2e8fcda
+    contentHash: 261d03f9dc1373218e77f27b0c1c903722ced0646395fcacd1e59eb3eec082a1
+    governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
+    stateFingerprint: 24a07d359367724942d7c33f75ab3865583dd42c5b53c286726ae6b543673fca
+    path: apps/web/src/app/components/TopAppBar.test.tsx
+    owningUnit: SYS-WEB-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-WEB-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-WEB
+      - SYS-WEB-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ENTRY
+    cqRails: UI actions and API queries
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-D674640041D0
     pathHash: 8b0fc7547ed0be8b900361c947f6c32c05a65222ab06b0a5b5a514dd2b1d5937
-    contentHash: e0167d16c086eae5ec426e4856b45fa25c35b8b0d21c22fcfb1336323e30e517
+    contentHash: 38e56d5aaf81dfd21e763a64c927f80211fe6a1f476e160362c41cbb7ee3f424
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 86b79b06ac08f39b6517c99218a047766a5869248844d4ee87cab24e19758e25
+    stateFingerprint: 0b0bd860706525bd47675183c50faeaeb63243b9f762d407299172f741dac343
     path: apps/web/src/app/components/TopAppBar.tsx
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT
@@ -2942,12 +2994,64 @@ files:
     governance:
       - >-
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
-  - fileId: F-1F86202A11BF
-    pathHash: 413a1df98affd7d832c49362a2644a701087a448fa44c522a371cad0699e058a
-    contentHash: bada54e182c7c5f6b2fd73708daf80b27e139dcf151bfc4a1cfacc61dd9374d0
+  - fileId: F-134868945E66
+    pathHash: c3ef78cafd815a1fcbec3d231dc16697b184d61b6d8d39a402f8efc6c3c98501
+    contentHash: b655b0e58ffa806e89b10ee41d8209db7c5e288c6a56e35523e87814d49f2a24
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: c4f8cdaca9292aadf7680425b18d95254d37fd0fff489074e3a729f57621cc62
-    path: apps/web/src/app/components/shell/ShellWorkspaceSelectors.tsx
+    stateFingerprint: e8e4d07637028908e76aeb96d22c6634d97010c504e8bf208e796868693f37b9
+    path: apps/web/src/app/components/shell/ShellProjectIdentityBadge.tsx
+    owningUnit: SYS-WEB-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-WEB-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-WEB
+      - SYS-WEB-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ENTRY
+    cqRails: UI actions and API queries
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+  - fileId: F-41430A657214
+    pathHash: e80f9cd2fd5afe4afc8984db0399e57281674f5b8a28c44edfcdb650387ab0b1
+    contentHash: f0f4eb4bafc2a1c42ff4c8fd52458a02f5eb7eb9548ab387a1704591096d6822
+    governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
+    stateFingerprint: 1987449722dffbc0a5bcbc61846ee7a0ceb31cb7ac9b76f57e4fa8f38d2597d6
+    path: apps/web/src/app/components/shell/ShellWorkspaceContextDetails.tsx
+    owningUnit: SYS-WEB-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-WEB-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-WEB
+      - SYS-WEB-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ENTRY
+    cqRails: UI actions and API queries
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+  - fileId: F-8D220025A149
+    pathHash: a23d7bad1a9d66cf4bbac7e782bc71ef3bab92273bd02b1b4dc75bf1e4314117
+    contentHash: c5f659115d3286951c3f8c3729fc1eddf3270e025eee214bd49b6b5ef2519101
+    governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
+    stateFingerprint: 47c7c1e2dd9760ed79765d8cb822d79c02530a6eaf6c5a00b19ea28a5b93eed7
+    path: apps/web/src/app/components/shell/ShellWorkspaceContextMenu.tsx
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
@@ -3022,9 +3126,9 @@ files:
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-08196DF3AF7A
     pathHash: 4fe74a1b7d2b494c8d69133c6e483b54517608da4302f80f25cdcf0a392cb93b
-    contentHash: 09fa658b20f27a8006324f5a2526d83d926f7db9c4eeee59fc355cbce7919fdf
+    contentHash: 9d347b13a3e3be398dac0e181a25b5a3b19e6582dd36b393c61ee0f1a5ec5278
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: f540be44ba0ace621942507a9e9f664ffb5cc754f4e801203d81596e0759ae4f
+    stateFingerprint: 9fbf812e3cf972da70fbe39b2a2562be0f043c3e834756bba73800be847a3696
     path: apps/web/src/app/components/shell/chrome.ts
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT
@@ -7856,6 +7960,58 @@ files:
     governance:
       - >-
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+  - fileId: F-E1B8C1ED968C
+    pathHash: 3b5f16f9492584999894f4a856d9bfea36fd5f515b07e0a2f4e0c6c53cf745a5
+    contentHash: 8f31a428eaaae3f2b5b3528f4914932ea06c0d48f2c8684b213a0ae2b2368ffc
+    governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
+    stateFingerprint: c880eddab4715e3fe098a2ad1c63553c024ca3270f05fdb98c81b050192ddf8e
+    path: apps/web/src/app/shell/projectIdentityBadge.test.ts
+    owningUnit: SYS-WEB-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-WEB-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-WEB
+      - SYS-WEB-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ENTRY
+    cqRails: UI actions and API queries
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+  - fileId: F-0328DA845E72
+    pathHash: 8c43c898ab0f1634a221f1978566fcc6468629b62ebc23c1acafa7e04648501c
+    contentHash: 671a17f3c3cde573607dd062a36196257b3896d5f25e7bb92d5f9fe3eab96925
+    governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
+    stateFingerprint: c8316ff812a97026fdaaea9ce3f428c3a3df10d35ced0a9c55e55e8fe4632e41
+    path: apps/web/src/app/shell/projectIdentityBadge.ts
+    owningUnit: SYS-WEB-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-WEB-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-WEB
+      - SYS-WEB-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: ENTRY
+    cqRails: UI actions and API queries
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-5541A83C0FA3
     pathHash: 67bf2ffcfb57512f16561762f541d239a0c356458fec741126e5ea7aff38d624
     contentHash: c04dd3557bd6af3f43c3787738ba823d5c876ec533bd7576dc7cc9e93d4e4f40
@@ -10926,9 +11082,9 @@ files:
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-19E5B7C2D104
     pathHash: b3dfd1848068040ddd84649832c2056fa89f53ed36022a34ceb4d8efe379f783
-    contentHash: 261a8ef2fc1b1da1ffce8f65f025604b5f2d3058111b35f504ad38d7731b7b95
+    contentHash: e93d7beb4540fa5a76ffe8f71495b40d4fc18892581ecb3d8972902de76807c8
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 2832a94ad3a37e8da0ba67faae28003581d4db6c91998ff7945bd89b29824235
+    stateFingerprint: 60fe70a7470e6d6eab342c159a00229a67984aacc94b7922d4001f83c91aee28
     path: apps/web/src/app/views/canvas/CanvasWorkbenchTabStrip.tsx
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT
@@ -15424,9 +15580,9 @@ files:
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-ED3393E79468
     pathHash: f1afe2248f37563fc5298ed559db037f5c74d2386131f7f0b6679f9af266b6c7
-    contentHash: 27d1a9489967afaae5867774cf72901c9111eda49f4f9711c37a88f46b965de7
+    contentHash: 8193af7ea134e07cf68549d5c547ae9d063362bcdd11d57b5d29404ff87257d7
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 8896849ffb470a3691fc85c323a31d05b0d414ac1236fa6b8425bc405fb608b5
+    stateFingerprint: 09d5d9ff9c8334e84d4ff0d26765f4d592f24d30ddea3c5befce9eff8a636197
     path: apps/web/src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT
@@ -15450,9 +15606,9 @@ files:
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-768A7FCC425B
     pathHash: 7a9a6e9165cb5eb707c60f935fec00be39cf783fd68b20ea1db0ef5734950c15
-    contentHash: bdf9e0bef8e9e01173b138f93b413d35c34a30d4f838bc2fcdf397947183faa0
+    contentHash: e756426742de13963d127a022cf7566b85ed567c48492f49abe0617a01bbc8e1
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 31153e881891e522ec7b7022b9d1a09f137b6912c9702574d1e9b71c1fd7248d
+    stateFingerprint: 31f0d30bf0b47c9c1b01850e944cc1e0c78809bbb003b95125b79cf03b53f568
     path: apps/web/src/app/views/canvas/canvasWorkbenchTabs.test.ts
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT
@@ -15476,9 +15632,9 @@ files:
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
   - fileId: F-88DFC51AFE68
     pathHash: 9f4e737e2d78e6fda48df72da81e0185b3da1d0f18d46dc36561e3a2d646c7f6
-    contentHash: 5dd759d35f6f88270aa163f4d7f05a5c2891c84b049230515efff2d8645886a0
+    contentHash: 85ba5ba73ba382d362d4656017c233e7ba638af6d5563be414e3434926b6b818
     governanceHash: 17b9458eb491785470127e84e01e837244221c4479c7af2c70c15b49bb9cbb20
-    stateFingerprint: 523730a831024660f61cd5f99cb26e5726d5f975ca859c66682158f57aeaa6a5
+    stateFingerprint: aec9f057e2ed863e86b9c7801e521dada82df0d9a84f0824006c6202082bfb48
     path: apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts
     owningUnit: SYS-WEB-ROOT
     rootUnit: SYS-DVT

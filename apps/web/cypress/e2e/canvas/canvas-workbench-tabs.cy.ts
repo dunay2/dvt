@@ -1,3 +1,4 @@
+/** Owned concern: verify Canvas workbench tab placement and text-only visual posture in browser. */
 import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
 import { stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
@@ -46,12 +47,51 @@ function assertGlobalWorkbenchRoutesAreAbsent(): void {
 }
 
 function assertCanvasWorkbenchTabsAreVisible(): void {
-  cy.get('#app-loading-screen').should('not.exist');
+  cy.get('body').then(($body) => {
+    expect($body.find('#app-loading-screen:visible')).to.have.length(0);
+  });
   cy.get('[data-slot="canvas-workbench-tab-strip"]').within(() => {
     for (const label of WORKBENCH_TAB_LABELS) {
       cy.contains('button', label).should('be.visible');
     }
   });
+}
+
+function assertCanvasWorkbenchTabsAreTextOnly(): void {
+  cy.get('[data-slot="canvas-workbench-tab-strip"]').then(($strip) => {
+    const tabTriggers = Array.from(
+      $strip[0].querySelectorAll<HTMLElement>('[data-slot="canvas-workbench-tab-trigger"]')
+    );
+
+    for (const tab of tabTriggers) {
+      expect(tab.querySelector('svg'), tab.textContent ?? 'tab').to.equal(null);
+      expect(tab.querySelectorAll('span'), tab.textContent ?? 'tab').to.have.length(1);
+    }
+  });
+}
+
+function assertShellWorkspaceContextIsRelocated(): void {
+  cy.get('[data-slot="shell-top-bar"]').within(() => {
+    cy.get('[data-slot="shell-project-identity-badge"]').should('be.visible');
+    cy.get('[data-slot="shell-project-identity-env"]').invoke('text').should('not.be.empty');
+    cy.get('[data-slot="shell-workspace-context-trigger"]').should('be.visible');
+    cy.get('[data-slot="shell-workspace-selectors"]').should('not.exist');
+    cy.get('[role="combobox"]').should('not.exist');
+  });
+
+  cy.get('[data-slot="shell-workspace-context-trigger"]').click();
+  cy.get('[data-slot="shell-workspace-context-menu"]').within(() => {
+    cy.get('[data-slot="shell-workspace-context-details"]').should('be.visible');
+    cy.get('[data-slot="shell-workspace-tenant-context"]').should('be.visible');
+    cy.get('[aria-label="Tenant scope (read only)"]').should('be.visible');
+    cy.get('[aria-label="Project scope (read only)"]').should('be.visible');
+    cy.get('[aria-label="Environment scope (read only)"]').should('be.visible');
+    cy.get('[role="combobox"]').should('not.exist');
+    cy.contains('Tenant').should('be.visible');
+    cy.contains('Project').should('be.visible');
+    cy.contains('Environment').should('be.visible');
+  });
+  cy.get('body').type('{esc}');
 }
 
 function assertCanvasWorkbenchTabsAreHeaderScoped(): void {
@@ -105,7 +145,9 @@ describe('Canvas workbench tabs', () => {
       visitCanvasWorkbench();
 
       assertGlobalWorkbenchRoutesAreAbsent();
+      assertShellWorkspaceContextIsRelocated();
       assertCanvasWorkbenchTabsAreVisible();
+      assertCanvasWorkbenchTabsAreTextOnly();
       assertCanvasWorkbenchTabsAreHeaderScoped();
       cy.get('.react-flow').should('be.visible');
 
@@ -125,7 +167,9 @@ describe('Canvas workbench tabs', () => {
     visitCanvasWorkbench();
 
     assertGlobalWorkbenchRoutesAreAbsent();
+    assertShellWorkspaceContextIsRelocated();
     assertCanvasWorkbenchTabsAreVisible();
+    assertCanvasWorkbenchTabsAreTextOnly();
     assertCanvasWorkbenchTabsAreHeaderScoped();
     cy.get('.react-flow').should('be.visible');
 

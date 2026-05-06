@@ -25,8 +25,6 @@ export function CanvasWorkbenchTabStrip({
       <Tabs value={tabsState.activeTabId} className="min-w-max flex-none">
         <TabsList className={cn(routeWorkbenchTabListClassName, 'h-auto min-w-max gap-1 p-1')}>
           {tabsState.tabs.map((tab) => {
-            const Icon = tab.icon;
-
             return (
               <TabsTrigger
                 key={tab.id}
@@ -38,7 +36,6 @@ export function CanvasWorkbenchTabStrip({
                 )}
                 onClick={() => onSelectTab(tab.id)}
               >
-                <Icon className="size-4 shrink-0" />
                 <span className="text-[13px] font-medium whitespace-nowrap">{tab.label}</span>
               </TabsTrigger>
             );

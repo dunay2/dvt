@@ -1,6 +1,8 @@
+/** Owned concern: compose global shell top-bar context, health, and command menus. */
 import { useLocation } from 'react-router';
 
 import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
+import { buildProjectIdentityBadge } from '../shell/projectIdentityBadge';
 import { usePlatformConnectionStore } from '../stores/platformConnectionStore';
 import { useSessionStore } from '../stores/sessionStore';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
@@ -10,8 +12,9 @@ import { resolveShellTopBarCopy } from './shell/copy';
 import { ShellConnectionStatus } from './shell/ShellConnectionStatus';
 import { ShellGitRef } from './shell/ShellGitRef';
 import { ShellMenu } from './shell/ShellMenu';
+import { ShellProjectIdentityBadge } from './shell/ShellProjectIdentityBadge';
+import { ShellWorkspaceContextMenu } from './shell/ShellWorkspaceContextMenu';
 import type { ShellTopBarProps } from './shell/types';
-import { ShellWorkspaceSelectors } from './shell/ShellWorkspaceSelectors';
 import { TooltipProvider } from './ui/tooltip';
 
 const workspaceBootstrap = resolveWorkspaceBootstrapConfig();
@@ -25,9 +28,6 @@ export function ShellTopBar({
   const selectedTenant = useSessionStore((state) => state.tenantId);
   const selectedProject = useSessionStore((state) => state.projectId);
   const selectedEnvironment = useSessionStore((state) => state.environmentId);
-  const setSelectedTenant = useSessionStore((state) => state.setTenantId);
-  const setSelectedProject = useSessionStore((state) => state.setProjectId);
-  const setSelectedEnvironment = useSessionStore((state) => state.setEnvironmentId);
   const connectionStatus = usePlatformConnectionStore((state) => state.connectionStatus);
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const toggleFocusMode = useUiLayoutStore((state) => state.toggleFocusMode);
@@ -43,6 +43,12 @@ export function ShellTopBar({
   const setCanvasPalette = useUiLayoutStore((state) => state.setCanvasPalette);
   const effectiveConnectionStatus = connectionStateOverride ?? connectionStatus;
   const copy = resolveShellTopBarCopy();
+  const projectIdentityBadge = buildProjectIdentityBadge({
+    workspaceBootstrap,
+    selectedTenant,
+    selectedProject,
+    selectedEnvironment,
+  });
 
   return (
     <TooltipProvider>
@@ -52,15 +58,8 @@ export function ShellTopBar({
           <span className={topAppBarClasses.brand}>Raven</span>
         </div>
 
-        <ShellWorkspaceSelectors
-          workspaceBootstrap={workspaceBootstrap}
-          selectedTenant={selectedTenant}
-          selectedProject={selectedProject}
-          selectedEnvironment={selectedEnvironment}
-          setSelectedTenant={setSelectedTenant}
-          setSelectedProject={setSelectedProject}
-          setSelectedEnvironment={setSelectedEnvironment}
-        />
+        <ShellProjectIdentityBadge badge={projectIdentityBadge} />
+        <ShellWorkspaceContextMenu badge={projectIdentityBadge} />
         <ShellGitRef
           gitBranch={workspaceBootstrap.gitBranch}
           gitSha={workspaceBootstrap.gitSha}

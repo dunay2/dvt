@@ -184,6 +184,86 @@ Rules for this seam:
 - the rail consumes render-ready `{ to, label, icon }` items and stays focused
   on navigation chrome and routing behavior.
 
+## Shell Workspace Context Component
+
+The shell workspace context is the bounded replacement for tenant, project, and
+environment dropdowns that previously consumed the main top bar.
+
+Workspace context is breadcrumb-style read-only content on the main screen.
+Tenant, project, and environment scope are read-only inside an active project
+context. Project changes belong to a separate governed project-selection
+screen, not to the App Shell top bar or Canvas workbench.
+
+The dedicated local component guide is
+[Shell Workspace Context Component](./shell-workspace-context-component.md).
+Scenario coverage lives in
+[Shell Workspace Context User Stories](./shell-workspace-context-user-stories.md).
+
+It uses a Fowler Presentation Model split:
+
+- `buildProjectIdentityBadge(...)` resolves workspace scope into read-only
+  labels;
+- `ShellProjectIdentityBadge` renders those labels without mutation affordance;
+- `ShellWorkspaceContextMenu` owns the on-demand read-only shell context
+  surface;
+- `ShellWorkspaceContextDetails` renders tenant, project, and environment as
+  read-only context fields.
+
+### Public API
+
+| API                            | Kind          | Owner                   | Contract                                                                      |
+| ------------------------------ | ------------- | ----------------------- | ----------------------------------------------------------------------------- |
+| `ProjectIdentityBadge`         | read model    | Web shell presentation  | Carries tenant, project, environment, compact id, slug, and draft-scope label |
+| `buildProjectIdentityBadge`    | query adapter | Web shell presentation  | Resolves granted option labels and falls back to raw ids without fabricating  |
+| `ShellProjectIdentityBadge`    | passive view  | Shell top-bar rendering | Displays read-only project identity in the persistent shell bar               |
+| `ShellWorkspaceContextMenu`    | details UI    | Shell context display   | Makes read-only workspace context reachable from an on-demand surface         |
+| `ShellWorkspaceContextDetails` | passive view  | Shell context display   | Displays tenant, project, and environment without mutation controls           |
+
+### Invariants
+
+- the main top bar renders no `role="combobox"` workspace controls;
+- `ProjectIdentityBadge` is read-only and cannot dispatch session commands;
+- Tenant, project, and environment scope are read-only inside an active project
+  context;
+- the menu must not expose tenant, project, or environment comboboxes;
+- the menu must not create a parallel auth, RBAC, tenant-admin,
+  project-selection, or environment-selection rail;
+- Git context remains read-only in this slice and does not become a branch
+  command surface.
+
+### Transitions
+
+```mermaid
+stateDiagram-v2
+  [*] --> ResolvedScope
+  ResolvedScope --> TopBarBadge: buildProjectIdentityBadge
+  TopBarBadge --> ScopeMenuClosed: render read-only context
+  ScopeMenuClosed --> ContextMenuOpen: user opens Context
+  ContextMenuOpen --> ReadOnlyDetails: show tenant/project/environment
+  ReadOnlyDetails --> ScopeMenuClosed: close Context
+```
+
+### Consumers
+
+| Consumer                   | Use                                                                 |
+| -------------------------- | ------------------------------------------------------------------- |
+| `ShellTopBar`              | Composes badge, context menu, health, Git reference, and View menu  |
+| Canvas workbench route     | Reads the same session scope through its existing query/controller  |
+| Runs and other workbenches | React to session-scope changes through their existing route queries |
+| Cypress posture proof      | Verifies badge presence, no comboboxes, and read-only details       |
+
+### Component Flow
+
+```mermaid
+flowchart LR
+  Store["sessionStore scope"] --> Model["buildProjectIdentityBadge"]
+  Config["WorkspaceBootstrapConfig"] --> Model
+  Model --> Badge["ShellProjectIdentityBadge"]
+  Model --> Menu["ShellWorkspaceContextMenu"]
+  Menu --> Details["ShellWorkspaceContextDetails"]
+  Details --> Context["tenant / project / environment read-only fields"]
+```
+
 ## UX Rules
 
 - the top bar stays visible across all routed views;
@@ -274,3 +354,5 @@ state must be placed in the smallest named slice that owns the concern.
 - [Data Source Service Boundary](./data-source-service-boundary.md)
 - [Library And Open-Source Reference Stack](../library-and-open-source-reference-stack.md)
 - [Canvas Workbench Tabs Component](../graph/canvas-workbench-tabs-component.md)
+- [Shell Workspace Context Component](./shell-workspace-context-component.md)
+- [Shell Workspace Context User Stories](./shell-workspace-context-user-stories.md)

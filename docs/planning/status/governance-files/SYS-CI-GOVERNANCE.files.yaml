@@ -2,7 +2,7 @@ version: 1
 shardId: SYS-CI-GOVERNANCE
 generatedFrom: git ls-files plus untracked non-ignored local files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-fileCount: 199
+fileCount: 201
 files:
   - fileId: F-80B99D37F6EB
     pathHash: 80447532cb5366e8cb4a64e0bfee2f37470cbbe4cd91304510c8bf02e79a976b
@@ -1385,6 +1385,56 @@ files:
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
     stateFingerprint: b14518b9a438a1f258bd1dbc775562ea822eb8256c242e24964877bb1de12a6f
     path: scripts/check-markdown-locations.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-2DFD1EEA72D7
+    pathHash: 874611cb9ef6599dfd410368c4e705e9e084000bd654c6c9631a2df16b41f05b
+    contentHash: c0df205865ee87ad49f4af40bb949772cdcd5adf0a7c05fe27e5f7e70b13377d
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: a254ec00a77004205eea7da172188e35184bd9d647e932004002c4d64aeec924
+    path: scripts/closeout-changed.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-8EE0B5596066
+    pathHash: 742a8906ab71efd2443ae07548ed7508cdb64cfeed1d1e218be8348c599d3c0c
+    contentHash: 9eca5074761bfe80611465ac46567a63ef41b7a556dd5f2cb32e77b3682d0631
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: adcd2d3707a0c546f12afaa9c56616705bf8227de731990429bb5e680cc41f9e
+    path: scripts/closeout-changed.test.cjs
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT

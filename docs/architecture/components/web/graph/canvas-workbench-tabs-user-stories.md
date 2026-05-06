@@ -2,7 +2,7 @@
 title: Canvas Workbench Tabs User Stories
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-05-04
+last_reviewed: 2026-05-06
 planning_type: architecture
 ---
 
@@ -17,6 +17,7 @@ aligned with:
 - `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
 - `docs/architecture/components/web/graph/canvas-workbench-tabs-component.md`
 - `buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md`
+- `buzon/20260506-codex-fowler-canvas-workbench-stage-1-text-only-tabs-review.md`
 
 ## User Stories
 
@@ -121,6 +122,55 @@ Acceptance:
 - labels are not truncated in the desktop workbench viewport;
 - Cypress proves `scrollWidth <= clientWidth + tolerance` for each label.
 
+### US-CANVAS-WORKBENCH-010 - Stage 1 Text-Only Tabs
+
+As a Canvas user, I want the Stage 1 workbench tabs to render as text-only
+labels so plugin icons cannot compete with the graph canvas.
+
+Acceptance:
+
+- `CanvasWorkbenchTabsReadModel` exposes labels, routes, active state, scope,
+  and availability only;
+- `CanvasWorkbenchTabStrip` renders one visible label span per tab trigger;
+- the tab strip does not render `svg`, `Icon`, or `tab.icon` paths.
+
+### US-CANVAS-WORKBENCH-011 - Plugin Icon Isolation
+
+As a plugin author, I want placement icon metadata to remain available to
+surfaces that intentionally render icons without forcing icons into Canvas
+workbench tabs.
+
+Acceptance:
+
+- plugin placement may still carry icon metadata;
+- `ListCanvasWorkbenchTabs` does not expose that metadata in the tab read
+  model;
+- future icon-bearing surfaces must create their own read model instead of
+  reusing `CanvasWorkbenchTabsReadModel`.
+
+### US-CANVAS-WORKBENCH-012 - Semantic Component Guide
+
+As a reviewer, I want a local component guide for the tab strip so public API,
+invariants, transitions, and consumers can be reviewed without reading the
+entire Stage 1 proposal.
+
+Acceptance:
+
+- the guide names `CanvasWorkbenchTabStrip`, its props, and its consumer path;
+- the guide documents text-only and passive-view invariants;
+- the guide includes transition and sequence diagrams.
+
+### US-CANVAS-WORKBENCH-013 - Semantic Architecture Guard
+
+As a maintainer, I want the architecture test to validate semantics, not only
+barrel thinness or source-string absence.
+
+Acceptance:
+
+- the guard requires the local component guide and Stage 1 mailbox review;
+- the guard requires owned-concern headers on the local tab proof modules;
+- the guard verifies the text-only read model and browser proof vocabulary.
+
 ## Scenario Matrix
 
 | Story                   | Rail                                 | DDD owner                               | Primary proof                              | Negative proof                                     |
@@ -134,6 +184,10 @@ Acceptance:
 | US-CANVAS-WORKBENCH-007 | `ResolveCanvasWorkbenchContext`      | `CanvasWorkbenchContext`                | `canvasWorkbenchRouteState.test.ts`        | unknown tab fails closed                           |
 | US-CANVAS-WORKBENCH-008 | `ListShellNavigationItems`           | `ShellNavigationReadModel`              | `shellNavigationModel.test.ts`             | workbench placement rejected                       |
 | US-CANVAS-WORKBENCH-009 | `VerifyCanvasWorkbenchVisualPosture` | `CanvasWorkbenchVisualPostureReadModel` | `canvas-workbench-tabs.cy.ts`              | truncated labels fail Cypress                      |
+| US-CANVAS-WORKBENCH-010 | `ListCanvasWorkbenchTabs`            | `CanvasWorkbenchTabsReadModel`          | `canvasWorkbenchTabs.test.ts`              | icon render data absent from read model            |
+| US-CANVAS-WORKBENCH-011 | `ListCanvasWorkbenchTabs`            | `CanvasWorkbenchTabsReadModel`          | `canvasWorkbenchTabs.architecture.test.ts` | plugin icon metadata cannot leak into tab strip    |
+| US-CANVAS-WORKBENCH-012 | `none - docs contract`               | `CanvasWorkbenchTabStrip`               | `canvasWorkbenchTabs.architecture.test.ts` | missing API/invariant/transition docs fail guard   |
+| US-CANVAS-WORKBENCH-013 | `VerifyCanvasWorkbenchVisualPosture` | `CanvasWorkbenchVisualPostureReadModel` | `canvasWorkbenchTabs.architecture.test.ts` | missing semantic proof vocabulary fails guard      |
 
 ## TDD Traceability
 
@@ -143,3 +197,6 @@ Acceptance:
   posture.
 - The label-readability regression was caught red by the enhanced Cypress
   geometry assertion before the tab strip layout was made non-truncating.
+- The Stage 1 semantic guard requires the tab-strip component guide, text-only
+  stories, mailbox analysis, owned-concern docblocks, and browser no-icon
+  proof to stay aligned.

@@ -510,7 +510,7 @@ tasks:
     blocking: reporting-only
     reason: Documents track drift or require disposition and need alignment with active units.
     fileCount: 0
-    documentCount: 264
+    documentCount: 266
     files: []
     documents:
       - path: docs/planning/closeouts/20260315-architecture-components-map-closeout.md
@@ -901,6 +901,9 @@ tasks:
         classification: tracks drift
       - path: docs/planning/gaps/index.md
         classification: tracks drift
+      - path: >-
+          docs/planning/proposals/mandatory/governance-and-docs/governed-changed-slice-closeout-plan-20260506.md
+        classification: tracks drift
       - path: docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md
         classification: tracks drift
       - path: docs/planning/reviews/20260407-f04-f-capabilities-port-hard-qa-review.md
@@ -1101,6 +1104,8 @@ tasks:
         classification: tracks drift
       - path: docs/reviews/prioritized-gaps-20260319.md
         classification: tracks drift
+      - path: docs/runbooks/governed-changed-slice-closeout-20260506.md
+        classification: tracks drift
     expectedValidation:
       - pnpm docs:governance:remediation-queue:check
       - pnpm docs:governance:coverage-report:check
@@ -1117,7 +1122,7 @@ tasks:
     blocking: reporting-only
     reason: Documents track drift or require disposition and need alignment with active units.
     fileCount: 0
-    documentCount: 45
+    documentCount: 46
     files: []
     documents:
       - path: docs/planning/closeouts/20260316-engine-docs-current-state-closeout.md
@@ -1186,6 +1191,8 @@ tasks:
       - path: docs/planning/reviews/ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md
         classification: tracks drift
       - path: docs/planning/reviews/ci-and-delivery/20260422-environment-configuration-audit-review.md
+        classification: tracks drift
+      - path: docs/planning/reviews/ci-and-delivery/20260506-ci-build-audit-review.md
         classification: tracks drift
       - path: docs/planning/reviews/ci-and-delivery/index.md
         classification: tracks drift
