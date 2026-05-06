@@ -1,0 +1,237 @@
+---
+title: Governed Changed Slice Closeout Plan
+status: Accepted
+owner: Engineering / CI Governance / Docs
+last_reviewed: 2026-05-06
+planning_type: proposal
+---
+
+# Governed Changed Slice Closeout Plan
+
+## Summary
+
+This slice adds a small closeout helper so governed local changes do not rely on
+an agent or contributor remembering the generated-doc, governance-hash,
+workboard, diff-check, conflict-marker, and prepush sequence by hand.
+
+The helper does not relax any gate. It runs the existing gates in a deterministic
+order and records the planned sequence before execution.
+
+## Governing Sources
+
+- `AGENTS.md`
+- `docs/planning/status/governance-document-rule-inventory.md`
+- `docs/guides/ai-work-protocol.md`
+- `docs/guides/testing-and-ci-capabilities.md`
+- `docs/architecture/command-query-rail-governance.md`
+- `docs/architecture/fowler-opportunity-planning-governance.md`
+- `docs/planning/state/planning-control-tower.md`
+
+## Scope
+
+In scope:
+
+- add `pnpm closeout:changed`;
+- plan generators from the local changed-file set;
+- run `docs:sync`, workboard generation, governance regeneration,
+  `git diff --check`, conflict-marker scan, and `pnpm verify:prepush`;
+- register the closeout helper regression test in the prepush gate;
+- add a runbook entry documenting usage and the untracked-doc caveat;
+- prove the planner with `node --test scripts/closeout-changed.test.cjs`.
+
+Out of scope:
+
+- changing the semantics of existing verification commands;
+- bypassing hooks or checks;
+- auto-committing, pushing, or creating PRs;
+- modifying apps, packages, contracts, adapters, or workflows.
+
+## Design Notes
+
+`pnpm closeout:changed --dry-run` prints the changed files and planned steps.
+`pnpm closeout:changed` executes them.
+
+The governance regeneration block includes a final file-component and
+fingerprint stabilization pass because some generated governance artifacts are
+inputs to later governance outputs. The helper makes that fixed ordering
+explicit instead of relying on memory.
+
+## Feature Mechanization Manifest
+
+```feature-mechanization
+version: 1
+featureId: GOVERNED-CHANGED-SLICE-CLOSEOUT
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/governed-changed-slice-closeout-plan-20260506.md
+componentGuides:
+  - docs/runbooks/governed-changed-slice-closeout-20260506.md
+userStories:
+  - docs/runbooks/governed-changed-slice-closeout-20260506.md
+  - docs/planning/proposals/mandatory/governance-and-docs/governed-changed-slice-closeout-plan-20260506.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/guides/testing-and-ci-capabilities.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+allowedImplementationSurfaces:
+  - package.json
+  - scripts/closeout-changed.cjs
+  - scripts/closeout-changed.test.cjs
+  - docs/runbooks/governed-changed-slice-closeout-20260506.md
+  - docs/runbooks/index.md
+  - docs/planning/proposals/mandatory/governance-and-docs/governed-changed-slice-closeout-plan-20260506.md
+  - docs/planning/proposals/index.md
+  - docs/planning/index.md
+  - docs/planning/status/**
+  - docs/.manifest.json
+forbiddenImplementationSurfaces:
+  - apps/**
+  - packages/**
+  - specs/**
+  - .github/workflows/**
+commandQueryRails:
+  - name: BuildChangedSliceCloseoutPlan
+    type: query
+    dddOwner: ChangedSliceCloseoutPlan
+  - name: RunChangedSliceCloseout
+    type: command
+    dddOwner: ChangedSliceCloseoutGate
+  - name: ScanChangedFilesForConflictMarkers
+    type: query
+    dddOwner: ChangedTextFileSet
+domainObjects:
+  - name: ChangedSliceCloseoutPlan
+    type: read-model
+    owner: CI governance
+  - name: ChangedSliceCloseoutGate
+    type: policy
+    owner: CI governance
+  - name: ChangedTextFileSet
+    type: read-model
+    owner: CI governance
+fowlerSignals:
+  - Scripted Process
+  - Single Source of Truth
+  - Explicit Gate
+  - Fail Fast
+architectureGuards:
+  - node --test scripts/closeout-changed.test.cjs
+  - pnpm docs:feature-mechanization:implementation
+cypressFlows:
+  - not-applicable: CI governance helper has no browser workflow.
+completionGate:
+  - node --test scripts/closeout-changed.test.cjs
+  - pnpm test:closeout-changed
+  - pnpm closeout:changed
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: closeout-plan-contract
+    redTest: node --test scripts/closeout-changed.test.cjs
+    expectedFailure: closeout helper module does not exist yet.
+    patchSurfaces:
+      - scripts/closeout-changed.cjs
+      - scripts/closeout-changed.test.cjs
+      - package.json
+    greenTest: node --test scripts/closeout-changed.test.cjs
+  - id: governance-stabilization-pass
+    redTest: pnpm closeout:changed
+    expectedFailure: a single governance generation pass can leave file/component indexes stale.
+    patchSurfaces:
+      - scripts/closeout-changed.cjs
+      - scripts/closeout-changed.test.cjs
+      - docs/runbooks/governed-changed-slice-closeout-20260506.md
+    greenTest: pnpm closeout:changed
+symbolDefaults: &closeoutSymbolDefaults
+  dddOwner: ChangedSliceCloseoutGate
+  cqRails:
+    - BuildChangedSliceCloseoutPlan
+    - RunChangedSliceCloseout
+    - ScanChangedFilesForConflictMarkers
+  fowlerSignals:
+    - Scripted Process
+    - Explicit Gate
+    - Fail Fast
+  architectureGuard: node --test scripts/closeout-changed.test.cjs
+  cypressCoverage: "not-applicable: CI governance helper has no browser workflow."
+  unitTests:
+    - node --test scripts/closeout-changed.test.cjs
+symbols:
+  - <<: *closeoutSymbolDefaults
+    name: fs
+    path: scripts/closeout-changed.cjs
+  - <<: *closeoutSymbolDefaults
+    name: path
+    path: scripts/closeout-changed.cjs
+  - <<: *closeoutSymbolDefaults
+    name: repoRoot
+    path: scripts/closeout-changed.cjs
+  - <<: *closeoutSymbolDefaults
+    name: GOVERNANCE_REGEN_STEPS
+    path: scripts/closeout-changed.cjs
+  - <<: *closeoutSymbolDefaults
+    name: GOVERNANCE_STABILIZE_STEPS
+    path: scripts/closeout-changed.cjs
+  - <<: *closeoutSymbolDefaults
+    name: normalizeChangedFiles
+    path: scripts/closeout-changed.cjs
+  - <<: *closeoutSymbolDefaults
+    name: hasDocsChange
+    path: scripts/closeout-changed.cjs
+  - <<: *closeoutSymbolDefaults
+    name: hasLaneRegistryChange
+    path: scripts/closeout-changed.cjs
+  - <<: *closeoutSymbolDefaults
+    name: hasWorkspaceSourceChange
+    path: scripts/closeout-changed.cjs
+  - <<: *closeoutSymbolDefaults
+    name: pushStepOnce
+    path: scripts/closeout-changed.cjs
+  - <<: *closeoutSymbolDefaults
+    name: listCloseoutChangedFiles
+    path: scripts/closeout-changed.cjs
+  - <<: *closeoutSymbolDefaults
+    name: buildCloseoutPlan
+    path: scripts/closeout-changed.cjs
+  - <<: *closeoutSymbolDefaults
+    name: commandLabel
+    path: scripts/closeout-changed.cjs
+  - <<: *closeoutSymbolDefaults
+    name: isProbablyText
+    path: scripts/closeout-changed.cjs
+  - <<: *closeoutSymbolDefaults
+    name: readChangedTextFiles
+    path: scripts/closeout-changed.cjs
+  - <<: *closeoutSymbolDefaults
+    name: assertNoConflictMarkers
+    path: scripts/closeout-changed.cjs
+  - <<: *closeoutSymbolDefaults
+    name: runCommand
+    path: scripts/closeout-changed.cjs
+  - <<: *closeoutSymbolDefaults
+    name: executeCloseoutPlan
+    path: scripts/closeout-changed.cjs
+  - <<: *closeoutSymbolDefaults
+    name: parseArgs
+    path: scripts/closeout-changed.cjs
+  - <<: *closeoutSymbolDefaults
+    name: main
+    path: scripts/closeout-changed.cjs
+  - <<: *closeoutSymbolDefaults
+    name: assert
+    path: scripts/closeout-changed.test.cjs
+  - <<: *closeoutSymbolDefaults
+    name: fs
+    path: scripts/closeout-changed.test.cjs
+  - <<: *closeoutSymbolDefaults
+    name: os
+    path: scripts/closeout-changed.test.cjs
+  - <<: *closeoutSymbolDefaults
+    name: path
+    path: scripts/closeout-changed.test.cjs
+  - <<: *closeoutSymbolDefaults
+    name: test
+    path: scripts/closeout-changed.test.cjs
+```

@@ -47,7 +47,7 @@ unit.
 
 ## Counts
 
-- Documents indexed: 1492
+- Documents indexed: 1494
 
 ### By Classification
 
@@ -55,7 +55,7 @@ unit.
 - `governs unit`: 553
 - `historical/reference only`: 254
 - `proves evidence`: 154
-- `tracks drift`: 425
+- `tracks drift`: 427
 - `tracks risk`: 32
 
 ### By Subject Unit
@@ -64,7 +64,7 @@ unit.
 - `SYS-API`: 47
 - `SYS-CI-GOVERNANCE`: 18
 - `SYS-CONTRACTS`: 157
-- `SYS-DOCS-GOVERNANCE`: 674
+- `SYS-DOCS-GOVERNANCE`: 676
 - `SYS-OBSERVABILITY`: 24
 - `SYS-PLANNER`: 73
 - `SYS-PLANSTORE`: 31

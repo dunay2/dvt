@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - documentation governance
 childrenRequired: true
-fileCount: 1752
+fileCount: 1754
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -9199,6 +9199,14 @@ files:
     isDrift: false
     isLegacy: false
   - path: >-
+      docs/planning/proposals/mandatory/governance-and-docs/governed-changed-slice-closeout-plan-20260506.md
+    fileId: F-42AD27333924
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
       docs/planning/proposals/mandatory/governance-and-docs/local-changed-files-gate-hardening-plan-20260503.md
     fileId: F-D47D38349445
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -12595,6 +12603,13 @@ files:
     isLegacy: false
   - path: docs/runbooks/gap-5-archive-operations-runbook-20260319.md
     fileId: F-0F65167027AD
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/runbooks/governed-changed-slice-closeout-20260506.md
+    fileId: F-9B5B9E93448F
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
