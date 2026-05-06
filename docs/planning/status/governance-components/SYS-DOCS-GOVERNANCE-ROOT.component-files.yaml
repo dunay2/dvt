@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - documentation governance
 childrenRequired: true
-fileCount: 1754
+fileCount: 1753
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -8928,6 +8928,14 @@ files:
     isDrift: false
     isLegacy: false
   - path: >-
+      docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-1-chrome-simplification-implementation-plan-20260506.md
+    fileId: F-BCC1F9B3F745
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-tabs-placement-design-plan-20260503.md
     fileId: F-98488AC50DC6
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -9193,14 +9201,6 @@ files:
   - path: >-
       docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md
     fileId: F-6B7109FAC413
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: >-
-      docs/planning/proposals/mandatory/governance-and-docs/governed-changed-slice-closeout-plan-20260506.md
-    fileId: F-42AD27333924
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -12603,13 +12603,6 @@ files:
     isLegacy: false
   - path: docs/runbooks/gap-5-archive-operations-runbook-20260319.md
     fileId: F-0F65167027AD
-    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
-    unitStatus: coverage-required
-    governanceState: coverage-required
-    isDrift: false
-    isLegacy: false
-  - path: docs/runbooks/governed-changed-slice-closeout-20260506.md
-    fileId: F-9B5B9E93448F
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

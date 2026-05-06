@@ -41,6 +41,7 @@ verification.
 - `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
 - `docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md`
 - `docs/architecture/components/web/graph/canvas-layout-persistence-component.md`
+- `docs/architecture/components/api/protected-runtime-command-query-rail-design.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md`
@@ -333,9 +334,13 @@ version, validation, error, and compatibility rules.
 - Stage 3 is an anti-corruption and value-object boundary: imported project
   snapshots need validation before becoming workspace authority.
 
-## First Implementation Plan To Write Next
+## Stage 1 Implementation Plan
 
-The next implementation plan should cover Stage 1 only.
+The Stage 1 implementation plan is:
+
+- `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-1-chrome-simplification-implementation-plan-20260506.md`
+
+That implementation plan covers Stage 1 only.
 
 It should include:
 
@@ -345,6 +350,8 @@ It should include:
 - architecture and Cypress proof for the UX invariants, progressive disclosure,
   command palette, Add palette pinning, responsive behavior, accessibility, and
   implementation boundary rules that Stage 1 touches;
+- frontend folder-structure guardrails so shell chrome, workbench primitives,
+  Canvas route code, stores, and UI primitives land in their owning folders;
 - Cypress proof for Canvas tab readability and reachable scope selection;
 - no backend, save, export, or import changes;
 - governance regeneration and `pnpm verify:prepush`.
