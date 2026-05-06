@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - documentation governance
 childrenRequired: true
-fileCount: 1758
+fileCount: 1759
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -1866,6 +1866,13 @@ files:
     isLegacy: false
   - path: docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
     fileId: F-8085D63C79AA
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/web/graph/canvas-workbench-tab-strip-component.md
+    fileId: F-448981A33C8D
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

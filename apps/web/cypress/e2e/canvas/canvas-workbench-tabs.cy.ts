@@ -1,3 +1,4 @@
+/** Owned concern: verify Canvas workbench tab placement and text-only visual posture in browser. */
 import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
 import { stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {

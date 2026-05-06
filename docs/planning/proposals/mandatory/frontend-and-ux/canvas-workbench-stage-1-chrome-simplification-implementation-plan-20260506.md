@@ -537,10 +537,12 @@ componentGuides:
   - docs/architecture/components/web/main-workspace-views-and-ux.md
   - docs/architecture/components/web/ux-implementation-guide.md
   - docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
+  - docs/architecture/components/web/graph/canvas-workbench-tab-strip-component.md
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
 userStories:
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-1-chrome-simplification-implementation-plan-20260506.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md
+  - docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -562,7 +564,10 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/main-workspace-views-and-ux.md
   - docs/architecture/components/web/ux-implementation-guide.md
   - docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
+  - docs/architecture/components/web/graph/canvas-workbench-tab-strip-component.md
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
+  - docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md
+  - buzon/20260506-codex-fowler-canvas-workbench-stage-1-text-only-tabs-review.md
   - docs/planning/state/agent-lane-e.yaml
   - docs/planning/state/agent-lane-e.md
   - docs/planning/state/execution-workboard.md
@@ -698,6 +703,18 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/useCanvasWorkbenchTabStripPresenter.ts
       - docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
     greenTest: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.test.ts src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
+  - id: stage-1-semantic-tab-strip-hardening
+    redTest: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
+    expectedFailure: CanvasWorkbenchTabStrip lacks a local component guide or owned-concern semantic guards.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/canvasWorkbenchTabs.test.ts
+      - apps/web/src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
+      - apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+      - docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
+      - docs/architecture/components/web/graph/canvas-workbench-tab-strip-component.md
+      - docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md
+      - buzon/20260506-codex-fowler-canvas-workbench-stage-1-text-only-tabs-review.md
+    greenTest: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
   - id: shell-context-relocation
     redTest: pnpm --filter @dvt/web test -- TopAppBar
     expectedFailure: Scope selectors still render as main top-bar dropdown controls.
@@ -823,6 +840,21 @@ symbols:
     cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
     unitTests:
       - pnpm docs:feature-mechanization:implementation
+  - name: CanvasWorkbenchTabStripComponentGuide
+    path: docs/architecture/components/web/graph/canvas-workbench-tab-strip-component.md
+    dddOwner: CanvasWorkbenchTabStrip
+    cqRails:
+      - ListCanvasWorkbenchTabs
+      - SelectCanvasWorkbenchTab
+      - VerifyCanvasWorkbenchVisualPosture
+    fowlerSignals:
+      - Presentation Model
+      - Semantic Fitness Function
+      - Documentation drift
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
+    cypressCoverage: canvas-workbench-tabs.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
   - name: assertCanvasWorkbenchTabsAreTextOnly
     path: apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
     dddOwner: CanvasWorkbenchVisualPostureReadModel

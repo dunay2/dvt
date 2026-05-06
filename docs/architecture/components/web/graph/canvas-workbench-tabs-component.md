@@ -2,7 +2,7 @@
 title: Canvas Workbench Tabs Component
 status: Accepted
 owner: Frontend / Architecture
-last_reviewed: 2026-05-03
+last_reviewed: 2026-05-06
 planning_type: architecture
 ---
 
@@ -26,8 +26,10 @@ that does not make the route a global shell destination.
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
+- `docs/architecture/components/web/graph/canvas-workbench-tab-strip-component.md`
 - `docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md`
 - `buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md`
+- `buzon/20260506-codex-fowler-canvas-workbench-stage-1-text-only-tabs-review.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-tabs-placement-design-plan-20260503.md`
 
 ## Owned Concern
@@ -47,10 +49,14 @@ The component does not own:
 
 - C&Q catalog:
   `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
+- Local tab-strip guide:
+  `docs/architecture/components/web/graph/canvas-workbench-tab-strip-component.md`
 - User stories:
   `docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md`
 - Fowler mailbox:
   `buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md`
+- Stage 1 text-only mailbox:
+  `buzon/20260506-codex-fowler-canvas-workbench-stage-1-text-only-tabs-review.md`
 
 ## Public API
 
@@ -66,7 +72,7 @@ The component does not own:
 | `resolveCanvasWorkbenchTabSelectionCommand(args)` | `canvasWorkbenchRouteState.ts` | Command result for tab selection navigation.                           |
 | `CanvasWorkbenchTabsReadModel`                    | `canvasWorkbenchTabs.ts`       | Text-only render-ready tab model for the Canvas route.                 |
 | `buildCanvasWorkbenchTabsReadModel(args)`         | `canvasWorkbenchTabs.ts`       | Projects Graph plus enabled plugin tabs with active/unavailable state. |
-| `CanvasWorkbenchTabStrip`                         | `CanvasWorkbenchTabStrip.tsx`  | Passive tab-list renderer.                                             |
+| `CanvasWorkbenchTabStrip`                         | `CanvasWorkbenchTabStrip.tsx`  | Passive text-only tab-list renderer; see local component guide.        |
 | `CanvasWorkbenchTabPanel`                         | `CanvasWorkbenchTabPanel.tsx`  | Renders the selected Canvas tab view or unavailable recovery surface.  |
 
 ## Command And Query Rails
@@ -205,6 +211,18 @@ sequenceDiagram
   tab. The registry accepts one Canvas placement, projects it through
   `ListCanvasWorkbenchTabs`, and rejects duplicate tab IDs or shell placements
   in Canvas tab queries.
+- `US-CANVAS-WORKBENCH-010`: as a Canvas user, I see Stage 1 tabs as text-only
+  labels. Plugin icon metadata must not render in the Canvas workbench tab
+  strip.
+- `US-CANVAS-WORKBENCH-011`: as a plugin author, I can keep icon metadata for
+  icon-bearing surfaces without forcing icons into
+  `CanvasWorkbenchTabsReadModel`.
+- `US-CANVAS-WORKBENCH-012`: as a reviewer, I can inspect
+  `CanvasWorkbenchTabStrip` public API, invariants, transitions, and consumers
+  in a local component guide.
+- `US-CANVAS-WORKBENCH-013`: as a maintainer, the architecture guard validates
+  semantic tab-strip posture, not only barrel thinness or source-string
+  absence.
 
 ## Scenario Coverage Matrix
 
@@ -224,6 +242,10 @@ sequenceDiagram
 - User-visible scoped tabs:
   `SelectCanvasWorkbenchTab`, `CanvasWorkbenchTabStrip`,
   `CanvasWorkbenchTabPanel`, `canvas-workbench-tabs.cy.ts`.
+- Text-only tab-strip component contract:
+  `CanvasWorkbenchTabStrip`, `CanvasWorkbenchTabsReadModel`,
+  `canvas-workbench-tab-strip-component.md`,
+  `canvasWorkbenchTabs.architecture.test.ts`.
 - Semantic documentation guard:
   architecture governance, this component guide, owned-concern docblocks, and
   `canvasWorkbenchTabs.architecture.test.ts`.

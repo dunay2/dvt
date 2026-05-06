@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files docs
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-documentCount: 1498
+documentCount: 1499
 documents:
   - path: docs/CONTRIBUTING.md
     classification: governs unit
@@ -962,6 +962,10 @@ documents:
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-WEB
   - path: docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-WEB
+  - path: docs/architecture/components/web/graph/canvas-workbench-tab-strip-component.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-WEB

@@ -1,3 +1,4 @@
+/** Owned concern: prove Canvas workbench tab read-model projection semantics. */
 import { FileCode2, GitGraph } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
 
