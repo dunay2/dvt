@@ -2,7 +2,7 @@ lane_id: B
 title: Event Contract And Traceability
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-19'
+last_reviewed: '2026-05-06'
 goal: Stabilize event payload versioning and lineage wiring.
 expected_outcome:
   - event contracts are versioned
@@ -471,7 +471,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: RC-F2
     priority: P2
-    status: review
+    status: done
     objective: >-
       externalize adapter-postgres CI path patterns to
       tools/ci/policy/adapter-postgres-relevance.json and load it from both test.yml and
@@ -480,16 +480,20 @@ tasks:
     target: Single source of truth for adapter scope detection plus path-matcher tests.
     complexity: S
     effort_points: 3
-    progress_pct: 80
+    progress_pct: 100
     evidence_refs:
       - tools/ci/policy/adapter-postgres-relevance.json
       - tools/ci/test/path-matcher.test.mjs
+      - tools/ci/test/adapter-postgres-policy.test.mjs
+      - tools/ci/workflow-pattern-parity.test.mjs
       - .github/workflows/test.yml
       - .github/workflows/pr-quality-gate.yml
     status_reason: >-
-      The shared policy and tests exist in code, but this pass did not find a dedicated accepted
-      closeout artifact for final closure.
-    last_verified: '2026-03-31'
+      Reality reconciliation accepted equivalent executable closure: the shared adapter-postgres
+      relevance policy exists, `test.yml` and `pr-quality-gate.yml` consume it through generated
+      scope helpers, and CI-tool tests lock policy generation plus workflow parity. No dedicated
+      closeout exists, but the task target is code-grounded and test-backed.
+    last_verified: '2026-05-06'
   - task_id: TF-B1
     priority: P1
     status: done
@@ -630,7 +634,10 @@ dependency_notes:
   - >-
     `DLQ alerting + automated replay` and `manifest S3 fetch cache` are now verified as delivered
     via accepted evidence dated 2026-03-30.
-  - '`ADP-LINT-ORDER-01` and `RC-F2` remain review-stage hardening work.'
+  - >-
+    `RC-F2` is now closed with equivalent code/test evidence for the shared adapter-postgres CI
+    scope policy. `ADP-LINT-ORDER-01` remains review-stage hardening work because no dedicated
+    closure artifact or tooling-acceptance evidence was found in this pass.
   - >-
     `AR-B1` is now closed with accepted closeout/evidence: RunStatus state-machine validation at
     event append boundary is documented, implemented, and validated as the canonical write-boundary
@@ -652,12 +659,13 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-19'
-  total_tasks: 22
-  total_effort_points: 83
-  completed_weighted_points: 58.9
-  lane_progress_pct: 71
+  verified_on: '2026-05-06'
+  total_tasks: 28
+  total_effort_points: 93
+  completed_weighted_points: 90.6
+  lane_progress_pct: 97
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
-    coordination-only effort. `AR-B5` now tracks the post-ownership lineage-runtime decomposition
-    follow-up after `RC-G1-C`.
+    coordination-only effort. The 2026-05-06 status reconciliation closed `RC-F2` from executable
+    workflow-policy evidence and recomputed the summary from the current task registry. `AR-B5`
+    remains the only queued Lane B execution follow-up after `RC-G1-C`.

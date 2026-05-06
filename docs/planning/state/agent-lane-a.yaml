@@ -2,7 +2,7 @@
 title: Contracts And State-Store Boundary
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-20'
+last_reviewed: '2026-05-06'
 goal:
   Close the state-store boundary, retire contract ownership drift, and keep governance startup
   executable.
@@ -1935,7 +1935,7 @@ tasks:
   - task_id: WE-HX-4
     parent_task: WE-HX
     priority: P1
-    status: completed
+    status: done
     complexity: M
     effort_points: 3
     progress_pct: 100
@@ -1954,7 +1954,7 @@ tasks:
   - task_id: WE-HX-4-A
     parent_task: WE-HX-4
     priority: P1
-    status: completed
+    status: done
     complexity: S
     effort_points: 3
     progress_pct: 100
@@ -1976,7 +1976,7 @@ tasks:
   - task_id: WE-HX-4-B
     parent_task: WE-HX-4
     priority: P1
-    status: completed
+    status: done
     complexity: M
     effort_points: 3
     progress_pct: 100
@@ -2000,7 +2000,7 @@ tasks:
   - task_id: WE-HX-4-C
     parent_task: WE-HX-4
     priority: P1
-    status: completed
+    status: done
     complexity: S
     effort_points: 2
     progress_pct: 100
@@ -2026,7 +2026,7 @@ tasks:
   - task_id: WE-HX-4-D
     parent_task: WE-HX-4
     priority: P1
-    status: completed
+    status: done
     complexity: S
     effort_points: 1
     progress_pct: 100
@@ -3089,11 +3089,11 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-27'
-  total_tasks: 118
-  total_effort_points: 356
-  completed_weighted_points: 285.39
-  lane_progress_pct: 80
+  verified_on: '2026-05-06'
+  total_tasks: 124
+  total_effort_points: 369
+  completed_weighted_points: 312.64
+  lane_progress_pct: 85
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort. `TF-A2` now adds the missing contract-first workspace graph-draft
@@ -3101,5 +3101,6 @@ verification_summary:
     continues, `TF-A1-C12..C19` now cover the post-hardening route-facade, compile-boundary
     ownership cleanup, and declarative route-policy plus canonical-envelope convergence, while the
     merged `origin/main` intake also carries `RC-G1-C-TRUTH-SYNC` and adjacent follow-up routing.
-    `RC-G1-D` is now closed with planner-private behavior ports moved to `@dvt/planner`, bringing
-    the weighted lane summary to 2026-04-27.
+    `RC-G1-D` is now closed with planner-private behavior ports moved to `@dvt/planner`. The
+    2026-05-06 status reconciliation normalized the remaining `completed` WE-HX entries to `done`
+    and recomputed the weighted summary from the current task registry.
