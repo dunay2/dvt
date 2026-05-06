@@ -270,6 +270,12 @@ Out of scope:
 infra/planning-db/docker-compose.yml
 scripts/planning-db-run.cjs
 scripts/planning-db-run.test.cjs
+scripts/planning-db-migrate.cjs
+scripts/planning-db-migrate.test.cjs
+scripts/planning-db-import.cjs
+scripts/planning-db-import.test.cjs
+scripts/planning-db-query.cjs
+scripts/planning-db-query.test.cjs
 tools/planning-db/migrations/
 tools/planning-db/import-planning-state.mjs
 tools/planning-db/export-planning-state.mjs
@@ -299,15 +305,16 @@ pnpm planning:db:logs
 pnpm planning:db:ps
 pnpm planning:db:env
 pnpm planning:db:health
-pnpm test:planning:db
-```
-
-Planned for the import/export and parity slices:
-
-```bash
 pnpm planning:db:migrate
 pnpm planning:db:import
 pnpm planning:db:query
+pnpm test:planning:db
+pnpm test:planning:db:integration
+```
+
+Planned for later export and parity slices:
+
+```bash
 pnpm planning:db:export
 pnpm planning:db:check
 pnpm governance:db:import
@@ -320,6 +327,10 @@ The closeout baseline for the local Docker substrate slice includes:
 
 ```bash
 pnpm test:planning:db
+pnpm test:planning:db:integration
+pnpm planning:db:migrate
+pnpm planning:db:import
+pnpm planning:db:query
 pnpm docs:feature-mechanization --feature GOV-S3-PLANNING-STATE-QUERY-STORE
 pnpm docs:feature-mechanization:implementation
 pnpm verify:prepush
@@ -342,28 +353,37 @@ The first schema should cover two derived read-model families.
 
 ### Planning tables
 
-| Table                    | Purpose                                                       |
-| ------------------------ | ------------------------------------------------------------- |
-| `planning_sources`       | Git path, content hash, source type, and import timestamp     |
-| `planning_lanes`         | Lane id, owner, scope, last reviewed date                     |
-| `planning_tasks`         | Task id, lane, status, priority, target, progress, complexity |
-| `planning_dependencies`  | Explicit task-to-task dependency edges                        |
-| `planning_evidence_refs` | Evidence, closeout, PR, commit, and doc references per task   |
-| `planning_status_events` | Derived status history when imports detect changed state      |
-| `planning_artifacts`     | Generated output path, source hash, and artifact hash         |
+| Table                    | W2 status   | Purpose                                                                |
+| ------------------------ | ----------- | ---------------------------------------------------------------------- |
+| `planning_sources`       | implemented | Git path, content hash, source type, byte size, and local import time  |
+| `planning_lanes`         | implemented | Lane id, source path/hash, title, owner, status, goal, and raw YAML    |
+| `planning_tasks`         | implemented | Task id, lane, status, priority, objective, target, evidence, raw YAML |
+| `planning_dependencies`  | planned     | Explicit task-to-task dependency edges parsed out of task dependencies |
+| `planning_evidence_refs` | planned     | Evidence, closeout, PR, commit, and doc references per task as rows    |
+| `planning_status_events` | planned     | Derived status history when imports detect changed state               |
+| `planning_artifacts`     | planned     | Generated output path, source hash, and artifact hash                  |
 
 ### Governance tables
 
-| Table                         | Purpose                                                    |
-| ----------------------------- | ---------------------------------------------------------- |
-| `governance_sources`          | Source path, source type, hash, and generated-policy class |
-| `governance_files`            | Tracked path, owning unit, component, root, drift flags    |
-| `governance_components`       | Component/source units and ownership metadata              |
-| `governance_component_files`  | File-to-component membership and shard provenance          |
-| `governance_fingerprints`     | File identity, content hash, governance hash, and state    |
-| `governance_coverage`         | Governed, ungoverned, drift, legacy, and summary counters  |
-| `governance_remediation`      | Remediation queue items, priority, owner, and source cause |
-| `governance_generated_assets` | Generated report path, source hash, and artifact hash      |
+| Table                         | W2 status   | Purpose                                                     |
+| ----------------------------- | ----------- | ----------------------------------------------------------- |
+| `governance_sources`          | implemented | Source path, source type, content hash, byte size           |
+| `governance_file_shards`      | implemented | File-index shard id, path, count, and upstream content hash |
+| `governance_files`            | implemented | Tracked path, owning unit, component, root, drift flags     |
+| `governance_components`       | planned     | Component/source units and ownership metadata               |
+| `governance_component_files`  | planned     | File-to-component membership and shard provenance           |
+| `governance_fingerprints`     | planned     | File identity, content hash, governance hash, and state     |
+| `governance_coverage`         | planned     | Governed, ungoverned, drift, legacy, and summary counters   |
+| `governance_remediation`      | planned     | Remediation queue items, priority, owner, and source cause  |
+| `governance_generated_assets` | planned     | Generated report path, source hash, and artifact hash       |
+
+The W2 schema is intentionally content-first. It stores the source hash for each
+imported YAML file and keeps `raw_lane`, `raw_task`, `raw_shard`, and `raw_file`
+JSONB columns so no current lane or governance field is thrown away while the
+first typed query columns stabilize. Typed columns are added only for fields that
+already drive repeated operational questions: lane/status/priority/progress,
+task objective/target/evidence, file ownership, component unit, governance
+state, drift, legacy, and content hashes.
 
 These tables are enough to answer high-value operational questions without
 introducing a large platform:
@@ -392,6 +412,7 @@ behavior.
 | `ExportPlanningStateSnapshot`      | command | Planning registry     | `PlanningStateExport`        | SQL + file-system    |
 | `ValidatePlanningStateDrift`       | query   | Planning governance   | `PlanningStateDriftReport`   | SQL + Git comparison |
 | `GeneratePlanningDerivedSurfaces`  | command | Documentation tooling | `PlanningGeneratedArtifact`  | docs generator       |
+| `MigratePlanningQueryStoreSchema`  | command | Planning tooling      | `PlanningQueryStoreSchema`   | SQL migration runner |
 | `ManagePlanningQueryStoreRuntime`  | command | Planning tooling      | `PlanningQueryStoreRuntime`  | Docker Compose       |
 | `InspectPlanningQueryStoreRuntime` | query   | Planning tooling      | `PlanningQueryStoreRuntime`  | Docker Compose + env |
 | `ImportGovernanceStateQueryStore`  | command | Docs governance       | `GovernanceStateImport`      | file-system + SQL    |
@@ -411,6 +432,16 @@ local machine operation; authorization is the developer's local OS and Docker
 access. Negative tests live in `scripts/planning-db-run.test.cjs` and verify the
 shared Windows data directory, fixed Compose project, environment override
 policy, Docker command selection, and rejection of unknown actions.
+
+`planning:db:migrate` implements `MigratePlanningQueryStoreSchema`.
+`planning:db:import` implements `ImportPlanningStateQueryStore` and
+`ImportGovernanceStateQueryStore` together for the W2 local content snapshot.
+`planning:db:query` implements `QueryPlanningStateReadModel` and
+`QueryGovernanceStateReadModel` for the current summary surface. Scope is local
+developer tooling only; authorization is local OS and Docker/Postgres access.
+Negative tests cover migration checksum mismatch, unknown query names, content
+extraction from real lane YAML, and governance file-count parity with the
+Git-tracked file index.
 
 ## GitHub Issues Role
 
@@ -433,8 +464,10 @@ surfaces without network access.
    check modes, and review fan-out.
 3. Add Docker Compose with the shared `C:\dvt\planning-db\postgres-data`
    machine-local volume and local runtime scripts.
-4. Import existing `agent-lane-*.yaml` files into read-only Postgres tables.
-5. Import existing `system-governance-*` indexes, component maps,
+4. Add schema migrations and import existing `agent-lane-*.yaml` plus
+   `system-governance-file-index.files.yaml` shards into read-only Postgres
+   tables with source hashes.
+5. Import existing `system-governance-*` component maps,
    fingerprints, coverage reports, and remediation queues into read-only
    Postgres tables.
 6. Add query and drift checks that compare Postgres output to Git-tracked lane
@@ -557,6 +590,9 @@ commandQueryRails:
   - name: GeneratePlanningDerivedSurfaces
     type: command
     dddOwner: PlanningGeneratedArtifact
+  - name: MigratePlanningQueryStoreSchema
+    type: command
+    dddOwner: PlanningQueryStoreSchema
   - name: ManagePlanningQueryStoreRuntime
     type: command
     dddOwner: PlanningQueryStoreRuntime
@@ -597,6 +633,9 @@ domainObjects:
   - name: PlanningGeneratedArtifact
     type: generated artifact
     owner: Docs governance
+  - name: PlanningQueryStoreSchema
+    type: local schema
+    owner: Product / Architecture / Delivery / Docs
   - name: PlanningQueryStoreRuntime
     type: local runtime
     owner: Product / Architecture / Delivery / Docs
@@ -626,12 +665,17 @@ fowlerSignals:
   - Mutable external tracker authority risk
 architectureGuards:
   - pnpm test:planning:db
+  - pnpm test:planning:db:integration
   - pnpm docs:feature-mechanization --feature GOV-S3-PLANNING-STATE-QUERY-STORE
   - pnpm docs:feature-mechanization:implementation
 cypressFlows:
   - N/A - planning query-store proposal has no browser workflow.
 completionGate:
   - pnpm test:planning:db
+  - pnpm test:planning:db:integration
+  - pnpm planning:db:migrate
+  - pnpm planning:db:import
+  - pnpm planning:db:query
   - pnpm docs:sync
   - pnpm docs:workboard:generate
   - pnpm docs:feature-mechanization --feature GOV-S3-PLANNING-STATE-QUERY-STORE
@@ -661,6 +705,24 @@ redGreenCycles:
       - scripts/planning-db-*.cjs
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     greenTest: pnpm test:planning:db
+  - id: planning-db-content-schema-and-import
+    redTest: pnpm test:planning:db
+    expectedFailure: Planning DB content parser, migration runner, and summary query are missing before W2 exists.
+    patchSurfaces:
+      - package.json
+      - tools/planning-db/**
+      - scripts/planning-db-*.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: pnpm test:planning:db
+  - id: planning-db-live-content-parity
+    redTest: pnpm test:planning:db:integration
+    expectedFailure: Live Postgres does not yet contain lane tasks and governance files matching Git-tracked source counts.
+    patchSurfaces:
+      - package.json
+      - tools/planning-db/**
+      - scripts/planning-db-*.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: pnpm test:planning:db:integration
   - id: planning-query-store-drift-check
     redTest: pnpm planning:db:check
     expectedFailure: Drift check fails when imported Postgres state differs from Git-tracked planning state.
@@ -693,6 +755,7 @@ symbols:
       - ExportPlanningStateSnapshot
       - ValidatePlanningStateDrift
       - GeneratePlanningDerivedSurfaces
+      - MigratePlanningQueryStoreSchema
       - ManagePlanningQueryStoreRuntime
       - InspectPlanningQueryStoreRuntime
       - ImportGovernanceStateQueryStore
@@ -819,6 +882,206 @@ symbols:
   - <<: *planningDbRuntimeSymbol
     name: scriptPath
     path: scripts/planning-db-run.test.cjs
+  - &planningDbContentSymbol
+    name: PlanningDbContentMigration
+    path: tools/planning-db/migrations/001_content_read_model.sql
+    dddOwner: PlanningQueryStoreSchema
+    cqRails:
+      - MigratePlanningQueryStoreSchema
+      - ImportPlanningStateQueryStore
+      - QueryPlanningStateReadModel
+      - ImportGovernanceStateQueryStore
+      - QueryGovernanceStateReadModel
+    fowlerSignals:
+      - Large planning file operating cost
+      - Generated artifact churn
+      - Hidden query model inside YAML
+      - Hidden query model inside governance shards
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - planning DB content import has no browser workflow.
+    unitTests:
+      - pnpm test:planning:db
+      - pnpm test:planning:db:integration
+  - <<: *planningDbContentSymbol
+    name: PlanningDbMigrateRunner
+    path: scripts/planning-db-migrate.cjs
+  - <<: *planningDbContentSymbol
+    name: crypto
+    path: scripts/planning-db-migrate.cjs
+  - <<: *planningDbContentSymbol
+    name: fs
+    path: scripts/planning-db-migrate.cjs
+  - <<: *planningDbContentSymbol
+    name: path
+    path: scripts/planning-db-migrate.cjs
+  - <<: *planningDbContentSymbol
+    name: repoRoot
+    path: scripts/planning-db-migrate.cjs
+  - <<: *planningDbContentSymbol
+    name: migrationsDir
+    path: scripts/planning-db-migrate.cjs
+  - <<: *planningDbContentSymbol
+    name: schemaName
+    path: scripts/planning-db-migrate.cjs
+  - <<: *planningDbContentSymbol
+    name: databaseUrl
+    path: scripts/planning-db-migrate.cjs
+  - <<: *planningDbContentSymbol
+    name: sha256
+    path: scripts/planning-db-migrate.cjs
+  - <<: *planningDbContentSymbol
+    name: quoteIdentifier
+    path: scripts/planning-db-migrate.cjs
+  - <<: *planningDbContentSymbol
+    name: readMigrationFiles
+    path: scripts/planning-db-migrate.cjs
+  - <<: *planningDbContentSymbol
+    name: buildMigrationRecords
+    path: scripts/planning-db-migrate.cjs
+  - <<: *planningDbContentSymbol
+    name: detectChecksumMismatch
+    path: scripts/planning-db-migrate.cjs
+  - <<: *planningDbContentSymbol
+    name: ensureMigrationTable
+    path: scripts/planning-db-migrate.cjs
+  - <<: *planningDbContentSymbol
+    name: runMigrations
+    path: scripts/planning-db-migrate.cjs
+  - <<: *planningDbContentSymbol
+    name: main
+    path: scripts/planning-db-migrate.cjs
+  - <<: *planningDbContentSymbol
+    name: test
+    path: scripts/planning-db-migrate.test.cjs
+  - <<: *planningDbContentSymbol
+    name: assert
+    path: scripts/planning-db-migrate.test.cjs
+  - <<: *planningDbContentSymbol
+    name: PlanningDbImportRunner
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: crypto
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: fs
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: path
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: yaml
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: repoRoot
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: laneDirectory
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: governanceFileIndexPath
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: databaseUrl
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: toPosix
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: repoRelative
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: sha256
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: readYamlSource
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: cleanJson
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: toJson
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: normalizeText
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: normalizeArray
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: normalizeNumber
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: normalizeDate
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: planningLaneFiles
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: buildPlanningContentSnapshot
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: buildGovernanceFileSnapshot
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: insertPlanningSnapshot
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: insertGovernanceSnapshot
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: importContent
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: main
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: test
+    path: scripts/planning-db-import.test.cjs
+  - <<: *planningDbContentSymbol
+    name: assert
+    path: scripts/planning-db-import.test.cjs
+  - <<: *planningDbContentSymbol
+    name: PlanningDbQueryRunner
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: knownQueries
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: databaseUrl
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: resolveQueryName
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: buildSummaryRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: readSummary
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: printSummary
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: runQuery
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: main
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: test
+    path: scripts/planning-db-query.test.cjs
+  - <<: *planningDbContentSymbol
+    name: assert
+    path: scripts/planning-db-query.test.cjs
+  - <<: *planningDbContentSymbol
+    name: test
+    path: scripts/planning-db-content.integration.test.cjs
+  - <<: *planningDbContentSymbol
+    name: assert
+    path: scripts/planning-db-content.integration.test.cjs
+  - <<: *planningDbContentSymbol
+    name: dbUrl
+    path: scripts/planning-db-content.integration.test.cjs
   - name: SystemGovernanceGenerationWorkflowComponent
     path: docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
     dddOwner: GovernanceGenerationWorkflow

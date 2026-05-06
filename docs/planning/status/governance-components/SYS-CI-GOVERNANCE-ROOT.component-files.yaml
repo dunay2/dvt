@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - repository automation
 childrenRequired: true
-fileCount: 184
+fileCount: 192
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -655,6 +655,55 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: scripts/planning-db-content.integration.test.cjs
+    fileId: F-00C7F0BCBB25
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/planning-db-import.cjs
+    fileId: F-BE730538DF11
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/planning-db-import.test.cjs
+    fileId: F-93AF019524B5
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/planning-db-migrate.cjs
+    fileId: F-DB167A227EF5
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/planning-db-migrate.test.cjs
+    fileId: F-A4BF52DFF553
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/planning-db-query.cjs
+    fileId: F-09A1C46FAD9C
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/planning-db-query.test.cjs
+    fileId: F-DA9549276EA3
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: scripts/planning-db-run.cjs
     fileId: F-161608EF057D
     owningUnit: SYS-CI-GOVERNANCE-ROOT
@@ -1287,6 +1336,13 @@ files:
     isLegacy: false
   - path: tools/ops/ar-c2-evidence-collector.mjs
     fileId: F-86F75B9A6E65
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: tools/planning-db/migrations/001_content_read_model.sql
+    fileId: F-93E2C0292B6F
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
