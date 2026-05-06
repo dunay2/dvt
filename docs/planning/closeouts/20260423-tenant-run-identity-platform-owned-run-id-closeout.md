@@ -1,8 +1,8 @@
 ---
 title: Closeout - Tenant/run identity platform-owned run id
-status: Review
+status: Done
 owner: Architecture / API / Runtime / Frontend
-last_reviewed: 2026-04-23
+last_reviewed: 2026-05-06
 planning_type: closeout
 slice: tenant-run-identity-platform-owned-run-id
 ---
@@ -187,3 +187,10 @@ The web start-run boundary now sends only:
 - no placeholder route behavior was added
 - no fake success path was added for missing `runId`
 - no TODO/FIXME marker was introduced to defer the identity boundary
+
+## 2026-05-06 Review Acceptance
+
+Lane C review reconciliation accepted this closeout as closure evidence for
+`AR-C7`. The platform-owned start-run identity boundary remains backed by
+ADR-0050, API parser rejection coverage, web caller-scope coverage, and semantic
+architecture tests.

@@ -2,7 +2,7 @@ lane_id: C
 title: Runtime Safety And Admission
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-23'
+last_reviewed: '2026-05-06'
 goal: Harden runtime behavior, admission checks, and caller-visible freshness.
 expected_outcome:
   - runtime failures are explicit
@@ -292,7 +292,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: AR-C1
     priority: P0
-    status: review
+    status: done
     objective: >-
       add explicit RBAC check to admin routes (/admin/runs/:runId/rebuild-snapshot and any future
       admin endpoints) so that authentication alone is not sufficient — an admin-level role grant is
@@ -311,10 +311,11 @@ tasks:
       - apps/api/test/entrypoints/http/adminRoutes.test.ts
       - apps/api/test/contracts/adminRebuildSnapshotAccessContract.test.ts
     status_reason: >-
-      Explicit admin RBAC is now enforced through a dedicated admin-scope guard on the maintenance
-      route path; non-admin authorization outcomes return 403 and route + contract tests cover the
-      negative path. Remaining hardening is tracked in `AR-C1-T1..T4`.
-    last_verified: '2026-04-04'
+      Accepted after Lane C review reconciliation. Explicit admin RBAC is enforced through a
+      dedicated admin-scope guard on the maintenance route path; non-admin authorization outcomes
+      return 403 and route + contract tests cover the negative path. `AR-C1-T4` and `CFG-TS-T1`
+      remain active cleanup/planning follow-ups, not blockers for the admin RBAC objective.
+    last_verified: '2026-05-06'
   - task_id: AR-C1-T1
     parent_task: AR-C1
     priority: P0
@@ -428,7 +429,7 @@ tasks:
     last_verified: '2026-04-03'
   - task_id: AR-C2
     priority: P0
-    status: done
+    status: in_progress
     objective: >-
       define and document formal SLA targets for event delivery latency, snapshot freshness, plan
       compilation time, run start latency, and outbox drain rate with measurable thresholds and
@@ -550,7 +551,7 @@ tasks:
     last_verified: '2026-04-04'
   - task_id: AR-C3
     priority: P1
-    status: review
+    status: done
     objective: >-
       introduce an abstract start-run execution-capacity admission seam in the API boundary so the
       system can stop accepting runs it cannot execute without coupling admission semantics to a
@@ -581,11 +582,11 @@ tasks:
       probe, operator-facing denial codes are now documented in telemetry and runbook truth, and the
       admission observability cluster now has its own local guide plus a semantic architecture
       fitness rule instead of remaining implicit inside the seam guide.
-    last_verified: '2026-04-24'
+    last_verified: '2026-05-06'
   - task_id: AR-C3-A
     parent_task: AR-C3
     priority: P1
-    status: review
+    status: done
     objective: >-
       hard-cut the abstract start-run execution-capacity admission boundary in apps/api without
       leaking provider vocabulary or adapter-specific metrics into the application contract.
@@ -612,11 +613,11 @@ tasks:
       `buildProtectedStartRunRuntime.ts`, and the local guide plus semantic architecture test now
       freeze the component rules while leaving concrete provider binding in protected-runtime
       composition.
-    last_verified: '2026-04-23'
+    last_verified: '2026-05-06'
   - task_id: AR-C3-B
     parent_task: AR-C3
     priority: P1
-    status: review
+    status: done
     objective: >-
       bind the abstract execution-capacity admission seam to a real adapter-backed signal without
       leaking provider detail into the API application contract.
@@ -636,13 +637,13 @@ tasks:
       - apps/api/test/application/services/BackpressureAwareStartRunUseCase.executionCapacityReadyzBinding.test.ts
     status_reason: >-
       Protected runtime composition now binds the `temporal` target adapter through a concrete
-      Temporal-worker `readyz` probe adapter while keeping the abstract application seam intact. The
-      remaining AR-C3 follow-through is telemetry and runbook closure only.
-    last_verified: '2026-04-23'
+      Temporal-worker `readyz` probe adapter while keeping the abstract application seam intact.
+      Parent-level telemetry and runbook follow-through is closed by `AR-C3-C`.
+    last_verified: '2026-05-06'
   - task_id: AR-C3-C
     parent_task: AR-C3
     priority: P1
-    status: review
+    status: done
     objective: >-
       close telemetry, runbook, and evidence posture for execution-capacity-based admission
       rejections.
@@ -667,10 +668,10 @@ tasks:
       rejection codes, telemetry labels, the admission-control runbook, and a local admission
       observability component guide with a semantic fitness rule. The remaining follow-up is future
       policy extension, not missing operator truth for the current slice.
-    last_verified: '2026-04-24'
+    last_verified: '2026-05-06'
   - task_id: AR-C4
     priority: P1
-    status: review
+    status: done
     objective: >-
       add circuit breaker between Temporal activities and IRunStateStore to prevent state store
       unavailability from blocking all step execution with no fallback or degradation signal.
@@ -693,7 +694,7 @@ tasks:
       Temporal activity state-store writes now flow through a circuit-breaker-wrapped command port
       with timeout protection and retryable fast-fail semantics; worker ops surfaces expose breaker
       posture and counters so degradation is explicit.
-    last_verified: '2026-04-15'
+    last_verified: '2026-05-06'
   - task_id: AR-C5
     priority: P1
     status: queued
@@ -1071,7 +1072,7 @@ tasks:
     last_verified: '2026-04-10'
   - task_id: AR-C7
     priority: P0
-    status: review
+    status: done
     objective: >-
       make start-run execution identity platform-owned so clients cannot provide canonical `runId`
       values at the protected runtime boundary.
@@ -1107,10 +1108,10 @@ tasks:
       and engine semantics remain outside `startRunIdentity.ts`. The Fowler follow-up analysis,
       allocator-specific local component guide, boundary guides, and semantic architecture tests now
       guard the boundary.
-    last_verified: '2026-04-23'
+    last_verified: '2026-05-06'
   - task_id: AR-C8
     priority: P0
-    status: review
+    status: done
     objective: >-
       replace the protected-runtime authorization repository-plus-policy split with one DVT-owned
       access-decision seam that keeps `apps/api` as PEP while avoiding a forced remote PDP
@@ -1140,7 +1141,7 @@ tasks:
       repository-plus-policy split, startup migration coverage follows the embedded backend, and the
       active ADR/API docs now treat later external PDP adoption as a backend swap rather than as a
       route-level redesign.
-    last_verified: '2026-04-23'
+    last_verified: '2026-05-06'
   - task_id: AR-C9
     priority: P0
     status: done
@@ -1371,7 +1372,7 @@ tasks:
     last_verified: '2026-04-14'
   - task_id: TF-C4
     priority: P0
-    status: review
+    status: done
     objective: >-
       implement the protected workspace graph-draft read/write boundary so editable Canvas graphs
       persist through one tenant-scoped API and store path instead of browser-local state.
@@ -1390,25 +1391,35 @@ tasks:
       read-your-writes behavior plus one operator-facing recovery runbook.
     complexity: M
     effort_points: 5
-    progress_pct: 70
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-authoring-draft-aggregate-roots-plan-20260423.md
+      - docs/contracts/planner/workspace-graph-draft-persistence-v1.md
+      - packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts
+      - packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts
       - docs/architecture/components/web/frontend-data-boundary-architecture.md
       - docs/architecture/reference-architecture.md
       - docs/planning/closeouts/20260416-tf-c4-workspace-graph-draft-protected-boundary-closeout.md
+      - docs/planning/closeouts/20260503-tf-e2-a-authoring-draft-hard-cut-closeout.md
       - docs/runbooks/workspace-graph-draft-protected-boundary-20260416.md
       - docs/runbooks/read-your-writes-freshness-slo-20260330.md
+      - apps/api/src/entrypoints/http/workspaceGraphDraftRoutes.ts
+      - apps/api/src/infrastructure/workspaceGraphDraft/PostgresWorkspaceGraphDraftStore.ts
+      - apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts
+      - apps/api/test/application/services/workspaceGraphDraftApplicationComponent.architecture.test.ts
+      - apps/web/src/app/views/canvas/canvasDraftRepository.ts
+      - apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
     status_reason: >-
-      Protected runtime already owns `GET /workspace/graph/draft` and `PUT /workspace/graph/draft`
-      through one store-backed API path with explicit capability outcomes, tenant/project/
-      environment scope enforcement, compare-and-swap revision rejection, scoped idempotent retry
-      handling, auditable decision/write outcomes, and dedicated traces plus metrics. That path is
-      real, but it is not yet the final closure target because the shared contract it persists still
-      embeds `DesignGraphDraft` and therefore models a compile-valid artifact instead of an editable
-      authoring aggregate. Remaining work is no longer just frontend adoption: `TF-C4` must absorb
-      the `TF-A2` contract reset so the protected path persists editable authoring draft truth and
-      treats `DesignGraphDraft` as a derived projection for preview/run.
-    last_verified: '2026-04-23'
+      Accepted after Lane C review reconciliation. Protected runtime owns `GET
+      /workspace/graph/draft` and `PUT /workspace/graph/draft` through one store-backed API path
+      with explicit capability outcomes, tenant/project/environment scope enforcement,
+      compare-and-swap revision rejection, scoped idempotent retry handling, auditable
+      decision/write outcomes, and dedicated traces plus metrics. The former blocker is closed:
+      `TF-A2` now freezes `WorkspaceGraphDraft.v1` around `WorkspaceGraphAuthoringDraft`, Canvas
+      `TF-E2-A` consumes the protected authoring-draft boundary, and `DesignGraphDraft` remains a
+      derived preview/run artifact rather than persisted editable truth.
+    last_verified: '2026-05-06'
 dependency_notes:
   - >-
     `MVP-C1` is now closed because its accepted runbook artifact no longer carries an open
@@ -1441,13 +1452,18 @@ dependency_notes:
     negative coverage, runtime composition checks, fixture reuse, and `baseUrl` deprecation planning
     without circular dependencies.
   - >-
-    `AR-C1` moved to review with explicit admin-scope RBAC wired in code and negative-path
-    route/contract coverage; remaining subtasks track post-hardening cleanup and composition tests.
+    `AR-C1` is accepted as done with explicit admin-scope RBAC wired in code and negative-path
+    route/contract coverage; remaining subtasks track cleanup and TypeScript migration planning, not
+    the admin RBAC closure objective.
   - >-
     `AR-C3` and `AR-C4` are P1 tasks: execution-capacity admission hardening and
     activity-to-state-store circuit breaker. `AR-C3` is decomposed into `AR-C3-A/B/C` so the API
     boundary can be abstract first and adapter binding can land later without leaking provider
     detail into the parent task.
+  - >-
+    `AR-C3`, `AR-C3-A`, `AR-C3-B`, `AR-C3-C`, and `AR-C4` are now accepted as done after Lane C
+    review reconciliation; future capacity-policy expansion and adapter-call circuit breaking remain
+    separate work, not missing evidence for these closed slices.
   - >-
     The 2026-04-02 principal deep architectural review adds `AR-C5` for adapter-call circuit
     breaking and health surfacing at the engine-adapter boundary.
@@ -1470,36 +1486,33 @@ dependency_notes:
     plugin-backed dbt subtasks so runtime closure can progress in smaller slices without losing the
     same outer contract.
   - >-
-    `TF-C4` is the protected workspace graph-draft follow-up. It depends on `TF-A2` for the shared
-    contract freeze and on the `read-your-writes contract` for caller-visible freshness so Lane E
-    adopts a real backend-owned write path instead of continuing on UI-local persistence.
+    `TF-C4` is now accepted as done: `TF-A2` froze the authoring-draft contract around
+    `WorkspaceGraphAuthoringDraft`, the protected API/store path owns scoped read/write persistence,
+    and Lane E `TF-E2-A` adopted the protected authoring boundary instead of UI-local persistence.
   - >-
-    `F-27` in Lane E is the internal alpha route consumer for Lane C runtime safety inputs. Lane C
-    does not own route UI completion, but alpha cannot close plan/run readiness, Canvas draft
-    recovery, or protected route authorization until `AR-C10` and `TF-C4` expose the needed rail,
-    denial, freshness, and degraded-mode vocabulary.
+    `F-27` in Lane E is the internal alpha route consumer for the now-closed Lane C `AR-C10` and
+    `TF-C4` inputs. Lane C does not own route UI completion; remaining alpha work is route fixture,
+    risk triage, cadence, recovery vocabulary, startup/context, Canvas proof, and plan/run readiness
+    execution in Lane E.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-05-05'
-  total_tasks: 50
-  total_effort_points: 183
-  completed_weighted_points: 166.15
-  lane_progress_pct: 91
+  verified_on: '2026-05-06'
+  total_tasks: 53
+  total_effort_points: 201
+  completed_weighted_points: 187.8
+  lane_progress_pct: 93
   notes: >-
-    Weighted progress uses effort_points across the current 50 task entries. `AR-C3-A` now
-    contributes review-level abstract-seam closure, and `AR-C7` contributes the platform-owned
-    start-run identity decision from the 2026-04-23 architecture review. `MW-C1`, `TF-C2-A`, and
-    `TF-C2-B` contribute accepted dispatcher, canonical proof, and caller-visible runtime-evidence
-    closure rather than the older queued-only posture. `TF-C2` is now closed with parent-level
-    acceptance evidence, so remaining runtime follow-through is repeatability/reset discipline
-    (`TF-D1`), phase-2 plugin-backed dbt dispatch (`TF-C3`), and broader hardening work rather than
-    the first PostgreSQL vertical itself. `TF-C3` remains in progress through the protected- runtime
-    `RunExecutionContext` resolver slice plus adapter-temporal DBT seam and fixture hardening, while
-    production plugin-host composition still remains open. `TF-C4` reserves the protected workspace
-    graph-draft read/write boundary so backend-owned persistence is a blocking dependency for
-    `TF-E2` instead of an implicit future assumption. `F-27` now names the internal alpha route as a
-    Lane E consumer of Lane C rail, authorization, freshness, and degraded-mode vocabulary rather
-    than a new Lane C UI task. `AR-C10` is closed with executable protected runtime rail catalog
-    truth, source-of-truth documentation, and architecture-test protection for internal alpha
-    runtime route vocabulary.
+    Weighted progress uses effort_points across the current 53 task entries. The 2026-05-06 Lane C
+    review reconciliation moved the review bucket to zero by accepting `AR-C1`, `AR-C3`, `AR-C3-A`,
+    `AR-C3-B`, `AR-C3-C`, `AR-C4`, `AR-C7`, `AR-C8`, and `TF-C4` as done from existing evidence.
+    `AR-C2` was corrected back to in-progress because dashboard/alert wiring evidence is still
+    pending despite its prior `done` status. `MW-C1`, `TF-C2-A`, and `TF-C2-B` contribute accepted
+    dispatcher, canonical proof, and caller-visible runtime-evidence closure rather than the older
+    queued-only posture. `TF-C2` is closed with parent-level acceptance evidence, so remaining
+    runtime follow-through is repeatability/reset discipline (`TF-D1`), phase-2 plugin-backed dbt
+    dispatch (`TF-C3`), and broader hardening work rather than the first PostgreSQL vertical itself.
+    `TF-C3` remains in progress through rollout acceptance and environment proof for the standalone
+    Temporal worker. `F-27` now consumes closed Lane C `AR-C10` and `TF-C4` rail, authorization,
+    freshness, and degraded-mode vocabulary as Lane E route-execution inputs rather than as new Lane
+    C UI tasks.

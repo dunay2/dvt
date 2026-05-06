@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files docs
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-documentCount: 1490
+documentCount: 1492
 documents:
   - path: docs/CONTRIBUTING.md
     classification: governs unit
@@ -4903,6 +4903,11 @@ documents:
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-CONTRACTS
   - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/ar-a5-plan-identity-determinism-verification-20260506.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-CONTRACTS
+  - path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/ar-b1-run-status-write-boundary-plan-20260404.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -4962,6 +4967,11 @@ documents:
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-WEB
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/lane-c-review-state-reconciliation-20260506.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-CONTRACTS
   - path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md
     classification: governs unit

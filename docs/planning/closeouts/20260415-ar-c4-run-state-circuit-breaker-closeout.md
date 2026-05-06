@@ -1,8 +1,8 @@
 ---
 title: Closeout - AR-C4 run-state circuit breaker
-status: Review
+status: Done
 owner: Runtime / Adapters / Docs
-last_reviewed: 2026-04-15
+last_reviewed: 2026-05-06
 planning_type: closeout
 slice: AR-C4-run-state-circuit-breaker
 ---
@@ -70,3 +70,9 @@ timeout-only behavior.
 - No lint/type/test rules were disabled.
 - No hooks/checks were bypassed.
 - No undocumented temporary bypasses were added.
+
+## 2026-05-06 Review Acceptance
+
+Lane C review reconciliation accepted this closeout as closure evidence for
+`AR-C4`. The code and test evidence referenced by the lane still exists, and no
+separate blocker remains for the activity-to-state-store circuit breaker slice.

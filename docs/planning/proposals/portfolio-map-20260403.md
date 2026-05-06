@@ -26,6 +26,8 @@ planning_type: proposal
 - [Runtime And Contracts](./mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)
 - [API governance subdivision plan
   2026-05-02](./mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md)
+- [Lane C review state reconciliation
+  2026-05-06](./mandatory/runtime-and-contracts/lane-c-review-state-reconciliation-20260506.md)
 - [MW-A2 GenericGraphSource plan](./mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)
 - [AR-C6 Temporal cancel semantics plan](./mandatory/runtime-and-contracts/ar-c6-temporal-cancel-semantics-plan-20260410.md)
 - [Contract pack and read boundary reset plan](./mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md)
