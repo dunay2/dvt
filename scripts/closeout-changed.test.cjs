@@ -37,6 +37,7 @@ test('buildCloseoutPlan regenerates docs, workboard, governance hashes, and prep
       'docs-governance-file-fingerprint-baseline-final',
       'docs-governance-file-fingerprint-impact-final',
       'git-diff-check',
+      'git-diff-cached-check',
       'conflict-marker-scan',
       'verify-prepush',
     ]
@@ -66,6 +67,7 @@ test('buildCloseoutPlan includes generated code status only for structural app o
       'docs-governance-file-fingerprint-baseline-final',
       'docs-governance-file-fingerprint-impact-final',
       'git-diff-check',
+      'git-diff-cached-check',
       'conflict-marker-scan',
       'verify-prepush',
     ]
@@ -121,6 +123,20 @@ test('assertNoConflictMarkers reports unresolved merge markers in changed text f
         },
       ]),
     /Unresolved conflict marker in docs\/planning\/example\.md/
+  );
+});
+
+test('buildCloseoutPlan checks both unstaged and staged whitespace errors', () => {
+  const plan = buildCloseoutPlan(['scripts/closeout-changed.cjs']);
+
+  assert.deepEqual(
+    plan
+      .filter((step) => step.id.startsWith('git-diff'))
+      .map((step) => [step.id, commandLabel(step)]),
+    [
+      ['git-diff-check', 'git diff --check'],
+      ['git-diff-cached-check', 'git diff --cached --check'],
+    ]
   );
 });
 

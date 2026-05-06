@@ -34,7 +34,8 @@ In scope:
 - add `pnpm closeout:changed`;
 - plan generators from the local changed-file set;
 - run `docs:sync`, workboard generation, governance regeneration,
-  `git diff --check`, conflict-marker scan, and `pnpm verify:prepush`;
+  unstaged and staged `git diff --check`, conflict-marker scan, and
+  `pnpm verify:prepush`;
 - register the closeout helper regression test in the prepush gate;
 - add a runbook entry documenting usage and the untracked-doc caveat;
 - prove the planner with `node --test scripts/closeout-changed.test.cjs`.

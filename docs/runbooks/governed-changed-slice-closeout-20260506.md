@@ -35,7 +35,7 @@ sequence:
 - governance regeneration for manifest, document-unit map, file-component
   index, fingerprints, impact, coverage report, and remediation queue;
 - a final file-component and fingerprint stabilization pass before validation;
-- `git diff --check`;
+- `git diff --check` and `git diff --cached --check`;
 - an internal unresolved-conflict-marker scan over changed text files;
 - `pnpm verify:prepush`.
 
