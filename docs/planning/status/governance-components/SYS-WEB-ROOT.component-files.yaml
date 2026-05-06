@@ -823,15 +823,15 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/components/shell/ShellWorkspaceContextMenu.tsx
-    fileId: F-8D220025A149
+  - path: apps/web/src/app/components/shell/ShellWorkspaceContextDetails.tsx
+    fileId: F-41430A657214
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
-  - path: apps/web/src/app/components/shell/ShellWorkspaceSelectors.tsx
-    fileId: F-1F86202A11BF
+  - path: apps/web/src/app/components/shell/ShellWorkspaceContextMenu.tsx
+    fileId: F-8D220025A149
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

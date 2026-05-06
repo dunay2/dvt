@@ -21,14 +21,18 @@ describe('ShellTopBar workspace context architecture', () => {
     const identityModelSource = readAppSource('shell/projectIdentityBadge.ts');
     const identityRendererSource = readAppSource('components/shell/ShellProjectIdentityBadge.tsx');
     const contextMenuSource = readAppSource('components/shell/ShellWorkspaceContextMenu.tsx');
-    const selectorsSource = readAppSource('components/shell/ShellWorkspaceSelectors.tsx');
+    const contextDetailsSource = readAppSource('components/shell/ShellWorkspaceContextDetails.tsx');
+    const chromeSource = readAppSource('components/shell/chrome.ts');
+    const rootShellTestSupportSource = readAppSource('Root.shellChrome.test.support.ts');
 
     for (const [label, source] of [
       ['TopAppBar', topAppBarSource],
       ['ProjectIdentityBadge', identityModelSource],
       ['ShellProjectIdentityBadge', identityRendererSource],
       ['ShellWorkspaceContextMenu', contextMenuSource],
-      ['ShellWorkspaceSelectors', selectorsSource],
+      ['ShellWorkspaceContextDetails', contextDetailsSource],
+      ['shell chrome class contract', chromeSource],
+      ['Root shell chrome test support', rootShellTestSupportSource],
     ] as const) {
       expect(source.trimStart().startsWith('/** Owned concern:'), label).toBe(true);
     }
@@ -42,10 +46,36 @@ describe('ShellTopBar workspace context architecture', () => {
     expect(identityModelSource).toContain('draftPostureLabel');
     expect(identityRendererSource).toContain('data-slot="shell-project-identity-badge"');
     expect(contextMenuSource).toContain('data-slot="shell-workspace-context-trigger"');
-    expect(contextMenuSource).toContain('ShellWorkspaceSelectors');
-    expect(selectorsSource).toContain('setSelectedTenant');
-    expect(selectorsSource).toContain('setSelectedProject');
-    expect(selectorsSource).toContain('setSelectedEnvironment');
+    expect(contextMenuSource).toContain('ShellWorkspaceContextDetails');
+    expect(contextMenuSource).toContain(
+      'Owned concern: expose active workspace scope as read-only shell context.'
+    );
+    expect(contextMenuSource).not.toContain('workspace-scope commands');
+    expect(contextMenuSource).not.toContain('ShellWorkspaceScopeCommands');
+    expect(contextMenuSource).not.toContain('ShellWorkspaceSelectors');
+
+    for (const forbiddenMutationSignal of [
+      'setSelectedTenant',
+      'setSelectedProject',
+      'setSelectedEnvironment',
+      'setTenantId',
+      'setProjectId',
+      'setEnvironmentId',
+      'onValueChange',
+      "from '../ui/select'",
+    ]) {
+      expect(topAppBarSource, forbiddenMutationSignal).not.toContain(forbiddenMutationSignal);
+      expect(contextMenuSource, forbiddenMutationSignal).not.toContain(forbiddenMutationSignal);
+      expect(contextDetailsSource, forbiddenMutationSignal).not.toContain(forbiddenMutationSignal);
+    }
+
+    expect(contextDetailsSource).toContain('data-slot="shell-workspace-context-details"');
+    expect(contextDetailsSource).toContain('data-slot="shell-workspace-tenant-context"');
+    expect(contextDetailsSource).toContain('data-slot="shell-workspace-project-context"');
+    expect(contextDetailsSource).toContain('data-slot="shell-workspace-environment-context"');
+    expect(contextDetailsSource).toContain('Tenant scope (read only)');
+    expect(contextDetailsSource).toContain('Project scope (read only)');
+    expect(contextDetailsSource).toContain('Environment scope (read only)');
   });
 
   it('documents API, invariants, transitions, consumers, and recorded risks', () => {
@@ -59,6 +89,15 @@ describe('ShellTopBar workspace context architecture', () => {
     const mailboxReview = readRepoSource(
       'buzon/20260506-codex-fowler-canvas-workbench-shell-context-review-and-risk.md'
     );
+    const hardeningMailboxReview = readRepoSource(
+      'buzon/20260506-codex-fowler-canvas-workbench-shell-context-hardening-review.md'
+    );
+    const componentGuide = readRepoSource(
+      'docs/architecture/components/web/appshell/shell-workspace-context-component.md'
+    );
+    const userStories = readRepoSource(
+      'docs/architecture/components/web/appshell/shell-workspace-context-user-stories.md'
+    );
 
     for (const requiredGuideSection of [
       '## Shell Workspace Context Component',
@@ -68,9 +107,10 @@ describe('ShellTopBar workspace context architecture', () => {
       '## Consumers',
       'ProjectIdentityBadge',
       'ShellWorkspaceContextMenu',
-      'setTenantId',
-      'setProjectId',
-      'setEnvironmentId',
+      'ShellWorkspaceContextDetails',
+      'Workspace context is breadcrumb-style read-only content on the main screen',
+      'Tenant, project, and environment scope are read-only inside an active project',
+      'Project changes belong to a separate governed project-selection',
       '```mermaid',
     ]) {
       expect(appShellGuide).toContain(requiredGuideSection);
@@ -80,6 +120,8 @@ describe('ShellTopBar workspace context architecture', () => {
       'Global context lives in compact top-bar labels',
       'Shell workspace context',
       'read-only presentation model',
+      'shell-workspace-context-component.md',
+      'shell-workspace-context-user-stories.md',
     ]) {
       expect(workbenchInventory).toContain(requiredInventorySignal);
     }
@@ -88,7 +130,12 @@ describe('ShellTopBar workspace context architecture', () => {
       'shell-context-relocation',
       'ProjectIdentityBadge',
       'ShellWorkspaceContextMenu',
+      'ShellWorkspaceContextDetails',
       'buzon/20260506-codex-fowler-canvas-workbench-shell-context-review-and-risk.md',
+      'buzon/20260506-codex-fowler-canvas-workbench-shell-context-hardening-review.md',
+      'ShellWorkspaceContextComponentGuide',
+      'ShellWorkspaceContextUserStories',
+      'workspace-context-read-only-main-screen',
     ]) {
       expect(stage1Plan).toContain(requiredPlanSignal);
     }
@@ -104,6 +151,52 @@ describe('ShellTopBar workspace context architecture', () => {
       'Semantic Fitness Function',
     ]) {
       expect(mailboxReview).toContain(requiredMailboxSection);
+    }
+
+    for (const requiredHardeningSection of [
+      '## Fowler Architecture Analysis',
+      '## Mature-System Comparison',
+      '## Patterns Improved',
+      '## Antipatterns Detected',
+      '## Component Grouping',
+      '## Repetitions Fixed',
+      '## Drift Fixed',
+      '## Opportunities',
+      '## Teachings For Future Work',
+      '## Recommendations And Risks',
+      '## ADR Decision',
+    ]) {
+      expect(hardeningMailboxReview).toContain(requiredHardeningSection);
+    }
+
+    for (const requiredComponentGuideSection of [
+      '# Shell Workspace Context Component',
+      '## Public API',
+      'ShellWorkspaceContextDetails',
+      '## Invariants',
+      '## Transitions',
+      '## Consumers',
+      '## Component Flow',
+      '## Semantic Fitness Function',
+      '```mermaid',
+    ]) {
+      expect(componentGuide).toContain(requiredComponentGuideSection);
+    }
+
+    for (const requiredStorySection of [
+      '# Shell Workspace Context User Stories',
+      '## Scenario Matrix',
+      '## User Stories',
+      'US-SWC-1',
+      'US-SWC-2',
+      'US-SWC-3',
+      'US-SWC-4',
+      'US-SWC-5',
+      'US-SWC-6',
+      '## Coverage Map',
+      '```mermaid',
+    ]) {
+      expect(userStories).toContain(requiredStorySection);
     }
   });
 });

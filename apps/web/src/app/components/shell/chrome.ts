@@ -1,10 +1,11 @@
+/** Owned concern: publish shell chrome class contracts without route or session authority. */
 export const topAppBarClasses = {
   shellBar:
     'flex h-10 shrink-0 items-center gap-2 border-b border-[color:var(--border-default)] bg-[var(--surface-shell)] px-3 text-[var(--text-default)]',
   brand: 'text-base leading-none font-semibold text-[var(--text-strong)]',
-  selectTrigger:
-    'h-8 border-[color:var(--border-default)] bg-[var(--surface-app)] text-[var(--text-default)]',
-  selectorLabel: 'text-[11px] font-medium uppercase text-[var(--text-subtle)]',
+  readOnlyScopeField:
+    'h-8 rounded-md border border-[color:var(--border-default)] bg-[var(--surface-app)] px-3 text-sm text-[var(--text-default)]',
+  contextLabel: 'text-[11px] font-medium uppercase text-[var(--text-subtle)]',
   gitRef:
     'hidden h-7 items-center gap-1.5 rounded-md border border-transparent px-1.5 text-[11px] text-[var(--text-subtle)] lg:flex',
   gitRefIcon: 'size-3.5 text-[var(--text-subtle)]',

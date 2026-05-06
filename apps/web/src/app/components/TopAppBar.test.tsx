@@ -51,7 +51,7 @@ describe('ShellTopBar workspace context', () => {
     expect(identityBadge?.textContent).toContain('dbt-analytics');
     expect(identityBadge?.textContent).toContain('dev');
     expect(contextTrigger).not.toBeNull();
-    expect(contextTrigger?.textContent).toContain('Scope');
+    expect(contextTrigger?.textContent).toContain('Context');
     expect(topBar?.querySelector('[data-slot="shell-workspace-selectors"]')).toBeNull();
     expect(topBar?.querySelectorAll('[role="combobox"]')).toHaveLength(0);
   });

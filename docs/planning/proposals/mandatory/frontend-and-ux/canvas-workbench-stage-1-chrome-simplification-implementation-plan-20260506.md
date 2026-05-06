@@ -80,8 +80,10 @@ In scope:
 - remove dominant Git reference controls from the main top bar;
 - render compact title, slug, project id, and draft posture as read-only
   context labels;
-- expose scope selection through a bounded on-demand shell context menu or
-  equivalent non-fixed surface;
+- expose tenant, project, and environment as breadcrumb-style read-only shell
+  context only;
+- keep project changes in a separate governed project-selection screen outside
+  this main-workbench shell slice;
 - remove the fixed left navigation rail from the Canvas workbench;
 - preserve the top menu and command palette as command-discovery surfaces;
 - preserve route behavior, protected runtime posture, draft authority, and
@@ -94,6 +96,7 @@ Out of scope:
 - save, export, import, or round-trip project snapshots;
 - new backend routes, contracts, adapters, migrations, or RBAC;
 - protected draft API behavior;
+- project-selection screen implementation;
 - full Git client behavior, branch switching, staging, commit, or conflict UI;
 - embedding Admin screens inside Canvas;
 - hard-coding Add palette, Inspector, Runtime panel, or View strip fragments
@@ -122,8 +125,9 @@ Stage 1 uses Fowler Presentation Model discipline:
 
 - shell context is resolved into a read-only presentation model before render;
 - Canvas view strip is projected by the existing Canvas tab read model;
-- scope change is an explicit shell command, not a top-bar dropdown side
-  effect;
+- workspace context is breadcrumb-style read-only content in the main
+  workbench;
+- project changes belong to a separate governed project-selection screen;
 - layout assertions become semantic fitness functions, not screenshot-only
   confidence;
 - runtime, inspector, Add palette, and Admin navigation stay bounded by named
@@ -145,22 +149,18 @@ No externally observable behavior may be implemented outside these rails. If
 implementation discovers that an existing rail is missing, the catalog must be
 updated before code changes continue.
 
-| Rail                                 | Type    | Bounded context               | DDD owner                               | Stage 1 use                                                                     |
-| ------------------------------------ | ------- | ----------------------------- | --------------------------------------- | ------------------------------------------------------------------------------- |
-| `ListCanvasWorkbenchTabs`            | query   | Canvas workbench presentation | `CanvasWorkbenchTabsReadModel`          | Return route-local tab labels without forcing icon rendering.                   |
-| `SelectCanvasWorkbenchTab`           | command | Canvas workbench presentation | `CanvasWorkbenchTabSelectionCommand`    | Preserve route-scoped tab navigation.                                           |
-| `ResolveCanvasWorkbenchContext`      | query   | Canvas workbench presentation | `CanvasWorkbenchContext`                | Resolve title, slug, compact project id, draft posture, and unavailable state.  |
-| `ListShellNavigationItems`           | query   | Web shell navigation          | `ShellNavigationReadModel`              | Keep global destinations separated from Canvas workbench projections.           |
-| `setTenantId`                        | command | Web auth / workspace scope    | `Web shell session aggregate`           | Move tenant choice out of the main top bar without changing auth.               |
-| `setProjectId`                       | command | Web auth / workspace scope    | `Web shell session aggregate`           | Move project choice out of the main top bar without changing project authority. |
-| `setEnvironmentId`                   | command | Web auth / workspace scope    | `Web shell session aggregate`           | Move environment choice out of the main top bar without changing run context.   |
-| `RefreshSessionGrants`               | query   | Web auth / workspace scope    | Session grants read model               | Limit scope choices to granted tenant/project/environment context.              |
-| `VerifyCanvasWorkbenchVisualPosture` | query   | Browser verification          | `CanvasWorkbenchVisualPostureReadModel` | Prove tab readability, top-bar relocation, and no fixed Canvas left rail.       |
+| Rail                                 | Type    | Bounded context               | DDD owner                               | Stage 1 use                                                                    |
+| ------------------------------------ | ------- | ----------------------------- | --------------------------------------- | ------------------------------------------------------------------------------ |
+| `ListCanvasWorkbenchTabs`            | query   | Canvas workbench presentation | `CanvasWorkbenchTabsReadModel`          | Return route-local tab labels without forcing icon rendering.                  |
+| `SelectCanvasWorkbenchTab`           | command | Canvas workbench presentation | `CanvasWorkbenchTabSelectionCommand`    | Preserve route-scoped tab navigation.                                          |
+| `ResolveCanvasWorkbenchContext`      | query   | Canvas workbench presentation | `CanvasWorkbenchContext`                | Resolve title, slug, compact project id, draft posture, and unavailable state. |
+| `ListShellNavigationItems`           | query   | Web shell navigation          | `ShellNavigationReadModel`              | Keep global destinations separated from Canvas workbench projections.          |
+| `RefreshSessionGrants`               | query   | Web auth / workspace scope    | Session grants read model               | Provide granted labels without making the main shell a selector surface.       |
+| `VerifyCanvasWorkbenchVisualPosture` | query   | Browser verification          | `CanvasWorkbenchVisualPostureReadModel` | Prove tab readability, read-only context, and no fixed Canvas left rail.       |
 
-Stage 1 reuses the existing workspace-scope commands documented by
-`sessionStore.ts`: `setTenantId`, `setProjectId`, and `setEnvironmentId`. Git
-context is read-only in Stage 1 unless a separate accepted Git rail is added
-before implementation.
+Stage 1 does not dispatch tenant, project, or environment switching commands
+from the main workbench shell. Git context is read-only in Stage 1 unless a
+separate accepted Git rail is added before implementation.
 
 ## DDD Object Map
 
@@ -170,7 +170,7 @@ before implementation.
 | `CanvasWorkbenchTabsReadModel`          | read model              | Canvas workbench presentation  | Contains text labels, active state, route target, and availability only.            |
 | `CanvasWorkbenchContext`                | value object            | Canvas workbench presentation  | Context is ready or explicitly unavailable; it never fabricates project identity.   |
 | `ProjectIdentityBadge`                  | read model              | Web shell presentation         | Title, slug, compact project id, and draft posture render as labels, not selectors. |
-| `ShellWorkspaceContextMenu`             | presentation model      | Web shell presentation         | Scope choices are command-backed and bounded by granted session context.            |
+| `ShellWorkspaceContextMenu`             | presentation model      | Web shell presentation         | Tenant, project, and environment render as read-only context details.               |
 | `WorkbenchCapabilityRegistry`           | query input / registry  | Web shell and Canvas workbench | Add/view/runtime availability is capability-driven, not hard-coded.                 |
 | `AddPalettePresentationPreference`      | presentation preference | Canvas workbench presentation  | Pinning is UI preference only and cannot become domain state or a second nav rail.  |
 | `RuntimeEvidencePanelState`             | presentation model      | Canvas runtime evidence        | Runtime panel is collapsed without active run and visible on failed run.            |
@@ -218,17 +218,21 @@ Folder guardrails:
 
 ## Fowler Opportunity Matrix
 
-| Scenario                                            | Opportunity                                          | Fowler response                                            | DDD owner                                                         | Rail                                                                                                       | Tests                                                                              | Out of scope                                   |
-| --------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------- |
-| Canvas tabs show icons and risk visual noise.       | Presentation drift and primitive visual confidence.  | Presentation Model with text-only tab projection.          | `CanvasWorkbenchTabsReadModel`                                    | `ListCanvasWorkbenchTabs`                                                                                  | Unit read-model test, architecture guard, Cypress label readability.               | New routes or tab semantics.                   |
-| Canvas tabs must stay horizontal and readable.      | Test-only confidence.                                | Semantic Fitness Function.                                 | `CanvasWorkbenchVisualPostureReadModel`                           | `VerifyCanvasWorkbenchVisualPosture`                                                                       | Cypress rectangle and text overflow assertions.                                    | Screenshot-only proof.                         |
-| Scope selectors dominate the main top bar.          | Boundary drift between shell context and route work. | Application Controller plus read-only context read model.  | `ProjectIdentityBadge`                                            | `ResolveCanvasWorkbenchContext`, `setTenantId`, `setProjectId`, `setEnvironmentId`, `RefreshSessionGrants` | Top-bar unit/architecture guard and Cypress reachable scope selection.             | New auth, tenant admin, RBAC.                  |
-| Environment selection risks an ad hoc rail.         | Hidden command creation risk.                        | Command Query Separation gate.                             | `Web shell session aggregate`                                     | Reuse `setEnvironmentId`; catalog update required before code only if a different rail is needed.          | Architecture test fails if environment selection is moved without catalog mapping. | Ad hoc store action names.                     |
-| Git reference controls sit in the top bar.          | Feature envy and UI authority drift.                 | Read-only reference projection.                            | Shell Git context read model, if present                          | Query only unless a Git command rail is accepted.                                                          | Architecture guard prevents branch-switch command from this slice.                 | Browser Git client.                            |
-| Canvas still has fixed left navigation.             | Duplicate navigation semantics.                      | Semantic Fitness Function and bounded shell layout policy. | `CanvasWorkbenchChrome`                                           | `ListShellNavigationItems`, `ListCanvasWorkbenchTabs`                                                      | Cypress no fixed Canvas rail; architecture guard for shell/workbench split.        | Removing all global destinations from the app. |
-| Insert/Add becomes a permanent panel.               | Hidden authority and panel sprawl.                   | Command Query Separation plus Presentation Preference.     | `AddPalettePresentationPreference`, `WorkbenchCapabilityRegistry` | Existing or cataloged Insert command rails                                                                 | Architecture guard: Add is unpinned/closed by default and capability-driven.       | Full Add palette redesign unless touched.      |
-| Inspector, Runtime, and minimap compete with graph. | Responsibility overload.                             | Progressive Disclosure presentation models.                | `CanvasInspectorPanelState`, `RuntimeEvidencePanelState`          | Existing panel toggle or run evidence rails                                                                | Cypress/architecture checks for default collapsed or contextual posture.           | Runtime diagnostics redesign.                  |
-| Admin appears as Canvas content.                    | Bounded-context leak.                                | Separate shell destination.                                | `ShellNavigationReadModel`                                        | `ListShellNavigationItems`                                                                                 | Architecture guard: Admin remains shell-level destination.                         | Admin feature implementation.                  |
+<!-- markdownlint-disable MD060 -->
+
+| Scenario                                            | Opportunity                                          | Fowler response                                            | DDD owner                                                         | Rail                                                                           | Tests                                                                        | Out of scope                                   |
+| --------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- | ---------------------------------------------- |
+| Canvas tabs show icons and risk visual noise.       | Presentation drift and primitive visual confidence.  | Presentation Model with text-only tab projection.          | `CanvasWorkbenchTabsReadModel`                                    | `ListCanvasWorkbenchTabs`                                                      | Unit read-model test, architecture guard, Cypress label readability.         | New routes or tab semantics.                   |
+| Canvas tabs must stay horizontal and readable.      | Test-only confidence.                                | Semantic Fitness Function.                                 | `CanvasWorkbenchVisualPostureReadModel`                           | `VerifyCanvasWorkbenchVisualPosture`                                           | Cypress rectangle and text overflow assertions.                              | Screenshot-only proof.                         |
+| Scope selectors dominate the main top bar.          | Boundary drift between shell context and route work. | Application Controller plus read-only context read model.  | `ProjectIdentityBadge`                                            | `ResolveCanvasWorkbenchContext`, `RefreshSessionGrants`                        | Top-bar unit/architecture guard and Cypress read-only context proof.         | New auth, tenant admin, RBAC.                  |
+| Environment selection risks an ad hoc rail.         | Hidden command creation risk.                        | Command Query Separation gate.                             | `ShellWorkspaceContextDetails`                                    | No main-screen mutation rail; project/environment selection belongs elsewhere. | Architecture test fails if shell context exposes mutation controls.          | Ad hoc store action names.                     |
+| Git reference controls sit in the top bar.          | Feature envy and UI authority drift.                 | Read-only reference projection.                            | Shell Git context read model, if present                          | Query only unless a Git command rail is accepted.                              | Architecture guard prevents branch-switch command from this slice.           | Browser Git client.                            |
+| Canvas still has fixed left navigation.             | Duplicate navigation semantics.                      | Semantic Fitness Function and bounded shell layout policy. | `CanvasWorkbenchChrome`                                           | `ListShellNavigationItems`, `ListCanvasWorkbenchTabs`                          | Cypress no fixed Canvas rail; architecture guard for shell/workbench split.  | Removing all global destinations from the app. |
+| Insert/Add becomes a permanent panel.               | Hidden authority and panel sprawl.                   | Command Query Separation plus Presentation Preference.     | `AddPalettePresentationPreference`, `WorkbenchCapabilityRegistry` | Existing or cataloged Insert command rails                                     | Architecture guard: Add is unpinned/closed by default and capability-driven. | Full Add palette redesign unless touched.      |
+| Inspector, Runtime, and minimap compete with graph. | Responsibility overload.                             | Progressive Disclosure presentation models.                | `CanvasInspectorPanelState`, `RuntimeEvidencePanelState`          | Existing panel toggle or run evidence rails                                    | Cypress/architecture checks for default collapsed or contextual posture.     | Runtime diagnostics redesign.                  |
+| Admin appears as Canvas content.                    | Bounded-context leak.                                | Separate shell destination.                                | `ShellNavigationReadModel`                                        | `ListShellNavigationItems`                                                     | Architecture guard: Admin remains shell-level destination.                   | Admin feature implementation.                  |
+
+<!-- markdownlint-enable MD060 -->
 
 ## Target State Diagram
 
@@ -237,8 +241,8 @@ flowchart TB
   Shell["Persistent shell"] --> TopMenu["Top menu and command palette"]
   Shell --> Context["Read-only context labels"]
   Shell --> Canvas["Canvas workbench route"]
-  Context --> ContextMenu["On-demand workspace context menu"]
-  ContextMenu --> ScopeCommands["setTenantId / setProjectId / setEnvironmentId"]
+  Context --> ContextMenu["On-demand read-only workspace context"]
+  ContextMenu --> ContextDetails["tenant / project / environment details"]
   Canvas --> Title["Canvas title, slug, project id, draft posture"]
   Canvas --> Strip["Text-only view strip"]
   Canvas --> Commands["Route toolbar and command surfaces"]
@@ -320,9 +324,9 @@ Actions:
 
 1. Add Stage 1 local component-guide deltas for top-bar context labels,
    text-only Canvas workbench tabs, no fixed Canvas left rail, and on-demand
-   workspace context selection.
-2. Add or map the environment scope command rail before any environment
-   selector move reaches code.
+   read-only workspace context details.
+2. Record that project selection belongs to a separate governed
+   project-selection screen before any selector move reaches code.
 3. Record Git as read-only in Stage 1 unless a Git command rail is separately
    accepted.
 4. Add a folder-structure architecture guard that fails when new Stage 1 shell,
@@ -386,16 +390,16 @@ pnpm --filter @dvt/web test -- TopAppBar
 
 Expected failure: tenant, project, environment, or dominant Git controls still
 render as main top-bar controls instead of read-only labels plus an on-demand
-context surface.
+read-only context surface.
 
 Green:
 
 - render title, slug, compact project id, and draft posture as labels;
-- move tenant/project/environment choice to a bounded shell context menu;
+- render tenant/project/environment as read-only context details only;
 - keep shell React chrome in `components/shell` and pure shell models in
   `app/shell`;
-- keep scope changes backed by `setTenantId`, `setProjectId`,
-  `setEnvironmentId`, and `RefreshSessionGrants`.
+- do not dispatch tenant/project/environment switching commands from the main
+  workbench shell.
 
 ### Task 4: No Fixed Canvas Left Rail Guard
 
@@ -513,7 +517,9 @@ Stage 1 is accepted only when:
 - Git context no longer appears as a dominant main top-bar control;
 - active project identity and draft posture remain visible as read-only
   context;
-- scope selection remains reachable through command-backed shell context;
+- tenant, project, and environment context remains reachable as read-only
+  shell details;
+- project selection remains outside the main workbench shell;
 - Canvas workbench renders without a fixed left navigation rail;
 - Add palette, View strip, Runtime panel, Inspector, and Admin navigation are
   driven by explicit state and capability contracts;
@@ -532,6 +538,7 @@ noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-1-chrome-simplification-implementation-plan-20260506.md
 componentGuides:
   - docs/architecture/components/web/appshell/app-shell.md
+  - docs/architecture/components/web/appshell/shell-workspace-context-component.md
   - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
   - docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md
   - docs/architecture/components/web/main-workspace-views-and-ux.md
@@ -542,6 +549,7 @@ componentGuides:
 userStories:
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-1-chrome-simplification-implementation-plan-20260506.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md
+  - docs/architecture/components/web/appshell/shell-workspace-context-user-stories.md
   - docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md
 governingSources:
   - AGENTS.md
@@ -552,6 +560,8 @@ governingSources:
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/architecture/components/web/appshell/app-shell.md
+  - docs/architecture/components/web/appshell/shell-workspace-context-component.md
+  - docs/architecture/components/web/appshell/shell-workspace-context-user-stories.md
   - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/architecture/components/api/protected-runtime-command-query-rail-design.md
@@ -559,6 +569,8 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-1-chrome-simplification-implementation-plan-20260506.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md
   - docs/architecture/components/web/appshell/app-shell.md
+  - docs/architecture/components/web/appshell/shell-workspace-context-component.md
+  - docs/architecture/components/web/appshell/shell-workspace-context-user-stories.md
   - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
   - docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md
   - docs/architecture/components/web/main-workspace-views-and-ux.md
@@ -569,6 +581,7 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md
   - buzon/20260506-codex-fowler-canvas-workbench-stage-1-text-only-tabs-review.md
   - buzon/20260506-codex-fowler-canvas-workbench-shell-context-review-and-risk.md
+  - buzon/20260506-codex-fowler-canvas-workbench-shell-context-hardening-review.md
   - docs/planning/state/agent-lane-e.yaml
   - docs/planning/state/agent-lane-e.md
   - docs/planning/state/execution-workboard.md
@@ -616,15 +629,6 @@ commandQueryRails:
   - name: ListShellNavigationItems
     type: query
     dddOwner: ShellNavigationReadModel
-  - name: setTenantId
-    type: command
-    dddOwner: Web shell session aggregate
-  - name: setProjectId
-    type: command
-    dddOwner: Web shell session aggregate
-  - name: setEnvironmentId
-    type: command
-    dddOwner: Web shell session aggregate
   - name: RefreshSessionGrants
     type: query
     dddOwner: Session grants read model
@@ -673,6 +677,7 @@ fowlerSignals:
   - Documentation drift
 architectureGuards:
   - pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
+  - pnpm --filter @dvt/web test -- TopAppBar
   - pnpm docs:feature-mechanization:implementation
 cypressFlows:
   - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
@@ -680,6 +685,7 @@ completionGate:
   - pnpm docs:feature-mechanization:implementation
   - pnpm lint:md:changed
   - pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.test.ts src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
+  - pnpm --filter @dvt/web test -- TopAppBar
   - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
   - pnpm --filter @dvt/web typecheck
   - pnpm verify:prepush
@@ -729,6 +735,21 @@ redGreenCycles:
       - docs/architecture/components/web/appshell/app-shell.md
       - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
     greenTest: pnpm --filter @dvt/web test -- TopAppBar
+  - id: workspace-context-read-only-main-screen
+    redTest: pnpm --filter @dvt/web test -- TopAppBar
+    expectedFailure: Shell workspace context still exposes main-screen mutation controls or lacks local component/story semantic guards.
+    patchSurfaces:
+      - apps/web/src/app/Root.shellChrome.test.support.ts
+      - apps/web/src/app/components/TopAppBar.architecture.test.ts
+      - apps/web/src/app/components/shell/chrome.ts
+      - apps/web/src/app/components/shell/ShellWorkspaceContextDetails.tsx
+      - apps/web/src/app/components/shell/ShellWorkspaceContextMenu.tsx
+      - docs/architecture/components/web/appshell/app-shell.md
+      - docs/architecture/components/web/appshell/shell-workspace-context-component.md
+      - docs/architecture/components/web/appshell/shell-workspace-context-user-stories.md
+      - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
+      - buzon/20260506-codex-fowler-canvas-workbench-shell-context-hardening-review.md
+    greenTest: pnpm --filter @dvt/web test -- TopAppBar
   - id: no-fixed-canvas-left-rail
     redTest: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
     expectedFailure: Canvas route still permits a fixed left navigation rail inside the workbench.
@@ -742,7 +763,7 @@ redGreenCycles:
     greenTest: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
   - id: browser-posture-proof
     redTest: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
-    expectedFailure: Cypress does not yet prove text-only tabs, reachable scope selection, context labels, and no fixed Canvas left rail.
+    expectedFailure: Cypress does not yet prove text-only tabs, read-only workspace context, context labels, and no fixed Canvas left rail.
     patchSurfaces:
       - apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
       - apps/web/cypress/support/**
@@ -886,12 +907,10 @@ symbols:
     path: apps/web/src/app/components/shell/ShellWorkspaceContextMenu.tsx
     dddOwner: ShellWorkspaceContextMenu
     cqRails:
-      - setTenantId
-      - setProjectId
-      - setEnvironmentId
+      - ResolveCanvasWorkbenchContext
       - RefreshSessionGrants
     fowlerSignals:
-      - Command Query Separation
+      - Presentation Model
       - Hidden authority
     architectureGuard: pnpm --filter @dvt/web test -- TopAppBar
     cypressCoverage: canvas-workbench-tabs.cy.ts
@@ -901,28 +920,69 @@ symbols:
     path: apps/web/src/app/components/shell/ShellWorkspaceContextMenu.tsx
     dddOwner: ShellWorkspaceContextMenu contract
     cqRails:
-      - setTenantId
-      - setProjectId
-      - setEnvironmentId
+      - ResolveCanvasWorkbenchContext
       - RefreshSessionGrants
     fowlerSignals:
-      - Command Query Separation
+      - Presentation Model
       - Hidden authority
     architectureGuard: pnpm --filter @dvt/web test -- TopAppBar
     cypressCoverage: canvas-workbench-tabs.cy.ts
     unitTests:
       - pnpm --filter @dvt/web test -- TopAppBar
-  - name: ShellWorkspaceSelectorsProps
-    path: apps/web/src/app/components/shell/ShellWorkspaceSelectors.tsx
-    dddOwner: ShellWorkspaceContextMenu selector contract
+  - name: ShellWorkspaceContextDetails
+    path: apps/web/src/app/components/shell/ShellWorkspaceContextDetails.tsx
+    dddOwner: ShellWorkspaceContextMenu read-only details
     cqRails:
-      - setTenantId
-      - setProjectId
-      - setEnvironmentId
+      - ResolveCanvasWorkbenchContext
       - RefreshSessionGrants
     fowlerSignals:
-      - Command Query Separation
+      - Presentation Model
       - Hidden authority
+      - Boundary drift
+    architectureGuard: pnpm --filter @dvt/web test -- TopAppBar
+    cypressCoverage: canvas-workbench-tabs.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- TopAppBar
+  - name: ShellWorkspaceContextDetailsProps
+    path: apps/web/src/app/components/shell/ShellWorkspaceContextDetails.tsx
+    dddOwner: ShellWorkspaceContextMenu details contract
+    cqRails:
+      - ResolveCanvasWorkbenchContext
+      - RefreshSessionGrants
+    fowlerSignals:
+      - Presentation Model
+      - Hidden authority
+    architectureGuard: pnpm --filter @dvt/web test -- TopAppBar
+    cypressCoverage: canvas-workbench-tabs.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- TopAppBar
+  - name: ShellWorkspaceContextComponentGuide
+    path: docs/architecture/components/web/appshell/shell-workspace-context-component.md
+    dddOwner: ShellWorkspaceContextMenu component guide
+    cqRails:
+      - ResolveCanvasWorkbenchContext
+      - RefreshSessionGrants
+      - VerifyCanvasWorkbenchVisualPosture
+    fowlerSignals:
+      - Presentation Model
+      - Command Query Separation
+      - Semantic Fitness Function
+      - Documentation drift
+    architectureGuard: pnpm --filter @dvt/web test -- TopAppBar
+    cypressCoverage: canvas-workbench-tabs.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- TopAppBar
+  - name: ShellWorkspaceContextUserStories
+    path: docs/architecture/components/web/appshell/shell-workspace-context-user-stories.md
+    dddOwner: ShellWorkspaceContextMenu scenario guide
+    cqRails:
+      - ResolveCanvasWorkbenchContext
+      - RefreshSessionGrants
+      - VerifyCanvasWorkbenchVisualPosture
+    fowlerSignals:
+      - Semantic Fitness Function
+      - Documentation drift
+      - Boundary drift
     architectureGuard: pnpm --filter @dvt/web test -- TopAppBar
     cypressCoverage: canvas-workbench-tabs.cy.ts
     unitTests:
@@ -983,9 +1043,6 @@ symbols:
     dddOwner: CanvasWorkbenchVisualPostureReadModel
     cqRails:
       - VerifyCanvasWorkbenchVisualPosture
-      - setTenantId
-      - setProjectId
-      - setEnvironmentId
     fowlerSignals:
       - Semantic Fitness Function
       - Boundary drift
