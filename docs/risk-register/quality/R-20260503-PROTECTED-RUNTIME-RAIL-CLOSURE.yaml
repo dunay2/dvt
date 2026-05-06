@@ -21,9 +21,10 @@ mitigation:
     composition.
   - Use
     `docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md`
-    as the implementation entry point for the closure slice.
+    and `docs/planning/closeouts/20260505-ar-c10-protected-runtime-rail-closure-closeout.md` as the
+    historical entry points for the closure slice.
   - Keep route-level behavior aligned with existing canonical command/query rails; do not introduce
-    parallel route semantics while the closure task is pending.
+    parallel route semantics after closure.
   - Require negative authorization and tenant-scope coverage in the executable rail catalog for any
     future protected runtime route change.
   - Keep `CANCEL` through `/signal` classified as compatibility and mapped back to canonical

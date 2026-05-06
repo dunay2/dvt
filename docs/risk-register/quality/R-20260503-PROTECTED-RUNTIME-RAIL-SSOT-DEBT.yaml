@@ -1,7 +1,7 @@
 ---
 id: R-20260503-PROTECTED-RUNTIME-RAIL-SSOT-DEBT
-title: Protected runtime rail catalog still has duplicated documentation truth
-status: Open
+title: Protected runtime rail catalog documentation source of truth is closed
+status: Closed
 date: 2026-05-03
 owners:
   - dvt-api
@@ -10,20 +10,20 @@ severity: Medium
 probability: Medium
 ---
 summary: >
-  AR-C10 closed the protected runtime command/query rail catalog, negative evidence mapping, and
-  explicit compatibility posture. A follow-up debt remains: the executable catalog is canonical, but
-  route matrices and closure language are still represented manually in component and planning
-  documentation. That creates a future drift risk where code, docs, lane state, and risk posture can
-  diverge even though each surface is locally valid.
+  AR-C10 closes the protected runtime command/query rail catalog, negative evidence mapping,
+  explicit compatibility posture, and source-of-truth documentation posture. The executable catalog
+  is the only row-level rail truth. Component and planning docs summarize and link to that catalog
+  instead of carrying a second manual route matrix.
 
 root_cause: >
   The closure slice prioritized making the protected runtime rails executable and mechanically
-  testable. The documentation was kept aligned by hand in the same PR, but no generator or guard yet
-  enforces that `PROTECTED_RUNTIME_COMMAND_QUERY_RAILS` is the single source of truth for rendered
-  component guidance.
+  testable. The follow-up closure reduced duplicated documentation truth, added architecture-test
+  coverage for the source-of-truth rule, removed ambiguous canonical-plan authorization wording, and
+  documented the signal parser constants facade as intentional.
 
 debt_items:
   - id: AR-C10-D-01
+    status: Closed
     title: Generate or reduce the protected runtime route matrix documentation
     description: >
       Keep `apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts` as the only
@@ -35,11 +35,13 @@ debt_items:
     affected_surfaces:
       - apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts
       - apps/api/docs/protected-runtime-route-group-component.md
+      - docs/architecture/components/api/protected-runtime-command-query-rail-design.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
     required_tests:
       - apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
       - pnpm docs:feature-mechanization:implementation
   - id: AR-C10-D-02
+    status: Closed
     title: Remove ambiguous compatibility wording from canonical planner rails
     description: >
       `PreviewExecutablePlan`, `CompileExecutablePlan`, and `ImportExecutablePlan` are classified as
@@ -54,6 +56,7 @@ debt_items:
     required_tests:
       - apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
   - id: AR-C10-D-03
+    status: Closed
     title: Decide whether the signal parser constants facade is intentional
     description: >
       `signalRunRouteParser.constants.ts` is a thin re-export facade over authorization and
@@ -79,9 +82,19 @@ acceptance:
   - 'The signal parser constants facade is either documented as intentional or removed.'
   - 'No protected runtime rail accepts legacy behavior as canonical behavior.'
 
+closure_evidence:
+  - docs/architecture/components/api/protected-runtime-command-query-rail-design.md
+  - apps/api/docs/protected-runtime-route-group-component.md
+  - apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts
+  - apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - docs/planning/closeouts/20260505-ar-c10-protected-runtime-rail-closure-closeout.md
+  - pnpm --filter dvt-api exec vitest run
+    test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - pnpm verify:prepush
+
 monitoring:
   cadence: per PR touching protected runtime route governance
   signals:
     - 'apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts fails on
       duplicated or stale protected runtime rail documentation'
-    - 'docs:feature-mechanization:implementation keeps the follow-up debt surfaced until closure'
+    - 'docs:feature-mechanization:implementation keeps AR-C10 implementation surfaces constrained'

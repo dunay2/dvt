@@ -446,13 +446,20 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 ### API auth and runtime boundary
 
 - Canonical spec:
+  [Protected runtime command/query rail design](../../architecture/components/api/protected-runtime-command-query-rail-design.md)
+  and
+  [Command And Query Rail Governance](../../architecture/command-query-rail-governance.md)
+  and
   [G8 Real Auth Final Spec](../archive/gaps/G8-REAL-AUTH-FINAL-SPEC.md)
 - Current status source:
   [System Delivery Status](../../architecture/system-delivery-status.md) (`G8`)
 - Current posture:
   G8 is **Closed** and the protected runtime command/query surface now has a
-  dedicated OIDC plus PostgreSQL integration lane.
-  The active local component guides for the `start-run` slice are:
+  dedicated OIDC plus PostgreSQL integration lane. `AR-C10` adds the
+  executable rail catalog as the route-family source of truth for protected
+  runtime session, plan, workspace, run, and admin repair rails.
+  The active local component guides for the protected runtime boundary are:
+  `apps/api/docs/protected-runtime-route-group-component.md`,
   `apps/api/docs/start-run-http-entrypoint-component.md`,
   `apps/api/docs/start-run-control-boundary-component.md`,
   `apps/api/docs/start-run-platform-identity-component.md`,
@@ -464,13 +471,28 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [apps/api/src/app.ts](../../../apps/api/src/app.ts),
   [apps/api/src/application/services/WorkflowEngineFactory.ts](../../../apps/api/src/application/services/WorkflowEngineFactory.ts),
   [apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts](../../../apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts),
+  [apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts](../../../apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts),
+  [apps/api/src/application/ports/protectedRuntimePlanCommandQueryRails.ts](../../../apps/api/src/application/ports/protectedRuntimePlanCommandQueryRails.ts),
+  [apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts](../../../apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts),
+  [apps/api/src/application/ports/protectedRuntimeRunCommandQueryRails.ts](../../../apps/api/src/application/ports/protectedRuntimeRunCommandQueryRails.ts),
+  [apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts](../../../apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts),
   [apps/api/src/modules/buildProtectedRuntimeModule.ts](../../../apps/api/src/modules/buildProtectedRuntimeModule.ts),
   [apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts](../../../apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts),
+  [apps/api/src/entrypoints/http/runtimeRoutes.constants.ts](../../../apps/api/src/entrypoints/http/runtimeRoutes.constants.ts),
+  [apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts](../../../apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts),
   [apps/api/src/entrypoints/http/startRunRoute.ts](../../../apps/api/src/entrypoints/http/startRunRoute.ts),
+  [apps/api/src/entrypoints/http/previewPlanRoute.ts](../../../apps/api/src/entrypoints/http/previewPlanRoute.ts),
+  [apps/api/src/entrypoints/http/compilePlanRoute.ts](../../../apps/api/src/entrypoints/http/compilePlanRoute.ts),
+  [apps/api/src/entrypoints/http/importPlanRoute.ts](../../../apps/api/src/entrypoints/http/importPlanRoute.ts),
+  [apps/api/src/entrypoints/http/workspaceGraphDraftRoutes.ts](../../../apps/api/src/entrypoints/http/workspaceGraphDraftRoutes.ts),
+  [apps/api/src/entrypoints/http/workspaceFilesRoutes.ts](../../../apps/api/src/entrypoints/http/workspaceFilesRoutes.ts),
   [apps/api/src/entrypoints/http/listRunsRoute.ts](../../../apps/api/src/entrypoints/http/listRunsRoute.ts),
   [apps/api/src/entrypoints/http/getRunRoute.ts](../../../apps/api/src/entrypoints/http/getRunRoute.ts),
   [apps/api/src/entrypoints/http/getRunEventsRoute.ts](../../../apps/api/src/entrypoints/http/getRunEventsRoute.ts),
   [apps/api/src/entrypoints/http/signalRunRoute.ts](../../../apps/api/src/entrypoints/http/signalRunRoute.ts),
+  [apps/api/src/entrypoints/http/cancelRunRoute.ts](../../../apps/api/src/entrypoints/http/cancelRunRoute.ts),
+  [apps/api/src/entrypoints/http/recoverRunRoute.ts](../../../apps/api/src/entrypoints/http/recoverRunRoute.ts),
+  [apps/api/src/entrypoints/http/adminRoutes.ts](../../../apps/api/src/entrypoints/http/adminRoutes.ts),
   [apps/api/src/infrastructure/backpressure/RawSqlBackpressureStore.ts](../../../apps/api/src/infrastructure/backpressure/RawSqlBackpressureStore.ts),
   [apps/api/src/infrastructure/backpressure/CachedBackpressureStore.ts](../../../apps/api/src/infrastructure/backpressure/CachedBackpressureStore.ts),
   [apps/api/src/infrastructure/backpressure/CircuitBreakingBackpressureStore.ts](../../../apps/api/src/infrastructure/backpressure/CircuitBreakingBackpressureStore.ts),
@@ -488,15 +510,24 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [apps/api/test/application/services/BackpressureAwareStartRunUseCase.executionCapacity.test.ts](../../../apps/api/test/application/services/BackpressureAwareStartRunUseCase.executionCapacity.test.ts),
   [apps/api/test/application/services/startRunApplicationComponent.architecture.test.ts](../../../apps/api/test/application/services/startRunApplicationComponent.architecture.test.ts),
   [apps/api/test/application/services/WorkflowEngineFactory.test.ts](../../../apps/api/test/application/services/WorkflowEngineFactory.test.ts),
+  [apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts](../../../apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts),
   [apps/api/test/entrypoints/http/startRunHttpEntrypointComponent.architecture.test.ts](../../../apps/api/test/entrypoints/http/startRunHttpEntrypointComponent.architecture.test.ts),
   [apps/api/test/entrypoints/http/startRunRoute.validation.test.ts](../../../apps/api/test/entrypoints/http/startRunRoute.validation.test.ts),
   [apps/api/test/entrypoints/http/startRunRoute.planSourcePolicy.test.ts](../../../apps/api/test/entrypoints/http/startRunRoute.planSourcePolicy.test.ts),
   [apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts](../../../apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts),
   [apps/api/test/entrypoints/http/startRunRoute.engineErrorTranslation.test.ts](../../../apps/api/test/entrypoints/http/startRunRoute.engineErrorTranslation.test.ts),
+  [apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts](../../../apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts),
+  [apps/api/test/entrypoints/http/compilePlanRoute.test.ts](../../../apps/api/test/entrypoints/http/compilePlanRoute.test.ts),
+  [apps/api/test/entrypoints/http/importPlanRoute.test.ts](../../../apps/api/test/entrypoints/http/importPlanRoute.test.ts),
+  [apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts](../../../apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts),
+  [apps/api/test/entrypoints/http/workspaceFilesRoutes.test.ts](../../../apps/api/test/entrypoints/http/workspaceFilesRoutes.test.ts),
   [apps/api/test/entrypoints/http/listRunsRoute.test.ts](../../../apps/api/test/entrypoints/http/listRunsRoute.test.ts),
   [apps/api/test/entrypoints/http/getRunRoute.test.ts](../../../apps/api/test/entrypoints/http/getRunRoute.test.ts),
   [apps/api/test/entrypoints/http/getRunEventsRoute.test.ts](../../../apps/api/test/entrypoints/http/getRunEventsRoute.test.ts),
   [apps/api/test/entrypoints/http/signalRunRoute.test.ts](../../../apps/api/test/entrypoints/http/signalRunRoute.test.ts),
+  [apps/api/test/entrypoints/http/cancelRunRoute.test.ts](../../../apps/api/test/entrypoints/http/cancelRunRoute.test.ts),
+  [apps/api/test/entrypoints/http/recoverRunRoute.test.ts](../../../apps/api/test/entrypoints/http/recoverRunRoute.test.ts),
+  [apps/api/test/entrypoints/http/adminRoutes.test.ts](../../../apps/api/test/entrypoints/http/adminRoutes.test.ts),
   [apps/api/test/infrastructure/backpressure/RawSqlBackpressureStore.test.ts](../../../apps/api/test/infrastructure/backpressure/RawSqlBackpressureStore.test.ts),
   [apps/api/test/infrastructure/backpressure/CachedBackpressureStore.test.ts](../../../apps/api/test/infrastructure/backpressure/CachedBackpressureStore.test.ts),
   [apps/api/test/infrastructure/backpressure/CircuitBreakingBackpressureStore.test.ts](../../../apps/api/test/infrastructure/backpressure/CircuitBreakingBackpressureStore.test.ts),
@@ -504,10 +535,16 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [apps/api/test/integration/protectedRuntime.integration.test.ts](../../../apps/api/test/integration/protectedRuntime.integration.test.ts)
 - Evidence:
   [ED-20260320 - API runtime query integration](../../evidence/critical/ED-20260320-api-runtime-query-integration.md)
+  and
+  [AR-C10 protected runtime rail closure closeout](../closeouts/20260505-ar-c10-protected-runtime-rail-closure-closeout.md)
 - Risk:
   [R-20260308 API auth runtime integration coverage](../../risk-register/quality/R-20260308-api-auth-runtime-integration-coverage.md)
+  and
+  [R-20260503 Protected runtime rail SSOT debt](../../risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-SSOT-DEBT.yaml)
 - Verification:
   `pnpm --filter dvt-api typecheck`
+  and
+  `pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts`
   and
   `pnpm --filter dvt-api test`
   and

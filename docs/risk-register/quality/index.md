@@ -77,7 +77,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Plugin admission architecture can drift back into executor-specific coupling](R-20260429-PLUGIN-ADMISSION-ARCHITECTURE.yaml)
 - [Policy-first precedence drift for unbounded timeout and concurrency](R-20260405-MWA2-POLICY-UNBOUNDED-PRECEDENCE.yaml)
 - [Postgres three-part model migration and compatibility drift](R-20260403-S08-4-POSTGRES-THREE-PART-MODEL.yaml)
-- [Protected runtime rail catalog still has duplicated documentation truth](R-20260503-PROTECTED-RUNTIME-RAIL-SSOT-DEBT.yaml)
+- [Protected runtime rail catalog documentation source of truth is closed](R-20260503-PROTECTED-RUNTIME-RAIL-SSOT-DEBT.yaml)
 - [Protected runtime rail closure is governed by executable C&Q evidence](R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml)
 - [Provider runtimes can regress to unchecked PlanRef execution](R-20260424-TEMPORAL-PLAN-REF-CONTRACT.yaml)
 - [R-20260307-GOLDEN-PATH-01 - Golden-path coverage debt can hide engine and adapter regressions](R-20260307-golden-path-coverage-debt.md)

@@ -26,6 +26,7 @@ surface, authorization rule, negative tests, and component documentation.
 - `docs/guides/ai-work-protocol.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
+- `docs/architecture/components/api/protected-runtime-command-query-rail-design.md`
 - `docs/planning/state/agent-lane-c.yaml`
 - `docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/tenant-run-identity-platform-owned-run-id-plan-20260423.md`
@@ -166,29 +167,42 @@ each protected runtime route:
 - component documentation owner,
 - legacy/drift posture.
 
-## Protected Runtime Rail Matrix
+## Architecture Design Handoff
 
-| Route                                      | Rail    | Bounded context              | DDD object/read model       | Application owner                                | Adapter surface                             | Authorization                                                 | Required negative tests                                                                    |
-| ------------------------------------------ | ------- | ---------------------------- | --------------------------- | ------------------------------------------------ | ------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `GET /session`                             | Query   | Runtime session admission    | authenticated session       | `IAuthenticator`                                 | protected HTTP route                        | authenticated principal bearer token                          | missing token, authentication failed                                                       |
-| `POST /runs/start`                         | Command | Runtime safety and admission | `Run` command admission     | `StartRunAuthorizedFacade` / start-run use cases | protected HTTP route                        | `run:start`, tenant scope                                     | missing token, missing action, tenant mismatch, client `runId`, invalid plan source        |
-| `POST /plans/preview`                      | Command | Planner/runtime admission    | executable plan draft       | `PreviewPlanUseCase`                             | protected HTTP route                        | planner/runtime command scope, tenant scope                   | missing token, missing action, tenant mismatch, invalid graph source, invalid selection    |
-| `POST /plans/compile`                      | Query   | Planner boundary             | compiled plan response      | `CompilePlanUseCase`                             | protected HTTP route                        | planner query/action scope, tenant scope                      | missing token, missing action, tenant mismatch, unsupported adapter                        |
-| `POST /plans/import`                       | Command | Runtime plan ingestion       | imported executable plan    | `ImportPlanUseCase`                              | protected HTTP route                        | plan import command scope, tenant scope                       | missing token, missing action, tenant mismatch, invalid plan ref                           |
-| `GET /workspace/graph/draft`               | Query   | Workspace graph drafting     | workspace draft read model  | `getWorkspaceGraphDraftUseCase`                  | protected HTTP route                        | workspace draft read scope                                    | missing token, missing action, tenant/workspace mismatch                                   |
-| `PUT /workspace/graph/draft`               | Command | Workspace graph drafting     | workspace draft aggregate   | `saveWorkspaceGraphDraftUseCase`                 | protected HTTP route                        | workspace draft save scope                                    | missing token, missing action, tenant/workspace mismatch, stale authority                  |
-| `GET /runs`                                | Query   | Runtime read model           | run list read model         | `ListRunsUseCase`                                | protected HTTP route                        | `run:list`, tenant scope                                      | missing token, missing action, tenant mismatch                                             |
-| `GET /runs/:runId`                         | Query   | Runtime read model           | run status read model       | `GetRunStatusUseCase`                            | protected HTTP route                        | `run:view`, tenant scope                                      | missing token, missing action, tenant mismatch, unknown run                                |
-| `GET /runs/:runId/events`                  | Query   | Runtime read model           | run event stream read model | `GetRunEventsUseCase`                            | protected HTTP route                        | `run:logs:view`, tenant scope                                 | missing token, missing action, tenant mismatch, unknown run                                |
-| `POST /runs/:runId/signal`                 | Command | Runtime control              | run signal command          | `SignalRunUseCase`                               | protected HTTP route                        | `run:signal`, or `run:cancel` only for compatibility `CANCEL` | missing token, missing action, tenant mismatch, unsupported signal, compatibility disabled |
-| `POST /runs/:runId/cancel`                 | Command | Runtime control              | run cancel command          | `CancelRunUseCase`                               | protected HTTP route                        | `run:cancel`, tenant scope                                    | missing token, missing action, tenant mismatch, non-empty reason                           |
-| `POST /runs/:runId/recover`                | Command | Runtime recovery             | run recovery command        | `RecoverRunUseCase`                              | protected HTTP route                        | recovery command scope, tenant scope                          | missing token, missing action, tenant mismatch, invalid recovery source                    |
-| `POST /admin/runs/:runId/rebuild-snapshot` | Command | Runtime repair operations    | snapshot rebuild command    | `registerAdminRoutes` / maintenance port         | admin HTTP route behind explicit enablement | admin repair action, tenant/admin scope                       | disabled route, missing token, missing action, tenant mismatch                             |
+The long-lived architecture/design view for this slice is
+`docs/architecture/components/api/protected-runtime-command-query-rail-design.md`.
+That document defines the source-of-truth posture:
 
-The implementation slice must verify the exact action names in code before
-turning this plan into acceptance evidence. If a row differs from current code,
-the code or the matrix must be reconciled in the same PR; parallel semantics are
-not allowed.
+- the executable rail catalog owns row-level route-to-rail truth;
+- the architecture document owns design rationale, family grouping, diagrams,
+  source-of-truth boundaries, and closed design decisions;
+- local component docs explain how API maintainers navigate the component;
+- planning and risk entries track delivery closure.
+
+The design handoff intentionally removes manual row-level route matrices from
+planning and component docs. `R-20260503-PROTECTED-RUNTIME-RAIL-SSOT-DEBT` is
+closed once the component guide links to the executable catalog, the
+architecture test blocks route/catalog drift, canonical plan rails no longer
+use ambiguous compatibility wording, and the signal parser constants facade is
+classified as an intentional parser-local boundary.
+
+## Protected Runtime Rail Catalog
+
+Complete row-level rail truth lives in `PROTECTED_RUNTIME_COMMAND_QUERY_RAILS`
+at `apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts`.
+Concern-local catalog modules split the route group by family:
+
+- `protectedRuntimePlanCommandQueryRails.ts`: session, start, preview, compile,
+  and import rails.
+- `protectedRuntimeWorkspaceCommandQueryRails.ts`: workspace draft and
+  workspace file rails.
+- `protectedRuntimeRunCommandQueryRails.ts`: run read, run command, recover,
+  and admin repair rails.
+
+The implementation slice must verify exact action names in code before turning
+the catalog into acceptance evidence. If a catalog row differs from current
+code, the code or catalog must be reconciled in the same PR; parallel semantics
+are not allowed.
 
 ## Allowed Implementation Surface
 
@@ -219,14 +233,14 @@ Disallowed without a separate plan:
 
 - add or update API component documentation for the protected runtime route
   group,
-- make each route row in this plan point to a concrete source file and test
-  file,
+- make each executable catalog row point to a concrete source file and test
+  evidence reference,
 - add architecture tests that fail if a protected runtime route exists outside
-  the rail matrix or route summary.
+  the executable rail catalog or route summary.
 
 ### AR-C10-B: negative coverage closure
 
-- inventory existing negative tests for each matrix row,
+- inventory existing negative tests for each catalog row,
 - add missing authorization, tenant-scope, malformed payload, and compatibility
   negative tests,
 - keep test helpers shared where they express the same protected runtime
@@ -243,9 +257,9 @@ Disallowed without a separate plan:
 
 - Lane C has one explicit protected runtime rail closure task.
 - `open-task-route.md` shows that task until closure is implemented.
-- Every protected runtime route in `runtimeRoutes.constants.ts` has a matrix
+- Every protected runtime route in `runtimeRoutes.constants.ts` has a catalog
   row and component owner.
-- Every matrix row has at least one positive test and the required negative
+- Every catalog row has at least one positive test and the required negative
   tests, or an explicit blocker tracked in the lane task.
 - Every rail declares a compatibility posture: either canonical with no legacy
   behavior accepted, or explicit compatibility mapped back to its canonical
@@ -254,7 +268,7 @@ Disallowed without a separate plan:
 - No new command, query, service, route, or mock semantics are introduced for an
   intent that already has a rail.
 - The risk entry `R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE` can move from open
-  only after implementation evidence proves the matrix.
+  only after implementation evidence proves the executable catalog.
 
 ## Validation Plan
 
@@ -283,6 +297,7 @@ noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
 componentGuides:
   - docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
+  - docs/architecture/components/api/protected-runtime-command-query-rail-design.md
 userStories:
   - docs/planning/proposals/web-user-stories-20260429.md
 governingSources:
@@ -291,10 +306,16 @@ governingSources:
   - docs/guides/ai-work-protocol.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/architecture/components/api/protected-runtime-command-query-rail-design.md
   - docs/planning/state/agent-lane-c.yaml
   - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
+  - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-SSOT-DEBT.yaml
 allowedImplementationSurfaces:
+  - docs/.manifest.json
+  - docs/architecture/components/api/**
+  - docs/architecture/index.md
   - apps/api/docs/protected-runtime-route-group-component.md
+  - apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts
   - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
   - apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
   - apps/api/src/entrypoints/http/sessionRoute.ts
@@ -306,6 +327,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/routes.test.tsx
   - apps/web/src/app/views/LoginView.tsx
   - docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
+  - docs/planning/closeouts/20260505-ar-c10-protected-runtime-rail-closure-closeout.md
   - docs/planning/state/agent-lane-c.yaml
   - docs/planning/state/agent-lane-c.md
   - docs/planning/state/execution-workboard.md
@@ -313,6 +335,7 @@ allowedImplementationSurfaces:
   - docs/planning/status/**
   - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
   - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-SSOT-DEBT.yaml
+  - docs/risk-register/quality/index.md
 forbiddenImplementationSurfaces:
   - packages/**
   - specs/**
@@ -366,6 +389,17 @@ redGreenCycles:
       - docs/planning/state/agent-lane-c.yaml
       - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
     greenTest: pnpm docs:feature-mechanization:implementation
+  - id: protected-runtime-rail-ssot-closure
+    redTest: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    expectedFailure: Component guide still duplicates row-level route matrix truth, canonical plan rails still contain ambiguous compatibility wording, and the signal parser constants facade is not documented as intentional.
+    patchSurfaces:
+      - apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+      - apps/api/docs/protected-runtime-route-group-component.md
+      - apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts
+      - docs/architecture/components/api/protected-runtime-command-query-rail-design.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
+      - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-SSOT-DEBT.yaml
+    greenTest: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
 symbols:
   - name: SessionRouteDeps
     path: apps/api/src/entrypoints/http/sessionRoute.ts
@@ -466,6 +500,18 @@ symbols:
     cypressCoverage: N/A - API architecture guard
     unitTests:
       - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - name: DESIGN_DOC_PATH
+    path: apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    dddOwner: Protected runtime route group architecture test
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+      - Documentation drift
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
   - name: CATALOG_PATH
     path: apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
     dddOwner: Protected runtime route group architecture test
@@ -473,6 +519,18 @@ symbols:
       - ClassifyProtectedRuntimeRouteRails
     fowlerSignals:
       - Boundary drift
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    cypressCoverage: N/A - API architecture guard
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - name: SIGNAL_PARSER_CONSTANTS_PATH
+    path: apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+    dddOwner: Protected runtime route group architecture test
+    cqRails:
+      - ClassifyProtectedRuntimeRouteRails
+    fowlerSignals:
+      - Boundary drift
+      - explicit parser facade
     architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
     cypressCoverage: N/A - API architecture guard
     unitTests:

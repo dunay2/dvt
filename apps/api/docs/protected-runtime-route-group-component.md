@@ -22,6 +22,7 @@ Use these related guides with this page:
 - `apps/api/docs/protected-security-access-decision-component.md`
 - `apps/api/docs/protected-runtime-dependency-builders-component.md`
 - `apps/api/docs/workspace-graph-draft-application-component.md`
+- `docs/architecture/components/api/protected-runtime-command-query-rail-design.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 
@@ -70,11 +71,11 @@ It does **not** own:
 ## Invariants
 
 - Every route in `runtimeRoutes.constants.ts` has exactly one row in
-  `PROTECTED_RUNTIME_COMMAND_QUERY_RAILS` and in the command/query rail matrix
-  below.
+  `PROTECTED_RUNTIME_COMMAND_QUERY_RAILS`.
 - Every required negative test case in `PROTECTED_RUNTIME_COMMAND_QUERY_RAILS`
   has at least one `apps/api/test/**/*.ts` evidence reference.
-- Each matrix row names the owning application service or delegated route group.
+- Each catalog row names the owning application service or delegated route
+  group.
 - Routes remain HTTP adapters; they do not own planner, engine, state-store, or
   access-decision backend semantics.
 - `POST /runs/:runId/signal` with `CANCEL` is compatibility behavior.
@@ -82,8 +83,9 @@ It does **not** own:
 - No protected runtime rail accepts legacy behavior as canonical behavior.
 - Admin repair routes are registered only when `DVT_ADMIN_ROUTES_ENABLED` is
   true.
-- New protected runtime routes require an update to this component guide, the
-  route constants, and architecture coverage in the same slice.
+- New protected runtime routes require an update to route constants, the
+  executable rail catalog, this component guide, and architecture coverage in
+  the same slice.
 
 ## Component map
 
@@ -111,26 +113,22 @@ flowchart LR
   Admin --> Repair["POST /admin/runs/:runId/rebuild-snapshot"]
 ```
 
-## Command/query rail matrix
+## Rail source of truth
 
-| Rail name                 | Route                                      | Rail    | Bounded context              | DDD object                  | Application owner                    | Authorization posture                                         | Required negative coverage                                                                 |
-| ------------------------- | ------------------------------------------ | ------- | ---------------------------- | --------------------------- | ------------------------------------ | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `GetRuntimeSession`       | `GET /session`                             | Query   | Runtime session admission    | Authenticated session       | IAuthenticator                       | authenticated principal bearer token                          | missing token, authentication failed                                                       |
-| `StartRun`                | `POST /runs/start`                         | Command | Runtime safety and admission | Run command admission       | StartRunAuthorizedFacade             | `run:start`, tenant scope                                     | missing token, missing action, tenant mismatch, client `runId`, invalid plan source        |
-| `PreviewExecutablePlan`   | `POST /plans/preview`                      | Command | Planner/runtime admission    | Executable plan draft       | PreviewPlanUseCase                   | `run:start` compatibility authorization, tenant scope         | missing token, missing action, tenant mismatch, invalid graph source, invalid selection    |
-| `CompileExecutablePlan`   | `POST /plans/compile`                      | Query   | Planner boundary             | Compiled plan read model    | CompilePlanUseCase                   | `run:start` compatibility authorization, tenant scope         | missing token, missing action, tenant mismatch, unsupported adapter                        |
-| `ImportExecutablePlan`    | `POST /plans/import`                       | Command | Runtime plan ingestion       | Imported executable plan    | ImportPlanUseCase                    | `run:start` compatibility authorization, tenant scope         | missing token, missing action, tenant mismatch, invalid plan ref                           |
-| `GetWorkspaceGraphDraft`  | `GET /workspace/graph/draft`               | Query   | Workspace graph drafting     | Workspace draft read model  | getWorkspaceGraphDraftUseCase        | `workspace:graph-draft:view`, tenant/project/environment      | missing token, missing action, tenant/workspace mismatch                                   |
-| `SaveWorkspaceGraphDraft` | `PUT /workspace/graph/draft`               | Command | Workspace graph drafting     | Workspace draft aggregate   | saveWorkspaceGraphDraftUseCase       | `workspace:graph-draft:save`, tenant/project/environment      | missing token, missing action, tenant/workspace mismatch, stale authority                  |
-| `ListWorkspaceFiles`      | `GET /workspace/files`                     | Query   | Operational evidence reads   | WorkspaceFileTree           | ListWorkspaceFilesUseCase            | `workspace:files:view`, tenant/project/environment            | missing token, missing action, missing scope                                               |
-| `GetWorkspaceFileContent` | `GET /workspace/files/:path`               | Query   | Operational evidence reads   | WorkspaceFileContent        | GetWorkspaceFileContentUseCase       | `workspace:files:view`, tenant/project/environment            | missing token, missing action, missing file, invalid path                                  |
-| `ListRuns`                | `GET /runs`                                | Query   | Runtime read model           | Run list read model         | ListRunsUseCase                      | `run:list`, tenant scope                                      | missing token, missing action, tenant mismatch                                             |
-| `GetRunStatus`            | `GET /runs/:runId`                         | Query   | Runtime read model           | Run status read model       | GetRunStatusUseCase                  | `run:view`, tenant scope                                      | missing token, missing action, tenant mismatch, unknown run                                |
-| `GetRunEvents`            | `GET /runs/:runId/events`                  | Query   | Runtime read model           | Run event stream read model | GetRunEventsUseCase                  | `run:logs:view`, tenant scope                                 | missing token, missing action, tenant mismatch, unknown run                                |
-| `SignalRun`               | `POST /runs/:runId/signal`                 | Command | Runtime control              | Run signal command          | SignalRunUseCase                     | `run:signal`, or `run:cancel` only for compatibility `CANCEL` | missing token, missing action, tenant mismatch, unsupported signal, compatibility disabled |
-| `CancelRun`               | `POST /runs/:runId/cancel`                 | Command | Runtime control              | Run cancel command          | CancelRunUseCase                     | `run:cancel`, tenant scope                                    | missing token, missing action, tenant mismatch, non-empty reason                           |
-| `RecoverRun`              | `POST /runs/:runId/recover`                | Command | Runtime recovery             | Run recovery command        | RecoverRunUseCase                    | `run:retry`, tenant scope                                     | missing token, missing action, tenant mismatch, invalid recovery source                    |
-| `RebuildRunSnapshot`      | `POST /admin/runs/:runId/rebuild-snapshot` | Command | Runtime repair operations    | Snapshot rebuild command    | registerAdminRoutes maintenance port | `admin:rebuild-snapshot`, tenant/admin scope                  | disabled route, missing token, missing action, tenant mismatch                             |
+Complete row-level rail truth lives in `PROTECTED_RUNTIME_COMMAND_QUERY_RAILS`
+at `apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts`.
+Concern-local catalog modules split that truth by rail family:
+
+- `protectedRuntimePlanCommandQueryRails.ts` owns session, start, preview,
+  compile, and import rail rows.
+- `protectedRuntimeWorkspaceCommandQueryRails.ts` owns workspace draft and
+  workspace file rail rows.
+- `protectedRuntimeRunCommandQueryRails.ts` owns run read, run command, recover,
+  and admin repair rail rows.
+
+This component guide intentionally does not duplicate the full row-level table.
+The architecture test keeps the route constants, executable catalog, negative
+test evidence, compatibility posture, and this guide aligned.
 
 ## Compatibility posture
 
@@ -145,6 +143,13 @@ No protected runtime rail accepts legacy behavior as canonical behavior. The
 only active compatibility posture in this component is `CANCEL` through
 `POST /runs/:runId/signal`, gated by `DVT_SIGNAL_ROUTE_ALLOW_CANCEL` and mapped
 back to the `CancelRun` rail.
+
+## Parser constants facade
+
+`signalRunRouteParser.constants.ts` is an intentional parser-local constants
+facade, not a generic barrel. It lets signal and cancel parser/route tests
+import one parser-boundary vocabulary while the underlying authorization and
+validation constants stay split by concern.
 
 ## Transitions
 

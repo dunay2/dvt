@@ -10,9 +10,17 @@ const DOC_PATH = join(
   import.meta.dirname,
   '../../../docs/protected-runtime-route-group-component.md'
 );
+const DESIGN_DOC_PATH = join(
+  import.meta.dirname,
+  '../../../../../docs/architecture/components/api/protected-runtime-command-query-rail-design.md'
+);
 const CATALOG_PATH = join(
   import.meta.dirname,
   '../../../src/application/ports/protectedRuntimeCommandQueryRails.ts'
+);
+const SIGNAL_PARSER_CONSTANTS_PATH = join(
+  import.meta.dirname,
+  '../../../src/entrypoints/http/signalRunRouteParser.constants.ts'
 );
 
 const RUNTIME_ROUTE_METHOD_BY_KEY = {
@@ -58,15 +66,22 @@ describe('protected runtime route group architecture', () => {
     expect(docText).toContain('```mermaid');
   });
 
-  it('keeps every protected runtime route in the documented command/query rail matrix', () => {
+  it('keeps row-level rail truth in the executable catalog instead of a component guide table', () => {
     const docText = readFileSync(DOC_PATH, 'utf8');
 
+    expect(docText).toContain(
+      'Complete row-level rail truth lives in `PROTECTED_RUNTIME_COMMAND_QUERY_RAILS`'
+    );
+    expect(docText).toContain(
+      '`apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts`'
+    );
+    expect(docText).not.toContain('## Command/query rail matrix');
     for (const rail of PROTECTED_RUNTIME_COMMAND_QUERY_RAILS) {
-      const matrixRow = findCommandQueryMatrixRow(docText, rail.adapterSurface);
+      const duplicatedRows = docText
+        .split('\n')
+        .filter((line) => line.startsWith('|') && line.includes(`\`${rail.adapterSurface}\``));
 
-      expect(matrixRow).toContain(`\`${rail.adapterSurface}\``);
-      expect(matrixRow).toContain(rail.kind === 'command' ? '| Command |' : '| Query   |');
-      expect(matrixRow).toContain(rail.applicationPort);
+      expect(duplicatedRows, `${rail.name} has duplicated component-doc row truth`).toHaveLength(0);
     }
   });
 
@@ -111,6 +126,31 @@ describe('protected runtime route group architecture', () => {
     }
   });
 
+  it('keeps compatibility wording only on rails with explicit compatibility posture', () => {
+    for (const rail of PROTECTED_RUNTIME_COMMAND_QUERY_RAILS) {
+      if (rail.compatibilityPosture.status === 'compatibility') {
+        expect(rail.scopeAndAuthorization.toLowerCase()).toContain('compatibility');
+        continue;
+      }
+
+      expect(rail.scopeAndAuthorization.toLowerCase()).not.toContain('compatibility');
+    }
+  });
+
+  it('documents the signal parser constants facade as an intentional parser boundary', () => {
+    expect(existsSync(SIGNAL_PARSER_CONSTANTS_PATH)).toBe(true);
+
+    const docText = readFileSync(DOC_PATH, 'utf8');
+    const designDocText = readFileSync(DESIGN_DOC_PATH, 'utf8');
+    for (const text of [docText, designDocText]) {
+      const normalizedText = text.replace(/\s+/g, ' ');
+      expect(normalizedText).toContain(
+        '`signalRunRouteParser.constants.ts` is an intentional parser-local constants facade'
+      );
+      expect(normalizedText).toContain('not a generic barrel');
+    }
+  });
+
   it('documents CANCEL through /signal as compatibility, not a second canonical cancel rail', () => {
     const docText = readFileSync(DOC_PATH, 'utf8');
     const compatibilityRails = PROTECTED_RUNTIME_COMMAND_QUERY_RAILS.filter(
@@ -138,12 +178,3 @@ describe('protected runtime route group architecture', () => {
     expect(docText).toContain('No protected runtime rail accepts legacy behavior as canonical');
   });
 });
-
-function findCommandQueryMatrixRow(docText: string, adapterSurface: string): string {
-  const row = docText
-    .split('\n')
-    .find((line) => line.startsWith('|') && line.includes(`\`${adapterSurface}\``));
-
-  expect(row, `missing command/query matrix row for ${adapterSurface}`).toBeDefined();
-  return row ?? '';
-}

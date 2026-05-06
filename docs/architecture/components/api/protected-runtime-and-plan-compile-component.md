@@ -14,12 +14,19 @@ it.
 Use the narrower local guides when you need subcomponent-level API,
 invariants, transitions, and consumers:
 
+- [Protected runtime command/query rail design](./protected-runtime-command-query-rail-design.md)
+- [Protected runtime route group component](../../../../apps/api/docs/protected-runtime-route-group-component.md)
 - [Protected runtime dependency builders component](../../../../apps/api/docs/protected-runtime-dependency-builders-component.md)
 - [Protected security access decision component](../../../../apps/api/docs/protected-security-access-decision-component.md)
 - [Start-run runtime composition component](../../../../apps/api/docs/start-run-runtime-composition-component.md)
 - [Executable-subgraph resolution component](../../../../apps/api/docs/executable-subgraph-resolution-component.md)
 - [Workspace graph draft application component](../../../../apps/api/docs/workspace-graph-draft-application-component.md)
 - [Workspace graph draft runtime composition component](../../../../apps/api/docs/workspace-graph-draft-runtime-composition-component.md)
+
+The route-level command/query rail source-of-truth design lives in
+[Protected runtime command/query rail design](./protected-runtime-command-query-rail-design.md).
+This component page focuses on protected runtime composition and the
+plan-compile boundary that feeds it.
 
 ## Why This Is A Component
 
