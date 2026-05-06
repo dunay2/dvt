@@ -4,15 +4,20 @@ export const topAppBarClasses = {
   brand: 'text-base leading-none font-semibold text-[var(--text-strong)]',
   selectTrigger:
     'h-8 border-[color:var(--border-default)] bg-[var(--surface-app)] text-[var(--text-default)]',
+  selectorLabel: 'text-[11px] font-medium uppercase text-[var(--text-subtle)]',
   gitRef:
-    'flex h-8 items-center gap-2 rounded-md border border-[color:var(--border-default)] bg-[var(--surface-app)] px-2.5 text-xs text-[var(--text-default)]',
+    'hidden h-7 items-center gap-1.5 rounded-md border border-transparent px-1.5 text-[11px] text-[var(--text-subtle)] lg:flex',
   gitRefIcon: 'size-3.5 text-[var(--text-subtle)]',
   gitRefSeparator: 'text-[var(--text-subtle)]',
-  gitRefSha: 'text-xs text-[var(--text-strong)]',
+  gitRefSha: 'text-[11px] text-[var(--text-default)]',
+  projectIdentityBadge:
+    'flex h-8 min-w-0 max-w-[18rem] items-center gap-1.5 rounded-md border border-[color:var(--border-default)] bg-[var(--surface-app)] px-2.5 text-xs text-[var(--text-default)]',
   contextChip:
     'flex h-8 min-w-0 max-w-[12rem] items-center gap-2 rounded-md border border-[color:var(--border-default)] bg-[var(--surface-app)] px-2.5 text-xs text-[var(--text-default)]',
   contextChipIcon: 'size-3.5 text-[var(--text-subtle)]',
   contextChipLabel: 'truncate text-[var(--text-strong)]',
+  contextChipMeta: 'hidden shrink-0 text-[var(--text-subtle)] md:inline',
+  contextChipSeparator: 'hidden shrink-0 text-[var(--text-subtle)] md:inline',
   smallStatusText: 'flex cursor-default items-center gap-1.5 px-1 text-[11px]',
   menuButton:
     'h-8 gap-1.5 px-2 text-[var(--text-default)] hover:bg-[var(--surface-selected)] hover:text-[var(--text-strong)]',

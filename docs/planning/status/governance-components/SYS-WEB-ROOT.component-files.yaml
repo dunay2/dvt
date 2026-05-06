@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: ENTRY
 cqRails: UI actions and API queries
 childrenRequired: true
-fileCount: 822
+fileCount: 828
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -627,6 +627,20 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: apps/web/src/app/components/TopAppBar.architecture.test.ts
+    fileId: F-F06C167F51DC
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/components/TopAppBar.test.tsx
+    fileId: F-3EF7DCA05395
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: apps/web/src/app/components/TopAppBar.tsx
     fileId: F-D674640041D0
     owningUnit: SYS-WEB-ROOT
@@ -797,6 +811,20 @@ files:
     isLegacy: false
   - path: apps/web/src/app/components/shell/ShellMenu.tsx
     fileId: F-A9A84D4533A0
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/components/shell/ShellProjectIdentityBadge.tsx
+    fileId: F-134868945E66
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/components/shell/ShellWorkspaceContextMenu.tsx
+    fileId: F-8D220025A149
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -2120,6 +2148,20 @@ files:
     isLegacy: false
   - path: apps/web/src/app/services/workspace/workspaceServiceCopy.ts
     fileId: F-24712DFF440A
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/shell/projectIdentityBadge.test.ts
+    fileId: F-E1B8C1ED968C
+    owningUnit: SYS-WEB-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: apps/web/src/app/shell/projectIdentityBadge.ts
+    fileId: F-0328DA845E72
     owningUnit: SYS-WEB-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

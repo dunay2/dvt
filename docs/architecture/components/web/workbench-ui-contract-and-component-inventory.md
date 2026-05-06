@@ -133,25 +133,26 @@ Core icon categories:
 
 These are the cross-route UI building blocks that should exist once and be reused.
 
-| Component             | Responsibility                                                            | Status                              |
-| --------------------- | ------------------------------------------------------------------------- | ----------------------------------- |
-| `AppShellFrame`       | Full-screen shell layout wrapper                                          | Current, v1 shell frame primitive   |
-| `ShellTopBar`         | Global context and global actions                                         | Current, should be hardened         |
-| `ShellHealthBanner`   | Health and degraded-state visibility                                      | Current                             |
-| `LeftNavigationRail`  | Primary route navigation                                                  | Current, should be standardized     |
-| `RouteWorkbenchFrame` | Shared route layout with header plus body or scroll ownership contract    | Current, v1 frame primitive         |
-| `RouteToolbar`        | Standard route command bar                                                | Needed as explicit shared primitive |
-| `ContextPanel`        | Shared side-panel container with title, collapse, scroll, and actions     | Needed                              |
-| `PrimarySurfaceFrame` | Shared main surface wrapper with route-level spacing and loading handling | Needed                              |
-| `BottomConsoleDrawer` | Shared shell console surface                                              | Current, content model now explicit |
-| `AppIcon`             | Shared icon wrapper for size, stroke, color, and state                    | Needed                              |
-| `LoadingState`        | Standard loading treatment                                                | Current, seeded from `Runs`         |
-| `EmptyState`          | Standard empty treatment                                                  | Current, seeded from `Runs`         |
-| `ErrorState`          | Standard error treatment                                                  | Current, seeded from `Runs`         |
-| `DegradedState`       | Standard stale or partial-data treatment                                  | Current, seeded from `Runs`         |
-| `ReadOnlyState`       | Standard non-mutation treatment                                           | Current, seeded from `Code`         |
-| `PermissionGate`      | Explains disabled or unavailable actions                                  | Needed                              |
-| `CommandPalette`      | Global search or command surface                                          | Optional later                      |
+| Component                 | Responsibility                                                            | Status                              |
+| ------------------------- | ------------------------------------------------------------------------- | ----------------------------------- |
+| `AppShellFrame`           | Full-screen shell layout wrapper                                          | Current, v1 shell frame primitive   |
+| `ShellTopBar`             | Global context and global actions                                         | Current, should be hardened         |
+| `Shell workspace context` | Read-only project identity plus on-demand session-scope commands          | Current Stage 1 split               |
+| `ShellHealthBanner`       | Health and degraded-state visibility                                      | Current                             |
+| `LeftNavigationRail`      | Primary route navigation                                                  | Current, should be standardized     |
+| `RouteWorkbenchFrame`     | Shared route layout with header plus body or scroll ownership contract    | Current, v1 frame primitive         |
+| `RouteToolbar`            | Standard route command bar                                                | Needed as explicit shared primitive |
+| `ContextPanel`            | Shared side-panel container with title, collapse, scroll, and actions     | Needed                              |
+| `PrimarySurfaceFrame`     | Shared main surface wrapper with route-level spacing and loading handling | Needed                              |
+| `BottomConsoleDrawer`     | Shared shell console surface                                              | Current, content model now explicit |
+| `AppIcon`                 | Shared icon wrapper for size, stroke, color, and state                    | Needed                              |
+| `LoadingState`            | Standard loading treatment                                                | Current, seeded from `Runs`         |
+| `EmptyState`              | Standard empty treatment                                                  | Current, seeded from `Runs`         |
+| `ErrorState`              | Standard error treatment                                                  | Current, seeded from `Runs`         |
+| `DegradedState`           | Standard stale or partial-data treatment                                  | Current, seeded from `Runs`         |
+| `ReadOnlyState`           | Standard non-mutation treatment                                           | Current, seeded from `Code`         |
+| `PermissionGate`          | Explains disabled or unavailable actions                                  | Needed                              |
+| `CommandPalette`          | Global search or command surface                                          | Optional later                      |
 
 ## Current Primitive Fit
 
@@ -184,8 +185,15 @@ Shell-specific current fit:
   Current gap: shell frame exists, but console product hardening and richer frame API remain future work.
 - `ShellTopBar`
   Current implementation: [TopAppBar.tsx](../../../../apps/web/src/app/components/TopAppBar.tsx) plus shell controls under `components/shell/*`
-  Reuse decision: reuse core behavior.
-  Current gap: shell ownership is aligned, but the top-bar composition still needs a deeper split.
+  Reuse decision: reuse core behavior and keep workspace scope as a read-only presentation model.
+  Current gap: shell ownership is aligned; command palette and richer top-menu semantics remain future work.
+- `Shell workspace context`
+  Current implementation: [projectIdentityBadge.ts](../../../../apps/web/src/app/shell/projectIdentityBadge.ts), [ShellProjectIdentityBadge.tsx](../../../../apps/web/src/app/components/shell/ShellProjectIdentityBadge.tsx), and [ShellWorkspaceContextMenu.tsx](../../../../apps/web/src/app/components/shell/ShellWorkspaceContextMenu.tsx)
+  Reuse decision: treat `ProjectIdentityBadge` as the stable read-only top-bar
+  projection and `ShellWorkspaceContextMenu` as the only Stage 1 selector
+  surface.
+  Current gap: the menu still delegates to the existing sessionStore commands;
+  grant refresh and richer unavailable-state copy remain future auth work.
 - `ShellHealthBanner`
   Current implementation: [ShellHealthBanner.tsx](../../../../apps/web/src/app/components/ShellHealthBanner.tsx)
   Reuse decision: reuse as-is with styling cleanup.

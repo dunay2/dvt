@@ -31,9 +31,13 @@ function expectRootShellHeaderChrome(container: ParentNode): void {
     container,
     '[data-slot="shell-connection-status"]'
   );
-  const shellWorkspaceSelectors = requireElement<HTMLElement>(
+  const shellProjectIdentityBadge = requireElement<HTMLElement>(
     container,
-    '[data-slot="shell-workspace-selectors"]'
+    '[data-slot="shell-project-identity-badge"]'
+  );
+  const shellWorkspaceContextTrigger = requireElement<HTMLElement>(
+    container,
+    '[data-slot="shell-workspace-context-trigger"]'
   );
   const shellMenuTrigger = requireElement<HTMLElement>(
     container,
@@ -44,12 +48,21 @@ function expectRootShellHeaderChrome(container: ParentNode): void {
   expect(shellTopBar.textContent).toContain('View');
   expect(shellTopBar.className).toContain('bg-[var(--surface-shell)]');
   expect(shellTopBar.querySelector('[data-slot="shell-git-ref"]')).toBeTruthy();
-  expect(shellTopBar.querySelector('[data-slot="shell-workspace-selectors"]')).toBeTruthy();
+  expect(shellTopBar.querySelector('[data-slot="shell-project-identity-badge"]')).toBeTruthy();
+  expect(shellTopBar.querySelector('[data-slot="shell-workspace-context-trigger"]')).toBeTruthy();
+  expect(shellTopBar.querySelector('[data-slot="shell-workspace-selectors"]')).toBeNull();
   expect(shellTopBar.querySelector('[data-slot="shell-menu-trigger"]')).toBeTruthy();
+  expect(shellTopBar.querySelectorAll('[role="combobox"]')).toHaveLength(0);
   expect(shellConnectionStatus.className).toContain('text-[var(--text-default)]');
-  expect(shellGitRef.className).toContain('bg-[var(--surface-app)]');
-  expect(shellGitRef.className).toContain('border-[color:var(--border-default)]');
-  expect(shellWorkspaceSelectors.querySelectorAll('[role="combobox"]')).toHaveLength(3);
+  expect(shellGitRef.className).toContain('text-[var(--text-subtle)]');
+  expect(
+    shellProjectIdentityBadge.querySelector('[data-slot="shell-project-identity-title"]')
+  ).not.toBeNull();
+  expect(
+    shellProjectIdentityBadge.querySelector('[data-slot="shell-project-identity-env"]')
+  ).not.toBeNull();
+  expect(shellProjectIdentityBadge.className).toContain('bg-[var(--surface-app)]');
+  expect(shellWorkspaceContextTrigger.textContent).toContain('Scope');
   expect(shellMenuTrigger.textContent).toContain('View');
 }
 
