@@ -61,7 +61,7 @@ query, drift-check, and eventually regenerate these governance read models:
 - `docs/planning/status/system-governance-file-fingerprint-impact-20260501.md`
 - `docs/planning/status/system-governance-coverage-report.coverage.yaml`
 - `docs/planning/status/system-governance-coverage-report-20260502.md`
-- `docs/planning/status/system-governance-remediation-queue.yaml`
+- `docs/planning/status/system-governance-remediation-queue.queue.yaml`
 - `docs/planning/status/system-governance-remediation-queue-20260502.md`
 - `docs/planning/status/governance-files/**`
 - `docs/planning/status/governance-components/**`
@@ -86,6 +86,11 @@ The current `system-governance-*` workflow is deterministic, but it is also the
 fan-out mechanism that makes a small source change touch many tracked files.
 The workflow below is the one this plan must preserve before deriving it into
 Postgres.
+
+The canonical component view for this existing workflow is
+[`System Governance Generation Workflow Component`](../../../../architecture/components/ci-governance/system-governance-generation-workflow-component.md).
+GOV-S3-W0 records the current workflow there before any Docker, migration, or
+Postgres-backed exporter work starts.
 
 ```mermaid
 flowchart TD
@@ -385,23 +390,26 @@ surfaces without network access.
 ## Migration Sequence
 
 1. Add this plan and agree on the storage boundary.
-2. Add Docker Compose, ignored local volume configuration, and schema
+2. Extract the current `system-governance-*` generation workflow into the
+   `ci-governance` component contract, including stages, inputs, outputs,
+   check modes, and review fan-out.
+3. Add Docker Compose, ignored local volume configuration, and schema
    migrations.
-3. Import existing `agent-lane-*.yaml` files into read-only Postgres tables.
-4. Import existing `system-governance-*` indexes, component maps,
+4. Import existing `agent-lane-*.yaml` files into read-only Postgres tables.
+5. Import existing `system-governance-*` indexes, component maps,
    fingerprints, coverage reports, and remediation queues into read-only
    Postgres tables.
-5. Add query and drift checks that compare Postgres output to Git-tracked lane
+6. Add query and drift checks that compare Postgres output to Git-tracked lane
    and governance state.
-6. Move workboard and open-task-route generation to read from the query store
+7. Move workboard and open-task-route generation to read from the query store
    when available, with deterministic file fallback during transition.
-7. Move governance report generation to read from the query store only after
+8. Move governance report generation to read from the query store only after
    parity proves it matches the current generators.
-8. Split large lane YAML files into smaller Git-tracked task shards only after
+9. Split large lane YAML files into smaller Git-tracked task shards only after
    the import/export checks prove parity.
-9. Consider compacting generated governance shards after query-store parity
-   proves reviewers can inspect root causes without losing deterministic output.
-10. Consider an optional GitHub Issues mirror after local and CI query-store
+10. Consider compacting generated governance shards after query-store parity
+    proves reviewers can inspect root causes without losing deterministic output.
+11. Consider an optional GitHub Issues mirror after local and CI query-store
     workflows are stable.
 
 ## Failure Modes And Guardrails
@@ -454,6 +462,8 @@ componentGuides:
   - docs/planning/state/planning-control-tower.md
   - docs/planning/state/how-to-add-tasks.md
   - docs/DOCS_README.md
+  - docs/architecture/components/ci-governance/index.md
+  - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
   - docs/architecture/components/ci-governance/local-changed-files-gate-component.md
 userStories:
   - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
@@ -478,6 +488,8 @@ allowedImplementationSurfaces:
   - scripts/check-feature-mechanization.cjs
   - scripts/check-feature-mechanization.test.cjs
   - docs/DOCS_README.md
+  - docs/architecture/components/ci-governance/index.md
+  - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
   - docs/planning/state/planning-control-tower.md
   - docs/planning/state/how-to-add-tasks.md
   - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
@@ -519,6 +531,12 @@ commandQueryRails:
   - name: ValidateGovernanceStateDrift
     type: query
     dddOwner: GovernanceStateDriftReport
+  - name: QuerySystemGovernanceGenerationWorkflow
+    type: query
+    dddOwner: GovernanceGenerationWorkflow
+  - name: ValidateSystemGovernanceGenerationWorkflow
+    type: query
+    dddOwner: GovernanceWorkflowDriftReport
 domainObjects:
   - name: PlanningStateImport
     type: command model
@@ -547,6 +565,12 @@ domainObjects:
   - name: GovernanceStateDriftReport
     type: read model
     owner: Docs governance
+  - name: GovernanceGenerationWorkflow
+    type: read model
+    owner: Docs governance
+  - name: GovernanceWorkflowDriftReport
+    type: read model
+    owner: Docs governance
 fowlerSignals:
   - Large planning file operating cost
   - Generated artifact churn
@@ -569,6 +593,14 @@ redGreenCycles:
     redTest: pnpm docs:feature-mechanization:implementation
     expectedFailure: Planning query-store proposal is outside allowedImplementationSurfaces before this manifest declares it.
     patchSurfaces:
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: pnpm docs:feature-mechanization:implementation
+  - id: system-governance-workflow-contract
+    redTest: pnpm docs:feature-mechanization:implementation
+    expectedFailure: New ci-governance workflow contract is outside allowedImplementationSurfaces before this manifest declares it.
+    patchSurfaces:
+      - docs/architecture/components/ci-governance/index.md
+      - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     greenTest: pnpm docs:feature-mechanization:implementation
   - id: planning-query-store-drift-check
@@ -607,6 +639,8 @@ symbols:
       - QueryGovernanceStateReadModel
       - ExportGovernanceStateSnapshot
       - ValidateGovernanceStateDrift
+      - QuerySystemGovernanceGenerationWorkflow
+      - ValidateSystemGovernanceGenerationWorkflow
     fowlerSignals:
       - Large planning file operating cost
       - Generated artifact churn
@@ -615,6 +649,23 @@ symbols:
       - Mutable external tracker authority risk
     architectureGuard: pnpm docs:feature-mechanization:implementation
     cypressCoverage: N/A - planning query-store proposal has no browser workflow.
+    unitTests:
+      - pnpm docs:feature-mechanization --feature GOV-S3-PLANNING-STATE-QUERY-STORE
+      - pnpm docs:feature-mechanization:implementation
+  - name: SystemGovernanceGenerationWorkflowComponent
+    path: docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
+    dddOwner: GovernanceGenerationWorkflow
+    cqRails:
+      - QuerySystemGovernanceGenerationWorkflow
+      - ValidateSystemGovernanceGenerationWorkflow
+      - ImportGovernanceStateQueryStore
+      - QueryGovernanceStateReadModel
+      - ValidateGovernanceStateDrift
+    fowlerSignals:
+      - Generated artifact churn
+      - Hidden query model inside governance shards
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - system governance workflow documentation has no browser workflow.
     unitTests:
       - pnpm docs:feature-mechanization --feature GOV-S3-PLANNING-STATE-QUERY-STORE
       - pnpm docs:feature-mechanization:implementation

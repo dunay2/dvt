@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - documentation governance
 childrenRequired: true
-fileCount: 1753
+fileCount: 1754
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -657,6 +657,13 @@ files:
     isLegacy: false
   - path: docs/architecture/components/ci-governance/local-changed-files-gate-component.md
     fileId: F-71B27FCCBB86
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
+    fileId: F-5F127B26BB91
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

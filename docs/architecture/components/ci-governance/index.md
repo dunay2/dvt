@@ -19,12 +19,15 @@ workflow parity, and local-to-remote quality gates.
   called complete;
 - keep generated governance indexes, file fingerprints, and coverage reports
   aligned with the real worktree;
+- define the current `system-governance-*` generation workflow as a stage and
+  artifact graph before GOV-S3 moves that read side into a query store;
 - expose operational commands through `package.json`, scripts, and workflow
   checks without moving product behavior into CI scripts.
 
 ## Component Decomposition
 
 - [Local Changed Files Gate Component](./local-changed-files-gate-component.md)
+- [System Governance Generation Workflow Component](./system-governance-generation-workflow-component.md)
 
 ## Public Operational Surface
 
