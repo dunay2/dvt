@@ -823,4 +823,16 @@ symbols:
     cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
     unitTests:
       - pnpm docs:feature-mechanization:implementation
+  - name: assertCanvasWorkbenchTabsAreTextOnly
+    path: apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+    dddOwner: CanvasWorkbenchVisualPostureReadModel
+    cqRails:
+      - VerifyCanvasWorkbenchVisualPosture
+    fowlerSignals:
+      - Semantic Fitness Function
+      - Test-only confidence
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
+    cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+    unitTests:
+      - pnpm docs:feature-mechanization:implementation
 ```

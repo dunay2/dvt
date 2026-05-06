@@ -42,6 +42,30 @@ describe('buildCanvasWorkbenchTabsReadModel', () => {
     expect(model.unavailableState).toBeNull();
   });
 
+  it('projects Stage 1 workbench tabs as text-only labels without icon render data', () => {
+    const model = buildCanvasWorkbenchTabsReadModel({
+      placements: [
+        {
+          kind: 'workbench-tab',
+          workbench: 'canvas',
+          tabId: 'code',
+          label: 'Code',
+          icon: FileCode2,
+          order: 20,
+          scope: 'selection',
+        },
+      ],
+      routeState: { kind: 'selected', tabId: 'graph' },
+      context: { kind: 'ready' },
+    });
+
+    expect(model.tabs.map((tab) => [tab.id, tab.label, tab.to])).toEqual([
+      ['graph', 'Graph', '/canvas'],
+      ['code', 'Code', '/canvas/code'],
+    ]);
+    expect(model.tabs.every((tab) => !('icon' in tab))).toBe(true);
+  });
+
   it('fails closed when duplicate Canvas tab IDs are registered', () => {
     expect(() =>
       buildCanvasWorkbenchTabsReadModel({

@@ -6901,9 +6901,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-B863220D9695
     pathHash: 6d65b9948a837472f92e68314054fb851d9b86e49009b4c9df484ee8e4d67235
-    contentHash: e0fc1e26c03eede2c48d57747a12452bb270b92f840b92c4c83809c091d86fdd
+    contentHash: 4a89d11d98406713d5f586cd0605be6dc364354635de4ec2ae39303c22f4acf4
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: c223a99139b1bbe1977b37d4d7bd9963ac80ee141ece74e14b216f7ec552bc73
+    stateFingerprint: a86e415936ffaa5fe52f1b19d62e6e1eba22a47506fee8d673c6594093684eab
     path: docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -32482,9 +32482,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-BCC1F9B3F745
     pathHash: ca448362f666b76ec59d596125823267148e67aad323fce6b761d68c045e00e4
-    contentHash: 1944cb34362eb1f41c6371d292e31d94fb60be4f60b411b929fdae61d9369c30
+    contentHash: 07f95738fa052b0748ab550199d647dc2836a16f4a64e6571c12e725b72ea062
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 2b191fc6cebc53bd0776ab0c0b0f9f25e92e1146699f89adadcf8a66b6651637
+    stateFingerprint: 840830efc46a83a12f49c29fc25b65ebd6e86258f77af6ffc3cd3d7995db46fb
     path: >-
       docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-1-chrome-simplification-implementation-plan-20260506.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
