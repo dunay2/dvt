@@ -1359,17 +1359,20 @@ tasks:
       limited to environment rollout or canary evidence rather than missing code topology.
     complexity: S
     effort_points: 3
-    progress_pct: 60
+    progress_pct: 70
     evidence_refs:
       - docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
       - docs/evidence/ed-20260414-tf-c3-production-temporal-worker-dbt-host.md
       - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md
     status_reason: >-
-      The in-repo worker now has a runbook baseline and aligned planning truth, but rollout
-      acceptance and environment-level canary evidence still remain outside this implementation
-      slice.
-    last_verified: '2026-04-14'
+      Runbook-to-code verification is complete. All 8 runbook claims verified accurate against
+      actual worker code; circuit breaker env vars, metrics, and health-payload fields documented.
+      Closure is blocked by missing environment-level canary evidence. Smallest next validation:
+      deploy worker to staging, verify /healthz (200), /readyz (200 with dbt), /metrics (scrape
+      target registers dvt_temporal_worker_up 1), run one DBT-enabled plan end-to-end, then confirm
+      dvt_temporal_worker_error_total remains flat during the observation window.
+    last_verified: '2026-05-07'
   - task_id: TF-C4
     priority: P0
     status: done
