@@ -2,7 +2,7 @@ version: 1
 shardId: SYS-CI-GOVERNANCE
 generatedFrom: git ls-files plus untracked non-ignored local files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-fileCount: 204
+fileCount: 206
 files:
   - fileId: F-80B99D37F6EB
     pathHash: 80447532cb5366e8cb4a64e0bfee2f37470cbbe4cd91304510c8bf02e79a976b
@@ -2306,9 +2306,9 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-200E5D9F0FA1
     pathHash: f5489caa8307a1db539556b5924040dd405b31f9b8bbca740fe7e7fa707af9f7
-    contentHash: 4f7d6924c3bbf88bce5f5a20fc3a15006452cc88ddcf69fda0d913e543bb79c8
+    contentHash: 6d5b098c5fcf18907675f5f3b35de563effa2823763bbf143a8740e38e86d6a5
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: cfb195d90435e9c7b909ee76b3807fc76e8b1fde3edc72e76ffd3c0481eba8c0
+    stateFingerprint: 2e7bee0c4a8e4a079e1cfeefbb79466cd3c99b0e1d7069cf5d1728f061476c75
     path: scripts/governance-refresh.cjs
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -2331,9 +2331,9 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-7C49EAEF4AC8
     pathHash: 97af8e79c674b10d00fbb79b221824d1ffddf1824489557d0fe6de1e220e21c1
-    contentHash: 647a7e461537427577aa667426cc3a41a922b354dcf48e7371e5193a314f771f
+    contentHash: f39c38b712f8f3f3c0fa266b9d4b582212abf4143525010fe310c6ba9cc11f3c
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: e82bbd8277efe15adb2190c20e7d2b59454a70dfa728befa03babfb436781495
+    stateFingerprint: 1504e15fdec9951defc36d19434dbdad6ed33366b2e4b491c4a3522c859c39fa
     path: scripts/governance-refresh.test.cjs
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -2506,10 +2506,60 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-00C7F0BCBB25
     pathHash: 85f7500895d0b07c135f8778c3460dacdbd2d41c93dd65cc4809e3c63a9c3087
-    contentHash: 3b943316dbdd0ca8a482b16405556fb1a658d8960ad272bd90d1e6ed6fd3f8e0
+    contentHash: afce7f38f02dfdfa66ad17799ee5789b76e36a6f2871b4f996a1f21f23200e99
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: 60c06a8645e56eb410c038bcf0fcac2738f93adde520fe2b150e8098ecd41378
+    stateFingerprint: 6a736aa886804100aad6a7800d1c22f70e9507f490636b52d1827fec55e9077e
     path: scripts/planning-db-content.integration.test.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-550BC68E1631
+    pathHash: 2e9e69d4be228325843cdd4ada5a5c9436f70af1b5960ace631b1fb70bab8f91
+    contentHash: 80b60a086c02d68071cd791b15c8bad9fc400c83e8f4ec216f065f836bf85732
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 56eac1d2b78d6c6dec931451d1d0ca04cfa52c1c97429ac32e6de30eff6af6c6
+    path: scripts/planning-db-export.cjs
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-DVT
+    componentUnit: SYS-CI-GOVERNANCE-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-CI-GOVERNANCE
+      - SYS-CI-GOVERNANCE-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: INFRA
+    cqRails: none - repository automation
+    governance:
+      - docs/guides/testing-and-ci-capabilities.md
+  - fileId: F-55BFE5064EB9
+    pathHash: 2a631f4674d829d1be06b1f9d1b2197a5c4c25a8a43c942099d850461c8eaddc
+    contentHash: e58d06cd25cff20883a896bdaa7697bc3c4b3b74254950acc82615c5745b44a9
+    governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
+    stateFingerprint: 2c9cc7acf5b44d2cd63265cadccde305465f3e0cd08392335bdce64f92311959
+    path: scripts/planning-db-export.test.cjs
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT

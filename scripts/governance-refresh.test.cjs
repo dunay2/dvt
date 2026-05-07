@@ -24,7 +24,7 @@ test('governance refresh runs deterministic generation before database drift che
   );
   assert.deepEqual(
     stages.databaseStages.map((stage) => stage.script),
-    ['planning:db:import', 'planning:db:check', 'governance:db:check']
+    ['planning:db:import', 'planning:db:check', 'planning:db:export:check', 'governance:db:check']
   );
 });
 

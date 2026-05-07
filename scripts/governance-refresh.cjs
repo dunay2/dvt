@@ -64,6 +64,10 @@ function buildRefreshStages() {
         script: 'planning:db:check',
       },
       {
+        id: 'planning-db-export-check',
+        script: 'planning:db:export:check',
+      },
+      {
         id: 'governance-db-check',
         script: 'governance:db:check',
       },

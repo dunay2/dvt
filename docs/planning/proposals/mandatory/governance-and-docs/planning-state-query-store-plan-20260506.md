@@ -355,16 +355,17 @@ pnpm planning:db:import
 pnpm planning:db:query
 pnpm planning:db:operate
 pnpm planning:db:check
+pnpm planning:db:export
+pnpm planning:db:export:check
 pnpm governance:db:check
 pnpm governance:refresh
 pnpm test:planning:db
 pnpm test:planning:db:integration
 ```
 
-Planned for later export and parity slices:
+Planned for later governance export and parity slices:
 
 ```bash
-pnpm planning:db:export
 pnpm governance:db:import
 pnpm governance:db:query
 pnpm governance:db:export
@@ -544,6 +545,16 @@ current Git-tracked planning lane snapshot with imported Postgres rows by source
 hash, lane id, and `(lane_id, task_id)` identity. It fails closed when a source
 hash is stale, a row is missing, or an unexpected imported row exists.
 
+`planning:db:export` implements `ExportPlanningStateSnapshot` for the first
+planning-derived surface parity slice. It reads imported Postgres lane and task
+rows, reconstructs lane registry documents into a temporary source directory,
+and delegates rendering to the existing `GeneratePlanningDerivedSurfaces`
+adapter instead of adding a parallel workboard renderer. Scope is local
+developer tooling only; authorization is local OS and Docker/Postgres access.
+`planning:db:export:check` compares the DB-rendered execution workboard and
+open-task route against the current generated files and fails closed on missing
+artifacts, stale DB content, or renderer drift.
+
 `governance:db:check` implements `ValidateGovernanceStateDrift`. It compares the
 current Git-tracked governance snapshot with imported Postgres rows by source
 hash, file path, component id, `(component_id, path)` identity, fingerprint
@@ -616,6 +627,30 @@ behavior, and fail-closed posture when generated output does not converge.
    `pnpm docs:feature-mechanization:implementation`, `pnpm governance:refresh`,
    `pnpm planning:db:reset -- --confirm-destroy-shared-planning-db`, and
    `pnpm verify:prepush`.
+
+### W7 Implementation Plan
+
+1. Update this plan before code so `planning:db:export` is no longer an
+   undeclared future command and the export parity boundary is explicit.
+2. Add red tests in `scripts/planning-db-export.test.cjs` for reconstructing
+   lane documents from DB rows, replacing raw lane task arrays with normalized
+   task rows, detecting generated artifact drift, and preserving the generated
+   artifact allowlist.
+3. Add `scripts/planning-db-export.cjs` as a thin DB-to-generator command. It
+   must read imported Postgres rows, emit temporary lane YAML source files, and
+   invoke the existing `scripts/generate-workboard.cjs` renderer rather than
+   duplicating workboard formatting logic.
+4. Add `planning:db:export` and `planning:db:export:check` package scripts and
+   wire `planning:db:export:check` into `governance:refresh` after import and
+   planning drift check. This keeps the current generation sequence canonical
+   while proving DB parity before closeout.
+5. Extend the live planning DB integration test to export DB-derived planning
+   views into a temporary output root after import and assert both expected
+   generated files exist.
+6. Validate W7 with `pnpm test:planning:db`,
+   `pnpm test:planning:db:integration`, `pnpm planning:db:import`,
+   `pnpm planning:db:export:check`, `pnpm governance:refresh`,
+   `pnpm ci:docs`, and `pnpm verify:prepush`.
 
 ## GitHub Issues Role
 
@@ -783,6 +818,7 @@ allowedImplementationSurfaces:
   - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
   - docs/planning/state/planning-control-tower.md
   - docs/planning/state/how-to-add-tasks.md
+  - docs/planning/closeouts/**
   - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
   - docs/planning/proposals/portfolio-map-20260403.md
   - docs/planning/index.md
@@ -916,6 +952,8 @@ completionGate:
   - pnpm planning:db:migrate
   - pnpm planning:db:import
   - pnpm planning:db:query
+  - pnpm planning:db:export
+  - pnpm planning:db:export:check
   - pnpm planning:db:reset -- --confirm-destroy-shared-planning-db
   - pnpm planning:db:operate
   - pnpm planning:db:check
@@ -1021,6 +1059,15 @@ redGreenCycles:
       - package.json
       - tools/planning-db/**
       - scripts/planning-db-*.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: pnpm test:planning:db
+  - id: planning-db-export-parity
+    redTest: pnpm test:planning:db
+    expectedFailure: Planning DB export runner does not yet regenerate planning-derived views through the canonical workboard renderer.
+    patchSurfaces:
+      - package.json
+      - scripts/planning-db-*.cjs
+      - scripts/governance-refresh*.cjs
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     greenTest: pnpm test:planning:db
 symbols:
@@ -1558,6 +1605,36 @@ symbols:
   - <<: *planningDbLocalOperationSymbol
     name: assertIdempotentReplayMatches
     path: scripts/planning-db-operate.test.cjs
+  - &planningDbExportSymbol
+    name: PlanningDbExportRunner
+    path: scripts/planning-db-export.cjs
+    dddOwner: PlanningStateExport
+    cqRails:
+      - ExportPlanningStateSnapshot
+      - GeneratePlanningDerivedSurfaces
+      - QueryPlanningStateReadModel
+    fowlerSignals:
+      - Large planning file operating cost
+      - Hidden query model inside YAML
+      - Generated artifact churn
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - planning DB export has no browser workflow.
+    unitTests:
+      - pnpm test:planning:db
+      - pnpm test:planning:db:integration
+      - pnpm planning:db:export:check
+  - <<: *planningDbExportSymbol
+    name: dependencies
+    path: scripts/planning-db-export.cjs
+  - <<: *planningDbExportSymbol
+    name: exportedArtifactPaths
+    path: scripts/planning-db-export.cjs
+  - <<: *planningDbExportSymbol
+    name: main
+    path: scripts/planning-db-export.cjs
+  - <<: *planningDbExportSymbol
+    name: node
+    path: scripts/planning-db-export.test.cjs
   - &planningDbDriftSymbol
     name: PlanningDbDriftCheckRunner
     path: scripts/planning-db-check.cjs

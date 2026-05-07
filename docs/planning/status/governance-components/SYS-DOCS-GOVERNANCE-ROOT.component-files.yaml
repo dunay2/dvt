@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - documentation governance
 childrenRequired: true
-fileCount: 1766
+fileCount: 1767
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -8388,6 +8388,13 @@ files:
     isLegacy: false
   - path: docs/planning/closeouts/20260507-gov-s2-doc-driven-operating-framework-closeout.md
     fileId: F-77B05EEE94AB
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/planning/closeouts/20260507-gov-s3-planning-db-export-parity-closeout.md
+    fileId: F-314BF2604A3D
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
