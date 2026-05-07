@@ -266,6 +266,31 @@ Most likely causes:
   then closes Postgres resources, then stops the operational server
 - shutdown failures must be treated as operational defects, not ignored
 
+## Rollout blocker (TF-C3-E)
+
+The following validation steps MUST be executed against a real environment before
+this runbook can be considered production-accepted. These steps are not
+automated in CI — they require a deployed Temporal worker instance.
+
+1. **Deploy worker to staging** — start the worker with `DVT_TEMPORAL_DBT_ENABLED=true`
+   and valid Postgres + Temporal connection strings.
+2. **Verify `/healthz` returns `200` with `state: "running"`** — confirms the
+   operational server started and the monitor reports a running worker. A `200`
+   without `state: "running"` is liveness evidence only.
+3. **Verify `/readyz` returns `200` with `dbtEnabled: true`** — confirms the DBT
+   plugin profile was built and the runtime completed startup without error.
+4. **Verify `/metrics` target registers `dvt_temporal_worker_up 1`** — confirms
+   Prometheus scrape target is live and the worker lifecycle metric is exposed.
+5. **Run one DBT-enabled plan end-to-end** — submit a plan with a DBT step via
+   the Temporal workflow, confirm the activity completes and the DBT CLI process
+   exits cleanly.
+6. **Confirm `dvt_temporal_worker_error_total` remains flat** — observe the
+   counter during the test window; any increment indicates an unhandled error in
+   the worker runtime.
+
+Until these steps pass, the worker path is **not production-accepted** and
+TF-C3-E remains blocked.
+
 ## Current limits
 
 - DBT execution currently uses a local CLI process behind the worker host
