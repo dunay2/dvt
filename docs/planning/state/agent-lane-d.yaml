@@ -2,7 +2,7 @@ lane_id: D
 title: Scale And Go-To-Market
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-20'
+last_reviewed: '2026-05-06'
 goal: Prepare the system for scale and for the first enterprise customer.
 expected_outcome:
   - storage and read-path scale are bounded
@@ -143,7 +143,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: cost attribution model
     priority: P2
-    status: blocked
+    status: queued
     objective: support billing and finance reporting.
     dependency: S05, S02, run event log retention + TTL
     target: Usage accounting and finance visibility.
@@ -153,9 +153,10 @@ tasks:
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
     status_reason: >-
-      The design remains deferred until payload versioning and retention prerequisites are fully
-      closed.
-    last_verified: '2026-03-31'
+      Payload-version, state-store split, and retention prerequisites are now closed in the lane
+      registry, so this is no longer dependency-blocked. The work remains queued because no usage
+      accounting or finance-reporting implementation evidence exists yet.
+    last_verified: '2026-05-06'
   - task_id: run_events partitioning
     priority: P2
     status: queued
@@ -184,7 +185,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: projector event-driven invalidation
     priority: P2
-    status: blocked
+    status: queued
     objective: remove polling bottlenecks.
     dependency: read-your-writes contract
     target: Event-driven projection cache invalidation.
@@ -194,9 +195,10 @@ tasks:
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
       - docs/planning/roadmap/strategic-product-roadmap.md
-    status_reason:
-      The queue-shaped mitigation is identified, but the runtime invalidation slice has not started.
-    last_verified: '2026-03-31'
+    status_reason: >-
+      The read-your-writes contract is now closed, so this is no longer dependency-blocked. The
+      queue-shaped mitigation is identified, but the runtime invalidation slice has not started.
+    last_verified: '2026-05-06'
   - task_id: Temporal -> API backpressure
     priority: P2
     status: blocked
@@ -527,7 +529,7 @@ tasks:
     last_verified: '2026-04-13'
   - task_id: first enterprise pilot
     priority: P3
-    status: blocked
+    status: queued
     objective: validate product-market fit.
     dependency: read-your-writes contract, RBAC at operation level, MVP-D1
     target: First customer validation.
@@ -536,8 +538,11 @@ tasks:
     progress_pct: 0
     evidence_refs:
       - docs/planning/roadmap/strategic-product-roadmap.md
-    status_reason: Explicit GTM backlog item; no execution evidence exists yet.
-    last_verified: '2026-03-31'
+    status_reason: >-
+      Runtime-safety prerequisites are now closed in the lane registry, so the pilot is no longer
+      dependency-blocked. It remains queued GTM validation work because no customer execution
+      evidence exists yet.
+    last_verified: '2026-05-06'
   - task_id: billing integration
     priority: P3
     status: blocked
@@ -586,13 +591,15 @@ dependency_notes:
     `run event log retention + TTL` is now verified as delivered by closeout plus accepted evidence
     from 2026-03-30.
   - '`G5-PR2`, `S15`, `S15-F1`, and `S14` are closed with code-backed closeouts.'
-  - '`cost attribution model` remains blocked on `S05` and on retention being fully operationalized.'
   - >-
-    `projector event-driven invalidation` stays blocked on the read-your-writes contract even though
-    the staleness surface is now caller-visible.
+    `cost attribution model` moved from blocked to queued because `S05`, `S02`, and retention are
+    now closed; no usage-accounting implementation evidence exists yet.
   - >-
-    `first enterprise pilot`, billing, compliance, and acquisition collateral remain explicit GTM
-    backlog rather than implementation work.
+    `projector event-driven invalidation` moved from blocked to queued because the read-your-writes
+    contract is now closed; runtime invalidation work has not started.
+  - >-
+    `first enterprise pilot` moved from blocked to queued because its runtime prerequisites are now
+    closed. Billing, compliance, and acquisition collateral remain blocked behind pilot execution.
   - >-
     `AR-D2` through `AR-D6` remain the original open scale backlog from the 2026-04-02 deep
     architectural review; `AR-D-PLAN-POINTER` now adds the workflow-payload hardening cut required
@@ -611,12 +618,14 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-20'
+  verified_on: '2026-05-06'
   total_tasks: 27
   total_effort_points: 143
-  completed_weighted_points: 47
-  lane_progress_pct: 33
+  completed_weighted_points: 58.54
+  lane_progress_pct: 41
   notes: >-
-    Weighted progress uses effort_points. `MW-D1` is now closed with the compile-only route/use-case
-    split, catalog-first composition, and non-dbt acceptance vector; remaining Lane D near-term work
-    is workflow payload hardening, retention enforcement, and the open scale backlog.
+    Weighted progress uses effort_points. The 2026-05-06 status reconciliation reclassified
+    dependency-cleared backlog items from blocked to queued and recomputed the summary from the
+    current task registry. `MW-D1` is closed with the compile-only route/use-case split,
+    catalog-first composition, and non-dbt acceptance vector; remaining Lane D near-term work is
+    workflow payload hardening, retention enforcement, and the open scale backlog.

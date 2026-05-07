@@ -1,0 +1,19 @@
+name: dvt-planning-db
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: dvt-planning-db-postgres
+    environment:
+      POSTGRES_DB: dvt_planning
+      POSTGRES_USER: dvt_planning
+      POSTGRES_PASSWORD: dvt_planning_local
+    ports:
+      - '55432:5432'
+    volumes:
+      - '${DVT_PLANNING_DB_DATA_DIR:-C:/dvt/planning-db/postgres-data}:/var/lib/postgresql/data'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U dvt_planning -d dvt_planning']
+      interval: 5s
+      timeout: 3s
+      retries: 20

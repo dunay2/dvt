@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - repository automation
 childrenRequired: true
-fileCount: 184
+fileCount: 201
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -641,6 +641,34 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: scripts/governance-db-check.cjs
+    fileId: F-12512A7E47C3
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/governance-db-check.test.cjs
+    fileId: F-9DAC1A61C72B
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/governance-refresh.cjs
+    fileId: F-200E5D9F0FA1
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/governance-refresh.test.cjs
+    fileId: F-7C49EAEF4AC8
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: scripts/hygiene.ps1
     fileId: F-42803C2BD485
     owningUnit: SYS-CI-GOVERNANCE-ROOT
@@ -664,6 +692,83 @@ files:
     isLegacy: false
   - path: scripts/outbox-worker-canary-evidence.ps1
     fileId: F-17B0417AAFE4
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/planning-db-check.cjs
+    fileId: F-B34D9B939D74
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/planning-db-check.test.cjs
+    fileId: F-94B41A5250E8
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/planning-db-content.integration.test.cjs
+    fileId: F-00C7F0BCBB25
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/planning-db-import.cjs
+    fileId: F-BE730538DF11
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/planning-db-import.test.cjs
+    fileId: F-93AF019524B5
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/planning-db-migrate.cjs
+    fileId: F-DB167A227EF5
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/planning-db-migrate.test.cjs
+    fileId: F-A4BF52DFF553
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/planning-db-query.cjs
+    fileId: F-09A1C46FAD9C
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/planning-db-query.test.cjs
+    fileId: F-DA9549276EA3
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/planning-db-run.cjs
+    fileId: F-161608EF057D
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/planning-db-run.test.cjs
+    fileId: F-57021A810F3C
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -1287,6 +1392,20 @@ files:
     isLegacy: false
   - path: tools/ops/ar-c2-evidence-collector.mjs
     fileId: F-86F75B9A6E65
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: tools/planning-db/migrations/001_content_read_model.sql
+    fileId: F-93E2C0292B6F
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: tools/planning-db/migrations/002_governance_content_read_model.sql
+    fileId: F-2A050BFE629B
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

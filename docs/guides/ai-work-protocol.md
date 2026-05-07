@@ -63,6 +63,34 @@ Minimum rule for every planning-affecting task:
 Do not leave planning changes only in ad hoc notes or PR text when a canonical
 planning surface exists.
 
+## Governance Refresh Placement Rule
+
+When a task touches governance or planning generated surfaces, keep the early
+work focused on content, code, tests, and the governing plan. Do not repeatedly
+run the full governance refresh during the inner development loop unless the
+next decision depends on generated output.
+
+Before closeout, run the canonical refresh command when any of these changed:
+
+- docs/planning/governance source surfaces;
+- governance workflow documentation;
+- governance generator or check scripts;
+- package scripts that affect docs, planning, or governance validation;
+- file additions, deletions, or renames that affect `system-governance-*`
+  indexes.
+
+The required final command is:
+
+```bash
+pnpm governance:refresh
+```
+
+This command owns the final quadrature for docs indexes, workboard views, docs
+manifests, `system-governance-*` indexes, fingerprints, coverage, remediation
+outputs, and planning/governance query-store import/checks. It must run before
+`pnpm ci:docs` or `pnpm verify:prepush` in affected slices, and it does not
+relax either gate.
+
 ## Task Modes
 
 Declare the task mode in the Pre-Implementation Brief (Phase 2). The mode
@@ -207,6 +235,9 @@ Before closing the work, verify all acceptance criteria:
 - [ ] lint and typecheck green in every touched package
 - [ ] `pnpm verify:prepush` green before the slice is presented as ready, unless
       the user explicitly limits validation and that limit is reported
+- [ ] `pnpm governance:refresh` run before final docs/prepush validation when
+      governance, planning, docs generated surfaces, package scripts, or file
+      inventory changes affect `system-governance-*`
 - [ ] no behavior changed outside the scope declared in Phase 2
 - [ ] no `as any`, magic values, or unjustified type assertions introduced
 - [ ] run the required checks (canonical commands below)

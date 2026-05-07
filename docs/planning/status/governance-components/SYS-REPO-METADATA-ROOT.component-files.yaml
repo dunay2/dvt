@@ -7,7 +7,7 @@ governanceState: governed
 dddOwner: INFRA
 cqRails: none - repository metadata
 childrenRequired: true
-fileCount: 121
+fileCount: 122
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -622,6 +622,13 @@ files:
     isLegacy: false
   - path: infra/docker/postgres/redpanda/migrations/001_init.sql
     fileId: F-13A9C489FBF6
+    owningUnit: SYS-REPO-METADATA-ROOT
+    unitStatus: canonical
+    governanceState: governed
+    isDrift: false
+    isLegacy: false
+  - path: infra/planning-db/docker-compose.yml
+    fileId: F-A1337CAD9087
     owningUnit: SYS-REPO-METADATA-ROOT
     unitStatus: canonical
     governanceState: governed

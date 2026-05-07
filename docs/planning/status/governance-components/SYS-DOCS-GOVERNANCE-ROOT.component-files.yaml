@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - documentation governance
 childrenRequired: true
-fileCount: 1761
+fileCount: 1763
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -657,6 +657,13 @@ files:
     isLegacy: false
   - path: docs/architecture/components/ci-governance/local-changed-files-gate-component.md
     fileId: F-71B27FCCBB86
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
+    fileId: F-5F127B26BB91
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -9245,6 +9252,14 @@ files:
   - path: >-
       docs/planning/proposals/mandatory/governance-and-docs/local-changed-files-gate-hardening-plan-20260503.md
     fileId: F-D47D38349445
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    fileId: F-2144BB3902E3
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

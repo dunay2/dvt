@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files docs
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-documentCount: 1501
+documentCount: 1503
 documents:
   - path: docs/CONTRIBUTING.md
     classification: governs unit
@@ -352,6 +352,10 @@ documents:
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-CI-GOVERNANCE
   - path: docs/architecture/components/ci-governance/local-changed-files-gate-component.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-CI-GOVERNANCE
+  - path: docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-CI-GOVERNANCE
@@ -4896,6 +4900,11 @@ documents:
     subjectUnit: SYS-DOCS-GOVERNANCE
   - path: >-
       docs/planning/proposals/mandatory/governance-and-docs/local-changed-files-gate-hardening-plan-20260503.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
+  - path: >-
+      docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-DOCS-GOVERNANCE
