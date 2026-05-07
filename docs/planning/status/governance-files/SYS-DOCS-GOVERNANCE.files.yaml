@@ -30547,9 +30547,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-AE2E8B931675
     pathHash: 942ad493c4e4f5383d0a62bbde24540ffd68d21dc019c861e22faf49ddf39d81
-    contentHash: 8c9a9443db0a4227755ca139f671a2da207e99e2a48fca7912741224a014843c
+    contentHash: d67326388adf8e65d38b7433b525f9c20faf917476f08a12c34636f268913857
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 21c813a69c31048117af7b4ae999060a645bfe2c72df67ba024cca2b3e0fe4f6
+    stateFingerprint: 11d6472dd7bb697aa355af79911d50caa0b15672b423e0fcc3d471559d8ce11f
     path: docs/planning/closeouts/20260507-ar-b5-lineage-worker-runtime-decomposition-closeout.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -33904,9 +33904,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-100D7FA8DBBB
     pathHash: 17a2e2cc18a001437c216914e20a38d8fbb6d582373ac35663c960f2f18638ef
-    contentHash: 5a220706efce9eb2ee0457390bca645bf37182f893be5ecda8b7ec4371dfb385
+    contentHash: ca21179314dd246b54e53a8aee064d0e7ae5ad89887a254f8f5a5f58103b1cc2
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: ad9439d54781e6a5b82d26b341c09aebd228439d9466e8c85eaa298e85f72430
+    stateFingerprint: fa8dd971d4c0023adc2a12ca5bc8c69b2b58f4ed4fa78785abcf12204d32105f
     path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/ar-b5-lineage-worker-runtime-decomposition-plan-20260507.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT

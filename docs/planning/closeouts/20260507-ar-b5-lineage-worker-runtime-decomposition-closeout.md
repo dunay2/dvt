@@ -256,6 +256,7 @@ allowedImplementationSurfaces:
   - packages/@dvt/traceability-service/src/lineage/runtime/LineageWorkerLoopController.ts
   - packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerTick.ts
   - packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.architecture.test.ts
+  - packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.runOnce.test.ts
   - packages/@dvt/traceability-service/test/lineage/lineageWorkerTick.test.ts
   - scripts/planning-db-migrate.cjs
   - scripts/planning-db-migrate.test.cjs
@@ -283,7 +284,7 @@ architectureGuards:
 cypressFlows:
   - Not applicable - internal lineage worker runtime decomposition only
 completionGate:
-  - pnpm exec vitest run packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.architecture.test.ts packages/@dvt/traceability-service/test/lineage/lineageWorkerTick.test.ts
+  - pnpm exec vitest run packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.architecture.test.ts packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.runOnce.test.ts packages/@dvt/traceability-service/test/lineage/lineageWorkerTick.test.ts
   - pnpm --filter @dvt/traceability-service test
   - pnpm --filter @dvt/traceability-service build
   - node --test scripts/planning-db-migrate.test.cjs
@@ -292,15 +293,16 @@ completionGate:
   - pnpm verify:prepush
 redGreenCycles:
   - id: lineage-runtime-facade-decomposition
-    redTest: pnpm exec vitest run packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.architecture.test.ts packages/@dvt/traceability-service/test/lineage/lineageWorkerTick.test.ts
-    expectedFailure: The tick module does not exist and the runtime facade still imports direct record/dead-letter helpers.
+    redTest: pnpm exec vitest run packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.architecture.test.ts packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.runOnce.test.ts packages/@dvt/traceability-service/test/lineage/lineageWorkerTick.test.ts
+    expectedFailure: The tick module does not exist, the runtime facade still imports direct record/dead-letter helpers, and observed lag is not preserved when later tick work fails.
     patchSurfaces:
       - packages/@dvt/traceability-service/src/lineage/LineageWorkerRuntime.ts
       - packages/@dvt/traceability-service/src/lineage/runtime/LineageWorkerLoopController.ts
       - packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerTick.ts
       - packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.architecture.test.ts
+      - packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.runOnce.test.ts
       - packages/@dvt/traceability-service/test/lineage/lineageWorkerTick.test.ts
-    greenTest: pnpm exec vitest run packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.architecture.test.ts packages/@dvt/traceability-service/test/lineage/lineageWorkerTick.test.ts
+    greenTest: pnpm exec vitest run packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.architecture.test.ts packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.runOnce.test.ts packages/@dvt/traceability-service/test/lineage/lineageWorkerTick.test.ts
   - id: planning-db-migration-line-ending-checksum
     redTest: node --test scripts/planning-db-migrate.test.cjs
     expectedFailure: CRLF and LF variants of the same migration SQL produce incompatible checksums.
