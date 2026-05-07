@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files docs
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-documentCount: 1503
+documentCount: 1504
 documents:
   - path: docs/CONTRIBUTING.md
     classification: governs unit
@@ -4493,6 +4493,10 @@ documents:
     classification: tracks drift
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-RUNTIME
+  - path: docs/planning/closeouts/20260507-gov-s2-doc-driven-operating-framework-closeout.md
+    classification: tracks drift
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-DOCS-GOVERNANCE
   - path: docs/planning/closeouts/F-02-closeout.md
     classification: tracks drift
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
