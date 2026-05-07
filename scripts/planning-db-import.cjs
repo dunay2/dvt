@@ -4,51 +4,26 @@ const path = require('node:path');
 const { Client } = require('pg');
 const yaml = require('js-yaml');
 
+const { governanceGeneratedPath } = require('./governance-generated-paths.cjs');
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { runMigrations, schemaName } = require('./planning-db-migrate.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const laneDirectory = path.join(repoRoot, 'docs', 'planning', 'state');
-const governanceFileIndexPath = path.join(
-  repoRoot,
-  'docs',
-  'planning',
-  'status',
-  'system-governance-file-index.files.yaml'
-);
-const governanceComponentIndexPath = path.join(
-  repoRoot,
-  'docs',
-  'planning',
-  'status',
+const governanceFileIndexPath = governanceGeneratedPath('system-governance-file-index.files.yaml');
+const governanceComponentIndexPath = governanceGeneratedPath(
   'system-governance-component-index.components.yaml'
 );
-const governanceComponentFileMapPath = path.join(
-  repoRoot,
-  'docs',
-  'planning',
-  'status',
+const governanceComponentFileMapPath = governanceGeneratedPath(
   'system-governance-component-file-map.components.yaml'
 );
-const governanceFingerprintBaselinePath = path.join(
-  repoRoot,
-  'docs',
-  'planning',
-  'status',
+const governanceFingerprintBaselinePath = governanceGeneratedPath(
   'system-governance-file-fingerprint-baseline.yaml'
 );
-const governanceCoverageReportPath = path.join(
-  repoRoot,
-  'docs',
-  'planning',
-  'status',
+const governanceCoverageReportPath = governanceGeneratedPath(
   'system-governance-coverage-report.coverage.yaml'
 );
-const governanceRemediationQueuePath = path.join(
-  repoRoot,
-  'docs',
-  'planning',
-  'status',
+const governanceRemediationQueuePath = governanceGeneratedPath(
   'system-governance-remediation-queue.queue.yaml'
 );
 

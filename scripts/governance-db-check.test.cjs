@@ -11,7 +11,7 @@ test('governance DB drift check detects stale governance source hashes', () => {
   const expected = buildGovernanceExpectedState({
     sources: [
       {
-        sourcePath: 'docs/planning/status/system-governance-file-index.files.yaml',
+        sourcePath: '.generated-docs/planning/status/system-governance-file-index.files.yaml',
         sourceType: 'governance_file_index',
         contentSha256: 'd'.repeat(64),
         sourceBytes: 200,
@@ -28,7 +28,7 @@ test('governance DB drift check detects stale governance source hashes', () => {
     ...expected,
     sources: [
       {
-        sourcePath: 'docs/planning/status/system-governance-file-index.files.yaml',
+        sourcePath: '.generated-docs/planning/status/system-governance-file-index.files.yaml',
         sourceType: 'governance_file_index',
         contentSha256: 'e'.repeat(64),
         sourceBytes: 200,
@@ -57,7 +57,8 @@ test('governance DB drift check detects missing remediation tasks', () => {
         priority: 'P0',
         fileCount: 20,
         documentCount: 0,
-        sourcePath: 'docs/planning/status/system-governance-remediation-queue.queue.yaml',
+        sourcePath:
+          '.generated-docs/planning/status/system-governance-remediation-queue.queue.yaml',
         sourceContentSha256: 'f'.repeat(64),
       },
     ],

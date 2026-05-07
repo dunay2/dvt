@@ -28,9 +28,10 @@ Git remains the canonical review and authority boundary:
 
 - lane state, proposals, reviews, closeouts, roadmap docs, evidence, and risk
   records remain tracked in the repository;
-- governance rules, file indexes, component maps, fingerprints, coverage
-  reports, and remediation queues remain tracked or generated according to their
-  existing governance policy;
+- governance rules remain tracked; derived file indexes, component maps,
+  fingerprints, coverage reports, remediation queues, and governance shards are
+  generated under `.generated-docs/planning/status/` and imported into
+  Postgres instead of being committed as review files;
 - Postgres imports those sources into normalized tables for queries, status
   reconciliation, dashboards, generated planning outputs, and governance
   coverage analysis;
@@ -73,6 +74,11 @@ query, drift-check, and eventually regenerate these governance read models:
 - `docs/planning/status/governance-files/**`
 - `docs/planning/status/governance-components/**`
 
+As of the generated-artifact extraction slice, the entries above are former
+tracked review paths. Their live generated location is now
+`.generated-docs/planning/status/**`, and the old `docs/planning/status/**`
+paths are removed from tracking and ignored to prevent PR fan-out.
+
 In other words, GOV-S3 moves the bulky governance read side toward:
 
 ```text
@@ -80,7 +86,8 @@ Git-tracked governance sources and generator rules
   -> deterministic import
   -> Postgres governance read model
   -> query/check/report/export
-  -> deterministic generated governance files while compatibility remains needed
+  -> deterministic ignored governance artifacts under .generated-docs
+  -> Postgres import/check for query and drift evidence
 ```
 
 The canonical authority still remains the repository. The database makes the
@@ -89,10 +96,11 @@ outside PR review.
 
 ## Current System Governance Workflow
 
-The current `system-governance-*` workflow is deterministic, but it is also the
-fan-out mechanism that makes a small source change touch many tracked files.
-The workflow below is the one this plan must preserve before deriving it into
-Postgres.
+The `system-governance-*` workflow is deterministic, but the old tracked-output
+model was the fan-out mechanism that made a small source change touch many
+tracked files. The workflow below is preserved, but its generated outputs now
+write to `.generated-docs/planning/status/` and then feed Postgres import/checks
+instead of becoming PR review files.
 
 The canonical component view for this existing workflow is
 [`System Governance Generation Workflow Component`](../../../../architecture/components/ci-governance/system-governance-generation-workflow-component.md).
@@ -143,16 +151,22 @@ flowchart TD
 
 The direct generators and checks are:
 
-| Stage                | Command                                          | Primary tracked outputs                                                                                                                     |
-| -------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| File/component index | `pnpm docs:governance:file-component-index`      | `system-governance-file-index.*`, `system-governance-component-index.*`, `system-governance-component-file-map.*`, governance shard folders |
-| Fingerprint baseline | `pnpm docs:governance:file-fingerprint-baseline` | `system-governance-file-fingerprint-baseline.yaml`                                                                                          |
-| Fingerprint impact   | `pnpm docs:governance:file-fingerprint-impact`   | `system-governance-file-fingerprint-impact-20260501.md`                                                                                     |
-| Coverage report      | `pnpm docs:governance:coverage-report`           | `system-governance-coverage-report.*`                                                                                                       |
-| Remediation queue    | `pnpm docs:governance:remediation-queue`         | `system-governance-remediation-queue*`                                                                                                      |
-| Readiness gate       | `pnpm verify:prepush` and `pnpm ci:docs`         | Fails if generated governance output is stale or changed files lack governance coverage                                                     |
+- `pnpm docs:governance:file-component-index` generates the file index,
+  component indexes, component maps, and governance shard folders under
+  `.generated-docs/planning/status/`.
+- `pnpm docs:governance:file-fingerprint-baseline` generates
+  `.generated-docs/planning/status/system-governance-file-fingerprint-baseline.yaml`.
+- `pnpm docs:governance:file-fingerprint-impact` generates
+  `.generated-docs/planning/status/system-governance-file-fingerprint-impact-20260501.md`.
+- `pnpm docs:governance:coverage-report` generates
+  `.generated-docs/planning/status/system-governance-coverage-report.*`.
+- `pnpm docs:governance:remediation-queue` generates
+  `.generated-docs/planning/status/system-governance-remediation-queue*`.
+- `pnpm verify:prepush` and `pnpm ci:docs` regenerate ignored artifacts,
+  validate changed files against active governance, and check DB import/drift
+  paths where applicable.
 
-In the current branch, one planning/proposal change fans out into the same
+Before this extraction, one planning/proposal change fanned out into the same
 surface visible in the editor:
 
 - proposal sources under `docs/planning/proposals/mandatory/governance-and-docs/`;
@@ -165,9 +179,9 @@ surface visible in the editor:
 - governance shard files under `governance-files/**` and
   `governance-components/**`.
 
-That fan-out is the problem to derive. GOV-S3 should first reproduce this
-workflow as an explicit import/query/export pipeline before changing what is
-tracked or how much of it reviewers must inspect.
+That tracked fan-out was the problem to derive. GOV-S3 now keeps the same
+generation order as an explicit import/query pipeline while removing those
+derived files from the tracked review surface.
 
 ## Problem
 
@@ -199,21 +213,23 @@ flowchart LR
   Human[Human or agent] --> LaneYaml[agent-lane-*.yaml]
   LaneYaml --> Workboard[generated workboard]
   LaneYaml --> Route[generated open-task route]
-  GitFiles[tracked repo files] --> GovIndex[system-governance-* shards]
+  GitFiles[tracked repo files] --> GovIndex[ignored .generated-docs governance artifacts]
   GovIndex --> Coverage[coverage and remediation reports]
   Human --> LargeYaml[large YAML reads and edits]
-  GovIndex --> ReviewNoise[large generated diffs]
-  Coverage --> ReviewNoise
+  GovIndex --> PgImport[Postgres import/check]
+  Coverage --> PgImport
 ```
 
-The lane YAML registry and governance shards are reviewable and deterministic,
-but they are poor query engines and poor concurrency surfaces.
+The lane YAML registry is still reviewable and deterministic. Governance
+artifacts are now ignored generated read models: useful for import/checks, but
+not a PR review surface or concurrency surface.
 
 ## Target State
 
 ```mermaid
 flowchart LR
-  Files[Existing YAML and generated governance files] --> Import[bootstrap import]
+  Files[Existing tracked YAML and docs sources] --> Generate[ignored .generated-docs artifacts]
+  Generate --> Import[bootstrap import]
   Import --> Pg[(local persistent Postgres)]
   Agent[Agent command] --> Command[transactional local command]
   Command --> Pg
@@ -221,14 +237,14 @@ flowchart LR
   Pg --> Queries[status, dependency, file, and component queries]
   Pg --> Reconcile[planning and governance reconciliation checks]
   Pg --> Export[deterministic export or PR snapshot]
-  Export --> Files
+  Export --> Artifacts
   Pg --> Generated[workboard, route, and governance report generation]
   Generated --> Artifacts[local or CI artifacts]
 ```
 
 The local database exists to make planning and governance state cheap to inspect
 and safe for multiple local agents to coordinate through transactional commands.
-Existing files remain the bootstrap and PR-review compatibility surface during
+Tracked files remain the bootstrap and PR-review compatibility surface during
 the transition, but agents should stop treating lane YAML and generated
 governance shards as the daily write backend.
 
@@ -236,8 +252,9 @@ governance shards as the daily write backend.
 
 This plan now separates three boundaries that were previously collapsed:
 
-1. Bootstrap/import: existing YAML and generated governance files can seed the
-   local database with source hashes and raw payloads.
+1. Bootstrap/import: existing tracked YAML/docs sources plus ignored
+   `.generated-docs` governance artifacts can seed the local database with
+   source hashes and raw payloads.
 2. Local operation: agents claim and update planning work through Postgres
    commands that use optimistic revisions and append-only audit rows.
 3. Review/export: deterministic file exports, closeouts, evidence, risk records,
@@ -598,7 +615,7 @@ behavior, and fail-closed posture when generated output does not converge.
    checks.
 3. Use a Git worktree fingerprint only as a convergence guard. Git remains the
    canonical source boundary; the fingerprint does not replace reviewed
-   generated artifacts or `contentSha256` DB drift checks.
+   tracked sources or `contentSha256` DB drift checks.
 4. Document the workflow in the ci-governance component so agents no longer
    rely on memory for regeneration sequence.
 5. Keep any proposal to reduce non-code check cost as a later CI policy slice.
@@ -651,6 +668,32 @@ behavior, and fail-closed posture when generated output does not converge.
    `pnpm test:planning:db:integration`, `pnpm planning:db:import`,
    `pnpm planning:db:export:check`, `pnpm governance:refresh`,
    `pnpm ci:docs`, and `pnpm verify:prepush`.
+
+### W8 Implementation Plan
+
+1. Add a focused red test for the new governance generated-output boundary:
+   derived `system-governance-*` artifacts must resolve to
+   `.generated-docs/planning/status/`, while
+   `system-governance-unit-index.units.yaml` remains the tracked source
+   manifest.
+2. Add `scripts/governance-generated-paths.cjs` as the single path helper for
+   generated governance outputs.
+3. Retarget document-map, file/component-index, fingerprint, coverage,
+   remediation, changed-file, and planning DB import scripts to read/write the
+   generated governance read side from `.generated-docs/planning/status/`.
+4. Change governance `:check` scripts so local/CI checks regenerate ignored
+   artifacts instead of failing because generated files are absent from a clean
+   checkout.
+5. Remove former derived `system-governance-*`, `governance-files/**`, and
+   `governance-components/**` outputs from tracking. Keep source surfaces such
+   as `system-governance-unit-index.units.yaml`,
+   `system-governance-unit-index-20260501.md`, and
+   `system-governance-unit-taxonomy-20260501.md` tracked.
+6. Update `docs/generated-docs-policy.json` and the CI governance component so
+   reviewers see that these artifacts are ignored local outputs, not PR review
+   files.
+7. Validate W8 with focused generator tests, `pnpm test:planning:db`,
+   `pnpm governance:refresh`, `pnpm ci:docs`, and `pnpm verify:prepush`.
 
 ## GitHub Issues Role
 
@@ -810,6 +853,9 @@ allowedImplementationSurfaces:
   - scripts/planning-db-*.cjs
   - scripts/governance-db-*.cjs
   - scripts/governance-refresh*.cjs
+  - scripts/governance-generated-paths*.cjs
+  - scripts/generate-governance-*.cjs
+  - scripts/check-governance-*.cjs
   - scripts/check-feature-mechanization.cjs
   - scripts/check-feature-mechanization.test.cjs
   - docs/DOCS_README.md
@@ -1070,6 +1116,22 @@ redGreenCycles:
       - scripts/governance-refresh*.cjs
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     greenTest: pnpm test:planning:db
+  - id: governance-generated-artifact-extraction
+    redTest: pnpm docs:feature-mechanization:implementation
+    expectedFailure: Governance generation still treats system-governance indexes, shards, fingerprints, coverage, and remediation reports as tracked review files instead of local generated artifacts imported into Postgres.
+    patchSurfaces:
+      - .gitignore
+      - package.json
+      - scripts/governance-generated-paths*.cjs
+      - scripts/generate-governance-*.cjs
+      - scripts/check-governance-*.cjs
+      - scripts/planning-db-*.cjs
+      - scripts/governance-db-*.cjs
+      - docs/generated-docs-policy.json
+      - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+      - docs/planning/status/**
+    greenTest: pnpm docs:feature-mechanization:implementation
 symbols:
   - name: PlanningAndGovernanceQueryStorePlan
     path: docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
@@ -1825,6 +1887,131 @@ symbols:
   - <<: *governanceRefreshSymbol
     name: assert
     path: scripts/governance-refresh.test.cjs
+  - &governanceGeneratedArtifactSymbol
+    name: GovernanceGeneratedArtifactPaths
+    path: scripts/governance-generated-paths.cjs
+    dddOwner: GovernanceGenerationWorkflow
+    cqRails:
+      - RefreshGovernanceDerivedSurfaces
+      - QuerySystemGovernanceGenerationWorkflow
+      - ValidateSystemGovernanceGenerationWorkflow
+      - ImportGovernanceStateQueryStore
+      - QueryGovernanceStateReadModel
+      - ValidateGovernanceStateDrift
+    fowlerSignals:
+      - Generated artifact churn
+      - Hidden query model inside governance shards
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - governance generated artifact paths have no browser workflow.
+    unitTests:
+      - pnpm test:planning:db
+      - pnpm governance:refresh
+      - pnpm docs:feature-mechanization:implementation
+  - <<: *governanceGeneratedArtifactSymbol
+    name: path
+    path: scripts/governance-generated-paths.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: repoRoot
+    path: scripts/governance-generated-paths.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: statusSourceDir
+    path: scripts/governance-generated-paths.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: generatedStatusRepoPath
+    path: scripts/governance-generated-paths.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: generatedStatusDir
+    path: scripts/governance-generated-paths.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: unitManifestPath
+    path: scripts/governance-generated-paths.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: toPosix
+    path: scripts/governance-generated-paths.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: repoRelative
+    path: scripts/governance-generated-paths.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: governanceGeneratedPath
+    path: scripts/governance-generated-paths.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: governanceGeneratedRepoPath
+    path: scripts/governance-generated-paths.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: test
+    path: scripts/governance-generated-paths.test.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: assert
+    path: scripts/governance-generated-paths.test.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: path
+    path: scripts/governance-generated-paths.test.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: statusDir
+    path: scripts/check-governance-file-fingerprint-baseline.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: fileIndexPath
+    path: scripts/check-governance-file-fingerprint-baseline.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: baselinePath
+    path: scripts/check-governance-file-fingerprint-baseline.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: impactReportPath
+    path: scripts/check-governance-file-fingerprint-baseline.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: sourcePath
+    path: scripts/check-governance-file-fingerprint-baseline.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: statusDir
+    path: scripts/generate-governance-document-unit-map.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: defaultManifestPath
+    path: scripts/generate-governance-document-unit-map.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: outputYamlPath
+    path: scripts/generate-governance-document-unit-map.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: outputMarkdownPath
+    path: scripts/generate-governance-document-unit-map.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: statusDir
+    path: scripts/generate-governance-file-component-index.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: fileYamlPath
+    path: scripts/generate-governance-file-component-index.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: fileMarkdownPath
+    path: scripts/generate-governance-file-component-index.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: componentYamlPath
+    path: scripts/generate-governance-file-component-index.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: componentMarkdownPath
+    path: scripts/generate-governance-file-component-index.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: componentFileMapYamlPath
+    path: scripts/generate-governance-file-component-index.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: componentFileMapMarkdownPath
+    path: scripts/generate-governance-file-component-index.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: generatedFileYamlRelativePath
+    path: scripts/generate-governance-file-component-index.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: generatedShardDirRelativePath
+    path: scripts/generate-governance-file-component-index.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: generatedComponentShardDirRelativePath
+    path: scripts/generate-governance-file-component-index.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: fingerprintBaselineRelativePath
+    path: scripts/generate-governance-file-component-index.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: fingerprintImpactReportRelativePath
+    path: scripts/generate-governance-file-component-index.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: componentFileMapPath
+    path: scripts/generate-governance-remediation-queue.cjs
   - name: SystemGovernanceGenerationWorkflowComponent
     path: docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
     dddOwner: GovernanceGenerationWorkflow

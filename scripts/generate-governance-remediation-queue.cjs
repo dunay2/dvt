@@ -4,25 +4,26 @@
  */
 
 const fs = require('node:fs');
-const path = require('node:path');
 const yaml = require('js-yaml');
 const { readFileIndexFromDisk } = require('./generate-governance-file-component-index.cjs');
+const { generatedStatusDir, governanceGeneratedPath } = require('./governance-generated-paths.cjs');
 
-const repoRoot = path.resolve(__dirname, '..');
-const statusDir = path.join(repoRoot, 'docs', 'planning', 'status');
-const coverageReportPath = path.join(statusDir, 'system-governance-coverage-report.coverage.yaml');
-const fileIndexPath = path.join(statusDir, 'system-governance-file-index.files.yaml');
-const componentIndexPath = path.join(
-  statusDir,
+const statusDir = generatedStatusDir;
+const coverageReportPath = governanceGeneratedPath(
+  'system-governance-coverage-report.coverage.yaml'
+);
+const fileIndexPath = governanceGeneratedPath('system-governance-file-index.files.yaml');
+const componentIndexPath = governanceGeneratedPath(
   'system-governance-component-index.components.yaml'
 );
-const componentFileMapPath = path.join(
-  statusDir,
+const componentFileMapPath = governanceGeneratedPath(
   'system-governance-component-file-map.components.yaml'
 );
-const documentMapPath = path.join(statusDir, 'system-governance-document-unit-map.docs.yaml');
-const queueYamlPath = path.join(statusDir, 'system-governance-remediation-queue.queue.yaml');
-const queueMarkdownPath = path.join(statusDir, 'system-governance-remediation-queue-20260502.md');
+const documentMapPath = governanceGeneratedPath('system-governance-document-unit-map.docs.yaml');
+const queueYamlPath = governanceGeneratedPath('system-governance-remediation-queue.queue.yaml');
+const queueMarkdownPath = governanceGeneratedPath(
+  'system-governance-remediation-queue-20260502.md'
+);
 
 function readYaml(filePath) {
   return yaml.load(fs.readFileSync(filePath, 'utf8'));
@@ -68,7 +69,7 @@ function withComponentFileMapPaths(components, componentFileMap) {
     ...component,
     componentFileMap:
       pathsByComponent.get(component.id) ||
-      `docs/planning/status/governance-components/${component.id}.component-files.yaml`,
+      `.generated-docs/planning/status/governance-components/${component.id}.component-files.yaml`,
   }));
 }
 
@@ -152,7 +153,7 @@ function buildTask({
     componentUnit: component.id,
     componentFileMap:
       component.componentFileMap ||
-      `docs/planning/status/governance-components/${component.id}.component-files.yaml`,
+      `.generated-docs/planning/status/governance-components/${component.id}.component-files.yaml`,
     rootUnit: component.rootUnit,
     domainUnit: component.domainUnit,
     dddOwner: component.dddOwner,
@@ -333,11 +334,11 @@ function buildRemediationQueue({
   return {
     version: 1,
     generatedFrom: [
-      'docs/planning/status/system-governance-coverage-report.coverage.yaml',
-      'docs/planning/status/system-governance-file-index.files.yaml',
-      'docs/planning/status/system-governance-component-index.components.yaml',
-      'docs/planning/status/system-governance-component-file-map.components.yaml',
-      'docs/planning/status/system-governance-document-unit-map.docs.yaml',
+      '.generated-docs/planning/status/system-governance-coverage-report.coverage.yaml',
+      '.generated-docs/planning/status/system-governance-file-index.files.yaml',
+      '.generated-docs/planning/status/system-governance-component-index.components.yaml',
+      '.generated-docs/planning/status/system-governance-component-file-map.components.yaml',
+      '.generated-docs/planning/status/system-governance-document-unit-map.docs.yaml',
     ],
     totals: {
       tasks: tasks.length,
@@ -467,6 +468,7 @@ function buildOutputs() {
 function main() {
   const checkOnly = process.argv.includes('--check');
   const outputs = buildOutputs();
+  fs.mkdirSync(statusDir, { recursive: true });
   const changed = [
     writeIfChanged(queueYamlPath, outputs.yaml),
     writeIfChanged(queueMarkdownPath, outputs.markdown),

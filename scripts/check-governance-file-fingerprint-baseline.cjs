@@ -7,16 +7,20 @@ const fs = require('node:fs');
 const path = require('node:path');
 const yaml = require('js-yaml');
 const { readFileIndexFromDisk } = require('./generate-governance-file-component-index.cjs');
+const {
+  generatedStatusDir,
+  governanceGeneratedPath,
+  repoRelative,
+  repoRoot,
+} = require('./governance-generated-paths.cjs');
 
-const repoRoot = path.resolve(__dirname, '..');
-const statusDir = path.join(repoRoot, 'docs', 'planning', 'status');
-const fileIndexPath = path.join(statusDir, 'system-governance-file-index.files.yaml');
-const baselinePath = path.join(statusDir, 'system-governance-file-fingerprint-baseline.yaml');
-const impactReportPath = path.join(
-  statusDir,
+const statusDir = generatedStatusDir;
+const fileIndexPath = governanceGeneratedPath('system-governance-file-index.files.yaml');
+const baselinePath = governanceGeneratedPath('system-governance-file-fingerprint-baseline.yaml');
+const impactReportPath = governanceGeneratedPath(
   'system-governance-file-fingerprint-impact-20260501.md'
 );
-const sourcePath = 'docs/planning/status/system-governance-file-index.files.yaml';
+const sourcePath = repoRelative(fileIndexPath);
 
 function renderYaml(payload) {
   return yaml.dump(payload, {
@@ -397,6 +401,7 @@ function main() {
   const reportMode = process.argv.includes('--report');
   const currentEntries = readCurrentFileIndex();
   const nextBaseline = buildFingerprintBaseline(currentEntries);
+  fs.mkdirSync(statusDir, { recursive: true });
 
   if (writeMode) {
     const changed = writeIfChanged(baselinePath, renderYaml(nextBaseline));
