@@ -59,3 +59,20 @@ test('tracked migrations include governance content read-model tables after W2',
     /create table if not exists planning_query_store\.governance_remediation/
   );
 });
+
+test('tracked migrations include local operation audit tables after W6', () => {
+  const migrations = readMigrationFiles();
+  const operationMigration = migrations.find(
+    (migration) => migration.fileName === '003_local_operation_store.sql'
+  );
+
+  assert.ok(operationMigration);
+  assert.match(
+    operationMigration.sql,
+    /create table if not exists planning_query_store\.planning_task_local_state/
+  );
+  assert.match(
+    operationMigration.sql,
+    /create table if not exists planning_query_store\.planning_local_operations/
+  );
+});

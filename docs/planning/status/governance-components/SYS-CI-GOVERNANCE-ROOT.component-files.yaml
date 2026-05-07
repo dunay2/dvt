@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - repository automation
 childrenRequired: true
-fileCount: 201
+fileCount: 204
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -746,6 +746,20 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: scripts/planning-db-operate.cjs
+    fileId: F-8CE6625B300B
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: scripts/planning-db-operate.test.cjs
+    fileId: F-6F65C124974C
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: scripts/planning-db-query.cjs
     fileId: F-09A1C46FAD9C
     owningUnit: SYS-CI-GOVERNANCE-ROOT
@@ -1406,6 +1420,13 @@ files:
     isLegacy: false
   - path: tools/planning-db/migrations/002_governance_content_read_model.sql
     fileId: F-2A050BFE629B
+    owningUnit: SYS-CI-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: tools/planning-db/migrations/003_local_operation_store.sql
+    fileId: F-3A26B3206494
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

@@ -167,6 +167,17 @@ The fingerprint is a convergence guard, not a new source of truth. Git-tracked
 sources, generated-docs policy, unit ownership, and generator scripts remain
 authoritative.
 
+If the shared local Postgres volume rejects `planning:db:import` because an
+already-applied migration checksum no longer matches the Git-tracked migration
+file, the accepted repair path is
+`pnpm planning:db:reset -- --confirm-destroy-shared-planning-db` followed by
+`pnpm governance:refresh`. Contributors must not edit
+`planning_query_store.schema_migrations` manually. The reset command is
+destructive for the shared machine-local cache only; canonical planning and
+governance truth remains in Git-tracked sources, while any existing local
+operation overlay/audit rows are exported to the local backup directory before
+the data directory is removed.
+
 ## Current Fan-Out
 
 One accepted source change can legitimately update all of these tracked output
@@ -194,8 +205,9 @@ source change was correct.
 ## Derivation Boundary For GOV-S3
 
 GOV-S3 must preserve this workflow before reducing tracked generated churn. The
-first database-backed implementation must therefore import or reproduce the
-following read models:
+first database-backed implementation therefore imports or reproduces the
+following read models, while the W6 local-operation slice moves agent
+coordination state into Postgres audit and overlay tables:
 
 | Read model                     | Minimum source rows                                                               |
 | ------------------------------ | --------------------------------------------------------------------------------- |
@@ -205,9 +217,12 @@ following read models:
 | `GovernanceWorkflowEdge`       | upstream artifact, downstream stage, edge reason                                  |
 | `GovernanceReviewImpact`       | root changed source, generated artifact family, changed row count, changed hash   |
 
-The database may cache and query these rows, but it must not become authority.
-The authoritative sources remain Git, the unit manifest, the generated-docs
-policy, and the generator scripts.
+The generation contract remains source-controlled: the unit manifest, the
+generated-docs policy, and generator scripts still define how generated
+governance artifacts are produced. The local database is now the operational
+coordination surface for agent task claims, revisions, and audit; generated
+governance files remain export/review artifacts until a later parity slice
+moves their generation behind DB-backed reports.
 
 ## Invariants
 
@@ -219,10 +234,11 @@ policy, and the generator scripts.
   and untracked non-ignored local files through the local name-status flow.
 - The fingerprint baseline is an accepted review artifact, not an invisible
   cache.
-- A Postgres query store may replace repetitive reads and review fan-out only
-  after parity proves that it preserves this stage contract.
-- The migration must compress reviewer attention onto root source changes and
-  summarized artifact hashes, not hide generated changes outside PR review.
+- A Postgres store may replace repetitive reads, local task coordination, and
+  review fan-out only after parity proves that it preserves this stage contract.
+- The migration must move local operational state into DB audit and overlay
+  rows while keeping reviewer attention on root source changes and summarized
+  artifact hashes.
 
 ## Command And Query Rails
 

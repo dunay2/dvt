@@ -2,7 +2,7 @@
 title: Contracts And State-Store Boundary
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-05-06'
+last_reviewed: '2026-05-07'
 goal:
   Close the state-store boundary, retire contract ownership drift, and keep governance startup
   executable.
@@ -577,7 +577,7 @@ tasks:
     last_verified: '2026-04-02'
   - task_id: GOV-S2
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
       formalize the repository's doc-driven operating model as a governed framework with information
       architecture, planning-data rules, authoring scaffolds, and traceability automation.
@@ -587,7 +587,7 @@ tasks:
       transition from isolated governance scripts to a coherent doc-driven operating system.
     complexity: M
     effort_points: 5
-    progress_pct: 35
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md
       - docs/planning/status/governance-document-rule-inventory.md
@@ -595,12 +595,16 @@ tasks:
       - docs/planning/state/planning-control-tower.md
       - docs/planning/status/documentation-information-architecture-current-vs-target-20260407.md
       - docs/guides/documentation-maintenance-guide-20260407.md
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+      - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
+      - docs/planning/closeouts/20260507-gov-s2-doc-driven-operating-framework-closeout.md
     status_reason: >-
-      Governance routing, generated-planning extraction, and the governing proposal are already in
-      place. This slice added a current-vs-target documentation information architecture spec and a
-      contributor maintenance guide, but the broader framework still needs wave decomposition,
-      authoring scaffolds, and traceability automation follow-through.
-    last_verified: '2026-04-07'
+      The doc-driven operating framework is now accepted and closed as one canonical umbrella:
+      startup routing, planning control, documentation information architecture, maintenance
+      guidance, governance refresh, feature mechanization, and the local planning/governance DB path
+      are linked. Future scaffold, traceability, export, or generated-artifact compaction work must
+      use concrete task IDs rather than reopening GOV-S2.
+    last_verified: '2026-05-07'
   - task_id: RC-A5
     priority: P1
     status: done
@@ -3056,9 +3060,10 @@ dependency_notes:
     realized lifecycle facts, canonical run-control signals, explicit provider mapping helpers, and
     dedicated future use-case boundaries for step retry and run recovery.
   - >-
-    `GOV-S2` is the next governance/docs execution surface: it turns the current inventory,
-    planning-data, and validation scripts into a declared doc-driven framework with scaffolding and
-    traceability waves instead of continuing script-by-script growth.
+    `GOV-S2` is closed as the doc-driven operating framework umbrella. Future governance work must
+    use concrete task IDs such as `GOV-S3-PLANNING-STATE-QUERY-STORE` for local DB operation,
+    derived query-store parity, or the existing docs-governance gates for scoped authoring and
+    traceability helpers.
   - >-
     `TF-A1` is now decomposed into `TF-A1-A` and `TF-A1-B` so the design-graph and preview surface
     freeze before the graph-to-step compiler mapping lands; downstream runtime and UI work should
@@ -3089,11 +3094,11 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-05-06'
+  verified_on: '2026-05-07'
   total_tasks: 124
   total_effort_points: 369
-  completed_weighted_points: 312.64
-  lane_progress_pct: 85
+  completed_weighted_points: 315.89
+  lane_progress_pct: 86
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort. `TF-A2` now adds the missing contract-first workspace graph-draft
@@ -3103,4 +3108,7 @@ verification_summary:
     merged `origin/main` intake also carries `RC-G1-C-TRUTH-SYNC` and adjacent follow-up routing.
     `RC-G1-D` is now closed with planner-private behavior ports moved to `@dvt/planner`. The
     2026-05-06 status reconciliation normalized the remaining `completed` WE-HX entries to `done`
-    and recomputed the weighted summary from the current task registry.
+    and recomputed the weighted summary from the current task registry. `GOV-S2` is now closed as
+    the doc-driven operating framework umbrella; remaining local DB operation, query-store, and
+    generated-artifact work routes through concrete follow-up tasks instead of a duplicate
+    governance umbrella.
