@@ -2581,9 +2581,9 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-DB167A227EF5
     pathHash: 8dd8af5041c176d41a6312144e65c5b5c32d8682b934abba3022b8dc2d165762
-    contentHash: 85ad456dda2fca54ea4085b8d4de840f7f746f4d79d40d83b020d4a094ac40cd
+    contentHash: ffdb72c18325f0f0defe4258d3c6bdfd4b2131f8a8173335315642252c7dea1c
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: 45ea8240445c3340a982a89317e087dbb85c0da667e260301a4325fb67db0f19
+    stateFingerprint: e37a21a03aae3e9e8857d9d8ee75d50506cf5d076873eb7da8b455d922bbb9da
     path: scripts/planning-db-migrate.cjs
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -2606,9 +2606,9 @@ files:
       - docs/guides/testing-and-ci-capabilities.md
   - fileId: F-A4BF52DFF553
     pathHash: 2dc8433801581363a8992af99fd6f3d7f3490f2fcd553579762ef793703e1860
-    contentHash: e9993a1177341165a59f1997b71976f5ec628acdce8ce68cf7b7841b1ce4bc29
+    contentHash: 34d9da6c09a60255d863e7d8edecf429abd14df5119f55c6e175c3578a9efc11
     governanceHash: 1863287ec0146af9b4e972c7b0ed11e89d3ed0e37c20e0f224eb5b0f67405b54
-    stateFingerprint: 0f21fc27bedbc917e21bd7f8892509f2163dc25cafebb07bdb0dceebaae0893c
+    stateFingerprint: d3c73ba8c0b88fad7effcc8bd08d410670b325e4f9c5b6b1a2b245e7d7c44e7b
     path: scripts/planning-db-migrate.test.cjs
     owningUnit: SYS-CI-GOVERNANCE-ROOT
     rootUnit: SYS-DVT

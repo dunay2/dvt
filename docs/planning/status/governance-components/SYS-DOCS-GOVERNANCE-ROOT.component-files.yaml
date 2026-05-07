@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - documentation governance
 childrenRequired: true
-fileCount: 1766
+fileCount: 1768
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -8386,6 +8386,13 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: docs/planning/closeouts/20260507-ar-b5-lineage-worker-runtime-decomposition-closeout.md
+    fileId: F-AE2E8B931675
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: docs/planning/closeouts/20260507-gov-s2-doc-driven-operating-framework-closeout.md
     fileId: F-77B05EEE94AB
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -9337,6 +9344,14 @@ files:
   - path: >-
       docs/planning/proposals/mandatory/runtime-and-contracts/ar-b1-run-status-write-boundary-plan-20260404.md
     fileId: F-10578A504015
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: >-
+      docs/planning/proposals/mandatory/runtime-and-contracts/ar-b5-lineage-worker-runtime-decomposition-plan-20260507.md
+    fileId: F-100D7FA8DBBB
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

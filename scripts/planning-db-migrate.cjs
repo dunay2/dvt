@@ -17,6 +17,21 @@ function sha256(value) {
   return crypto.createHash('sha256').update(value).digest('hex');
 }
 
+function normalizeSqlForChecksum(sql) {
+  return String(sql).replace(/\r\n/g, '\n');
+}
+
+function buildLineEndingCompatibleChecksums(sql) {
+  const rawSql = String(sql);
+  return Array.from(
+    new Set([
+      sha256(normalizeSqlForChecksum(rawSql)),
+      sha256(rawSql),
+      sha256(rawSql.replace(/\r?\n/g, '\r\n')),
+    ])
+  );
+}
+
 function quoteIdentifier(value) {
   return `"${String(value).replaceAll('"', '""')}"`;
 }
@@ -36,13 +51,19 @@ function buildMigrationRecords(files) {
   return files.map((file) => ({
     fileName: file.fileName,
     version: file.fileName.replace(/\.sql$/i, ''),
-    checksumSha256: sha256(file.sql),
+    checksumSha256: sha256(normalizeSqlForChecksum(file.sql)),
+    compatibleChecksumSha256: buildLineEndingCompatibleChecksums(file.sql),
     sql: file.sql,
   }));
 }
 
 function detectChecksumMismatch(record, appliedRow) {
-  if (!appliedRow || appliedRow.checksum_sha256 === record.checksumSha256) {
+  const compatibleChecksums = new Set([
+    record.checksumSha256,
+    ...(record.compatibleChecksumSha256 || []),
+  ]);
+
+  if (!appliedRow || compatibleChecksums.has(appliedRow.checksum_sha256)) {
     return null;
   }
 

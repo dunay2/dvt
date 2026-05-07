@@ -4,7 +4,7 @@ generatedFrom:
   - docs/planning/status/system-governance-component-index.components.yaml
 shardDirectory: docs/planning/status/governance-components
 componentCount: 32
-fileCount: 4296
+fileCount: 4302
 components:
   - id: SYS-ADAPTERS-ROOT
     path: docs/planning/status/governance-components/SYS-ADAPTERS-ROOT.component-files.yaml
@@ -104,10 +104,10 @@ components:
     contentHash: fa1299dd144e2f14a9e3b3491fd17636c0f59e41f50e1195db9bd9b50111eb0e
   - id: SYS-DOCS-GOVERNANCE-ROOT
     path: docs/planning/status/governance-components/SYS-DOCS-GOVERNANCE-ROOT.component-files.yaml
-    fileCount: 1766
+    fileCount: 1768
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: f56f852d763a377ab6f0ace118376a6fe12e0ebaf617115a6916b3444d6219d6
+    contentHash: 0bd3e6cdba2ed581286b566a1f9fe635cf5e55bc775e9241946cced90b18ff99
   - id: SYS-OBSERVABILITY-ROOT
     path: docs/planning/status/governance-components/SYS-OBSERVABILITY-ROOT.component-files.yaml
     fileCount: 15
@@ -183,10 +183,10 @@ components:
     contentHash: 318b5106aeff74ce410e1f28ad207d405bca530c9dda6d54a36e35969999f3ed
   - id: SYS-TRACEABILITY-ROOT
     path: docs/planning/status/governance-components/SYS-TRACEABILITY-ROOT.component-files.yaml
-    fileCount: 67
+    fileCount: 71
     driftFileCount: 0
     legacyFileCount: 0
-    contentHash: 57c42e02971fea5f2f7c4b59eba1f5adfda77db680db81e4fd0556bc85c72231
+    contentHash: 2aa3c39be13cd4a3f8ffc00267dea71d33dfe3fcbb39056c5e0c3bda9901d5c9
   - id: SYS-WEB-ROOT
     path: docs/planning/status/governance-components/SYS-WEB-ROOT.component-files.yaml
     fileCount: 828

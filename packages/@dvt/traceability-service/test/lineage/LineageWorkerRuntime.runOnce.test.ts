@@ -70,6 +70,23 @@ describe('LineageWorkerRuntime', () => {
       expect(store.markFailed).not.toHaveBeenCalled();
     });
 
+    it('preserves observed lag when processing fails after pending count', async () => {
+      const record = makeRecord({ id: 'r-skip-fail' });
+      const store = makeStore([record]);
+      store.countPending.mockResolvedValueOnce(17);
+      store.markDelivered.mockRejectedValueOnce(new Error('markDelivered down'));
+      const runtime = new LineageWorkerRuntime(
+        store,
+        makeSink(),
+        makeMapper(false),
+        makeSilentLogger()
+      );
+
+      await expect(runtime.runOnce()).rejects.toThrow('markDelivered down');
+
+      expect(runtime.lagCount).toBe(17);
+    });
+
     it('increments attempts and calls markFailed on sink failure below max', async () => {
       const record = makeRecord({ id: 'r1', attempts: 1 });
       const store = makeStore([record]);
@@ -190,6 +207,22 @@ describe('LineageWorkerRuntime', () => {
         }),
         'lineage worker: dead-letter backlog threshold reached'
       );
+      expect(runtime.deadLetterCount).toBe(4);
+    });
+
+    it('preserves observed dead-letter lag when summary logging fails after counting', async () => {
+      const store = makeStore([]);
+      store.countDeadLetter.mockResolvedValueOnce(4);
+      const logger = makeSilentLogger();
+      logger.info = vi.fn(() => {
+        throw new Error('logger unavailable');
+      });
+      const runtime = new LineageWorkerRuntime(store, makeSink(), makeMapper(), logger, {
+        deadLetterTenantId: 'tenant-a',
+      });
+
+      await expect(runtime.runOnce()).rejects.toThrow('logger unavailable');
+
       expect(runtime.deadLetterCount).toBe(4);
     });
 
