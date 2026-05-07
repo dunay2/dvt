@@ -94,6 +94,8 @@ governingSources:
 allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md
   - docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
+  - docs/runbooks/temporal-worker-scaling-operations.md
+  - docs/architecture/components/engine/adapters/temporal/temporal-worker-scaling-strategy.md
   - docs/planning/state/agent-lane-c.yaml
   - docs/planning/state/agent-lane-c.md
   - docs/planning/state/execution-workboard.md
