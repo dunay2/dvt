@@ -85,6 +85,12 @@ availability before the worker enters the ready state.
 - `DVT_PG_SCHEMA` default `dvt`
 - `DVT_PG_STATEMENT_TIMEOUT_MS` default `0`
 - `DVT_PG_QUERY_TIMEOUT_MS` default `0`
+- `DVT_RUNSTATE_CIRCUIT_BREAKER_FAILURE_THRESHOLD` default `3`; consecutive
+  failures before the run-state command circuit opens
+- `DVT_RUNSTATE_CIRCUIT_BREAKER_OPEN_DURATION_MS` default `10000`; milliseconds
+  the circuit stays open before transitioning to half-open
+- `DVT_RUNSTATE_CIRCUIT_BREAKER_OPERATION_TIMEOUT_MS` default `2000`;
+  milliseconds before a guarded state-store operation is considered timed out
 - `DVT_TEMPORAL_WORKER_RUN_MIGRATIONS` default `false`
 - `TEMPORAL_ADDRESS`
 - `TEMPORAL_NAMESPACE`
@@ -119,9 +125,15 @@ DBT mode rule:
 
 ## Endpoints
 
-- `GET /healthz`: process liveness and coarse runtime state
-- `GET /readyz`: readiness plus last runtime error details
-- `GET /metrics`: Prometheus-style worker metrics
+- `GET /healthz`: process liveness and coarse runtime state.
+  Response body: `ok`, `state`, `service`, `dbtEnabled`, `runStateCircuitState`.
+  Returns `200` when `ok=true`, `503` when `ok=false`.
+- `GET /readyz`: readiness plus last runtime error details.
+  Response body: `ok`, `ready`, `state`, `service`, `dbtEnabled`, `runStateCircuitState`,
+  `lastErrorMessage`, `lastErrorAt`.
+  Returns `200` when `ready=true`, `503` when `ready=false`.
+- `GET /metrics`: Prometheus-style worker metrics in `text/plain` format with
+  `Content-Type: text/plain; version=0.0.4; charset=utf-8`.
 
 ## Runtime states
 
@@ -139,6 +151,8 @@ Readiness rule:
 
 ## Metrics
 
+### Worker lifecycle
+
 - `dvt_temporal_worker_up`
 - `dvt_temporal_worker_ready`
 - `dvt_temporal_worker_dbt_enabled`
@@ -148,6 +162,18 @@ Readiness rule:
 - `dvt_temporal_worker_error_total`
 - `dvt_temporal_worker_started_timestamp_seconds`
 - `dvt_temporal_worker_last_error_timestamp_seconds`
+
+### Run-state command circuit breaker
+
+Tracked when the worker binds the [`AR-C4`](../../planning/closeouts/20260415-ar-c4-run-state-circuit-breaker-closeout.md)
+run-state command circuit breaker:
+
+- `dvt_temporal_worker_run_state_circuit_state{state=*}` — `closed`, `open`, or `half_open`
+- `dvt_temporal_worker_run_state_circuit_trip_total` — circuit open transitions
+- `dvt_temporal_worker_run_state_circuit_rejection_total` — fast-fail rejections while open
+- `dvt_temporal_worker_run_state_circuit_failure_total` — guarded state-store failures
+- `dvt_temporal_worker_run_state_circuit_timeout_total` — guarded state-store timeouts
+- `dvt_temporal_worker_run_state_circuit_half_open_probe_total` — half-open probe attempts
 
 ## Rollout posture
 
@@ -203,6 +229,21 @@ Most likely causes:
 - artifact-backed `RunExecutionContext` or bundle read failure
 - DBT bundle integrity mismatch (`projectBundleRef.sha256` does not match bytes)
 - worker runtime entered `failing`
+
+### Run-state command circuit breaker is `open`
+
+The circuit breaker guards state-store writes from Temporal activities (see
+[`AR-C4`](../../planning/closeouts/20260415-ar-c4-run-state-circuit-breaker-closeout.md)):
+
+- `dvt_temporal_worker_run_state_circuit_state{state="open"} 1` indicates the
+  state store has been unreachable or timing out.
+- `dvt_temporal_worker_run_state_circuit_rejection_total` shows how many
+  operations were fast-failed without attempting the store.
+- `dvt_temporal_worker_run_state_circuit_trip_total` shows how many times
+  the circuit has opened.
+- Check Postgres connectivity, connection pool pressure, and query timeouts.
+- The circuit auto-transitions to `half_open` after the configured
+  `DVT_RUNSTATE_CIRCUIT_BREAKER_OPEN_DURATION_MS` window.
 
 ### `/metrics` shows `dvt_temporal_worker_dbt_enabled 0`
 
