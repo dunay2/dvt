@@ -47,7 +47,7 @@ shards:
   - id: SYS-TRACEABILITY
     path: docs/planning/status/governance-files/SYS-TRACEABILITY.files.yaml
     fileCount: 71
-    contentHash: cee118c81750a70d7aaecb502bc8e0bf37ccdf71c0aca06b1dcebacd93ebbfe0
+    contentHash: 0bbf95e8d2df1624377044ad0f4f47f63f82e0dc59c20473b91c3ea288285173
   - id: SYS-WEB
     path: docs/planning/status/governance-files/SYS-WEB.files.yaml
     fileCount: 828

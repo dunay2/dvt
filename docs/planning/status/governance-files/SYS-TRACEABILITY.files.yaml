@@ -506,9 +506,9 @@ files:
       - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
   - fileId: F-55E92375692A
     pathHash: 02c7940c068050bd4b4f8fb27a91a171813731e9e9dba7836992b8021bfd1d60
-    contentHash: 5262bffd51ad3f500a19af9d6f2d201c8750b988298d2a78414d4a2a8e7c5bd6
+    contentHash: b7d9984cf6d375ebc0608d692cf3a1ba3f60cc1775a274d64ca10e36031dea1c
     governanceHash: 0967d35e0846d38b639c654c831365c8c2b648fe2b458572b7c475ed4860d082
-    stateFingerprint: e45cf6872032d079fadc86638e86de6392aa321c7b565575c3b4d266602e3355
+    stateFingerprint: 78b34c09a00816cb07652dd4608acb99602d5f5fe1bfdf945d09d0894e1f56d6
     path: packages/@dvt/traceability-service/src/lineage/LineageWorkerRuntime.ts
     owningUnit: SYS-TRACEABILITY-ROOT
     rootUnit: SYS-DVT
@@ -1056,9 +1056,9 @@ files:
       - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
   - fileId: F-C230414027DA
     pathHash: 51db849273a2b5c09925ed8e34a6a19e0c76c3d313b437535b9f8674dfa83c40
-    contentHash: bfce80dd184a3e42e19602fbd0beec8e1a5b50b5b1a8a4672d6fe2ab50acb6f7
+    contentHash: 0ed0f5fff0cc20cdb22d4a96b5f7198eb456706068b9d789eb52f515ed3c0655
     governanceHash: 0967d35e0846d38b639c654c831365c8c2b648fe2b458572b7c475ed4860d082
-    stateFingerprint: 02e3a2e091e68ba2468ec2c145bf3b67ddeec70d6354a555c6094f0b4e218c34
+    stateFingerprint: fd2675af9bd7837ce1c34fbc2291a8fe2536b5835dae28653fd8c754cf2590f1
     path: packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerTick.ts
     owningUnit: SYS-TRACEABILITY-ROOT
     rootUnit: SYS-DVT
@@ -1406,9 +1406,9 @@ files:
       - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
   - fileId: F-1B4352EBD5A8
     pathHash: d58b869cc87af9cb1dd452e0a13923c1a193a1188a6f6059b04c16f28b866688
-    contentHash: abd2f7349487002b8560a139ffec2006717a3f0ae17dd8e7ef0f79794c76f044
+    contentHash: bd502ca3a1c13eb6c24e2a0266372c4e3bdfceed3b64b3b15a9e6a8356900372
     governanceHash: 0967d35e0846d38b639c654c831365c8c2b648fe2b458572b7c475ed4860d082
-    stateFingerprint: b88bca405f13d3c1c7430720594365ec2392411735bc2266d1bedd2490af814d
+    stateFingerprint: b3054897b98c078be2e161797186a12ea295dc5997f26253d2dc2f8b871de245
     path: packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.runOnce.test.ts
     owningUnit: SYS-TRACEABILITY-ROOT
     rootUnit: SYS-DVT

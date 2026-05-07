@@ -95,6 +95,12 @@ export class LineageWorkerRuntime {
       deadLetterTenantId: this.deadLetterTenantId,
       logger: this.logger,
       mapper: this.mapper,
+      onDeadLetterCountObserved: (count) => {
+        this._deadLetterCount = count;
+      },
+      onLagObserved: (lag) => {
+        this._lagCount = lag;
+      },
       sink: this.sink,
       store: this.store,
     });

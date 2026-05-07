@@ -29,6 +29,8 @@ export interface RunLineageWorkerTickArgs {
   deadLetterTenantId: string | null;
   logger: LineageWorkerRuntimeLogger;
   mapper: ILineageStepEventMapper;
+  onDeadLetterCountObserved?: (count: number | null) => void;
+  onLagObserved?: (lag: number) => void;
   sink: ILineageSink;
   store: ILineageOutboxStore;
 }
@@ -39,6 +41,7 @@ export async function runLineageWorkerTick(
   const { batchSize, logger, mapper, sink, store } = args;
   const pending = await store.listPending(batchSize);
   const lag = store.countPending === undefined ? pending.length : await store.countPending();
+  args.onLagObserved?.(lag);
   let processed = 0;
   let deadLettered = 0;
 
@@ -59,6 +62,7 @@ export async function runLineageWorkerTick(
     logger,
     store,
   });
+  args.onDeadLetterCountObserved?.(deadLetterCount);
   await runLineageDeadLetterAutoReplay({
     autoReplayBatchSize: args.autoReplayBatchSize,
     autoReplayEnabled: args.autoReplayEnabled,
