@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: DS
 cqRails: traceability commands and lineage queries
 childrenRequired: true
-fileCount: 67
+fileCount: 71
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -277,6 +277,13 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/runtime/LineageWorkerLoopController.ts
+    fileId: F-951657FF7910
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerDeadLetterSupport.ts
     fileId: F-918FDF52668A
     owningUnit: SYS-TRACEABILITY-ROOT
@@ -293,6 +300,13 @@ files:
     isLegacy: false
   - path: packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerRuntimeConfig.ts
     fileId: F-52A72526A729
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerTick.ts
+    fileId: F-C230414027DA
     owningUnit: SYS-TRACEABILITY-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -368,6 +382,13 @@ files:
     governanceState: coverage-required
     isDrift: false
     isLegacy: false
+  - path: packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.architecture.test.ts
+    fileId: F-5B1573724FC7
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
   - path: packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.configuration.test.ts
     fileId: F-0EA743E053FC
     owningUnit: SYS-TRACEABILITY-ROOT
@@ -419,6 +440,13 @@ files:
     isLegacy: false
   - path: packages/@dvt/traceability-service/test/lineage/facetSchema.validation.test.ts
     fileId: F-EB0A8823C4D1
+    owningUnit: SYS-TRACEABILITY-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: packages/@dvt/traceability-service/test/lineage/lineageWorkerTick.test.ts
+    fileId: F-C210098D86EB
     owningUnit: SYS-TRACEABILITY-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required

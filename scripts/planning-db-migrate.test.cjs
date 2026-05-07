@@ -6,6 +6,7 @@ const {
   detectChecksumMismatch,
   readMigrationFiles,
   schemaName,
+  sha256,
 } = require('./planning-db-migrate.cjs');
 
 test('planning DB migrations target the dedicated query-store schema', () => {
@@ -29,6 +30,28 @@ test('buildMigrationRecords derives stable versions and sha256 checksums', () =>
     ['001_init', '002_content']
   );
   assert.match(records[0].checksumSha256, /^[a-f0-9]{64}$/);
+});
+
+test('buildMigrationRecords normalizes SQL line endings before checksumming', () => {
+  const sqlWithLf = 'create table one (\n  id bigint primary key\n);\n';
+  const sqlWithCrlf = sqlWithLf.replace(/\n/g, '\r\n');
+
+  const [lfRecord, crlfRecord] = buildMigrationRecords([
+    { fileName: '001_init.sql', sql: sqlWithLf },
+    { fileName: '001_init.sql', sql: sqlWithCrlf },
+  ]);
+
+  assert.equal(crlfRecord.checksumSha256, lfRecord.checksumSha256);
+});
+
+test('detectChecksumMismatch accepts legacy line-ending-only checksums', () => {
+  const sqlWithLf = 'create table one (\n  id bigint primary key\n);\n';
+  const sqlWithCrlf = sqlWithLf.replace(/\n/g, '\r\n');
+  const [record] = buildMigrationRecords([{ fileName: '001_init.sql', sql: sqlWithCrlf }]);
+
+  const mismatch = detectChecksumMismatch(record, { checksum_sha256: sha256(sqlWithCrlf) });
+
+  assert.equal(mismatch, null);
 });
 
 test('detectChecksumMismatch catches edited migrations after apply', () => {

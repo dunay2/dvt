@@ -63,6 +63,37 @@ Minimum rule for every planning-affecting task:
 Do not leave planning changes only in ad hoc notes or PR text when a canonical
 planning surface exists.
 
+## Feature Mechanization Placement Rule
+
+When a slice is non-trivial, changes implementation surfaces, adds top-level
+symbols, or is expected to satisfy the feature mechanization gate, the
+mechanization manifest is part of the declared pre-implementation route.
+
+The canonical manifest placement is a Markdown file under
+`docs/planning/proposals/mandatory/**` using a `feature-mechanization` fenced
+block. A closeout may cite that proposal, but it MUST NOT be the only place where
+the manifest is declared.
+
+The required sequence is:
+
+1. create or update the mandatory proposal with the Think-First analysis,
+   Fowler planning matrix, command/query rail posture, allowed implementation
+   surfaces, forbidden surfaces, red/green cycles, and declared symbols;
+2. run `pnpm docs:feature-mechanization -- --feature <FEATURE_ID>` before
+   production code changes;
+3. write the red tests named by the manifest;
+4. implement only within `allowedImplementationSurfaces`;
+5. if a new file, new top-level symbol, or new scope appears outside the
+   manifest, stop implementation, update the proposal manifest, and rerun the
+   feature-specific mechanization check before continuing;
+6. run `pnpm docs:feature-mechanization:implementation` before closeout and
+   before `pnpm verify:prepush`.
+
+This rule is intentionally about declared steps, not just document location. A
+passing late manifest does not prove the slice followed the repository workflow
+unless the route above was declared before implementation or the closeout records
+the deviation and corrective action.
+
 ## Governance Refresh Placement Rule
 
 When a task touches governance or planning generated surfaces, keep the early
