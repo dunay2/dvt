@@ -23,7 +23,7 @@ shards:
   - id: SYS-DOCS-GOVERNANCE
     path: docs/planning/status/governance-files/SYS-DOCS-GOVERNANCE.files.yaml
     fileCount: 1763
-    contentHash: 32f6d177a0b397955a620bee45aedab64de91a6e743e52340fd1194cf9e1206b
+    contentHash: 502230f06d0741a6a76fc67b6f7f494a5311bc83745d8094d32bfb0a7c55c52b
   - id: SYS-OBSERVABILITY
     path: docs/planning/status/governance-files/SYS-OBSERVABILITY.files.yaml
     fileCount: 15
@@ -39,7 +39,7 @@ shards:
   - id: SYS-REPO-METADATA
     path: docs/planning/status/governance-files/SYS-REPO-METADATA.files.yaml
     fileCount: 122
-    contentHash: 54914b9ecc84ca0c755a7f5086e42600f0389a021a27ea248973b0b0abe37930
+    contentHash: 2faad554b9ee52da1a4822ebe0beb9e1b630655775b26e0c0c312899b088ebcb
   - id: SYS-RUNTIME
     path: docs/planning/status/governance-files/SYS-RUNTIME.files.yaml
     fileCount: 286
