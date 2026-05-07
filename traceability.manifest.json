@@ -738,6 +738,7 @@
     {
       "number": "ADR-0032",
       "decisions": [
+        "Coordinate one lineage worker tick without owning lifecycle mechanics",
         "Define stable lineage error codes, reason codes, and message keys for compiled-code resolution",
         "Define stable lineage warning codes, message keys, and parameters for fail-open compiled-code resolution",
         "Emit StepStarted artifact references before executing DVT-owned step activities with explicit retry handling",
@@ -748,6 +749,7 @@
         "Normalize arbitrary lineage runtime errors into structured fail-open diagnostics",
         "Normalize lineage worker runtime options before polling, replay, or dead-letter processing starts",
         "Observe delivered StepStarted outbox records and enqueue lineage work fail-open",
+        "Own lineage worker lifecycle loop, abort cleanup, and backoff without owning tick semantics",
         "Process lineage outbox records through mapper, sink, delivered, failed, and dead-letter states",
         "Run lineage outbox polling, delivery, dead-letter, and replay loops outside domain outbox authority",
         "Sanitize, redact, and bound lineage error metadata before persistence"
@@ -762,9 +764,11 @@
         "packages/@dvt/traceability-service/src/lineage/errorSupport.ts",
         "packages/@dvt/traceability-service/src/lineage/logMessages.ts",
         "packages/@dvt/traceability-service/src/lineage/mapper/mapCompiledCodeResolutionWarning.ts",
+        "packages/@dvt/traceability-service/src/lineage/runtime/LineageWorkerLoopController.ts",
         "packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerDeadLetterSupport.ts",
         "packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerRecordProcessor.ts",
         "packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerRuntimeConfig.ts",
+        "packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerTick.ts",
         "packages/@dvt/traceability-service/src/lineage/warningContract.ts"
       ],
       "title": "ADR-0032 — compiledCodeRef Ownership: Reference in StepStarted Payload"
@@ -772,6 +776,7 @@
     {
       "number": "ADR-0033",
       "decisions": [
+        "Coordinate one lineage worker tick without owning lifecycle mechanics",
         "Derive stable outbox shard ownership from runId using deterministic hashing",
         "Keep lineage runtime log message keys explicit and separate from published lineage warning contracts",
         "Manage lineage dead-letter counting, alerting, and replay as worker-owned recovery behavior",
@@ -779,6 +784,7 @@
         "Normalize lineage outbox claim, tenant, and query bounds at the PostgreSQL adapter boundary",
         "Normalize lineage worker runtime options before polling, replay, or dead-letter processing starts",
         "Observe delivered StepStarted outbox records and enqueue lineage work fail-open",
+        "Own lineage worker lifecycle loop, abort cleanup, and backoff without owning tick semantics",
         "Process lineage outbox records through mapper, sink, delivered, failed, and dead-letter states",
         "Run lineage outbox polling, delivery, dead-letter, and replay loops outside domain outbox authority",
         "Sanitize, redact, and bound lineage error metadata before persistence"
@@ -791,9 +797,11 @@
         "packages/@dvt/traceability-service/src/lineage/errorPersistenceSupport.ts",
         "packages/@dvt/traceability-service/src/lineage/errorSupport.ts",
         "packages/@dvt/traceability-service/src/lineage/logMessages.ts",
+        "packages/@dvt/traceability-service/src/lineage/runtime/LineageWorkerLoopController.ts",
         "packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerDeadLetterSupport.ts",
         "packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerRecordProcessor.ts",
-        "packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerRuntimeConfig.ts"
+        "packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerRuntimeConfig.ts",
+        "packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerTick.ts"
       ],
       "title": "ADR-0033 - Outbox Worker Sharding And Fencing Model"
     },
