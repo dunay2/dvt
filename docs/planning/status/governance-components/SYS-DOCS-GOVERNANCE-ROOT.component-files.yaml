@@ -7,7 +7,7 @@ governanceState: coverage-required
 dddOwner: INFRA
 cqRails: none - documentation governance
 childrenRequired: true
-fileCount: 1766
+fileCount: 1768
 driftFileCount: 0
 legacyFileCount: 0
 files:
@@ -776,6 +776,13 @@ files:
     isLegacy: false
   - path: docs/architecture/components/engine/adapters/temporal/temporal-step-plugin-profile.md
     fileId: F-EC0BEDD38226
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/architecture/components/engine/adapters/temporal/temporal-worker-scaling-strategy.md
+    fileId: F-EDC4622621DB
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
@@ -12746,6 +12753,13 @@ files:
     isLegacy: false
   - path: docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
     fileId: F-C4E0E6C45672
+    owningUnit: SYS-DOCS-GOVERNANCE-ROOT
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    isDrift: false
+    isLegacy: false
+  - path: docs/runbooks/temporal-worker-scaling-operations.md
+    fileId: F-A4B9E7211A87
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     unitStatus: coverage-required
     governanceState: coverage-required
