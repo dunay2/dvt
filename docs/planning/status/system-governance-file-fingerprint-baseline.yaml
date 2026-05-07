@@ -427,9 +427,9 @@ files:
     owningUnit: SYS-CI-GOVERNANCE-ROOT
   - fileId: F-7E1405087E27
     path: .gitignore
-    contentHash: 796280d8fce0536c2aea1e2c1e932292b600d542c1c3f71a462ed21297d2c65b
+    contentHash: cc2eec8fd69ef008a1d0b932fedd693a048ff1ebdc70fc22f073e35697d15c79
     governanceHash: eddb0d7ea48deb958461e3541201333fe91c4929ce2717cba0b1f028836a8ee3
-    stateFingerprint: 17b3add83f4ba299f3b280b05966ea74251413340b6612199a2206458df93957
+    stateFingerprint: 9e099ebf19c9d850f246d91e1382dd36047db34abfd462dcaa275e2f9628c5a4
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-REPO-METADATA-ROOT

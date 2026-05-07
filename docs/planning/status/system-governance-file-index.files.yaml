@@ -39,7 +39,7 @@ shards:
   - id: SYS-REPO-METADATA
     path: docs/planning/status/governance-files/SYS-REPO-METADATA.files.yaml
     fileCount: 122
-    contentHash: 2faad554b9ee52da1a4822ebe0beb9e1b630655775b26e0c0c312899b088ebcb
+    contentHash: 54914b9ecc84ca0c755a7f5086e42600f0389a021a27ea248973b0b0abe37930
   - id: SYS-RUNTIME
     path: docs/planning/status/governance-files/SYS-RUNTIME.files.yaml
     fileCount: 286
