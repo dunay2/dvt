@@ -39558,9 +39558,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-5B14954FF979
     pathHash: 43a750f71146dffa7f4cce85a4d5bf18fdc069900f189383388eeda0499cbcdc
-    contentHash: 141cf548e87389d052587d421ab987e41d7ddef831bc29af8144d3ab40fef3ef
+    contentHash: 37f4b949b18944e304da19802c526e67d53b7733c8094f642f064b1f08cefe39
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 4717e977d0315ce63ecf950a9940a9c73aa59a1d37dd5a6985e581b6f965ffb0
+    stateFingerprint: 68e5337655b80b5c98ab86a0ff0c18a3f7c64a54e8f2edb1738020686b6ecb4f
     path: docs/planning/state/agent-lane-c.yaml
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT
@@ -46164,9 +46164,9 @@ files:
       - docs/planning/status/governance-document-rule-inventory.md
   - fileId: F-C4E0E6C45672
     pathHash: 3c2a461882d6c6c0e6011ab19ba3807c35ec40c6cb999c6328ec3fc6585e1aad
-    contentHash: 58e6ae4793b6bb89f5bc09397599e67d6cb29801caccbdc9f13f952bf6d56418
+    contentHash: 615c406b44a9f39f39643d708e74e51825eba6204b88cc96b3123d7f600cb8e4
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 8aa434698f6867a4e6e5c1a652776d6a1ed7c2f0981a3c37b1369b441b369be2
+    stateFingerprint: 444a04982945076f2208c72134640054f9cb2e2e127ef700e8510c9897bc7a6f
     path: docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
     rootUnit: SYS-DVT

@@ -1371,8 +1371,8 @@ tasks:
       TemporalWorkerMonitor.ts, temporalWorkerLifecycle.ts, temporalWorkerDbtProfile.ts,
       temporalWorkerRuntimeResources.ts, createTemporalWorkerRuntime.ts, and env.ts. Closure is
       blocked by missing environment-level canary evidence. Smallest next validation: deploy worker
-      to staging, verify /healthz (200), /readyz (200 with dbt), /metrics (scrape target registers
-      dvt_temporal_worker_up 1), run one DBT-enabled plan end-to-end, then confirm
+      to staging, verify /healthz (200 with state running), /readyz (200 with dbt), /metrics (scrape
+      target registers dvt_temporal_worker_up 1), run one DBT-enabled plan end-to-end, then confirm
       dvt_temporal_worker_error_total remains flat during the observation window.
     last_verified: '2026-05-07'
   - task_id: TF-C4

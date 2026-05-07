@@ -274,8 +274,9 @@ automated in CI — they require a deployed Temporal worker instance.
 
 1. **Deploy worker to staging** — start the worker with `DVT_TEMPORAL_DBT_ENABLED=true`
    and valid Postgres + Temporal connection strings.
-2. **Verify `/healthz` returns `200`** — confirms the operational server started
-   and the monitor entered `running` state.
+2. **Verify `/healthz` returns `200` with `state: "running"`** — confirms the
+   operational server started and the monitor reports a running worker. A `200`
+   without `state: "running"` is liveness evidence only.
 3. **Verify `/readyz` returns `200` with `dbtEnabled: true`** — confirms the DBT
    plugin profile was built and the runtime completed startup without error.
 4. **Verify `/metrics` target registers `dvt_temporal_worker_up 1`** — confirms
