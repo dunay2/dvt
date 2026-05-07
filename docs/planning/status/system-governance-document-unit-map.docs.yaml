@@ -1,7 +1,7 @@
 version: 1
 generatedFrom: git ls-files docs
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-documentCount: 1504
+documentCount: 1506
 documents:
   - path: docs/CONTRIBUTING.md
     classification: governs unit
@@ -436,6 +436,10 @@ documents:
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-ADAPTERS
+  - path: docs/architecture/components/engine/adapters/temporal/temporal-worker-scaling-strategy.md
+    classification: governs unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-WORKERS
   - path: docs/architecture/components/engine/architecture/c4-engine.md
     classification: governs unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -6308,6 +6312,10 @@ documents:
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-ADAPTERS
   - path: docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
+    classification: describes unit
+    documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
+    subjectUnit: SYS-WORKERS
+  - path: docs/runbooks/temporal-worker-scaling-operations.md
     classification: describes unit
     documentOwnerUnit: SYS-DOCS-GOVERNANCE-ROOT
     subjectUnit: SYS-WORKERS

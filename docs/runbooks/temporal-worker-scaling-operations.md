@@ -1,238 +1,246 @@
 ---
 title: Temporal Worker Scaling Operations
 status: Active
-owner: Runtime / Temporal / Operations
+owner: Runtime / SRE / Delivery
 last_reviewed: 2026-05-07
 ---
 
 # Temporal Worker Scaling Operations
 
-This runbook covers operational procedures for provisioning, monitoring, and
-scaling Temporal workers in a multi-tenant environment.
+## Purpose
 
-Use this runbook with:
+Operate and scale `apps/temporal-worker` using the topology implemented in the
+repository today.
 
-- [Temporal Worker Scaling Strategy](../architecture/components/engine/adapters/temporal/temporal-worker-scaling-strategy.md)
-- [Temporal Worker DBT Runtime Runbook](./temporal-worker-dbt-plugin-runtime-20260414.md)
-- [Temporal PlanRef capacity SLA](../architecture/components/engine/adapters/temporal/temporal-planref-capacity-sla.md)
-- [Temporal adapter specification](../architecture/components/engine/adapters/temporal/temporal-adapter-spec.md)
+Current invariant:
 
-## Provisioning Worker Pools
+- `TemporalAdapter` starts tenant-scoped workflows on `<baseQueue>-<tenantId>`.
+- each worker process polls exactly one `TEMPORAL_TASK_QUEUE`.
+- a "pool" means multiple worker replicas polling the same queue.
+- a global shared pool that polls all tenant queues is not implemented.
 
-### Prerequisites
+## Queue Naming
 
-Before provisioning a worker pool, verify:
+Use the same derivation as `toTemporalTaskQueue()`:
 
-1. Temporal cluster is reachable and the target namespace exists.
-2. Postgres instance is reachable and migrated (`pnpm db:migrate`).
-3. Worker image is built and available in the container registry.
-4. Environment configuration is complete (see required env vars below).
+| Value                        | Example                 |
+| ---------------------------- | ----------------------- |
+| base queue                   | `dvt-temporal`          |
+| tenant id                    | `tenant-a`              |
+| tenant queue                 | `dvt-temporal-tenant-a` |
+| worker `TEMPORAL_TASK_QUEUE` | `dvt-temporal-tenant-a` |
 
-### Required Environment Variables
+For a non-empty tenant id, do not use `dvt_<tenantId>`. The worker queue must
+match `<baseQueue>-<tenantId>`.
 
-| Variable                                     | Required | Default   | Description                                        |
-| -------------------------------------------- | -------- | --------- | -------------------------------------------------- |
-| `DATABASE_URL`                               | Yes      | —         | Postgres connection string                         |
-| `TEMPORAL_ADDRESS`                           | Yes      | —         | Temporal server gRPC address                       |
-| `TEMPORAL_NAMESPACE`                         | Yes      | —         | Temporal namespace                                 |
-| `TEMPORAL_TASK_QUEUE`                        | Yes      | —         | Default task queue (not used in multi-tenant mode) |
-| `DVT_TEMPORAL_DBT_ENABLED`                   | No       | `false`   | Enable DBT plugin profile                          |
-| `DVT_TEMPORAL_DBT_BUNDLE_DIR`                | No       | —         | DBT bundle directory (required when DBT enabled)   |
-| `DVT_TEMPORAL_DBT_BUNDLE_ARTIFACT_STORE_URL` | No       | —         | DBT artifact store URL (required when DBT enabled) |
-| `HOST`                                       | No       | `0.0.0.0` | Operational server bind host                       |
-| `PORT`                                       | No       | `3000`    | Operational server port                            |
+## Required Environment
 
-### Provisioning Steps
+### Always Required
 
-#### Shared Pool (Default)
+| Variable                             | Required | Default   | Purpose                            |
+| ------------------------------------ | -------- | --------- | ---------------------------------- |
+| `DATABASE_URL`                       | Yes      | none      | Postgres connection string         |
+| `TEMPORAL_ADDRESS`                   | Yes      | none      | Temporal server gRPC address       |
+| `TEMPORAL_NAMESPACE`                 | Yes      | none      | Temporal namespace                 |
+| `TEMPORAL_TASK_QUEUE`                | Yes      | none      | The single queue this worker polls |
+| `DVT_PG_SCHEMA`                      | No       | `dvt`     | State-store schema                 |
+| `DVT_TEMPORAL_WORKER_RUN_MIGRATIONS` | No       | `false`   | Run worker-owned migrations        |
+| `DVT_TEMPORAL_ADMIN_HOST`            | No       | `0.0.0.0` | Operational server bind host       |
+| `DVT_TEMPORAL_ADMIN_PORT`            | No       | `9468`    | Operational server port            |
+| `DVT_TEMPORAL_DBT_ENABLED`           | No       | `false`   | Enable DBT worker profile          |
 
-```bash
-# Step 1: Deploy worker instances
-# (platform-specific: Kubernetes Deployment, Nomad job, etc.)
-# Example: kubectl apply -f temporal-worker-deployment.yaml
+### Required When DBT Mode Is Enabled
 
-# Step 2: Verify worker startup
-curl http://<worker>:3000/healthz
-# Expected: 200 OK
+| Variable                       | Required when DBT enabled | Default | Purpose                       |
+| ------------------------------ | ------------------------- | ------- | ----------------------------- |
+| `DVT_DBT_BIN`                  | No                        | `dbt`   | DBT executable                |
+| `DVT_DBT_WORKDIR_ROOT`         | No                        | OS temp | DBT materialization root      |
+| `DVT_DBT_BUNDLE_STORE_BACKEND` | Yes                       | none    | `s3` or `file` bundle backend |
+| `DVT_DBT_BUNDLE_S3_BUCKET`     | If backend is `s3`        | none    | Bundle bucket                 |
+| `DVT_DBT_BUNDLE_FILE_ROOT`     | If backend is `file`      | none    | Bundle file root              |
 
-# Step 3: Verify worker readiness
-curl http://<worker>:3000/readyz
-# Expected: 200 OK
+## Provision A Worker Pool For One Queue
 
-# Step 4: Verify metrics endpoint
-curl http://<worker>:3000/metrics
-# Expected: text/plain with dvt_temporal_worker_up 1
+1. Choose the queue.
 
-# Step 5: Confirm worker appears in Temporal Server UI
-# Navigate to: https://<temporal-ui>/namespaces/<namespace>/task-queues
+   ```bash
+   # Example for base queue dvt-temporal and tenant tenant-a:
+   TEMPORAL_TASK_QUEUE=dvt-temporal-tenant-a
+   ```
+
+2. Deploy one or more worker replicas with that same queue.
+
+   ```bash
+   # Example only; use the environment's deployment mechanism.
+   kubectl apply -f temporal-worker-tenant-a.yaml
+   ```
+
+3. Verify liveness on the configured admin port.
+
+   ```bash
+   curl -fsS http://<worker-host>:9468/healthz
+   ```
+
+4. Verify readiness.
+
+   ```bash
+   curl -fsS http://<worker-host>:9468/readyz
+   ```
+
+5. Verify metrics.
+
+   ```bash
+   curl -fsS http://<worker-host>:9468/metrics
+   ```
+
+Expected metrics for a ready worker:
+
+```text
+dvt_temporal_worker_up 1
+dvt_temporal_worker_ready 1
+dvt_temporal_worker_state{state="running"} 1
 ```
 
-#### Dedicated Worker (Single Tenant)
+1. Confirm Temporal shows pollers for the exact `TEMPORAL_TASK_QUEUE`.
+
+If Temporal shows workflows queued on `<baseQueue>-<tenantId>` but no pollers on
+that queue, the worker is configured for the wrong queue.
+
+## Scale Capacity For One Queue
+
+Use this when queue delay or backlog rises for a queue that already has a worker
+deployment.
 
 ```bash
-# Deploy a worker that polls only one tenant's task queue
-# Set TEMPORAL_TASK_QUEUE=dvt_<tenantId>
-# The worker will only poll that specific queue
-
-# Example: kubectl apply -f temporal-worker-dedicated-tenant-a.yaml
+# Example only.
+kubectl scale deployment temporal-worker-tenant-a --replicas=4
 ```
 
-### Verifying Provisioning
+After scaling:
 
-After provisioning, confirm:
+1. confirm all replicas return `/readyz` 200;
+2. confirm `dvt_temporal_worker_ready 1` per replica;
+3. confirm Temporal poller count increases for the same queue;
+4. watch queue delay until it returns below target.
 
-1. `/healthz` returns `200` — worker process is running.
-2. `/readyz` returns `200` — worker is ready to accept tasks.
-3. `/metrics` exposes `dvt_temporal_worker_up 1` — lifecycle metric is healthy.
-4. Temporal Server UI shows the worker as a poller for the expected task queues.
+Rollback: scale the deployment back to the previous replica count.
+
+## Add Capacity For A New Tenant Queue
+
+Use this when a tenant has started workflows on `<baseQueue>-<tenantId>` and no
+worker pool exists for that queue.
+
+1. Derive the queue from the API adapter base queue and tenant id.
+2. Create a worker deployment with that exact `TEMPORAL_TASK_QUEUE`.
+3. Start with one replica unless queue latency already requires more.
+4. Verify readiness and poller registration.
+5. Record the queue/deployment mapping in the environment inventory.
+
+Do not change a generic worker from `dvt-temporal` to `dvt-temporal-tenant-a`
+unless that worker was intended to stop polling the generic queue.
 
 ## Monitoring Saturation
 
-### Key Metrics
+### Worker Metrics
 
-| Metric                                     | Source                  | What It Indicates                                                               |
-| ------------------------------------------ | ----------------------- | ------------------------------------------------------------------------------- |
-| `dvt_temporal_worker_up`                   | Worker `/metrics`       | Worker lifecycle state (1=running, 0=error)                                     |
-| `dvt_temporal_worker_state`                | Worker `/metrics`       | Current runtime state (0=starting, 1=running, 2=stopping, 3=failing, 4=stopped) |
-| `dvt_temporal_worker_dbt_enabled`          | Worker `/metrics`       | DBT plugin status (1=enabled, 0=disabled)                                       |
-| `dvt_temporal_worker_error_total`          | Worker `/metrics`       | Cumulative error count                                                          |
-| `temporal_task_queue_latency`              | Temporal Server metrics | Time tasks wait in queue before pickup                                          |
-| `temporal_activity_task_execution_latency` | Temporal Server metrics | Time to execute activity tasks                                                  |
-| `temporal_server_poller_count`             | Temporal Server metrics | Number of pollers per task queue                                                |
-| Worker CPU                                 | Container/Pod metrics   | Worker process CPU utilization                                                  |
-| Worker memory                              | Container/Pod metrics   | Worker process memory utilization                                               |
+| Metric                               | Meaning                                   |
+| ------------------------------------ | ----------------------------------------- |
+| `dvt_temporal_worker_up`             | Process is alive enough to report health. |
+| `dvt_temporal_worker_ready`          | Worker is ready to poll Temporal.         |
+| `dvt_temporal_worker_state{state=*}` | Current runtime state as labelled gauges. |
+| `dvt_temporal_worker_dbt_enabled`    | DBT profile enabled for this worker.      |
+| `dvt_temporal_worker_error_total`    | Worker runtime error count.               |
 
-### Saturation Thresholds
+`dvt_temporal_worker_up 1` is not the readiness signal. Use
+`dvt_temporal_worker_ready 1` and
+`dvt_temporal_worker_state{state="running"} 1` for readiness.
 
-| Metric                                         | Warning       | Critical        | Action                                     |
-| ---------------------------------------------- | ------------- | --------------- | ------------------------------------------ |
-| `temporal_task_queue_latency` p50              | > 5s          | > 15s           | Scale up shared pool or move noisy tenant  |
-| `temporal_activity_task_execution_latency` p99 | > 30s         | > 60s           | Investigate activity execution (DBT hang?) |
-| Worker CPU                                     | > 70%         | > 85%           | Scale up or investigate noisy tenant       |
-| Worker memory                                  | > 75%         | > 90%           | Scale up or move large-DAG tenants         |
-| `dvt_temporal_worker_error_total`              | Any increment | Rapid increment | Investigate worker logs                    |
+### Queue Metrics
 
-### Dashboard Setup
+Use the Temporal UI or exported Temporal metrics for the affected queue:
 
-Recommended dashboard panels:
+- schedule-to-start latency or equivalent queue delay
+- queued workflow/activity task count
+- poller count for the exact task queue
+- task failure/retry rate
 
-1. **Worker fleet overview**: `dvt_temporal_worker_up` per worker, worker count.
-2. **Task queue latency**: Heatmap of `temporal_task_queue_latency` by queue.
-3. **Worker resource usage**: CPU and memory per worker.
-4. **Error rate**: `dvt_temporal_worker_error_total` rate per worker.
-5. **DBT status**: `dvt_temporal_worker_dbt_enabled` per worker.
+If the environment exposes different Temporal metric names, dashboard the
+environment-specific names but keep the same operational meaning.
 
-## Adding Capacity
+### Warning Thresholds
 
-### When to Add Capacity
+| Signal         | Warning             | Critical            | Action                         |
+| -------------- | ------------------- | ------------------- | ------------------------------ |
+| queue delay    | > 5s for 5 min      | > 15s for 5 min     | Add replicas for that queue.   |
+| ready replicas | below desired count | zero ready replicas | Restart or roll back workers.  |
+| worker CPU     | > 70% for 10 min    | > 90% for 5 min     | Add replicas or larger nodes.  |
+| worker memory  | > 75% for 10 min    | > 90% for 5 min     | Add replicas or larger nodes.  |
+| `error_total`  | any increase        | rapid increase      | Inspect logs and state metric. |
 
-Add capacity when any of these conditions are met:
+## Rebalance Or Drain
 
-1. `temporal_task_queue_latency` p50 exceeds 5s for more than 5 minutes.
-2. Worker CPU exceeds 80% for more than 2 minutes.
-3. Worker memory exceeds 80% for more than 2 minutes.
-4. A new tenant with high expected activity is being onboarded.
+### Increase Tenant Queue Capacity
 
-### How to Add Capacity
+1. Scale the worker deployment for `<baseQueue>-<tenantId>`.
+2. Wait for new replicas to become ready.
+3. Confirm additional pollers on the same queue.
+4. Keep the higher replica count until latency is stable.
 
-#### Scale Up Shared Pool
+### Reduce Tenant Queue Capacity
 
-```bash
-# Increase the replica count of the shared pool deployment
-# Example: kubectl scale deployment temporal-worker --replicas=8
+1. Confirm queue delay and backlog are below target.
+2. Reduce replicas gradually.
+3. Keep at least the environment's minimum ready count for active tenants.
+4. Watch `/readyz`, `dvt_temporal_worker_ready`, and queue delay.
 
-# Verify new workers join the pool
-# Check Temporal Server UI for increased poller count
-```
+### Drain A Queue
 
-#### Add Dedicated Worker for a Tenant
+1. Stop new workflow starts for the tenant or queue at the ingress/admission
+   layer.
+2. Let existing workflows complete or follow the approved drained-cutover
+   process for workflow-shape migrations.
+3. Scale the queue's worker deployment down after drain evidence is recorded.
 
-```bash
-# 1. Deploy a dedicated worker polling the tenant's queue
-# Example: kubectl apply -f temporal-worker-dedicated-tenant-a.yaml
+Do not assume in-flight workflows move to another task queue when a worker is
+stopped.
 
-# 2. Verify the dedicated worker starts and polls the queue
-curl http://<dedicated-worker>:3000/healthz
-curl http://<dedicated-worker>:3000/readyz
+## Failure Triage
 
-# 3. Monitor the tenant's queue latency
-# Expected: latency decreases as dedicated worker picks up tasks
+### `/healthz` 200 But `/readyz` 503
 
-# 4. (Optional) Remove the tenant's queue from shared pool polling
-# This requires a shared pool configuration update and restart
-```
+1. Check `dvt_temporal_worker_state{state=*}`.
+2. Check `dvt_temporal_worker_error_total`.
+3. Check Temporal connectivity and namespace.
+4. Check Postgres connectivity and circuit-breaker metrics.
+5. If DBT mode is enabled, check `DVT_DBT_*` configuration and DBT binary
+   availability.
 
-### Capacity Planning Guidelines
+### Workflows Queued But Not Executing
 
-| Tenant Tier | Expected Activity | Recommended Workers                                |
-| ----------- | ----------------- | -------------------------------------------------- |
-| Low         | < 10 runs/day     | Shared pool (default)                              |
-| Medium      | 10–100 runs/day   | Shared pool (default)                              |
-| High        | 100–1000 runs/day | Shared pool + monitor for dedicated worker trigger |
-| Critical    | > 1000 runs/day   | Dedicated worker                                   |
+1. Identify the task queue used by the workflow in Temporal.
+2. Compare it with worker `TEMPORAL_TASK_QUEUE`.
+3. If they differ, deploy a worker for the workflow queue.
+4. If they match, scale replicas or inspect worker errors.
 
-## Rebalancing Tenants or Task Queues
+### DBT-Enabled Worker Failing
 
-### Moving a Tenant from Shared Pool to Dedicated Worker
+1. Verify `DVT_TEMPORAL_DBT_ENABLED=true` was intended.
+2. Verify `DVT_DBT_BUNDLE_STORE_BACKEND`.
+3. Verify `DVT_DBT_BUNDLE_S3_BUCKET` or `DVT_DBT_BUNDLE_FILE_ROOT`.
+4. Verify `DVT_DBT_BIN` is available inside the worker image.
+5. Check artifact-read and bundle-integrity errors.
 
-```bash
-# Step 1: Deploy dedicated worker
-kubectl apply -f temporal-worker-dedicated-<tenantId>.yaml
+## Evidence Before Claiming Scale Readiness
 
-# Step 2: Wait for dedicated worker to start and poll the queue
-# Monitor: temporal_server_poller_count for dvt_<tenantId> increases by 1
+Do not claim AR-D3 production scale readiness until evidence exists for:
 
-# Step 3: Monitor queue latency for 5 minutes
-# Expected: latency decreases as dedicated worker absorbs load
+1. queue-local pool scale-up and scale-down;
+2. tenant queue provisioning for at least one tenant-scoped queue;
+3. a noisy-tenant drill showing only that tenant queue was scaled;
+4. readiness and metrics dashboards using the exact worker metric semantics;
+5. load evidence for the target tenant and queue count;
+6. an explicit decision on the 1000+ tenant provisioning model.
 
-# Step 4: (Optional) Remove queue from shared pool
-# Update shared pool configuration to exclude dvt_<tenantId>
-# Restart shared pool workers with updated configuration
-
-# Step 5: Confirm dedicated worker is handling the tenant's tasks
-# Check Temporal Server UI for task dispatch on the dedicated worker
-```
-
-### Moving a Tenant Back to Shared Pool
-
-```bash
-# Step 1: (If queue was removed from shared pool) Add queue back
-# Update shared pool configuration to include dvt_<tenantId>
-# Restart shared pool workers
-
-# Step 2: Stop dedicated worker
-kubectl delete deployment temporal-worker-dedicated-<tenantId>
-
-# Step 3: Confirm shared pool is handling the tenant's tasks
-# Check Temporal Server UI for task dispatch on shared pool workers
-```
-
-### Rebalancing Multiple Tenants
-
-For bulk rebalancing (e.g., after a large tenant onboarding):
-
-1. Add capacity to the shared pool first (scale up by 20–50%).
-2. Move tenants one at a time, monitoring queue latency after each move.
-3. Allow 5 minutes between moves for Temporal to redistribute tasks.
-4. After all tenants are moved, scale down the shared pool if appropriate.
-
-## Evidence Required Before Claiming Scale Readiness
-
-Before claiming that the worker scaling strategy is production-ready for
-1000+ tenants, the following evidence must be produced:
-
-1. **Load test results**: Shared pool handles 1000 task queues with < 5s p50
-   latency under expected load.
-2. **Cold-start measurement**: Worker cold start completes within 15 seconds
-   (including DBT profile init if enabled).
-3. **Autoscaling validation**: Autoscaling triggers fire at the configured
-   thresholds and workers scale within the cooldown period.
-4. **Tenant isolation test**: A noisy tenant on a dedicated worker does not
-   affect shared pool latency for other tenants.
-5. **Rebalancing drill**: Moving a tenant from shared pool to dedicated worker
-   and back completes without task loss or duplicate execution.
-6. **Failure mode drill**: Worker crash, degraded state, and circuit breaker
-   open scenarios are exercised and recovery procedures are validated.
-
-Until this evidence exists, the scaling strategy is **design-ready only**, not
-production-proven.
+Current status: the repository has the queue-local runtime building blocks, but
+does not yet have a global shared worker pool or automated 1000+ tenant worker
+provisioning.

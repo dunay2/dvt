@@ -14160,9 +14160,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-EDC4622621DB
     path: docs/architecture/components/engine/adapters/temporal/temporal-worker-scaling-strategy.md
-    contentHash: e22eb09e4983529e0dbd1da67f8167220f5e8ce761f8092fd9a12605cd2afce7
+    contentHash: 19c98c6157ce089b28dec02cc2df5471f4aa623c5b0d41df121091320cd8ba65
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 6164ef421f75b52507b0370ff22eab5a2356426327884a4c4f46ae2bc072d5ff
+    stateFingerprint: b22b17141f6c0d5ced384638d26c59a69af743c31fddc8abcbbe75f5a9652d7e
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -27358,9 +27358,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-DF0AE79C048B
     path: docs/planning/state/agent-lane-d.yaml
-    contentHash: 0ace9b61bcb1954c31bb02046744bbcda10ba174f089f608c47dd83ca30b4cde
+    contentHash: 6a101876c6d33afd36fc6ac09969989942a66f09a994147cac1298209c55be62
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: ec1d5b43f86fc7bda22ca66d5babe97c99801169f05e003faa71ee00c6b39963
+    stateFingerprint: 43b3cd891d10a71bcad63baceead2b514404aaae1d04f85e2b7134f8e927144e
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -28070,18 +28070,18 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-5D25269D1180
     path: docs/planning/status/system-governance-document-unit-map-20260501.md
-    contentHash: a4c6d9c4bd5b811f677a92284ff371771a532c8ac14fc403f83f7ba8fb55e9c4
+    contentHash: 72dd7d456c8641cd17cfcad354c7e43d7289c651f38d049c9fd386172d187fac
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 87318c0caaed0af06e4ba7a79dc2e477c476941075661efe62ab1c7b29d85d9c
+    stateFingerprint: 47a71886fa6e6820f459d719fba92ec988c239849eba4b841b4acad86ec4c9e2
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-E7EC54670607
     path: docs/planning/status/system-governance-document-unit-map.docs.yaml
-    contentHash: ae78e506be5bfaaf575fef07ca780d9030fb63db5822202122c2ca4bd8e66144
+    contentHash: 0a1ed050de625420566e11db1481c0b8a301c26bde2fc381c896010dc33e3822
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: 83c105bfd4acbe871a21899ed4733c528e28d87a1a35332cf0f753ae9ca1b8f9
+    stateFingerprint: 4cf9b1389bd98ee91b85285f879db01cd5b2a85ec8f4acda8f054426fe315eea
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT
@@ -29718,9 +29718,9 @@ files:
     owningUnit: SYS-DOCS-GOVERNANCE-ROOT
   - fileId: F-A4B9E7211A87
     path: docs/runbooks/temporal-worker-scaling-operations.md
-    contentHash: bd4db9e6b886d50eee84e62f11089a58dba2240632d3d71d21e8a0a7ec2aa459
+    contentHash: f617e0e1c13afe19fa002ff33f14f23762f9b351ad47eab6bed5a44be4f3aa62
     governanceHash: 1121be0d81847ba81b40aaa3fadf7788f4cc904d6a2be33c461802a605c35beb
-    stateFingerprint: c512bac625ab1d84ae60473fba4f1add231006f29df465e1dd308e369522a640
+    stateFingerprint: a87437e8342694bc7e64fc7c5d2635864afbf9d75cdca06138f6c762e866ba17
     rootUnit: SYS-DVT
     domainUnit: SYS-DVT
     componentUnit: SYS-DOCS-GOVERNANCE-ROOT

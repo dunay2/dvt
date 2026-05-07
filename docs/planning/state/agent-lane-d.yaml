@@ -347,19 +347,19 @@ tasks:
       covers worker provisioning, scaling triggers, and tenant-to-queue assignment policy.
     complexity: S
     effort_points: 3
-    progress_pct: 80
+    progress_pct: 60
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
       - docs/architecture/components/engine/adapters/temporal/temporal-worker-scaling-strategy.md
       - docs/runbooks/temporal-worker-scaling-operations.md
     status_reason: >-
       Architecture document (temporal-worker-scaling-strategy.md) and operator runbook
-      (temporal-worker-scaling-operations.md) are created. The strategy defines shared pool default,
-      dedicated worker criteria, task queue density model, cold-start targets, autoscaling signals,
-      tenant-to-queue assignment policy, noisy-tenant isolation, and operational failure modes. The
-      runbook covers provisioning, monitoring, scaling, rebalancing, and evidence requirements. Task
-      remains in_progress because no production scale evidence exists — design readiness is
-      complete, production proof is deferred.
+      (temporal-worker-scaling-operations.md) now align to the executable Temporal adapter/worker
+      model: tenant-scoped queues are derived as <baseQueue>-<tenantId>, each worker process polls
+      exactly one TEMPORAL_TASK_QUEUE, and capacity is added by scaling queue-local worker pools.
+      The docs preserve the useful multi-worker strategy while explicitly marking a global shared
+      pool across all tenant queues, tenant-to-queue automation, and 1000+ tenant production
+      evidence as open work rather than completed capability.
     last_verified: '2026-05-07'
   - task_id: AR-D4
     priority: P2
