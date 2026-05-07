@@ -2,7 +2,7 @@ version: 1
 shardId: SYS-TRACEABILITY
 generatedFrom: git ls-files plus untracked non-ignored local files
 unitManifest: docs/planning/status/system-governance-unit-index.units.yaml
-fileCount: 67
+fileCount: 71
 files:
   - fileId: F-4DEEC440215C
     pathHash: 8975c7766e8c874d5189be3395e5d9e56653b44bd16a7e1993ecc6c380fd986a
@@ -506,9 +506,9 @@ files:
       - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
   - fileId: F-55E92375692A
     pathHash: 02c7940c068050bd4b4f8fb27a91a171813731e9e9dba7836992b8021bfd1d60
-    contentHash: 624ff6058e5fbc966ab0b218114746248a537abdfc31ab98f42f2717c8547cf2
+    contentHash: 5262bffd51ad3f500a19af9d6f2d201c8750b988298d2a78414d4a2a8e7c5bd6
     governanceHash: 0967d35e0846d38b639c654c831365c8c2b648fe2b458572b7c475ed4860d082
-    stateFingerprint: 78bb13a6d59c3491c93a6419096af6d16a490652ae969b2269ed46b93371623e
+    stateFingerprint: e45cf6872032d079fadc86638e86de6392aa321c7b565575c3b4d266602e3355
     path: packages/@dvt/traceability-service/src/lineage/LineageWorkerRuntime.ts
     owningUnit: SYS-TRACEABILITY-ROOT
     rootUnit: SYS-DVT
@@ -954,6 +954,31 @@ files:
     cqRails: traceability commands and lineage queries
     governance:
       - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
+  - fileId: F-951657FF7910
+    pathHash: d7ea7c6ec0b57a62d97094c8084c75f5aff1f2642a2bd218d5622249ad465648
+    contentHash: 73d5a991daca33623f78d1398ec0e3d5c65352b43c6c93c30cda2109d255ce07
+    governanceHash: 0967d35e0846d38b639c654c831365c8c2b648fe2b458572b7c475ed4860d082
+    stateFingerprint: 0591ac9a599c4ea033b655512f107898269c24b280357b819626b7aca32e4b7c
+    path: packages/@dvt/traceability-service/src/lineage/runtime/LineageWorkerLoopController.ts
+    owningUnit: SYS-TRACEABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-TRACEABILITY
+    componentUnit: SYS-TRACEABILITY-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-TRACEABILITY
+      - SYS-TRACEABILITY-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: DS
+    cqRails: traceability commands and lineage queries
+    governance:
+      - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
   - fileId: F-918FDF52668A
     pathHash: b435eeaecdf0c3540645d5a9c69d0b9416b8bc573608fbffb78463ac54a1c26e
     contentHash: 3cb72b9effb519cccc5c0d39a2406084f370969caf24397ca13aa6f0d13fe12d
@@ -1010,6 +1035,31 @@ files:
     governanceHash: 0967d35e0846d38b639c654c831365c8c2b648fe2b458572b7c475ed4860d082
     stateFingerprint: 921681cdaff3f0b90ec27e54a5a19d97b5c7ef29414151631b1f54c3e8866fb0
     path: packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerRuntimeConfig.ts
+    owningUnit: SYS-TRACEABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-TRACEABILITY
+    componentUnit: SYS-TRACEABILITY-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-TRACEABILITY
+      - SYS-TRACEABILITY-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: DS
+    cqRails: traceability commands and lineage queries
+    governance:
+      - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
+  - fileId: F-C230414027DA
+    pathHash: 51db849273a2b5c09925ed8e34a6a19e0c76c3d313b437535b9f8674dfa83c40
+    contentHash: bfce80dd184a3e42e19602fbd0beec8e1a5b50b5b1a8a4672d6fe2ab50acb6f7
+    governanceHash: 0967d35e0846d38b639c654c831365c8c2b648fe2b458572b7c475ed4860d082
+    stateFingerprint: 02e3a2e091e68ba2468ec2c145bf3b67ddeec70d6354a555c6094f0b4e218c34
+    path: packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerTick.ts
     owningUnit: SYS-TRACEABILITY-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-TRACEABILITY
@@ -1279,6 +1329,31 @@ files:
     cqRails: traceability commands and lineage queries
     governance:
       - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
+  - fileId: F-5B1573724FC7
+    pathHash: 1f478bb2e6cd08a29dcc2197df28295e1cc3fa23471bbc1228e9b7241c16ba5a
+    contentHash: a6a669c07e80c9f4e47a98f14f4f54e4015cdf4c0611919606eab64a84002dd2
+    governanceHash: 0967d35e0846d38b639c654c831365c8c2b648fe2b458572b7c475ed4860d082
+    stateFingerprint: fbc53f96920303c7b3c23489bb4d9f35c61ef037d70dfa24b45815b8c8ca03b9
+    path: packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.architecture.test.ts
+    owningUnit: SYS-TRACEABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-TRACEABILITY
+    componentUnit: SYS-TRACEABILITY-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-TRACEABILITY
+      - SYS-TRACEABILITY-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: DS
+    cqRails: traceability commands and lineage queries
+    governance:
+      - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
   - fileId: F-0EA743E053FC
     pathHash: a08dcd191573d3ab4af75d5080c0996496e1118c1f0565514e5749ae7ca0d4bb
     contentHash: a8bb47a23420fbf80810ede2b40a6c465c28a7d0567cdef4f22218547384779f
@@ -1460,6 +1535,31 @@ files:
     governanceHash: 0967d35e0846d38b639c654c831365c8c2b648fe2b458572b7c475ed4860d082
     stateFingerprint: 45fd7d5fcf6f1006b3cdb67f1b7348f8a59fed31a032f337aa2e361e0cfabe7a
     path: packages/@dvt/traceability-service/test/lineage/facetSchema.validation.test.ts
+    owningUnit: SYS-TRACEABILITY-ROOT
+    rootUnit: SYS-DVT
+    domainUnit: SYS-TRACEABILITY
+    componentUnit: SYS-TRACEABILITY-ROOT
+    unitPath:
+      - SYS-DVT
+      - SYS-TRACEABILITY
+      - SYS-TRACEABILITY-ROOT
+    ownerLevel: component
+    unitStatus: coverage-required
+    governanceState: coverage-required
+    canonicalRole: none
+    evidenceState: coverage-required
+    isDrift: false
+    isLegacy: false
+    dddOwner: DS
+    cqRails: traceability commands and lineage queries
+    governance:
+      - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
+  - fileId: F-C210098D86EB
+    pathHash: c2ce7baaae6d5f8fb7de0fa8cda6a944f44f3b81349e24f062d21a2b249eb121
+    contentHash: 6b53a3c9d933180428d56e3b71c5265066d361e05a26b835faf5af46bd058148
+    governanceHash: 0967d35e0846d38b639c654c831365c8c2b648fe2b458572b7c475ed4860d082
+    stateFingerprint: 07ba38810af7bfd1081bb33148b51be7cfbb97b47ffd12312b9e73b3eb09885e
+    path: packages/@dvt/traceability-service/test/lineage/lineageWorkerTick.test.ts
     owningUnit: SYS-TRACEABILITY-ROOT
     rootUnit: SYS-DVT
     domainUnit: SYS-TRACEABILITY

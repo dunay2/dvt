@@ -1914,7 +1914,7 @@ tasks:
     blocking: reporting-only
     reason: Documents track drift or require disposition and need alignment with active units.
     fileCount: 0
-    documentCount: 3
+    documentCount: 4
     files: []
     documents:
       - path: docs/planning/closeouts/20260316-g7-projector-worker-runtime-closeout.md
@@ -1922,6 +1922,8 @@ tasks:
       - path: docs/planning/closeouts/20260317-outbox-worker-script-dedup-closeout.md
         classification: tracks drift
       - path: docs/planning/closeouts/20260420-temporal-worker-runtime-config-shape-closeout.md
+        classification: tracks drift
+      - path: docs/planning/closeouts/20260507-ar-b5-lineage-worker-runtime-decomposition-closeout.md
         classification: tracks drift
     expectedValidation:
       - pnpm docs:governance:remediation-queue:check

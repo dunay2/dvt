@@ -99,7 +99,7 @@ Machine-readable source:
 | `GRQ-DOC_ALIGNMENT-SYS-CI-GOVERNANCE` | `P3` | `doc-alignment` | `SYS-CI-GOVERNANCE` | 0 | 5 | Documents track drift or require disposition and need alignment with active units. |
 | `GRQ-DOC_ALIGNMENT-SYS-CONTRACTS` | `P3` | `doc-alignment` | `SYS-CONTRACTS` | 0 | 5 | Documents track drift or require disposition and need alignment with active units. |
 | `GRQ-DOC_ALIGNMENT-SYS-OBSERVABILITY` | `P3` | `doc-alignment` | `SYS-OBSERVABILITY` | 0 | 5 | Documents track drift or require disposition and need alignment with active units. |
-| `GRQ-DOC_ALIGNMENT-SYS-WORKERS` | `P3` | `doc-alignment` | `SYS-WORKERS` | 0 | 3 | Documents track drift or require disposition and need alignment with active units. |
+| `GRQ-DOC_ALIGNMENT-SYS-WORKERS` | `P3` | `doc-alignment` | `SYS-WORKERS` | 0 | 4 | Documents track drift or require disposition and need alignment with active units. |
 | `GRQ-DOC_ALIGNMENT-SYS-TRACEABILITY` | `P3` | `doc-alignment` | `SYS-TRACEABILITY` | 0 | 1 | Documents track drift or require disposition and need alignment with active units. |
 <!-- prettier-ignore-end -->
 
