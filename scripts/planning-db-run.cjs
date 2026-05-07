@@ -33,12 +33,16 @@ function buildPgEnv() {
     ...process.env,
     DATABASE_URL: defaultPgUrl,
     DVT_PLANNING_DB_URL: defaultPgUrl,
-    DVT_PLANNING_DB_DATA_DIR: defaultDataDir,
+    DVT_PLANNING_DB_DATA_DIR: resolveDataDir(),
   };
 }
 
+function resolveDataDir() {
+  return process.env.DVT_PLANNING_DB_DATA_DIR || defaultDataDir;
+}
+
 function ensureDataDir() {
-  fs.mkdirSync(defaultDataDir, { recursive: true });
+  fs.mkdirSync(resolveDataDir(), { recursive: true });
 }
 
 function buildComposeArgs(actionArgs, prefixArgs = ['compose']) {
@@ -91,7 +95,7 @@ function runCompose(actionArgs) {
 function printEnv() {
   console.log(`DVT_PLANNING_DB_URL=${defaultPgUrl}`);
   console.log(`DATABASE_URL=${defaultPgUrl}`);
-  console.log(`DVT_PLANNING_DB_DATA_DIR=${defaultDataDir}`);
+  console.log(`DVT_PLANNING_DB_DATA_DIR=${resolveDataDir()}`);
 }
 
 function main() {

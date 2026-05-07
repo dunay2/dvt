@@ -27,6 +27,7 @@ test('planning DB defaults to a shared machine-local Windows data directory', ()
 test('planning DB environment exports the canonical shared DSN', (t) => {
   const originalDatabaseUrl = process.env.DATABASE_URL;
   const originalPlanningUrl = process.env.DVT_PLANNING_DB_URL;
+  const originalPlanningDataDir = process.env.DVT_PLANNING_DB_DATA_DIR;
 
   t.after(() => {
     if (originalDatabaseUrl === undefined) {
@@ -40,15 +41,39 @@ test('planning DB environment exports the canonical shared DSN', (t) => {
     } else {
       process.env.DVT_PLANNING_DB_URL = originalPlanningUrl;
     }
+
+    if (originalPlanningDataDir === undefined) {
+      delete process.env.DVT_PLANNING_DB_DATA_DIR;
+    } else {
+      process.env.DVT_PLANNING_DB_DATA_DIR = originalPlanningDataDir;
+    }
   });
 
   process.env.DATABASE_URL = 'postgresql://other/database';
   process.env.DVT_PLANNING_DB_URL = 'postgresql://other/planning';
+  delete process.env.DVT_PLANNING_DB_DATA_DIR;
 
   const env = buildPgEnv();
   assert.equal(env.DATABASE_URL, defaultPgUrl);
   assert.equal(env.DVT_PLANNING_DB_URL, defaultPgUrl);
   assert.equal(env.DVT_PLANNING_DB_DATA_DIR, defaultDataDir);
+});
+
+test('planning DB environment preserves an operator data directory override', (t) => {
+  const originalPlanningDataDir = process.env.DVT_PLANNING_DB_DATA_DIR;
+  const configuredDataDir = 'D:\\dvt-planning-db\\postgres-data';
+
+  t.after(() => {
+    if (originalPlanningDataDir === undefined) {
+      delete process.env.DVT_PLANNING_DB_DATA_DIR;
+    } else {
+      process.env.DVT_PLANNING_DB_DATA_DIR = originalPlanningDataDir;
+    }
+  });
+
+  process.env.DVT_PLANNING_DB_DATA_DIR = configuredDataDir;
+
+  assert.equal(buildPgEnv().DVT_PLANNING_DB_DATA_DIR, configuredDataDir);
 });
 
 test('compose args use a fixed project name so every worktree targets one DB', () => {
@@ -63,15 +88,53 @@ test('compose args use a fixed project name so every worktree targets one DB', (
 
 test('ensureDataDir creates the shared data directory recursively', (t) => {
   const mkdirCalls = [];
+  const originalPlanningDataDir = process.env.DVT_PLANNING_DB_DATA_DIR;
 
   t.mock.method(fs, 'mkdirSync', (target, options) => {
     mkdirCalls.push({ target, options });
   });
 
+  t.after(() => {
+    if (originalPlanningDataDir === undefined) {
+      delete process.env.DVT_PLANNING_DB_DATA_DIR;
+    } else {
+      process.env.DVT_PLANNING_DB_DATA_DIR = originalPlanningDataDir;
+    }
+  });
+
+  delete process.env.DVT_PLANNING_DB_DATA_DIR;
   ensureDataDir();
   assert.deepEqual(mkdirCalls, [
     {
       target: defaultDataDir,
+      options: { recursive: true },
+    },
+  ]);
+});
+
+test('ensureDataDir creates the configured planning DB data directory recursively', (t) => {
+  const mkdirCalls = [];
+  const originalPlanningDataDir = process.env.DVT_PLANNING_DB_DATA_DIR;
+  const configuredDataDir = 'D:\\dvt-planning-db\\postgres-data';
+
+  t.mock.method(fs, 'mkdirSync', (target, options) => {
+    mkdirCalls.push({ target, options });
+  });
+
+  t.after(() => {
+    if (originalPlanningDataDir === undefined) {
+      delete process.env.DVT_PLANNING_DB_DATA_DIR;
+    } else {
+      process.env.DVT_PLANNING_DB_DATA_DIR = originalPlanningDataDir;
+    }
+  });
+
+  process.env.DVT_PLANNING_DB_DATA_DIR = configuredDataDir;
+
+  ensureDataDir();
+  assert.deepEqual(mkdirCalls, [
+    {
+      target: configuredDataDir,
       options: { recursive: true },
     },
   ]);
