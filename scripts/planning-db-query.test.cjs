@@ -23,6 +23,8 @@ test('buildSummaryRows exposes planning and governance content counts', () => {
     governanceCoverageRows: 128,
     governanceRemediationTasks: 43,
     governanceRemediationP0: 3,
+    planningLocalTaskOverlays: 2,
+    planningLocalOperations: 5,
   });
 
   assert.deepEqual(rows, [
@@ -38,5 +40,7 @@ test('buildSummaryRows exposes planning and governance content counts', () => {
     ['governance.coverage_rows', 128],
     ['governance.remediation_tasks', 43],
     ['governance.remediation_tasks.p0', 3],
+    ['planning.local_task_overlays', 2],
+    ['planning.local_operations', 5],
   ]);
 });

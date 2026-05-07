@@ -32,6 +32,8 @@ function buildSummaryRows(summary) {
     ['governance.coverage_rows', summary.governanceCoverageRows],
     ['governance.remediation_tasks', summary.governanceRemediationTasks],
     ['governance.remediation_tasks.p0', summary.governanceRemediationP0],
+    ['planning.local_task_overlays', summary.planningLocalTaskOverlays],
+    ['planning.local_operations', summary.planningLocalOperations],
   ];
 }
 
@@ -49,7 +51,9 @@ async function readSummary(client) {
       (select count(*)::int from ${schemaName}.governance_fingerprints) as "governanceFingerprints",
       (select count(*)::int from ${schemaName}.governance_coverage) as "governanceCoverageRows",
       (select count(*)::int from ${schemaName}.governance_remediation) as "governanceRemediationTasks",
-      (select count(*)::int from ${schemaName}.governance_remediation where priority = 'P0') as "governanceRemediationP0"
+      (select count(*)::int from ${schemaName}.governance_remediation where priority = 'P0') as "governanceRemediationP0",
+      (select count(*)::int from ${schemaName}.planning_task_local_state) as "planningLocalTaskOverlays",
+      (select count(*)::int from ${schemaName}.planning_local_operations) as "planningLocalOperations"
   `);
 
   return result.rows[0];

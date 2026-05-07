@@ -25,7 +25,7 @@ Machine-readable sources:
 ## Totals
 
 - Components: 32
-- Files mapped: 4290
+- Files mapped: 4294
 - Components with drift or legacy files: 3
 
 ## Largest Components
@@ -33,10 +33,10 @@ Machine-readable sources:
 <!-- prettier-ignore-start -->
 | Component | Files | Drift files | Legacy files |
 | --- | ---: | ---: | ---: |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1763 | 0 | 0 |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1764 | 0 | 0 |
 | `SYS-WEB-ROOT` | 828 | 0 | 0 |
 | `SYS-RUNTIME-ROOT` | 286 | 0 | 0 |
-| `SYS-CI-GOVERNANCE-ROOT` | 201 | 0 | 0 |
+| `SYS-CI-GOVERNANCE-ROOT` | 204 | 0 | 0 |
 | `SYS-ADAPTERS-ROOT` | 196 | 0 | 0 |
 | `SYS-CONTRACTS-ROOT` | 127 | 0 | 0 |
 | `SYS-REPO-METADATA-ROOT` | 122 | 0 | 0 |
@@ -84,9 +84,9 @@ Machine-readable sources:
 | `SYS-API-REPO-CONFIG` | 11 | 0 | 0 | [shard](./governance-components/SYS-API-REPO-CONFIG.component-files.yaml) |
 | `SYS-API-RUNTIME-COMPOSITION` | 26 | 0 | 0 | [shard](./governance-components/SYS-API-RUNTIME-COMPOSITION.component-files.yaml) |
 | `SYS-API-TESTS` | 101 | 0 | 0 | [shard](./governance-components/SYS-API-TESTS.component-files.yaml) |
-| `SYS-CI-GOVERNANCE-ROOT` | 201 | 0 | 0 | [shard](./governance-components/SYS-CI-GOVERNANCE-ROOT.component-files.yaml) |
+| `SYS-CI-GOVERNANCE-ROOT` | 204 | 0 | 0 | [shard](./governance-components/SYS-CI-GOVERNANCE-ROOT.component-files.yaml) |
 | `SYS-CONTRACTS-ROOT` | 127 | 0 | 0 | [shard](./governance-components/SYS-CONTRACTS-ROOT.component-files.yaml) |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1763 | 0 | 0 | [shard](./governance-components/SYS-DOCS-GOVERNANCE-ROOT.component-files.yaml) |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1764 | 0 | 0 | [shard](./governance-components/SYS-DOCS-GOVERNANCE-ROOT.component-files.yaml) |
 | `SYS-OBSERVABILITY-ROOT` | 15 | 0 | 0 | [shard](./governance-components/SYS-OBSERVABILITY-ROOT.component-files.yaml) |
 | `SYS-PLANNER-ROOT` | 76 | 0 | 0 | [shard](./governance-components/SYS-PLANNER-ROOT.component-files.yaml) |
 | `SYS-PLANSTORE-API-COMPOSITION` | 20 | 20 | 0 | [shard](./governance-components/SYS-PLANSTORE-API-COMPOSITION.component-files.yaml) |

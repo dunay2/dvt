@@ -32,7 +32,7 @@ itself prove verified semantic maturity. `governanceState`,
 
 ## Totals
 
-- Repository files indexed: 4290
+- Repository files indexed: 4294
 - Component/source owner units: 32
 - Ungoverned files: 0
 - Drift files: 41
@@ -44,7 +44,7 @@ itself prove verified semantic maturity. `governanceState`,
 | Status | Files |
 | --- | ---: |
 | `canonical` | 122 |
-| `coverage-required` | 4045 |
+| `coverage-required` | 4049 |
 | `drift` | 41 |
 | `review` | 82 |
 <!-- prettier-ignore-end -->
@@ -54,7 +54,7 @@ itself prove verified semantic maturity. `governanceState`,
 <!-- prettier-ignore-start -->
 | Governance state | Files |
 | --- | ---: |
-| `coverage-required` | 4045 |
+| `coverage-required` | 4049 |
 | `drift` | 41 |
 | `governed` | 122 |
 | `review` | 82 |
@@ -66,7 +66,7 @@ itself prove verified semantic maturity. `governanceState`,
 | Canonical role | Files |
 | --- | ---: |
 | `implementation-owner` | 122 |
-| `none` | 4168 |
+| `none` | 4172 |
 <!-- prettier-ignore-end -->
 
 ## By Owning Unit
@@ -87,9 +87,9 @@ itself prove verified semantic maturity. `governanceState`,
 | `SYS-API-REPO-CONFIG` | 11 |
 | `SYS-API-RUNTIME-COMPOSITION` | 26 |
 | `SYS-API-TESTS` | 101 |
-| `SYS-CI-GOVERNANCE-ROOT` | 201 |
+| `SYS-CI-GOVERNANCE-ROOT` | 204 |
 | `SYS-CONTRACTS-ROOT` | 127 |
-| `SYS-DOCS-GOVERNANCE-ROOT` | 1763 |
+| `SYS-DOCS-GOVERNANCE-ROOT` | 1764 |
 | `SYS-OBSERVABILITY-ROOT` | 15 |
 | `SYS-PLANNER-ROOT` | 76 |
 | `SYS-PLANSTORE-API-COMPOSITION` | 20 |

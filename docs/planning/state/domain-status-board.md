@@ -2,7 +2,7 @@
 title: Domain Status Board
 status: Review
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-21
+last_reviewed: 2026-05-07
 planning_type: status
 ---
 
@@ -103,21 +103,25 @@ For full task-level tracking use the lane YAML registry linked from
 
 - Current objective: institutionalize shared preflight and keep docs and code
   validation loops cheap enough to sustain the active lane tempo.
-- Active task IDs: `RC-C2`, `GOV-S2`
+- Active task IDs: `RC-C2`
 - Roadmap lane affected:
   [Documentation Governance lane](../roadmap/roadmap-by-domain.md)
-- Primary blockers: `RC-C2` still needs qualifying Lane C cycles, and metadata
-  noise still hides semantic drift.
+- Primary blockers: `RC-C2` still needs qualifying Lane C cycles. `GOV-S2` is
+  closed as the doc-driven operating framework umbrella; future query-store or
+  generated-artifact work must route through concrete follow-up tasks.
 
 ### `Documentation Governance`
 
 - Current objective: keep canonical status, archive boundaries, domain boards,
-  and generated planning surfaces synchronized with mainline truth.
-- Active task IDs: `GOV-S2`, `DOC-ARCH-01`
+  and generated planning surfaces synchronized with mainline truth without
+  reopening closed umbrella work.
+- Active task IDs: none; use concrete Lane A governance follow-up tasks when new
+  implementation work is accepted.
 - Roadmap lane affected:
   [Documentation Governance lane](../roadmap/roadmap-by-domain.md)
-- Primary blockers: active surfaces drift after merges unless archive moves,
-  lane refresh, and generators run together.
+- Primary blockers: active surfaces can still drift after merges unless archive
+  moves, lane refresh, governance refresh, and query-store checks run together,
+  but `DOC-ARCH-01` and `GOV-S2` are no longer active blockers.
 
 ## Canonical Anchors
 

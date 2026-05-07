@@ -9,6 +9,7 @@ const {
   buildPlanningContentSnapshot,
   importContent,
 } = require('./planning-db-import.cjs');
+const { applyTaskLocalOperation, readAudit } = require('./planning-db-operate.cjs');
 const { readSummary } = require('./planning-db-query.cjs');
 
 function dbUrl() {
@@ -46,4 +47,53 @@ test('live planning DB imports lane tasks and governance files with Git-count pa
   } finally {
     await client.end();
   }
+});
+
+test('live planning DB preserves local operation audit across file imports', async () => {
+  await runMigrations({ databaseUrl: dbUrl(), silent: true });
+  await importContent({ databaseUrl: dbUrl(), silent: true });
+
+  await applyTaskLocalOperation(
+    {
+      kind: 'task_claim',
+      actor: 'codex',
+      laneId: 'A',
+      taskId: 'GOV-S2',
+      ttlMinutes: 60,
+      expectedRevision: null,
+      idempotencyKey: 'integration-gov-s2-claim',
+    },
+    {
+      databaseUrl: dbUrl(),
+      operationId: 'integration-claim-op',
+      now: '2026-05-07T10:00:00.000Z',
+    }
+  );
+
+  await importContent({ databaseUrl: dbUrl(), silent: true });
+
+  const client = new Client({ connectionString: dbUrl() });
+  await client.connect();
+  try {
+    const summary = await readSummary(client);
+    assert.equal(summary.planningLocalTaskOverlays >= 1, true);
+    assert.equal(summary.planningLocalOperations >= 1, true);
+  } finally {
+    await client.end();
+  }
+
+  const auditRows = await readAudit(
+    {
+      kind: 'audit',
+      laneId: 'A',
+      taskId: 'GOV-S2',
+      limit: 10,
+    },
+    { databaseUrl: dbUrl() }
+  );
+
+  assert.equal(
+    auditRows.some((row) => row.operation_id === 'integration-claim-op'),
+    true
+  );
 });
