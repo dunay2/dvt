@@ -590,7 +590,7 @@ tasks:
     last_verified: '2026-04-10'
   - task_id: AR-B5
     priority: P1
-    status: review
+    status: done
     objective: >-
       decompose `LineageWorkerRuntime` into lifecycle, record-processing, dead-letter, and
       observability seams without reintroducing shared-kernel leakage.
@@ -602,7 +602,7 @@ tasks:
       helper.
     complexity: M
     effort_points: 2
-    progress_pct: 90
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260419-post-rc-g1-c-architecture-review.md
       - docs/planning/closeouts/20260507-ar-b5-lineage-worker-runtime-decomposition-closeout.md
@@ -612,11 +612,12 @@ tasks:
       - packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerDeadLetterSupport.ts
       - packages/@dvt/traceability-service/src/lineage/errorContract.ts
     status_reason: >-
-      The runtime facade now delegates one-tick orchestration to `lineageWorkerTick` and lifecycle
-      mechanics to `LineageWorkerLoopController`, while preserving the existing public API and
-      traceability-owned contracts. Review is pending final branch integration after governance and
-      prepush gates.
-    last_verified: '2026-05-07'
+      Closed on current mainline truth: the runtime facade delegates one-tick orchestration to
+      `lineageWorkerTick` and lifecycle mechanics to `LineageWorkerLoopController`, while preserving
+      the existing public API and traceability-owned contracts. The closeout records passed package,
+      build, governance, and prepush validation, and the focused runtime guard still passes on
+      2026-05-08.
+    last_verified: '2026-05-08'
 dependency_notes:
   - >-
     `EVD-IA-03` completes the structural move from metadata-only classification to class-aware
