@@ -1243,19 +1243,29 @@ tasks:
       target-state-only wording.
     complexity: S
     effort_points: 3
-    progress_pct: 80
+    progress_pct: 90
     evidence_refs:
       - docs/architecture/components/web/index.md
       - docs/architecture/domain-ui.md
       - docs/architecture/components/web/ux-implementation-guide.md
       - docs/architecture/components/web/screen-manuals-and-user-stories.md
+      - docs/architecture/components/web/web-sequence.md
+      - docs/architecture/components/web/web-ddd.md
+      - docs/architecture/components/web/web-functional.md
+      - docs/architecture/components/web/web-constraints.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/web-architecture-docs-current-runtime-substantiation-plan-20260508.md
       - docs/planning/proposals/frontend-roadmap-20260219.md
+      - apps/web/src/app/ports/runs.ts
+      - apps/web/src/app/services/runs/runsService.api.ts
+      - apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts
     status_reason: >-
       The frontend architecture entrypoint, route-level docs, observability slice, UX guide, and
-      screen manuals were reconciled into English and grounded in the current code, but planning
-      closeouts and reviews still carry legacy frontend-path references and contract alignment plus
-      deeper component detail still remain open.
-    last_verified: '2026-04-19'
+      screen manuals were reconciled into English and grounded in the current code. Four new
+      component-level docs (web-sequence, web-ddd, web-functional, web-constraints) were promoted
+      from Draft to Active after route-claim verification against current web code. Planning
+      closeouts and reviews still carry legacy frontend-path references (out of scope per F-13
+      rules) and deeper component detail still remains open.
+    last_verified: '2026-05-08'
   - task_id: F-14
     priority: P1
     status: queued
