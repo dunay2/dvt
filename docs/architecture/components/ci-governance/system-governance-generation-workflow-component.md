@@ -10,14 +10,15 @@ planning_type: architecture
 
 ## Purpose
 
-This component records the current `system-governance-*` generation workflow as
-an explicit operational contract.
+This component records the `system-governance-*` generation workflow as an
+explicit operational contract.
 
-The workflow is correct and deterministic today, but it is expensive to review:
-a small source change can update file indexes, component maps, fingerprints,
-coverage reports, remediation queues, and shard files. GOV-S3 can only move
-that read side into Postgres after this workflow is preserved as a concrete
-input/output graph.
+The workflow remains deterministic, but the generated read side is no longer a
+tracked review surface. File indexes, component maps, fingerprints, coverage
+reports, remediation queues, and shard files are local artifacts under
+`.generated-docs/planning/status/`. The planning/governance Postgres read model
+rebuilds equivalent projections in memory from the same generator modules for
+query and drift checks.
 
 ## Governing Sources
 
@@ -59,9 +60,9 @@ This component does not own:
 | `scripts/generate-governance-remediation-queue.cjs`            | Remediation queue generator                       | Script source           |
 | `scripts/check-governance-changed-files.cjs`                   | Changed-file governance validation                | Script source           |
 
-Generated Markdown and YAML outputs are reviewable artifacts, but they are not
-manual authoring surfaces. The editable root is the owning source plus the
-generator declared in the generated-docs policy.
+Generated Markdown and YAML outputs are local artifacts, not manual authoring
+surfaces and not tracked review files. The editable root is the owning source
+plus the generator declared in the generated-docs policy.
 
 ## Current Workflow
 
@@ -87,30 +88,30 @@ flowchart TD
   Worktree --> DocumentMap
   UnitManifest --> FileComponent
   Worktree --> FileComponent
-  FileComponent --> FileIndex["system-governance-file-index.*"]
-  FileComponent --> ComponentIndex["system-governance-component-index.*"]
-  FileComponent --> ComponentMap["system-governance-component-file-map.*"]
-  FileComponent --> FileShards["governance-files/*.files.yaml"]
-  FileComponent --> ComponentShards["governance-components/*.component-files.yaml"]
-  DocumentMap --> DocumentMapOutputs["system-governance-document-unit-map.*"]
+  FileComponent --> FileIndex[".generated-docs/.../system-governance-file-index.*"]
+  FileComponent --> ComponentIndex[".generated-docs/.../system-governance-component-index.*"]
+  FileComponent --> ComponentMap[".generated-docs/.../system-governance-component-file-map.*"]
+  FileComponent --> FileShards[".generated-docs/.../governance-files/*.files.yaml"]
+  FileComponent --> ComponentShards[".generated-docs/.../governance-components/*.component-files.yaml"]
+  DocumentMap --> DocumentMapOutputs[".generated-docs/.../system-governance-document-unit-map.*"]
   FileIndex --> Fingerprint
   FileShards --> Fingerprint
   ComponentMap --> Fingerprint
   ComponentShards --> Fingerprint
-  Fingerprint --> FingerprintBaseline["system-governance-file-fingerprint-baseline.yaml"]
+  Fingerprint --> FingerprintBaseline[".generated-docs/.../system-governance-file-fingerprint-baseline.yaml"]
   FingerprintBaseline --> FingerprintImpact
   FileIndex --> FingerprintImpact
   FileIndex --> Coverage
   ComponentIndex --> Coverage
   ComponentMap --> Coverage
   FingerprintBaseline --> Coverage
-  Coverage --> CoverageOutputs["system-governance-coverage-report.*"]
+  Coverage --> CoverageOutputs[".generated-docs/.../system-governance-coverage-report.*"]
   CoverageOutputs --> Remediation
   FileIndex --> Remediation
   ComponentIndex --> Remediation
   ComponentMap --> Remediation
   DocumentMapOutputs --> Remediation
-  Remediation --> RemediationOutputs["system-governance-remediation-queue.*"]
+  Remediation --> RemediationOutputs[".generated-docs/.../system-governance-remediation-queue.*"]
   FileIndex --> ChangedFiles
   FingerprintBaseline --> ChangedFiles
   Worktree --> ChangedFiles
@@ -125,21 +126,50 @@ flowchart TD
 
 ## Stage Contract
 
-| Stage                   | Command                                          | Script                                                            | Reads                                                                                | Writes                                                                                              | Check posture                                                                    |
-| ----------------------- | ------------------------------------------------ | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| Unit coverage           | `pnpm docs:governance:unit-coverage`             | `scripts/check-governance-unit-coverage.cjs`                      | `system-governance-unit-index.units.yaml`, repository file list                      | None                                                                                                | Fails when a file has zero or multiple unit owners                               |
-| Document unit map       | `pnpm docs:governance:document-unit-map`         | `scripts/generate-governance-document-unit-map.cjs`               | `system-governance-unit-index.units.yaml`, tracked docs                              | `system-governance-document-unit-map.docs.yaml`, `system-governance-document-unit-map-20260501.md`  | `:check` fails on stale generated output                                         |
-| File/component index    | `pnpm docs:governance:file-component-index`      | `scripts/generate-governance-file-component-index.cjs`            | `system-governance-unit-index.units.yaml`, tracked and untracked non-ignored files   | file index, component index, component file map, file shards, component shards                      | `:check` fails on stale generated output                                         |
-| Fingerprint baseline    | `pnpm docs:governance:file-fingerprint-baseline` | `scripts/check-governance-file-fingerprint-baseline.cjs --write`  | current file index and shards                                                        | `system-governance-file-fingerprint-baseline.yaml`                                                  | `:check` fails when current file state differs from accepted baseline            |
-| Fingerprint impact      | `pnpm docs:governance:file-fingerprint-impact`   | `scripts/check-governance-file-fingerprint-baseline.cjs --report` | accepted baseline and current file index                                             | `system-governance-file-fingerprint-impact-20260501.md`                                             | `:check` fails when the report is stale                                          |
-| Coverage report         | `pnpm docs:governance:coverage-report`           | `scripts/generate-governance-coverage-report.cjs`                 | file index, component index, component map, fingerprint baseline                     | `system-governance-coverage-report.coverage.yaml`, `system-governance-coverage-report-20260502.md`  | `:check` fails on stale generated output                                         |
-| Remediation queue       | `pnpm docs:governance:remediation-queue`         | `scripts/generate-governance-remediation-queue.cjs`               | coverage report, file index, component index, component map, document map            | `system-governance-remediation-queue.queue.yaml`, `system-governance-remediation-queue-20260502.md` | `:check` fails on stale generated output                                         |
-| Changed-file validation | `pnpm docs:governance:changed-files:check`       | `scripts/check-governance-changed-files.cjs`                      | base baseline from Git, current baseline, current file index, local name-status diff | None                                                                                                | Fails when changed files lack active governance or expected fingerprint movement |
+- `Unit coverage` runs `pnpm docs:governance:unit-coverage` through
+  `scripts/check-governance-unit-coverage.cjs`. It reads the unit index and
+  repository file list, writes nothing, and fails when a file has zero or
+  multiple unit owners.
+- `Document unit map` runs `pnpm docs:governance:document-unit-map` through
+  `scripts/generate-governance-document-unit-map.cjs`. It reads the unit index
+  and tracked docs, writes `.generated-docs/planning/status/system-governance-document-unit-map.*`,
+  and its check command regenerates the ignored artifact.
+- `File/component index` runs `pnpm docs:governance:file-component-index`
+  through `scripts/generate-governance-file-component-index.cjs`. It reads the
+  unit index plus tracked and untracked non-ignored files, writes the
+  `.generated-docs/planning/status/system-governance-*` outputs plus the
+  `governance-files/` and `governance-components/` shards, and its check command
+  regenerates ignored artifacts.
+- `Fingerprint baseline` runs `pnpm docs:governance:file-fingerprint-baseline`
+  through `scripts/check-governance-file-fingerprint-baseline.cjs --write`. It
+  reads the current generated file index and shards, writes
+  `.generated-docs/planning/status/system-governance-file-fingerprint-baseline.yaml`,
+  and its check command regenerates the ignored current baseline.
+- `Fingerprint impact` runs `pnpm docs:governance:file-fingerprint-impact`
+  through `scripts/check-governance-file-fingerprint-baseline.cjs --report`. It
+  reads the current generated baseline and file index, writes
+  `.generated-docs/planning/status/system-governance-file-fingerprint-impact-20260501.md`,
+  and its check command regenerates the ignored current impact report.
+- `Coverage report` runs `pnpm docs:governance:coverage-report` through
+  `scripts/generate-governance-coverage-report.cjs`. It reads the generated
+  file index, component index, component map, and fingerprint baseline, writes
+  `.generated-docs/planning/status/system-governance-coverage-report.*`, and
+  its check command regenerates the ignored artifact.
+- `Remediation queue` runs `pnpm docs:governance:remediation-queue` through
+  `scripts/generate-governance-remediation-queue.cjs`. It reads generated
+  coverage, file index, component index, component map, and document map
+  artifacts, writes `.generated-docs/planning/status/system-governance-remediation-queue.*`,
+  and its check command regenerates the ignored artifact.
+- `Changed-file validation` runs `pnpm docs:governance:changed-files:check`
+  through `scripts/check-governance-changed-files.cjs`. It reads the current
+  generated baseline, current generated file index, and local name-status diff,
+  writes nothing, and fails when changed files lack active governance.
 
 ## Canonical Refresh Command
 
-`pnpm governance:refresh` is the canonical local command for refreshing the
-generated governance read side before query-store import and drift checks.
+`pnpm governance:refresh` is the canonical local command for refreshing local
+inspection artifacts, rebuilding the query-store import, and running drift
+checks.
 Agents and contributors should prefer this command over manually remembering the
 individual generator order.
 
@@ -160,12 +190,17 @@ The command runs the docs and governance generation stages in this order:
 After each generation pass, the runner hashes staged, unstaged, and untracked
 non-ignored worktree state. It repeats generation until that fingerprint stops
 changing, with a small maximum pass count. Only after generated outputs are
-stable does it run `planning:db:import`, `planning:db:check`, and
-`governance:db:check`.
+stable does it run `planning:db:import`, `planning:db:check`,
+`planning:db:export:check`, and `governance:db:check`.
 
 The fingerprint is a convergence guard, not a new source of truth. Git-tracked
 sources, generated-docs policy, unit ownership, and generator scripts remain
 authoritative.
+
+`planning:db:import` takes a transaction-scoped advisory lock before replacing
+planning and governance read-model rows. This is required because the local
+Postgres volume is shared by all worktrees and agents on the same machine; two
+imports must not interleave their delete and insert phases.
 
 If the shared local Postgres volume rejects `planning:db:import` because an
 already-applied migration checksum no longer matches the Git-tracked migration
@@ -178,10 +213,10 @@ governance truth remains in Git-tracked sources, while any existing local
 operation overlay/audit rows are exported to the local backup directory before
 the data directory is removed.
 
-## Current Fan-Out
+## Former Tracked Fan-Out
 
-One accepted source change can legitimately update all of these tracked output
-families:
+These output families used to be tracked review files under
+`docs/planning/status/`:
 
 - `docs/planning/status/system-governance-file-index.files.yaml`
 - `docs/planning/status/system-governance-file-index-20260501.md`
@@ -198,16 +233,17 @@ families:
 - `docs/planning/status/governance-files/*.files.yaml`
 - `docs/planning/status/governance-components/*.component-files.yaml`
 
-That fan-out is expected under the current model. It becomes a problem when the
-reviewer has to inspect every generated file to understand whether the root
-source change was correct.
+That fan-out is no longer expected in PR file lists. The same payload is still
+deterministically generated under `.generated-docs/planning/status/` for local
+inspection and rebuilt in memory for Postgres import, but reviewer attention
+stays on root source, script, config, and plan changes.
 
 ## Derivation Boundary For GOV-S3
 
-GOV-S3 must preserve this workflow before reducing tracked generated churn. The
-first database-backed implementation therefore imports or reproduces the
-following read models, while the W6 local-operation slice moves agent
-coordination state into Postgres audit and overlay tables:
+GOV-S3 preserves the workflow while removing tracked generated churn. The
+database-backed implementation imports or reproduces the following read models,
+while the local-operation slice moves agent coordination state into Postgres
+audit and overlay tables:
 
 | Read model                     | Minimum source rows                                                               |
 | ------------------------------ | --------------------------------------------------------------------------------- |
@@ -216,26 +252,40 @@ coordination state into Postgres audit and overlay tables:
 | `GovernanceGeneratedArtifact`  | path, artifact class, generator command, tracking posture, content hash           |
 | `GovernanceWorkflowEdge`       | upstream artifact, downstream stage, edge reason                                  |
 | `GovernanceReviewImpact`       | root changed source, generated artifact family, changed row count, changed hash   |
+| `GovernanceFileHashProjection` | path, file id, path hash, content hash, governance hash, state fingerprint        |
 
 The generation contract remains source-controlled: the unit manifest, the
 generated-docs policy, and generator scripts still define how generated
 governance artifacts are produced. The local database is now the operational
-coordination surface for agent task claims, revisions, and audit; generated
-governance files remain export/review artifacts until a later parity slice
-moves their generation behind DB-backed reports.
+coordination and query surface for generated governance state. Generated
+governance files are ignored local artifacts, not PR review files.
+`planning:db:import` must rebuild governance projections in memory from the
+same generator modules; `.generated-docs` files are local inspection outputs,
+not the database import source.
 
 ## Invariants
 
-- Every tracked generated `system-governance-*` artifact must have one owning
-  generator command in `docs/generated-docs-policy.json`.
-- Check commands must compare deterministic output against the worktree and
-  fail closed on drift.
+- No derived `system-governance-*` artifact may be tracked under
+  `docs/planning/status/`; those outputs belong under `.generated-docs/`.
+- Every generated `system-governance-*` artifact must have one owning generator
+  command in `docs/generated-docs-policy.json`.
+- Check commands must regenerate deterministic ignored artifacts and fail
+  closed on generator, ownership, or DB drift errors.
 - `docs:governance:changed-files:check` must include staged, unstaged, branch,
   and untracked non-ignored local files through the local name-status flow.
-- The fingerprint baseline is an accepted review artifact, not an invisible
-  cache.
+- The fingerprint baseline is a current generated read-model artifact, not an
+  accepted tracked review file.
 - A Postgres store may replace repetitive reads, local task coordination, and
-  review fan-out only after parity proves that it preserves this stage contract.
+  review fan-out while preserving this stage contract through import and drift
+  checks.
+- Postgres hash projections may derive file id, path hash, governance hash, and
+  state fingerprint from imported governance file rows. The imported
+  `content_hash` remains the byte-level input fact until repository file
+  contents are imported directly.
+- The DB import rail must not require `.generated-docs` files to exist before
+  import. It may keep generated repo paths as stable source identifiers, but the
+  source content hash must be computed from the in-memory projection payload
+  being imported.
 - The migration must move local operational state into DB audit and overlay
   rows while keeping reviewer attention on root source changes and summarized
   artifact hashes.
@@ -245,18 +295,28 @@ moves their generation behind DB-backed reports.
 This component formalizes existing repository automation and the proposed
 GOV-S3 read model rails. It does not add product runtime behavior.
 
-| Rail                                         | Type    | Bounded context | DDD object                      | Adapter surface                                       | Negative tests                                                                                   |
-| -------------------------------------------- | ------- | --------------- | ------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `RefreshGovernanceDerivedSurfaces`           | command | Docs governance | `GovernanceRefreshWorkflow`     | package script runner and Git worktree fingerprint    | Repeated generation that does not stabilize fails before database import or drift checks.        |
-| `QuerySystemGovernanceGenerationWorkflow`    | query   | Docs governance | `GovernanceGenerationWorkflow`  | file-system manifest and generated-docs policy reader | Missing generator ownership for a tracked generated artifact fails closed.                       |
-| `ValidateSystemGovernanceGenerationWorkflow` | query   | Docs governance | `GovernanceWorkflowDriftReport` | generator/check command adapter                       | A generated artifact changed without its owning source or accepted baseline update fails closed. |
+- `RefreshGovernanceDerivedSurfaces` is a Docs governance command owned by
+  `GovernanceRefreshWorkflow`. Its adapter surface is the package script runner
+  plus Git worktree fingerprinting; repeated generation that does not stabilize
+  fails before database import or drift checks.
+- `QuerySystemGovernanceGenerationWorkflow` is a Docs governance query owned by
+  `GovernanceGenerationWorkflow`. Its adapter surface is the file-system
+  manifest plus generated-docs policy reader; missing generator ownership for a
+  generated artifact fails closed.
+- `ValidateSystemGovernanceGenerationWorkflow` is a Docs governance query owned
+  by `GovernanceWorkflowDriftReport`. Its adapter surface is the generator/check
+  command adapter plus Postgres checker; missing `.generated-docs` artifacts or
+  imported DB drift fail closed. File fingerprint comparison uses the
+  DB-derived `governance_file_hash_projection` read model instead of treating
+  the generated fingerprint baseline as the comparison source.
 
 These rails are documentation and tooling rails. Runtime packages, API routes,
 web UI actions, engine contracts, and adapters must not depend on them.
 
 ## Review Rule
 
-Until GOV-S3 parity exists, contributors must continue to regenerate and commit
-the current `system-governance-*` outputs. Reviewers should use this workflow
-contract to distinguish root source changes from deterministic generated
-fan-out.
+Contributors must run `pnpm governance:refresh` before closeout when governance
+sources or generator scripts change. Reviewers should not expect generated
+`system-governance-*` artifacts in the PR diff; they should review root source
+changes, generator/script changes, the generated-docs policy, and validation
+evidence.

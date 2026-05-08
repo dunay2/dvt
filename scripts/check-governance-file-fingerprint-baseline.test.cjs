@@ -35,7 +35,7 @@ const currentEntries = [
 test('buildFingerprintBaseline projects stable fingerprint rows from current file index', () => {
   assert.deepEqual(buildFingerprintBaseline(currentEntries), {
     version: 1,
-    source: 'docs/planning/status/system-governance-file-index.files.yaml',
+    source: '.generated-docs/planning/status/system-governance-file-index.files.yaml',
     fileCount: 2,
     files: [
       {

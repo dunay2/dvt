@@ -3,6 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
+  buildCurrentGovernanceIndexes,
   parseNameStatus,
   readLocalNameStatusDiff,
   readNameStatusDiff,
@@ -173,6 +174,59 @@ test('readLocalNameStatusDiff includes worktree, staged and untracked files with
   );
 });
 
+test('readLocalNameStatusDiff treats a staged deletion as the final state after a committed modification', () => {
+  const result = readLocalNameStatusDiff('origin/main', 'HEAD', (args) => {
+    const command = args.join(' ');
+    if (command === 'diff --name-status --find-renames origin/main...HEAD') {
+      return 'M\tdocs/planning/status/system-governance-file-index.files.yaml\n';
+    }
+    if (command === 'diff --cached --name-status --find-renames') {
+      return 'D\tdocs/planning/status/system-governance-file-index.files.yaml\n';
+    }
+    return '';
+  });
+
+  assert.deepEqual(result, [
+    {
+      status: 'D',
+      path: 'docs/planning/status/system-governance-file-index.files.yaml',
+    },
+  ]);
+});
+
+test('buildCurrentGovernanceIndexes derives current indexes from an in-memory snapshot', () => {
+  const result = buildCurrentGovernanceIndexes({
+    buildSnapshot: () => ({
+      files: [
+        {
+          path: 'apps/api/src/app.ts',
+          fileId: 'F-API',
+          stateFingerprint: 'current-api',
+          owningUnit: 'SYS-API-ROOT',
+          rootUnit: 'SYS-DVT',
+          domainUnit: 'SYS-RUNTIME',
+          componentUnit: 'SYS-API-ROOT',
+          unitStatus: 'canonical',
+          dddOwner: 'AS',
+          cqRails: 'CMD',
+          isDrift: false,
+          isLegacy: false,
+        },
+      ],
+      fingerprints: [
+        {
+          path: 'apps/api/src/app.ts',
+          fileId: 'F-API',
+          stateFingerprint: 'current-api',
+        },
+      ],
+    }),
+  });
+
+  assert.deepEqual(result.currentFileIndex.files, currentFileIndex.files.slice(0, 1));
+  assert.deepEqual(result.currentBaseline.files, currentBaseline.files.slice(0, 1));
+});
+
 test('validateChangedFiles accepts governed added, modified, deleted and renamed files', () => {
   const result = validateChangedFiles({
     changes: [
@@ -196,25 +250,22 @@ test('validateChangedFiles accepts governed added, modified, deleted and renamed
     modified: 1,
     deleted: 1,
     renamed: 1,
-    skipped: 0,
   });
 });
 
-test('validateChangedFiles rejects modified files when the accepted fingerprint did not change', () => {
+test('validateChangedFiles rejects modified files missing from the current generated baseline', () => {
   const result = validateChangedFiles({
     changes: [{ status: 'M', path: 'apps/api/src/app.ts' }],
     baseBaseline,
-    currentBaseline: {
-      files: [{ path: 'apps/api/src/app.ts', fileId: 'F-API', stateFingerprint: 'base-api' }],
-    },
+    currentBaseline: { files: [] },
     currentFileIndex,
   });
 
   assert.match(result.errors.join('\n'), /apps\/api\/src\/app\.ts/);
-  assert.match(result.errors.join('\n'), /modified but its accepted fingerprint did not change/);
+  assert.match(result.errors.join('\n'), /missing from the current generated fingerprint baseline/);
 });
 
-test('validateChangedFiles accepts normalized governance generated artifacts when their own fingerprint is stable', () => {
+test('validateChangedFiles treats formerly tracked generated artifacts as deleted files', () => {
   const generatedPaths = [
     'docs/planning/status/system-governance-file-fingerprint-baseline.yaml',
     'docs/planning/status/system-governance-file-index.files.yaml',
@@ -222,34 +273,49 @@ test('validateChangedFiles accepts normalized governance generated artifacts whe
     'docs/planning/status/governance-files/SYS-API.files.yaml',
     'docs/planning/status/governance-components/SYS-API.component-files.yaml',
   ];
-  const generatedIndexEntries = generatedPaths.map((pathName, index) => ({
-    path: pathName,
-    fileId: `F-GENERATED-${index}`,
-    stateFingerprint: 'stable-generated-fingerprint',
-    owningUnit: 'SYS-DOCS-GOVERNANCE-ROOT',
-    rootUnit: 'SYS-DVT',
-    domainUnit: 'SYS-DVT',
-    componentUnit: 'SYS-DOCS-GOVERNANCE-ROOT',
-    unitStatus: 'canonical',
-    dddOwner: 'DOCS',
-    cqRails: 'DOCS',
-    isDrift: false,
-    isLegacy: false,
-  }));
-  const generatedBaselineEntries = generatedIndexEntries.map((entry) => ({
-    path: entry.path,
-    fileId: entry.fileId,
-    stateFingerprint: entry.stateFingerprint,
-  }));
 
   const result = validateChangedFiles({
-    changes: generatedPaths.map((pathName) => ({ status: 'M', path: pathName })),
-    baseBaseline: { files: generatedBaselineEntries },
-    currentBaseline: { files: generatedBaselineEntries },
-    currentFileIndex: { files: generatedIndexEntries },
+    changes: generatedPaths.map((pathName) => ({ status: 'D', path: pathName })),
+    baseBaseline,
+    currentBaseline,
+    currentFileIndex,
   });
 
   assert.deepEqual(result.errors, []);
+  assert.deepEqual(result.summary, {
+    added: 0,
+    modified: 0,
+    deleted: generatedPaths.length,
+    renamed: 0,
+  });
+});
+
+test('validateChangedFiles rejects modified generated artifacts that are no longer active files', () => {
+  const result = validateChangedFiles({
+    changes: [
+      {
+        status: 'M',
+        path: 'docs/planning/status/system-governance-file-fingerprint-baseline.yaml',
+      },
+    ],
+    baseBaseline,
+    currentBaseline,
+    currentFileIndex,
+  });
+
+  assert.match(result.errors.join('\n'), /system-governance-file-fingerprint-baseline\.yaml/);
+  assert.match(result.errors.join('\n'), /missing from the governance file index/);
+});
+
+test('validateChangedFiles rejects unsupported statuses instead of accepting them', () => {
+  const result = validateChangedFiles({
+    changes: [{ status: 'T', path: 'apps/api/src/app.ts' }],
+    baseBaseline,
+    currentBaseline,
+    currentFileIndex,
+  });
+
+  assert.match(result.errors.join('\n'), /unsupported change status T/);
 });
 
 test('validateChangedFiles rejects active legacy or drift files without prior cleanup', () => {

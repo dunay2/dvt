@@ -69,6 +69,24 @@ docs/planning/state/agent-lane-*.md
 docs/planning/state/execution-workboard.md
 docs/planning/state/open-task-route.md
 
+# Legacy generated system-governance outputs now live under .generated-docs/
+docs/planning/status/governance-files/
+docs/planning/status/governance-components/
+docs/planning/status/system-governance-component-file-map-20260503.md
+docs/planning/status/system-governance-component-file-map.components.yaml
+docs/planning/status/system-governance-component-index-20260501.md
+docs/planning/status/system-governance-component-index.components.yaml
+docs/planning/status/system-governance-coverage-report-20260502.md
+docs/planning/status/system-governance-coverage-report.coverage.yaml
+docs/planning/status/system-governance-document-unit-map-20260501.md
+docs/planning/status/system-governance-document-unit-map.docs.yaml
+docs/planning/status/system-governance-file-fingerprint-baseline.yaml
+docs/planning/status/system-governance-file-fingerprint-impact-20260501.md
+docs/planning/status/system-governance-file-index-20260501.md
+docs/planning/status/system-governance-file-index.files.yaml
+docs/planning/status/system-governance-remediation-queue-20260502.md
+docs/planning/status/system-governance-remediation-queue.queue.yaml
+
 # Generated AI index artifacts
 **/AI_INDEX.json
 

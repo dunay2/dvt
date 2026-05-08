@@ -6,36 +6,10 @@
  */
 
 const { execFileSync } = require('node:child_process');
-const fs = require('node:fs');
-const path = require('node:path');
-const yaml = require('js-yaml');
-const { readFileIndexFromDisk } = require('./generate-governance-file-component-index.cjs');
+const { repoRoot, toPosix } = require('./governance-generated-paths.cjs');
+const { buildGovernanceFileSnapshot } = require('./planning-db-import.cjs');
 
-const repoRoot = path.resolve(__dirname, '..');
-const statusDir = path.join(repoRoot, 'docs', 'planning', 'status');
-const fileIndexPath = path.join(statusDir, 'system-governance-file-index.files.yaml');
-const baselinePath = path.join(statusDir, 'system-governance-file-fingerprint-baseline.yaml');
-const baselineRepoPath = 'docs/planning/status/system-governance-file-fingerprint-baseline.yaml';
 const gitOutputMaxBuffer = 16 * 1024 * 1024;
-const selfNormalizedGeneratedPaths = new Set([
-  baselineRepoPath,
-  'docs/planning/status/system-governance-file-index.files.yaml',
-  'docs/planning/status/system-governance-file-index-20260501.md',
-  'docs/planning/status/system-governance-component-index-20260501.md',
-  'docs/planning/status/system-governance-component-index.components.yaml',
-  'docs/planning/status/system-governance-component-file-map-20260503.md',
-  'docs/planning/status/system-governance-component-file-map.components.yaml',
-  'docs/planning/status/system-governance-coverage-report-20260502.md',
-  'docs/planning/status/system-governance-coverage-report.coverage.yaml',
-]);
-const selfNormalizedGeneratedPrefixes = [
-  'docs/planning/status/governance-files/',
-  'docs/planning/status/governance-components/',
-];
-
-function toPosix(filePath) {
-  return filePath.replace(/\\/g, '/');
-}
 
 function parseArgs(argv) {
   const args = {
@@ -55,21 +29,6 @@ function parseArgs(argv) {
   }
 
   return args;
-}
-
-function readYaml(filePath) {
-  return yaml.load(fs.readFileSync(filePath, 'utf8'));
-}
-
-function readYamlFromGit(ref, repoPath) {
-  const output = execFileSync('git', ['show', `${ref}:${repoPath}`], {
-    cwd: repoRoot,
-    encoding: 'utf8',
-    maxBuffer: gitOutputMaxBuffer,
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
-
-  return yaml.load(output);
 }
 
 function readNameStatusDiff(base, head, git = execGit) {
@@ -132,13 +91,19 @@ function changeKey(change) {
 }
 
 function dedupeChanges(changes) {
+  const deletedPaths = new Set(
+    changes.filter((change) => change.status === 'D').map((change) => change.path)
+  );
+  const addedPaths = new Set(
+    changes.filter((change) => change.status === 'A').map((change) => change.path)
+  );
   const byKey = new Map();
   for (const change of changes) {
-    if (change.status === 'M') {
-      const addedKey = changeKey({ status: 'A', path: change.path });
-      if (byKey.has(addedKey)) {
-        continue;
-      }
+    if (change.status !== 'D' && deletedPaths.has(change.path)) {
+      continue;
+    }
+    if (change.status === 'M' && addedPaths.has(change.path)) {
+      continue;
     }
     byKey.set(changeKey(change), change);
   }
@@ -195,13 +160,6 @@ function isLegacyOrDrift(entry) {
   );
 }
 
-function isSelfNormalizedGeneratedPath(pathName) {
-  return (
-    selfNormalizedGeneratedPaths.has(pathName) ||
-    selfNormalizedGeneratedPrefixes.some((prefix) => pathName.startsWith(prefix))
-  );
-}
-
 function requireActiveGovernance(pathName, currentIndexByPath, currentBaselineByPath, errors) {
   const indexEntry = currentIndexByPath.get(pathName);
   const baselineEntry = currentBaselineByPath.get(pathName);
@@ -212,7 +170,9 @@ function requireActiveGovernance(pathName, currentIndexByPath, currentBaselineBy
   }
 
   if (!baselineEntry) {
-    errors.push(`${pathName} changed but is missing from the accepted fingerprint baseline.`);
+    errors.push(
+      `${pathName} changed but is missing from the current generated fingerprint baseline.`
+    );
   }
 
   if (isUngoverned(indexEntry)) {
@@ -233,41 +193,18 @@ function validateAdded(change, context, errors) {
     context.currentBaselineByPath,
     errors
   );
-
-  if (context.baseBaselineByPath.has(change.path)) {
-    errors.push(
-      `${change.path} is marked added but already exists in the base fingerprint baseline.`
-    );
-  }
 }
 
 function validateModified(change, context, errors) {
-  const current = requireActiveGovernance(
+  requireActiveGovernance(
     change.path,
     context.currentIndexByPath,
     context.currentBaselineByPath,
     errors
   );
-  const baseEntry = context.baseBaselineByPath.get(change.path);
-
-  if (!baseEntry) {
-    errors.push(`${change.path} is modified but is missing from the base fingerprint baseline.`);
-    return;
-  }
-
-  if (
-    current?.baselineEntry?.stateFingerprint === baseEntry.stateFingerprint &&
-    !isSelfNormalizedGeneratedPath(change.path)
-  ) {
-    errors.push(`${change.path} is modified but its accepted fingerprint did not change.`);
-  }
 }
 
 function validateDeleted(change, context, errors) {
-  if (!context.baseBaselineByPath.has(change.path)) {
-    errors.push(`${change.path} is deleted but was not present in the base fingerprint baseline.`);
-  }
-
   if (
     context.currentIndexByPath.has(change.path) ||
     context.currentBaselineByPath.has(change.path)
@@ -277,12 +214,6 @@ function validateDeleted(change, context, errors) {
 }
 
 function validateRenamed(change, context, errors) {
-  if (!context.baseBaselineByPath.has(change.oldPath)) {
-    errors.push(
-      `${change.oldPath} is renamed but was not present in the base fingerprint baseline.`
-    );
-  }
-
   if (
     context.currentIndexByPath.has(change.oldPath) ||
     context.currentBaselineByPath.has(change.oldPath)
@@ -300,10 +231,9 @@ function validateRenamed(change, context, errors) {
   );
 }
 
-function validateChangedFiles({ changes, baseBaseline, currentBaseline, currentFileIndex }) {
+function validateChangedFiles({ changes, currentBaseline, currentFileIndex }) {
   const errors = [];
   const context = {
-    baseBaselineByPath: entriesByPath(baseBaseline),
     currentBaselineByPath: entriesByPath(currentBaseline),
     currentIndexByPath: entriesByPath(currentFileIndex),
   };
@@ -312,7 +242,6 @@ function validateChangedFiles({ changes, baseBaseline, currentBaseline, currentF
     modified: 0,
     deleted: 0,
     renamed: 0,
-    skipped: 0,
   };
 
   for (const change of changes) {
@@ -329,11 +258,27 @@ function validateChangedFiles({ changes, baseBaseline, currentBaseline, currentF
       summary.renamed += 1;
       validateRenamed(change, context, errors);
     } else {
-      summary.skipped += 1;
+      errors.push(`${change.path} has unsupported change status ${change.status}.`);
     }
   }
 
   return { errors, summary };
+}
+
+function buildCurrentGovernanceIndexes(options = {}) {
+  const snapshot = (options.buildSnapshot || buildGovernanceFileSnapshot)();
+  return {
+    currentBaseline: {
+      files: snapshot.fingerprints.map((fingerprint) => ({
+        path: fingerprint.path,
+        fileId: fingerprint.fileId,
+        stateFingerprint: fingerprint.stateFingerprint,
+      })),
+    },
+    currentFileIndex: {
+      files: snapshot.files,
+    },
+  };
 }
 
 function printResult(result) {
@@ -357,11 +302,11 @@ function main() {
   const args = parseArgs(process.argv.slice(2));
   const base = resolveBaseRef([args.base, 'origin/main', 'upstream/main', 'main']);
   const changes = readLocalNameStatusDiff(base, args.head);
+  const { currentBaseline, currentFileIndex } = buildCurrentGovernanceIndexes();
   const result = validateChangedFiles({
     changes,
-    baseBaseline: readYamlFromGit(base, baselineRepoPath),
-    currentBaseline: readYaml(baselinePath),
-    currentFileIndex: { files: readFileIndexFromDisk(fileIndexPath) },
+    currentBaseline,
+    currentFileIndex,
   });
 
   printResult(result);
@@ -376,6 +321,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  buildCurrentGovernanceIndexes,
   parseNameStatus,
   readLocalNameStatusDiff,
   readNameStatusDiff,

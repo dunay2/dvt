@@ -514,8 +514,8 @@ test('buildComponentFileMapManifest creates deterministic component shards with 
   assert.deepEqual(output.manifest, {
     version: 1,
     generatedFrom: [
-      'docs/planning/status/system-governance-file-index.files.yaml',
-      'docs/planning/status/system-governance-component-index.components.yaml',
+      '.generated-docs/planning/status/system-governance-file-index.files.yaml',
+      '.generated-docs/planning/status/system-governance-component-index.components.yaml',
     ],
     shardDirectory: 'docs/planning/status/governance-components',
     componentCount: 3,

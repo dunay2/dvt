@@ -11,21 +11,29 @@ const fs = require('node:fs');
 const path = require('node:path');
 const yaml = require('js-yaml');
 const { findOwnerMatches, readManifest } = require('./check-governance-unit-coverage.cjs');
+const {
+  generatedStatusDir,
+  governanceGeneratedPath,
+  repoRelative,
+  repoRoot,
+  toPosix,
+} = require('./governance-generated-paths.cjs');
 
-const repoRoot = path.resolve(__dirname, '..');
-const statusDir = path.join(repoRoot, 'docs', 'planning', 'status');
+const statusDir = generatedStatusDir;
 const shardDir = path.join(statusDir, 'governance-files');
 const componentShardDir = path.join(statusDir, 'governance-components');
-const fileYamlPath = path.join(statusDir, 'system-governance-file-index.files.yaml');
-const fileMarkdownPath = path.join(statusDir, 'system-governance-file-index-20260501.md');
-const componentYamlPath = path.join(statusDir, 'system-governance-component-index.components.yaml');
-const componentMarkdownPath = path.join(statusDir, 'system-governance-component-index-20260501.md');
-const componentFileMapYamlPath = path.join(
-  statusDir,
+const fileYamlPath = governanceGeneratedPath('system-governance-file-index.files.yaml');
+const fileMarkdownPath = governanceGeneratedPath('system-governance-file-index-20260501.md');
+const componentYamlPath = governanceGeneratedPath(
+  'system-governance-component-index.components.yaml'
+);
+const componentMarkdownPath = governanceGeneratedPath(
+  'system-governance-component-index-20260501.md'
+);
+const componentFileMapYamlPath = governanceGeneratedPath(
   'system-governance-component-file-map.components.yaml'
 );
-const componentFileMapMarkdownPath = path.join(
-  statusDir,
+const componentFileMapMarkdownPath = governanceGeneratedPath(
   'system-governance-component-file-map-20260503.md'
 );
 const fingerprintBaselinePath = path.join(
@@ -37,31 +45,14 @@ const fingerprintImpactReportPath = path.join(
   'system-governance-file-fingerprint-impact-20260501.md'
 );
 
-const generatedOutputPaths = [
-  fileYamlPath,
-  fileMarkdownPath,
-  componentYamlPath,
-  componentMarkdownPath,
-  componentFileMapYamlPath,
-  componentFileMapMarkdownPath,
-  fingerprintBaselinePath,
-  fingerprintImpactReportPath,
-].map((filePath) => toPosix(path.relative(repoRoot, filePath)));
-
-const generatedFileYamlRelativePath = toPosix(path.relative(repoRoot, fileYamlPath));
+const generatedFileYamlRelativePath = repoRelative(fileYamlPath);
 const generatedComponentFileMapYamlRelativePath = toPosix(
   path.relative(repoRoot, componentFileMapYamlPath)
 );
-const generatedShardDirRelativePath = toPosix(path.relative(repoRoot, shardDir));
-const generatedComponentShardDirRelativePath = toPosix(path.relative(repoRoot, componentShardDir));
-const fingerprintBaselineRelativePath = toPosix(path.relative(repoRoot, fingerprintBaselinePath));
-const fingerprintImpactReportRelativePath = toPosix(
-  path.relative(repoRoot, fingerprintImpactReportPath)
-);
-
-function toPosix(filePath) {
-  return filePath.replace(/\\/g, '/');
-}
+const generatedShardDirRelativePath = repoRelative(shardDir);
+const generatedComponentShardDirRelativePath = repoRelative(componentShardDir);
+const fingerprintBaselineRelativePath = repoRelative(fingerprintBaselinePath);
+const fingerprintImpactReportRelativePath = repoRelative(fingerprintImpactReportPath);
 
 function compareText(left, right) {
   if (left === right) {
@@ -109,41 +100,6 @@ function getRepositoryFiles() {
   for (const filePath of readGitFileList(['ls-files', '--others', '--exclude-standard'])) {
     if (!repositoryFiles.includes(filePath)) {
       repositoryFiles.push(filePath);
-    }
-  }
-
-  for (const generatedPath of generatedOutputPaths) {
-    if (
-      fs.existsSync(path.join(repoRoot, generatedPath)) &&
-      !repositoryFiles.includes(generatedPath)
-    ) {
-      repositoryFiles.push(generatedPath);
-    }
-  }
-
-  if (fs.existsSync(shardDir)) {
-    for (const entry of fs.readdirSync(shardDir, { withFileTypes: true })) {
-      if (!entry.isFile() || !entry.name.endsWith('.files.yaml')) {
-        continue;
-      }
-      const generatedShardPath = toPosix(path.relative(repoRoot, path.join(shardDir, entry.name)));
-      if (!repositoryFiles.includes(generatedShardPath)) {
-        repositoryFiles.push(generatedShardPath);
-      }
-    }
-  }
-
-  if (fs.existsSync(componentShardDir)) {
-    for (const entry of fs.readdirSync(componentShardDir, { withFileTypes: true })) {
-      if (!entry.isFile() || !entry.name.endsWith('.component-files.yaml')) {
-        continue;
-      }
-      const generatedShardPath = toPosix(
-        path.relative(repoRoot, path.join(componentShardDir, entry.name))
-      );
-      if (!repositoryFiles.includes(generatedShardPath)) {
-        repositoryFiles.push(generatedShardPath);
-      }
     }
   }
 
@@ -548,10 +504,7 @@ function buildComponentFileMapManifest(componentEntries, fileEntries, options = 
   return {
     manifest: {
       version: 1,
-      generatedFrom: [
-        'docs/planning/status/system-governance-file-index.files.yaml',
-        'docs/planning/status/system-governance-component-index.components.yaml',
-      ],
+      generatedFrom: [generatedFileYamlRelativePath, repoRelative(componentYamlPath)],
       shardDirectory,
       componentCount: componentRows.length,
       fileCount: componentRows.reduce((sum, component) => sum + component.fileCount, 0),
@@ -1012,10 +965,19 @@ function buildOutputs() {
   const componentEntries = buildComponentEntries(units, fileEntries, unitById);
   const fileIndex = buildFileIndexManifest(fileEntries);
   const componentFileMap = buildComponentFileMapManifest(componentEntries, fileEntries);
+  const componentIndexManifest = {
+    version: 1,
+    generatedFrom: 'docs/planning/status/system-governance-unit-index.units.yaml',
+    fileIndex: generatedFileYamlRelativePath,
+    componentCount: componentEntries.length,
+    components: componentEntries,
+  };
 
   return {
     fileEntries,
     componentEntries,
+    fileIndexManifest: fileIndex.manifest,
+    fileIndexShardPayloads: fileIndex.shards,
     fileYaml: renderYaml(fileIndex.manifest),
     fileShards: Object.fromEntries(
       Object.entries(fileIndex.shards).map(([shardPath, payload]) => [
@@ -1023,13 +985,10 @@ function buildOutputs() {
         renderYaml(payload),
       ])
     ),
-    componentYaml: renderYaml({
-      version: 1,
-      generatedFrom: 'docs/planning/status/system-governance-unit-index.units.yaml',
-      fileIndex: 'docs/planning/status/system-governance-file-index.files.yaml',
-      componentCount: componentEntries.length,
-      components: componentEntries,
-    }),
+    componentIndexManifest,
+    componentYaml: renderYaml(componentIndexManifest),
+    componentFileMapManifest: componentFileMap.manifest,
+    componentFileMapShardPayloads: componentFileMap.shards,
     componentFileMapYaml: renderYaml(componentFileMap.manifest),
     componentFileMapShards: Object.fromEntries(
       Object.entries(componentFileMap.shards).map(([shardPath, payload]) => [

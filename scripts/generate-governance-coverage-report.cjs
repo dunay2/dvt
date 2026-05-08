@@ -4,19 +4,19 @@
  */
 
 const fs = require('node:fs');
-const path = require('node:path');
 const yaml = require('js-yaml');
 const { readFileIndexFromDisk } = require('./generate-governance-file-component-index.cjs');
+const { generatedStatusDir, governanceGeneratedPath } = require('./governance-generated-paths.cjs');
 
-const repoRoot = path.resolve(__dirname, '..');
-const statusDir = path.join(repoRoot, 'docs', 'planning', 'status');
-const fileIndexPath = path.join(statusDir, 'system-governance-file-index.files.yaml');
-const componentIndexPath = path.join(
-  statusDir,
+const statusDir = generatedStatusDir;
+const fileIndexPath = governanceGeneratedPath('system-governance-file-index.files.yaml');
+const componentIndexPath = governanceGeneratedPath(
   'system-governance-component-index.components.yaml'
 );
-const coverageYamlPath = path.join(statusDir, 'system-governance-coverage-report.coverage.yaml');
-const coverageMarkdownPath = path.join(statusDir, 'system-governance-coverage-report-20260502.md');
+const coverageYamlPath = governanceGeneratedPath('system-governance-coverage-report.coverage.yaml');
+const coverageMarkdownPath = governanceGeneratedPath(
+  'system-governance-coverage-report-20260502.md'
+);
 
 function readYaml(filePath) {
   return yaml.load(fs.readFileSync(filePath, 'utf8'));
@@ -148,8 +148,8 @@ function buildCoverageReport(fileIndex, componentIndex) {
   return {
     version: 1,
     generatedFrom: [
-      'docs/planning/status/system-governance-file-index.files.yaml',
-      'docs/planning/status/system-governance-component-index.components.yaml',
+      '.generated-docs/planning/status/system-governance-file-index.files.yaml',
+      '.generated-docs/planning/status/system-governance-component-index.components.yaml',
     ],
     totals: {
       files: files.length,
@@ -384,6 +384,7 @@ function buildOutputs() {
 function main() {
   const checkOnly = process.argv.includes('--check');
   const outputs = buildOutputs();
+  fs.mkdirSync(statusDir, { recursive: true });
   const changed = [
     writeIfChanged(coverageYamlPath, outputs.yaml),
     writeIfChanged(coverageMarkdownPath, outputs.markdown),
