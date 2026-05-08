@@ -553,16 +553,18 @@ rejection of unknown actions.
 `summary` query is intentionally lightweight and does not touch the
 `governance_file_hash_drift` projection. `planning:db:query hash-drift` is the
 explicit heavy query for DB-derived governance hash drift. `planning:db:query
-tasks` and `planning:db:query next` read `planning_effective_tasks`, not raw
-lane YAML, so local DB-first overlays are visible in full inspection and next
-task selection. `planning:db:query open` reads `planning_open_tasks`, the SQL
-view that encapsulates the daily-work filter for rows that are neither `done`
-nor `blocked`. Scope is local developer tooling only; authorization is local OS
-and Docker/Postgres access. Negative tests cover migration checksum mismatch,
-unknown query names, fast summary isolation from the hash-drift projection,
-explicit hash-drift querying, effective task filtering, open-task view
-selection, actionable next-task filtering, content extraction from real lane
-YAML, and governance file-count parity with the Git-tracked file index.
+tasks` reads `planning_effective_tasks`, not raw lane YAML, so local DB-first
+overlays are visible in full inspection. `planning:db:query open` reads
+`planning_open_tasks`, the SQL view that encapsulates the daily-work filter for
+rows that are neither `done` nor `blocked`. `planning:db:query next` reads
+`planning_next_tasks`, the SQL view that encapsulates queued actionable task
+selection after dependency resolution. Scope is local developer tooling only;
+authorization is local OS and Docker/Postgres access. Negative tests cover
+migration checksum mismatch, unknown query names, fast summary isolation from
+the hash-drift projection, explicit hash-drift querying, effective task
+filtering, open-task view selection, next-task view selection, content
+extraction from real lane YAML, and governance file-count parity with the
+Git-tracked file index.
 
 `planning:db:operate` implements `ApplyPlanningLocalOperation` and
 `QueryPlanningLocalOperationAudit`. It is the local DB-first command surface for
@@ -908,9 +910,47 @@ Implementation steps:
    filter in JavaScript SQL.
 4. Keep `planning:db:query tasks` and `planning:db:query next` on
    `planning_effective_tasks`: `tasks` is the full inspection query and `next`
-   needs `done` rows to resolve dependencies before lane filtering.
+   needs `done` rows to resolve dependencies before lane filtering. W11D below
+   supersedes this transitional `next` adapter by moving that dependency
+   resolution into `planning_next_tasks`.
 5. Validate W11C with `pnpm test:planning:db`, `pnpm planning:db:migrate`,
    `pnpm planning:db:query open`, `pnpm governance:refresh`,
+   `pnpm docs:feature-mechanization:implementation`, and
+   `pnpm verify:prepush`.
+
+### W11D Next Task View Implementation Plan
+
+After W11C, `planning:db:query open` no longer repeated the daily-work status
+filter outside Postgres, but `planning:db:query next` still repeated
+dependency parsing and actionable-task selection in `scripts/planning-db-query.cjs`.
+That kept a second query model in JavaScript for the same operational question
+agents ask in pgAdmin: "what can I safely pick next?".
+
+```mermaid
+flowchart LR
+  EffectiveTasks["planning_effective_tasks"] --> OpenTasks["planning_open_tasks"]
+  OpenTasks --> NextTasks["planning_next_tasks"]
+  EffectiveTasks --> NextTasks
+  NextTasks --> NextQuery["planning:db:query next"]
+  OpenTasks --> OpenQuery["planning:db:query open"]
+  EffectiveTasks --> TasksQuery["planning:db:query tasks"]
+```
+
+Implementation steps:
+
+1. Add red migration coverage proving `008_planning_next_task_views.sql`
+   creates `planning_query_store.planning_next_tasks`.
+2. The SQL view must read from `planning_open_tasks`, keep only queued
+   candidates, split dependency references in Postgres, and reject candidates
+   with any dependency that is not `done` in `planning_effective_tasks`.
+3. Add red query coverage proving `planning:db:query next` reads
+   `planning_next_tasks` directly and no longer emits dependency parsing SQL or
+   JavaScript filtering against `planning_effective_tasks`.
+4. Keep lane, status, claim, priority, and limit flags in the CLI adapter as
+   ordinary query filters over the DB-owned view; the CLI must not own
+   actionable-next semantics.
+5. Validate W11D with `pnpm test:planning:db`, `pnpm planning:db:migrate`,
+   `pnpm planning:db:query next`, `pnpm governance:refresh`,
    `pnpm docs:feature-mechanization:implementation`, and
    `pnpm verify:prepush`.
 
@@ -1002,14 +1042,16 @@ Current implementation status on 2026-05-08:
 - W11 first slice is implemented: `planning_effective_tasks` overlays
   `planning_task_local_state` on imported `planning_tasks` only while the
   overlay base source hash matches the imported task source hash;
-  `planning:db:query tasks` and `planning:db:query next` read effective task
-  state, `next` resolves dependencies against all effective tasks before lane
-  filtering, and
+  `planning:db:query tasks` reads effective task state, and
   `planning:db:export` exports reviewable effective status/progress/evidence
   fields without exporting local claim tokens or audit rows;
 - W11C is implemented: `planning_open_tasks` is the SQL view for daily
   non-`done`, non-`blocked` planning inspection, and `planning:db:query open`
   reads that view instead of duplicating the open-task filter in CLI SQL;
+- W11D is implemented: `planning_next_tasks` is the SQL view for queued,
+  dependency-satisfied route candidates, and `planning:db:query next` reads
+  that view instead of duplicating dependency parsing and actionable-task
+  filtering in CLI JavaScript;
 - the obsolete `governance:artifacts:generate` package alias is removed;
   `pnpm governance:refresh` is the single local orchestration command for
   generated inspection artifacts plus planning/governance DB import and checks;
@@ -1437,6 +1479,16 @@ redGreenCycles:
   - id: planning-db-open-task-view
     redTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
     expectedFailure: Planning daily-work inspection repeats status filtering outside Postgres because the query store has no planning_open_tasks view and no planning:db:query open adapter.
+    patchSurfaces:
+      - tools/planning-db/**
+      - scripts/planning-db-*.cjs
+      - docs/planning/state/planning-control-tower.md
+      - docs/planning/state/how-to-add-tasks.md
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+  - id: planning-db-next-task-view
+    redTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+    expectedFailure: Planning next-task selection repeats dependency parsing and actionable filtering in JavaScript because the query store has no planning_next_tasks view and no DB-backed planning:db:query next adapter.
     patchSurfaces:
       - tools/planning-db/**
       - scripts/planning-db-*.cjs
@@ -1878,7 +1930,6 @@ symbols:
       - pnpm test:planning:db
       - pnpm test:planning:db:integration
       - pnpm planning:db:query tasks
-      - pnpm planning:db:query next
       - pnpm planning:db:export:check
   - <<: *planningDbEffectiveTaskSymbol
     name: parseLimit
@@ -1893,24 +1944,6 @@ symbols:
     name: buildTaskRows
     path: scripts/planning-db-query.cjs
   - <<: *planningDbEffectiveTaskSymbol
-    name: parseDependencyTokens
-    path: scripts/planning-db-query.cjs
-  - <<: *planningDbEffectiveTaskSymbol
-    name: isTaskUnblocked
-    path: scripts/planning-db-query.cjs
-  - <<: *planningDbEffectiveTaskSymbol
-    name: priorityRank
-    path: scripts/planning-db-query.cjs
-  - <<: *planningDbEffectiveTaskSymbol
-    name: compareTasksForRoute
-    path: scripts/planning-db-query.cjs
-  - <<: *planningDbEffectiveTaskSymbol
-    name: matchesNextTaskFilters
-    path: scripts/planning-db-query.cjs
-  - <<: *planningDbEffectiveTaskSymbol
-    name: buildNextTaskRows
-    path: scripts/planning-db-query.cjs
-  - <<: *planningDbEffectiveTaskSymbol
     name: appendFilter
     path: scripts/planning-db-query.cjs
   - <<: *planningDbEffectiveTaskSymbol
@@ -1918,9 +1951,6 @@ symbols:
     path: scripts/planning-db-query.cjs
   - <<: *planningDbEffectiveTaskSymbol
     name: readTaskRows
-    path: scripts/planning-db-query.cjs
-  - <<: *planningDbEffectiveTaskSymbol
-    name: readNextTaskRows
     path: scripts/planning-db-query.cjs
   - <<: *planningDbEffectiveTaskSymbol
     name: printTaskRows
@@ -1947,6 +1977,32 @@ symbols:
     path: scripts/planning-db-query.cjs
   - <<: *planningDbOpenTaskSymbol
     name: readOpenTaskRows
+    path: scripts/planning-db-query.cjs
+  - &planningDbNextTaskSymbol
+    name: PlanningNextTaskViewMigration
+    path: tools/planning-db/migrations/008_planning_next_task_views.sql
+    dddOwner: PlanningStateReadModel
+    cqRails:
+      - QueryPlanningStateReadModel
+      - MigratePlanningQueryStoreSchema
+    fowlerSignals:
+      - Large planning file operating cost
+      - Hidden query model inside JavaScript
+      - Generated artifact churn
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - planning DB next task view has no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+      - pnpm test:planning:db
+      - pnpm planning:db:query next
+  - <<: *planningDbNextTaskSymbol
+    name: nextTaskSelect
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbNextTaskSymbol
+    name: nextTaskOrderBy
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbNextTaskSymbol
+    name: readNextTaskRows
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: main

@@ -101,9 +101,10 @@ When there is confusion about "what is active now" vs "where to continue":
 2. [System Delivery Status](../../architecture/system-delivery-status.md)
    (`last_reviewed: 2026-04-08`): current implementation truth.
 3. Planning DB query store: `pnpm planning:db:query open` shows non-done,
-   non-blocked effective work, `pnpm planning:db:query tasks` shows the full
-   effective task read model, and `pnpm planning:db:query next` shows route
-   candidates after local DB overlays.
+   non-blocked effective work from `planning_open_tasks`,
+   `pnpm planning:db:query tasks` shows the full effective task read model, and
+   `pnpm planning:db:query next` shows dependency-satisfied route candidates
+   from `planning_next_tasks` after local DB overlays.
 4. [Agent Lane YAML registry](./agent-lane-a.yaml)
    (`agent-lane-a.yaml` ... `agent-lane-e.yaml`): bootstrap task definitions
    and create/delete compatibility surface.

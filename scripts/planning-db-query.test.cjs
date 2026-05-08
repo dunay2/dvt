@@ -2,7 +2,6 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
-  buildNextTaskRows,
   buildHashDriftRows,
   buildSummaryRows,
   buildTaskRows,
@@ -165,96 +164,6 @@ test('buildTaskRows formats effective task rows with claim and progress context'
   ]);
 });
 
-test('buildNextTaskRows selects queued tasks whose dependencies are done in effective state', () => {
-  const rows = buildNextTaskRows([
-    {
-      lane_id: 'A',
-      task_id: 'DONE-1',
-      priority: 'P0',
-      status: 'done',
-      progress_pct: 100,
-      claimed_by: null,
-      dependency: 'none',
-      objective: 'Completed prerequisite.',
-      target: 'Evidence accepted.',
-    },
-    {
-      lane_id: 'A',
-      task_id: 'READY-1',
-      priority: 'P1',
-      status: 'queued',
-      progress_pct: 0,
-      claimed_by: null,
-      dependency: 'DONE-1',
-      objective: 'Ready task.',
-      target: 'Start now.',
-    },
-    {
-      lane_id: 'A',
-      task_id: 'BLOCKED-1',
-      priority: 'P0',
-      status: 'queued',
-      progress_pct: 0,
-      claimed_by: null,
-      dependency: 'MISSING-1',
-      objective: 'Blocked task.',
-      target: 'Wait.',
-    },
-  ]);
-
-  assert.deepEqual(
-    rows.map((row) => row[1]),
-    ['READY-1']
-  );
-});
-
-test('buildNextTaskRows filters route candidates after cross-lane dependency resolution', () => {
-  const rows = buildNextTaskRows(
-    [
-      {
-        lane_id: 'A',
-        task_id: 'DONE-A',
-        priority: 'P0',
-        status: 'done',
-        progress_pct: 100,
-        claimed_by: null,
-        dependency: 'none',
-        objective: 'Completed cross-lane prerequisite.',
-        target: 'Evidence accepted.',
-      },
-      {
-        lane_id: 'C',
-        task_id: 'READY-C',
-        priority: 'P1',
-        status: 'queued',
-        progress_pct: 0,
-        claimed_by: null,
-        dependency: 'DONE-A',
-        objective: 'Ready lane C task.',
-        target: 'Start now.',
-      },
-      {
-        lane_id: 'D',
-        task_id: 'READY-D',
-        priority: 'P1',
-        status: 'queued',
-        progress_pct: 0,
-        claimed_by: null,
-        dependency: 'DONE-A',
-        objective: 'Ready lane D task.',
-        target: 'Start now.',
-      },
-    ],
-    20,
-    { laneId: 'C' }
-  );
-
-  assert.deepEqual(
-    rows.map((row) => `${row[0]}/${row[1]}`),
-    ['C/READY-C']
-  );
-});
-
 test('readTaskRows queries the effective task view with stable filters', async () => {
   const captured = { sql: '', params: null };
   const client = {
@@ -304,7 +213,7 @@ test('readOpenTaskRows queries the DB open-task view without duplicating status 
   assert.deepEqual(captured.params, ['C', 'P1', 10]);
 });
 
-test('readNextTaskRows reads effective tasks before applying dependency routing', async () => {
+test('readNextTaskRows queries the DB next-task view without duplicating dependency logic', async () => {
   const captured = { sql: '', params: null };
   const client = {
     async query(sql, params) {
@@ -312,17 +221,6 @@ test('readNextTaskRows reads effective tasks before applying dependency routing'
       captured.params = params;
       return {
         rows: [
-          {
-            lane_id: 'A',
-            task_id: 'DONE-A',
-            priority: 'P0',
-            status: 'done',
-            progress_pct: 100,
-            claimed_by: null,
-            dependency: 'none',
-            objective: 'Completed prerequisite.',
-            target: 'Evidence accepted.',
-          },
           {
             lane_id: 'C',
             task_id: 'READY-C',
@@ -341,9 +239,12 @@ test('readNextTaskRows reads effective tasks before applying dependency routing'
 
   const rows = await readNextTaskRows(client, { laneId: 'C', limit: 5 });
 
-  assert.match(captured.sql, /from planning_query_store\.planning_effective_tasks/);
-  assert.doesNotMatch(captured.sql, /where lane_id = \$1/);
-  assert.deepEqual(captured.params, []);
+  assert.match(captured.sql, /from planning_query_store\.planning_next_tasks/);
+  assert.doesNotMatch(captured.sql, /from planning_query_store\.planning_effective_tasks/);
+  assert.doesNotMatch(captured.sql, /regexp_split_to_table/);
+  assert.match(captured.sql, /lane_id = \$1/);
+  assert.match(captured.sql, /limit \$2/);
+  assert.deepEqual(captured.params, ['C', 5]);
   assert.deepEqual(
     rows.map((row) => `${row[0]}/${row[1]}`),
     ['C/READY-C']

@@ -91,10 +91,10 @@ pnpm planning:db:query next --lane A
 `done` and `blocked` rows for daily work inspection while preserving the full
 effective read model in `planning_effective_tasks`.
 
-`planning:db:query next --lane <id>` resolves dependencies against the full
-effective task view before it filters candidates to the requested lane. This
-keeps cross-lane prerequisites visible while still returning a lane-scoped next
-work list.
+`planning:db:query next --lane <id>` reads `planning_next_tasks`, the DB view
+that resolves dependencies against the full effective task view before the CLI
+filters candidates to the requested lane. This keeps cross-lane prerequisites
+visible while still returning a lane-scoped next work list.
 
 Before publishing a branch that depends on local DB overlays, run:
 

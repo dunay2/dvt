@@ -123,75 +123,6 @@ function buildTaskRows(rows) {
   ]);
 }
 
-function parseDependencyTokens(dependency) {
-  if (!dependency || dependency === 'none') {
-    return [];
-  }
-
-  return String(dependency)
-    .split(/,|\band\b/)
-    .map((entry) => entry.trim().split(/\s+/)[0])
-    .filter(Boolean);
-}
-
-function isTaskUnblocked(task, doneTaskIds) {
-  const status = String(task.status || '').toLowerCase();
-  if (status !== 'queued') {
-    return false;
-  }
-
-  return parseDependencyTokens(task.dependency).every((taskId) => doneTaskIds.has(taskId));
-}
-
-function priorityRank(priority) {
-  const parsed = Number.parseInt(String(priority || 'P9').replace(/^P/i, ''), 10);
-  return Number.isFinite(parsed) ? parsed : 9;
-}
-
-function compareTasksForRoute(left, right) {
-  const priorityComparison = priorityRank(left.priority) - priorityRank(right.priority);
-  if (priorityComparison !== 0) {
-    return priorityComparison;
-  }
-
-  const leftTaskId = String(left.task_id ?? left.taskId ?? '');
-  const rightTaskId = String(right.task_id ?? right.taskId ?? '');
-  return leftTaskId.localeCompare(rightTaskId);
-}
-
-function matchesNextTaskFilters(row, filters = {}) {
-  if (filters.laneId && String(row.lane_id ?? row.laneId) !== String(filters.laneId)) {
-    return false;
-  }
-
-  if (filters.priority && String(row.priority) !== String(filters.priority)) {
-    return false;
-  }
-
-  if (
-    filters.claimedBy &&
-    String(row.claimed_by ?? row.claimedBy ?? '') !== String(filters.claimedBy)
-  ) {
-    return false;
-  }
-
-  return true;
-}
-
-function buildNextTaskRows(rows, limit = 20, filters = {}) {
-  const doneTaskIds = new Set(
-    rows
-      .filter((row) => String(row.status || '').toLowerCase() === 'done')
-      .map((row) => String(row.task_id ?? row.taskId))
-  );
-
-  return buildTaskRows(
-    rows
-      .filter((row) => isTaskUnblocked(row, doneTaskIds) && matchesNextTaskFilters(row, filters))
-      .sort(compareTasksForRoute)
-  ).slice(0, limit);
-}
-
 function appendFilter(predicates, params, column, value) {
   if (value === undefined || value === null || value === '') {
     return;
@@ -229,6 +160,31 @@ function openTaskSelect() {
       objective,
       target
     from ${schemaName}.planning_open_tasks`;
+}
+
+function nextTaskSelect() {
+  return `
+    select
+      lane_id,
+      task_id,
+      priority,
+      status,
+      progress_pct,
+      claimed_by,
+      dependency,
+      objective,
+      target
+    from ${schemaName}.planning_next_tasks`;
+}
+
+function nextTaskOrderBy() {
+  return `
+     order by
+      case
+        when priority ~* '^P?[0-9]+$' then regexp_replace(priority, '^P', '', 'i')::int
+        else 9
+      end,
+      task_id`;
 }
 
 async function readSummary(client) {
@@ -298,13 +254,25 @@ async function readOpenTaskRows(client, filters = {}) {
 }
 
 async function readNextTaskRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'lane_id', filters.laneId);
+  appendFilter(predicates, params, 'status', filters.status);
+  appendFilter(predicates, params, 'claimed_by', filters.claimedBy);
+  appendFilter(predicates, params, 'priority', filters.priority);
+
+  const limit = parseLimit(filters.limit, 20);
+  params.push(limit);
+
   const result = await client.query(
-    `${effectiveTaskSelect()}
-     order by lane_id, priority, task_id`,
-    []
+    `${nextTaskSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     ${nextTaskOrderBy()}
+     limit $${params.length}`,
+    params
   );
 
-  return buildNextTaskRows(result.rows, parseLimit(filters.limit, 20), filters);
+  return buildTaskRows(result.rows);
 }
 
 async function readHashDriftSummary(client) {
@@ -410,7 +378,6 @@ if (require.main === module) {
 }
 
 module.exports = {
-  buildNextTaskRows,
   buildHashDriftRows,
   buildSummaryRows,
   buildTaskRows,
