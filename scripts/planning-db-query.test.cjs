@@ -2,10 +2,20 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
+  buildGovernanceComponentRows,
+  buildGovernanceCoverageRows,
+  buildGovernanceDriftRows,
+  buildGovernanceFileRows,
+  buildGovernanceRemediationRows,
   buildHashDriftRows,
   buildSummaryRows,
   buildTaskRows,
   parseArgs,
+  readGovernanceComponentRows,
+  readGovernanceCoverageRows,
+  readGovernanceDriftRows,
+  readGovernanceFileRows,
+  readGovernanceRemediationRows,
   readNextTaskRows,
   readHashDriftSummary,
   readOpenTaskRows,
@@ -21,6 +31,11 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('tasks'), 'tasks');
   assert.equal(resolveQueryName('open'), 'open');
   assert.equal(resolveQueryName('next'), 'next');
+  assert.equal(resolveQueryName('files'), 'files');
+  assert.equal(resolveQueryName('components'), 'components');
+  assert.equal(resolveQueryName('coverage'), 'coverage');
+  assert.equal(resolveQueryName('remediation'), 'remediation');
+  assert.equal(resolveQueryName('drift'), 'drift');
   assert.throws(() => resolveQueryName('unknown'), /Unknown planning DB query "unknown"/);
 });
 
@@ -44,6 +59,30 @@ test('parseArgs parses task query filters for daily DB-first planning work', () 
       status: 'review',
       claimedBy: 'codex',
       limit: 10,
+    },
+  });
+});
+
+test('parseArgs parses governance query filters for DB-first governance inspection', () => {
+  const command = parseArgs([
+    'files',
+    '--component',
+    'SYS-DOCS-GOVERNANCE',
+    '--state',
+    'drift',
+    '--path',
+    'docs/planning/status/example.md',
+    '--limit',
+    '5',
+  ]);
+
+  assert.deepEqual(command, {
+    queryName: 'files',
+    filters: {
+      component: 'SYS-DOCS-GOVERNANCE',
+      governanceState: 'drift',
+      path: 'docs/planning/status/example.md',
+      limit: 5,
     },
   });
 });
@@ -248,5 +287,209 @@ test('readNextTaskRows queries the DB next-task view without duplicating depende
   assert.deepEqual(
     rows.map((row) => `${row[0]}/${row[1]}`),
     ['C/READY-C']
+  );
+});
+
+test('buildGovernanceFileRows formats DB-owned governance file rows', () => {
+  const rows = buildGovernanceFileRows([
+    {
+      path: 'docs/planning/status/system-governance-file-index.files.yaml',
+      component_unit: 'SYS-DOCS-GOVERNANCE',
+      owning_unit: 'SYS-DOCS-GOVERNANCE',
+      governance_state: 'drift',
+      is_drift: true,
+      is_legacy: false,
+    },
+  ]);
+
+  assert.deepEqual(rows, [
+    [
+      'docs/planning/status/system-governance-file-index.files.yaml',
+      'SYS-DOCS-GOVERNANCE',
+      'SYS-DOCS-GOVERNANCE',
+      'drift',
+      'drift',
+      '-',
+    ],
+  ]);
+});
+
+test('readGovernanceFileRows queries the DB governance file view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readGovernanceFileRows(client, {
+    component: 'SYS-DOCS-GOVERNANCE',
+    governanceState: 'drift',
+    path: 'docs/planning/status/example.md',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.governance_file_query/);
+  assert.doesNotMatch(captured.sql, /system-governance-file-index\.files\.yaml/);
+  assert.match(captured.sql, /component_unit = \$1/);
+  assert.match(captured.sql, /governance_state = \$2/);
+  assert.match(captured.sql, /path = \$3/);
+  assert.match(captured.sql, /limit \$4/);
+  assert.deepEqual(captured.params, [
+    'SYS-DOCS-GOVERNANCE',
+    'drift',
+    'docs/planning/status/example.md',
+    5,
+  ]);
+});
+
+test('readGovernanceComponentRows queries the DB governance component view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readGovernanceComponentRows(client, {
+    component: 'SYS-DOCS-GOVERNANCE',
+    governanceState: 'stable',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.governance_component_query/);
+  assert.match(captured.sql, /component_id = \$1/);
+  assert.match(captured.sql, /governance_state = \$2/);
+  assert.match(captured.sql, /limit \$3/);
+  assert.deepEqual(captured.params, ['SYS-DOCS-GOVERNANCE', 'stable', 5]);
+});
+
+test('readGovernanceCoverageRows queries the DB governance coverage view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readGovernanceCoverageRows(client, {
+    kind: 'component',
+    component: 'SYS-DOCS-GOVERNANCE',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.governance_coverage_query/);
+  assert.match(captured.sql, /coverage_kind = \$1/);
+  assert.match(captured.sql, /component_id = \$2/);
+  assert.match(captured.sql, /limit \$3/);
+  assert.deepEqual(captured.params, ['component', 'SYS-DOCS-GOVERNANCE', 5]);
+});
+
+test('readGovernanceRemediationRows queries the DB governance remediation view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readGovernanceRemediationRows(client, {
+    priority: 'P0',
+    component: 'SYS-DOCS-GOVERNANCE',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.governance_remediation_query/);
+  assert.match(captured.sql, /priority = \$1/);
+  assert.match(captured.sql, /component_unit = \$2/);
+  assert.match(captured.sql, /limit \$3/);
+  assert.deepEqual(captured.params, ['P0', 'SYS-DOCS-GOVERNANCE', 5]);
+});
+
+test('readGovernanceDriftRows queries the DB governance drift view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readGovernanceDriftRows(client, {
+    component: 'SYS-DOCS-GOVERNANCE',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.governance_drift_query/);
+  assert.doesNotMatch(captured.sql, /from planning_query_store\.governance_file_hash_drift/);
+  assert.match(captured.sql, /component_unit = \$1/);
+  assert.match(captured.sql, /limit \$2/);
+  assert.deepEqual(captured.params, ['SYS-DOCS-GOVERNANCE', 5]);
+});
+
+test('governance row builders format DB rows for CLI output', () => {
+  assert.deepEqual(
+    buildGovernanceComponentRows([
+      {
+        component_id: 'SYS-DOCS-GOVERNANCE',
+        file_count: 42,
+        governance_state: 'stable',
+        is_drift: false,
+        is_legacy: false,
+        ddd_owner: 'DocsGovernance',
+      },
+    ]),
+    [['SYS-DOCS-GOVERNANCE', 42, 'stable', '-', '-', 'DocsGovernance']]
+  );
+  assert.deepEqual(
+    buildGovernanceCoverageRows([
+      {
+        coverage_kind: 'component',
+        name: 'SYS-DOCS-GOVERNANCE',
+        count_value: 42,
+        file_count: 42,
+        component_id: 'SYS-DOCS-GOVERNANCE',
+      },
+    ]),
+    [['component', 'SYS-DOCS-GOVERNANCE', 42, 42, 'SYS-DOCS-GOVERNANCE']]
+  );
+  assert.deepEqual(
+    buildGovernanceRemediationRows([
+      {
+        priority: 'P0',
+        task_id: 'GOV-1',
+        component_unit: 'SYS-DOCS-GOVERNANCE',
+        file_count: 4,
+        reason: 'Component is too broad.',
+      },
+    ]),
+    [['P0', 'GOV-1', 'SYS-DOCS-GOVERNANCE', 4, 'Component is too broad.']]
+  );
+  assert.deepEqual(
+    buildGovernanceDriftRows([
+      {
+        path: 'docs/example.md',
+        component_unit: 'SYS-DOCS-GOVERNANCE',
+        owning_unit: 'SYS-DOCS-GOVERNANCE',
+        drift_fields: ['governance_hash', 'state_fingerprint'],
+      },
+    ]),
+    [
+      [
+        'docs/example.md',
+        'SYS-DOCS-GOVERNANCE',
+        'SYS-DOCS-GOVERNANCE',
+        'governance_hash,state_fingerprint',
+      ],
+    ]
   );
 });
