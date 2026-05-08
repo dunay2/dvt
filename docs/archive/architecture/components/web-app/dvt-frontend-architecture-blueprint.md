@@ -1,15 +1,25 @@
+---
+title: Frontend Architecture Blueprint (Expanded)
+status: Archived
+owner: frontend-architecture
+last_reviewed: 2026-05-08
+planning_type: historical-reference
+---
+
+> **Archived**: This document predates the F-07 runtime contract baseline and
+> the current hexagonal frontend architecture. It describes aspirational design
+> concepts that are not the active implementation contract. Current architecture
+> documentation starts at:
+>
+> - [web component](../../../../architecture/components/web/index.md)
+> - [Frontend Data Boundary Architecture](../../../../architecture/components/web/frontend-data-boundary-architecture.md)
+> - [Frontend Runtime Contract Technical Manual](../../../../architecture/components/web/runs/frontend-runtime-contract-technical-manual.md)
+> - [Workbench UI Contract And Component Inventory](../../../../architecture/components/web/workbench-ui-contract-and-component-inventory.md)
+> - [Frontend Runtime Modes User Manual](../../../../architecture/components/web/frontend-runtime-modes-user-manual.md)
+
 # DVT+ Frontend Architecture Blueprint (Expanded)
 
-## Raven Plan / DVT UI Architecture — Detailed Version
-
----
-
-title: Frontend Architecture Blueprint (Expanded)
-status: Draft
-owner: frontend-architecture
-last_reviewed: 2026-03-29
-
----
+## Raven Plan / DVT UI Architecture - Detailed Version
 
 # 1. Context
 
@@ -33,7 +43,7 @@ It extends the previous blueprint with:
 ## 2.1 Separation of Concerns
 
 ```
-UI ≠ Server State ≠ Graph State ≠ Editor State
+UI != Server State != Graph State != Editor State
 ```
 
 ## 2.2 Product Philosophy

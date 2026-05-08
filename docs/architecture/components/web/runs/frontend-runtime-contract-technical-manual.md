@@ -2,7 +2,7 @@
 title: Frontend Runtime Contract Technical Manual
 status: Review
 owner: Frontend / API / Architecture
-last_reviewed: 2026-04-23
+last_reviewed: 2026-05-08
 domain: frontend
 ---
 
@@ -72,7 +72,7 @@ Active route consumers now use explicit read models and a route-level facade:
 - `listRunSummaries(): Promise<RunSummaryItem[]>`
 - `getRunSnapshot(runId): Promise<RunSnapshot | null>`
 - `listRunEvents(runId, afterSeq?): Promise<RunEventTimelinePage>`
-- `startRun(input): Promise<EngineRunRef>`
+- `startRun(input): Promise<RunStartReceipt>`
 - `loadRunWorkspace(runId): Promise<RunWorkspaceViewModel | null>`
 
 Retired from active route consumers:

@@ -1,34 +1,41 @@
 ---
 title: Web Functionalities
-status: Draft
+status: Active
 owner: UI / Visualization Domain
-last_reviewed: 2026-03-28
+last_reviewed: 2026-05-08
 ---
 
 # Web Functionalities
 
+This document summarizes the active product-facing functionality of `apps/web`.
+The current runtime boundary is hexagonal: route views depend on presentation
+ports and service facades, while HTTP transport is isolated in adapters.
+
 ## Functionalities
 
-| #   | Functionality             | Description                                                                                                          |
-| --- | ------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| 1   | UI Component Library      | Provides reusable UI components (views, panels, controls) consumed by the web application layer.                     |
-| 2   | Run Status Visualization  | Renders current run status, step progress, and workflow state sourced from the API and engine.                       |
-| 3   | User Interaction Handling | Captures and dispatches user events (e.g., triggering a run, viewing step details) to the appropriate API endpoints. |
-| 4   | API Integration           | Communicates with `apps/api` via HTTP to query run status, retrieve plan summaries, and submit user requests.        |
-| 5   | Engine Status Display     | Surfaces workflow execution state from `@dvt/engine` for real-time monitoring in the UI.                             |
-| 6   | Contract Compliance       | All API calls and data models conform to the UI contracts and API definitions governing the UI/Visualization domain. |
+| #   | Functionality             | Description                                                                                                |
+| --- | ------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| 1   | Route and workbench shell | Composes browser routes, plugin views, and shell-owned administrative surfaces.                            |
+| 2   | Run status visualization  | Renders run summaries, snapshots, step progress, and timeline events sourced from protected runtime rails. |
+| 3   | User interaction handling | Captures user intent and dispatches it through presentation ports such as `IRunsPort`.                     |
+| 4   | API integration           | Communicates with `apps/api` through service adapters such as `runsService.api.ts`.                        |
+| 5   | Contract compliance       | Keeps frontend DTOs aligned with current API route contracts and runtime rails.                            |
 
 ## Main Methods
 
-- `renderView(state: UIState): ReactElement`: Renders a UI component tree based on the current application state.
-- `handleUserInteraction(event: UIEvent): void`: Processes a user-triggered event and dispatches the corresponding API call or state update.
-- `fetchStatus(): Promise<RunStatus>`: Queries the API for the latest run or workflow status and updates the component state.
-- `queryStatus(runId: string): Promise<RunStatus>`: (APIClient) Sends an HTTP GET request to `apps/api` for run status by run ID.
-- `getWorkflowStatus(runId: string): Promise<WorkflowStatus>`: (EngineStatusAdapter) Retrieves workflow execution state from `@dvt/engine` for display.
+The following methods are the current `IRunsPort` contract implemented by
+[`runsService.api.ts`](../../../../apps/web/src/app/services/runs/runsService.api.ts)
+and defined in [`ports/runs.ts`](../../../../apps/web/src/app/ports/runs.ts):
+
+- `getRunSnapshot(runId: string): Promise<RunSnapshot | null>`: fetches a tenant-scoped run snapshot from `GET /runs/:runId`.
+- `listRunSummaries(): Promise<RunSummaryItem[]>`: lists run summaries from `GET /runs` using tenant, project, and environment scope.
+- `startRun(input: StartRunInput): Promise<RunStartReceipt>`: starts a run via `POST /runs/start`; the API owns run identity and admission.
+- `listRunEvents(runId: string, afterSeq?: number): Promise<RunEventTimelinePage>`: lists tenant-scoped run events from `GET /runs/:runId/events`.
 
 ## Key Files
 
-- `packages/@dvt/web/src/components/`
-- `packages/@dvt/web/src/adapters/APIClient.ts`
-- `packages/@dvt/web/src/adapters/EngineStatusAdapter.ts`
-- `packages/@dvt/web/src/index.ts`
+- `apps/web/src/app/services/runs/runsService.ts`
+- `apps/web/src/app/services/runs/runsService.api.ts`
+- `apps/web/src/app/ports/runs.ts`
+- `apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts`
+- `apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts`
