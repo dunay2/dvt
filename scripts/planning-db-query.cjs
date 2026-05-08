@@ -159,7 +159,26 @@ function compareTasksForRoute(left, right) {
   return leftTaskId.localeCompare(rightTaskId);
 }
 
-function buildNextTaskRows(rows, limit = 20) {
+function matchesNextTaskFilters(row, filters = {}) {
+  if (filters.laneId && String(row.lane_id ?? row.laneId) !== String(filters.laneId)) {
+    return false;
+  }
+
+  if (filters.priority && String(row.priority) !== String(filters.priority)) {
+    return false;
+  }
+
+  if (
+    filters.claimedBy &&
+    String(row.claimed_by ?? row.claimedBy ?? '') !== String(filters.claimedBy)
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+function buildNextTaskRows(rows, limit = 20, filters = {}) {
   const doneTaskIds = new Set(
     rows
       .filter((row) => String(row.status || '').toLowerCase() === 'done')
@@ -167,7 +186,9 @@ function buildNextTaskRows(rows, limit = 20) {
   );
 
   return buildTaskRows(
-    rows.filter((row) => isTaskUnblocked(row, doneTaskIds)).sort(compareTasksForRoute)
+    rows
+      .filter((row) => isTaskUnblocked(row, doneTaskIds) && matchesNextTaskFilters(row, filters))
+      .sort(compareTasksForRoute)
   ).slice(0, limit);
 }
 
@@ -240,18 +261,13 @@ async function readTaskRows(client, filters = {}) {
 }
 
 async function readNextTaskRows(client, filters = {}) {
-  const params = [];
-  const predicates = [];
-  appendFilter(predicates, params, 'lane_id', filters.laneId);
-
   const result = await client.query(
     `${effectiveTaskSelect()}
-     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
      order by lane_id, priority, task_id`,
-    params
+    []
   );
 
-  return buildNextTaskRows(result.rows, parseLimit(filters.limit, 20));
+  return buildNextTaskRows(result.rows, parseLimit(filters.limit, 20), filters);
 }
 
 async function readHashDriftSummary(client) {

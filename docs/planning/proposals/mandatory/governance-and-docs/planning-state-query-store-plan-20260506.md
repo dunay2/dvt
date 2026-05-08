@@ -786,19 +786,27 @@ behavior, and fail-closed posture when generated output does not converge.
 
 1. Add red migration coverage proving a tracked SQL migration creates
    `planning_effective_tasks`, the read model that overlays
-   `planning_task_local_state` on top of imported `planning_tasks`.
+   `planning_task_local_state` on top of imported `planning_tasks`. The view
+   only applies a local overlay when its recorded
+   `base_source_content_sha256` still matches the imported task source hash,
+   and it must preserve nullable overlay semantics such as clearing
+   `status_reason`.
 2. Add red query tests for `planning:db:query tasks` and
    `planning:db:query next`, including lane/status/claim filters, stable task
    row rendering, and actionable-next filtering from effective task status.
 3. Add red export tests proving `planning:db:export` writes effective status,
    progress, evidence, and status reason from the DB overlay back into temporary
    lane YAML before rendering workboard/open-task-route artifacts.
-4. Implement `005_planning_effective_task_read_model.sql` as a view only. The
-   slice must not mutate imported `planning_tasks`, create/delete tasks, or make
-   Postgres the repository review authority.
+4. Implement `005_planning_effective_task_read_model.sql` as a view only, with
+   `006_planning_effective_task_overlay_guard.sql` owning the follow-up overlay
+   applicability hardening. The slice must not mutate imported
+   `planning_tasks`, create/delete tasks, or make Postgres the repository review
+   authority.
 5. Retarget `planning:db:query summary`, `tasks`, and `next` to read
    `planning_effective_tasks` so daily filters reflect local DB-first task
-   operations without rereading lane YAML.
+   operations without rereading lane YAML. The `next` query loads all effective
+   tasks before applying lane filters so cross-lane dependencies remain visible
+   during dependency resolution.
 6. Retarget `planning:db:export` to read the effective view and overlay only
    exported task fields that belong in the reviewable lane registry. Local
    claims, claim tokens, and audit rows remain DB-local and are not exported to
@@ -899,9 +907,11 @@ Current implementation status on 2026-05-08:
   lightweight read-model counts, while `pnpm planning:db:query hash-drift`
   owns the explicit heavy hash projection inspection;
 - W11 first slice is implemented: `planning_effective_tasks` overlays
-  `planning_task_local_state` on imported `planning_tasks`;
+  `planning_task_local_state` on imported `planning_tasks` only while the
+  overlay base source hash matches the imported task source hash;
   `planning:db:query tasks` and `planning:db:query next` read effective task
-  state, and
+  state, `next` resolves dependencies against all effective tasks before lane
+  filtering, and
   `planning:db:export` exports reviewable effective status/progress/evidence
   fields without exporting local claim tokens or audit rows;
 - the obsolete `governance:artifacts:generate` package alias is removed;
@@ -1775,6 +1785,9 @@ symbols:
     path: scripts/planning-db-query.cjs
   - <<: *planningDbEffectiveTaskSymbol
     name: compareTasksForRoute
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbEffectiveTaskSymbol
+    name: matchesNextTaskFilters
     path: scripts/planning-db-query.cjs
   - <<: *planningDbEffectiveTaskSymbol
     name: buildNextTaskRows
