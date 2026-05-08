@@ -27,8 +27,10 @@ surface. This control tower is the update protocol.
   treating generated planning views as aligned.
 - Regenerates workboard or open-task-route views: run `pnpm planning:db:import`
   before `pnpm docs:workboard:generate`. The workboard generator reads the
-  fresh `planning_effective_tasks` DB view by default and falls back to lane
-  YAML only when the local DB is unavailable; a reachable stale DB fails closed.
+  fresh `planning_effective_tasks` DB view for task state and
+  `planning_next_tasks` for `Actionable Now` route candidates by default. It
+  falls back to lane YAML only when the local DB is unavailable; a reachable
+  stale DB fails closed.
 - Creates, deletes, or structurally re-scopes an active work item: update the
   relevant `agent-lane-*.yaml` entry, run `pnpm planning:db:import`, and
   regenerate planning-derived views locally. Create/delete task semantics remain
@@ -119,7 +121,8 @@ When there is confusion about "what is active now" vs "where to continue":
 Interpretation rule:
 
 - `status` = truth now
-- `planning DB effective task view` = execution now + next work
+- `planning DB effective task view` = execution state now
+- `planning DB next-task view` = dependency-satisfied next work
 - `lane yaml` = bootstrap task definitions and create/delete compatibility
 - `roadmap` = sequence
 - `reviews` = rationale and intake for follow-up work

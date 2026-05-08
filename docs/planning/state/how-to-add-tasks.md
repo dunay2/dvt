@@ -144,11 +144,12 @@ pnpm docs:workboard:generate
 ```
 
 `docs:workboard:generate` defaults to `--source auto`: it reads the imported
-`planning_effective_tasks` DB view when the shared planning DB is reachable and
-fresh, and falls back to lane YAML only when the DB is unavailable. Use
-`node scripts/generate-workboard.cjs --source yaml` only for an explicit
-deterministic fallback preview. If the DB is reachable but stale, refresh with
-`pnpm planning:db:import` instead of accepting YAML-derived output.
+`planning_effective_tasks` DB view for task state and `planning_next_tasks` for
+the `open-task-route.md` `Actionable Now` section when the shared planning DB
+is reachable and fresh. It falls back to lane YAML only when the DB is
+unavailable. Use `node scripts/generate-workboard.cjs --source yaml` only for
+an explicit deterministic fallback preview. If the DB is reachable but stale,
+refresh with `pnpm planning:db:import` instead of accepting YAML-derived output.
 
 If you added, removed, or renamed documentation files under `docs/`, also run:
 

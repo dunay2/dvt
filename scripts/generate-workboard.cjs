@@ -148,6 +148,44 @@ function isPlanningDbUnavailable(error) {
 }
 
 async function loadLanesFromDb(args, deps = dependencies) {
+  const source = await loadDbLaneSource(args, deps);
+  return source.lanes;
+}
+
+async function readNextTaskIdentitiesFromDb(client, deps = dependencies) {
+  const actualDeps = resolveDeps(deps);
+  const result = await client.query(`
+    select
+      lane_id as "laneId",
+      task_id as "taskId"
+    from ${actualDeps.schemaName}.planning_next_tasks
+    order by
+      case
+        when priority ~* '^P?[0-9]+$' then regexp_replace(priority, '^P', '', 'i')::int
+        else 9
+      end,
+      task_id
+  `);
+
+  return result.rows;
+}
+
+function resolveDbActionableTasks(lanes, nextTaskIdentities) {
+  const taskByKey = new Map(
+    collectTasks(lanes).map((task) => [`${task.lane_id}/${task.task_id}`, task])
+  );
+
+  return nextTaskIdentities.map((identity) => {
+    const key = `${identity.laneId}/${identity.taskId}`;
+    const task = taskByKey.get(key);
+    if (!task) {
+      throw new Error(`planning_next_tasks references missing effective task ${key}.`);
+    }
+    return task;
+  });
+}
+
+async function loadDbLaneSource(args, deps = dependencies) {
   const actualDeps = resolveDeps(deps);
   const client = new actualDeps.Client({
     connectionString: databaseUrl(args.databaseUrl, actualDeps),
@@ -165,7 +203,14 @@ async function loadLanesFromDb(args, deps = dependencies) {
 
     const runner = new actualDeps.PlanningDbExportRunner(actualDeps);
     const rows = await runner.readPlanningRows(client);
-    return runner.buildLaneDocuments(rows);
+    const lanes = runner.buildLaneDocuments(rows);
+    const nextTaskIdentities = await readNextTaskIdentitiesFromDb(client, actualDeps);
+    return {
+      kind: 'db',
+      description: 'planning DB effective task and next-task views',
+      lanes,
+      actionableTasks: resolveDbActionableTasks(lanes, nextTaskIdentities),
+    };
   } finally {
     await client.end();
   }
@@ -184,11 +229,7 @@ async function resolveLaneSource(args, deps = dependencies) {
   }
 
   try {
-    return {
-      kind: 'db',
-      description: 'planning DB effective task view',
-      lanes: await loadLanesFromDb(args, actualDeps),
-    };
+    return await loadDbLaneSource(args, actualDeps);
   } catch (error) {
     if (args.source === 'auto' && isPlanningDbUnavailable(error)) {
       return yamlSource();
@@ -289,6 +330,21 @@ function isUnblocked(task, doneSet) {
   if (normalizeStatus(task.status) !== 'queued') return false;
   const tokens = parseDependencyTokens(task.dependency);
   return tokens.every((token) => doneSet.has(token));
+}
+
+function sortYamlActionableTasks(tasks) {
+  const priorityOrder = (priority) =>
+    Number.parseInt(String(priority ?? 'P9').replace('P', ''), 10);
+
+  return [...tasks].sort((a, b) => {
+    const pa = priorityOrder(a.priority);
+    const pb = priorityOrder(b.priority);
+    if (pa !== pb) return pa - pb;
+    const ga = a.parent_task ?? a.task_id;
+    const gb = b.parent_task ?? b.task_id;
+    if (ga !== gb) return ga.localeCompare(gb);
+    return String(a.task_id).localeCompare(String(b.task_id));
+  });
 }
 
 function pad(s, len) {
@@ -414,21 +470,12 @@ function buildOpenTaskRoute(
   lanes,
   doneSet,
   date,
-  sourceDescription = 'verified agent-lane YAML files'
+  sourceDescription = 'verified agent-lane YAML files',
+  actionableTasks = null
 ) {
-  const unblocked = tasks.filter((task) => isUnblocked(task, doneSet));
-  const priorityOrder = (priority) =>
-    Number.parseInt(String(priority ?? 'P9').replace('P', ''), 10);
-
-  unblocked.sort((a, b) => {
-    const pa = priorityOrder(a.priority);
-    const pb = priorityOrder(b.priority);
-    if (pa !== pb) return pa - pb;
-    const ga = a.parent_task ?? a.task_id;
-    const gb = b.parent_task ?? b.task_id;
-    if (ga !== gb) return ga.localeCompare(gb);
-    return String(a.task_id).localeCompare(String(b.task_id));
-  });
+  const unblocked = Array.isArray(actionableTasks)
+    ? actionableTasks
+    : sortYamlActionableTasks(tasks.filter((task) => isUnblocked(task, doneSet)));
 
   const inProgress = tasks.filter((task) => normalizeStatus(task.status) === 'in_progress');
   const review = tasks.filter((task) => normalizeStatus(task.status) === 'review');
@@ -529,13 +576,14 @@ async function main() {
   const laneSource = await resolveLaneSource(args);
   const lanes = laneSource.lanes;
   const tasks = collectTasks(lanes);
-  const doneSet = buildDoneSet(tasks);
+  const actionableTasks = laneSource.actionableTasks || null;
+  const doneSet = actionableTasks ? null : buildDoneSet(tasks);
 
   const workboardDate = resolveGeneratedDate(workboardPath, (date) =>
     buildWorkboard(tasks, lanes, date, laneSource.description)
   );
   const openTaskDate = resolveGeneratedDate(openTaskPath, (date) =>
-    buildOpenTaskRoute(tasks, lanes, doneSet, date, laneSource.description)
+    buildOpenTaskRoute(tasks, lanes, doneSet, date, laneSource.description, actionableTasks)
   );
 
   fs.writeFileSync(
@@ -545,7 +593,14 @@ async function main() {
   );
   fs.writeFileSync(
     openTaskPath,
-    buildOpenTaskRoute(tasks, lanes, doneSet, openTaskDate, laneSource.description),
+    buildOpenTaskRoute(
+      tasks,
+      lanes,
+      doneSet,
+      openTaskDate,
+      laneSource.description,
+      actionableTasks
+    ),
     'utf8'
   );
 
@@ -572,6 +627,7 @@ module.exports = {
   isPlanningDbUnavailable,
   isUnblocked,
   loadLanes,
+  loadDbLaneSource,
   loadLanesFromDb,
   normalizeComplexity,
   normalizeEffort,
@@ -579,6 +635,7 @@ module.exports = {
   normalizeStatus,
   parseArgs,
   parseDependencyTokens,
+  readNextTaskIdentitiesFromDb,
   resolveLaneSource,
   summarizeLane,
 };

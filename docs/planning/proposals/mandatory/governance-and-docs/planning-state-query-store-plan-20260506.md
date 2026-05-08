@@ -954,6 +954,38 @@ Implementation steps:
    `pnpm docs:feature-mechanization:implementation`, and
    `pnpm verify:prepush`.
 
+### W11E DB-Backed Route Actionables Implementation Plan
+
+After W11D, `planning:db:query next` used the DB-owned
+`planning_next_tasks` view, but `docs:workboard:generate` still recomputed the
+`open-task-route.md` `Actionable Now` section from effective task rows with
+local JavaScript dependency parsing. That left one remaining generated-route
+consumer outside the DB-owned next-task read model.
+
+```mermaid
+flowchart LR
+  EffectiveTasks["planning_effective_tasks"] --> WorkboardTasks["execution-workboard.md"]
+  NextTasks["planning_next_tasks"] --> OpenRouteActionables["open-task-route.md Actionable Now"]
+  LaneYaml -. "explicit YAML fallback" .-> LocalFallback["local dependency parser"]
+  LocalFallback -.-> OpenRouteActionables
+```
+
+Implementation steps:
+
+1. Add red workboard-generator coverage proving the DB source reads
+   `planning_next_tasks` and carries those candidates as `actionableTasks`.
+2. Add red renderer coverage proving `buildOpenTaskRoute` can render a
+   DB-supplied actionable list without consulting the local `doneSet`.
+3. Keep YAML fallback semantics unchanged: when the DB is unavailable and
+   source mode is `auto`, the generator may still compute unblocked queued rows
+   from lane YAML.
+4. Update planning operation docs to state that DB-backed generated routes use
+   `planning_next_tasks` for `Actionable Now`.
+5. Validate W11E with `node --test scripts/generate-workboard.test.cjs`,
+   `pnpm docs:workboard:generate`, `pnpm test:planning:db`,
+   `pnpm governance:refresh`, `pnpm docs:feature-mechanization:implementation`,
+   and `pnpm verify:prepush`.
+
 ## GitHub Issues Role
 
 GitHub Issues may be useful as a collaboration mirror after the query store is
@@ -1052,6 +1084,9 @@ Current implementation status on 2026-05-08:
   dependency-satisfied route candidates, and `planning:db:query next` reads
   that view instead of duplicating dependency parsing and actionable-task
   filtering in CLI JavaScript;
+- W11E is implemented: DB-backed `docs:workboard:generate` reads
+  `planning_next_tasks` for the `open-task-route.md` `Actionable Now` section,
+  leaving local dependency parsing only for explicit YAML fallback;
 - the obsolete `governance:artifacts:generate` package alias is removed;
   `pnpm governance:refresh` is the single local orchestration command for
   generated inspection artifacts plus planning/governance DB import and checks;
@@ -1496,6 +1531,15 @@ redGreenCycles:
       - docs/planning/state/how-to-add-tasks.md
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+  - id: planning-db-backed-route-actionables
+    redTest: node --test scripts/generate-workboard.test.cjs
+    expectedFailure: DB-backed workboard generation still computes open-task-route Actionable Now rows from JavaScript dependency parsing instead of planning_next_tasks.
+    patchSurfaces:
+      - scripts/generate-workboard*.cjs
+      - docs/planning/state/planning-control-tower.md
+      - docs/planning/state/how-to-add-tasks.md
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: node --test scripts/generate-workboard.test.cjs
 symbols:
   - name: PlanningAndGovernanceQueryStorePlan
     path: docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
@@ -2259,6 +2303,15 @@ symbols:
     name: isPlanningDbUnavailable
     path: scripts/generate-workboard.cjs
   - <<: *planningWorkboardSourceSymbol
+    name: readNextTaskIdentitiesFromDb
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: resolveDbActionableTasks
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: loadDbLaneSource
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
     name: loadLanesFromDb
     path: scripts/generate-workboard.cjs
   - <<: *planningWorkboardSourceSymbol
@@ -2287,6 +2340,9 @@ symbols:
     path: scripts/generate-workboard.cjs
   - <<: *planningWorkboardSourceSymbol
     name: isUnblocked
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: sortYamlActionableTasks
     path: scripts/generate-workboard.cjs
   - <<: *planningWorkboardSourceSymbol
     name: pad
