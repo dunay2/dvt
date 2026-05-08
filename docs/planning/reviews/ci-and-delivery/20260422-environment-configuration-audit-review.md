@@ -2,7 +2,7 @@
 title: Environment Configuration Audit - DVT Monorepo
 status: Active
 owner: CI / Delivery
-last_reviewed: 2026-04-22
+last_reviewed: 2026-05-08
 planning_type: review
 ---
 
@@ -52,8 +52,10 @@ Two important caveats emerged during verification:
 Most notably, the shared CI setup already caches both the pnpm store and
 `node_modules`, and workflow scope logic is more centralized than older CI
 reviews implied. By contrast, the Node version drift, limited Turbo graph, root
-type-check orchestration, permanent pre-commit determinism rebuild, and low
-coverage thresholds remain real concerns.
+type-check orchestration, and low coverage thresholds remain real concerns.
+The pre-commit determinism concern has been reduced by the scoped determinism
+helper and by avoiding a root `precommit` lifecycle script that would duplicate
+the Git hook when using `pnpm commit`.
 
 ## Finding-by-finding assessment
 
@@ -169,23 +171,24 @@ Recommendation:
 
 ### 5. CI workflows and caching
 
-| Topic                                    | Operator claim | Current repo state                                                             | Assessment       |
-| ---------------------------------------- | -------------- | ------------------------------------------------------------------------------ | ---------------- |
-| actions pinned to SHAs                   | yes            | workflows and composite action are SHA pinned                                  | Confirmed        |
-| concurrency/cancel-in-progress           | good           | current workflows use concurrency controls                                     | Confirmed        |
-| pnpm store cache present                 | yes            | shared setup action caches pnpm store                                          | Confirmed        |
-| `node_modules` cache absent              | no             | shared setup action already caches `node_modules`                              | Outdated         |
-| Turbo cache absent                       | yes            | no Turbo cache layer is configured in CI                                       | Confirmed        |
-| push-to-main full suite is costly        | yes            | `test.yml` still includes a full recursive push lane                           | Mostly confirmed |
-| pre-commit determinism rebuild is costly | yes            | `precommit` still runs `lint-staged && pnpm lint:determinism` for every commit | Confirmed        |
+| Topic                                    | Operator claim | Current repo state                                   | Assessment       |
+| ---------------------------------------- | -------------- | ---------------------------------------------------- | ---------------- |
+| actions pinned to SHAs                   | yes            | workflows and composite action are SHA pinned        | Confirmed        |
+| concurrency/cancel-in-progress           | good           | current workflows use concurrency controls           | Confirmed        |
+| pnpm store cache present                 | yes            | shared setup action caches pnpm store                | Confirmed        |
+| `node_modules` cache absent              | no             | shared setup action already caches `node_modules`    | Outdated         |
+| Turbo cache absent                       | yes            | no Turbo cache layer is configured in CI             | Confirmed        |
+| push-to-main full suite is costly        | yes            | `test.yml` still includes a full recursive push lane | Mostly confirmed |
+| pre-commit determinism rebuild is costly | yes            | scoped hook; no root `precommit` lifecycle script    | Partly resolved  |
 
 Assessment:
 
 - The audit is partly stale here, but still useful.
 - The repo has already implemented a dual cache in the shared setup action:
   pnpm store plus `node_modules`.
-- The stronger remaining CI observations are the lack of Turbo cache and the
-  unconditional local pre-commit determinism build.
+- The stronger remaining CI observation is the lack of Turbo cache. Pre-commit
+  cost should still be measured, but the current hook is scoped and avoids the
+  `pnpm commit` lifecycle duplication.
 
 Additional nuance:
 
@@ -199,9 +202,9 @@ Additional nuance:
 Recommendation:
 
 - Keep the Turbo cache proposal.
-- Rework the pre-commit determinism gate with path scoping or a split local/CI
-  strategy, but only if the deterministic-runtime guard remains blocking for
-  engine and Temporal workflow changes.
+- Keep the pre-commit determinism gate scoped and covered by the CI tool
+  contract tests, so it remains blocking for engine and Temporal workflow
+  changes without duplicating work during `pnpm commit`.
 
 ### 6. Testing and coverage posture
 

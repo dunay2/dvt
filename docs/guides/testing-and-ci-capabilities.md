@@ -317,7 +317,7 @@ Current workflow consumers:
   closeout command for every Temporal slice.
 - Local Node selection is pinned through `.node-version` and `.nvmrc` with the
   same Node 22 baseline that the shared CI setup already uses.
-- `pnpm precommit` still runs `lint-staged` for every commit, but the
+- `pnpm run hooks:precommit` still runs `lint-staged` for every commit, but the
   determinism gate now runs only when staged files touch
   `packages/@dvt/engine/src/**`, `packages/@dvt/adapter-temporal/src/workflows/**`,
   or the config inputs that govern that gate.

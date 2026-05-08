@@ -173,7 +173,7 @@
     "release": "echo \"Releases are managed by release-please workflow\"",
     "prepare": "node scripts/setup-git-hooks.cjs",
     "precommit:determinism": "node scripts/run-determinism-precommit.cjs",
-    "precommit": "lint-staged && pnpm precommit:determinism"
+    "hooks:precommit": "lint-staged && pnpm precommit:determinism"
   },
   "lint-staged": {
     "packages/@dvt/*/src/**/*.{ts,tsx}": [

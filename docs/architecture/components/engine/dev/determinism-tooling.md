@@ -47,7 +47,7 @@ const parallelism = Math.random() > 0.5 ? 4 : 8;
 npm run setup-hooks
 
 # This installs:
-#   .husky/pre-commit → runs eslint + determinism-linter
+#   .husky/pre-commit → runs lint-staged + scoped determinism gate
 #   .husky/pre-push → runs integration tests
 ```
 
