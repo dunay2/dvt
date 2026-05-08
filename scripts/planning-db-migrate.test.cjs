@@ -120,3 +120,20 @@ test('tracked migrations include DB-derived governance hash projections after W7
     /create or replace view planning_query_store\.governance_file_hash_drift/
   );
 });
+
+test('tracked migrations include the effective planning task read model after W11', () => {
+  const migrations = readMigrationFiles();
+  const effectiveTaskMigration = migrations.find(
+    (migration) => migration.fileName === '005_planning_effective_task_read_model.sql'
+  );
+
+  assert.ok(effectiveTaskMigration);
+  assert.match(
+    effectiveTaskMigration.sql,
+    /create or replace view planning_query_store\.planning_effective_tasks/
+  );
+  assert.match(
+    effectiveTaskMigration.sql,
+    /left join planning_query_store\.planning_task_local_state/
+  );
+});

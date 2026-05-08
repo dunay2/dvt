@@ -8,11 +8,17 @@ planning_type: guide
 
 # How to Add Tasks to an Agent Lane
 
-Tasks live in the `agent-lane-*.yaml` files. The lane Markdown views,
-workboard, open-task-route, and planning landing indexes are generated local/CI
-artifacts and must never be edited directly or committed.
+New task definitions live in the `agent-lane-*.yaml` files. Existing task
+claims, releases, status changes, progress updates, evidence refs, and status
+reasons are local DB-first operations through `pnpm planning:db:operate`. The
+lane Markdown views, workboard, open-task-route, and planning landing indexes
+are generated local/CI artifacts and must never be edited directly or
+committed.
 
-The lane YAML is the verified planning registry, but task closure is evidence-based:
+The lane YAML remains the bootstrap and PR-review compatibility registry until
+create/delete task commands move to the DB. Effective task state for existing
+work items is the Postgres overlay plus the imported lane row. Task closure is
+evidence-based:
 
 - `done` means the task has accepted evidence or equivalent verifiable closure.
 - `review` means implementation or documentation exists, but final closure still
@@ -30,9 +36,9 @@ The lane YAML is the verified planning registry, but task closure is evidence-ba
 | D    | `agent-lane-d.yaml` | Scale, retention, GTM                                 |
 | E    | `agent-lane-e.yaml` | Frontend and UI - shell, API integration, core flow   |
 
-## Step 2 - Add or update the task entry
+## Step 2 - Add the task entry
 
-Open the lane file and append to the `tasks` list:
+For new tasks, open the lane file and append to the `tasks` list:
 
 ```yaml
 - task_id: S21
@@ -70,6 +76,23 @@ parent:
   last_verified: 2026-03-31
 ```
 
+For existing tasks, do not edit the lane YAML just to claim work or change
+status/progress/evidence. Use the DB command rail:
+
+```bash
+pnpm planning:db:operate task claim --lane A --task S21 --actor codex
+pnpm planning:db:operate task update --lane A --task S21 --actor codex --status review --progress 80 --reason "Implementation ready for review" --evidence docs/planning/closeouts/20260508-s21-closeout.md
+pnpm planning:db:query tasks --lane A --status review
+pnpm planning:db:query next --lane A
+```
+
+Before publishing a branch that depends on local DB overlays, run:
+
+```bash
+pnpm planning:db:export:check
+pnpm planning:db:check
+```
+
 ## Step 3 - Maintain the lane verification summary
 
 Each lane carries a `verification_summary` block that captures the current
@@ -97,6 +120,13 @@ lane_progress_pct = round(sum(effort_points * progress_pct/100) / sum(effort_poi
 of tasks with status `done`.
 
 ## Step 4 - Regenerate the views
+
+For new task definitions or structural lane changes, import the lane YAML into
+the DB before regenerating or checking derived views:
+
+```bash
+pnpm planning:db:import
+```
 
 ```bash
 pnpm docs:planning:lanes:generate

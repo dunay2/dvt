@@ -95,6 +95,28 @@ class PlanningDbExportRunner {
     return JSON.parse(JSON.stringify(value));
   }
 
+  applyEffectiveTaskFields(task, row) {
+    if (row.status !== undefined && row.status !== null) {
+      task.status = row.status;
+    }
+
+    if (row.progressPct !== undefined && row.progressPct !== null) {
+      task.progress_pct = Number(row.progressPct);
+    }
+
+    if (row.evidenceRefs !== undefined && row.evidenceRefs !== null) {
+      task.evidence_refs = this.cloneJson(row.evidenceRefs);
+    }
+
+    if (row.statusReason !== undefined) {
+      if (row.statusReason === null) {
+        delete task.status_reason;
+      } else {
+        task.status_reason = row.statusReason;
+      }
+    }
+  }
+
   buildLaneDocuments(rows) {
     const laneById = new Map();
     const taskOrderByLaneId = new Map();
@@ -152,6 +174,7 @@ class PlanningDbExportRunner {
       }
 
       task.task_id = task.task_id || row.taskId;
+      this.applyEffectiveTaskFields(task, row);
       lane.tasks.push(task);
     }
 
@@ -171,8 +194,13 @@ class PlanningDbExportRunner {
         select
           lane_id as "laneId",
           task_id as "taskId",
-          raw_task as "rawTask"
-        from ${this.deps.schemaName}.planning_tasks
+          raw_task as "rawTask",
+          status,
+          progress_pct as "progressPct",
+          evidence_refs as "evidenceRefs",
+          status_reason as "statusReason",
+          claimed_by as "claimedBy"
+        from ${this.deps.schemaName}.planning_effective_tasks
         order by lane_id, task_id
       `),
     ]);
