@@ -1,3 +1,7 @@
+/**
+ * Owned concern: own all user-visible copy strings for runs route states,
+ * keeping presentation text out of the state model and view logic.
+ */
 export const runStatesCopy = {
   runsTitle: 'Runs',
   emptyRuns: 'No runs yet.',

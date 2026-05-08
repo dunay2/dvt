@@ -2,7 +2,7 @@
 title: Runs Frontend Architecture
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-11
+last_reviewed: 2026-05-08
 domain: frontend
 ---
 

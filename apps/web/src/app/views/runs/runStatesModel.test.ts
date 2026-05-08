@@ -6,6 +6,7 @@ describe('runStatesModel', () => {
   it('detects known and unknown run fields', () => {
     expect(isKnownRunField('dev')).toBe(true);
     expect(isKnownRunField('unknown')).toBe(false);
+    expect(isKnownRunField('unknown-plan')).toBe(false);
     expect(isKnownRunField(undefined)).toBe(false);
   });
 

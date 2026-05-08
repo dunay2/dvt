@@ -1,11 +1,15 @@
+/**
+ * Owned concern: own the runs workspace data-fetching lifecycle as a composable
+ * hook for route consumers.
+ */
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useSyncExternalStore } from 'react';
 
 import type { IRunsPort, RunSummaryItem } from '../../ports/runs';
 import { queryKeys } from '../../queries/queryKeys';
-import { ApiError } from '../../services/api/createApiClient';
-import { useRunsService, useSessionContext } from '../../services/AppServicesContext';
 import { useScopedRunSummariesQuery } from '../../queries/runsQueries';
+import { classifyHttpError, extractHttpStatusCode } from '../../services/api/classifyHttpError';
+import { useRunsService, useSessionContext } from '../../services/AppServicesContext';
 import {
   createRunWorkspaceFacade,
   RunWorkspaceLoadError,
@@ -29,23 +33,26 @@ type UseRunWorkspaceResult = {
 };
 
 function describeRunsListError(error: Error | null): string {
-  if (error instanceof ApiError) {
-    if (error.statusCode === 401) {
-      return 'Authentication required';
-    }
-
-    if (error.statusCode === 403) {
-      return 'Access denied for runs list';
-    }
-
-    if ((error.statusCode ?? 0) >= 500) {
-      return 'Runtime service is unavailable';
-    }
-
-    return `Runs could not be loaded${error.statusCode ? ` (HTTP ${error.statusCode})` : ''}.`;
+  if (!error) {
+    return '';
   }
 
-  return error ? 'Runs could not be loaded due to an unexpected error.' : '';
+  const kind = classifyHttpError(error);
+
+  switch (kind) {
+    case 'auth-required':
+      return 'Authentication required';
+    case 'access-denied':
+      return 'Access denied for runs list';
+    case 'service-unavailable':
+      return 'Runtime service is unavailable';
+    case 'client-error': {
+      const statusCode = extractHttpStatusCode(error);
+      return `Runs could not be loaded${statusCode ? ` (HTTP ${statusCode})` : ''}.`;
+    }
+    default:
+      return 'Runs could not be loaded due to an unexpected error.';
+  }
 }
 
 export function useRunWorkspace(runId: string | undefined): UseRunWorkspaceResult {

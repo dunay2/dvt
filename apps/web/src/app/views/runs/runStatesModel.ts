@@ -1,3 +1,7 @@
+/**
+ * Owned concern: derive run status presentation helpers from the runs port DTOs
+ * without importing adapter internals.
+ */
 import type { RunSummaryItem } from '../../ports/runs';
 import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceFacade';
 

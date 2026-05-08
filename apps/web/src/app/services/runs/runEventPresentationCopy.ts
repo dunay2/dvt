@@ -1,3 +1,7 @@
+/**
+ * Owned concern: resolve human-readable headline copy for known run event
+ * types, falling back to the runtime-supplied event type for unknowns.
+ */
 import type { RunEventHeadlineKey } from './runEventPresentationModel';
 
 const RUN_EVENT_HEADLINE_COPY: Record<Exclude<RunEventHeadlineKey, 'fallback'>, string> = {

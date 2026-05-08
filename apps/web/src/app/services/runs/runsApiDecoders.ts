@@ -1,3 +1,7 @@
+/**
+ * Owned concern: validate and decode runtime API response fields into typed
+ * presentation DTOs, rejecting malformed or unexpected payload shapes early.
+ */
 import type { RunStatus as ContractRunStatus } from '@dvt/contracts';
 
 import type {
@@ -46,9 +50,7 @@ export function parseContractRunStatus(value: unknown): ContractRunStatus | unde
   }
 }
 
-export function parseSnapshotStaleness(
-  value: unknown
-): 'FRESH' | 'STALE' | 'UNKNOWN' | undefined {
+export function parseSnapshotStaleness(value: unknown): 'FRESH' | 'STALE' | 'UNKNOWN' | undefined {
   switch (value) {
     case 'FRESH':
     case 'STALE':
@@ -78,9 +80,7 @@ export function mapContractStatusToUi(status: ContractRunStatus | undefined): Ui
   }
 }
 
-export function parseMaterializationEvidence(
-  value: unknown
-): MaterializationEvidence | undefined {
+export function parseMaterializationEvidence(value: unknown): MaterializationEvidence | undefined {
   if (!value || typeof value !== 'object') {
     return undefined;
   }

@@ -2,6 +2,10 @@ import type { SessionContextPort } from '../../ports/sessionContext';
 
 import { asFiniteInteger } from './runsApiDecoders';
 
+/**
+ * Owned concern: extract and shape API request payloads for runs, including
+ * tenant-scoped query parameter construction.
+ */
 export function extractRunListPayload(payload: unknown): unknown[] {
   if (!payload || typeof payload !== 'object') {
     return [];
@@ -11,9 +15,10 @@ export function extractRunListPayload(payload: unknown): unknown[] {
   return Array.isArray(record.items) ? record.items : [];
 }
 
-export function extractEventsPayload(
-  payload: unknown
-): { events: unknown[]; nextAfterSeq?: number } {
+export function extractEventsPayload(payload: unknown): {
+  events: unknown[];
+  nextAfterSeq?: number;
+} {
   if (!payload || typeof payload !== 'object') {
     return { events: [] };
   }

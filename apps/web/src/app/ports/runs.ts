@@ -74,7 +74,12 @@ export type RunProvenanceChain = {
   authoring?: RunAuthoringProvenance;
 };
 
-export type RunSummaryItem = {
+/**
+ * Common fields shared between {@link RunSnapshot} and {@link RunSummaryItem},
+ * keeping the snapshot DTO and its summary projection aligned without
+ * duplicating field declarations.
+ */
+export type RunCommonSnapshotFields = {
   runId: string;
   planId?: string;
   status: UiRunStatus;
@@ -89,25 +94,17 @@ export type RunSummaryItem = {
   execution?: RunExecutionEvidence;
 };
 
-export type RunSnapshot = {
-  runId: string;
-  planId?: string;
-  status: UiRunStatus;
+/** Summary projection: exactly the common snapshot fields. */
+export type RunSummaryItem = RunCommonSnapshotFields;
+
+/** Full snapshot DTO with run-detail-specific fields. */
+export type RunSnapshot = RunCommonSnapshotFields & {
   executor?: RunExecutor;
-  environment?: string;
-  gitSha?: string;
-  startedAt: string;
-  completedAt?: string;
-  substatus?: string;
-  message?: string;
-  hash?: string;
-  snapshotStaleness?: 'FRESH' | 'STALE' | 'UNKNOWN';
   currentStepId?: string;
   failedStepId?: string;
   errorReason?: string;
   materialization?: MaterializationEvidence;
   provenance?: RunProvenanceChain;
-  execution?: RunExecutionEvidence;
 };
 
 export type RunEventTimelinePage = {
@@ -116,7 +113,7 @@ export type RunEventTimelinePage = {
 };
 
 // ---------------------------------------------------------------------------
-// Runs port — presentation-layer contract for run operations
+// Runs port: presentation-layer contract for run operations
 // ---------------------------------------------------------------------------
 
 /**

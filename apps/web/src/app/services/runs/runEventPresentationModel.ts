@@ -1,3 +1,7 @@
+/**
+ * Owned concern: transform a raw RunEvent into a presentation-oriented model
+ * with semantic level, headline key, and optional step context.
+ */
 import type { RunEvent } from '../../types/engine';
 
 export type RunEventLevel = 'INFO' | 'WARN' | 'ERROR' | 'SUCCESS';
