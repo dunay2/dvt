@@ -1004,7 +1004,7 @@ flowchart LR
   Import --> GovernanceTables["governance_* tables"]
   GovernanceTables --> QueryViews["governance_*_query views"]
   QueryViews --> GovernanceQuery["governance:db:query files/components/coverage/remediation/drift"]
-  QueryViews -. "future W12B" .-> ReportGenerators["system-governance report generators"]
+  QueryViews -. "W12B" .-> ReportGenerators["system-governance report generators"]
 ```
 
 Implementation steps:
@@ -1026,6 +1026,50 @@ Implementation steps:
    `pnpm governance:db:query files`, `pnpm governance:refresh`,
    `pnpm docs:feature-mechanization:implementation`, and
    `pnpm verify:prepush`.
+
+### W12B Governance Report DB Source Implementation Plan
+
+After W12A, humans and agents can inspect governance state through
+`governance:db:query`, but the report generators still own their primary input
+through generated YAML files. W12B moves the canonical refresh path for coverage
+and remediation reports onto the DB-owned governance query views, while keeping
+the local in-memory generator path as the standalone CI/development fallback for
+commands that run without a planning database.
+
+```mermaid
+flowchart TD
+  SourceGenerators["docs/gov source generators"] --> Import["planning:db:import"]
+  Import --> QueryViews["governance_*_query views"]
+  QueryViews --> Coverage["docs:governance:coverage-report\nsource=db"]
+  QueryViews --> Remediation["docs:governance:remediation-queue\nsource=db"]
+  LocalFallback["in-memory generator fallback"] -. "standalone no DB" .-> Coverage
+  LocalFallback -. "standalone no DB" .-> Remediation
+```
+
+Implementation steps:
+
+1. Add a `010` migration that enriches the governance query views with the
+   JSON payload columns the report generators need: file/component governance
+   references, raw coverage rows, remediation task files, remediation task
+   documents, expected validation, and raw remediation tasks.
+2. Add red coverage-generator tests proving `readCoverageReportFromDb` reads
+   `governance_file_query` and `governance_component_query`, reconstructs the
+   same report shape, and does not read `.generated-docs` inputs.
+3. Add red remediation-generator tests proving `readRemediationQueueFromDb`
+   reads `governance_remediation_query` and `governance_coverage_query`, uses
+   DB-owned task payloads, and does not rebuild the queue from generated YAML.
+4. Move `governance:refresh` so `planning:db:import` runs after source
+   generators that can affect the file list and before DB-backed report
+   generators. The coverage and remediation stages must set the report source
+   to `db`.
+5. Keep standalone report commands able to run from deterministic in-memory
+   generator inputs when the DB source is not explicitly requested. That is a
+   CI/development fallback, not the canonical refresh path.
+6. Validate W12B with
+   `node --test scripts/planning-db-migrate.test.cjs scripts/generate-governance-coverage-report.test.cjs scripts/generate-governance-remediation-queue.test.cjs scripts/governance-refresh.test.cjs`,
+   `pnpm test:planning:db`, `pnpm planning:db:migrate`,
+   `pnpm governance:refresh`, `pnpm docs:feature-mechanization:implementation`,
+   and `pnpm verify:prepush`.
 
 ## GitHub Issues Role
 
@@ -1132,6 +1176,11 @@ Current implementation status on 2026-05-08:
   `coverage`, `remediation`, and `drift` read DB-owned governance query views
   for daily inspection instead of requiring agents to open generated
   `system-governance-*` artifacts;
+- W12B is implemented: `governance:refresh` imports the query store after
+  source-affecting governance generators and before coverage/remediation
+  generation, then runs those report generators against DB-owned governance
+  query views. Standalone no-DB checks retain deterministic local generator
+  input for CI/development parity;
 - the obsolete `governance:artifacts:generate` package alias is removed;
   `pnpm governance:refresh` is the single local orchestration command for
   generated inspection artifacts plus planning/governance DB import and checks;
@@ -1141,7 +1190,7 @@ Current implementation status on 2026-05-08:
 - the shared DB checksum-repair route is implemented through
   `pnpm planning:db:reset -- --confirm-destroy-shared-planning-db`, not through
   manual edits to `schema_migrations`;
-- the remainder of step 11 and steps 12 through 15 remain future concrete
+- the remainder of step 11 and steps 13 through 15 remain future concrete
   follow-up work. They do not keep
   `GOV-S2` open; `GOV-S2` is the closed framework umbrella and this plan owns
   any remaining query-store parity or generated-artifact compaction work.
@@ -1595,6 +1644,17 @@ redGreenCycles:
       - scripts/planning-db-*.cjs
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+  - id: governance-db-backed-report-generation
+    redTest: node --test scripts/planning-db-migrate.test.cjs scripts/generate-governance-coverage-report.test.cjs scripts/generate-governance-remediation-queue.test.cjs scripts/governance-refresh.test.cjs
+    expectedFailure: Coverage and remediation report generators still read generated YAML inputs as their canonical source and governance refresh does not import the query store immediately before DB-backed report generation.
+    patchSurfaces:
+      - tools/planning-db/**
+      - scripts/generate-governance-coverage-report*.cjs
+      - scripts/generate-governance-remediation-queue*.cjs
+      - scripts/governance-refresh*.cjs
+      - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/generate-governance-coverage-report.test.cjs scripts/generate-governance-remediation-queue.test.cjs scripts/governance-refresh.test.cjs
 symbols:
   - name: PlanningAndGovernanceQueryStorePlan
     path: docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
@@ -2520,6 +2580,69 @@ symbols:
   - <<: *governanceDbQuerySurfaceSymbol
     name: readGovernanceDriftRows
     path: scripts/planning-db-query.cjs
+  - &governanceDbReportSourceSymbol
+    name: GovernanceReportQueryPayloadMigration
+    path: tools/planning-db/migrations/010_governance_report_query_payloads.sql
+    dddOwner: GovernanceStateReadModel
+    cqRails:
+      - QueryGovernanceStateReadModel
+      - RefreshGovernanceDerivedSurfaces
+      - MigratePlanningQueryStoreSchema
+    fowlerSignals:
+      - Generated artifact churn
+      - Duplicate report input authority
+      - Hidden generated YAML read path
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - governance report source migration has no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-migrate.test.cjs scripts/generate-governance-coverage-report.test.cjs scripts/generate-governance-remediation-queue.test.cjs scripts/governance-refresh.test.cjs
+      - pnpm test:planning:db
+      - pnpm governance:refresh
+  - <<: *governanceDbReportSourceSymbol
+    name: resolveSourceMode
+    path: scripts/generate-governance-coverage-report.cjs
+  - <<: *governanceDbReportSourceSymbol
+    name: asArray
+    path: scripts/generate-governance-coverage-report.cjs
+  - <<: *governanceDbReportSourceSymbol
+    name: mapDbFileRowToCoverageFile
+    path: scripts/generate-governance-coverage-report.cjs
+  - <<: *governanceDbReportSourceSymbol
+    name: mapDbComponentRowToCoverageComponent
+    path: scripts/generate-governance-coverage-report.cjs
+  - <<: *governanceDbReportSourceSymbol
+    name: readCoverageReportFromDb
+    path: scripts/generate-governance-coverage-report.cjs
+  - <<: *governanceDbReportSourceSymbol
+    name: buildLocalCoverageOutputs
+    path: scripts/generate-governance-coverage-report.cjs
+  - <<: *governanceDbReportSourceSymbol
+    name: buildOutputs
+    path: scripts/generate-governance-coverage-report.cjs
+  - <<: *governanceDbReportSourceSymbol
+    name: main
+    path: scripts/generate-governance-coverage-report.cjs
+  - <<: *governanceDbReportSourceSymbol
+    name: mapDbRemediationTaskRow
+    path: scripts/generate-governance-remediation-queue.cjs
+  - <<: *governanceDbReportSourceSymbol
+    name: findCoverageTotal
+    path: scripts/generate-governance-remediation-queue.cjs
+  - <<: *governanceDbReportSourceSymbol
+    name: buildRemediationQueueFromDbRows
+    path: scripts/generate-governance-remediation-queue.cjs
+  - <<: *governanceDbReportSourceSymbol
+    name: readRemediationQueueFromDb
+    path: scripts/generate-governance-remediation-queue.cjs
+  - <<: *governanceDbReportSourceSymbol
+    name: buildLocalRemediationOutputs
+    path: scripts/generate-governance-remediation-queue.cjs
+  - <<: *governanceDbReportSourceSymbol
+    name: buildOutputs
+    path: scripts/generate-governance-remediation-queue.cjs
+  - <<: *governanceDbReportSourceSymbol
+    name: main
+    path: scripts/generate-governance-remediation-queue.cjs
   - &planningDbDriftSymbol
     name: PlanningDbDriftCheckRunner
     path: scripts/planning-db-check.cjs

@@ -6,15 +6,13 @@ const path = require('node:path');
 const packageJson = require('../package.json');
 const { buildRefreshStages, runGovernanceRefresh } = require('./governance-refresh.cjs');
 
-test('governance refresh imports planning DB before DB-backed workboard generation', () => {
+test('governance refresh imports planning DB before DB-backed generated surfaces', () => {
   const stages = buildRefreshStages();
 
   assert.deepEqual(
     stages.generationStages.map((stage) => stage.script),
     [
       'docs:sync',
-      'planning:db:import',
-      'docs:workboard:generate',
       'docs:status:generate',
       'docs:capability:generate',
       'docs:gov:manifest',
@@ -22,9 +20,21 @@ test('governance refresh imports planning DB before DB-backed workboard generati
       'docs:governance:file-component-index',
       'docs:governance:file-fingerprint-baseline',
       'docs:governance:file-fingerprint-impact',
+      'planning:db:import',
+      'docs:workboard:generate',
       'docs:governance:coverage-report',
       'docs:governance:remediation-queue',
     ]
+  );
+  assert.equal(
+    stages.generationStages.find((stage) => stage.id === 'coverage-report').env
+      .DVT_GOVERNANCE_REPORT_SOURCE,
+    'db'
+  );
+  assert.equal(
+    stages.generationStages.find((stage) => stage.id === 'remediation-queue').env
+      .DVT_GOVERNANCE_REPORT_SOURCE,
+    'db'
   );
   assert.deepEqual(
     stages.databaseStages.map((stage) => stage.script),

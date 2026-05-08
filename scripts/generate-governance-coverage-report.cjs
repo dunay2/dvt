@@ -4,9 +4,12 @@
  */
 
 const fs = require('node:fs');
+const { Client } = require('pg');
 const yaml = require('js-yaml');
 const { readFileIndexFromDisk } = require('./generate-governance-file-component-index.cjs');
 const { generatedStatusDir, governanceGeneratedPath } = require('./governance-generated-paths.cjs');
+const { schemaName } = require('./planning-db-migrate.cjs');
+const { defaultPgUrl } = require('./planning-db-run.cjs');
 
 const statusDir = generatedStatusDir;
 const fileIndexPath = governanceGeneratedPath('system-governance-file-index.files.yaml');
@@ -28,6 +31,37 @@ function renderYaml(payload) {
     noRefs: true,
     sortKeys: false,
   });
+}
+
+function resolveSourceMode(options = {}) {
+  const args = options.args || process.argv.slice(2);
+  const env = options.env || process.env;
+  let sourceMode = options.sourceMode || env.DVT_GOVERNANCE_REPORT_SOURCE || 'local';
+
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] !== '--source') {
+      continue;
+    }
+
+    const value = args[index + 1];
+    if (!value || value.startsWith('--')) {
+      throw new Error('--source requires "db" or "local".');
+    }
+    sourceMode = value;
+    index += 1;
+  }
+
+  if (!['db', 'local'].includes(sourceMode)) {
+    throw new Error(
+      `Unsupported governance report source "${sourceMode}". Expected "db" or "local".`
+    );
+  }
+
+  return sourceMode;
+}
+
+function asArray(value) {
+  return Array.isArray(value) ? value : [];
 }
 
 function countBy(entries, key) {
@@ -189,6 +223,98 @@ function buildCoverageReport(fileIndex, componentIndex) {
     componentCoverage: buildComponentCoverage(files, components),
     findings,
   };
+}
+
+function mapDbFileRowToCoverageFile(row) {
+  return {
+    path: row.path,
+    fileId: row.file_id ?? row.fileId,
+    owningUnit: row.owning_unit ?? row.owningUnit,
+    rootUnit: row.root_unit ?? row.rootUnit,
+    domainUnit: row.domain_unit ?? row.domainUnit,
+    componentUnit: row.component_unit ?? row.componentUnit,
+    ownerLevel: row.owner_level ?? row.ownerLevel,
+    unitStatus: row.unit_status ?? row.unitStatus,
+    governanceState: row.governance_state ?? row.governanceState,
+    canonicalRole: row.canonical_role ?? row.canonicalRole,
+    evidenceState: row.evidence_state ?? row.evidenceState,
+    isDrift: Boolean(row.is_drift ?? row.isDrift),
+    isLegacy: Boolean(row.is_legacy ?? row.isLegacy),
+    dddOwner: row.ddd_owner ?? row.dddOwner,
+    cqRails: row.cq_rails ?? row.cqRails,
+    governance: asArray(row.governance_refs ?? row.governanceRefs),
+  };
+}
+
+function mapDbComponentRowToCoverageComponent(row) {
+  return {
+    id: row.component_id ?? row.componentId,
+    name: row.name,
+    rootUnit: row.root_unit ?? row.rootUnit,
+    domainUnit: row.domain_unit ?? row.domainUnit,
+    status: row.status,
+    governanceState: row.governance_state ?? row.governanceState,
+    canonicalRole: row.canonical_role ?? row.canonicalRole,
+    evidenceState: row.evidence_state ?? row.evidenceState,
+    dddOwner: row.ddd_owner ?? row.dddOwner,
+    cqRails: row.cq_rails ?? row.cqRails,
+    fileCount: row.file_count ?? row.fileCount,
+    childrenRequired: Boolean(row.children_required ?? row.childrenRequired),
+    isDrift: Boolean(row.is_drift ?? row.isDrift),
+    isLegacy: Boolean(row.is_legacy ?? row.isLegacy),
+    governance: asArray(row.governance_refs ?? row.governanceRefs),
+  };
+}
+
+async function readCoverageReportFromDb(client) {
+  const [filesResult, componentsResult] = await Promise.all([
+    client.query(`
+      select
+        path,
+        file_id,
+        owning_unit,
+        root_unit,
+        domain_unit,
+        component_unit,
+        owner_level,
+        unit_status,
+        governance_state,
+        canonical_role,
+        evidence_state,
+        is_drift,
+        is_legacy,
+        ddd_owner,
+        cq_rails,
+        governance_refs
+      from ${schemaName}.governance_file_query
+      order by path
+    `),
+    client.query(`
+      select
+        component_id,
+        name,
+        root_unit,
+        domain_unit,
+        status,
+        governance_state,
+        canonical_role,
+        evidence_state,
+        is_drift,
+        is_legacy,
+        children_required,
+        file_count,
+        ddd_owner,
+        cq_rails,
+        governance_refs
+      from ${schemaName}.governance_component_query
+      order by component_id
+    `),
+  ]);
+
+  return buildCoverageReport(
+    { files: filesResult.rows.map(mapDbFileRowToCoverageFile) },
+    { components: componentsResult.rows.map(mapDbComponentRowToCoverageComponent) }
+  );
 }
 
 function renderCountTable(rows, label) {
@@ -369,7 +495,7 @@ function writeIfChanged(filePath, content) {
   return true;
 }
 
-function buildOutputs() {
+function buildLocalCoverageOutputs() {
   const report = buildCoverageReport(
     { files: readFileIndexFromDisk(fileIndexPath) },
     readYaml(componentIndexPath)
@@ -381,9 +507,45 @@ function buildOutputs() {
   };
 }
 
-function main() {
+async function buildOutputs(options = {}) {
+  const sourceMode = resolveSourceMode(options);
+
+  if (sourceMode === 'local') {
+    return buildLocalCoverageOutputs();
+  }
+
+  const client =
+    options.client ||
+    new Client({
+      connectionString:
+        options.databaseUrl ||
+        process.env.DVT_PLANNING_DB_URL ||
+        process.env.DATABASE_URL ||
+        defaultPgUrl,
+    });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    const report = await readCoverageReportFromDb(client);
+    return {
+      report,
+      yaml: renderYaml(report),
+      markdown: renderMarkdown(report),
+    };
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
+async function main() {
   const checkOnly = process.argv.includes('--check');
-  const outputs = buildOutputs();
+  const outputs = await buildOutputs();
   fs.mkdirSync(statusDir, { recursive: true });
   const changed = [
     writeIfChanged(coverageYamlPath, outputs.yaml),
@@ -403,13 +565,21 @@ function main() {
 }
 
 if (require.main === module) {
-  main();
+  main().catch((error) => {
+    console.error(`[docs:governance:coverage-report] ${error.message}`);
+    process.exit(1);
+  });
 }
 
 module.exports = {
+  buildLocalCoverageOutputs,
   buildCoverageReport,
   buildComponentCoverage,
   buildOpenGovernanceFindings,
   countGovernanceDocuments,
+  mapDbComponentRowToCoverageComponent,
+  mapDbFileRowToCoverageFile,
+  readCoverageReportFromDb,
   renderMarkdown,
+  resolveSourceMode,
 };

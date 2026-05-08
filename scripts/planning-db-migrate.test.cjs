@@ -219,3 +219,20 @@ test('tracked migrations include governance query views after W12A', () => {
     /create or replace view planning_query_store\.governance_drift_query/
   );
 });
+
+test('tracked migrations include governance report query payloads after W12B', () => {
+  const migrations = readMigrationFiles();
+  const reportQueryPayloadMigration = migrations.find(
+    (migration) => migration.fileName === '010_governance_report_query_payloads.sql'
+  );
+
+  assert.ok(reportQueryPayloadMigration);
+  assert.match(reportQueryPayloadMigration.sql, /governance_refs/);
+  assert.match(reportQueryPayloadMigration.sql, /raw_coverage/);
+  assert.match(reportQueryPayloadMigration.sql, /expected_validation/);
+  assert.match(reportQueryPayloadMigration.sql, /raw_task/);
+  assert.match(
+    reportQueryPayloadMigration.sql,
+    /create or replace view planning_query_store\.governance_remediation_query/
+  );
+});

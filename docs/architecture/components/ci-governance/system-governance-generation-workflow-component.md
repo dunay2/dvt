@@ -18,7 +18,10 @@ tracked review surface. File indexes, component maps, fingerprints, coverage
 reports, remediation queues, and shard files are local artifacts under
 `.generated-docs/planning/status/`. The planning/governance Postgres read model
 rebuilds equivalent projections in memory from the same generator modules for
-query and drift checks.
+query and drift checks. In the canonical `governance:refresh` path, coverage
+and remediation report generation read the imported DB query views after
+`planning:db:import`; their local file/in-memory source path remains only for
+standalone checks that run without a planning database.
 
 ## Governing Sources
 
@@ -101,16 +104,16 @@ flowchart TD
   Fingerprint --> FingerprintBaseline[".generated-docs/.../system-governance-file-fingerprint-baseline.yaml"]
   FingerprintBaseline --> FingerprintImpact
   FileIndex --> FingerprintImpact
-  FileIndex --> Coverage
-  ComponentIndex --> Coverage
-  ComponentMap --> Coverage
-  FingerprintBaseline --> Coverage
+  FileIndex --> Import["planning:db:import"]
+  ComponentIndex --> Import
+  ComponentMap --> Import
+  DocumentMapOutputs --> Import
+  FingerprintBaseline --> Import
+  FingerprintImpact --> Import
+  Import --> Coverage
   Coverage --> CoverageOutputs[".generated-docs/.../system-governance-coverage-report.*"]
+  Import --> Remediation
   CoverageOutputs --> Remediation
-  FileIndex --> Remediation
-  ComponentIndex --> Remediation
-  ComponentMap --> Remediation
-  DocumentMapOutputs --> Remediation
   Remediation --> RemediationOutputs[".generated-docs/.../system-governance-remediation-queue.*"]
   FileIndex --> ChangedFiles
   FingerprintBaseline --> ChangedFiles
@@ -151,15 +154,25 @@ flowchart TD
   `.generated-docs/planning/status/system-governance-file-fingerprint-impact-20260501.md`,
   and its check command regenerates the ignored current impact report.
 - `Coverage report` runs `pnpm docs:governance:coverage-report` through
-  `scripts/generate-governance-coverage-report.cjs`. It reads the generated
-  file index, component index, component map, and fingerprint baseline, writes
+  `scripts/generate-governance-coverage-report.cjs`. In
+  `governance:refresh`, the stage runs with
+  `DVT_GOVERNANCE_REPORT_SOURCE=db` and reads
+  `planning_query_store.governance_file_query` plus
+  `planning_query_store.governance_component_query` after
+  `planning:db:import`. Standalone checks without that source override retain
+  the deterministic local generated-input path, write
   `.generated-docs/planning/status/system-governance-coverage-report.*`, and
-  its check command regenerates the ignored artifact.
+  regenerate the ignored artifact.
 - `Remediation queue` runs `pnpm docs:governance:remediation-queue` through
-  `scripts/generate-governance-remediation-queue.cjs`. It reads generated
-  coverage, file index, component index, component map, and document map
-  artifacts, writes `.generated-docs/planning/status/system-governance-remediation-queue.*`,
-  and its check command regenerates the ignored artifact.
+  `scripts/generate-governance-remediation-queue.cjs`. In
+  `governance:refresh`, the stage runs with
+  `DVT_GOVERNANCE_REPORT_SOURCE=db` and reads
+  `planning_query_store.governance_remediation_query` plus
+  `planning_query_store.governance_coverage_query` after
+  `planning:db:import`. Standalone checks without that source override retain
+  the deterministic local generated-input path, write
+  `.generated-docs/planning/status/system-governance-remediation-queue.*`, and
+  regenerate the ignored artifact.
 - `Changed-file validation` runs `pnpm docs:governance:changed-files:check`
   through `scripts/check-governance-changed-files.cjs`. It reads the current
   generated baseline, current generated file index, and local name-status diff,
@@ -176,22 +189,24 @@ individual generator order.
 The command runs the docs and governance generation stages in this order:
 
 1. `docs:sync`
-2. `docs:workboard:generate`
-3. `docs:status:generate`
-4. `docs:capability:generate`
-5. `docs:gov:manifest`
-6. `docs:governance:document-unit-map`
-7. `docs:governance:file-component-index`
-8. `docs:governance:file-fingerprint-baseline`
-9. `docs:governance:file-fingerprint-impact`
-10. `docs:governance:coverage-report`
-11. `docs:governance:remediation-queue`
+2. `docs:status:generate`
+3. `docs:capability:generate`
+4. `docs:gov:manifest`
+5. `docs:governance:document-unit-map`
+6. `docs:governance:file-component-index`
+7. `docs:governance:file-fingerprint-baseline`
+8. `docs:governance:file-fingerprint-impact`
+9. `planning:db:import`
+10. `docs:workboard:generate`
+11. `docs:governance:coverage-report`
+12. `docs:governance:remediation-queue`
 
 After each generation pass, the runner hashes staged, unstaged, and untracked
 non-ignored worktree state. It repeats generation until that fingerprint stops
-changing, with a small maximum pass count. Only after generated outputs are
-stable does it run `planning:db:import`, `planning:db:check`,
-`planning:db:export:check`, and `governance:db:check`.
+changing, with a small maximum pass count. `planning:db:import` runs inside each
+generation pass after source-affecting generators and before DB-backed generated
+surfaces. Only after generated outputs are stable does it run
+`planning:db:check`, `planning:db:export:check`, and `governance:db:check`.
 
 The fingerprint is a convergence guard, not a new source of truth. Git-tracked
 sources, generated-docs policy, unit ownership, and generator scripts remain
