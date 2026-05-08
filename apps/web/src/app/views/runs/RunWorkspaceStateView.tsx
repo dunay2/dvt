@@ -1,3 +1,7 @@
+/**
+ * Owned concern: render the run workspace detail, provenance, materialization,
+ * diagnostics, and timeline read model.
+ */
 import { Badge } from '../../components/ui/badge';
 import { Card } from '../../components/ui/card';
 import { WorkbenchStateFrame } from '../../components/workbench/state/WorkbenchStates';
@@ -328,9 +332,7 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
                         {artifact.commitSha ? (
                           <div>
                             <span className="text-slate-400">{copy.artifactCommitShaLabel}</span>
-                            <div className="break-all font-mono text-xs">
-                              {artifact.commitSha}
-                            </div>
+                            <div className="break-all font-mono text-xs">{artifact.commitSha}</div>
                           </div>
                         ) : null}
                         {artifact.contentSha256 ? (

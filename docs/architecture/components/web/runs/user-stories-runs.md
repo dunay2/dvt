@@ -10,6 +10,7 @@ code_refs:
   - apps/web/src/app/services/runs/runsService.mock.ts
   - apps/web/src/app/services/runs/runWorkspaceFacade.ts
   - apps/web/src/app/services/runs/runsService.test.ts
+  - apps/web/src/app/views/runs/runsDomainBoundary.architecture.test.ts
 ---
 
 # User Stories - Runs Domain Frontend
@@ -373,4 +374,5 @@ query fails.
 - [Runs Frontend Architecture](./dvt-runs-frontend-architecture.md)
 - [Frontend Runtime Contract Technical Manual](./frontend-runtime-contract-technical-manual.md)
 - [Start Run Client Identity Boundary](./start-run-client-identity-boundary.md)
+- [Runs Domain Architecture Test](../../../../../apps/web/src/app/views/runs/runsDomainBoundary.architecture.test.ts)
 - [Command Query Rail Governance](../../../command-query-rail-governance.md)

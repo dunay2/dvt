@@ -1,3 +1,7 @@
+/**
+ * Owned concern: render the runs summary list view using shared workbench state
+ * primitives, badges, and route navigation.
+ */
 import { Clock, GitCommit } from 'lucide-react';
 import { useNavigate } from 'react-router';
 

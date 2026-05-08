@@ -1,6 +1,10 @@
-import { ApiError } from '../api/createApiClient';
+/**
+ * Owned concern: compose snapshot and timeline queries into a single workspace
+ * view model with classified errors and degraded-mode resilience.
+ */
 import type { IRunsPort, RunSnapshot } from '../../ports/runs';
 import type { RunEvent } from '../../types/engine';
+import { classifyHttpError, extractHttpStatusCode } from '../api/classifyHttpError';
 
 export type RunWorkspaceTimeline =
   | {
@@ -50,57 +54,50 @@ export interface RunWorkspaceFacade {
   loadRunWorkspace: (runId: string) => Promise<RunWorkspaceViewModel | null>;
 }
 
-function getStatusCode(error: ApiError): number | undefined {
-  return typeof error.statusCode === 'number' ? error.statusCode : undefined;
-}
-
 function classifySnapshotError(error: unknown): RunWorkspaceLoadError {
-  if (error instanceof ApiError) {
-    const statusCode = getStatusCode(error);
+  const kind = classifyHttpError(error);
+  const statusCode = extractHttpStatusCode(error);
 
-    if (statusCode === 401) {
+  switch (kind) {
+    case 'auth-required':
       return new RunWorkspaceLoadError('unauthorized', 'Authentication required', statusCode);
-    }
-    if (statusCode === 403) {
+    case 'access-denied':
       return new RunWorkspaceLoadError('forbidden', 'Access denied for this run', statusCode);
-    }
-    if ((statusCode ?? 0) >= 500) {
+    case 'service-unavailable':
       return new RunWorkspaceLoadError(
         'runtime-unavailable',
         'Runtime service is unavailable',
         statusCode
       );
-    }
+    default:
+      return new RunWorkspaceLoadError('unexpected', 'Unexpected runtime failure');
   }
-
-  return new RunWorkspaceLoadError('unexpected', 'Unexpected runtime failure');
 }
 
 function describeTimelineError(error: unknown): { message: string; statusCode?: number } {
-  if (error instanceof ApiError) {
-    const statusCode = getStatusCode(error);
+  const kind = classifyHttpError(error);
+  const statusCode = extractHttpStatusCode(error);
 
-    if (statusCode === 401 || statusCode === 403) {
+  switch (kind) {
+    case 'auth-required':
+    case 'access-denied':
       return {
         message: 'Timeline is unavailable because access to event detail is denied.',
         statusCode,
       };
-    }
-
-    if ((statusCode ?? 0) >= 500) {
+    case 'service-unavailable':
       return {
         message: 'Timeline is temporarily unavailable because runtime event service is degraded.',
         statusCode,
       };
-    }
-
-    return {
-      message: `Timeline could not be loaded${statusCode ? ` (HTTP ${statusCode})` : ''}.`,
-      statusCode,
-    };
+    case 'client-error':
+      return {
+        message: `Timeline could not be loaded${statusCode ? ` (HTTP ${statusCode})` : ''}.`,
+        statusCode,
+      };
+    default:
+      return { message: 'Timeline could not be loaded due to an unexpected error.' };
   }
-
-  return { message: 'Timeline could not be loaded due to an unexpected error.' };
 }
 
 export function createRunWorkspaceFacade(runsService: IRunsPort): RunWorkspaceFacade {

@@ -1,10 +1,10 @@
-import { describe, expect, it, vi } from 'vitest';
 import { parseExecutionSelection } from '@dvt/contracts';
+import { describe, expect, it, vi } from 'vitest';
 
-import { ApiError, type ApiClient } from '../api/createApiClient';
 import type { StartRunInput } from '../../ports/runs';
 import { useSessionStore } from '../../stores/sessionStore';
 import { makePlanRef } from '../../testing/contractTestUtils';
+import { ApiError, type ApiClient } from '../api/createApiClient';
 import { createRunsService } from './runsService';
 
 function createApiClientMock(): ApiClient {
@@ -382,6 +382,43 @@ describe('runsService runtime contract', () => {
       events: [],
       nextAfterSeq: undefined,
     });
+  });
+
+  it('propagates listRunSummaries API errors', async () => {
+    const apiClient = createApiClientMock();
+    const apiError = createApiError(500, '/runs');
+    vi.mocked(apiClient.getJson).mockRejectedValue(apiError);
+
+    const service = createRunsService('api', apiClient);
+
+    await expect(service.listRunSummaries()).rejects.toBe(apiError);
+  });
+
+  it('returns IRunsPort-compatible service for api mode', () => {
+    const apiClient = createApiClientMock();
+    const service = createRunsService('api', apiClient);
+
+    expect(service).toHaveProperty('listRunSummaries');
+    expect(service).toHaveProperty('getRunSnapshot');
+    expect(service).toHaveProperty('startRun');
+    expect(service).toHaveProperty('listRunEvents');
+    expect(typeof service.listRunSummaries).toBe('function');
+    expect(typeof service.getRunSnapshot).toBe('function');
+    expect(typeof service.startRun).toBe('function');
+    expect(typeof service.listRunEvents).toBe('function');
+  });
+
+  it('returns IRunsPort-compatible service for mock mode', () => {
+    const service = createRunsService('mock');
+
+    expect(service).toHaveProperty('listRunSummaries');
+    expect(service).toHaveProperty('getRunSnapshot');
+    expect(service).toHaveProperty('startRun');
+    expect(service).toHaveProperty('listRunEvents');
+    expect(typeof service.listRunSummaries).toBe('function');
+    expect(typeof service.getRunSnapshot).toBe('function');
+    expect(typeof service.startRun).toBe('function');
+    expect(typeof service.listRunEvents).toBe('function');
   });
 
   it.each([401, 403, 404, 409, 422, 500])(
