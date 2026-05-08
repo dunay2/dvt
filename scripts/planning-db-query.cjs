@@ -3,7 +3,7 @@ const { Client } = require('pg');
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { schemaName } = require('./planning-db-migrate.cjs');
 
-const knownQueries = new Set(['summary', 'hash-drift', 'tasks', 'next']);
+const knownQueries = new Set(['summary', 'hash-drift', 'tasks', 'open', 'next']);
 
 function databaseUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
@@ -216,6 +216,21 @@ function effectiveTaskSelect() {
     from ${schemaName}.planning_effective_tasks`;
 }
 
+function openTaskSelect() {
+  return `
+    select
+      lane_id,
+      task_id,
+      priority,
+      status,
+      progress_pct,
+      claimed_by,
+      dependency,
+      objective,
+      target
+    from ${schemaName}.planning_open_tasks`;
+}
+
 async function readSummary(client) {
   const result = await client.query(`
     select
@@ -251,6 +266,28 @@ async function readTaskRows(client, filters = {}) {
 
   const result = await client.query(
     `${effectiveTaskSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by lane_id, status, priority, task_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readOpenTaskRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'lane_id', filters.laneId);
+  appendFilter(predicates, params, 'status', filters.status);
+  appendFilter(predicates, params, 'claimed_by', filters.claimedBy);
+  appendFilter(predicates, params, 'priority', filters.priority);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${openTaskSelect()}
      ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
      order by lane_id, status, priority, task_id
      limit $${params.length}`,
@@ -335,6 +372,15 @@ async function runQuery(options = {}) {
       return taskRows;
     }
 
+    if (queryName === 'open') {
+      const rows = await readOpenTaskRows(client, options.filters || {});
+      const taskRows = buildTaskRows(rows);
+      if (options.print !== false) {
+        printTaskRows(taskRows);
+      }
+      return taskRows;
+    }
+
     if (queryName === 'next') {
       const taskRows = await readNextTaskRows(client, options.filters || {});
       if (options.print !== false) {
@@ -371,6 +417,7 @@ module.exports = {
   databaseUrl,
   parseArgs,
   printHashDriftSummary,
+  readOpenTaskRows,
   printSummary,
   printTaskRows,
   readNextTaskRows,

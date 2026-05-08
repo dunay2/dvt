@@ -82,9 +82,14 @@ status/progress/evidence. Use the DB command rail:
 ```bash
 pnpm planning:db:operate task claim --lane A --task S21 --actor codex
 pnpm planning:db:operate task update --lane A --task S21 --actor codex --status review --progress 80 --reason "Implementation ready for review" --evidence docs/planning/closeouts/20260508-s21-closeout.md
+pnpm planning:db:query open --lane A
 pnpm planning:db:query tasks --lane A --status review
 pnpm planning:db:query next --lane A
 ```
+
+`planning:db:query open` reads `planning_open_tasks`, the DB view that hides
+`done` and `blocked` rows for daily work inspection while preserving the full
+effective read model in `planning_effective_tasks`.
 
 `planning:db:query next --lane <id>` resolves dependencies against the full
 effective task view before it filters candidates to the requested lane. This
@@ -137,6 +142,13 @@ pnpm planning:db:import
 pnpm docs:planning:lanes:generate
 pnpm docs:workboard:generate
 ```
+
+`docs:workboard:generate` defaults to `--source auto`: it reads the imported
+`planning_effective_tasks` DB view when the shared planning DB is reachable and
+fresh, and falls back to lane YAML only when the DB is unavailable. Use
+`node scripts/generate-workboard.cjs --source yaml` only for an explicit
+deterministic fallback preview. If the DB is reachable but stale, refresh with
+`pnpm planning:db:import` instead of accepting YAML-derived output.
 
 If you added, removed, or renamed documentation files under `docs/`, also run:
 

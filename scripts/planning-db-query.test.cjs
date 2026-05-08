@@ -9,6 +9,7 @@ const {
   parseArgs,
   readNextTaskRows,
   readHashDriftSummary,
+  readOpenTaskRows,
   readSummary,
   readTaskRows,
   resolveQueryName,
@@ -19,6 +20,7 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('summary'), 'summary');
   assert.equal(resolveQueryName('hash-drift'), 'hash-drift');
   assert.equal(resolveQueryName('tasks'), 'tasks');
+  assert.equal(resolveQueryName('open'), 'open');
   assert.equal(resolveQueryName('next'), 'next');
   assert.throws(() => resolveQueryName('unknown'), /Unknown planning DB query "unknown"/);
 });
@@ -276,6 +278,30 @@ test('readTaskRows queries the effective task view with stable filters', async (
   assert.match(captured.sql, /claimed_by = \$3/);
   assert.match(captured.sql, /limit \$4/);
   assert.deepEqual(captured.params, ['C', 'review', 'codex', 10]);
+});
+
+test('readOpenTaskRows queries the DB open-task view without duplicating status logic', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readOpenTaskRows(client, {
+    laneId: 'C',
+    priority: 'P1',
+    limit: 10,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.planning_open_tasks/);
+  assert.doesNotMatch(captured.sql, /status not in/i);
+  assert.match(captured.sql, /lane_id = \$1/);
+  assert.match(captured.sql, /priority = \$2/);
+  assert.match(captured.sql, /limit \$3/);
+  assert.deepEqual(captured.params, ['C', 'P1', 10]);
 });
 
 test('readNextTaskRows reads effective tasks before applying dependency routing', async () => {
