@@ -190,3 +190,49 @@ test('tracked migrations include the actionable next planning task view after W1
   assert.match(nextTaskMigration.sql, /regexp_split_to_table/);
   assert.match(nextTaskMigration.sql, /lower\(prerequisite\.status\) = 'done'/);
 });
+
+test('tracked migrations include governance query views after W12A', () => {
+  const migrations = readMigrationFiles();
+  const governanceQueryMigration = migrations.find(
+    (migration) => migration.fileName === '009_governance_query_views.sql'
+  );
+
+  assert.ok(governanceQueryMigration);
+  assert.match(
+    governanceQueryMigration.sql,
+    /create or replace view planning_query_store\.governance_file_query/
+  );
+  assert.match(
+    governanceQueryMigration.sql,
+    /create or replace view planning_query_store\.governance_component_query/
+  );
+  assert.match(
+    governanceQueryMigration.sql,
+    /create or replace view planning_query_store\.governance_coverage_query/
+  );
+  assert.match(
+    governanceQueryMigration.sql,
+    /create or replace view planning_query_store\.governance_remediation_query/
+  );
+  assert.match(
+    governanceQueryMigration.sql,
+    /create or replace view planning_query_store\.governance_drift_query/
+  );
+});
+
+test('tracked migrations include governance report query payloads after W12B', () => {
+  const migrations = readMigrationFiles();
+  const reportQueryPayloadMigration = migrations.find(
+    (migration) => migration.fileName === '010_governance_report_query_payloads.sql'
+  );
+
+  assert.ok(reportQueryPayloadMigration);
+  assert.match(reportQueryPayloadMigration.sql, /governance_refs/);
+  assert.match(reportQueryPayloadMigration.sql, /raw_coverage/);
+  assert.match(reportQueryPayloadMigration.sql, /expected_validation/);
+  assert.match(reportQueryPayloadMigration.sql, /raw_task/);
+  assert.match(
+    reportQueryPayloadMigration.sql,
+    /create or replace view planning_query_store\.governance_remediation_query/
+  );
+});

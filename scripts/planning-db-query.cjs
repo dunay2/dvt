@@ -3,7 +3,18 @@ const { Client } = require('pg');
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { schemaName } = require('./planning-db-migrate.cjs');
 
-const knownQueries = new Set(['summary', 'hash-drift', 'tasks', 'open', 'next']);
+const knownQueries = new Set([
+  'summary',
+  'hash-drift',
+  'tasks',
+  'open',
+  'next',
+  'files',
+  'components',
+  'coverage',
+  'remediation',
+  'drift',
+]);
 
 function databaseUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
@@ -66,6 +77,30 @@ function parseArgs(args = process.argv.slice(2)) {
       filters.priority = value;
       continue;
     }
+    if (arg === '--component') {
+      filters.component = value;
+      continue;
+    }
+    if (arg === '--root') {
+      filters.rootUnit = value;
+      continue;
+    }
+    if (arg === '--domain') {
+      filters.domainUnit = value;
+      continue;
+    }
+    if (arg === '--path') {
+      filters.path = value;
+      continue;
+    }
+    if (arg === '--state') {
+      filters.governanceState = value;
+      continue;
+    }
+    if (arg === '--kind') {
+      filters.kind = value;
+      continue;
+    }
     if (arg === '--limit') {
       filters.limit = parseLimit(value, 20);
       continue;
@@ -123,6 +158,67 @@ function buildTaskRows(rows) {
   ]);
 }
 
+function compactText(value) {
+  return String(value ?? '-')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function flagLabel(value, label) {
+  return value ? label : '-';
+}
+
+function buildGovernanceFileRows(rows) {
+  return rows.map((row) => [
+    row.path,
+    row.component_unit ?? row.componentUnit,
+    row.owning_unit ?? row.owningUnit,
+    row.governance_state ?? row.governanceState,
+    flagLabel(row.is_drift ?? row.isDrift, 'drift'),
+    flagLabel(row.is_legacy ?? row.isLegacy, 'legacy'),
+  ]);
+}
+
+function buildGovernanceComponentRows(rows) {
+  return rows.map((row) => [
+    row.component_id ?? row.componentId,
+    row.file_count ?? row.fileCount,
+    row.governance_state ?? row.governanceState,
+    flagLabel(row.is_drift ?? row.isDrift, 'drift'),
+    flagLabel(row.is_legacy ?? row.isLegacy, 'legacy'),
+    row.ddd_owner ?? row.dddOwner ?? '-',
+  ]);
+}
+
+function buildGovernanceCoverageRows(rows) {
+  return rows.map((row) => [
+    row.coverage_kind ?? row.coverageKind,
+    row.name,
+    row.count_value ?? row.countValue ?? '-',
+    row.file_count ?? row.fileCount ?? '-',
+    row.component_id ?? row.componentId ?? '-',
+  ]);
+}
+
+function buildGovernanceRemediationRows(rows) {
+  return rows.map((row) => [
+    row.priority,
+    row.task_id ?? row.taskId,
+    row.component_unit ?? row.componentUnit,
+    row.file_count ?? row.fileCount,
+    compactText(row.reason),
+  ]);
+}
+
+function buildGovernanceDriftRows(rows) {
+  return rows.map((row) => [
+    row.path,
+    row.component_unit ?? row.componentUnit,
+    row.owning_unit ?? row.owningUnit,
+    (row.drift_fields ?? row.driftFields ?? []).join(','),
+  ]);
+}
+
 function appendFilter(predicates, params, column, value) {
   if (value === undefined || value === null || value === '') {
     return;
@@ -175,6 +271,83 @@ function nextTaskSelect() {
       objective,
       target
     from ${schemaName}.planning_next_tasks`;
+}
+
+function governanceFileSelect() {
+  return `
+    select
+      path,
+      component_unit,
+      owning_unit,
+      root_unit,
+      domain_unit,
+      governance_state,
+      is_drift,
+      is_legacy,
+      ddd_owner,
+      cq_rails
+    from ${schemaName}.governance_file_query`;
+}
+
+function governanceComponentSelect() {
+  return `
+    select
+      component_id,
+      name,
+      level,
+      root_unit,
+      domain_unit,
+      status,
+      governance_state,
+      is_drift,
+      is_legacy,
+      children_required,
+      file_count,
+      ddd_owner,
+      cq_rails
+    from ${schemaName}.governance_component_query`;
+}
+
+function governanceCoverageSelect() {
+  return `
+    select
+      coverage_id,
+      coverage_kind,
+      name,
+      count_value,
+      file_count,
+      component_id
+    from ${schemaName}.governance_coverage_query`;
+}
+
+function governanceRemediationSelect() {
+  return `
+    select
+      task_id,
+      task_type,
+      priority,
+      component_unit,
+      root_unit,
+      domain_unit,
+      ddd_owner,
+      cq_rails,
+      blocking,
+      reason,
+      file_count,
+      document_count
+    from ${schemaName}.governance_remediation_query`;
+}
+
+function governanceDriftSelect() {
+  return `
+    select
+      path,
+      component_unit,
+      owning_unit,
+      root_unit,
+      domain_unit,
+      drift_fields
+    from ${schemaName}.governance_drift_query`;
 }
 
 function nextTaskOrderBy() {
@@ -275,6 +448,126 @@ async function readNextTaskRows(client, filters = {}) {
   return buildTaskRows(result.rows);
 }
 
+function appendGovernanceFileFilters(predicates, params, filters = {}) {
+  appendFilter(predicates, params, 'component_unit', filters.component);
+  appendFilter(predicates, params, 'root_unit', filters.rootUnit);
+  appendFilter(predicates, params, 'domain_unit', filters.domainUnit);
+  appendFilter(predicates, params, 'governance_state', filters.governanceState);
+  appendFilter(predicates, params, 'path', filters.path);
+}
+
+function appendGovernanceComponentFilters(predicates, params, filters = {}) {
+  appendFilter(predicates, params, 'component_id', filters.component);
+  appendFilter(predicates, params, 'root_unit', filters.rootUnit);
+  appendFilter(predicates, params, 'domain_unit', filters.domainUnit);
+  appendFilter(predicates, params, 'governance_state', filters.governanceState);
+}
+
+async function readGovernanceFileRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendGovernanceFileFilters(predicates, params, filters);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${governanceFileSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by is_drift desc, component_unit, path
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readGovernanceComponentRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendGovernanceComponentFilters(predicates, params, filters);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${governanceComponentSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by file_count desc, component_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readGovernanceCoverageRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'coverage_kind', filters.kind);
+  appendFilter(predicates, params, 'component_id', filters.component);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${governanceCoverageSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by coverage_kind, name
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readGovernanceRemediationRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'priority', filters.priority);
+  appendFilter(predicates, params, 'component_unit', filters.component);
+  appendFilter(predicates, params, 'root_unit', filters.rootUnit);
+  appendFilter(predicates, params, 'domain_unit', filters.domainUnit);
+  appendFilter(predicates, params, 'task_type', filters.kind);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${governanceRemediationSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by
+      case
+        when priority ~* '^P?[0-9]+$' then regexp_replace(priority, '^P', '', 'i')::int
+        else 9
+      end,
+      task_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readGovernanceDriftRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendGovernanceFileFilters(predicates, params, filters);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${governanceDriftSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by component_unit, path
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
 async function readHashDriftSummary(client) {
   const result = await client.query(`
     select
@@ -357,6 +650,51 @@ async function runQuery(options = {}) {
       return taskRows;
     }
 
+    if (queryName === 'files') {
+      const rows = await readGovernanceFileRows(client, options.filters || {});
+      const fileRows = buildGovernanceFileRows(rows);
+      if (options.print !== false) {
+        printTaskRows(fileRows);
+      }
+      return fileRows;
+    }
+
+    if (queryName === 'components') {
+      const rows = await readGovernanceComponentRows(client, options.filters || {});
+      const componentRows = buildGovernanceComponentRows(rows);
+      if (options.print !== false) {
+        printTaskRows(componentRows);
+      }
+      return componentRows;
+    }
+
+    if (queryName === 'coverage') {
+      const rows = await readGovernanceCoverageRows(client, options.filters || {});
+      const coverageRows = buildGovernanceCoverageRows(rows);
+      if (options.print !== false) {
+        printTaskRows(coverageRows);
+      }
+      return coverageRows;
+    }
+
+    if (queryName === 'remediation') {
+      const rows = await readGovernanceRemediationRows(client, options.filters || {});
+      const remediationRows = buildGovernanceRemediationRows(rows);
+      if (options.print !== false) {
+        printTaskRows(remediationRows);
+      }
+      return remediationRows;
+    }
+
+    if (queryName === 'drift') {
+      const rows = await readGovernanceDriftRows(client, options.filters || {});
+      const driftRows = buildGovernanceDriftRows(rows);
+      if (options.print !== false) {
+        printTaskRows(driftRows);
+      }
+      return driftRows;
+    }
+
     throw new Error(`Unhandled planning DB query "${queryName}".`);
   } finally {
     if (ownsClient) {
@@ -378,12 +716,22 @@ if (require.main === module) {
 }
 
 module.exports = {
+  buildGovernanceComponentRows,
+  buildGovernanceCoverageRows,
+  buildGovernanceDriftRows,
+  buildGovernanceFileRows,
+  buildGovernanceRemediationRows,
   buildHashDriftRows,
   buildSummaryRows,
   buildTaskRows,
   databaseUrl,
   parseArgs,
   printHashDriftSummary,
+  readGovernanceComponentRows,
+  readGovernanceCoverageRows,
+  readGovernanceDriftRows,
+  readGovernanceFileRows,
+  readGovernanceRemediationRows,
   readOpenTaskRows,
   printSummary,
   printTaskRows,

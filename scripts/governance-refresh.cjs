@@ -14,14 +14,6 @@ function buildRefreshStages() {
         script: 'docs:sync',
       },
       {
-        id: 'planning-db-import',
-        script: 'planning:db:import',
-      },
-      {
-        id: 'workboard',
-        script: 'docs:workboard:generate',
-      },
-      {
         id: 'code-status',
         script: 'docs:status:generate',
       },
@@ -50,12 +42,26 @@ function buildRefreshStages() {
         script: 'docs:governance:file-fingerprint-impact',
       },
       {
+        id: 'planning-db-import',
+        script: 'planning:db:import',
+      },
+      {
+        id: 'workboard',
+        script: 'docs:workboard:generate',
+      },
+      {
         id: 'coverage-report',
         script: 'docs:governance:coverage-report',
+        env: {
+          DVT_GOVERNANCE_REPORT_SOURCE: 'db',
+        },
       },
       {
         id: 'remediation-queue',
         script: 'docs:governance:remediation-queue',
+        env: {
+          DVT_GOVERNANCE_REPORT_SOURCE: 'db',
+        },
       },
     ],
     databaseStages: [
@@ -79,11 +85,14 @@ function pnpmCommand() {
   return process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
 }
 
-function runPnpmScript(script) {
+function runPnpmScript(script, stage = {}) {
   const command = pnpmCommand();
   const result = childProcess.spawnSync(command, [script], {
     cwd: repoRoot,
-    env: process.env,
+    env: {
+      ...process.env,
+      ...(stage.env || {}),
+    },
     stdio: 'inherit',
     shell: process.platform === 'win32' && command.endsWith('.cmd'),
   });

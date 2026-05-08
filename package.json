@@ -89,6 +89,7 @@
     "planning:db:export": "node scripts/planning-db-export.cjs",
     "planning:db:export:check": "node scripts/planning-db-export.cjs --check",
     "governance:db:check": "node scripts/governance-db-check.cjs",
+    "governance:db:query": "node scripts/planning-db-query.cjs",
     "governance:refresh": "node scripts/governance-refresh.cjs",
     "test:governance:refresh": "node --test scripts/governance-refresh.test.cjs",
     "test:planning:db": "node --test scripts/planning-db-run.test.cjs scripts/planning-db-migrate.test.cjs scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-operate.test.cjs scripts/planning-db-check.test.cjs scripts/planning-db-export.test.cjs scripts/governance-db-check.test.cjs scripts/governance-generated-paths.test.cjs scripts/governance-refresh.test.cjs scripts/generate-workboard.test.cjs",

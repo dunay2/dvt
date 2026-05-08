@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const {
   buildCoverageReport,
   countGovernanceDocuments,
+  readCoverageReportFromDb,
   renderMarkdown,
 } = require('./generate-governance-coverage-report.cjs');
 
@@ -148,4 +149,113 @@ test('renderMarkdown includes generated marker and finding tables', () => {
   assert.match(markdown, /By Evidence State/);
   assert.match(markdown, /apps\/api\/src\/legacy\/store\.ts/);
   assert.match(markdown, /SYS-API-ROOT/);
+});
+
+test('readCoverageReportFromDb reads governance query views as the report source', async () => {
+  const queries = [];
+  const client = {
+    async query(sql) {
+      queries.push(sql);
+
+      if (sql.includes('governance_file_query')) {
+        return {
+          rows: [
+            {
+              path: 'apps/api/src/main.ts',
+              file_id: 'FILE-API-MAIN',
+              owning_unit: 'SYS-API-ROOT',
+              root_unit: 'SYS-DVT',
+              domain_unit: 'SYS-API',
+              component_unit: 'SYS-API-ROOT',
+              owner_level: 'component',
+              unit_status: 'coverage-required',
+              governance_state: 'coverage-required',
+              canonical_role: 'none',
+              evidence_state: 'coverage-required',
+              is_drift: false,
+              is_legacy: false,
+              ddd_owner: 'AS',
+              cq_rails: 'API-Q01',
+              governance_refs: ['docs/api.md'],
+            },
+            {
+              path: 'apps/api/src/legacy/store.ts',
+              file_id: 'FILE-API-LEGACY',
+              owning_unit: 'SYS-PLANSTORE-LEGACY',
+              root_unit: 'SYS-DVT',
+              domain_unit: 'SYS-API',
+              component_unit: 'SYS-PLANSTORE-LEGACY',
+              owner_level: 'component',
+              unit_status: 'legacy',
+              governance_state: 'legacy',
+              canonical_role: 'none',
+              evidence_state: 'remediation-required',
+              is_drift: true,
+              is_legacy: true,
+              ddd_owner: 'ADP',
+              cq_rails: 'PS-Q04',
+              governance_refs: ['docs/planstore.md', 'docs/api.md'],
+            },
+          ],
+        };
+      }
+
+      if (sql.includes('governance_component_query')) {
+        return {
+          rows: [
+            {
+              component_id: 'SYS-API-ROOT',
+              name: 'API root',
+              root_unit: 'SYS-DVT',
+              domain_unit: 'SYS-API',
+              status: 'coverage-required',
+              governance_state: 'coverage-required',
+              canonical_role: 'none',
+              evidence_state: 'coverage-required',
+              ddd_owner: 'AS',
+              cq_rails: 'API-Q01',
+              file_count: 1,
+              children_required: true,
+              is_drift: false,
+              is_legacy: false,
+              governance_refs: ['docs/api.md'],
+            },
+            {
+              component_id: 'SYS-PLANSTORE-LEGACY',
+              name: 'Plan store legacy',
+              root_unit: 'SYS-DVT',
+              domain_unit: 'SYS-API',
+              status: 'legacy',
+              governance_state: 'legacy',
+              canonical_role: 'none',
+              evidence_state: 'remediation-required',
+              ddd_owner: 'ADP',
+              cq_rails: 'PS-Q04',
+              file_count: 1,
+              children_required: false,
+              is_drift: true,
+              is_legacy: true,
+              governance_refs: ['docs/planstore.md'],
+            },
+          ],
+        };
+      }
+
+      throw new Error(`Unexpected SQL: ${sql}`);
+    },
+  };
+
+  const report = await readCoverageReportFromDb(client);
+  const capturedSql = queries.join('\n');
+
+  assert.equal(report.totals.files, 2);
+  assert.equal(report.totals.driftFiles, 1);
+  assert.deepEqual(report.governanceDocuments, [
+    { path: 'docs/api.md', fileCount: 2 },
+    { path: 'docs/planstore.md', fileCount: 1 },
+  ]);
+  assert.match(capturedSql, /from planning_query_store\.governance_file_query/);
+  assert.match(capturedSql, /from planning_query_store\.governance_component_query/);
+  assert.doesNotMatch(capturedSql, /\.generated-docs/);
+  assert.doesNotMatch(capturedSql, /system-governance-file-index\.files\.yaml/);
 });

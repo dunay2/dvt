@@ -4,9 +4,13 @@
  */
 
 const fs = require('node:fs');
+const { Client } = require('pg');
 const yaml = require('js-yaml');
+const { resolveSourceMode } = require('./generate-governance-coverage-report.cjs');
 const { readFileIndexFromDisk } = require('./generate-governance-file-component-index.cjs');
 const { generatedStatusDir, governanceGeneratedPath } = require('./governance-generated-paths.cjs');
+const { schemaName } = require('./planning-db-migrate.cjs');
+const { defaultPgUrl } = require('./planning-db-run.cjs');
 
 const statusDir = generatedStatusDir;
 const coverageReportPath = governanceGeneratedPath(
@@ -355,6 +359,113 @@ function buildRemediationQueue({
   };
 }
 
+function mapDbRemediationTaskRow(row) {
+  const rawTask = row.raw_task ?? row.rawTask;
+  if (rawTask && typeof rawTask === 'object' && !Array.isArray(rawTask)) {
+    return rawTask;
+  }
+
+  return {
+    id: row.task_id ?? row.taskId,
+    type: row.task_type ?? row.taskType,
+    priority: row.priority,
+    componentUnit: row.component_unit ?? row.componentUnit,
+    componentFileMap: row.component_file_map ?? row.componentFileMap,
+    rootUnit: row.root_unit ?? row.rootUnit,
+    domainUnit: row.domain_unit ?? row.domainUnit,
+    dddOwner: row.ddd_owner ?? row.dddOwner,
+    cqRails: row.cq_rails ?? row.cqRails,
+    blocking: row.blocking,
+    reason: row.reason,
+    fileCount: row.file_count ?? row.fileCount ?? 0,
+    documentCount: row.document_count ?? row.documentCount ?? 0,
+    files: asArray(row.files),
+    documents: asArray(row.documents),
+    expectedValidation: asArray(row.expected_validation ?? row.expectedValidation),
+  };
+}
+
+function findCoverageTotal(coverageRows, name) {
+  const row = asArray(coverageRows).find(
+    (entry) => (entry.coverage_kind ?? entry.coverageKind) === 'total' && entry.name === name
+  );
+
+  return Number(row?.count_value ?? row?.countValue ?? 0);
+}
+
+function buildRemediationQueueFromDbRows({ remediationRows, coverageRows }) {
+  const tasks = sortTasks(asArray(remediationRows).map(mapDbRemediationTaskRow));
+
+  return {
+    version: 1,
+    generatedFrom: [
+      'planning_query_store.governance_remediation_query',
+      'planning_query_store.governance_coverage_query',
+    ],
+    totals: {
+      tasks: tasks.length,
+      p0: tasks.filter((task) => task.priority === 'P0').length,
+      p1: tasks.filter((task) => task.priority === 'P1').length,
+      p2: tasks.filter((task) => task.priority === 'P2').length,
+      p3: tasks.filter((task) => task.priority === 'P3').length,
+      driftFiles: findCoverageTotal(coverageRows, 'driftFiles'),
+      componentsRequiringSubdivision: findCoverageTotal(
+        coverageRows,
+        'componentsRequiringSubdivision'
+      ),
+    },
+    byType: countBy(tasks, 'type'),
+    byPriority: countBy(tasks, 'priority'),
+    tasks,
+  };
+}
+
+async function readRemediationQueueFromDb(client) {
+  const [remediationResult, coverageResult] = await Promise.all([
+    client.query(`
+      select
+        task_id,
+        task_type,
+        priority,
+        component_unit,
+        component_file_map,
+        root_unit,
+        domain_unit,
+        ddd_owner,
+        cq_rails,
+        blocking,
+        reason,
+        file_count,
+        document_count,
+        files,
+        documents,
+        expected_validation,
+        raw_task
+      from ${schemaName}.governance_remediation_query
+      order by
+        case
+          when priority ~* '^P?[0-9]+$' then regexp_replace(priority, '^P', '', 'i')::int
+          else 9
+        end,
+        task_id
+    `),
+    client.query(`
+      select
+        coverage_kind,
+        name,
+        count_value
+      from ${schemaName}.governance_coverage_query
+      where coverage_kind = 'total'
+      order by name
+    `),
+  ]);
+
+  return buildRemediationQueueFromDbRows({
+    remediationRows: remediationResult.rows,
+    coverageRows: coverageResult.rows,
+  });
+}
+
 function renderTaskRows(tasks) {
   if (tasks.length === 0) {
     return '| _None_ | _None_ | _None_ | _None_ | 0 | 0 | _None_ |';
@@ -449,7 +560,7 @@ function writeIfChanged(filePath, content) {
   return true;
 }
 
-function buildOutputs() {
+function buildLocalRemediationOutputs() {
   const queue = buildRemediationQueue({
     coverageReport: readYaml(coverageReportPath),
     fileIndex: { files: readFileIndexFromDisk(fileIndexPath) },
@@ -465,9 +576,45 @@ function buildOutputs() {
   };
 }
 
-function main() {
+async function buildOutputs(options = {}) {
+  const sourceMode = resolveSourceMode(options);
+
+  if (sourceMode === 'local') {
+    return buildLocalRemediationOutputs();
+  }
+
+  const client =
+    options.client ||
+    new Client({
+      connectionString:
+        options.databaseUrl ||
+        process.env.DVT_PLANNING_DB_URL ||
+        process.env.DATABASE_URL ||
+        defaultPgUrl,
+    });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    const queue = await readRemediationQueueFromDb(client);
+    return {
+      queue,
+      yaml: renderYaml(queue),
+      markdown: renderMarkdown(queue),
+    };
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
+async function main() {
   const checkOnly = process.argv.includes('--check');
-  const outputs = buildOutputs();
+  const outputs = await buildOutputs();
   fs.mkdirSync(statusDir, { recursive: true });
   const changed = [
     writeIfChanged(queueYamlPath, outputs.yaml),
@@ -487,16 +634,24 @@ function main() {
 }
 
 if (require.main === module) {
-  main();
+  main().catch((error) => {
+    console.error(`[docs:governance:remediation-queue] ${error.message}`);
+    process.exit(1);
+  });
 }
 
 module.exports = {
+  buildLocalRemediationOutputs,
+  buildRemediationQueueFromDbRows,
   buildRemediationQueue,
   buildDriftTasks,
   buildSubdivisionTasks,
   buildRailGapTasks,
   buildDocumentAlignmentTasks,
   classifyPriority,
+  findCoverageTotal,
   isSpecificRail,
+  mapDbRemediationTaskRow,
+  readRemediationQueueFromDb,
   renderMarkdown,
 };
