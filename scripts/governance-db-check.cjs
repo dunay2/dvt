@@ -46,15 +46,15 @@ function buildGovernanceExpectedState(snapshot = buildGovernanceFileSnapshot()) 
       sourcePath: file.sourcePath,
       sourceContentSha256: file.sourceContentSha256,
     })),
-    fingerprints: (snapshot.fingerprints || []).map((fingerprint) => ({
-      path: fingerprint.path,
-      fileId: fingerprint.fileId,
-      contentHash: fingerprint.contentHash,
-      governanceHash: fingerprint.governanceHash,
-      stateFingerprint: fingerprint.stateFingerprint,
-      owningUnit: fingerprint.owningUnit,
-      sourcePath: fingerprint.sourcePath,
-      sourceContentSha256: fingerprint.sourceContentSha256,
+    fingerprints: (snapshot.files || []).map((file) => ({
+      path: file.path,
+      fileId: file.fileId,
+      contentHash: file.contentHash,
+      governanceHash: file.governanceHash,
+      stateFingerprint: file.stateFingerprint,
+      owningUnit: file.owningUnit,
+      sourcePath: file.sourcePath,
+      sourceContentSha256: file.sourceContentSha256,
     })),
     coverageRows: (snapshot.coverageRows || []).map((row) => ({
       coverageId: row.coverageId,
@@ -225,14 +225,14 @@ async function readGovernanceDatabaseState(client) {
       client.query(`
       select
         path,
-        file_id as "fileId",
+        derived_file_id as "fileId",
         content_hash as "contentHash",
-        governance_hash as "governanceHash",
-        state_fingerprint as "stateFingerprint",
+        derived_governance_hash as "governanceHash",
+        derived_state_fingerprint as "stateFingerprint",
         owning_unit as "owningUnit",
         source_path as "sourcePath",
         source_content_sha256 as "sourceContentSha256"
-      from ${schemaName}.governance_fingerprints
+      from ${schemaName}.governance_file_hash_projection
       order by path
     `),
       client.query(`

@@ -965,10 +965,19 @@ function buildOutputs() {
   const componentEntries = buildComponentEntries(units, fileEntries, unitById);
   const fileIndex = buildFileIndexManifest(fileEntries);
   const componentFileMap = buildComponentFileMapManifest(componentEntries, fileEntries);
+  const componentIndexManifest = {
+    version: 1,
+    generatedFrom: 'docs/planning/status/system-governance-unit-index.units.yaml',
+    fileIndex: generatedFileYamlRelativePath,
+    componentCount: componentEntries.length,
+    components: componentEntries,
+  };
 
   return {
     fileEntries,
     componentEntries,
+    fileIndexManifest: fileIndex.manifest,
+    fileIndexShardPayloads: fileIndex.shards,
     fileYaml: renderYaml(fileIndex.manifest),
     fileShards: Object.fromEntries(
       Object.entries(fileIndex.shards).map(([shardPath, payload]) => [
@@ -976,13 +985,10 @@ function buildOutputs() {
         renderYaml(payload),
       ])
     ),
-    componentYaml: renderYaml({
-      version: 1,
-      generatedFrom: 'docs/planning/status/system-governance-unit-index.units.yaml',
-      fileIndex: generatedFileYamlRelativePath,
-      componentCount: componentEntries.length,
-      components: componentEntries,
-    }),
+    componentIndexManifest,
+    componentYaml: renderYaml(componentIndexManifest),
+    componentFileMapManifest: componentFileMap.manifest,
+    componentFileMapShardPayloads: componentFileMap.shards,
     componentFileMapYaml: renderYaml(componentFileMap.manifest),
     componentFileMapShards: Object.fromEntries(
       Object.entries(componentFileMap.shards).map(([shardPath, payload]) => [

@@ -16,8 +16,9 @@ explicit operational contract.
 The workflow remains deterministic, but the generated read side is no longer a
 tracked review surface. File indexes, component maps, fingerprints, coverage
 reports, remediation queues, and shard files are local artifacts under
-`.generated-docs/planning/status/`; `governance:refresh` then imports them into
-the planning/governance Postgres read model for query and drift checks.
+`.generated-docs/planning/status/`. The planning/governance Postgres read model
+rebuilds equivalent projections in memory from the same generator modules for
+query and drift checks.
 
 ## Governing Sources
 
@@ -166,8 +167,9 @@ flowchart TD
 
 ## Canonical Refresh Command
 
-`pnpm governance:refresh` is the canonical local command for refreshing the
-generated governance read side before query-store import and drift checks.
+`pnpm governance:refresh` is the canonical local command for refreshing local
+inspection artifacts, rebuilding the query-store import, and running drift
+checks.
 Agents and contributors should prefer this command over manually remembering the
 individual generator order.
 
@@ -194,6 +196,11 @@ stable does it run `planning:db:import`, `planning:db:check`,
 The fingerprint is a convergence guard, not a new source of truth. Git-tracked
 sources, generated-docs policy, unit ownership, and generator scripts remain
 authoritative.
+
+`planning:db:import` takes a transaction-scoped advisory lock before replacing
+planning and governance read-model rows. This is required because the local
+Postgres volume is shared by all worktrees and agents on the same machine; two
+imports must not interleave their delete and insert phases.
 
 If the shared local Postgres volume rejects `planning:db:import` because an
 already-applied migration checksum no longer matches the Git-tracked migration
@@ -227,9 +234,9 @@ These output families used to be tracked review files under
 - `docs/planning/status/governance-components/*.component-files.yaml`
 
 That fan-out is no longer expected in PR file lists. The same payload is still
-deterministically generated under `.generated-docs/planning/status/` and then
-imported into Postgres, but reviewer attention stays on root source, script,
-config, and plan changes.
+deterministically generated under `.generated-docs/planning/status/` for local
+inspection and rebuilt in memory for Postgres import, but reviewer attention
+stays on root source, script, config, and plan changes.
 
 ## Derivation Boundary For GOV-S3
 
@@ -245,12 +252,16 @@ audit and overlay tables:
 | `GovernanceGeneratedArtifact`  | path, artifact class, generator command, tracking posture, content hash           |
 | `GovernanceWorkflowEdge`       | upstream artifact, downstream stage, edge reason                                  |
 | `GovernanceReviewImpact`       | root changed source, generated artifact family, changed row count, changed hash   |
+| `GovernanceFileHashProjection` | path, file id, path hash, content hash, governance hash, state fingerprint        |
 
 The generation contract remains source-controlled: the unit manifest, the
 generated-docs policy, and generator scripts still define how generated
 governance artifacts are produced. The local database is now the operational
 coordination and query surface for generated governance state. Generated
 governance files are ignored local artifacts, not PR review files.
+`planning:db:import` must rebuild governance projections in memory from the
+same generator modules; `.generated-docs` files are local inspection outputs,
+not the database import source.
 
 ## Invariants
 
@@ -267,6 +278,14 @@ governance files are ignored local artifacts, not PR review files.
 - A Postgres store may replace repetitive reads, local task coordination, and
   review fan-out while preserving this stage contract through import and drift
   checks.
+- Postgres hash projections may derive file id, path hash, governance hash, and
+  state fingerprint from imported governance file rows. The imported
+  `content_hash` remains the byte-level input fact until repository file
+  contents are imported directly.
+- The DB import rail must not require `.generated-docs` files to exist before
+  import. It may keep generated repo paths as stable source identifiers, but the
+  source content hash must be computed from the in-memory projection payload
+  being imported.
 - The migration must move local operational state into DB audit and overlay
   rows while keeping reviewer attention on root source changes and summarized
   artifact hashes.
@@ -287,7 +306,9 @@ GOV-S3 read model rails. It does not add product runtime behavior.
 - `ValidateSystemGovernanceGenerationWorkflow` is a Docs governance query owned
   by `GovernanceWorkflowDriftReport`. Its adapter surface is the generator/check
   command adapter plus Postgres checker; missing `.generated-docs` artifacts or
-  imported DB drift fail closed.
+  imported DB drift fail closed. File fingerprint comparison uses the
+  DB-derived `governance_file_hash_projection` read model instead of treating
+  the generated fingerprint baseline as the comparison source.
 
 These rails are documentation and tooling rails. Runtime packages, API routes,
 web UI actions, engine contracts, and adapters must not depend on them.

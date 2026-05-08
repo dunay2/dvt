@@ -3,6 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
+  buildCurrentGovernanceIndexes,
   parseNameStatus,
   readLocalNameStatusDiff,
   readNameStatusDiff,
@@ -191,6 +192,39 @@ test('readLocalNameStatusDiff treats a staged deletion as the final state after 
       path: 'docs/planning/status/system-governance-file-index.files.yaml',
     },
   ]);
+});
+
+test('buildCurrentGovernanceIndexes derives current indexes from an in-memory snapshot', () => {
+  const result = buildCurrentGovernanceIndexes({
+    buildSnapshot: () => ({
+      files: [
+        {
+          path: 'apps/api/src/app.ts',
+          fileId: 'F-API',
+          stateFingerprint: 'current-api',
+          owningUnit: 'SYS-API-ROOT',
+          rootUnit: 'SYS-DVT',
+          domainUnit: 'SYS-RUNTIME',
+          componentUnit: 'SYS-API-ROOT',
+          unitStatus: 'canonical',
+          dddOwner: 'AS',
+          cqRails: 'CMD',
+          isDrift: false,
+          isLegacy: false,
+        },
+      ],
+      fingerprints: [
+        {
+          path: 'apps/api/src/app.ts',
+          fileId: 'F-API',
+          stateFingerprint: 'current-api',
+        },
+      ],
+    }),
+  });
+
+  assert.deepEqual(result.currentFileIndex.files, currentFileIndex.files.slice(0, 1));
+  assert.deepEqual(result.currentBaseline.files, currentBaseline.files.slice(0, 1));
 });
 
 test('validateChangedFiles accepts governed added, modified, deleted and renamed files', () => {

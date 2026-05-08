@@ -5,6 +5,15 @@ const { Client } = require('pg');
 const yaml = require('js-yaml');
 
 const { governanceGeneratedPath } = require('./governance-generated-paths.cjs');
+const { buildFingerprintBaseline } = require('./check-governance-file-fingerprint-baseline.cjs');
+const {
+  buildOutputs: buildDocumentUnitOutputs,
+} = require('./generate-governance-document-unit-map.cjs');
+const {
+  buildOutputs: buildGovernanceFileComponentOutputs,
+} = require('./generate-governance-file-component-index.cjs');
+const { buildCoverageReport } = require('./generate-governance-coverage-report.cjs');
+const { buildRemediationQueue } = require('./generate-governance-remediation-queue.cjs');
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { runMigrations, schemaName } = require('./planning-db-migrate.cjs');
 
@@ -52,6 +61,26 @@ function readYamlSource(filePath) {
     contentSha256: sha256(raw),
     sourceBytes: Buffer.byteLength(raw, 'utf8'),
     parsed: yaml.load(raw),
+  };
+}
+
+function renderYamlSourcePayload(payload) {
+  return yaml.dump(payload, {
+    lineWidth: 100,
+    noRefs: true,
+    sortKeys: false,
+  });
+}
+
+function buildGeneratedYamlSource(sourcePath, parsed) {
+  const raw = renderYamlSourcePayload(parsed);
+  return {
+    absolutePath: path.join(repoRoot, sourcePath),
+    sourcePath,
+    raw,
+    contentSha256: sha256(raw),
+    sourceBytes: Buffer.byteLength(raw, 'utf8'),
+    parsed,
   };
 }
 
@@ -132,6 +161,13 @@ function addGovernanceSource(sources, source, sourceType, metadata = {}) {
     sourceBytes: source.sourceBytes,
     metadata,
   });
+}
+
+function inMemorySourceMetadata(metadata = {}) {
+  return {
+    sourceMode: 'in-memory-generator',
+    ...metadata,
+  };
 }
 
 function buildCoverageRows(coverageSource) {
@@ -334,18 +370,74 @@ function buildPlanningContentSnapshot() {
   return { sources, lanes, tasks };
 }
 
+function buildGovernanceGeneratedInputs() {
+  const fileComponentOutputs = buildGovernanceFileComponentOutputs();
+  const documentOutputs = buildDocumentUnitOutputs();
+  const index = fileComponentOutputs.fileIndexManifest;
+  const componentIndex = fileComponentOutputs.componentIndexManifest;
+  const componentFileMap = fileComponentOutputs.componentFileMapManifest;
+  const fingerprintBaseline = buildFingerprintBaseline(fileComponentOutputs.fileEntries);
+  const coverageReport = buildCoverageReport(
+    { files: fileComponentOutputs.fileEntries },
+    componentIndex
+  );
+  const remediationQueue = buildRemediationQueue({
+    coverageReport,
+    fileIndex: { files: fileComponentOutputs.fileEntries },
+    componentIndex,
+    componentFileMap,
+    documentMap: documentOutputs.documentMap,
+  });
+
+  return {
+    indexSource: buildGeneratedYamlSource(repoRelative(governanceFileIndexPath), index),
+    componentIndexSource: buildGeneratedYamlSource(
+      repoRelative(governanceComponentIndexPath),
+      componentIndex
+    ),
+    componentFileMapSource: buildGeneratedYamlSource(
+      repoRelative(governanceComponentFileMapPath),
+      componentFileMap
+    ),
+    fingerprintBaselineSource: buildGeneratedYamlSource(
+      repoRelative(governanceFingerprintBaselinePath),
+      fingerprintBaseline
+    ),
+    coverageReportSource: buildGeneratedYamlSource(
+      repoRelative(governanceCoverageReportPath),
+      coverageReport
+    ),
+    remediationQueueSource: buildGeneratedYamlSource(
+      repoRelative(governanceRemediationQueuePath),
+      remediationQueue
+    ),
+    fileShardSources: new Map(
+      Object.entries(fileComponentOutputs.fileIndexShardPayloads).map(([sourcePath, payload]) => [
+        sourcePath,
+        buildGeneratedYamlSource(sourcePath, payload),
+      ])
+    ),
+    componentShardSources: new Map(
+      Object.entries(fileComponentOutputs.componentFileMapShardPayloads).map(
+        ([sourcePath, payload]) => [sourcePath, buildGeneratedYamlSource(sourcePath, payload)]
+      )
+    ),
+  };
+}
+
 function buildGovernanceFileSnapshot() {
-  const indexSource = readYamlSource(governanceFileIndexPath);
+  const generatedInputs = buildGovernanceGeneratedInputs();
+  const indexSource = generatedInputs.indexSource;
   const index = indexSource.parsed;
-  const componentIndexSource = readYamlSource(governanceComponentIndexPath);
+  const componentIndexSource = generatedInputs.componentIndexSource;
   const componentIndex = componentIndexSource.parsed;
-  const componentFileMapSource = readYamlSource(governanceComponentFileMapPath);
+  const componentFileMapSource = generatedInputs.componentFileMapSource;
   const componentFileMap = componentFileMapSource.parsed;
-  const fingerprintBaselineSource = readYamlSource(governanceFingerprintBaselinePath);
+  const fingerprintBaselineSource = generatedInputs.fingerprintBaselineSource;
   const fingerprintBaseline = fingerprintBaselineSource.parsed;
-  const coverageReportSource = readYamlSource(governanceCoverageReportPath);
+  const coverageReportSource = generatedInputs.coverageReportSource;
   const coverageReport = coverageReportSource.parsed;
-  const remediationQueueSource = readYamlSource(governanceRemediationQueuePath);
+  const remediationQueueSource = generatedInputs.remediationQueueSource;
   const remediationQueue = remediationQueueSource.parsed;
 
   const sources = [];
@@ -356,35 +448,73 @@ function buildGovernanceFileSnapshot() {
   const componentFiles = [];
   const fingerprints = [];
 
-  addGovernanceSource(sources, indexSource, 'governance_file_index', {
-    fileCount: index.fileCount,
-    shardCount: Array.isArray(index.shards) ? index.shards.length : 0,
-  });
-  addGovernanceSource(sources, componentIndexSource, 'governance_component_index', {
-    componentCount: componentIndex.componentCount,
-  });
-  addGovernanceSource(sources, componentFileMapSource, 'governance_component_file_map', {
-    componentCount: componentFileMap.componentCount,
-    fileCount: componentFileMap.fileCount,
-  });
-  addGovernanceSource(sources, fingerprintBaselineSource, 'governance_fingerprint_baseline', {
-    fileCount: fingerprintBaseline.fileCount,
-  });
-  addGovernanceSource(sources, coverageReportSource, 'governance_coverage_report', {
-    totals: coverageReport.totals || {},
-  });
-  addGovernanceSource(sources, remediationQueueSource, 'governance_remediation_queue', {
-    totals: remediationQueue.totals || {},
-  });
+  addGovernanceSource(
+    sources,
+    indexSource,
+    'governance_file_index',
+    inMemorySourceMetadata({
+      fileCount: index.fileCount,
+      shardCount: Array.isArray(index.shards) ? index.shards.length : 0,
+    })
+  );
+  addGovernanceSource(
+    sources,
+    componentIndexSource,
+    'governance_component_index',
+    inMemorySourceMetadata({
+      componentCount: componentIndex.componentCount,
+    })
+  );
+  addGovernanceSource(
+    sources,
+    componentFileMapSource,
+    'governance_component_file_map',
+    inMemorySourceMetadata({
+      componentCount: componentFileMap.componentCount,
+      fileCount: componentFileMap.fileCount,
+    })
+  );
+  addGovernanceSource(
+    sources,
+    fingerprintBaselineSource,
+    'governance_fingerprint_baseline',
+    inMemorySourceMetadata({
+      fileCount: fingerprintBaseline.fileCount,
+    })
+  );
+  addGovernanceSource(
+    sources,
+    coverageReportSource,
+    'governance_coverage_report',
+    inMemorySourceMetadata({
+      totals: coverageReport.totals || {},
+    })
+  );
+  addGovernanceSource(
+    sources,
+    remediationQueueSource,
+    'governance_remediation_queue',
+    inMemorySourceMetadata({
+      totals: remediationQueue.totals || {},
+    })
+  );
 
   for (const shard of index.shards || []) {
-    const shardSource = readYamlSource(path.join(repoRoot, shard.path));
+    const shardSource = generatedInputs.fileShardSources.get(shard.path);
+    if (!shardSource) {
+      throw new Error(`Missing in-memory governance file shard ${shard.path}`);
+    }
     const shardDoc = shardSource.parsed;
 
-    addGovernanceSource(sources, shardSource, 'governance_file_shard', {
-      shardId: shardDoc.shardId,
-      fileCount: shardDoc.fileCount,
-    });
+    addGovernanceSource(
+      sources,
+      shardSource,
+      'governance_file_shard',
+      inMemorySourceMetadata({
+        shardId: shardDoc.shardId,
+        fileCount: shardDoc.fileCount,
+      })
+    );
 
     fileShards.push({
       shardId: normalizeText(shardDoc.shardId),
@@ -455,16 +585,24 @@ function buildGovernanceFileSnapshot() {
   }
 
   for (const componentShard of componentFileMap.components || []) {
-    const shardSource = readYamlSource(path.join(repoRoot, componentShard.path));
+    const shardSource = generatedInputs.componentShardSources.get(componentShard.path);
+    if (!shardSource) {
+      throw new Error(`Missing in-memory governance component shard ${componentShard.path}`);
+    }
     const shardDoc = shardSource.parsed;
     const componentId = normalizeText(componentShard.id || shardDoc.componentUnit);
 
-    addGovernanceSource(sources, shardSource, 'governance_component_shard', {
-      componentId,
-      fileCount: shardDoc.fileCount,
-      driftFileCount: shardDoc.driftFileCount,
-      legacyFileCount: shardDoc.legacyFileCount,
-    });
+    addGovernanceSource(
+      sources,
+      shardSource,
+      'governance_component_shard',
+      inMemorySourceMetadata({
+        componentId,
+        fileCount: shardDoc.fileCount,
+        driftFileCount: shardDoc.driftFileCount,
+        legacyFileCount: shardDoc.legacyFileCount,
+      })
+    );
 
     componentFileShards.push({
       componentId,
@@ -854,6 +992,14 @@ async function insertGovernanceSnapshot(client, snapshot) {
   }
 }
 
+async function beginImportTransaction(client) {
+  await client.query('begin');
+  await client.query('select pg_advisory_xact_lock(hashtext($1), hashtext($2))', [
+    'dvt:planning-query-store',
+    'import-content-v1',
+  ]);
+}
+
 async function importContent(options = {}) {
   const url = options.databaseUrl || databaseUrl();
   const silent = options.silent === true;
@@ -868,7 +1014,7 @@ async function importContent(options = {}) {
 
   try {
     await runMigrations({ client, silent: true });
-    await client.query('begin');
+    await beginImportTransaction(client);
     await insertPlanningSnapshot(client, planningSnapshot);
     await insertGovernanceSnapshot(client, governanceSnapshot);
     await client.query('commit');
@@ -913,6 +1059,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  beginImportTransaction,
   buildGovernanceFileSnapshot,
   buildPlanningContentSnapshot,
   databaseUrl,

@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const {
   buildGovernanceFileSnapshot,
   buildPlanningContentSnapshot,
+  importContent,
   normalizeText,
 } = require('./planning-db-import.cjs');
 
@@ -57,8 +58,51 @@ test('governance snapshot preserves component, fingerprint, coverage, and remedi
   assert.equal(planstoreDrift.files.length, 20);
 });
 
+test('governance snapshot builds DB import sources from in-memory generator projections', () => {
+  const snapshot = buildGovernanceFileSnapshot();
+  const generatedSources = snapshot.sources.filter((source) =>
+    source.sourcePath.startsWith('.generated-docs/')
+  );
+
+  assert.ok(generatedSources.length > 0);
+  assert.equal(
+    generatedSources.every((source) => source.metadata?.sourceMode === 'in-memory-generator'),
+    true
+  );
+  assert.equal(
+    generatedSources.some((source) => source.sourceType === 'governance_file_shard'),
+    true
+  );
+  assert.equal(
+    generatedSources.some((source) => source.sourceType === 'governance_component_shard'),
+    true
+  );
+});
+
 test('normalizeText keeps structured lane fields queryable without dropping content', () => {
   assert.equal(normalizeText(undefined), '');
   assert.equal(normalizeText(['one', 'two']), 'one\ntwo');
   assert.equal(normalizeText({ a: 1 }), '{"a":1}');
+});
+
+test('importContent serializes destructive read-model replacement with an advisory lock', async () => {
+  const queries = [];
+  const client = {
+    async query(sql, params) {
+      queries.push({ sql: String(sql).trim(), params });
+      return { rows: [] };
+    },
+  };
+
+  await importContent({ client, silent: true });
+
+  const beginIndexes = queries
+    .map((query, index) => (query.sql === 'begin' ? index : -1))
+    .filter((index) => index >= 0);
+  const importBeginIndex = beginIndexes.at(-1);
+  const lockQuery = queries[importBeginIndex + 1];
+
+  assert.ok(importBeginIndex > 0);
+  assert.match(lockQuery.sql, /pg_advisory_xact_lock/);
+  assert.deepEqual(lockQuery.params, ['dvt:planning-query-store', 'import-content-v1']);
 });

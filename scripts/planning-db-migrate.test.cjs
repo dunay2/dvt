@@ -99,3 +99,24 @@ test('tracked migrations include local operation audit tables after W6', () => {
     /create table if not exists planning_query_store\.planning_local_operations/
   );
 });
+
+test('tracked migrations include DB-derived governance hash projections after W7', () => {
+  const migrations = readMigrationFiles();
+  const hashProjectionMigration = migrations.find(
+    (migration) => migration.fileName === '004_governance_hash_projections.sql'
+  );
+
+  assert.ok(hashProjectionMigration);
+  assert.match(
+    hashProjectionMigration.sql,
+    /create or replace function planning_query_store\.stable_jsonb_text/
+  );
+  assert.match(
+    hashProjectionMigration.sql,
+    /create or replace view planning_query_store\.governance_file_hash_projection/
+  );
+  assert.match(
+    hashProjectionMigration.sql,
+    /create or replace view planning_query_store\.governance_file_hash_drift/
+  );
+});

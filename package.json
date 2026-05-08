@@ -92,7 +92,7 @@
     "governance:artifacts:generate": "pnpm docs:governance:document-unit-map && pnpm docs:governance:file-component-index && pnpm docs:governance:file-fingerprint-baseline && pnpm docs:governance:file-fingerprint-impact && pnpm docs:governance:coverage-report && pnpm docs:governance:remediation-queue",
     "governance:refresh": "node scripts/governance-refresh.cjs",
     "test:governance:refresh": "node --test scripts/governance-refresh.test.cjs",
-    "test:planning:db": "pnpm governance:artifacts:generate && node --test scripts/planning-db-run.test.cjs scripts/planning-db-migrate.test.cjs scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-operate.test.cjs scripts/planning-db-check.test.cjs scripts/planning-db-export.test.cjs scripts/governance-db-check.test.cjs scripts/governance-generated-paths.test.cjs scripts/governance-refresh.test.cjs",
+    "test:planning:db": "node --test scripts/planning-db-run.test.cjs scripts/planning-db-migrate.test.cjs scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-operate.test.cjs scripts/planning-db-check.test.cjs scripts/planning-db-export.test.cjs scripts/governance-db-check.test.cjs scripts/governance-generated-paths.test.cjs scripts/governance-refresh.test.cjs",
     "test:planning:db:integration": "node --test scripts/planning-db-content.integration.test.cjs",
     "contracts:index:generate": "node scripts/generate-contract-index.cjs",
     "contracts:index:check": "pnpm contracts:index:generate && git diff --quiet -- specs/contracts/README.md",

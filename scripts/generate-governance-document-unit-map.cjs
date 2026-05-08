@@ -359,8 +359,16 @@ function buildOutputs(manifestPath = defaultManifestPath) {
   const manifest = readManifest(manifestPath);
   const units = Array.isArray(manifest.units) ? manifest.units : [];
   const entries = buildDocumentEntries(getTrackedDocs(), units);
+  const documentMap = {
+    version: 1,
+    generatedFrom: 'git ls-files docs',
+    unitManifest: 'docs/planning/status/system-governance-unit-index.units.yaml',
+    documentCount: entries.length,
+    documents: entries,
+  };
   return {
     entries,
+    documentMap,
     yaml: renderYaml(entries),
     markdown: renderMarkdown(entries),
   };
@@ -389,6 +397,7 @@ if (require.main === module) {
 
 module.exports = {
   buildDocumentEntries,
+  buildOutputs,
   classifyDocument,
   resolveSubjectUnit,
   renderMarkdown,

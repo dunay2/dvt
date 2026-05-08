@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
+const packageJson = require('../package.json');
 const { buildRefreshStages, runGovernanceRefresh } = require('./governance-refresh.cjs');
 
 test('governance refresh runs deterministic generation before database drift checks', () => {
@@ -72,5 +73,13 @@ test('governance refresh fails closed when generated output does not stabilize',
     executedScripts.includes('planning:db:import'),
     false,
     'database import must wait for stable generated surfaces'
+  );
+});
+
+test('planning DB test suite does not pre-generate governance artifacts', () => {
+  assert.doesNotMatch(
+    packageJson.scripts['test:planning:db'],
+    /governance:artifacts:generate/,
+    'planning DB tests must prove DB import works without generated files as input'
   );
 });

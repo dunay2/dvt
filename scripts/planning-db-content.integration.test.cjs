@@ -45,6 +45,16 @@ test('live planning DB imports lane tasks and governance files with Git-count pa
     assert.equal(summary.governanceComponentFiles, governanceSnapshot.componentFiles.length);
     assert.equal(summary.governanceFingerprints, governanceSnapshot.fingerprints.length);
     assert.equal(summary.governanceRemediationTasks, governanceSnapshot.remediationTasks.length);
+    assert.equal(summary.governanceHashDrift, 0);
+
+    const projection = await client.query(`
+      select
+        count(*)::int as "projectionRows",
+        count(*) filter (where derived_state_fingerprint = stored_state_fingerprint)::int as "matchingRows"
+      from planning_query_store.governance_file_hash_projection
+    `);
+    assert.equal(projection.rows[0].projectionRows, governanceSnapshot.files.length);
+    assert.equal(projection.rows[0].matchingRows, governanceSnapshot.files.length);
   } finally {
     await client.end();
   }

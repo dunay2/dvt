@@ -6,13 +6,9 @@
  */
 
 const { execFileSync } = require('node:child_process');
-const fs = require('node:fs');
-const yaml = require('js-yaml');
-const { readFileIndexFromDisk } = require('./generate-governance-file-component-index.cjs');
-const { governanceGeneratedPath, repoRoot, toPosix } = require('./governance-generated-paths.cjs');
+const { repoRoot, toPosix } = require('./governance-generated-paths.cjs');
+const { buildGovernanceFileSnapshot } = require('./planning-db-import.cjs');
 
-const fileIndexPath = governanceGeneratedPath('system-governance-file-index.files.yaml');
-const baselinePath = governanceGeneratedPath('system-governance-file-fingerprint-baseline.yaml');
 const gitOutputMaxBuffer = 16 * 1024 * 1024;
 
 function parseArgs(argv) {
@@ -33,10 +29,6 @@ function parseArgs(argv) {
   }
 
   return args;
-}
-
-function readYaml(filePath) {
-  return yaml.load(fs.readFileSync(filePath, 'utf8'));
 }
 
 function readNameStatusDiff(base, head, git = execGit) {
@@ -273,6 +265,22 @@ function validateChangedFiles({ changes, currentBaseline, currentFileIndex }) {
   return { errors, summary };
 }
 
+function buildCurrentGovernanceIndexes(options = {}) {
+  const snapshot = (options.buildSnapshot || buildGovernanceFileSnapshot)();
+  return {
+    currentBaseline: {
+      files: snapshot.fingerprints.map((fingerprint) => ({
+        path: fingerprint.path,
+        fileId: fingerprint.fileId,
+        stateFingerprint: fingerprint.stateFingerprint,
+      })),
+    },
+    currentFileIndex: {
+      files: snapshot.files,
+    },
+  };
+}
+
 function printResult(result) {
   const summary = Object.entries(result.summary)
     .map(([name, count]) => `${name}=${count}`)
@@ -294,10 +302,11 @@ function main() {
   const args = parseArgs(process.argv.slice(2));
   const base = resolveBaseRef([args.base, 'origin/main', 'upstream/main', 'main']);
   const changes = readLocalNameStatusDiff(base, args.head);
+  const { currentBaseline, currentFileIndex } = buildCurrentGovernanceIndexes();
   const result = validateChangedFiles({
     changes,
-    currentBaseline: readYaml(baselinePath),
-    currentFileIndex: { files: readFileIndexFromDisk(fileIndexPath) },
+    currentBaseline,
+    currentFileIndex,
   });
 
   printResult(result);
@@ -312,6 +321,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  buildCurrentGovernanceIndexes,
   parseNameStatus,
   readLocalNameStatusDiff,
   readNameStatusDiff,
