@@ -47,6 +47,8 @@ truthful in the browser:
 In scope:
 
 - automatic save status copy and posture for the existing Canvas draft lifecycle;
+- localized Canvas chrome that displays the automatic save posture and workbench
+  tabs from one i18n catalog per active locale;
 - Cypress proof over `apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts`;
 - focused unit tests for draft toolbar/status derivation and autosave failure
   scheduling;
@@ -91,6 +93,8 @@ Out of scope:
   save succeeds.
 - A failed automatic save renders `Draft save failed` and does not present the
   failed write as synced.
+- Canvas workbench tabs and autosave status are resolved through the Canvas i18n
+  catalog instead of hardcoded bilingual literals.
 - Read-only draft posture keeps node creation hidden and produces zero draft
   writes.
 - Focused unit tests cover the failed-save toolbar state and the autosave
@@ -129,7 +133,10 @@ governingSources:
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
 allowedImplementationSurfaces:
+  - apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+  - apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
   - apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
+  - apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
   - apps/web/src/app/views/canvas/canvasCopy.types.ts
   - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.ts
   - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.es.ts
@@ -142,6 +149,9 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasDraftPersistenceRuntime.test.ts
   - apps/web/src/app/views/canvas/canvasDraftToolbarState.ts
   - apps/web/src/app/views/canvas/canvasDraftToolbarState.test.ts
+  - apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts
+  - apps/web/src/app/views/canvas/canvasWorkbenchTabs.test.ts
+  - apps/web/src/app/views/canvas/copy.test.ts
   - apps/web/src/app/views/canvas/useCanvasDraftAttemptRefs.ts
   - apps/web/src/app/views/canvas/useCanvasDraftAutosave.ts
   - apps/web/src/app/views/canvas/useCanvasDraftBootstrapSync.ts
@@ -236,6 +246,21 @@ redGreenCycles:
     patchSurfaces:
       - apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
     greenTest: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
+  - id: autosave-and-workbench-i18n-proof
+    redTest: pnpm --filter @dvt/web test -- src/app/views/canvas/copy.test.ts src/app/views/canvas/canvasWorkbenchTabs.test.ts
+    expectedFailure: Canvas Workbench tabs and Cypress assertions still consume plugin fallback labels or bilingual literals instead of the active Canvas i18n catalog.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/canvasCopy.types.ts
+      - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.ts
+      - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.es.ts
+      - apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts
+      - apps/web/src/app/views/canvas/canvasWorkbenchTabs.test.ts
+      - apps/web/src/app/views/canvas/copy.test.ts
+      - apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+      - apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+      - apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
+      - apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+    greenTest: pnpm --filter @dvt/web test -- src/app/views/canvas/copy.test.ts src/app/views/canvas/canvasWorkbenchTabs.test.ts
 symbols:
   - name: DraftSaveStatus
     path: apps/web/src/app/views/canvas/canvasDraftLifecycle.types.ts
@@ -279,6 +304,116 @@ symbols:
       - Presentation Model
     architectureGuard: pnpm docs:feature-mechanization:implementation
     cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
+    unitTests:
+      - N/A - Cypress proof helper
+  - name: resolveCanvasWorkbenchTabLabel
+    path: apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts
+    dddOwner: Canvas workbench read model
+    cqRails:
+      - VerifyCanvasAutosave
+    fowlerSignals:
+      - Presentation Model
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: canvas-workbench-tabs.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.test.ts
+  - name: CanvasWorkbenchTabsCopy
+    path: apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts
+    dddOwner: Canvas workbench read model
+    cqRails:
+      - VerifyCanvasAutosave
+    fowlerSignals:
+      - Presentation Model
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: canvas-workbench-tabs.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.test.ts
+  - name: CANVAS_WORKBENCH_TAB_LABEL_KEYS
+    path: apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts
+    dddOwner: Canvas workbench read model
+    cqRails:
+      - VerifyCanvasAutosave
+    fowlerSignals:
+      - Presentation Model
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: canvas-workbench-tabs.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.test.ts
+  - name: WORKBENCH_TAB_LABEL_KEYS
+    path: apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+    dddOwner: Canvas workbench browser proof
+    cqRails:
+      - VerifyCanvasAutosave
+    fowlerSignals:
+      - Presentation Model
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: canvas-workbench-tabs.cy.ts
+    unitTests:
+      - N/A - Cypress proof helper
+  - name: WorkbenchTabLabelKey
+    path: apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+    dddOwner: Canvas workbench browser proof
+    cqRails:
+      - VerifyCanvasAutosave
+    fowlerSignals:
+      - Presentation Model
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: canvas-workbench-tabs.cy.ts
+    unitTests:
+      - N/A - Cypress proof helper
+  - name: clickCanvasWorkbenchTab
+    path: apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+    dddOwner: Canvas workbench browser proof
+    cqRails:
+      - VerifyCanvasAutosave
+    fowlerSignals:
+      - Presentation Model
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: canvas-workbench-tabs.cy.ts
+    unitTests:
+      - N/A - Cypress proof helper
+  - name: CanvasDraftStatusCopyKey
+    path: apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
+    dddOwner: Canvas autosave browser proof
+    cqRails:
+      - VerifyCanvasAutosave
+    fowlerSignals:
+      - Presentation Model
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: canvas-ready-node-authoring.cy.ts
+    unitTests:
+      - N/A - Cypress proof helper
+  - name: CanvasDraftAccessCopyKey
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access browser proof
+    cqRails:
+      - VerifyCanvasAutosave
+    fowlerSignals:
+      - Presentation Model
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - N/A - Cypress proof helper
+  - name: assertCanvasCopyVisible
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access browser proof
+    cqRails:
+      - VerifyCanvasAutosave
+    fowlerSignals:
+      - Presentation Model
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: canvas-draft-access-posture.cy.ts
+    unitTests:
+      - N/A - Cypress proof helper
+  - name: assertCanvasButtonVisible
+    path: apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts
+    dddOwner: Canvas draft access browser proof
+    cqRails:
+      - VerifyCanvasAutosave
+    fowlerSignals:
+      - Presentation Model
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: canvas-draft-access-posture.cy.ts
     unitTests:
       - N/A - Cypress proof helper
   - name: resolveWritableToolbarTone

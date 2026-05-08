@@ -1,11 +1,12 @@
 /** Owned concern: project Canvas workbench tab placements into a route-owned read model. */
-import { resolveString } from '../../plugins/contracts/PluginManifest';
 import type {
   CanvasWorkbenchTabId,
   CanvasWorkbenchTabPlacement,
 } from '../../plugins/contracts/PluginManifest';
 import type { CanvasWorkbenchRouteState } from './canvasWorkbenchRouteState';
 import { buildCanvasWorkbenchTabPath } from './canvasWorkbenchRouteState';
+import type { CanvasViewCopy } from './copy';
+import { canvasViewCopy } from './copy';
 
 export type CanvasWorkbenchContext =
   | Readonly<{
@@ -42,10 +43,38 @@ export type CanvasWorkbenchTabsReadModel = Readonly<{
   unavailableState: CanvasWorkbenchTabUnavailableState | null;
 }>;
 
-export function createGraphCanvasWorkbenchTab(): CanvasWorkbenchTabReadModel {
+type CanvasWorkbenchTabsCopy = Pick<
+  CanvasViewCopy,
+  | 'workbenchGraphTabLabel'
+  | 'workbenchCodeTabLabel'
+  | 'workbenchLineageTabLabel'
+  | 'workbenchDiffTabLabel'
+  | 'workbenchArtifactsTabLabel'
+  | 'workbenchRunsTabLabel'
+>;
+
+const CANVAS_WORKBENCH_TAB_LABEL_KEYS = {
+  graph: 'workbenchGraphTabLabel',
+  code: 'workbenchCodeTabLabel',
+  lineage: 'workbenchLineageTabLabel',
+  diff: 'workbenchDiffTabLabel',
+  artifacts: 'workbenchArtifactsTabLabel',
+  runs: 'workbenchRunsTabLabel',
+} satisfies Record<CanvasWorkbenchTabId, keyof CanvasWorkbenchTabsCopy>;
+
+export function resolveCanvasWorkbenchTabLabel(
+  tabId: CanvasWorkbenchTabId,
+  copy: CanvasWorkbenchTabsCopy = canvasViewCopy
+): string {
+  return copy[CANVAS_WORKBENCH_TAB_LABEL_KEYS[tabId]];
+}
+
+export function createGraphCanvasWorkbenchTab(
+  copy: CanvasWorkbenchTabsCopy = canvasViewCopy
+): CanvasWorkbenchTabReadModel {
   return {
     id: 'graph',
-    label: 'Graph',
+    label: resolveCanvasWorkbenchTabLabel('graph', copy),
     order: 10,
     scope: 'canvas',
     isEnabled: true,
@@ -65,11 +94,12 @@ function assertUniqueCanvasWorkbenchTabs(tabs: readonly CanvasWorkbenchTabReadMo
 }
 
 function projectPlacementToTab(
-  placement: CanvasWorkbenchTabPlacement
+  placement: CanvasWorkbenchTabPlacement,
+  copy: CanvasWorkbenchTabsCopy
 ): CanvasWorkbenchTabReadModel {
   return {
     id: placement.tabId,
-    label: resolveString(placement.label),
+    label: resolveCanvasWorkbenchTabLabel(placement.tabId, copy),
     order: placement.order,
     scope: placement.scope,
     isEnabled: true,
@@ -81,12 +111,16 @@ export function buildCanvasWorkbenchTabsReadModel(args: {
   placements: readonly CanvasWorkbenchTabPlacement[];
   routeState: CanvasWorkbenchRouteState;
   context: CanvasWorkbenchContext;
+  copy?: CanvasWorkbenchTabsCopy;
 }): CanvasWorkbenchTabsReadModel {
   const routeState = args.routeState;
-  const graphTab = createGraphCanvasWorkbenchTab();
+  const copy = args.copy ?? canvasViewCopy;
+  const graphTab = createGraphCanvasWorkbenchTab(copy);
   const pluginTabs =
     args.context.kind === 'ready'
-      ? args.placements.map(projectPlacementToTab).sort((left, right) => left.order - right.order)
+      ? args.placements
+          .map((placement) => projectPlacementToTab(placement, copy))
+          .sort((left, right) => left.order - right.order)
       : [];
   const tabs = [graphTab, ...pluginTabs];
   assertUniqueCanvasWorkbenchTabs(tabs);

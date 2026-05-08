@@ -6,6 +6,7 @@ import {
   buildCanvasWorkbenchTabsReadModel,
   createGraphCanvasWorkbenchTab,
 } from './canvasWorkbenchTabs';
+import { resolveCanvasViewCopy } from './copy';
 
 describe('buildCanvasWorkbenchTabsReadModel', () => {
   it('projects Graph plus enabled plugin tabs in placement order', () => {
@@ -65,6 +66,70 @@ describe('buildCanvasWorkbenchTabsReadModel', () => {
       ['code', 'Code', '/canvas/code'],
     ]);
     expect(model.tabs.every((tab) => !('icon' in tab))).toBe(true);
+  });
+
+  it('resolves Canvas workbench tab labels from the active locale catalog', () => {
+    const model = buildCanvasWorkbenchTabsReadModel({
+      placements: [
+        {
+          kind: 'workbench-tab',
+          workbench: 'canvas',
+          tabId: 'runs',
+          label: 'Runs',
+          icon: FileCode2,
+          order: 60,
+          scope: 'run',
+        },
+        {
+          kind: 'workbench-tab',
+          workbench: 'canvas',
+          tabId: 'artifacts',
+          label: 'Artifacts',
+          icon: FileCode2,
+          order: 50,
+          scope: 'run',
+        },
+        {
+          kind: 'workbench-tab',
+          workbench: 'canvas',
+          tabId: 'diff',
+          label: 'Diff',
+          icon: FileCode2,
+          order: 40,
+          scope: 'selection',
+        },
+        {
+          kind: 'workbench-tab',
+          workbench: 'canvas',
+          tabId: 'lineage',
+          label: 'Lineage',
+          icon: GitGraph,
+          order: 30,
+          scope: 'canvas',
+        },
+        {
+          kind: 'workbench-tab',
+          workbench: 'canvas',
+          tabId: 'code',
+          label: 'Code',
+          icon: FileCode2,
+          order: 20,
+          scope: 'selection',
+        },
+      ],
+      routeState: { kind: 'selected', tabId: 'graph' },
+      context: { kind: 'ready' },
+      copy: resolveCanvasViewCopy('es-ES'),
+    });
+
+    expect(model.tabs.map((tab) => tab.label)).toEqual([
+      'Grafo',
+      'Codigo',
+      'Linaje',
+      'Diferencias',
+      'Artefactos',
+      'Ejecuciones',
+    ]);
   });
 
   it('fails closed when duplicate Canvas tab IDs are registered', () => {

@@ -76,6 +76,12 @@ export type CanvasViewCopy = {
   readonly toolbarPlanLabel: string;
   readonly toolbarRunLabel: string;
   readonly newCanvasLabel: string;
+  readonly workbenchGraphTabLabel: string;
+  readonly workbenchCodeTabLabel: string;
+  readonly workbenchLineageTabLabel: string;
+  readonly workbenchDiffTabLabel: string;
+  readonly workbenchArtifactsTabLabel: string;
+  readonly workbenchRunsTabLabel: string;
   readonly replaceCanvasTitle: string;
   readonly replaceCanvasMessage: string;
   readonly replaceCanvasCancelLabel: string;

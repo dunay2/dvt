@@ -1,3 +1,4 @@
+import { resolveCanvasViewCopy, type CanvasViewCopy } from '../../../src/app/views/canvas/copy';
 import {
   stubFailingCanvasDraftSave,
   stubCanvasDraftRead,
@@ -27,6 +28,10 @@ type CanvasDraftSaveRequestBody = {
     }>;
   };
 };
+type CanvasDraftStatusCopyKey = keyof Pick<
+  CanvasViewCopy,
+  'draftSyncedLabel' | 'draftSavedLabel' | 'draftSaveFailedLabel'
+>;
 
 function stubRuntimeCapabilities(): void {
   stubE2eJsonApi('GET', '/capabilities', {
@@ -61,10 +66,17 @@ function waitForDraftSaveCount(expectedCount: number): void {
 
 function assertNoManualSaveCommand(): void {
   cy.contains('button', /^Save$/).should('not.exist');
+  cy.contains('button', /^Guardar$/).should('not.exist');
 }
 
-function assertDraftSaveStatus(expectedText: RegExp): void {
-  cy.get('[data-slot="canvas-draft-save-status"]').invoke('text').should('match', expectedText);
+function assertDraftSaveStatus(copyKey: CanvasDraftStatusCopyKey): void {
+  cy.window({ log: false }).then((window) => {
+    const copy = resolveCanvasViewCopy(
+      window.navigator.language || window.document.documentElement.lang
+    );
+
+    cy.get('[data-slot="canvas-draft-save-status"]').should('contain.text', copy[copyKey]);
+  });
 }
 
 function addSqlTransformNode(): void {
@@ -112,7 +124,7 @@ describe('Canvas ready node authoring', () => {
 
     cy.contains('Sales canvas').should('be.visible');
     assertNoManualSaveCommand();
-    assertDraftSaveStatus(/Draft synced|Draft sincronizado/);
+    assertDraftSaveStatus('draftSyncedLabel');
     cy.contains('.react-flow__node', 'model_orders').should('be.visible');
     showExplorerPanel();
     cy.contains('h3', 'Add node')
@@ -142,7 +154,7 @@ describe('Canvas ready node authoring', () => {
       });
     });
     assertNoManualSaveCommand();
-    assertDraftSaveStatus(/Draft saved|Draft guardado/);
+    assertDraftSaveStatus('draftSavedLabel');
   });
 
   it('persists add and remove authoring changes across route reloads', () => {
@@ -179,7 +191,7 @@ describe('Canvas ready node authoring', () => {
     cy.contains('.react-flow__node', 'SQL transform 1').should('be.visible');
     waitForDraftSaveCount(1);
     assertNoManualSaveCommand();
-    assertDraftSaveStatus(/Draft save failed|Guardado de draft fallido/);
+    assertDraftSaveStatus('draftSaveFailedLabel');
 
     visitReadyCanvas();
 

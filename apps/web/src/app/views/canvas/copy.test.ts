@@ -10,4 +10,22 @@ describe('canvas copy catalog', () => {
     expect(canvasViewCopy.refreshSessionActionLabel).toBe('Refresh session');
     expect(resolveCanvasViewCopy('es').sessionRequiredDraftLabel).toBe('Sesion requerida');
   });
+
+  it('resolves Canvas workbench and autosave chrome from one locale catalog', () => {
+    const spanishCopy = resolveCanvasViewCopy('es-ES');
+
+    expect(spanishCopy.toolbarLayoutLabel).toBe('Disposicion');
+    expect(spanishCopy.toolbarRunLabel).toBe('Ejecutar');
+    expect(spanishCopy.draftSyncedLabel).toBe('Borrador sincronizado');
+    expect(spanishCopy.draftSavedLabel).toBe('Borrador guardado');
+    expect(spanishCopy.draftSaveFailedLabel).toBe('Guardado del borrador fallido');
+    expect([
+      spanishCopy.workbenchGraphTabLabel,
+      spanishCopy.workbenchCodeTabLabel,
+      spanishCopy.workbenchLineageTabLabel,
+      spanishCopy.workbenchDiffTabLabel,
+      spanishCopy.workbenchArtifactsTabLabel,
+      spanishCopy.workbenchRunsTabLabel,
+    ]).toEqual(['Grafo', 'Codigo', 'Linaje', 'Diferencias', 'Artefactos', 'Ejecuciones']);
+  });
 });

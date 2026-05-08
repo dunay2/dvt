@@ -1,4 +1,5 @@
 /** Owned concern: verify Canvas workbench tab placement and text-only visual posture in browser. */
+import { resolveCanvasViewCopy, type CanvasViewCopy } from '../../../src/app/views/canvas/copy';
 import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
 import { stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
@@ -6,9 +7,17 @@ import {
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
 
-const WORKBENCH_TAB_LABELS = ['Graph', 'Code', 'Lineage', 'Diff', 'Artifacts', 'Runs'] as const;
+const WORKBENCH_TAB_LABEL_KEYS = [
+  'workbenchGraphTabLabel',
+  'workbenchCodeTabLabel',
+  'workbenchLineageTabLabel',
+  'workbenchDiffTabLabel',
+  'workbenchArtifactsTabLabel',
+  'workbenchRunsTabLabel',
+] as const satisfies readonly (keyof CanvasViewCopy)[];
 const GLOBAL_REMOVED_WORKBENCH_HREFS = ['/code', '/lineage', '/diff', '/artifacts'] as const;
 const RETIRED_SHELL_WORKBENCH_LABELS = ['Code', 'Lineage', 'Diff', 'Artifacts'] as const;
+type WorkbenchTabLabelKey = (typeof WORKBENCH_TAB_LABEL_KEYS)[number];
 
 function stubRuntimeCapabilities(): void {
   stubE2eJsonApi('GET', '/capabilities', {
@@ -50,10 +59,27 @@ function assertCanvasWorkbenchTabsAreVisible(): void {
   cy.get('body').then(($body) => {
     expect($body.find('#app-loading-screen:visible')).to.have.length(0);
   });
-  cy.get('[data-slot="canvas-workbench-tab-strip"]').within(() => {
-    for (const label of WORKBENCH_TAB_LABELS) {
-      cy.contains('button', label).should('be.visible');
-    }
+
+  cy.window({ log: false }).then((window) => {
+    const copy = resolveCanvasViewCopy(
+      window.navigator.language || window.document.documentElement.lang
+    );
+
+    cy.get('[data-slot="canvas-workbench-tab-strip"]').within(() => {
+      for (const labelKey of WORKBENCH_TAB_LABEL_KEYS) {
+        cy.contains('button', copy[labelKey]).should('be.visible');
+      }
+    });
+  });
+}
+
+function clickCanvasWorkbenchTab(labelKey: WorkbenchTabLabelKey): void {
+  cy.window({ log: false }).then((window) => {
+    const copy = resolveCanvasViewCopy(
+      window.navigator.language || window.document.documentElement.lang
+    );
+
+    cy.get('[data-slot="canvas-workbench-tab-strip"]').contains('button', copy[labelKey]).click();
   });
 }
 
@@ -151,11 +177,11 @@ describe('Canvas workbench tabs', () => {
       assertCanvasWorkbenchTabsAreHeaderScoped();
       cy.get('.react-flow').should('be.visible');
 
-      cy.get('[data-slot="canvas-workbench-tab-strip"]').contains('button', 'Lineage').click();
+      clickCanvasWorkbenchTab('workbenchLineageTabLabel');
       cy.location('pathname').should('eq', '/canvas/lineage');
       cy.contains('Column-level').should('be.visible');
 
-      cy.get('[data-slot="canvas-workbench-tab-strip"]').contains('button', 'Graph').click();
+      clickCanvasWorkbenchTab('workbenchGraphTabLabel');
       cy.location('pathname').should('eq', '/canvas');
       cy.get('.react-flow').should('be.visible');
     });
@@ -173,11 +199,11 @@ describe('Canvas workbench tabs', () => {
     assertCanvasWorkbenchTabsAreHeaderScoped();
     cy.get('.react-flow').should('be.visible');
 
-    cy.get('[data-slot="canvas-workbench-tab-strip"]').contains('button', 'Lineage').click();
+    clickCanvasWorkbenchTab('workbenchLineageTabLabel');
     cy.location('pathname').should('eq', '/canvas/lineage');
     cy.contains('Column-level').should('be.visible');
 
-    cy.get('[data-slot="canvas-workbench-tab-strip"]').contains('button', 'Graph').click();
+    clickCanvasWorkbenchTab('workbenchGraphTabLabel');
     cy.location('pathname').should('eq', '/canvas');
     cy.get('.react-flow').should('be.visible');
   });
