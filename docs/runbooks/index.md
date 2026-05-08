@@ -25,6 +25,7 @@ Operational runbooks for incidents, recovery, and maintenance.
 - [Temporal PlanRef Drained Cutover Runbook](temporal-planref-drained-cutover-20260427.md)
 - [Temporal Postgres Proof Environment](temporal-postgres-proof-environment.md)
 - [Temporal Worker DBT Runtime Runbook](temporal-worker-dbt-plugin-runtime-20260414.md)
+- [Temporal Worker Scaling Operations](temporal-worker-scaling-operations.md)
 - [Workflow Isolation Testing Strategy](workflow-isolation-testing.md)
 - [Workspace Graph-Draft Protected Boundary Runbook](workspace-graph-draft-protected-boundary-20260416.md)
 

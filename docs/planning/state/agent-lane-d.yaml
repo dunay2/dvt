@@ -337,7 +337,7 @@ tasks:
     last_verified: '2026-04-30'
   - task_id: AR-D3
     priority: P2
-    status: queued
+    status: in_progress
     objective: >-
       document worker scaling strategy for 1000+ tenants — per-tenant workers vs shared pool, task
       queue density model, cold-start latency targets, and worker auto-scaling policy.
@@ -347,13 +347,20 @@ tasks:
       covers worker provisioning, scaling triggers, and tenant-to-queue assignment policy.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 60
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/architecture/components/engine/adapters/temporal/temporal-worker-scaling-strategy.md
+      - docs/runbooks/temporal-worker-scaling-operations.md
     status_reason: >-
-      1000+ task queues (one per tenant) requires explicit worker density planning that does not
-      exist today.
-    last_verified: '2026-04-02'
+      Architecture document (temporal-worker-scaling-strategy.md) and operator runbook
+      (temporal-worker-scaling-operations.md) now align to the executable Temporal adapter/worker
+      model: tenant-scoped queues are derived as <baseQueue>-<tenantId>, each worker process polls
+      exactly one TEMPORAL_TASK_QUEUE, and capacity is added by scaling queue-local worker pools.
+      The docs preserve the useful multi-worker strategy while explicitly marking a global shared
+      pool across all tenant queues, tenant-to-queue automation, and 1000+ tenant production
+      evidence as open work rather than completed capability.
+    last_verified: '2026-05-07'
   - task_id: AR-D4
     priority: P2
     status: queued
