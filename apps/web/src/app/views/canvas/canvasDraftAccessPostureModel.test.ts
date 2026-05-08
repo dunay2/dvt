@@ -63,6 +63,28 @@ describe('canvasDraftAccessPostureModel', () => {
     expect(toCanvasDraftToolbarState(posture).label).toBe('Read-only draft');
   });
 
+  it('keeps automatic save failure visible without blocking graph edits', () => {
+    const posture = deriveCanvasDraftAccessPosture({
+      draftAccessMode: 'writable',
+      draftCapabilityReason: 'authorized',
+      draftFormatError: null,
+      recoveryReason: null,
+      draftSaveStatus: 'failed',
+      authTransportPosture: 'none',
+    });
+
+    expect(posture).toMatchObject({
+      kind: 'save_failed',
+      recoveryAction: 'none',
+      mutationBlocked: false,
+    });
+    expect(toCanvasDraftToolbarState(posture)).toEqual({
+      label: 'Draft save failed',
+      tone: 'danger',
+      showReloadAction: false,
+    });
+  });
+
   it('does not show synced for conflict, missing remote, or projection gap', () => {
     const recoverySlots = {
       stale_conflict: 'canvas-stale-draft-state',

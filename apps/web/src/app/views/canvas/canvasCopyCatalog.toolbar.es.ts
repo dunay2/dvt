@@ -26,6 +26,7 @@ export const canvasViewToolbarCopyEs = {
   draftSyncedLabel: 'Draft sincronizado',
   savingDraftLabel: 'Guardando draft',
   draftSavedLabel: 'Draft guardado',
+  draftSaveFailedLabel: 'Guardado de draft fallido',
   staleVersionLabel: 'Version obsoleta',
   draftMissingLabel: 'Draft ausente',
   projectionGapLabel: 'Hueco de proyeccion',

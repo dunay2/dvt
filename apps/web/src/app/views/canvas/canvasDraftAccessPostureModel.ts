@@ -24,6 +24,7 @@ export type CanvasDraftAccessPostureKind =
   | 'writable'
   | 'saving'
   | 'saved'
+  | 'save_failed'
   | 'read_only'
   | 'unauthenticated'
   | 'forbidden_scope'
@@ -123,6 +124,8 @@ function resolveWritableDraftToolbarLabel(draftSaveStatus: DraftSaveStatus): str
       return canvasViewCopy.savingDraftLabel;
     case 'saved':
       return canvasViewCopy.draftSavedLabel;
+    case 'failed':
+      return canvasViewCopy.draftSaveFailedLabel;
     default:
       return canvasViewCopy.draftSyncedLabel;
   }
@@ -130,8 +133,18 @@ function resolveWritableDraftToolbarLabel(draftSaveStatus: DraftSaveStatus): str
 
 function resolveWritablePostureKind(
   draftSaveStatus: DraftSaveStatus
-): Extract<CanvasDraftAccessPostureKind, 'writable' | 'saving' | 'saved'> {
+): Extract<CanvasDraftAccessPostureKind, 'writable' | 'saving' | 'saved' | 'save_failed'> {
+  if (draftSaveStatus === 'failed') {
+    return 'save_failed';
+  }
+
   return draftSaveStatus === 'saving' || draftSaveStatus === 'saved' ? draftSaveStatus : 'writable';
+}
+
+function resolveWritableToolbarTone(
+  draftSaveStatus: DraftSaveStatus
+): CanvasDraftToolbarState['tone'] {
+  return draftSaveStatus === 'failed' ? 'danger' : 'neutral';
 }
 
 function resolveDraftFormatPostureContent(
@@ -278,7 +291,7 @@ export function deriveCanvasDraftAccessPosture({
       title: canvasViewCopy.canvasReadyDetail,
       message: canvasViewCopy.canvasReadyDetail,
       toolbarLabel: resolveWritableDraftToolbarLabel(draftSaveStatus),
-      toolbarTone: 'neutral',
+      toolbarTone: resolveWritableToolbarTone(draftSaveStatus),
       recoveryAction: 'none',
       mutationBlocked: false,
     });

@@ -49,6 +49,7 @@ export function useCanvasDraftRecoveryActions({
   const reloadLatestDraft = useCallback(() => {
     clearSaveDebounce(refs);
     invalidateInFlightSaveAttempt();
+    refs.lastFailedSignatureRef.current = null;
     const reloadGeneration = refs.saveAttemptGenerationRef.current;
     setDraftSaveStatus('idle');
 

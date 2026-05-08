@@ -59,6 +59,14 @@ function waitForDraftSaveCount(expectedCount: number): void {
   });
 }
 
+function assertNoManualSaveCommand(): void {
+  cy.contains('button', /^Save$/).should('not.exist');
+}
+
+function assertDraftSaveStatus(expectedText: RegExp): void {
+  cy.get('[data-slot="canvas-draft-save-status"]').invoke('text').should('match', expectedText);
+}
+
 function addSqlTransformNode(): void {
   showExplorerPanel();
   cy.contains('h3', 'Add node')
@@ -103,6 +111,8 @@ describe('Canvas ready node authoring', () => {
     visitReadyCanvas();
 
     cy.contains('Sales canvas').should('be.visible');
+    assertNoManualSaveCommand();
+    assertDraftSaveStatus(/Draft synced|Draft sincronizado/);
     cy.contains('.react-flow__node', 'model_orders').should('be.visible');
     showExplorerPanel();
     cy.contains('h3', 'Add node')
@@ -127,10 +137,12 @@ describe('Canvas ready node authoring', () => {
       expect(createdNode).to.deep.include({
         id: 'dvt-sql-transform-1',
         name: 'SQL transform 1',
-        kind: 'dvt:sql_transform',
+        kind: 'sql_transform',
         pluginId: 'dvt',
       });
     });
+    assertNoManualSaveCommand();
+    assertDraftSaveStatus(/Draft saved|Draft guardado/);
   });
 
   it('persists add and remove authoring changes across route reloads', () => {
@@ -166,6 +178,8 @@ describe('Canvas ready node authoring', () => {
     addSqlTransformNode();
     cy.contains('.react-flow__node', 'SQL transform 1').should('be.visible');
     waitForDraftSaveCount(1);
+    assertNoManualSaveCommand();
+    assertDraftSaveStatus(/Draft save failed|Guardado de draft fallido/);
 
     visitReadyCanvas();
 

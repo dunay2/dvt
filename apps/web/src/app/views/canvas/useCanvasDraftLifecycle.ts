@@ -62,6 +62,7 @@ export function useCanvasDraftLifecycle({
     setDraftSaveStatus,
     invalidateInFlightSaveAttempt,
     lastSavedSignatureRef: refs.lastSavedSignatureRef,
+    lastFailedSignatureRef: refs.lastFailedSignatureRef,
   });
   const { reloadLatestDraft } = useCanvasDraftPersistence({
     draftRepository,

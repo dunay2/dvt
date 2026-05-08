@@ -13,6 +13,7 @@ type UseCanvasDraftMissingRemoteSyncArgs = {
   setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
   invalidateInFlightSaveAttempt: () => void;
   lastSavedSignatureRef: { current: string | null };
+  lastFailedSignatureRef: { current: string | null };
   lastAuthoritativeSemanticGraphRef: {
     current: CanvasAuthoringSemanticGraph | null;
   };
@@ -60,6 +61,7 @@ export function useCanvasDraftMissingRemoteSync({
   setDraftSaveStatus,
   invalidateInFlightSaveAttempt,
   lastSavedSignatureRef,
+  lastFailedSignatureRef,
   lastAuthoritativeSemanticGraphRef,
 }: UseCanvasDraftMissingRemoteSyncArgs) {
   useEffect(() => {
@@ -88,6 +90,7 @@ export function useCanvasDraftMissingRemoteSync({
 
     invalidateInFlightSaveAttempt();
     lastSavedSignatureRef.current = null;
+    lastFailedSignatureRef.current = null;
     setDraftSaveStatus('idle');
     setDraftSession((currentSession) =>
       canvasDraftSession.machine.markRemoteDraftMissing(
@@ -104,6 +107,7 @@ export function useCanvasDraftMissingRemoteSync({
     graphDraftQuery.data?.record,
     invalidateInFlightSaveAttempt,
     lastAuthoritativeSemanticGraphRef,
+    lastFailedSignatureRef,
     lastSavedSignatureRef,
     setDraftSaveStatus,
     setDraftSession,

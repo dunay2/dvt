@@ -27,6 +27,7 @@ type UseCanvasDraftBootstrapSyncArgs = {
   setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
   invalidateInFlightSaveAttempt: () => void;
   lastSavedSignatureRef: { current: string | null };
+  lastFailedSignatureRef: { current: string | null };
 };
 
 export function useCanvasDraftBootstrapSync({
@@ -42,6 +43,7 @@ export function useCanvasDraftBootstrapSync({
   setDraftSaveStatus,
   invalidateInFlightSaveAttempt,
   lastSavedSignatureRef,
+  lastFailedSignatureRef,
 }: UseCanvasDraftBootstrapSyncArgs) {
   const lastAuthoritativeSemanticGraphRef = useRef<CanvasAuthoringSemanticGraph | null>(null);
 
@@ -53,6 +55,7 @@ export function useCanvasDraftBootstrapSync({
     setCanvasNodePositions,
     setDraftSaveStatus,
     lastSavedSignatureRef,
+    lastFailedSignatureRef,
     lastAuthoritativeSemanticGraphRef,
   });
 
@@ -68,6 +71,7 @@ export function useCanvasDraftBootstrapSync({
     setDraftSaveStatus,
     invalidateInFlightSaveAttempt,
     lastSavedSignatureRef,
+    lastFailedSignatureRef,
     lastAuthoritativeSemanticGraphRef,
   });
 

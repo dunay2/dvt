@@ -18,6 +18,7 @@ type UseCanvasDraftInitialBootstrapArgs = {
   setCanvasNodePositions: (workspaceLayoutKey: string, positions: CanvasNodePositions) => void;
   setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
   lastSavedSignatureRef: { current: string | null };
+  lastFailedSignatureRef: { current: string | null };
 };
 
 export function useCanvasDraftInitialBootstrap({
@@ -31,6 +32,7 @@ export function useCanvasDraftInitialBootstrap({
   setCanvasNodePositions,
   setDraftSaveStatus,
   lastSavedSignatureRef,
+  lastFailedSignatureRef,
 }: UseCanvasDraftInitialBootstrapArgs) {
   useEffect(() => {
     if (shouldWaitForBootstrapReadiness || draftSession.syncState !== 'bootstrapping') {
@@ -55,6 +57,7 @@ export function useCanvasDraftInitialBootstrap({
       });
     }
 
+    lastFailedSignatureRef.current = null;
     setDraftSession(
       canvasDraftSession.machine.bootstrap({
         remoteDraft,
@@ -68,6 +71,7 @@ export function useCanvasDraftInitialBootstrap({
     draftSession.syncState,
     graphDraftQuery.data?.record,
     graphDraftQuery.data?.semanticGraph,
+    lastFailedSignatureRef,
     lastSavedSignatureRef,
     persistedNodePositions,
     setCanvasNodePositions,

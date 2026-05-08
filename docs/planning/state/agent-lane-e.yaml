@@ -1872,7 +1872,7 @@ tasks:
     status: in_progress
     objective: >-
       define and execute the next Canvas workbench sequence: simplified shell chrome first, then
-      explicit save, then project export and import proof.
+      automatic save-state proof, then project export and import proof.
     dependency: F-24, F-26, TF-E2-M
     target: >-
       Stage 1 removes icon noise from Canvas workbench tabs, moves tenant/project/environment
@@ -1885,15 +1885,17 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md
       - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-1-chrome-simplification-implementation-plan-20260506.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-2-autosave-e2e-proof-plan-20260508.md
       - docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
       - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
       - docs/architecture/components/api/protected-runtime-command-query-rail-design.md
     status_reason: >-
       Product direction is recorded after the Canvas workbench review and the strict Stage 1
       implementation plan now binds the first code round to Fowler presentation-model cleanup,
-      command/query rails, semantic tests, Cypress proof, and frontend folder ownership. Save,
-      export/import, protected draft authority, backend contracts, and multi-canvas persistence stay
-      outside Stage 1.
+      command/query rails, semantic tests, Cypress proof, and frontend folder ownership. The Stage 2
+      correction keeps Canvas save automatic: no manual Save button or second save command is
+      allowed; the next proof must make autosave status and failed-save posture visible through the
+      existing `SaveWorkspaceGraphDraft` rail.
     definition_of_done:
       - Stage 1 implementation plan is approved before code changes
       - Canvas workbench tabs render as readable text-only tabs
@@ -1908,8 +1910,47 @@ tasks:
       - active project identity remains visible through title, slug, and compact project id
       - save, export, import, protected draft authority, and backend contracts are unchanged in
         Stage 1
-      - Stage 2 save and Stage 3 export/import rails remain documented follow-up work
+      - Stage 2 proves automatic save status and failed-save posture without adding a manual save
+        command
+      - Stage 3 export/import rails remain documented follow-up work
     last_verified: '2026-05-06'
+  - task_id: F-28-B
+    parent_task: F-28
+    priority: P0
+    status: in_progress
+    objective: >-
+      prove Canvas automatic draft saving as the Stage 2 save-state path without adding a manual
+      Save command or a second persistence authority.
+    dependency: F-28
+    target: >-
+      Cypress and focused unit tests prove that graph edits automatically call
+      `SaveWorkspaceGraphDraft`, successful saves render saved posture, failed automatic saves stay
+      visibly failed instead of synced, read-only posture produces no draft writes, and no manual
+      Save button appears in Canvas chrome.
+    complexity: S
+    effort_points: 2
+    progress_pct: 20
+    evidence_refs:
+      - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-2-autosave-e2e-proof-plan-20260508.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md
+      - docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md
+      - docs/architecture/components/web/graph/canvas-draft-session-component.md
+      - apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
+    status_reason: >-
+      Product correction: save remains automatic. This slice must harden visibility and browser
+      evidence around the existing autosave lifecycle instead of adding a manual command. The first
+      executable gap is failed automatic save posture, which currently risks being presented as
+      synced after the write fails.
+    definition_of_done:
+      - no manual Save button or command is added
+      - successful graph edits automatically dispatch `SaveWorkspaceGraphDraft`
+      - Cypress proves saved posture after automatic save success
+      - Cypress proves failed-save posture after automatic save failure
+      - read-only protected draft posture still produces zero draft writes
+      - focused unit tests cover failed-save toolbar state and failed-signature autosave hold
+      - docs sync, workboard generation, feature mechanization, focused web tests, Cypress,
+        typecheck, markdown changed lint, and prepush validation pass
+    last_verified: '2026-05-08'
   - task_id: F-28-A
     parent_task: F-28
     priority: P0
@@ -3214,9 +3255,10 @@ dependency_notes:
     expansion must update `F-27` rather than widening child-slice manifests.
   - >-
     `F-28` records the next Canvas workbench product sequence: first simplify shell chrome and move
-    scope selectors out of the main top bar, then add explicit save posture, then design project
-    export/import as a complete round-trip proof. Stage 1 must remain a visual and presentation
-    slice and must not smuggle in multi-canvas persistence or backend project asset behavior.
+    scope selectors out of the main top bar, then prove automatic save posture without a manual Save
+    command, then design project export/import as a complete round-trip proof. Stage 1 must remain a
+    visual and presentation slice and must not smuggle in multi-canvas persistence or backend
+    project asset behavior.
   - >-
     `F-28-A` is the strict Stage 1 planning gate for `F-28`: it binds the first implementation round
     to Fowler presentation-model cleanup, command/query rails, semantic fitness functions, Cypress

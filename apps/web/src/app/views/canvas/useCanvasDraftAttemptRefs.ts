@@ -5,6 +5,7 @@ import type { DraftAttemptRefs } from './canvasDraftLifecycle.types';
 export function useCanvasDraftAttemptRefs() {
   const saveDebounceTimerRef = useRef<ReturnType<typeof globalThis.setTimeout> | null>(null);
   const lastSavedSignatureRef = useRef<string | null>(null);
+  const lastFailedSignatureRef = useRef<string | null>(null);
   const saveAttemptGenerationRef = useRef(0);
   const nextSaveAttemptIdRef = useRef(0);
   const activeSaveAttemptRef = useRef<{ id: number; generation: number } | null>(null);
@@ -12,6 +13,7 @@ export function useCanvasDraftAttemptRefs() {
     () => ({
       saveDebounceTimerRef,
       lastSavedSignatureRef,
+      lastFailedSignatureRef,
       saveAttemptGenerationRef,
       nextSaveAttemptIdRef,
       activeSaveAttemptRef,

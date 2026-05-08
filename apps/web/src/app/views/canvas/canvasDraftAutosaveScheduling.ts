@@ -25,6 +25,7 @@ type AutosaveOutcome =
   | { kind: 'clear_and_idle' }
   | { kind: 'idle_if_saving' }
   | { kind: 'idle' }
+  | { kind: 'hold_failed_signature' }
   | { kind: 'schedule' };
 
 export type CanvasDraftAutosaveSchedulingArgs = {
@@ -59,6 +60,7 @@ function resolveAutosaveOutcome(args: {
   draftSession: CanvasDraftSession;
   currentDraftPayloadSignature: string;
   lastSavedSignature: string | null;
+  lastFailedSignature: string | null;
 }): AutosaveOutcome {
   if (shouldWaitForPersistenceReadiness(args.graphAuthorityQuery, args.graphDraftQuery)) {
     return { kind: 'wait' };
@@ -74,6 +76,10 @@ function resolveAutosaveOutcome(args: {
 
   if (args.currentDraftPayloadSignature === args.lastSavedSignature) {
     return { kind: 'idle' };
+  }
+
+  if (args.currentDraftPayloadSignature === args.lastFailedSignature) {
+    return { kind: 'hold_failed_signature' };
   }
 
   return { kind: 'schedule' };
@@ -98,6 +104,12 @@ function applyAutosaveNonSchedulingOutcome(
 
   if (outcome.kind === 'idle_if_saving') {
     setIdleDraftSaveStatusOnlyWhenSaving(args.setDraftSaveStatus);
+    return;
+  }
+
+  if (outcome.kind === 'hold_failed_signature') {
+    clearSaveDebounce(args.refs);
+    args.setDraftSaveStatus('failed');
     return;
   }
 
@@ -147,6 +159,7 @@ export function runCanvasDraftAutosaveEffect(
     draftSession: args.draftSession,
     currentDraftPayloadSignature: args.currentDraftPayloadSignature,
     lastSavedSignature: args.refs.lastSavedSignatureRef.current,
+    lastFailedSignature: args.refs.lastFailedSignatureRef.current,
   });
 
   if (outcome.kind !== 'schedule') {

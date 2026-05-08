@@ -98,6 +98,10 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.draft.toolbar.savedLabel',
     fallback: 'Draft saved',
   },
+  draftSaveFailedLabel: {
+    key: 'canvas.draft.toolbar.saveFailedLabel',
+    fallback: 'Draft save failed',
+  },
   staleVersionLabel: {
     key: 'canvas.draft.toolbar.staleVersionLabel',
     fallback: 'Stale version',

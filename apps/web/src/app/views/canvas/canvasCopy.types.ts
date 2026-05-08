@@ -83,6 +83,7 @@ export type CanvasViewCopy = {
   readonly draftSyncedLabel: string;
   readonly savingDraftLabel: string;
   readonly draftSavedLabel: string;
+  readonly draftSaveFailedLabel: string;
   readonly staleVersionLabel: string;
   readonly draftMissingLabel: string;
   readonly projectionGapLabel: string;

@@ -19,6 +19,7 @@ type UseCanvasDraftReloadHydrationArgs = {
   setCanvasNodePositions: (workspaceLayoutKey: string, positions: CanvasNodePositions) => void;
   setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
   lastSavedSignatureRef: { current: string | null };
+  lastFailedSignatureRef: { current: string | null };
   lastAuthoritativeSemanticGraphRef: {
     current: CanvasAuthoringSemanticGraph | null;
   };
@@ -32,6 +33,7 @@ export function useCanvasDraftReloadHydration({
   setCanvasNodePositions,
   setDraftSaveStatus,
   lastSavedSignatureRef,
+  lastFailedSignatureRef,
   lastAuthoritativeSemanticGraphRef,
 }: UseCanvasDraftReloadHydrationArgs) {
   return useCallback(
@@ -41,6 +43,7 @@ export function useCanvasDraftReloadHydration({
     ) => {
       draftQueryCache.replaceRemoteDraftState(remoteDraftState);
       setDraftSaveStatus('idle');
+      lastFailedSignatureRef.current = null;
       const remoteDraft = remoteDraftState.record;
 
       if (remoteDraft == null) {
@@ -77,6 +80,7 @@ export function useCanvasDraftReloadHydration({
     },
     [
       draftQueryCache,
+      lastFailedSignatureRef,
       lastAuthoritativeSemanticGraphRef,
       lastSavedSignatureRef,
       persistedNodePositions,
