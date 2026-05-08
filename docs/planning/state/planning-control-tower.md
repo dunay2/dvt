@@ -21,9 +21,16 @@ surface. This control tower is the update protocol.
 
 - Claims, releases, or changes status/progress/evidence on an existing active
   work item: use `pnpm planning:db:operate` against the imported planning DB
-  state, then inspect with `pnpm planning:db:query tasks` or
+  state, then inspect active rows with `pnpm planning:db:query open`, full rows
+  with `pnpm planning:db:query tasks`, or route candidates with
   `pnpm planning:db:query next`. Use `pnpm planning:db:export:check` before
   treating generated planning views as aligned.
+- Regenerates workboard or open-task-route views: run `pnpm planning:db:import`
+  before `pnpm docs:workboard:generate`. The workboard generator reads the
+  fresh `planning_effective_tasks` DB view for task state and
+  `planning_next_tasks` for `Actionable Now` route candidates by default. It
+  falls back to lane YAML only when the local DB is unavailable; a reachable
+  stale DB fails closed.
 - Creates, deletes, or structurally re-scopes an active work item: update the
   relevant `agent-lane-*.yaml` entry, run `pnpm planning:db:import`, and
   regenerate planning-derived views locally. Create/delete task semantics remain
@@ -95,9 +102,11 @@ When there is confusion about "what is active now" vs "where to continue":
    blockers, lanes, and next reading surface.
 2. [System Delivery Status](../../architecture/system-delivery-status.md)
    (`last_reviewed: 2026-04-08`): current implementation truth.
-3. Planning DB query store: `pnpm planning:db:query tasks` and
-   `pnpm planning:db:query next` show effective active tasks, owners, execution
-   status, blockers, and next actions after local DB overlays.
+3. Planning DB query store: `pnpm planning:db:query open` shows non-done,
+   non-blocked effective work from `planning_open_tasks`,
+   `pnpm planning:db:query tasks` shows the full effective task read model, and
+   `pnpm planning:db:query next` shows dependency-satisfied route candidates
+   from `planning_next_tasks` after local DB overlays.
 4. [Agent Lane YAML registry](./agent-lane-a.yaml)
    (`agent-lane-a.yaml` ... `agent-lane-e.yaml`): bootstrap task definitions
    and create/delete compatibility surface.
@@ -112,7 +121,8 @@ When there is confusion about "what is active now" vs "where to continue":
 Interpretation rule:
 
 - `status` = truth now
-- `planning DB effective task view` = execution now + next work
+- `planning DB effective task view` = execution state now
+- `planning DB next-task view` = dependency-satisfied next work
 - `lane yaml` = bootstrap task definitions and create/delete compatibility
 - `roadmap` = sequence
 - `reviews` = rationale and intake for follow-up work
@@ -131,7 +141,8 @@ Interpretation rule:
 
 1. [Planning Control Tower](./planning-control-tower.md)
 2. [Planning Dashboard](./planning-dashboard.md)
-3. `pnpm planning:db:query next` or `pnpm planning:db:query tasks`
+3. `pnpm planning:db:query open`, `pnpm planning:db:query next`, or
+   `pnpm planning:db:query tasks`
 4. Relevant [Agent Lane YAML](./agent-lane-a.yaml) when creating/deleting tasks
 5. [Roadmap Of Record](../roadmap/index.md)
 6. [Strategic Product Roadmap](../roadmap/strategic-product-roadmap.md)

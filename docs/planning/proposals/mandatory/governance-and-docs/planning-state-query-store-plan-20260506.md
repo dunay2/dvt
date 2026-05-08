@@ -553,14 +553,18 @@ rejection of unknown actions.
 `summary` query is intentionally lightweight and does not touch the
 `governance_file_hash_drift` projection. `planning:db:query hash-drift` is the
 explicit heavy query for DB-derived governance hash drift. `planning:db:query
-tasks` and `planning:db:query next` read `planning_effective_tasks`, not raw
-lane YAML, so local DB-first overlays are visible in daily filtering and next
-task selection. Scope is local developer tooling only; authorization is local
-OS and Docker/Postgres access. Negative tests cover migration checksum
-mismatch, unknown query names, fast summary isolation from the hash-drift
-projection, explicit hash-drift querying, effective task filtering, actionable
-next-task filtering, content extraction from real lane YAML, and governance
-file-count parity with the Git-tracked file index.
+tasks` reads `planning_effective_tasks`, not raw lane YAML, so local DB-first
+overlays are visible in full inspection. `planning:db:query open` reads
+`planning_open_tasks`, the SQL view that encapsulates the daily-work filter for
+rows that are neither `done` nor `blocked`. `planning:db:query next` reads
+`planning_next_tasks`, the SQL view that encapsulates queued actionable task
+selection after dependency resolution. Scope is local developer tooling only;
+authorization is local OS and Docker/Postgres access. Negative tests cover
+migration checksum mismatch, unknown query names, fast summary isolation from
+the hash-drift projection, explicit hash-drift querying, effective task
+filtering, open-task view selection, next-task view selection, content
+extraction from real lane YAML, and governance file-count parity with the
+Git-tracked file index.
 
 `planning:db:operate` implements `ApplyPlanningLocalOperation` and
 `QueryPlanningLocalOperationAudit`. It is the local DB-first command surface for
@@ -821,6 +825,167 @@ behavior, and fail-closed posture when generated output does not converge.
    `pnpm governance:refresh`, `pnpm docs:feature-mechanization:implementation`,
    and `pnpm verify:prepush`.
 
+### W11B DB-Backed Workboard Generation Implementation Plan
+
+The current generated planning route is:
+
+```mermaid
+flowchart LR
+  LaneYaml["agent-lane-*.yaml"] --> WorkboardGenerator["generate-workboard.cjs"]
+  WorkboardGenerator --> ExecutionWorkboard["execution-workboard.md"]
+  WorkboardGenerator --> OpenTaskRoute["open-task-route.md"]
+```
+
+The target route keeps YAML as deterministic fallback but lets the shared
+planning DB effective view own the local operational state when it is available
+and fresh:
+
+```mermaid
+flowchart LR
+  LaneYaml["agent-lane-*.yaml"] --> Import["planning:db:import"]
+  Import --> EffectiveTasks["planning_effective_tasks"]
+  LocalOverlays["planning_task_local_state"] --> EffectiveTasks
+  EffectiveTasks --> WorkboardGenerator["generate-workboard.cjs --source auto"]
+  LaneYaml -. "fallback when DB unavailable" .-> WorkboardGenerator
+  WorkboardGenerator --> ExecutionWorkboard["execution-workboard.md"]
+  WorkboardGenerator --> OpenTaskRoute["open-task-route.md"]
+```
+
+1. Add red workboard-generator tests proving `--source auto` reads
+   `planning_effective_tasks` through the existing planning DB export read
+   model when the DB is reachable and `planning:db:check` semantics report no
+   drift.
+2. Add red fallback tests proving `--source auto` falls back to lane YAML only
+   when the DB is unavailable or the query-store schema is missing; a reachable
+   but stale DB must fail closed instead of silently hiding drift.
+3. Add red governance-refresh tests proving `planning:db:import` runs before
+   `docs:workboard:generate`, while `planning:db:check`,
+   `planning:db:export:check`, and `governance:db:check` remain after the
+   generated surfaces stabilize.
+4. Refactor `scripts/generate-workboard.cjs` into exported, testable source
+   selection helpers without changing the rendered table semantics.
+5. Teach the workboard generator `--source auto|db|yaml` and
+   `--database-url`; keep `auto` as the default for local use and CI-safe YAML
+   fallback when no shared DB exists.
+6. Update `governance:refresh` so the planning DB import precedes workboard
+   generation, then the existing stabilization loop validates the rendered
+   planning route before the database drift/export checks run.
+7. Update planning operation docs to state that generated workboard/open route
+   views are DB-effective when the local query store is fresh and YAML-derived
+   only during explicit fallback.
+8. Validate W11B with `pnpm test:planning:db`,
+   `pnpm test:planning:db:integration`, `pnpm docs:workboard:generate`,
+   `pnpm planning:db:export:check`, `pnpm governance:refresh`,
+   `pnpm docs:feature-mechanization:implementation`, and
+   `pnpm verify:prepush`.
+
+### W11C Open Task View Implementation Plan
+
+The effective planning task read model must remain complete because dependency
+resolution, export parity, drift checks, and audit-oriented inspection need
+`done` and `blocked` rows. Human daily planning needs a narrower operational
+surface that does not repeat the same status filter in every pgAdmin query or
+CLI adapter.
+
+```mermaid
+flowchart LR
+  ImportedTasks["planning_tasks"] --> EffectiveTasks["planning_effective_tasks"]
+  LocalState["planning_task_local_state"] --> EffectiveTasks
+  EffectiveTasks --> OpenTasks["planning_open_tasks"]
+  OpenTasks --> OpenQuery["planning:db:query open"]
+  EffectiveTasks --> NextQuery["planning:db:query next"]
+  EffectiveTasks --> Export["planning:db:export"]
+```
+
+Implementation steps:
+
+1. Add red migration coverage proving `007_planning_open_task_views.sql`
+   creates `planning_query_store.planning_open_tasks` from
+   `planning_effective_tasks`.
+2. The SQL view must encapsulate the operational filter
+   `status not in ('done', 'blocked')`, preserving all task columns from the
+   effective view so pgAdmin and CLI consumers share one definition.
+3. Add red query coverage for `planning:db:query open` proving it reads
+   `planning_open_tasks` directly and does not re-express the open-status
+   filter in JavaScript SQL.
+4. Keep `planning:db:query tasks` and `planning:db:query next` on
+   `planning_effective_tasks`: `tasks` is the full inspection query and `next`
+   needs `done` rows to resolve dependencies before lane filtering. W11D below
+   supersedes this transitional `next` adapter by moving that dependency
+   resolution into `planning_next_tasks`.
+5. Validate W11C with `pnpm test:planning:db`, `pnpm planning:db:migrate`,
+   `pnpm planning:db:query open`, `pnpm governance:refresh`,
+   `pnpm docs:feature-mechanization:implementation`, and
+   `pnpm verify:prepush`.
+
+### W11D Next Task View Implementation Plan
+
+After W11C, `planning:db:query open` no longer repeated the daily-work status
+filter outside Postgres, but `planning:db:query next` still repeated
+dependency parsing and actionable-task selection in `scripts/planning-db-query.cjs`.
+That kept a second query model in JavaScript for the same operational question
+agents ask in pgAdmin: "what can I safely pick next?".
+
+```mermaid
+flowchart LR
+  EffectiveTasks["planning_effective_tasks"] --> OpenTasks["planning_open_tasks"]
+  OpenTasks --> NextTasks["planning_next_tasks"]
+  EffectiveTasks --> NextTasks
+  NextTasks --> NextQuery["planning:db:query next"]
+  OpenTasks --> OpenQuery["planning:db:query open"]
+  EffectiveTasks --> TasksQuery["planning:db:query tasks"]
+```
+
+Implementation steps:
+
+1. Add red migration coverage proving `008_planning_next_task_views.sql`
+   creates `planning_query_store.planning_next_tasks`.
+2. The SQL view must read from `planning_open_tasks`, keep only queued
+   candidates, split dependency references in Postgres, and reject candidates
+   with any dependency that is not `done` in `planning_effective_tasks`.
+3. Add red query coverage proving `planning:db:query next` reads
+   `planning_next_tasks` directly and no longer emits dependency parsing SQL or
+   JavaScript filtering against `planning_effective_tasks`.
+4. Keep lane, status, claim, priority, and limit flags in the CLI adapter as
+   ordinary query filters over the DB-owned view; the CLI must not own
+   actionable-next semantics.
+5. Validate W11D with `pnpm test:planning:db`, `pnpm planning:db:migrate`,
+   `pnpm planning:db:query next`, `pnpm governance:refresh`,
+   `pnpm docs:feature-mechanization:implementation`, and
+   `pnpm verify:prepush`.
+
+### W11E DB-Backed Route Actionables Implementation Plan
+
+After W11D, `planning:db:query next` used the DB-owned
+`planning_next_tasks` view, but `docs:workboard:generate` still recomputed the
+`open-task-route.md` `Actionable Now` section from effective task rows with
+local JavaScript dependency parsing. That left one remaining generated-route
+consumer outside the DB-owned next-task read model.
+
+```mermaid
+flowchart LR
+  EffectiveTasks["planning_effective_tasks"] --> WorkboardTasks["execution-workboard.md"]
+  NextTasks["planning_next_tasks"] --> OpenRouteActionables["open-task-route.md Actionable Now"]
+  LaneYaml -. "explicit YAML fallback" .-> LocalFallback["local dependency parser"]
+  LocalFallback -.-> OpenRouteActionables
+```
+
+Implementation steps:
+
+1. Add red workboard-generator coverage proving the DB source reads
+   `planning_next_tasks` and carries those candidates as `actionableTasks`.
+2. Add red renderer coverage proving `buildOpenTaskRoute` can render a
+   DB-supplied actionable list without consulting the local `doneSet`.
+3. Keep YAML fallback semantics unchanged: when the DB is unavailable and
+   source mode is `auto`, the generator may still compute unblocked queued rows
+   from lane YAML.
+4. Update planning operation docs to state that DB-backed generated routes use
+   `planning_next_tasks` for `Actionable Now`.
+5. Validate W11E with `node --test scripts/generate-workboard.test.cjs`,
+   `pnpm docs:workboard:generate`, `pnpm test:planning:db`,
+   `pnpm governance:refresh`, `pnpm docs:feature-mechanization:implementation`,
+   and `pnpm verify:prepush`.
+
 ## GitHub Issues Role
 
 GitHub Issues may be useful as a collaboration mirror after the query store is
@@ -909,11 +1074,19 @@ Current implementation status on 2026-05-08:
 - W11 first slice is implemented: `planning_effective_tasks` overlays
   `planning_task_local_state` on imported `planning_tasks` only while the
   overlay base source hash matches the imported task source hash;
-  `planning:db:query tasks` and `planning:db:query next` read effective task
-  state, `next` resolves dependencies against all effective tasks before lane
-  filtering, and
+  `planning:db:query tasks` reads effective task state, and
   `planning:db:export` exports reviewable effective status/progress/evidence
   fields without exporting local claim tokens or audit rows;
+- W11C is implemented: `planning_open_tasks` is the SQL view for daily
+  non-`done`, non-`blocked` planning inspection, and `planning:db:query open`
+  reads that view instead of duplicating the open-task filter in CLI SQL;
+- W11D is implemented: `planning_next_tasks` is the SQL view for queued,
+  dependency-satisfied route candidates, and `planning:db:query next` reads
+  that view instead of duplicating dependency parsing and actionable-task
+  filtering in CLI JavaScript;
+- W11E is implemented: DB-backed `docs:workboard:generate` reads
+  `planning_next_tasks` for the `open-task-route.md` `Actionable Now` section,
+  leaving local dependency parsing only for explicit YAML fallback;
 - the obsolete `governance:artifacts:generate` package alias is removed;
   `pnpm governance:refresh` is the single local orchestration command for
   generated inspection artifacts plus planning/governance DB import and checks;
@@ -1016,6 +1189,7 @@ allowedImplementationSurfaces:
   - scripts/planning-db-*.cjs
   - scripts/governance-db-*.cjs
   - scripts/governance-refresh*.cjs
+  - scripts/generate-workboard*.cjs
   - scripts/governance-generated-paths*.cjs
   - scripts/generate-governance-*.cjs
   - scripts/check-governance-*.cjs
@@ -1326,6 +1500,46 @@ redGreenCycles:
       - docs/planning/state/how-to-add-tasks.md
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     greenTest: pnpm test:planning:db
+  - id: planning-db-backed-workboard-generation
+    redTest: node --test scripts/generate-workboard.test.cjs scripts/governance-refresh.test.cjs
+    expectedFailure: Workboard generation has no DB source selector, does not fail closed on reachable stale DB state, and governance refresh generates the workboard before importing the query store.
+    patchSurfaces:
+      - package.json
+      - scripts/generate-workboard*.cjs
+      - scripts/governance-refresh*.cjs
+      - docs/planning/state/planning-control-tower.md
+      - docs/planning/state/how-to-add-tasks.md
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: node --test scripts/generate-workboard.test.cjs scripts/governance-refresh.test.cjs
+  - id: planning-db-open-task-view
+    redTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+    expectedFailure: Planning daily-work inspection repeats status filtering outside Postgres because the query store has no planning_open_tasks view and no planning:db:query open adapter.
+    patchSurfaces:
+      - tools/planning-db/**
+      - scripts/planning-db-*.cjs
+      - docs/planning/state/planning-control-tower.md
+      - docs/planning/state/how-to-add-tasks.md
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+  - id: planning-db-next-task-view
+    redTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+    expectedFailure: Planning next-task selection repeats dependency parsing and actionable filtering in JavaScript because the query store has no planning_next_tasks view and no DB-backed planning:db:query next adapter.
+    patchSurfaces:
+      - tools/planning-db/**
+      - scripts/planning-db-*.cjs
+      - docs/planning/state/planning-control-tower.md
+      - docs/planning/state/how-to-add-tasks.md
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+  - id: planning-db-backed-route-actionables
+    redTest: node --test scripts/generate-workboard.test.cjs
+    expectedFailure: DB-backed workboard generation still computes open-task-route Actionable Now rows from JavaScript dependency parsing instead of planning_next_tasks.
+    patchSurfaces:
+      - scripts/generate-workboard*.cjs
+      - docs/planning/state/planning-control-tower.md
+      - docs/planning/state/how-to-add-tasks.md
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: node --test scripts/generate-workboard.test.cjs
 symbols:
   - name: PlanningAndGovernanceQueryStorePlan
     path: docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
@@ -1760,7 +1974,6 @@ symbols:
       - pnpm test:planning:db
       - pnpm test:planning:db:integration
       - pnpm planning:db:query tasks
-      - pnpm planning:db:query next
       - pnpm planning:db:export:check
   - <<: *planningDbEffectiveTaskSymbol
     name: parseLimit
@@ -1775,24 +1988,6 @@ symbols:
     name: buildTaskRows
     path: scripts/planning-db-query.cjs
   - <<: *planningDbEffectiveTaskSymbol
-    name: parseDependencyTokens
-    path: scripts/planning-db-query.cjs
-  - <<: *planningDbEffectiveTaskSymbol
-    name: isTaskUnblocked
-    path: scripts/planning-db-query.cjs
-  - <<: *planningDbEffectiveTaskSymbol
-    name: priorityRank
-    path: scripts/planning-db-query.cjs
-  - <<: *planningDbEffectiveTaskSymbol
-    name: compareTasksForRoute
-    path: scripts/planning-db-query.cjs
-  - <<: *planningDbEffectiveTaskSymbol
-    name: matchesNextTaskFilters
-    path: scripts/planning-db-query.cjs
-  - <<: *planningDbEffectiveTaskSymbol
-    name: buildNextTaskRows
-    path: scripts/planning-db-query.cjs
-  - <<: *planningDbEffectiveTaskSymbol
     name: appendFilter
     path: scripts/planning-db-query.cjs
   - <<: *planningDbEffectiveTaskSymbol
@@ -1802,10 +1997,56 @@ symbols:
     name: readTaskRows
     path: scripts/planning-db-query.cjs
   - <<: *planningDbEffectiveTaskSymbol
-    name: readNextTaskRows
-    path: scripts/planning-db-query.cjs
-  - <<: *planningDbEffectiveTaskSymbol
     name: printTaskRows
+    path: scripts/planning-db-query.cjs
+  - &planningDbOpenTaskSymbol
+    name: PlanningOpenTaskViewMigration
+    path: tools/planning-db/migrations/007_planning_open_task_views.sql
+    dddOwner: PlanningStateReadModel
+    cqRails:
+      - QueryPlanningStateReadModel
+      - MigratePlanningQueryStoreSchema
+    fowlerSignals:
+      - Large planning file operating cost
+      - Hidden query model inside YAML
+      - Generated artifact churn
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - planning DB open task view has no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+      - pnpm test:planning:db
+      - pnpm planning:db:query open
+  - <<: *planningDbOpenTaskSymbol
+    name: openTaskSelect
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbOpenTaskSymbol
+    name: readOpenTaskRows
+    path: scripts/planning-db-query.cjs
+  - &planningDbNextTaskSymbol
+    name: PlanningNextTaskViewMigration
+    path: tools/planning-db/migrations/008_planning_next_task_views.sql
+    dddOwner: PlanningStateReadModel
+    cqRails:
+      - QueryPlanningStateReadModel
+      - MigratePlanningQueryStoreSchema
+    fowlerSignals:
+      - Large planning file operating cost
+      - Hidden query model inside JavaScript
+      - Generated artifact churn
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - planning DB next task view has no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+      - pnpm test:planning:db
+      - pnpm planning:db:query next
+  - <<: *planningDbNextTaskSymbol
+    name: nextTaskSelect
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbNextTaskSymbol
+    name: nextTaskOrderBy
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbNextTaskSymbol
+    name: readNextTaskRows
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: main
@@ -1984,6 +2225,173 @@ symbols:
   - <<: *planningDbExportSymbol
     name: node
     path: scripts/planning-db-export.test.cjs
+  - &planningWorkboardSourceSymbol
+    name: WorkboardSourceSelection
+    path: scripts/generate-workboard.cjs
+    dddOwner: PlanningGeneratedArtifact
+    cqRails:
+      - QueryPlanningStateReadModel
+      - ValidatePlanningStateDrift
+      - GeneratePlanningDerivedSurfaces
+      - ExportPlanningStateSnapshot
+    fowlerSignals:
+      - Large planning file operating cost
+      - Hidden query model inside YAML
+      - Generated artifact churn
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning workboard generation has no browser workflow.
+    unitTests:
+      - node --test scripts/generate-workboard.test.cjs scripts/governance-refresh.test.cjs
+      - pnpm test:planning:db
+      - pnpm docs:workboard:generate
+      - pnpm planning:db:export:check
+  - <<: *planningWorkboardSourceSymbol
+    name: fs
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: path
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: yaml
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: Client
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: resolveGeneratedDate
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: defaultPgUrl
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: schemaName
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: checkPlanningDatabase
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: formatDriftReport
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: PlanningDbExportRunner
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: repoRoot
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: dependencies
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: resolveDeps
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: databaseUrl
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: parseArgs
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: LANE_DOMAIN
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: normalizeStatus
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: loadLanes
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: isPlanningDbUnavailable
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: readNextTaskIdentitiesFromDb
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: resolveDbActionableTasks
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: loadDbLaneSource
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: loadLanesFromDb
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: resolveLaneSource
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: normalizeComplexity
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: normalizeEffort
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: normalizeProgress
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: summarizeLane
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: collectTasks
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: buildDoneSet
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: parseDependencyTokens
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: isUnblocked
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: sortYamlActionableTasks
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: pad
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: buildLaneSummaryTable
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: buildWorkboard
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: buildOpenTaskRoute
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: printHelp
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: main
+    path: scripts/generate-workboard.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: test
+    path: scripts/generate-workboard.test.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: assert
+    path: scripts/generate-workboard.test.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: fs
+    path: scripts/generate-workboard.test.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: os
+    path: scripts/generate-workboard.test.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: path
+    path: scripts/generate-workboard.test.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: buildOpenTaskRoute
+    path: scripts/generate-workboard.test.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: buildWorkboard
+    path: scripts/generate-workboard.test.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: parseArgs
+    path: scripts/generate-workboard.test.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: resolveLaneSource
+    path: scripts/generate-workboard.test.cjs
+  - <<: *planningWorkboardSourceSymbol
+    name: writeLaneFixture
+    path: scripts/generate-workboard.test.cjs
   - &planningDbDriftSymbol
     name: PlanningDbDriftCheckRunner
     path: scripts/planning-db-check.cjs

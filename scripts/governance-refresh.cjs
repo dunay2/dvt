@@ -14,6 +14,10 @@ function buildRefreshStages() {
         script: 'docs:sync',
       },
       {
+        id: 'planning-db-import',
+        script: 'planning:db:import',
+      },
+      {
         id: 'workboard',
         script: 'docs:workboard:generate',
       },
@@ -55,10 +59,6 @@ function buildRefreshStages() {
       },
     ],
     databaseStages: [
-      {
-        id: 'planning-db-import',
-        script: 'planning:db:import',
-      },
       {
         id: 'planning-db-check',
         script: 'planning:db:check',

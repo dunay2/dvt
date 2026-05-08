@@ -3,7 +3,7 @@ const { Client } = require('pg');
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { schemaName } = require('./planning-db-migrate.cjs');
 
-const knownQueries = new Set(['summary', 'hash-drift', 'tasks', 'next']);
+const knownQueries = new Set(['summary', 'hash-drift', 'tasks', 'open', 'next']);
 
 function databaseUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
@@ -123,75 +123,6 @@ function buildTaskRows(rows) {
   ]);
 }
 
-function parseDependencyTokens(dependency) {
-  if (!dependency || dependency === 'none') {
-    return [];
-  }
-
-  return String(dependency)
-    .split(/,|\band\b/)
-    .map((entry) => entry.trim().split(/\s+/)[0])
-    .filter(Boolean);
-}
-
-function isTaskUnblocked(task, doneTaskIds) {
-  const status = String(task.status || '').toLowerCase();
-  if (status !== 'queued') {
-    return false;
-  }
-
-  return parseDependencyTokens(task.dependency).every((taskId) => doneTaskIds.has(taskId));
-}
-
-function priorityRank(priority) {
-  const parsed = Number.parseInt(String(priority || 'P9').replace(/^P/i, ''), 10);
-  return Number.isFinite(parsed) ? parsed : 9;
-}
-
-function compareTasksForRoute(left, right) {
-  const priorityComparison = priorityRank(left.priority) - priorityRank(right.priority);
-  if (priorityComparison !== 0) {
-    return priorityComparison;
-  }
-
-  const leftTaskId = String(left.task_id ?? left.taskId ?? '');
-  const rightTaskId = String(right.task_id ?? right.taskId ?? '');
-  return leftTaskId.localeCompare(rightTaskId);
-}
-
-function matchesNextTaskFilters(row, filters = {}) {
-  if (filters.laneId && String(row.lane_id ?? row.laneId) !== String(filters.laneId)) {
-    return false;
-  }
-
-  if (filters.priority && String(row.priority) !== String(filters.priority)) {
-    return false;
-  }
-
-  if (
-    filters.claimedBy &&
-    String(row.claimed_by ?? row.claimedBy ?? '') !== String(filters.claimedBy)
-  ) {
-    return false;
-  }
-
-  return true;
-}
-
-function buildNextTaskRows(rows, limit = 20, filters = {}) {
-  const doneTaskIds = new Set(
-    rows
-      .filter((row) => String(row.status || '').toLowerCase() === 'done')
-      .map((row) => String(row.task_id ?? row.taskId))
-  );
-
-  return buildTaskRows(
-    rows
-      .filter((row) => isTaskUnblocked(row, doneTaskIds) && matchesNextTaskFilters(row, filters))
-      .sort(compareTasksForRoute)
-  ).slice(0, limit);
-}
-
 function appendFilter(predicates, params, column, value) {
   if (value === undefined || value === null || value === '') {
     return;
@@ -214,6 +145,46 @@ function effectiveTaskSelect() {
       objective,
       target
     from ${schemaName}.planning_effective_tasks`;
+}
+
+function openTaskSelect() {
+  return `
+    select
+      lane_id,
+      task_id,
+      priority,
+      status,
+      progress_pct,
+      claimed_by,
+      dependency,
+      objective,
+      target
+    from ${schemaName}.planning_open_tasks`;
+}
+
+function nextTaskSelect() {
+  return `
+    select
+      lane_id,
+      task_id,
+      priority,
+      status,
+      progress_pct,
+      claimed_by,
+      dependency,
+      objective,
+      target
+    from ${schemaName}.planning_next_tasks`;
+}
+
+function nextTaskOrderBy() {
+  return `
+     order by
+      case
+        when priority ~* '^P?[0-9]+$' then regexp_replace(priority, '^P', '', 'i')::int
+        else 9
+      end,
+      task_id`;
 }
 
 async function readSummary(client) {
@@ -260,14 +231,48 @@ async function readTaskRows(client, filters = {}) {
   return result.rows;
 }
 
-async function readNextTaskRows(client, filters = {}) {
+async function readOpenTaskRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'lane_id', filters.laneId);
+  appendFilter(predicates, params, 'status', filters.status);
+  appendFilter(predicates, params, 'claimed_by', filters.claimedBy);
+  appendFilter(predicates, params, 'priority', filters.priority);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
   const result = await client.query(
-    `${effectiveTaskSelect()}
-     order by lane_id, priority, task_id`,
-    []
+    `${openTaskSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by lane_id, status, priority, task_id
+     limit $${params.length}`,
+    params
   );
 
-  return buildNextTaskRows(result.rows, parseLimit(filters.limit, 20), filters);
+  return result.rows;
+}
+
+async function readNextTaskRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'lane_id', filters.laneId);
+  appendFilter(predicates, params, 'status', filters.status);
+  appendFilter(predicates, params, 'claimed_by', filters.claimedBy);
+  appendFilter(predicates, params, 'priority', filters.priority);
+
+  const limit = parseLimit(filters.limit, 20);
+  params.push(limit);
+
+  const result = await client.query(
+    `${nextTaskSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     ${nextTaskOrderBy()}
+     limit $${params.length}`,
+    params
+  );
+
+  return buildTaskRows(result.rows);
 }
 
 async function readHashDriftSummary(client) {
@@ -335,6 +340,15 @@ async function runQuery(options = {}) {
       return taskRows;
     }
 
+    if (queryName === 'open') {
+      const rows = await readOpenTaskRows(client, options.filters || {});
+      const taskRows = buildTaskRows(rows);
+      if (options.print !== false) {
+        printTaskRows(taskRows);
+      }
+      return taskRows;
+    }
+
     if (queryName === 'next') {
       const taskRows = await readNextTaskRows(client, options.filters || {});
       if (options.print !== false) {
@@ -364,13 +378,13 @@ if (require.main === module) {
 }
 
 module.exports = {
-  buildNextTaskRows,
   buildHashDriftRows,
   buildSummaryRows,
   buildTaskRows,
   databaseUrl,
   parseArgs,
   printHashDriftSummary,
+  readOpenTaskRows,
   printSummary,
   printTaskRows,
   readNextTaskRows,

@@ -5,18 +5,70 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const yaml = require('js-yaml');
+const { Client } = require('pg');
 const { resolveGeneratedDate } = require('./generated-doc-date.cjs');
+const { defaultPgUrl } = require('./planning-db-run.cjs');
+const { schemaName } = require('./planning-db-migrate.cjs');
+const { checkPlanningDatabase, formatDriftReport } = require('./planning-db-check.cjs');
+const { PlanningDbExportRunner } = require('./planning-db-export.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
+
+const dependencies = {
+  fs,
+  path,
+  yaml,
+  Client,
+  defaultPgUrl,
+  schemaName,
+  checkPlanningDatabase,
+  formatDriftReport,
+  PlanningDbExportRunner,
+  repoRoot,
+};
+
+function resolveDeps(overrides = {}) {
+  return {
+    ...dependencies,
+    ...overrides,
+  };
+}
+
+function databaseUrl(value, deps = dependencies) {
+  return value || process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || deps.defaultPgUrl;
+}
 
 function parseArgs(argv) {
   const args = {
     outputRoot: repoRoot,
     sourceStateDir: path.join(repoRoot, 'docs', 'planning', 'state'),
+    source: 'auto',
+    databaseUrl: null,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index];
+    if (token === '--source') {
+      const next = argv[index + 1];
+      if (!next) {
+        throw new Error('Missing value for --source');
+      }
+      if (!['auto', 'db', 'yaml'].includes(next)) {
+        throw new Error(`Invalid --source "${next}". Expected auto, db, or yaml.`);
+      }
+      args.source = next;
+      index += 1;
+      continue;
+    }
+    if (token === '--database-url') {
+      const next = argv[index + 1];
+      if (!next) {
+        throw new Error('Missing value for --database-url');
+      }
+      args.databaseUrl = next;
+      index += 1;
+      continue;
+    }
     if (token === '--output-root') {
       const next = argv[index + 1];
       if (!next) {
@@ -33,7 +85,14 @@ function parseArgs(argv) {
       }
       args.sourceStateDir = path.resolve(repoRoot, next);
       index += 1;
+      continue;
     }
+    if (token === '--help' || token === '-h') {
+      args.help = true;
+      continue;
+    }
+
+    throw new Error(`Unknown workboard generation option "${token}".`);
   }
 
   return args;
@@ -53,16 +112,131 @@ function normalizeStatus(status) {
     .toLowerCase();
 }
 
-function loadLanes(sourceStateDir) {
-  const laneFiles = fs
+function loadLanes(sourceStateDir, deps = dependencies) {
+  const actualDeps = resolveDeps(deps);
+  const laneFiles = actualDeps.fs
     .readdirSync(sourceStateDir)
     .filter((f) => /^agent-lane-[a-z]\.yaml$/i.test(f))
     .sort();
 
   return laneFiles.map((file) => {
-    const raw = fs.readFileSync(path.join(sourceStateDir, file), 'utf8');
-    return yaml.load(raw);
+    const raw = actualDeps.fs.readFileSync(actualDeps.path.join(sourceStateDir, file), 'utf8');
+    return actualDeps.yaml.load(raw);
   });
+}
+
+function isPlanningDbUnavailable(error) {
+  const code = error && error.code;
+  if (
+    [
+      'ECONNREFUSED',
+      'ECONNRESET',
+      'ENOTFOUND',
+      'ETIMEDOUT',
+      'EHOSTUNREACH',
+      '3D000',
+      '3F000',
+      '42P01',
+    ].includes(code)
+  ) {
+    return true;
+  }
+
+  return /connect ECONNREFUSED|schema .* does not exist|relation .* does not exist/i.test(
+    String(error && error.message)
+  );
+}
+
+async function loadLanesFromDb(args, deps = dependencies) {
+  const source = await loadDbLaneSource(args, deps);
+  return source.lanes;
+}
+
+async function readNextTaskIdentitiesFromDb(client, deps = dependencies) {
+  const actualDeps = resolveDeps(deps);
+  const result = await client.query(`
+    select
+      lane_id as "laneId",
+      task_id as "taskId"
+    from ${actualDeps.schemaName}.planning_next_tasks
+    order by
+      case
+        when priority ~* '^P?[0-9]+$' then regexp_replace(priority, '^P', '', 'i')::int
+        else 9
+      end,
+      task_id
+  `);
+
+  return result.rows;
+}
+
+function resolveDbActionableTasks(lanes, nextTaskIdentities) {
+  const taskByKey = new Map(
+    collectTasks(lanes).map((task) => [`${task.lane_id}/${task.task_id}`, task])
+  );
+
+  return nextTaskIdentities.map((identity) => {
+    const key = `${identity.laneId}/${identity.taskId}`;
+    const task = taskByKey.get(key);
+    if (!task) {
+      throw new Error(`planning_next_tasks references missing effective task ${key}.`);
+    }
+    return task;
+  });
+}
+
+async function loadDbLaneSource(args, deps = dependencies) {
+  const actualDeps = resolveDeps(deps);
+  const client = new actualDeps.Client({
+    connectionString: databaseUrl(args.databaseUrl, actualDeps),
+  });
+
+  await client.connect();
+
+  try {
+    const driftReport = await actualDeps.checkPlanningDatabase({ client });
+    if (!driftReport.ok) {
+      throw new Error(
+        `Planning DB is reachable but stale.\n${actualDeps.formatDriftReport('planning:db:check', driftReport)}`
+      );
+    }
+
+    const runner = new actualDeps.PlanningDbExportRunner(actualDeps);
+    const rows = await runner.readPlanningRows(client);
+    const lanes = runner.buildLaneDocuments(rows);
+    const nextTaskIdentities = await readNextTaskIdentitiesFromDb(client, actualDeps);
+    return {
+      kind: 'db',
+      description: 'planning DB effective task and next-task views',
+      lanes,
+      actionableTasks: resolveDbActionableTasks(lanes, nextTaskIdentities),
+    };
+  } finally {
+    await client.end();
+  }
+}
+
+async function resolveLaneSource(args, deps = dependencies) {
+  const actualDeps = resolveDeps(deps);
+  const yamlSource = () => ({
+    kind: 'yaml',
+    description: 'verified agent-lane YAML files',
+    lanes: loadLanes(args.sourceStateDir, actualDeps),
+  });
+
+  if (args.source === 'yaml') {
+    return yamlSource();
+  }
+
+  try {
+    return await loadDbLaneSource(args, actualDeps);
+  } catch (error) {
+    if (args.source === 'auto' && isPlanningDbUnavailable(error)) {
+      return yamlSource();
+    }
+
+    throw error;
+  }
 }
 
 function normalizeComplexity(task) {
@@ -158,6 +332,21 @@ function isUnblocked(task, doneSet) {
   return tokens.every((token) => doneSet.has(token));
 }
 
+function sortYamlActionableTasks(tasks) {
+  const priorityOrder = (priority) =>
+    Number.parseInt(String(priority ?? 'P9').replace('P', ''), 10);
+
+  return [...tasks].sort((a, b) => {
+    const pa = priorityOrder(a.priority);
+    const pb = priorityOrder(b.priority);
+    if (pa !== pb) return pa - pb;
+    const ga = a.parent_task ?? a.task_id;
+    const gb = b.parent_task ?? b.task_id;
+    if (ga !== gb) return ga.localeCompare(gb);
+    return String(a.task_id).localeCompare(String(b.task_id));
+  });
+}
+
 function pad(s, len) {
   return String(s).padEnd(len);
 }
@@ -192,7 +381,7 @@ function buildLaneSummaryTable(lanes) {
   return [fmt(headers), fmt(sep), ...rows.map(fmt), ''].join('\n');
 }
 
-function buildWorkboard(tasks, lanes, date) {
+function buildWorkboard(tasks, lanes, date, sourceDescription = 'verified agent-lane YAML files') {
   const statusOrder = { in_progress: 0, review: 1, queued: 2, blocked: 3, done: 4 };
   const sorted = [...tasks].sort((a, b) => {
     const sa = statusOrder[normalizeStatus(a.status)] ?? 9;
@@ -253,7 +442,7 @@ function buildWorkboard(tasks, lanes, date) {
     '',
     '# Execution Workboard',
     '',
-    `Generated from verified agent-lane YAML files on ${date}.`,
+    `Generated from ${sourceDescription} on ${date}.`,
     '',
     '## Status Legend',
     '',
@@ -276,20 +465,17 @@ function buildWorkboard(tasks, lanes, date) {
   ].join('\n');
 }
 
-function buildOpenTaskRoute(tasks, lanes, doneSet, date) {
-  const unblocked = tasks.filter((task) => isUnblocked(task, doneSet));
-  const priorityOrder = (priority) =>
-    Number.parseInt(String(priority ?? 'P9').replace('P', ''), 10);
-
-  unblocked.sort((a, b) => {
-    const pa = priorityOrder(a.priority);
-    const pb = priorityOrder(b.priority);
-    if (pa !== pb) return pa - pb;
-    const ga = a.parent_task ?? a.task_id;
-    const gb = b.parent_task ?? b.task_id;
-    if (ga !== gb) return ga.localeCompare(gb);
-    return String(a.task_id).localeCompare(String(b.task_id));
-  });
+function buildOpenTaskRoute(
+  tasks,
+  lanes,
+  doneSet,
+  date,
+  sourceDescription = 'verified agent-lane YAML files',
+  actionableTasks = null
+) {
+  const unblocked = Array.isArray(actionableTasks)
+    ? actionableTasks
+    : sortYamlActionableTasks(tasks.filter((task) => isUnblocked(task, doneSet)));
 
   const inProgress = tasks.filter((task) => normalizeStatus(task.status) === 'in_progress');
   const review = tasks.filter((task) => normalizeStatus(task.status) === 'review');
@@ -336,7 +522,7 @@ function buildOpenTaskRoute(tasks, lanes, doneSet, date) {
     '',
     `Fast execution route for selecting the next task. Generated on ${date}.`,
     '',
-    'Verified task registry source: [agent-lane YAML files](./agent-lane-a.yaml).',
+    `Verified task registry source: ${sourceDescription}.`,
     '',
     '## Current Open Snapshot',
     '',
@@ -363,8 +549,20 @@ function buildOpenTaskRoute(tasks, lanes, doneSet, date) {
   ].join('\n');
 }
 
-function main() {
+function printHelp() {
+  console.log(
+    'Usage: pnpm docs:workboard:generate [--source auto|db|yaml] [--database-url <url>] [--source-state-dir <path>] [--output-root <path>]'
+  );
+}
+
+async function main() {
   const args = parseArgs(process.argv.slice(2));
+
+  if (args.help) {
+    printHelp();
+    return;
+  }
+
   const sourceStateDir = args.sourceStateDir;
   const outputStateDir = path.join(args.outputRoot, 'docs', 'planning', 'state');
   const workboardPath = path.join(outputStateDir, 'execution-workboard.md');
@@ -375,23 +573,69 @@ function main() {
   }
   fs.mkdirSync(outputStateDir, { recursive: true });
 
-  const lanes = loadLanes(sourceStateDir);
+  const laneSource = await resolveLaneSource(args);
+  const lanes = laneSource.lanes;
   const tasks = collectTasks(lanes);
-  const doneSet = buildDoneSet(tasks);
+  const actionableTasks = laneSource.actionableTasks || null;
+  const doneSet = actionableTasks ? null : buildDoneSet(tasks);
 
   const workboardDate = resolveGeneratedDate(workboardPath, (date) =>
-    buildWorkboard(tasks, lanes, date)
+    buildWorkboard(tasks, lanes, date, laneSource.description)
   );
   const openTaskDate = resolveGeneratedDate(openTaskPath, (date) =>
-    buildOpenTaskRoute(tasks, lanes, doneSet, date)
+    buildOpenTaskRoute(tasks, lanes, doneSet, date, laneSource.description, actionableTasks)
   );
 
-  fs.writeFileSync(workboardPath, buildWorkboard(tasks, lanes, workboardDate), 'utf8');
-  fs.writeFileSync(openTaskPath, buildOpenTaskRoute(tasks, lanes, doneSet, openTaskDate), 'utf8');
+  fs.writeFileSync(
+    workboardPath,
+    buildWorkboard(tasks, lanes, workboardDate, laneSource.description),
+    'utf8'
+  );
+  fs.writeFileSync(
+    openTaskPath,
+    buildOpenTaskRoute(
+      tasks,
+      lanes,
+      doneSet,
+      openTaskDate,
+      laneSource.description,
+      actionableTasks
+    ),
+    'utf8'
+  );
 
   console.log(
-    `[docs:workboard:generate] Updated ${path.relative(repoRoot, workboardPath)} and ${path.relative(repoRoot, openTaskPath)}`
+    `[docs:workboard:generate] Updated ${path.relative(repoRoot, workboardPath)} and ${path.relative(repoRoot, openTaskPath)} from ${laneSource.kind}`
   );
 }
 
-main();
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(`[docs:workboard:generate] ${error.message}`);
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  buildDoneSet,
+  buildLaneSummaryTable,
+  buildOpenTaskRoute,
+  buildWorkboard,
+  collectTasks,
+  databaseUrl,
+  dependencies,
+  isPlanningDbUnavailable,
+  isUnblocked,
+  loadLanes,
+  loadDbLaneSource,
+  loadLanesFromDb,
+  normalizeComplexity,
+  normalizeEffort,
+  normalizeProgress,
+  normalizeStatus,
+  parseArgs,
+  parseDependencyTokens,
+  readNextTaskIdentitiesFromDb,
+  resolveLaneSource,
+  summarizeLane,
+};

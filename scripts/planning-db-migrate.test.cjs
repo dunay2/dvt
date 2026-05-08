@@ -158,3 +158,35 @@ test('tracked migrations guard effective task overlays by source hash after revi
     /case\s+when local\.task_id is null\s+then task\.status_reason\s+else local\.status_reason\s+end as status_reason/s
   );
 });
+
+test('tracked migrations include the open planning task view after W11C', () => {
+  const migrations = readMigrationFiles();
+  const openTaskMigration = migrations.find(
+    (migration) => migration.fileName === '007_planning_open_task_views.sql'
+  );
+
+  assert.ok(openTaskMigration);
+  assert.match(
+    openTaskMigration.sql,
+    /create or replace view planning_query_store\.planning_open_tasks/
+  );
+  assert.match(openTaskMigration.sql, /from planning_query_store\.planning_effective_tasks/);
+  assert.match(openTaskMigration.sql, /where status not in \('done', 'blocked'\)/);
+});
+
+test('tracked migrations include the actionable next planning task view after W11D', () => {
+  const migrations = readMigrationFiles();
+  const nextTaskMigration = migrations.find(
+    (migration) => migration.fileName === '008_planning_next_task_views.sql'
+  );
+
+  assert.ok(nextTaskMigration);
+  assert.match(
+    nextTaskMigration.sql,
+    /create or replace view planning_query_store\.planning_next_tasks/
+  );
+  assert.match(nextTaskMigration.sql, /from planning_query_store\.planning_open_tasks/);
+  assert.match(nextTaskMigration.sql, /lower\(candidate\.status\) = 'queued'/);
+  assert.match(nextTaskMigration.sql, /regexp_split_to_table/);
+  assert.match(nextTaskMigration.sql, /lower\(prerequisite\.status\) = 'done'/);
+});

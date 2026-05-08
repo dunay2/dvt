@@ -6,13 +6,14 @@ const path = require('node:path');
 const packageJson = require('../package.json');
 const { buildRefreshStages, runGovernanceRefresh } = require('./governance-refresh.cjs');
 
-test('governance refresh runs deterministic generation before database drift checks', () => {
+test('governance refresh imports planning DB before DB-backed workboard generation', () => {
   const stages = buildRefreshStages();
 
   assert.deepEqual(
     stages.generationStages.map((stage) => stage.script),
     [
       'docs:sync',
+      'planning:db:import',
       'docs:workboard:generate',
       'docs:status:generate',
       'docs:capability:generate',
@@ -27,7 +28,7 @@ test('governance refresh runs deterministic generation before database drift che
   );
   assert.deepEqual(
     stages.databaseStages.map((stage) => stage.script),
-    ['planning:db:import', 'planning:db:check', 'planning:db:export:check', 'governance:db:check']
+    ['planning:db:check', 'planning:db:export:check', 'governance:db:check']
   );
 });
 
@@ -72,9 +73,9 @@ test('governance refresh fails closed when generated output does not stabilize',
   );
 
   assert.equal(
-    executedScripts.includes('planning:db:import'),
+    executedScripts.includes('planning:db:check'),
     false,
-    'database import must wait for stable generated surfaces'
+    'database drift checks must wait for stable generated surfaces'
   );
 });
 
