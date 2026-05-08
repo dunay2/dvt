@@ -2,6 +2,7 @@
  * Owned concern: prove first canvas and first node authoring against the live
  * protected runtime without draft endpoint intercepts or seeded success.
  */
+import { resolveCanvasViewCopy } from '../../../src/app/views/canvas/copy';
 import {
   assertLiveFirstAuthoringDraftScopeIsClean,
   resolveLiveFirstAuthoringWorkspaceSession,
@@ -72,11 +73,20 @@ describe('Canvas first-authoring live protected runtime', () => {
   }
 
   function waitForDraftSaveSettled(): void {
-    cy.get('[data-slot="canvas-draft-save-status"]', { timeout: 20_000 }).should(($status) => {
-      const text = $status.text();
+    cy.window({ log: false }).then((window) => {
+      const copy = resolveCanvasViewCopy(
+        window.navigator.language || window.document.documentElement.lang
+      );
 
-      expect(text).not.to.contain('Saving draft');
-      expect(text).to.match(/Draft saved|Draft synced/);
+      cy.get('[data-slot="canvas-draft-save-status"]', { timeout: 20_000 }).should(($status) => {
+        const text = $status.text();
+
+        expect(text).not.to.contain(copy.savingDraftLabel);
+        expect(
+          [copy.draftSavedLabel, copy.draftSyncedLabel].some((label) => text.includes(label)),
+          text
+        ).to.equal(true);
+      });
     });
   }
 

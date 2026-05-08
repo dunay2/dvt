@@ -28,11 +28,12 @@ export type GraphDraftQueryState = {
   isError: boolean;
 };
 
-export type DraftSaveStatus = 'idle' | 'saving' | 'saved';
+export type DraftSaveStatus = 'idle' | 'saving' | 'saved' | 'failed';
 
 export type DraftAttemptRefs = {
   saveDebounceTimerRef: MutableRefObject<ReturnType<typeof globalThis.setTimeout> | null>;
   lastSavedSignatureRef: MutableRefObject<string | null>;
+  lastFailedSignatureRef: MutableRefObject<string | null>;
   saveAttemptGenerationRef: MutableRefObject<number>;
   nextSaveAttemptIdRef: MutableRefObject<number>;
   activeSaveAttemptRef: MutableRefObject<{ id: number; generation: number } | null>;

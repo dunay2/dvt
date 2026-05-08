@@ -62,6 +62,7 @@ export function applyConflictResolution(args: {
   draftQueryCache: CanvasDraftQueryCache;
   setDraftSession: (updater: (currentSession: CanvasDraftSession) => CanvasDraftSession) => void;
   setDraftSaveStatus: (status: 'idle') => void;
+  refs: DraftAttemptRefs;
   currentState: CanvasAuthoringDraftReadModel;
 }) {
   const currentRecord = args.currentState.record;
@@ -69,6 +70,7 @@ export function applyConflictResolution(args: {
     return;
   }
 
+  args.refs.lastFailedSignatureRef.current = null;
   args.draftQueryCache.replaceRemoteDraftState(args.currentState);
   args.setDraftSession((currentSession) =>
     canvasDraftSession.machine.applyConflict(currentSession, currentRecord)
@@ -90,6 +92,7 @@ export function applySavedDraftResolution(args: {
   }
 
   args.refs.lastSavedSignatureRef.current = args.currentDraftPayloadSignature;
+  args.refs.lastFailedSignatureRef.current = null;
   args.draftQueryCache.replaceRemoteDraftState(args.remoteDraftState);
   args.setDraftSession((currentSession) =>
     canvasDraftSession.machine.applySaveSuccess(currentSession, record)
@@ -98,9 +101,12 @@ export function applySavedDraftResolution(args: {
 }
 
 export function restoreEditingAfterSaveFailure(
+  refs: DraftAttemptRefs,
+  currentDraftPayloadSignature: string,
   setDraftSession: (updater: (currentSession: CanvasDraftSession) => CanvasDraftSession) => void,
-  setDraftSaveStatus: (status: 'idle') => void
+  setDraftSaveStatus: (status: 'failed') => void
 ) {
+  refs.lastFailedSignatureRef.current = currentDraftPayloadSignature;
   setDraftSession((currentSession) =>
     currentSession.syncState === 'saving'
       ? {
@@ -109,5 +115,5 @@ export function restoreEditingAfterSaveFailure(
         }
       : currentSession
   );
-  setDraftSaveStatus('idle');
+  setDraftSaveStatus('failed');
 }

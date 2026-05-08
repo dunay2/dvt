@@ -18,8 +18,8 @@ disappear behind smaller tab, layout, and startup fixes.
 The next work should proceed in three stages:
 
 1. simplify the Canvas workbench chrome and project context placement;
-2. introduce an explicit user-visible save command over the existing draft
-   authority;
+2. make automatic draft-save posture explicit and prove it through the existing
+   draft authority;
 3. add project export and import proof as a complete round trip.
 
 Multi-canvas persistence is intentionally out of scope for this sequence. The
@@ -281,10 +281,13 @@ not encode project identity as route-local string assembly inside the view.
   session store and protected runtime posture.
 - No save, export, import, or backend contract behavior changes in Stage 1.
 
-## Stage 2: Explicit Save
+## Stage 2: Automatic Save Posture Proof
 
-Stage 2 introduces a visible `Save` command without changing the source of
-truth.
+Stage 2 does not introduce a manual Save button or a second user-triggered save
+command. Canvas draft persistence remains automatic. The stage makes the
+automatic save posture explicit enough for operators and Cypress to distinguish
+unchanged, saving, saved, failed-save, and conflict states without changing the
+source of truth.
 
 Expected rail posture:
 
@@ -294,9 +297,11 @@ Expected rail posture:
 | `GetWorkspaceGraphDraft`  | query   | Canvas startup and recovery | reuse  |
 | `PersistCanvasLayout`     | command | Canvas layout presentation  | reuse  |
 
-The save button should reflect `Unsaved`, `Saving`, `Saved`, conflict, and
-failed-save states. It must not create a second persistence authority beside
-the protected workspace graph draft.
+The toolbar status and browser proof should show that graph edits automatically
+call `SaveWorkspaceGraphDraft`, transition through saving and saved states, keep
+failed saves visible as failed instead of presenting them as synced, and block
+manual-save affordances from appearing. It must not create a second persistence
+authority beside the protected workspace graph draft.
 
 ## Stage 3: Project Export And Import Proof
 
@@ -313,7 +318,7 @@ Expected new or extended rails:
 The acceptance proof must cover:
 
 - create or modify a Canvas graph;
-- save the draft;
+- let the automatic draft save settle;
 - export the project snapshot;
 - load or import the snapshot into a clean workspace context;
 - verify nodes, edges, layout, project metadata, and Canvas identity are
@@ -327,9 +332,9 @@ version, validation, error, and compatibility rules.
 - Stage 1 is primarily a Presentation Model cleanup: the shell should expose
   the right workbench state without making scope selectors the dominant
   visual object.
-- Stage 2 is a command-boundary clarification: user-visible save must map to
-  the existing draft command rail instead of inventing a local persistence
-  shortcut.
+- Stage 2 is a command-boundary clarification: automatic save visibility must
+  map to the existing draft command rail instead of inventing a manual Save
+  command or a local persistence shortcut.
 - Stage 3 is an anti-corruption and value-object boundary: imported project
   snapshots need validation before becoming workspace authority.
 

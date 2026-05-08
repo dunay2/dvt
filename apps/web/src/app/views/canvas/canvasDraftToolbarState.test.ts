@@ -52,6 +52,19 @@ describe('canvasDraftToolbarState', () => {
     ).toBe(canvasViewCopy.savingDraftLabel);
   });
 
+  it('uses failed automatic save copy when autosave fails without recovery', () => {
+    expect(
+      deriveCanvasDraftToolbarState({
+        draftSaveStatus: 'failed',
+        recoveryReason: null,
+      })
+    ).toEqual({
+      label: 'Draft save failed',
+      tone: 'danger',
+      showReloadAction: false,
+    });
+  });
+
   it('uses warning and danger toolbar states for recovery reasons', () => {
     expect(
       deriveCanvasDraftToolbarState({

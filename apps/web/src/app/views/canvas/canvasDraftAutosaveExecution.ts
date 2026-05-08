@@ -32,6 +32,7 @@ type SaveFailureContext = {
   saveAttempt: DraftSaveAttempt;
   setDraftSession: SetDraftSession;
   setDraftSaveStatus: SetDraftSaveStatus;
+  currentDraftPayloadSignature: string;
 };
 
 export type PerformCanvasDraftAutosaveArgs = {
@@ -67,6 +68,7 @@ function resolveDraftSaveSuccess(
       draftQueryCache,
       setDraftSession,
       setDraftSaveStatus: (status) => setDraftSaveStatus(status),
+      refs,
       currentState: result.remoteDraftState,
     });
     return;
@@ -87,13 +89,16 @@ function resolveDraftSaveFailure({
   saveAttempt,
   setDraftSession,
   setDraftSaveStatus,
+  currentDraftPayloadSignature,
 }: SaveFailureContext) {
   if (isStaleSaveResolution(refs, saveAttempt)) {
     return;
   }
 
   refs.activeSaveAttemptRef.current = null;
-  restoreEditingAfterSaveFailure(setDraftSession, (status) => setDraftSaveStatus(status));
+  restoreEditingAfterSaveFailure(refs, currentDraftPayloadSignature, setDraftSession, (status) =>
+    setDraftSaveStatus(status)
+  );
 }
 
 export function performCanvasDraftAutosave({
@@ -133,6 +138,7 @@ export function performCanvasDraftAutosave({
         saveAttempt,
         setDraftSession,
         setDraftSaveStatus,
+        currentDraftPayloadSignature,
       })
     );
 }

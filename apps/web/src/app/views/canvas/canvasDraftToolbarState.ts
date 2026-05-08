@@ -1,5 +1,6 @@
 /** Owned concern: resolve Canvas draft recovery reasons and toolbar labels from draft state. */
 import { canvasViewCopy } from './copy';
+import type { DraftSaveStatus } from './canvasDraftLifecycle.types';
 
 export type CanvasDraftRecoveryReason =
   | 'stale_conflict'
@@ -14,7 +15,7 @@ export type CanvasDraftToolbarState = {
 };
 
 type CanvasDraftToolbarStateArgs = {
-  draftSaveStatus: 'idle' | 'saving' | 'saved';
+  draftSaveStatus: DraftSaveStatus;
   recoveryReason: CanvasDraftRecoveryReason;
 };
 
@@ -62,6 +63,8 @@ function resolveNeutralDraftToolbarLabel(
       return canvasViewCopy.savingDraftLabel;
     case 'saved':
       return canvasViewCopy.draftSavedLabel;
+    case 'failed':
+      return canvasViewCopy.draftSaveFailedLabel;
     default:
       return canvasViewCopy.draftSyncedLabel;
   }
@@ -93,7 +96,7 @@ export function deriveCanvasDraftToolbarState({
     default:
       return {
         label: resolveNeutralDraftToolbarLabel(draftSaveStatus),
-        tone: 'neutral',
+        tone: draftSaveStatus === 'failed' ? 'danger' : 'neutral',
         showReloadAction: false,
       };
   }

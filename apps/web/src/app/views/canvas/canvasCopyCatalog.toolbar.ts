@@ -69,6 +69,30 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.toolbar.newCanvasLabel',
     fallback: 'New canvas',
   },
+  workbenchGraphTabLabel: {
+    key: 'canvas.workbench.tabs.graphLabel',
+    fallback: 'Graph',
+  },
+  workbenchCodeTabLabel: {
+    key: 'canvas.workbench.tabs.codeLabel',
+    fallback: 'Code',
+  },
+  workbenchLineageTabLabel: {
+    key: 'canvas.workbench.tabs.lineageLabel',
+    fallback: 'Lineage',
+  },
+  workbenchDiffTabLabel: {
+    key: 'canvas.workbench.tabs.diffLabel',
+    fallback: 'Diff',
+  },
+  workbenchArtifactsTabLabel: {
+    key: 'canvas.workbench.tabs.artifactsLabel',
+    fallback: 'Artifacts',
+  },
+  workbenchRunsTabLabel: {
+    key: 'canvas.workbench.tabs.runsLabel',
+    fallback: 'Runs',
+  },
   replaceCanvasTitle: {
     key: 'canvas.toolbar.replaceCanvasTitle',
     fallback: 'Replace current canvas?',
@@ -97,6 +121,10 @@ export const canvasViewToolbarCopyByKey = {
   draftSavedLabel: {
     key: 'canvas.draft.toolbar.savedLabel',
     fallback: 'Draft saved',
+  },
+  draftSaveFailedLabel: {
+    key: 'canvas.draft.toolbar.saveFailedLabel',
+    fallback: 'Draft save failed',
   },
   staleVersionLabel: {
     key: 'canvas.draft.toolbar.staleVersionLabel',
