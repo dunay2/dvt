@@ -89,6 +89,13 @@ The tracked planning sources of truth are:
 - tracked planning docs such as `planning-control-tower.md`, portfolio maps,
   proposals, reviews, closeouts, and roadmap docs
 
+For existing task operations, the local Postgres query store is the operational
+surface. Use `pnpm planning:db:operate` for claim/release/status/progress and
+evidence overlay changes, then inspect with `pnpm planning:db:query tasks` or
+`pnpm planning:db:query next`. Lane YAML remains the bootstrap and PR-review
+compatibility surface for new task definitions until create/delete commands are
+declared for the DB rail.
+
 The following planning surfaces are derived local/CI artifacts and must not be
 committed:
 

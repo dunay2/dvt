@@ -19,9 +19,15 @@ surface. This control tower is the update protocol.
 
 ## Mandatory Update Map By Task Type
 
-- Starts, re-scopes, or changes an active work item:
-  update the relevant `agent-lane-*.yaml` entry and regenerate planning-derived
-  views locally.
+- Claims, releases, or changes status/progress/evidence on an existing active
+  work item: use `pnpm planning:db:operate` against the imported planning DB
+  state, then inspect with `pnpm planning:db:query tasks` or
+  `pnpm planning:db:query next`. Use `pnpm planning:db:export:check` before
+  treating generated planning views as aligned.
+- Creates, deletes, or structurally re-scopes an active work item: update the
+  relevant `agent-lane-*.yaml` entry, run `pnpm planning:db:import`, and
+  regenerate planning-derived views locally. Create/delete task semantics remain
+  file-backed until a later DB command slice declares them.
 - Changes sequencing, dependencies, blockers, or parallel lanes:
   update [Roadmap Of Record](../roadmap/index.md),
   [Roadmap By Domain](../roadmap/roadmap-by-domain.md),
@@ -32,14 +38,16 @@ surface. This control tower is the update protocol.
   [Roadmap By Domain](../roadmap/roadmap-by-domain.md).
 - Introduces or updates a plan/proposal:
   update the corresponding file under `docs/planning/proposals/` and its linked
-  work item in the relevant lane YAML.
+  work item through the DB overlay when the task already exists, or the relevant
+  lane YAML when the task is new.
 - Produces review findings that require execution:
-  update the corresponding file under `docs/planning/reviews/`, the relevant
-  lane YAML, and the roadmap or domain surface that owns the follow-up.
+  update the corresponding file under `docs/planning/reviews/`, the relevant DB
+  task overlay or lane YAML task definition, and the roadmap or domain surface
+  that owns the follow-up.
 - Closes implementation work:
-  update the corresponding file under `docs/planning/closeouts/`, the status in
-  the relevant lane YAML, and any canonical status
-  surfaces whose posture changed.
+  update the corresponding file under `docs/planning/closeouts/`, move the
+  existing task through `planning:db:operate task update`, and update any
+  canonical status surfaces whose posture changed.
 - Changes roadmap classification or canonical roadmap posture:
   update [Roadmap Of Record](../roadmap/index.md).
 - Retires or supersedes a planning construct:
@@ -87,21 +95,25 @@ When there is confusion about "what is active now" vs "where to continue":
    blockers, lanes, and next reading surface.
 2. [System Delivery Status](../../architecture/system-delivery-status.md)
    (`last_reviewed: 2026-04-08`): current implementation truth.
-3. [Agent Lane YAML registry](./agent-lane-a.yaml)
-   (`agent-lane-a.yaml` ... `agent-lane-e.yaml`): active tasks, owners,
-   execution status, blockers, and next actions.
-4. [Review Status Board](../reviews/review-status-board.md)
+3. Planning DB query store: `pnpm planning:db:query tasks` and
+   `pnpm planning:db:query next` show effective active tasks, owners, execution
+   status, blockers, and next actions after local DB overlays.
+4. [Agent Lane YAML registry](./agent-lane-a.yaml)
+   (`agent-lane-a.yaml` ... `agent-lane-e.yaml`): bootstrap task definitions
+   and create/delete compatibility surface.
+5. [Review Status Board](../reviews/review-status-board.md)
    (`last_reviewed: 2026-04-04`): which reviews are active/reference and which
    tasks they feed.
-5. [Roadmap Of Record](../roadmap/index.md): roadmap classification and source
+6. [Roadmap Of Record](../roadmap/index.md): roadmap classification and source
    authority.
-6. [Strategic Product Roadmap](../roadmap/strategic-product-roadmap.md):
+7. [Strategic Product Roadmap](../roadmap/strategic-product-roadmap.md):
    long-range product direction and capability ladder.
 
 Interpretation rule:
 
 - `status` = truth now
-- `lane yaml` = execution now + next work
+- `planning DB effective task view` = execution now + next work
+- `lane yaml` = bootstrap task definitions and create/delete compatibility
 - `roadmap` = sequence
 - `reviews` = rationale and intake for follow-up work
 
@@ -119,9 +131,10 @@ Interpretation rule:
 
 1. [Planning Control Tower](./planning-control-tower.md)
 2. [Planning Dashboard](./planning-dashboard.md)
-3. Relevant [Agent Lane YAML](./agent-lane-a.yaml)
-4. [Roadmap Of Record](../roadmap/index.md)
-5. [Strategic Product Roadmap](../roadmap/strategic-product-roadmap.md)
-6. [Roadmap By Domain](../roadmap/roadmap-by-domain.md)
-7. [Domain Status Board](./domain-status-board.md)
-8. Relevant proposal or review document for the specific slice
+3. `pnpm planning:db:query next` or `pnpm planning:db:query tasks`
+4. Relevant [Agent Lane YAML](./agent-lane-a.yaml) when creating/deleting tasks
+5. [Roadmap Of Record](../roadmap/index.md)
+6. [Strategic Product Roadmap](../roadmap/strategic-product-roadmap.md)
+7. [Roadmap By Domain](../roadmap/roadmap-by-domain.md)
+8. [Domain Status Board](./domain-status-board.md)
+9. Relevant proposal or review document for the specific slice

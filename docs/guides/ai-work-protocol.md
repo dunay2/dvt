@@ -50,14 +50,18 @@ the document surfaces defined there in the same task.
 
 Minimum rule for every planning-affecting task:
 
-1. update or confirm the canonical task entry in the relevant
-   `agent-lane-*.yaml` file and regenerate the local planning-derived views;
-2. update the relevant source surface (`proposals`, `reviews`, `closeouts`,
+1. for an existing task, apply claim/status/progress/evidence changes through
+   `pnpm planning:db:operate`, then confirm effective state with
+   `pnpm planning:db:query tasks` or `pnpm planning:db:query next`;
+2. for a new, deleted, or structurally re-scoped task, update the canonical task
+   definition in the relevant `agent-lane-*.yaml` file, then run
+   `pnpm planning:db:import` and regenerate the local planning-derived views;
+3. update the relevant source surface (`proposals`, `reviews`, `closeouts`,
    `gaps`, or `roadmap`) based on task type;
-3. if sequencing, blockers, or lane ownership changed, update
+4. if sequencing, blockers, or lane ownership changed, update
    [Planning Control Tower](../planning/state/planning-control-tower.md),
    the relevant roadmap surface, and linked diagrams.
-4. when creating or renaming review files, follow
+5. when creating or renaming review files, follow
    [Review Naming Policy](../planning/reviews/review-naming-policy.md).
 
 Do not leave planning changes only in ad hoc notes or PR text when a canonical

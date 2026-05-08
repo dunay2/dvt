@@ -43,6 +43,67 @@ node.test('planning DB export reconstructs lane documents from normalized DB tas
   node.assert.equal(lanes[0].verification_summary.lane_progress_pct, 50);
 });
 
+node.test(
+  'planning DB export overlays effective task fields without exporting local claims',
+  () => {
+    const runner = new PlanningDbExportRunner();
+    const lanes = runner.buildLaneDocuments({
+      lanes: [
+        {
+          laneId: 'C',
+          rawLane: {
+            lane_id: 'C',
+            title: 'Lane C',
+            tasks: [{ task_id: 'AR-C10' }],
+          },
+        },
+      ],
+      tasks: [
+        {
+          laneId: 'C',
+          taskId: 'AR-C10',
+          rawTask: {
+            task_id: 'AR-C10',
+            status: 'queued',
+            progress_pct: 0,
+            evidence_refs: [],
+            status_reason: 'Imported state.',
+          },
+          status: 'review',
+          progressPct: 80,
+          evidenceRefs: ['docs/evidence/ED-20260508-planning-db-effective-tasks.md'],
+          statusReason: 'DB overlay is ready for review.',
+          claimedBy: 'codex',
+        },
+      ],
+    });
+
+    const [task] = lanes[0].tasks;
+    node.assert.equal(task.status, 'review');
+    node.assert.equal(task.progress_pct, 80);
+    node.assert.deepEqual(task.evidence_refs, [
+      'docs/evidence/ED-20260508-planning-db-effective-tasks.md',
+    ]);
+    node.assert.equal(task.status_reason, 'DB overlay is ready for review.');
+    node.assert.equal(task.claimed_by, undefined);
+  }
+);
+
+node.test('planning DB export reads effective task rows from the query store', async () => {
+  const runner = new PlanningDbExportRunner();
+  const capturedSql = [];
+  const client = {
+    async query(sql) {
+      capturedSql.push(sql);
+      return { rows: [] };
+    },
+  };
+
+  await runner.readPlanningRows(client);
+
+  node.assert.match(capturedSql.join('\n'), /from planning_query_store\.planning_effective_tasks/);
+});
+
 node.test('planning DB export rejects task rows that reference a missing lane', () => {
   const runner = new PlanningDbExportRunner();
 

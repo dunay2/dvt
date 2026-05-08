@@ -9,6 +9,7 @@ const {
   deriveGovernanceSemantics,
   expandComponentFileMapFromManifest,
   expandFileIndexFromManifest,
+  filterExistingRepositoryFiles,
   normalizeGeneratedIndexBytesForHash,
   normalizeTextBytesForHash,
 } = require('./generate-governance-file-component-index.cjs');
@@ -240,6 +241,15 @@ test('buildFileEntries adds unit status and drift legacy booleans per file', () 
       governance: ['package.json'],
     },
   ]);
+});
+
+test('filterExistingRepositoryFiles drops tracked files deleted from the worktree', () => {
+  assert.deepEqual(
+    filterExistingRepositoryFiles(['package.json', 'scripts/removed-once.cjs'], {
+      fileExists: (filePath) => filePath === 'package.json',
+    }),
+    ['package.json']
+  );
 });
 
 test('buildComponentEntries counts owned files per component', () => {

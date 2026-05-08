@@ -33,8 +33,8 @@ The review documents remain as evidence inputs, not active competing plans.
 The current delivery chain is already substantial and mostly coherent:
 
 1. Bootstrap: `prepare` runs `scripts/setup-git-hooks.cjs`.
-2. Pre-commit: `.husky/pre-commit` runs `pnpm precommit`, which executes
-   `lint-staged` plus `pnpm lint:determinism`.
+2. Pre-commit: `.husky/pre-commit` runs `pnpm run hooks:precommit`, which
+   executes `lint-staged` plus `pnpm precommit:determinism`.
 3. Commit message: `.husky/commit-msg` runs `pnpm exec commitlint --edit`.
 4. Pre-push: `.husky/pre-push` selects either a docs-only fast path or
    `pnpm verify:prepush`.

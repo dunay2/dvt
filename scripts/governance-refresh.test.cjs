@@ -1,5 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const packageJson = require('../package.json');
 const { buildRefreshStages, runGovernanceRefresh } = require('./governance-refresh.cjs');
@@ -82,4 +84,18 @@ test('planning DB test suite does not pre-generate governance artifacts', () => 
     /governance:artifacts:generate/,
     'planning DB tests must prove DB import works without generated files as input'
   );
+});
+
+test('package scripts expose governance refresh instead of the obsolete artifact alias', () => {
+  assert.equal(typeof packageJson.scripts['governance:refresh'], 'string');
+  assert.equal(Object.hasOwn(packageJson.scripts, 'governance:artifacts:generate'), false);
+});
+
+test('one-off architecture migration scripts are not kept in active scripts', () => {
+  for (const fileName of [
+    'rehome-architecture-docs.cjs',
+    'rewrite-active-architecture-paths.cjs',
+  ]) {
+    assert.equal(fs.existsSync(path.join(__dirname, fileName)), false, fileName);
+  }
 });

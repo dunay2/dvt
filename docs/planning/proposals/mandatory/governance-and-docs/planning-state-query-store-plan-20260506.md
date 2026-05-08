@@ -549,11 +549,18 @@ rejection of unknown actions.
 `planning:db:import` implements `ImportPlanningStateQueryStore` and
 `ImportGovernanceStateQueryStore` together for the W2 local content snapshot.
 `planning:db:query` implements `QueryPlanningStateReadModel` and
-`QueryGovernanceStateReadModel` for the current summary surface. Scope is local
-developer tooling only; authorization is local OS and Docker/Postgres access.
-Negative tests cover migration checksum mismatch, unknown query names, content
-extraction from real lane YAML, and governance file-count parity with the
-Git-tracked file index.
+`QueryGovernanceStateReadModel` for the current summary surface. The default
+`summary` query is intentionally lightweight and does not touch the
+`governance_file_hash_drift` projection. `planning:db:query hash-drift` is the
+explicit heavy query for DB-derived governance hash drift. `planning:db:query
+tasks` and `planning:db:query next` read `planning_effective_tasks`, not raw
+lane YAML, so local DB-first overlays are visible in daily filtering and next
+task selection. Scope is local developer tooling only; authorization is local
+OS and Docker/Postgres access. Negative tests cover migration checksum
+mismatch, unknown query names, fast summary isolation from the hash-drift
+projection, explicit hash-drift querying, effective task filtering, actionable
+next-task filtering, content extraction from real lane YAML, and governance
+file-count parity with the Git-tracked file index.
 
 `planning:db:operate` implements `ApplyPlanningLocalOperation` and
 `QueryPlanningLocalOperationAudit`. It is the local DB-first command surface for
@@ -572,14 +579,17 @@ hash, lane id, and `(lane_id, task_id)` identity. It fails closed when a source
 hash is stale, a row is missing, or an unexpected imported row exists.
 
 `planning:db:export` implements `ExportPlanningStateSnapshot` for the first
-planning-derived surface parity slice. It reads imported Postgres lane and task
-rows, reconstructs lane registry documents into a temporary source directory,
-and delegates rendering to the existing `GeneratePlanningDerivedSurfaces`
-adapter instead of adding a parallel workboard renderer. Scope is local
-developer tooling only; authorization is local OS and Docker/Postgres access.
-`planning:db:export:check` compares the DB-rendered execution workboard and
-open-task route against the current generated files and fails closed on missing
-artifacts, stale DB content, or renderer drift.
+planning-derived surface parity slice. It reads Postgres lane rows and
+`planning_effective_tasks`, reconstructs lane registry documents into a
+temporary source directory, exports reviewable status/progress/evidence fields
+from local DB overlays, and delegates rendering to the existing
+`GeneratePlanningDerivedSurfaces` adapter instead of adding a parallel workboard
+renderer. Scope is local developer tooling only; authorization is local OS and
+Docker/Postgres access. Local claim tokens, claim expiry, and audit rows remain
+DB-local and are not exported to lane YAML. `planning:db:export:check` compares
+the DB-rendered execution workboard and open-task route against the current
+generated files and fails closed on missing artifacts, stale DB content, or
+renderer drift.
 
 `governance:db:check` implements `ValidateGovernanceStateDrift`. It compares the
 current Git-tracked governance snapshot with imported Postgres rows by source
@@ -712,7 +722,7 @@ behavior, and fail-closed posture when generated output does not converge.
 ### W9 Implementation Plan
 
 1. Add focused red tests requiring a Postgres migration for derived governance
-   hash projections and a summary count for governance hash drift.
+   hash projections and an explicit query surface for governance hash drift.
 2. Add a Postgres hash projection that recomputes file id, path hash,
    governance hash, and state fingerprint from imported governance file rows.
    The imported `content_hash` remains the byte-level fact until a later slice
@@ -743,9 +753,10 @@ behavior, and fail-closed posture when generated output does not converge.
 5. Retarget `docs:governance:changed-files:check` to derive the current file
    index and baseline from the same in-memory snapshot instead of reading
    `.generated-docs` files.
-6. Remove `governance:artifacts:generate` from `test:planning:db` so the DB
-   test rail proves it can build governance import content without pregenerated
-   local files.
+6. Remove the obsolete `governance:artifacts:generate` rail so
+   `governance:refresh` remains the single local orchestration command. The DB
+   test rail must prove it can build governance import content without
+   pregenerated local files.
 7. Serialize `planning:db:import` destructive read-model replacement with a
    transaction-scoped advisory lock so concurrent agents using the shared
    machine-local Postgres volume cannot interleave delete and insert phases.
@@ -753,6 +764,62 @@ behavior, and fail-closed posture when generated output does not converge.
    `pnpm test:planning:db:integration`, `pnpm planning:db:import`,
    `pnpm planning:db:query`, `pnpm governance:db:check`,
    `pnpm governance:refresh`, `pnpm ci:docs`, and `pnpm verify:prepush`.
+
+### W10A Fast Query Summary Implementation Plan
+
+1. Keep `planning:db:query` as the daily local inspection command and prevent
+   it from recalculating DB-derived governance hashes during the default
+   `summary` query.
+2. Add an explicit `planning:db:query hash-drift` query for operators and QA
+   slices that need to inspect `governance_file_hash_drift` directly.
+3. Keep `governance:db:check` as the fail-closed deep validation rail for
+   governance drift; the fast summary must not replace it.
+4. Prove the split with tests that fail when the default summary references
+   `governance_file_hash_drift` and pass only when hash drift is queried through
+   the explicit heavy route.
+5. Validate W10A with `pnpm test:planning:db`,
+   `pnpm test:planning:db:integration`, `pnpm planning:db:query`,
+   `pnpm planning:db:query hash-drift`, `pnpm governance:db:check`,
+   `pnpm ci:docs`, and `pnpm verify:prepush`.
+
+### W11 Effective Task Operations Implementation Plan
+
+1. Add red migration coverage proving a tracked SQL migration creates
+   `planning_effective_tasks`, the read model that overlays
+   `planning_task_local_state` on top of imported `planning_tasks`. The view
+   only applies a local overlay when its recorded
+   `base_source_content_sha256` still matches the imported task source hash,
+   and it must preserve nullable overlay semantics such as clearing
+   `status_reason`.
+2. Add red query tests for `planning:db:query tasks` and
+   `planning:db:query next`, including lane/status/claim filters, stable task
+   row rendering, and actionable-next filtering from effective task status.
+3. Add red export tests proving `planning:db:export` writes effective status,
+   progress, evidence, and status reason from the DB overlay back into temporary
+   lane YAML before rendering workboard/open-task-route artifacts.
+4. Implement `005_planning_effective_task_read_model.sql` as a view only, with
+   `006_planning_effective_task_overlay_guard.sql` owning the follow-up overlay
+   applicability hardening. The slice must not mutate imported
+   `planning_tasks`, create/delete tasks, or make Postgres the repository review
+   authority.
+5. Retarget `planning:db:query summary`, `tasks`, and `next` to read
+   `planning_effective_tasks` so daily filters reflect local DB-first task
+   operations without rereading lane YAML. The `next` query loads all effective
+   tasks before applying lane filters so cross-lane dependencies remain visible
+   during dependency resolution.
+6. Retarget `planning:db:export` to read the effective view and overlay only
+   exported task fields that belong in the reviewable lane registry. Local
+   claims, claim tokens, and audit rows remain DB-local and are not exported to
+   YAML.
+7. Update planning operation docs so existing-task status/claim/review updates
+   use `planning:db:operate` plus query/export/check. Keep lane YAML as the
+   bootstrap and PR-review compatibility surface for new task creation until a
+   later slice moves create/delete semantics.
+8. Validate W11 with `pnpm test:planning:db`,
+   `pnpm test:planning:db:integration`, `pnpm planning:db:query tasks`,
+   `pnpm planning:db:query next`, `pnpm planning:db:export:check`,
+   `pnpm governance:refresh`, `pnpm docs:feature-mechanization:implementation`,
+   and `pnpm verify:prepush`.
 
 ## GitHub Issues Role
 
@@ -794,7 +861,11 @@ surfaces without network access.
 10. Build governance DB import from in-memory generator projections instead of
     reading `.generated-docs` files as import input.
 11. Move workboard and open-task-route generation to read from the query store
-    when available, with deterministic file fallback during transition.
+    when available, with deterministic file fallback during transition. The
+    first slice of this step is the effective task read model for existing task
+    operations only: local claim/status/progress/evidence overlays are queried
+    and exported through Postgres, while task creation and deletion stay in lane
+    YAML until a later slice declares those command semantics.
 12. Move governance report generation to read from the query store only after
     parity proves it matches the current generators.
 13. Split large lane YAML files into smaller Git-tracked task shards only after
@@ -832,10 +903,28 @@ Current implementation status on 2026-05-08:
   pregenerates governance artifacts before the DB tests. The import transaction
   also takes a transaction-scoped advisory lock before replacing read-model rows
   so concurrent local agents cannot race on the shared Postgres volume;
+- W10A is implemented: the default `pnpm planning:db:query` summary reads only
+  lightweight read-model counts, while `pnpm planning:db:query hash-drift`
+  owns the explicit heavy hash projection inspection;
+- W11 first slice is implemented: `planning_effective_tasks` overlays
+  `planning_task_local_state` on imported `planning_tasks` only while the
+  overlay base source hash matches the imported task source hash;
+  `planning:db:query tasks` and `planning:db:query next` read effective task
+  state, `next` resolves dependencies against all effective tasks before lane
+  filtering, and
+  `planning:db:export` exports reviewable effective status/progress/evidence
+  fields without exporting local claim tokens or audit rows;
+- the obsolete `governance:artifacts:generate` package alias is removed;
+  `pnpm governance:refresh` is the single local orchestration command for
+  generated inspection artifacts plus planning/governance DB import and checks;
+- one-off architecture migration helpers from the earlier architecture rehome
+  are removed from active `scripts/` because the move has already landed and
+  the scripts were not part of any package, CI, governance refresh, or DB rail;
 - the shared DB checksum-repair route is implemented through
   `pnpm planning:db:reset -- --confirm-destroy-shared-planning-db`, not through
   manual edits to `schema_migrations`;
-- steps 11 through 15 remain future concrete follow-up work. They do not keep
+- the remainder of step 11 and steps 12 through 15 remain future concrete
+  follow-up work. They do not keep
   `GOV-S2` open; `GOV-S2` is the closed framework umbrella and this plan owns
   any remaining query-store parity or generated-artifact compaction work.
 
@@ -1072,6 +1161,7 @@ completionGate:
   - pnpm planning:db:migrate
   - pnpm planning:db:import
   - pnpm planning:db:query
+  - pnpm planning:db:query hash-drift
   - pnpm planning:db:export
   - pnpm planning:db:export:check
   - pnpm planning:db:reset -- --confirm-destroy-shared-planning-db
@@ -1224,6 +1314,16 @@ redGreenCycles:
       - scripts/generate-governance-*.cjs
       - scripts/check-governance-*.cjs
       - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: pnpm test:planning:db
+  - id: planning-db-effective-task-operations
+    redTest: pnpm test:planning:db
+    expectedFailure: Planning DB queries and export still read imported lane task rows directly instead of the effective DB overlay read model for existing task operations.
+    patchSurfaces:
+      - tools/planning-db/**
+      - scripts/planning-db-*.cjs
+      - docs/planning/state/planning-control-tower.md
+      - docs/planning/state/how-to-add-tasks.md
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     greenTest: pnpm test:planning:db
 symbols:
@@ -1621,13 +1721,91 @@ symbols:
     name: buildSummaryRows
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
+    name: buildHashDriftRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
     name: readSummary
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: readHashDriftSummary
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: printRows
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: printSummary
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
+    name: printHashDriftSummary
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
     name: runQuery
+    path: scripts/planning-db-query.cjs
+  - &planningDbEffectiveTaskSymbol
+    name: PlanningEffectiveTaskReadModelMigration
+    path: tools/planning-db/migrations/005_planning_effective_task_read_model.sql
+    dddOwner: PlanningStateReadModel
+    cqRails:
+      - QueryPlanningStateReadModel
+      - ExportPlanningStateSnapshot
+      - GeneratePlanningDerivedSurfaces
+      - MigratePlanningQueryStoreSchema
+    fowlerSignals:
+      - Large planning file operating cost
+      - Hidden query model inside YAML
+      - Generated artifact churn
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - planning DB effective task read model has no browser workflow.
+    unitTests:
+      - pnpm test:planning:db
+      - pnpm test:planning:db:integration
+      - pnpm planning:db:query tasks
+      - pnpm planning:db:query next
+      - pnpm planning:db:export:check
+  - <<: *planningDbEffectiveTaskSymbol
+    name: parseLimit
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbEffectiveTaskSymbol
+    name: parseArgs
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbEffectiveTaskSymbol
+    name: normalizeProgress
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbEffectiveTaskSymbol
+    name: buildTaskRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbEffectiveTaskSymbol
+    name: parseDependencyTokens
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbEffectiveTaskSymbol
+    name: isTaskUnblocked
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbEffectiveTaskSymbol
+    name: priorityRank
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbEffectiveTaskSymbol
+    name: compareTasksForRoute
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbEffectiveTaskSymbol
+    name: matchesNextTaskFilters
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbEffectiveTaskSymbol
+    name: buildNextTaskRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbEffectiveTaskSymbol
+    name: appendFilter
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbEffectiveTaskSymbol
+    name: effectiveTaskSelect
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbEffectiveTaskSymbol
+    name: readTaskRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbEffectiveTaskSymbol
+    name: readNextTaskRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbEffectiveTaskSymbol
+    name: printTaskRows
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: main
@@ -1997,6 +2175,12 @@ symbols:
     name: assert
     path: scripts/governance-refresh.test.cjs
   - <<: *governanceRefreshSymbol
+    name: fs
+    path: scripts/governance-refresh.test.cjs
+  - <<: *governanceRefreshSymbol
+    name: path
+    path: scripts/governance-refresh.test.cjs
+  - <<: *governanceRefreshSymbol
     name: packageJson
     path: scripts/governance-refresh.test.cjs
   - &governanceGeneratedArtifactSymbol
@@ -2114,6 +2298,9 @@ symbols:
     path: scripts/generate-governance-file-component-index.cjs
   - <<: *governanceGeneratedArtifactSymbol
     name: generatedShardDirRelativePath
+    path: scripts/generate-governance-file-component-index.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: filterExistingRepositoryFiles
     path: scripts/generate-governance-file-component-index.cjs
   - <<: *governanceGeneratedArtifactSymbol
     name: generatedComponentShardDirRelativePath

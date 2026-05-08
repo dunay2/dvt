@@ -227,7 +227,7 @@ Usage rules already declared in the ADR index:
   Role: `command registry`
   Enforces: root commands for lint, type-check, tests, contracts, docs sync,
   docs quality, determinism, golden validation, and ADR-0000 traceability.
-- [package.json `precommit`](../../../package.json)
+- [package.json `hooks:precommit`](../../../package.json)
   Role: `hook command`
   Enforces: `lint-staged` plus determinism lint before commit when hooks run
   normally.
