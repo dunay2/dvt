@@ -3,7 +3,7 @@ const { Client } = require('pg');
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { schemaName } = require('./planning-db-migrate.cjs');
 
-const knownQueries = new Set(['summary']);
+const knownQueries = new Set(['summary', 'hash-drift']);
 
 function databaseUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
@@ -12,7 +12,9 @@ function databaseUrl() {
 function resolveQueryName(value) {
   const queryName = value || 'summary';
   if (!knownQueries.has(queryName)) {
-    throw new Error(`Unknown planning DB query "${queryName}". Expected: summary.`);
+    throw new Error(
+      `Unknown planning DB query "${queryName}". Expected: ${[...knownQueries].sort().join(', ')}.`
+    );
   }
 
   return queryName;
@@ -32,10 +34,13 @@ function buildSummaryRows(summary) {
     ['governance.coverage_rows', summary.governanceCoverageRows],
     ['governance.remediation_tasks', summary.governanceRemediationTasks],
     ['governance.remediation_tasks.p0', summary.governanceRemediationP0],
-    ['governance.hash_drift', summary.governanceHashDrift],
     ['planning.local_task_overlays', summary.planningLocalTaskOverlays],
     ['planning.local_operations', summary.planningLocalOperations],
   ];
+}
+
+function buildHashDriftRows(summary) {
+  return [['governance.hash_drift', summary.governanceHashDrift]];
 }
 
 async function readSummary(client) {
@@ -53,7 +58,6 @@ async function readSummary(client) {
       (select count(*)::int from ${schemaName}.governance_coverage) as "governanceCoverageRows",
       (select count(*)::int from ${schemaName}.governance_remediation) as "governanceRemediationTasks",
       (select count(*)::int from ${schemaName}.governance_remediation where priority = 'P0') as "governanceRemediationP0",
-      (select count(*)::int from ${schemaName}.governance_file_hash_drift) as "governanceHashDrift",
       (select count(*)::int from ${schemaName}.planning_task_local_state) as "planningLocalTaskOverlays",
       (select count(*)::int from ${schemaName}.planning_local_operations) as "planningLocalOperations"
   `);
@@ -61,10 +65,27 @@ async function readSummary(client) {
   return result.rows[0];
 }
 
-function printSummary(summary) {
-  for (const [label, value] of buildSummaryRows(summary)) {
+async function readHashDriftSummary(client) {
+  const result = await client.query(`
+    select
+      (select count(*)::int from ${schemaName}.governance_file_hash_drift) as "governanceHashDrift"
+  `);
+
+  return result.rows[0];
+}
+
+function printRows(rows) {
+  for (const [label, value] of rows) {
     console.log(`${label}: ${value}`);
   }
+}
+
+function printSummary(summary) {
+  printRows(buildSummaryRows(summary));
+}
+
+function printHashDriftSummary(summary) {
+  printRows(buildHashDriftRows(summary));
 }
 
 async function runQuery(options = {}) {
@@ -82,6 +103,14 @@ async function runQuery(options = {}) {
       const summary = await readSummary(client);
       if (options.print !== false) {
         printSummary(summary);
+      }
+      return summary;
+    }
+
+    if (queryName === 'hash-drift') {
+      const summary = await readHashDriftSummary(client);
+      if (options.print !== false) {
+        printHashDriftSummary(summary);
       }
       return summary;
     }
@@ -107,9 +136,12 @@ if (require.main === module) {
 }
 
 module.exports = {
+  buildHashDriftRows,
   buildSummaryRows,
   databaseUrl,
+  printHashDriftSummary,
   printSummary,
+  readHashDriftSummary,
   readSummary,
   resolveQueryName,
   runQuery,

@@ -94,6 +94,14 @@ function readGitFileList(args) {
     .map(toPosix);
 }
 
+function filterExistingRepositoryFiles(files, options = {}) {
+  const fileExists =
+    options.fileExists ||
+    ((filePath) => fs.existsSync(path.join(repoRoot, ...filePath.split('/'))));
+
+  return files.filter((filePath) => fileExists(filePath));
+}
+
 function getRepositoryFiles() {
   const repositoryFiles = [...readGitFileList(['ls-files'])];
 
@@ -103,7 +111,7 @@ function getRepositoryFiles() {
     }
   }
 
-  return repositoryFiles.sort();
+  return filterExistingRepositoryFiles(repositoryFiles).sort();
 }
 
 function buildUnitIndex(units) {
@@ -1059,6 +1067,7 @@ module.exports = {
   deriveGovernanceSemantics,
   expandComponentFileMapFromManifest,
   expandFileIndexFromManifest,
+  filterExistingRepositoryFiles,
   normalizeGeneratedIndexBytesForHash,
   normalizeTextBytesForHash,
   renderComponentFileMapMarkdown,

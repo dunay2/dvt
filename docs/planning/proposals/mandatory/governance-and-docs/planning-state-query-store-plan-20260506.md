@@ -549,11 +549,15 @@ rejection of unknown actions.
 `planning:db:import` implements `ImportPlanningStateQueryStore` and
 `ImportGovernanceStateQueryStore` together for the W2 local content snapshot.
 `planning:db:query` implements `QueryPlanningStateReadModel` and
-`QueryGovernanceStateReadModel` for the current summary surface. Scope is local
+`QueryGovernanceStateReadModel` for the current summary surface. The default
+`summary` query is intentionally lightweight and does not touch the
+`governance_file_hash_drift` projection. `planning:db:query hash-drift` is the
+explicit heavy query for DB-derived governance hash drift. Scope is local
 developer tooling only; authorization is local OS and Docker/Postgres access.
-Negative tests cover migration checksum mismatch, unknown query names, content
-extraction from real lane YAML, and governance file-count parity with the
-Git-tracked file index.
+Negative tests cover migration checksum mismatch, unknown query names, fast
+summary isolation from the hash-drift projection, explicit hash-drift querying,
+content extraction from real lane YAML, and governance file-count parity with
+the Git-tracked file index.
 
 `planning:db:operate` implements `ApplyPlanningLocalOperation` and
 `QueryPlanningLocalOperationAudit`. It is the local DB-first command surface for
@@ -712,7 +716,7 @@ behavior, and fail-closed posture when generated output does not converge.
 ### W9 Implementation Plan
 
 1. Add focused red tests requiring a Postgres migration for derived governance
-   hash projections and a summary count for governance hash drift.
+   hash projections and an explicit query surface for governance hash drift.
 2. Add a Postgres hash projection that recomputes file id, path hash,
    governance hash, and state fingerprint from imported governance file rows.
    The imported `content_hash` remains the byte-level fact until a later slice
@@ -743,9 +747,10 @@ behavior, and fail-closed posture when generated output does not converge.
 5. Retarget `docs:governance:changed-files:check` to derive the current file
    index and baseline from the same in-memory snapshot instead of reading
    `.generated-docs` files.
-6. Remove `governance:artifacts:generate` from `test:planning:db` so the DB
-   test rail proves it can build governance import content without pregenerated
-   local files.
+6. Remove the obsolete `governance:artifacts:generate` rail so
+   `governance:refresh` remains the single local orchestration command. The DB
+   test rail must prove it can build governance import content without
+   pregenerated local files.
 7. Serialize `planning:db:import` destructive read-model replacement with a
    transaction-scoped advisory lock so concurrent agents using the shared
    machine-local Postgres volume cannot interleave delete and insert phases.
@@ -753,6 +758,23 @@ behavior, and fail-closed posture when generated output does not converge.
    `pnpm test:planning:db:integration`, `pnpm planning:db:import`,
    `pnpm planning:db:query`, `pnpm governance:db:check`,
    `pnpm governance:refresh`, `pnpm ci:docs`, and `pnpm verify:prepush`.
+
+### W10A Fast Query Summary Implementation Plan
+
+1. Keep `planning:db:query` as the daily local inspection command and prevent
+   it from recalculating DB-derived governance hashes during the default
+   `summary` query.
+2. Add an explicit `planning:db:query hash-drift` query for operators and QA
+   slices that need to inspect `governance_file_hash_drift` directly.
+3. Keep `governance:db:check` as the fail-closed deep validation rail for
+   governance drift; the fast summary must not replace it.
+4. Prove the split with tests that fail when the default summary references
+   `governance_file_hash_drift` and pass only when hash drift is queried through
+   the explicit heavy route.
+5. Validate W10A with `pnpm test:planning:db`,
+   `pnpm test:planning:db:integration`, `pnpm planning:db:query`,
+   `pnpm planning:db:query hash-drift`, `pnpm governance:db:check`,
+   `pnpm ci:docs`, and `pnpm verify:prepush`.
 
 ## GitHub Issues Role
 
@@ -832,6 +854,15 @@ Current implementation status on 2026-05-08:
   pregenerates governance artifacts before the DB tests. The import transaction
   also takes a transaction-scoped advisory lock before replacing read-model rows
   so concurrent local agents cannot race on the shared Postgres volume;
+- W10A is implemented: the default `pnpm planning:db:query` summary reads only
+  lightweight read-model counts, while `pnpm planning:db:query hash-drift`
+  owns the explicit heavy hash projection inspection;
+- the obsolete `governance:artifacts:generate` package alias is removed;
+  `pnpm governance:refresh` is the single local orchestration command for
+  generated inspection artifacts plus planning/governance DB import and checks;
+- one-off architecture migration helpers from the earlier architecture rehome
+  are removed from active `scripts/` because the move has already landed and
+  the scripts were not part of any package, CI, governance refresh, or DB rail;
 - the shared DB checksum-repair route is implemented through
   `pnpm planning:db:reset -- --confirm-destroy-shared-planning-db`, not through
   manual edits to `schema_migrations`;
@@ -1072,6 +1103,7 @@ completionGate:
   - pnpm planning:db:migrate
   - pnpm planning:db:import
   - pnpm planning:db:query
+  - pnpm planning:db:query hash-drift
   - pnpm planning:db:export
   - pnpm planning:db:export:check
   - pnpm planning:db:reset -- --confirm-destroy-shared-planning-db
@@ -1621,10 +1653,22 @@ symbols:
     name: buildSummaryRows
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
+    name: buildHashDriftRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
     name: readSummary
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
+    name: readHashDriftSummary
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: printRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
     name: printSummary
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: printHashDriftSummary
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: runQuery
@@ -1997,6 +2041,12 @@ symbols:
     name: assert
     path: scripts/governance-refresh.test.cjs
   - <<: *governanceRefreshSymbol
+    name: fs
+    path: scripts/governance-refresh.test.cjs
+  - <<: *governanceRefreshSymbol
+    name: path
+    path: scripts/governance-refresh.test.cjs
+  - <<: *governanceRefreshSymbol
     name: packageJson
     path: scripts/governance-refresh.test.cjs
   - &governanceGeneratedArtifactSymbol
@@ -2114,6 +2164,9 @@ symbols:
     path: scripts/generate-governance-file-component-index.cjs
   - <<: *governanceGeneratedArtifactSymbol
     name: generatedShardDirRelativePath
+    path: scripts/generate-governance-file-component-index.cjs
+  - <<: *governanceGeneratedArtifactSymbol
+    name: filterExistingRepositoryFiles
     path: scripts/generate-governance-file-component-index.cjs
   - <<: *governanceGeneratedArtifactSymbol
     name: generatedComponentShardDirRelativePath
