@@ -321,18 +321,21 @@ tasks:
     progress_pct: 90
     evidence_refs:
       - docs/architecture/components/web/frontend-data-boundary-architecture.md
+      - docs/architecture/components/web/web-store-domain-ownership-component.md
       - apps/web/src/app/views/canvas/useCanvasController.ts
       - apps/web/src/app/views/RunsView.tsx
       - apps/web/src/app/queries/useCapabilitiesQuery.ts
-      - apps/web/src/app/stores/index.ts
+      - apps/web/src/app/stores/webStoreDomainOwnership.architecture.test.ts
     status_reason: >-
       Inventory is captured in the technical architecture document and mapped to concrete code
-      anchors; remaining work is final acceptance during F-04 closeout.
+      anchors. The retired `stores/index.ts` evidence reference was replaced with the current store
+      ownership component and architecture guard; remaining work is final acceptance during F-04
+      closeout.
     definition_of_done:
       - inventory lists direct resolveDataSource and create*Service usage by file
       - inventory identifies raw fetch usage and legacy store parallel surfaces
       - migration dependencies for F-04-E and F-04-F are explicit
-    last_verified: '2026-04-03'
+    last_verified: '2026-05-09'
   - task_id: F-04-B
     parent_task: F-04
     priority: P0
@@ -918,7 +921,7 @@ tasks:
     last_verified: '2026-04-08'
   - task_id: F-07
     priority: P0
-    status: review
+    status: done
     objective: >-
       deliver the first frontend Fowler pilot for runtime contracts: align routes, split run read
       models, and remove legacy overloaded run aggregation from active Runs consumers.
@@ -929,7 +932,7 @@ tasks:
       verification-ready handoff for F-08 through F-11.
     complexity: M
     effort_points: 5
-    progress_pct: 90
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/f-07-frontend-runtime-contract-baseline-plan-20260404.md
@@ -938,24 +941,27 @@ tasks:
       - docs/architecture/components/web/runs/frontend-runtime-contract-user-manual.md
       - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
       - apps/web/src/app/services/runs/runsService.ts
+      - apps/web/src/app/services/runs/runsService.test.ts
       - apps/web/src/app/services/runs/runWorkspaceFacade.ts
+      - apps/web/src/app/services/runs/runWorkspaceFacade.test.ts
     status_reason: >-
-      The docs-first baseline and Fowler pattern are now explicit. The active Runs route consumes
-      explicit read models through a route facade with no legacy status endpoint or fake aggregate
-      fallback.
+      Closed after review-state cleanup: the docs-first baseline and Fowler pattern are explicit,
+      runtime service tests prove protected route and error behavior, the active Runs route consumes
+      explicit read models through a route facade, and the F-07-D route-drift cleanup is closed with
+      no legacy status endpoint or fake aggregate fallback.
     definition_of_done:
-      - F-07-A through F-07-F are all review or done with evidence refs
+      - F-07-A through F-07-F are done with evidence refs
       - frontend run-start route aligns to POST /runs/start
       - frontend no longer depends on GET /runs/:runId/status as status authority
       - active Runs route consumers use explicit read models and RunWorkspaceViewModel composition
       - no compatibility aggregate mapping is used in active Runs route flow
       - lane docs, architecture docs, and roadmap wording are aligned
       - F-08 through F-11 handoff is explicit and governed
-    last_verified: '2026-04-04'
+    last_verified: '2026-05-09'
   - task_id: F-07-A
     parent_task: F-07
     priority: P0
-    status: review
+    status: done
     objective: >-
       publish the docs-first runtime contract baseline with canonical as-is and to-be route truth.
     dependency: MVP-E1
@@ -964,7 +970,7 @@ tasks:
       planning entrypoints.
     complexity: S
     effort_points: 2
-    progress_pct: 90
+    progress_pct: 100
     evidence_refs:
       - docs/architecture/components/web/frontend-fowler-implementation-pattern.md
       - docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md
@@ -976,15 +982,16 @@ tasks:
       - docs/architecture/domain-api.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
     status_reason: >-
-      Baseline docs and entrypoint alignment are in place; final closure depends on docs gates and
-      generated planning outputs.
+      Closed after docs and generated planning gates: the baseline docs, architecture entrypoints,
+      domain links, and roadmap references now agree on the protected runtime route truth and F-07
+      handoff chain.
     definition_of_done:
       - docs are English-only and consistent on as-is and to-be runtime routes
       - required Mermaid diagrams render without syntax errors
       - Fowler service-layer and gateway rules are explicit and linked from frontend entrypoints
       - roadmap and lane wording match the same F-07 order and handoff chain
       - no runtime route claims outside protected route truth
-    last_verified: '2026-04-04'
+    last_verified: '2026-05-09'
   - task_id: F-07-B
     parent_task: F-07
     priority: P0
@@ -1043,7 +1050,7 @@ tasks:
   - task_id: F-07-D
     parent_task: F-07
     priority: P1
-    status: review
+    status: done
     objective: >-
       refactor runtime-service mapping and behavior to remove route-drift duplication while
       preserving mock/api mode boundaries.
@@ -1052,18 +1059,24 @@ tasks:
       Mapping and parse behavior are cleanly structured without reintroducing route drift.
     complexity: S
     effort_points: 2
-    progress_pct: 90
+    progress_pct: 100
     evidence_refs:
       - apps/web/src/app/services/runs/runsService.ts
+      - apps/web/src/app/services/runs/runsService.api.ts
+      - apps/web/src/app/services/runs/runsApiSnapshotMapper.ts
+      - apps/web/src/app/services/runs/runsService.test.ts
+      - apps/web/src/app/services/runs/runWorkspaceFacade.ts
+      - apps/web/src/app/services/runs/runWorkspaceFacade.test.ts
       - apps/web/src/app/services/api/createApiClient.ts
     status_reason: >-
-      The status-route replacement no longer fabricates snapshots from the lossy UI model; route
-      drift cleanup now preserves the contract payload instead.
+      Closed after sanity review: the status-route replacement no longer fabricates snapshots from
+      the lossy UI model, route drift cleanup preserves the contract payload, and the runs service
+      and facade tests guard the protected-route mapping and active read-model boundary.
     definition_of_done:
       - mapping duplication tied to old status route is removed
       - mock and api behavior remain behind governed service boundary
       - no route-level view reads runtime route strings directly
-    last_verified: '2026-04-04'
+    last_verified: '2026-05-09'
   - task_id: F-07-E
     parent_task: F-07
     priority: P1
@@ -1881,7 +1894,7 @@ tasks:
       behavior, or backend contracts.
     complexity: M
     effort_points: 5
-    progress_pct: 10
+    progress_pct: 65
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md
       - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-1-chrome-simplification-implementation-plan-20260506.md
@@ -1890,12 +1903,10 @@ tasks:
       - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
       - docs/architecture/components/api/protected-runtime-command-query-rail-design.md
     status_reason: >-
-      Product direction is recorded after the Canvas workbench review and the strict Stage 1
-      implementation plan now binds the first code round to Fowler presentation-model cleanup,
-      command/query rails, semantic tests, Cypress proof, and frontend folder ownership. The Stage 2
-      correction keeps Canvas save automatic: no manual Save button or second save command is
-      allowed; the next proof must make autosave status and failed-save posture visible through the
-      existing `SaveWorkspaceGraphDraft` rail.
+      Product direction is recorded after the Canvas workbench review. Stage 1 chrome/tab proof and
+      Stage 2 automatic save-state proof are merged; save remains automatic and no manual Save
+      command is allowed. The remaining executable product work is the Stage 3 project export/import
+      round-trip proof, tracked by `F-28-C`, plus separately tracked residual Canvas i18n debt.
     definition_of_done:
       - Stage 1 implementation plan is approved before code changes
       - Canvas workbench tabs render as readable text-only tabs
@@ -1917,7 +1928,7 @@ tasks:
   - task_id: F-28-B
     parent_task: F-28
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       prove Canvas automatic draft saving as the Stage 2 save-state path without adding a manual
       Save command or a second persistence authority.
@@ -1929,18 +1940,19 @@ tasks:
       Save button appears in Canvas chrome.
     complexity: S
     effort_points: 2
-    progress_pct: 20
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-2-autosave-e2e-proof-plan-20260508.md
       - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/canvas-visible-i18n-debt-plan-20260508.md
       - docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md
       - docs/architecture/components/web/graph/canvas-draft-session-component.md
       - apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
     status_reason: >-
-      Product correction: save remains automatic. This slice must harden visibility and browser
-      evidence around the existing autosave lifecycle instead of adding a manual command. The first
-      executable gap is failed automatic save posture, which currently risks being presented as
-      synced after the write fails.
+      Closed by PR #1137: Canvas autosave remains automatic, failed automatic save posture is
+      visible, read-only draft posture still produces no writes, and no manual Save command was
+      added. Remaining visible Canvas i18n cleanup is tracked separately and must not reopen a
+      manual-save path.
     definition_of_done:
       - no manual Save button or command is added
       - successful graph edits automatically dispatch `SaveWorkspaceGraphDraft`
@@ -1951,10 +1963,54 @@ tasks:
       - docs sync, workboard generation, feature mechanization, focused web tests, Cypress,
         typecheck, markdown changed lint, and prepush validation pass
     last_verified: '2026-05-08'
+  - task_id: F-28-C
+    parent_task: F-28
+    priority: P0
+    status: queued
+    objective: >-
+      design and prove the Canvas workbench Stage 3 project export/import round trip without
+      treating the snapshot format as stable before validation, versioning, and rejection semantics
+      are explicit.
+    dependency: F-28-B
+    target: >-
+      A governed Stage 3 slice defines `ExportProjectSnapshot`, `ImportProjectSnapshot`, and
+      `ValidateProjectImport` rails, then proves in browser-visible form that a saved Canvas graph
+      can be exported, imported into a clean workspace context, and restored with coherent nodes,
+      edges, layout, project metadata, and Canvas identity.
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-2-autosave-e2e-proof-plan-20260508.md
+      - docs/architecture/command-query-rail-governance.md
+      - docs/architecture/fowler-opportunity-planning-governance.md
+      - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
+      - docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md
+      - docs/architecture/components/web/graph/canvas-draft-session-component.md
+    status_reason: >-
+      Stage 1 chrome proof and Stage 2 automatic-save proof are the accepted prerequisites. The next
+      product gap is not another manual save affordance; it is a governed project snapshot round
+      trip. This task starts as queued because the rails, snapshot value object, validation policy,
+      import rejection vocabulary, and Cypress proof must be planned before code changes.
+    definition_of_done:
+      - Stage 3 implementation plan exists before any app, package, adapter, or contract changes
+      - export, import, and validate project snapshot rails have named DDD owners, ports, adapter
+        surfaces, scope rules, and negative tests
+      - snapshot format includes version, compatibility, malformed input, unsupported format, and
+        stale-draft rejection semantics before it is presented as product behavior
+      - export waits for automatic draft save to settle and does not introduce a manual Save command
+      - import restores nodes, edges, layout, project metadata, and Canvas identity into a clean
+        workspace context
+      - Cypress proves the complete export/import round trip and at least one fail-closed import
+        path
+      - docs sync, workboard generation, feature mechanization, focused web tests, Cypress,
+        typecheck, markdown changed lint, and prepush validation pass
+    last_verified: '2026-05-08'
   - task_id: F-28-A
     parent_task: F-28
     priority: P0
-    status: review
+    status: done
     objective: >-
       publish the strict Fowler Stage 1 implementation plan for Canvas workbench chrome
       simplification before any `apps/web` code changes begin.
@@ -1975,9 +2031,11 @@ tasks:
       - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
       - docs/architecture/components/api/protected-runtime-command-query-rail-design.md
     status_reason: >-
-      The Stage 1 plan is ready for review as a docs-first gate. It keeps implementation strict:
-      every future UI change must map to a command/query rail, DDD owner, Fowler signal, semantic
-      architecture guard, Cypress proof, and owning frontend folder before code changes proceed.
+      Closed as an accepted docs-first gate: the Stage 1 implementation plan exists under mandatory
+      frontend planning, binds future UI changes to command/query rails, DDD owners, Fowler signals,
+      semantic architecture guards, Cypress proof, and owning frontend folders, and later F-28
+      slices have already consumed the guardrails without reopening save/export/import/backend
+      scope.
     definition_of_done:
       - Stage 1 implementation plan exists under mandatory frontend planning
       - plan includes command/query rails and DDD owners before code
@@ -1988,7 +2046,7 @@ tasks:
         multi-canvas persistence
       - docs sync, generated workboard views, feature mechanization, markdown lint, and prepush
         validation pass
-    last_verified: '2026-05-06'
+    last_verified: '2026-05-08'
   - task_id: TF-E1
     priority: P0
     status: done
