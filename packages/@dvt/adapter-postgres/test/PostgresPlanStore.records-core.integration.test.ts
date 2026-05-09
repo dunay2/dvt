@@ -8,6 +8,7 @@ import { quoteIdentifier } from '../src/sqlUtils.js';
 
 import {
   NOW,
+  PLAN_STORE_SCOPE,
   createPgClient,
   describeIfPg,
   dropSchema,
@@ -21,6 +22,13 @@ const PLAN_ID = {
   r4_10: toCanonicalPlanId('plan-r4-10'),
   r4_11: toCanonicalPlanId('plan-r4-11'),
 } as const;
+
+function storePlanArtifact(
+  store: PostgresPlanStore,
+  planId: string
+): ReturnType<PostgresPlanStore['storePlanArtifact']> {
+  return store.storePlanArtifact({ buildResult: makeBuildResult(planId) });
+}
 
 describeIfPg('PostgresPlanStore records core integration', () => {
   let schemaCounter = 0;
@@ -41,45 +49,64 @@ describeIfPg('PostgresPlanStore records core integration', () => {
 
   test('persists and reads three-part model', () =>
     withIsolatedStore(async (store) => {
-      const planRef = await store.storePlan(makeBuildResult(PLAN_ID.r4_9));
+      const planRef = await storePlanArtifact(store, PLAN_ID.r4_9);
       await store.recordExecutability({
+        ...PLAN_STORE_SCOPE,
         planId: PLAN_ID.r4_9,
         adapterId: 'temporal',
         state: 'VALID',
         validatedAtIso: NOW,
       });
       await store.markAdmitted({
+        ...PLAN_STORE_SCOPE,
         planId: PLAN_ID.r4_9,
         runId: 'run-r4-9',
         adapterId: 'temporal',
         admittedAtIso: NOW,
       });
 
-      expect(await store.getPlanRecordByRef(planRef)).toMatchObject({ planId: PLAN_ID.r4_9 });
-      expect(await store.listExecutabilityByAdapter(PLAN_ID.r4_9)).toEqual(
-        expect.arrayContaining([expect.objectContaining({ state: 'VALID' })])
-      );
-      expect((await store.getAdmissionLinks(PLAN_ID.r4_9))[0]).toMatchObject({ runId: 'run-r4-9' });
+      expect(await store.getPlanRecordByRef({ ...PLAN_STORE_SCOPE, planRef })).toMatchObject({
+        planId: PLAN_ID.r4_9,
+      });
+      expect(
+        await store.listExecutabilityByAdapter({ ...PLAN_STORE_SCOPE, planId: PLAN_ID.r4_9 })
+      ).toEqual(expect.arrayContaining([expect.objectContaining({ state: 'VALID' })]));
+      expect(
+        (await store.getAdmissionLinks({ ...PLAN_STORE_SCOPE, planId: PLAN_ID.r4_9 }))[0]
+      ).toMatchObject({
+        runId: 'run-r4-9',
+      });
     }));
 
   test('markSuperseded links old->new coherently', () =>
     withIsolatedStore(async (store) => {
-      await store.storePlan(makeBuildResult(PLAN_ID.r4_10));
-      await store.storePlan(makeBuildResult(PLAN_ID.r4_11));
-      await store.markSuperseded(PLAN_ID.r4_10, PLAN_ID.r4_11);
+      await storePlanArtifact(store, PLAN_ID.r4_10);
+      await storePlanArtifact(store, PLAN_ID.r4_11);
+      await store.markSuperseded({
+        ...PLAN_STORE_SCOPE,
+        planId: PLAN_ID.r4_10,
+        supersededByPlanId: PLAN_ID.r4_11,
+      });
 
-      expect((await store.getPlanRecord(PLAN_ID.r4_10))?.state).toBe('SUPERSEDED');
-      expect((await store.getPlanRecord(PLAN_ID.r4_11))?.supersedesPlanId).toBe(PLAN_ID.r4_10);
-      expect(await store.getSupersession(PLAN_ID.r4_10)).toEqual({
+      expect(
+        (await store.getPlanRecord({ ...PLAN_STORE_SCOPE, planId: PLAN_ID.r4_10 }))?.state
+      ).toBe('SUPERSEDED');
+      expect(
+        (await store.getPlanRecord({ ...PLAN_STORE_SCOPE, planId: PLAN_ID.r4_11 }))
+          ?.supersedesPlanId
+      ).toBe(PLAN_ID.r4_10);
+      expect(await store.getSupersession({ ...PLAN_STORE_SCOPE, planId: PLAN_ID.r4_10 })).toEqual({
         supersededByPlanId: PLAN_ID.r4_11,
       });
     }));
 
   test('archivePlan marks record as ARCHIVED', () =>
     withIsolatedStore(async (store) => {
-      await store.storePlan(makeBuildResult(PLAN_ID.r4_11));
-      await store.archivePlan(PLAN_ID.r4_11, NOW);
-      expect(await store.getPlanRecord(PLAN_ID.r4_11)).toMatchObject({
+      await storePlanArtifact(store, PLAN_ID.r4_11);
+      await store.archivePlan({ ...PLAN_STORE_SCOPE, planId: PLAN_ID.r4_11, archivedAtIso: NOW });
+      expect(
+        await store.getPlanRecord({ ...PLAN_STORE_SCOPE, planId: PLAN_ID.r4_11 })
+      ).toMatchObject({
         state: 'ARCHIVED',
         archivedAtIso: expect.any(String),
       });
@@ -87,19 +114,25 @@ describeIfPg('PostgresPlanStore records core integration', () => {
 
   test('getPlanRecordByRef rejects mismatched metadata', () =>
     withIsolatedStore(async (store) => {
-      const planRef = await store.storePlan(makeBuildResult(PLAN_ID.r4_11));
+      const planRef = await storePlanArtifact(store, PLAN_ID.r4_11);
       await expect(
-        store.getPlanRecordByRef({ ...planRef, uri: `dvt-plan://postgres/${PLAN_ID.r4_10}` })
+        store.getPlanRecordByRef({
+          ...PLAN_STORE_SCOPE,
+          planRef: { ...planRef, uri: `dvt-plan://postgres/${PLAN_ID.r4_10}` },
+        })
       ).rejects.toThrow('PLAN_REF_MISMATCH');
       await expect(
-        store.getPlanRecordByRef({ ...planRef, planVersion: `${planRef.planVersion}-unsupported` })
+        store.getPlanRecordByRef({
+          ...PLAN_STORE_SCOPE,
+          planRef: { ...planRef, planVersion: `${planRef.planVersion}-unsupported` },
+        })
       ).rejects.toThrow('PLAN_REF_MISMATCH');
     }));
 
   test('createPlanRecord rejects duplicate and missing lineage refs', () =>
     withIsolatedStore(async (store) => {
-      const planRef = await store.storePlan(makeBuildResult(PLAN_ID.r4_9));
-      const record = await store.getPlanRecordByRef(planRef);
+      const planRef = await storePlanArtifact(store, PLAN_ID.r4_9);
+      const record = await store.getPlanRecordByRef({ ...PLAN_STORE_SCOPE, planRef });
       if (!record) throw new Error('expected persisted plan record');
       await expect(store.createPlanRecord(record)).rejects.toThrow('PLAN_RECORD_ALREADY_EXISTS');
       const missingLineagePlanId = toCanonicalPlanId('new-plan-with-missing-ref');
@@ -112,6 +145,7 @@ describeIfPg('PostgresPlanStore records core integration', () => {
           contractVersion: record.contractVersion,
           inputHashSha256: '1'.repeat(64),
           createdAtIso: record.createdAtIso,
+          ownership: PLAN_STORE_SCOPE,
         },
         steps: [{ stepId: `${missingLineagePlanId}.step`, kind: 'DBT_MODEL', dependsOn: [] }],
       });
@@ -139,6 +173,7 @@ describeIfPg('PostgresPlanStore records core integration', () => {
           contractVersion: '1.0.0',
           inputHashSha256: '3'.repeat(64),
           createdAtIso: NOW,
+          ownership: PLAN_STORE_SCOPE,
         },
         steps: [{ stepId: `${legacyPlanId}.step`, kind: 'DBT_MODEL', dependsOn: [] }],
       });
@@ -169,7 +204,7 @@ describeIfPg('PostgresPlanStore records core integration', () => {
         await client.end();
       }
       await store.migrate();
-      const record = await store.getPlanRecord(legacyPlanId);
+      const record = await store.getPlanRecord({ ...PLAN_STORE_SCOPE, planId: legacyPlanId });
       expect(record?.canonicalHash).toBe(canonicalHash);
       expect(record?.canonicalHash).not.toBe(wrongHash);
     }));

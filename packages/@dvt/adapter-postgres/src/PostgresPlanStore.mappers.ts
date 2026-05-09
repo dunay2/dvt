@@ -1,3 +1,6 @@
+/**
+ * Owned concern: map scoped plan-store rows.
+ */
 import { createHash } from 'node:crypto';
 
 import {
@@ -8,6 +11,7 @@ import {
   type PlanExecutabilityRejectionReport,
   type PlanRefSchemaT,
   type PlanRecord,
+  type PlanStoreScope,
   parsePlanRecord,
   type PlannerBuildResultV1,
   type RunExecutionPolicy,
@@ -44,7 +48,11 @@ export function buildPlanRecord(
 ): PlanRecord {
   const nowIso = new Date().toISOString();
   const canonicalPlanJson = toPersistedCanonicalPlanJson(buildResult);
+  const scope = getRequiredPlanStoreScope(buildResult);
   return parsePlanRecord({
+    tenantId: scope.tenantId,
+    projectId: scope.projectId,
+    environmentId: scope.environmentId,
     planId: buildResult.plan.metadata.planId,
     canonicalPlanJson,
     canonicalHash: sha256HexUtf8(canonicalPlanJson),
@@ -58,7 +66,18 @@ export function buildPlanRecord(
   });
 }
 
+function getRequiredPlanStoreScope(buildResult: PlannerBuildResultV1): PlanStoreScope {
+  const ownership = buildResult.plan.metadata.ownership;
+  if (!ownership) {
+    throw new Error(`PLAN_STORE_SCOPE_MISSING: ${buildResult.plan.metadata.planId}`);
+  }
+  return ownership;
+}
+
 export function toPlanRecord(row: {
+  tenant_id: string;
+  project_id: string;
+  environment_id: string;
   plan_id: string;
   canonical_plan_json: string;
   canonical_hash: string;
@@ -74,6 +93,9 @@ export function toPlanRecord(row: {
   archived_at_iso: string | null;
 }): PlanRecord {
   return parsePlanRecord({
+    tenantId: row.tenant_id,
+    projectId: row.project_id,
+    environmentId: row.environment_id,
     planId: row.plan_id,
     canonicalPlanJson: row.canonical_plan_json,
     canonicalHash: row.canonical_hash,
@@ -93,20 +115,29 @@ export function toPlanRecord(row: {
 }
 
 export function toPlanExecutabilityRecord(row: {
+  tenant_id: string;
+  project_id: string;
+  environment_id: string;
   plan_id: string;
   adapter_id: string;
   state: ExecutabilityState;
   validated_at_iso: string | null;
   rejection_report_json: unknown;
 }): PlanExecutabilityRecord {
+  const scope = {
+    tenantId: row.tenant_id,
+    projectId: row.project_id,
+    environmentId: row.environment_id,
+  };
   if (row.state === 'PENDING') {
-    return { planId: row.plan_id, adapterId: row.adapter_id, state: 'PENDING' };
+    return { ...scope, planId: row.plan_id, adapterId: row.adapter_id, state: 'PENDING' };
   }
   if (row.state === 'VALID') {
     if (row.validated_at_iso === null) {
       throw new Error(`PLAN_EXECUTABILITY_ROW_INVALID: ${row.plan_id}:${row.adapter_id}:VALID`);
     }
     return {
+      ...scope,
       planId: row.plan_id,
       adapterId: row.adapter_id,
       state: 'VALID',
@@ -117,6 +148,7 @@ export function toPlanExecutabilityRecord(row: {
     throw new Error(`PLAN_EXECUTABILITY_ROW_INVALID: ${row.plan_id}:${row.adapter_id}:INVALID`);
   }
   return {
+    ...scope,
     planId: row.plan_id,
     adapterId: row.adapter_id,
     state: 'INVALID',

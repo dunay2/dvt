@@ -1,8 +1,9 @@
 /**
  * @baseline ADR-0043: Plan Record, Plan Store, And Artifacts Ownership
  */
+import type { IStoredPlanArtifactReader } from '@dvt/artifacts';
 import type { RunExecutionPolicy } from '@dvt/contracts';
-import type { IPlanFetcher, IPlanIntegrityValidator } from '@dvt/engine';
+import type { IPlanIntegrityValidator } from '@dvt/engine';
 import { describe, expect, it } from 'vitest';
 
 import { createScopedTemporalPlanArtifactReader } from '../src/activities/temporalPlanArtifactReader.js';
@@ -114,9 +115,13 @@ describe('Temporal plan artifact reader', () => {
   });
 });
 
-function createUnusedFetcher(): IPlanFetcher {
+function createUnusedFetcher(): IStoredPlanArtifactReader {
   return {
-    fetch: async () => {
+    getStoredPlanValidationRecord: async () => undefined,
+    fetchStoredPlanArtifact: async () => {
+      throw new Error('fetcher should only be consumed by the integrity validator');
+    },
+    fetchStoredPlanArtifactForValidation: async () => {
       throw new Error('fetcher should only be consumed by the integrity validator');
     },
   };

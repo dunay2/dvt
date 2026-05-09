@@ -1,10 +1,25 @@
-import type { IPlanStoreReader, IPlanStoreWriter } from '@dvt/artifacts';
+/**
+ * Owned concern: adapt scoped plan-store commands and queries to Postgres.
+ */
+import type {
+  ArchivePlanInput,
+  IPlanStoreReader,
+  IPlanStoreWriter,
+  IStoredPlanArtifactStore,
+  MarkPlanSupersededInput,
+  MarkStoredPlanArtifactInvalidInput,
+  ScopedPlanExecutabilityQuery,
+  StorePlanArtifactInput,
+  StoredPlanArtifact,
+} from '@dvt/artifacts';
 import {
   type ExecutabilityValidationResult,
   type PlanAdmissionLink,
   type PlanExecutabilityRecord,
   type PlanRefSchemaT,
   type PlanRecord,
+  type ScopedPlanId,
+  type ScopedPlanRef,
   type PlanValidationRecord,
   parsePlanAdmissionLink,
   parsePlanExecutabilityRecord,
@@ -13,8 +28,6 @@ import {
   type PlannerBuildResultV1,
   type RunExecutionPolicy,
 } from '@dvt/contracts';
-import type { IPlanFetcher, StoredPlanArtifact } from '@dvt/engine';
-import type { IPlanValidationLifecycleStore } from '@dvt/planner';
 import { Pool, type PoolClient } from 'pg';
 
 import { PostgresPlanAdmissionRepository } from './PostgresPlanStore.admission-repository.js';
@@ -51,7 +64,7 @@ export interface PostgresPlanStoreConfig {
 const PLAN_URI_SCHEME = 'dvt-plan';
 
 export class PostgresPlanStore
-  implements IPlanValidationLifecycleStore, IPlanFetcher, IPlanStoreWriter, IPlanStoreReader
+  implements IStoredPlanArtifactStore, IPlanStoreWriter, IPlanStoreReader
 {
   private readonly pool: Pool;
   private readonly ownsPool: boolean;
@@ -84,7 +97,8 @@ export class PostgresPlanStore
     }
   }
 
-  public async storePlan(buildResult: PlannerBuildResultV1): Promise<PlanRefSchemaT> {
+  public async storePlanArtifact(input: StorePlanArtifactInput): Promise<PlanRefSchemaT> {
+    const { buildResult } = input;
     const executable = this.config.toExecutablePlan(buildResult);
     const executableBytes = Buffer.from(executable.text, 'utf8');
     const planId = buildResult.plan.metadata.planId;
@@ -140,17 +154,14 @@ export class PostgresPlanStore
     });
   }
 
-  public async markValid(planRef: PlanRefSchemaT): Promise<void> {
-    const validated = parsePlanRef(planRef);
-    await this.transition(validated.planId, 'PENDING_VALIDATION', 'VALID', null);
+  public async markStoredPlanArtifactValid(input: ScopedPlanRef): Promise<void> {
+    await this.transition(input, 'PENDING_VALIDATION', 'VALID', null);
   }
 
-  public async markInvalid(
-    planRef: PlanRefSchemaT,
-    report: ExecutabilityValidationResult & { status: 'ERROR' }
+  public async markStoredPlanArtifactInvalid(
+    input: MarkStoredPlanArtifactInvalidInput
   ): Promise<void> {
-    const validated = parsePlanRef(planRef);
-    await this.transition(validated.planId, 'PENDING_VALIDATION', 'INVALID', report);
+    await this.transition(input, 'PENDING_VALIDATION', 'INVALID', input.report);
   }
 
   public async createPlanRecord(record: PlanRecord): Promise<void> {
@@ -174,31 +185,28 @@ export class PostgresPlanStore
     });
   }
 
-  public async markSuperseded(
-    planId: PlanRecord['planId'],
-    supersededByPlanId: PlanRecord['planId']
-  ): Promise<void> {
+  public async markSuperseded(input: MarkPlanSupersededInput): Promise<void> {
     await this.withTransaction(async (client) => {
-      await this.planRecordRepository.markSuperseded(client, planId, supersededByPlanId);
+      await this.planRecordRepository.markSuperseded(client, input);
     });
   }
 
-  public async archivePlan(planId: PlanRecord['planId'], archivedAtIso: string): Promise<void> {
+  public async archivePlan(input: ArchivePlanInput): Promise<void> {
     await this.withTransaction(async (client) => {
-      await this.planRecordRepository.archivePlan(client, planId, archivedAtIso);
+      await this.planRecordRepository.archivePlan(client, input);
     });
   }
 
-  public async getPlanRecord(planId: PlanRecord['planId']): Promise<PlanRecord | undefined> {
+  public async getPlanRecord(input: ScopedPlanId): Promise<PlanRecord | undefined> {
     return this.withClient(async (client) => {
-      const record = await this.planRecordRepository.get(client, planId);
+      const record = await this.planRecordRepository.get(client, input);
       return record ? parsePlanRecord(record) : undefined;
     });
   }
 
-  public async getPlanRecordByRef(planRef: PlanRefSchemaT): Promise<PlanRecord | undefined> {
-    const validated = parsePlanRef(planRef);
-    const record = await this.getPlanRecord(validated.planId);
+  public async getPlanRecordByRef(input: ScopedPlanRef): Promise<PlanRecord | undefined> {
+    const validated = parsePlanRef(input.planRef);
+    const record = await this.getPlanRecord({ ...input, planId: validated.planId });
     if (!record) {
       return undefined;
     }
@@ -213,35 +221,39 @@ export class PostgresPlanStore
   }
 
   public async listExecutabilityByAdapter(
-    planId: PlanRecord['planId']
+    input: ScopedPlanExecutabilityQuery
   ): Promise<ReadonlyArray<PlanExecutabilityRecord>> {
     return this.withClient(async (client) => {
-      const records = await this.planExecutabilityRepository.listByPlanId(client, planId);
+      const records = await this.planExecutabilityRepository.listByPlanId(client, input);
       return records.map((record) => parsePlanExecutabilityRecord(record));
     });
   }
 
-  public async getAdmissionLinks(
-    planId: PlanRecord['planId']
-  ): Promise<ReadonlyArray<PlanAdmissionLink>> {
+  public async getAdmissionLinks(input: ScopedPlanId): Promise<ReadonlyArray<PlanAdmissionLink>> {
     return this.withClient(async (client) => {
-      const links = await this.planAdmissionRepository.getByPlanId(client, planId);
+      const links = await this.planAdmissionRepository.getByPlanId(client, input);
       return links.map((link) => parsePlanAdmissionLink(link));
     });
   }
 
   public async getSupersession(
-    planId: PlanRecord['planId']
+    input: ScopedPlanId
   ): Promise<{ supersededByPlanId: PlanRecord['planId'] } | undefined> {
     return this.withClient(async (client) => {
-      return this.planRecordRepository.getSupersession(client, planId);
+      return this.planRecordRepository.getSupersession(client, input);
     });
   }
 
-  public async getValidationRecord(planId: string): Promise<PlanValidationRecord | undefined> {
-    const row = await this.withClient(async (client) =>
-      this.executableBlobRepository.getValidationRecordRow(client, planId)
-    );
+  public async getStoredPlanValidationRecord(
+    input: ScopedPlanId
+  ): Promise<PlanValidationRecord | undefined> {
+    const row = await this.withClient(async (client) => {
+      const record = await this.planRecordRepository.get(client, input);
+      if (!record) {
+        return undefined;
+      }
+      return this.executableBlobRepository.getValidationRecordRow(client, input.planId);
+    });
 
     if (!row) {
       return undefined;
@@ -262,14 +274,25 @@ export class PostgresPlanStore
     };
   }
 
-  public async fetch(planRef: PlanRefSchemaT): Promise<StoredPlanArtifact> {
-    const validated = parsePlanRef(planRef);
+  public async fetchStoredPlanArtifact(input: ScopedPlanRef): Promise<StoredPlanArtifact> {
+    const validated = await this.assertScopedPlanRef(input);
     return this.loadExecutablePlan(validated, ['VALID']);
   }
 
-  public async fetchForValidation(planRef: PlanRefSchemaT): Promise<StoredPlanArtifact> {
-    const validated = parsePlanRef(planRef);
+  public async fetchStoredPlanArtifactForValidation(
+    input: ScopedPlanRef
+  ): Promise<StoredPlanArtifact> {
+    const validated = await this.assertScopedPlanRef(input);
     return this.loadExecutablePlan(validated, ['PENDING_VALIDATION', 'VALID']);
+  }
+
+  private async assertScopedPlanRef(input: ScopedPlanRef): Promise<PlanRefSchemaT> {
+    const validated = parsePlanRef(input.planRef);
+    const record = await this.getPlanRecordByRef(input);
+    if (!record) {
+      throw new Error(`PLAN_RECORD_NOT_FOUND: ${validated.planId}`);
+    }
+    return validated;
   }
 
   private async loadExecutablePlan(
@@ -299,15 +322,23 @@ export class PostgresPlanStore
   }
 
   private async transition(
-    planId: string,
+    input: ScopedPlanRef,
     expectedState: 'PENDING_VALIDATION',
     nextState: 'VALID' | 'INVALID',
     report: (ExecutabilityValidationResult & { status: 'ERROR' }) | null,
     onTransition?: (client: PoolClient) => Promise<void>
   ): Promise<void> {
+    const validated = parsePlanRef(input.planRef);
     await this.withTransaction(async (client) => {
+      const record = await this.planRecordRepository.get(client, {
+        ...input,
+        planId: validated.planId,
+      });
+      if (!record) {
+        throw new Error(`PLAN_RECORD_NOT_FOUND: ${validated.planId}`);
+      }
       await this.executableBlobRepository.transitionValidationState(client, {
-        planId,
+        planId: validated.planId,
         expectedState,
         nextState,
         report,

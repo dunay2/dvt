@@ -1,10 +1,16 @@
-import type { PlanRecord } from '@dvt/contracts';
+/**
+ * Owned concern: persist tenant-owned plan-record aggregate state.
+ */
+import type { PlanRecord, ScopedPlanId } from '@dvt/contracts';
 import type { PoolClient } from 'pg';
 
 import { toPlanRecord } from './PostgresPlanStore.mappers.js';
 import { quoteIdentifier } from './sqlUtils.js';
 
 type PlanRecordRow = {
+  tenant_id: string;
+  project_id: string;
+  environment_id: string;
   plan_id: string;
   canonical_plan_json: string;
   canonical_hash: string;
@@ -20,20 +26,25 @@ type PlanRecordRow = {
   archived_at_iso: string | null;
 };
 
+type PlanRecordScope = Pick<PlanRecord, 'tenantId' | 'projectId' | 'environmentId'>;
+
 export class PostgresPlanRecordRepository {
   public constructor(private readonly schema: string) {}
 
   public async create(client: PoolClient, record: PlanRecord): Promise<void> {
     if (record.derivedFromPlanId !== undefined) {
-      await this.assertExists(client, record.derivedFromPlanId, 'derived_from_plan_id');
+      await this.assertExists(client, record, record.derivedFromPlanId, 'derived_from_plan_id');
     }
     if (record.supersedesPlanId !== undefined) {
-      await this.assertExists(client, record.supersedesPlanId, 'supersedes_plan_id');
+      await this.assertExists(client, record, record.supersedesPlanId, 'supersedes_plan_id');
     }
 
     const inserted = await client.query(
       `
         INSERT INTO ${quoteIdentifier(this.schema)}.plan_records (
+          tenant_id,
+          project_id,
+          environment_id,
           plan_id,
           canonical_plan_json,
           canonical_hash,
@@ -48,12 +59,15 @@ export class PostgresPlanRecordRepository {
           supersedes_plan_id,
           archived_at
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9::timestamptz, $10::timestamptz, $11, $12, $13::timestamptz
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::timestamptz, $13::timestamptz, $14, $15, $16::timestamptz
         )
-        ON CONFLICT (plan_id) DO NOTHING
+        ON CONFLICT (tenant_id, project_id, environment_id, plan_id) DO NOTHING
         RETURNING plan_id
       `,
       [
+        record.tenantId,
+        record.projectId,
+        record.environmentId,
         record.planId,
         record.canonicalPlanJson,
         record.canonicalHash,
@@ -79,6 +93,9 @@ export class PostgresPlanRecordRepository {
     const upsertResult = await client.query(
       `
         INSERT INTO ${quoteIdentifier(this.schema)}.plan_records (
+          tenant_id,
+          project_id,
+          environment_id,
           plan_id,
           canonical_plan_json,
           canonical_hash,
@@ -93,9 +110,9 @@ export class PostgresPlanRecordRepository {
           supersedes_plan_id,
           archived_at
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9::timestamptz, $10::timestamptz, $11, $12, $13::timestamptz
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::timestamptz, $13::timestamptz, $14, $15, $16::timestamptz
         )
-        ON CONFLICT (plan_id) DO UPDATE
+        ON CONFLICT (tenant_id, project_id, environment_id, plan_id) DO UPDATE
         SET updated_at = EXCLUDED.updated_at,
             supersedes_plan_id = COALESCE(plan_records.supersedes_plan_id, EXCLUDED.supersedes_plan_id),
             archived_at = plan_records.archived_at
@@ -111,6 +128,9 @@ export class PostgresPlanRecordRepository {
         RETURNING plan_id
       `,
       [
+        record.tenantId,
+        record.projectId,
+        record.environmentId,
         record.planId,
         record.canonicalPlanJson,
         record.canonicalHash,
@@ -131,10 +151,13 @@ export class PostgresPlanRecordRepository {
     }
   }
 
-  public async get(client: PoolClient, planId: string): Promise<PlanRecord | undefined> {
+  public async get(client: PoolClient, input: ScopedPlanId): Promise<PlanRecord | undefined> {
     const row = await client.query<PlanRecordRow>(
       `
         SELECT
+          tenant_id,
+          project_id,
+          environment_id,
           plan_id,
           canonical_plan_json,
           canonical_hash,
@@ -149,9 +172,12 @@ export class PostgresPlanRecordRepository {
           supersedes_plan_id,
           archived_at::text AS archived_at_iso
         FROM ${quoteIdentifier(this.schema)}.plan_records
-        WHERE plan_id = $1
+        WHERE tenant_id = $1
+          AND project_id = $2
+          AND environment_id = $3
+          AND plan_id = $4
       `,
-      [planId]
+      [input.tenantId, input.projectId, input.environmentId, input.planId]
     );
     const first = row.rows[0];
     return first ? toPlanRecord(first) : undefined;
@@ -159,11 +185,10 @@ export class PostgresPlanRecordRepository {
 
   public async markSuperseded(
     client: PoolClient,
-    planId: PlanRecord['planId'],
-    supersededByPlanId: PlanRecord['planId']
+    input: ScopedPlanId & { readonly supersededByPlanId: PlanRecord['planId'] }
   ): Promise<void> {
-    if (planId === supersededByPlanId) {
-      throw new Error(`PLAN_RECORD_INVALID_SUPERSESSION_SELF: ${planId}`);
+    if (input.planId === input.supersededByPlanId) {
+      throw new Error(`PLAN_RECORD_INVALID_SUPERSESSION_SELF: ${input.planId}`);
     }
 
     const supersederState = await client.query<{
@@ -173,17 +198,22 @@ export class PostgresPlanRecordRepository {
       `
         SELECT state, supersedes_plan_id
         FROM ${quoteIdentifier(this.schema)}.plan_records
-        WHERE plan_id = $1
+        WHERE tenant_id = $1
+          AND project_id = $2
+          AND environment_id = $3
+          AND plan_id = $4
         FOR UPDATE
       `,
-      [supersededByPlanId]
+      [input.tenantId, input.projectId, input.environmentId, input.supersededByPlanId]
     );
     const supersederRow = supersederState.rows[0];
     if (!supersederRow || supersederRow.state !== 'ACTIVE') {
-      throw new Error(`PLAN_RECORD_SUPERSEDER_NOT_ACTIVE_OR_NOT_FOUND: ${supersededByPlanId}`);
+      throw new Error(
+        `PLAN_RECORD_SUPERSEDER_NOT_ACTIVE_OR_NOT_FOUND: ${input.supersededByPlanId}`
+      );
     }
     if (supersederRow.supersedes_plan_id !== null) {
-      throw new Error(`PLAN_RECORD_SUPERSEDER_ALREADY_LINKED: ${supersededByPlanId}`);
+      throw new Error(`PLAN_RECORD_SUPERSEDER_ALREADY_LINKED: ${input.supersededByPlanId}`);
     }
 
     const result = await client.query(
@@ -191,63 +221,80 @@ export class PostgresPlanRecordRepository {
         UPDATE ${quoteIdentifier(this.schema)}.plan_records
         SET state = 'SUPERSEDED',
             updated_at = NOW()
-        WHERE plan_id = $1 AND state = 'ACTIVE'
+        WHERE tenant_id = $1
+          AND project_id = $2
+          AND environment_id = $3
+          AND plan_id = $4
+          AND state = 'ACTIVE'
       `,
-      [planId]
+      [input.tenantId, input.projectId, input.environmentId, input.planId]
     );
     if (result.rowCount === 0) {
-      throw new Error(`PLAN_RECORD_NOT_ACTIVE: ${planId}`);
+      throw new Error(`PLAN_RECORD_NOT_ACTIVE: ${input.planId}`);
     }
 
     const superseder = await client.query(
       `
         UPDATE ${quoteIdentifier(this.schema)}.plan_records
-        SET supersedes_plan_id = $2,
+        SET supersedes_plan_id = $5,
             updated_at = NOW()
-        WHERE plan_id = $1 AND state = 'ACTIVE' AND supersedes_plan_id IS NULL
+        WHERE tenant_id = $1
+          AND project_id = $2
+          AND environment_id = $3
+          AND plan_id = $4
+          AND state = 'ACTIVE'
+          AND supersedes_plan_id IS NULL
       `,
-      [supersededByPlanId, planId]
+      [input.tenantId, input.projectId, input.environmentId, input.supersededByPlanId, input.planId]
     );
     if (superseder.rowCount === 0) {
-      throw new Error(`PLAN_RECORD_SUPERSEDER_WRITE_FAILED: ${supersededByPlanId}`);
+      throw new Error(`PLAN_RECORD_SUPERSEDER_WRITE_FAILED: ${input.supersededByPlanId}`);
     }
   }
 
   public async archivePlan(
     client: PoolClient,
-    planId: PlanRecord['planId'],
-    archivedAtIso: string
+    input: ScopedPlanId & { readonly archivedAtIso: string }
   ): Promise<void> {
     const result = await client.query(
       `
         UPDATE ${quoteIdentifier(this.schema)}.plan_records
         SET state = 'ARCHIVED',
-            archived_at = $2::timestamptz,
+            archived_at = $5::timestamptz,
             updated_at = NOW()
-        WHERE plan_id = $1
+        WHERE tenant_id = $1
+          AND project_id = $2
+          AND environment_id = $3
+          AND plan_id = $4
       `,
-      [planId, archivedAtIso]
+      [input.tenantId, input.projectId, input.environmentId, input.planId, input.archivedAtIso]
     );
     if (result.rowCount === 0) {
-      throw new Error(`PLAN_RECORD_NOT_FOUND: ${planId}`);
+      throw new Error(`PLAN_RECORD_NOT_FOUND: ${input.planId}`);
     }
   }
 
   public async getSupersession(
     client: PoolClient,
-    planId: PlanRecord['planId']
+    input: ScopedPlanId
   ): Promise<{ supersededByPlanId: PlanRecord['planId'] } | undefined> {
     const result = await client.query<{ superseded_by_plan_id: string | null }>(
       `
         SELECT p2.plan_id AS superseded_by_plan_id
         FROM ${quoteIdentifier(this.schema)}.plan_records p1
         LEFT JOIN ${quoteIdentifier(this.schema)}.plan_records p2
-          ON p2.supersedes_plan_id = p1.plan_id
-        WHERE p1.plan_id = $1
+          ON p2.tenant_id = p1.tenant_id
+          AND p2.project_id = p1.project_id
+          AND p2.environment_id = p1.environment_id
+          AND p2.supersedes_plan_id = p1.plan_id
+        WHERE p1.tenant_id = $1
+          AND p1.project_id = $2
+          AND p1.environment_id = $3
+          AND p1.plan_id = $4
         ORDER BY p2.updated_at DESC
         LIMIT 1
       `,
-      [planId]
+      [input.tenantId, input.projectId, input.environmentId, input.planId]
     );
     const supersededByPlanId = result.rows[0]?.superseded_by_plan_id;
     return supersededByPlanId ? { supersededByPlanId } : undefined;
@@ -255,6 +302,7 @@ export class PostgresPlanRecordRepository {
 
   private async assertExists(
     client: PoolClient,
+    scope: PlanRecordScope,
     planId: string,
     field: 'derived_from_plan_id' | 'supersedes_plan_id'
   ): Promise<void> {
@@ -262,9 +310,12 @@ export class PostgresPlanRecordRepository {
       `
         SELECT plan_id
         FROM ${quoteIdentifier(this.schema)}.plan_records
-        WHERE plan_id = $1
+        WHERE tenant_id = $1
+          AND project_id = $2
+          AND environment_id = $3
+          AND plan_id = $4
       `,
-      [planId]
+      [scope.tenantId, scope.projectId, scope.environmentId, planId]
     );
     if (result.rowCount === 0) {
       throw new Error(`PLAN_RECORD_REFERENCE_NOT_FOUND: ${field}:${planId}`);

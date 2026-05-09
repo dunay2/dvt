@@ -1,3 +1,6 @@
+/**
+ * Owned concern: define scoped plan-store Postgres DDL.
+ */
 import { quoteIdentifier } from './sqlUtils.js';
 
 export function sqlCreateStoredPlansTable(schema: string): string {
@@ -47,7 +50,10 @@ export function sqlCreateStoredPlansValidationStateIndex(schema: string): string
 export function sqlCreatePlanRecordsTable(schema: string): string {
   return `
     CREATE TABLE IF NOT EXISTS ${quoteIdentifier(schema)}.plan_records (
-      plan_id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      project_id TEXT NOT NULL,
+      environment_id TEXT NOT NULL,
+      plan_id TEXT NOT NULL,
       canonical_plan_json TEXT NOT NULL,
       canonical_hash TEXT NOT NULL,
       plan_version TEXT NOT NULL,
@@ -57,10 +63,41 @@ export function sqlCreatePlanRecordsTable(schema: string): string {
       state TEXT NOT NULL,
       created_at TIMESTAMPTZ NOT NULL,
       updated_at TIMESTAMPTZ NOT NULL,
-      derived_from_plan_id TEXT REFERENCES ${quoteIdentifier(schema)}.plan_records(plan_id),
-      supersedes_plan_id TEXT REFERENCES ${quoteIdentifier(schema)}.plan_records(plan_id),
-      archived_at TIMESTAMPTZ
+      derived_from_plan_id TEXT,
+      supersedes_plan_id TEXT,
+      archived_at TIMESTAMPTZ,
+      PRIMARY KEY (tenant_id, project_id, environment_id, plan_id),
+      CONSTRAINT plan_records_derived_from_scoped_plan_id_fkey
+        FOREIGN KEY (tenant_id, project_id, environment_id, derived_from_plan_id)
+        REFERENCES ${quoteIdentifier(schema)}.plan_records(tenant_id, project_id, environment_id, plan_id),
+      CONSTRAINT plan_records_supersedes_scoped_plan_id_fkey
+        FOREIGN KEY (tenant_id, project_id, environment_id, supersedes_plan_id)
+        REFERENCES ${quoteIdentifier(schema)}.plan_records(tenant_id, project_id, environment_id, plan_id)
     )
+  `;
+}
+
+export function sqlAssertPlanRecordsScopedShape(schema: string): string {
+  return `
+    DO $$
+    BEGIN
+      IF EXISTS (
+        SELECT 1
+        FROM information_schema.tables
+        WHERE table_schema = ${quoteLiteral(schema)}
+          AND table_name = 'plan_records'
+      )
+      AND NOT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = ${quoteLiteral(schema)}
+          AND table_name = 'plan_records'
+          AND column_name = 'tenant_id'
+      ) THEN
+        RAISE EXCEPTION 'PLAN_RECORDS_SCOPE_MIGRATION_REQUIRED';
+      END IF;
+    END
+    $$;
   `;
 }
 
@@ -74,14 +111,14 @@ export function sqlEnsurePlanRecordLineageConstraints(schema: string): string {
         JOIN pg_class t ON t.oid = c.conrelid
         JOIN pg_namespace n ON n.oid = t.relnamespace
         WHERE c.contype = 'f'
-          AND c.conname = 'plan_records_derived_from_plan_id_fkey'
+          AND c.conname = 'plan_records_derived_from_scoped_plan_id_fkey'
           AND n.nspname = ${quoteLiteral(schema)}
           AND t.relname = 'plan_records'
       ) THEN
         ALTER TABLE ${quoteIdentifier(schema)}.plan_records
-          ADD CONSTRAINT plan_records_derived_from_plan_id_fkey
-          FOREIGN KEY (derived_from_plan_id)
-          REFERENCES ${quoteIdentifier(schema)}.plan_records(plan_id);
+          ADD CONSTRAINT plan_records_derived_from_scoped_plan_id_fkey
+          FOREIGN KEY (tenant_id, project_id, environment_id, derived_from_plan_id)
+          REFERENCES ${quoteIdentifier(schema)}.plan_records(tenant_id, project_id, environment_id, plan_id);
       END IF;
     END
     $$;
@@ -98,14 +135,14 @@ export function sqlEnsurePlanRecordSupersedesConstraints(schema: string): string
         JOIN pg_class t ON t.oid = c.conrelid
         JOIN pg_namespace n ON n.oid = t.relnamespace
         WHERE c.contype = 'f'
-          AND c.conname = 'plan_records_supersedes_plan_id_fkey'
+          AND c.conname = 'plan_records_supersedes_scoped_plan_id_fkey'
           AND n.nspname = ${quoteLiteral(schema)}
           AND t.relname = 'plan_records'
       ) THEN
         ALTER TABLE ${quoteIdentifier(schema)}.plan_records
-          ADD CONSTRAINT plan_records_supersedes_plan_id_fkey
-          FOREIGN KEY (supersedes_plan_id)
-          REFERENCES ${quoteIdentifier(schema)}.plan_records(plan_id);
+          ADD CONSTRAINT plan_records_supersedes_scoped_plan_id_fkey
+          FOREIGN KEY (tenant_id, project_id, environment_id, supersedes_plan_id)
+          REFERENCES ${quoteIdentifier(schema)}.plan_records(tenant_id, project_id, environment_id, plan_id);
       END IF;
     END
     $$;
@@ -119,12 +156,18 @@ function quoteLiteral(value: string): string {
 export function sqlCreatePlanExecutabilityRecordsTable(schema: string): string {
   return `
     CREATE TABLE IF NOT EXISTS ${quoteIdentifier(schema)}.plan_executability_records (
-      plan_id TEXT NOT NULL REFERENCES ${quoteIdentifier(schema)}.plan_records(plan_id) ON DELETE CASCADE,
+      tenant_id TEXT NOT NULL,
+      project_id TEXT NOT NULL,
+      environment_id TEXT NOT NULL,
+      plan_id TEXT NOT NULL,
       adapter_id TEXT NOT NULL,
       state TEXT NOT NULL,
       validated_at TIMESTAMPTZ,
       rejection_report_json JSONB,
-      PRIMARY KEY (plan_id, adapter_id)
+      PRIMARY KEY (tenant_id, project_id, environment_id, plan_id, adapter_id),
+      FOREIGN KEY (tenant_id, project_id, environment_id, plan_id)
+        REFERENCES ${quoteIdentifier(schema)}.plan_records(tenant_id, project_id, environment_id, plan_id)
+        ON DELETE CASCADE
     )
   `;
 }
@@ -132,18 +175,45 @@ export function sqlCreatePlanExecutabilityRecordsTable(schema: string): string {
 export function sqlCreatePlanAdmissionLinksTable(schema: string): string {
   return `
     CREATE TABLE IF NOT EXISTS ${quoteIdentifier(schema)}.plan_admission_links (
-      plan_id TEXT NOT NULL REFERENCES ${quoteIdentifier(schema)}.plan_records(plan_id) ON DELETE CASCADE,
+      tenant_id TEXT NOT NULL,
+      project_id TEXT NOT NULL,
+      environment_id TEXT NOT NULL,
+      plan_id TEXT NOT NULL,
       run_id TEXT NOT NULL,
       adapter_id TEXT NOT NULL,
       admitted_at TIMESTAMPTZ NOT NULL,
-      PRIMARY KEY (plan_id, run_id, adapter_id)
+      PRIMARY KEY (tenant_id, project_id, environment_id, plan_id, run_id, adapter_id),
+      FOREIGN KEY (tenant_id, project_id, environment_id, plan_id)
+        REFERENCES ${quoteIdentifier(schema)}.plan_records(tenant_id, project_id, environment_id, plan_id)
+        ON DELETE CASCADE
     )
+  `;
+}
+
+export function sqlAssertStoredPlansCanonicalOwnership(schema: string): string {
+  return `
+    DO $$
+    BEGIN
+      IF EXISTS (
+        SELECT 1
+        FROM ${quoteIdentifier(schema)}.stored_plans sp
+        WHERE NULLIF(sp.canonical_plan_json::jsonb #>> '{metadata,ownership,tenantId}', '') IS NULL
+           OR NULLIF(sp.canonical_plan_json::jsonb #>> '{metadata,ownership,projectId}', '') IS NULL
+           OR NULLIF(sp.canonical_plan_json::jsonb #>> '{metadata,ownership,environmentId}', '') IS NULL
+      ) THEN
+        RAISE EXCEPTION 'PLAN_STORE_BACKFILL_SCOPE_MISSING';
+      END IF;
+    END
+    $$;
   `;
 }
 
 export function sqlBackfillPlanRecordsFromStoredPlans(schema: string): string {
   return `
     INSERT INTO ${quoteIdentifier(schema)}.plan_records (
+      tenant_id,
+      project_id,
+      environment_id,
       plan_id,
       canonical_plan_json,
       canonical_hash,
@@ -156,6 +226,9 @@ export function sqlBackfillPlanRecordsFromStoredPlans(schema: string): string {
       updated_at
     )
     SELECT
+      sp.canonical_plan_json::jsonb #>> '{metadata,ownership,tenantId}',
+      sp.canonical_plan_json::jsonb #>> '{metadata,ownership,projectId}',
+      sp.canonical_plan_json::jsonb #>> '{metadata,ownership,environmentId}',
       sp.plan_id,
       sp.canonical_plan_json,
       sp.plan_sha256,
@@ -167,6 +240,6 @@ export function sqlBackfillPlanRecordsFromStoredPlans(schema: string): string {
       sp.stored_at,
       sp.updated_at
     FROM ${quoteIdentifier(schema)}.stored_plans sp
-    ON CONFLICT (plan_id) DO NOTHING
+    ON CONFLICT (tenant_id, project_id, environment_id, plan_id) DO NOTHING
   `;
 }
