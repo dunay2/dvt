@@ -43,6 +43,13 @@ behavior, Temporal worker behavior, or GitHub branch protection settings.
 This plan depends on the command taxonomy owned by
 `docs/planning/proposals/mandatory/governance-and-docs/repository-command-catalog-normalization-plan-20260508.md`.
 
+## Prerequisite Command Catalog Slice
+
+The repository command catalog normalization plan is the prerequisite for
+script and package-command classification. This CI scope optimization slice must
+consume the catalog instead of creating another hand-maintained list of
+governance, planning, runtime, and CI tooling command names.
+
 Implementation order:
 
 1. Close or co-implement the repository command catalog first:
@@ -193,6 +200,7 @@ allowedImplementationSurfaces:
   - tools/ci/workflow-pattern-parity.test.mjs
   - tools/ci/test/path-matcher.test.mjs
   - tools/ci/package-json-scope-classification.test.mjs
+  - tools/ci/prepush-typecheck-scope.mjs
   - tools/ci/emit-scope.test.mjs
   - tools/ci/emit-workspace-matrix.test.mjs
   - docs/guides/testing-and-ci-capabilities.md

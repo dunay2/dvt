@@ -173,6 +173,14 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
   );
   assertWorkflowContains(ciWorkflow, 'node tools/ci/emit-scope.mjs --mode workflow');
   assertWorkflowContains(ciWorkflow, 'node tools/ci/emit-workspace-matrix.mjs');
+  assertWorkflowContains(
+    ciWorkflow,
+    'changed_file_validation_relevant: ${{ steps.scope.outputs.changed_file_validation_relevant }}'
+  );
+  assertWorkflowContains(
+    ciWorkflow,
+    "needs.detect-affected.outputs.changed_file_validation_relevant == 'true'"
+  );
 
   assertWorkflowContains(
     prQualityGate,
@@ -189,6 +197,7 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
     lane_yaml_changed: workflowScopePolicy.lane_yaml_changed,
     generated_status_relevant: workflowScopePolicy.generated_status_relevant,
     generated_capability_relevant: workflowScopePolicy.generated_capability_relevant,
+    changed_file_validation_relevant: workflowScopePolicy.changed_file_validation_relevant,
   });
 });
 

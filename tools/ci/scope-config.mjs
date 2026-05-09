@@ -1,6 +1,12 @@
 import { execFile } from 'node:child_process';
 import { appendFileSync, readFileSync } from 'node:fs';
 import { promisify } from 'node:util';
+import {
+  classifyPackageScriptCommand,
+  classifyScriptFilePath,
+  isGovernanceToolingCommand,
+  isRepositoryCommandFile,
+} from './repository-command-catalog.mjs';
 
 const execFileAsync = promisify(execFile);
 
@@ -21,6 +27,7 @@ function readWorkflowScopePolicy() {
     'lane_yaml_changed',
     'generated_status_relevant',
     'generated_capability_relevant',
+    'changed_file_validation_relevant',
     'workspace_global',
     'workspace_api',
     'workspace_lineage_worker',
@@ -81,6 +88,7 @@ export const WORKFLOW_SCOPE_PATTERNS = {
   lane_yaml_changed: WORKFLOW_SCOPE_POLICY.lane_yaml_changed,
   generated_status_relevant: WORKFLOW_SCOPE_POLICY.generated_status_relevant,
   generated_capability_relevant: WORKFLOW_SCOPE_POLICY.generated_capability_relevant,
+  changed_file_validation_relevant: WORKFLOW_SCOPE_POLICY.changed_file_validation_relevant,
 };
 
 export const WORKSPACE_ENTRIES = [
@@ -348,6 +356,13 @@ export const PR_QUALITY_SCOPE_PATTERNS = {
   adapter_postgres_changed: ADAPTER_POSTGRES_RELEVANT_PATTERNS,
 };
 
+export const SCOPE_MODES = {
+  contracts: CONTRACT_SCOPE_PATTERNS,
+  'pr-quality': PR_QUALITY_SCOPE_PATTERNS,
+  test: TEST_SCOPE_PATTERNS,
+  workflow: WORKFLOW_SCOPE_PATTERNS,
+};
+
 function normalizePath(path) {
   return path.replaceAll('\\', '/');
 }
@@ -389,28 +404,256 @@ export function matchesAnyPattern(path, patterns) {
   return patterns.some((pattern) => matchesPattern(path, pattern));
 }
 
-export function computeBooleanScope(changedFiles, scopePatterns) {
+function stripScripts(packageJson) {
+  const rest = { ...(packageJson ?? {}) };
+  delete rest.scripts;
+  return rest;
+}
+
+function stableJson(value) {
+  if (Array.isArray(value)) {
+    return `[${value.map(stableJson).join(',')}]`;
+  }
+
+  if (value && typeof value === 'object') {
+    return `{${Object.keys(value)
+      .sort((left, right) => left.localeCompare(right))
+      .map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`)
+      .join(',')}}`;
+  }
+
+  return JSON.stringify(value);
+}
+
+export function isRuntimeFanoutCommand(commandClass) {
+  return (
+    commandClass.runtimeFanout === true ||
+    commandClass.domain === 'runtime-capability' ||
+    commandClass.domain === 'unknown'
+  );
+}
+
+function isLifecycleScript(name) {
+  return /^(pre|post)?(install|pack|publish|version)$/u.test(name) || name === 'prepare';
+}
+
+export function classifyPackageJsonChange(previousPackageJson, nextPackageJson) {
+  const previousScripts = previousPackageJson?.scripts ?? {};
+  const nextScripts = nextPackageJson?.scripts ?? {};
+  const changedScriptNames = [
+    ...new Set([...Object.keys(previousScripts), ...Object.keys(nextScripts)]),
+  ]
+    .filter((name) => previousScripts[name] !== nextScripts[name])
+    .sort((left, right) => left.localeCompare(right));
+  const commandClasses = changedScriptNames.map((name) =>
+    classifyPackageScriptCommand(name, nextScripts[name] ?? previousScripts[name] ?? '')
+  );
+  const nonScriptChange =
+    stableJson(stripScripts(previousPackageJson)) !== stableJson(stripScripts(nextPackageJson));
+  const dependencySensitive = nonScriptChange;
+  const lifecycleSensitive = changedScriptNames.some(isLifecycleScript);
+  const rootBuildSensitive =
+    nonScriptChange ||
+    lifecycleSensitive ||
+    commandClasses.some((commandClass) => isRuntimeFanoutCommand(commandClass));
+  const governanceToolingOnly =
+    !rootBuildSensitive &&
+    commandClasses.length > 0 &&
+    commandClasses.every((commandClass) => isGovernanceToolingCommand(commandClass));
+
+  return {
+    changedScriptNames,
+    commandClasses,
+    nonScriptChange,
+    packageScriptsOnly: changedScriptNames.length > 0 && !nonScriptChange,
+    dependencySensitive,
+    lifecycleSensitive,
+    rootBuildSensitive,
+    governanceToolingOnly,
+    ciToolingSensitive: commandClasses.some((commandClass) =>
+      ['ci-tooling', 'developer-workflow', 'test-tooling'].includes(commandClass.domain)
+    ),
+    temporalCapabilitySensitive: commandClasses.some(
+      (commandClass) => commandClass.domain === 'runtime-capability'
+    ),
+    postgresCapabilitySensitive: commandClasses.some(
+      (commandClass) => commandClass.domain === 'runtime-capability'
+    ),
+    contractCapabilitySensitive: commandClasses.some(
+      (commandClass) => commandClass.domain === 'contracts'
+    ),
+  };
+}
+
+function isSemanticallyNarrowPackageJson(scopeContext) {
+  return scopeContext?.packageJsonChange?.rootBuildSensitive === false;
+}
+
+function buildFilesForPathPolicy(changedFiles, scopeContext) {
   const normalizedFiles = changedFiles.map(normalizePath);
-  return Object.fromEntries(
+  return isSemanticallyNarrowPackageJson(scopeContext)
+    ? normalizedFiles.filter((path) => path !== 'package.json')
+    : normalizedFiles;
+}
+
+export function computeBooleanScope(changedFiles, scopePatterns, scopeContext = {}) {
+  const normalizedFiles = buildFilesForPathPolicy(changedFiles, scopeContext);
+  const scope = Object.fromEntries(
     Object.entries(scopePatterns).map(([key, patterns]) => [
       key,
       normalizedFiles.some((path) => matchesAnyPattern(path, patterns)),
     ])
   );
+
+  if (changedFiles.map(normalizePath).includes('package.json')) {
+    if ('changed_file_validation_relevant' in scope) {
+      scope.changed_file_validation_relevant = true;
+    }
+    if (isSemanticallyNarrowPackageJson(scopeContext)) {
+      if ('any_code' in scope) {
+        scope.any_code = false;
+      }
+      if ('generated_status_relevant' in scope) {
+        scope.generated_status_relevant = false;
+      }
+      if ('generated_capability_relevant' in scope) {
+        scope.generated_capability_relevant = false;
+      }
+    }
+  }
+
+  return scope;
 }
 
-export function computeWorkspaceMatrix(changedFiles) {
+export function computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext = {}) {
+  const scopePatterns = SCOPE_MODES[mode];
+  if (!scopePatterns) {
+    throw new TypeError(`UNSUPPORTED_MODE: ${mode ?? 'undefined'}`);
+  }
+
+  const scope = computeBooleanScope(changedFiles, scopePatterns, scopeContext);
+  const packageJsonChange = scopeContext.packageJsonChange;
+
+  if (packageJsonChange?.rootBuildSensitive === false) {
+    for (const key of [
+      'any_test',
+      'root_config',
+      'contracts_relevant',
+      'determinism_relevant',
+      'golden_relevant',
+      'temporal_changed',
+      'temporal_transformation_changed',
+      'temporal_postgres_changed',
+      'adapter_postgres_changed',
+    ]) {
+      if (key in scope) {
+        scope[key] = false;
+      }
+    }
+  }
+
+  return {
+    ...scope,
+  };
+}
+
+export function parseScopeMode(argv) {
+  const modeFlagIndex = argv.indexOf('--mode');
+  if (modeFlagIndex === -1) {
+    throw new TypeError('MODE_REQUIRED');
+  }
+
+  const mode = argv[modeFlagIndex + 1];
+  if (!mode || !(mode in SCOPE_MODES)) {
+    throw new TypeError(`UNSUPPORTED_MODE: ${mode ?? 'undefined'}`);
+  }
+
+  return mode;
+}
+
+export function computeWorkspaceMatrix(changedFiles, options = {}) {
   const normalizedFiles = changedFiles.map(normalizePath);
-  const globalChanged = normalizedFiles.some((path) => matchesAnyPattern(path, CI_GLOBAL_PATTERNS));
+  const packageJsonChanged = normalizedFiles.includes('package.json');
+  const packageJsonRootSensitive =
+    packageJsonChanged &&
+    (!options.packageJsonChange || options.packageJsonChange.rootBuildSensitive === true);
+  const filesForPathPolicy = normalizedFiles.filter((path) => path !== 'package.json');
+  const commandFiles = filesForPathPolicy.filter(isRepositoryCommandFile);
+  const nonCommandFiles = filesForPathPolicy.filter((path) => !isRepositoryCommandFile(path));
+  const runtimeFanoutScriptChanged = commandFiles.some((path) =>
+    isRuntimeFanoutCommand(classifyScriptFilePath(path))
+  );
+  const globalChanged =
+    packageJsonRootSensitive ||
+    runtimeFanoutScriptChanged ||
+    nonCommandFiles.some((path) => matchesAnyPattern(path, CI_GLOBAL_PATTERNS));
   const include = globalChanged
     ? WORKSPACE_ENTRIES.map(({ name, pkg }) => ({ name, pkg }))
     : WORKSPACE_ENTRIES.filter(({ patterns }) =>
-        normalizedFiles.some((path) => matchesAnyPattern(path, patterns))
+        filesForPathPolicy.some((path) => matchesAnyPattern(path, patterns))
       ).map(({ name, pkg }) => ({ name, pkg }));
 
   return {
     anyChanged: include.length > 0,
     include,
+  };
+}
+
+export async function readJsonAtGitRef(ref, filePath) {
+  const { stdout } = await execFileAsync('git', ['show', `${ref}:${filePath}`], {
+    encoding: 'utf8',
+  });
+  return JSON.parse(stdout);
+}
+
+function failClosedPackageJsonChange(error) {
+  return {
+    changedScriptNames: [],
+    commandClasses: [],
+    nonScriptChange: true,
+    packageScriptsOnly: false,
+    dependencySensitive: true,
+    lifecycleSensitive: true,
+    rootBuildSensitive: true,
+    governanceToolingOnly: false,
+    ciToolingSensitive: true,
+    temporalCapabilitySensitive: true,
+    postgresCapabilitySensitive: true,
+    contractCapabilitySensitive: true,
+    failClosed: true,
+    error: error instanceof Error ? error.message : String(error),
+  };
+}
+
+export async function readRootPackageJsonChange(baseRef, headRef, options = {}) {
+  const readJsonAtRef = options.readJsonAtRef ?? readJsonAtGitRef;
+  try {
+    const [previousPackageJson, nextPackageJson] = await Promise.all([
+      readJsonAtRef(baseRef, 'package.json'),
+      readJsonAtRef(headRef, 'package.json'),
+    ]);
+    return classifyPackageJsonChange(previousPackageJson, nextPackageJson);
+  } catch (error) {
+    return failClosedPackageJsonChange(error);
+  }
+}
+
+export async function buildChangedScopeContext(changedFiles, options = {}) {
+  const normalizedFiles = changedFiles.map(normalizePath);
+  if (!normalizedFiles.includes('package.json')) {
+    return {};
+  }
+
+  const baseRef = options.baseRef;
+  const headRef = options.headRef;
+  if (!baseRef || !headRef) {
+    return {
+      packageJsonChange: failClosedPackageJsonChange('BASE_AND_HEAD_REQUIRED'),
+    };
+  }
+
+  return {
+    packageJsonChange: await readRootPackageJsonChange(baseRef, headRef, options),
   };
 }
 

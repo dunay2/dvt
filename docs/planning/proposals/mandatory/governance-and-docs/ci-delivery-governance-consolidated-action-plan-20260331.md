@@ -441,6 +441,10 @@ consumers that can safely reuse that ownership move to Turbo.
 
 ### Wave 1 - Scope Authority Convergence
 
+`CDG-W1-0` establishes the repository command catalog so later scope work can
+classify package scripts and script files through one executable taxonomy
+instead of repeating path lists in workflows and scope helpers.
+
 | Task       | Files / surfaces                                                                                   | Action                                                                                                                                      | Validation                                                                                 | Exit criteria                                                                                     |
 | ---------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
 | `CDG-W1-1` | `ci.yml`, `tools/ci/emit-workspace-matrix.mjs`, `tools/ci/scope-config.mjs`                        | Rewire `detect-affected` in `ci.yml` to use `emit-workspace-matrix.mjs` instead of maintaining inline workspace inventories.                | `pnpm test:ci-tools`, targeted workflow parity tests, `pnpm verify:prepush`                | `ci.yml` no longer owns a separate workspace path inventory.                                      |

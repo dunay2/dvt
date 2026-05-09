@@ -21,6 +21,17 @@ test('matchesAnyPattern supports wildcard and normalizes Windows separators', ()
   );
 });
 
+test('script globs cover root and nested scripts explicitly', () => {
+  assert.equal(matchesAnyPattern('scripts/planning-db-query.cjs', ['scripts/*.cjs']), true);
+  assert.equal(matchesAnyPattern('scripts/nested/example.cjs', ['scripts/**/*.cjs']), true);
+  assert.equal(matchesAnyPattern('tools/docs/check-filenames.ts', ['tools/docs/*.ts']), true);
+  assert.equal(matchesAnyPattern('tools/docs/lib/markdown.ts', ['tools/docs/**/*.ts']), true);
+  assert.equal(
+    matchesAnyPattern('tools/ops/ar-c2-evidence-collector.mjs', ['tools/ops/*.mjs']),
+    true
+  );
+});
+
 test('computeBooleanScope marks adapter_postgres_changed for relevant workflow/config changes', () => {
   const fromWorkflow = computeBooleanScope(
     ['.github/workflows/pr-quality-gate.yml'],

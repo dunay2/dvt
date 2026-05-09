@@ -66,7 +66,7 @@
     "test:replay": "pnpm --filter @dvt/engine test --testNamePattern replay",
     "test:coverage": "pnpm -r test -- --coverage",
     "test:coverage:engine": "pnpm --filter @dvt/engine test -- --coverage",
-    "test:ci-tools": "node --test tools/ci/*.test.mjs",
+    "test:ci-tools": "node --test tools/ci/*.test.mjs tools/ci/test/*.test.mjs",
     "arch:deps": "node tools/ci/check-architecture-dependencies.mjs",
     "validate:contracts": "pnpm --filter @dvt/contracts run build && pnpm --filter @dvt/cli validate-contracts",
     "gen:ai-index": "node scripts/gen-ai-index.js",

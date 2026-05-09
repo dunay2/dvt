@@ -174,6 +174,7 @@ governingSources:
   - docs/architecture/fowler-opportunity-planning-governance.md
 allowedImplementationSurfaces:
   - package.json
+  - .github/workflows/ci.yml
   - tools/ci/repository-command-catalog.mjs
   - tools/ci/repository-command-catalog.test.mjs
   - tools/ci/scope-config.mjs
@@ -183,6 +184,7 @@ allowedImplementationSurfaces:
   - tools/ci/validate-policy.js
   - tools/ci/workflow-scope-classification.test.mjs
   - tools/ci/package-json-scope-classification.test.mjs
+  - tools/ci/prepush-typecheck-scope.mjs
   - tools/ci/emit-scope.test.mjs
   - tools/ci/emit-workspace-matrix.test.mjs
   - tools/ci/workflow-pattern-parity.test.mjs
@@ -387,6 +389,314 @@ symbols:
     cypressCoverage: N/A - CI and repository tooling only
     unitTests:
       - node --test tools/ci/repository-command-catalog.test.mjs
+  - name: REPOSITORY_COMMAND_DOMAINS
+    path: tools/ci/repository-command-catalog.mjs
+    dddOwner: RepositoryCommandDomain
+    cqRails:
+      - ClassifyRepositoryCommand
+    fowlerSignals:
+      - Primitive obsession in script path and package-script scope decisions
+    architectureGuard: node --test tools/ci/repository-command-catalog.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/repository-command-catalog.test.mjs
+  - name: REPOSITORY_COMMAND_SENSITIVITIES
+    path: tools/ci/repository-command-catalog.mjs
+    dddOwner: RepositoryCommandSensitivity
+    cqRails:
+      - ClassifyRepositoryCommand
+    fowlerSignals:
+      - Primitive obsession in script path and package-script scope decisions
+    architectureGuard: node --test tools/ci/repository-command-catalog.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/repository-command-catalog.test.mjs
+  - name: COMMAND_FILE_EXTENSIONS
+    path: tools/ci/repository-command-catalog.mjs
+    dddOwner: RepositoryCommandCatalog
+    cqRails:
+      - QueryRepositoryCommandCatalog
+    fowlerSignals:
+      - Divergent change between package command names, script files, and CI filters
+    architectureGuard: node --test tools/ci/repository-command-catalog.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/repository-command-catalog.test.mjs
+  - name: COMMAND_FILE_ROOTS
+    path: tools/ci/repository-command-catalog.mjs
+    dddOwner: RepositoryCommandCatalog
+    cqRails:
+      - QueryRepositoryCommandCatalog
+    fowlerSignals:
+      - Divergent change between package command names, script files, and CI filters
+    architectureGuard: node --test tools/ci/repository-command-catalog.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/repository-command-catalog.test.mjs
+  - name: EXACT_PACKAGE_SCRIPT_DOMAINS
+    path: tools/ci/repository-command-catalog.mjs
+    dddOwner: RepositoryCommandCatalog
+    cqRails:
+      - ClassifyRepositoryCommand
+    fowlerSignals:
+      - Primitive obsession in script path and package-script scope decisions
+    architectureGuard: node --test tools/ci/repository-command-catalog.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/repository-command-catalog.test.mjs
+  - name: GOVERNANCE_TOOLING_DOMAINS
+    path: tools/ci/repository-command-catalog.mjs
+    dddOwner: RepositoryCommandDomain
+    cqRails:
+      - ClassifyRepositoryCommand
+    fowlerSignals:
+      - Primitive obsession in script path and package-script scope decisions
+    architectureGuard: node --test tools/ci/repository-command-catalog.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/repository-command-catalog.test.mjs
+  - name: PACKAGE_PREFIX_DOMAINS
+    path: tools/ci/repository-command-catalog.mjs
+    dddOwner: RepositoryCommandCatalog
+    cqRails:
+      - ClassifyRepositoryCommand
+    fowlerSignals:
+      - Primitive obsession in script path and package-script scope decisions
+    architectureGuard: node --test tools/ci/repository-command-catalog.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/repository-command-catalog.test.mjs
+  - name: SCRIPT_FILE_RULES
+    path: tools/ci/repository-command-catalog.mjs
+    dddOwner: RepositoryCommandCatalog
+    cqRails:
+      - ClassifyRepositoryCommand
+    fowlerSignals:
+      - Divergent change between package command names, script files, and CI filters
+    architectureGuard: node --test tools/ci/repository-command-catalog.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/repository-command-catalog.test.mjs
+  - name: commandClass
+    path: tools/ci/repository-command-catalog.mjs
+    dddOwner: RepositoryCommand
+    cqRails:
+      - ClassifyRepositoryCommand
+    fowlerSignals:
+      - Primitive obsession in script path and package-script scope decisions
+    architectureGuard: node --test tools/ci/repository-command-catalog.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/repository-command-catalog.test.mjs
+  - name: firstMatchingDomain
+    path: tools/ci/repository-command-catalog.mjs
+    dddOwner: RepositoryCommand
+    cqRails:
+      - ClassifyRepositoryCommand
+    fowlerSignals:
+      - Primitive obsession in script path and package-script scope decisions
+    architectureGuard: node --test tools/ci/repository-command-catalog.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/repository-command-catalog.test.mjs
+  - name: classifyCommandByReferencedFiles
+    path: tools/ci/repository-command-catalog.mjs
+    dddOwner: RepositoryCommand
+    cqRails:
+      - ClassifyRepositoryCommand
+    fowlerSignals:
+      - Divergent change between package command names, script files, and CI filters
+    architectureGuard: node --test tools/ci/repository-command-catalog.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/repository-command-catalog.test.mjs
+  - name: normalizePath
+    path: tools/ci/repository-command-catalog.mjs
+    dddOwner: RepositoryCommand
+    cqRails:
+      - QueryRepositoryCommandCatalog
+    fowlerSignals:
+      - Divergent change between package command names, script files, and CI filters
+    architectureGuard: node --test tools/ci/repository-command-catalog.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/repository-command-catalog.test.mjs
+  - name: isGovernanceToolingCommand
+    path: tools/ci/repository-command-catalog.mjs
+    dddOwner: RepositoryCommandDomain
+    cqRails:
+      - ClassifyRepositoryCommand
+    fowlerSignals:
+      - Primitive obsession in script path and package-script scope decisions
+    architectureGuard: node --test tools/ci/repository-command-catalog.test.mjs tools/ci/package-json-scope-classification.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/repository-command-catalog.test.mjs tools/ci/package-json-scope-classification.test.mjs
+  - name: SCOPE_MODES
+    path: tools/ci/scope-config.mjs
+    dddOwner: WorkflowModeScopeOutputs
+    cqRails:
+      - ConsumeCommandCatalogForCiScope
+    fowlerSignals:
+      - Shotgun surgery from repeated command lists in package scripts and workflows
+    architectureGuard: node --test tools/ci/emit-scope.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/emit-scope.test.mjs
+  - name: stripScripts
+    path: tools/ci/scope-config.mjs
+    dddOwner: PackageJsonChangeClass
+    cqRails:
+      - ConsumeCommandCatalogForCiScope
+    fowlerSignals:
+      - Primitive obsession in script path and package-script scope decisions
+    architectureGuard: node --test tools/ci/package-json-scope-classification.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/package-json-scope-classification.test.mjs
+  - name: stableJson
+    path: tools/ci/scope-config.mjs
+    dddOwner: PackageJsonChangeClass
+    cqRails:
+      - ConsumeCommandCatalogForCiScope
+    fowlerSignals:
+      - Primitive obsession in script path and package-script scope decisions
+    architectureGuard: node --test tools/ci/package-json-scope-classification.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/package-json-scope-classification.test.mjs
+  - name: isRuntimeFanoutCommand
+    path: tools/ci/scope-config.mjs
+    dddOwner: RepositoryCommandSensitivity
+    cqRails:
+      - ConsumeCommandCatalogForCiScope
+    fowlerSignals:
+      - Shotgun surgery from repeated command lists in package scripts and workflows
+    architectureGuard: node --test tools/ci/package-json-scope-classification.test.mjs tools/ci/workflow-scope-classification.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/package-json-scope-classification.test.mjs tools/ci/workflow-scope-classification.test.mjs
+  - name: isLifecycleScript
+    path: tools/ci/scope-config.mjs
+    dddOwner: PackageJsonChangeClass
+    cqRails:
+      - ConsumeCommandCatalogForCiScope
+    fowlerSignals:
+      - Primitive obsession in script path and package-script scope decisions
+    architectureGuard: node --test tools/ci/package-json-scope-classification.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/package-json-scope-classification.test.mjs
+  - name: isSemanticallyNarrowPackageJson
+    path: tools/ci/scope-config.mjs
+    dddOwner: PackageJsonChangeClass
+    cqRails:
+      - ConsumeCommandCatalogForCiScope
+    fowlerSignals:
+      - Shotgun surgery from repeated command lists in package scripts and workflows
+    architectureGuard: node --test tools/ci/package-json-scope-classification.test.mjs tools/ci/emit-scope.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/package-json-scope-classification.test.mjs tools/ci/emit-scope.test.mjs
+  - name: buildFilesForPathPolicy
+    path: tools/ci/scope-config.mjs
+    dddOwner: ChangedFileSet
+    cqRails:
+      - ConsumeCommandCatalogForCiScope
+    fowlerSignals:
+      - Divergent change between package command names, script files, and CI filters
+    architectureGuard: node --test tools/ci/workflow-scope-classification.test.mjs tools/ci/emit-scope.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/workflow-scope-classification.test.mjs tools/ci/emit-scope.test.mjs
+  - name: computeWorkflowModeScopeOutputs
+    path: tools/ci/scope-config.mjs
+    dddOwner: WorkflowModeScopeOutputs
+    cqRails:
+      - ConsumeCommandCatalogForCiScope
+    fowlerSignals:
+      - Shotgun surgery from repeated command lists in package scripts and workflows
+    architectureGuard: node --test tools/ci/emit-scope.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/emit-scope.test.mjs
+  - name: parseScopeMode
+    path: tools/ci/scope-config.mjs
+    dddOwner: WorkflowModeScopeOutputs
+    cqRails:
+      - ConsumeCommandCatalogForCiScope
+    fowlerSignals:
+      - Divergent change between package command names, script files, and CI filters
+    architectureGuard: node --test tools/ci/emit-scope.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/emit-scope.test.mjs
+  - name: failClosedPackageJsonChange
+    path: tools/ci/scope-config.mjs
+    dddOwner: PackageJsonChangeClass
+    cqRails:
+      - ConsumeCommandCatalogForCiScope
+    fowlerSignals:
+      - Primitive obsession in script path and package-script scope decisions
+    architectureGuard: node --test tools/ci/package-json-scope-classification.test.mjs tools/ci/emit-workspace-matrix.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/package-json-scope-classification.test.mjs tools/ci/emit-workspace-matrix.test.mjs
+  - name: buildWorkspaceMatrixOutputs
+    path: tools/ci/emit-workspace-matrix.mjs
+    dddOwner: WorkspaceMatrix
+    cqRails:
+      - ConsumeCommandCatalogForCiScope
+    fowlerSignals:
+      - Shotgun surgery from repeated command lists in package scripts and workflows
+    architectureGuard: node --test tools/ci/emit-workspace-matrix.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/emit-workspace-matrix.test.mjs
+  - name: main
+    path: tools/ci/emit-workspace-matrix.mjs
+    dddOwner: WorkspaceMatrix
+    cqRails:
+      - ConsumeCommandCatalogForCiScope
+    fowlerSignals:
+      - Shotgun surgery from repeated command lists in package scripts and workflows
+    architectureGuard: node --test tools/ci/emit-workspace-matrix.test.mjs tools/ci/workflow-pattern-parity.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/emit-workspace-matrix.test.mjs tools/ci/workflow-pattern-parity.test.mjs
+  - name: main
+    path: tools/ci/emit-scope.mjs
+    dddOwner: WorkflowModeScopeOutputs
+    cqRails:
+      - ConsumeCommandCatalogForCiScope
+    fowlerSignals:
+      - Divergent change between package command names, script files, and CI filters
+    architectureGuard: node --test tools/ci/emit-scope.test.mjs tools/ci/workflow-pattern-parity.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/emit-scope.test.mjs tools/ci/workflow-pattern-parity.test.mjs
+  - name: packageJson
+    path: tools/ci/repository-command-catalog.test.mjs
+    dddOwner: RepositoryCommandCatalog
+    cqRails:
+      - ValidateRepositoryCommandCatalog
+    fowlerSignals:
+      - Shotgun surgery from repeated command lists in package scripts and workflows
+    architectureGuard: node --test tools/ci/repository-command-catalog.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/repository-command-catalog.test.mjs
+  - name: scriptsOnlyContext
+    path: tools/ci/emit-scope.test.mjs
+    dddOwner: WorkflowModeScopeOutputs
+    cqRails:
+      - ValidateRepositoryCommandCatalog
+    fowlerSignals:
+      - Primitive obsession in script path and package-script scope decisions
+    architectureGuard: node --test tools/ci/emit-scope.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/emit-scope.test.mjs
 ```
 
 ## Command Domain Taxonomy

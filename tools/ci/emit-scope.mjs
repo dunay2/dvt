@@ -1,53 +1,37 @@
+import { pathToFileURL } from 'node:url';
+
 import {
-  CONTRACT_SCOPE_PATTERNS,
-  PR_QUALITY_SCOPE_PATTERNS,
-  TEST_SCOPE_PATTERNS,
-  WORKFLOW_SCOPE_PATTERNS,
-  computeBooleanScope,
+  buildChangedScopeContext,
+  computeWorkflowModeScopeOutputs,
   getChangedFiles,
   isPullRequestEvent,
+  parseScopeMode,
   setGitHubOutput,
 } from './scope-config.mjs';
 
-const MODES = {
-  contracts: CONTRACT_SCOPE_PATTERNS,
-  'pr-quality': PR_QUALITY_SCOPE_PATTERNS,
-  test: TEST_SCOPE_PATTERNS,
-  workflow: WORKFLOW_SCOPE_PATTERNS,
-};
-
-function parseMode(argv) {
-  const modeFlagIndex = argv.indexOf('--mode');
-  if (modeFlagIndex === -1) {
-    throw new TypeError('MODE_REQUIRED');
-  }
-
-  const mode = argv[modeFlagIndex + 1];
-  if (!mode || !(mode in MODES)) {
-    throw new TypeError(`UNSUPPORTED_MODE: ${mode ?? 'undefined'}`);
-  }
-
-  return mode;
-}
-
-async function main() {
-  const mode = parseMode(process.argv.slice(2));
+export async function main() {
+  const mode = parseScopeMode(process.argv.slice(2));
   const eventName = process.env.GITHUB_EVENT_NAME ?? '';
-  const scopePatterns = MODES[mode];
 
   if (!isPullRequestEvent(eventName)) {
-    for (const key of Object.keys(scopePatterns)) {
+    const scope = computeWorkflowModeScopeOutputs(mode, ['.github/workflows/ci.yml']);
+    for (const key of Object.keys(scope)) {
       setGitHubOutput(key, true);
     }
     return;
   }
 
-  const changedFiles = await getChangedFiles(process.env.GIT_BASE, process.env.GIT_HEAD);
-  const scope = computeBooleanScope(changedFiles, scopePatterns);
+  const baseRef = process.env.GIT_BASE;
+  const headRef = process.env.GIT_HEAD;
+  const changedFiles = await getChangedFiles(baseRef, headRef);
+  const scopeContext = await buildChangedScopeContext(changedFiles, { baseRef, headRef });
+  const scope = computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext);
 
   for (const [key, value] of Object.entries(scope)) {
     setGitHubOutput(key, value);
   }
 }
 
-await main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  await main();
+}

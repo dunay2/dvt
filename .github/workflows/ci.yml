@@ -46,6 +46,7 @@ jobs:
       any_changed: ${{ steps.matrix.outputs.any_changed }}
       matrix: ${{ steps.matrix.outputs.matrix }}
       docs_changed: ${{ steps.scope.outputs.docs_changed }}
+      changed_file_validation_relevant: ${{ steps.scope.outputs.changed_file_validation_relevant }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -74,7 +75,8 @@ jobs:
     needs: detect-affected
     if: >-
       github.event_name != 'pull_request' || needs.detect-affected.outputs.any_changed == 'true' ||
-      needs.detect-affected.outputs.docs_changed == 'true'
+      needs.detect-affected.outputs.docs_changed == 'true' ||
+      needs.detect-affected.outputs.changed_file_validation_relevant == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
