@@ -33,6 +33,7 @@ const requiredKeys = [
         'lane_yaml_changed',
         'generated_status_relevant',
         'generated_capability_relevant',
+        'changed_file_validation_relevant',
         'workspace_global',
         'workspace_api',
         'workspace_lineage_worker',

@@ -254,6 +254,29 @@ Planning-generated pages that are intentionally untracked:
   coverage with GitHub issue notification on failure.
   Source: [`.github/workflows/adapter-postgres-integration-nightly.yml`](../../.github/workflows/adapter-postgres-integration-nightly.yml)
 
+## Repository Command Catalog
+
+`package.json` is the contributor-facing command registry. CI scope code must
+not infer command intent from raw names or broad script paths alone. The
+canonical command classifier is
+[`tools/ci/repository-command-catalog.mjs`](../../tools/ci/repository-command-catalog.mjs).
+
+The catalog classifies package scripts and script file paths into command
+domains such as `runtime-root`, `runtime-package`, `runtime-capability`,
+`contracts`, `docs-governance`, `planning-db`, `ci-tooling`, `test-tooling`,
+`developer-workflow`, `dev-local`, and `release-ops`.
+
+New package scripts that invoke `scripts/**`, `tools/ci/**`, `tools/docs/**`,
+`.github/scripts/**`, or `tools/ops/**` must have a non-`unknown` catalog
+classification before they are merged. Unknown classifications fail closed in
+tests and are treated as runtime-fanout sensitive by CI scope code.
+
+For root `package.json` changes, CI reads the base and head package blobs on
+pull requests. Scripts-only governance, planning DB, CI tooling, and developer
+workflow aliases can keep the workspace matrix empty, while
+`changed_file_validation_relevant` still keeps changed-file lint/format checks
+active.
+
 ## Shared CI Scope Logic
 
 The repository centralizes workflow scope detection in:

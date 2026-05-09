@@ -47,8 +47,8 @@ export function classifyPrepushTypecheck(changedFiles) {
     };
   }
 
-  const globalRelevantChange = relevantFiles.some((filePath) =>
-    matchesAnyPattern(filePath, CI_GLOBAL_PATTERNS)
+  const globalRelevantChange = relevantFiles.some(
+    (filePath) => filePath === 'package.json' || matchesAnyPattern(filePath, CI_GLOBAL_PATTERNS)
   );
 
   if (globalRelevantChange) {

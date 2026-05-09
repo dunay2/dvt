@@ -69,6 +69,7 @@ test('classifies governance script changes as docs-relevant but not code scope',
   );
   assert.equal(scope.docs_changed, true);
   assert.equal(scope.any_code, false);
+  assert.equal(scope.changed_file_validation_relevant, true);
 });
 
 test('classifies app/package structural changes as code and generated-status relevant', () => {
@@ -98,6 +99,29 @@ test('classifies turbo root-build surfaces for workflow scope and workspace matr
   const matrix = computeWorkspaceMatrix(['turbo.json']);
   assert.equal(matrix.anyChanged, true);
   assert.equal(matrix.include.length, WORKSPACE_ENTRIES.length);
+});
+
+test('planning db script path keeps workspace matrix empty while validation stays enabled', () => {
+  const matrix = computeWorkspaceMatrix(['scripts/planning-db-query.cjs']);
+  const scope = computeBooleanScope(['scripts/planning-db-query.cjs'], WORKFLOW_SCOPE_PATTERNS);
+
+  assert.equal(matrix.anyChanged, false);
+  assert.deepEqual(matrix.include, []);
+  assert.equal(scope.changed_file_validation_relevant, true);
+});
+
+test('docs and ci helper script paths keep workspace matrix empty while validation stays enabled', () => {
+  for (const file of [
+    'tools/docs/check-filenames.ts',
+    'tools/ci/emit-scope.mjs',
+    '.github/scripts/generate_pr_manifest.sh',
+  ]) {
+    assert.deepEqual(computeWorkspaceMatrix([file]).include, []);
+    assert.equal(
+      computeBooleanScope([file], WORKFLOW_SCOPE_PATTERNS).changed_file_validation_relevant,
+      true
+    );
+  }
 });
 
 test('workspace matrix covers every workspace with a build or typecheck script', () => {
