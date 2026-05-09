@@ -75,6 +75,7 @@ Evidence documents that justify or validate relevant changes.
 - [Ed 20260430 Ar D Continuation Safety](ed-20260430-ar-d-continuation-safety.md)
 - [Ed 20260430 Ar D2 Temporal Planref Capacity Sla](ed-20260430-ar-d2-temporal-planref-capacity-sla.md)
 - [Ed 20260509 Stored Plan Artifact Port Ownership](ed-20260509-stored-plan-artifact-port-ownership.md)
+- [Ed 20260509 Tenant Aware Outbox Sharding](ed-20260509-tenant-aware-outbox-sharding.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)
 - [ED-20260402 S05 envelope boundary hardening](ED-20260402-s05-envelope-boundary-hardening.md)
 - [ED-20260402 S08 contract-layer hardening](ED-20260402-s08-contract-layer-hardening.md)

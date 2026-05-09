@@ -1,8 +1,8 @@
 ---
 title: Post RC-G1-C Architecture Review
-status: Active
+status: Reference
 date: 2026-04-19
-last_reviewed: 2026-04-26
+last_reviewed: 2026-05-09
 reviewer: Principal / Staff Architect (AI-assisted)
 scope: post-merge review of RC-G1-C ownership migration and immediate architecture backlog
 review_type: architecture-and-governance
@@ -161,20 +161,28 @@ Status update 2026-04-26:
 - the `RC-G1-C` closeout now distinguishes the DTO-only root-barrel re-export
   from owner-local delivery contract ownership.
 
+Status update 2026-05-09:
+
+- `AR-B5` is now closed by the lineage worker runtime decomposition closeout.
+- This review no longer represents an open review queue. It remains a reference
+  intake for the still-open `AR-A7` delivery-runtime domain-rule and duplicate
+  in-memory outbox semantics follow-up.
+
 ## Routing Notes
 
-This review feeds the following backlog:
+This review fed the following backlog:
 
 1. `RC-G1-C-TRUTH-SYNC`
-   - reconcile the active closeout and status surfaces with the code that
-     actually shipped
+   - closed; reconciled the active closeout and status surfaces with the code
+     that actually shipped
 2. `AR-A7`
-   - continue the runtime-seam cleanup after the delivery-side split by routing
-     the remaining work into explicit shell and duplicate-semantics follow-up
+   - open; continue the runtime-seam cleanup after the delivery-side split by
+     routing the remaining work into explicit shell and duplicate-semantics
+     follow-up
 3. `AR-B5`
-   - decompose `LineageWorkerRuntime` until its orchestration shape is on par
-     with the delivery runtime without collapsing lineage ownership back into a
-     shared helper
+   - closed; decomposed `LineageWorkerRuntime` until its orchestration shape is
+     on par with the delivery runtime without collapsing lineage ownership back
+     into a shared helper
 
 ## Conclusion
 

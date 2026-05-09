@@ -15,8 +15,9 @@
  * Run with:
  *   DVT_PG_INTEGRATION=1 DVT_PG_URL=postgresql://dvt:dvt@localhost:5432/dvt pnpm test
  */
-import { createHash, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 
+import { resolveOutboxShardId } from '@dvt/delivery';
 import { Client } from 'pg';
 import { afterAll, describe, expect, test } from 'vitest';
 
@@ -556,11 +557,13 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
     withAdapter(
       async (adapter) => {
         const shardCount = 2;
-        const shard0RunId = findRunIdForShard(0, shardCount);
-        const shard1RunId = findRunIdForShard(1, shardCount);
+        const shard0TenantId = findTenantIdForShard(0, shardCount);
+        const shard1TenantId = findTenantIdForShard(1, shardCount);
+        const shard0RunId = 'run-owned-by-tenant-shard-0';
+        const shard1RunId = 'run-owned-by-tenant-shard-1';
 
-        await adapter.bootstrapRunTx(makeBootstrap(shard0RunId));
-        await adapter.bootstrapRunTx(makeBootstrap(shard1RunId));
+        await adapter.bootstrapRunTx(makeBootstrap(shard0RunId, shard0TenantId));
+        await adapter.bootstrapRunTx(makeBootstrap(shard1RunId, shard1TenantId));
 
         const shard0Pending = await adapter.listPendingForClaim(10, { shardIds: [0] });
         expect(shard0Pending).toHaveLength(1);
@@ -1203,17 +1206,15 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
     }));
 });
 
-function findRunIdForShard(targetShardId: number, shardCount: number): string {
+function findTenantIdForShard(targetShardId: number, shardCount: number): string {
   for (let index = 0; index < 256; index += 1) {
-    const candidate = `run-shard-${targetShardId}-${index}`;
-    if (resolveShardId(candidate, shardCount) === targetShardId) {
+    const candidate = `tenant-shard-${targetShardId}-${index}`;
+    if (
+      resolveOutboxShardId({ tenantId: candidate, runId: 'probe-run' }, shardCount) ===
+      targetShardId
+    ) {
       return candidate;
     }
   }
-  throw new Error(`Unable to find run id for shard ${targetShardId}`);
-}
-
-function resolveShardId(runId: string, shardCount: number): number {
-  const hash = createHash('md5').update(runId, 'utf8').digest('hex').slice(0, 16);
-  return Number(BigInt(`0x${hash}`) % BigInt(shardCount));
+  throw new Error(`Unable to find tenant id for shard ${targetShardId}`);
 }

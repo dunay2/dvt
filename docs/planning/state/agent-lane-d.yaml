@@ -472,7 +472,7 @@ tasks:
     last_verified: '2026-04-02'
   - task_id: AR-D7
     priority: P1
-    status: queued
+    status: done
     objective: >-
       implement tenant-aware outbox shard assignment so high-volume tenants cannot starve unrelated
       tenants through shared run_id hash distribution.
@@ -482,13 +482,21 @@ tasks:
       isolation, and operational docs define shard rebalance and migration rollout.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-d7-tenant-aware-outbox-sharding-plan-20260509.md
+      - docs/planning/closeouts/20260509-ar-d7-tenant-aware-outbox-sharding-closeout.md
+      - docs/evidence/ed-20260509-tenant-aware-outbox-sharding.md
+      - docs/risk-register/quality/R-20260509-TENANT-AWARE-OUTBOX-SHARDING.yaml
+      - docs/architecture/components/outbox-worker/tenant-aware-outbox-sharding-component.md
+      - docs/architecture/components/outbox-worker/tenant-aware-outbox-sharding-user-stories.md
     status_reason: >-
-      Principal deep review flagged shared shard assignment by run_id as a multi-tenant fairness
-      risk under sustained load.
-    last_verified: '2026-04-04'
+      Delivery now owns tenant-aware outbox shard assignment, in-memory stores and PostgreSQL
+      enqueue SQL apply the same tenant-affine policy for new rows, worker tests cover noisy-tenant
+      containment and tenant/run ordering isolation, and rollout risk is tracked explicitly as ARC-2
+      evidence.
+    last_verified: '2026-05-09'
   - task_id: AR-D8
     priority: P1
     status: queued
@@ -625,14 +633,14 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-05-06'
+  verified_on: '2026-05-09'
   total_tasks: 27
   total_effort_points: 143
-  completed_weighted_points: 58.54
-  lane_progress_pct: 41
+  completed_weighted_points: 63.54
+  lane_progress_pct: 44
   notes: >-
-    Weighted progress uses effort_points. The 2026-05-06 status reconciliation reclassified
-    dependency-cleared backlog items from blocked to queued and recomputed the summary from the
-    current task registry. `MW-D1` is closed with the compile-only route/use-case split,
-    catalog-first composition, and non-dbt acceptance vector; remaining Lane D near-term work is
-    workflow payload hardening, retention enforcement, and the open scale backlog.
+    Weighted progress uses effort_points. The 2026-05-09 AR-D7 closeout adds tenant-aware outbox
+    shard assignment with delivery, engine, adapter-postgres, and outbox-worker evidence. `MW-D1` is
+    closed with the compile-only route/use-case split, catalog-first composition, and non-dbt
+    acceptance vector; remaining Lane D near-term work is workflow payload hardening, retention
+    enforcement, and the open scale backlog.

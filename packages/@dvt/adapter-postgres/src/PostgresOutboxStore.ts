@@ -2,6 +2,10 @@
  * @file packages/@dvt/adapter-postgres/src/PostgresOutboxStore.ts
  *
  * PostgreSQL-backed outbox and dead-letter storage.
+ * Owned concern: persist, claim, retry, and replay tenant-scoped outbox records
+ * while applying the Delivery-owned tenant-affine shard assignment policy at
+ * enqueue time.
+ *
  * Implements the IOutboxStorage contract: claim, deliver, retry, dead-letter,
  * and replay operations for the DVT transactional outbox pattern.
  *
@@ -120,6 +124,7 @@ export class PostgresOutboxStore implements IOutboxStorage {
   ): Promise<void> {
     const createdAt = this.now();
     for (const event of events) {
+      this.assertShardAssignmentIdentity(event, runId);
       await client.query(
         `
           INSERT INTO ${quoteIdentifier(this.schema)}.outbox (
@@ -137,7 +142,7 @@ export class PostgresOutboxStore implements IOutboxStorage {
             $1,
             $2,
             $3,
-            ((mod((('x' || left(md5($3), 16))::bit(64)::bigint), $8::bigint) + $8::bigint) % $8::bigint)::int,
+            ((mod((('x' || left(md5(length($2::text)::text || ':' || $2::text), 16))::bit(64)::bigint), $8::bigint) + $8::bigint) % $8::bigint)::int,
             $4,
             $5::timestamptz,
             $6,
@@ -421,6 +426,15 @@ export class PostgresOutboxStore implements IOutboxStorage {
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
+
+  private assertShardAssignmentIdentity(event: EventEnvelope, runId: RunId): void {
+    if (typeof event.tenantId !== 'string' || event.tenantId.trim().length === 0) {
+      throw new Error('INVALID_OUTBOX_SHARD_ASSIGNMENT_TENANT');
+    }
+    if (typeof runId !== 'string' || runId.trim().length === 0) {
+      throw new Error('INVALID_OUTBOX_SHARD_ASSIGNMENT_RUN');
+    }
+  }
 
   private buildReplayDeadLettersParams(
     options: { limit?: number; tenantId: string; runId?: string; ids?: string[] },

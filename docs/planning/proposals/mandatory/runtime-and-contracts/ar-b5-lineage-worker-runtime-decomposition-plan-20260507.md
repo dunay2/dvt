@@ -68,6 +68,7 @@ governingSources:
   - docs/planning/reviews/architecture-and-governance/20260419-post-rc-g1-c-architecture-review.md
 allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/runtime-and-contracts/ar-b5-lineage-worker-runtime-decomposition-plan-20260507.md
+  - docs/planning/reviews/architecture-and-governance/20260419-post-rc-g1-c-architecture-review.md
   - docs/planning/closeouts/20260507-ar-b5-lineage-worker-runtime-decomposition-closeout.md
   - docs/planning/state/agent-lane-b.yaml
   - docs/planning/state/agent-lane-b.md

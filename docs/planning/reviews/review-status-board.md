@@ -2,7 +2,7 @@
 title: Review Status Board
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-05-05
+last_reviewed: 2026-05-09
 planning_type: review
 ---
 
@@ -54,7 +54,7 @@ Sprint execution board:
 | [20260401 Lane C RC-C2 efficiency institutionalization review](./ci-and-delivery/20260401-lane-c-rc-c2-efficiency-institutionalization-review.md) | `ci-and-delivery`                 | RC-C2 phase-2 institutionalization review               | `RC-C2`                                    | `review`         | `67%`              |
 | [20260402 RC-C2 operational friction intake review](./ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md)                       | `ci-and-delivery`                 | current RC-C2 intake review                             | `RC-C2`                                    | `review`         | `67%`              |
 | [20260422 Environment configuration audit](./ci-and-delivery/20260422-environment-configuration-audit-review.md)                                  | `ci-and-delivery`                 | current monorepo environment and tooling audit baseline | `none`                                     | reference        | `n/a`              |
-| [20260506 CI build config audit](./ci-and-delivery/20260506-ci-build-audit-review.md)                                                             | `ci-and-delivery`                 | current CI/build/config audit intake                    | `none`                                     | `review`         | `0%`               |
+| [20260506 CI build config audit](./ci-and-delivery/20260506-ci-build-audit-review.md)                                                             | `ci-and-delivery`                 | CI/build/config audit intake routed to Lane C tasks     | `CI-AUDIT-*`                               | reference        | `n/a`              |
 
 Additional active rationale:
 
@@ -193,10 +193,10 @@ Additional active rationale:
 
 - [20260419 Post RC-G1-C architecture review](./architecture-and-governance/20260419-post-rc-g1-c-architecture-review.md)
   - domain: `architecture-and-governance`
-  - role: post-merge architecture intake for RC-G1-C follow-up backlog and truth-sync routing
-  - linkage: `RC-G1-C-TRUTH-SYNC`, `AR-A7`, `AR-B5`
-  - status: `review`
-  - progress: `33%`
+  - role: reference intake for the remaining delivery-runtime decomposition follow-up
+  - linkage: `AR-A7`
+  - status: `reference`
+  - progress: `n/a`
 
 - [20260411 Project architecture strengths, weaknesses, and priority review](./architecture-and-governance/20260411-project-architecture-strengths-weaknesses-fowler-review.md)
   - domain: `architecture-and-governance`
@@ -294,32 +294,32 @@ Additional active QA:
   - domain: `architecture-and-governance`
   - role: hard QA intake and closure record for backend-owned `planRef` handoff
   - linkage: `F-04-RISK-A`, `F-04-RISK-A-QA-03`
-  - status: `review`
+  - status: `done`
   - progress: `100%`
 - [20260407 F-04-F capabilities-port hard QA review](./20260407-f04-f-capabilities-port-hard-qa-review.md)
   - domain: `frontend-and-ui`
   - role: documentary hard QA gate for the governed capabilities-boundary slice
   - linkage: `F-04-F`
-  - status: `review`
+  - status: `done`
   - progress: `100%`
 - [20260407 F-04-RISK-B mock workspace isolation hard QA review](./20260407-f04-risk-b-mock-workspace-isolation-hard-qa-review.md)
   - domain: `frontend-and-ui`
   - role: documentary hard QA gate for the mock workspace determinism hardening slice
   - linkage: `F-04-RISK-B`
-  - status: `review`
+  - status: `done`
   - progress: `100%`
 - [20260408 F-04-RESIDUAL-A Root provider guard hard QA review](./20260408-f04-residual-a-root-provider-guard-hard-qa-review.md)
   - domain: `frontend-and-ui`
   - role: documentary hard QA gate for the Root-level provider ownership guard
   - linkage: `F-04-RESIDUAL-A`
-  - status: `review`
+  - status: `done`
   - progress: `100%`
 - [20260409 TF-C2-B runtime read-surface hard QA review](execution-runtime/20260409-tf-c2-b-read-surface-hard-qa-review.md)
   - domain: `execution-runtime`
   - role: documentary hard QA gate for TF-C2-B execution evidence projection and contract closure
   - linkage: `TF-C2-B`, `TF-C2-B-QA-01..05`
-  - status: `review`
-  - progress: `80%`
+  - status: `done`
+  - progress: `100%`
 
 - [20260407 Retry-step boundary hard QA review](./architecture-and-governance/20260407-retry-step-boundary-hard-qa-review.md)
   - domain: `architecture-and-governance`
