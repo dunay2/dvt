@@ -2,24 +2,17 @@
  * Owned concern: assemble the protected start-run runtime subcomponent for
  * `apps/api` from already-bound abstract dependencies.
  */
-import type {
-  IPlanner,
-  IStepTypeRegistry,
-} from '@dvt/contracts';
+import type { IStoredPlanArtifactStore } from '@dvt/artifacts';
+import type { IPlanner, IStepTypeRegistry } from '@dvt/contracts';
 import type { EngineRunRef, IProviderAdapter, IWorkflowEngine } from '@dvt/engine';
 import type { IObservability } from '@dvt/observability';
-import {
-  PlannerFacade,
-  type IPlanExecutabilityValidator,
-  type IPlanValidationLifecycleStore,
-} from '@dvt/planner';
+import { PlannerFacade, type IPlanExecutabilityValidator } from '@dvt/planner';
 
 import type { IAuthenticator } from '../../application/ports/auth.js';
 import type { DuplicateRunProbe } from '../../application/ports/DuplicateRunProbe.js';
 import type { IAdmissionGuard } from '../../application/ports/IAdmissionGuard.js';
 import type { AdmissionMode } from '../../application/ports/IAdmissionMode.js';
 import type { IStartRunExecutionCapacityPort } from '../../application/ports/IStartRunExecutionCapacityPort.js';
-import type { IStoredPlanValidationReader } from '../../application/ports/storedPlan.js';
 import type { IWorkspaceGraphDraftStore } from '../../application/ports/workspaceGraphDraft.js';
 import type { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import { BackpressureAwareStartRunUseCase } from '../../application/services/BackpressureAwareStartRunUseCase.js';
@@ -44,7 +37,7 @@ export type BuildProtectedStartRunRuntimeDeps = {
   readonly retryAfterSeconds: number;
   readonly engine: IWorkflowEngine;
   readonly adapters: ReadonlyMap<EngineRunRef['provider'], IProviderAdapter>;
-  readonly planStore: IPlanValidationLifecycleStore & IStoredPlanValidationReader;
+  readonly planStore: IStoredPlanArtifactStore;
   readonly stepTypeRegistry: IStepTypeRegistry;
   readonly workspaceGraphDraftStore: IWorkspaceGraphDraftStore;
 };
@@ -59,8 +52,7 @@ export type ProtectedStartRunRuntime = {
 export function buildProtectedStartRunRuntime(
   deps: BuildProtectedStartRunRuntimeDeps
 ): ProtectedStartRunRuntime {
-  const executionCapacity =
-    deps.executionCapacity ?? DEFAULT_START_RUN_EXECUTION_CAPACITY_PORT;
+  const executionCapacity = deps.executionCapacity ?? DEFAULT_START_RUN_EXECUTION_CAPACITY_PORT;
   const startRunSlaTelemetry = new ObservabilityStartRunSlaTelemetry({
     observability: deps.observability,
   });

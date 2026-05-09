@@ -1,8 +1,5 @@
-import type {
-  ExecutionPlan,
-  IPlanner,
-  PlanRef,
-} from '@dvt/contracts';
+import type { IStoredPlanArtifactStore } from '@dvt/artifacts';
+import type { ExecutionPlan, IPlanner, PlanRef } from '@dvt/contracts';
 import type {
   EngineRunRef,
   IProviderAdapter,
@@ -10,10 +7,7 @@ import type {
   IRunHealthService,
   IWorkflowEngine,
 } from '@dvt/engine';
-import type {
-  IPlanExecutabilityValidator,
-  IPlanValidationLifecycleStore,
-} from '@dvt/planner';
+import type { IPlanExecutabilityValidator } from '@dvt/planner';
 
 import type { IAuthenticator } from '../application/ports/auth.js';
 import type { IStartRunTargetAdapterRegistry } from '../application/ports/IStartRunTargetAdapterRegistry.js';
@@ -38,9 +32,16 @@ export interface ProtectedRuntimeModule {
   stateStore: StateStoreRoleBindings;
   planner: IPlanner;
   planCompilePlanner: IPlanner;
-  planStore: IPlanValidationLifecycleStore;
+  planStore: IStoredPlanArtifactStore;
   planValidator: IPlanExecutabilityValidator;
-  executablePlanResolver: { fetch(planRef: PlanRef): Promise<ExecutionPlan> };
+  executablePlanResolver: {
+    fetch(input: {
+      tenantId: string;
+      projectId: string;
+      environmentId: string;
+      planRef: PlanRef;
+    }): Promise<ExecutionPlan>;
+  };
   workspaceGraphDraftStore: IWorkspaceGraphDraftStore;
   workspaceGraphDraftCapabilityService: AuthorizeWorkspaceGraphDraftCapabilityService;
   getWorkspaceGraphDraftUseCase: GetWorkspaceGraphDraftUseCase;

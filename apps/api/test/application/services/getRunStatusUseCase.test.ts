@@ -453,7 +453,10 @@ describe('GetRunStatusUseCase', () => {
       } as never
     );
 
-    const result = await useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never);
+    const result = await useCase.execute(
+      { runId: 'run-1', enriched: false },
+      queryContext as never
+    );
 
     expect(result).toMatchObject({
       runId: 'provider-run-1',
@@ -659,8 +662,17 @@ describe('GetRunStatusUseCase', () => {
       } as never,
       undefined,
       {
-        async getPlanRecord() {
+        async getPlanRecord(input: unknown) {
+          expect(input).toEqual({
+            tenantId: 'tenant-a',
+            projectId: 'proj-1',
+            environmentId: 'env-1',
+            planId: 'plan-1',
+          });
           return {
+            tenantId: 'tenant-a',
+            projectId: 'proj-1',
+            environmentId: 'env-1',
             planId: '9'.repeat(64),
             planVersion: '1.0',
             schemaVersion: 'v1.2',
@@ -674,6 +686,11 @@ describe('GetRunStatusUseCase', () => {
                 contractVersion: '1.0.0',
                 inputHashSha256: 'b'.repeat(64),
                 createdAtIso: '2026-04-08T10:00:00.000Z',
+                ownership: {
+                  tenantId: 'tenant-a',
+                  projectId: 'proj-1',
+                  environmentId: 'env-1',
+                },
               },
               steps: [],
               observability: {
@@ -1297,5 +1314,3 @@ describe('GetRunStatusUseCase', () => {
     });
   });
 });
-
-

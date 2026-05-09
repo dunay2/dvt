@@ -150,7 +150,12 @@ function createStack(
     ['temporal', inMemoryAdapter],
   ]);
   const planFetcher = {
-    fetch: async () => ({
+    getStoredPlanValidationRecord: async () => undefined,
+    fetchStoredPlanArtifact: async () => ({
+      bytes: Buffer.from(JSON.stringify(enginePlan), 'utf8'),
+      executionPolicy: {},
+    }),
+    fetchStoredPlanArtifactForValidation: async () => ({
       bytes: Buffer.from(JSON.stringify(enginePlan), 'utf8'),
       executionPolicy: {},
     }),

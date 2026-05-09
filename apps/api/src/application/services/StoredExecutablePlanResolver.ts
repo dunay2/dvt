@@ -5,28 +5,31 @@
  */
 import { createHash } from 'node:crypto';
 
+import type { IStoredPlanArtifactReader } from '@dvt/artifacts';
 import {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   CURRENT_EXECUTION_PLAN_VERSION,
   type PlanRef,
   type IStepTypeRegistry,
+  type ScopedPlanRef,
 } from '@dvt/contracts';
-import type { ExecutionPlan, IPlanFetcher as IStoredPlanFetcher } from '@dvt/engine';
+import type { ExecutionPlan } from '@dvt/engine';
 
 import { parseStoredExecutablePlan } from './storedExecutablePlan.js';
 
 export class StoredExecutablePlanResolver {
   public constructor(
     private readonly deps: {
-      readonly fetcher: IStoredPlanFetcher;
+      readonly fetcher: IStoredPlanArtifactReader;
       readonly stepTypeRegistry?: IStepTypeRegistry;
     }
   ) {}
 
-  public async fetch(planRef: PlanRef): Promise<ExecutionPlan> {
+  public async fetch(input: ScopedPlanRef): Promise<ExecutionPlan> {
+    const { planRef } = input;
     if (planRef.uri.startsWith('dvt-plan://')) {
-      const bytes = await this.deps.fetcher.fetch(planRef);
+      const bytes = await this.deps.fetcher.fetchStoredPlanArtifact(input);
       validateStoredPlanIntegrity(bytes.bytes, planRef);
       const plan = parseStoredExecutablePlan(bytes.bytes, {
         ...(this.deps.stepTypeRegistry === undefined

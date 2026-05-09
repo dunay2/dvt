@@ -3,20 +3,20 @@
  * through planner-owned selected-closure resolution without widening to the
  * whole protected draft.
  */
+import type { IStoredPlanArtifactWriter } from '@dvt/artifacts';
 import type {
   ExecutionPlan,
   ExecutionSelection,
   GenericGraphSourceV1,
   IPlanner,
   PlanRef,
+  PlannerBuildResultV1,
   PlannerPolicyClassSet,
   PlannerSelection,
+  ScopedPlanRef,
   StartRunPlannerEnvironmentInput,
 } from '@dvt/contracts';
-import type {
-  IPlanExecutabilityValidator,
-  IPlanValidationLifecycleStore,
-} from '@dvt/planner';
+import type { IPlanExecutabilityValidator } from '@dvt/planner';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 
@@ -67,7 +67,7 @@ export class PreviewPlanUseCase {
   public constructor(
     private readonly deps: {
       readonly planner: IPlanner;
-      readonly planStore: IPlanValidationLifecycleStore;
+      readonly planStore: IStoredPlanArtifactWriter;
       readonly planValidator: IPlanExecutabilityValidator;
       readonly executableSubgraphResolver: ResolveAuthorizedExecutableSubgraphService;
     }
@@ -104,9 +104,7 @@ export class PreviewPlanUseCase {
       } satisfies PlannerSelection,
       ...(command.policies === undefined ? {} : { policies: command.policies }),
       ...(command.environment === undefined ? {} : { environment: command.environment }),
-      ...(command.observability === undefined
-        ? {}
-        : { observability: command.observability }),
+      ...(command.observability === undefined ? {} : { observability: command.observability }),
     };
 
     const plannerInput = resolveAuthorizedPlannerInputEnvelope(
@@ -116,11 +114,18 @@ export class PreviewPlanUseCase {
     );
 
     const buildResult = await this.deps.planner.buildPlan(plannerInput);
-    const planRef = await this.deps.planStore.storePlan(buildResult);
-    const validation = await this.deps.planValidator.validatePlan(planRef, command.targetAdapter);
+    const planRef = await this.deps.planStore.storePlanArtifact({ buildResult });
+    const scopedPlanRef = toScopedPlanRef(buildResult, planRef);
+    const validation = await this.deps.planValidator.validatePlan({
+      ...scopedPlanRef,
+      adapterId: command.targetAdapter,
+    });
 
     if (validation.status === 'ERROR') {
-      await this.deps.planStore.markInvalid(planRef, validation);
+      await this.deps.planStore.markStoredPlanArtifactInvalid({
+        ...scopedPlanRef,
+        report: validation,
+      });
       return {
         kind: PREVIEW_PLAN_RESULT_KIND.rejected,
         planRef,
@@ -128,11 +133,24 @@ export class PreviewPlanUseCase {
       };
     }
 
-    await this.deps.planStore.markValid(planRef);
+    await this.deps.planStore.markStoredPlanArtifactValid(scopedPlanRef);
     return {
       kind: PREVIEW_PLAN_RESULT_KIND.accepted,
       plan: buildResult.plan,
       planRef,
     };
   }
+}
+
+function toScopedPlanRef(buildResult: PlannerBuildResultV1, planRef: PlanRef): ScopedPlanRef {
+  const ownership = buildResult.plan.metadata.ownership;
+  if (ownership === undefined) {
+    throw new Error('PLAN_STORE_SCOPE_MISSING');
+  }
+  return {
+    tenantId: ownership.tenantId,
+    projectId: ownership.projectId,
+    environmentId: ownership.environmentId,
+    planRef,
+  };
 }

@@ -2,18 +2,18 @@
  * Owned concern: compile planner-backed selected-closure start-run inputs into
  * stored plans and hand validated plan refs to the execution delegate.
  */
+import type { IStoredPlanArtifactWriter } from '@dvt/artifacts';
 import {
   START_RUN_RESULT_KIND,
   type IPlanner,
   type PlannerInputEnvelopeV1,
+  type PlannerBuildResultV1,
   type PlanRef,
+  type ScopedPlanRef,
   type StartRunCommand,
   type StartRunPlanRef,
 } from '@dvt/contracts';
-import type {
-  IPlanExecutabilityValidator,
-  IPlanValidationLifecycleStore,
-} from '@dvt/planner';
+import type { IPlanExecutabilityValidator } from '@dvt/planner';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 import type {
@@ -34,7 +34,7 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
   public constructor(
     private readonly deps: {
       readonly planner: IPlanner;
-      readonly planStore: IPlanValidationLifecycleStore;
+      readonly planStore: IStoredPlanArtifactWriter;
       readonly validator: IPlanExecutabilityValidator;
       readonly delegate: IStartRunUseCase;
       readonly compileTelemetry?: IPlanCompileLatencyTelemetry;
@@ -84,11 +84,18 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
         this.deps.compileTelemetry ?? PlannerBackedStartRunUseCase.NOOP_TELEMETRY
       ).recordPlanCompileLatency(Date.now() - compileStartMs, compileOutcome);
     }
-    const planRef = await this.deps.planStore.storePlan(buildResult);
-    const validation = await this.deps.validator.validatePlan(planRef, command.targetAdapter);
+    const planRef = await this.deps.planStore.storePlanArtifact({ buildResult });
+    const scopedPlanRef = toScopedPlanRef(buildResult, planRef);
+    const validation = await this.deps.validator.validatePlan({
+      ...scopedPlanRef,
+      adapterId: command.targetAdapter,
+    });
 
     if (isValidationError(validation)) {
-      await this.deps.planStore.markInvalid(planRef, validation);
+      await this.deps.planStore.markStoredPlanArtifactInvalid({
+        ...scopedPlanRef,
+        report: validation,
+      });
       return {
         ok: true,
         value: {
@@ -101,7 +108,7 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
       };
     }
 
-    await this.deps.planStore.markValid(planRef);
+    await this.deps.planStore.markStoredPlanArtifactValid(scopedPlanRef);
     return this.deps.delegate.execute(
       {
         runId: command.runId,
@@ -115,6 +122,19 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
       context
     );
   }
+}
+
+function toScopedPlanRef(buildResult: PlannerBuildResultV1, planRef: PlanRef): ScopedPlanRef {
+  const ownership = buildResult.plan.metadata.ownership;
+  if (ownership === undefined) {
+    throw new Error('PLAN_STORE_SCOPE_MISSING');
+  }
+  return {
+    tenantId: ownership.tenantId,
+    projectId: ownership.projectId,
+    environmentId: ownership.environmentId,
+    planRef,
+  };
 }
 
 function toRoutePlanRef(planRef: PlanRef): StartRunPlanRef {
@@ -139,19 +159,17 @@ function toPlannerInput(
   }
 
   const ownership = resolvePlanOwnership(context);
-  return resolveCanonicalPlannerInputEnvelope(
-    {
-      graphSource: toPlannerGraphSource(command.graphSource),
-      ...(command.policies === undefined ? {} : { policies: command.policies }),
-      ...(command.environment === undefined ? {} : { environment: command.environment }),
-      ...(ownership === undefined ? {} : { ownership }),
-      ...(command.observability === undefined ? {} : { observability: command.observability }),
-      selection: { selectedNodeIds: [...selectedNodeIds] },
-      requestedBy: context.principal.principalId,
-      requestId: context.requestId,
-      requestedAtIso: context.authorizedAt.toISOString(),
-    }
-  );
+  return resolveCanonicalPlannerInputEnvelope({
+    graphSource: toPlannerGraphSource(command.graphSource),
+    ...(command.policies === undefined ? {} : { policies: command.policies }),
+    ...(command.environment === undefined ? {} : { environment: command.environment }),
+    ...(ownership === undefined ? {} : { ownership }),
+    ...(command.observability === undefined ? {} : { observability: command.observability }),
+    selection: { selectedNodeIds: [...selectedNodeIds] },
+    requestedBy: context.principal.principalId,
+    requestId: context.requestId,
+    requestedAtIso: context.authorizedAt.toISOString(),
+  });
 }
 
 function resolvePlanOwnership(

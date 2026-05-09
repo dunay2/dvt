@@ -3,11 +3,13 @@
  * This service checks adapter presence, stored-plan integrity, step-kind
  * support, and capability requirements before planner-backed runtime dispatch.
  */
+import type { IStoredPlanArtifactReader } from '@dvt/artifacts';
 import type {
   ExecutabilityValidationResult,
   IStepTypeRegistry,
   PlanRefSchemaT,
   RunExecutionPolicy,
+  ScopedPlanRef,
 } from '@dvt/contracts';
 import {
   collectRequiredCapabilitiesForSteps,
@@ -16,16 +18,11 @@ import {
   parsePlanRef,
 } from '@dvt/contracts';
 import type { EngineRunRef, ExecutionPlan, IProviderAdapter } from '@dvt/engine';
-import type { IPlanExecutabilityValidator } from '@dvt/planner';
-
-import type { IStoredPlanValidationReader } from '../ports/storedPlan.js';
+import type { IPlanExecutabilityValidator, PlanExecutabilityValidationInput } from '@dvt/planner';
 
 import { parseStoredExecutablePlan } from './storedExecutablePlan.js';
 
-type ExecutabilityValidationError = Extract<
-  ExecutabilityValidationResult,
-  { status: 'ERROR' }
->;
+type ExecutabilityValidationError = Extract<ExecutabilityValidationResult, { status: 'ERROR' }>;
 
 type LoadedPlanForValidation = {
   readonly artifactExecutionPolicy: RunExecutionPolicy | undefined;
@@ -34,25 +31,26 @@ type LoadedPlanForValidation = {
 
 type ExecutabilityValidationContext = {
   readonly adapterId: string;
+  readonly scopedPlanRef: ScopedPlanRef;
   readonly validatedRef: PlanRefSchemaT;
 };
 
 export class StoredPlanExecutabilityValidator implements IPlanExecutabilityValidator {
   public constructor(
     private readonly deps: {
-      readonly fetcher: IStoredPlanValidationReader;
+      readonly fetcher: IStoredPlanArtifactReader;
       readonly adapters: ReadonlyMap<EngineRunRef['provider'], IProviderAdapter>;
       readonly stepTypeRegistry?: IStepTypeRegistry;
     }
   ) {}
 
   public async validatePlan(
-    planRef: PlanRefSchemaT,
-    adapterId: string
+    input: PlanExecutabilityValidationInput
   ): Promise<ExecutabilityValidationResult> {
     const validationContext: ExecutabilityValidationContext = {
-      adapterId,
-      validatedRef: parsePlanRef(planRef),
+      adapterId: input.adapterId,
+      scopedPlanRef: input,
+      validatedRef: parsePlanRef(input.planRef),
     };
     const adapter = resolveAdapter(this.deps.adapters, validationContext);
     if ('status' in adapter) {
@@ -111,12 +109,14 @@ function resolveAdapter(
 }
 
 async function loadPlanForValidation(
-  fetcher: IStoredPlanValidationReader,
+  fetcher: IStoredPlanArtifactReader,
   validationContext: ExecutabilityValidationContext,
   stepTypeRegistry: IStepTypeRegistry
 ): Promise<LoadedPlanForValidation | ExecutabilityValidationError> {
   try {
-    const artifact = await fetcher.fetchForValidation(validationContext.validatedRef);
+    const artifact = await fetcher.fetchStoredPlanArtifactForValidation(
+      validationContext.scopedPlanRef
+    );
     return {
       artifactExecutionPolicy: artifact.executionPolicy,
       plan: parseStoredExecutablePlan(artifact.bytes, {
@@ -124,12 +124,7 @@ async function loadPlanForValidation(
       }),
     };
   } catch (error) {
-    return buildValidationError(
-      validationContext,
-      'REJECTED',
-      toErrorMessage(error),
-      'plan_fetch'
-    );
+    return buildValidationError(validationContext, 'REJECTED', toErrorMessage(error), 'plan_fetch');
   }
 }
 
@@ -152,11 +147,8 @@ function findUnsupportedStepError(
 ): ExecutabilityValidationError | undefined {
   const unsupportedStep = plan.steps.find(
     (step) =>
-      isStepKindSupportedByAdapter(
-        stepTypeRegistry,
-        step.kind,
-        validationContext.adapterId
-      ) === false
+      isStepKindSupportedByAdapter(stepTypeRegistry, step.kind, validationContext.adapterId) ===
+      false
   );
   if (unsupportedStep === undefined) {
     return undefined;

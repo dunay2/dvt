@@ -7,6 +7,7 @@
  *   - createWorkflowEngine: test-seam path - accepts a flat WorkflowEngineDeps
  *     and an optional builder override, allowing unit tests to inject fakes.
  */
+import type { IStoredPlanArtifactReader } from '@dvt/artifacts';
 import {
   buildRunControlService,
   buildWorkflowEngineUseCases,
@@ -25,7 +26,6 @@ import {
   type IAuthorizer,
   type IClock,
   type IOutboxRateLimiter,
-  type IPlanFetcher,
   type IProviderAdapter,
   type IRunAccessPolicy,
   type IRunEnrichmentService,
@@ -58,7 +58,7 @@ export interface EnginePersistenceConfig {
   stateStoreRead: IRunStateStoreRead;
   stateStoreWrite: IRunStateStoreWrite;
   intentStore: IStartRunIntentStore;
-  planFetcher: IPlanFetcher;
+  planFetcher: IStoredPlanArtifactReader;
   runExecutionContextResolver?: IRunExecutionContextResolver;
   runExecutionContextBindingPolicy?: IRunExecutionContextBindingPolicy;
 }
