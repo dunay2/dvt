@@ -68,6 +68,8 @@ Shard ownership rule:
 
 - `DVT_OUTBOX_SHARD_COUNT` must stay aligned with the write-side adapter that enqueues outbox rows
 - multi-shard ownership requires explicit `DVT_OUTBOX_OWNED_SHARD_IDS`
+- new outbox rows use tenant-aware shard assignment, so one tenant is bounded to
+  one persisted shard for the configured shard count
 - shard filtering is enforced in SQL before claim selection; it is not an in-memory discard step
 - active startup holds one dedicated PostgreSQL session for the configured shard locks and destroys that session on shutdown
 - retry-backlog readiness is scoped to the same owned shard set used for claim selection

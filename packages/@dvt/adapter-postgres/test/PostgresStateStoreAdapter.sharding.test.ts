@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { normalizeOutboxClaimTimeoutMs } from '../src/PostgresOutboxStore.js';
+import { PostgresOutboxStore, normalizeOutboxClaimTimeoutMs } from '../src/PostgresOutboxStore.js';
 import { IS_SNAPSHOT_STALE_ALIAS } from '../src/PostgresSnapshotStalenessQuerySql.js';
 import { PostgresStateStoreAdapter } from '../src/PostgresStateStoreAdapter.js';
 
@@ -96,6 +96,54 @@ class RecordingPoolClient {
 }
 
 describe('PostgresStateStoreAdapter shard-aware claiming', () => {
+  it('computes persisted outbox shard ids from tenant identity during enqueue', async () => {
+    const client = new RecordingPoolClient();
+    const store = new PostgresOutboxStore(
+      'dvt',
+      () => '2026-03-12T00:00:00.000Z',
+      8,
+      300_000,
+      async (fn) => fn(client as never),
+      async (fn) => fn(client as never)
+    );
+
+    await store.enqueueTx('run-tenant-a', [
+      {
+        eventId: 'evt-tenant-a-1',
+        eventType: 'RunQueued',
+        runId: 'run-tenant-a',
+        tenantId: 'tenant-a',
+        projectId: 'project-1',
+        environmentId: 'dev',
+        planId: 'plan-1',
+        planVersion: '1.0.0',
+        logicalAttemptId: 1,
+        engineAttemptId: 1,
+        emittedAt: '2026-03-12T00:00:00.000Z',
+        idempotencyKey: 'key-tenant-a-1',
+        runSeq: 1,
+        persistedAt: '2026-03-12T00:00:00.000Z',
+      },
+    ]);
+
+    const insertQuery = client.queries.find(
+      (entry) => entry.sql.includes('INSERT INTO') && entry.sql.includes('.outbox')
+    );
+    expect(insertQuery).toBeDefined();
+    expect(insertQuery?.sql).toContain('length($2::text)');
+    expect(insertQuery?.sql).not.toContain('left(md5($3), 16)');
+    expect(insertQuery?.params).toEqual([
+      'run-tenant-a:1',
+      'tenant-a',
+      'run-tenant-a',
+      1,
+      '2026-03-12T00:00:00.000Z',
+      'key-tenant-a-1',
+      expect.any(String),
+      8,
+    ]);
+  });
+
   it('pushes owned shard ids into the pending-claim SQL filter', async () => {
     const client = new RecordingPoolClient();
     const adapter = new PostgresStateStoreAdapter({

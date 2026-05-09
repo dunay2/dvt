@@ -1,3 +1,9 @@
+/**
+ * Owned concern: in-memory delivery outbox storage.
+ *
+ * Mirrors the production delivery shard and tenant/run ordering semantics for
+ * tests and local runtimes without owning the shard policy itself.
+ */
 import { type DeadLetterRecord, type EventEnvelope, type OutboxRecord } from '@dvt/contracts';
 
 import {
@@ -5,8 +11,7 @@ import {
   type IOutboxStorage,
   type OutboxClaimSelection,
 } from '../contracts.js';
-
-import { resolveOutboxShardId } from './outboxSharding.js';
+import { buildOutboxStreamOrderingKey, resolveOutboxShardId } from '../outboxShardAssignment.js';
 
 type ReplayDeadLetterOptions = Parameters<IOutboxStorage['replayDeadLetters']>[0];
 
@@ -41,34 +46,34 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
     return epochMsToIsoUtc(this.nowMs() + delayMs);
   }
 
-  private buildHeadRunSeqByRunId(blockedRunIds: ReadonlySet<string>): Map<string, number> {
-    const headRunSeqByRunId = new Map<string, number>();
+  private buildHeadRunSeqByStreamKey(blockedStreamKeys: ReadonlySet<string>): Map<string, number> {
+    const headRunSeqByStreamKey = new Map<string, number>();
 
     for (const record of this.pending) {
-      const runId = record.payload.runId;
-      if (blockedRunIds.has(runId)) {
+      const streamKey = buildOutboxStreamOrderingKey(record.payload);
+      if (blockedStreamKeys.has(streamKey)) {
         continue;
       }
-      const currentHeadRunSeq = headRunSeqByRunId.get(runId);
+      const currentHeadRunSeq = headRunSeqByStreamKey.get(streamKey);
       if (currentHeadRunSeq === undefined || record.payload.runSeq < currentHeadRunSeq) {
-        headRunSeqByRunId.set(runId, record.payload.runSeq);
+        headRunSeqByStreamKey.set(streamKey, record.payload.runSeq);
       }
     }
 
-    return headRunSeqByRunId;
+    return headRunSeqByStreamKey;
   }
 
   private isPendingRecordEligible(
     record: PersistedOutboxRecord,
-    blockedRunIds: ReadonlySet<string>,
-    headRunSeqByRunId: ReadonlyMap<string, number>,
+    blockedStreamKeys: ReadonlySet<string>,
+    headRunSeqByStreamKey: ReadonlyMap<string, number>,
     nowMs: number
   ): boolean {
-    const runId = record.payload.runId;
-    if (blockedRunIds.has(runId)) {
+    const streamKey = buildOutboxStreamOrderingKey(record.payload);
+    if (blockedStreamKeys.has(streamKey)) {
       return false;
     }
-    if (headRunSeqByRunId.get(runId) !== record.payload.runSeq) {
+    if (headRunSeqByStreamKey.get(streamKey) !== record.payload.runSeq) {
       return false;
     }
     if (!record.nextAttemptAt) {
@@ -149,7 +154,10 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
         idempotencyKey: event.idempotencyKey,
         payload: event,
         attempts: 0,
-        shardId: resolveOutboxShardId(event.runId, this.shardCount),
+        shardId: resolveOutboxShardId(
+          { tenantId: event.tenantId, runId: event.runId },
+          this.shardCount
+        ),
       });
     }
   }
@@ -174,12 +182,14 @@ export class InMemoryOutboxStorage implements IOutboxStorage {
     }
 
     const nowMs = this.nowMs();
-    const blockedRunIds = new Set(this.deadLetters.map((record) => record.runId));
-    const headRunSeqByRunId = this.buildHeadRunSeqByRunId(blockedRunIds);
+    const blockedStreamKeys = new Set(
+      this.deadLetters.map((record) => buildOutboxStreamOrderingKey(record.payload))
+    );
+    const headRunSeqByStreamKey = this.buildHeadRunSeqByStreamKey(blockedStreamKeys);
     const eligible = this.pending.filter(
       (record) =>
         (ownedShardIds?.has(record.shardId) ?? true) &&
-        this.isPendingRecordEligible(record, blockedRunIds, headRunSeqByRunId, nowMs)
+        this.isPendingRecordEligible(record, blockedStreamKeys, headRunSeqByStreamKey, nowMs)
     );
 
     eligible.sort(InMemoryOutboxStorage.compareEligibleRecords);
