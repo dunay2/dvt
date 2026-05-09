@@ -16,7 +16,7 @@ export { PlannerError, PlannerErrorCode } from './domain/errors.js';
 export type { ICustomPolicyNamespaceRegistry } from './contracts/CustomPolicyNamespaceRegistry.js';
 export type { IExecutionBindingVerifier } from './contracts/ExecutionBindingVerification.js';
 export type { IPlanExecutabilityValidator } from './contracts/PlanExecutabilityValidation.js';
-export type { IPlanValidationLifecycleStore } from './contracts/PlanValidationLifecycle.js';
+export type { PlanExecutabilityValidationInput } from './contracts/PlanExecutabilityValidation.js';
 
 // ── Transitional contract re-exports ─────────────────────────────────────────
 //

@@ -41,7 +41,6 @@ last_reviewed: 2026-04-07
 - `packages/@dvt/contracts/src/contracts/planner/PlannerInputEnvelopeV1.schema.json`
 - `packages/@dvt/planner/src/contracts/PlanExecutabilityValidation.ts`
 - `packages/@dvt/planner/src/contracts/ExecutionBindingVerification.ts`
-- `packages/@dvt/planner/src/contracts/PlanValidationLifecycle.ts`
 - `packages/@dvt/planner/src/contracts/CustomPolicyNamespaceRegistry.ts`
 
 ## Canonical references

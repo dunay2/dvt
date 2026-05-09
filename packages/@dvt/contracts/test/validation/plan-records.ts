@@ -8,17 +8,21 @@ import {
   parsePlanExecutabilityRecord,
   parsePlanRecord,
 } from '../../src/validation.js';
-import { VALID_EXECUTION_PLAN_V2_FIXTURE } from '../fixtures/planner-contract.fixtures.js';
+import { VALID_EXECUTION_PLAN_V1_FIXTURE } from '../fixtures/planner-contract.fixtures.js';
 
-const validCanonicalPlanJson = jcsCanonicalize(VALID_EXECUTION_PLAN_V2_FIXTURE);
+const validCanonicalPlanJson = jcsCanonicalize(VALID_EXECUTION_PLAN_V1_FIXTURE);
+const planStoreScope = VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.ownership;
 
 const validPlanRecord = {
-  planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
+  tenantId: planStoreScope.tenantId,
+  projectId: planStoreScope.projectId,
+  environmentId: planStoreScope.environmentId,
+  planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
   canonicalPlanJson: validCanonicalPlanJson,
   canonicalHash: sha256HexUtf8(validCanonicalPlanJson),
-  planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
-  schemaVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.schemaVersion,
-  contractVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.contractVersion,
+  planVersion: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planVersion,
+  schemaVersion: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.schemaVersion,
+  contractVersion: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.contractVersion,
   sourceRef: 'planner://build/123',
   state: 'ACTIVE',
   createdAtIso: '2026-04-02T10:00:00.000Z',
@@ -32,6 +36,15 @@ export function registerValidationPlanRecordsSuite(): void {
 
       expect(record.state).toBe('ACTIVE');
       expect(record.canonicalHash).toHaveLength(64);
+    });
+
+    it('rejects PlanRecord without a plan-store scope tuple', () => {
+      const { tenantId, projectId, environmentId, ...unscopedRecord } = validPlanRecord;
+      void tenantId;
+      void projectId;
+      void environmentId;
+
+      expect(() => parsePlanRecord(unscopedRecord)).toThrow(ContractValidationError);
     });
 
     it('rejects PlanRecord when canonicalPlanJson metadata does not match top-level identity', () => {
@@ -99,14 +112,14 @@ export function registerValidationPlanRecordsSuite(): void {
 
     it('rejects PlanRecord when canonicalPlanJson is not JCS(canonical ExecutionPlan)', () => {
       const nonCanonicalPlanJson = JSON.stringify({
-        steps: VALID_EXECUTION_PLAN_V2_FIXTURE.steps,
+        steps: VALID_EXECUTION_PLAN_V1_FIXTURE.steps,
         metadata: {
-          createdAtIso: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.createdAtIso,
-          planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
-          inputHashSha256: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.inputHashSha256,
-          contractVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.contractVersion,
-          schemaVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.schemaVersion,
-          planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+          createdAtIso: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.createdAtIso,
+          planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
+          inputHashSha256: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.inputHashSha256,
+          contractVersion: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.contractVersion,
+          schemaVersion: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.schemaVersion,
+          planVersion: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planVersion,
         },
       });
 
@@ -121,7 +134,10 @@ export function registerValidationPlanRecordsSuite(): void {
 
     it('parses INVALID PlanExecutabilityRecord with canonical rejection code', () => {
       const record = parsePlanExecutabilityRecord({
-        planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
+        tenantId: planStoreScope.tenantId,
+        projectId: planStoreScope.projectId,
+        environmentId: planStoreScope.environmentId,
+        planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
         adapterId: 'temporal',
         state: 'INVALID',
         validatedAtIso: '2026-04-02T10:03:00.000Z',
@@ -138,10 +154,23 @@ export function registerValidationPlanRecordsSuite(): void {
       }
     });
 
+    it('rejects PlanExecutabilityRecord without a plan-store scope tuple', () => {
+      expect(() =>
+        parsePlanExecutabilityRecord({
+          planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
+          adapterId: 'temporal',
+          state: 'PENDING',
+        })
+      ).toThrow(ContractValidationError);
+    });
+
     it('rejects PlanExecutabilityRecord with unknown state', () => {
       expect(() =>
         parsePlanExecutabilityRecord({
-          planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
+          tenantId: planStoreScope.tenantId,
+          projectId: planStoreScope.projectId,
+          environmentId: planStoreScope.environmentId,
+          planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
           adapterId: 'temporal',
           state: 'READY',
         })
@@ -151,7 +180,10 @@ export function registerValidationPlanRecordsSuite(): void {
     it('rejects VALID PlanExecutabilityRecord when rejectionReport is present', () => {
       expect(() =>
         parsePlanExecutabilityRecord({
-          planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
+          tenantId: planStoreScope.tenantId,
+          projectId: planStoreScope.projectId,
+          environmentId: planStoreScope.environmentId,
+          planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
           adapterId: 'temporal',
           state: 'VALID',
           validatedAtIso: '2026-04-02T10:03:00.000Z',
@@ -167,7 +199,10 @@ export function registerValidationPlanRecordsSuite(): void {
     it('rejects INVALID PlanExecutabilityRecord without rejectionReport', () => {
       expect(() =>
         parsePlanExecutabilityRecord({
-          planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
+          tenantId: planStoreScope.tenantId,
+          projectId: planStoreScope.projectId,
+          environmentId: planStoreScope.environmentId,
+          planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
           adapterId: 'temporal',
           state: 'INVALID',
           validatedAtIso: '2026-04-02T10:03:00.000Z',
@@ -178,7 +213,10 @@ export function registerValidationPlanRecordsSuite(): void {
     it('rejects PlanExecutabilityRecord with non-canonical rejection code', () => {
       expect(() =>
         parsePlanExecutabilityRecord({
-          planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
+          tenantId: planStoreScope.tenantId,
+          projectId: planStoreScope.projectId,
+          environmentId: planStoreScope.environmentId,
+          planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
           adapterId: 'temporal',
           state: 'INVALID',
           validatedAtIso: '2026-04-02T10:03:00.000Z',
@@ -193,7 +231,10 @@ export function registerValidationPlanRecordsSuite(): void {
 
     it('parses PlanAdmissionLink relation without overloading PlanRecord state', () => {
       const link = parsePlanAdmissionLink({
-        planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
+        tenantId: planStoreScope.tenantId,
+        projectId: planStoreScope.projectId,
+        environmentId: planStoreScope.environmentId,
+        planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
         runId: 'run-1',
         adapterId: 'temporal',
         admittedAtIso: '2026-04-02T10:05:00.000Z',
@@ -201,6 +242,17 @@ export function registerValidationPlanRecordsSuite(): void {
 
       expect(link.runId).toBe('run-1');
       expect(link.adapterId).toBe('temporal');
+    });
+
+    it('rejects PlanAdmissionLink without a plan-store scope tuple', () => {
+      expect(() =>
+        parsePlanAdmissionLink({
+          planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
+          runId: 'run-1',
+          adapterId: 'temporal',
+          admittedAtIso: '2026-04-02T10:05:00.000Z',
+        })
+      ).toThrow(ContractValidationError);
     });
   });
 }

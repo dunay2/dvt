@@ -1,14 +1,14 @@
+import type { IStoredPlanArtifactReader, StoredPlanArtifact } from '@dvt/artifacts';
 import type {
   IStepTypeRegistry,
   PlanRefSchemaT,
   RunExecutionPolicy,
+  ScopedPlanRef,
   StepKindExecutionProfile,
 } from '@dvt/contracts';
-import {
-  CURRENT_SIGNAL_SEMANTICS_VERSION,
-  asNonBlankString,
-} from '@dvt/contracts';
+import { CURRENT_SIGNAL_SEMANTICS_VERSION, asNonBlankString } from '@dvt/contracts';
 import type { IProviderAdapter } from '@dvt/engine';
+import type { PlanExecutabilityValidationInput } from '@dvt/planner';
 
 /**
  * Shared test harness for `StoredPlanExecutabilityValidator`.
@@ -24,6 +24,30 @@ export const PLAN_REF: PlanRefSchemaT = {
   planId: asNonBlankString('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'),
   planVersion: asNonBlankString('1.0'),
 };
+
+export const SCOPED_PLAN_REF: ScopedPlanRef = {
+  tenantId: 'tenant-a',
+  projectId: 'project-a',
+  environmentId: 'prod',
+  planRef: PLAN_REF,
+};
+
+export function validationInput(adapterId = 'temporal'): PlanExecutabilityValidationInput {
+  return {
+    ...SCOPED_PLAN_REF,
+    adapterId,
+  };
+}
+
+export function makeValidationReader(
+  artifact: () => StoredPlanArtifact | Promise<StoredPlanArtifact>
+): IStoredPlanArtifactReader {
+  return {
+    getStoredPlanValidationRecord: async () => undefined,
+    fetchStoredPlanArtifact: async () => artifact(),
+    fetchStoredPlanArtifactForValidation: async () => artifact(),
+  };
+}
 
 export function storedPlanArtifact(
   overrides?: Partial<{

@@ -24,7 +24,6 @@ This component owns planner-private behavior-port semantics for:
 
 - validating persisted plan executability before execution admission
 - verifying compiled artifact bindings for planner-authored steps
-- persisting planner validation lifecycle transitions
 - resolving custom policy namespace registration for planner policy checks
 
 It does not own shared serializable DTO vocabulary. Rejection codes, validation
@@ -33,16 +32,12 @@ remain in `@dvt/contracts`.
 
 ## Public API
 
-| API                                                                                       | Module                                                                 | Consumer intent                                                                                        |
-| ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `IPlanExecutabilityValidator#validatePlan(planRef, adapterId)`                            | `packages/@dvt/planner/src/contracts/PlanExecutabilityValidation.ts`   | Check whether a persisted plan reference is executable on a target adapter before start-run admission. |
-| `IExecutionBindingVerifier#verifyStepBinding(planId, stepId, storageUri, expectedSha256)` | `packages/@dvt/planner/src/contracts/ExecutionBindingVerification.ts`  | Verify that a compiled artifact binding still matches the expected digest before execution uses it.    |
-| `IPlanValidationLifecycleStore#storePlan(buildResult)`                                    | `packages/@dvt/planner/src/contracts/PlanValidationLifecycle.ts`       | Persist a built plan in a non-runnable validation state and return its `PlanRef`.                      |
-| `IPlanValidationLifecycleStore#markValid(planRef)`                                        | `packages/@dvt/planner/src/contracts/PlanValidationLifecycle.ts`       | Transition a persisted plan to `VALID` after executability validation succeeds.                        |
-| `IPlanValidationLifecycleStore#markInvalid(planRef, report)`                              | `packages/@dvt/planner/src/contracts/PlanValidationLifecycle.ts`       | Transition a persisted plan to `INVALID` with the structured rejection report.                         |
-| `IPlanValidationLifecycleStore#getValidationRecord(planId)`                               | `packages/@dvt/planner/src/contracts/PlanValidationLifecycle.ts`       | Read validation state for admission and audit paths.                                                   |
-| `ICustomPolicyNamespaceRegistry#lookup(namespace)`                                        | `packages/@dvt/planner/src/contracts/CustomPolicyNamespaceRegistry.ts` | Resolve the registered namespace entry used by planner policy checks.                                  |
-| `ICustomPolicyNamespaceRegistry#listNamespaces()`                                         | `packages/@dvt/planner/src/contracts/CustomPolicyNamespaceRegistry.ts` | Enumerate registered custom policy namespaces without exposing registry internals.                     |
+| API                                                                                       | Module                                                                 | Consumer intent                                                                                               |
+| ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `IPlanExecutabilityValidator#validatePlan(input)`                                         | `packages/@dvt/planner/src/contracts/PlanExecutabilityValidation.ts`   | Check whether a scoped persisted plan reference is executable on a target adapter before start-run admission. |
+| `IExecutionBindingVerifier#verifyStepBinding(planId, stepId, storageUri, expectedSha256)` | `packages/@dvt/planner/src/contracts/ExecutionBindingVerification.ts`  | Verify that a compiled artifact binding still matches the expected digest before execution uses it.           |
+| `ICustomPolicyNamespaceRegistry#lookup(namespace)`                                        | `packages/@dvt/planner/src/contracts/CustomPolicyNamespaceRegistry.ts` | Resolve the registered namespace entry used by planner policy checks.                                         |
+| `ICustomPolicyNamespaceRegistry#listNamespaces()`                                         | `packages/@dvt/planner/src/contracts/CustomPolicyNamespaceRegistry.ts` | Enumerate registered custom policy namespaces without exposing registry internals.                            |
 
 ## DDD Diagram
 
@@ -55,20 +50,12 @@ classDiagram
 
   class IPlanExecutabilityValidator {
     <<interface>>
-    validatePlan(planRef, adapterId)
+    validatePlan(ScopedPlanRef, adapterId)
   }
 
   class IExecutionBindingVerifier {
     <<interface>>
     verifyStepBinding(planId, stepId, storageUri, expectedSha256)
-  }
-
-  class IPlanValidationLifecycleStore {
-    <<interface>>
-    storePlan(buildResult)
-    markValid(planRef)
-    markInvalid(planRef, report)
-    getValidationRecord(planId)
   }
 
   class ICustomPolicyNamespaceRegistry {
@@ -88,7 +75,6 @@ classDiagram
 
   PlannerPrivateBehaviorPorts *-- IPlanExecutabilityValidator
   PlannerPrivateBehaviorPorts *-- IExecutionBindingVerifier
-  PlannerPrivateBehaviorPorts *-- IPlanValidationLifecycleStore
   PlannerPrivateBehaviorPorts *-- ICustomPolicyNamespaceRegistry
   PlannerPrivateBehaviorPorts ..> SharedPlannerVocabulary : type-only imports
 ```
@@ -100,13 +86,15 @@ flowchart LR
   Contracts["@dvt/contracts\nshared serializable vocabulary"]
   PlannerPorts["@dvt/planner\nplanner-private behavior ports"]
   Api["apps/api\ncomposition and admission"]
-  Postgres["@dvt/adapter-postgres\nlifecycle-store implementation"]
+  Artifacts["@dvt/artifacts\nstored-plan artifact ports"]
+  Postgres["@dvt/adapter-postgres\nartifact-store implementation"]
   Engine["@dvt/engine\nexecution runtime"]
 
   PlannerPorts --> Contracts
   Api --> PlannerPorts
+  Api --> Artifacts
   Api --> Contracts
-  Postgres --> PlannerPorts
+  Postgres --> Artifacts
   Postgres --> Contracts
   Api --> Engine
 
@@ -119,9 +107,9 @@ flowchart LR
 ```mermaid
 stateDiagram-v2
   [*] --> BuiltPlan
-  BuiltPlan --> PendingValidation: storePlan(buildResult)
-  PendingValidation --> Valid: markValid(planRef)
-  PendingValidation --> Invalid: markInvalid(planRef, report)
+  BuiltPlan --> PendingValidation: storePlanArtifact(buildResult)
+  PendingValidation --> Valid: markStoredPlanArtifactValid(ScopedPlanRef)
+  PendingValidation --> Invalid: markStoredPlanArtifactInvalid(ScopedPlanRef, report)
   Valid --> StartRunEligible: admission reads VALID record
   Invalid --> RejectedForAudit: admission reads rejection report
 ```
@@ -131,16 +119,16 @@ stateDiagram-v2
 ```mermaid
 sequenceDiagram
   participant API as apps/api composition
-  participant Lifecycle as IPlanValidationLifecycleStore
+  participant ArtifactStore as IStoredPlanArtifactStore
   participant Validator as IPlanExecutabilityValidator
   participant Contracts as @dvt/contracts vocabulary
   participant Engine as @dvt/engine
 
-  API->>Lifecycle: storePlan(buildResult)
-  Lifecycle-->>API: PlanRefSchemaT
-  API->>Validator: validatePlan(planRef, adapterId)
+  API->>ArtifactStore: storePlanArtifact({ buildResult })
+  ArtifactStore-->>API: PlanRefSchemaT
+  API->>Validator: validatePlan(ScopedPlanRef, adapterId)
   Validator-->>API: ExecutabilityValidationResult
-  API->>Lifecycle: markValid(planRef) or markInvalid(planRef, report)
+  API->>ArtifactStore: markStoredPlanArtifactValid(...) or markStoredPlanArtifactInvalid(...)
   API->>Engine: startRun(planRef) only after VALID
   Contracts-->>API: DTOs and result vocabulary
 ```
@@ -154,8 +142,8 @@ sequenceDiagram
 | Planner modules import contracts type-only            | `packages/@dvt/planner/test/unit/planner-private-ownership.architecture.test.ts` | Behavior-port modules may reference shared vocabulary but must not create runtime dependency edges into the shared kernel. |
 | No peer-domain dependency                             | `packages/@dvt/planner/test/unit/planner-private-ownership.architecture.test.ts` | Behavior-port modules must not import engine, adapter, app, or contracts source internals.                                 |
 | Root barrel exports type-only ports                   | planner root barrel plus architecture test                                       | The public planner package surface publishes interface types without runtime adapter wiring.                               |
-| Adapter dependency is implementation-only             | `packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts`                        | Postgres may implement the lifecycle port; it must not import planner services or aggregates.                              |
-| Start-run requires validated persisted plan semantics | `IPlanValidationLifecycleStore` plus API admission flow                          | A plan moves through persisted validation state before execution eligibility is claimed.                                   |
+| Adapter dependency is implementation-only             | `packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts`                        | Postgres implements artifacts-owned ports; it must not import planner services or aggregates.                              |
+| Start-run requires validated persisted plan semantics | `IStoredPlanArtifactStore` plus API admission flow                               | A plan moves through persisted validation state before execution eligibility is claimed.                                   |
 
 ## Consumers
 
@@ -163,7 +151,6 @@ sequenceDiagram
 - `apps/api/src/application/services/PreviewPlanUseCase.ts`
 - `apps/api/src/application/services/PlannerBackedStartRunUseCase.ts`
 - `apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts`
-- `packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts`
 - `packages/@dvt/planner/src/index.ts`
 - `packages/@dvt/planner/test/unit/planner-private-ownership.architecture.test.ts`
 - `packages/@dvt/contracts/test/planner-private-ownership.architecture.test.ts`

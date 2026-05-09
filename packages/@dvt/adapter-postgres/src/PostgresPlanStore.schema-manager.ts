@@ -1,8 +1,13 @@
+/**
+ * Owned concern: migrate scoped plan-store tables and fail-fast legacy shapes.
+ */
 import { createHash } from 'node:crypto';
 
 import type { PoolClient } from 'pg';
 
 import {
+  sqlAssertPlanRecordsScopedShape,
+  sqlAssertStoredPlansCanonicalOwnership,
   sqlBackfillStoredPlansCompatibilityFingerprint,
   sqlBackfillPlanRecordsFromStoredPlans,
   sqlCreatePlanAdmissionLinksTable,
@@ -30,9 +35,11 @@ export class PostgresPlanStoreSchemaManager {
       await client.query(sqlEnsureStoredPlansCompatibilityFingerprintColumn(this.schema));
       await client.query(sqlBackfillStoredPlansCompatibilityFingerprint(this.schema));
       await client.query(sqlCreateStoredPlansValidationStateIndex(this.schema));
+      await client.query(sqlAssertPlanRecordsScopedShape(this.schema));
       await client.query(sqlCreatePlanRecordsTable(this.schema));
       await client.query(sqlCreatePlanExecutabilityRecordsTable(this.schema));
       await client.query(sqlCreatePlanAdmissionLinksTable(this.schema));
+      await client.query(sqlAssertStoredPlansCanonicalOwnership(this.schema));
       await client.query(sqlBackfillPlanRecordsFromStoredPlans(this.schema));
       await client.query(sqlEnsurePlanRecordLineageConstraints(this.schema));
       await client.query(sqlEnsurePlanRecordSupersedesConstraints(this.schema));
@@ -42,12 +49,15 @@ export class PostgresPlanStoreSchemaManager {
 
   private async reconcileBackfilledCanonicalHashes(client: PoolClient): Promise<void> {
     const backfilled = await client.query<{
+      tenant_id: string;
+      project_id: string;
+      environment_id: string;
       plan_id: string;
       canonical_plan_json: string;
       canonical_hash: string;
     }>(
       `
-        SELECT plan_id, canonical_plan_json, canonical_hash
+        SELECT tenant_id, project_id, environment_id, plan_id, canonical_plan_json, canonical_hash
         FROM ${quoteIdentifier(this.schema)}.plan_records
       `
     );
@@ -58,10 +68,13 @@ export class PostgresPlanStoreSchemaManager {
         await client.query(
           `
             UPDATE ${quoteIdentifier(this.schema)}.plan_records
-            SET canonical_hash = $2
-            WHERE plan_id = $1
+            SET canonical_hash = $5
+            WHERE tenant_id = $1
+              AND project_id = $2
+              AND environment_id = $3
+              AND plan_id = $4
           `,
-          [row.plan_id, canonicalHash]
+          [row.tenant_id, row.project_id, row.environment_id, row.plan_id, canonicalHash]
         );
       }
     }

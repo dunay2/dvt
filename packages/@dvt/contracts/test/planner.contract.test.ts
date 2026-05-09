@@ -26,8 +26,8 @@ import {
   INVALID_NO_GRAPH_SOURCE_PLANNER_INPUT_FIXTURE,
   INVALID_PLANNER_INPUT_FIXTURE,
   NO_SOURCE_PLANNER_INPUT_FIXTURE,
-  VALID_EXECUTION_PLAN_V2_FIXTURE,
-  VALID_PLANNER_BUILD_RESULT_V2_FIXTURE,
+  VALID_EXECUTION_PLAN_V1_FIXTURE,
+  VALID_PLANNER_BUILD_RESULT_V1_FIXTURE,
   VALID_PLANNER_INPUT_FIXTURE,
 } from './fixtures/planner-contract.fixtures';
 
@@ -44,11 +44,11 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
     const planner: IPlanner = {
       async buildPlan(input) {
         return PlannerBuildResultV1Schema.parse({
-          ...VALID_PLANNER_BUILD_RESULT_V2_FIXTURE,
+          ...VALID_PLANNER_BUILD_RESULT_V1_FIXTURE,
           plan: {
-            ...VALID_PLANNER_BUILD_RESULT_V2_FIXTURE.plan,
+            ...VALID_PLANNER_BUILD_RESULT_V1_FIXTURE.plan,
             metadata: {
-              ...VALID_PLANNER_BUILD_RESULT_V2_FIXTURE.plan.metadata,
+              ...VALID_PLANNER_BUILD_RESULT_V1_FIXTURE.plan.metadata,
               ownership: input.ownership,
             },
             observability: input.observability,
@@ -131,7 +131,7 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
   });
 
   it('valida schema del ExecutionPlan canónico versionado', () => {
-    const plan = ExecutionPlanSchema.parse(VALID_EXECUTION_PLAN_V2_FIXTURE);
+    const plan = ExecutionPlanSchema.parse(VALID_EXECUTION_PLAN_V1_FIXTURE);
     expect(plan.metadata.planVersion).toBe(CURRENT_EXECUTION_PLAN_VERSION);
     expect(plan.metadata.schemaVersion).toBe('v1.2');
     expect(plan.metadata.contractVersion).toBe('1.0.0');
@@ -150,17 +150,17 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
   });
 
   it('mantiene una sola identidad pública entre planner y engine', () => {
-    const plannerPlan = VALID_EXECUTION_PLAN_V2_FIXTURE satisfies ExecutionPlan;
+    const plannerPlan = VALID_EXECUTION_PLAN_V1_FIXTURE satisfies ExecutionPlan;
     const engineVisible: EngineVisibleExecutionPlan = plannerPlan;
 
-    expect(engineVisible.metadata.planId).toBe(VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId);
+    expect(engineVisible.metadata.planId).toBe(VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId);
     expect(engineVisible.metadata.createdAtIso).toBe(
-      VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.createdAtIso
+      VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.createdAtIso
     );
   });
 
   it('valida schema de PlannerBuildResultV1 con canonicalPlanCoreJson', () => {
-    const result = PlannerBuildResultV1Schema.parse(VALID_PLANNER_BUILD_RESULT_V2_FIXTURE);
+    const result = PlannerBuildResultV1Schema.parse(VALID_PLANNER_BUILD_RESULT_V1_FIXTURE);
     expect(result.executionPolicy.requiresCapabilities).toEqual(['basic-execution']);
     expect(result.canonicalPlanCoreJson).toContain(
       `"planVersion":"${CURRENT_EXECUTION_PLAN_VERSION}"`
@@ -169,13 +169,13 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
 
   it('rechaza PlannerBuildResultV1 cuando canonicalPlanCoreJson no coincide con plan', () => {
     const result = PlannerBuildResultV1Schema.safeParse({
-      ...VALID_PLANNER_BUILD_RESULT_V2_FIXTURE,
+      ...VALID_PLANNER_BUILD_RESULT_V1_FIXTURE,
       canonicalPlanCoreJson: JSON.stringify({
         metadata: {
           planVersion: CURRENT_EXECUTION_PLAN_VERSION,
           inputHashSha256: 'c'.repeat(64),
         },
-        steps: VALID_EXECUTION_PLAN_V2_FIXTURE.steps,
+        steps: VALID_EXECUTION_PLAN_V1_FIXTURE.steps,
       }),
     });
 
@@ -185,11 +185,11 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
   it('rechaza parsePlannerBuildResultV1 cuando planId no coincide con sha256(canonicalPlanCoreJson)', async () => {
     await expect(
       parsePlannerBuildResultV1({
-        ...VALID_PLANNER_BUILD_RESULT_V2_FIXTURE,
+        ...VALID_PLANNER_BUILD_RESULT_V1_FIXTURE,
         plan: {
-          ...VALID_PLANNER_BUILD_RESULT_V2_FIXTURE.plan,
+          ...VALID_PLANNER_BUILD_RESULT_V1_FIXTURE.plan,
           metadata: {
-            ...VALID_PLANNER_BUILD_RESULT_V2_FIXTURE.plan.metadata,
+            ...VALID_PLANNER_BUILD_RESULT_V1_FIXTURE.plan.metadata,
             planId: 'f'.repeat(64),
           },
         },

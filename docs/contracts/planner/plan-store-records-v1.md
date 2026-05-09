@@ -2,7 +2,7 @@
 title: Plan store records v1
 status: Active
 owner: docs
-last_reviewed: 2026-04-07
+last_reviewed: 2026-05-09
 ---
 
 # Plan store records v1
@@ -44,6 +44,8 @@ Invariants:
 - `canonicalPlanJson` must parse as the canonical `ExecutionPlan`.
 - `canonicalPlanJson` must equal `JCS(canonical ExecutionPlan)`.
 - `canonicalHash` must equal `sha256(canonicalPlanJson)`.
+- top-level `tenantId`, `projectId`, and `environmentId` must match
+  `canonicalPlanJson.metadata.ownership` exactly.
 - top-level `planId`, `planVersion`, `schemaVersion`, and `contractVersion`
   must match `canonicalPlanJson.metadata` exactly.
 - `schemaVersion` and `contractVersion` inherit validity from the canonical
@@ -53,6 +55,8 @@ Invariants:
   - `SUPERSEDED`
   - `ARCHIVED`
 - `archivedAtIso` is required only when `state = 'ARCHIVED'`.
+- tenant-owned record identity is `PlanStoreScope + planId`; `planId` alone is
+  only the content artifact identity.
 
 JSON Schema vs runtime parser:
 
@@ -69,7 +73,7 @@ truth.
 
 Invariants:
 
-- executability is keyed by `planId` plus `adapterId`.
+- executability is keyed by `PlanStoreScope + planId + adapterId`.
 - `state` is explicit:
   - `PENDING` with no validation timestamp and no rejection report
   - `VALID` with `validatedAtIso`
@@ -86,7 +90,8 @@ the run that consumed it.
 Invariants:
 
 - admission is represented as a separate link record, not as mutable plan state
-- a link records `planId`, `runId`, `adapterId`, and `admittedAtIso`
+- a link records `PlanStoreScope`, `planId`, `runId`, `adapterId`, and
+  `admittedAtIso`
 
 ## Boundary rules
 
@@ -96,6 +101,8 @@ Invariants:
   fields.
 - `ADR-0043` keeps serializable plan records in planner contracts while moving
   plan-storage behavior ownership to `@dvt/artifacts`.
+- `ADR-0054` narrows tenant-owned record identity to scoped records:
+  `PlanStoreScope`, `ScopedPlanId`, and `ScopedPlanRef`.
 
 ## Related
 
@@ -103,4 +110,5 @@ Invariants:
 - [ADR-0041](../../adr/ADR-0041-global-domain-state-model-and-boundary-contracts.md)
 - [ADR-0042](../../adr/ADR-0042-execution-plan-canonical-identity-unification.md)
 - [ADR-0043](../../adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md)
+- [ADR-0054](../../adr/ADR-0054-plan-store-scoped-record-identity.md)
 - [S08 execution plan](../../planning/proposals/mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)

@@ -30,6 +30,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@dvt/artifacts": "workspace:*",
     "@dvt/observability": "workspace:*",
     "@dvt/crypto": "workspace:*",
     "@dvt/contracts": "workspace:*",

@@ -70,10 +70,11 @@ carries the current posture.
   admission machinery implicitly**: the facade-width residual is closed, but
   recover-run and start-run still rely on a common guard/policy cluster that
   has not yet been decomposed to the target posture.
-- **Plan artifact reader ownership is now normalized**: `IPlanFetcher`,
-  `StoredPlanArtifact`, and `IPlanIntegrityValidator` live in
-  `packages/@dvt/engine/src/ports/IPlanArtifactReader.ts`. `IRunStateStore`
-  stays focused on run metadata, event log, snapshots, and maintenance.
+- **Plan artifact reader ownership is now normalized**:
+  `IStoredPlanArtifactReader` and `StoredPlanArtifact` live in
+  `@dvt/artifacts`, while `IPlanIntegrityValidator` lives in `@dvt/engine`.
+  `IRunStateStore` stays focused on run metadata, event log, snapshots, and
+  maintenance.
 
 ## Unidentified Design Concerns
 
@@ -107,7 +108,7 @@ ports, and their relationships.
 | `IRunStateStore`               | `runtime-wired`               | Canonical state/event/snapshot seam                                                             |
 | `IStartRunIntentStore`         | `runtime-wired`               | Crash-consistency seam                                                                          |
 | `IProviderAdapter`             | `runtime-wired`               | Provider runtime seam                                                                           |
-| `IPlanFetcher`                 | `runtime-wired`               | Plan/artifact fetch seam                                                                        |
+| `IPlanIntegrityValidator`      | `runtime-wired`               | Engine integrity gate that consumes the artifacts-owned plan reader                             |
 | `IRunExecutionContextResolver` | `optional runtime wiring`     | Conditional start-run seam; wired only when the composition root provides it                    |
 | `IProjector`                   | `package-exposed target seam` | Declared seam; mainline still uses `SnapshotProjector` directly                                 |
 | `IMetricsCollector`            | `source-tree target seam`     | Declared in source; not exported from the package root. Mainline still injects `IObservability` |
@@ -171,7 +172,7 @@ flowchart TB
     IRSS["IRunStateStore<br/>(runtime-wired)"]:::port
     ISRIS["IStartRunIntentStore<br/>(runtime-wired)"]:::port
     IPA["IProviderAdapter<br/>(runtime-wired)"]:::port
-    IPF["IPlanFetcher<br/>(runtime-wired)"]:::port
+    IPF["IPlanIntegrityValidator<br/>(runtime-wired)"]:::port
     IREC["IRunExecutionContextResolver<br/>(optional runtime wiring)"]:::port
     IPROJ["IProjector<br/>(package-exposed target seam)"]:::port
     IMC["IMetricsCollector<br/>(source-tree target seam)"]:::port

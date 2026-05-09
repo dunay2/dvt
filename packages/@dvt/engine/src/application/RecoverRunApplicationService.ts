@@ -1,6 +1,7 @@
 /**
  * @ownedConcern Orchestrate governed run recovery from terminal source runs.
  */
+import type { IStoredPlanArtifactReader } from '@dvt/artifacts';
 import {
   asNonBlankString,
   type CanonicalRunStatus,
@@ -9,6 +10,7 @@ import {
   type ResolvedRunContext,
   type RunContext,
   type RunStatus,
+  type ScopedPlanRef,
 } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 
@@ -21,7 +23,7 @@ import type {
   IRunRecoveryService,
   RecoverRunServiceRequest,
 } from '../domain/IRunRecoveryService.js';
-import type { IPlanFetcher, IPlanIntegrityValidator } from '../ports/IPlanArtifactReader.js';
+import type { IPlanIntegrityValidator } from '../ports/IPlanIntegrityValidator.js';
 import type { IRunExecutionContextBindingPolicy } from '../ports/IRunExecutionContextBindingPolicy.js';
 import type { IRunExecutionContextResolver } from '../ports/IRunExecutionContextResolver.js';
 import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunStateStore.js';
@@ -39,7 +41,7 @@ export interface RecoverRunApplicationServiceDeps {
   policy: IRunAccessPolicy;
   runExecutionContextResolver?: IRunExecutionContextResolver;
   runExecutionContextBindingPolicy?: IRunExecutionContextBindingPolicy;
-  planFetcher: IPlanFetcher;
+  planFetcher: IStoredPlanArtifactReader;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
   observability: IObservability;
   clock: IClock;
@@ -189,7 +191,7 @@ export class RecoverRunApplicationService implements IRunRecoveryService {
     await guard.assertStartRunAllowed(planRef, preflightContext);
     const adapter = guard.resolveAdapter(preflightContext);
     const verifiedArtifact = await this.planIntegrityValidator.fetchAndValidate(
-      planRef,
+      toScopedPlanRef(planRef, preflightContext),
       this.deps.planFetcher
     );
     await guard.assertExecutionPolicyAllowed({
@@ -218,6 +220,15 @@ export class RecoverRunApplicationService implements IRunRecoveryService {
 
     return this.deps.stateStoreWrite.reserveRetryAttempt(tenantId, sourceMetadata.runId);
   }
+}
+
+function toScopedPlanRef(planRef: PlanRef, context: ResolvedRunContext): ScopedPlanRef {
+  return {
+    tenantId: context.tenantId,
+    projectId: context.projectId,
+    environmentId: context.environmentId,
+    planRef,
+  };
 }
 
 export function buildRunRecoveryService(

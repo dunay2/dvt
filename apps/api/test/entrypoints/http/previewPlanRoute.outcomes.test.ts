@@ -13,11 +13,15 @@ import {
   buildStoredPlan,
   buildTransformationStoredPlan,
 } from './planRouteFixtures.js';
-import {
-  createPreviewRequest,
-  createReply,
-} from './planRouteHttpTestSupport.js';
+import { createPreviewRequest, createReply } from './planRouteHttpTestSupport.js';
 import { createPreviewDeps } from './previewPlanRouteTestSupport.js';
+
+const SCOPED_VALID_PLAN_REF = {
+  tenantId: 'tenant-1',
+  projectId: 'project-1',
+  environmentId: 'env-1',
+  planRef: VALID_PLAN_REF,
+};
 
 function createAcceptedPreviewDeps(
   buildPlan: ReturnType<typeof vi.fn>
@@ -25,9 +29,9 @@ function createAcceptedPreviewDeps(
   return createPreviewDeps({
     planner: { buildPlan },
     planStore: {
-      storePlan: vi.fn(async () => VALID_PLAN_REF),
-      markValid: vi.fn(async () => undefined),
-      markInvalid: vi.fn(async () => undefined),
+      storePlanArtifact: vi.fn(async () => VALID_PLAN_REF),
+      markStoredPlanArtifactValid: vi.fn(async () => undefined),
+      markStoredPlanArtifactInvalid: vi.fn(async () => undefined),
     },
     planValidator: {
       validatePlan: vi.fn(async () => ({
@@ -109,9 +113,12 @@ describe('previewPlanRoute outcomes', () => {
         },
       })
     );
-    expect(validatePlan).toHaveBeenCalledWith(VALID_PLAN_REF, 'temporal');
-    expect(deps.planStore.markValid).toHaveBeenCalledWith(VALID_PLAN_REF);
-    expect(deps.planStore.markInvalid).not.toHaveBeenCalled();
+    expect(validatePlan).toHaveBeenCalledWith({
+      ...SCOPED_VALID_PLAN_REF,
+      adapterId: 'temporal',
+    });
+    expect(deps.planStore.markStoredPlanArtifactValid).toHaveBeenCalledWith(SCOPED_VALID_PLAN_REF);
+    expect(deps.planStore.markStoredPlanArtifactInvalid).not.toHaveBeenCalled();
   });
 
   it('returns 422 and marks the stored plan invalid when executability fails', async () => {
@@ -125,9 +132,9 @@ describe('previewPlanRoute outcomes', () => {
         })),
       },
       planStore: {
-        storePlan: vi.fn(async () => VALID_PLAN_REF),
-        markValid: vi.fn(),
-        markInvalid: vi.fn(async () => undefined),
+        storePlanArtifact: vi.fn(async () => VALID_PLAN_REF),
+        markStoredPlanArtifactValid: vi.fn(),
+        markStoredPlanArtifactInvalid: vi.fn(async () => undefined),
       },
       planValidator: {
         validatePlan: vi.fn(async () => ({
@@ -149,10 +156,10 @@ describe('previewPlanRoute outcomes', () => {
     );
 
     expect(reply.statusCode).toBe(422);
-    expect(deps.planStore.markInvalid).toHaveBeenCalledWith(
-      VALID_PLAN_REF,
-      expect.objectContaining({ status: 'ERROR', code: 'REJECTED' })
-    );
+    expect(deps.planStore.markStoredPlanArtifactInvalid).toHaveBeenCalledWith({
+      ...SCOPED_VALID_PLAN_REF,
+      report: expect.objectContaining({ status: 'ERROR', code: 'REJECTED' }),
+    });
   });
 
   it('forwards transformation provenance into planner observability and response payload', async () => {

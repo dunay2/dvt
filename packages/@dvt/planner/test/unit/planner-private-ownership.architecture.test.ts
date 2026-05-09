@@ -9,7 +9,7 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../../../.
 const plannerOwnedPorts = [
   {
     barrelExport: './contracts/PlanExecutabilityValidation.js',
-    contractVocabulary: ['ExecutabilityValidationResult', 'PlanRefSchemaT'],
+    contractVocabulary: ['ExecutabilityValidationResult', 'ScopedPlanRef'],
     ownedConcern: 'validate persisted plan executability before execution admission',
     sourcePath: 'packages/@dvt/planner/src/contracts/PlanExecutabilityValidation.ts',
     symbol: 'IPlanExecutabilityValidator',
@@ -20,18 +20,6 @@ const plannerOwnedPorts = [
     ownedConcern: 'verify compiled artifact bindings for planner-authored steps',
     sourcePath: 'packages/@dvt/planner/src/contracts/ExecutionBindingVerification.ts',
     symbol: 'IExecutionBindingVerifier',
-  },
-  {
-    barrelExport: './contracts/PlanValidationLifecycle.js',
-    contractVocabulary: [
-      'ExecutabilityValidationResult',
-      'PlanRefSchemaT',
-      'PlanValidationRecord',
-      'PlannerBuildResultV1',
-    ],
-    ownedConcern: 'persist planner validation lifecycle transitions',
-    sourcePath: 'packages/@dvt/planner/src/contracts/PlanValidationLifecycle.ts',
-    symbol: 'IPlanValidationLifecycleStore',
   },
   {
     barrelExport: './contracts/CustomPolicyNamespaceRegistry.js',

@@ -4,8 +4,19 @@
   "title": "PlanAdmissionLinkV1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["planId", "runId", "adapterId", "admittedAtIso"],
+  "required": [
+    "tenantId",
+    "projectId",
+    "environmentId",
+    "planId",
+    "runId",
+    "adapterId",
+    "admittedAtIso"
+  ],
   "properties": {
+    "tenantId": { "type": "string", "minLength": 1 },
+    "projectId": { "type": "string", "minLength": 1 },
+    "environmentId": { "type": "string", "minLength": 1 },
     "planId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
     "runId": { "type": "string", "minLength": 1 },
     "adapterId": { "type": "string", "minLength": 1 },

@@ -3,16 +3,20 @@ import { describe, expect, it, vi } from 'vitest';
 import { ImportPlanUseCase } from '../../../src/application/services/ImportPlanUseCase.js';
 import { importPlanRoute } from '../../../src/entrypoints/http/importPlanRoute.js';
 
-import {
-  VALID_PLAN_REF,
-  buildImportedPlan,
-} from './planRouteFixtures.js';
+import { VALID_PLAN_REF, buildImportedPlan } from './planRouteFixtures.js';
 import {
   createImportRequest,
   createReply,
   okAuthDeps,
   type TestAuthDeps,
 } from './planRouteHttpTestSupport.js';
+
+const SCOPED_VALID_PLAN_REF = {
+  tenantId: 'tenant-1',
+  projectId: 'project-1',
+  environmentId: 'env-1',
+  planRef: VALID_PLAN_REF,
+};
 
 type ImportRouteTestDeps = TestAuthDeps & {
   planResolver: { fetch: ReturnType<typeof vi.fn> };
@@ -92,7 +96,7 @@ describe('importPlanRoute', () => {
       plan,
       planRef: VALID_PLAN_REF,
     });
-    expect(fetch).toHaveBeenCalledWith(VALID_PLAN_REF);
+    expect(fetch).toHaveBeenCalledWith(SCOPED_VALID_PLAN_REF);
   });
 
   it('returns 403 when canonical ownership mismatches even if scope tags match the authorized context', async () => {

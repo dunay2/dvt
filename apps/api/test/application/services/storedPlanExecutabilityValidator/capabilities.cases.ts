@@ -4,7 +4,12 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { StoredPlanExecutabilityValidator } from '../../../../src/application/services/StoredPlanExecutabilityValidator.js';
 
-import { makeAdapter, PLAN_REF, storedPlanArtifact } from './harness.js';
+import {
+  makeAdapter,
+  makeValidationReader,
+  storedPlanArtifact,
+  validationInput,
+} from './harness.js';
 
 /**
  * Capability-oriented cases for `StoredPlanExecutabilityValidator`.
@@ -13,13 +18,13 @@ export function describeStoredPlanExecutabilityValidatorCapabilitiesCases(): voi
   describe('StoredPlanExecutabilityValidator capability checks', () => {
     it('returns OK when the stored executable plan matches the ref and capabilities', async () => {
       const validator = new StoredPlanExecutabilityValidator({
-        fetcher: {
-          fetchForValidation: vi.fn(async () => storedPlanArtifact()),
-        },
-        adapters: new Map([['temporal', makeAdapter(['basic-execution', 'workflow.fan.parallel'])]]),
+        fetcher: makeValidationReader(() => storedPlanArtifact()),
+        adapters: new Map([
+          ['temporal', makeAdapter(['basic-execution', 'workflow.fan.parallel'])],
+        ]),
       });
 
-      const result = await validator.validatePlan(PLAN_REF, 'temporal');
+      const result = await validator.validatePlan(validationInput());
 
       expect(result).toEqual({
         status: 'OK',
@@ -30,17 +35,15 @@ export function describeStoredPlanExecutabilityValidatorCapabilitiesCases(): voi
 
     it('rejects when the adapter lacks a required capability', async () => {
       const validator = new StoredPlanExecutabilityValidator({
-        fetcher: {
-          fetchForValidation: vi.fn(async () =>
-            storedPlanArtifact({
-              executionPolicy: { requiresCapabilities: [asNonBlankString('workflow.pause')] },
-            })
-          ),
-        },
+        fetcher: makeValidationReader(() =>
+          storedPlanArtifact({
+            executionPolicy: { requiresCapabilities: [asNonBlankString('workflow.pause')] },
+          })
+        ),
         adapters: new Map([['temporal', makeAdapter(['basic-execution'])]]),
       });
 
-      const result = await validator.validatePlan(PLAN_REF, 'temporal');
+      const result = await validator.validatePlan(validationInput());
 
       expect(result).toEqual({
         status: 'ERROR',
@@ -55,13 +58,11 @@ export function describeStoredPlanExecutabilityValidatorCapabilitiesCases(): voi
 
     it('rejects when the plan requires capabilities but the adapter does not declare any', async () => {
       const validator = new StoredPlanExecutabilityValidator({
-        fetcher: {
-          fetchForValidation: vi.fn(async () =>
-            storedPlanArtifact({
-              executionPolicy: { requiresCapabilities: [asNonBlankString('workflow.pause')] },
-            })
-          ),
-        },
+        fetcher: makeValidationReader(() =>
+          storedPlanArtifact({
+            executionPolicy: { requiresCapabilities: [asNonBlankString('workflow.pause')] },
+          })
+        ),
         adapters: new Map([
           [
             'temporal',
@@ -87,7 +88,7 @@ export function describeStoredPlanExecutabilityValidatorCapabilitiesCases(): voi
         ]),
       });
 
-      const result = await validator.validatePlan(PLAN_REF, 'temporal');
+      const result = await validator.validatePlan(validationInput());
 
       expect(result).toEqual({
         status: 'ERROR',
@@ -103,18 +104,16 @@ export function describeStoredPlanExecutabilityValidatorCapabilitiesCases(): voi
     it('rejects invalid stepTypeConfig before capability checks', async () => {
       const capabilitiesSpy = vi.fn(() => ['basic-execution']);
       const validator = new StoredPlanExecutabilityValidator({
-        fetcher: {
-          fetchForValidation: vi.fn(async () =>
-            storedPlanArtifact({
-              stepTypeConfig: {
-                retries: {
-                  maxAttempts: 3,
-                  backoffMs: 'invalid-backoff-ms',
-                },
+        fetcher: makeValidationReader(() =>
+          storedPlanArtifact({
+            stepTypeConfig: {
+              retries: {
+                maxAttempts: 3,
+                backoffMs: 'invalid-backoff-ms',
               },
-            })
-          ),
-        },
+            },
+          })
+        ),
         adapters: new Map([
           [
             'temporal',
@@ -126,7 +125,7 @@ export function describeStoredPlanExecutabilityValidatorCapabilitiesCases(): voi
         ]),
       });
 
-      const result = await validator.validatePlan(PLAN_REF, 'temporal');
+      const result = await validator.validatePlan(validationInput());
 
       expect(result).toEqual({
         status: 'ERROR',

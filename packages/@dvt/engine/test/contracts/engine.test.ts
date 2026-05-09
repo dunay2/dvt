@@ -6,7 +6,7 @@
  * - Issue impact: #14 (IWorkflowEngine + SnapshotProjector), specifically read-model/status
  *   expectations in the provider adapter path (`PENDING` until completion events are present).
  */
-import { CURRENT_SIGNAL_SEMANTICS_VERSION } from '@dvt/contracts';
+import { CURRENT_SIGNAL_SEMANTICS_VERSION, type ScopedPlanRef } from '@dvt/contracts';
 import { jcsCanonicalize } from '@dvt/crypto';
 import { createNoopObservability } from '@dvt/observability';
 import { describe, it, expect, vi } from 'vitest';
@@ -106,6 +106,15 @@ function makeCtx(runId: string): RunContext {
     environmentId: 'dev',
     runId,
     targetAdapter: 'temporal',
+  };
+}
+
+function makeScopedPlanRef(planRef: PlanRef): ScopedPlanRef {
+  return {
+    tenantId: 't1',
+    projectId: 'p1',
+    environmentId: 'dev',
+    planRef,
   };
 }
 
@@ -247,9 +256,9 @@ describe('WorkflowEngine + in-memory temporal provider adapter', () => {
       clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
     });
 
-    await expect(integrity.fetchAndValidate(badRef, fetcher)).rejects.toThrowError(
-      /PLAN_ID_MISMATCH/
-    );
+    await expect(
+      integrity.fetchAndValidate(makeScopedPlanRef(badRef), fetcher)
+    ).rejects.toThrowError(/PLAN_ID_MISMATCH/);
   });
 
   it('Plan integrity validation: sha256 mismatch against fetched bytes fails before planId checks', async () => {
@@ -271,9 +280,9 @@ describe('WorkflowEngine + in-memory temporal provider adapter', () => {
       clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
     });
 
-    await expect(integrity.fetchAndValidate(badRef, fetcher)).rejects.toThrowError(
-      /PLAN_INTEGRITY_VALIDATION_FAILED/
-    );
+    await expect(
+      integrity.fetchAndValidate(makeScopedPlanRef(badRef), fetcher)
+    ).rejects.toThrowError(/PLAN_INTEGRITY_VALIDATION_FAILED/);
   });
 
   it('Plan integrity validation: expired PlanRef fails before provider dispatch', async () => {
@@ -296,9 +305,9 @@ describe('WorkflowEngine + in-memory temporal provider adapter', () => {
       clock: { nowIsoUtc: () => '2026-04-30T00:00:00.000Z' },
     });
 
-    await expect(integrity.fetchAndValidate(expiredRef, fetcher)).rejects.toThrowError(
-      /PLAN_REF_EXPIRED/
-    );
+    await expect(
+      integrity.fetchAndValidate(makeScopedPlanRef(expiredRef), fetcher)
+    ).rejects.toThrowError(/PLAN_REF_EXPIRED/);
   });
 
   it('does not call adapter.startRun when PlanRef validation fails', async () => {
@@ -328,7 +337,12 @@ describe('WorkflowEngine + in-memory temporal provider adapter', () => {
     const idempotency = new IdempotencyKeyBuilder();
     const clock = new SequenceClock('2026-02-12T00:00:00.000Z');
     const planFetcher = {
-      fetch: vi.fn(async () => ({
+      getStoredPlanValidationRecord: vi.fn(async () => undefined),
+      fetchStoredPlanArtifact: vi.fn(async () => ({
+        bytes: utf8(JSON.stringify(makeHelloWorldPlan())),
+        executionPolicy: {},
+      })),
+      fetchStoredPlanArtifactForValidation: vi.fn(async () => ({
         bytes: utf8(JSON.stringify(makeHelloWorldPlan())),
         executionPolicy: {},
       })),
@@ -361,7 +375,7 @@ describe('WorkflowEngine + in-memory temporal provider adapter', () => {
     };
     await expect(engine.startRun(badPlanRef1, baseCtx)).rejects.toThrow(PlanUriNotAllowedError);
     expect(startRunMock).not.toHaveBeenCalled();
-    expect(planFetcher.fetch).not.toHaveBeenCalled();
+    expect(planFetcher.fetchStoredPlanArtifact).not.toHaveBeenCalled();
 
     // Case 2: invalid schemaVersion
     const badPlanRef2: PlanRef = {
@@ -376,7 +390,7 @@ describe('WorkflowEngine + in-memory temporal provider adapter', () => {
       message: ENGINE_ERROR_MESSAGE_KEY.PLAN_SCHEMA_VERSION_UNKNOWN,
     });
     expect(startRunMock).not.toHaveBeenCalled();
-    expect(planFetcher.fetch).not.toHaveBeenCalled();
+    expect(planFetcher.fetchStoredPlanArtifact).not.toHaveBeenCalled();
 
     // Engine entry-point integrity now owns fetch/verify, but invalid plan refs still fail before fetch.
   });

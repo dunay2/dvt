@@ -16,10 +16,6 @@ const plannerPrivatePorts = [
     symbol: 'IExecutionBindingVerifier',
   },
   {
-    sourcePath: 'packages/@dvt/contracts/src/contracts/planner/PlanValidationLifecycle.v1.ts',
-    symbol: 'IPlanValidationLifecycleStore',
-  },
-  {
     sourcePath: 'packages/@dvt/contracts/src/contracts/planner/CustomPolicyNamespaceRegistry.v1.ts',
     symbol: 'ICustomPolicyNamespaceRegistry',
   },

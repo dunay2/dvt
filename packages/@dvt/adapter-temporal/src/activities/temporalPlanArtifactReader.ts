@@ -2,12 +2,13 @@
  * @ownedConcern Resolve scoped Temporal plan artifacts for engine dispatch.
  * @baseline ADR-0043: Plan Record, Plan Store, And Artifacts Ownership
  * @baseline ADR-0046: Execution Plan Definition And Run Execution Policy Separation
- * @decision Fetch engine dispatch artifacts through the engine-owned integrity port before segment projection.
+ * @decision Fetch engine dispatch artifacts through the artifacts-owned reader before segment projection.
  * @consequence Temporal activity composition cannot bypass plan ownership or execution-policy validation.
  * @version 1.0.0
  */
+import type { IStoredPlanArtifactReader } from '@dvt/artifacts';
 import type { PlanRef, ResolvedRunContext, RunExecutionPolicy } from '@dvt/contracts';
-import type { ExecutionPlan, IPlanFetcher, IPlanIntegrityValidator } from '@dvt/engine';
+import type { ExecutionPlan, IPlanIntegrityValidator } from '@dvt/engine';
 
 export interface FetchPlanForEngineDispatchInput {
   planRef: PlanRef;
@@ -27,7 +28,7 @@ export interface TemporalPlanArtifactReader {
 }
 
 export interface CreateScopedTemporalPlanArtifactReaderArgs {
-  fetcher: IPlanFetcher & { close?(): Promise<void> };
+  fetcher: IStoredPlanArtifactReader & { close?(): Promise<void> };
   integrity: IPlanIntegrityValidator;
 }
 
@@ -36,7 +37,15 @@ export function createScopedTemporalPlanArtifactReader(
 ): TemporalPlanArtifactReader {
   return {
     async fetchForEngineDispatch(input) {
-      const result = await args.integrity.fetchAndValidate(input.planRef, args.fetcher);
+      const result = await args.integrity.fetchAndValidate(
+        {
+          tenantId: input.ctx.tenantId,
+          projectId: input.ctx.projectId,
+          environmentId: input.ctx.environmentId,
+          planRef: input.planRef,
+        },
+        args.fetcher
+      );
       assertPlanOwnershipMatchesContext(result.plan, input.ctx);
       return result;
     },

@@ -350,7 +350,12 @@ function buildDeps(
   const fetcher = Object.hasOwn(legacyOverrides, 'fetcher')
     ? legacyOverrides.fetcher
     : {
-        fetch: async () => ({
+        getStoredPlanValidationRecord: async () => undefined,
+        fetchStoredPlanArtifact: async () => ({
+          bytes: new Uint8Array(),
+          executionPolicy: {},
+        }),
+        fetchStoredPlanArtifactForValidation: async () => ({
           bytes: new Uint8Array(),
           executionPolicy: {},
         }),
@@ -511,7 +516,16 @@ describe('stepActivities', () => {
           clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
         }),
         fetcher: {
-          async fetch() {
+          async getStoredPlanValidationRecord() {
+            return undefined;
+          },
+          async fetchStoredPlanArtifact() {
+            return {
+              bytes: mutatedPlanBytes,
+              executionPolicy: {},
+            };
+          },
+          async fetchStoredPlanArtifactForValidation() {
             return {
               bytes: mutatedPlanBytes,
               executionPolicy: {},

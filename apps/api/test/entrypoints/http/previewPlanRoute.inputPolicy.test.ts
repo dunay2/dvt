@@ -12,10 +12,7 @@ import {
   VALID_TRANSFORMATION_GRAPH_SOURCE,
   buildPreviewBody,
 } from './planRouteFixtures.js';
-import {
-  createPreviewRequest,
-  createReply,
-} from './planRouteHttpTestSupport.js';
+import { createPreviewRequest, createReply } from './planRouteHttpTestSupport.js';
 import { createPreviewDeps } from './previewPlanRouteTestSupport.js';
 
 describe('previewPlanRoute input policy', () => {
@@ -96,18 +93,14 @@ describe('previewPlanRoute input policy', () => {
     const reply = createReply();
     const deps = createPreviewDeps();
 
-    await previewPlanRoute(
-      createPreviewRequest({ body }) as never,
-      reply as never,
-      deps as never
-    );
+    await previewPlanRoute(createPreviewRequest({ body }) as never, reply as never, deps as never);
 
     expect(reply.statusCode).toBe(400);
     expect(reply.payload).toEqual({
       error: { type: 'bad_request', reason: expectedReason },
     });
     expect(deps.planner.buildPlan).not.toHaveBeenCalled();
-    expect(deps.planStore.storePlan).not.toHaveBeenCalled();
+    expect(deps.planStore.storePlanArtifact).not.toHaveBeenCalled();
   });
 
   it('returns 400 when previewProfile is missing or padded with whitespace', async () => {
@@ -127,7 +120,11 @@ describe('previewPlanRoute input policy', () => {
       const reply = createReply();
       const deps = createPreviewDeps();
 
-      await previewPlanRoute(createPreviewRequest({ body }) as never, reply as never, deps as never);
+      await previewPlanRoute(
+        createPreviewRequest({ body }) as never,
+        reply as never,
+        deps as never
+      );
 
       expect(reply.statusCode).toBe(400);
       expect(reply.payload).toEqual({
@@ -201,7 +198,7 @@ describe('previewPlanRoute input policy', () => {
         },
       },
     });
-    expect(deps.planStore.storePlan).not.toHaveBeenCalled();
+    expect(deps.planStore.storePlanArtifact).not.toHaveBeenCalled();
     expect(deps.planValidator.validatePlan).not.toHaveBeenCalled();
   });
 
@@ -239,6 +236,6 @@ describe('previewPlanRoute input policy', () => {
       },
     });
     expect(deps.planner.buildPlan).not.toHaveBeenCalled();
-    expect(deps.planStore.storePlan).not.toHaveBeenCalled();
+    expect(deps.planStore.storePlanArtifact).not.toHaveBeenCalled();
   });
 });

@@ -1,3 +1,6 @@
+/**
+ * Owned concern: provide transaction boundaries for scoped plan-store repositories.
+ */
 import type { Pool, PoolClient } from 'pg';
 
 export class PostgresPlanStoreTxRunner {

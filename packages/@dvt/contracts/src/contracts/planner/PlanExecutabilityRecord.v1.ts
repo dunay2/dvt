@@ -1,4 +1,6 @@
 /**
+ * Owned concern: publish tenant-owned adapter executability record shapes.
+ *
  * S08 adapter-scoped plan executability record.
  *
  * Baseline ADRs:
@@ -7,6 +9,7 @@
  */
 import type { ExecutionPlan } from './ExecutionPlan.v1.js';
 import type { ExecutabilityRejectionCode } from './PlanExecutabilityValidation.v1.js';
+import type { PlanStoreScope } from './PlanRecord.v1.js';
 
 export type PlanExecutabilityState = 'PENDING' | 'VALID' | 'INVALID';
 
@@ -17,7 +20,7 @@ export interface PlanExecutabilityRejectionReport {
   cause?: string | undefined;
 }
 
-interface PlanExecutabilityRecordBase {
+interface PlanExecutabilityRecordBase extends PlanStoreScope {
   planId: ExecutionPlan['metadata']['planId'];
   adapterId: string;
 }
