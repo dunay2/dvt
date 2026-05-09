@@ -1,3 +1,6 @@
+/**
+ * Owned concern: validate scoped plan-store record contracts.
+ */
 import { z } from 'zod';
 
 import {

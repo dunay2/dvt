@@ -1,4 +1,6 @@
 /**
+ * Owned concern: publish tenant-owned adapter executability record shapes.
+ *
  * S08 adapter-scoped plan executability record.
  *
  * Baseline ADRs:

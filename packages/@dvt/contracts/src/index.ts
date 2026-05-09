@@ -245,6 +245,8 @@ export type {
 export type {
   PlanRecord,
   PlanRecordState,
+  ScopedPlanId,
+  ScopedPlanRef,
   PlanStoreScope,
 } from './contracts/planner/PlanRecord.v1.js';
 export type {
@@ -298,7 +300,6 @@ export type {
   RunEventInput,
   RunEventInputBase,
   RunMetadata,
-  StoredPlanArtifact,
   StepEventInput,
   WorkflowSnapshot,
 } from './engine/IRunStateStore.v1.js';

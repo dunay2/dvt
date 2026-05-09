@@ -3,10 +3,8 @@ import type {
   EngineRunRef,
   IsoUtcString,
   StepId,
-  PlanRef,
   Provider,
   RunExecutionEvidence,
-  RunExecutionPolicy,
   RunStatus,
 } from '../types/contracts.js';
 
@@ -283,20 +281,4 @@ export interface IIdempotencyKeyBuilder {
     targetAdapter?: Provider
   ): string;
   eventId(): string;
-}
-
-export interface IPlanFetcher {
-  fetch(planRef: PlanRef): Promise<StoredPlanArtifact>;
-}
-
-export interface IPlanIntegrityValidator {
-  fetchAndValidate(
-    planRef: PlanRef,
-    fetcher: IPlanFetcher
-  ): Promise<{ plan: ExecutionPlan; executionPolicy: RunExecutionPolicy }>;
-}
-
-export interface StoredPlanArtifact {
-  bytes: Uint8Array;
-  executionPolicy: RunExecutionPolicy;
 }
