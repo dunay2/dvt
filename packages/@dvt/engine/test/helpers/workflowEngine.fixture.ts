@@ -71,7 +71,7 @@ export function makeProviderMap(
   return new Map([[adapter.provider, adapter]]);
 }
 
-export function createWorkflowEngineFixture(input?: {
+interface WorkflowEngineFixtureInput {
   adapters?: Map<EngineRunRef['provider'], IProviderAdapter>;
   adapter?: IProviderAdapter;
   authorizer?: IAuthorizer;
@@ -89,7 +89,9 @@ export function createWorkflowEngineFixture(input?: {
   runExecutionContextResolver?: IRunExecutionContextResolver;
   runExecutionContextBindingPolicy?: IRunExecutionContextBindingPolicy;
   planFetcher?: IStoredPlanArtifactReader;
-}): {
+}
+
+interface WorkflowEngineFixture {
   engine: WorkflowEngine;
   store: InMemoryTxStore;
   stateStoreRead: InMemoryTxStore;
@@ -99,7 +101,11 @@ export function createWorkflowEngineFixture(input?: {
   projector: SnapshotProjector;
   idempotency: IdempotencyKeyBuilder;
   clock: IClock;
-} {
+}
+
+export function createWorkflowEngineFixture(
+  input?: WorkflowEngineFixtureInput
+): WorkflowEngineFixture {
   const store = input?.stateStore ?? input?.stateStoreRead ?? new InMemoryTxStore();
   const stateStoreRead = input?.stateStoreRead ?? store;
   const stateStoreWrite = input?.stateStoreWrite ?? store;
@@ -113,28 +119,7 @@ export function createWorkflowEngineFixture(input?: {
     (input?.adapter
       ? makeProviderMap(input.adapter)
       : new Map<EngineRunRef['provider'], IProviderAdapter>());
-  const defaultPlan = makeDefaultExecutionPlan();
-  const planFetcher =
-    input?.planFetcher ??
-    ({
-      async getStoredPlanValidationRecord() {
-        return undefined;
-      },
-      async fetchStoredPlanArtifact(_input: ScopedPlanRef): Promise<StoredPlanArtifact> {
-        return {
-          bytes: Buffer.from(JSON.stringify(defaultPlan), 'utf8'),
-          executionPolicy: {},
-        };
-      },
-      async fetchStoredPlanArtifactForValidation(
-        _input: ScopedPlanRef
-      ): Promise<StoredPlanArtifact> {
-        return {
-          bytes: Buffer.from(JSON.stringify(defaultPlan), 'utf8'),
-          executionPolicy: {},
-        };
-      },
-    } as const);
+  const planFetcher = input?.planFetcher ?? makePlanFetcherForPlan(makeDefaultExecutionPlan());
   const policy = new RunAccessPolicy({
     authorizer: input?.authorizer ?? new AllowAllAuthorizer(),
     planRefPolicy: new PlanRefPolicy({ allowedSchemes: input?.allowedSchemes ?? ['https'] }),

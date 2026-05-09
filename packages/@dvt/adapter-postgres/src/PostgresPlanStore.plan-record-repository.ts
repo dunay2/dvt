@@ -27,6 +27,7 @@ type PlanRecordRow = {
 };
 
 type PlanRecordScope = Pick<PlanRecord, 'tenantId' | 'projectId' | 'environmentId'>;
+type MarkSupersededInput = ScopedPlanId & { readonly supersededByPlanId: PlanRecord['planId'] };
 
 export class PostgresPlanRecordRepository {
   public constructor(private readonly schema: string) {}
@@ -183,14 +184,20 @@ export class PostgresPlanRecordRepository {
     return first ? toPlanRecord(first) : undefined;
   }
 
-  public async markSuperseded(
-    client: PoolClient,
-    input: ScopedPlanId & { readonly supersededByPlanId: PlanRecord['planId'] }
-  ): Promise<void> {
+  public async markSuperseded(client: PoolClient, input: MarkSupersededInput): Promise<void> {
     if (input.planId === input.supersededByPlanId) {
       throw new Error(`PLAN_RECORD_INVALID_SUPERSESSION_SELF: ${input.planId}`);
     }
 
+    await this.assertSupersederCanLink(client, input);
+    await this.markPlanAsSuperseded(client, input);
+    await this.linkSuperseder(client, input);
+  }
+
+  private async assertSupersederCanLink(
+    client: PoolClient,
+    input: MarkSupersededInput
+  ): Promise<void> {
     const supersederState = await client.query<{
       state: PlanRecord['state'];
       supersedes_plan_id: string | null;
@@ -215,7 +222,12 @@ export class PostgresPlanRecordRepository {
     if (supersederRow.supersedes_plan_id !== null) {
       throw new Error(`PLAN_RECORD_SUPERSEDER_ALREADY_LINKED: ${input.supersededByPlanId}`);
     }
+  }
 
+  private async markPlanAsSuperseded(
+    client: PoolClient,
+    input: MarkSupersededInput
+  ): Promise<void> {
     const result = await client.query(
       `
         UPDATE ${quoteIdentifier(this.schema)}.plan_records
@@ -232,7 +244,9 @@ export class PostgresPlanRecordRepository {
     if (result.rowCount === 0) {
       throw new Error(`PLAN_RECORD_NOT_ACTIVE: ${input.planId}`);
     }
+  }
 
+  private async linkSuperseder(client: PoolClient, input: MarkSupersededInput): Promise<void> {
     const superseder = await client.query(
       `
         UPDATE ${quoteIdentifier(this.schema)}.plan_records

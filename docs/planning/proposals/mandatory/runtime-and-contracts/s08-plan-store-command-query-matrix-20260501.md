@@ -1028,6 +1028,102 @@ symbols:
     architectureGuard: pnpm docs:feature-mechanization:implementation
     cypressCoverage: N/A - backend use-case helper
     unitTests: [dvt-api application service tests]
+  - name: PlanCompileResult
+    path: apps/api/src/application/services/PlannerBackedStartRunUseCase.ts
+    dddOwner: API start-run application service
+    cqRails: [FetchPlanForValidation]
+    fowlerSignals: [Long method]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend use-case helper type
+    unitTests: [dvt-api application service tests]
+  - name: StoredPlannerArtifact
+    path: apps/api/src/application/services/PlannerBackedStartRunUseCase.ts
+    dddOwner: API start-run application service
+    cqRails: [CreateStoredPlan]
+    fowlerSignals: [Long method]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend use-case helper type
+    unitTests: [dvt-api application service tests]
+  - name: StoredPlannerArtifactResult
+    path: apps/api/src/application/services/PlannerBackedStartRunUseCase.ts
+    dddOwner: API start-run application service
+    cqRails: [CreateStoredPlan]
+    fowlerSignals: [Long method]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend use-case helper type
+    unitTests: [dvt-api application service tests]
+  - name: toDelegateCommand
+    path: apps/api/src/application/services/PlannerBackedStartRunUseCase.ts
+    dddOwner: API start-run application service
+    cqRails: [FetchPlanForValidation]
+    fowlerSignals: [Long method]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend use-case helper
+    unitTests: [dvt-api application service tests]
+  - name: toExecutableSubgraphRequest
+    path: apps/api/src/application/services/PlannerBackedStartRunUseCase.ts
+    dddOwner: API start-run application service
+    cqRails: [CreateStoredPlan]
+    fowlerSignals: [Long method]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend use-case helper
+    unitTests: [dvt-api application service tests]
+  - name: toPlanRejectedResult
+    path: apps/api/src/application/services/PlannerBackedStartRunUseCase.ts
+    dddOwner: API start-run application service
+    cqRails: [FetchPlanForValidation]
+    fowlerSignals: [Long method]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend use-case helper
+    unitTests: [dvt-api application service tests]
+  - name: CanonicalRunSnapshot
+    path: apps/api/src/application/services/getRunStatusUseCase.ts
+    dddOwner: API run-status query application service
+    cqRails: [GetRunRecord]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend query helper type
+    unitTests: [dvt-api run-status tests]
+  - name: PlanRecordMetadata
+    path: apps/api/src/application/services/getRunStatusUseCase.ts
+    dddOwner: API run-status query application service
+    cqRails: [GetPlanRecord]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend query helper type
+    unitTests: [dvt-api run-status tests]
+  - name: ProviderView
+    path: apps/api/src/application/services/getRunStatusUseCase.ts
+    dddOwner: API run-status query application service
+    cqRails: [GetRunRecord]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend query helper type
+    unitTests: [dvt-api run-status tests]
+  - name: RunReadRef
+    path: apps/api/src/application/services/getRunStatusUseCase.ts
+    dddOwner: API run-status query application service
+    cqRails: [GetRunRecord]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend query value object
+    unitTests: [dvt-api run-status tests]
+  - name: RunStatusResponseInput
+    path: apps/api/src/application/services/getRunStatusUseCase.ts
+    dddOwner: API run-status query application service
+    cqRails: [GetRunRecord]
+    fowlerSignals: [Long method]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend query helper type
+    unitTests: [dvt-api run-status tests]
+  - name: toRunReadRef
+    path: apps/api/src/application/services/getRunStatusUseCase.ts
+    dddOwner: API run-status query application service
+    cqRails: [GetRunRecord]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend query helper
+    unitTests: [dvt-api run-status tests]
   - name: toScopedPlanRef
     path: apps/api/src/application/services/PreviewPlanUseCase.ts
     dddOwner: API preview application service
@@ -1121,6 +1217,14 @@ symbols:
     dddOwner: PostgreSQL plan-record repository
     cqRails: [GetPlanRecord]
     fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend adapter type
+    unitTests: [adapter-postgres plan-store tests]
+  - name: MarkSupersededInput
+    path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.plan-record-repository.ts
+    dddOwner: PostgreSQL plan-record repository
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Long method]
     architectureGuard: pnpm docs:feature-mechanization:implementation
     cypressCoverage: N/A - backend adapter type
     unitTests: [adapter-postgres plan-store tests]
@@ -1659,6 +1763,30 @@ symbols:
     fowlerSignals: [Coverage refinement]
     architectureGuard: packages/@dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts
     cypressCoverage: N/A - contract test fixture
+    unitTests: [engine contract tests]
+  - name: WorkflowEngineFixture
+    path: packages/@dvt/engine/test/helpers/workflowEngine.fixture.ts
+    dddOwner: Engine workflow fixture
+    cqRails: [FetchPlanForEngineDispatch]
+    fowlerSignals: [Large context]
+    architectureGuard: packages/@dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts
+    cypressCoverage: N/A - engine test fixture type
+    unitTests: [engine contract tests]
+  - name: WorkflowEngineFixtureInput
+    path: packages/@dvt/engine/test/helpers/workflowEngine.fixture.ts
+    dddOwner: Engine workflow fixture
+    cqRails: [FetchPlanForEngineDispatch]
+    fowlerSignals: [Large context]
+    architectureGuard: packages/@dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts
+    cypressCoverage: N/A - engine test fixture type
+    unitTests: [engine contract tests]
+  - name: createWorkflowEngineFixture
+    path: packages/@dvt/engine/test/helpers/workflowEngine.fixture.ts
+    dddOwner: Engine workflow fixture
+    cqRails: [FetchPlanForEngineDispatch]
+    fowlerSignals: [Large context]
+    architectureGuard: packages/@dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts
+    cypressCoverage: N/A - engine test fixture factory
     unitTests: [engine contract tests]
   - name: PlanExecutabilityValidationInput
     path: packages/@dvt/planner/src/contracts/PlanExecutabilityValidation.ts
