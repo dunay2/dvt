@@ -11,7 +11,13 @@ import type { ExecutionPlan } from './ExecutionPlan.v1.js';
 export type PlanRecordState = 'ACTIVE' | 'SUPERSEDED' | 'ARCHIVED';
 type HexSha256 = ExecutionPlan['metadata']['planId'];
 
-interface PlanRecordBase {
+export interface PlanStoreScope {
+  tenantId: string;
+  projectId: string;
+  environmentId: string;
+}
+
+interface PlanRecordBase extends PlanStoreScope {
   planId: HexSha256;
   /**
    * Persisted canonical planner-emitted `ExecutionPlan` JSON.

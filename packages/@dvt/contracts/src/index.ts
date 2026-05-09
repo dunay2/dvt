@@ -242,7 +242,11 @@ export type {
   PlanBindingRecord,
   StepBindingEntry,
 } from './contracts/planner/ExecutionBindingVerification.v1.js';
-export type { PlanRecord, PlanRecordState } from './contracts/planner/PlanRecord.v1.js';
+export type {
+  PlanRecord,
+  PlanRecordState,
+  PlanStoreScope,
+} from './contracts/planner/PlanRecord.v1.js';
 export type {
   PlanExecutabilityRecord,
   PlanExecutabilityRejectionReport,

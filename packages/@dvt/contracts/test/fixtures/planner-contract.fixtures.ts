@@ -83,7 +83,7 @@ export const INVALID_NO_GRAPH_SOURCE_PLANNER_INPUT_FIXTURE = {
   graphSource: undefined,
 };
 
-export const VALID_EXECUTION_PLAN_V2_FIXTURE = {
+export const VALID_EXECUTION_PLAN_V1_FIXTURE = {
   metadata: {
     planVersion: CURRENT_EXECUTION_PLAN_VERSION,
     schemaVersion: 'v1.2',
@@ -136,20 +136,20 @@ export const VALID_EXECUTION_PLAN_V2_FIXTURE = {
 
 const VALID_PLAN_CORE_FIXTURE = {
   metadata: {
-    planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
-    inputHashSha256: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.inputHashSha256,
+    planVersion: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planVersion,
+    inputHashSha256: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.inputHashSha256,
   },
-  steps: VALID_EXECUTION_PLAN_V2_FIXTURE.steps,
+  steps: VALID_EXECUTION_PLAN_V1_FIXTURE.steps,
 } as const;
 
 const VALID_CANONICAL_PLAN_CORE_JSON = jcsCanonicalize(VALID_PLAN_CORE_FIXTURE);
 
-VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId = createHash('sha256')
+VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId = createHash('sha256')
   .update(VALID_CANONICAL_PLAN_CORE_JSON, 'utf8')
   .digest('hex');
 
-export const VALID_PLANNER_BUILD_RESULT_V2_FIXTURE = {
-  plan: VALID_EXECUTION_PLAN_V2_FIXTURE,
+export const VALID_PLANNER_BUILD_RESULT_V1_FIXTURE = {
+  plan: VALID_EXECUTION_PLAN_V1_FIXTURE,
   executionPolicy: {
     pluginCompatibilityFingerprint: HEX_64_A,
     requiresCapabilities: ['basic-execution'],

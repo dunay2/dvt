@@ -21,8 +21,19 @@ import { HexSha256Schema } from './shared.js';
 
 export const PlanRecordStateSchema = z.enum(['ACTIVE', 'SUPERSEDED', 'ARCHIVED']);
 
+export const PlanStoreScopeSchema = z
+  .object({
+    tenantId: NonBlankStringSchema,
+    projectId: NonBlankStringSchema,
+    environmentId: NonBlankStringSchema,
+  })
+  .strict();
+
 const PlanRecordCommonSchema = z
   .object({
+    tenantId: NonBlankStringSchema,
+    projectId: NonBlankStringSchema,
+    environmentId: NonBlankStringSchema,
     planId: HexSha256Schema,
     canonicalPlanJson: NonBlankStringSchema,
     canonicalHash: HexSha256Schema,
@@ -59,6 +70,7 @@ export const PlanRecordSchema: z.ZodType<PlanRecord> = PlanRecordShapeSchema.sup
     if (hasCanonicalPlanJsonMismatch(record, canonicalPlan, ctx)) {
       return;
     }
+    validateCanonicalOwnership(record, canonicalPlan, ctx);
     validateCanonicalHash(record, ctx);
     validateCanonicalMetadata(record, canonicalPlan, ctx);
   }
@@ -151,6 +163,49 @@ function validateCanonicalMetadata(
   }
 }
 
+function validateCanonicalOwnership(
+  record: PlanRecord,
+  canonicalPlan: ExecutionPlan,
+  ctx: z.RefinementCtx
+): void {
+  const ownership = canonicalPlan.metadata.ownership;
+  if (ownership === undefined) {
+    addPlanRecordIssue(
+      ctx,
+      ['canonicalPlanJson', 'metadata', 'ownership'],
+      'canonicalPlanJson.metadata.ownership is required for persisted plan records'
+    );
+    return;
+  }
+
+  const checks = [
+    {
+      actual: record.tenantId,
+      expected: ownership.tenantId,
+      message: 'tenantId must match canonicalPlanJson.metadata.ownership.tenantId',
+      path: ['tenantId'],
+    },
+    {
+      actual: record.projectId,
+      expected: ownership.projectId,
+      message: 'projectId must match canonicalPlanJson.metadata.ownership.projectId',
+      path: ['projectId'],
+    },
+    {
+      actual: record.environmentId,
+      expected: ownership.environmentId,
+      message: 'environmentId must match canonicalPlanJson.metadata.ownership.environmentId',
+      path: ['environmentId'],
+    },
+  ] as const;
+
+  for (const check of checks) {
+    if (check.actual !== check.expected) {
+      addPlanRecordIssue(ctx, [...check.path], check.message);
+    }
+  }
+}
+
 function addPlanRecordIssue(
   ctx: z.RefinementCtx,
   path: readonly PropertyKey[],
@@ -176,6 +231,9 @@ export const PlanExecutabilityRejectionReportSchema: z.ZodType<PlanExecutability
 
 const PlanExecutabilityRecordCommonSchema = z
   .object({
+    tenantId: NonBlankStringSchema,
+    projectId: NonBlankStringSchema,
+    environmentId: NonBlankStringSchema,
     planId: HexSha256Schema,
     adapterId: NonBlankStringSchema,
   })
@@ -199,6 +257,9 @@ export const PlanExecutabilityRecordSchema: z.ZodType<PlanExecutabilityRecord> =
 
 export const PlanAdmissionLinkSchema: z.ZodType<PlanAdmissionLink> = z
   .object({
+    tenantId: NonBlankStringSchema,
+    projectId: NonBlankStringSchema,
+    environmentId: NonBlankStringSchema,
     planId: HexSha256Schema,
     runId: NonBlankStringSchema,
     adapterId: NonBlankStringSchema,
