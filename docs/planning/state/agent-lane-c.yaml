@@ -2,7 +2,7 @@ lane_id: C
 title: Runtime Safety And Admission
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-05-06'
+last_reviewed: '2026-05-09'
 goal: Harden runtime behavior, admission checks, and caller-visible freshness.
 expected_outcome:
   - runtime failures are explicit
@@ -805,6 +805,122 @@ tasks:
       tests stop being advisory-only. Final closure still depends on three qualifying Lane C PR
       cycles logged against the new workflow.
     last_verified: '2026-04-23'
+  - task_id: CI-AUDIT-ARC-STATE-STORE
+    parent_task: RC-C2
+    priority: P1
+    status: queued
+    objective: >-
+      decide and implement the ARC policy posture for `packages/@dvt/state-store/**` so state-store
+      changes are either intentionally ARC-2 governed or the stale `state-core` trigger is removed.
+    dependency: none
+    target: >-
+      `.arc-policy.yaml`, ARC validation tests, and contributor guidance agree on the current
+      state-store package path and required evidence/risk posture.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/ci-and-delivery/20260506-ci-build-audit-review.md
+      - .arc-policy.yaml
+      - tools/ci/arc-check.mjs
+    status_reason: >-
+      The 2026-05-06 CI build config audit found that `.arc-policy.yaml` still targets
+      `packages/@dvt/state/**` even though the current package path is
+      `packages/@dvt/state-store/**`. This is a real governance routing gap, not a direct
+      implementation authorization.
+    last_verified: '2026-05-09'
+  - task_id: CI-AUDIT-ENGINE-COVERAGE
+    parent_task: RC-C2
+    priority: P2
+    status: queued
+    objective: >-
+      align the Engine Coverage Gate change detector with the actual engine package scope so engine
+      Vitest configuration changes cannot bypass coverage threshold enforcement.
+    dependency: none
+    target: >-
+      The coverage gate either sources its relevant path set from the governed CI scope policy or
+      explicitly includes `packages/@dvt/engine/vitest.config.ts`, with CI-tool coverage proving the
+      path mapping.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/ci-and-delivery/20260506-ci-build-audit-review.md
+      - .github/workflows/test.yml
+      - tools/ci/policy/workflow-scope.json
+    status_reason: >-
+      The audit confirmed that engine tests run for broad engine changes, but the separate coverage
+      gate still uses a local `coverage_relevant` filter that omits the package-local engine Vitest
+      config.
+    last_verified: '2026-05-09'
+  - task_id: CI-AUDIT-CONTRACTS-SCOPE
+    parent_task: RC-C2
+    priority: P2
+    status: queued
+    objective: >-
+      decide whether `contracts.yml` should keep inline `dorny/paths-filter` scope rules or move to
+      the central workflow-scope policy used by newer CI gates.
+    dependency: none
+    target: >-
+      `contracts.yml` either consumes the central scope helper or documents the exception, and
+      CI-tool tests lock the chosen contract-scope behavior.
+    complexity: S
+    effort_points: 2
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/ci-and-delivery/20260506-ci-build-audit-review.md
+      - .github/workflows/contracts.yml
+      - tools/ci/policy/workflow-scope.json
+      - tools/ci/emit-scope.mjs
+    status_reason: >-
+      The audit identified workflow-scope ownership drift: most newer gates use the central scope
+      policy and emitter, while the contracts workflow still carries local inline filters.
+    last_verified: '2026-05-09'
+  - task_id: CI-AUDIT-ADR0-OWNER
+    parent_task: RC-C2
+    priority: P2
+    status: queued
+    objective: >-
+      choose one authoritative workflow owner for the ADR-0000 traceability gate so CI enforcement
+      stays explicit without duplicated push coverage.
+    dependency: none
+    target: >-
+      The ADR-0000 gate remains enforced for pull requests and pushes, but duplicate workflow
+      ownership is removed or documented with a clear reason.
+    complexity: S
+    effort_points: 1
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/ci-and-delivery/20260506-ci-build-audit-review.md
+      - .github/workflows/pr-quality-gate.yml
+      - .github/workflows/ci.yml
+      - traceability.config.json
+    status_reason: >-
+      Current main enforces `pnpm traceability:adr0` in PR quality checks and also in the CI
+      workflow for pushes. The follow-up is ownership consolidation, not adding missing coverage.
+    last_verified: '2026-05-09'
+  - task_id: CI-AUDIT-RELEASE-FLOW
+    parent_task: RC-C2
+    priority: P3
+    status: queued
+    objective: >-
+      confirm whether the release-please workflow intentionally avoids repository checkout and the
+      shared Node/pnpm setup action, or whether release automation needs repo-tooling parity.
+    dependency: none
+    target: >-
+      Release workflow ownership is explicit: either release-please remains action-only by design,
+      or the workflow adopts the repository setup path with a focused validation note.
+    complexity: S
+    effort_points: 1
+    progress_pct: 0
+    evidence_refs:
+      - docs/planning/reviews/ci-and-delivery/20260506-ci-build-audit-review.md
+      - .github/workflows/release.yml
+      - .github/actions/setup-node-pnpm/action.yml
+    status_reason: >-
+      The audit found release workflow setup drift, but the correct action is a policy decision:
+      release-please may not need local repo tooling unless release generation depends on it.
+    last_verified: '2026-05-09'
   - task_id: RC-E1
     priority: P1
     status: done
@@ -1499,16 +1615,22 @@ dependency_notes:
     `TF-C4` inputs. Lane C does not own route UI completion; remaining alpha work is route fixture,
     risk triage, cadence, recovery vocabulary, startup/context, Canvas proof, and plan/run readiness
     execution in Lane E.
+  - >-
+    The 2026-05-06 CI build config audit is now a reference intake instead of an open review queue.
+    Accepted findings are split into `CI-AUDIT-ARC-STATE-STORE`, `CI-AUDIT-ENGINE-COVERAGE`,
+    `CI-AUDIT-CONTRACTS-SCOPE`, `CI-AUDIT-ADR0-OWNER`, and `CI-AUDIT-RELEASE-FLOW`. `CI-05` did not
+    receive a task because the current workflow-scope policy already treats all `docs/**` changes as
+    docs-structure relevant.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-05-06'
-  total_tasks: 53
-  total_effort_points: 201
-  completed_weighted_points: 187.8
-  lane_progress_pct: 93
+  verified_on: '2026-05-09'
+  total_tasks: 58
+  total_effort_points: 209
+  completed_weighted_points: 188.1
+  lane_progress_pct: 90
   notes: >-
-    Weighted progress uses effort_points across the current 53 task entries. The 2026-05-06 Lane C
+    Weighted progress uses effort_points across the current 58 task entries. The 2026-05-06 Lane C
     review reconciliation moved the review bucket to zero by accepting `AR-C1`, `AR-C3`, `AR-C3-A`,
     `AR-C3-B`, `AR-C3-C`, `AR-C4`, `AR-C7`, `AR-C8`, and `TF-C4` as done from existing evidence.
     `AR-C2` was corrected back to in-progress because dashboard/alert wiring evidence is still
@@ -1520,4 +1642,5 @@ verification_summary:
     `TF-C3` remains in progress through rollout acceptance and environment proof for the standalone
     Temporal worker. `F-27` now consumes closed Lane C `AR-C10` and `TF-C4` rail, authorization,
     freshness, and degraded-mode vocabulary as Lane E route-execution inputs rather than as new Lane
-    C UI tasks.
+    C UI tasks. The 2026-05-09 review-board hygiene pass routed the CI build config audit into five
+    explicit queued Lane C follow-ups without changing CI behavior in the same slice.
