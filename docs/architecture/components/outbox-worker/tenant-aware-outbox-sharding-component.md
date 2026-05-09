@@ -18,13 +18,36 @@ delivery runtime and host concerns.
 
 ## Public API
 
-| API                                                       | Owner                | Purpose                                                                                                     |
-| --------------------------------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `OutboxShardAssignmentKey`                                | `@dvt/delivery`      | Names the tenant/run identity used by the sharding policy.                                                  |
-| `buildOutboxStreamOrderingKey(key)`                       | `@dvt/delivery`      | Builds the length-prefixed `(tenantId, runId)` stream key used by in-memory claim and dead-letter ordering. |
-| `resolveOutboxShardId(key, shardCount)`                   | `@dvt/delivery`      | Pure query that returns the persisted shard id for a new outbox row.                                        |
-| `IOutboxStorage.enqueueTx(runId, events)`                 | `@dvt/delivery` port | Adapter entrypoint that applies the policy when rows are persisted.                                         |
-| `IOutboxStorage.listPendingForClaim(limit, { shardIds })` | `@dvt/delivery` port | Existing claim command boundary that filters by worker-owned shards.                                        |
+| API                                                        | Owner                | Purpose                                                                                                     |
+| ---------------------------------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `OutboxShardAssignmentKey`                                 | `@dvt/delivery`      | Names the tenant/run identity used by the sharding policy.                                                  |
+| `buildOutboxStreamOrderingKey(key)`                        | `@dvt/delivery`      | Builds the length-prefixed `(tenantId, runId)` stream key used by in-memory claim and dead-letter ordering. |
+| `resolveOutboxShardId(key, shardCount)`                    | `@dvt/delivery`      | Pure query that returns the persisted shard id for a new outbox row.                                        |
+| `engine/state/outboxSharding.resolveOutboxShardId`         | `@dvt/engine` facade | Engine-local compatibility API that delegates to the Delivery policy without owning hash semantics.         |
+| `engine/state/outboxSharding.buildOutboxStreamOrderingKey` | `@dvt/engine` facade | Engine-local compatibility API for tenant/run stream ordering, backed by Delivery semantics.                |
+| `IOutboxStorage.enqueueTx(runId, events)`                  | `@dvt/delivery` port | Adapter entrypoint that applies the policy when rows are persisted.                                         |
+| `IOutboxStorage.listPendingForClaim(limit, { shardIds })`  | `@dvt/delivery` port | Existing claim command boundary that filters by worker-owned shards.                                        |
+
+## Engine Compatibility Facade
+
+`packages/@dvt/engine/src/state/outboxSharding.ts` is intentionally a semantic
+facade, not a barrel. Engine owns the import shape used by
+`InMemoryOutboxState`; Delivery owns the tenant-affine hash and stream-ordering
+rules.
+
+The facade exists so Engine tests can keep a local state-store vocabulary while
+the runtime policy remains centralized in Delivery. It must expose named
+functions, delegate to `@dvt/delivery`, and avoid local `node:crypto` or hash
+implementation details.
+
+```mermaid
+flowchart LR
+    State["Engine InMemoryOutboxState"] --> Facade["Engine outboxSharding facade"]
+    Facade --> Policy["Delivery OutboxShardAssignment"]
+    Policy --> Shard["persisted shard_id"]
+    Policy --> Stream["tenant/run stream key"]
+    Facade -. must not own .-> Hash["hash algorithm"]
+```
 
 ## Invariants
 
@@ -38,6 +61,8 @@ delivery runtime and host concerns.
 - Existing rows keep their persisted `shard_id` until delivered, dead-lettered,
   or explicitly migrated.
 - Workers claim only their configured shard ids.
+- Engine compatibility APIs must delegate to Delivery and must not re-export a
+  raw barrel or re-implement hashing.
 
 ## Transitions
 
@@ -102,6 +127,7 @@ Changing `shardCount` remains a separate topology migration.
 `OutboxShardAssignment.architecture.test.ts` validates that:
 
 - delivery owns the policy;
-- engine delegates rather than re-implements the hash;
+- engine exposes a named compatibility facade and delegates rather than
+  re-implements the hash;
 - PostgreSQL enqueue SQL includes tenant-aware hash input;
 - docs no longer describe run-only shard assignment as current behavior.

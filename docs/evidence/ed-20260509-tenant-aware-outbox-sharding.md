@@ -12,6 +12,8 @@ breaking: false
 code_refs:
   - packages/@dvt/delivery/src/outboxShardAssignment.ts
   - packages/@dvt/delivery/src/testing/InMemoryOutboxStorage.ts
+  - packages/@dvt/delivery/test/OutboxShardAssignment.architecture.test.ts
+  - packages/@dvt/engine/src/state/outboxSharding.ts
   - packages/@dvt/engine/src/state/InMemoryOutboxState.ts
   - packages/@dvt/adapter-postgres/src/PostgresOutboxStore.ts
   - apps/outbox-worker/test/sharding/concurrentWorkerOrdering.test.ts
@@ -26,6 +28,7 @@ evidence:
     - pnpm --filter @dvt/adapter-postgres typecheck
     - pnpm --filter dvt-outbox-worker typecheck
     - pnpm docs:feature-mechanization:implementation
+    - pnpm verify:prepush
 ---
 
 ## Summary
@@ -48,6 +51,17 @@ changes as a separate topology migration.
   `tenant_id` instead of `run_id`.
 - Updated outbox-worker sharding tests, ADR-0033, the G5 outbox runbook, and
   the component guide/user stories.
+
+## Follow-Up: Engine Facade Encapsulation
+
+The post-merge review tightened the Engine compatibility boundary. Engine's
+`outboxSharding.ts` now exposes named facade functions with an owned-concern
+docblock instead of a raw `@dvt/delivery` re-export. The facade delegates to the
+Delivery-owned policy and keeps Engine's in-memory state vocabulary local.
+
+`OutboxShardAssignment.architecture.test.ts` now guards that boundary by
+requiring explicit facade functions, Delivery delegation, no raw barrel export,
+and no local hash implementation.
 
 ## Architectural Intent
 

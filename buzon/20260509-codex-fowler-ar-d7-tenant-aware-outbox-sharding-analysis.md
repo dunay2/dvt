@@ -139,3 +139,54 @@ The code should be grouped around a Delivery-owned sharding policy:
   not only dependency or barrel thinness.
 - Operational rollout belongs with the policy change because persisted
   `shard_id` makes old and new assignments coexist during migration.
+
+## Post-Merge Facade Follow-Up
+
+The post-merge review found one remaining encapsulation drift: Engine's
+`outboxSharding.ts` was reduced to a raw re-export of Delivery symbols. The
+runtime behavior was correct, but the module read as a barrel instead of a
+semantic boundary. In Fowler terms, the code had solved duplicate logic but had
+not made the published boundary explicit enough for future maintainers.
+
+### Mature-System Comparison
+
+Mature event-sourced systems usually keep adapter-local facades around shared
+policies when the caller belongs to another bounded context. The facade should
+not own the algorithm, but it should own the caller vocabulary. That keeps a
+future Engine change from reaching into Delivery internals while still keeping
+the real sharding policy centralized.
+
+```mermaid
+flowchart LR
+    Engine["Engine in-memory state"] --> Facade["Engine-owned compatibility facade"]
+    Facade --> Delivery["Delivery-owned OutboxShardAssignment"]
+    Delivery --> SQL["PostgreSQL enqueue expression"]
+    Delivery --> Memory["Delivery in-memory storage"]
+    Facade -. forbidden .-> LocalHash["duplicated hash policy"]
+```
+
+### Pattern Improvements
+
+- Replaced a barrel-shaped compatibility module with named facade functions.
+- Kept the Delivery policy as the single source of shard and stream-ordering
+  semantics.
+- Strengthened the architecture test to validate delegation, docblock ownership,
+  and local component documentation.
+- Added the Engine facade to the local component API and invariants.
+
+### Antipatterns Removed
+
+- **Barrel boundary masquerading as architecture.** A re-export hid the fact that
+  Engine owns a compatibility surface while Delivery owns policy semantics.
+- **Semantic drift between code and docs.** The component guide described the
+  Delivery policy but omitted the Engine compatibility surface that real code
+  imports.
+
+### Future Lessons
+
+- A facade can be thin without becoming a barrel. The useful distinction is
+  whether it names its owned concern and preserves the caller's vocabulary.
+- Architecture tests should check semantic ownership text and delegation shape
+  when a module exists primarily as a boundary.
+- Component guides should list compatibility facades as consumers or APIs when
+  they are intentionally kept for bounded-context vocabulary.
