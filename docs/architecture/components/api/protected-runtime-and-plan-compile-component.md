@@ -135,10 +135,10 @@ acts as a fake namespace.
 - `createStartRunTargetAdapterRegistryFromValues(values)`
   Registry factory. Filters discovered adapter IDs to the canonical start-run
   adapter truth.
-- `StoredPlanExecutabilityValidator.validatePlan(planRef, adapterId)`
+- `StoredPlanExecutabilityValidator.validatePlan(ScopedPlanRef, adapterId)`
   Admission service. Returns a fail-closed executability decision for a stored
   plan and adapter.
-- `StoredExecutablePlanResolver.fetch(planRef)`
+- `StoredExecutablePlanResolver.fetch(ScopedPlanRef)`
   Plan resolver. Resolves a stored executable plan after integrity and
   metadata validation.
 

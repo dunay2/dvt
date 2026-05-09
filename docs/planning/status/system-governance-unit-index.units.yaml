@@ -85,7 +85,7 @@ units:
       - packages/@dvt/cli/**
       - packages/cli/**
     excludes:
-      - packages/@dvt/engine/src/ports/IPlanArtifactReader.ts
+      - packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts
       - packages/@dvt/engine/src/security/planRefPolicy.ts
       - packages/@dvt/engine/src/security/planRefPolicyRules.ts
       - packages/@dvt/engine/test/core/WorkflowEngine.planRef.test.ts
@@ -136,14 +136,14 @@ units:
     level: component
     status: review
     owns:
-      - docs/contracts/planner/PlanStoreRecords.v1.md
+      - docs/contracts/planner/plan-store-records-v1.md
       - packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts
       - packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts
     childrenRequired: true
     dddOwner: PORT
     cqRails: PS-Q01, PS-C01
     governance:
-      - docs/contracts/planner/PlanStoreRecords.v1.md
+      - docs/contracts/planner/plan-store-records-v1.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
       - docs/risk-register/quality/R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml
     fowlerSignals:
@@ -173,7 +173,7 @@ units:
     name: Postgres plan-store adapter implementation
     parent: SYS-PLANSTORE
     level: component
-    status: drift
+    status: review
     owns:
       - packages/@dvt/adapter-postgres/src/PostgresPlanStore*.ts
       - packages/@dvt/adapter-postgres/test/PostgresPlanStore*.ts
@@ -192,10 +192,9 @@ units:
     name: API plan-store composition and resolvers
     parent: SYS-PLANSTORE
     level: component
-    status: drift
+    status: review
     owns:
       - apps/api/src/application/errors/ManifestArtifactResolutionError.ts
-      - apps/api/src/application/ports/storedPlan.ts
       - apps/api/src/application/services/StoredExecutablePlanResolver.ts
       - apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
       - apps/api/src/application/services/WorkflowEngineFactory.ts
@@ -254,9 +253,9 @@ units:
     name: Engine plan artifact fetch and plan-ref policy
     parent: SYS-PLANSTORE
     level: component
-    status: drift
+    status: review
     owns:
-      - packages/@dvt/engine/src/ports/IPlanArtifactReader.ts
+      - packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts
       - packages/@dvt/engine/src/security/planRefPolicy.ts
       - packages/@dvt/engine/src/security/planRefPolicyRules.ts
       - packages/@dvt/engine/test/core/WorkflowEngine.planRef.test.ts
@@ -418,8 +417,6 @@ units:
     status: coverage-required
     owns:
       - apps/api/src/application/ports/**
-    excludes:
-      - apps/api/src/application/ports/storedPlan.ts
     childrenRequired: false
     dddOwner: PORT
     cqRails: API application command/query ports
@@ -858,7 +855,7 @@ units:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
       - docs/adr/adr-0052-planref-continuation-safety.md
       - docs/architecture/components/engine/adapters/temporal/temporal-planref*.md
-      - docs/contracts/planner/PlanStoreRecords.v1.md
+      - docs/contracts/planner/plan-store-records-v1.md
       - docs/evidence/ED-20260402-s08-contract-layer-hardening.md
       - docs/evidence/ED-20260403-s08-*.md
       - docs/evidence/ed-20260427-temporal-planref-*.md

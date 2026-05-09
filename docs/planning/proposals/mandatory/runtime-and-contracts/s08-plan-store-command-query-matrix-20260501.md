@@ -40,7 +40,7 @@ Minimum review decisions:
 - `docs/adr/ADR-0041-global-domain-state-model-and-boundary-contracts.md`
 - `docs/adr/ADR-0042-execution-plan-canonical-identity-unification.md`
 - `docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md`
-- `docs/contracts/planner/PlanStoreRecords.v1.md`
+- `docs/contracts/planner/plan-store-records-v1.md`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md`
 - `docs/planning/closeouts/20260425-production-tenant-isolation-baseline-closeout.md`
 - `docs/architecture/components/engine/security/SECURITY_INVARIANTS.v1.md`
@@ -121,7 +121,7 @@ review acceptance.
 | Slice                   | `S08-IMPL-01` scoped plan-record contracts and ports                                                                                                                                       |
 | C&Q rows                | `PS-C02`, `PS-C03`, `PS-C04`, `PS-Q01`, `PS-Q02`, `PS-Q03`, `PS-Q04`, `PS-Q05`                                                                                                             |
 | DDD owners              | `PlanRecord` aggregate, plan executability domain service, runtime admission application service, plan record/executability/admission/lineage read models                                  |
-| Allowed surfaces        | `docs/contracts/planner/PlanStoreRecords.v1.md`, `packages/@dvt/contracts/**`, `packages/@dvt/artifacts/src/ports/**`, focused contract/architecture tests                                 |
+| Allowed surfaces        | `docs/contracts/planner/plan-store-records-v1.md`, `packages/@dvt/contracts/**`, `packages/@dvt/artifacts/src/ports/**`, focused contract/architecture tests                               |
 | Explicitly out of scope | API composition, Temporal worker composition, engine dispatch materialization, SQL migration, lifecycle facade deletion                                                                    |
 | Red tests first         | Contract shape rejects unscoped plan records; artifacts ports cannot express unscoped plan-record commands/queries; architecture guard rejects lifecycle facade as canonical S08 authority |
 | ARC posture             | ARC-2 is required once code under contracts/artifacts changes; evidence and risk entries must be created before PR creation                                                                |
@@ -438,7 +438,7 @@ authorization proof.
 | `docs/planning/proposals/mandatory/runtime-and-contracts/postgres-rls-qa-remediation-plan-20260425.md` and `postgres-rls-fowler-qa-remediation-plan-20260426.md`                                                                                | RLS remediation planning                                                | All storage-backed IDs                                     | Treat plan-store tenancy as residual or out-of-scope without routing closure to this scoped command/query matrix                                                                                                                                                                                                   |
 | `docs/planning/proposals/mandatory/runtime-and-contracts/tenant-run-identity-platform-owned-run-id-plan-20260423.md`                                                                                                                            | Platform-owned run identity plan                                        | `PS-C02`, `PS-Q01`, `PS-Q02`                               | Leaves plan-record tenant indexing as a separate concern without pointing to this S08 matrix as the closure authority                                                                                                                                                                                              |
 | `docs/planning/reviews/20260402-s08-plan-record-plan-store-gap-review.md`                                                                                                                                                                       | S08 gap review                                                          | `PS-C01`, `PS-C07`, `PS-C08`, `PS-Q08`                     | Review context still frames the gap around lifecycle facade and unscoped fetcher dependencies                                                                                                                                                                                                                      |
-| `docs/contracts/planner/PlanStoreRecords.v1.md`                                                                                                                                                                                                 | Plan-store records contract doc                                         | All record-backed IDs                                      | Still links the prior S08 execution plan as the command/query authority and does not point to this no-legacy matrix                                                                                                                                                                                                |
+| `docs/contracts/planner/plan-store-records-v1.md`                                                                                                                                                                                               | Plan-store records contract doc                                         | All record-backed IDs                                      | Still links the prior S08 execution plan as the command/query authority and does not point to this no-legacy matrix                                                                                                                                                                                                |
 | `docs/risk-register/quality/R-20260321-planner-validation-lifecycle-semantics.md`                                                                                                                                                               | Open risk register entry                                                | `PS-C07`, `PS-C08`, `PS-Q06`                               | Tracks lifecycle transition semantics as active risk rather than removal/supersession                                                                                                                                                                                                                              |
 | `docs/risk-register/quality/R-20260403-S08-4-POSTGRES-THREE-PART-MODEL.yaml` and `R-20260429-WE-HX-1-BOUNDARY-OWNERSHIP.yaml`                                                                                                                   | Open risk register entries                                              | `PS-C01`, `PS-C07`, `PS-C08`, `PS-Q08`                     | Still describe legacy lifecycle callers or unscoped `IPlanFetcher` ownership without S08 tenancy removal posture                                                                                                                                                                                                   |
 | `docs/risk-register/quality/R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE.yaml`, `R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml`, and `R-20260408-PR807-ADAPTER-POSTGRES-TEST-CONTRACT-DRIFT.yaml`                                         | Open risk register entries                                              | All IDs                                                    | Track deferred plan-store tenancy, canonical-shape drift, or plan-store test drift without closure against this matrix                                                                                                                                                                                             |
@@ -861,4 +861,811 @@ symbols:
     cypressCoverage: N/A - unit test fixture
     unitTests:
       - packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+```
+
+## Feature Mechanization Manifest: S08 Scoped Artifact Port Closure
+
+This manifest binds the broader S08 scoped plan-store remediation slice to the
+single canonical artifact port owner. It exists because the closure touches
+contracts, artifacts, planner, engine, API, Temporal, PostgreSQL, and governance
+documentation in one bounded migration.
+
+```feature-mechanization
+version: 1
+featureId: S08-SCOPED-ARTIFACT-PORT-CLOSURE-20260509
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+componentGuides:
+  - docs/architecture/components/engine/contracts/plan-store-records-component.md
+  - docs/architecture/components/engine/architecture/workflow-engine-boundary-ownership-component.md
+  - docs/architecture/components/planner/planner-private-behavior-ports-component.md
+  - docs/architecture/components/api/protected-runtime-and-plan-compile-component.md
+userStories:
+  - docs/architecture/components/engine/contracts/plan-store-records-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-boundary-ownership-user-stories.md
+  - buzon/20260509-codex-fowler-plan-store-scoped-records-analysis-and-remediation.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/adr/ADR-0031-adapter-tenant-isolation.md
+  - docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md
+  - docs/adr/ADR-0041-global-domain-state-model-and-boundary-contracts.md
+  - docs/adr/ADR-0042-execution-plan-canonical-identity-unification.md
+  - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
+  - docs/adr/ADR-0054-plan-store-scoped-record-identity.md
+  - docs/contracts/planner/plan-store-records-v1.md
+allowedImplementationSurfaces:
+  - apps/api/**
+  - buzon/20260509-codex-fowler-plan-store-scoped-records-analysis-and-remediation.md
+  - docs/.manifest.json
+  - docs/adr/**
+  - docs/architecture/components/api/protected-runtime-and-plan-compile-component.md
+  - docs/architecture/components/engine/**
+  - docs/architecture/components/planner/**
+  - docs/architecture/diagrams/**
+  - docs/contracts/**
+  - docs/evidence/**
+  - docs/guides/postgres-plan-store-*.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - docs/planning/status/**
+  - docs/risk-register/quality/**
+  - packages/@dvt/adapter-postgres/**
+  - packages/@dvt/adapter-temporal/**
+  - packages/@dvt/artifacts/**
+  - packages/@dvt/contracts/**
+  - packages/@dvt/engine/**
+  - packages/@dvt/planner/**
+  - pnpm-lock.yaml
+forbiddenImplementationSurfaces:
+  - apps/web/**
+  - packages/@dvt/state-store/**
+  - packages/@dvt/run-domain/**
+  - packages/@dvt/delivery/**
+  - scripts/**
+commandQueryRails:
+  - name: CreateStoredPlan
+    type: command
+    dddOwner: Preview/start-run application service with PlanRecord aggregate
+  - name: CreatePlanRecord
+    type: command
+    dddOwner: PlanRecord aggregate
+  - name: RecordPlanExecutability
+    type: command
+    dddOwner: Plan executability domain service
+  - name: MarkPlanAdmitted
+    type: command
+    dddOwner: Runtime admission application service
+  - name: GetPlanRecord
+    type: query
+    dddOwner: Plan record read model
+  - name: GetPlanRecordByRef
+    type: query
+    dddOwner: Plan record read model
+  - name: FetchPlanForValidation
+    type: query
+    dddOwner: Plan validation application service
+  - name: FetchPlanForEngineDispatch
+    type: query
+    dddOwner: Engine runtime materialization boundary
+domainObjects:
+  - name: PlanStoreScope
+    type: value object
+    owner: Plan-store scoped record contracts
+  - name: ScopedPlanRef
+    type: value object
+    owner: Plan-store scoped record contracts
+  - name: IStoredPlanArtifactStore
+    type: application port
+    owner: Artifacts bounded context
+  - name: IPlanIntegrityValidator
+    type: engine port
+    owner: Engine runtime boundary
+  - name: PostgresPlanStore
+    type: storage adapter
+    owner: PostgreSQL plan-store adapter
+fowlerSignals:
+  - Boundary drift
+  - Hidden authority
+  - Responsibility overload
+  - Semantic duplication
+  - Repeated unscoped materialization
+architectureGuards:
+  - pnpm docs:feature-mechanization:implementation
+  - packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+  - packages/@dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts
+cypressFlows:
+  - N/A - backend contract, adapter, API, and engine boundary slice
+completionGate:
+  - pnpm docs:feature-mechanization -- --feature S08-SCOPED-ARTIFACT-PORT-CLOSURE-20260509
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm governance:refresh
+  - pnpm ci:docs
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: scoped-plan-record-contracts
+    redTest: pnpm --filter @dvt/contracts test -- test/plan-store-records.architecture.test.ts
+    expectedFailure: Plan-store records and lifecycle vocabulary still allowed unscoped plan identity.
+    patchSurfaces:
+      - packages/@dvt/contracts/src/contracts/planner/**
+      - packages/@dvt/contracts/src/schema-packs/plan-records.ts
+      - packages/@dvt/contracts/test/**
+    greenTest: pnpm --filter @dvt/contracts test -- test/plan-store-records.architecture.test.ts
+  - id: canonical-artifact-port-owner
+    redTest: pnpm --filter @dvt/artifacts build
+    expectedFailure: Stored-plan artifact lifecycle behavior had ports in several bounded contexts.
+    patchSurfaces:
+      - packages/@dvt/artifacts/src/**
+      - packages/@dvt/planner/src/contracts/PlanExecutabilityValidation.ts
+      - packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts
+    greenTest: pnpm --filter @dvt/artifacts --filter @dvt/planner --filter @dvt/engine build
+  - id: scoped-runtime-composition
+    redTest: pnpm --filter dvt-api --filter @dvt/adapter-postgres test
+    expectedFailure: API and PostgreSQL composition could still materialize by unscoped plan reference.
+    patchSurfaces:
+      - apps/api/**
+      - packages/@dvt/adapter-postgres/**
+      - packages/@dvt/adapter-temporal/**
+    greenTest: pnpm --filter dvt-api --filter @dvt/adapter-postgres --filter @dvt/adapter-temporal test
+  - id: governance-drift-closeout
+    redTest: pnpm docs:feature-mechanization:implementation
+    expectedFailure: The broad S08 diff was not declared by a feature mechanization manifest.
+    patchSurfaces:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - docs/planning/status/**
+      - docs/evidence/**
+      - docs/risk-register/quality/**
+    greenTest: pnpm docs:feature-mechanization:implementation
+symbols:
+  - name: toScopedPlanRef
+    path: apps/api/src/application/services/PlannerBackedStartRunUseCase.ts
+    dddOwner: API start-run application service
+    cqRails: [FetchPlanForValidation]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend use-case helper
+    unitTests: [dvt-api application service tests]
+  - name: toScopedPlanRef
+    path: apps/api/src/application/services/PreviewPlanUseCase.ts
+    dddOwner: API preview application service
+    cqRails: [CreateStoredPlan]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend use-case helper
+    unitTests: [dvt-api route and preview tests]
+  - name: SCOPED_STORED_PLAN_REF
+    path: apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts
+    dddOwner: API start-run test fixture
+    cqRails: [FetchPlanForValidation]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - unit test fixture
+    unitTests: [dvt-api application service tests]
+  - name: SCOPED_PLAN_REF
+    path: apps/api/test/application/services/StoredExecutablePlanResolver.test.ts
+    dddOwner: API stored executable resolver test fixture
+    cqRails: [FetchPlanForValidation]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - unit test fixture
+    unitTests: [dvt-api resolver tests]
+  - name: SCOPED_PLAN_REF
+    path: apps/api/test/application/services/storedPlanExecutabilityValidator/harness.ts
+    dddOwner: API executability validator test harness
+    cqRails: [FetchPlanForValidation]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - unit test fixture
+    unitTests: [dvt-api executability validator tests]
+  - name: makeValidationReader
+    path: apps/api/test/application/services/storedPlanExecutabilityValidator/harness.ts
+    dddOwner: API executability validator test harness
+    cqRails: [FetchPlanForValidation]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - unit test fixture
+    unitTests: [dvt-api executability validator tests]
+  - name: validationInput
+    path: apps/api/test/application/services/storedPlanExecutabilityValidator/harness.ts
+    dddOwner: API executability validator test harness
+    cqRails: [FetchPlanForValidation]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - unit test fixture
+    unitTests: [dvt-api executability validator tests]
+  - name: SCOPED_VALID_PLAN_REF
+    path: apps/api/test/entrypoints/http/importPlanRoute.test.ts
+    dddOwner: API import-plan route test fixture
+    cqRails: [CreateStoredPlan]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - HTTP route test fixture
+    unitTests: [dvt-api import route tests]
+  - name: SCOPED_VALID_PLAN_REF
+    path: apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts
+    dddOwner: API preview route test fixture
+    cqRails: [CreateStoredPlan]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - HTTP route test fixture
+    unitTests: [dvt-api preview route tests]
+  - name: ExecutabilityValidationError
+    path: apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
+    dddOwner: API stored-plan executability validator
+    cqRails: [FetchPlanForValidation]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend validator type
+    unitTests: [dvt-api executability validator tests]
+  - name: createPreviewDeps
+    path: apps/api/test/entrypoints/http/previewPlanRouteTestSupport.ts
+    dddOwner: API preview route test support
+    cqRails: [CreateStoredPlan]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - HTTP route test support
+    unitTests: [dvt-api preview route tests]
+  - name: getRequiredPlanStoreScope
+    path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts
+    dddOwner: PostgreSQL plan-store mapper boundary
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend adapter mapper
+    unitTests: [adapter-postgres plan-store tests]
+  - name: PlanRecordScope
+    path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.plan-record-repository.ts
+    dddOwner: PostgreSQL plan-record repository
+    cqRails: [GetPlanRecord]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend adapter type
+    unitTests: [adapter-postgres plan-store tests]
+  - name: sqlAssertPlanRecordsScopedShape
+    path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.sql.ts
+    dddOwner: PostgreSQL plan-store schema guard
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend SQL guard
+    unitTests: [adapter-postgres SQL tests]
+  - name: sqlAssertStoredPlansCanonicalOwnership
+    path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.sql.ts
+    dddOwner: PostgreSQL stored-plan schema guard
+    cqRails: [CreateStoredPlan]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend SQL guard
+    unitTests: [adapter-postgres SQL tests]
+  - name: PLAN_STORE_SCOPE
+    path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.integration.helpers.ts
+    dddOwner: PostgreSQL plan-store integration fixture
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - integration fixture
+    unitTests: [adapter-postgres integration tests]
+  - name: storePlanArtifact
+    path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts
+    dddOwner: PostgreSQL plan-store integration fixture
+    cqRails: [CreateStoredPlan]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - integration fixture
+    unitTests: [adapter-postgres records tests]
+  - name: archive
+    path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-guards.integration.test.ts
+    dddOwner: PostgreSQL plan-store guard fixture
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - integration fixture
+    unitTests: [adapter-postgres guard tests]
+  - name: scopedPlan
+    path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-guards.integration.test.ts
+    dddOwner: PostgreSQL plan-store guard fixture
+    cqRails: [GetPlanRecord]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - integration fixture
+    unitTests: [adapter-postgres guard tests]
+  - name: storePlanArtifact
+    path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-guards.integration.test.ts
+    dddOwner: PostgreSQL plan-store guard fixture
+    cqRails: [CreateStoredPlan]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - integration fixture
+    unitTests: [adapter-postgres guard tests]
+  - name: supersession
+    path: packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-guards.integration.test.ts
+    dddOwner: PostgreSQL plan-store guard fixture
+    cqRails: [GetPlanRecord]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - integration fixture
+    unitTests: [adapter-postgres guard tests]
+  - name: fetcher
+    path: packages/@dvt/adapter-temporal/test/activityDeps.typecheck.ts
+    dddOwner: Temporal adapter typecheck fixture
+    cqRails: [FetchPlanForEngineDispatch]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - adapter typecheck fixture
+    unitTests: [adapter-temporal typecheck tests]
+  - name: scopedPlanRef
+    path: packages/@dvt/adapter-temporal/test/dbtRuntimeFixtures.test.ts
+    dddOwner: Temporal adapter DBT runtime fixture
+    cqRails: [FetchPlanForEngineDispatch]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - adapter test fixture
+    unitTests: [adapter-temporal runtime fixture tests]
+  - name: TestPlanFetcher
+    path: packages/@dvt/adapter-temporal/test/helpers/integration/testActivities.ts
+    dddOwner: Temporal adapter integration fixture
+    cqRails: [FetchPlanForEngineDispatch]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - integration fixture
+    unitTests: [adapter-temporal integration tests]
+  - name: createUnusedFetcher
+    path: packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts
+    dddOwner: Temporal plan artifact reader test fixture
+    cqRails: [FetchPlanForEngineDispatch]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - unit test fixture
+    unitTests: [adapter-temporal reader tests]
+  - name: ScopedPlanExecutabilityQuery
+    path: packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts
+    dddOwner: Artifacts plan-store read port
+    cqRails: [GetPlanRecord]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend port type
+    unitTests: [artifacts build and consumer tests]
+  - name: ArchivePlanInput
+    path: packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts
+    dddOwner: Artifacts plan-store write port
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend port type
+    unitTests: [artifacts build and consumer tests]
+  - name: MarkPlanSupersededInput
+    path: packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts
+    dddOwner: Artifacts plan-store write port
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend port type
+    unitTests: [artifacts build and consumer tests]
+  - name: IStoredPlanArtifactReader
+    path: packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts
+    dddOwner: Artifacts stored-plan artifact port
+    cqRails: [FetchPlanForValidation]
+    fowlerSignals: [Semantic duplication]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend port type
+    unitTests: [artifacts build and consumer tests]
+  - name: IStoredPlanArtifactStore
+    path: packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts
+    dddOwner: Artifacts stored-plan artifact port
+    cqRails: [CreateStoredPlan]
+    fowlerSignals: [Semantic duplication]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend port type
+    unitTests: [artifacts build and consumer tests]
+  - name: IStoredPlanArtifactWriter
+    path: packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts
+    dddOwner: Artifacts stored-plan artifact port
+    cqRails: [CreateStoredPlan]
+    fowlerSignals: [Semantic duplication]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend port type
+    unitTests: [artifacts build and consumer tests]
+  - name: MarkStoredPlanArtifactInvalidInput
+    path: packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts
+    dddOwner: Artifacts stored-plan artifact port
+    cqRails: [RecordPlanExecutability]
+    fowlerSignals: [Semantic duplication]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend port type
+    unitTests: [artifacts build and consumer tests]
+  - name: StorePlanArtifactInput
+    path: packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts
+    dddOwner: Artifacts stored-plan artifact port
+    cqRails: [CreateStoredPlan]
+    fowlerSignals: [Semantic duplication]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend port type
+    unitTests: [artifacts build and consumer tests]
+  - name: StoredPlanArtifact
+    path: packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts
+    dddOwner: Artifacts stored-plan artifact port
+    cqRails: [FetchPlanForValidation]
+    fowlerSignals: [Semantic duplication]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - backend port type
+    unitTests: [artifacts build and consumer tests]
+  - name: PlanAdmissionLink
+    path: packages/@dvt/contracts/src/contracts/planner/PlanAdmissionLink.v1.ts
+    dddOwner: Plan admission link contract
+    cqRails: [MarkPlanAdmitted]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - backend contract
+    unitTests: [contracts plan-store record tests]
+  - name: PlanExecutabilityRecordBase
+    path: packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityRecord.v1.ts
+    dddOwner: Plan executability record contract
+    cqRails: [RecordPlanExecutability]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - backend contract
+    unitTests: [contracts plan-store record tests]
+  - name: PlanRecordBase
+    path: packages/@dvt/contracts/src/contracts/planner/PlanRecord.v1.ts
+    dddOwner: Plan record contract
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - backend contract
+    unitTests: [contracts plan-store record tests]
+  - name: PlanStoreScope
+    path: packages/@dvt/contracts/src/contracts/planner/PlanRecord.v1.ts
+    dddOwner: Plan-store scope value object
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - backend contract
+    unitTests: [contracts plan-store record tests]
+  - name: ScopedPlanId
+    path: packages/@dvt/contracts/src/contracts/planner/PlanRecord.v1.ts
+    dddOwner: Scoped plan identifier value object
+    cqRails: [GetPlanRecord]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - backend contract
+    unitTests: [contracts plan-store record tests]
+  - name: ScopedPlanRef
+    path: packages/@dvt/contracts/src/contracts/planner/PlanRecord.v1.ts
+    dddOwner: Scoped plan reference value object
+    cqRails: [FetchPlanForValidation]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - backend contract
+    unitTests: [contracts plan-store record tests]
+  - name: PlanStoreScopeSchema
+    path: packages/@dvt/contracts/src/schema-packs/plan-records.ts
+    dddOwner: Plan-store scope schema pack
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - backend schema pack
+    unitTests: [contracts schema-pack tests]
+  - name: validateCanonicalOwnership
+    path: packages/@dvt/contracts/src/schema-packs/plan-records.ts
+    dddOwner: Plan-store ownership schema pack
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - backend schema pack
+    unitTests: [contracts schema-pack tests]
+  - name: VALID_EXECUTION_PLAN_V1_FIXTURE
+    path: packages/@dvt/contracts/test/fixtures/planner-contract.fixtures.ts
+    dddOwner: Planner contract fixture
+    cqRails: [CreateStoredPlan]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - test fixture
+    unitTests: [contracts fixture tests]
+  - name: VALID_PLANNER_BUILD_RESULT_V1_FIXTURE
+    path: packages/@dvt/contracts/test/fixtures/planner-contract.fixtures.ts
+    dddOwner: Planner build-result fixture
+    cqRails: [CreateStoredPlan]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - test fixture
+    unitTests: [contracts fixture tests]
+  - name: ADAPTER_POSTGRES_SRC_ROOT
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: API_STORED_PLAN_PORT
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [FetchPlanForValidation]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: ARTIFACTS_SRC_ROOT
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [CreateStoredPlan]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: COMPONENT_GUIDE
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: CONTRACTS_SRC_ROOT
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: ENGINE_PLAN_ARTIFACT_READER
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [FetchPlanForEngineDispatch]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: MAILBOX_REVIEW
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: PLANNER_LIFECYCLE_PORT
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [RecordPlanExecutability]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: PLAN_ADMISSION_SOURCE
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [MarkPlanAdmitted]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: PLAN_EXECUTABILITY_SOURCE
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [RecordPlanExecutability]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: PLAN_RECORD_SCHEMA_PACK
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: PLAN_RECORD_SOURCE
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: PLAN_STORE_READER_PORT
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [GetPlanRecord]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: PLAN_STORE_WRITER_PORT
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: POSTGRES_PLAN_RECORD_REPOSITORY
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [GetPlanRecord]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: POSTGRES_PLAN_STORE_SOURCE
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [CreateStoredPlan]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: POSTGRES_PLAN_STORE_SQL
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [CreateStoredPlan]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: POSTGRES_PLAN_STORE_MAPPERS
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: POSTGRES_PLAN_STORE_SCHEMA_MANAGER
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: POSTGRES_PLAN_EXECUTABILITY_REPOSITORY
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [RecordPlanExecutability]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: POSTGRES_PLAN_ADMISSION_REPOSITORY
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [MarkPlanAdmitted]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: POSTGRES_PLAN_EXECUTABLE_BLOB_REPOSITORY
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [FetchPlanForEngineDispatch]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: SYSTEM_OPERATIONS_INVENTORY
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Documentation drift]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: REPO_ROOT
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: SCOPED_RECORD_ADR
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: STORED_PLAN_ARTIFACT_PORT
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [CreateStoredPlan]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: USER_STORIES_DOC
+    path: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    dddOwner: Plan-store architecture test
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [contracts architecture tests]
+  - name: planStoreScope
+    path: packages/@dvt/contracts/test/validation/plan-records.ts
+    dddOwner: Contracts plan-record validation fixture
+    cqRails: [CreatePlanRecord]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - validation fixture
+    unitTests: [contracts validation tests]
+  - name: validCanonicalPlanJson
+    path: packages/@dvt/contracts/test/validation/plan-records.ts
+    dddOwner: Contracts plan-record validation fixture
+    cqRails: [CreateStoredPlan]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - validation fixture
+    unitTests: [contracts validation tests]
+  - name: toScopedPlanRef
+    path: packages/@dvt/engine/src/application/RecoverRunApplicationService.ts
+    dddOwner: Engine recovery application service
+    cqRails: [FetchPlanForEngineDispatch]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: packages/@dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts
+    cypressCoverage: N/A - backend engine helper
+    unitTests: [engine application tests]
+  - name: toScopedPlanRef
+    path: packages/@dvt/engine/src/application/StartRunApplicationService.ts
+    dddOwner: Engine start-run application service
+    cqRails: [FetchPlanForEngineDispatch]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: packages/@dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts
+    cypressCoverage: N/A - backend engine helper
+    unitTests: [engine application tests]
+  - name: IPlanIntegrityValidator
+    path: packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts
+    dddOwner: Engine runtime materialization boundary
+    cqRails: [FetchPlanForEngineDispatch]
+    fowlerSignals: [Semantic duplication]
+    architectureGuard: packages/@dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts
+    cypressCoverage: N/A - backend engine port
+    unitTests: [engine architecture and contract tests]
+  - name: API_STORED_PLAN_VALIDATOR
+    path: packages/@dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts
+    dddOwner: Engine boundary architecture test
+    cqRails: [FetchPlanForEngineDispatch]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [engine architecture tests]
+  - name: ARTIFACTS_STORED_PLAN_PORT
+    path: packages/@dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts
+    dddOwner: Engine boundary architecture test
+    cqRails: [FetchPlanForEngineDispatch]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests: [engine architecture tests]
+  - name: makeScopedPlanRef
+    path: packages/@dvt/engine/test/contracts/engine.test.ts
+    dddOwner: Engine contract test fixture
+    cqRails: [FetchPlanForEngineDispatch]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts
+    cypressCoverage: N/A - contract test fixture
+    unitTests: [engine contract tests]
+  - name: InMemoryPlanFetcher
+    path: packages/@dvt/engine/test/contracts/helpers.ts
+    dddOwner: Engine contract test fixture
+    cqRails: [FetchPlanForEngineDispatch]
+    fowlerSignals: [Coverage refinement]
+    architectureGuard: packages/@dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts
+    cypressCoverage: N/A - contract test fixture
+    unitTests: [engine contract tests]
+  - name: PlanExecutabilityValidationInput
+    path: packages/@dvt/planner/src/contracts/PlanExecutabilityValidation.ts
+    dddOwner: Planner executability validation contract
+    cqRails: [FetchPlanForValidation]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - backend planner contract
+    unitTests: [planner contract tests]
 ```

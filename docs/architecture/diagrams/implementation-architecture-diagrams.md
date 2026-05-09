@@ -377,7 +377,7 @@ architecture, gathered from the section analyses above.
 
 Closed audit items such as the earlier `DispatchedIntentReconciliationPolicy`
 outcome-key bug, the Temporal native-cancel cutover, and the WE-HX-1
-`IPlanFetcher` ownership split are intentionally omitted from the active
+stored-plan artifact ownership split is intentionally omitted from the active
 inventory.
 
 **Design improvement opportunities (not previously identified):**

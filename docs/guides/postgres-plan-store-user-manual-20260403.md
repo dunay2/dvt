@@ -14,13 +14,15 @@ Postgres-backed plan store behavior in day-to-day work.
 
 ## What the component provides
 
-- Persist plan artifacts (`storePlan`)
-- Transition validation state (`markValid`, `markInvalid`)
+- Persist plan artifacts (`storePlanArtifact`)
+- Transition validation state (`markStoredPlanArtifactValid`,
+  `markStoredPlanArtifactInvalid`)
 - Persist artifacts-domain records (`createPlanRecord`, `recordExecutability`,
   `markAdmitted`, `markSuperseded`, `archivePlan`)
 - Read artifacts-domain records (`getPlanRecord`, `getPlanRecordByRef`,
   `listExecutabilityByAdapter`, `getAdmissionLinks`, `getSupersession`)
-- Fetch executable bytes (`fetch`, `fetchForValidation`)
+- Fetch executable bytes (`fetchStoredPlanArtifact`,
+  `fetchStoredPlanArtifactForValidation`)
 
 ## Typical usage flow
 
@@ -30,12 +32,12 @@ sequenceDiagram
   participant Store as PostgresPlanStore
   participant DB as PostgreSQL
 
-  Planner->>Store: storePlan(buildResult)
+  Planner->>Store: storePlanArtifact({ buildResult })
   Store->>DB: insert stored_plans + upsert plan_records
   DB-->>Store: plan persisted as PENDING_VALIDATION
   Store-->>Planner: PlanRef
 
-  Planner->>Store: markValid(planRef) or markInvalid(planRef, report)
+  Planner->>Store: markStoredPlanArtifactValid(ScopedPlanRef) or markStoredPlanArtifactInvalid(...)
   Store->>DB: transition validation state
   DB-->>Store: state updated
 ```
@@ -72,7 +74,7 @@ pnpm --filter @dvt/adapter-postgres test
 
 ## Error semantics you should expect
 
-- `PLAN_STORE_CONFLICT:*` when idempotent `storePlan` replay does not match
+- `PLAN_STORE_CONFLICT:*` when idempotent `storePlanArtifact` replay does not match
   existing stored payload.
 - `PLAN_RECORD_ALREADY_EXISTS:*` when `createPlanRecord` is called for an
   existing `planId`.
@@ -98,9 +100,9 @@ Validation lifecycle in `stored_plans`:
 
 ```mermaid
 stateDiagram-v2
-  [*] --> PENDING_VALIDATION: storePlan
-  PENDING_VALIDATION --> VALID: markValid
-  PENDING_VALIDATION --> INVALID: markInvalid
+  [*] --> PENDING_VALIDATION: storePlanArtifact
+  PENDING_VALIDATION --> VALID: markStoredPlanArtifactValid
+  PENDING_VALIDATION --> INVALID: markStoredPlanArtifactInvalid
   VALID --> [*]
   INVALID --> [*]
 ```

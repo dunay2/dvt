@@ -2,7 +2,7 @@
 title: PostgresPlanStore Technical Manual
 status: Active
 owner: Adapters / Artifacts / Architecture
-last_reviewed: 2026-04-03
+last_reviewed: 2026-05-09
 ---
 
 # PostgresPlanStore Technical Manual
@@ -19,30 +19,32 @@ invariants, and the current architectural-gap status.
 - `docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md`
 - `docs/adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md`
 - `docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md`
+- `docs/adr/ADR-0054-plan-store-scoped-record-identity.md`
+- `docs/architecture/components/engine/contracts/plan-store-records-component.md`
 - `docs/planning/reviews/architecture-and-governance/20260403-postgres-plan-store-srp-remediation-target.md`
 - `docs/planning/reviews/architecture-and-governance/20260403-s08-postgres-plan-store-hard-qa-review.md`
 
 ## Runtime role
 
-`PostgresPlanStore` currently implements four ports:
+`PostgresPlanStore` currently implements four artifacts-owned ports:
 
-- `IPlanValidationLifecycleStore`
-- `IPlanFetcher`
+- `IStoredPlanArtifactWriter`
+- `IStoredPlanArtifactReader`
 - `IPlanStoreWriter`
 - `IPlanStoreReader`
 
-Ownership note: `IPlanValidationLifecycleStore` is now imported from
-`@dvt/planner` as a planner-owned behavior port. Shared serializable plan
-records, refs, validation records, and executability DTOs remain in
-`@dvt/contracts`.
+Ownership note: stored-plan artifact lifecycle and materialization behavior is
+canonical in `@dvt/artifacts` through `IStoredPlanArtifactStore`. Shared
+serializable plan records, refs, validation records, and executability DTOs
+remain in `@dvt/contracts`.
 
 ```mermaid
 flowchart LR
   subgraph Callers
     C1[Planner pipeline]
-    C2[Validation lifecycle callers]
-    C3[Runtime fetch callers]
-    C4[Artifacts readers]
+    C2[Stored artifact lifecycle callers]
+    C3[Runtime materialization callers]
+    C4[Scoped record readers and writers]
   end
 
   subgraph AdapterPostgres
@@ -51,9 +53,9 @@ flowchart LR
 
   subgraph Storage
     T1[(stored_plans)]
-    T2[(plan_records)]
-    T3[(plan_executability_records)]
-    T4[(plan_admission_links)]
+    T2[(plan_records scoped)]
+    T3[(plan_executability_records scoped)]
+    T4[(plan_admission_links scoped)]
   end
 
   C1 --> S
@@ -77,16 +79,28 @@ Composition now delegates infrastructure responsibilities:
 - `PostgresPlanAdmissionRepository` owns `plan_admission_links`.
 - `PostgresExecutableBlobRepository` owns `stored_plans` persistence/fetch and
   validation-state transitions.
-- `PostgresPlanStore` remains the application-facing lifecycle/fetch facade.
+- `PostgresPlanStore` remains the application-facing artifacts store adapter.
 
 ## Current data model
 
 ```mermaid
 erDiagram
-  PLAN_RECORDS ||--o{ PLAN_EXECUTABILITY_RECORDS : "plan_id"
-  PLAN_RECORDS ||--o{ PLAN_ADMISSION_LINKS : "plan_id"
+  STORED_PLANS ||--o{ PLAN_RECORDS : "plan_id content artifact"
+  PLAN_RECORDS ||--o{ PLAN_EXECUTABILITY_RECORDS : "scope + plan_id"
+  PLAN_RECORDS ||--o{ PLAN_ADMISSION_LINKS : "scope + plan_id"
+
+  STORED_PLANS {
+    text plan_id PK
+    text plan_uri
+    text plan_sha256
+    text canonical_plan_json
+    text executable_plan_json
+  }
 
   PLAN_RECORDS {
+    text tenant_id PK
+    text project_id PK
+    text environment_id PK
     text plan_id PK
     text canonical_hash
     text plan_version
@@ -102,6 +116,9 @@ erDiagram
   }
 
   PLAN_EXECUTABILITY_RECORDS {
+    text tenant_id FK
+    text project_id FK
+    text environment_id FK
     text plan_id FK
     text adapter_id PK
     text state
@@ -110,6 +127,9 @@ erDiagram
   }
 
   PLAN_ADMISSION_LINKS {
+    text tenant_id FK
+    text project_id FK
+    text environment_id FK
     text plan_id FK
     text run_id PK
     text adapter_id PK
@@ -119,7 +139,7 @@ erDiagram
 
 ## Write and transition behavior
 
-### `storePlan(buildResult)`
+### `storePlanArtifact({ buildResult })`
 
 1. Persists canonical and executable content in `stored_plans` with
    `PENDING_VALIDATION`.
@@ -133,30 +153,40 @@ erDiagram
    - backfilled legacy rows whose `created_at` does not match the incoming
      canonical metadata timestamp fail with `PLAN_RECORD_CONFLICT` by design.
 
-### `markValid(planRef)` and `markInvalid(planRef, report)`
+### `markStoredPlanArtifactValid(input)` and `markStoredPlanArtifactInvalid(input)`
 
-1. Enforce transition from `PENDING_VALIDATION` only.
-2. Update `stored_plans`.
-3. Do not write implicit adapter executability side effects.
+1. Require `ScopedPlanRef` and assert the tenant-owned `plan_records` row
+   exists before mutating the artifact validation state.
+2. Enforce transition from `PENDING_VALIDATION` only.
+3. Update `stored_plans`.
+4. Do not write implicit adapter executability side effects.
    Adapter-scoped executability is recorded explicitly via
    `recordExecutability`.
 
-### `markSuperseded(planId, supersededByPlanId)`
+### `markSuperseded(input)`
+
+`input` is `PlanStoreScope + planId + supersededByPlanId`.
 
 1. Rejects self-supersession.
 2. Moves superseded row to `SUPERSEDED` only when currently `ACTIVE`.
 3. Requires the superseder row to exist and be `ACTIVE`.
 4. Writes lineage on superseder (`supersedes_plan_id = superseded plan`).
 
-### `archivePlan(planId, archivedAtIso)`
+### `archivePlan(input)`
+
+`input` is `PlanStoreScope + planId + archivedAtIso`.
 
 - Sets `state=ARCHIVED`, `archived_at`, and updates timestamp.
 - Rejects unknown plan id with `PLAN_RECORD_NOT_FOUND`.
 
 ## Read integrity behavior
 
-- `getPlanRecordByRef(planRef)` enforces metadata match (`uri`, `planVersion`,
-  `schemaVersion`) and throws `PLAN_REF_MISMATCH` on drift.
+- `getPlanRecord(input)` resolves by `PlanStoreScope + planId`.
+- `getPlanRecordByRef(input)` enforces scope plus metadata match (`uri`,
+  `planVersion`, `schemaVersion`) and throws `PLAN_REF_MISMATCH` on drift.
+- `fetchStoredPlanArtifact(input)` and
+  `fetchStoredPlanArtifactForValidation(input)` require `ScopedPlanRef` and
+  assert the scoped plan record before returning executable artifact bytes.
 - `toPlanExecutabilityRecord` is strict:
   - `VALID` without `validated_at` throws.
   - `INVALID` without `validated_at` or `rejection_report_json` throws.
@@ -164,7 +194,10 @@ erDiagram
 
 ## Architectural gap status
 
-No open architectural gaps remain for the S08 scope.
+The tenant-owned record model is scoped and the stored-plan artifact
+lifecycle/fetch surface is extracted into `IStoredPlanArtifactStore` under
+`@dvt/artifacts`. The remaining guardrail is to keep API, planner, and engine
+from redeclaring equivalent stored-plan ports.
 
 ## Compatibility posture
 
@@ -177,12 +210,14 @@ applied in `upsert`.
 ## Closed in this slice
 
 1. `derived_from_plan_id` and `supersedes_plan_id` are now FK-constrained to
-   `plan_records(plan_id)`.
+   `plan_records(tenant_id, project_id, environment_id, plan_id)`.
 2. Repository split for `plan-record` / `executability` / `admission` is
    complete and delegated to dedicated repository classes.
 3. Composer-level extraction is complete through `composePostgresPlanStore`.
 4. Critical invariants are now covered by always-on unit tests without
    PostgreSQL.
+5. Stored-plan artifact lifecycle and materialization are exposed through the
+   artifacts-owned `IStoredPlanArtifactStore` port.
 
 ## Validation and diagnostics
 

@@ -16,25 +16,29 @@ readers into engine needs.
 
 ## Public API
 
-| Surface                        | Canonical owner                                         | Public role                                                                    |
-| ------------------------------ | ------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `PlanRef`                      | `@dvt/contracts`                                        | Shared immutable plan reference and integrity metadata.                        |
-| `RunExecutionContextRef`       | `@dvt/contracts`                                        | Shared immutable reference to plugin/runtime execution context.                |
-| `IPlanFetcher`                 | `@dvt/engine/src/ports/IPlanArtifactReader.ts`          | Engine-owned port that reads plan bytes plus execution policy before dispatch. |
-| `IPlanIntegrityValidator`      | `@dvt/engine/src/ports/IPlanArtifactReader.ts`          | Engine-owned integrity gate abstraction for start-run and recovery preflight.  |
-| `IRunExecutionContextResolver` | `@dvt/engine/src/ports/IRunExecutionContextResolver.ts` | Engine-owned resolver need for admission-time context materialization.         |
-| `IRunExecutionContextReader`   | `@dvt/artifacts`                                        | Artifact-owned reader implementation seam for context payloads.                |
+| Surface                        | Canonical owner                                         | Public role                                                                       |
+| ------------------------------ | ------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `PlanRef`                      | `@dvt/contracts`                                        | Shared immutable plan reference and integrity metadata.                           |
+| `RunExecutionContextRef`       | `@dvt/contracts`                                        | Shared immutable reference to plugin/runtime execution context.                   |
+| `IStoredPlanArtifactReader`    | `@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts`  | Artifact-owned port that materializes executable plan bytes from `ScopedPlanRef`. |
+| `IPlanIntegrityValidator`      | `@dvt/engine/src/ports/IPlanIntegrityValidator.ts`      | Engine-owned integrity gate abstraction for start-run and recovery preflight.     |
+| `IRunExecutionContextResolver` | `@dvt/engine/src/ports/IRunExecutionContextResolver.ts` | Engine-owned resolver need for admission-time context materialization.            |
+| `IRunExecutionContextReader`   | `@dvt/artifacts`                                        | Artifact-owned reader implementation seam for context payloads.                   |
 
-`@dvt/engine` exports `IPlanFetcher`, `StoredPlanArtifact`, and
-`IPlanIntegrityValidator` from its root package so composition roots can wire
-implementations without importing engine internals.
+`@dvt/artifacts` exports `StoredPlanArtifact` and
+`IStoredPlanArtifactReader`. `@dvt/engine` exports only
+`IPlanIntegrityValidator` for the integrity gate it owns.
 
 ## Invariants
 
 - `PlanRef` and `RunExecutionContextRef` are shared serializable contracts, not
   engine behavior ports.
-- `IPlanFetcher` belongs to `@dvt/engine` because it describes the execution
-  use-case need: fetch bytes for the authoritative integrity gate.
+- `IStoredPlanArtifactReader` belongs to `@dvt/artifacts` because executable
+  plan bytes are artifact materialization behavior, not engine lifecycle
+  behavior.
+- `IPlanIntegrityValidator` belongs to `@dvt/engine` because it owns the
+  dispatch-time invariant that fetched bytes and metadata match the scoped
+  `PlanRef`.
 - Artifact storage and context reading behavior belongs to `@dvt/artifacts`.
 - `IRunStateStore` must not publish plan-fetching or artifact-reader
   responsibilities.
@@ -45,12 +49,12 @@ implementations without importing engine internals.
 
 ## Transitions
 
-| Transition            | From                           | To                           | Rule                                                                   |
-| --------------------- | ------------------------------ | ---------------------------- | ---------------------------------------------------------------------- |
-| `PlanRef` admitted    | API/composition root           | `WorkflowEngine.startRun`    | Engine normalizes and validates the shared reference.                  |
-| plan artifact fetched | `IPlanFetcher` implementation  | `PlanIntegrityValidator`     | Engine-owned integrity validator receives bytes plus execution policy. |
-| adapter dispatch      | engine start-run service       | `IProviderAdapter.startRun`  | Dispatch occurs only after plan bytes and metadata match `PlanRef`.    |
-| context resolved      | `IRunExecutionContextResolver` | run-context admission policy | Required only when the plan declares plugin/runtime context needs.     |
+| Transition            | From                                       | To                           | Rule                                                                   |
+| --------------------- | ------------------------------------------ | ---------------------------- | ---------------------------------------------------------------------- |
+| `PlanRef` admitted    | API/composition root                       | `WorkflowEngine.startRun`    | Engine normalizes and validates the shared reference.                  |
+| plan artifact fetched | `IStoredPlanArtifactReader` implementation | `PlanIntegrityValidator`     | Engine-owned integrity validator receives bytes plus execution policy. |
+| adapter dispatch      | engine start-run service                   | `IProviderAdapter.startRun`  | Dispatch occurs only after plan bytes and metadata match `PlanRef`.    |
+| context resolved      | `IRunExecutionContextResolver`             | run-context admission policy | Required only when the plan declares plugin/runtime context needs.     |
 
 ## Consumers
 
@@ -59,7 +63,7 @@ implementations without importing engine internals.
 - `packages/@dvt/engine/src/security/planIntegrity.ts`
 - `apps/api/src/application/services/WorkflowEngineFactory.ts`
 - `apps/api/src/application/services/StoredExecutablePlanResolver.ts`
-- `apps/api/src/application/ports/storedPlan.ts`
+- `packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts`
 - `packages/@dvt/artifacts/src/ports/IRunExecutionContextReader.ts`
 
 ## User Stories
@@ -78,14 +82,15 @@ flowchart LR
   Api["apps/api<br/>composition root"]
   Artifacts["@dvt/artifacts<br/>artifact/context readers"]
   Engine["@dvt/engine<br/>WorkflowEngine"]
-  PlanPort["IPlanFetcher<br/>engine-owned port"]
+  PlanPort["IStoredPlanArtifactReader<br/>artifact-owned port"]
   ContextPort["IRunExecutionContextResolver<br/>engine-owned port"]
   Adapter["IProviderAdapter<br/>run-driven provider"]
 
   Contracts --> Api
   Api --> Engine
   Api --> Artifacts
-  Engine --> PlanPort
+  Engine --> Validator["IPlanIntegrityValidator<br/>engine-owned gate"]
+  Validator --> PlanPort
   Engine --> ContextPort
   Api -. adapts .-> PlanPort
   Api -. adapts .-> ContextPort
@@ -96,13 +101,13 @@ flowchart LR
 sequenceDiagram
   participant API as apps/api
   participant Engine as WorkflowEngine
-  participant PlanReader as IPlanFetcher
+  participant PlanReader as IStoredPlanArtifactReader
   participant Validator as IPlanIntegrityValidator
   participant Adapter as IProviderAdapter
 
   API->>Engine: startRun(PlanRef, RunContext)
-  Engine->>Validator: fetchAndValidate(PlanRef, IPlanFetcher)
-  Validator->>PlanReader: fetch(PlanRef)
+  Engine->>Validator: fetchAndValidate(ScopedPlanRef, IStoredPlanArtifactReader)
+  Validator->>PlanReader: fetchStoredPlanArtifact(ScopedPlanRef)
   PlanReader-->>Validator: StoredPlanArtifact
   Validator-->>Engine: plan + executionPolicy
   Engine->>Adapter: startRun(PlanRef, resolvedContext)
@@ -112,6 +117,7 @@ sequenceDiagram
 
 - `packages/@dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts`
   fails if plan artifact reading returns to `IRunStateStore`.
-- The same test fails if a duplicate adapter-local `IPlanFetcher` file returns.
+- The same test fails if a duplicate adapter-local or engine-local
+  `IPlanFetcher` file returns.
 - The test requires this guide to keep public API, invariants, transitions,
   consumers, diagrams, and drift guards visible together.
