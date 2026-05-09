@@ -1,8 +1,8 @@
 ---
 title: CI Build Config Audit Review 2026-05-06
-status: Review
+status: Reference
 owner: Architecture / DevOps / CI
-last_reviewed: 2026-05-06
+last_reviewed: 2026-05-09
 planning_type: review
 ---
 
@@ -30,11 +30,29 @@ implementation.
 
 ## Integration Recommendation
 
-Track this file as a CI and delivery review, not as a normative CI policy. The
-original stash artifact contained useful evidence, but several claims were
-overstated or invalidated by current workflow state. This cleaned version keeps
-only findings that remain useful for owner review and explicitly labels
-uncertain items as follow-up questions.
+Track this file as a CI and delivery review intake, not as a normative CI
+policy. The original stash artifact contained useful evidence, but several
+claims were overstated or invalidated by current workflow state. This cleaned
+version keeps only findings that remain useful for owner review and explicitly
+labels uncertain items as follow-up questions.
+
+Status update 2026-05-09:
+
+- The audit has been routed to explicit Lane C follow-up tasks.
+- This file is now a reference intake. It does not authorize direct workflow,
+  hook, package-script, or ARC-policy changes.
+- `CI-05` does not currently need a task because `docs_structure_changed`
+  already includes `docs/**`; revisit only if a generator dependency is later
+  found outside that scope.
+
+| Finding | Route                                                           |
+| ------- | --------------------------------------------------------------- |
+| `CI-01` | `CI-AUDIT-ENGINE-COVERAGE`                                      |
+| `CI-02` | `CI-AUDIT-ARC-STATE-STORE`                                      |
+| `CI-03` | `CI-AUDIT-CONTRACTS-SCOPE`                                      |
+| `CI-04` | `CI-AUDIT-ADR0-OWNER`                                           |
+| `CI-05` | no task; current workflow-scope policy already covers `docs/**` |
+| `CI-06` | `CI-AUDIT-RELEASE-FLOW`                                         |
 
 ## Validated Findings
 
