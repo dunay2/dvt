@@ -342,6 +342,17 @@ symbols:
     cypressCoverage: N/A - backend delivery policy
     unitTests:
       - pnpm --filter @dvt/engine test -- test/state/InMemoryTxStore.outbox.test.ts
+  - name: buildOutboxStreamOrderingKey
+    path: packages/@dvt/engine/src/state/outboxSharding.ts
+    dddOwner: OutboxStreamOrderingKey compatibility facade
+    cqRails:
+      - ClaimOutboxBatch
+    fowlerSignals:
+      - Engine exposes semantic facade functions instead of a barrel re-export.
+    architectureGuard: pnpm --filter @dvt/delivery test -- OutboxShardAssignment.architecture.test.ts
+    cypressCoverage: N/A - backend delivery policy
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/state/InMemoryTxStore.outbox.test.ts
   - name: normalizeTenantId
     path: packages/@dvt/delivery/src/outboxShardAssignment.ts
     dddOwner: OutboxShardAssignment

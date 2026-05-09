@@ -24,7 +24,13 @@ describe('Outbox shard assignment architecture', () => {
   it('prevents engine from re-implementing the hash policy', () => {
     const engineFacade = readRepoFile('packages/@dvt/engine/src/state/outboxSharding.ts');
 
+    expect(engineFacade).toContain('Owned concern: expose engine-local outbox sharding facade');
     expect(engineFacade).toContain('@dvt/delivery');
+    expect(engineFacade).toContain('function resolveOutboxShardId');
+    expect(engineFacade).toContain('function buildOutboxStreamOrderingKey');
+    expect(engineFacade).toContain('return resolveDeliveryOutboxShardId');
+    expect(engineFacade).toContain('return buildDeliveryOutboxStreamOrderingKey');
+    expect(engineFacade).not.toMatch(/export\s*\{[\s\S]*\}\s*from\s+['"]@dvt\/delivery['"]/);
     expect(engineFacade).not.toContain("from 'node:crypto'");
     expect(engineFacade).not.toContain('createHash');
   });
@@ -47,6 +53,7 @@ describe('Outbox shard assignment architecture', () => {
     expect(adr).toContain('tenant-affine');
     expect(runbook).toContain('tenant-aware shard assignment');
     expect(component).toContain('Tenant-Aware Outbox Sharding Component');
+    expect(component).toContain('## Engine Compatibility Facade');
     expect(`${adr}\n${runbook}\n${component}`).not.toContain('stableHash64(runId) % shardCount');
   });
 });

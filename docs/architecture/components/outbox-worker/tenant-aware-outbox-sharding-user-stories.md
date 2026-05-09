@@ -17,6 +17,7 @@ last_reviewed: 2026-05-09
 | AR-D7-US4 | Worker operator       | As an operator, I need shard ownership to remain explicit after the policy change.                                                   | Workers still claim by configured `ownedShardIds`; empty or invalid shard selections fail closed.                                                |
 | AR-D7-US5 | Release owner         | As a release owner, I need a rollout rule for persisted old rows.                                                                    | Runbook states that existing rows keep stored `shard_id`, new rows use tenant-aware assignment, and shard-count changes are separate migrations. |
 | AR-D7-US6 | Architecture reviewer | As a reviewer, I need a semantic guard against returning to run-only hashing.                                                        | Architecture test fails if docs or source reintroduce run-only shard assignment as current behavior.                                             |
+| AR-D7-US7 | Engine maintainer     | As a maintainer, I need Engine to expose a semantic compatibility facade instead of a raw barrel.                                    | Engine facade has an owned-concern docblock, named functions, explicit Delivery delegation, and no local hash implementation.                    |
 
 ## Scenario Diagram
 
@@ -39,3 +40,5 @@ flowchart LR
 - A worker with no owned shards must claim nothing.
 - Documentation that states `stableHash(runId) % shardCount` as current behavior
   must fail the semantic architecture guard.
+- Replacing the Engine facade with a raw `export from '@dvt/delivery'` barrel
+  must fail the architecture guard.

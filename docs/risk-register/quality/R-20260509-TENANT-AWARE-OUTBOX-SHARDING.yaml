@@ -5,8 +5,13 @@ status: Open
 date: 2026-05-09
 owners:
   - packages/@dvt/delivery
+  - packages/@dvt/engine
   - packages/@dvt/adapter-postgres
   - apps/outbox-worker
 severity: Medium
 probability: Low
+mitigations:
+  - Keep Engine outbox sharding as named facade functions with an owned-concern docblock.
+  - Delegate Engine facade behavior to Delivery without importing node:crypto.
+  - Guard against raw Delivery barrel exports and local hash reimplementation in architecture tests.
 ---
