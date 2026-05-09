@@ -509,17 +509,6 @@ export function computeBooleanScope(changedFiles, scopePatterns, scopeContext = 
     if ('changed_file_validation_relevant' in scope) {
       scope.changed_file_validation_relevant = true;
     }
-    if (isSemanticallyNarrowPackageJson(scopeContext)) {
-      if ('any_code' in scope) {
-        scope.any_code = false;
-      }
-      if ('generated_status_relevant' in scope) {
-        scope.generated_status_relevant = false;
-      }
-      if ('generated_capability_relevant' in scope) {
-        scope.generated_capability_relevant = false;
-      }
-    }
   }
 
   return scope;
@@ -532,25 +521,6 @@ export function computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext
   }
 
   const scope = computeBooleanScope(changedFiles, scopePatterns, scopeContext);
-  const packageJsonChange = scopeContext.packageJsonChange;
-
-  if (packageJsonChange?.rootBuildSensitive === false) {
-    for (const key of [
-      'any_test',
-      'root_config',
-      'contracts_relevant',
-      'determinism_relevant',
-      'golden_relevant',
-      'temporal_changed',
-      'temporal_transformation_changed',
-      'temporal_postgres_changed',
-      'adapter_postgres_changed',
-    ]) {
-      if (key in scope) {
-        scope[key] = false;
-      }
-    }
-  }
 
   return {
     ...scope,
