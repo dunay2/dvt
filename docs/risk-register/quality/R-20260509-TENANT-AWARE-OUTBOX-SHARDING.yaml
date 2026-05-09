@@ -1,0 +1,12 @@
+---
+id: R-20260509-TENANT-AWARE-OUTBOX-SHARDING
+title: Tenant-aware outbox sharding can create short mixed-policy windows during rollout
+status: Open
+date: 2026-05-09
+owners:
+  - packages/@dvt/delivery
+  - packages/@dvt/adapter-postgres
+  - apps/outbox-worker
+severity: Medium
+probability: Low
+---

@@ -598,7 +598,7 @@ use-case separation in the repo. Other packages should mirror this pattern.
 | `saveInMemoryProviderRef`, `reserveInMemoryRetryAttempt`                                                     | `ADP` helpers                | `CMD-RET`                      | `OK`   |                      |
 | `getInMemoryRunMetadata`, `listInMemoryRunEvents`, `listInMemoryRuns`                                        | `ADP` helpers                | `QRY`                          | `OK`   |                      |
 | `getInMemorySnapshot`, `rebuildInMemorySnapshot`, `listInMemoryStaleSnapshotRuns`, `isInMemorySnapshotStale` | `ADP` helpers                | `QRY`/`CMD-RET`                | `OK`   |                      |
-| `outboxSharding.resolveOutboxShardId(runId, shardCount)`                                                     | `DS` (sharding policy)       | `QRY` (pure)                   | `OK`   | ADR-0033.            |
+| `outboxSharding.resolveOutboxShardId({ tenantId, runId }, shardCount)`                                       | `DS` (sharding policy)       | `QRY` (pure)                   | `OK`   | ADR-0033 / AR-D7.    |
 | `retryLineagePolicy.*`                                                                                       | `DS` (retry-lineage policy)  | `QRY` (pure)                   | `OK`   |                      |
 | `runEventWritePolicy.*` (assertions, factories)                                                              | `DS` (write-side invariants) | `QRY` (assertion)/`QRY` (pure) | `OK`   | Tenant matchers etc. |
 | `snapshotStaleness.*`                                                                                        | `DS`                         | `QRY` (pure)                   | `OK`   |                      |

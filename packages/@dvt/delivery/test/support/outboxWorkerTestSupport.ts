@@ -101,13 +101,16 @@ export function makeAlwaysFailBus(message = 'always fail'): IEventBus {
   };
 }
 
-export function findRunIdForShard(targetShardId: number, shardCount: number): string {
+export function findTenantIdForShard(targetShardId: number, shardCount: number): string {
   for (let index = 0; index < 256; index += 1) {
-    const candidate = `run-shard-${targetShardId}-${index}`;
-    if (resolveOutboxShardId(candidate, shardCount) === targetShardId) {
+    const candidate = `tenant-shard-${targetShardId}-${index}`;
+    if (
+      resolveOutboxShardId({ tenantId: candidate, runId: 'probe-run' }, shardCount) ===
+      targetShardId
+    ) {
       return candidate;
     }
   }
 
-  throw new Error(`Unable to find run id for shard ${targetShardId}`);
+  throw new Error(`Unable to find tenant id for shard ${targetShardId}`);
 }

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ENGINE_ERROR_CODE } from '../../src/contracts/errors.js';
 import type { RunEventInput } from '../../src/contracts/runEvents.js';
+import type { EventEnvelope as RunEventPersisted } from '../../src/ports/IRunStateStore.js';
 import type { RunBootstrapInput } from '../../src/ports/IRunStateStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { resolveOutboxShardId } from '../../src/state/outboxSharding.js';
@@ -74,11 +75,13 @@ describe('InMemoryTxStore outbox semantics', () => {
   it('filters pending claims by configured shard ownership', async () => {
     const shardCount = 2;
     const store = new InMemoryTxStore({ outboxShardCount: shardCount });
-    const shard0RunId = findRunIdForShard(0, shardCount);
-    const shard1RunId = findRunIdForShard(1, shardCount);
+    const shard0TenantId = findTenantIdForShard(0, shardCount);
+    const shard1TenantId = findTenantIdForShard(1, shardCount);
+    const shard0RunId = 'run-owned-by-tenant-shard-0';
+    const shard1RunId = 'run-owned-by-tenant-shard-1';
 
-    await store.bootstrapRunTx(makeBootstrap(shard0RunId));
-    await store.bootstrapRunTx(makeBootstrap(shard1RunId));
+    await store.bootstrapRunTx(makeBootstrap(shard0RunId, shard0TenantId));
+    await store.bootstrapRunTx(makeBootstrap(shard1RunId, shard1TenantId));
 
     const shard0Pending = await store.listPendingForClaim(10, { shardIds: [0] });
     expect(shard0Pending).toHaveLength(1);
@@ -89,10 +92,11 @@ describe('InMemoryTxStore outbox semantics', () => {
     expect(shard1Pending[0]?.payload.runId).toBe(shard1RunId);
   });
 
-  it('matches PostgreSQL signed 64-bit shard routing when the hash high bit is set', async () => {
+  it('matches PostgreSQL signed 64-bit tenant-affine shard routing', async () => {
     const store = new InMemoryTxStore({ outboxShardCount: 3 });
+    const tenantId = findTenantIdForShard(1, 3);
 
-    await store.bootstrapRunTx(makeBootstrap('run-3'));
+    await store.bootstrapRunTx(makeBootstrap('run-3', tenantId));
 
     const shard1Pending = await store.listPendingForClaim(10, { shardIds: [1] });
     expect(shard1Pending).toHaveLength(1);
@@ -125,6 +129,50 @@ describe('InMemoryTxStore outbox semantics', () => {
     expect(pendingAfterBackoff).toHaveLength(1);
     expect(pendingAfterBackoff[0]?.payload.runId).toBe('run-ordered');
     expect(pendingAfterBackoff[0]?.payload.runSeq).toBe(1);
+  });
+
+  it('does not block another tenant that uses the same run id', async () => {
+    const now = { value: 0 };
+    const store = new InMemoryTxStore({ outboxNowMs: () => now.value });
+    const runId = 'shared-run-id';
+
+    await store.enqueueTx(runId, [
+      {
+        ...makeStarted(runId, 'tenant-a:queued', 'tenant-a'),
+        persistedAt: '2026-03-11T00:00:00.000Z',
+        runSeq: 1,
+      } satisfies RunEventPersisted,
+      {
+        ...makeStarted(runId, 'tenant-a:started', 'tenant-a'),
+        persistedAt: '2026-03-11T00:00:00.000Z',
+        runSeq: 2,
+      } satisfies RunEventPersisted,
+    ]);
+    await store.enqueueTx(runId, [
+      {
+        ...makeStarted(runId, 'tenant-b:queued', 'tenant-b'),
+        persistedAt: '2026-03-11T00:00:00.000Z',
+        runSeq: 1,
+      } satisfies RunEventPersisted,
+    ]);
+
+    const allPending = await store.listPending(10);
+    const tenantAHead = allPending.find((record) => record.payload.tenantId === 'tenant-a');
+    const pendingTenantAHead = requireDefined(tenantAHead, 'expected tenant-a head');
+    await store.markFailed(pendingTenantAHead.id, 'synthetic tenant-a backoff');
+
+    const pendingDuringBackoff = await store.listPending(10);
+
+    expect(
+      pendingDuringBackoff.some(
+        (record) => record.payload.tenantId === 'tenant-b' && record.payload.runId === runId
+      )
+    ).toBe(true);
+    expect(
+      pendingDuringBackoff.some(
+        (record) => record.payload.tenantId === 'tenant-a' && record.payload.runSeq === 2
+      )
+    ).toBe(false);
   });
 
   it('keeps other runs drainable while one run is blocked on retry backoff', async () => {
@@ -257,12 +305,15 @@ describe('InMemoryTxStore outbox semantics', () => {
   });
 });
 
-function findRunIdForShard(targetShardId: number, shardCount: number): string {
+function findTenantIdForShard(targetShardId: number, shardCount: number): string {
   for (let index = 0; index < 256; index += 1) {
-    const candidate = `run-shard-${targetShardId}-${index}`;
-    if (resolveOutboxShardId(candidate, shardCount) === targetShardId) {
+    const candidate = `tenant-shard-${targetShardId}-${index}`;
+    if (
+      resolveOutboxShardId({ tenantId: candidate, runId: 'probe-run' }, shardCount) ===
+      targetShardId
+    ) {
       return candidate;
     }
   }
-  throw new Error(`Unable to find run id for shard ${targetShardId}`);
+  throw new Error(`Unable to find tenant id for shard ${targetShardId}`);
 }
