@@ -20,22 +20,39 @@ const FOWLER_REVIEW = join(
   'docs/planning/reviews/architecture-and-governance/20260429-we-hx-1-fowler-architecture-review.md'
 );
 const API_STORED_PLAN_PORT = join(REPO_ROOT, 'apps/api/src/application/ports/storedPlan.ts');
+const ARTIFACTS_STORED_PLAN_PORT = join(
+  REPO_ROOT,
+  'packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts'
+);
+const API_STORED_PLAN_VALIDATOR = join(
+  REPO_ROOT,
+  'apps/api/src/application/services/StoredPlanExecutabilityValidator.ts'
+);
 
 describe('WorkflowEngine boundary ownership architecture', () => {
-  it('keeps plan artifact reading separate from run-state persistence ownership', () => {
+  it('keeps plan artifact materialization canonical in artifacts and separate from run-state persistence', () => {
     const runStateStore = readEngineSource('ports/IRunStateStore.ts');
-    const planArtifactReader = readEngineSource('ports/IPlanArtifactReader.ts');
+    const planIntegrityValidator = readEngineSource('ports/IPlanIntegrityValidator.ts');
+    const storedPlanArtifactPort = readFileSync(ARTIFACTS_STORED_PLAN_PORT, 'utf8');
 
     expect(runStateStore).not.toContain('interface IPlanFetcher');
     expect(runStateStore).not.toContain('interface IPlanIntegrityValidator');
     expect(runStateStore).not.toContain('interface StoredPlanArtifact');
 
-    expect(planArtifactReader).toContain(
-      '@ownedConcern Define the engine port for reading plan artifacts before start-run dispatch.'
+    expect(storedPlanArtifactPort).toContain(
+      'Owned concern: expose stored-plan artifact lifecycle and materialization ports'
     );
-    expect(planArtifactReader).toContain('export interface IPlanFetcher');
-    expect(planArtifactReader).toContain('export interface IPlanIntegrityValidator');
-    expect(planArtifactReader).toContain('export interface StoredPlanArtifact');
+    expect(storedPlanArtifactPort).toContain('export interface IStoredPlanArtifactReader');
+    expect(storedPlanArtifactPort).toContain('export interface StoredPlanArtifact');
+
+    expect(planIntegrityValidator).toContain(
+      '@ownedConcern Define the engine port for validating scoped plan artifacts before dispatch.'
+    );
+    expect(planIntegrityValidator).toContain('export interface IPlanIntegrityValidator');
+    expect(planIntegrityValidator).toContain("from '@dvt/artifacts'");
+    expect(planIntegrityValidator).not.toContain('export interface IPlanFetcher');
+    expect(existsSync(join(ENGINE_ROOT, 'ports/IPlanArtifactReader.ts'))).toBe(false);
+    expect(existsSync(join(ENGINE_ROOT, 'ports/IPlanResolver.ts'))).toBe(false);
   });
 
   it('does not keep a duplicate adapter-local plan fetcher contract', () => {
@@ -61,7 +78,7 @@ describe('WorkflowEngine boundary ownership architecture', () => {
     }
 
     expect(guide).toContain('PlanRef');
-    expect(guide).toContain('IPlanFetcher');
+    expect(guide).toContain('IStoredPlanArtifactReader');
     expect(guide).toContain('IRunExecutionContextResolver');
     expect(guide).toContain('@dvt/artifacts');
     expect(guide).toContain('workflow-engine-boundary-ownership-user-stories.md');
@@ -94,7 +111,7 @@ describe('WorkflowEngine boundary ownership architecture', () => {
 
   it('keeps owned-concern docblocks on the boundary modules touched by the slice', () => {
     for (const relativePath of [
-      'ports/IPlanArtifactReader.ts',
+      'ports/IPlanIntegrityValidator.ts',
       'ports/IRunStateStore.ts',
       'application/StartRunApplicationService.ts',
       'application/RecoverRunApplicationService.ts',
@@ -104,11 +121,12 @@ describe('WorkflowEngine boundary ownership architecture', () => {
     }
   });
 
-  it('reuses the engine-owned stored plan artifact shape instead of redefining it in API', () => {
-    const apiPort = readFileSync(API_STORED_PLAN_PORT, 'utf8');
+  it('reuses the artifacts-owned stored plan artifact shape instead of redefining it in API', () => {
+    expect(existsSync(API_STORED_PLAN_PORT)).toBe(false);
 
-    expect(apiPort).toContain("import type { StoredPlanArtifact } from '@dvt/engine'");
-    expect(apiPort).not.toContain('export interface StoredPlanArtifact');
+    const validator = readFileSync(API_STORED_PLAN_VALIDATOR, 'utf8');
+    expect(validator).toContain("from '@dvt/artifacts'");
+    expect(validator).not.toContain('export interface StoredPlanArtifact');
   });
 });
 

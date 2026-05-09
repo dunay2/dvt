@@ -1,12 +1,13 @@
 /**
  * @ownedConcern Orchestrate start-run authorization, admission, integrity validation, and dispatch.
  */
-import type { EngineRunRef, PlanRef, ResolvedRunContext } from '@dvt/contracts';
+import type { IStoredPlanArtifactReader } from '@dvt/artifacts';
+import type { EngineRunRef, PlanRef, ResolvedRunContext, ScopedPlanRef } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 
 import type { IdempotencyKeyBuilder } from '../core/idempotency.js';
 import type { StartRunTraceContext } from '../core/lifecycle/StartRunTraceContext.js';
-import type { IPlanFetcher, IPlanIntegrityValidator } from '../ports/IPlanArtifactReader.js';
+import type { IPlanIntegrityValidator } from '../ports/IPlanIntegrityValidator.js';
 import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunStateStore.js';
 import type { IStartRunIntentStore } from '../ports/IStartRunIntentStore.js';
 import { PlanIntegrityValidator } from '../security/planIntegrity.js';
@@ -29,7 +30,7 @@ export interface StartRunApplicationServiceDeps {
   clock: IClock;
   intentStore: IStartRunIntentStore;
   observability: IObservability;
-  planFetcher: IPlanFetcher;
+  planFetcher: IStoredPlanArtifactReader;
   planIntegrityValidator?: IPlanIntegrityValidator;
   timeouts?: {
     adapterCallMs?: number;
@@ -131,7 +132,7 @@ export class StartRunApplicationService {
     await this.deps.guard.assertStartRunAllowed(planRef, resolvedContext);
     const adapter = this.deps.guard.resolveAdapter(resolvedContext);
     const verifiedArtifact = await this.planIntegrityValidator.fetchAndValidate(
-      planRef,
+      toScopedPlanRef(planRef, resolvedContext),
       this.deps.planFetcher
     );
     await this.deps.guard.assertExecutionPolicyAllowed({
@@ -176,6 +177,15 @@ export class StartRunApplicationService {
     });
     return intentId;
   }
+}
+
+function toScopedPlanRef(planRef: PlanRef, context: ResolvedRunContext): ScopedPlanRef {
+  return {
+    tenantId: context.tenantId,
+    projectId: context.projectId,
+    environmentId: context.environmentId,
+    planRef,
+  };
 }
 
 function buildMetricTags(

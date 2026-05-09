@@ -1,10 +1,11 @@
+import type { IStoredPlanArtifactReader, StoredPlanArtifact } from '@dvt/artifacts';
 import {
   CURRENT_SIGNAL_SEMANTICS_VERSION,
   type EngineRunRef,
   type ExecutionPlan,
   type PlanRef,
   type RunExecutionPolicy,
-  type StoredPlanArtifact,
+  type ScopedPlanRef,
 } from '@dvt/contracts';
 import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
 import { createNoopObservability } from '@dvt/observability';
@@ -87,7 +88,7 @@ export function createWorkflowEngineFixture(input?: {
   observabilityFallbackThrottleMs?: number;
   runExecutionContextResolver?: IRunExecutionContextResolver;
   runExecutionContextBindingPolicy?: IRunExecutionContextBindingPolicy;
-  planFetcher?: { fetch(planRef: PlanRef): Promise<StoredPlanArtifact> };
+  planFetcher?: IStoredPlanArtifactReader;
 }): {
   engine: WorkflowEngine;
   store: InMemoryTxStore;
@@ -116,7 +117,18 @@ export function createWorkflowEngineFixture(input?: {
   const planFetcher =
     input?.planFetcher ??
     ({
-      async fetch(_planRef: PlanRef): Promise<StoredPlanArtifact> {
+      async getStoredPlanValidationRecord() {
+        return undefined;
+      },
+      async fetchStoredPlanArtifact(_input: ScopedPlanRef): Promise<StoredPlanArtifact> {
+        return {
+          bytes: Buffer.from(JSON.stringify(defaultPlan), 'utf8'),
+          executionPolicy: {},
+        };
+      },
+      async fetchStoredPlanArtifactForValidation(
+        _input: ScopedPlanRef
+      ): Promise<StoredPlanArtifact> {
         return {
           bytes: Buffer.from(JSON.stringify(defaultPlan), 'utf8'),
           executionPolicy: {},
@@ -228,11 +240,18 @@ export function makePlanRefForPlan(
 export function makePlanFetcherForPlan(
   plan: ExecutionPlan,
   executionPolicy: RunExecutionPolicy = {}
-): {
-  fetch(planRef: PlanRef): Promise<StoredPlanArtifact>;
-} {
+): IStoredPlanArtifactReader {
   return {
-    async fetch(_planRef: PlanRef): Promise<StoredPlanArtifact> {
+    async getStoredPlanValidationRecord() {
+      return undefined;
+    },
+    async fetchStoredPlanArtifact(_input: ScopedPlanRef): Promise<StoredPlanArtifact> {
+      return {
+        bytes: Buffer.from(JSON.stringify(plan), 'utf8'),
+        executionPolicy,
+      };
+    },
+    async fetchStoredPlanArtifactForValidation(_input: ScopedPlanRef): Promise<StoredPlanArtifact> {
       return {
         bytes: Buffer.from(JSON.stringify(plan), 'utf8'),
         executionPolicy,
