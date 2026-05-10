@@ -49,7 +49,8 @@ The review classifies each web capability against three constraints:
   capability availability, executable validity, tenant scope, or plugin
   backend readiness.
 - UI does not invent runtime state: the browser must not synthesize persisted
-  run, plan, workspace, audit, or artifact truth outside explicit demo mode.
+  run, plan, workspace, audit, or artifact truth outside explicit test
+  harnesses.
 
 Presentation state is allowed in the UI when it is visibly local and cannot be
 confused with backend truth. Examples: selected tab, panel size, viewport,
@@ -60,9 +61,10 @@ temporary selection, search filters, and route-local loading state.
 ```mermaid
 flowchart LR
   Browser["apps/web shell and routes"]
-  Ports["Web ports and services"]
+  Ports["API-only product ports"]
   Stores["Zustand/localStorage stores"]
-  Mock["Mock adapters and mockDbtData"]
+  Tests["Vitest harnesses"]
+  Doubles["Explicit test doubles"]
   API["apps/api HTTP routes"]
   Contracts["@dvt/contracts"]
   Runtime["Engine/planner/state store"]
@@ -70,7 +72,8 @@ flowchart LR
   Browser --> Ports
   Browser --> Stores
   Ports --> API
-  Ports --> Mock
+  Tests --> Doubles
+  Tests --> Ports
   API --> Contracts
   API --> Runtime
   Ports -.-> Contracts
@@ -85,8 +88,14 @@ Implementation update on 2026-05-10: the broad web `IWorkspacePort` was
 hard-cut from the composition root and replaced by named workspace capability
 ports. The remaining drift is no longer hidden behind one TypeScript service;
 it is concentrated in missing backend rails, frontend static plugin
-composition, local authorization/session stores, and mock/demo paths that still
-model product semantics.
+composition, local authorization/session stores, and test fixture paths that
+must stay outside product semantics.
+
+Implementation update on 2026-05-10: product app-service composition was also
+hard-cut to API-only. The former mock adapters were moved out of
+`apps/web/src/app/services` into explicit test-double surfaces under
+`apps/web/src/testing`. `DataSourceMode` now resolves to API-only and protected
+routes no longer have a mock bypass.
 
 ## API And Contract Baseline
 
@@ -122,30 +131,30 @@ Missing or mismatched API surfaces currently referenced or implied by web:
 
 ## Capability Matrix
 
-| Capability                                   | Web entry points                                                                                | Source today                                                                                     | Risk: UI executes                    | Risk: UI decides | Risk: UI invents state           | Migration                                                                                                                                                                                                                                |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------ | ---------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Route authentication gate                    | `AuthRouteGate`, `LoginView`                                                                    | Real `GET /session`; mock mode bypass                                                            | Low                                  | Medium           | Low                              | Keep API gate, but add a shared session profile contract and use session grants to seed workspace scope. Mock bypass must remain explicit demo mode only.                                                                                |
-| Workspace/session scope                      | `sessionStore`, `sessionContextPort`, `workspaceConfig`, `createApiClient` headers/query params | Frontend env + localStorage; remediation adds `GET /workspace/context` as server-owned authority | Medium                               | High             | Medium                           | Keep `GET /session` authentication-only. Use `GetEffectiveWorkspaceContext` to seed API-mode `sessionStore` from server-granted options before protected route rendering.                                                                |
-| Platform health                              | `platform-health` capability, `ShellHealthBanner`, admin platform tab                           | Real public API with optional probes                                                             | Low                                  | Low              | Low                              | Keep. Align DTOs through a shared contract or route-local API schema export so web stops mirroring shapes manually.                                                                                                                      |
-| Runtime capabilities and plugin availability | `useCapabilitiesQuery`, `shellRuntimeModel`, `PluginsView`, `PLUGIN_REGISTRY`                   | Real `/capabilities` plus local fallback/static registry                                         | Low                                  | Medium           | Medium                           | Make network failure an unavailable/degraded state, not `frontend-local` enabled-by-default. Add backend-published plugin capability manifest or define static registry as presentation-only and deny execution unless backend confirms. |
-| Canvas workspace graph draft                 | `useCanvasAuthoringRuntime`, draft repository, `workspaceGraphDraftAuthoring.*`                 | Real API in API mode; WeakMap mock in mock mode                                                  | Medium                               | Medium           | High in mock mode                | Keep API path. Fence mock store behind demo wording. Require contract-backed tests that API mode never uses mock revision/audit/idempotency generation.                                                                                  |
-| Canvas node/edge admission and validation    | graph handlers, `canvasRuntimePolicy`, `transformationGraphValidation`, plugin connection rules | Browser rules, then plan preview API later                                                       | Medium                               | High             | Medium                           | Keep browser rules as advisory UX only. Add a server validation query/command for design graph admissibility and make plan/start depend on API validation/proof.                                                                         |
-| Canvas plan preview                          | `executeCanvasPlanAction`, `plansService.api`                                                   | Real `POST /plans/preview` in API mode; mock plan in mock mode                                   | Low for API mode, High for mock mode | Medium           | High in mock mode                | Keep API path and contract parsing. Remove product semantics from mock mode or mark demo. Fix provenance file write gap before requiring provenance in API mode.                                                                         |
-| Canvas run start                             | `executeCanvasRunStartAction`, `runsService.api`                                                | Real `POST /runs/start` in API mode; mock run receipt in mock mode                               | Low for API mode, High for mock mode | Medium           | High in mock mode                | Keep API path. Web may block obvious stale UI states, but backend remains authority. Mock run IDs/events must not be available outside demo mode.                                                                                        |
-| Runs list/detail/events                      | `RunsView`, `useRunWorkspace`, canvas runs tab, cost input                                      | Real API in API mode; mock events in mock mode                                                   | Low for API mode, High for mock mode | Low              | High in mock mode                | Keep. Convert any route-specific DTO mapping still local to shared contracts where practical.                                                                                                                                            |
-| Code read-only file browser                  | `CodeView`, `useWorkspaceFileTreeQuery`, `useWorkspaceFileContentQuery`                         | Real `GET /workspace/files*` in API mode; mock file tree in mock mode                            | Low                                  | Low              | Medium in mock mode              | Keep read-only posture. Remove `saveFileContent` from the read-only port or move it to a separate command rail that exists in API.                                                                                                       |
-| Preview provenance graph artifact write      | `canvasPreviewProvenance.savePreviewGraphArtifact`, `IWorkspaceFileContentCommandPort`          | API mode fails closed because no accepted write rail exists                                      | High                                 | Medium           | High                             | Either add a governed workspace artifact write command or move provenance artifact persistence into `POST /plans/preview`.                                                                                                               |
-| Diff view                                    | `DiffView`, `useDiffData`, `IWorkspaceDiffQueryPort.getDiffChanges`                             | API mode fails closed; mock adapter returns `mockDiffChanges`                                    | Medium                               | High             | High                             | Add a `GetWorkspaceDiffChanges` query rail or keep the diff view unavailable in API mode. Derive diff on server from workspace/plan/git evidence, not from browser fixtures.                                                             |
-| Lineage view                                 | `LineageView`, `useLineageViewData`                                                             | Browser computes lineage from workspace graph draft                                              | Low                                  | Medium           | Medium                           | Accept as presentation while graph draft is authority, but add a lineage read-model query for column-level lineage and large graphs. Browser traversal should become fallback/advisory.                                                  |
-| Artifacts view                               | `ArtifactsView`, `useArtifactsViewModel`, `useLocalManifestImport`                              | Workspace files read API plus local upload/parser                                                | Medium                               | Medium           | High for imported local manifest | Keep workspace-file previews as read-only. Move local upload/import behind an explicit local-inspection mode or add artifact ingestion/query rails.                                                                                      |
-| Source import wizard                         | `SourceImportWizard`, `useSourceImportWizard`, canvas source import handlers                    | Mock-only; API mode throws unavailable and hides entry by capability                             | High in mock mode                    | High             | High                             | Add warehouse-source discovery/import commands and query rails, or keep completely demo-only. The current API-mode disabled path is correct but should be documented in shell capability copy.                                           |
-| Admin roles and audit                        | `AdminView`, `useAdminViewData`                                                                 | API adapter calls missing `/admin/roles` and `/admin/audit`; mock adapter returns fixtures       | Low                                  | High             | High                             | Replace with real admin read models or remove the tabs in API mode. Do not imply admin RBAC/audit truth from mock fixtures.                                                                                                              |
-| Admin repair                                 | API route only                                                                                  | `POST /admin/runs/:runId/rebuild-snapshot`, disabled by default                                  | N/A                                  | N/A              | N/A                              | Web has no corresponding capability. Add UI only after an admin command rail, authorization copy, and negative tests are complete.                                                                                                       |
-| Cost view/plugin                             | `costContributions`, `CostView`, `useCostData`                                                  | Static optional plugin gated by `/capabilities`; no backend cost read model                      | Medium                               | High             | Medium                           | Keep disabled by backend default. Before enabling, add a cost query rail and require the cost view to consume backend cost read models.                                                                                                  |
-| Plugin registry and navigation               | `PLUGIN_REGISTRY`, `getRuntimePlugins`, route creation                                          | Static frontend registry filtered by partial backend capability signal                           | Low                                  | Medium           | Medium                           | Treat registry as presentation extension composition only. Runtime executable availability must come from `/capabilities` or a richer backend manifest. Unknown backend entries should not default to enabled for executable plugins.    |
-| Authorization controls                       | `authorizationStore`, `canvasRuntimePolicy`, view buttons                                       | Local store defaults every permission to true                                                    | Medium                               | High             | Medium                           | Replace with session/capability/authorization read model. Browser gating can remain optimistic UX only if all commands are API-authorized and denied states are visible.                                                                 |
-| Shell layout and canvas viewport             | `uiLayoutStore`, `canvasInteractionStore`                                                       | localStorage presentation state                                                                  | Low                                  | Low              | Low                              | Keep local. Document it as presentation-only state and ensure it never feeds execution or authorization decisions.                                                                                                                       |
-| Current plan/current run selection           | `executionStore`, canvas overlays, cost                                                         | Local selected evidence cache                                                                    | Medium                               | Medium           | Medium                           | Keep only as selected read-model cache. Clear or rehydrate from API after navigation/reload; do not use it as authority for run/plan existence.                                                                                          |
+| Capability                                   | Web entry points                                                                                | Source today                                                                                     | Risk: UI executes               | Risk: UI decides | Risk: UI invents state           | Migration                                                                                                                                                                                                                                |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------- | ---------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Route authentication gate                    | `AuthRouteGate`, `LoginView`                                                                    | Real `GET /session` plus protected workspace context startup; no bypass                          | Low                             | Medium           | Low                              | Keep API gate, add a shared session profile contract, and continue using server-granted workspace scope before protected route rendering.                                                                                                |
+| Workspace/session scope                      | `sessionStore`, `sessionContextPort`, `workspaceConfig`, `createApiClient` headers/query params | Frontend env + localStorage; remediation adds `GET /workspace/context` as server-owned authority | Medium                          | High             | Medium                           | Keep `GET /session` authentication-only. Use `GetEffectiveWorkspaceContext` to seed API-mode `sessionStore` from server-granted options before protected route rendering.                                                                |
+| Platform health                              | `platform-health` capability, `ShellHealthBanner`, admin platform tab                           | Real public API with optional probes                                                             | Low                             | Low              | Low                              | Keep. Align DTOs through a shared contract or route-local API schema export so web stops mirroring shapes manually.                                                                                                                      |
+| Runtime capabilities and plugin availability | `useCapabilitiesQuery`, `shellRuntimeModel`, `PluginsView`, `PLUGIN_REGISTRY`                   | Real `/capabilities` plus local fallback/static registry                                         | Low                             | Medium           | Medium                           | Make network failure an unavailable/degraded state, not `frontend-local` enabled-by-default. Add backend-published plugin capability manifest or define static registry as presentation-only and deny execution unless backend confirms. |
+| Canvas workspace graph draft                 | `useCanvasAuthoringRuntime`, draft repository, `workspaceGraphDraftAuthoring.*`                 | Real API in product composition; explicit test double in `apps/web/src/testing`                  | Medium                          | Medium           | Low product; High test reuse     | Keep API path. Architecture guard prevents product composition from importing test-double revision/audit/idempotency generation.                                                                                                         |
+| Canvas node/edge admission and validation    | graph handlers, `canvasRuntimePolicy`, `transformationGraphValidation`, plugin connection rules | Browser rules, then plan preview API later                                                       | Medium                          | High             | Medium                           | Keep browser rules as advisory UX only. Add a server validation query/command for design graph admissibility and make plan/start depend on API validation/proof.                                                                         |
+| Canvas plan preview                          | `executeCanvasPlanAction`, `plansService.api`                                                   | Real `POST /plans/preview` in product composition; plan doubles are test-only                    | Low                             | Medium           | Low in product                   | Keep API path and contract parsing. Fix provenance file write gap before requiring provenance in API mode.                                                                                                                               |
+| Canvas run start                             | `executeCanvasRunStartAction`, `runsService.api`                                                | Real `POST /runs/start` in product composition; run doubles are test-only                        | Low                             | Medium           | Low in product                   | Keep API path. Web may block obvious stale UI states, but backend remains authority. Test run IDs/events must not be available outside test-only harnesses.                                                                              |
+| Runs list/detail/events                      | `RunsView`, `useRunWorkspace`, canvas runs tab, cost input                                      | Real API in product composition; event doubles are test-only                                     | Low                             | Low              | Low in product                   | Keep. Convert any route-specific DTO mapping still local to shared contracts where practical.                                                                                                                                            |
+| Code read-only file browser                  | `CodeView`, `useWorkspaceFileTreeQuery`, `useWorkspaceFileContentQuery`                         | Real `GET /workspace/files*` in product composition; file-tree doubles are test-only             | Low                             | Low              | Low in product                   | Keep read-only posture. Remove `saveFileContent` from the read-only port or move it to a separate command rail that exists in API.                                                                                                       |
+| Preview provenance graph artifact write      | `canvasPreviewProvenance.savePreviewGraphArtifact`, `IWorkspaceFileContentCommandPort`          | API mode fails closed because no accepted write rail exists                                      | High                            | Medium           | High                             | Either add a governed workspace artifact write command or move provenance artifact persistence into `POST /plans/preview`.                                                                                                               |
+| Diff view                                    | `DiffView`, `useDiffData`, `IWorkspaceDiffQueryPort.getDiffChanges`                             | API mode fails closed; mock adapter returns `mockDiffChanges`                                    | Medium                          | High             | High                             | Add a `GetWorkspaceDiffChanges` query rail or keep the diff view unavailable in API mode. Derive diff on server from workspace/plan/git evidence, not from browser fixtures.                                                             |
+| Lineage view                                 | `LineageView`, `useLineageViewData`                                                             | Browser computes lineage from workspace graph draft                                              | Low                             | Medium           | Medium                           | Accept as presentation while graph draft is authority, but add a lineage read-model query for column-level lineage and large graphs. Browser traversal should become fallback/advisory.                                                  |
+| Artifacts view                               | `ArtifactsView`, `useArtifactsViewModel`, `useLocalManifestImport`                              | Workspace files read API plus local upload/parser                                                | Medium                          | Medium           | High for imported local manifest | Keep workspace-file previews as read-only. Move local upload/import behind an explicit local-inspection mode or add artifact ingestion/query rails.                                                                                      |
+| Source import wizard                         | `SourceImportWizard`, `useSourceImportWizard`, canvas source import handlers                    | Product API port throws unavailable and hides entry by capability; test double can exercise UI   | Low product; High outside tests | High             | High if reused outside tests     | Add warehouse-source discovery/import commands and query rails, or keep unavailable in product runtime. The current API-mode disabled path is correct but should be documented in shell capability copy.                                 |
+| Admin roles and audit                        | `AdminView`, `useAdminViewData`                                                                 | API adapter calls missing `/admin/roles` and `/admin/audit`; mock adapter returns fixtures       | Low                             | High             | High                             | Replace with real admin read models or remove the tabs in API mode. Do not imply admin RBAC/audit truth from mock fixtures.                                                                                                              |
+| Admin repair                                 | API route only                                                                                  | `POST /admin/runs/:runId/rebuild-snapshot`, disabled by default                                  | N/A                             | N/A              | N/A                              | Web has no corresponding capability. Add UI only after an admin command rail, authorization copy, and negative tests are complete.                                                                                                       |
+| Cost view/plugin                             | `costContributions`, `CostView`, `useCostData`                                                  | Static optional plugin gated by `/capabilities`; no backend cost read model                      | Medium                          | High             | Medium                           | Keep disabled by backend default. Before enabling, add a cost query rail and require the cost view to consume backend cost read models.                                                                                                  |
+| Plugin registry and navigation               | `PLUGIN_REGISTRY`, `getRuntimePlugins`, route creation                                          | Static frontend registry filtered by partial backend capability signal                           | Low                             | Medium           | Medium                           | Treat registry as presentation extension composition only. Runtime executable availability must come from `/capabilities` or a richer backend manifest. Unknown backend entries should not default to enabled for executable plugins.    |
+| Authorization controls                       | `authorizationStore`, `canvasRuntimePolicy`, view buttons                                       | Local store defaults every permission to true                                                    | Medium                          | High             | Medium                           | Replace with session/capability/authorization read model. Browser gating can remain optimistic UX only if all commands are API-authorized and denied states are visible.                                                                 |
+| Shell layout and canvas viewport             | `uiLayoutStore`, `canvasInteractionStore`                                                       | localStorage presentation state                                                                  | Low                             | Low              | Low                              | Keep local. Document it as presentation-only state and ensure it never feeds execution or authorization decisions.                                                                                                                       |
+| Current plan/current run selection           | `executionStore`, canvas overlays, cost                                                         | Local selected evidence cache                                                                    | Medium                          | Medium           | Medium                           | Keep only as selected read-model cache. Clear or rehydrate from API after navigation/reload; do not use it as authority for run/plan existence.                                                                                          |
 
 ## Key Findings
 
@@ -181,23 +190,23 @@ workspace graph draft, and workspace file reads. The hard drift moved from
 "code calls routes that do not exist" to "product capabilities are explicitly
 unavailable until their backend rails are designed and implemented."
 
-### 3. Mock mode still contains product semantics
+### 3. Mock runtime semantics are now test-only
 
 Mock plans, runs, files, warehouse imports, graph draft revisions, audit refs,
-and runtime events are more than visual fixtures. They behave like a small
-runtime. That is useful for UI development, but it violates the production rule
-unless it is clearly fenced as demo-only and prevented from becoming default
-truth.
+and runtime events still exist, but they were moved out of product service
+composition into explicit test-double files under `apps/web/src/testing`. They
+remain useful for UI development, but the architecture guard now rejects
+reintroducing them into the product AppServices rail.
 
 Risk examples:
 
-- `runsService.mock.ts` creates `run_mock_N` and event timelines.
-- `workspaceGraphDraftAuthoring.mock.ts` creates revisions, timestamps, and
-  audit/correlation refs.
-- `workspacePorts.mock.ts` imports warehouse sources and mutates a graph/file
-  tree.
-- `mockDbtData.ts` contains plans, runs, roles, audit, diff, plugins, and
-  files in one fixture source.
+- `runsPortDoubles.ts` creates `run_mock_N` and event timelines.
+- `workspaceGraphDraftAuthoringPortDoubles.ts` creates revisions, timestamps,
+  and audit/correlation refs.
+- `workspacePortDoubles.ts` imports warehouse sources and mutates a graph/file
+  tree for tests.
+- `fixtures/mockDbtData.ts` contains plans, runs, roles, audit, diff, plugins,
+  and files as test-only fixture input.
 
 ### 4. The UI owns effective workspace scope
 
@@ -250,11 +259,11 @@ flowchart TD
   A[Inventory web capability] --> B{Existing command/query rail?}
   B -- yes --> C[Bind web port to rail DTO and API route]
   B -- no --> D[Create or update rail catalog]
-  D --> E[Add API route/use case/contract or mark demo-only]
+  D --> E[Add API route/use case/contract or keep product unavailable]
   C --> F[Add negative test: UI cannot use mock/local authority in API mode]
   E --> F
   F --> G[Update docs and capability copy]
-  G --> H[Remove old mock semantics or fence behind demo mode]
+  G --> H[Remove old mock semantics or keep them test-only]
 ```
 
 Prioritized capability migrations:
@@ -278,17 +287,20 @@ Prioritized capability migrations:
      [`web-api-effective-workspace-context-remediation-plan-20260510.md`](../proposals/mandatory/frontend-and-ux/web-api-effective-workspace-context-remediation-plan-20260510.md):
      protected API-mode route startup now resolves session and server-owned
      workspace context before rendering.
-3. Fence mock runtime semantics.
-   - Add an explicit demo/dev posture to mock plans, runs, workspace graph,
-     warehouse import, and admin/audit fixtures.
-   - Add architecture tests preventing mock services from being imported by API
-     mode composition.
+3. Completed: fence mock runtime semantics.
+   - Product app-service composition is API-only.
+   - Mock plans, runs, workspace graph, warehouse import, and admin/audit
+     fixtures live under `apps/web/src/testing`.
+   - `appServicesMockHardcut.architecture.test.ts` prevents product
+     composition from importing test doubles, exposing `mode: 'mock'`, or
+     keeping non-test `*.mock.ts` files under `apps/web/src/app/services`.
 4. Completed: split `IWorkspacePort` by rail with a hard cut.
    - `workspacePorts.ts`, `workspacePorts.api.ts`, and
-     `workspacePorts.mock.ts` replaced the old broad service module names.
+     test-only workspace doubles replaced the old broad service module names
+     outside product runtime.
    - Every web consumer now takes graph, file, diff, admin, plugin catalog,
      warehouse import, or file-write ports explicitly.
-   - The architecture guard blocks the legacy broad interface, composition
+   - The architecture guard blocks the retired broad interface, composition
      field, hook, and broad factory.
 5. Move validation/authorization authority out of browser-local stores.
    - Use API validation results for executable graph/plan readiness.
@@ -303,8 +315,8 @@ Prioritized capability migrations:
 
 ## Capability-Specific Acceptance Tests To Add
 
-- API mode composition must not call any `*.mock.ts` service for protected
-  routes.
+- Implemented: product composition must not call any mock/test-double service
+  for protected routes.
 - `workspacePorts.api.ts` must not contain API endpoints absent from
   `runtimeRoutes.constants.ts`, operational route registration, or an explicit
   route catalog.
@@ -312,8 +324,8 @@ Prioritized capability migrations:
   `canPlan`, `canRun`, or admin actions.
 - Cost plugin route must not be navigable/executable when `/capabilities`
   reports `cost.available=false`.
-- Diff/Admin tabs must either consume real API routes or render an unavailable
-  API-mode state.
+- Implemented: Diff/Admin/API-missing workspace ports fail closed until real
+  API routes exist.
 - Canvas plan preview must not require `POST /workspace/files/:path` unless the
   API route exists; provenance persistence must be owned by an API command.
 - Local artifact upload must be labelled and tested as local inspection or moved
@@ -323,7 +335,7 @@ Prioritized capability migrations:
 
 - Before adding a web service method, name the command/query rail.
 - Before adding a route/view, declare whether it is presentation-only,
-  API-backed, or demo-only.
+  API-backed, unavailable until a backend rail exists, or test-only.
 - Do not add a method to a broad port when it belongs to a different bounded
   context.
 - Do not make a missing capability default to available if it can execute or
@@ -334,13 +346,14 @@ Prioritized capability migrations:
 
 ## Conclusion
 
-The web/API integration is partially real and stronger than a pure mock shell:
-session gating, health, capabilities, workspace graph draft, plans, runs, and
-workspace file reads all have real API paths. The main drift is not absence of
-API work; it is uneven authority boundaries. Broad web ports and static plugin
-composition make mock/local behavior look equivalent to backend-backed rails.
+The web/API integration is now materially less mock-driven: session gating,
+workspace context startup, health, capabilities, workspace graph draft, plans,
+runs, and workspace file reads all use API-backed product composition. The
+main remaining drift is no longer product mock runtime selection; it is uneven
+authority boundaries for static plugin composition, local authorization stores,
+and missing backend read models.
 
-The next valuable implementation slice is to fence mock runtime semantics.
-Route parity, server-owned workspace context, and the hard-cut port split now
-reduce false confidence in API mode; the next risk is that mock runtime
-behavior still looks product-equivalent outside explicit demo posture.
+The next valuable implementation slice is to replace optimistic browser-owned
+authorization and capability decisions with API-published read models. Route
+parity, server-owned workspace context, the hard-cut port split, and the
+API-only app-service composition now reduce false confidence in API mode.

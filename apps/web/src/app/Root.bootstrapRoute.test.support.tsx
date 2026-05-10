@@ -1,3 +1,4 @@
+import { createAppServicesTestOverrides } from '../testing/appServicesTestDoubles';
 import { useEffect } from 'react';
 import { RouterProvider, createMemoryRouter, type RouteObject } from 'react-router';
 import { vi } from 'vitest';
@@ -57,9 +58,7 @@ function createStaticRootChildRoute(args: {
     index: args.index,
     handle,
     element: (
-      <StaticRouteBootstrapBoundary
-        registration={getRouteBootstrapRegistration(args.id, handle)}
-      >
+      <StaticRouteBootstrapBoundary registration={getRouteBootstrapRegistration(args.id, handle)}>
         <div>{args.elementText}</div>
       </StaticRouteBootstrapBoundary>
     ),
@@ -109,7 +108,12 @@ export function RouteBootstrapProbe({
     return () => {
       resetRouteBootstrapPresentation(registration);
     };
-  }, [presentationState.canComplete, presentationState.detail, presentationState.status, registration]);
+  }, [
+    presentationState.canComplete,
+    presentationState.detail,
+    presentationState.status,
+    registration,
+  ]);
 
   return children;
 }
@@ -172,7 +176,10 @@ export function createRootShellNode(
 
   return (
     <AppServicesProvider
-      overrides={{ mode: 'mock', capabilitiesPort: capabilitiesPort ?? createDefaultCapabilitiesPort() }}
+      overrides={{
+        ...createAppServicesTestOverrides(),
+        capabilitiesPort: capabilitiesPort ?? createDefaultCapabilitiesPort(),
+      }}
     >
       <RouterProvider router={router} />
     </AppServicesProvider>
@@ -196,7 +203,12 @@ export function createBrokenRootShellNode(
   );
 
   return (
-    <AppServicesProvider overrides={{ mode: 'mock', capabilitiesPort: createDefaultCapabilitiesPort() }}>
+    <AppServicesProvider
+      overrides={{
+        ...createAppServicesTestOverrides(),
+        capabilitiesPort: createDefaultCapabilitiesPort(),
+      }}
+    >
       <RouterProvider router={router} />
     </AppServicesProvider>
   );

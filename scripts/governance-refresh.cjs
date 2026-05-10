@@ -78,8 +78,8 @@ function buildRefreshStages() {
         script: 'planning:db:export:check',
       },
       {
-        id: 'planning-db-import-before-governance-check',
-        script: 'planning:db:import',
+        id: 'governance-db-import-final',
+        script: 'governance:db:import',
       },
       {
         id: 'governance-db-check',

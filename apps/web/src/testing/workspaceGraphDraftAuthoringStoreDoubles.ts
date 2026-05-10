@@ -1,3 +1,4 @@
+/** Owned concern: hold instance-scoped graph-draft test state without product runtime wiring. */
 import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
 type MockWorkspaceGraphDraftRecord = {

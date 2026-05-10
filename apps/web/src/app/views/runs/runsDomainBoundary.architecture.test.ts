@@ -69,7 +69,6 @@ describe('Runs domain boundary', () => {
       'services/api/classifyHttpError.ts',
       'services/runs/runsService.ts',
       'services/runs/runsService.api.ts',
-      'services/runs/runsService.mock.ts',
       'services/runs/runsApiPayloads.ts',
       'services/runs/runsApiDecoders.ts',
       'services/runs/runsApiSnapshotMapper.ts',
@@ -114,9 +113,7 @@ describe('Runs domain boundary', () => {
     ].join('\n');
 
     expect(viewSources).not.toContain("from './runsService.api'");
-    expect(viewSources).not.toContain("from './runsService.mock'");
     expect(viewSources).not.toContain("from '../runs/runsService.api'");
-    expect(viewSources).not.toContain("from '../runs/runsService.mock'");
     expect(viewSources).not.toContain('interface IRunsPort');
     expect(viewSources).not.toContain('type StartRunInput');
     expect(viewSources).not.toContain('type RunStartReceipt');
@@ -152,9 +149,7 @@ describe('Runs domain boundary', () => {
     expect(serviceTestSource).toContain("expect(payload).not.toHaveProperty('runId')");
     expect(serviceTestSource).toContain("expect(payload).not.toHaveProperty('context')");
 
-    const mockServiceSource = readAppSource('services/runs/runsService.mock.ts');
-    expect(mockServiceSource).not.toContain('clientRunId');
-    expect(mockServiceSource).not.toContain('client_run_id');
+    expect(serviceTestSource).toContain('createMockRunsService');
   });
 
   it('models workbench state as a discriminated union with explicit variants', () => {

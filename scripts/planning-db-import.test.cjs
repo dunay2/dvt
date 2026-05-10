@@ -7,10 +7,13 @@ const {
   buildPlanningContentSnapshot,
   buildPrReadinessSnapshot,
   buildRepositoryCommandSnapshot,
+  clearGovernanceSnapshotTables,
+  governanceImportDeleteTables,
   importContent,
   normalizeText,
 } = require('./planning-db-import.cjs');
 const { governanceGeneratedPath } = require('./governance-generated-paths.cjs');
+const { schemaName } = require('./planning-db-migrate.cjs');
 
 test('planning content snapshot preserves real lane task content and hashes', () => {
   const snapshot = buildPlanningContentSnapshot();
@@ -202,6 +205,24 @@ test('governance snapshot imports DB-backed coverage and remediation generated a
       }
     }
   }
+});
+
+test('governance import clears every repopulated governance table before insert', async () => {
+  const queries = [];
+
+  await clearGovernanceSnapshotTables({
+    query: async (sql) => {
+      queries.push(sql);
+    },
+  });
+
+  assert.deepEqual(
+    queries,
+    governanceImportDeleteTables.map((tableName) => `delete from ${schemaName}.${tableName}`)
+  );
+  assert.ok(governanceImportDeleteTables.includes('governance_coverage'));
+  assert.ok(governanceImportDeleteTables.includes('governance_remediation'));
+  assert.equal(governanceImportDeleteTables.at(-1), 'governance_sources');
 });
 
 test('governance snapshot does not use stale generated YAML as structured import input', () => {

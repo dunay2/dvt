@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { StartRunInput } from '../../ports/runs';
 import { useSessionStore } from '../../stores/sessionStore';
 import { makePlanRef } from '../../testing/contractTestUtils';
+import { createMockRunsService } from '../../../testing/runsPortDoubles';
 import { ApiError, type ApiClient } from '../api/createApiClient';
 import { createRunsService } from './runsService';
 
@@ -66,7 +67,7 @@ describe('runsService runtime contract', () => {
       accepted: true,
     });
 
-    const service = createRunsService('api', apiClient);
+    const service = createRunsService(apiClient);
     await expect(service.startRun(createStartRunInput())).resolves.toEqual({
       runId: 'run_123',
       accepted: true,
@@ -98,7 +99,7 @@ describe('runsService runtime contract', () => {
       accepted: true,
     });
 
-    const service = createRunsService('api', apiClient);
+    const service = createRunsService(apiClient);
     await service.startRun(createStartRunInput());
 
     const [, payload] = vi.mocked(apiClient.postJson).mock.calls[0] ?? [];
@@ -113,7 +114,7 @@ describe('runsService runtime contract', () => {
       accepted: true,
     });
 
-    const service = createRunsService('api', apiClient);
+    const service = createRunsService(apiClient);
 
     await expect(service.startRun(createStartRunInput())).rejects.toThrow(
       'RUN_START_RESPONSE_INVALID_RUN_ID'
@@ -134,7 +135,7 @@ describe('runsService runtime contract', () => {
       snapshotStaleness: 'FRESH',
     });
 
-    const service = createRunsService('api', apiClient);
+    const service = createRunsService(apiClient);
     const snapshot = await service.getRunSnapshot('run_abc');
 
     expect(apiClient.getJson).toHaveBeenCalledWith('/runs/run_abc?tenantId=tenant-1');
@@ -157,7 +158,7 @@ describe('runsService runtime contract', () => {
     const apiClient = createApiClientMock();
     vi.mocked(apiClient.getJson).mockRejectedValue(createApiError(404, '/runs/missing'));
 
-    const service = createRunsService('api', apiClient);
+    const service = createRunsService(apiClient);
     const snapshot = await service.getRunSnapshot('missing');
 
     expect(snapshot).toBeNull();
@@ -170,7 +171,7 @@ describe('runsService runtime contract', () => {
       nextCursor: 10,
     });
 
-    const service = createRunsService('api', apiClient);
+    const service = createRunsService(apiClient);
     await service.listRunEvents('run_abc', 5);
 
     expect(apiClient.getJson).toHaveBeenCalledWith(
@@ -196,7 +197,7 @@ describe('runsService runtime contract', () => {
       nextCursor: null,
     });
 
-    const service = createRunsService('api', apiClient);
+    const service = createRunsService(apiClient);
     const runs = await service.listRunSummaries();
 
     expect(apiClient.getJson).toHaveBeenCalledWith(
@@ -241,7 +242,7 @@ describe('runsService runtime contract', () => {
       },
     });
 
-    const service = createRunsService('api', apiClient);
+    const service = createRunsService(apiClient);
     const snapshot = await service.getRunSnapshot('run_completed');
 
     expect(snapshot).toMatchObject({
@@ -289,7 +290,7 @@ describe('runsService runtime contract', () => {
       },
     });
 
-    const service = createRunsService('api', apiClient);
+    const service = createRunsService(apiClient);
     const snapshot = await service.getRunSnapshot('run_with_provenance');
 
     expect(snapshot).toMatchObject({
@@ -336,7 +337,7 @@ describe('runsService runtime contract', () => {
       },
     });
 
-    const service = createRunsService('api', apiClient);
+    const service = createRunsService(apiClient);
     const snapshot = await service.getRunSnapshot('run_with_read_model_fields');
 
     expect(snapshot).toMatchObject({
@@ -359,7 +360,7 @@ describe('runsService runtime contract', () => {
       nextCursor: 11,
     });
 
-    const service = createRunsService('api', apiClient);
+    const service = createRunsService(apiClient);
     const result = await service.listRunEvents('run_abc');
 
     expect(result).toEqual({
@@ -375,7 +376,7 @@ describe('runsService runtime contract', () => {
       nextCursor: 11.5,
     });
 
-    const service = createRunsService('api', apiClient);
+    const service = createRunsService(apiClient);
     const result = await service.listRunEvents('run_abc');
 
     expect(result).toEqual({
@@ -389,14 +390,14 @@ describe('runsService runtime contract', () => {
     const apiError = createApiError(500, '/runs');
     vi.mocked(apiClient.getJson).mockRejectedValue(apiError);
 
-    const service = createRunsService('api', apiClient);
+    const service = createRunsService(apiClient);
 
     await expect(service.listRunSummaries()).rejects.toBe(apiError);
   });
 
-  it('returns IRunsPort-compatible service for api mode', () => {
+  it('returns an IRunsPort-compatible API service', () => {
     const apiClient = createApiClientMock();
-    const service = createRunsService('api', apiClient);
+    const service = createRunsService(apiClient);
 
     expect(service).toHaveProperty('listRunSummaries');
     expect(service).toHaveProperty('getRunSnapshot');
@@ -408,8 +409,8 @@ describe('runsService runtime contract', () => {
     expect(typeof service.listRunEvents).toBe('function');
   });
 
-  it('returns IRunsPort-compatible service for mock mode', () => {
-    const service = createRunsService('mock');
+  it('keeps the explicit runs-port test double contract usable', () => {
+    const service = createMockRunsService();
 
     expect(service).toHaveProperty('listRunSummaries');
     expect(service).toHaveProperty('getRunSnapshot');
@@ -427,7 +428,7 @@ describe('runsService runtime contract', () => {
       const apiClient = createApiClientMock();
       const apiError = createApiError(statusCode);
       vi.mocked(apiClient.postJson).mockRejectedValue(apiError);
-      const service = createRunsService('api', apiClient);
+      const service = createRunsService(apiClient);
 
       await expect(service.startRun(createStartRunInput())).rejects.toBe(apiError);
     }
@@ -448,7 +449,7 @@ describe('runsService runtime contract', () => {
         },
       })
     );
-    const service = createRunsService('api', apiClient);
+    const service = createRunsService(apiClient);
 
     await expect(service.startRun(createStartRunInput())).rejects.toThrow(
       'Selected scope no longer matches the authoritative draft. Re-run Plan.'
@@ -463,7 +464,7 @@ describe('runsService runtime contract', () => {
       startedAt: '2026-04-04T00:00:00.000Z',
     });
 
-    const service = createRunsService('api', apiClient);
+    const service = createRunsService(apiClient);
     await service.getRunSnapshot('run_abc');
 
     expect(apiClient.getJson).toHaveBeenCalledWith('/runs/run_abc?tenantId=tenant-1');

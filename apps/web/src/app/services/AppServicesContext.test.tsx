@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -145,13 +146,13 @@ describe('AppServicesProvider', () => {
   it('builds services from mode and exposes them through hooks', async () => {
     await act(async () => {
       root.render(
-        <AppServicesProvider overrides={{ mode: 'mock' }}>
+        <AppServicesProvider overrides={createAppServicesTestOverrides()}>
           <Probe />
         </AppServicesProvider>
       );
     });
 
-    expect(captured.mode).toBe('mock');
+    expect(captured.mode).toBe('api');
     expect(captured.workspaceGraphSnapshotQuery).not.toBeNull();
     expect(captured.workspaceFilesQuery).not.toBeNull();
     expect(captured.workspaceDiffQuery).not.toBeNull();
@@ -311,7 +312,6 @@ describe('AppServicesProvider', () => {
       root.render(
         <AppServicesProvider
           overrides={{
-            mode: 'api',
             workspaceGraphSnapshotQuery,
             workspaceFilesQuery,
             workspaceDiffQuery,
@@ -362,12 +362,12 @@ describe('AppServicesProvider', () => {
 
     await act(async () => {
       root.render(
-        <firstLoad.AppServicesProvider overrides={{ mode: 'mock' }}>
+        <firstLoad.AppServicesProvider overrides={createAppServicesTestOverrides()}>
           <CrossReloadProbe />
         </firstLoad.AppServicesProvider>
       );
     });
 
-    expect(captured.mode).toBe('mock');
+    expect(captured.mode).toBe('api');
   });
 });

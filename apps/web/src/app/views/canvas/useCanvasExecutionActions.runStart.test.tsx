@@ -2,7 +2,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { mockExecutionPlan } from '../../data/mockDbtData';
+import { mockExecutionPlan } from '../../../testing/fixtures/mockDbtData';
 import type { PlanViewModel } from '../../types/plans';
 import { canvasViewCopy } from './copy';
 import {

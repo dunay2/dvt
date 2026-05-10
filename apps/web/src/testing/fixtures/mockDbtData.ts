@@ -1,3 +1,4 @@
+/** Owned concern: provide deterministic frontend fixture data for test doubles. */
 import { asNonBlankString } from '@dvt/contracts';
 
 import {
@@ -9,7 +10,7 @@ import {
   Role,
   AuditLogEntry,
   DiffChange,
-} from '../types/dbt';
+} from '../../app/types/dbt';
 
 export const mockNodes: DbtNode[] = [
   {

@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 
 const {
   buildDocsDispositionRows,
+  buildFocusRows,
   buildGovernanceComponentRows,
   buildGovernanceCoverageRows,
   buildGovernanceDriftRows,
@@ -28,6 +29,7 @@ const {
   readPlanningStatusEventRows,
   readPrReadinessRows,
   readDocsDispositionRows,
+  readFocusRows,
   readTaskGapRows,
   readRepositoryCommandRows,
   readTaskTraceRows,
@@ -63,6 +65,7 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('task-references'), 'task-references');
   assert.equal(resolveQueryName('task-trace'), 'task-trace');
   assert.equal(resolveQueryName('task-gaps'), 'task-gaps');
+  assert.equal(resolveQueryName('focus'), 'focus');
   assert.throws(() => resolveQueryName('unknown'), /Unknown planning DB query "unknown"/);
 });
 
@@ -182,6 +185,36 @@ test('parseArgs parses task provenance query filters for DB-first task triage', 
     queryName: 'task-gaps',
     filters: {
       resolution: 'resolved',
+      limit: 10,
+    },
+  });
+});
+
+test('parseArgs parses work intake focus filters for DB-first work selection', () => {
+  const command = parseArgs([
+    'focus',
+    '--kind',
+    'task_gap',
+    '--lane',
+    'C',
+    '--priority',
+    'P1',
+    '--task',
+    'F-28-C',
+    '--path',
+    'docs/planning/reviews/example.md',
+    '--limit',
+    '10',
+  ]);
+
+  assert.deepEqual(command, {
+    queryName: 'focus',
+    filters: {
+      kind: 'task_gap',
+      laneId: 'C',
+      priority: 'P1',
+      taskId: 'F-28-C',
+      path: 'docs/planning/reviews/example.md',
       limit: 10,
     },
   });
@@ -716,6 +749,43 @@ test('readTaskGapRows queries the DB-owned task provenance gap view', async () =
   assert.deepEqual(captured.params, ['active_review_without_task_link', 'C', 'P1', 'pending', 5]);
 });
 
+test('readFocusRows queries the DB-owned planning work intake view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readFocusRows(client, {
+    kind: 'task_gap',
+    laneId: 'C',
+    priority: 'P1',
+    taskId: 'F-28-C',
+    path: 'docs/planning/reviews/example.md',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.planning_work_intake_query/);
+  assert.match(captured.sql, /intake_kind = \$1/);
+  assert.match(captured.sql, /lane_id = \$2/);
+  assert.match(captured.sql, /priority = \$3/);
+  assert.match(captured.sql, /task_id = \$4/);
+  assert.match(captured.sql, /document_path = \$5/);
+  assert.match(captured.sql, /order by\s+rank_score,\s+intake_kind,\s+item_id/s);
+  assert.match(captured.sql, /limit \$6/);
+  assert.deepEqual(captured.params, [
+    'task_gap',
+    'C',
+    'P1',
+    'F-28-C',
+    'docs/planning/reviews/example.md',
+    5,
+  ]);
+});
+
 test('docs disposition row builders format cleanup queues for operator output', () => {
   assert.deepEqual(
     buildDocsDispositionRows([
@@ -797,6 +867,38 @@ test('task provenance row builders format task trace and gap queues for operator
         '-',
         'resolved',
         'Task is in review or done without evidence refs.',
+      ],
+    ]
+  );
+});
+
+test('buildFocusRows formats ranked work intake rows for operator output', () => {
+  assert.deepEqual(
+    buildFocusRows([
+      {
+        rank_score: 10,
+        priority: 'P1',
+        intake_kind: 'task_gap',
+        item_id: 'task_gap:F-28-C',
+        lane_id: 'C',
+        task_id: 'F-28-C',
+        document_path: null,
+        title: 'done_or_review_without_evidence',
+        reason: 'Task is in review or done without evidence refs.',
+        suggested_query: 'pnpm planning:db:query task-trace --task F-28-C --limit 30',
+      },
+    ]),
+    [
+      [
+        10,
+        'P1',
+        'task_gap',
+        'task_gap:F-28-C',
+        'C/F-28-C',
+        '-',
+        'done_or_review_without_evidence',
+        'Task is in review or done without evidence refs.',
+        'pnpm planning:db:query task-trace --task F-28-C --limit 30',
       ],
     ]
   );

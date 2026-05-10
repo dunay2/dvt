@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -68,7 +69,7 @@ describe('PluginsView', () => {
     };
 
     mounted = await withTestQueryClient(
-      <AppServicesProvider overrides={{ mode: 'mock', capabilitiesPort }}>
+      <AppServicesProvider overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
         <PluginsView />
       </AppServicesProvider>
     );
@@ -119,7 +120,7 @@ describe('PluginsView', () => {
     };
 
     mounted = await withTestQueryClient(
-      <AppServicesProvider overrides={{ mode: 'mock', capabilitiesPort }}>
+      <AppServicesProvider overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
         <PluginsView />
       </AppServicesProvider>
     );
@@ -156,7 +157,7 @@ describe('PluginsView', () => {
     };
 
     mounted = await withTestQueryClient(
-      <AppServicesProvider overrides={{ mode: 'mock', capabilitiesPort }}>
+      <AppServicesProvider overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
         <PluginsView />
       </AppServicesProvider>
     );
@@ -198,7 +199,7 @@ describe('PluginsView', () => {
     };
 
     mounted = await withTestQueryClient(
-      <AppServicesProvider overrides={{ mode: 'mock', capabilitiesPort }}>
+      <AppServicesProvider overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
         <PluginsView />
       </AppServicesProvider>
     );
@@ -225,7 +226,7 @@ describe('PluginsView', () => {
     };
 
     mounted = await withTestQueryClient(
-      <AppServicesProvider overrides={{ mode: 'mock', capabilitiesPort }}>
+      <AppServicesProvider overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
         <PluginsView />
       </AppServicesProvider>
     );

@@ -73,7 +73,7 @@ function expectBlockedCanvasRouteState(args: {
   harness: CanvasRouteHarness;
   text: string;
   detail: string;
-  routeState: 'blocked_runtime' | 'blocked_backend';
+  routeState: 'blocked_backend';
   bootstrapStatus?: 'blocked' | 'complete';
   canCompleteBootstrap?: boolean;
 }): void {
@@ -738,20 +738,6 @@ describe('Canvas route states', () => {
       bootstrapDetail:
         'Canvas cannot open persisted canvas kind "dbt" because its plugin is disabled or unavailable.',
       canCompleteBootstrap: true,
-    });
-  });
-
-  it('fails closed when canvas authoring is mounted outside api runtime mode', async () => {
-    await renderCanvasRouteWithController(harness, {
-      dataSourceMode: 'mock',
-      explorerNodes: [],
-    });
-
-    expectBlockedCanvasRouteState({
-      harness,
-      text: 'Canvas runtime unavailable',
-      detail: 'Canvas authoring requires API runtime mode and protected workspace draft access.',
-      routeState: 'blocked_runtime',
     });
   });
 

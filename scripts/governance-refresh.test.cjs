@@ -48,7 +48,7 @@ test('governance refresh imports planning DB before DB-backed generated surfaces
       'planning:db:check',
       'planning:db:inventory:check',
       'planning:db:export:check',
-      'planning:db:import',
+      'governance:db:import',
       'governance:db:check',
       'governance:db:export:check',
     ]

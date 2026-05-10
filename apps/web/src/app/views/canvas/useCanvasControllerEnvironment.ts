@@ -22,10 +22,7 @@ export function useCanvasControllerEnvironment() {
   const dataSourceMode = useAppDataSourceMode();
   const { data: capabilities } = useCapabilitiesQuery();
   const platformHealthQuery = usePlatformHealthSnapshotQuery();
-  const workspacePortCapabilities = useMemo(
-    () => resolveWorkspacePortCapabilities(dataSourceMode),
-    [dataSourceMode]
-  );
+  const workspacePortCapabilities = useMemo(() => resolveWorkspacePortCapabilities(), []);
   const workspaceFilesQuery = useWorkspaceFilesQueryPort();
   const workspaceFileContentCommand = useWorkspaceFileContentCommandPort();
   const workspaceGraphDraftAuthoringPort = useWorkspaceGraphDraftAuthoringPort();

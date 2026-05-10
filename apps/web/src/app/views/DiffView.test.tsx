@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import React, { act } from 'react';
 import { fireEvent, waitFor } from '@testing-library/dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -178,10 +179,7 @@ describe('DiffView', () => {
   it('renders diff summary and graph items', async () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
-        overrides={{
-          mode: 'mock',
-          ...buildDiffViewWorkspacePorts(),
-        }}
+        overrides={{ ...createAppServicesTestOverrides(), ...buildDiffViewWorkspacePorts() }}
       >
         <DiffView />
       </AppServicesProvider>
@@ -201,7 +199,7 @@ describe('DiffView', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
-          mode: 'mock',
+          ...createAppServicesTestOverrides(),
           ...buildDiffViewWorkspacePorts({
             diff: { getDiffChanges: async () => [] },
           }),
@@ -224,7 +222,7 @@ describe('DiffView', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
-          mode: 'mock',
+          ...createAppServicesTestOverrides(),
           ...buildDiffViewWorkspacePorts({
             diff: {
               getDiffChanges: async () => {
@@ -250,10 +248,7 @@ describe('DiffView', () => {
   it('keeps diff header and summary outside the scroll-owned body', async () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
-        overrides={{
-          mode: 'mock',
-          ...buildDiffViewWorkspacePorts(),
-        }}
+        overrides={{ ...createAppServicesTestOverrides(), ...buildDiffViewWorkspacePorts() }}
       >
         <DiffView />
       </AppServicesProvider>
@@ -280,10 +275,7 @@ describe('DiffView', () => {
   it('renders Monaco-backed SQL diff when the SQL tab is selected', async () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
-        overrides={{
-          mode: 'mock',
-          ...buildDiffViewWorkspacePorts(),
-        }}
+        overrides={{ ...createAppServicesTestOverrides(), ...buildDiffViewWorkspacePorts() }}
       >
         <DiffView />
       </AppServicesProvider>
@@ -322,7 +314,7 @@ describe('DiffView', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
-          mode: 'mock',
+          ...createAppServicesTestOverrides(),
           ...buildDiffViewWorkspacePorts({
             files: {
               getFileContent: () =>
@@ -369,7 +361,7 @@ describe('DiffView', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
-          mode: 'mock',
+          ...createAppServicesTestOverrides(),
           ...buildDiffViewWorkspacePorts({
             files: {
               getFileContent: async () => {
@@ -412,7 +404,7 @@ describe('DiffView', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
-          mode: 'mock',
+          ...createAppServicesTestOverrides(),
           ...buildDiffViewWorkspacePorts({
             diff: {
               getDiffChanges: async () => [
@@ -477,7 +469,7 @@ describe('DiffView', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
-          mode: 'mock',
+          ...createAppServicesTestOverrides(),
           ...buildDiffViewWorkspacePorts({
             graph: {
               getGraphSnapshot: async () => ({
@@ -524,7 +516,7 @@ describe('DiffView', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
-          mode: 'mock',
+          ...createAppServicesTestOverrides(),
           ...buildDiffViewWorkspacePorts({
             graph: {
               getGraphSnapshot: async () => ({

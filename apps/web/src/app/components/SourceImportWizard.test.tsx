@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -107,7 +108,7 @@ describe('SourceImportWizard', () => {
       root.render(
         <AppServicesProvider
           overrides={{
-            mode: 'mock',
+            ...createAppServicesTestOverrides(),
             warehouseSourceImport: args?.warehouseSourceImport ?? buildWarehouseSourceImportPort(),
           }}
         >

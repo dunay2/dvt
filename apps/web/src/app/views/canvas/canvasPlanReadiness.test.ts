@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { mockExecutionPlan } from '../../data/mockDbtData';
+import { mockExecutionPlan } from '../../../testing/fixtures/mockDbtData';
 import { makePlanRef } from '../../testing/contractTestUtils';
 import {
   hasPersistedPreviewProof,

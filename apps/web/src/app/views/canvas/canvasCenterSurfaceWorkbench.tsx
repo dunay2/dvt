@@ -25,15 +25,6 @@ function renderCanvasStartupWorkbenchSurface(
     );
   }
 
-  if (routeState === 'blocked_runtime') {
-    return (
-      <CanvasBlockedStateView
-        title={startupBlockState?.title ?? canvasViewCopy.runtimeBlockedTitle}
-        message={startupBlockState?.message ?? canvasViewCopy.runtimeBlockedFallbackMessage}
-      />
-    );
-  }
-
   if (routeState === 'blocked_backend') {
     return (
       <CanvasBlockedStateView

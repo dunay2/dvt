@@ -1,9 +1,14 @@
 import { resolveCurrentGraphDraftQueryData } from './useCanvasController.test.graphQuery';
 import type { CanvasHarnessMocks, CanvasHarnessState } from './useCanvasController.test.types';
 import type { CanvasAuthoringDraftReadModel } from './canvasDraftReadModel';
+import { createPlatformHealthSnapshot } from '../../../capabilities/platform-health/testing/platformHealthFixtures';
 
 type CanvasGraphQueryData = CanvasHarnessState['graphData'];
-type CanvasHarnessQueryData = CanvasAuthoringDraftReadModel | CanvasGraphQueryData;
+type CanvasHarnessPlatformHealthData = ReturnType<typeof createPlatformHealthSnapshot>;
+type CanvasHarnessQueryData =
+  | CanvasAuthoringDraftReadModel
+  | CanvasGraphQueryData
+  | CanvasHarnessPlatformHealthData;
 type CanvasHarnessQueryConfig = {
   queryKey?: readonly unknown[];
   queryFn?: () => Promise<unknown>;
@@ -28,6 +33,14 @@ function buildCanvasHarnessUseQueryResult(
   state: CanvasHarnessState,
   queryKey: readonly unknown[]
 ): { data: CanvasHarnessQueryData; isPending: false; isError: false } {
+  if (queryKey[0] === 'shell' && queryKey[1] === 'platform-health') {
+    return {
+      data: createPlatformHealthSnapshot(),
+      isPending: false,
+      isError: false,
+    };
+  }
+
   if (queryKey[1] === 'graph-draft') {
     return {
       data: resolveCurrentGraphDraftQueryData(state),

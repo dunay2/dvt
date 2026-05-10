@@ -1223,11 +1223,14 @@ Current implementation status on 2026-05-08:
   DB rows, then `planning:db:query docs-disposition` and
   `planning:db:query task-references` expose the triage queue without turning
   the status inventory into a parallel workboard;
-- W19 is implemented: the planning-query slice adds a task provenance ledger
-  over existing planning, document-disposition, dependency, and evidence rows so
-  agents can ask which reviews, proposals, closeouts, evidence refs, and
-  unresolved gaps explain a task before selecting or closing work;
-- W20 is implemented: docs disposition and task-provenance gaps can now be
+- W19 is implemented: `planning:db:query task-trace` and
+  `planning:db:query task-gaps` expose the task provenance ledger over existing
+  planning, document-disposition, dependency, and evidence rows;
+- W20 is implemented: the planning-query slice adds a work-intake focus query
+  over next tasks, task provenance gaps, docs disposition actions, governance
+  remediation, and PR readiness blockers so agents can ask what to work on next
+  and why without opening every specialized queue first;
+- W21 is implemented: docs disposition and task-provenance gaps can now be
   resolved through DB-owned source-hash-guarded overlays instead of requiring
   agents to edit status/inventory files to remove operational noise;
 - the obsolete `governance:artifacts:generate` package alias is removed;
@@ -1358,19 +1361,69 @@ W19 does not change task status, create tasks, archive reviews, promote
 proposals, or infer closure. It only makes the relationships visible enough for
 the next work selection or closeout decision to be evidence-led.
 
-## W20 Docs Resolution Overlay Design
+## W20 Work Intake Focus Query Design
 
-After W18 and W19, operators could inspect docs disposition actions and task
-provenance gaps in the DB, but the only way to keep already-reviewed cleanup
-signals out of the active queue was still to alter source files. That made the
-DB easier to query but did not make it the governed operational surface for
-triage decisions.
+The planning DB now has narrow query queues for next executable tasks, docs
+disposition, task provenance gaps, governance remediation, and PR readiness.
+That improves precision, but work selection still requires an operator to run
+several commands and mentally rank the results.
 
-W20 adds DB-owned resolution overlays for disposition actions and task gaps. The
+W20 derives a single DB-owned work-intake read model from existing query views.
+It does not replace the specialized queues; it routes operators to them. The
+view joins no mutable state and writes no task status. It only ranks already
+imported rows by priority and source kind.
+
+Target state:
+
+```mermaid
+flowchart LR
+  Next["planning_next_tasks"] --> Intake["planning_work_intake_query"]
+  Gaps["planning_task_gap_query"] --> Intake
+  Docs["doc_disposition_action_query"] --> Intake
+  Remediation["governance_remediation_query"] --> Intake
+  Readiness["pr_readiness_query"] --> Intake
+  Intake --> Focus["planning:db:query focus --limit 20"]
+  Intake --> FocusKind["planning:db:query focus --kind task_gap"]
+```
+
+`QueryPlanningWorkIntake` owns this operator query. The output contract is:
+
+- `rank_score`: stable numeric ordering across sources;
+- `priority`: planning priority label normalized from the source row;
+- `intake_kind`: one of `next_task`, `task_gap`, `docs_disposition`,
+  `governance_remediation`, or `pr_readiness`;
+- `item_id`: stable source-row identifier for deduplication and review;
+- `lane_id` and `task_id` when the row is task-scoped;
+- `document_path` or `source_path` when the row is document-scoped;
+- `title`: compact human label;
+- `reason`: why the row is actionable;
+- `suggested_query`: the next specialized query to inspect the item;
+- `source_view`: the DB view that owns the detailed semantics.
+
+Ordering is intentionally conservative: P0/P1 blockers sort first, PR readiness
+blockers are included only when blocking, and specialized source queries remain
+the authority for details. The CLI exposes `--kind`, `--lane`, `--priority`,
+`--task`, `--path`, and `--limit` filters so agents can focus without adding
+parallel queue names.
+
+W20 does not create tasks, resolve docs disposition actions, change ARC
+readiness, or infer task closure. It accelerates intake by making the first
+question DB-answerable: what deserves attention next, and which canonical query
+explains it?
+
+## W21 Docs Resolution Overlay Design
+
+After W18, W19, and W20, operators could inspect docs disposition actions, task
+provenance gaps, and the ranked work-intake queue in the DB, but the only way
+to keep already-reviewed cleanup signals out of the active queues was still to
+alter source files. That made the DB easier to query but did not make it the
+governed operational surface for triage decisions.
+
+W21 adds DB-owned resolution overlays for disposition actions and task gaps. The
 overlay is local operational state, not a replacement for Git-reviewed source
 truth. Each resolution stores the source content hash of the imported action or
-gap, so a later source-file change reopens the signal instead of silently hiding
-new evidence behind an old decision.
+gap, so a later source-file change reopens the signal instead of silently
+hiding new evidence behind an old decision.
 
 Target state:
 
@@ -1384,13 +1437,15 @@ flowchart LR
   Overlays --> GapView
   ActionView --> DocsQueue["planning:db:query docs-disposition --resolution pending|resolved|all"]
   GapView --> GapQueue["planning:db:query task-gaps --resolution pending|resolved|all"]
+  GapView --> Intake["planning_work_intake_query"]
+  ActionView --> Intake
 ```
 
 `ResolveDocsDispositionAction` and `ResolveTaskProvenanceGap` own the command
-rail. `QueryDocsDispositionQueue` and `QueryTaskProvenanceLedger` remain the
-query rails. The overlay intentionally supports `resolved`, `accepted`,
-`ignored`, and `linked` statuses; it does not archive documents, create tasks,
-or rewrite lane YAML.
+rail. `QueryDocsDispositionQueue`, `QueryTaskProvenanceLedger`, and
+`QueryPlanningWorkIntake` remain the query rails. The overlay intentionally
+supports `resolved`, `accepted`, `ignored`, and `linked` statuses; it does not
+archive documents, create tasks, change ARC readiness, or rewrite lane YAML.
 
 Implementation plan:
 
@@ -1398,7 +1453,7 @@ Implementation plan:
    `scripts/planning-db-query.test.cjs`, and
    `scripts/planning-db-migrate.test.cjs` for resolution command parsing,
    source-hash-guarded planning, query filtering, and migration coverage.
-2. Add `019_docs_resolution_overlays.sql` with `doc_resolution_overlays`,
+2. Add `021_docs_resolution_overlays.sql` with `doc_resolution_overlays`,
    `doc_resolution_operations`, source-hash-joined disposition views, and
    task-gap views split into raw and resolution-aware projections.
 3. Extend `planning:db:operate` with `docs-disposition resolve` and
@@ -1406,11 +1461,12 @@ Implementation plan:
 4. Extend `planning:db:query docs-disposition` and `task-gaps` with
    `--resolution pending|resolved|all`; default output remains the pending
    operator queue.
-5. Validate W20 with
+5. Validate W21 with
    `node --test scripts/planning-db-operate.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs`,
    `pnpm test:planning:db`, `pnpm planning:db:migrate`,
    `pnpm planning:db:query docs-disposition --limit 5`,
    `pnpm planning:db:query task-gaps --limit 5`,
+   `pnpm planning:db:query focus --limit 5`,
    `pnpm governance:refresh`,
    `pnpm docs:feature-mechanization:implementation`, and
    `pnpm verify:prepush`.
@@ -1432,6 +1488,7 @@ Implementation plan:
 | PR readiness blockers are hidden in CI    | ARC/readiness blockers are queryable in `pr_readiness_checks`  |
 | Docs disposition stays manual and stale   | Docs disposition queues are imported and queryable in the DB   |
 | Task provenance stays manual and stale    | Task trace and task gap queues are derived in DB query views   |
+| Work intake stays split across queues     | Focus query ranks existing DB queues without creating writes   |
 | Reviewed docs gaps keep polluting queues  | Source-hash-guarded resolution overlays hide only current rows |
 | DB treated as hidden repository authority | No committed database files; export must remain reviewable     |
 | GitHub mirror edits bypass PR review      | Mirror is read-only or imports as reviewed repo changes first  |
@@ -1470,6 +1527,9 @@ docs-disposition` and `planning:db:query task-references` without treating a
 <TASK_ID>` and task-governance gaps can be inspected through
   `planning:db:query task-gaps` without rereading every lane, review, proposal,
   and closeout file by hand.
+- Work intake can be inspected through `planning:db:query focus --limit 20`,
+  with source-kind filters, without manually running every planning,
+  documentation, governance, and PR-readiness queue first.
 - The governance refresh sequence is executable through one local command and
   fails closed if generated output does not stabilize before DB import/check.
 
@@ -1603,6 +1663,9 @@ commandQueryRails:
   - name: ResolveTaskProvenanceGap
     type: command
     dddOwner: DocsResolutionOverlay
+  - name: QueryPlanningWorkIntake
+    type: query
+    dddOwner: PlanningWorkIntakeReadModel
   - name: ExportGovernanceStateSnapshot
     type: command
     dddOwner: GovernanceStateExport
@@ -1670,6 +1733,9 @@ domainObjects:
   - name: DocsResolutionOverlay
     type: command model
     owner: Docs governance
+  - name: PlanningWorkIntakeReadModel
+    type: read model
+    owner: Product / Architecture / Delivery / Docs
   - name: GovernanceStateExport
     type: command model
     owner: Docs governance
@@ -1693,6 +1759,7 @@ fowlerSignals:
   - Manual docs disposition inventory
   - Manual task provenance reconstruction
   - Manual docs disposition resolution
+  - Manual work intake reconstruction
   - Mutable external tracker authority risk
 architectureGuards:
   - pnpm test:governance:refresh
@@ -1714,6 +1781,7 @@ completionGate:
   - pnpm planning:db:query task-gaps --limit 10
   - pnpm planning:db:query docs-disposition --resolution all --limit 10
   - pnpm planning:db:query task-gaps --resolution all --limit 10
+  - pnpm planning:db:query focus --limit 10
   - pnpm planning:db:query hash-drift
   - pnpm planning:db:export
   - pnpm planning:db:export:check
@@ -1962,6 +2030,14 @@ redGreenCycles:
       - scripts/planning-db-*.cjs
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+  - id: planning-db-work-intake-focus-query
+    redTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+    expectedFailure: Work selection still requires manually running next-task, task-gap, docs-disposition, governance-remediation, and PR-readiness queues because no DB-owned planning_work_intake_query view or planning:db:query focus adapter exists.
+    patchSurfaces:
+      - tools/planning-db/**
+      - scripts/planning-db-*.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
   - id: planning-db-docs-resolution-overlays
     redTest: node --test scripts/planning-db-operate.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
     expectedFailure: Docs disposition and task gap queues can be read from the DB but reviewed rows cannot be resolved through a DB-owned source-hash-guarded command rail.
@@ -1990,6 +2066,7 @@ symbols:
       - QueryTaskProvenanceLedger
       - ResolveDocsDispositionAction
       - ResolveTaskProvenanceGap
+      - QueryPlanningWorkIntake
       - ExportGovernanceStateSnapshot
       - ValidateGovernanceStateDrift
       - RefreshGovernanceDerivedSurfaces
@@ -2003,6 +2080,7 @@ symbols:
       - Manual docs disposition inventory
       - Manual task provenance reconstruction
       - Manual docs disposition resolution
+      - Manual work intake reconstruction
       - Mutable external tracker authority risk
     architectureGuard: pnpm docs:feature-mechanization:implementation
     cypressCoverage: N/A - planning query-store proposal has no browser workflow.
@@ -2195,13 +2273,14 @@ symbols:
     path: tools/planning-db/migrations/018_task_provenance_ledger.sql
   - &planningDbDocsResolutionOverlaySymbol
     name: PlanningDbDocsResolutionOverlayMigration
-    path: tools/planning-db/migrations/019_docs_resolution_overlays.sql
+    path: tools/planning-db/migrations/021_docs_resolution_overlays.sql
     dddOwner: DocsResolutionOverlay
     cqRails:
       - ResolveDocsDispositionAction
       - ResolveTaskProvenanceGap
       - QueryDocsDispositionQueue
       - QueryTaskProvenanceLedger
+      - QueryPlanningWorkIntake
       - MigratePlanningQueryStoreSchema
     fowlerSignals:
       - Manual docs disposition inventory
@@ -2212,6 +2291,12 @@ symbols:
     unitTests:
       - node --test scripts/planning-db-operate.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
       - pnpm test:planning:db
+  - <<: *planningDbContentSymbol
+    name: PlanningDbWorkIntakeQueryMigration
+    path: tools/planning-db/migrations/019_planning_work_intake_query.sql
+  - <<: *planningDbContentSymbol
+    name: PlanningDbWorkIntakeQuerySuggestionHardeningMigration
+    path: tools/planning-db/migrations/020_planning_work_intake_query_suggestions.sql
   - <<: *planningDbContentSymbol
     name: PlanningDbMigrateRunner
     path: scripts/planning-db-migrate.cjs
@@ -2574,6 +2659,18 @@ symbols:
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: readTaskGapRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: buildFocusRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: taskScope
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: workIntakeSelect
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: readFocusRows
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: printRows

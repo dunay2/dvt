@@ -37,6 +37,17 @@ const governanceCoverageReportPath = governanceGeneratedPath(
 const governanceRemediationQueuePath = governanceGeneratedPath(
   'system-governance-remediation-queue.queue.yaml'
 );
+const governanceImportDeleteTables = [
+  'governance_component_files',
+  'governance_component_file_shards',
+  'governance_fingerprints',
+  'governance_files',
+  'governance_file_shards',
+  'governance_components',
+  'governance_coverage',
+  'governance_remediation',
+  'governance_sources',
+];
 
 function databaseUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
@@ -1552,8 +1563,14 @@ async function insertPlanningSnapshot(client, snapshot) {
   }
 }
 
+async function clearGovernanceSnapshotTables(client) {
+  for (const tableName of governanceImportDeleteTables) {
+    await client.query(`delete from ${schemaName}.${tableName}`);
+  }
+}
+
 async function insertGovernanceSnapshot(client, snapshot) {
-  await client.query(`delete from ${schemaName}.governance_sources`);
+  await clearGovernanceSnapshotTables(client);
 
   for (const source of snapshot.sources) {
     await client.query(
@@ -2047,8 +2064,10 @@ module.exports = {
   buildPlanningContentSnapshot,
   buildPrReadinessSnapshot,
   buildRepositoryCommandSnapshot,
+  clearGovernanceSnapshotTables,
   databaseUrl,
   evaluateArcPolicyReadiness,
+  governanceImportDeleteTables,
   importContent,
   insertDocsDispositionSnapshot,
   insertPrReadinessSnapshot,

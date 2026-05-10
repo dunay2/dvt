@@ -22,18 +22,18 @@ describe('buildBottomConsoleDrawerModel', () => {
     });
   });
 
-  it('returns a loading model with run badge and mock badge', () => {
+  it('returns a loading model with run badge and no runtime badge', () => {
     expect(
       buildBottomConsoleDrawerModel({
         title: 'Console',
-        dataSourceMode: 'mock',
+        dataSourceMode: 'api',
         runId: 'run-42',
         isLoading: true,
         lines: [],
       })
     ).toEqual({
       title: 'Console',
-      modeLabel: 'Mock',
+      modeLabel: null,
       kind: 'loading',
       runLabel: 'Run run-42',
       message: 'Loading run events...',
@@ -44,14 +44,14 @@ describe('buildBottomConsoleDrawerModel', () => {
     expect(
       buildBottomConsoleDrawerModel({
         title: 'Console',
-        dataSourceMode: 'mock',
+        dataSourceMode: 'api',
         runId: 'run-42',
         isLoading: false,
         lines: ['step: started', 'step: finished'],
       })
     ).toEqual({
       title: 'Console',
-      modeLabel: 'Mock',
+      modeLabel: null,
       kind: 'streaming',
       runLabel: 'Run run-42',
       lines: ['step: started', 'step: finished'],
