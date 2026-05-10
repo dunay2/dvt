@@ -1,0 +1,18 @@
+---
+id: R-20260510-ENGINE-ARTIFACTS-PATHS
+title: Engine artifact dependency path mapping can drift from workspace dependencies
+status: Open
+date: 2026-05-10
+owners:
+  - packages/@dvt/engine
+severity: Low
+probability: Low
+---
+mitigation:
+  summary: >
+    The engine tsconfig now maps @dvt/artifacts to the built package declaration surface, matching
+    the package dependency and the pattern used by other artifact consumers.
+  evidence:
+    - docs/evidence/ed-20260510-engine-artifacts-path-resolution.md
+  follow_up:
+    - Keep package tsconfig path mappings aligned when adding new workspace package imports.

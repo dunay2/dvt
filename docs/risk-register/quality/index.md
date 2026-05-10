@@ -44,6 +44,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Effective workspace context drift can reappear in protected web API mode](r-20260510-web-api-ewc.yaml)
 - [Empty temporal taskQueue values can re-enter provider-ref runtime state](R-20260409-PROVIDER-REF-EMPTY-STRING-PERSISTENCE.yaml)
 - [Engine and Temporal static-analysis cleanup can drift from admission and activity semantics](R-20260429-ENGINE-STATIC-ANALYSIS-CLEANUP.yaml)
+- [Engine artifact dependency path mapping can drift from workspace dependencies](R-20260510-ENGINE-ARTIFACTS-PATHS.yaml)
 - [Engine plan-integrity ports can lose ADR traceability metadata](R-20260510-PLAN-INTEGRITY-TRACEABILITY.yaml)
 - [Engine-owned plan verification increases adapter payload size and replay pressure](R-20260407-ENGINE-ENTRYPOINT-PLAN-PAYLOAD.yaml)
 - [Envelope boundary gating can drift if payloadVersion checks stay implicit](R-20260402-S05-ENVELOPE-BOUNDARY-GATING.yaml)
