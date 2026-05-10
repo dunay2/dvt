@@ -1906,6 +1906,9 @@ symbols:
     name: PlanningDbGovernanceContentMigration
     path: tools/planning-db/migrations/002_governance_content_read_model.sql
   - <<: *planningDbContentSymbol
+    name: PlanningDbRepositoryCommandCatalogMigration
+    path: tools/planning-db/migrations/015_repository_command_catalog.sql
+  - <<: *planningDbContentSymbol
     name: PlanningDbMigrateRunner
     path: scripts/planning-db-migrate.cjs
   - <<: *planningDbContentSymbol
@@ -2068,10 +2071,19 @@ symbols:
     name: buildGovernanceFileSnapshot
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
+    name: loadRepositoryCommandCatalogModule
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: buildRepositoryCommandSnapshot
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
     name: insertPlanningSnapshot
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
     name: insertGovernanceSnapshot
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: insertRepositoryCommandSnapshot
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
     name: beginImportTransaction
@@ -2111,6 +2123,15 @@ symbols:
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: readHashDriftSummary
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: repositoryCommandSelect
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: buildRepositoryCommandRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: readRepositoryCommandRows
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: printRows

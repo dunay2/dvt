@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const {
   buildGovernanceFileSnapshot,
   buildPlanningContentSnapshot,
+  buildRepositoryCommandSnapshot,
   importContent,
   normalizeText,
 } = require('./planning-db-import.cjs');
@@ -132,6 +133,24 @@ test('governance snapshot does not use stale generated YAML as structured import
       fs.writeFileSync(fileIndexPath, original, 'utf8');
     }
   }
+});
+
+test('repository command snapshot imports package scripts and command files for DB queries', async () => {
+  const snapshot = await buildRepositoryCommandSnapshot();
+
+  assert.ok(snapshot.commands.length > 0);
+  assert.ok(snapshot.commands.some((command) => command.commandId === 'package:planning:db:query'));
+  assert.ok(
+    snapshot.commands.some((command) => command.commandId === 'file:scripts/planning-db-query.cjs')
+  );
+
+  const planningQuery = snapshot.commands.find(
+    (command) => command.commandId === 'package:planning:db:query'
+  );
+  assert.equal(planningQuery.commandType, 'package_script');
+  assert.equal(planningQuery.domain, 'planning-db');
+  assert.equal(planningQuery.sensitivity, 'planning-query-store');
+  assert.deepEqual(planningQuery.referencedFiles, ['scripts/planning-db-query.cjs']);
 });
 
 test('normalizeText keeps structured lane fields queryable without dropping content', () => {

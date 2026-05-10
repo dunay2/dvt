@@ -1,6 +1,7 @@
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 const { Client } = require('pg');
 const yaml = require('js-yaml');
 
@@ -754,6 +755,70 @@ function buildGovernanceFileSnapshot() {
   };
 }
 
+async function loadRepositoryCommandCatalogModule() {
+  return import(
+    pathToFileURL(path.join(repoRoot, 'tools', 'ci', 'repository-command-catalog.mjs')).href
+  );
+}
+
+async function buildRepositoryCommandSnapshot() {
+  const packageJsonPath = path.join(repoRoot, 'package.json');
+  const packageJsonRaw = fs.readFileSync(packageJsonPath, 'utf8');
+  const packageJson = JSON.parse(packageJsonRaw);
+  const packageJsonHash = sha256(packageJsonRaw);
+  const catalogModule = await loadRepositoryCommandCatalogModule();
+  const catalog = catalogModule.buildRepositoryCommandCatalog(
+    packageJson,
+    catalogModule.discoverRepositoryCommandFiles(repoRoot)
+  );
+  const commands = [];
+
+  for (const script of catalog.packageScripts) {
+    commands.push({
+      commandId: `package:${script.name}`,
+      commandType: 'package_script',
+      commandName: script.name,
+      commandPath: null,
+      commandText: normalizeText(script.command),
+      domain: normalizeText(script.classification.domain),
+      sensitivity: normalizeText(script.classification.sensitivity),
+      runtimeFanout: Boolean(script.classification.runtimeFanout),
+      changedFileValidationRelevant: Boolean(script.classification.changedFileValidationRelevant),
+      referencedFiles: normalizeArray(script.referencedFiles).map(normalizeText),
+      sourcePath: 'package.json',
+      sourceContentSha256: packageJsonHash,
+      rawCommand: script,
+    });
+  }
+
+  for (const fileCommand of catalog.fileCommands) {
+    const sourcePath = normalizeText(fileCommand.path);
+    const fileRaw = fs.readFileSync(path.join(repoRoot, sourcePath), 'utf8');
+    commands.push({
+      commandId: `file:${sourcePath}`,
+      commandType: 'command_file',
+      commandName: null,
+      commandPath: sourcePath,
+      commandText: null,
+      domain: normalizeText(fileCommand.classification.domain),
+      sensitivity: normalizeText(fileCommand.classification.sensitivity),
+      runtimeFanout: Boolean(fileCommand.classification.runtimeFanout),
+      changedFileValidationRelevant: Boolean(
+        fileCommand.classification.changedFileValidationRelevant
+      ),
+      referencedFiles: [],
+      sourcePath,
+      sourceContentSha256: sha256(fileRaw),
+      rawCommand: fileCommand,
+    });
+  }
+
+  return {
+    sourcePath: 'tools/ci/repository-command-catalog.mjs',
+    commands,
+  };
+}
+
 async function insertPlanningSnapshot(client, snapshot) {
   await client.query(`delete from ${schemaName}.planning_sources`);
 
@@ -1060,6 +1125,35 @@ async function insertGovernanceSnapshot(client, snapshot) {
   }
 }
 
+async function insertRepositoryCommandSnapshot(client, snapshot) {
+  await client.query(`delete from ${schemaName}.repository_commands`);
+
+  for (const command of snapshot.commands) {
+    await client.query(
+      `insert into ${schemaName}.repository_commands
+        (command_id, command_type, command_name, command_path, command_text, domain, sensitivity,
+         runtime_fanout, changed_file_validation_relevant, referenced_files, source_path,
+         source_content_sha256, raw_command)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11, $12, $13::jsonb)`,
+      [
+        command.commandId,
+        command.commandType,
+        command.commandName,
+        command.commandPath,
+        command.commandText,
+        command.domain,
+        command.sensitivity,
+        command.runtimeFanout,
+        command.changedFileValidationRelevant,
+        toJson(command.referencedFiles),
+        command.sourcePath,
+        command.sourceContentSha256,
+        toJson(command.rawCommand),
+      ]
+    );
+  }
+}
+
 async function beginImportTransaction(client) {
   await client.query('begin');
   await client.query('select pg_advisory_xact_lock(hashtext($1), hashtext($2))', [
@@ -1075,6 +1169,9 @@ async function importContent(options = {}) {
   const includeGovernance = options.includeGovernance !== false;
   const planningSnapshot = includePlanning ? buildPlanningContentSnapshot() : null;
   const governanceSnapshot = includeGovernance ? buildGovernanceFileSnapshot() : null;
+  const repositoryCommandSnapshot = includeGovernance
+    ? await buildRepositoryCommandSnapshot()
+    : null;
   const client = options.client || new Client({ connectionString: url });
   const ownsClient = !options.client;
 
@@ -1090,6 +1187,7 @@ async function importContent(options = {}) {
     }
     if (includeGovernance) {
       await insertGovernanceSnapshot(client, governanceSnapshot);
+      await insertRepositoryCommandSnapshot(client, repositoryCommandSnapshot);
     }
     await client.query('commit');
   } catch (error) {
@@ -1110,12 +1208,19 @@ async function importContent(options = {}) {
     governanceFingerprints: governanceSnapshot?.fingerprints.length ?? 0,
     governanceCoverageRows: governanceSnapshot?.coverageRows.length ?? 0,
     governanceRemediationTasks: governanceSnapshot?.remediationTasks.length ?? 0,
+    repositoryCommands: repositoryCommandSnapshot?.commands.length ?? 0,
   };
 
   if (!silent) {
-    console.log(
-      `[planning:db:import] lanes=${result.lanes} tasks=${result.tasks} governanceFiles=${result.governanceFiles} governanceComponents=${result.governanceComponents} governanceRemediationTasks=${result.governanceRemediationTasks}`
-    );
+    const message = [
+      `[planning:db:import] lanes=${result.lanes}`,
+      `tasks=${result.tasks}`,
+      `governanceFiles=${result.governanceFiles}`,
+      `governanceComponents=${result.governanceComponents}`,
+      `governanceRemediationTasks=${result.governanceRemediationTasks}`,
+      `repositoryCommands=${result.repositoryCommands}`,
+    ].join(' ');
+    console.log(message);
   }
 
   return result;
@@ -1136,8 +1241,10 @@ module.exports = {
   beginImportTransaction,
   buildGovernanceFileSnapshot,
   buildPlanningContentSnapshot,
+  buildRepositoryCommandSnapshot,
   databaseUrl,
   importContent,
+  insertRepositoryCommandSnapshot,
   normalizeText,
   readYamlSource,
   sha256,
