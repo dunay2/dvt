@@ -38,11 +38,13 @@ test('DB surface inventory exists and validates canonical planning and governanc
 
 test('DB surface inventory validator rejects missing required surfaces', () => {
   const { validateInventory } = loadInventoryCheck();
-  const withoutTaskLifecycle = fs
-    .readFileSync(inventoryPath, 'utf8')
-    .split(/\r?\n/)
-    .filter((line) => !line.includes('| Planning task lifecycle |'))
-    .join('\n');
+  const inventory = fs.readFileSync(inventoryPath, 'utf8');
+  const withoutTaskLifecycle = inventory.replace(
+    /^\|\s*Planning task lifecycle\s*\|.*(?:\r?\n|$)/m,
+    ''
+  );
+
+  assert.notEqual(withoutTaskLifecycle, inventory);
 
   const result = validateInventory(withoutTaskLifecycle, { inventoryPath });
 
