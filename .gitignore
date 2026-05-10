@@ -102,6 +102,9 @@ private/finance/
 private/business/
 private/neo4j/
 
+# Local database data
+/planning-db/
+
 # Monorepo-local private data (full path under dvt/)
 dvt/private/
 docs/planning/GTM_PLAN_DVT.md
