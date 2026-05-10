@@ -304,3 +304,20 @@ test('tracked migrations include canonical governance source documents after W15
   assert.ok(sourceTextMigration);
   assert.match(sourceTextMigration.sql, /raw_source_text text/);
 });
+
+test('tracked migrations include repository command catalog read model after W16', () => {
+  const migrations = readMigrationFiles();
+  const commandCatalogMigration = migrations.find(
+    (migration) => migration.fileName === '015_repository_command_catalog.sql'
+  );
+
+  assert.ok(commandCatalogMigration);
+  assert.match(
+    commandCatalogMigration.sql,
+    /create table if not exists planning_query_store\.repository_commands/
+  );
+  assert.match(
+    commandCatalogMigration.sql,
+    /create or replace view planning_query_store\.repository_command_query/
+  );
+});

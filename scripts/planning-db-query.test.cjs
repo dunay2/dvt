@@ -10,6 +10,7 @@ const {
   buildHashDriftRows,
   buildSummaryRows,
   buildTaskRows,
+  buildRepositoryCommandRows,
   parseArgs,
   readGovernanceComponentRows,
   readGovernanceCoverageRows,
@@ -20,6 +21,7 @@ const {
   readPlanningDependencyRows,
   readPlanningEvidenceRows,
   readPlanningStatusEventRows,
+  readRepositoryCommandRows,
   readNextTaskRows,
   readHashDriftSummary,
   readOpenTaskRows,
@@ -45,6 +47,7 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('coverage'), 'coverage');
   assert.equal(resolveQueryName('remediation'), 'remediation');
   assert.equal(resolveQueryName('drift'), 'drift');
+  assert.equal(resolveQueryName('commands'), 'commands');
   assert.throws(() => resolveQueryName('unknown'), /Unknown planning DB query "unknown"/);
 });
 
@@ -96,6 +99,27 @@ test('parseArgs parses governance query filters for DB-first governance inspecti
   });
 });
 
+test('parseArgs parses repository command query filters for DB-first catalog inspection', () => {
+  const command = parseArgs([
+    'commands',
+    '--command-domain',
+    'planning-db',
+    '--type',
+    'package_script',
+    '--limit',
+    '5',
+  ]);
+
+  assert.deepEqual(command, {
+    queryName: 'commands',
+    filters: {
+      commandDomain: 'planning-db',
+      type: 'package_script',
+      limit: 5,
+    },
+  });
+});
+
 test('formatQueryError preserves nested connection failures for unavailable DB', () => {
   const ipv6Error = Object.assign(new Error('connect ECONNREFUSED ::1:55432'), {
     code: 'ECONNREFUSED',
@@ -133,6 +157,9 @@ test('buildSummaryRows exposes planning and governance content counts without ex
     planningTaskEvidenceRefs: 30,
     planningTaskStatusEvents: 250,
     planningArtifacts: 2,
+    repositoryCommands: 220,
+    repositoryCommandUnknown: 4,
+    repositoryCommandRuntimeFanout: 16,
   });
 
   assert.deepEqual(rows, [
@@ -144,6 +171,9 @@ test('buildSummaryRows exposes planning and governance content counts without ex
     ['planning.task_evidence_refs', 30],
     ['planning.task_status_events', 250],
     ['planning.artifacts', 2],
+    ['repository.commands', 220],
+    ['repository.commands.unknown', 4],
+    ['repository.commands.runtime_fanout', 16],
     ['governance.files', 4255],
     ['governance.files.drift', 41],
     ['governance.files.legacy', 0],
@@ -188,6 +218,9 @@ test('readSummary counts review tasks from the effective task view without hash 
             planningTaskEvidenceRefs: 30,
             planningTaskStatusEvents: 250,
             planningArtifacts: 2,
+            repositoryCommands: 220,
+            repositoryCommandUnknown: 4,
+            repositoryCommandRuntimeFanout: 16,
           },
         ],
       };
@@ -202,6 +235,7 @@ test('readSummary counts review tasks from the effective task view without hash 
   assert.match(capturedSql, /planning_task_evidence_refs/);
   assert.match(capturedSql, /planning_task_status_events/);
   assert.match(capturedSql, /planning_artifacts/);
+  assert.match(capturedSql, /repository_commands/);
   assert.doesNotMatch(capturedSql, /governance_file_hash_drift/);
 });
 
@@ -355,6 +389,71 @@ test('planning relation queries read normalized DB views', async () => {
   assert.deepEqual(captured[1].params, ['A', 4]);
   assert.deepEqual(captured[2].params, ['C', 5]);
   assert.deepEqual(captured[3].params, ['workboard', 6]);
+});
+
+test('readRepositoryCommandRows queries the DB repository command catalog view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readRepositoryCommandRows(client, {
+    commandDomain: 'planning-db',
+    type: 'package_script',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.repository_command_query/);
+  assert.match(captured.sql, /domain = \$1/);
+  assert.match(captured.sql, /command_type = \$2/);
+  assert.match(captured.sql, /limit \$3/);
+  assert.deepEqual(captured.params, ['planning-db', 'package_script', 5]);
+});
+
+test('buildRepositoryCommandRows formats DB-owned repository command catalog rows', () => {
+  const rows = buildRepositoryCommandRows([
+    {
+      command_type: 'package_script',
+      command_name: 'planning:db:query',
+      command_path: null,
+      domain: 'planning-db',
+      sensitivity: 'planning-query-store',
+      runtime_fanout: true,
+      referenced_file_count: 1,
+    },
+    {
+      command_type: 'command_file',
+      command_name: null,
+      command_path: 'scripts/planning-db-query.cjs',
+      domain: 'planning-db',
+      sensitivity: 'planning-query-store',
+      runtime_fanout: false,
+      referenced_file_count: 0,
+    },
+  ]);
+
+  assert.deepEqual(rows, [
+    [
+      'package_script',
+      'planning:db:query',
+      'planning-db',
+      'planning-query-store',
+      'runtime-fanout',
+      1,
+    ],
+    [
+      'command_file',
+      'scripts/planning-db-query.cjs',
+      'planning-db',
+      'planning-query-store',
+      '-',
+      0,
+    ],
+  ]);
 });
 
 test('buildGovernanceFileRows formats DB-owned governance file rows', () => {

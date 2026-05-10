@@ -26,6 +26,7 @@ const knownQueries = new Set([
   'coverage',
   'remediation',
   'drift',
+  'commands',
 ]);
 
 function databaseUrl() {
@@ -93,6 +94,14 @@ function parseArgs(args = process.argv.slice(2)) {
       filters.component = value;
       continue;
     }
+    if (arg === '--command-domain') {
+      filters.commandDomain = value;
+      continue;
+    }
+    if (arg === '--type') {
+      filters.type = value;
+      continue;
+    }
     if (arg === '--root') {
       filters.rootUnit = value;
       continue;
@@ -134,6 +143,9 @@ function buildSummaryRows(summary) {
     ['planning.task_evidence_refs', summary.planningTaskEvidenceRefs],
     ['planning.task_status_events', summary.planningTaskStatusEvents],
     ['planning.artifacts', summary.planningArtifacts],
+    ['repository.commands', summary.repositoryCommands],
+    ['repository.commands.unknown', summary.repositoryCommandUnknown],
+    ['repository.commands.runtime_fanout', summary.repositoryCommandRuntimeFanout],
     ['governance.files', summary.governanceFiles],
     ['governance.files.drift', summary.driftFiles],
     ['governance.files.legacy', summary.legacyFiles],
@@ -209,6 +221,17 @@ function buildPlanningArtifactRows(rows) {
     row.artifact_kind ?? row.artifactKind,
     row.artifact_path ?? row.artifactPath,
     row.content_sha256 ?? row.contentSha256 ?? '-',
+  ]);
+}
+
+function buildRepositoryCommandRows(rows) {
+  return rows.map((row) => [
+    row.command_type ?? row.commandType,
+    row.command_name ?? row.commandName ?? row.command_path ?? row.commandPath,
+    row.domain,
+    row.sensitivity,
+    flagLabel(row.runtime_fanout ?? row.runtimeFanout, 'runtime-fanout'),
+    row.referenced_file_count ?? row.referencedFileCount ?? 0,
   ]);
 }
 
@@ -372,6 +395,25 @@ function planningArtifactSelect() {
     from ${schemaName}.planning_artifacts`;
 }
 
+function repositoryCommandSelect() {
+  return `
+    select
+      command_id,
+      command_type,
+      command_name,
+      command_path,
+      command_text,
+      domain,
+      sensitivity,
+      runtime_fanout,
+      changed_file_validation_relevant,
+      referenced_file_count,
+      source_path,
+      source_content_sha256,
+      imported_at
+    from ${schemaName}.repository_command_query`;
+}
+
 function governanceFileSelect() {
   return `
     select
@@ -470,6 +512,9 @@ async function readSummary(client) {
       (select count(*)::int from ${schemaName}.planning_task_evidence_refs) as "planningTaskEvidenceRefs",
       (select count(*)::int from ${schemaName}.planning_task_status_events) as "planningTaskStatusEvents",
       (select count(*)::int from ${schemaName}.planning_artifacts) as "planningArtifacts",
+      (select count(*)::int from ${schemaName}.repository_commands) as "repositoryCommands",
+      (select count(*)::int from ${schemaName}.repository_commands where domain = 'unknown') as "repositoryCommandUnknown",
+      (select count(*)::int from ${schemaName}.repository_commands where runtime_fanout = true) as "repositoryCommandRuntimeFanout",
       (select count(*)::int from ${schemaName}.governance_files) as "governanceFiles",
       (select count(*)::int from ${schemaName}.governance_files where is_drift = true) as "driftFiles",
       (select count(*)::int from ${schemaName}.governance_files where is_legacy = true) as "legacyFiles",
@@ -622,6 +667,26 @@ async function readPlanningArtifactRows(client, filters = {}) {
     `${planningArtifactSelect()}
      ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
      order by artifact_kind, artifact_path
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readRepositoryCommandRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'domain', filters.commandDomain);
+  appendFilter(predicates, params, 'command_type', filters.type);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${repositoryCommandSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by runtime_fanout desc, domain, command_type, coalesce(command_name, command_path)
      limit $${params.length}`,
     params
   );
@@ -867,6 +932,15 @@ async function runQuery(options = {}) {
       return artifactRows;
     }
 
+    if (queryName === 'commands') {
+      const rows = await readRepositoryCommandRows(client, options.filters || {});
+      const commandRows = buildRepositoryCommandRows(rows);
+      if (options.print !== false) {
+        printTaskRows(commandRows);
+      }
+      return commandRows;
+    }
+
     if (queryName === 'files') {
       const rows = await readGovernanceFileRows(client, options.filters || {});
       const fileRows = buildGovernanceFileRows(rows);
@@ -985,6 +1059,7 @@ module.exports = {
   buildPlanningDependencyRows,
   buildPlanningEvidenceRows,
   buildPlanningStatusEventRows,
+  buildRepositoryCommandRows,
   buildSummaryRows,
   buildTaskRows,
   databaseUrl,
@@ -1000,6 +1075,7 @@ module.exports = {
   readPlanningDependencyRows,
   readPlanningEvidenceRows,
   readPlanningStatusEventRows,
+  readRepositoryCommandRows,
   readOpenTaskRows,
   printSummary,
   printTaskRows,
