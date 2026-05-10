@@ -30,6 +30,8 @@ const knownQueries = new Set([
   'pr-readiness',
   'docs-disposition',
   'task-references',
+  'task-trace',
+  'task-gaps',
 ]);
 
 function databaseUrl() {
@@ -68,6 +70,10 @@ function parseArgs(args = process.argv.slice(2)) {
   for (let index = 0; index < rest.length; index += 1) {
     const arg = rest[index];
     if (!arg.startsWith('--')) {
+      if (queryName === 'task-trace' && !filters.taskId) {
+        filters.taskId = arg;
+        continue;
+      }
       throw new Error(`Unexpected argument "${arg}". Expected --name value flags.`);
     }
 
@@ -127,6 +133,10 @@ function parseArgs(args = process.argv.slice(2)) {
     }
     if (arg === '--prefix') {
       filters.prefix = value;
+      continue;
+    }
+    if (arg === '--task') {
+      filters.taskId = value;
       continue;
     }
     if (arg === '--limit') {
@@ -283,6 +293,27 @@ function buildTaskReferenceRows(rows) {
     row.reference_prefix ?? row.referencePrefix,
     row.document_path ?? row.documentPath,
     row.occurrence_count ?? row.occurrenceCount ?? 0,
+  ]);
+}
+
+function buildTaskTraceRows(rows) {
+  return rows.map((row) => [
+    row.lane_id ?? row.laneId ?? '-',
+    row.task_id ?? row.taskId ?? '-',
+    row.trace_kind ?? row.traceKind,
+    row.trace_ref ?? row.traceRef,
+    row.trace_status ?? row.traceStatus ?? '-',
+    compactText(row.trace_detail ?? row.traceDetail),
+  ]);
+}
+
+function buildTaskGapRows(rows) {
+  return rows.map((row) => [
+    row.severity,
+    row.gap_kind ?? row.gapKind,
+    row.task_id ?? row.taskId ?? '-',
+    row.document_path ?? row.documentPath ?? '-',
+    compactText(row.reason),
   ]);
 }
 
@@ -524,6 +555,39 @@ function taskReferenceSelect() {
       raw_reference,
       imported_at
     from ${schemaName}.doc_task_reference_query`;
+}
+
+function taskTraceSelect() {
+  return `
+    select
+      lane_id,
+      task_id,
+      priority,
+      status,
+      progress_pct,
+      trace_kind,
+      trace_ref,
+      trace_status,
+      trace_detail,
+      document_path,
+      source_path,
+      source_content_sha256,
+      trace_order
+    from ${schemaName}.planning_task_trace_query`;
+}
+
+function taskGapSelect() {
+  return `
+    select
+      gap_kind,
+      severity,
+      lane_id,
+      task_id,
+      document_path,
+      reason,
+      source_path,
+      source_content_sha256
+    from ${schemaName}.planning_task_gap_query`;
 }
 
 function governanceFileSelect() {
@@ -881,6 +945,61 @@ async function readTaskReferenceRows(client, filters = {}) {
   return result.rows;
 }
 
+async function readTaskTraceRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'task_id', filters.taskId);
+  appendFilter(predicates, params, 'trace_kind', filters.kind);
+  appendFilter(predicates, params, 'lane_id', filters.laneId);
+
+  const limit = parseLimit(filters.limit, 100);
+  params.push(limit);
+
+  const result = await client.query(
+    `${taskTraceSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by
+      lane_id,
+      task_id,
+      trace_order,
+      trace_kind,
+      trace_ref
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readTaskGapRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'gap_kind', filters.kind);
+  appendFilter(predicates, params, 'lane_id', filters.laneId);
+  appendFilter(predicates, params, 'severity', filters.priority);
+  appendFilter(predicates, params, 'task_id', filters.taskId);
+  appendFilter(predicates, params, 'document_path', filters.path);
+
+  const limit = parseLimit(filters.limit, 100);
+  params.push(limit);
+
+  const result = await client.query(
+    `${taskGapSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by
+      case
+        when severity ~* '^P?[0-9]+$' then regexp_replace(severity, '^P', '', 'i')::int
+        else 9
+      end,
+      gap_kind,
+      coalesce(task_id, document_path)
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
 function appendGovernanceFileFilters(predicates, params, filters = {}) {
   appendFilter(predicates, params, 'component_unit', filters.component);
   appendFilter(predicates, params, 'root_unit', filters.rootUnit);
@@ -1155,6 +1274,24 @@ async function runQuery(options = {}) {
       return referenceRows;
     }
 
+    if (queryName === 'task-trace') {
+      const rows = await readTaskTraceRows(client, options.filters || {});
+      const traceRows = buildTaskTraceRows(rows);
+      if (options.print !== false) {
+        printTaskRows(traceRows);
+      }
+      return traceRows;
+    }
+
+    if (queryName === 'task-gaps') {
+      const rows = await readTaskGapRows(client, options.filters || {});
+      const gapRows = buildTaskGapRows(rows);
+      if (options.print !== false) {
+        printTaskRows(gapRows);
+      }
+      return gapRows;
+    }
+
     if (queryName === 'files') {
       const rows = await readGovernanceFileRows(client, options.filters || {});
       const fileRows = buildGovernanceFileRows(rows);
@@ -1277,7 +1414,9 @@ module.exports = {
   buildPrReadinessRows,
   buildRepositoryCommandRows,
   buildSummaryRows,
+  buildTaskGapRows,
   buildTaskRows,
+  buildTaskTraceRows,
   buildTaskReferenceRows,
   databaseUrl,
   formatQueryError,
@@ -1296,8 +1435,10 @@ module.exports = {
   readPrReadinessRows,
   readRepositoryCommandRows,
   readOpenTaskRows,
+  readTaskGapRows,
   printSummary,
   printTaskRows,
+  readTaskTraceRows,
   readNextTaskRows,
   readHashDriftSummary,
   readSummary,

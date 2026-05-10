@@ -91,10 +91,17 @@ test('governance snapshot builds DB import sources from in-memory generator proj
   const generatedSources = snapshot.sources.filter((source) =>
     source.sourcePath.startsWith('.generated-docs/')
   );
+  const artifactBackedTypes = new Set([
+    'governance_coverage_report',
+    'governance_remediation_queue',
+  ]);
+  const inMemorySources = generatedSources.filter(
+    (source) => !artifactBackedTypes.has(source.sourceType)
+  );
 
   assert.ok(generatedSources.length > 0);
   assert.equal(
-    generatedSources.every((source) => source.metadata?.sourceMode === 'in-memory-generator'),
+    inMemorySources.every((source) => source.metadata?.sourceMode === 'in-memory-generator'),
     true
   );
   assert.equal(
@@ -107,6 +114,94 @@ test('governance snapshot builds DB import sources from in-memory generator proj
   );
   assert.ok(generatedSources.every((source) => source.rawSource));
   assert.ok(generatedSources.every((source) => typeof source.rawSourceText === 'string'));
+});
+
+test('governance snapshot imports DB-backed coverage and remediation generated artifacts', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const coveragePath = governanceGeneratedPath('system-governance-coverage-report.coverage.yaml');
+  const remediationPath = governanceGeneratedPath('system-governance-remediation-queue.queue.yaml');
+  const originals = new Map(
+    [coveragePath, remediationPath].map((filePath) => [
+      filePath,
+      fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : null,
+    ])
+  );
+  const coverageRaw = [
+    'totals:',
+    '  files: 7',
+    '  governedFiles: 7',
+    '  ungovernedFiles: 0',
+    '  driftFiles: 0',
+    '  legacyFiles: 0',
+    'ciPosture:',
+    '  blockingStatus: fixture',
+    'byCanonicalRole:',
+    '  - name: fixture-role',
+    '    count: 7',
+    'componentCoverage: []',
+    'governanceDocuments: []',
+    'findings: []',
+    '',
+  ].join('\n');
+  const remediationRaw = [
+    'totals:',
+    '  tasks: 1',
+    '  p0: 0',
+    '  p1: 1',
+    '  p2: 0',
+    '  p3: 0',
+    '  driftFiles: 0',
+    '  componentsRequiringSubdivision: 1',
+    'byType: []',
+    'byPriority: []',
+    'tasks:',
+    '  - id: GRQ-FIXTURE',
+    '    type: component-subdivision',
+    '    priority: P1',
+    '    componentUnit: SYS-FIXTURE',
+    '    rootUnit: SYS',
+    '    domainUnit: Docs',
+    '    dddOwner: Docs',
+    '    cqRails: none',
+    '    blocking: no',
+    '    reason: Fixture generated artifact',
+    '    fileCount: 0',
+    '    documentCount: 0',
+    '    files: []',
+    '    documents: []',
+    '    expectedValidation: []',
+    '',
+  ].join('\n');
+
+  fs.mkdirSync(path.dirname(coveragePath), { recursive: true });
+  fs.writeFileSync(coveragePath, coverageRaw, 'utf8');
+  fs.writeFileSync(remediationPath, remediationRaw, 'utf8');
+
+  try {
+    const snapshot = buildGovernanceFileSnapshot();
+    const coverageSource = snapshot.sources.find(
+      (source) => source.sourceType === 'governance_coverage_report'
+    );
+    const remediationSource = snapshot.sources.find(
+      (source) => source.sourceType === 'governance_remediation_queue'
+    );
+
+    assert.ok(snapshot.coverageRows.some((row) => row.name === 'fixture-role'));
+    assert.ok(snapshot.remediationTasks.some((task) => task.taskId === 'GRQ-FIXTURE'));
+    assert.equal(coverageSource.metadata.sourceMode, 'generated-artifact');
+    assert.equal(remediationSource.metadata.sourceMode, 'generated-artifact');
+    assert.equal(coverageSource.rawSourceText, coverageRaw);
+    assert.equal(remediationSource.rawSourceText, remediationRaw);
+  } finally {
+    for (const [filePath, original] of originals) {
+      if (original === null) {
+        fs.unlinkSync(filePath);
+      } else {
+        fs.writeFileSync(filePath, original, 'utf8');
+      }
+    }
+  }
 });
 
 test('governance snapshot does not use stale generated YAML as structured import input', () => {
@@ -197,7 +292,7 @@ test('PR readiness snapshot clears ARC evidence and risk blockers from changed d
 test('docs disposition snapshot classifies active-doc cleanup actions and task-like references', () => {
   const snapshot = buildDocsDispositionSnapshot({
     pendingHotspotThreshold: 2,
-    planningTaskIds: ['AR-A6'],
+    planningTaskIds: ['AR-A6', 'F-28', 'S08'],
     documents: [
       {
         sourcePath: 'docs/planning/closeouts/example.md',
@@ -209,7 +304,7 @@ test('docs disposition snapshot classifies active-doc cleanup actions and task-l
           'owner: Docs',
           '---',
           [
-            'AR-A6 WEB-123 ADR-0055 ARC-2 ED-20260510-example',
+            'AR-A6 F-28 S08 WEB-123 ADR-0055 ARC-2 ED-20260510-example',
             'R-20260510-EXAMPLE US-1 F04-W4 SYS-DOCS CMD-RET PS-Q08',
             'SHA-256 GAP-1 MVP-E1-A RESIDUAL-A RISK-B LEGACY-DRIFT INV-SCOPE-03',
           ].join(' '),
@@ -235,6 +330,8 @@ test('docs disposition snapshot classifies active-doc cleanup actions and task-l
     snapshot.references.map((reference) => [reference.referenceText, reference.classification])
   );
   assert.equal(classifications.get('AR-A6'), 'registered_planning_task');
+  assert.equal(classifications.get('F-28'), 'registered_planning_task');
+  assert.equal(classifications.get('S08'), 'registered_planning_task');
   assert.equal(classifications.get('WEB-123'), 'unknown_task_like_id');
   assert.equal(classifications.get('ADR-0055'), 'adr_id');
   assert.equal(classifications.get('ARC-2'), 'arc_level');

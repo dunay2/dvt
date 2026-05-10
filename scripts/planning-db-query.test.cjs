@@ -9,9 +9,11 @@ const {
   buildGovernanceFileRows,
   buildGovernanceRemediationRows,
   buildHashDriftRows,
+  buildTaskGapRows,
   buildPrReadinessRows,
   buildSummaryRows,
   buildTaskRows,
+  buildTaskTraceRows,
   buildTaskReferenceRows,
   buildRepositoryCommandRows,
   parseArgs,
@@ -26,7 +28,9 @@ const {
   readPlanningStatusEventRows,
   readPrReadinessRows,
   readDocsDispositionRows,
+  readTaskGapRows,
   readRepositoryCommandRows,
+  readTaskTraceRows,
   readTaskReferenceRows,
   readNextTaskRows,
   readHashDriftSummary,
@@ -57,6 +61,8 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('pr-readiness'), 'pr-readiness');
   assert.equal(resolveQueryName('docs-disposition'), 'docs-disposition');
   assert.equal(resolveQueryName('task-references'), 'task-references');
+  assert.equal(resolveQueryName('task-trace'), 'task-trace');
+  assert.equal(resolveQueryName('task-gaps'), 'task-gaps');
   assert.throws(() => resolveQueryName('unknown'), /Unknown planning DB query "unknown"/);
 });
 
@@ -149,6 +155,23 @@ test('parseArgs parses docs disposition queue filters for DB-first cleanup work'
       kind: 'unknown_task_like_id',
       path: 'docs/planning/status/example.md',
       limit: 5,
+    },
+  });
+});
+
+test('parseArgs parses task provenance query filters for DB-first task triage', () => {
+  assert.deepEqual(parseArgs(['task-trace', 'F-28-C', '--limit', '20']), {
+    queryName: 'task-trace',
+    filters: {
+      taskId: 'F-28-C',
+      limit: 20,
+    },
+  });
+
+  assert.deepEqual(parseArgs(['task-gaps', '--kind', 'active_review_without_task_link']), {
+    queryName: 'task-gaps',
+    filters: {
+      kind: 'active_review_without_task_link',
     },
   });
 });
@@ -610,6 +633,50 @@ test('readTaskReferenceRows queries the DB-owned task-like reference view', asyn
   assert.deepEqual(captured.params, ['unknown_task_like_id', 'docs/planning/status/example.md', 5]);
 });
 
+test('readTaskTraceRows queries the DB-owned task provenance trace view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readTaskTraceRows(client, { taskId: 'F-28-C', kind: 'proposal', limit: 10 });
+
+  assert.match(captured.sql, /from planning_query_store\.planning_task_trace_query/);
+  assert.match(captured.sql, /task_id = \$1/);
+  assert.match(captured.sql, /trace_kind = \$2/);
+  assert.match(captured.sql, /limit \$3/);
+  assert.deepEqual(captured.params, ['F-28-C', 'proposal', 10]);
+});
+
+test('readTaskGapRows queries the DB-owned task provenance gap view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readTaskGapRows(client, {
+    kind: 'active_review_without_task_link',
+    laneId: 'C',
+    priority: 'P1',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.planning_task_gap_query/);
+  assert.match(captured.sql, /gap_kind = \$1/);
+  assert.match(captured.sql, /lane_id = \$2/);
+  assert.match(captured.sql, /severity = \$3/);
+  assert.match(captured.sql, /limit \$4/);
+  assert.deepEqual(captured.params, ['active_review_without_task_link', 'C', 'P1', 5]);
+});
+
 test('docs disposition row builders format cleanup queues for operator output', () => {
   assert.deepEqual(
     buildDocsDispositionRows([
@@ -643,6 +710,52 @@ test('docs disposition row builders format cleanup queues for operator output', 
       },
     ]),
     [['unknown_task_like_id', 'WEB-123', 'WEB', 'docs/planning/status/example.md', 2]]
+  );
+});
+
+test('task provenance row builders format task trace and gap queues for operator output', () => {
+  assert.deepEqual(
+    buildTaskTraceRows([
+      {
+        lane_id: 'E',
+        task_id: 'F-28-C',
+        trace_kind: 'proposal',
+        trace_ref: 'docs/planning/proposals/mandatory/frontend-and-ux/example.md',
+        trace_status: 'Review',
+        trace_detail: 'Stage 3 proposal',
+      },
+    ]),
+    [
+      [
+        'E',
+        'F-28-C',
+        'proposal',
+        'docs/planning/proposals/mandatory/frontend-and-ux/example.md',
+        'Review',
+        'Stage 3 proposal',
+      ],
+    ]
+  );
+
+  assert.deepEqual(
+    buildTaskGapRows([
+      {
+        gap_kind: 'done_or_review_without_evidence',
+        severity: 'P1',
+        task_id: 'AR-A12',
+        document_path: null,
+        reason: 'Task is in review or done without evidence refs.',
+      },
+    ]),
+    [
+      [
+        'P1',
+        'done_or_review_without_evidence',
+        'AR-A12',
+        '-',
+        'Task is in review or done without evidence refs.',
+      ],
+    ]
   );
 });
 
