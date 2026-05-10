@@ -134,6 +134,23 @@ const requiredSurfaces = [
       'Migration state': ['Git-first indexed'],
     },
   },
+  {
+    surface: 'Docs resolution overlays',
+    includes: {
+      'Canonical source': ['doc_resolution_overlays', 'source hashes'],
+      'Write rail': [
+        'planning:db:operate docs-disposition resolve',
+        'planning:db:operate task-gap resolve',
+      ],
+      'Read/query rail': [
+        'planning:db:query docs-disposition --resolution',
+        'planning:db:query task-gaps --resolution',
+      ],
+      Projection: ['doc_disposition_action_query', 'planning_task_gap_query'],
+      Validation: ['test:planning:db', 'planning:db:query task-gaps --resolution all'],
+      'Migration state': ['DB-first'],
+    },
+  },
 ];
 
 function splitMarkdownRow(line) {

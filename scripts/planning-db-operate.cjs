@@ -5,6 +5,7 @@ const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { runMigrations, schemaName } = require('./planning-db-migrate.cjs');
 
 const allowedStatuses = new Set(['queued', 'in_progress', 'blocked', 'review', 'done']);
+const allowedDocsResolutionStatuses = new Set(['resolved', 'accepted', 'ignored', 'linked']);
 
 function databaseUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
@@ -37,6 +38,18 @@ function validateTaskStatus(value) {
   if (!allowedStatuses.has(value)) {
     throw new Error(
       `Invalid planning task status "${value}". Expected: ${[...allowedStatuses].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateDocsResolutionStatus(value) {
+  if (!allowedDocsResolutionStatuses.has(value)) {
+    throw new Error(
+      `Invalid docs resolution status "${value}". Expected: ${[
+        ...allowedDocsResolutionStatuses,
+      ].join(', ')}.`
     );
   }
 
@@ -111,6 +124,21 @@ function parseFlagOptions(args) {
 }
 
 function operationPayload(command) {
+  if (command.kind === 'docs_disposition_resolve' || command.kind === 'task_gap_resolve') {
+    return {
+      resolutionScope: command.resolutionScope,
+      issueKind: command.issueKind,
+      documentPath: normalizeOptionalText(command.documentPath),
+      referenceText: normalizeOptionalText(command.referenceText),
+      laneId: normalizeOptionalText(command.laneId),
+      taskId: normalizeOptionalText(command.taskId),
+      resolutionStatus: command.resolutionStatus,
+      reason: command.reason,
+      targetLaneId: normalizeOptionalText(command.targetLaneId),
+      targetTaskId: normalizeOptionalText(command.targetTaskId),
+    };
+  }
+
   if (command.kind === 'task_claim') {
     return {
       ttlMinutes: command.ttlMinutes ?? null,
@@ -157,6 +185,24 @@ function operationPayload(command) {
 }
 
 function defaultIdempotencyKey(command) {
+  if (command.kind === 'docs_disposition_resolve' || command.kind === 'task_gap_resolve') {
+    return [
+      command.kind,
+      command.actor || 'anonymous',
+      command.resolutionScope,
+      command.issueKind,
+      command.documentPath || 'no-document',
+      command.referenceText || 'no-reference',
+      command.laneId || 'no-lane',
+      command.taskId || 'no-task',
+      crypto
+        .createHash('sha256')
+        .update(JSON.stringify(operationPayload(command)))
+        .digest('hex')
+        .slice(0, 16),
+    ].join(':');
+  }
+
   return [
     command.kind,
     command.actor || 'anonymous',
@@ -169,6 +215,30 @@ function defaultIdempotencyKey(command) {
       .digest('hex')
       .slice(0, 16),
   ].join(':');
+}
+
+function assertDocsResolutionIdempotentReplayMatches(existingOperation, command) {
+  const expectedPayload = operationPayload(command);
+  const existingPayload = normalizeExistingPayload(existingOperation.payload);
+  const sameOperation =
+    existingOperation.operation_type === command.kind &&
+    existingOperation.actor === command.actor &&
+    existingOperation.resolution_scope === command.resolutionScope &&
+    existingOperation.issue_kind === command.issueKind &&
+    normalizeOptionalText(existingOperation.document_path) ===
+      normalizeOptionalText(command.documentPath) &&
+    normalizeOptionalText(existingOperation.reference_text) ===
+      normalizeOptionalText(command.referenceText) &&
+    normalizeOptionalText(existingOperation.lane_id) === normalizeOptionalText(command.laneId) &&
+    normalizeOptionalText(existingOperation.task_id) === normalizeOptionalText(command.taskId) &&
+    existingOperation.resolution_status === command.resolutionStatus &&
+    canonicalJson(existingPayload) === canonicalJson(expectedPayload);
+
+  if (!sameOperation) {
+    throw new Error(
+      `Idempotency key "${command.idempotencyKey}" already belongs to a different docs resolution operation.`
+    );
+  }
 }
 
 function normalizeExistingPayload(payload) {
@@ -341,6 +411,45 @@ function parseTaskCommand(action, args) {
   );
 }
 
+function parseDocsResolutionCommand(resource, action, args) {
+  if (action !== 'resolve') {
+    throw new Error(`Unknown ${resource} operation "${action}". Expected resolve.`);
+  }
+
+  const options = parseFlagOptions(args);
+  const actor = requireOption(options, 'actor');
+  const issueKind = requireOption(options, 'kind');
+  const reason = requireOption(options, 'reason');
+  const resolutionStatus = validateDocsResolutionStatus(options.resolution || 'resolved');
+  const resolutionScope = resource === 'docs-disposition' ? 'docs_disposition' : 'task_gap';
+  const kind = resource === 'docs-disposition' ? 'docs_disposition_resolve' : 'task_gap_resolve';
+  const command = {
+    kind,
+    resolutionScope,
+    issueKind,
+    documentPath: normalizeOptionalText(options.path),
+    referenceText: normalizeOptionalText(options.reference),
+    laneId: normalizeOptionalText(options.lane),
+    taskId: normalizeOptionalText(options.task),
+    actor,
+    resolutionStatus,
+    reason,
+    targetLaneId: normalizeOptionalText(options.targetLane),
+    targetTaskId: normalizeOptionalText(options.targetTask),
+    idempotencyKey: options.idempotencyKey,
+  };
+
+  if (resource === 'docs-disposition') {
+    command.documentPath = requireOption(options, 'path');
+  }
+
+  if (resource === 'task-gap' && !command.documentPath && !(command.laneId && command.taskId)) {
+    throw new Error('Task gap resolution requires --path or both --lane and --task.');
+  }
+
+  return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+}
+
 function parseArgs(args = process.argv.slice(2)) {
   const [resource, action, ...rest] = args;
 
@@ -364,7 +473,17 @@ function parseArgs(args = process.argv.slice(2)) {
     };
   }
 
-  throw new Error('Unknown planning DB operation. Expected "task" or "audit".');
+  if (resource === 'docs-disposition' || resource === 'task-gap') {
+    if (!action) {
+      throw new Error(`Missing ${resource} operation. Expected resolve.`);
+    }
+
+    return parseDocsResolutionCommand(resource, action, rest);
+  }
+
+  throw new Error(
+    'Unknown planning DB operation. Expected "task", "docs-disposition", "task-gap", or "audit".'
+  );
 }
 
 function normalizeState(row) {
@@ -667,11 +786,110 @@ function planTaskDefinitionOperation({
   throw new Error(`Unsupported task definition operation kind "${command.kind}".`);
 }
 
+function resolutionSourceValue(row, key) {
+  return row[key] === undefined ? null : row[key];
+}
+
+function buildResolutionKey(source) {
+  const seed = [
+    source.resolutionScope,
+    source.issueKind,
+    source.documentPath || '',
+    source.referenceText || '',
+    source.laneId || '',
+    source.taskId || '',
+  ].join('\0');
+
+  return `${source.resolutionScope}:${crypto.createHash('sha256').update(seed).digest('hex')}`;
+}
+
+function normalizeDocsResolutionSource(command, sourceRow) {
+  if (!sourceRow) {
+    return null;
+  }
+
+  return {
+    resolutionScope: command.resolutionScope,
+    issueKind:
+      resolutionSourceValue(sourceRow, 'action_kind') ||
+      resolutionSourceValue(sourceRow, 'gap_kind') ||
+      command.issueKind,
+    documentPath: resolutionSourceValue(sourceRow, 'document_path') || command.documentPath,
+    referenceText: resolutionSourceValue(sourceRow, 'reference_text') || command.referenceText,
+    laneId: resolutionSourceValue(sourceRow, 'lane_id') || command.laneId,
+    taskId: resolutionSourceValue(sourceRow, 'task_id') || command.taskId,
+    sourceContentSha256:
+      resolutionSourceValue(sourceRow, 'source_content_sha256') || command.sourceContentSha256,
+    sourceReason: resolutionSourceValue(sourceRow, 'reason'),
+  };
+}
+
+function planDocsResolutionOperation({ command, sourceRow, operationId, now }) {
+  const source = normalizeDocsResolutionSource(command, sourceRow);
+  if (!source) {
+    throw new Error(
+      `Docs resolution source ${command.resolutionScope}/${command.issueKind} was not imported into the planning DB.`
+    );
+  }
+
+  const resolutionKey = buildResolutionKey(source);
+  const resolvedAt = toIso(now);
+  const resolution = {
+    resolutionKey,
+    resolutionScope: source.resolutionScope,
+    issueKind: source.issueKind,
+    documentPath: normalizeOptionalText(source.documentPath),
+    referenceText: normalizeOptionalText(source.referenceText),
+    laneId: normalizeOptionalText(source.laneId),
+    taskId: normalizeOptionalText(source.taskId),
+    resolutionStatus: command.resolutionStatus,
+    resolvedBy: command.actor,
+    resolvedAt,
+    reason: command.reason,
+    targetLaneId: normalizeOptionalText(command.targetLaneId),
+    targetTaskId: normalizeOptionalText(command.targetTaskId),
+    sourceContentSha256: source.sourceContentSha256,
+  };
+  resolution.rawResolution = {
+    ...resolution,
+    sourceReason: source.sourceReason,
+  };
+
+  const audit = {
+    operationId,
+    idempotencyKey: command.idempotencyKey,
+    operationType: command.kind,
+    actor: command.actor,
+    resolutionKey,
+    resolutionScope: source.resolutionScope,
+    issueKind: source.issueKind,
+    documentPath: normalizeOptionalText(source.documentPath),
+    referenceText: normalizeOptionalText(source.referenceText),
+    laneId: normalizeOptionalText(source.laneId),
+    taskId: normalizeOptionalText(source.taskId),
+    resolutionStatus: command.resolutionStatus,
+    sourceContentSha256: source.sourceContentSha256,
+    payload: operationPayload(command),
+    createdAt: resolvedAt,
+  };
+
+  return { resolution, audit };
+}
+
 function buildAuditRows(rows) {
   return rows.map(
     (row) =>
       `${row.created_at} ${row.operation_id} ${row.operation_type} ${row.lane_id}/${row.task_id} actor=${row.actor} expected=${row.expected_revision ?? 'null'} resulting=${row.resulting_revision}`
   );
+}
+
+function buildDocsResolutionAuditRows(rows) {
+  return rows.map((row) => {
+    const reference = row.reference_text ? ` ref=${row.reference_text}` : '';
+    const target =
+      row.lane_id && row.task_id ? ` ${row.lane_id}/${row.task_id}` : ` ${row.document_path}`;
+    return `${row.created_at} ${row.operation_id} ${row.operation_type} ${row.resolution_scope}/${row.issue_kind}${target}${reference} status=${row.resolution_status} actor=${row.actor}`;
+  });
 }
 
 async function readImportedTask(client, command) {
@@ -770,6 +988,77 @@ async function readExistingOperation(client, idempotencyKey) {
      where idempotency_key = $1`,
     [idempotencyKey]
   );
+
+  return result.rows[0] || null;
+}
+
+async function readExistingDocsResolutionOperation(client, idempotencyKey) {
+  const result = await client.query(
+    `select *
+     from ${schemaName}.doc_resolution_operations
+     where idempotency_key = $1`,
+    [idempotencyKey]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function readDocsDispositionAction(client, command) {
+  const result = await client.query(
+    `select
+       action_id,
+       action_kind,
+       document_path,
+       reference_text,
+       reason,
+       source_content_sha256
+     from ${schemaName}.doc_disposition_actions
+     where action_kind = $1
+       and document_path = $2
+       and coalesce(reference_text, '') = coalesce($3, '')`,
+    [command.issueKind, command.documentPath, command.referenceText]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function readTaskGapSource(client, command) {
+  const params = [command.issueKind];
+  const predicates = ['gap_kind = $1'];
+
+  if (command.documentPath) {
+    params.push(command.documentPath);
+    predicates.push(`document_path = $${params.length}`);
+  }
+  if (command.laneId) {
+    params.push(command.laneId);
+    predicates.push(`lane_id = $${params.length}`);
+  }
+  if (command.taskId) {
+    params.push(command.taskId);
+    predicates.push(`task_id = $${params.length}`);
+  }
+
+  const result = await client.query(
+    `select
+       gap_kind,
+       severity,
+       lane_id,
+       task_id,
+       document_path,
+       reason,
+       source_path,
+       source_content_sha256
+     from ${schemaName}.planning_task_gap_query
+     where ${predicates.join(' and ')}`,
+    params
+  );
+
+  if (result.rows.length > 1) {
+    throw new Error(
+      `Task gap selector ${command.issueKind} matched ${result.rows.length} rows. Add --path or --lane/--task.`
+    );
+  }
 
   return result.rows[0] || null;
 }
@@ -950,6 +1239,111 @@ async function writePlannedDefinitionOperation(client, planned) {
   );
 }
 
+async function writePlannedDocsResolutionOperation(client, planned) {
+  await client.query(
+    `insert into ${schemaName}.doc_resolution_overlays
+      (resolution_key, resolution_scope, issue_kind, document_path, reference_text,
+       lane_id, task_id, resolution_status, resolved_by, resolved_at, reason,
+       target_lane_id, target_task_id, source_content_sha256, raw_resolution)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb)
+     on conflict (resolution_key) do update set
+       resolution_status = excluded.resolution_status,
+       resolved_by = excluded.resolved_by,
+       resolved_at = excluded.resolved_at,
+       reason = excluded.reason,
+       target_lane_id = excluded.target_lane_id,
+       target_task_id = excluded.target_task_id,
+       source_content_sha256 = excluded.source_content_sha256,
+       raw_resolution = excluded.raw_resolution`,
+    [
+      planned.resolution.resolutionKey,
+      planned.resolution.resolutionScope,
+      planned.resolution.issueKind,
+      planned.resolution.documentPath,
+      planned.resolution.referenceText,
+      planned.resolution.laneId,
+      planned.resolution.taskId,
+      planned.resolution.resolutionStatus,
+      planned.resolution.resolvedBy,
+      planned.resolution.resolvedAt,
+      planned.resolution.reason,
+      planned.resolution.targetLaneId,
+      planned.resolution.targetTaskId,
+      planned.resolution.sourceContentSha256,
+      toJson(planned.resolution.rawResolution),
+    ]
+  );
+
+  await client.query(
+    `insert into ${schemaName}.doc_resolution_operations
+      (operation_id, idempotency_key, operation_type, actor, resolution_key,
+       resolution_scope, issue_kind, document_path, reference_text, lane_id, task_id,
+       resolution_status, source_content_sha256, payload, created_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14::jsonb, $15)`,
+    [
+      planned.audit.operationId,
+      planned.audit.idempotencyKey,
+      planned.audit.operationType,
+      planned.audit.actor,
+      planned.audit.resolutionKey,
+      planned.audit.resolutionScope,
+      planned.audit.issueKind,
+      planned.audit.documentPath,
+      planned.audit.referenceText,
+      planned.audit.laneId,
+      planned.audit.taskId,
+      planned.audit.resolutionStatus,
+      planned.audit.sourceContentSha256,
+      toJson(planned.audit.payload),
+      planned.audit.createdAt,
+    ]
+  );
+}
+
+async function applyDocsResolutionOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    await runMigrations({ client, silent: true });
+    await client.query('begin');
+
+    const existing = await readExistingDocsResolutionOperation(client, command.idempotencyKey);
+    if (existing) {
+      assertDocsResolutionIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+
+    const sourceRow =
+      command.resolutionScope === 'docs_disposition'
+        ? await readDocsDispositionAction(client, command)
+        : await readTaskGapSource(client, command);
+    const planned = planDocsResolutionOperation({
+      command,
+      sourceRow,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+
+    await writePlannedDocsResolutionOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
 async function applyTaskLocalOperation(command, options = {}) {
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
@@ -1101,8 +1495,22 @@ async function readAudit(command, options = {}) {
 
 function printOperationResult(result) {
   if (result.idempotent) {
+    if (result.audit.resolution_scope) {
+      console.log(
+        `[planning:db:operate] idempotent operation=${result.audit.operation_id} resolution=${result.audit.resolution_scope}/${result.audit.issue_kind}`
+      );
+      return;
+    }
+
     console.log(
       `[planning:db:operate] idempotent operation=${result.audit.operation_id} resultingRevision=${result.audit.resulting_revision}`
+    );
+    return;
+  }
+
+  if (result.resolution) {
+    console.log(
+      `[planning:db:operate] ${result.audit.operationType} ${result.resolution.resolutionScope}/${result.resolution.issueKind} status=${result.resolution.resolutionStatus}`
     );
     return;
   }
@@ -1129,7 +1537,10 @@ async function main() {
     return;
   }
 
-  const result = await applyTaskLocalOperation(command);
+  const result =
+    command.kind === 'docs_disposition_resolve' || command.kind === 'task_gap_resolve'
+      ? await applyDocsResolutionOperation(command)
+      : await applyTaskLocalOperation(command);
   printOperationResult(result);
 }
 
@@ -1141,11 +1552,15 @@ if (require.main === module) {
 }
 
 module.exports = {
+  applyDocsResolutionOperation,
   applyTaskLocalOperation,
+  assertDocsResolutionIdempotentReplayMatches,
   assertIdempotentReplayMatches,
   buildAuditRows,
+  buildDocsResolutionAuditRows,
   databaseUrl,
   parseArgs,
+  planDocsResolutionOperation,
   planTaskDefinitionOperation,
   planTaskLocalOperation,
   readAudit,

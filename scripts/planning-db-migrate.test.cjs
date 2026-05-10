@@ -386,3 +386,24 @@ test('tracked migrations include task provenance ledger after W19', () => {
   assert.match(taskProvenanceMigration.sql, /doc_task_reference_query/);
   assert.match(taskProvenanceMigration.sql, /doc_disposition_action_query/);
 });
+
+test('tracked migrations include docs resolution overlays after W20', () => {
+  const migrations = readMigrationFiles();
+  const docsResolutionMigration = migrations.find(
+    (migration) => migration.fileName === '019_docs_resolution_overlays.sql'
+  );
+
+  assert.ok(docsResolutionMigration);
+  assert.match(
+    docsResolutionMigration.sql,
+    /create table if not exists planning_query_store\.doc_resolution_overlays/
+  );
+  assert.match(
+    docsResolutionMigration.sql,
+    /create table if not exists planning_query_store\.doc_resolution_operations/
+  );
+  assert.match(docsResolutionMigration.sql, /source_content_sha256/);
+  assert.match(docsResolutionMigration.sql, /resolution_status/);
+  assert.match(docsResolutionMigration.sql, /doc_disposition_action_query/);
+  assert.match(docsResolutionMigration.sql, /planning_task_gap_query/);
+});

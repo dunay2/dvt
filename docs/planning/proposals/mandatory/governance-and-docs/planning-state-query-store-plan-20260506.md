@@ -1223,10 +1223,13 @@ Current implementation status on 2026-05-08:
   DB rows, then `planning:db:query docs-disposition` and
   `planning:db:query task-references` expose the triage queue without turning
   the status inventory into a parallel workboard;
-- W19 is active: the next planning-query slice adds a task provenance ledger
+- W19 is implemented: the planning-query slice adds a task provenance ledger
   over existing planning, document-disposition, dependency, and evidence rows so
   agents can ask which reviews, proposals, closeouts, evidence refs, and
   unresolved gaps explain a task before selecting or closing work;
+- W20 is implemented: docs disposition and task-provenance gaps can now be
+  resolved through DB-owned source-hash-guarded overlays instead of requiring
+  agents to edit status/inventory files to remove operational noise;
 - the obsolete `governance:artifacts:generate` package alias is removed;
   `pnpm governance:refresh` is the single local orchestration command for
   generated inspection artifacts plus planning/governance DB import and checks;
@@ -1355,25 +1358,83 @@ W19 does not change task status, create tasks, archive reviews, promote
 proposals, or infer closure. It only makes the relationships visible enough for
 the next work selection or closeout decision to be evidence-led.
 
+## W20 Docs Resolution Overlay Design
+
+After W18 and W19, operators could inspect docs disposition actions and task
+provenance gaps in the DB, but the only way to keep already-reviewed cleanup
+signals out of the active queue was still to alter source files. That made the
+DB easier to query but did not make it the governed operational surface for
+triage decisions.
+
+W20 adds DB-owned resolution overlays for disposition actions and task gaps. The
+overlay is local operational state, not a replacement for Git-reviewed source
+truth. Each resolution stores the source content hash of the imported action or
+gap, so a later source-file change reopens the signal instead of silently hiding
+new evidence behind an old decision.
+
+Target state:
+
+```mermaid
+flowchart LR
+  Actions["doc_disposition_actions"] --> ActionView["doc_disposition_action_query"]
+  Gaps["planning_task_gap_raw_query"] --> GapView["planning_task_gap_query"]
+  ResolutionCommand["planning:db:operate docs-disposition/task-gap resolve"] --> Overlays["doc_resolution_overlays"]
+  ResolutionCommand --> Audit["doc_resolution_operations"]
+  Overlays --> ActionView
+  Overlays --> GapView
+  ActionView --> DocsQueue["planning:db:query docs-disposition --resolution pending|resolved|all"]
+  GapView --> GapQueue["planning:db:query task-gaps --resolution pending|resolved|all"]
+```
+
+`ResolveDocsDispositionAction` and `ResolveTaskProvenanceGap` own the command
+rail. `QueryDocsDispositionQueue` and `QueryTaskProvenanceLedger` remain the
+query rails. The overlay intentionally supports `resolved`, `accepted`,
+`ignored`, and `linked` statuses; it does not archive documents, create tasks,
+or rewrite lane YAML.
+
+Implementation plan:
+
+1. Add red tests in `scripts/planning-db-operate.test.cjs`,
+   `scripts/planning-db-query.test.cjs`, and
+   `scripts/planning-db-migrate.test.cjs` for resolution command parsing,
+   source-hash-guarded planning, query filtering, and migration coverage.
+2. Add `019_docs_resolution_overlays.sql` with `doc_resolution_overlays`,
+   `doc_resolution_operations`, source-hash-joined disposition views, and
+   task-gap views split into raw and resolution-aware projections.
+3. Extend `planning:db:operate` with `docs-disposition resolve` and
+   `task-gap resolve` commands that are idempotent and audited.
+4. Extend `planning:db:query docs-disposition` and `task-gaps` with
+   `--resolution pending|resolved|all`; default output remains the pending
+   operator queue.
+5. Validate W20 with
+   `node --test scripts/planning-db-operate.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs`,
+   `pnpm test:planning:db`, `pnpm planning:db:migrate`,
+   `pnpm planning:db:query docs-disposition --limit 5`,
+   `pnpm planning:db:query task-gaps --limit 5`,
+   `pnpm governance:refresh`,
+   `pnpm docs:feature-mechanization:implementation`, and
+   `pnpm verify:prepush`.
+
 ## Failure Modes And Guardrails
 
-| Failure mode                              | Guardrail                                                     |
-| ----------------------------------------- | ------------------------------------------------------------- |
-| Local DB diverges from Git                | `planning:db:check` fails on drift                            |
-| Docker volume lost                        | Rebuild from Git with import command                          |
-| Import order affects output               | Stable ordering and hash checks                               |
-| Generated artifact churn returns          | Artifact hashes recorded in `planning_artifacts`              |
-| Agents forget refresh order               | `governance:refresh` owns order and repeats until stable      |
-| Agents collide on lane YAML edits         | `planning:db:operate` owns local task claims and revisions    |
-| Applied migration checksum mismatch       | `planning:db:reset` rebuilds the shared volume from Git       |
-| Local DB audit is lost in temp DB         | durable audit uses the shared local Postgres volume           |
-| Non-code gate cost grows unchecked        | Treat CI policy reduction as a separate governed optimization |
-| Governance report churn is hidden         | Governance artifact hashes and source causes are queryable    |
-| PR readiness blockers are hidden in CI    | ARC/readiness blockers are queryable in `pr_readiness_checks` |
-| Docs disposition stays manual and stale   | Docs disposition queues are imported and queryable in the DB  |
-| Task provenance stays manual and stale    | Task trace and task gap queues are derived in DB query views  |
-| DB treated as hidden repository authority | No committed database files; export must remain reviewable    |
-| GitHub mirror edits bypass PR review      | Mirror is read-only or imports as reviewed repo changes first |
+| Failure mode                              | Guardrail                                                      |
+| ----------------------------------------- | -------------------------------------------------------------- |
+| Local DB diverges from Git                | `planning:db:check` fails on drift                             |
+| Docker volume lost                        | Rebuild from Git with import command                           |
+| Import order affects output               | Stable ordering and hash checks                                |
+| Generated artifact churn returns          | Artifact hashes recorded in `planning_artifacts`               |
+| Agents forget refresh order               | `governance:refresh` owns order and repeats until stable       |
+| Agents collide on lane YAML edits         | `planning:db:operate` owns local task claims and revisions     |
+| Applied migration checksum mismatch       | `planning:db:reset` rebuilds the shared volume from Git        |
+| Local DB audit is lost in temp DB         | durable audit uses the shared local Postgres volume            |
+| Non-code gate cost grows unchecked        | Treat CI policy reduction as a separate governed optimization  |
+| Governance report churn is hidden         | Governance artifact hashes and source causes are queryable     |
+| PR readiness blockers are hidden in CI    | ARC/readiness blockers are queryable in `pr_readiness_checks`  |
+| Docs disposition stays manual and stale   | Docs disposition queues are imported and queryable in the DB   |
+| Task provenance stays manual and stale    | Task trace and task gap queues are derived in DB query views   |
+| Reviewed docs gaps keep polluting queues  | Source-hash-guarded resolution overlays hide only current rows |
+| DB treated as hidden repository authority | No committed database files; export must remain reviewable     |
+| GitHub mirror edits bypass PR review      | Mirror is read-only or imports as reviewed repo changes first  |
 
 ## Acceptance Criteria
 
@@ -1536,6 +1597,12 @@ commandQueryRails:
   - name: QueryTaskProvenanceLedger
     type: query
     dddOwner: TaskProvenanceLedger
+  - name: ResolveDocsDispositionAction
+    type: command
+    dddOwner: DocsResolutionOverlay
+  - name: ResolveTaskProvenanceGap
+    type: command
+    dddOwner: DocsResolutionOverlay
   - name: ExportGovernanceStateSnapshot
     type: command
     dddOwner: GovernanceStateExport
@@ -1600,6 +1667,9 @@ domainObjects:
   - name: TaskProvenanceLedger
     type: read model
     owner: Product / Architecture / Delivery / Docs
+  - name: DocsResolutionOverlay
+    type: command model
+    owner: Docs governance
   - name: GovernanceStateExport
     type: command model
     owner: Docs governance
@@ -1622,6 +1692,7 @@ fowlerSignals:
   - Hidden query model inside governance shards
   - Manual docs disposition inventory
   - Manual task provenance reconstruction
+  - Manual docs disposition resolution
   - Mutable external tracker authority risk
 architectureGuards:
   - pnpm test:governance:refresh
@@ -1641,6 +1712,8 @@ completionGate:
   - pnpm planning:db:query
   - pnpm planning:db:query task-trace --task F-28-C
   - pnpm planning:db:query task-gaps --limit 10
+  - pnpm planning:db:query docs-disposition --resolution all --limit 10
+  - pnpm planning:db:query task-gaps --resolution all --limit 10
   - pnpm planning:db:query hash-drift
   - pnpm planning:db:export
   - pnpm planning:db:export:check
@@ -1889,6 +1962,14 @@ redGreenCycles:
       - scripts/planning-db-*.cjs
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+  - id: planning-db-docs-resolution-overlays
+    redTest: node --test scripts/planning-db-operate.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
+    expectedFailure: Docs disposition and task gap queues can be read from the DB but reviewed rows cannot be resolved through a DB-owned source-hash-guarded command rail.
+    patchSurfaces:
+      - tools/planning-db/**
+      - scripts/planning-db-*.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: node --test scripts/planning-db-operate.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
 symbols:
   - name: PlanningAndGovernanceQueryStorePlan
     path: docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
@@ -1907,6 +1988,8 @@ symbols:
       - ImportGovernanceStateQueryStore
       - QueryGovernanceStateReadModel
       - QueryTaskProvenanceLedger
+      - ResolveDocsDispositionAction
+      - ResolveTaskProvenanceGap
       - ExportGovernanceStateSnapshot
       - ValidateGovernanceStateDrift
       - RefreshGovernanceDerivedSurfaces
@@ -1917,7 +2000,9 @@ symbols:
       - Generated artifact churn
       - Hidden query model inside YAML
       - Hidden query model inside governance shards
+      - Manual docs disposition inventory
       - Manual task provenance reconstruction
+      - Manual docs disposition resolution
       - Mutable external tracker authority risk
     architectureGuard: pnpm docs:feature-mechanization:implementation
     cypressCoverage: N/A - planning query-store proposal has no browser workflow.
@@ -2108,6 +2193,25 @@ symbols:
   - <<: *planningDbContentSymbol
     name: PlanningDbTaskProvenanceLedgerMigration
     path: tools/planning-db/migrations/018_task_provenance_ledger.sql
+  - &planningDbDocsResolutionOverlaySymbol
+    name: PlanningDbDocsResolutionOverlayMigration
+    path: tools/planning-db/migrations/019_docs_resolution_overlays.sql
+    dddOwner: DocsResolutionOverlay
+    cqRails:
+      - ResolveDocsDispositionAction
+      - ResolveTaskProvenanceGap
+      - QueryDocsDispositionQueue
+      - QueryTaskProvenanceLedger
+      - MigratePlanningQueryStoreSchema
+    fowlerSignals:
+      - Manual docs disposition inventory
+      - Manual docs disposition resolution
+      - Manual task provenance reconstruction
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - docs resolution overlays have no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-operate.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
+      - pnpm test:planning:db
   - <<: *planningDbContentSymbol
     name: PlanningDbMigrateRunner
     path: scripts/planning-db-migrate.cjs
@@ -2524,6 +2628,9 @@ symbols:
   - <<: *planningDbEffectiveTaskSymbol
     name: appendFilter
     path: scripts/planning-db-query.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: appendResolutionFilter
+    path: scripts/planning-db-query.cjs
   - <<: *planningDbEffectiveTaskSymbol
     name: effectiveTaskSelect
     path: scripts/planning-db-query.cjs
@@ -2736,6 +2843,9 @@ symbols:
   - <<: *planningDbLocalOperationSymbol
     name: allowedStatuses
     path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: allowedDocsResolutionStatuses
+    path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: databaseUrl
     path: scripts/planning-db-operate.cjs
@@ -2750,6 +2860,9 @@ symbols:
     path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: validateTaskStatus
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: validateDocsResolutionStatus
     path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: parseIntegerOption
@@ -2781,8 +2894,14 @@ symbols:
   - <<: *planningDbLocalOperationSymbol
     name: assertIdempotentReplayMatches
     path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: assertDocsResolutionIdempotentReplayMatches
+    path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: parseTaskCommand
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: parseDocsResolutionCommand
     path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: parseArgs
@@ -2811,8 +2930,23 @@ symbols:
   - <<: *planningDbLocalOperationSymbol
     name: planTaskDefinitionOperation
     path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: resolutionSourceValue
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: buildResolutionKey
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: normalizeDocsResolutionSource
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: planDocsResolutionOperation
+    path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: buildAuditRows
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: buildDocsResolutionAuditRows
     path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: readImportedTask
@@ -2835,11 +2969,26 @@ symbols:
   - <<: *planningDbLocalOperationSymbol
     name: readExistingOperation
     path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: readExistingDocsResolutionOperation
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: readDocsDispositionAction
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: readTaskGapSource
+    path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: writePlannedOperation
     path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: writePlannedDefinitionOperation
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: writePlannedDocsResolutionOperation
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: applyDocsResolutionOperation
     path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: applyTaskLocalOperation
