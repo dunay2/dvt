@@ -16,6 +16,10 @@ const {
   readGovernanceDriftRows,
   readGovernanceFileRows,
   readGovernanceRemediationRows,
+  readPlanningArtifactRows,
+  readPlanningDependencyRows,
+  readPlanningEvidenceRows,
+  readPlanningStatusEventRows,
   readNextTaskRows,
   readHashDriftSummary,
   readOpenTaskRows,
@@ -31,6 +35,10 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('tasks'), 'tasks');
   assert.equal(resolveQueryName('open'), 'open');
   assert.equal(resolveQueryName('next'), 'next');
+  assert.equal(resolveQueryName('dependencies'), 'dependencies');
+  assert.equal(resolveQueryName('evidence'), 'evidence');
+  assert.equal(resolveQueryName('status-events'), 'status-events');
+  assert.equal(resolveQueryName('artifacts'), 'artifacts');
   assert.equal(resolveQueryName('files'), 'files');
   assert.equal(resolveQueryName('components'), 'components');
   assert.equal(resolveQueryName('coverage'), 'coverage');
@@ -103,12 +111,21 @@ test('buildSummaryRows exposes planning and governance content counts without ex
     governanceRemediationP0: 3,
     planningLocalTaskOverlays: 2,
     planningLocalOperations: 5,
+    planningTaskDependencies: 40,
+    planningTaskEvidenceRefs: 30,
+    planningTaskStatusEvents: 250,
+    planningArtifacts: 2,
   });
 
   assert.deepEqual(rows, [
+    ['planning.source_authority', 'database'],
     ['planning.lanes', 5],
     ['planning.tasks', 250],
     ['planning.tasks.review', 9],
+    ['planning.task_dependencies', 40],
+    ['planning.task_evidence_refs', 30],
+    ['planning.task_status_events', 250],
+    ['planning.artifacts', 2],
     ['governance.files', 4255],
     ['governance.files.drift', 41],
     ['governance.files.legacy', 0],
@@ -149,6 +166,10 @@ test('readSummary counts review tasks from the effective task view without hash 
             governanceRemediationP0: 3,
             planningLocalTaskOverlays: 2,
             planningLocalOperations: 5,
+            planningTaskDependencies: 40,
+            planningTaskEvidenceRefs: 30,
+            planningTaskStatusEvents: 250,
+            planningArtifacts: 2,
           },
         ],
       };
@@ -159,6 +180,10 @@ test('readSummary counts review tasks from the effective task view without hash 
 
   assert.equal(summary.governanceHashDrift, undefined);
   assert.match(capturedSql, /planning_effective_tasks where status = 'review'/);
+  assert.match(capturedSql, /planning_task_dependencies/);
+  assert.match(capturedSql, /planning_task_evidence_refs/);
+  assert.match(capturedSql, /planning_task_status_events/);
+  assert.match(capturedSql, /planning_artifacts/);
   assert.doesNotMatch(capturedSql, /governance_file_hash_drift/);
 });
 
@@ -288,6 +313,30 @@ test('readNextTaskRows queries the DB next-task view without duplicating depende
     rows.map((row) => `${row[0]}/${row[1]}`),
     ['C/READY-C']
   );
+});
+
+test('planning relation queries read normalized DB views', async () => {
+  const captured = [];
+  const client = {
+    async query(sql, params) {
+      captured.push({ sql, params });
+      return { rows: [] };
+    },
+  };
+
+  await readPlanningDependencyRows(client, { laneId: 'E', limit: 3 });
+  await readPlanningEvidenceRows(client, { laneId: 'A', limit: 4 });
+  await readPlanningStatusEventRows(client, { laneId: 'C', limit: 5 });
+  await readPlanningArtifactRows(client, { kind: 'workboard', limit: 6 });
+
+  assert.match(captured[0].sql, /from planning_query_store\.planning_task_dependencies/);
+  assert.match(captured[1].sql, /from planning_query_store\.planning_task_evidence_refs/);
+  assert.match(captured[2].sql, /from planning_query_store\.planning_task_status_events/);
+  assert.match(captured[3].sql, /from planning_query_store\.planning_artifacts/);
+  assert.deepEqual(captured[0].params, ['E', 3]);
+  assert.deepEqual(captured[1].params, ['A', 4]);
+  assert.deepEqual(captured[2].params, ['C', 5]);
+  assert.deepEqual(captured[3].params, ['workboard', 6]);
 });
 
 test('buildGovernanceFileRows formats DB-owned governance file rows', () => {

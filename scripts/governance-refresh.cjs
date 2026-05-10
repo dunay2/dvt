@@ -66,6 +66,10 @@ function buildRefreshStages() {
     ],
     databaseStages: [
       {
+        id: 'planning-db-import-final',
+        script: 'planning:db:import',
+      },
+      {
         id: 'planning-db-check',
         script: 'planning:db:check',
       },
@@ -76,6 +80,10 @@ function buildRefreshStages() {
       {
         id: 'governance-db-check',
         script: 'governance:db:check',
+      },
+      {
+        id: 'governance-db-export-check',
+        script: 'governance:db:export:check',
       },
     ],
   };

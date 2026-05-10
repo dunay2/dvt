@@ -42,7 +42,7 @@ function parseArgs(argv) {
   const args = {
     outputRoot: repoRoot,
     sourceStateDir: path.join(repoRoot, 'docs', 'planning', 'state'),
-    source: 'auto',
+    source: 'db',
     databaseUrl: null,
   };
 
@@ -53,8 +53,8 @@ function parseArgs(argv) {
       if (!next) {
         throw new Error('Missing value for --source');
       }
-      if (!['auto', 'db', 'yaml'].includes(next)) {
-        throw new Error(`Invalid --source "${next}". Expected auto, db, or yaml.`);
+      if (!['db', 'yaml'].includes(next)) {
+        throw new Error(`Invalid --source "${next}". Expected db or yaml.`);
       }
       args.source = next;
       index += 1;
@@ -228,15 +228,7 @@ async function resolveLaneSource(args, deps = dependencies) {
     return yamlSource();
   }
 
-  try {
-    return await loadDbLaneSource(args, actualDeps);
-  } catch (error) {
-    if (args.source === 'auto' && isPlanningDbUnavailable(error)) {
-      return yamlSource();
-    }
-
-    throw error;
-  }
+  return loadDbLaneSource(args, actualDeps);
 }
 
 function normalizeComplexity(task) {
@@ -551,7 +543,7 @@ function buildOpenTaskRoute(
 
 function printHelp() {
   console.log(
-    'Usage: pnpm docs:workboard:generate [--source auto|db|yaml] [--database-url <url>] [--source-state-dir <path>] [--output-root <path>]'
+    'Usage: pnpm docs:workboard:generate [--source db|yaml] [--database-url <url>] [--source-state-dir <path>] [--output-root <path>]'
   );
 }
 

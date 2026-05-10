@@ -9,6 +9,10 @@ const knownQueries = new Set([
   'tasks',
   'open',
   'next',
+  'dependencies',
+  'evidence',
+  'status-events',
+  'artifacts',
   'files',
   'components',
   'coverage',
@@ -114,9 +118,14 @@ function parseArgs(args = process.argv.slice(2)) {
 
 function buildSummaryRows(summary) {
   return [
+    ['planning.source_authority', summary.sourceAuthority || 'database'],
     ['planning.lanes', summary.lanes],
     ['planning.tasks', summary.tasks],
     ['planning.tasks.review', summary.reviewTasks],
+    ['planning.task_dependencies', summary.planningTaskDependencies],
+    ['planning.task_evidence_refs', summary.planningTaskEvidenceRefs],
+    ['planning.task_status_events', summary.planningTaskStatusEvents],
+    ['planning.artifacts', summary.planningArtifacts],
     ['governance.files', summary.governanceFiles],
     ['governance.files.drift', summary.driftFiles],
     ['governance.files.legacy', summary.legacyFiles],
@@ -155,6 +164,43 @@ function buildTaskRows(rows) {
     String(row.objective ?? '')
       .replace(/\s+/g, ' ')
       .trim(),
+  ]);
+}
+
+function buildPlanningDependencyRows(rows) {
+  return rows.map((row) => [
+    row.lane_id ?? row.laneId,
+    row.task_id ?? row.taskId,
+    row.dependency_order ?? row.dependencyOrder,
+    row.dependency_task_id ?? row.dependencyTaskId,
+    compactText(row.dependency_text ?? row.dependencyText),
+  ]);
+}
+
+function buildPlanningEvidenceRows(rows) {
+  return rows.map((row) => [
+    row.lane_id ?? row.laneId,
+    row.task_id ?? row.taskId,
+    row.evidence_order ?? row.evidenceOrder,
+    row.evidence_ref ?? row.evidenceRef,
+  ]);
+}
+
+function buildPlanningStatusEventRows(rows) {
+  return rows.map((row) => [
+    row.event_kind ?? row.eventKind,
+    row.lane_id ?? row.laneId,
+    row.task_id ?? row.taskId,
+    row.status ?? '-',
+    row.actor ?? '-',
+  ]);
+}
+
+function buildPlanningArtifactRows(rows) {
+  return rows.map((row) => [
+    row.artifact_kind ?? row.artifactKind,
+    row.artifact_path ?? row.artifactPath,
+    row.content_sha256 ?? row.contentSha256 ?? '-',
   ]);
 }
 
@@ -273,6 +319,51 @@ function nextTaskSelect() {
     from ${schemaName}.planning_next_tasks`;
 }
 
+function planningDependencySelect() {
+  return `
+    select
+      lane_id,
+      task_id,
+      dependency_order,
+      dependency_task_id,
+      dependency_text
+    from ${schemaName}.planning_task_dependencies`;
+}
+
+function planningEvidenceSelect() {
+  return `
+    select
+      lane_id,
+      task_id,
+      evidence_order,
+      evidence_ref
+    from ${schemaName}.planning_task_evidence_refs`;
+}
+
+function planningStatusEventSelect() {
+  return `
+    select
+      event_id,
+      event_kind,
+      lane_id,
+      task_id,
+      status,
+      actor,
+      occurred_at
+    from ${schemaName}.planning_task_status_events`;
+}
+
+function planningArtifactSelect() {
+  return `
+    select
+      artifact_path,
+      artifact_kind,
+      content_sha256,
+      source_content_sha256,
+      exported_at
+    from ${schemaName}.planning_artifacts`;
+}
+
 function governanceFileSelect() {
   return `
     select
@@ -363,9 +454,14 @@ function nextTaskOrderBy() {
 async function readSummary(client) {
   const result = await client.query(`
     select
+      'database'::text as "sourceAuthority",
       (select count(*)::int from ${schemaName}.planning_lanes) as lanes,
       (select count(*)::int from ${schemaName}.planning_tasks) as tasks,
       (select count(*)::int from ${schemaName}.planning_effective_tasks where status = 'review') as "reviewTasks",
+      (select count(*)::int from ${schemaName}.planning_task_dependencies) as "planningTaskDependencies",
+      (select count(*)::int from ${schemaName}.planning_task_evidence_refs) as "planningTaskEvidenceRefs",
+      (select count(*)::int from ${schemaName}.planning_task_status_events) as "planningTaskStatusEvents",
+      (select count(*)::int from ${schemaName}.planning_artifacts) as "planningArtifacts",
       (select count(*)::int from ${schemaName}.governance_files) as "governanceFiles",
       (select count(*)::int from ${schemaName}.governance_files where is_drift = true) as "driftFiles",
       (select count(*)::int from ${schemaName}.governance_files where is_legacy = true) as "legacyFiles",
@@ -446,6 +542,83 @@ async function readNextTaskRows(client, filters = {}) {
   );
 
   return buildTaskRows(result.rows);
+}
+
+async function readPlanningDependencyRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'lane_id', filters.laneId);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${planningDependencySelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by lane_id, task_id, dependency_order
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readPlanningEvidenceRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'lane_id', filters.laneId);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${planningEvidenceSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by lane_id, task_id, evidence_order
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readPlanningStatusEventRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'lane_id', filters.laneId);
+  appendFilter(predicates, params, 'status', filters.status);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${planningStatusEventSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by occurred_at desc, lane_id, task_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readPlanningArtifactRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'artifact_kind', filters.kind);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${planningArtifactSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by artifact_kind, artifact_path
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
 }
 
 function appendGovernanceFileFilters(predicates, params, filters = {}) {
@@ -650,6 +823,42 @@ async function runQuery(options = {}) {
       return taskRows;
     }
 
+    if (queryName === 'dependencies') {
+      const rows = await readPlanningDependencyRows(client, options.filters || {});
+      const dependencyRows = buildPlanningDependencyRows(rows);
+      if (options.print !== false) {
+        printTaskRows(dependencyRows);
+      }
+      return dependencyRows;
+    }
+
+    if (queryName === 'evidence') {
+      const rows = await readPlanningEvidenceRows(client, options.filters || {});
+      const evidenceRows = buildPlanningEvidenceRows(rows);
+      if (options.print !== false) {
+        printTaskRows(evidenceRows);
+      }
+      return evidenceRows;
+    }
+
+    if (queryName === 'status-events') {
+      const rows = await readPlanningStatusEventRows(client, options.filters || {});
+      const eventRows = buildPlanningStatusEventRows(rows);
+      if (options.print !== false) {
+        printTaskRows(eventRows);
+      }
+      return eventRows;
+    }
+
+    if (queryName === 'artifacts') {
+      const rows = await readPlanningArtifactRows(client, options.filters || {});
+      const artifactRows = buildPlanningArtifactRows(rows);
+      if (options.print !== false) {
+        printTaskRows(artifactRows);
+      }
+      return artifactRows;
+    }
+
     if (queryName === 'files') {
       const rows = await readGovernanceFileRows(client, options.filters || {});
       const fileRows = buildGovernanceFileRows(rows);
@@ -722,6 +931,10 @@ module.exports = {
   buildGovernanceFileRows,
   buildGovernanceRemediationRows,
   buildHashDriftRows,
+  buildPlanningArtifactRows,
+  buildPlanningDependencyRows,
+  buildPlanningEvidenceRows,
+  buildPlanningStatusEventRows,
   buildSummaryRows,
   buildTaskRows,
   databaseUrl,
@@ -732,6 +945,10 @@ module.exports = {
   readGovernanceDriftRows,
   readGovernanceFileRows,
   readGovernanceRemediationRows,
+  readPlanningArtifactRows,
+  readPlanningDependencyRows,
+  readPlanningEvidenceRows,
+  readPlanningStatusEventRows,
   readOpenTaskRows,
   printSummary,
   printTaskRows,

@@ -27,6 +27,23 @@ test('planning content snapshot preserves real lane task content and hashes', ()
   );
 });
 
+test('planning content snapshot normalizes dependencies and evidence refs for DB reads', () => {
+  const snapshot = buildPlanningContentSnapshot();
+  const dependency = snapshot.dependencies.find(
+    (row) => row.taskId === 'F-28-C' && row.dependencyTaskId === 'F-28-B'
+  );
+  const evidenceRef = snapshot.evidenceRefs.find(
+    (row) => row.taskId === 'MVP-A1' && /ED-20260331-mvp-a1/.test(row.evidenceRef)
+  );
+
+  assert.ok(dependency);
+  assert.equal(dependency.sourceKind, 'planning_task');
+  assert.ok(Number.isInteger(dependency.dependencyOrder));
+  assert.ok(evidenceRef);
+  assert.equal(evidenceRef.sourceKind, 'planning_task');
+  assert.ok(Number.isInteger(evidenceRef.evidenceOrder));
+});
+
 test('governance file snapshot preserves every file entry declared by the index', () => {
   const snapshot = buildGovernanceFileSnapshot();
 
@@ -77,6 +94,8 @@ test('governance snapshot builds DB import sources from in-memory generator proj
     generatedSources.some((source) => source.sourceType === 'governance_component_shard'),
     true
   );
+  assert.ok(generatedSources.every((source) => source.rawSource));
+  assert.ok(generatedSources.every((source) => typeof source.rawSourceText === 'string'));
 });
 
 test('normalizeText keeps structured lane fields queryable without dropping content', () => {

@@ -112,6 +112,11 @@ function buildCloseoutPlan(changedFiles) {
 
   if (hasLaneRegistryChange(normalizedChangedFiles)) {
     pushStepOnce(steps, {
+      id: 'planning-db-import',
+      command: 'pnpm',
+      args: ['planning:db:import'],
+    });
+    pushStepOnce(steps, {
       id: 'docs-workboard-generate',
       command: 'pnpm',
       args: ['docs:workboard:generate'],
@@ -133,6 +138,31 @@ function buildCloseoutPlan(changedFiles) {
     pushStepOnce(steps, step);
   }
 
+  pushStepOnce(steps, {
+    id: 'planning-db-import-final',
+    command: 'pnpm',
+    args: ['planning:db:import'],
+  });
+  pushStepOnce(steps, {
+    id: 'planning-db-check',
+    command: 'pnpm',
+    args: ['planning:db:check'],
+  });
+  pushStepOnce(steps, {
+    id: 'planning-db-export-check',
+    command: 'pnpm',
+    args: ['planning:db:export:check'],
+  });
+  pushStepOnce(steps, {
+    id: 'governance-db-check',
+    command: 'pnpm',
+    args: ['governance:db:check'],
+  });
+  pushStepOnce(steps, {
+    id: 'governance-db-export-check',
+    command: 'pnpm',
+    args: ['governance:db:export:check'],
+  });
   pushStepOnce(steps, {
     id: 'git-diff-check',
     command: 'git',

@@ -7,6 +7,7 @@ const dependencies = (() => {
 
   return {
     childProcess: require('node:child_process'),
+    crypto: require('node:crypto'),
     fs: require('node:fs'),
     os: require('node:os'),
     path,
@@ -254,7 +255,40 @@ class PlanningDbExportRunner {
     }
   }
 
-  runWorkboardGenerator({ sourceStateDir, outputRoot }) {
+  sha256(value) {
+    return this.deps.crypto.createHash('sha256').update(value).digest('hex');
+  }
+
+  async recordPlanningArtifacts(client, outputRoot) {
+    for (const artifactPath of exportedArtifactPaths) {
+      const absolutePath = this.deps.path.join(outputRoot, artifactPath);
+      if (!this.deps.fs.existsSync(absolutePath)) {
+        continue;
+      }
+
+      const content = this.deps.fs.readFileSync(absolutePath, 'utf8');
+      await client.query(
+        `insert into ${this.deps.schemaName}.planning_artifacts
+          (artifact_path, artifact_kind, source_table, content_sha256, metadata, exported_at)
+         values ($1, $2, $3, $4, $5::jsonb, now())
+         on conflict (artifact_path) do update set
+          artifact_kind = excluded.artifact_kind,
+          source_table = excluded.source_table,
+          content_sha256 = excluded.content_sha256,
+          metadata = excluded.metadata,
+          exported_at = now()`,
+        [
+          artifactPath,
+          artifactPath.endsWith('execution-workboard.md') ? 'workboard' : 'open-task-route',
+          'planning_effective_tasks',
+          this.sha256(content),
+          JSON.stringify({ outputMode: 'planning-db-export' }),
+        ]
+      );
+    }
+  }
+
+  runWorkboardGenerator({ outputRoot, databaseUrl }) {
     const generatorPath = this.deps.path.join(
       this.deps.repoRoot,
       'scripts',
@@ -262,7 +296,7 @@ class PlanningDbExportRunner {
     );
     const result = this.deps.childProcess.spawnSync(
       process.execPath,
-      [generatorPath, '--source-state-dir', sourceStateDir, '--output-root', outputRoot],
+      [generatorPath, '--source', 'db', '--database-url', databaseUrl, '--output-root', outputRoot],
       {
         cwd: this.deps.repoRoot,
         encoding: 'utf8',
@@ -352,11 +386,6 @@ class PlanningDbExportRunner {
     try {
       const rows = await this.readPlanningRows(client);
       const lanes = this.buildLaneDocuments(rows);
-      const sourceStateDir = this.deps.fs.mkdtempSync(
-        this.deps.path.join(this.deps.os.tmpdir(), 'planning-db-export-source-')
-      );
-      cleanupDirs.push(sourceStateDir);
-      this.writeLaneYamlFiles(lanes, sourceStateDir);
 
       const outputRoot = options.check
         ? this.deps.fs.mkdtempSync(
@@ -371,7 +400,10 @@ class PlanningDbExportRunner {
         this.deps.fs.mkdirSync(outputRoot, { recursive: true });
       }
 
-      this.runWorkboardGenerator({ sourceStateDir, outputRoot });
+      this.runWorkboardGenerator({
+        outputRoot,
+        databaseUrl: this.databaseUrl(options.databaseUrl),
+      });
 
       const report = options.check
         ? this.compareGeneratedArtifacts({
@@ -384,8 +416,10 @@ class PlanningDbExportRunner {
         throw new Error(this.formatDiffReport(report));
       }
 
+      await this.recordPlanningArtifacts(client, outputRoot);
+
       return {
-        lanes: rows.lanes.length,
+        lanes: lanes.length,
         tasks: rows.tasks.length,
         outputRoot,
         report,

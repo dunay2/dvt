@@ -20,8 +20,10 @@ reports, remediation queues, and shard files are local artifacts under
 rebuilds equivalent projections in memory from the same generator modules for
 query and drift checks. In the canonical `governance:refresh` path, coverage
 and remediation report generation read the imported DB query views after
-`planning:db:import`; their local file/in-memory source path remains only for
-standalone checks that run without a planning database.
+`planning:db:import`; the refresh then runs a final `planning:db:import` after
+those reports are regenerated so DB drift checks compare against the same pass.
+Their local file/in-memory source path remains only for standalone checks that
+run without a planning database.
 
 ## Governing Sources
 
@@ -115,6 +117,7 @@ flowchart TD
   Import --> Remediation
   CoverageOutputs --> Remediation
   Remediation --> RemediationOutputs[".generated-docs/.../system-governance-remediation-queue.*"]
+  RemediationOutputs --> ImportFinal["planning:db:import final"]
   FileIndex --> ChangedFiles
   FingerprintBaseline --> ChangedFiles
   Worktree --> ChangedFiles
@@ -123,7 +126,8 @@ flowchart TD
   FileIndex --> Prepush
   FingerprintImpact --> Prepush
   CoverageOutputs --> Prepush
-  RemediationOutputs --> Prepush
+  RemediationOutputs --> ImportFinal
+  ImportFinal --> Prepush
   ChangedFiles --> Prepush
 ```
 
@@ -181,8 +185,8 @@ flowchart TD
 ## Canonical Refresh Command
 
 `pnpm governance:refresh` is the canonical local command for refreshing local
-inspection artifacts, rebuilding the query-store import, and running drift
-checks.
+inspection artifacts, rebuilding the DB canonical operational source, and
+running drift/export checks.
 Agents and contributors should prefer this command over manually remembering the
 individual generator order.
 
@@ -200,13 +204,15 @@ The command runs the docs and governance generation stages in this order:
 10. `docs:workboard:generate`
 11. `docs:governance:coverage-report`
 12. `docs:governance:remediation-queue`
+13. `planning:db:import` final import for generated report parity
 
 After each generation pass, the runner hashes staged, unstaged, and untracked
 non-ignored worktree state. It repeats generation until that fingerprint stops
 changing, with a small maximum pass count. `planning:db:import` runs inside each
 generation pass after source-affecting generators and before DB-backed generated
-surfaces. Only after generated outputs are stable does it run
-`planning:db:check`, `planning:db:export:check`, and `governance:db:check`.
+surfaces. Only after generated outputs are stable does it re-run
+`planning:db:import`, then `planning:db:check`, `planning:db:export:check`,
+`governance:db:check`, and `governance:db:export:check`.
 
 The fingerprint is a convergence guard, not a new source of truth. Git-tracked
 sources, generated-docs policy, unit ownership, and generator scripts remain
@@ -223,10 +229,10 @@ file, the accepted repair path is
 `pnpm planning:db:reset -- --confirm-destroy-shared-planning-db` followed by
 `pnpm governance:refresh`. Contributors must not edit
 `planning_query_store.schema_migrations` manually. The reset command is
-destructive for the shared machine-local cache only; canonical planning and
-governance truth remains in Git-tracked sources, while any existing local
-operation overlay/audit rows are exported to the local backup directory before
-the data directory is removed.
+destructive for the shared machine-local cache only; Git-tracked sources remain
+the bootstrap/review recovery boundary, while the DB is the canonical local
+operational source and any existing local operation overlay/audit rows are
+exported to the local backup directory before the data directory is removed.
 
 ## Former Tracked Fan-Out
 
