@@ -63,7 +63,7 @@ function buildExpectedArtifacts(laneIds) {
       path: `docs/planning/state/agent-lane-${laneId}.md`,
       markers: [
         /^planning_type:\s*status$/m,
-        /Generated from the verified lane registry/,
+        /Generated from the lane bootstrap\/export snapshot/,
         /^## Goal$/m,
         /^## Verification Summary$/m,
         /^## Tasks$/m,

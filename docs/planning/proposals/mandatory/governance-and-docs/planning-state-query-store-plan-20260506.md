@@ -1580,6 +1580,8 @@ allowedImplementationSurfaces:
   - scripts/governance-db-*.cjs
   - scripts/governance-refresh*.cjs
   - scripts/generate-workboard*.cjs
+  - scripts/generate-planning-lanes*.cjs
+  - scripts/docs-planning-generated-check.cjs
   - scripts/governance-generated-paths*.cjs
   - scripts/generate-governance-*.cjs
   - scripts/check-governance-*.cjs
@@ -1593,6 +1595,10 @@ allowedImplementationSurfaces:
   - docs/runbooks/**
   - docs/planning/state/planning-control-tower.md
   - docs/planning/state/how-to-add-tasks.md
+  - docs/planning/state/planning-dashboard.md
+  - docs/planning/state/gap-execution-route.md
+  - docs/planning/state/inventory-and-coverage.md
+  - docs/planning/templates/**
   - docs/planning/closeouts/**
   - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
   - docs/planning/proposals/portfolio-map-20260403.md
@@ -2397,6 +2403,12 @@ symbols:
     name: databaseUrl
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
+    name: parseArgs
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: printHelp
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
     name: toPosix
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
@@ -2571,6 +2583,27 @@ symbols:
     name: importContent
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
+    name: compareImportRows
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: compareGovernanceAuxiliaryState
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: buildGovernanceAuxiliaryExpectedState
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: readGovernanceAuxiliaryState
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: checkGovernanceAuxiliaryProjections
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: isScopeFresh
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: runPlanningImport
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
     name: main
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
@@ -2579,6 +2612,12 @@ symbols:
   - <<: *planningDbContentSymbol
     name: assert
     path: scripts/planning-db-import.test.cjs
+  - <<: *planningDbContentSymbol
+    name: test
+    path: scripts/generate-planning-lanes.test.cjs
+  - <<: *planningDbContentSymbol
+    name: assert
+    path: scripts/generate-planning-lanes.test.cjs
   - <<: *planningDbContentSymbol
     name: PlanningDbQueryRunner
     path: scripts/planning-db-query.cjs

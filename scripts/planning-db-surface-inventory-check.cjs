@@ -32,7 +32,7 @@ const requiredSurfaces = [
   {
     surface: 'Planning task lifecycle',
     includes: {
-      'Canonical source': ['planning_query_store', 'agent-lane-*.yaml', 'bootstrap/export'],
+      'Canonical source': ['planning_query_store', 'DB local definitions', 'bootstrap/export'],
       'Write rail': ['planning:db:operate'],
       'Read/query rail': ['planning:db:query', 'tasks', 'next'],
       Projection: ['execution-workboard.md', 'open-task-route.md'],
@@ -43,8 +43,8 @@ const requiredSurfaces = [
   {
     surface: 'Planning lane registry',
     includes: {
-      'Canonical source': ['agent-lane-*.yaml'],
-      'Write rail': ['planning:db:import'],
+      'Canonical source': ['planning_query_store lane rows', 'agent-lane-*.yaml', 'snapshot'],
+      'Write rail': ['planning:db:import', '--if-stale', '--planning-only'],
       'Read/query rail': ['planning:db:query'],
       Projection: ['DB lane rows'],
       Validation: ['planning:db:check', 'planning:db:export:check'],

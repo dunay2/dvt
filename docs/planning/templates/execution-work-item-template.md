@@ -8,8 +8,9 @@ planning_type: template
 
 # Execution Work Item Template
 
-Use this template when adding or updating a task entry in the relevant
-`docs/planning/state/agent-lane-*.yaml` file.
+Use this template when shaping the payload for
+`pnpm planning:db:operate task create` or reviewing the bootstrap/export YAML
+snapshot that the planning DB can export for Git review.
 
 ## Required Fields
 
@@ -37,5 +38,6 @@ next_slice: <smallest next shippable slice>
 
 ## Mapping Rule
 
-If the work originates in a review, include the review source in the relevant
-lane YAML task entry and regenerate the local planning-derived views.
+If the work originates in a review, include the review source in the DB task
+payload through `pnpm planning:db:operate` and regenerate the local
+planning-derived views from the DB source.

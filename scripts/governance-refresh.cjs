@@ -44,10 +44,16 @@ function buildRefreshStages() {
       {
         id: 'planning-db-import',
         script: 'planning:db:import',
+        args: ['--', '--if-stale', '--planning-only'],
       },
       {
         id: 'workboard',
         script: 'docs:workboard:generate',
+      },
+      {
+        id: 'governance-db-import',
+        script: 'governance:db:import',
+        args: ['--', '--if-stale'],
       },
       {
         id: 'coverage-report',
@@ -64,6 +70,7 @@ function buildRefreshStages() {
       {
         id: 'planning-db-import-final',
         script: 'planning:db:import',
+        args: ['--', '--if-stale', '--planning-only'],
       },
       {
         id: 'planning-db-check',
