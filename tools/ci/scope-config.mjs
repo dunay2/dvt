@@ -499,6 +499,10 @@ function isLifecycleScript(name) {
   return /^(pre|post)?(install|pack|publish|version)$/u.test(name) || name === 'prepare';
 }
 
+function isDeterminismJobScript(name) {
+  return name === 'lint:determinism' || name === 'test:determinism' || name === 'test:replay';
+}
+
 export function classifyPackageJsonChange(previousPackageJson, nextPackageJson) {
   const previousScripts = previousPackageJson?.scripts ?? {};
   const nextScripts = nextPackageJson?.scripts ?? {};
@@ -535,6 +539,7 @@ export function classifyPackageJsonChange(previousPackageJson, nextPackageJson) 
     ciToolingSensitive: commandClasses.some((commandClass) =>
       ['ci-tooling', 'developer-workflow', 'test-tooling'].includes(commandClass.domain)
     ),
+    determinismSensitive: changedScriptNames.some(isDeterminismJobScript),
     temporalCapabilitySensitive: commandClasses.some(
       (commandClass) => commandClass.domain === 'runtime-capability'
     ),
@@ -591,6 +596,9 @@ export function computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext
       contracts_relevant: Boolean(
         scope.contracts_relevant || packageJsonChange?.contractCapabilitySensitive
       ),
+      determinism_relevant: Boolean(
+        scope.determinism_relevant || packageJsonChange?.determinismSensitive
+      ),
       contract_capability_changed: Boolean(
         scope.contracts_relevant ||
         scope.determinism_relevant ||
@@ -637,7 +645,9 @@ export function computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext
         scope.postgres_capability_changed || packageJsonChange?.postgresCapabilitySensitive
       ),
       determinism_relevant: Boolean(
-        scope.determinism_relevant || packageJsonChange?.rootBuildSensitive
+        scope.determinism_relevant ||
+        packageJsonChange?.determinismSensitive ||
+        packageJsonChange?.rootBuildSensitive
       ),
       coverage_relevant: Boolean(scope.coverage_relevant || packageJsonChange?.rootBuildSensitive),
     };

@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { computeWorkflowModeScopeOutputs, parseScopeMode } from './scope-config.mjs';
+import {
+  classifyPackageJsonChange,
+  computeWorkflowModeScopeOutputs,
+  parseScopeMode,
+} from './scope-config.mjs';
 
 const scriptsOnlyContext = {
   packageJsonChange: {
@@ -16,6 +20,13 @@ const scriptsOnlyContext = {
     contractCapabilitySensitive: false,
   },
 };
+
+function packageJsonScriptChange(scriptName, previousCommand, nextCommand) {
+  return classifyPackageJsonChange(
+    { scripts: { [scriptName]: previousCommand } },
+    { scripts: { [scriptName]: nextCommand } }
+  );
+}
 
 test('emit-scope workflow mode keeps changed-file validation for scripts-only package json', () => {
   const scope = computeWorkflowModeScopeOutputs('workflow', ['package.json'], scriptsOnlyContext);
@@ -61,6 +72,19 @@ test('emit-scope contracts mode routes contract tooling package aliases to contr
   assert.equal(scope.contract_capability_changed, true);
 });
 
+test('emit-scope contracts mode routes lint:determinism script changes to determinism scan', () => {
+  const scope = computeWorkflowModeScopeOutputs('contracts', ['package.json'], {
+    packageJsonChange: packageJsonScriptChange(
+      'lint:determinism',
+      'pnpm --filter @dvt/engine lint',
+      'pnpm --filter @dvt/engine lint --max-warnings 0'
+    ),
+  });
+
+  assert.equal(scope.contracts_relevant, false);
+  assert.equal(scope.determinism_relevant, true);
+});
+
 test('emit-scope test mode keeps scripts-only package json out of runtime capability lanes', () => {
   const scope = computeWorkflowModeScopeOutputs('test', ['package.json'], scriptsOnlyContext);
 
@@ -70,6 +94,32 @@ test('emit-scope test mode keeps scripts-only package json out of runtime capabi
   assert.equal(scope.determinism_relevant, false);
   assert.equal(scope.coverage_relevant, false);
   assert.equal(scope.postgres_capability_changed, false);
+});
+
+test('emit-scope test mode routes test:determinism script changes to determinism job', () => {
+  const scope = computeWorkflowModeScopeOutputs('test', ['package.json'], {
+    packageJsonChange: packageJsonScriptChange(
+      'test:determinism',
+      'pnpm --filter @dvt/engine test --testNamePattern determinism',
+      'pnpm --filter @dvt/engine test --testNamePattern deterministic'
+    ),
+  });
+
+  assert.equal(scope.root_build_sensitive, false);
+  assert.equal(scope.determinism_relevant, true);
+});
+
+test('emit-scope test mode routes test:replay script changes to determinism job', () => {
+  const scope = computeWorkflowModeScopeOutputs('test', ['package.json'], {
+    packageJsonChange: packageJsonScriptChange(
+      'test:replay',
+      'pnpm --filter @dvt/engine test --testNamePattern replay',
+      'pnpm --filter @dvt/engine test --testNamePattern replay-consistency'
+    ),
+  });
+
+  assert.equal(scope.root_build_sensitive, false);
+  assert.equal(scope.determinism_relevant, true);
 });
 
 test('emit-scope test mode marks engine changes coverage relevant', () => {
