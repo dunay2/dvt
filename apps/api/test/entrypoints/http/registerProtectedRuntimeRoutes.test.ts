@@ -34,6 +34,7 @@ function protectedRuntimeModule(): ProtectedRuntimeModule {
       read: {},
       snapshotStaleness: {},
     },
+    workspaceContextQuery: { getEffectiveWorkspaceContext: async () => null },
     workspaceGraphDraftCapabilityService: {},
     workspaceGraphDraftStore: {},
   } as unknown as ProtectedRuntimeModule;
@@ -86,6 +87,7 @@ describe('registerProtectedRuntimeRoutes', () => {
     expect(app.hasRoute({ method: 'POST', url: '/plans/compile' })).toBe(true);
     expect(app.hasRoute({ method: 'POST', url: '/plans/preview' })).toBe(true);
     expect(app.hasRoute({ method: 'POST', url: '/plans/import' })).toBe(true);
+    expect(app.hasRoute({ method: 'GET', url: '/workspace/context' })).toBe(true);
     expect(app.hasRoute({ method: 'GET', url: '/workspace/graph/draft' })).toBe(true);
     expect(app.hasRoute({ method: 'GET', url: '/workspace/files' })).toBe(true);
     expect(app.hasRoute({ method: 'GET', url: '/workspace/files/:path' })).toBe(true);

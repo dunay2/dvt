@@ -4,6 +4,7 @@ import { Navigate, useLocation } from 'react-router';
 
 import { createApiClient, type ApiError } from '../services/api/createApiClient';
 import { getRuntimeDataSourceMode } from '../services/config/runtimeDataSourceMode';
+import { resolveProtectedRouteSessionContext } from '../services/session/protectedRouteSessionContext';
 
 type AuthGateState =
   | { kind: 'checking' }
@@ -28,10 +29,7 @@ export default function AuthRouteGate({
 
     let cancelled = false;
     setState({ kind: 'checking' });
-    sessionApiClient
-      .getJson('/session', {
-        includeSessionHeaders: false,
-      })
+    resolveProtectedRouteSessionContext(sessionApiClient)
       .then(() => {
         if (!cancelled) {
           setState({ kind: 'allowed' });

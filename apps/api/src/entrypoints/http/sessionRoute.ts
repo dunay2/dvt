@@ -3,6 +3,8 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import type { IAuthenticator } from '../../application/ports/auth.js';
 
+import { extractBearerToken } from './authHeaders.js';
+
 type SessionRouteDeps = Readonly<{
   authenticator: IAuthenticator;
 }>;
@@ -41,13 +43,4 @@ export async function sessionRoute(
       scopes: principal.rawScopes,
     },
   });
-}
-
-function extractBearerToken(header: string | undefined): string | undefined {
-  if (!header) {
-    return undefined;
-  }
-
-  const match = /^Bearer\s+(.+)$/i.exec(header.trim());
-  return match?.[1];
 }

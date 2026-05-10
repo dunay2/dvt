@@ -30,6 +30,7 @@ export const PROTECTED_RUNTIME_NEGATIVE_CASE = {
   unknownRun: 'unknown run',
   unsupportedAdapter: 'unsupported adapter',
   unsupportedSignal: 'unsupported signal',
+  workspaceContextNotGranted: 'workspace context not granted',
 } as const;
 
 export const PROTECTED_RUNTIME_TEST_REF = {
@@ -61,6 +62,7 @@ export const PROTECTED_RUNTIME_TEST_REF = {
   workspaceDraftAuth:
     'apps/api/test/application/services/authorizeWorkspaceGraphDraftCapabilityService.test.ts',
   workspaceDraftRoutes: 'apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts',
+  workspaceContextRoute: 'apps/api/test/entrypoints/http/workspaceContextRoute.test.ts',
   workspaceFilesRoutes: 'apps/api/test/entrypoints/http/workspaceFilesRoutes.test.ts',
 } as const;
 
@@ -108,6 +110,14 @@ export const PROTECTED_RUNTIME_PLAN_RAIL = {
 } as const;
 
 export const PROTECTED_RUNTIME_WORKSPACE_RAIL = {
+  getEffectiveWorkspaceContext: {
+    name: 'GetEffectiveWorkspaceContext',
+    boundedContext: 'Protected runtime workspace context',
+    dddObject: 'EffectiveWorkspaceContext',
+    applicationPort: 'IWorkspaceContextQuery',
+    adapterSurface: 'GET /workspace/context',
+    scopeAndAuthorization: 'authenticated principal plus backend grant store',
+  },
   getWorkspaceGraphDraft: {
     name: 'GetWorkspaceGraphDraft',
     boundedContext: 'Workspace graph drafting',
