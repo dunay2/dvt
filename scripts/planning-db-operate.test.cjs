@@ -375,6 +375,7 @@ test('planTaskDefinitionOperation creates a local task definition with auditable
       actor: 'codex',
       laneId: 'E',
       taskId: 'F-29-E2E',
+      parentTaskId: 'F-29',
       priority: 'P0',
       status: 'queued',
       objective: 'Prove the next E2E route through the planning DB command rail.',
@@ -403,7 +404,10 @@ test('planTaskDefinitionOperation creates a local task definition with auditable
   assert.equal(operation.definition.taskId, 'F-29-E2E');
   assert.equal(operation.definition.sourcePath, 'docs/planning/state/agent-lane-e.yaml');
   assert.equal(operation.definition.sourceContentSha256, 'b'.repeat(64));
+  assert.equal(operation.definition.parentTaskId, 'F-29');
   assert.equal(operation.definition.rawTask.task_id, 'F-29-E2E');
+  assert.equal(operation.definition.rawTask.parent_task, 'F-29');
+  assert.equal(operation.definition.rawTask.parent_task_id, undefined);
   assert.equal(
     operation.definition.rawTask.objective,
     'Prove the next E2E route through the planning DB command rail.'

@@ -488,7 +488,7 @@ function buildRawTaskFromCreateCommand(command) {
   };
 
   const optionalFields = [
-    ['parent_task_id', command.parentTaskId],
+    ['parent_task', command.parentTaskId],
     ['priority', command.priority],
     ['dependency', command.dependency],
     ['target', command.target],

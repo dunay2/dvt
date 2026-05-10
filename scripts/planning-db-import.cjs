@@ -76,18 +76,16 @@ function renderYamlSourcePayload(payload) {
 function buildGeneratedYamlSource(sourcePath, parsed) {
   const absolutePath = path.join(repoRoot, sourcePath);
   const hasExistingGeneratedSource = fs.existsSync(absolutePath);
-  const raw = hasExistingGeneratedSource
-    ? fs.readFileSync(absolutePath, 'utf8')
-    : renderYamlSourcePayload(parsed);
-  const sourceParsed = hasExistingGeneratedSource ? yaml.load(raw) : parsed;
+  const raw = renderYamlSourcePayload(parsed);
+  const rawSourceText = hasExistingGeneratedSource ? fs.readFileSync(absolutePath, 'utf8') : raw;
   return {
     absolutePath,
     sourcePath,
     raw,
     contentSha256: sha256(raw),
     sourceBytes: Buffer.byteLength(raw, 'utf8'),
-    parsed: sourceParsed,
-    rawSourceText: raw,
+    parsed,
+    rawSourceText,
   };
 }
 

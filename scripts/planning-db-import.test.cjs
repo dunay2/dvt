@@ -7,6 +7,7 @@ const {
   importContent,
   normalizeText,
 } = require('./planning-db-import.cjs');
+const { governanceGeneratedPath } = require('./governance-generated-paths.cjs');
 
 test('planning content snapshot preserves real lane task content and hashes', () => {
   const snapshot = buildPlanningContentSnapshot();
@@ -103,6 +104,34 @@ test('governance snapshot builds DB import sources from in-memory generator proj
   );
   assert.ok(generatedSources.every((source) => source.rawSource));
   assert.ok(generatedSources.every((source) => typeof source.rawSourceText === 'string'));
+});
+
+test('governance snapshot does not use stale generated YAML as structured import input', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const fileIndexPath = governanceGeneratedPath('system-governance-file-index.files.yaml');
+  const original = fs.existsSync(fileIndexPath) ? fs.readFileSync(fileIndexPath, 'utf8') : null;
+  const staleRaw = 'fileCount: 999999\nshards: []\n';
+
+  fs.mkdirSync(path.dirname(fileIndexPath), { recursive: true });
+  fs.writeFileSync(fileIndexPath, staleRaw, 'utf8');
+
+  try {
+    const snapshot = buildGovernanceFileSnapshot();
+    const source = snapshot.sources.find((entry) => entry.sourceType === 'governance_file_index');
+
+    assert.ok(source);
+    assert.notEqual(snapshot.index.fileCount, 999999);
+    assert.equal(snapshot.files.length, snapshot.index.fileCount);
+    assert.equal(source.rawSource.fileCount, snapshot.index.fileCount);
+    assert.equal(source.rawSourceText, staleRaw);
+  } finally {
+    if (original === null) {
+      fs.unlinkSync(fileIndexPath);
+    } else {
+      fs.writeFileSync(fileIndexPath, original, 'utf8');
+    }
+  }
 });
 
 test('normalizeText keeps structured lane fields queryable without dropping content', () => {
