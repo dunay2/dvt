@@ -42,6 +42,105 @@ Use this document as a disposition layer:
 | Is a proposal applied?               | Proposal status plus task/evidence references                                                               | A proposal is applied only when its linked tasks are closed or the proposal is marked `Implemented`, `Accepted`, or `Completed` with evidence. |
 | Is a proposal still active?          | Proposal portfolio map and proposal frontmatter                                                             | `Active`, `Review`, `Proposed`, and `Draft` proposals require triage unless they are explicitly reference-only.                                |
 
+## Minimum Disposition Dossier
+
+Every active review, proposal, or component-level claim needs a small dossier
+before it can be closed, archived, promoted to `reference-only`, or used to
+select new work. The dossier may live in the source document, this index, a
+closeout, an evidence doc, a risk entry, or the canonical doc-code matrix, but
+the links must be explicit.
+
+- Why does it exist?
+  The problem, opportunity, gap, review finding, or product need that caused the
+  document or component to exist.
+- What contract does it satisfy?
+  The contract, command/query rail, ADR, API, workflow rule, governance rule, or
+  operational policy it implements.
+- Which decisions shaped it?
+  Linked ADRs, reviews, accepted proposals, closeouts, risk decisions, or
+  explicit architecture tradeoffs.
+- Which variants were discarded?
+  Alternatives rejected, deferred, superseded, or treated as non-goals, with the
+  reason for that disposition.
+- Which requirements does it meet?
+  Linked task IDs, product requirements, architecture requirements, security
+  requirements, or operational requirements.
+- Which risks does it control?
+  Risk register entries, explicitly mitigated review findings, or stated
+  residual risks.
+- Which tests prove it is valid?
+  Test paths, verification commands, evidence docs, CI checks, or manual proof
+  surfaces that should fail on regression.
+
+If an answer is not applicable, write `n/a` with the reason. If an answer is
+unknown for an active document, do not close the item; route it to a planning
+task, risk entry, or explicit future review.
+
+## Component Traceability Dossier
+
+Use this component dossier when a review or proposal claims ownership over a
+package, bounded context, route, worker, adapter, UI surface, persisted model,
+command/query rail, emitted event, consumed event, or security boundary. It
+does not replace canonical architecture docs, ADRs, contracts, or the
+[Canonical Doc Code Matrix](./canonical-doc-code-matrix.md). It records where
+the current answers live.
+
+- Purpose:
+  Why the component exists and which user, system, or governance outcome it
+  supports.
+- Ownership:
+  Owning bounded context, package, team/role, CODEOWNERS route, or planning
+  lane.
+- Public contract:
+  Exported API, command/query rail, contract document, route, schema, event, or
+  UI contract.
+- Inputs / outputs:
+  Accepted inputs, produced outputs, side effects, and caller/consumer
+  expectations.
+- Invariants:
+  Rules that must remain true across execution, replay, persistence, retries, or
+  UI state changes.
+- State model:
+  State names, transitions, lifecycle authority, derived-state boundaries, and
+  illegal transitions.
+- Error model:
+  Expected failures, error envelopes, retryability, authorization failures, and
+  negative semantics.
+- Security rules:
+  Tenant isolation, RBAC, authn/authz, capability checks, privacy constraints,
+  and fail-closed posture.
+- Dependencies:
+  Internal packages, external providers, infrastructure services, and permitted
+  dependency directions.
+- Configuration:
+  Environment variables, feature flags, runtime policy, build-time config, and
+  defaults.
+- Events emitted / consumed:
+  Domain, integration, telemetry, lineage, or workflow events plus
+  ordering/idempotency expectations.
+- Persistence impact:
+  Tables, migrations, indexes, retention, restore, data ownership, and
+  compatibility impact.
+- Observability:
+  Logs, metrics, traces, audit records, dashboards, cardinality limits, and
+  alertable signals.
+- Tests:
+  Unit, integration, contract, architecture, E2E, replay, determinism, or CI
+  checks that validate behavior.
+- ADRs linked:
+  Accepted or superseding ADRs that define the component decision boundary.
+- Requirements linked:
+  Planning tasks, proposal IDs, review findings, product requirements, or risk
+  mitigations satisfied.
+- Lifecycle / deprecation policy:
+  Versioning, support window, replacement path, deprecation trigger, migration
+  path, and removal conditions.
+
+Missing component dossier fields are not automatically defects for historical
+or reference-only documents. They are defects for active work only when the
+missing field prevents us from deciding whether the work is implemented, still
+required, risky, or deliberately out of scope.
+
 ## Current Planning State
 
 Planning DB is the operational source of truth for work state.
