@@ -1,13 +1,6 @@
 /**
- * Owned concern: normalize HTTP authorization header parsing for protected
- * runtime route handlers.
+ * Owned concern: expose the protected-runtime authorization-header parser
+ * without duplicating token parsing semantics.
  */
 
-export function extractBearerToken(header: string | undefined): string | undefined {
-  if (!header) {
-    return undefined;
-  }
-
-  const match = /^Bearer\s+(.+)$/i.exec(header.trim());
-  return match?.[1];
-}
+export { extractBearerToken } from './extractBearerToken.js';
