@@ -5,7 +5,10 @@
 import type { IPlansPort } from '../../ports/plans';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { SessionContextPort } from '../../ports/sessionContext';
-import type { IWorkspacePort } from '../../ports/workspace';
+import type {
+  IWorkspaceFileContentCommandPort,
+  IWorkspaceFilesQueryPort,
+} from '../../ports/workspace';
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
@@ -40,7 +43,8 @@ export async function executeCanvasPlanAction({
   sessionContext,
   transformationValidation,
   workspaceNodeIds,
-  workspaceService,
+  workspaceFilesQuery,
+  workspaceFileContentCommand,
 }: {
   canPlan: boolean;
   canonicalEdges: readonly CanonicalEdge[];
@@ -55,7 +59,8 @@ export async function executeCanvasPlanAction({
   sessionContext: SessionContextPort;
   transformationValidation: TransformationGraphValidationResult;
   workspaceNodeIds: readonly string[];
-  workspaceService: IWorkspacePort;
+  workspaceFilesQuery: IWorkspaceFilesQueryPort;
+  workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
 }): Promise<CanvasPlanActionResult> {
   if (!canPlan) {
     return { ok: false, message: canvasViewCopy.planPermissionDeniedMessage };
@@ -83,7 +88,8 @@ export async function executeCanvasPlanAction({
       canonicalNodes,
       canonicalEdges,
       scopedNodeIds: selectedForPlan,
-      workspaceService,
+      workspaceFilesQuery,
+      workspaceFileContentCommand,
       workspaceScope: sessionContext.getWorkspaceScopeSnapshot(),
       previewProvenanceConfig,
       required: true,

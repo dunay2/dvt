@@ -1,9 +1,10 @@
+/** Owned concern: derive artifact view state from imported and workspace file read models. */
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 import type { FileContent, WorkspaceFileEntry } from '../../ports/workspace';
 import { queryKeys } from '../../queries/queryKeys';
-import { useWorkspaceService } from '../../services/AppServicesContext';
+import { useWorkspaceFilesQueryPort } from '../../services/AppServicesContext';
 import { type ArtifactFileName, type ArtifactPreviewDocumentMap } from './constants';
 import type { ArtifactPreview, ImportState } from './types';
 import { formatFileSize } from './utils';
@@ -126,11 +127,11 @@ async function loadWorkspaceArtifacts(
 }
 
 export function useArtifactsViewModel(state: ImportState): ArtifactsViewModel {
-  const workspaceService = useWorkspaceService();
+  const workspaceFilesQuery = useWorkspaceFilesQueryPort();
   const workspaceArtifactsQuery = useQuery<WorkspaceArtifactMap>({
     queryKey: queryKeys.workspace.artifacts(),
     queryFn: () =>
-      loadWorkspaceArtifacts(workspaceService.listFiles, workspaceService.getFileContent),
+      loadWorkspaceArtifacts(workspaceFilesQuery.listFiles, workspaceFilesQuery.getFileContent),
   });
 
   return useMemo(() => {

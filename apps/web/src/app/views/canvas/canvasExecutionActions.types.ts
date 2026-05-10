@@ -1,10 +1,14 @@
+/** Owned concern: define Canvas execution-action dependencies and results. */
 import type { Dispatch, SetStateAction } from 'react';
 
 import type { IPlansPort } from '../../ports/plans';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
-import type { IWorkspacePort } from '../../ports/workspace';
+import type {
+  IWorkspaceFileContentCommandPort,
+  IWorkspaceFilesQueryPort,
+} from '../../ports/workspace';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -13,7 +17,8 @@ import type { PlanViewModel } from '../../types/plans';
 export type UseCanvasExecutionActionsParams = {
   plansService: IPlansPort;
   runsService: IRunsPort;
-  workspaceService: IWorkspacePort;
+  workspaceFilesQuery: IWorkspaceFilesQueryPort;
+  workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   executionStrategy: CanvasExecutionStrategy | null;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];

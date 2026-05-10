@@ -1,23 +1,23 @@
 import { describe, expect, it } from 'vitest';
 
-import { createWorkspaceService, resolveWorkspaceServiceCapabilities } from './workspaceService';
-import { createMockWorkspaceService, createMockWorkspaceState } from './workspaceService.mock';
+import { createWorkspacePorts, resolveWorkspacePortCapabilities } from './workspacePorts';
+import { createMockWorkspacePorts, createMockWorkspaceState } from './workspacePorts.mock';
 
-describe('workspaceService source import', () => {
+describe('workspace ports source import', () => {
   it('advertises source import capability explicitly by adapter mode', () => {
-    expect(resolveWorkspaceServiceCapabilities('mock')).toEqual({
+    expect(resolveWorkspacePortCapabilities('mock')).toEqual({
       sourceImportAvailable: true,
     });
-    expect(resolveWorkspaceServiceCapabilities('api')).toEqual({
+    expect(resolveWorkspacePortCapabilities('api')).toEqual({
       sourceImportAvailable: false,
     });
   });
 
   it('imports selected warehouse tables into the mock workspace graph', async () => {
-    const service = createWorkspaceService('mock');
-    const before = await service.getGraphSnapshot();
+    const ports = createWorkspacePorts('mock');
+    const before = await ports.workspaceGraphSnapshotQuery.getGraphSnapshot();
 
-    const result = await service.importSources({
+    const result = await ports.warehouseSourceImport.importSources({
       connectionId: 'conn-1',
       tables: [
         {
@@ -37,7 +37,7 @@ describe('workspaceService source import', () => {
       addFreshness: false,
     });
 
-    const after = await service.getGraphSnapshot();
+    const after = await ports.workspaceGraphSnapshotQuery.getGraphSnapshot();
     const importedNode = after.nodes.find((node) => node.id === 'src_finance_invoices');
 
     expect(result.success).toBe(true);
@@ -58,11 +58,11 @@ describe('workspaceService source import', () => {
   });
 
   it('isolates graph mutations between default mock service instances', async () => {
-    const firstService = createWorkspaceService('mock');
-    const secondService = createWorkspaceService('mock');
-    const secondBefore = await secondService.getGraphSnapshot();
+    const firstPorts = createWorkspacePorts('mock');
+    const secondPorts = createWorkspacePorts('mock');
+    const secondBefore = await secondPorts.workspaceGraphSnapshotQuery.getGraphSnapshot();
 
-    await firstService.importSources({
+    await firstPorts.warehouseSourceImport.importSources({
       connectionId: 'conn-1',
       tables: [
         {
@@ -79,8 +79,8 @@ describe('workspaceService source import', () => {
       addFreshness: false,
     });
 
-    const firstAfter = await firstService.getGraphSnapshot();
-    const secondAfter = await secondService.getGraphSnapshot();
+    const firstAfter = await firstPorts.workspaceGraphSnapshotQuery.getGraphSnapshot();
+    const secondAfter = await secondPorts.workspaceGraphSnapshotQuery.getGraphSnapshot();
 
     expect(firstAfter.nodes.some((node) => node.id === 'src_operations_shipments')).toBe(true);
     expect(secondAfter.nodes.some((node) => node.id === 'src_operations_shipments')).toBe(false);
@@ -89,10 +89,10 @@ describe('workspaceService source import', () => {
 
   it('shares mutable mock workspace state only when explicitly requested', async () => {
     const sharedState = createMockWorkspaceState();
-    const firstService = createMockWorkspaceService(sharedState);
-    const secondService = createMockWorkspaceService(sharedState);
+    const firstPorts = createMockWorkspacePorts(sharedState);
+    const secondPorts = createMockWorkspacePorts(sharedState);
 
-    await firstService.importSources({
+    await firstPorts.warehouseSourceImport.importSources({
       connectionId: 'conn-1',
       tables: [
         {
@@ -109,19 +109,19 @@ describe('workspaceService source import', () => {
       addFreshness: false,
     });
 
-    const secondAfter = await secondService.getGraphSnapshot();
+    const secondAfter = await secondPorts.workspaceGraphSnapshotQuery.getGraphSnapshot();
 
     expect(secondAfter.nodes.some((node) => node.id === 'src_support_tickets')).toBe(true);
   });
 
   it('fails explicitly in api mode until the backend endpoint exists', async () => {
-    const service = createWorkspaceService('api');
+    const ports = createWorkspacePorts('api');
 
-    await expect(service.listWarehouseConnections()).rejects.toThrow(
+    await expect(ports.warehouseSourceImport.listWarehouseConnections()).rejects.toThrow(
       'Warehouse source import is not available in API mode'
     );
     await expect(
-      service.importSources({
+      ports.warehouseSourceImport.importSources({
         connectionId: 'conn-1',
         tables: [],
         groupingStrategy: 'schema',

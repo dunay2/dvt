@@ -6,7 +6,10 @@ import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
 import type { IWorkspaceGraphDraftAuthoringPort } from '../../ports/workspaceGraphDraftAuthoring';
-import type { IWorkspacePort } from '../../ports/workspace';
+import type {
+  IWorkspaceFileContentCommandPort,
+  IWorkspaceFilesQueryPort,
+} from '../../ports/workspace';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 import type { CanvasAuthoringDraftReadModel } from './canvasDraftReadModel';
@@ -24,7 +27,8 @@ export type CanvasHarnessState = {
   overlayDecorations: Map<string, OverlayDecoration>;
   currentPlan: PlanViewModel | null;
   services: {
-    workspaceService: IWorkspacePort;
+    workspaceFilesQuery: IWorkspaceFilesQueryPort;
+    workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
     workspaceGraphDraftAuthoringPort: IWorkspaceGraphDraftAuthoringPort;
     plansService: IPlansPort;
     runsService: IRunsPort;

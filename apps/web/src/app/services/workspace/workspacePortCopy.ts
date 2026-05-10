@@ -1,12 +1,12 @@
-﻿import { resolveString, type LocalizableString } from '../../plugins/contracts/PluginManifest';
+import { resolveString, type LocalizableString } from '../../plugins/contracts/PluginManifest';
 
-export type WorkspaceServiceCopy = {
+export type WorkspacePortCopy = {
   readonly warehouseImportApiModeUnavailable: string;
 };
 
-type WorkspaceServiceLanguage = 'en' | 'es';
+type WorkspacePortLanguage = 'en' | 'es';
 
-const COPY_BY_KEY: Record<keyof WorkspaceServiceCopy, LocalizableString> = {
+const COPY_BY_KEY: Record<keyof WorkspacePortCopy, LocalizableString> = {
   warehouseImportApiModeUnavailable: {
     key: 'workspace.import.apiModeUnavailable',
     fallback:
@@ -14,15 +14,15 @@ const COPY_BY_KEY: Record<keyof WorkspaceServiceCopy, LocalizableString> = {
   },
 };
 
-const LOCALIZED_COPY_BY_LANGUAGE: Record<WorkspaceServiceLanguage, WorkspaceServiceCopy | null> = {
+const LOCALIZED_COPY_BY_LANGUAGE: Record<WorkspacePortLanguage, WorkspacePortCopy | null> = {
   en: null,
   es: {
     warehouseImportApiModeUnavailable:
-      'La importación de fuentes del warehouse no está disponible en modo API hasta que exista el endpoint del backend.',
+      'La importaci�n de fuentes del warehouse no est� disponible en modo API hasta que exista el endpoint del backend.',
   },
 };
 
-function resolveWorkspaceServiceLanguage(locale?: string): WorkspaceServiceLanguage {
+function resolveWorkspacePortLanguage(locale?: string): WorkspacePortLanguage {
   const normalizedLocale = locale?.trim().toLowerCase();
 
   if (normalizedLocale?.startsWith('es')) {
@@ -32,7 +32,7 @@ function resolveWorkspaceServiceLanguage(locale?: string): WorkspaceServiceLangu
   return 'en';
 }
 
-export function detectWorkspaceServiceLocale(): string {
+export function detectWorkspacePortLocale(): string {
   if (typeof navigator !== 'undefined') {
     const navigatorLocale = navigator.language || navigator.languages?.[0];
     if (navigatorLocale) {
@@ -49,8 +49,8 @@ export function detectWorkspaceServiceLocale(): string {
   return 'en';
 }
 
-export function resolveWorkspaceServiceCopy(locale?: string): WorkspaceServiceCopy {
-  const localizedCopy = LOCALIZED_COPY_BY_LANGUAGE[resolveWorkspaceServiceLanguage(locale)];
+export function resolveWorkspacePortCopy(locale?: string): WorkspacePortCopy {
+  const localizedCopy = LOCALIZED_COPY_BY_LANGUAGE[resolveWorkspacePortLanguage(locale)];
   if (localizedCopy) {
     return localizedCopy;
   }

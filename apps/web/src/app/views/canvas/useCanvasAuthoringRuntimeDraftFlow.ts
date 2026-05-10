@@ -8,7 +8,6 @@ import { useCanvasDraftBaseline } from './useCanvasDraftBaseline';
 import { useCanvasDraftLifecycle } from './useCanvasDraftLifecycle';
 
 export function useCanvasAuthoringRuntimeDraftFlow({
-  workspaceService,
   workspaceGraphDraftAuthoringPort,
   workspaceLayoutKey,
   columnLevelLineageEnabled,
@@ -20,7 +19,6 @@ export function useCanvasAuthoringRuntimeDraftFlow({
 }: UseCanvasAuthoringRuntimeDraftFlowArgs) {
   const [draftSession, setDraftSession] = useState(canvasDraftSession.machine.createBootstrapping);
   const { draftQueryCache, draftRepository, graphDraftQuery } = useCanvasDraftBaseline({
-    workspaceService,
     workspaceGraphDraftAuthoringPort,
     workspaceLayoutKey,
   });

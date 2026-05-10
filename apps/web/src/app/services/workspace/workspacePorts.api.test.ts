@@ -8,7 +8,7 @@ import {
   buildWorkspaceGraphDraftEndpoint,
   WORKSPACE_GRAPH_DRAFT_HTTP_ERROR_REASON,
 } from './workspaceGraphDraftHttp';
-import { createApiWorkspaceServiceHarness } from './workspaceServiceApi.test.harness';
+import { createApiWorkspacePortHarness } from './workspacePortsApi.test.harness';
 import {
   buildWorkspaceScope,
   installWorkspaceScopeHarness,
@@ -16,53 +16,54 @@ import {
 } from './workspaceScope.test.harness';
 import { httpErrorResponse, jsonResponse } from './workspaceApiClient.test.harness';
 
-type ApiWorkspaceService = ReturnType<typeof createApiWorkspaceServiceHarness>['service'];
+type ApiWorkspacePorts = ReturnType<typeof createApiWorkspacePortHarness>;
 
 const unsupportedApiWorkspaceOperations: ReadonlyArray<{
   readonly operation: string;
   readonly capability: string;
   readonly rail: string;
-  readonly call: (service: ApiWorkspaceService) => Promise<unknown>;
+  readonly call: (ports: ApiWorkspacePorts) => Promise<unknown>;
 }> = [
   {
     operation: 'getDiffChanges',
     capability: 'workspace.diffChanges',
     rail: 'GetWorkspaceDiffChanges',
-    call: (service) => service.getDiffChanges(),
+    call: (ports) => ports.workspaceDiffQuery.getDiffChanges(),
   },
   {
     operation: 'getPlugins',
     capability: 'workspace.plugins',
     rail: 'ListWorkspacePlugins',
-    call: (service) => service.getPlugins(),
+    call: (ports) => ports.workspacePluginCatalogQuery.getPlugins(),
   },
   {
     operation: 'getRoles',
     capability: 'workspace.adminRoles',
     rail: 'ListAdminRoles',
-    call: (service) => service.getRoles(),
+    call: (ports) => ports.workspaceAdminRead.getRoles(),
   },
   {
     operation: 'getAuditLog',
     capability: 'workspace.adminAuditLog',
     rail: 'ListAdminAuditLog',
-    call: (service) => service.getAuditLog(),
+    call: (ports) => ports.workspaceAdminRead.getAuditLog(),
   },
   {
     operation: 'saveFileContent',
     capability: 'workspace.fileWrite',
     rail: 'SaveWorkspaceFileContent',
-    call: (service) => service.saveFileContent('models/generated.sql', 'select 1'),
+    call: (ports) =>
+      ports.workspaceFileContentCommand.saveFileContent('models/generated.sql', 'select 1'),
   },
 ] as const;
 
-describe('workspaceService api graph snapshot', () => {
+describe('workspace ports api graph snapshot', () => {
   installWorkspaceScopeHarness();
 
   it('projects the protected workspace graph draft into the canonical graph snapshot read model', async () => {
     const scope = buildWorkspaceScope();
     setWorkspaceScope(scope);
-    const { getJson, requestRaw, service } = createApiWorkspaceServiceHarness({
+    const { getJson, requestRaw, workspaceGraphSnapshotQuery } = createApiWorkspacePortHarness({
       getJson: async (endpoint) => {
         throw new Error(`Retired graph endpoint reached: ${endpoint}`);
       },
@@ -73,7 +74,7 @@ describe('workspaceService api graph snapshot', () => {
       },
     });
 
-    const snapshot = await service.getGraphSnapshot();
+    const snapshot = await workspaceGraphSnapshotQuery.getGraphSnapshot();
 
     expect(getJson).not.toHaveBeenCalled();
     expect(requestRaw).toHaveBeenCalledTimes(1);
@@ -99,7 +100,7 @@ describe('workspaceService api graph snapshot', () => {
   it('maps a missing protected draft to an empty graph snapshot instead of failing startup', async () => {
     const scope = buildWorkspaceScope();
     setWorkspaceScope(scope);
-    const { getJson, service } = createApiWorkspaceServiceHarness({
+    const { getJson, workspaceGraphSnapshotQuery } = createApiWorkspacePortHarness({
       getJson: async (endpoint) => {
         throw new Error(`Retired graph endpoint reached: ${endpoint}`);
       },
@@ -111,18 +112,22 @@ describe('workspaceService api graph snapshot', () => {
         }),
     });
 
-    await expect(service.getGraphSnapshot()).resolves.toEqual({ nodes: [], edges: [] });
+    await expect(workspaceGraphSnapshotQuery.getGraphSnapshot()).resolves.toEqual({
+      nodes: [],
+      edges: [],
+    });
     expect(getJson).not.toHaveBeenCalled();
   });
 });
 
-describe('workspaceService api route parity posture', () => {
+describe('workspace ports api route parity posture', () => {
   it.each(unsupportedApiWorkspaceOperations)(
     'fails closed for %s before issuing transport calls',
     async ({ call, capability, rail }) => {
-      const { getJson, postJson, requestRaw, service } = createApiWorkspaceServiceHarness();
+      const ports = createApiWorkspacePortHarness();
+      const { getJson, postJson, requestRaw } = ports;
 
-      await expect(call(service)).rejects.toMatchObject({
+      await expect(call(ports)).rejects.toMatchObject({
         name: 'WorkspaceApiCapabilityUnsupportedError',
         capability,
         rail,
@@ -135,7 +140,7 @@ describe('workspaceService api route parity posture', () => {
 
   it('does not retain orphan API route literals for missing workspace rails', () => {
     const source = readFileSync(
-      resolve(process.cwd(), 'src/app/services/workspace/workspaceService.api.ts'),
+      resolve(process.cwd(), 'src/app/services/workspace/workspacePorts.api.ts'),
       'utf8'
     );
 

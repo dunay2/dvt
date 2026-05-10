@@ -1,6 +1,6 @@
 ---
 title: Workspace Port Decomposition Component
-status: Proposed
+status: Implemented
 owner: Web / API / Architecture
 last_reviewed: 2026-05-10
 planning_type: architecture
@@ -14,7 +14,7 @@ The workspace port decomposition component replaces the broad presentation
 `IWorkspacePort` with smaller ports whose names match owned web/API concerns and
 accepted or missing command/query rails.
 
-The component prevents one frontend service from looking like the authority for
+The component prevents one frontend module from looking like the authority for
 graph snapshots, files, diff, plugins, admin read models, warehouse import, and
 file writes at the same time.
 
@@ -53,14 +53,14 @@ admin RBAC truth, or file write semantics.
 - The composition root may assemble multiple ports, but no broad workspace port
   may become the product API again.
 
-## Current Shape
+## Previous Shape
 
 ```mermaid
 flowchart LR
   View["Views and hooks"]
   Broad["IWorkspacePort"]
-  Api["workspaceService.api"]
-  Mock["workspaceService.mock"]
+  Api["workspacePorts.api"]
+  Mock["workspacePorts.mock"]
   Real["Existing API routes"]
   Missing["Missing backend rails"]
 
@@ -72,7 +72,7 @@ flowchart LR
   Mock -. demo semantics .-> Missing
 ```
 
-## Target Shape
+## Implemented Shape
 
 ```mermaid
 flowchart LR
@@ -112,7 +112,8 @@ stateDiagram-v2
   SplitReadPorts --> SplitCommandPorts: import/file write
   SplitCommandPorts --> ConsumerMigration: views use minimal ports
   ConsumerMigration --> BroadPortRemoved: no IWorkspacePort consumers
-  BroadPortRemoved --> GuardGreen: semantic architecture test passes
+  BroadPortRemoved --> PortsModulesRenamed: workspacePorts hard cut
+  PortsModulesRenamed --> GuardGreen: semantic architecture test passes
 ```
 
 ## Consumers
@@ -137,8 +138,10 @@ thin barrel:
 - every workspace-facing port name has one owned concern;
 - read ports do not expose command verbs such as `save` or `import`;
 - API-mode unavailable ports reject before transport;
-- views import the narrow port they consume instead of the composition root
+- views import the narrow port they consume instead of a composition-root
   workspace service.
+- no `workspaceService*` module remains in the workspace service directory
+  after the hard cut.
 
 ## Module Docblock Rule
 

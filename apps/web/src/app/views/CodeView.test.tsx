@@ -2,7 +2,7 @@ import { act } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createRoot, type Root } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import type { IWorkspacePort } from '../ports/workspace';
+import type { IWorkspaceFilesQueryPort } from '../ports/workspace';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { WorkspaceFileLoadError } from '../services/workspace/workspaceErrors';
 import CodeView from './CodeView';
@@ -24,23 +24,10 @@ vi.mock('../components/monaco/MonacoCodeViewer', () => ({
   ),
 }));
 
-function buildWorkspaceService(overrides: Partial<IWorkspacePort> = {}): IWorkspacePort {
-  const service: IWorkspacePort = {
-    getGraphSnapshot: async () => ({ nodes: [], edges: [] }),
-    getDiffChanges: async () => [],
-    getPlugins: async () => [],
-    getRoles: async () => [],
-    getAuditLog: async () => [],
-    listWarehouseConnections: async () => [],
-    listWarehouseTables: async () => [],
-    importSources: async () => ({
-      success: true,
-      sourcesCreated: 0,
-      tablesImported: 0,
-      yamlFiles: [],
-      grouping: 'schema',
-      options: { includeColumns: false, addTests: false, addFreshness: false },
-    }),
+function buildWorkspaceFilesQueryPort(
+  overrides: Partial<IWorkspaceFilesQueryPort> = {}
+): IWorkspaceFilesQueryPort {
+  const port: IWorkspaceFilesQueryPort = {
     listFiles: async () => [
       {
         path: 'models',
@@ -59,16 +46,9 @@ function buildWorkspaceService(overrides: Partial<IWorkspacePort> = {}): IWorksp
       content: path.endsWith('.sql') ? 'select * from orders' : '# Workspace',
       lastModified: '2026-04-06T00:00:00Z',
     }),
-    saveFileContent: async (path, content) => ({
-      path,
-      name: path.split('/').at(-1) ?? path,
-      language: 'sql',
-      content,
-      lastModified: '2026-04-06T00:00:00Z',
-    }),
   };
 
-  return { ...service, ...overrides };
+  return { ...port, ...overrides };
 }
 
 describe('CodeView', () => {
@@ -117,7 +97,10 @@ describe('CodeView', () => {
         <QueryClientProvider client={createTestQueryClient()}>
           {' '}
           <AppServicesProvider
-            overrides={{ mode: 'mock', workspaceService: buildWorkspaceService() }}
+            overrides={{
+              mode: 'mock',
+              workspaceFilesQuery: buildWorkspaceFilesQueryPort(),
+            }}
           >
             {' '}
             <CodeView />{' '}
@@ -158,7 +141,7 @@ describe('CodeView', () => {
           <AppServicesProvider
             overrides={{
               mode: 'mock',
-              workspaceService: buildWorkspaceService({ listFiles: async () => [] }),
+              workspaceFilesQuery: buildWorkspaceFilesQueryPort({ listFiles: async () => [] }),
             }}
           >
             {' '}
@@ -195,7 +178,7 @@ describe('CodeView', () => {
           <AppServicesProvider
             overrides={{
               mode: 'api',
-              workspaceService: buildWorkspaceService({
+              workspaceFilesQuery: buildWorkspaceFilesQueryPort({
                 listFiles: async () => {
                   throw new Error('request failed');
                 },
@@ -236,7 +219,7 @@ describe('CodeView', () => {
           <AppServicesProvider
             overrides={{
               mode: 'mock',
-              workspaceService: buildWorkspaceService({
+              workspaceFilesQuery: buildWorkspaceFilesQueryPort({
                 getFileContent: async (path) => {
                   throw new WorkspaceFileLoadError('not_found', path);
                 },

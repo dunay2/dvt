@@ -79,10 +79,14 @@ flowchart LR
 
 The architecture has a usable API-backed path for session gating, runtime
 health, capabilities, protected workspace graph draft read/write, plan
-preview/import, run list/detail/events/start, and workspace file read. The
-remaining drift is concentrated in broad `IWorkspacePort` responsibilities,
-frontend static plugin composition, local authorization/session stores, and
-mock/demo paths that still model product semantics.
+preview/import, run list/detail/events/start, and workspace file read.
+
+Implementation update on 2026-05-10: the broad web `IWorkspacePort` was
+hard-cut from the composition root and replaced by named workspace capability
+ports. The remaining drift is no longer hidden behind one TypeScript service;
+it is concentrated in missing backend rails, frontend static plugin
+composition, local authorization/session stores, and mock/demo paths that still
+model product semantics.
 
 ## API And Contract Baseline
 
@@ -103,18 +107,18 @@ Confirmed API surfaces:
 
 Missing or mismatched API surfaces currently referenced or implied by web:
 
-| Capability intent       | Current web surface                                                             | API status                                                              | Gap                                                          |
-| ----------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------ |
-| Diff changes            | `workspaceService.getDiffChanges()` -> `GET /diff/changes`                      | No matching route found                                                 | UI has no authoritative diff read model                      |
-| Plugin catalog          | `workspaceService.getPlugins()` -> `GET /plugins` plus static `PLUGIN_REGISTRY` | No matching route found                                                 | UI owns plugin inventory and much of readiness               |
-| Admin roles/audit       | `GET /admin/roles`, `GET /admin/audit`                                          | No matching route found; only rebuild snapshot exists                   | Admin view can read mock-only authority                      |
-| Warehouse source import | `listWarehouseConnections`, `listWarehouseTables`, `importSources`              | Explicitly unavailable in API mode                                      | Mock mode creates graph/file state                           |
-| Workspace file write    | `saveFileContent()` -> `POST /workspace/files/:path`                            | API exposes read-only `GET` routes                                      | Canvas preview provenance can call a nonexistent write route |
-| Cost analytics          | `CostView` derives from graph + runs + currentRun store                         | `/capabilities` says cost unavailable; no cost read model               | UI computes product metric posture locally                   |
-| Lineage read model      | `LineageView` derives from workspace graph in browser                           | No lineage query; graph draft read exists                               | UI owns traversal and column lineage interpretation          |
-| Artifact import         | local file upload + parser                                                      | No artifact ingestion/query rail                                        | Browser invents imported artifact workspace state            |
-| Authorization grants    | `authorizationStore` defaults all permissions to true                           | API has per-route authz but no web permission read model                | UI decides enabled actions before API denial                 |
-| Workspace selector      | `sessionStore` + env + localStorage                                             | `/session` returns principal/grants but not effective workspace context | UI supplies tenant/project/environment scope                 |
+| Capability intent       | Current web surface                                                           | API status                                                              | Gap                                                          |
+| ----------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Diff changes            | `IWorkspaceDiffQueryPort.getDiffChanges()`                                    | No matching route found; API mode fails closed before transport         | UI has no authoritative diff read model                      |
+| Plugin catalog          | `IWorkspacePluginCatalogQueryPort.getPlugins()` plus static `PLUGIN_REGISTRY` | No matching route found; API mode fails closed before transport         | UI owns plugin inventory and much of readiness               |
+| Admin roles/audit       | `GET /admin/roles`, `GET /admin/audit`                                        | No matching route found; only rebuild snapshot exists                   | Admin view can read mock-only authority                      |
+| Warehouse source import | `listWarehouseConnections`, `listWarehouseTables`, `importSources`            | Explicitly unavailable in API mode                                      | Mock mode creates graph/file state                           |
+| Workspace file write    | `IWorkspaceFileContentCommandPort.saveFileContent()`                          | API exposes read-only `GET` routes; API mode fails closed before write  | Canvas preview provenance still needs an accepted write rail |
+| Cost analytics          | `CostView` derives from graph + runs + currentRun store                       | `/capabilities` says cost unavailable; no cost read model               | UI computes product metric posture locally                   |
+| Lineage read model      | `LineageView` derives from workspace graph in browser                         | No lineage query; graph draft read exists                               | UI owns traversal and column lineage interpretation          |
+| Artifact import         | local file upload + parser                                                    | No artifact ingestion/query rail                                        | Browser invents imported artifact workspace state            |
+| Authorization grants    | `authorizationStore` defaults all permissions to true                         | API has per-route authz but no web permission read model                | UI decides enabled actions before API denial                 |
+| Workspace selector      | `sessionStore` + env + localStorage                                           | `/session` returns principal/grants but not effective workspace context | UI supplies tenant/project/environment scope                 |
 
 ## Capability Matrix
 
@@ -130,8 +134,8 @@ Missing or mismatched API surfaces currently referenced or implied by web:
 | Canvas run start                             | `executeCanvasRunStartAction`, `runsService.api`                                                | Real `POST /runs/start` in API mode; mock run receipt in mock mode                               | Low for API mode, High for mock mode | Medium           | High in mock mode                | Keep API path. Web may block obvious stale UI states, but backend remains authority. Mock run IDs/events must not be available outside demo mode.                                                                                        |
 | Runs list/detail/events                      | `RunsView`, `useRunWorkspace`, canvas runs tab, cost input                                      | Real API in API mode; mock events in mock mode                                                   | Low for API mode, High for mock mode | Low              | High in mock mode                | Keep. Convert any route-specific DTO mapping still local to shared contracts where practical.                                                                                                                                            |
 | Code read-only file browser                  | `CodeView`, `useWorkspaceFileTreeQuery`, `useWorkspaceFileContentQuery`                         | Real `GET /workspace/files*` in API mode; mock file tree in mock mode                            | Low                                  | Low              | Medium in mock mode              | Keep read-only posture. Remove `saveFileContent` from the read-only port or move it to a separate command rail that exists in API.                                                                                                       |
-| Preview provenance graph artifact write      | `canvasPreviewProvenance.savePreviewGraphArtifact`                                              | Calls `workspaceService.saveFileContent`, but API lacks matching POST route                      | High                                 | Medium           | High                             | Either add a governed workspace artifact write command or move provenance artifact persistence into `POST /plans/preview`. Do not keep a web-only write command on `IWorkspacePort`.                                                     |
-| Diff view                                    | `DiffView`, `useDiffData`, `workspaceService.getDiffChanges`                                    | API adapter calls missing `/diff/changes`; mock adapter returns `mockDiffChanges`                | Medium                               | High             | High                             | Add a `GetWorkspaceDiffChanges` query rail or disable diff in API mode. Derive diff on server from workspace/plan/git evidence, not from browser fixtures.                                                                               |
+| Preview provenance graph artifact write      | `canvasPreviewProvenance.savePreviewGraphArtifact`, `IWorkspaceFileContentCommandPort`          | API mode fails closed because no accepted write rail exists                                      | High                                 | Medium           | High                             | Either add a governed workspace artifact write command or move provenance artifact persistence into `POST /plans/preview`.                                                                                                               |
+| Diff view                                    | `DiffView`, `useDiffData`, `IWorkspaceDiffQueryPort.getDiffChanges`                             | API mode fails closed; mock adapter returns `mockDiffChanges`                                    | Medium                               | High             | High                             | Add a `GetWorkspaceDiffChanges` query rail or keep the diff view unavailable in API mode. Derive diff on server from workspace/plan/git evidence, not from browser fixtures.                                                             |
 | Lineage view                                 | `LineageView`, `useLineageViewData`                                                             | Browser computes lineage from workspace graph draft                                              | Low                                  | Medium           | Medium                           | Accept as presentation while graph draft is authority, but add a lineage read-model query for column-level lineage and large graphs. Browser traversal should become fallback/advisory.                                                  |
 | Artifacts view                               | `ArtifactsView`, `useArtifactsViewModel`, `useLocalManifestImport`                              | Workspace files read API plus local upload/parser                                                | Medium                               | Medium           | High for imported local manifest | Keep workspace-file previews as read-only. Move local upload/import behind an explicit local-inspection mode or add artifact ingestion/query rails.                                                                                      |
 | Source import wizard                         | `SourceImportWizard`, `useSourceImportWizard`, canvas source import handlers                    | Mock-only; API mode throws unavailable and hides entry by capability                             | High in mock mode                    | High             | High                             | Add warehouse-source discovery/import commands and query rails, or keep completely demo-only. The current API-mode disabled path is correct but should be documented in shell capability copy.                                           |
@@ -145,44 +149,37 @@ Missing or mismatched API surfaces currently referenced or implied by web:
 
 ## Key Findings
 
-### 1. `IWorkspacePort` mixes unrelated bounded contexts
+### 1. `IWorkspacePort` hard-cut completed
 
-`IWorkspacePort` currently owns graph draft reads, diff, plugins, roles, audit,
-warehouse import, file reads, and file writes. This creates a single adapter
-surface where some methods are real API rails, some are nonexistent routes,
-some are explicitly unavailable, and some are mock-only.
+`IWorkspacePort` no longer exists as a composition dependency. The web
+composition root now publishes the smallest named ports required by consumers:
 
-This is the largest architectural friction point. It hides integration gaps
-because a view can call a method that has a TypeScript implementation while the
-corresponding API route does not exist.
+- `IWorkspaceGraphSnapshotQueryPort`
+- `IWorkspaceFilesQueryPort`
+- `IWorkspaceDiffQueryPort`
+- `IWorkspacePluginCatalogQueryPort`
+- `IWorkspaceAdminReadPort`
+- `IWarehouseSourceImportPort`
+- `IWorkspaceFileContentCommandPort`
 
-Recommended split:
+The semantic guard
+`workspacePortDecomposition.architecture.test.ts` fails if the old broad
+composition field, `useWorkspaceService`, or `createWorkspaceService` return.
+It also fails if a `workspaceService*` module remains after the hard cut.
+This improves the pattern from a God Port to Extract Interface plus Gateway per
+command/query rail. The remaining risk is not the web dependency shape; it is
+the missing backend rails that those ports now expose explicitly.
 
-- `WorkspaceGraphDraftQueryPort`
-- `WorkspaceFilesQueryPort`
-- `WorkspaceArtifactCommandPort` or `PlanPreviewProvenancePort`
-- `WorkspaceDiffQueryPort`
-- `WorkspaceAdminReadPort`
-- `WarehouseSourceImportPort`
+### 2. Missing workspace rails are fail-closed instead of fake API calls
 
-Each port should map to one command/query rail and one API surface, or be marked
-presentation/demo-only.
+The API adapter no longer calls orphan workspace routes for diff, plugins,
+admin roles/audit, warehouse import, or file writes. Missing capabilities are
+named by rail and fail before transport.
 
-### 2. Several API adapters call routes that are absent
-
-The web API workspace service references:
-
-- `GET /diff/changes`
-- `GET /plugins`
-- `GET /admin/roles`
-- `GET /admin/audit`
-- `POST /workspace/files/:path`
-
-The API baseline exposes protected runtime routes for plans, runs, workspace
-graph draft, and workspace file reads. It does not expose those five surfaces.
-
-This is hard drift because the code looks API-backed while operationally it
-cannot succeed in API mode.
+The API baseline still exposes only protected runtime routes for plans, runs,
+workspace graph draft, and workspace file reads. The hard drift moved from
+"code calls routes that do not exist" to "product capabilities are explicitly
+unavailable until their backend rails are designed and implemented."
 
 ### 3. Mock mode still contains product semantics
 
@@ -197,7 +194,7 @@ Risk examples:
 - `runsService.mock.ts` creates `run_mock_N` and event timelines.
 - `workspaceGraphDraftAuthoring.mock.ts` creates revisions, timestamps, and
   audit/correlation refs.
-- `workspaceService.mock.ts` imports warehouse sources and mutates a graph/file
+- `workspacePorts.mock.ts` imports warehouse sources and mutates a graph/file
   tree.
 - `mockDbtData.ts` contains plans, runs, roles, audit, diff, plugins, and
   files in one fixture source.
@@ -262,7 +259,7 @@ flowchart TD
 
 Prioritized capability migrations:
 
-1. Fix the hard API mismatches in `workspaceService.api.ts`.
+1. Completed: fix the hard API mismatches in `workspacePorts.api.ts`.
    - Remove or split `saveFileContent` from the read-only workspace files API
      until an API command exists.
    - Disable or route-gate diff/admin/plugin reads in API mode until real
@@ -286,9 +283,13 @@ Prioritized capability migrations:
      warehouse import, and admin/audit fixtures.
    - Add architecture tests preventing mock services from being imported by API
      mode composition.
-4. Split `IWorkspacePort` by rail.
-   - Make every port correspond to one query/command rail.
-   - Move demo-only operations into separate demo ports.
+4. Completed: split `IWorkspacePort` by rail with a hard cut.
+   - `workspacePorts.ts`, `workspacePorts.api.ts`, and
+     `workspacePorts.mock.ts` replaced the old broad service module names.
+   - Every web consumer now takes graph, file, diff, admin, plugin catalog,
+     warehouse import, or file-write ports explicitly.
+   - The architecture guard blocks the legacy broad interface, composition
+     field, hook, and broad factory.
 5. Move validation/authorization authority out of browser-local stores.
    - Use API validation results for executable graph/plan readiness.
    - Replace optimistic permissions with session/capability/authorization read
@@ -304,7 +305,7 @@ Prioritized capability migrations:
 
 - API mode composition must not call any `*.mock.ts` service for protected
   routes.
-- `workspaceService.api.ts` must not contain API endpoints absent from
+- `workspacePorts.api.ts` must not contain API endpoints absent from
   `runtimeRoutes.constants.ts`, operational route registration, or an explicit
   route catalog.
 - `authorizationStore` defaults must not be used as command authority for
@@ -339,7 +340,7 @@ workspace file reads all have real API paths. The main drift is not absence of
 API work; it is uneven authority boundaries. Broad web ports and static plugin
 composition make mock/local behavior look equivalent to backend-backed rails.
 
-The next valuable implementation slice is to fence mock runtime semantics and
-then split `IWorkspacePort` by rail. Route parity and server-owned workspace
-context now reduce false confidence in API mode; the next risk is that mock
-runtime behavior still looks product-equivalent outside explicit demo posture.
+The next valuable implementation slice is to fence mock runtime semantics.
+Route parity, server-owned workspace context, and the hard-cut port split now
+reduce false confidence in API mode; the next risk is that mock runtime
+behavior still looks product-equivalent outside explicit demo posture.

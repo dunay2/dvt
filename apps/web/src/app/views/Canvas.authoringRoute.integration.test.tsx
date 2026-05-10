@@ -174,7 +174,8 @@ describe('Canvas route authoring bootstrap integration', () => {
               queryClient={queryClient}
               overrides={{
                 mode: 'api',
-                workspaceService: harness.state.services.workspaceService,
+                workspaceFilesQuery: harness.state.services.workspaceFilesQuery,
+                workspaceFileContentCommand: harness.state.services.workspaceFileContentCommand,
                 workspaceGraphDraftAuthoringPort:
                   harness.state.services.workspaceGraphDraftAuthoringPort,
                 plansService: harness.state.services.plansService,
@@ -215,7 +216,9 @@ describe('Canvas route authoring bootstrap integration', () => {
       bootstrapStatus: 'complete',
       canCompleteBootstrap: true,
     });
-    expect(getPublishedRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION)).toMatchObject({
+    expect(
+      getPublishedRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION)
+    ).toMatchObject({
       status: 'complete',
       canComplete: true,
     });

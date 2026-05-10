@@ -1,37 +1,42 @@
+/** Owned concern: bind workspace query hooks to their minimal service ports. */
 import { useQuery } from '@tanstack/react-query';
-import { useWorkspaceService } from '../services/AppServicesContext';
+import {
+  useWorkspaceDiffQueryPort,
+  useWorkspaceFilesQueryPort,
+  useWorkspaceGraphSnapshotQueryPort,
+} from '../services/AppServicesContext';
 import { queryKeys } from './queryKeys';
 
 export function useWorkspaceDiffChangesQuery() {
-  const workspaceService = useWorkspaceService();
+  const workspaceDiffQuery = useWorkspaceDiffQueryPort();
   return useQuery({
     queryKey: queryKeys.workspace.diffChanges(),
-    queryFn: () => workspaceService.getDiffChanges(),
+    queryFn: () => workspaceDiffQuery.getDiffChanges(),
   });
 }
 
 export function useWorkspaceGraphForViewQuery(viewId: string, staleTime?: number) {
-  const workspaceService = useWorkspaceService();
+  const workspaceGraphSnapshotQuery = useWorkspaceGraphSnapshotQueryPort();
   return useQuery({
     queryKey: queryKeys.workspace.graphForView(viewId),
-    queryFn: () => workspaceService.getGraphSnapshot(),
+    queryFn: () => workspaceGraphSnapshotQuery.getGraphSnapshot(),
     ...(typeof staleTime === 'number' ? { staleTime } : {}),
   });
 }
 
 export function useWorkspaceFileTreeQuery() {
-  const workspaceService = useWorkspaceService();
+  const workspaceFilesQuery = useWorkspaceFilesQueryPort();
   return useQuery({
     queryKey: queryKeys.workspace.fileTree(),
-    queryFn: () => workspaceService.listFiles(),
+    queryFn: () => workspaceFilesQuery.listFiles(),
   });
 }
 
 export function useWorkspaceFileContentQuery(path: string | undefined) {
-  const workspaceService = useWorkspaceService();
+  const workspaceFilesQuery = useWorkspaceFilesQueryPort();
   return useQuery({
     enabled: path != null,
     queryKey: queryKeys.workspace.fileContent(path ?? ''),
-    queryFn: () => workspaceService.getFileContent(path ?? ''),
+    queryFn: () => workspaceFilesQuery.getFileContent(path ?? ''),
   });
 }

@@ -1,3 +1,4 @@
+/** Owned concern: provide demo-local workspace capability ports backed by fixture state. */
 import {
   mockAuditLog,
   mockDiffChanges,
@@ -7,18 +8,26 @@ import {
   mockRoles,
 } from '../../data/mockDbtData';
 import type { DbtNode } from '../../types/dbt';
-import type { FileContent, IWorkspacePort, WorkspaceFileEntry } from '../../ports/workspace';
 import type {
+  FileContent,
   ImportSourcesInput,
   ImportSourcesResult,
+  IWarehouseSourceImportPort,
+  IWorkspaceAdminReadPort,
+  IWorkspaceDiffQueryPort,
+  IWorkspaceFileContentCommandPort,
+  IWorkspaceFilesQueryPort,
+  IWorkspaceGraphSnapshotQueryPort,
+  IWorkspacePluginCatalogQueryPort,
   SourceImportGrouping,
   WarehouseConnection,
   WarehouseTable,
-  WorkspaceGraphSnapshot
-} from './workspaceService';
+  WorkspaceFileEntry,
+  WorkspaceGraphSnapshot,
+} from '../../ports/workspace';
 import { WorkspaceFileLoadError } from './workspaceErrors';
 
-export const mockWorkspaceServiceCapabilities = {
+export const mockWorkspacePortCapabilities = {
   sourceImportAvailable: true,
 } as const;
 
@@ -586,15 +595,47 @@ function inferLanguage(path: string): string {
   return langMap[ext] ?? 'plaintext';
 }
 
-export function createMockWorkspaceService(
+export type MockWorkspacePorts = {
+  readonly workspaceGraphSnapshotQuery: IWorkspaceGraphSnapshotQueryPort;
+  readonly workspaceDiffQuery: IWorkspaceDiffQueryPort;
+  readonly workspacePluginCatalogQuery: IWorkspacePluginCatalogQueryPort;
+  readonly workspaceAdminRead: IWorkspaceAdminReadPort;
+  readonly warehouseSourceImport: IWarehouseSourceImportPort;
+  readonly workspaceFilesQuery: IWorkspaceFilesQueryPort;
+  readonly workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
+};
+
+export function createMockWorkspaceGraphSnapshotQueryPort(
   state: MockWorkspaceState = createMockWorkspaceState()
-): IWorkspacePort {
+): IWorkspaceGraphSnapshotQueryPort {
   return {
     getGraphSnapshot: async () => cloneGraphSnapshot(state.graphSnapshot),
+  };
+}
+
+export function createMockWorkspaceDiffQueryPort(): IWorkspaceDiffQueryPort {
+  return {
     getDiffChanges: async () => mockDiffChanges,
+  };
+}
+
+export function createMockWorkspacePluginCatalogQueryPort(): IWorkspacePluginCatalogQueryPort {
+  return {
     getPlugins: async () => mockPlugins,
+  };
+}
+
+export function createMockWorkspaceAdminReadPort(): IWorkspaceAdminReadPort {
+  return {
     getRoles: async () => mockRoles,
     getAuditLog: async () => mockAuditLog,
+  };
+}
+
+export function createMockWarehouseSourceImportPort(
+  state: MockWorkspaceState = createMockWorkspaceState()
+): IWarehouseSourceImportPort {
+  return {
     listWarehouseConnections: async () => mockConnections.map((connection) => ({ ...connection })),
     listWarehouseTables: async (connectionId) =>
       (mockWarehouseTablesByConnectionId[connectionId] ?? []).map((table) => ({
@@ -602,6 +643,13 @@ export function createMockWorkspaceService(
         columns: table.columns?.map((column) => ({ ...column })),
       })),
     importSources: async (input) => importMockSources(state, input),
+  };
+}
+
+export function createMockWorkspaceFilesQueryPort(
+  state: MockWorkspaceState = createMockWorkspaceState()
+): IWorkspaceFilesQueryPort {
+  return {
     listFiles: async () => cloneWorkspaceFileEntries(state.fileTree),
     getFileContent: async (path) => {
       const file = state.fileContents[path];
@@ -610,6 +658,13 @@ export function createMockWorkspaceService(
       }
       return cloneFileContent(file);
     },
+  };
+}
+
+export function createMockWorkspaceFileContentCommandPort(
+  state: MockWorkspaceState = createMockWorkspaceState()
+): IWorkspaceFileContentCommandPort {
+  return {
     saveFileContent: async (path, content) => {
       const existing = state.fileContents[path];
       const name = path.split('/').pop() ?? path;
@@ -627,3 +682,16 @@ export function createMockWorkspaceService(
   };
 }
 
+export function createMockWorkspacePorts(
+  state: MockWorkspaceState = createMockWorkspaceState()
+): MockWorkspacePorts {
+  return {
+    workspaceGraphSnapshotQuery: createMockWorkspaceGraphSnapshotQueryPort(state),
+    workspaceDiffQuery: createMockWorkspaceDiffQueryPort(),
+    workspacePluginCatalogQuery: createMockWorkspacePluginCatalogQueryPort(),
+    workspaceAdminRead: createMockWorkspaceAdminReadPort(),
+    warehouseSourceImport: createMockWarehouseSourceImportPort(state),
+    workspaceFilesQuery: createMockWorkspaceFilesQueryPort(state),
+    workspaceFileContentCommand: createMockWorkspaceFileContentCommandPort(state),
+  };
+}

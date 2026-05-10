@@ -1,16 +1,17 @@
+/** Owned concern: load warehouse source import choices through the source import port. */
 import { useEffect, type Dispatch, type SetStateAction } from 'react';
 
-import type { IWorkspacePort } from '../../ports/workspace';
+import type { IWarehouseSourceImportPort } from '../../ports/workspace';
 import { sourceImportWizardCopy as copy } from './copy';
 import type { SourceImportWizardState } from './types';
 
 interface LoaderParams {
   open: boolean;
-  workspaceService: IWorkspacePort;
+  warehouseSourceImport: IWarehouseSourceImportPort;
   setState: Dispatch<SetStateAction<SourceImportWizardState>>;
 }
 
-export function useConnectionsLoader({ open, workspaceService, setState }: LoaderParams) {
+export function useConnectionsLoader({ open, warehouseSourceImport, setState }: LoaderParams) {
   useEffect(() => {
     if (!open) {
       return;
@@ -23,7 +24,7 @@ export function useConnectionsLoader({ open, workspaceService, setState }: Loade
         loadError: null,
       }));
       try {
-        const connections = await workspaceService.listWarehouseConnections();
+        const connections = await warehouseSourceImport.listWarehouseConnections();
         if (!cancelled) {
           setState((prev) => ({ ...prev, connections }));
         }
@@ -42,7 +43,7 @@ export function useConnectionsLoader({ open, workspaceService, setState }: Loade
     return () => {
       cancelled = true;
     };
-  }, [open, setState, workspaceService]);
+  }, [open, setState, warehouseSourceImport]);
 }
 
 interface TablesLoaderParams extends LoaderParams {
@@ -52,7 +53,7 @@ interface TablesLoaderParams extends LoaderParams {
 export function useTablesLoader({
   open,
   selectedConnection,
-  workspaceService,
+  warehouseSourceImport,
   setState,
 }: TablesLoaderParams) {
   useEffect(() => {
@@ -63,7 +64,7 @@ export function useTablesLoader({
     const loadTables = async () => {
       setState((prev) => ({ ...prev, isLoadingTables: true, loadError: null }));
       try {
-        const tables = await workspaceService.listWarehouseTables(selectedConnection);
+        const tables = await warehouseSourceImport.listWarehouseTables(selectedConnection);
         if (!cancelled) {
           setState((prev) => ({
             ...prev,
@@ -85,5 +86,5 @@ export function useTablesLoader({
     return () => {
       cancelled = true;
     };
-  }, [open, selectedConnection, setState, workspaceService]);
+  }, [open, selectedConnection, setState, warehouseSourceImport]);
 }

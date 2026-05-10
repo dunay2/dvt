@@ -1,17 +1,19 @@
+/** Owned concern: collect Canvas route environment ports and runtime state. */
 import { useMemo } from 'react';
 
 import { usePlatformHealthSnapshotQuery } from '../../../capabilities/platform-health';
 import { useCapabilitiesQuery } from '../../queries/useCapabilitiesQuery';
 import { resolveWorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
-import { resolveWorkspaceServiceCapabilities } from '../../services/workspace/workspaceService';
+import { resolveWorkspacePortCapabilities } from '../../services/workspace/workspacePorts';
 import {
   useAppDataSourceMode,
   usePlansService,
   useRunsService,
   useSessionContext,
   useShellFeedback,
+  useWorkspaceFileContentCommandPort,
+  useWorkspaceFilesQueryPort,
   useWorkspaceGraphDraftAuthoringPort,
-  useWorkspaceService,
 } from '../../services/AppServicesContext';
 import { useCanvasNavigationActions } from './useCanvasNavigationActions';
 import { useCanvasStoreFacade } from './useCanvasStoreFacade';
@@ -20,11 +22,12 @@ export function useCanvasControllerEnvironment() {
   const dataSourceMode = useAppDataSourceMode();
   const { data: capabilities } = useCapabilitiesQuery();
   const platformHealthQuery = usePlatformHealthSnapshotQuery();
-  const workspaceServiceCapabilities = useMemo(
-    () => resolveWorkspaceServiceCapabilities(dataSourceMode),
+  const workspacePortCapabilities = useMemo(
+    () => resolveWorkspacePortCapabilities(dataSourceMode),
     [dataSourceMode]
   );
-  const workspaceService = useWorkspaceService();
+  const workspaceFilesQuery = useWorkspaceFilesQueryPort();
+  const workspaceFileContentCommand = useWorkspaceFileContentCommandPort();
   const workspaceGraphDraftAuthoringPort = useWorkspaceGraphDraftAuthoringPort();
   const plansService = usePlansService();
   const runsService = useRunsService();
@@ -38,8 +41,9 @@ export function useCanvasControllerEnvironment() {
     dataSourceMode,
     capabilities,
     platformHealthQuery,
-    workspaceServiceCapabilities,
-    workspaceService,
+    workspacePortCapabilities,
+    workspaceFilesQuery,
+    workspaceFileContentCommand,
     workspaceGraphDraftAuthoringPort,
     plansService,
     runsService,

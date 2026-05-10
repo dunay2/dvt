@@ -1,8 +1,12 @@
+/** Owned concern: resolve plan preview provenance through workspace file read/write ports. */
 import { sha256HexUtf8 } from '@dvt/contracts';
 
 import type { PlanPreviewProvenance } from '../../ports/plans';
 import type { WorkspaceScope } from '../../ports/sessionContext';
-import type { IWorkspacePort } from '../../ports/workspace';
+import type {
+  IWorkspaceFileContentCommandPort,
+  IWorkspaceFilesQueryPort,
+} from '../../ports/workspace';
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
@@ -32,7 +36,8 @@ type ResolvePreviewProvenanceArgs = {
   canonicalNodes: readonly CanonicalNode[];
   canonicalEdges: readonly CanonicalEdge[];
   scopedNodeIds: readonly string[];
-  workspaceService: IWorkspacePort;
+  workspaceFilesQuery: IWorkspaceFilesQueryPort;
+  workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   workspaceScope: WorkspaceScope;
   previewProvenanceConfig: PreviewProvenanceConfig;
   required: boolean;
@@ -82,7 +87,7 @@ function resolveTransformNodeWithPath(
 }
 
 async function savePreviewGraphArtifact(args: {
-  workspaceService: IWorkspacePort;
+  workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   workspaceScope: WorkspaceScope;
   graphArtifactPath: string;
   gitRepo: string;
@@ -104,7 +109,7 @@ async function savePreviewGraphArtifact(args: {
       environmentId: args.workspaceScope.environmentId,
     },
   });
-  const graphArtifactFile = await args.workspaceService.saveFileContent(
+  const graphArtifactFile = await args.workspaceFileContentCommand.saveFileContent(
     args.graphArtifactPath,
     graphArtifactContent
   );
@@ -122,7 +127,8 @@ export async function resolvePreviewProvenance({
   canonicalNodes,
   canonicalEdges,
   scopedNodeIds,
-  workspaceService,
+  workspaceFilesQuery,
+  workspaceFileContentCommand,
   workspaceScope,
   previewProvenanceConfig,
   required,
@@ -137,23 +143,24 @@ export async function resolvePreviewProvenance({
 
   const previewWorkspaceConfig = resolvePreviewWorkspaceConfig(previewProvenanceConfig);
   if (!previewWorkspaceConfig) {
-    const message = previewProvenanceConfig.gitRepo && previewProvenanceConfig.graphArtifactPath
-      ? canvasViewCopy.previewProvenanceExplicitGitRevisionRequiredMessage
-      : canvasViewCopy.previewProvenanceWorkspaceNotConfiguredMessage;
+    const message =
+      previewProvenanceConfig.gitRepo && previewProvenanceConfig.graphArtifactPath
+        ? canvasViewCopy.previewProvenanceExplicitGitRevisionRequiredMessage
+        : canvasViewCopy.previewProvenanceWorkspaceNotConfiguredMessage;
 
     return resolveOptionalPreviewFailure(required, message);
   }
 
   try {
     const { sqlArtifact, sqlText } = await readPreviewSqlArtifact({
-      workspaceService,
+      workspaceFilesQuery,
       path: transformNode.path,
       gitRepo: previewWorkspaceConfig.gitRepo,
       gitRef: previewWorkspaceConfig.gitRef,
       gitSha: previewWorkspaceConfig.gitSha,
     });
     const graphArtifact = await savePreviewGraphArtifact({
-      workspaceService,
+      workspaceFileContentCommand,
       workspaceScope,
       graphArtifactPath: previewWorkspaceConfig.graphArtifactPath,
       gitRepo: previewWorkspaceConfig.gitRepo,

@@ -3,7 +3,7 @@
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { IWorkspacePort } from '../ports/workspace';
+import type { IWorkspaceFilesQueryPort } from '../ports/workspace';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { waitForReactQuery, withTestQueryClient } from '../../testing/reactQueryHarness';
 import ArtifactsView from './ArtifactsView';
@@ -32,23 +32,10 @@ describe('ArtifactsView', () => {
   let mounted: Awaited<ReturnType<typeof withTestQueryClient>> | null;
   const mockedUseLocalManifestImport = vi.mocked(useLocalManifestImport);
 
-  function buildWorkspaceService(overrides?: Partial<IWorkspacePort>): IWorkspacePort {
+  function buildWorkspaceFilesQueryPort(
+    overrides?: Partial<IWorkspaceFilesQueryPort>
+  ): IWorkspaceFilesQueryPort {
     return {
-      getGraphSnapshot: async () => ({ nodes: [], edges: [] }),
-      getDiffChanges: async () => [],
-      getPlugins: async () => [],
-      getRoles: async () => [],
-      getAuditLog: async () => [],
-      listWarehouseConnections: async () => [],
-      listWarehouseTables: async () => [],
-      importSources: async () => ({
-        success: true,
-        sourcesCreated: 0,
-        tablesImported: 0,
-        yamlFiles: [],
-        grouping: 'schema',
-        options: { includeColumns: false, addTests: false, addFreshness: false },
-      }),
       listFiles: async () => [
         {
           path: 'target',
@@ -66,13 +53,6 @@ describe('ArtifactsView', () => {
         name: path.split('/').at(-1) ?? path,
         language: 'json',
         content: JSON.stringify({ metadata: { dbt_schema_version: 'workspace', path } }),
-        lastModified: '2026-04-06T00:00:00Z',
-      }),
-      saveFileContent: async (path, content) => ({
-        path,
-        name: path.split('/').at(-1) ?? path,
-        language: 'json',
-        content,
         lastModified: '2026-04-06T00:00:00Z',
       }),
       ...overrides,
@@ -117,7 +97,7 @@ describe('ArtifactsView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'mock',
-          workspaceService: buildWorkspaceService(),
+          workspaceFilesQuery: buildWorkspaceFilesQueryPort(),
         }}
       >
         <ArtifactsView />
@@ -146,7 +126,7 @@ describe('ArtifactsView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'mock',
-          workspaceService: buildWorkspaceService(),
+          workspaceFilesQuery: buildWorkspaceFilesQueryPort(),
         }}
       >
         <ArtifactsView />
@@ -181,7 +161,7 @@ describe('ArtifactsView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'mock',
-          workspaceService: buildWorkspaceService({
+          workspaceFilesQuery: buildWorkspaceFilesQueryPort({
             listFiles: async () => [],
           }),
         }}
@@ -206,7 +186,7 @@ describe('ArtifactsView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'api',
-          workspaceService: buildWorkspaceService({
+          workspaceFilesQuery: buildWorkspaceFilesQueryPort({
             listFiles: async () => {
               throw new Error('workspace unavailable');
             },
@@ -243,7 +223,7 @@ describe('ArtifactsView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'mock',
-          workspaceService: buildWorkspaceService({
+          workspaceFilesQuery: buildWorkspaceFilesQueryPort({
             listFiles: async () => [],
           }),
         }}

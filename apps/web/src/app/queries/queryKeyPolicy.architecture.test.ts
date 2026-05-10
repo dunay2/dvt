@@ -12,7 +12,7 @@ const REMOVED_AGGREGATE_STORE_IMPORT_PATTERNS = [
   /import\s+['"][^'"]*stores\/index(?:\.ts)?['"]/,
 ];
 const SERVICE_FACTORY_CALL_PATTERNS = [
-  /createWorkspaceService\s*\(/,
+  /createWorkspacePorts\s*\(/,
   /createRunsService\s*\(/,
   /createPlansService\s*\(/,
 ];
@@ -122,7 +122,7 @@ describe('Query key policy (architecture)', () => {
 
     const allowedFactoryCallers = new Set([
       'services/composition/appServices.ts',
-      'services/workspace/workspaceService.ts',
+      'services/workspace/workspacePorts.ts',
       'services/runs/runsService.ts',
       'services/plans/plansService.ts',
     ]);

@@ -4,7 +4,12 @@ import React, { act } from 'react';
 import { fireEvent, waitFor } from '@testing-library/dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { FileContent, IWorkspacePort } from '../ports/workspace';
+import type {
+  FileContent,
+  IWorkspaceDiffQueryPort,
+  IWorkspaceFilesQueryPort,
+  IWorkspaceGraphSnapshotQueryPort,
+} from '../ports/workspace';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { withTestQueryClient, waitForReactQuery } from '../../testing/reactQueryHarness';
 import DiffView from './DiffView';
@@ -67,8 +72,16 @@ function buildFileContent(path: string): FileContent {
   };
 }
 
-function buildWorkspaceService(overrides?: Partial<IWorkspacePort>): IWorkspacePort {
-  return {
+function buildDiffViewWorkspacePorts(overrides?: {
+  graph?: Partial<IWorkspaceGraphSnapshotQueryPort>;
+  diff?: Partial<IWorkspaceDiffQueryPort>;
+  files?: Partial<IWorkspaceFilesQueryPort>;
+}): {
+  workspaceGraphSnapshotQuery: IWorkspaceGraphSnapshotQueryPort;
+  workspaceDiffQuery: IWorkspaceDiffQueryPort;
+  workspaceFilesQuery: IWorkspaceFilesQueryPort;
+} {
+  const workspaceGraphSnapshotQuery: IWorkspaceGraphSnapshotQueryPort = {
     getGraphSnapshot: async () => ({
       nodes: [
         {
@@ -102,6 +115,9 @@ function buildWorkspaceService(overrides?: Partial<IWorkspacePort>): IWorkspaceP
       ],
       edges: [],
     }),
+    ...overrides?.graph,
+  };
+  const workspaceDiffQuery: IWorkspaceDiffQueryPort = {
     getDiffChanges: async () => [
       {
         id: '1',
@@ -122,29 +138,17 @@ function buildWorkspaceService(overrides?: Partial<IWorkspacePort>): IWorkspaceP
         newValue: "WHERE o.order_date >= '2020-01-01'",
       },
     ],
-    getPlugins: async () => [],
-    getRoles: async () => [],
-    getAuditLog: async () => [],
-    listWarehouseConnections: async () => [],
-    listWarehouseTables: async () => [],
-    importSources: async () => ({
-      success: true,
-      sourcesCreated: 0,
-      tablesImported: 0,
-      yamlFiles: [],
-      grouping: 'schema',
-      options: { includeColumns: false, addTests: false, addFreshness: false },
-    }),
+    ...overrides?.diff,
+  };
+  const workspaceFilesQuery: IWorkspaceFilesQueryPort = {
     listFiles: async () => [],
     getFileContent: async (path) => buildFileContent(path),
-    saveFileContent: async (path, content) => ({
-      path,
-      name: path.split('/').at(-1) ?? path,
-      language: 'sql',
-      content,
-      lastModified: '2026-04-06T00:00:00Z',
-    }),
-    ...overrides,
+    ...overrides?.files,
+  };
+  return {
+    workspaceGraphSnapshotQuery,
+    workspaceDiffQuery,
+    workspaceFilesQuery,
   };
 }
 
@@ -176,7 +180,7 @@ describe('DiffView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'mock',
-          workspaceService: buildWorkspaceService(),
+          ...buildDiffViewWorkspacePorts(),
         }}
       >
         <DiffView />
@@ -198,8 +202,8 @@ describe('DiffView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'mock',
-          workspaceService: buildWorkspaceService({
-            getDiffChanges: async () => [],
+          ...buildDiffViewWorkspacePorts({
+            diff: { getDiffChanges: async () => [] },
           }),
         }}
       >
@@ -221,9 +225,11 @@ describe('DiffView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'mock',
-          workspaceService: buildWorkspaceService({
-            getDiffChanges: async () => {
-              throw new Error('Diff pipeline offline');
+          ...buildDiffViewWorkspacePorts({
+            diff: {
+              getDiffChanges: async () => {
+                throw new Error('Diff pipeline offline');
+              },
             },
           }),
         }}
@@ -246,7 +252,7 @@ describe('DiffView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'mock',
-          workspaceService: buildWorkspaceService(),
+          ...buildDiffViewWorkspacePorts(),
         }}
       >
         <DiffView />
@@ -276,7 +282,7 @@ describe('DiffView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'mock',
-          workspaceService: buildWorkspaceService(),
+          ...buildDiffViewWorkspacePorts(),
         }}
       >
         <DiffView />
@@ -317,11 +323,13 @@ describe('DiffView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'mock',
-          workspaceService: buildWorkspaceService({
-            getFileContent: () =>
-              new Promise<FileContent>((resolve) => {
-                resolveFileContent = resolve;
-              }),
+          ...buildDiffViewWorkspacePorts({
+            files: {
+              getFileContent: () =>
+                new Promise<FileContent>((resolve) => {
+                  resolveFileContent = resolve;
+                }),
+            },
           }),
         }}
       >
@@ -362,9 +370,11 @@ describe('DiffView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'mock',
-          workspaceService: buildWorkspaceService({
-            getFileContent: async () => {
-              throw new Error('Workspace file preview offline');
+          ...buildDiffViewWorkspacePorts({
+            files: {
+              getFileContent: async () => {
+                throw new Error('Workspace file preview offline');
+              },
             },
           }),
         }}
@@ -403,27 +413,29 @@ describe('DiffView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'mock',
-          workspaceService: buildWorkspaceService({
-            getDiffChanges: async () => [
-              {
-                id: '3',
-                nodeId: 'fct_sales',
-                type: 'changed',
-                severity: 'warning',
-                description: 'Column type changed: order_date',
-                oldValue: 'DATE',
-                newValue: 'TIMESTAMP',
-              },
-              {
-                id: '4',
-                nodeId: 'fct_sales',
-                type: 'added',
-                severity: 'info',
-                description: 'Column added: gross_amount',
-                oldValue: null,
-                newValue: 'gross_amount NUMERIC(18,2)',
-              },
-            ],
+          ...buildDiffViewWorkspacePorts({
+            diff: {
+              getDiffChanges: async () => [
+                {
+                  id: '3',
+                  nodeId: 'fct_sales',
+                  type: 'changed',
+                  severity: 'warning',
+                  description: 'Column type changed: order_date',
+                  oldValue: 'DATE',
+                  newValue: 'TIMESTAMP',
+                },
+                {
+                  id: '4',
+                  nodeId: 'fct_sales',
+                  type: 'added',
+                  severity: 'info',
+                  description: 'Column added: gross_amount',
+                  oldValue: null,
+                  newValue: 'gross_amount NUMERIC(18,2)',
+                },
+              ],
+            },
           }),
         }}
       >
@@ -466,11 +478,13 @@ describe('DiffView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'mock',
-          workspaceService: buildWorkspaceService({
-            getGraphSnapshot: async () => ({
-              nodes: [],
-              edges: [],
-            }),
+          ...buildDiffViewWorkspacePorts({
+            graph: {
+              getGraphSnapshot: async () => ({
+                nodes: [],
+                edges: [],
+              }),
+            },
           }),
         }}
       >
@@ -511,81 +525,85 @@ describe('DiffView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'mock',
-          workspaceService: buildWorkspaceService({
-            getGraphSnapshot: async () => ({
-              nodes: [
+          ...buildDiffViewWorkspacePorts({
+            graph: {
+              getGraphSnapshot: async () => ({
+                nodes: [
+                  {
+                    id: 'dim_store',
+                    name: 'dim_store',
+                    type: 'MODEL',
+                    package: 'analytics',
+                    path: 'models/dimensions/dim_store.sql',
+                    tags: [],
+                    status: 'success',
+                    dependencies: [],
+                    compiledSql: [
+                      'SELECT',
+                      '  s.store_id,',
+                      '  s.store_name',
+                      'FROM raw.store_dim s',
+                    ].join('\n'),
+                    columns: [
+                      { name: 'store_id', type: 'INTEGER', nullable: false },
+                      { name: 'store_name', type: 'TEXT', nullable: false },
+                      { name: 'store_city', type: 'TEXT', nullable: true },
+                    ],
+                  },
+                  {
+                    id: 'fct_sales',
+                    name: 'fct_sales',
+                    type: 'MODEL',
+                    package: 'analytics',
+                    path: 'models/marts/fct_sales.sql',
+                    tags: [],
+                    status: 'success',
+                    dependencies: ['stg_orders', 'dim_store'],
+                    compiledSql: [
+                      'SELECT',
+                      '  o.order_id,',
+                      '  o.customer_id,',
+                      '  o.order_date,',
+                      '  s.store_id,',
+                      '  o.total_amount',
+                      'FROM {{ ref("stg_orders") }} o',
+                      'LEFT JOIN {{ ref("dim_store") }} s',
+                      '  ON o.store_id = s.store_id',
+                    ].join('\n'),
+                    columns: [
+                      { name: 'order_id', type: 'INTEGER', nullable: false },
+                      { name: 'customer_id', type: 'INTEGER', nullable: false },
+                      { name: 'order_date', type: 'DATE', nullable: false },
+                      { name: 'store_id', type: 'INTEGER', nullable: true },
+                      { name: 'total_amount', type: 'NUMERIC(18,2)', nullable: true },
+                    ],
+                  },
+                ],
+                edges: [],
+              }),
+            },
+            diff: {
+              getDiffChanges: async () => [
                 {
-                  id: 'dim_store',
-                  name: 'dim_store',
-                  type: 'MODEL',
-                  package: 'analytics',
-                  path: 'models/dimensions/dim_store.sql',
-                  tags: [],
-                  status: 'success',
-                  dependencies: [],
-                  compiledSql: [
-                    'SELECT',
-                    '  s.store_id,',
-                    '  s.store_name',
-                    'FROM raw.store_dim s',
-                  ].join('\n'),
-                  columns: [
-                    { name: 'store_id', type: 'INTEGER', nullable: false },
-                    { name: 'store_name', type: 'TEXT', nullable: false },
-                    { name: 'store_city', type: 'TEXT', nullable: true },
-                  ],
+                  id: '1',
+                  nodeId: 'dim_store',
+                  type: 'added',
+                  severity: 'info',
+                  description: 'Column added: store_region',
+                  oldValue: null,
+                  newValue: 'store_region TEXT',
                 },
                 {
-                  id: 'fct_sales',
-                  name: 'fct_sales',
-                  type: 'MODEL',
-                  package: 'analytics',
-                  path: 'models/marts/fct_sales.sql',
-                  tags: [],
-                  status: 'success',
-                  dependencies: ['stg_orders', 'dim_store'],
-                  compiledSql: [
-                    'SELECT',
-                    '  o.order_id,',
-                    '  o.customer_id,',
-                    '  o.order_date,',
-                    '  s.store_id,',
-                    '  o.total_amount',
-                    'FROM {{ ref("stg_orders") }} o',
-                    'LEFT JOIN {{ ref("dim_store") }} s',
-                    '  ON o.store_id = s.store_id',
-                  ].join('\n'),
-                  columns: [
-                    { name: 'order_id', type: 'INTEGER', nullable: false },
-                    { name: 'customer_id', type: 'INTEGER', nullable: false },
-                    { name: 'order_date', type: 'DATE', nullable: false },
-                    { name: 'store_id', type: 'INTEGER', nullable: true },
-                    { name: 'total_amount', type: 'NUMERIC(18,2)', nullable: true },
-                  ],
+                  id: '2',
+                  nodeId: 'fct_sales',
+                  type: 'changed',
+                  severity: 'breaking',
+                  description: 'Column removed: discount_amount',
+                  oldValue: 'discount_amount DECIMAL',
+                  newValue: null,
                 },
               ],
-              edges: [],
-            }),
-            getDiffChanges: async () => [
-              {
-                id: '1',
-                nodeId: 'dim_store',
-                type: 'added',
-                severity: 'info',
-                description: 'Column added: store_region',
-                oldValue: null,
-                newValue: 'store_region TEXT',
-              },
-              {
-                id: '2',
-                nodeId: 'fct_sales',
-                type: 'changed',
-                severity: 'breaking',
-                description: 'Column removed: discount_amount',
-                oldValue: 'discount_amount DECIMAL',
-                newValue: null,
-              },
-            ],
+            },
           }),
         }}
       >

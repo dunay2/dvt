@@ -1,6 +1,6 @@
 ---
 title: Workspace Port Decomposition User Stories
-status: Proposed
+status: Implemented
 owner: Web / API / Architecture
 last_reviewed: 2026-05-10
 planning_type: architecture

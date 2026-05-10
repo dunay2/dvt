@@ -1,3 +1,4 @@
+/** Owned concern: coordinate Canvas plan and run action handlers. */
 import { useEffect, useState } from 'react';
 
 import { deriveCanvasExecutionState } from './canvasExecutionState';
@@ -22,7 +23,8 @@ function useCanvasExecutionDraftSignatureSync(args: {
 export function useCanvasExecutionActions({
   plansService,
   runsService,
-  workspaceService,
+  workspaceFilesQuery,
+  workspaceFileContentCommand,
   executionStrategy,
   canonicalNodes,
   canonicalEdges,
@@ -77,7 +79,8 @@ export function useCanvasExecutionActions({
     shellFeedback,
     transformationValidation,
     workspaceNodeIds,
-    workspaceService,
+    workspaceFilesQuery,
+    workspaceFileContentCommand,
     setCurrentPlan,
     setLastPlannedDraftSignature,
     setPlanModalOpen,

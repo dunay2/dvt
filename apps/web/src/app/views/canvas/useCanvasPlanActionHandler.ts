@@ -1,3 +1,4 @@
+/** Owned concern: bind Canvas plan command handling to minimal execution ports. */
 import { useCallback } from 'react';
 
 import { canvasViewCopy } from './copy';
@@ -21,7 +22,8 @@ type UseCanvasPlanActionHandlerArgs = Pick<
   | 'sessionContext'
   | 'shellFeedback'
   | 'workspaceNodeIds'
-  | 'workspaceService'
+  | 'workspaceFilesQuery'
+  | 'workspaceFileContentCommand'
   | 'setCurrentPlan'
 > & {
   transformationValidation: CanvasExecutionState['transformationValidation'];
@@ -41,7 +43,8 @@ export function useCanvasPlanActionHandler({
   shellFeedback,
   transformationValidation,
   workspaceNodeIds,
-  workspaceService,
+  workspaceFilesQuery,
+  workspaceFileContentCommand,
   setCurrentPlan,
   setLastPlannedDraftSignature,
   setPlanModalOpen,
@@ -58,7 +61,8 @@ export function useCanvasPlanActionHandler({
       sessionContext,
       transformationValidation,
       workspaceNodeIds,
-      workspaceService,
+      workspaceFilesQuery,
+      workspaceFileContentCommand,
     });
 
     if (!result.ok) {
@@ -81,7 +85,8 @@ export function useCanvasPlanActionHandler({
     sessionContext,
     transformationValidation,
     workspaceNodeIds,
-    workspaceService,
+    workspaceFilesQuery,
+    workspaceFileContentCommand,
     shellFeedback,
     setCurrentPlan,
     setLastPlannedDraftSignature,

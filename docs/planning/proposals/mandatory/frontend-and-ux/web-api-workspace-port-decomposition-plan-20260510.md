@@ -1,6 +1,6 @@
 ---
 title: Web API Workspace Port Decomposition Plan
-status: Proposed
+status: Implemented
 owner: Web / API / Architecture
 last_reviewed: 2026-05-10
 planning_type: mandatory
@@ -11,7 +11,7 @@ planning_type: mandatory
 > **For agentic workers:** REQUIRED SUB-SKILL: Use
 > `superpowers:subagent-driven-development` (recommended) or
 > `superpowers:executing-plans` to implement this plan task-by-task. Steps use
-> checkbox (`- [ ]`) syntax for tracking.
+> checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Split the broad web `IWorkspacePort` into narrow capability ports so
 each web consumer depends only on the command/query rail it actually uses.
@@ -44,7 +44,7 @@ Mermaid architecture docs, existing web service composition root.
 ```feature-mechanization
 version: 1
 featureId: WEB-API-WORKSPACE-PORT-DECOMPOSITION-20260510
-mechanizationStatus: closed
+mechanizationStatus: implemented
 noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/web-api-workspace-port-decomposition-plan-20260510.md
 componentGuides:
@@ -66,10 +66,12 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/workspace/workspace-port-decomposition-user-stories.md
   - docs/planning/proposals/mandatory/frontend-and-ux/web-api-workspace-port-decomposition-plan-20260510.md
   - docs/planning/reviews/20260510-web-api-integration-gap-review.md
+  - apps/web/src/app/ports/index.ts
   - apps/web/src/app/ports/workspace.ts
   - apps/web/src/app/services/workspace/**
   - apps/web/src/app/services/composition/**
   - apps/web/src/app/services/AppServicesContext.tsx
+  - apps/web/src/app/services/AppServicesContext.test.tsx
   - apps/web/src/app/queries/workspaceQueries.ts
   - apps/web/src/app/views/**
   - apps/web/src/app/components/**
@@ -160,7 +162,7 @@ cypressFlows:
 completionGate:
   - pnpm docs:sync
   - pnpm --filter @dvt/web exec vitest run src/app/services/workspace/workspacePortDecomposition.architecture.test.ts
-  - pnpm --filter @dvt/web exec vitest run src/app/services/workspace/workspaceService.api.test.ts src/app/services/workspace/workspaceService.files.test.ts src/app/services/workspace/workspaceService.imports.test.ts
+  - pnpm --filter @dvt/web exec vitest run src/app/services/workspace/workspacePorts.api.test.ts src/app/services/workspace/workspacePorts.files.test.ts src/app/services/workspace/workspacePorts.imports.test.ts
   - pnpm --filter @dvt/web typecheck
   - pnpm docs:feature-mechanization:implementation
   - pnpm verify:prepush
@@ -173,13 +175,13 @@ redGreenCycles:
       - apps/web/src/app/ports/workspace.ts
     greenTest: pnpm --filter @dvt/web exec vitest run src/app/services/workspace/workspacePortDecomposition.architecture.test.ts
   - id: api-port-factory-split
-    redTest: pnpm --filter @dvt/web exec vitest run src/app/services/workspace/workspaceService.api.test.ts
-    expectedFailure: createApiWorkspaceService still returns the broad workspace port.
+    redTest: pnpm --filter @dvt/web exec vitest run src/app/services/workspace/workspacePorts.api.test.ts
+    expectedFailure: API composition still exposes a broad workspace port factory.
     patchSurfaces:
-      - apps/web/src/app/services/workspace/workspaceService.api.ts
-      - apps/web/src/app/services/workspace/workspaceService.api.test.ts
-      - apps/web/src/app/services/workspace/workspaceService.ts
-    greenTest: pnpm --filter @dvt/web exec vitest run src/app/services/workspace/workspaceService.api.test.ts
+      - apps/web/src/app/services/workspace/workspacePorts.api.ts
+      - apps/web/src/app/services/workspace/workspacePorts.api.test.ts
+      - apps/web/src/app/services/workspace/workspacePorts.ts
+    greenTest: pnpm --filter @dvt/web exec vitest run src/app/services/workspace/workspacePorts.api.test.ts
   - id: consumer-minimal-port-migration
     redTest: pnpm --filter @dvt/web typecheck
     expectedFailure: consumers still require IWorkspacePort after narrow ports are introduced.
@@ -191,41 +193,331 @@ redGreenCycles:
       - apps/web/src/app/components/**
     greenTest: pnpm --filter @dvt/web typecheck
 symbols:
-  - name: IWorkspaceGraphSnapshotQueryPort
+  - &workspace_port_symbol
+    name: IWorkspaceGraphSnapshotQueryPort
     path: apps/web/src/app/ports/workspace.ts
-    dddOwner: Workspace graph snapshot presentation
-    cqRails:
-      - GetWorkspaceGraphDraft
-    fowlerSignals:
-      - God Port mixes unrelated bounded concerns
+    dddOwner: Workspace port decomposition
+    cqRails: [GetWorkspaceGraphDraft]
+    fowlerSignals: [Hard-cut broad workspace service shape]
     architectureGuard: pnpm --filter @dvt/web exec vitest run src/app/services/workspace/workspacePortDecomposition.architecture.test.ts
     cypressCoverage: N/A - dependency-shape slice only
     unitTests:
-      - apps/web/src/app/services/workspace/workspaceService.api.test.ts
-  - name: IWorkspaceFilesQueryPort
+      - apps/web/src/app/services/workspace/workspacePortDecomposition.architecture.test.ts
+      - apps/web/src/app/services/workspace/workspacePorts.api.test.ts
+      - apps/web/src/app/services/workspace/workspacePorts.files.test.ts
+      - apps/web/src/app/services/workspace/workspacePorts.imports.test.ts
+  - <<: *workspace_port_symbol
+    name: IWorkspaceFilesQueryPort
     path: apps/web/src/app/ports/workspace.ts
-    dddOwner: Workspace file read presentation
+    cqRails: [ListWorkspaceFiles, GetWorkspaceFileContent]
+  - <<: *workspace_port_symbol
+    name: IWorkspaceDiffQueryPort
+    path: apps/web/src/app/ports/workspace.ts
+    cqRails: [GetWorkspaceDiffChanges]
+  - <<: *workspace_port_symbol
+    name: IWorkspacePluginCatalogQueryPort
+    path: apps/web/src/app/ports/workspace.ts
+    cqRails: [ListWorkspacePlugins]
+  - <<: *workspace_port_symbol
+    name: IWorkspaceAdminReadPort
+    path: apps/web/src/app/ports/workspace.ts
+    cqRails: [ListAdminRoles, ListAdminAuditLog]
+  - <<: *workspace_port_symbol
+    name: IWarehouseSourceImportPort
+    path: apps/web/src/app/ports/workspace.ts
+    cqRails: [ListWarehouseConnections, ListWarehouseTables, ImportWarehouseSources]
+  - <<: *workspace_port_symbol
+    name: IWorkspaceFileContentCommandPort
+    path: apps/web/src/app/ports/workspace.ts
+    cqRails: [SaveWorkspaceFileContent]
+  - <<: *workspace_port_symbol
+    name: useWorkspaceGraphSnapshotQueryPort
+    path: apps/web/src/app/services/AppServicesContext.tsx
+  - <<: *workspace_port_symbol
+    name: useWorkspaceFilesQueryPort
+    path: apps/web/src/app/services/AppServicesContext.tsx
+    cqRails: [ListWorkspaceFiles, GetWorkspaceFileContent]
+  - <<: *workspace_port_symbol
+    name: useWorkspaceDiffQueryPort
+    path: apps/web/src/app/services/AppServicesContext.tsx
+    cqRails: [GetWorkspaceDiffChanges]
+  - <<: *workspace_port_symbol
+    name: useWorkspacePluginCatalogQueryPort
+    path: apps/web/src/app/services/AppServicesContext.tsx
+    cqRails: [ListWorkspacePlugins]
+  - <<: *workspace_port_symbol
+    name: useWorkspaceAdminReadPort
+    path: apps/web/src/app/services/AppServicesContext.tsx
+    cqRails: [ListAdminRoles, ListAdminAuditLog]
+  - <<: *workspace_port_symbol
+    name: useWarehouseSourceImportPort
+    path: apps/web/src/app/services/AppServicesContext.tsx
+    cqRails: [ListWarehouseConnections, ListWarehouseTables, ImportWarehouseSources]
+  - <<: *workspace_port_symbol
+    name: useWorkspaceFileContentCommandPort
+    path: apps/web/src/app/services/AppServicesContext.tsx
+    cqRails: [SaveWorkspaceFileContent]
+  - <<: *workspace_port_symbol
+    name: AppServicesProvider
+    path: apps/web/src/app/services/AppServicesContext.tsx
+  - <<: *workspace_port_symbol
+    name: WorkspacePortCapabilities
+    path: apps/web/src/app/services/workspace/workspacePorts.ts
+  - <<: *workspace_port_symbol
+    name: WorkspacePorts
+    path: apps/web/src/app/services/workspace/workspacePorts.ts
+  - <<: *workspace_port_symbol
+    name: resolveWorkspacePortCapabilities
+    path: apps/web/src/app/services/workspace/workspacePorts.ts
+  - <<: *workspace_port_symbol
+    name: createWorkspacePorts
+    path: apps/web/src/app/services/workspace/workspacePorts.ts
+  - <<: *workspace_port_symbol
+    name: apiWorkspacePortCapabilities
+    path: apps/web/src/app/services/workspace/workspacePorts.api.ts
+  - <<: *workspace_port_symbol
+    name: isWorkspaceFileNotFoundApiError
+    path: apps/web/src/app/services/workspace/workspacePorts.api.ts
+    cqRails: [GetWorkspaceFileContent]
+  - <<: *workspace_port_symbol
+    name: getWorkspaceGraphSnapshot
+    path: apps/web/src/app/services/workspace/workspacePorts.api.ts
+  - <<: *workspace_port_symbol
+    name: rejectUnsupportedApiWorkspaceCapability
+    path: apps/web/src/app/services/workspace/workspacePorts.api.ts
     cqRails:
-      - ListWorkspaceFiles
-      - GetWorkspaceFileContent
-    fowlerSignals:
-      - Read ports must not expose command verbs
-    architectureGuard: pnpm --filter @dvt/web exec vitest run src/app/services/workspace/workspacePortDecomposition.architecture.test.ts
-    cypressCoverage: N/A - dependency-shape slice only
-    unitTests:
-      - apps/web/src/app/services/workspace/workspaceService.files.test.ts
+      [GetWorkspaceDiffChanges, ListWorkspacePlugins, ListAdminRoles, ListAdminAuditLog,
+      SaveWorkspaceFileContent]
+  - <<: *workspace_port_symbol
+    name: createApiWorkspaceGraphSnapshotQueryPort
+    path: apps/web/src/app/services/workspace/workspacePorts.api.ts
+  - <<: *workspace_port_symbol
+    name: createApiWorkspaceFilesQueryPort
+    path: apps/web/src/app/services/workspace/workspacePorts.api.ts
+    cqRails: [ListWorkspaceFiles, GetWorkspaceFileContent]
+  - <<: *workspace_port_symbol
+    name: createApiWorkspaceDiffQueryPort
+    path: apps/web/src/app/services/workspace/workspacePorts.api.ts
+    cqRails: [GetWorkspaceDiffChanges]
+  - <<: *workspace_port_symbol
+    name: createApiWorkspacePluginCatalogQueryPort
+    path: apps/web/src/app/services/workspace/workspacePorts.api.ts
+    cqRails: [ListWorkspacePlugins]
+  - <<: *workspace_port_symbol
+    name: createApiWorkspaceAdminReadPort
+    path: apps/web/src/app/services/workspace/workspacePorts.api.ts
+    cqRails: [ListAdminRoles, ListAdminAuditLog]
+  - <<: *workspace_port_symbol
+    name: createApiWarehouseSourceImportPort
+    path: apps/web/src/app/services/workspace/workspacePorts.api.ts
+    cqRails: [ListWarehouseConnections, ListWarehouseTables, ImportWarehouseSources]
+  - <<: *workspace_port_symbol
+    name: createApiWorkspaceFileContentCommandPort
+    path: apps/web/src/app/services/workspace/workspacePorts.api.ts
+    cqRails: [SaveWorkspaceFileContent]
+  - <<: *workspace_port_symbol
+    name: mockWorkspacePortCapabilities
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+  - <<: *workspace_port_symbol
+    name: mockConnections
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+    cqRails: [ListWarehouseConnections]
+  - <<: *workspace_port_symbol
+    name: mockWarehouseTablesByConnectionId
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+    cqRails: [ListWarehouseTables]
+  - <<: *workspace_port_symbol
+    name: defaultGraphSnapshot
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+  - <<: *workspace_port_symbol
+    name: cloneGraphSnapshot
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+  - <<: *workspace_port_symbol
+    name: cloneWorkspaceFileEntries
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+  - <<: *workspace_port_symbol
+    name: cloneFileContent
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+  - <<: *workspace_port_symbol
+    name: cloneFileContents
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+  - <<: *workspace_port_symbol
+    name: ensureWorkspaceDirectoryChildren
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+  - <<: *workspace_port_symbol
+    name: MockWorkspaceState
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+  - <<: *workspace_port_symbol
+    name: createMockWorkspaceState
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+  - <<: *workspace_port_symbol
+    name: ensureWorkspaceFileEntry
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+  - <<: *workspace_port_symbol
+    name: createDefaultWorkspaceFileTree
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+  - <<: *workspace_port_symbol
+    name: toSourceNodeId
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+  - <<: *workspace_port_symbol
+    name: buildYamlFileName
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+    cqRails: [ImportWarehouseSources]
+  - <<: *workspace_port_symbol
+    name: createImportedSourceNode
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+    cqRails: [ImportWarehouseSources]
+  - <<: *workspace_port_symbol
+    name: buildImportResult
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+    cqRails: [ImportWarehouseSources]
+  - <<: *workspace_port_symbol
+    name: importMockSources
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+    cqRails: [ImportWarehouseSources]
+  - <<: *workspace_port_symbol
+    name: mockFileTree
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+  - <<: *workspace_port_symbol
+    name: defaultFileContents
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+  - <<: *workspace_port_symbol
+    name: inferLanguage
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+    cqRails: [SaveWorkspaceFileContent]
+  - <<: *workspace_port_symbol
+    name: MockWorkspacePorts
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+  - <<: *workspace_port_symbol
+    name: createMockWorkspaceGraphSnapshotQueryPort
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+  - <<: *workspace_port_symbol
+    name: createMockWorkspaceDiffQueryPort
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+    cqRails: [GetWorkspaceDiffChanges]
+  - <<: *workspace_port_symbol
+    name: createMockWorkspacePluginCatalogQueryPort
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+    cqRails: [ListWorkspacePlugins]
+  - <<: *workspace_port_symbol
+    name: createMockWorkspaceAdminReadPort
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+    cqRails: [ListAdminRoles, ListAdminAuditLog]
+  - <<: *workspace_port_symbol
+    name: createMockWarehouseSourceImportPort
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+    cqRails: [ListWarehouseConnections, ListWarehouseTables, ImportWarehouseSources]
+  - <<: *workspace_port_symbol
+    name: createMockWorkspaceFilesQueryPort
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+    cqRails: [ListWorkspaceFiles, GetWorkspaceFileContent]
+  - <<: *workspace_port_symbol
+    name: createMockWorkspaceFileContentCommandPort
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+    cqRails: [SaveWorkspaceFileContent]
+  - <<: *workspace_port_symbol
+    name: createMockWorkspacePorts
+    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
+  - <<: *workspace_port_symbol
+    name: WorkspacePortCopy
+    path: apps/web/src/app/services/workspace/workspacePortCopy.ts
+  - <<: *workspace_port_symbol
+    name: WorkspacePortLanguage
+    path: apps/web/src/app/services/workspace/workspacePortCopy.ts
+  - <<: *workspace_port_symbol
+    name: COPY_BY_KEY
+    path: apps/web/src/app/services/workspace/workspacePortCopy.ts
+  - <<: *workspace_port_symbol
+    name: LOCALIZED_COPY_BY_LANGUAGE
+    path: apps/web/src/app/services/workspace/workspacePortCopy.ts
+  - <<: *workspace_port_symbol
+    name: resolveWorkspacePortLanguage
+    path: apps/web/src/app/services/workspace/workspacePortCopy.ts
+  - <<: *workspace_port_symbol
+    name: detectWorkspacePortLocale
+    path: apps/web/src/app/services/workspace/workspacePortCopy.ts
+  - <<: *workspace_port_symbol
+    name: resolveWorkspacePortCopy
+    path: apps/web/src/app/services/workspace/workspacePortCopy.ts
+  - <<: *workspace_port_symbol
+    name: readRepoFile
+    path: apps/web/src/app/services/workspace/workspacePortDecomposition.architecture.test.ts
+  - <<: *workspace_port_symbol
+    name: ApiWorkspacePorts
+    path: apps/web/src/app/services/workspace/workspacePorts.api.test.ts
+  - <<: *workspace_port_symbol
+    name: unsupportedApiWorkspaceOperations
+    path: apps/web/src/app/services/workspace/workspacePorts.api.test.ts
+  - <<: *workspace_port_symbol
+    name: ApiWorkspacePortHarnessOptions
+    path: apps/web/src/app/services/workspace/workspaceApiClient.test.harness.ts
+  - <<: *workspace_port_symbol
+    name: createApiClientHarness
+    path: apps/web/src/app/services/workspace/workspaceApiClient.test.harness.ts
+  - <<: *workspace_port_symbol
+    name: createApiWorkspacePortHarness
+    path: apps/web/src/app/services/workspace/workspacePortsApi.test.harness.ts
+  - <<: *workspace_port_symbol
+    name: buildWorkspacePortStubs
+    path: apps/web/src/app/services/composition/appServices.test.ts
+  - <<: *workspace_port_symbol
+    name: buildWarehouseSourceImportPort
+    path: apps/web/src/app/components/SourceImportWizard.test.tsx
+    cqRails: [ListWarehouseConnections, ListWarehouseTables, ImportWarehouseSources]
+  - <<: *workspace_port_symbol
+    name: useConnectionsLoader
+    path: apps/web/src/app/components/sourceImportWizard/useSourceImportWizardDataLoaders.ts
+    cqRails: [ListWarehouseConnections]
+  - <<: *workspace_port_symbol
+    name: buildWorkspaceAdminReadPort
+    path: apps/web/src/app/views/AdminView.test.tsx
+    cqRails: [ListAdminRoles, ListAdminAuditLog]
+  - <<: *workspace_port_symbol
+    name: buildWorkspaceFilesQueryPort
+    path: apps/web/src/app/views/CodeView.test.tsx
+    cqRails: [ListWorkspaceFiles, GetWorkspaceFileContent]
+  - <<: *workspace_port_symbol
+    name: buildWorkspaceGraphSnapshotQueryPort
+    path: apps/web/src/app/views/CostView.test.tsx
+  - <<: *workspace_port_symbol
+    name: buildDiffViewWorkspacePorts
+    path: apps/web/src/app/views/DiffView.test.tsx
+    cqRails: [GetWorkspaceDiffChanges]
+  - <<: *workspace_port_symbol
+    name: buildWorkspaceGraphSnapshotQueryPort
+    path: apps/web/src/app/views/LineageView.test.tsx
+  - <<: *workspace_port_symbol
+    name: buildWorkspaceFilesQueryPort
+    path: apps/web/src/app/views/artifacts/useArtifactsViewModel.test.tsx
+    cqRails: [ListWorkspaceFiles, GetWorkspaceFileContent]
+  - <<: *workspace_port_symbol
+    name: createWorkspaceFilePortMocks
+    path: apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx
+    cqRails: [ListWorkspaceFiles, GetWorkspaceFileContent, SaveWorkspaceFileContent]
+  - <<: *workspace_port_symbol
+    name: resolveWorkspaceFilePortMocks
+    path: apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx
+    cqRails: [ListWorkspaceFiles, GetWorkspaceFileContent, SaveWorkspaceFileContent]
+  - <<: *workspace_port_symbol
+    name: ControlledExecutionActionsHookHostProps
+    path: apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx
+    cqRails: [ListWorkspaceFiles, GetWorkspaceFileContent, SaveWorkspaceFileContent]
+  - <<: *workspace_port_symbol
+    name: StatefulExecutionActionsHookHostProps
+    path: apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx
+    cqRails: [ListWorkspaceFiles, GetWorkspaceFileContent, SaveWorkspaceFileContent]
 ```
 
 ## Fowler Planning Matrix
 
-| Scenario                                                | Opportunity             | Fowler pattern              | DDD owner                                   | Command/query rail                                                          | Implementation surfaces                                    | Unit or package test             | Architecture test                                 | User-flow test                | Out of scope                               |
-| ------------------------------------------------------- | ----------------------- | --------------------------- | ------------------------------------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------- | -------------------------------- | ------------------------------------------------- | ----------------------------- | ------------------------------------------ |
-| Split graph snapshot reads from broad workspace service | Responsibility overload | Extract Interface, Gateway  | Workspace graph draft read model            | `GetWorkspaceGraphDraft`                                                    | `workspace.ts`, `workspaceService.api.ts`, graph consumers | `workspaceService.api.test.ts`   | `workspacePortDecomposition.architecture.test.ts` | Existing canvas/lineage tests | New graph backend route                    |
-| Split file reads from file writes                       | Command/query mixing    | CQRS, Gateway               | Workspace file read model                   | `ListWorkspaceFiles`, `GetWorkspaceFileContent`                             | `workspace.ts`, files service/tests, file consumers        | `workspaceService.files.test.ts` | `workspacePortDecomposition.architecture.test.ts` | Existing code/artifact tests  | `SaveWorkspaceFileContent` backend command |
-| Isolate missing diff rail                               | Hidden authority        | Fail-closed Adapter         | Workspace diff read model                   | `GetWorkspaceDiffChanges`                                                   | diff port, `DiffView`, tests                               | `DiffView.test.tsx`              | `workspacePortDecomposition.architecture.test.ts` | N/A                           | Implementing diff backend                  |
-| Isolate plugin catalog readiness                        | Hidden authority        | Gateway, Published Language | Runtime plugin catalog read model           | `ListWorkspacePlugins`                                                      | plugin catalog port, plugin view tests                     | plugin view test                 | architecture guard                                | N/A                           | Runtime plugin execution                   |
-| Isolate admin roles/audit                               | Feature envy            | Service Layer, Read Model   | Admin RBAC/audit read models                | `ListAdminRoles`, `ListAdminAuditLog`                                       | admin read port, admin view tests                          | `AdminView.test.tsx`             | architecture guard                                | N/A                           | Backend admin routes                       |
-| Fence warehouse import                                  | Mock runtime authority  | Command Gateway             | Warehouse source import command/read models | `ListWarehouseConnections`, `ListWarehouseTables`, `ImportWarehouseSources` | source import port, wizard tests                           | `SourceImportWizard.test.tsx`    | architecture guard                                | N/A                           | Backend warehouse connector                |
+| Scenario                                                | Opportunity             | Fowler pattern              | DDD owner                                   | Command/query rail                                                          | Implementation surfaces                                  | Unit or package test           | Architecture test                                 | User-flow test                | Out of scope                               |
+| ------------------------------------------------------- | ----------------------- | --------------------------- | ------------------------------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------ | ------------------------------------------------- | ----------------------------- | ------------------------------------------ |
+| Split graph snapshot reads from broad workspace service | Responsibility overload | Extract Interface, Gateway  | Workspace graph draft read model            | `GetWorkspaceGraphDraft`                                                    | `workspace.ts`, `workspacePorts.api.ts`, graph consumers | `workspacePorts.api.test.ts`   | `workspacePortDecomposition.architecture.test.ts` | Existing canvas/lineage tests | New graph backend route                    |
+| Split file reads from file writes                       | Command/query mixing    | CQRS, Gateway               | Workspace file read model                   | `ListWorkspaceFiles`, `GetWorkspaceFileContent`                             | `workspace.ts`, files service/tests, file consumers      | `workspacePorts.files.test.ts` | `workspacePortDecomposition.architecture.test.ts` | Existing code/artifact tests  | `SaveWorkspaceFileContent` backend command |
+| Isolate missing diff rail                               | Hidden authority        | Fail-closed Adapter         | Workspace diff read model                   | `GetWorkspaceDiffChanges`                                                   | diff port, `DiffView`, tests                             | `DiffView.test.tsx`            | `workspacePortDecomposition.architecture.test.ts` | N/A                           | Implementing diff backend                  |
+| Isolate plugin catalog readiness                        | Hidden authority        | Gateway, Published Language | Runtime plugin catalog read model           | `ListWorkspacePlugins`                                                      | plugin catalog port, plugin view tests                   | plugin view test               | architecture guard                                | N/A                           | Runtime plugin execution                   |
+| Isolate admin roles/audit                               | Feature envy            | Service Layer, Read Model   | Admin RBAC/audit read models                | `ListAdminRoles`, `ListAdminAuditLog`                                       | admin read port, admin view tests                        | `AdminView.test.tsx`           | architecture guard                                | N/A                           | Backend admin routes                       |
+| Fence warehouse import                                  | Mock runtime authority  | Command Gateway             | Warehouse source import command/read models | `ListWarehouseConnections`, `ListWarehouseTables`, `ImportWarehouseSources` | source import port, wizard tests                         | `SourceImportWizard.test.tsx`  | architecture guard                                | N/A                           | Backend warehouse connector                |
 
 ## File Structure
 
@@ -234,15 +526,15 @@ Create or modify:
 - `apps/web/src/app/ports/workspace.ts`
   - Keeps shared workspace DTOs.
   - Replaces `IWorkspacePort` with narrow exported interfaces.
-- `apps/web/src/app/services/workspace/workspaceService.api.ts`
+- `apps/web/src/app/services/workspace/workspacePorts.api.ts`
   - Exposes API factory methods for graph snapshot and file read ports.
   - Keeps unsupported API capabilities as fail-closed ports.
-- `apps/web/src/app/services/workspace/workspaceService.mock.ts`
+- `apps/web/src/app/services/workspace/workspacePorts.mock.ts`
   - Exposes mock/demo factories by capability.
   - Keeps demo-only behavior explicit.
-- `apps/web/src/app/services/workspace/workspaceService.ts`
-  - Becomes a compatibility composition module during migration, then retires
-    the broad factory before closeout.
+- `apps/web/src/app/services/workspace/workspacePorts.ts`
+  - Composes capability ports after the hard cut. It does not export a broad
+    workspace service or compatibility factory.
 - `apps/web/src/app/services/workspace/workspacePortDecomposition.architecture.test.ts`
   - Semantic architecture guard for narrow port ownership.
 - `apps/web/src/app/services/composition/appServices.ts`
@@ -260,7 +552,7 @@ Create or modify:
 - Create: `apps/web/src/app/services/workspace/workspacePortDecomposition.architecture.test.ts`
 - Modify: `apps/web/src/app/ports/workspace.ts`
 
-- [ ] **Step 1: Write the failing architecture test**
+- [x] **Step 1: Write the failing architecture test**
 
 ```ts
 import { readFileSync } from 'node:fs';
@@ -299,7 +591,7 @@ describe('workspace port decomposition architecture', () => {
   });
 
   it('keeps API missing rails unavailable before transport', () => {
-    const source = readRepoFile('src', 'app', 'services', 'workspace', 'workspaceService.api.ts');
+    const source = readRepoFile('src', 'app', 'services', 'workspace', 'workspacePorts.api.ts');
 
     expect(source).toContain('createApiWorkspaceDiffQueryPort');
     expect(source).toContain('createApiWorkspaceAdminReadPort');
@@ -312,7 +604,7 @@ describe('workspace port decomposition architecture', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test and verify red**
+- [x] **Step 2: Run the test and verify red**
 
 Run:
 
@@ -323,7 +615,7 @@ pnpm --filter @dvt/web exec vitest run src/app/services/workspace/workspacePortD
 Expected: FAIL because `IWorkspacePort` still exists and narrow interfaces do
 not exist.
 
-- [ ] **Step 3: Add narrow interfaces with docblocks**
+- [x] **Step 3: Add narrow interfaces with docblocks**
 
 Add owned-concern docblocks and interfaces in
 `apps/web/src/app/ports/workspace.ts`:
@@ -369,12 +661,12 @@ export interface IWorkspaceFileContentCommandPort {
 }
 ```
 
-- [ ] **Step 4: Remove `IWorkspacePort`**
+- [x] **Step 4: Remove `IWorkspacePort`**
 
 Remove the broad interface before moving consumers. Typecheck is expected to
 fail until later tasks migrate consumers.
 
-- [ ] **Step 5: Re-run the architecture test**
+- [x] **Step 5: Re-run the architecture test**
 
 Run:
 
@@ -388,11 +680,11 @@ Expected: FAIL only on API factory names until Task 2.
 
 **Files:**
 
-- Modify: `apps/web/src/app/services/workspace/workspaceService.api.ts`
-- Modify: `apps/web/src/app/services/workspace/workspaceService.api.test.ts`
-- Modify: `apps/web/src/app/services/workspace/workspaceService.ts`
+- Modify: `apps/web/src/app/services/workspace/workspacePorts.api.ts`
+- Modify: `apps/web/src/app/services/workspace/workspacePorts.api.test.ts`
+- Modify: `apps/web/src/app/services/workspace/workspacePorts.ts`
 
-- [ ] **Step 1: Refactor API factories**
+- [x] **Step 1: Refactor API factories**
 
 Create named factories:
 
@@ -438,17 +730,17 @@ export function createApiWorkspaceDiffQueryPort(): IWorkspaceDiffQueryPort {
 }
 ```
 
-- [ ] **Step 2: Update API tests to target factories**
+- [x] **Step 2: Update API tests to target factories**
 
 Update the existing route-parity tests so each unsupported operation is tested
 through the narrow factory that owns it.
 
-- [ ] **Step 3: Run API workspace tests**
+- [x] **Step 3: Run API workspace tests**
 
 Run:
 
 ```bash
-pnpm --filter @dvt/web exec vitest run src/app/services/workspace/workspaceService.api.test.ts
+pnpm --filter @dvt/web exec vitest run src/app/services/workspace/workspacePorts.api.test.ts
 ```
 
 Expected: PASS.
@@ -457,27 +749,27 @@ Expected: PASS.
 
 **Files:**
 
-- Modify: `apps/web/src/app/services/workspace/workspaceService.mock.ts`
-- Modify: `apps/web/src/app/services/workspace/workspaceService.imports.test.ts`
-- Modify: `apps/web/src/app/services/workspace/workspaceService.files.test.ts`
+- Modify: `apps/web/src/app/services/workspace/workspacePorts.mock.ts`
+- Modify: `apps/web/src/app/services/workspace/workspacePorts.imports.test.ts`
+- Modify: `apps/web/src/app/services/workspace/workspacePorts.files.test.ts`
 
-- [ ] **Step 1: Split mock factories by capability**
+- [x] **Step 1: Split mock factories by capability**
 
 Expose mock factories matching the narrow interfaces while sharing existing
 mock state where tests require it.
 
-- [ ] **Step 2: Fence demo-only semantics**
+- [x] **Step 2: Fence demo-only semantics**
 
 Keep source import, diff, admin, plugin, and file write behavior under
 capability-specific mock factories. The exported names must make demo locality
 visible in tests and composition.
 
-- [ ] **Step 3: Run mock workspace tests**
+- [x] **Step 3: Run mock workspace tests**
 
 Run:
 
 ```bash
-pnpm --filter @dvt/web exec vitest run src/app/services/workspace/workspaceService.files.test.ts src/app/services/workspace/workspaceService.imports.test.ts
+pnpm --filter @dvt/web exec vitest run src/app/services/workspace/workspacePorts.files.test.ts src/app/services/workspace/workspacePorts.imports.test.ts
 ```
 
 Expected: PASS.
@@ -491,7 +783,7 @@ Expected: PASS.
 - Modify: `apps/web/src/app/services/composition/appServices.test.ts`
 - Modify: `apps/web/src/app/services/AppServicesContext.test.tsx`
 
-- [ ] **Step 1: Replace `workspaceService` in `AppServices`**
+- [x] **Step 1: Replace `workspaceService` in `AppServices`**
 
 Expose named narrow ports:
 
@@ -505,12 +797,12 @@ readonly warehouseSourceImport: IWarehouseSourceImportPort;
 readonly workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
 ```
 
-- [ ] **Step 2: Add narrow hooks**
+- [x] **Step 2: Add narrow hooks**
 
 Add hooks such as `useWorkspaceFilesQueryPort()` and
 `useWorkspaceDiffQueryPort()` instead of `useWorkspaceService()`.
 
-- [ ] **Step 3: Run composition tests**
+- [x] **Step 3: Run composition tests**
 
 Run:
 
@@ -532,29 +824,29 @@ Expected: PASS.
 - Modify: `apps/web/src/app/views/DiffView*.tsx`
 - Modify: canvas action files that still accept `workspaceService`
 
-- [ ] **Step 1: Migrate file consumers**
+- [x] **Step 1: Migrate file consumers**
 
 Use `IWorkspaceFilesQueryPort` for code/artifacts file reads.
 
-- [ ] **Step 2: Migrate diff consumers**
+- [x] **Step 2: Migrate diff consumers**
 
 Use `IWorkspaceDiffQueryPort` for diff reads.
 
-- [ ] **Step 3: Migrate admin consumers**
+- [x] **Step 3: Migrate admin consumers**
 
 Use `IWorkspaceAdminReadPort` for roles and audit.
 
-- [ ] **Step 4: Migrate warehouse import consumers**
+- [x] **Step 4: Migrate warehouse import consumers**
 
 Use `IWarehouseSourceImportPort` for source import wizard flows.
 
-- [ ] **Step 5: Migrate file write/provenance consumers**
+- [x] **Step 5: Migrate file write/provenance consumers**
 
 Use `IWorkspaceFileContentCommandPort` only where a file write is still
 required. If API mode has no accepted backend command, preserve fail-closed
 behavior and keep the capability unavailable.
 
-- [ ] **Step 6: Run web typecheck**
+- [x] **Step 6: Run web typecheck**
 
 Run:
 
@@ -573,18 +865,18 @@ Expected: PASS.
 - Modify: `docs/architecture/components/web/workspace/workspace-port-decomposition-user-stories.md`
 - Modify: this plan
 
-- [ ] **Step 1: Mark implementation status**
+- [x] **Step 1: Mark implementation status**
 
 After code is green, set `mechanizationStatus: implemented` and update symbol
 entries for every added exported port, factory, and architecture-test helper.
 
-- [ ] **Step 2: Update drift review**
+- [x] **Step 2: Update drift review**
 
 Change the review entry for `IWorkspacePort` from open drift to remediated
 semantic decomposition, while keeping missing backend rails listed as future
 work.
 
-- [ ] **Step 3: Run generated docs sync**
+- [x] **Step 3: Run generated docs sync**
 
 Run:
 
@@ -595,13 +887,13 @@ pnpm governance:refresh
 
 Expected: generated docs and governance DB checks are stable.
 
-- [ ] **Step 4: Run closeout validation**
+- [x] **Step 4: Run closeout validation**
 
 Run:
 
 ```bash
 pnpm --filter @dvt/web exec vitest run src/app/services/workspace/workspacePortDecomposition.architecture.test.ts
-pnpm --filter @dvt/web exec vitest run src/app/services/workspace/workspaceService.api.test.ts src/app/services/workspace/workspaceService.files.test.ts src/app/services/workspace/workspaceService.imports.test.ts
+pnpm --filter @dvt/web exec vitest run src/app/services/workspace/workspacePorts.api.test.ts src/app/services/workspace/workspacePorts.files.test.ts src/app/services/workspace/workspacePorts.imports.test.ts
 pnpm --filter @dvt/web typecheck
 pnpm docs:feature-mechanization:implementation
 pnpm verify:prepush

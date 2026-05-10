@@ -5,10 +5,7 @@ import {
   projectCanvasHarnessDraftReadModel,
   resolveCanvasHarnessDraftSave,
 } from './useCanvasController.test.draftAuthoring';
-import type {
-  CanvasHarnessState,
-  MockFn,
-} from './useCanvasController.test.types';
+import type { CanvasHarnessState, MockFn } from './useCanvasController.test.types';
 import type { PlanViewModel } from '../../types/plans';
 import type { WorkspaceGraphDraftAuthoringSaveResult } from '../../ports/workspaceGraphDraftAuthoring';
 
@@ -37,11 +34,6 @@ export function configureCanvasHarnessStoreStateMocks(state: CanvasHarnessState)
 }
 
 export function configureCanvasHarnessDraftTransportMocks(state: CanvasHarnessState): void {
-  (state.services.workspaceService.getGraphSnapshot as MockFn).mockImplementation(async () => ({
-    nodes: [...state.graphData.nodes],
-    edges: [...state.graphData.edges],
-  }));
-
   (state.services.workspaceGraphDraftAuthoringPort.readGraphDraft as MockFn).mockImplementation(
     async () =>
       state.remoteDraftRecord == null
