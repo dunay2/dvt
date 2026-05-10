@@ -421,6 +421,17 @@ symbols:
     cypressCoverage: N/A - CI scope tooling only
     unitTests:
       - node --test tools/ci/package-json-scope-classification.test.mjs
+  - name: isDeterminismJobScript
+    path: tools/ci/scope-config.mjs
+    dddOwner: WorkflowModeScopeOutputs
+    cqRails:
+      - EmitWorkflowCapabilityScopes
+    fowlerSignals:
+      - Primitive obsession in package-root CI scope decisions
+    architectureGuard: node --test tools/ci/emit-scope.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-scope.test.mjs
   - name: classifyScriptPathChange
     path: tools/ci/repository-command-catalog.mjs
     dddOwner: ScriptPathChangeClass
@@ -529,6 +540,17 @@ symbols:
     fowlerSignals:
       - Duplicate scope authority between workflow paths and local gates
     architectureGuard: node --test tools/ci/emit-scope.test.mjs tools/ci/workflow-pattern-parity.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-scope.test.mjs
+  - name: packageJsonScriptChange
+    path: tools/ci/emit-scope.test.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Primitive obsession in package-root CI scope decisions
+    architectureGuard: node --test tools/ci/emit-scope.test.mjs
     cypressCoverage: N/A - CI scope tooling only
     unitTests:
       - node --test tools/ci/emit-scope.test.mjs
