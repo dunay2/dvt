@@ -1,12 +1,12 @@
 ---
-title: How to Add Tasks to an Agent Lane
+title: How to Add Tasks to the Planning DB
 status: Active
 owner: Product / Architecture / Delivery / Docs
 last_reviewed: 2026-03-31
 planning_type: guide
 ---
 
-# How to Add Tasks to an Agent Lane
+# How to Add Tasks to the Planning DB
 
 New task definitions, deletions, claims, releases, status changes, progress
 updates, evidence refs, and status reasons are local DB-first operations through
@@ -26,7 +26,7 @@ tombstones. Task closure is evidence-based:
 - `progress_pct` tracks quantity of work completed, even when status is not
   `done`.
 
-## Step 1 - Pick the right lane
+## Step 1 - Pick the right lane ID
 
 | Lane | File                | Scope                                                 |
 | ---- | ------------------- | ----------------------------------------------------- |
@@ -149,11 +149,12 @@ of tasks with status `done`.
 
 ## Step 4 - Regenerate the views
 
-For bootstrap lane changes or structural lane changes outside a single task row,
-import the lane YAML into the DB before regenerating or checking derived views:
+For bootstrap lane snapshot changes or structural lane changes outside a single
+task row, import only the planning scope into the DB before regenerating or
+checking derived views:
 
 ```bash
-pnpm planning:db:import
+pnpm planning:db:import -- --if-stale --planning-only
 ```
 
 ```bash
@@ -166,7 +167,8 @@ pnpm docs:workboard:generate
 the `open-task-route.md` `Actionable Now` section. It does not silently fall
 back to lane YAML. Use `node scripts/generate-workboard.cjs --source yaml` only
 for an explicit deterministic bootstrap/export preview. If the DB is reachable
-but stale, refresh with `pnpm planning:db:import` instead of accepting
+but stale, refresh with
+`pnpm planning:db:import -- --if-stale --planning-only` instead of accepting
 YAML-derived output.
 
 If you added, removed, or renamed documentation files under `docs/`, also run:

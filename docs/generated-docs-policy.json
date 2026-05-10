@@ -49,7 +49,7 @@
     },
     {
       "id": "planning-local-lane-views",
-      "description": "Ignored rendered lane views generated from tracked lane YAML registries.",
+      "description": "Ignored rendered lane views generated from lane bootstrap/export snapshots.",
       "artifacts": ["docs/planning/state/agent-lane-*.md"],
       "sourcePaths": [
         "scripts/generate-planning-lanes.cjs",
@@ -62,11 +62,11 @@
       "generatorCommand": "pnpm docs:planning:lanes:generate",
       "tracking": "untracked",
       "manualEditPolicy": "generator-owned",
-      "requiredMarkers": ["Generated from the verified lane registry"]
+      "requiredMarkers": ["Generated from the lane bootstrap/export snapshot"]
     },
     {
       "id": "planning-local-workboard-views",
-      "description": "Ignored planning workboard and open-task route generated from tracked lane YAML registries.",
+      "description": "Ignored planning workboard and open-task route generated from the planning DB query store.",
       "artifacts": [
         "docs/planning/state/execution-workboard.md",
         "docs/planning/state/open-task-route.md"

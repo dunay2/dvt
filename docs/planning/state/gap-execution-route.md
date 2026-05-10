@@ -24,4 +24,4 @@ current operational planning path.
 ## Retirement Rule
 
 Do not use this page to plan current work. Express new sequencing, blockers, or
-parallelism in the active roadmap, sprint boards, and lane YAMLs.
+parallelism in the active roadmap, sprint boards, and planning DB task rows.

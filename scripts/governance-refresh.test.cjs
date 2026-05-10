@@ -11,7 +11,7 @@ const {
   runGovernanceRefresh,
 } = require('./governance-refresh.cjs');
 
-test('governance refresh imports planning DB before DB-backed generated surfaces', () => {
+test('governance refresh uses stale-aware scoped DB imports before DB-backed surfaces', () => {
   const stages = buildRefreshStages();
 
   assert.deepEqual(
@@ -27,9 +27,18 @@ test('governance refresh imports planning DB before DB-backed generated surfaces
       'docs:governance:file-fingerprint-impact',
       'planning:db:import',
       'docs:workboard:generate',
+      'governance:db:import',
       'docs:governance:coverage-report',
       'docs:governance:remediation-queue',
     ]
+  );
+  assert.deepEqual(
+    stages.generationStages.find((stage) => stage.id === 'planning-db-import').args,
+    ['--', '--if-stale', '--planning-only']
+  );
+  assert.deepEqual(
+    stages.generationStages.find((stage) => stage.id === 'governance-db-import').args,
+    ['--', '--if-stale']
   );
   assert.deepEqual(stages.generationStages.find((stage) => stage.id === 'coverage-report').args, [
     '--',
@@ -52,6 +61,14 @@ test('governance refresh imports planning DB before DB-backed generated surfaces
       'governance:db:check',
       'governance:db:export:check',
     ]
+  );
+  assert.deepEqual(
+    stages.databaseStages.find((stage) => stage.id === 'planning-db-import-final').args,
+    ['--', '--if-stale', '--planning-only']
+  );
+  assert.equal(
+    stages.databaseStages.find((stage) => stage.id === 'governance-db-import-final').args,
+    undefined
   );
 });
 

@@ -11,6 +11,8 @@ const {
   governanceImportDeleteTables,
   importContent,
   normalizeText,
+  parseArgs,
+  runPlanningImport,
 } = require('./planning-db-import.cjs');
 const { governanceGeneratedPath } = require('./governance-generated-paths.cjs');
 const { schemaName } = require('./planning-db-migrate.cjs');
@@ -32,6 +34,87 @@ test('planning content snapshot preserves real lane task content and hashes', ()
       'docs/evidence/critical/ED-20260331-mvp-a1-backend-contractual-inventory.md'
     )
   );
+});
+
+test('planning DB import parses stale-aware scoped import flags', () => {
+  assert.deepEqual(
+    parseArgs([
+      '--',
+      '--if-stale',
+      '--planning-only',
+      '--database-url',
+      'postgres://example/planning',
+    ]),
+    {
+      databaseUrl: 'postgres://example/planning',
+      help: false,
+      ifStale: true,
+      includeGovernance: false,
+      includePlanning: true,
+    }
+  );
+
+  assert.throws(() => parseArgs(['--planning-only', '--governance-only']), /mutually exclusive/);
+});
+
+test('planning DB import skips all selected scopes when stale-aware checks are fresh', async () => {
+  const calls = [];
+  const logs = [];
+
+  const result = await runPlanningImport(
+    {
+      databaseUrl: 'postgres://example/planning',
+      ifStale: true,
+      includePlanning: true,
+      includeGovernance: true,
+    },
+    {
+      checkPlanningDatabase: async () => ({ ok: true }),
+      checkGovernanceDatabase: async () => ({ ok: true }),
+      importContent: async (options) => {
+        calls.push(options);
+        return { lanes: 99 };
+      },
+      logger: { log: (message) => logs.push(message) },
+    }
+  );
+
+  assert.deepEqual(calls, []);
+  assert.deepEqual(result.importedScopes, []);
+  assert.deepEqual(result.skippedScopes, ['planning', 'governance']);
+  assert.match(logs.join('\n'), /skipped fresh scopes: planning, governance/);
+});
+
+test('planning DB import only imports stale selected scopes', async () => {
+  const calls = [];
+
+  const result = await runPlanningImport(
+    {
+      databaseUrl: 'postgres://example/planning',
+      ifStale: true,
+      includePlanning: true,
+      includeGovernance: true,
+    },
+    {
+      checkPlanningDatabase: async () => ({ ok: true }),
+      checkGovernanceDatabase: async () => ({ ok: false, sections: {} }),
+      importContent: async (options) => {
+        calls.push(options);
+        return { governanceFiles: 3, governanceComponents: 2 };
+      },
+      logger: { log() {} },
+    }
+  );
+
+  assert.deepEqual(calls, [
+    {
+      databaseUrl: 'postgres://example/planning',
+      includePlanning: false,
+      includeGovernance: true,
+    },
+  ]);
+  assert.deepEqual(result.importedScopes, ['governance']);
+  assert.deepEqual(result.skippedScopes, ['planning']);
 });
 
 test('planning content snapshot normalizes dependencies and evidence refs for DB reads', () => {

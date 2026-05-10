@@ -53,6 +53,86 @@ function databaseUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
 }
 
+function parseArgs(argv = process.argv.slice(2)) {
+  const options = {
+    databaseUrl: null,
+    help: false,
+    ifStale: false,
+    includePlanning: true,
+    includeGovernance: true,
+  };
+  let planningOnly = false;
+  let governanceOnly = false;
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const token = argv[index];
+
+    if (token === '--') {
+      continue;
+    }
+
+    if (token === '--database-url') {
+      const next = argv[index + 1];
+      if (!next) {
+        throw new Error('Missing value for --database-url');
+      }
+      options.databaseUrl = next;
+      index += 1;
+      continue;
+    }
+
+    if (token === '--if-stale') {
+      options.ifStale = true;
+      continue;
+    }
+
+    if (token === '--planning-only') {
+      planningOnly = true;
+      continue;
+    }
+
+    if (token === '--governance-only') {
+      governanceOnly = true;
+      continue;
+    }
+
+    if (token === '--help' || token === '-h') {
+      options.help = true;
+      continue;
+    }
+
+    throw new Error(`Unknown planning DB import option "${token}".`);
+  }
+
+  if (planningOnly && governanceOnly) {
+    throw new Error('--planning-only and --governance-only are mutually exclusive.');
+  }
+
+  if (planningOnly) {
+    options.includePlanning = true;
+    options.includeGovernance = false;
+  }
+
+  if (governanceOnly) {
+    options.includePlanning = false;
+    options.includeGovernance = true;
+  }
+
+  return options;
+}
+
+function printHelp() {
+  console.log(
+    [
+      'Usage: pnpm planning:db:import [--if-stale] [--planning-only|--governance-only] [--database-url <url>]',
+      '',
+      '--if-stale       Skip selected scopes that already match the imported DB state.',
+      '--planning-only  Import or check only planning lane/task bootstrap rows.',
+      '--governance-only Import or check only governance/query projection rows.',
+    ].join('\n')
+  );
+}
+
 function toPosix(filePath) {
   return filePath.replace(/\\/g, '/');
 }
@@ -2046,15 +2126,103 @@ async function importContent(options = {}) {
   return result;
 }
 
-async function main() {
-  await importContent();
+async function isScopeFresh(scope, options, deps) {
+  try {
+    if (scope === 'planning') {
+      const checkPlanningDatabase =
+        deps.checkPlanningDatabase || require('./planning-db-check.cjs').checkPlanningDatabase;
+      const report = await checkPlanningDatabase({ databaseUrl: options.databaseUrl });
+      return report.ok;
+    }
+
+    if (scope === 'governance') {
+      const checkGovernanceDatabase =
+        deps.checkGovernanceDatabase ||
+        require('./governance-db-check.cjs').checkGovernanceDatabase;
+      const report = await checkGovernanceDatabase({ databaseUrl: options.databaseUrl });
+      return report.ok;
+    }
+  } catch {
+    return false;
+  }
+
+  throw new Error(`Unknown import scope "${scope}".`);
 }
 
-if (require.main === module) {
-  main().catch((error) => {
-    console.error(`[planning:db:import] ${error.message}`);
-    process.exit(1);
+async function runPlanningImport(options = {}, deps = {}) {
+  const actualDeps = {
+    importContent,
+    logger: console,
+    ...deps,
+  };
+  const selected = {
+    planning: options.includePlanning !== false,
+    governance: options.includeGovernance !== false,
+  };
+  const skippedScopes = [];
+
+  if (options.ifStale) {
+    for (const scope of ['planning', 'governance']) {
+      if (!selected[scope]) {
+        continue;
+      }
+
+      if (await isScopeFresh(scope, options, actualDeps)) {
+        selected[scope] = false;
+        skippedScopes.push(scope);
+      }
+    }
+  }
+
+  if (skippedScopes.length > 0) {
+    actualDeps.logger.log(`[planning:db:import] skipped fresh scopes: ${skippedScopes.join(', ')}`);
+  }
+
+  const importedScopes = Object.entries(selected)
+    .filter(([, enabled]) => enabled)
+    .map(([scope]) => scope);
+
+  if (importedScopes.length === 0) {
+    return {
+      lanes: 0,
+      tasks: 0,
+      governanceFiles: 0,
+      governanceComponents: 0,
+      governanceComponentFiles: 0,
+      governanceFingerprints: 0,
+      governanceCoverageRows: 0,
+      governanceRemediationTasks: 0,
+      repositoryCommands: 0,
+      prReadinessChecks: 0,
+      docsDispositionDocuments: 0,
+      docsDispositionActions: 0,
+      docsTaskLikeReferences: 0,
+      importedScopes,
+      skippedScopes,
+    };
+  }
+
+  const result = await actualDeps.importContent({
+    databaseUrl: options.databaseUrl,
+    includePlanning: selected.planning,
+    includeGovernance: selected.governance,
   });
+
+  return {
+    ...result,
+    importedScopes,
+    skippedScopes,
+  };
+}
+
+async function main() {
+  const options = parseArgs();
+  if (options.help) {
+    printHelp();
+    return;
+  }
+
+  await runPlanningImport(options);
 }
 
 module.exports = {
@@ -2073,6 +2241,15 @@ module.exports = {
   insertPrReadinessSnapshot,
   insertRepositoryCommandSnapshot,
   normalizeText,
+  parseArgs,
   readYamlSource,
+  runPlanningImport,
   sha256,
 };
+
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(`[planning:db:import] ${error.message}`);
+    process.exit(1);
+  });
+}

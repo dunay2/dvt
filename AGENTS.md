@@ -348,11 +348,22 @@ the canonical refresh sequence that makes the later gates meaningful.
 
 ## Planning State Rule
 
-Agent task assignments live in `docs/planning/state/agent-lane-*.yaml`.
+Agent task assignments, claims, releases, status changes, progress, evidence
+refs, task creation, and task deletion live in the local planning DB command
+and query rails.
+
+The `docs/planning/state/agent-lane-*.yaml` files remain bootstrap, export, and
+recovery snapshots for Git review. They are not the daily operational write
+surface for task lifecycle changes.
 
 - `execution-workboard.md` and `open-task-route.md` are **generated views** — never edit them directly.
-- To add or update a task, edit the relevant `agent-lane-X.yaml`.
-- After editing, run `pnpm docs:workboard:generate` to regenerate the views.
+- To add or update a task, use `pnpm planning:db:operate`.
+- To inspect active or next work, use `pnpm planning:db:query open`,
+  `pnpm planning:db:query tasks`, `pnpm planning:db:query next`, or
+  `pnpm planning:db:query focus`.
+- For bootstrap/export snapshot refresh only, run
+  `pnpm planning:db:import -- --if-stale --planning-only`, then
+  `pnpm docs:workboard:generate`.
 
 Lane ownership:
 
@@ -362,6 +373,7 @@ Lane ownership:
 | B    | `agent-lane-b.yaml` | Event contracts, traceability, lineage                |
 | C    | `agent-lane-c.yaml` | Runtime safety, admission control, RBAC               |
 | D    | `agent-lane-d.yaml` | Scale, retention, GTM                                 |
+| E    | `agent-lane-e.yaml` | Frontend and UI - shell, API integration, core flow   |
 
 See `docs/planning/state/how-to-add-tasks.md` for the full task format.
 

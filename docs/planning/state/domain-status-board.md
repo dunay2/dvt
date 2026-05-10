@@ -10,8 +10,10 @@ planning_type: status
 
 Operational board by domain with explicit links to task IDs and roadmap impact.
 
-For full task-level tracking use the lane YAML registry linked from
-[Planning Control Tower](./planning-control-tower.md).
+For full task-level tracking use `pnpm planning:db:query focus`,
+`pnpm planning:db:query next`, or `pnpm planning:db:query tasks`. The lane YAML
+files linked from [Planning Control Tower](./planning-control-tower.md) are
+bootstrap/export snapshots.
 
 ## Domain Board
 
