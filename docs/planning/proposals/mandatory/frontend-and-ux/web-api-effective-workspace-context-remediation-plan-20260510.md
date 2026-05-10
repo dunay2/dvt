@@ -395,6 +395,41 @@ symbols:
     cypressCoverage: N/A
     unitTests:
       - apps/web/src/app/services/session/protectedRouteSessionContext.architecture.test.ts
+  - name: AuthGateDeniedReason
+    path: apps/web/src/app/bootstrap/AuthRouteGate.tsx
+    dddOwner: Web protected route startup
+    cqRails:
+      - GetRuntimeSession
+      - GetEffectiveWorkspaceContext
+    fowlerSignals:
+      - UI must distinguish authenticated workspace denial from login failure
+    architectureGuard: pnpm --filter @dvt/web exec vitest run src/app/services/session/protectedRouteSessionContext.architecture.test.ts
+    cypressCoverage: N/A
+    unitTests:
+      - apps/web/src/app/services/session/protectedRouteSessionContext.test.ts
+  - name: classifyProtectedRouteSessionError
+    path: apps/web/src/app/bootstrap/AuthRouteGate.tsx
+    dddOwner: Web protected route startup
+    cqRails:
+      - GetRuntimeSession
+      - GetEffectiveWorkspaceContext
+    fowlerSignals:
+      - UI must distinguish authenticated workspace denial from login failure
+    architectureGuard: pnpm --filter @dvt/web exec vitest run src/app/services/session/protectedRouteSessionContext.architecture.test.ts
+    cypressCoverage: N/A
+    unitTests:
+      - apps/web/src/app/services/session/protectedRouteSessionContext.test.ts
+  - name: hasWorkspaceContextNotGrantedBody
+    path: apps/web/src/app/bootstrap/AuthRouteGate.tsx
+    dddOwner: Web protected route startup
+    cqRails:
+      - GetEffectiveWorkspaceContext
+    fowlerSignals:
+      - UI must not collapse server-owned workspace denial into local auth state
+    architectureGuard: pnpm --filter @dvt/web exec vitest run src/app/services/session/protectedRouteSessionContext.architecture.test.ts
+    cypressCoverage: N/A
+    unitTests:
+      - apps/web/src/app/services/session/protectedRouteSessionContext.test.ts
   - name: EffectiveWorkspaceContext
     path: apps/web/src/app/services/session/protectedRouteSessionContext.ts
     dddOwner: Web protected route startup
