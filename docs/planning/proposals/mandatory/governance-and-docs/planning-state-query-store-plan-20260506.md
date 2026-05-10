@@ -1497,6 +1497,9 @@ commandQueryRails:
   - name: ValidatePlanningStateDrift
     type: query
     dddOwner: PlanningStateDriftReport
+  - name: InventoryDbGovernanceSurface
+    type: query
+    dddOwner: DbGovernanceSurfaceInventory
   - name: ApplyPlanningLocalOperation
     type: command
     dddOwner: PlanningLocalOperation
@@ -1561,6 +1564,9 @@ domainObjects:
   - name: PlanningStateDriftReport
     type: read model
     owner: Docs governance
+  - name: DbGovernanceSurfaceInventory
+    type: read model
+    owner: Product / Architecture / Delivery / Docs
   - name: PlanningLocalOperation
     type: command model
     owner: Product / Architecture / Delivery / Docs
@@ -1641,6 +1647,7 @@ completionGate:
   - pnpm planning:db:reset -- --confirm-destroy-shared-planning-db
   - pnpm planning:db:operate
   - pnpm planning:db:check
+  - pnpm planning:db:inventory:check
   - pnpm governance:db:import
   - pnpm governance:db:check
   - pnpm governance:db:export
@@ -1718,6 +1725,16 @@ redGreenCycles:
       - scripts/planning-db-*.cjs
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     greenTest: pnpm planning:db:check
+  - id: db-governance-surface-inventory
+    redTest: pnpm planning:db:inventory:check
+    expectedFailure: Planning and governance DB/Git ownership surfaces are implicit and have no validated inventory.
+    patchSurfaces:
+      - package.json
+      - scripts/planning-db-*.cjs
+      - scripts/governance-refresh*.cjs
+      - docs/planning/status/**
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: pnpm planning:db:inventory:check
   - id: governance-query-store-drift-check
     redTest: pnpm governance:db:check
     expectedFailure: Drift check fails when imported Postgres state differs from Git-tracked governance state.
@@ -3252,6 +3269,96 @@ symbols:
   - <<: *planningDbDriftSymbol
     name: assert
     path: scripts/planning-db-check.test.cjs
+  - &dbGovernanceSurfaceInventorySymbol
+    name: DbGovernanceSurfaceInventoryCheck
+    path: scripts/planning-db-surface-inventory-check.cjs
+    dddOwner: DbGovernanceSurfaceInventory
+    cqRails:
+      - InventoryDbGovernanceSurface
+    fowlerSignals:
+      - Hidden query model inside YAML
+      - Hidden query model inside governance shards
+      - Manual docs disposition inventory
+    architectureGuard: pnpm planning:db:inventory:check
+    cypressCoverage: N/A - DB surface inventory has no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-surface-inventory-check.test.cjs
+      - pnpm planning:db:inventory:check
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: fs
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: path
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: repoRoot
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: defaultInventoryPath
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: requiredColumns
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: allowedMigrationStates
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: requiredSurfaces
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: splitMarkdownRow
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: isSeparatorLine
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: parseMarkdownTables
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: normalizeText
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: includesTerm
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: findSurfaceTable
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: validateInventory
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: runCli
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: test
+    path: scripts/planning-db-surface-inventory-check.test.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: assert
+    path: scripts/planning-db-surface-inventory-check.test.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: childProcess
+    path: scripts/planning-db-surface-inventory-check.test.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: fs
+    path: scripts/planning-db-surface-inventory-check.test.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: path
+    path: scripts/planning-db-surface-inventory-check.test.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: packageJson
+    path: scripts/planning-db-surface-inventory-check.test.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: repoRoot
+    path: scripts/planning-db-surface-inventory-check.test.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: inventoryPath
+    path: scripts/planning-db-surface-inventory-check.test.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: scriptPath
+    path: scripts/planning-db-surface-inventory-check.test.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: loadInventoryCheck
+    path: scripts/planning-db-surface-inventory-check.test.cjs
   - &governanceDbDriftSymbol
     name: GovernanceDbDriftCheckRunner
     path: scripts/governance-db-check.cjs
