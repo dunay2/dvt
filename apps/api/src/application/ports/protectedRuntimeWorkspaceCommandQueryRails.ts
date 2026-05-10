@@ -22,6 +22,20 @@ function buildWorkspaceFileNegativeCoverage(
 
 export const PROTECTED_RUNTIME_WORKSPACE_COMMAND_QUERY_RAILS = [
   defineProtectedRuntimeRail({
+    ...PROTECTED_RUNTIME_WORKSPACE_RAIL.getEffectiveWorkspaceContext,
+    kind: PROTECTED_RUNTIME_RAIL_KIND.query,
+    coverage: [
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingToken,
+        PROTECTED_RUNTIME_TEST_REF.workspaceContextRoute,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.workspaceContextNotGranted,
+        PROTECTED_RUNTIME_TEST_REF.workspaceContextRoute,
+      ],
+    ],
+  }),
+  defineProtectedRuntimeRail({
     ...PROTECTED_RUNTIME_WORKSPACE_RAIL.getWorkspaceGraphDraft,
     kind: PROTECTED_RUNTIME_RAIL_KIND.query,
     coverage: [

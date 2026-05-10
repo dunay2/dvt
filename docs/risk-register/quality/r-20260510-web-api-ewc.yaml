@@ -1,0 +1,21 @@
+---
+id: R-20260510-WEB-API-EWC
+title: Effective workspace context drift can reappear in protected web API mode
+status: Open
+date: 2026-05-10
+owners:
+  - apps/api
+  - apps/web
+  - packages/@dvt/engine
+severity: Low
+probability: Low
+---
+mitigation:
+  summary: >
+    ADR-0055, the effective workspace context component guide, route tests, resolver tests, and
+    semantic architecture tests now guard the session versus workspace-context split.
+  evidence:
+    - docs/evidence/ed-20260510-web-api-effective-workspace-context.md
+    - docs/adr/ADR-0055-server-owned-effective-workspace-context.md
+  follow_up:
+    - Continue splitting broad web workspace capabilities by command/query rail.

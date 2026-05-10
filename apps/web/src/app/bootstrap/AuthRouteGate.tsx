@@ -4,13 +4,43 @@ import { Navigate, useLocation } from 'react-router';
 
 import { createApiClient, type ApiError } from '../services/api/createApiClient';
 import { getRuntimeDataSourceMode } from '../services/config/runtimeDataSourceMode';
+import { resolveProtectedRouteSessionContext } from '../services/session/protectedRouteSessionContext';
 
 type AuthGateState =
   | { kind: 'checking' }
   | { kind: 'allowed' }
-  | { kind: 'denied'; reason: 'unauthenticated' | 'transport_error' };
+  | { kind: 'denied'; reason: AuthGateDeniedReason };
+
+type AuthGateDeniedReason = 'unauthenticated' | 'workspace_context_not_granted' | 'transport_error';
 
 const sessionApiClient = createApiClient();
+
+function hasWorkspaceContextNotGrantedBody(apiError: Pick<ApiError, 'responseBody'>): boolean {
+  const body = apiError.responseBody;
+  if (typeof body !== 'object' || body === null) {
+    return false;
+  }
+
+  const errorBody = (body as { readonly error?: { readonly reason?: unknown } }).error;
+  return errorBody?.reason === 'workspace_context_not_granted';
+}
+
+export function classifyProtectedRouteSessionError(error: unknown): AuthGateDeniedReason {
+  const apiError = error as Partial<ApiError>;
+  if (
+    apiError?.statusCode === 403 &&
+    apiError.endpoint === '/workspace/context' &&
+    hasWorkspaceContextNotGrantedBody(apiError as ApiError)
+  ) {
+    return 'workspace_context_not_granted';
+  }
+
+  if (apiError?.statusCode === 401 || apiError?.statusCode === 403) {
+    return 'unauthenticated';
+  }
+
+  return 'transport_error';
+}
 
 export default function AuthRouteGate({
   children,
@@ -28,10 +58,7 @@ export default function AuthRouteGate({
 
     let cancelled = false;
     setState({ kind: 'checking' });
-    sessionApiClient
-      .getJson('/session', {
-        includeSessionHeaders: false,
-      })
+    resolveProtectedRouteSessionContext(sessionApiClient)
       .then(() => {
         if (!cancelled) {
           setState({ kind: 'allowed' });
@@ -42,13 +69,7 @@ export default function AuthRouteGate({
           return;
         }
 
-        const apiError = error as ApiError;
-        if (apiError?.statusCode === 401 || apiError?.statusCode === 403) {
-          setState({ kind: 'denied', reason: 'unauthenticated' });
-          return;
-        }
-
-        setState({ kind: 'denied', reason: 'transport_error' });
+        setState({ kind: 'denied', reason: classifyProtectedRouteSessionError(error) });
       });
 
     return () => {
@@ -65,6 +86,19 @@ export default function AuthRouteGate({
   }
 
   if (state.kind === 'denied') {
+    if (state.reason === 'workspace_context_not_granted') {
+      return (
+        <div className="flex h-screen items-center justify-center bg-slate-950 px-6 text-slate-200">
+          <div className="max-w-md space-y-3 text-center" role="alert">
+            <h1 className="text-xl font-semibold text-white">Workspace access required</h1>
+            <p className="text-sm text-slate-300">
+              Your session is valid, but no workspace grant is available for this account.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     const returnTo = `${location.pathname}${location.search}${location.hash}`;
     return (
       <Navigate

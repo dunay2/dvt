@@ -11,6 +11,7 @@ import type { IPlanExecutabilityValidator } from '@dvt/planner';
 
 import type { IAuthenticator } from '../application/ports/auth.js';
 import type { IStartRunTargetAdapterRegistry } from '../application/ports/IStartRunTargetAdapterRegistry.js';
+import type { IWorkspaceContextQuery } from '../application/ports/workspaceContext.js';
 import type { IWorkspaceGraphDraftStore } from '../application/ports/workspaceGraphDraft.js';
 import type { AuthorizeCommandScopeService } from '../application/services/authorizeCommandScopeService.js';
 import type { AuthorizeWorkspaceGraphDraftCapabilityService } from '../application/services/authorizeWorkspaceGraphDraftCapabilityService.js';
@@ -24,6 +25,7 @@ export interface ProtectedRuntimeModule {
   facade: StartRunAuthorizedFacade;
   authenticator: IAuthenticator;
   authorizer: AuthorizeCommandScopeService;
+  workspaceContextQuery: IWorkspaceContextQuery;
   engine: IWorkflowEngine;
   runEnrichmentService: IRunEnrichmentService;
   runHealthService: IRunHealthService;

@@ -11,6 +11,7 @@ import { registerProtectedAdminRouteGroup } from './protectedRuntimeAdminRouteGr
 import { registerProtectedPlanRoutes } from './protectedRuntimePlanRoutes.js';
 import { buildProtectedRuntimeRouteDependencies } from './protectedRuntimeRouteDependencies.js';
 import { registerProtectedRunRoutes } from './protectedRuntimeRunRoutes.js';
+import { registerProtectedWorkspaceContextRouteGroup } from './protectedRuntimeWorkspaceContextRouteGroup.js';
 import { registerProtectedWorkspaceGraphDraftRouteGroup } from './protectedRuntimeWorkspaceGraphDraftRouteGroup.js';
 import { PROTECTED_RUNTIME_ROUTE_SUMMARY } from './runtimeRoutes.constants.js';
 import { registerProtectedWorkspaceFilesRouteGroup } from './workspaceFilesRouteGroup.js';
@@ -29,6 +30,7 @@ export async function registerProtectedRuntimeRoutes(
   const dependencies = buildProtectedRuntimeRouteDependencies(options);
 
   registerProtectedPlanRoutes(app, env, protectedModule, dependencies);
+  registerProtectedWorkspaceContextRouteGroup(app, env, protectedModule);
   registerProtectedWorkspaceGraphDraftRouteGroup(app, observability, protectedModule, dependencies);
   registerProtectedWorkspaceFilesRouteGroup(app, { env, runtimeAuth: dependencies.runtimeAuth });
   registerProtectedRunRoutes(app, env, protectedModule, dependencies);

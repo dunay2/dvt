@@ -1,5 +1,7 @@
 import type { IStoredPlanArtifactReader, StoredPlanArtifact } from '@dvt/artifacts';
 import {
+  asIsoUtcString,
+  asNonBlankString,
   CURRENT_SIGNAL_SEMANTICS_VERSION,
   type EngineRunRef,
   type ExecutionPlan,
@@ -112,7 +114,7 @@ export function createWorkflowEngineFixture(
   const intentStore = input?.intentStore ?? new InMemoryStartRunIntentStore();
   const projector = input?.projector ?? new SnapshotProjector();
   const idempotency = input?.idempotency ?? new IdempotencyKeyBuilder();
-  const clock = input?.clock ?? new SequenceClock('2026-02-12T00:00:00.000Z');
+  const clock = input?.clock ?? new SequenceClock(asIsoUtcString('2026-02-12T00:00:00.000Z'));
   const observability = input?.observability ?? createNoopObservability();
   const adapters =
     input?.adapters ??
@@ -191,7 +193,9 @@ export function createWorkflowEngineFixture(
   const engine = buildWorkflowEngineFacade({
     ...workflowUseCases,
     adapters,
-    requiredProviders: input?.requiredProviders,
+    ...(input?.requiredProviders === undefined
+      ? {}
+      : { requiredProviders: input.requiredProviders }),
   }) as WorkflowEngine;
 
   return {
@@ -213,11 +217,11 @@ export function makePlanRefForPlan(
 ): PlanRef {
   const bytes = Buffer.from(JSON.stringify(plan), 'utf8');
   return {
-    uri,
-    sha256: sha256Hex(bytes),
-    schemaVersion: plan.metadata.schemaVersion,
-    planId: plan.metadata.planId,
-    planVersion: plan.metadata.planVersion,
+    uri: asNonBlankString(uri),
+    sha256: asNonBlankString(sha256Hex(bytes)),
+    schemaVersion: asNonBlankString(plan.metadata.schemaVersion),
+    planId: asNonBlankString(plan.metadata.planId),
+    planVersion: asNonBlankString(plan.metadata.planVersion),
     sizeBytes: bytes.byteLength,
   };
 }
@@ -304,7 +308,7 @@ export function createWorkflowEngineCoreFixture(input?: {
   const stateStoreWrite = input?.stateStoreWrite ?? store;
   const projector = input?.projector ?? new SnapshotProjector();
   const idempotency = input?.idempotency ?? new IdempotencyKeyBuilder();
-  const clock = input?.clock ?? new SequenceClock('2026-03-26T00:00:00.000Z');
+  const clock = input?.clock ?? new SequenceClock(asIsoUtcString('2026-03-26T00:00:00.000Z'));
   const adapter = input?.adapter ?? makeTemporalAdapter(input?.adapterOverrides);
   const adapters = makeProviderMap(adapter);
   const policy = new RunAccessPolicy({

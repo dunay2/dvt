@@ -1,7 +1,6 @@
 /** Owned concern: adapt the workspace service port to protected API read-model projections. */
 import { parseWorkspaceGraphDraftReadResponse } from '@dvt/contracts';
 
-import type { AuditLogEntry, DiffChange, Plugin, Role } from '../../types/dbt';
 import type {
   FileContent,
   IWorkspacePort,
@@ -10,7 +9,12 @@ import type {
 } from '../../ports/workspace';
 import { ApiError, type ApiClient } from '../api/createApiClient';
 import { detectWorkspaceServiceLocale, resolveWorkspaceServiceCopy } from './workspaceServiceCopy';
-import { WorkspaceFileLoadError } from './workspaceErrors';
+import {
+  WorkspaceApiCapabilityUnsupportedError,
+  WorkspaceFileLoadError,
+  type WorkspaceApiUnsupportedCapability,
+  type WorkspaceApiUnsupportedRail,
+} from './workspaceErrors';
 import {
   buildWorkspaceFileContentEndpoint,
   buildWorkspaceFilesEndpoint,
@@ -62,13 +66,24 @@ async function getWorkspaceGraphSnapshot(apiClient: ApiClient): Promise<Workspac
   );
 }
 
+function rejectUnsupportedApiWorkspaceCapability(
+  capability: WorkspaceApiUnsupportedCapability,
+  rail: WorkspaceApiUnsupportedRail
+): Promise<never> {
+  return Promise.reject(new WorkspaceApiCapabilityUnsupportedError(capability, rail));
+}
+
 export function createApiWorkspaceService(apiClient: ApiClient): IWorkspacePort {
   return {
     getGraphSnapshot: () => getWorkspaceGraphSnapshot(apiClient),
-    getDiffChanges: () => apiClient.getJson<DiffChange[]>('/diff/changes'),
-    getPlugins: () => apiClient.getJson<Plugin[]>('/plugins'),
-    getRoles: () => apiClient.getJson<Role[]>('/admin/roles'),
-    getAuditLog: () => apiClient.getJson<AuditLogEntry[]>('/admin/audit'),
+    getDiffChanges: () =>
+      rejectUnsupportedApiWorkspaceCapability('workspace.diffChanges', 'GetWorkspaceDiffChanges'),
+    getPlugins: () =>
+      rejectUnsupportedApiWorkspaceCapability('workspace.plugins', 'ListWorkspacePlugins'),
+    getRoles: () =>
+      rejectUnsupportedApiWorkspaceCapability('workspace.adminRoles', 'ListAdminRoles'),
+    getAuditLog: () =>
+      rejectUnsupportedApiWorkspaceCapability('workspace.adminAuditLog', 'ListAdminAuditLog'),
     listWarehouseConnections: async () => {
       throw new Error(
         resolveWorkspaceServiceCopy(detectWorkspaceServiceLocale())
@@ -104,10 +119,7 @@ export function createApiWorkspaceService(apiClient: ApiClient): IWorkspacePort 
         throw error;
       }
     },
-    saveFileContent: (path, content) =>
-      apiClient.postJson<{ content: string }, FileContent>(
-        `/workspace/files/${encodeURIComponent(path)}`,
-        { content }
-      ),
+    saveFileContent: () =>
+      rejectUnsupportedApiWorkspaceCapability('workspace.fileWrite', 'SaveWorkspaceFileContent'),
   };
 }

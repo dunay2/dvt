@@ -106,6 +106,7 @@ export async function buildProtectedRuntimeModule(
     facade: startRunRuntime.facade,
     authenticator: securityRuntime.authenticator,
     authorizer: securityRuntime.commandAuthorizer,
+    workspaceContextQuery: securityRuntime.workspaceContextQuery,
     engine: executionRuntime.engine,
     runEnrichmentService: executionRuntime.runEnrichmentService,
     runHealthService: executionRuntime.runHealthService,

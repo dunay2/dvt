@@ -8,6 +8,7 @@ import type { IAccessDecisionService } from '../../application/ports/accessDecis
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import { StructuredAuditLogger } from '../../infrastructure/audit/structuredAuditLogger.js';
 import { EmbeddedAccessDecisionService } from '../../infrastructure/auth/embeddedAccessDecisionService.js';
+import { EmbeddedWorkspaceContextQuery } from '../../infrastructure/auth/embeddedWorkspaceContextQuery.js';
 import { JwksJwtVerifier } from '../../infrastructure/auth/jwksJwtVerifier.js';
 import { OidcAuthenticator } from '../../infrastructure/auth/oidcAuthenticator.js';
 import type { Env } from '../../plugins/env.js';
@@ -22,6 +23,7 @@ export type BuildProtectedSecurityRuntimeDeps = {
 
 export type ProtectedSecurityRuntime = {
   readonly accessDecisionService: IAccessDecisionService;
+  readonly workspaceContextQuery: EmbeddedWorkspaceContextQuery;
   readonly migrateAccessDecisionService: () => Promise<void>;
   readonly commandAuthorizer: AuthorizeCommandScopeService;
   readonly authenticator: OidcAuthenticator;
@@ -31,6 +33,10 @@ export function buildProtectedSecurityRuntime(
   deps: BuildProtectedSecurityRuntimeDeps
 ): ProtectedSecurityRuntime {
   const embeddedAccessDecisionService = new EmbeddedAccessDecisionService(
+    deps.pool,
+    deps.env.DVT_PG_SCHEMA
+  );
+  const workspaceContextQuery = new EmbeddedWorkspaceContextQuery(
     deps.pool,
     deps.env.DVT_PG_SCHEMA
   );
@@ -51,6 +57,7 @@ export function buildProtectedSecurityRuntime(
 
   return {
     accessDecisionService: embeddedAccessDecisionService,
+    workspaceContextQuery,
     migrateAccessDecisionService: () => embeddedAccessDecisionService.migrate(),
     commandAuthorizer,
     authenticator,

@@ -48,6 +48,11 @@ export function describeRegisterOperationalHooksCases(): void {
         planStore: {} as never,
         planValidator: {} as never,
         executablePlanResolver: { fetch: async () => ({}) } as never,
+        workspaceContextQuery: {
+          async getEffectiveWorkspaceContext() {
+            return null;
+          },
+        },
         workspaceGraphDraftStore: {
           async migrate() {},
           async close() {},
