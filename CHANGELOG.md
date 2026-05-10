@@ -1,5 +1,37 @@
 # Changelog
 
+## [5.22.0](https://github.com/dunay2/dvt/compare/v5.21.0...v5.22.0) (2026-05-10)
+
+
+### Features
+
+* **adapters:** Add tenant-aware outbox shard assignment ([c5e7a76](https://github.com/dunay2/dvt/commit/c5e7a760d4434296b1b1da1b21b119ac9ab54724))
+* **ci:** Add governed changed-slice closeout helper ([0b2380d](https://github.com/dunay2/dvt/commit/0b2380d0e7992661dffe5ed58e30349f86896515))
+* **docs:** Add DB-backed PR readiness projection ([66c958a](https://github.com/dunay2/dvt/commit/66c958a84bf44bef2364fada36e49daa0bce9f0a))
+* **docs:** Add DB-backed repository command catalog ([#1147](https://github.com/dunay2/dvt/issues/1147)) ([fd7d012](https://github.com/dunay2/dvt/commit/fd7d012d483b72cf3e17f69cab30af4ee5bca157))
+* **docs:** Add docs disposition query queue ([#1152](https://github.com/dunay2/dvt/issues/1152)) ([755f59f](https://github.com/dunay2/dvt/commit/755f59f9a85603ac16e2d5c475d6ca3e139dc402))
+* **docs:** Add planning query store operations ([195906f](https://github.com/dunay2/dvt/commit/195906f0259907f6c8f241d2abae2eabcc1ace8e))
+* **docs:** Add task provenance ledger query ([ac3fd82](https://github.com/dunay2/dvt/commit/ac3fd8280179f06a6be04c25e91efcd5cc160bdc))
+* **docs:** Make planning DB the canonical source ([919048b](https://github.com/dunay2/dvt/commit/919048b8ce9adc24f344741709be8a326cf524e0))
+* **planner:** Add DB-first planning task queries ([e414749](https://github.com/dunay2/dvt/commit/e4147497aabb9a58d1839c702ddaa9f244e172d7))
+* **planner:** Add planning governance query store ([c9d47ac](https://github.com/dunay2/dvt/commit/c9d47ac09845b4b7e06130bf21cb5f1385ed3adc))
+* **planner:** Move governance import to DB-first snapshots ([3bc4540](https://github.com/dunay2/dvt/commit/3bc45401e6f76326c241d6ffddc1adbd623b5bb2))
+* **planner:** Move governance reports to DB views ([cc8058a](https://github.com/dunay2/dvt/commit/cc8058a94ba3e595b59d8ba03487fe3f0213ef44))
+* **planner:** Move workboard routing to DB task views ([255a9f6](https://github.com/dunay2/dvt/commit/255a9f640305a8f846519125beb78154df9f5ce7))
+* **web:** Add server-owned workspace context rail ([#1146](https://github.com/dunay2/dvt/issues/1146)) ([70786c5](https://github.com/dunay2/dvt/commit/70786c5f93672f7c12b7ddde88bfd0159f0da45a))
+* **web:** Render Canvas tabs as text-only labels ([647599f](https://github.com/dunay2/dvt/commit/647599fbf3a022279458dcf4a12de55cd62ef084))
+* **web:** Render shell context as read-only badge ([3d11b4e](https://github.com/dunay2/dvt/commit/3d11b4e9b6b6269637cafde5aa5e38b6ce0ebd0f))
+
+
+### Bug Fixes
+
+* **ci:** Check staged whitespace in closeout helper ([968b68c](https://github.com/dunay2/dvt/commit/968b68c8d3e8d55b8e2744742b76ebd179b4d79e))
+* **ci:** Route workflow scopes through semantic emitter ([c1acc3e](https://github.com/dunay2/dvt/commit/c1acc3e5362cc45ba94b2ecc2da80e939df2236f))
+* **engine:** Expose outbox sharding facade ([f25d7ca](https://github.com/dunay2/dvt/commit/f25d7ca093e8d71b3d308f373b24d61b307db589))
+* **web:** Correct runs domain semantic encapsulation ([eeaa42a](https://github.com/dunay2/dvt/commit/eeaa42ab1bd532d8b491b270a34ccf6f5551d0ac))
+* **web:** Harden Canvas autosave and localized chrome ([0e784c4](https://github.com/dunay2/dvt/commit/0e784c472a26c392063f16a4cc36010a6f2dbe6f))
+* **web:** Make shell workspace context read-only ([4a7c65c](https://github.com/dunay2/dvt/commit/4a7c65cc17a4d6d81e794d28455b2224dcc42ee4))
+
 ## [5.21.0](https://github.com/dunay2/dvt/compare/v5.20.0...v5.21.0) (2026-05-05)
 
 

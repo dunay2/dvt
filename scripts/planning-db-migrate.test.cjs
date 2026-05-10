@@ -386,3 +386,40 @@ test('tracked migrations include task provenance ledger after W19', () => {
   assert.match(taskProvenanceMigration.sql, /doc_task_reference_query/);
   assert.match(taskProvenanceMigration.sql, /doc_disposition_action_query/);
 });
+
+test('tracked migrations include planning work intake focus query after W20', () => {
+  const migrations = readMigrationFiles();
+  const workIntakeMigration = migrations.find(
+    (migration) => migration.fileName === '019_planning_work_intake_query.sql'
+  );
+
+  assert.ok(workIntakeMigration);
+  assert.match(
+    workIntakeMigration.sql,
+    /create or replace view planning_query_store\.planning_work_intake_query/
+  );
+  assert.match(workIntakeMigration.sql, /planning_next_tasks/);
+  assert.match(workIntakeMigration.sql, /planning_task_gap_query/);
+  assert.match(workIntakeMigration.sql, /doc_disposition_action_query/);
+  assert.match(workIntakeMigration.sql, /governance_remediation_query/);
+  assert.match(workIntakeMigration.sql, /pr_readiness_query/);
+  assert.match(workIntakeMigration.sql, /intake_kind/);
+  assert.match(workIntakeMigration.sql, /suggested_query/);
+});
+
+test('tracked migrations quote focus suggested query arguments after W20 hardening', () => {
+  const migrations = readMigrationFiles();
+  const workIntakeHardeningMigration = migrations.find(
+    (migration) => migration.fileName === '020_planning_work_intake_query_suggestions.sql'
+  );
+
+  assert.ok(workIntakeHardeningMigration);
+  assert.match(
+    workIntakeHardeningMigration.sql,
+    /create or replace view planning_query_store\.planning_work_intake_query/
+  );
+  assert.match(workIntakeHardeningMigration.sql, /quote_literal\(task\.task_id\)/);
+  assert.match(workIntakeHardeningMigration.sql, /quote_literal\(gap\.task_id\)/);
+  assert.match(workIntakeHardeningMigration.sql, /quote_literal\(gap\.document_path\)/);
+  assert.match(workIntakeHardeningMigration.sql, /quote_literal\(action\.document_path\)/);
+});

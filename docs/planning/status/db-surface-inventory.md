@@ -1,0 +1,60 @@
+---
+title: DB Surface Inventory
+status: Active
+owner: Product / Architecture / Delivery / Docs
+last_reviewed: 2026-05-10
+planning_type: status
+---
+
+# DB Surface Inventory
+
+## Purpose
+
+This inventory makes the planning and governance DB boundary explicit. It names
+which surfaces are DB-owned, which remain Git-owned, and which are generated
+projections, so scripts do not force file edits where a command or query rail
+already exists.
+
+## Governing Sources
+
+- `AGENTS.md`
+- `docs/planning/status/governance-document-rule-inventory.md`
+- `docs/guides/ai-work-protocol.md`
+- `docs/planning/state/planning-control-tower.md`
+- `docs/architecture/command-query-rail-governance.md`
+- `scripts/planning-db-*.cjs`
+- `scripts/governance-db-*.cjs`
+- `scripts/governance-refresh.cjs`
+
+## Command And Query Rail
+
+- Rail name: `InventoryDbGovernanceSurface`
+- Type: Query
+- Owning context: Planning and governance local operations
+- DDD object/read model: DB surface inventory read model
+- Application port: `pnpm planning:db:inventory:check`
+- Adapter surface: `scripts/planning-db-surface-inventory-check.cjs`
+- Scope and auth: repo-local, read-only maintainer and CI check
+- Negative tests: missing inventory, missing required surface, missing rail
+  columns, invalid migration state row
+
+## Surface Inventory
+
+| Surface                         | Canonical source                                                                                                                   | Write rail                                                                                 | Read/query rail                                                                                                       | Projection                                                                             | Validation                                                                                             | Migration state   |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ----------------- |
+| Planning task lifecycle         | `planning_query_store` effective task rows after import; `docs/planning/state/agent-lane-*.yaml` is bootstrap/export compatibility | `pnpm planning:db:operate`                                                                 | `pnpm planning:db:query tasks`, `pnpm planning:db:query next`, `pnpm planning:db:query open`                          | `docs/planning/state/execution-workboard.md`, `docs/planning/state/open-task-route.md` | `pnpm planning:db:check`, `pnpm planning:db:export:check`, `pnpm docs:workboard:check`                 | DB-first          |
+| Planning lane registry          | `docs/planning/state/agent-lane-*.yaml` for lane taxonomy and reviewable export                                                    | Git edit to lane YAML for taxonomy changes, then `pnpm planning:db:import`                 | `pnpm planning:db:query summary`, `pnpm planning:db:query tasks --lane <id>`                                          | DB lane rows and exported lane YAML                                                    | `pnpm planning:db:check`, `pnpm planning:db:export:check`                                              | Bootstrap/export  |
+| Workboard and open task route   | DB effective planning views produced by `planning:db:import`                                                                       | No direct file write; use task lifecycle or lane registry rails                            | `pnpm planning:db:query next`, generator source `db`                                                                  | `docs/planning/state/execution-workboard.md`, `docs/planning/state/open-task-route.md` | `pnpm docs:workboard:check`, `pnpm planning:db:export:check`                                           | Generated-only    |
+| Governance file inventory       | Git tracked docs and source files imported into governance DB tables                                                               | Git edit to governed source, then `pnpm governance:refresh` or `pnpm governance:db:import` | `pnpm governance:db:query files`, `pnpm governance:db:query components`, `pnpm governance:db:query drift`             | `docs/.manifest.json`, `docs/planning/status/system-governance-unit-index-20260501.md` | `pnpm governance:db:check`, `pnpm governance:db:export:check`                                          | Hybrid indexed    |
+| Governance remediation queue    | Governance DB coverage and fingerprint reports after refresh                                                                       | Fix owning docs, config, code, or scripts; then `pnpm governance:refresh`                  | `pnpm governance:db:query remediation`, `pnpm governance:db:query coverage`                                           | Governance coverage and remediation generated reports                                  | `pnpm docs:governance:coverage-report:check`, `pnpm docs:governance:remediation-queue:check`           | Generated-only    |
+| ADR and contract decisions      | `docs/adr/**`, `docs/contracts/**`, and `specs/contracts/**`                                                                       | Git edit through ADR or contract review flow                                               | `pnpm governance:db:query files --prefix docs/adr`, `pnpm governance:db:query files --prefix specs/contracts`         | Docs indexes and governance file inventory                                             | `pnpm docs:sync:check`, `pnpm contracts:index:check`, `pnpm docs:arc:evidence:check -- --changed-only` | Git-first indexed |
+| Risk and evidence records       | `docs/evidence/**` and `docs/risk-register/**`                                                                                     | Git edit through ARC evidence and risk register rules                                      | `pnpm governance:db:query files --prefix docs/evidence`, `pnpm governance:db:query files --prefix docs/risk-register` | `docs/evidence/index.md`, `docs/risk-register/index.md`, risk category indexes         | `pnpm docs:sync:check`, `pnpm docs:arc:evidence:check -- --changed-only`                               | Git-first indexed |
+| Repository command catalog      | `tools/ci/repository-command-catalog.mjs` imported into planning DB command rows                                                   | Git edit to command catalog or workflow source                                             | `pnpm planning:db:query commands`, `pnpm planning:db:query pr-readiness`                                              | Repository command and PR-readiness query output                                       | `pnpm test:ci-tools`, `pnpm docs:feature-mechanization:implementation`                                 | Hybrid indexed    |
+| Docs task disposition inventory | `docs/planning/status/docs-task-disposition-inventory-20260510.md` and related planning status docs                                | Git edit to disposition inventory, then `pnpm governance:refresh`                          | `pnpm planning:db:query docs-disposition`, `pnpm planning:db:query task-references`                                   | Disposition query rows and task-reference reports                                      | `pnpm governance:db:check`, `pnpm docs:governance:changed-files:check`                                 | Git-first indexed |
+
+## Operating Rule
+
+DB-first rows must be changed through their command rail and read through their
+query rail. Generated-only rows must not be edited directly. Git-first indexed
+rows remain reviewable source documents, but their query behavior must be
+validated by the DB import/export checks before closeout.

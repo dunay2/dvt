@@ -70,6 +70,10 @@ function buildRefreshStages() {
         script: 'planning:db:check',
       },
       {
+        id: 'planning-db-inventory-check',
+        script: 'planning:db:inventory:check',
+      },
+      {
         id: 'planning-db-export-check',
         script: 'planning:db:export:check',
       },

@@ -1223,10 +1223,13 @@ Current implementation status on 2026-05-08:
   DB rows, then `planning:db:query docs-disposition` and
   `planning:db:query task-references` expose the triage queue without turning
   the status inventory into a parallel workboard;
-- W19 is active: the next planning-query slice adds a task provenance ledger
-  over existing planning, document-disposition, dependency, and evidence rows so
-  agents can ask which reviews, proposals, closeouts, evidence refs, and
-  unresolved gaps explain a task before selecting or closing work;
+- W19 is implemented: `planning:db:query task-trace` and
+  `planning:db:query task-gaps` expose the task provenance ledger over existing
+  planning, document-disposition, dependency, and evidence rows;
+- W20 is active: the next planning-query slice adds a work-intake focus query
+  over next tasks, task provenance gaps, docs disposition actions, governance
+  remediation, and PR readiness blockers so agents can ask what to work on next
+  and why without opening every specialized queue first;
 - the obsolete `governance:artifacts:generate` package alias is removed;
   `pnpm governance:refresh` is the single local orchestration command for
   generated inspection artifacts plus planning/governance DB import and checks;
@@ -1355,6 +1358,56 @@ W19 does not change task status, create tasks, archive reviews, promote
 proposals, or infer closure. It only makes the relationships visible enough for
 the next work selection or closeout decision to be evidence-led.
 
+## W20 Work Intake Focus Query Design
+
+The planning DB now has narrow query queues for next executable tasks, docs
+disposition, task provenance gaps, governance remediation, and PR readiness.
+That improves precision, but work selection still requires an operator to run
+several commands and mentally rank the results.
+
+W20 derives a single DB-owned work-intake read model from existing query views.
+It does not replace the specialized queues; it routes operators to them. The
+view joins no mutable state and writes no task status. It only ranks already
+imported rows by priority and source kind.
+
+Target state:
+
+```mermaid
+flowchart LR
+  Next["planning_next_tasks"] --> Intake["planning_work_intake_query"]
+  Gaps["planning_task_gap_query"] --> Intake
+  Docs["doc_disposition_action_query"] --> Intake
+  Remediation["governance_remediation_query"] --> Intake
+  Readiness["pr_readiness_query"] --> Intake
+  Intake --> Focus["planning:db:query focus --limit 20"]
+  Intake --> FocusKind["planning:db:query focus --kind task_gap"]
+```
+
+`QueryPlanningWorkIntake` owns this operator query. The output contract is:
+
+- `rank_score`: stable numeric ordering across sources;
+- `priority`: planning priority label normalized from the source row;
+- `intake_kind`: one of `next_task`, `task_gap`, `docs_disposition`,
+  `governance_remediation`, or `pr_readiness`;
+- `item_id`: stable source-row identifier for deduplication and review;
+- `lane_id` and `task_id` when the row is task-scoped;
+- `document_path` or `source_path` when the row is document-scoped;
+- `title`: compact human label;
+- `reason`: why the row is actionable;
+- `suggested_query`: the next specialized query to inspect the item;
+- `source_view`: the DB view that owns the detailed semantics.
+
+Ordering is intentionally conservative: P0/P1 blockers sort first, PR readiness
+blockers are included only when blocking, and specialized source queries remain
+the authority for details. The CLI exposes `--kind`, `--lane`, `--priority`,
+`--task`, `--path`, and `--limit` filters so agents can focus without adding
+parallel queue names.
+
+W20 does not create tasks, resolve docs disposition actions, change ARC
+readiness, or infer task closure. It accelerates intake by making the first
+question DB-answerable: what deserves attention next, and which canonical query
+explains it?
+
 ## Failure Modes And Guardrails
 
 | Failure mode                              | Guardrail                                                     |
@@ -1372,6 +1425,7 @@ the next work selection or closeout decision to be evidence-led.
 | PR readiness blockers are hidden in CI    | ARC/readiness blockers are queryable in `pr_readiness_checks` |
 | Docs disposition stays manual and stale   | Docs disposition queues are imported and queryable in the DB  |
 | Task provenance stays manual and stale    | Task trace and task gap queues are derived in DB query views  |
+| Work intake stays split across queues     | Focus query ranks existing DB queues without creating writes  |
 | DB treated as hidden repository authority | No committed database files; export must remain reviewable    |
 | GitHub mirror edits bypass PR review      | Mirror is read-only or imports as reviewed repo changes first |
 
@@ -1409,6 +1463,9 @@ docs-disposition` and `planning:db:query task-references` without treating a
 <TASK_ID>` and task-governance gaps can be inspected through
   `planning:db:query task-gaps` without rereading every lane, review, proposal,
   and closeout file by hand.
+- Work intake can be inspected through `planning:db:query focus --limit 20`,
+  with source-kind filters, without manually running every planning,
+  documentation, governance, and PR-readiness queue first.
 - The governance refresh sequence is executable through one local command and
   fails closed if generated output does not stabilize before DB import/check.
 
@@ -1497,6 +1554,9 @@ commandQueryRails:
   - name: ValidatePlanningStateDrift
     type: query
     dddOwner: PlanningStateDriftReport
+  - name: InventoryDbGovernanceSurface
+    type: query
+    dddOwner: DbGovernanceSurfaceInventory
   - name: ApplyPlanningLocalOperation
     type: command
     dddOwner: PlanningLocalOperation
@@ -1533,6 +1593,9 @@ commandQueryRails:
   - name: QueryTaskProvenanceLedger
     type: query
     dddOwner: TaskProvenanceLedger
+  - name: QueryPlanningWorkIntake
+    type: query
+    dddOwner: PlanningWorkIntakeReadModel
   - name: ExportGovernanceStateSnapshot
     type: command
     dddOwner: GovernanceStateExport
@@ -1561,6 +1624,9 @@ domainObjects:
   - name: PlanningStateDriftReport
     type: read model
     owner: Docs governance
+  - name: DbGovernanceSurfaceInventory
+    type: read model
+    owner: Product / Architecture / Delivery / Docs
   - name: PlanningLocalOperation
     type: command model
     owner: Product / Architecture / Delivery / Docs
@@ -1594,6 +1660,9 @@ domainObjects:
   - name: TaskProvenanceLedger
     type: read model
     owner: Product / Architecture / Delivery / Docs
+  - name: PlanningWorkIntakeReadModel
+    type: read model
+    owner: Product / Architecture / Delivery / Docs
   - name: GovernanceStateExport
     type: command model
     owner: Docs governance
@@ -1616,6 +1685,7 @@ fowlerSignals:
   - Hidden query model inside governance shards
   - Manual docs disposition inventory
   - Manual task provenance reconstruction
+  - Manual work intake reconstruction
   - Mutable external tracker authority risk
 architectureGuards:
   - pnpm test:governance:refresh
@@ -1635,12 +1705,14 @@ completionGate:
   - pnpm planning:db:query
   - pnpm planning:db:query task-trace --task F-28-C
   - pnpm planning:db:query task-gaps --limit 10
+  - pnpm planning:db:query focus --limit 10
   - pnpm planning:db:query hash-drift
   - pnpm planning:db:export
   - pnpm planning:db:export:check
   - pnpm planning:db:reset -- --confirm-destroy-shared-planning-db
   - pnpm planning:db:operate
   - pnpm planning:db:check
+  - pnpm planning:db:inventory:check
   - pnpm governance:db:import
   - pnpm governance:db:check
   - pnpm governance:db:export
@@ -1718,6 +1790,16 @@ redGreenCycles:
       - scripts/planning-db-*.cjs
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     greenTest: pnpm planning:db:check
+  - id: db-governance-surface-inventory
+    redTest: pnpm planning:db:inventory:check
+    expectedFailure: Planning and governance DB/Git ownership surfaces are implicit and have no validated inventory.
+    patchSurfaces:
+      - package.json
+      - scripts/planning-db-*.cjs
+      - scripts/governance-refresh*.cjs
+      - docs/planning/status/**
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: pnpm planning:db:inventory:check
   - id: governance-query-store-drift-check
     redTest: pnpm governance:db:check
     expectedFailure: Drift check fails when imported Postgres state differs from Git-tracked governance state.
@@ -1872,6 +1954,14 @@ redGreenCycles:
       - scripts/planning-db-*.cjs
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+  - id: planning-db-work-intake-focus-query
+    redTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+    expectedFailure: Work selection still requires manually running next-task, task-gap, docs-disposition, governance-remediation, and PR-readiness queues because no DB-owned planning_work_intake_query view or planning:db:query focus adapter exists.
+    patchSurfaces:
+      - tools/planning-db/**
+      - scripts/planning-db-*.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
 symbols:
   - name: PlanningAndGovernanceQueryStorePlan
     path: docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
@@ -1890,6 +1980,7 @@ symbols:
       - ImportGovernanceStateQueryStore
       - QueryGovernanceStateReadModel
       - QueryTaskProvenanceLedger
+      - QueryPlanningWorkIntake
       - ExportGovernanceStateSnapshot
       - ValidateGovernanceStateDrift
       - RefreshGovernanceDerivedSurfaces
@@ -1901,6 +1992,7 @@ symbols:
       - Hidden query model inside YAML
       - Hidden query model inside governance shards
       - Manual task provenance reconstruction
+      - Manual work intake reconstruction
       - Mutable external tracker authority risk
     architectureGuard: pnpm docs:feature-mechanization:implementation
     cypressCoverage: N/A - planning query-store proposal has no browser workflow.
@@ -2091,6 +2183,12 @@ symbols:
   - <<: *planningDbContentSymbol
     name: PlanningDbTaskProvenanceLedgerMigration
     path: tools/planning-db/migrations/018_task_provenance_ledger.sql
+  - <<: *planningDbContentSymbol
+    name: PlanningDbWorkIntakeQueryMigration
+    path: tools/planning-db/migrations/019_planning_work_intake_query.sql
+  - <<: *planningDbContentSymbol
+    name: PlanningDbWorkIntakeQuerySuggestionHardeningMigration
+    path: tools/planning-db/migrations/020_planning_work_intake_query_suggestions.sql
   - <<: *planningDbContentSymbol
     name: PlanningDbMigrateRunner
     path: scripts/planning-db-migrate.cjs
@@ -2453,6 +2551,18 @@ symbols:
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: readTaskGapRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: buildFocusRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: taskScope
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: workIntakeSelect
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: readFocusRows
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: printRows
@@ -3252,6 +3362,96 @@ symbols:
   - <<: *planningDbDriftSymbol
     name: assert
     path: scripts/planning-db-check.test.cjs
+  - &dbGovernanceSurfaceInventorySymbol
+    name: DbGovernanceSurfaceInventoryCheck
+    path: scripts/planning-db-surface-inventory-check.cjs
+    dddOwner: DbGovernanceSurfaceInventory
+    cqRails:
+      - InventoryDbGovernanceSurface
+    fowlerSignals:
+      - Hidden query model inside YAML
+      - Hidden query model inside governance shards
+      - Manual docs disposition inventory
+    architectureGuard: pnpm planning:db:inventory:check
+    cypressCoverage: N/A - DB surface inventory has no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-surface-inventory-check.test.cjs
+      - pnpm planning:db:inventory:check
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: fs
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: path
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: repoRoot
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: defaultInventoryPath
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: requiredColumns
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: allowedMigrationStates
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: requiredSurfaces
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: splitMarkdownRow
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: isSeparatorLine
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: parseMarkdownTables
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: normalizeText
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: includesTerm
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: findSurfaceTable
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: validateInventory
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: runCli
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: test
+    path: scripts/planning-db-surface-inventory-check.test.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: assert
+    path: scripts/planning-db-surface-inventory-check.test.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: childProcess
+    path: scripts/planning-db-surface-inventory-check.test.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: fs
+    path: scripts/planning-db-surface-inventory-check.test.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: path
+    path: scripts/planning-db-surface-inventory-check.test.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: packageJson
+    path: scripts/planning-db-surface-inventory-check.test.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: repoRoot
+    path: scripts/planning-db-surface-inventory-check.test.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: inventoryPath
+    path: scripts/planning-db-surface-inventory-check.test.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: scriptPath
+    path: scripts/planning-db-surface-inventory-check.test.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: loadInventoryCheck
+    path: scripts/planning-db-surface-inventory-check.test.cjs
   - &governanceDbDriftSymbol
     name: GovernanceDbDriftCheckRunner
     path: scripts/governance-db-check.cjs
