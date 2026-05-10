@@ -2,7 +2,6 @@ import type { DataSourceMode } from '../../services/config/dataSource';
 
 const API_IDLE_MESSAGE =
   'Start a run to see run events here. Live log streaming is not available in API mode yet.';
-const DEFAULT_IDLE_MESSAGE = 'Start a run to see execution output here.';
 const LOADING_MESSAGE = 'Loading run events...';
 
 type BottomConsoleDrawerModelBase = {
@@ -37,12 +36,12 @@ type BuildBottomConsoleDrawerModelInput = {
 
 export function buildBottomConsoleDrawerModel({
   title,
-  dataSourceMode,
+  dataSourceMode: _dataSourceMode,
   runId,
   isLoading,
   lines,
 }: BuildBottomConsoleDrawerModelInput): BottomConsoleDrawerModel {
-  const modeLabel = dataSourceMode === 'mock' ? 'Mock' : null;
+  const modeLabel = null;
 
   if (!runId) {
     return {
@@ -50,7 +49,7 @@ export function buildBottomConsoleDrawerModel({
       modeLabel,
       kind: 'idle',
       runLabel: null,
-      message: dataSourceMode === 'api' ? API_IDLE_MESSAGE : DEFAULT_IDLE_MESSAGE,
+      message: API_IDLE_MESSAGE,
     };
   }
 

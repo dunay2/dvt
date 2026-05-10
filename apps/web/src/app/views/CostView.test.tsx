@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import React, { act, type ReactElement, type ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -123,7 +124,7 @@ describe('CostView', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
-          mode: 'mock',
+          ...createAppServicesTestOverrides(),
           workspaceGraphSnapshotQuery: buildWorkspaceGraphSnapshotQueryPort(),
           runsService: buildRunsService(),
         }}
@@ -181,7 +182,6 @@ describe('CostView', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
-          mode: 'api',
           workspaceGraphSnapshotQuery: buildWorkspaceGraphSnapshotQueryPort({
             getGraphSnapshot: async () => {
               throw new Error('workspace unavailable');

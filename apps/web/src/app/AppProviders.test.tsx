@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { createAppServicesTestOverrides } from '../testing/appServicesTestDoubles';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -65,7 +66,7 @@ describe('AppProviders', () => {
 
     await act(async () => {
       root.render(
-        <AppProviders overrides={{ mode: 'mock', capabilitiesPort }}>
+        <AppProviders overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
           <Probe />
         </AppProviders>
       );

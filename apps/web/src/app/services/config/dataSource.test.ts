@@ -11,8 +11,8 @@ describe('resolveDataSource', () => {
     expect(resolveDataSource('unsupported-mode')).toBe('api');
   });
 
-  it('keeps explicit supported values', () => {
-    expect(resolveDataSource('mock')).toBe('mock');
+  it('hard-cuts non-api data source values to api', () => {
+    expect(resolveDataSource('mock')).toBe('api');
     expect(resolveDataSource('api')).toBe('api');
   });
 });

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { createMockWorkspacePorts } from '../../../testing/workspacePortDoubles';
 import { ApiError } from '../api/createApiClient';
-import { createWorkspacePorts } from './workspacePorts';
 import { flattenWorkspaceEntries } from './workspaceFileTree.test.fixtures';
 import { createApiWorkspacePortHarness } from './workspacePortsApi.test.harness';
 import { WorkspaceFileLoadError, WORKSPACE_HTTP_ERROR_REASON } from './workspaceErrors';
@@ -15,8 +15,8 @@ describe('workspace ports files', () => {
   installWorkspaceScopeHarness();
 
   it('keeps file-content edits local to each default mock service instance', async () => {
-    const firstPorts = createWorkspacePorts('mock');
-    const secondPorts = createWorkspacePorts('mock');
+    const firstPorts = createMockWorkspacePorts();
+    const secondPorts = createMockWorkspacePorts();
     const original = await secondPorts.workspaceFilesQuery.getFileContent('README.md');
 
     await firstPorts.workspaceFileContentCommand.saveFileContent(
@@ -32,7 +32,7 @@ describe('workspace ports files', () => {
   });
 
   it('returns a unique default file tree without duplicated workspace paths', async () => {
-    const ports = createWorkspacePorts('mock');
+    const ports = createMockWorkspacePorts();
 
     const fileTree = flattenWorkspaceEntries(await ports.workspaceFilesQuery.listFiles());
 
@@ -45,8 +45,8 @@ describe('workspace ports files', () => {
   });
 
   it('adds newly saved files to the instance-local file tree', async () => {
-    const firstPorts = createWorkspacePorts('mock');
-    const secondPorts = createWorkspacePorts('mock');
+    const firstPorts = createMockWorkspacePorts();
+    const secondPorts = createMockWorkspacePorts();
     const newFilePath = 'models/generated/new_model.sql';
 
     await firstPorts.workspaceFileContentCommand.saveFileContent(newFilePath, 'select 1 as id');
@@ -62,7 +62,7 @@ describe('workspace ports files', () => {
   });
 
   it('maps missing mock files to a typed workspace file load error', async () => {
-    const ports = createWorkspacePorts('mock');
+    const ports = createMockWorkspacePorts();
 
     await expect(ports.workspaceFilesQuery.getFileContent('models/missing.sql')).rejects.toEqual(
       expect.objectContaining<Partial<WorkspaceFileLoadError>>({

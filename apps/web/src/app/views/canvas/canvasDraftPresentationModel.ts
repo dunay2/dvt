@@ -11,7 +11,6 @@ import type { CanvasRouteStartupBlockState } from './canvasRouteInteractionState
 
 export type CanvasRouteState =
   | 'loading_backend'
-  | 'blocked_runtime'
   | 'blocked_backend'
   | 'loading_graph'
   | 'error_graph'
@@ -144,17 +143,6 @@ export function deriveCanvasDraftPresentationState({
       draftToolbarState,
       bootstrapStatus: 'pending',
       bootstrapDetail: canvasViewCopy.checkingBackendReadinessDetail,
-      canCompleteBootstrap: false,
-    });
-  }
-
-  if (startupBlockState?.kind === 'runtime_mode') {
-    return createCanvasDraftPresentationState({
-      routeState: 'blocked_runtime',
-      recoveryReason,
-      draftToolbarState,
-      bootstrapStatus: 'blocked',
-      bootstrapDetail: startupBlockState.message,
       canCompleteBootstrap: false,
     });
   }

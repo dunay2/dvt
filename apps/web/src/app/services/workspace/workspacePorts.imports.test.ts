@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
+import {
+  createMockWorkspacePorts,
+  createMockWorkspaceState,
+} from '../../../testing/workspacePortDoubles';
 import { resolveWorkspacePortCopy } from './workspacePortCopy';
 import { createWorkspacePorts, resolveWorkspacePortCapabilities } from './workspacePorts';
-import { createMockWorkspacePorts, createMockWorkspaceState } from './workspacePorts.mock';
 
 describe('workspace ports source import', () => {
-  it('advertises source import capability explicitly by adapter mode', () => {
-    expect(resolveWorkspacePortCapabilities('mock')).toEqual({
-      sourceImportAvailable: true,
-    });
-    expect(resolveWorkspacePortCapabilities('api')).toEqual({
+  it('advertises API source import capability explicitly', () => {
+    expect(resolveWorkspacePortCapabilities()).toEqual({
       sourceImportAvailable: false,
     });
   });
@@ -21,7 +21,7 @@ describe('workspace ports source import', () => {
   });
 
   it('imports selected warehouse tables into the mock workspace graph', async () => {
-    const ports = createWorkspacePorts('mock');
+    const ports = createMockWorkspacePorts();
     const before = await ports.workspaceGraphSnapshotQuery.getGraphSnapshot();
 
     const result = await ports.warehouseSourceImport.importSources({
@@ -65,8 +65,8 @@ describe('workspace ports source import', () => {
   });
 
   it('isolates graph mutations between default mock service instances', async () => {
-    const firstPorts = createWorkspacePorts('mock');
-    const secondPorts = createWorkspacePorts('mock');
+    const firstPorts = createMockWorkspacePorts();
+    const secondPorts = createMockWorkspacePorts();
     const secondBefore = await secondPorts.workspaceGraphSnapshotQuery.getGraphSnapshot();
 
     await firstPorts.warehouseSourceImport.importSources({
@@ -122,7 +122,7 @@ describe('workspace ports source import', () => {
   });
 
   it('fails explicitly in api mode until the backend endpoint exists', async () => {
-    const ports = createWorkspacePorts('api');
+    const ports = createWorkspacePorts();
 
     await expect(ports.warehouseSourceImport.listWarehouseConnections()).rejects.toThrow(
       'Warehouse source import is not available in API mode'

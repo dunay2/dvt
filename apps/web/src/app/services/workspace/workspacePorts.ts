@@ -9,7 +9,6 @@ import type {
   IWorkspacePluginCatalogQueryPort,
 } from '../../ports/workspace';
 import { type ApiClient, createApiClient } from '../api/createApiClient';
-import type { DataSourceMode } from '../config/dataSource';
 import {
   apiWorkspacePortCapabilities,
   createApiWarehouseSourceImportPort,
@@ -20,7 +19,6 @@ import {
   createApiWorkspaceGraphSnapshotQueryPort,
   createApiWorkspacePluginCatalogQueryPort,
 } from './workspacePorts.api';
-import { createMockWorkspacePorts, mockWorkspacePortCapabilities } from './workspacePorts.mock';
 
 export type {
   WorkspaceGraphSnapshot,
@@ -48,25 +46,18 @@ export type WorkspacePorts = {
   readonly workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
 };
 
-export function resolveWorkspacePortCapabilities(mode: DataSourceMode): WorkspacePortCapabilities {
-  return mode === 'api' ? apiWorkspacePortCapabilities : mockWorkspacePortCapabilities;
+export function resolveWorkspacePortCapabilities(): WorkspacePortCapabilities {
+  return apiWorkspacePortCapabilities;
 }
 
-export function createWorkspacePorts(
-  mode: DataSourceMode,
-  apiClient: ApiClient = createApiClient()
-): WorkspacePorts {
-  if (mode === 'api') {
-    return {
-      workspaceGraphSnapshotQuery: createApiWorkspaceGraphSnapshotQueryPort(apiClient),
-      workspaceFilesQuery: createApiWorkspaceFilesQueryPort(apiClient),
-      workspaceDiffQuery: createApiWorkspaceDiffQueryPort(),
-      workspacePluginCatalogQuery: createApiWorkspacePluginCatalogQueryPort(),
-      workspaceAdminRead: createApiWorkspaceAdminReadPort(),
-      warehouseSourceImport: createApiWarehouseSourceImportPort(),
-      workspaceFileContentCommand: createApiWorkspaceFileContentCommandPort(),
-    };
-  }
-
-  return createMockWorkspacePorts();
+export function createWorkspacePorts(apiClient: ApiClient = createApiClient()): WorkspacePorts {
+  return {
+    workspaceGraphSnapshotQuery: createApiWorkspaceGraphSnapshotQueryPort(apiClient),
+    workspaceFilesQuery: createApiWorkspaceFilesQueryPort(apiClient),
+    workspaceDiffQuery: createApiWorkspaceDiffQueryPort(),
+    workspacePluginCatalogQuery: createApiWorkspacePluginCatalogQueryPort(),
+    workspaceAdminRead: createApiWorkspaceAdminReadPort(),
+    warehouseSourceImport: createApiWarehouseSourceImportPort(),
+    workspaceFileContentCommand: createApiWorkspaceFileContentCommandPort(),
+  };
 }

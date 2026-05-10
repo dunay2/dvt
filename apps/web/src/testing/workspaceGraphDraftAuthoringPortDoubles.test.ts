@@ -1,8 +1,8 @@
 import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
-import type { SessionContextPort } from '../../ports/sessionContext';
-import { createMockWorkspaceGraphDraftAuthoringPort } from './workspaceGraphDraftAuthoring.mock';
+import type { SessionContextPort } from '../app/ports/sessionContext';
+import { createMockWorkspaceGraphDraftAuthoringPort } from './workspaceGraphDraftAuthoringPortDoubles';
 
 function buildSessionContext(): Pick<SessionContextPort, 'getWorkspaceScopeSnapshot'> {
   return {

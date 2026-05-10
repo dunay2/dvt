@@ -8,34 +8,6 @@ import {
 import { deriveCanvasDraftToolbarState } from './canvasDraftToolbarState';
 
 describe('canvasDraftPresentationModel', () => {
-  it('publishes runtime-mode mismatch as a blocked startup posture', () => {
-    const draftToolbarState = deriveCanvasDraftToolbarState({
-      draftSaveStatus: 'idle',
-      recoveryReason: null,
-    });
-
-    expect(
-      deriveCanvasDraftPresentationState({
-        isBackendCheckPending: false,
-        startupBlockState: {
-          kind: 'runtime_mode',
-          title: 'Canvas runtime unavailable',
-          message:
-            'Canvas authoring requires API runtime mode and protected workspace draft access.',
-        },
-        workbenchState: { kind: 'ready' },
-        recoveryReason: null,
-        draftToolbarState,
-      })
-    ).toMatchObject({
-      routeState: 'blocked_runtime',
-      bootstrapStatus: 'blocked',
-      bootstrapDetail:
-        'Canvas authoring requires API runtime mode and protected workspace draft access.',
-      canCompleteBootstrap: false,
-    });
-  });
-
   it('publishes backend readiness failure as a routable blocked canvas posture after shell startup', () => {
     const draftToolbarState = deriveCanvasDraftToolbarState({
       draftSaveStatus: 'saved',

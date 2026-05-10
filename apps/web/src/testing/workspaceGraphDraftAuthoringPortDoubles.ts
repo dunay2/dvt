@@ -1,3 +1,4 @@
+/** Owned concern: provide protected graph-draft authoring behavior for frontend tests. */
 import type {
   WorkspaceGraphDraftAuditAction,
   WorkspaceGraphDraftAuditOutcome,
@@ -8,14 +9,14 @@ import type {
   WorkspaceGraphDraftScope,
 } from '@dvt/contracts';
 
-import type { SessionContextPort } from '../../ports/sessionContext';
-import type { IWorkspaceGraphDraftAuthoringPort } from '../../ports/workspaceGraphDraftAuthoring';
-import { WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION } from './workspaceGraphDraftProtocol';
+import type { SessionContextPort } from '../app/ports/sessionContext';
+import type { IWorkspaceGraphDraftAuthoringPort } from '../app/ports/workspaceGraphDraftAuthoring';
+import { WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION } from '../app/services/workspace/workspaceGraphDraftProtocol';
 import {
   cloneWorkspaceGraphAuthoringDraft,
   createDraftRequestSignature,
   getMockWorkspaceGraphDraftStore,
-} from './workspaceGraphDraftAuthoring.mockStore';
+} from './workspaceGraphDraftAuthoringStoreDoubles';
 
 type MockWorkspaceGraphDraftPortArgs = {
   draftStoreKey: object;

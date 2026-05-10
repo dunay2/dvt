@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import React, { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -84,7 +85,7 @@ describe('LineageView', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
-          mode: 'mock',
+          ...createAppServicesTestOverrides(),
           workspaceGraphSnapshotQuery: buildWorkspaceGraphSnapshotQueryPort(),
         }}
       >
@@ -111,7 +112,7 @@ describe('LineageView', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
-          mode: 'mock',
+          ...createAppServicesTestOverrides(),
           workspaceGraphSnapshotQuery: buildWorkspaceGraphSnapshotQueryPort({
             getGraphSnapshot: async () => graphSnapshotPromise,
           }),
@@ -134,7 +135,7 @@ describe('LineageView', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
-          mode: 'mock',
+          ...createAppServicesTestOverrides(),
           workspaceGraphSnapshotQuery: buildWorkspaceGraphSnapshotQueryPort({
             getGraphSnapshot: async () => buildGraphSnapshot({ nodes: [], edges: [] }),
           }),
@@ -158,7 +159,7 @@ describe('LineageView', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
-          mode: 'mock',
+          ...createAppServicesTestOverrides(),
           workspaceGraphSnapshotQuery: buildWorkspaceGraphSnapshotQueryPort({
             getGraphSnapshot: async () => {
               throw new Error('Graph snapshot unavailable');
@@ -184,7 +185,7 @@ describe('LineageView', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
-          mode: 'mock',
+          ...createAppServicesTestOverrides(),
           workspaceGraphSnapshotQuery: buildWorkspaceGraphSnapshotQueryPort(),
         }}
       >
@@ -221,7 +222,7 @@ describe('LineageView', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
-          mode: 'mock',
+          ...createAppServicesTestOverrides(),
           workspaceGraphSnapshotQuery: buildWorkspaceGraphSnapshotQueryPort({
             getGraphSnapshot: async () =>
               buildGraphSnapshot({
@@ -277,7 +278,7 @@ describe('LineageView', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
-          mode: 'mock',
+          ...createAppServicesTestOverrides(),
           workspaceGraphSnapshotQuery: buildWorkspaceGraphSnapshotQueryPort({
             getGraphSnapshot: async () =>
               buildGraphSnapshot({

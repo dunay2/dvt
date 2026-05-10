@@ -35,7 +35,7 @@ admin RBAC truth, or file write semantics.
 | `IWorkspaceDiffQueryPort`          | web query port         | `GetWorkspaceDiffChanges`                                                   | Return authoritative diff changes when the backend rail exists; otherwise unavailable in API mode.                      |
 | `IWorkspacePluginCatalogQueryPort` | web query port         | `ListWorkspacePlugins`                                                      | Return backend-published plugin catalog/readiness when the backend rail exists; presentation registry remains separate. |
 | `IWorkspaceAdminReadPort`          | web query port         | `ListAdminRoles`, `ListAdminAuditLog`                                       | Return admin roles and audit read models when backend rails exist; unavailable in API mode until then.                  |
-| `IWarehouseSourceImportPort`       | web command/query port | `ListWarehouseConnections`, `ListWarehouseTables`, `ImportWarehouseSources` | Discover and import warehouse source metadata when backend rails exist; demo-only in mock mode until then.              |
+| `IWarehouseSourceImportPort`       | web command/query port | `ListWarehouseConnections`, `ListWarehouseTables`, `ImportWarehouseSources` | Discover and import warehouse source metadata when backend rails exist; unavailable in product runtime until then.      |
 | `IWorkspaceFileContentCommandPort` | web command port       | `SaveWorkspaceFileContent`                                                  | Persist file content only after an accepted backend command exists.                                                     |
 
 ## Invariants
@@ -43,8 +43,8 @@ admin RBAC truth, or file write semantics.
 - A web view depends only on the smallest port matching the capability it uses.
 - API mode must not expose callable methods for routes that do not exist.
 - Missing backend rails fail closed before transport.
-- Mock/demo ports may support local behavior only when their capability is
-  explicitly marked demo-only.
+- Test-only port doubles may support local behavior only inside explicit test
+  harnesses.
 - Read ports do not expose commands.
 - Command ports do not return screen-shaped read models as their primary
   purpose.
@@ -60,16 +60,16 @@ flowchart LR
   View["Views and hooks"]
   Broad["IWorkspacePort"]
   Api["workspacePorts.api"]
-  Mock["workspacePorts.mock"]
+  TestDoubles["service-local test doubles"]
   Real["Existing API routes"]
   Missing["Missing backend rails"]
 
   View --> Broad
   Broad --> Api
-  Broad --> Mock
+  Broad --> TestDoubles
   Api --> Real
   Api -. fail closed .-> Missing
-  Mock -. demo semantics .-> Missing
+  TestDoubles -. fixture semantics .-> Missing
 ```
 
 ## Implemented Shape
@@ -98,7 +98,7 @@ flowchart LR
   Diff -. unavailable until backend .-> DiffRail["GetWorkspaceDiffChanges"]
   Plugins -. unavailable until backend .-> PluginRail["ListWorkspacePlugins"]
   Admin -. unavailable until backend .-> AdminRails["ListAdminRoles / ListAdminAuditLog"]
-  Import -. demo only until backend .-> ImportRails["Warehouse source rails"]
+  Import -. unavailable until backend .-> ImportRails["Warehouse source rails"]
   FileWrite -. unavailable until backend .-> WriteRail["SaveWorkspaceFileContent"]
 ```
 

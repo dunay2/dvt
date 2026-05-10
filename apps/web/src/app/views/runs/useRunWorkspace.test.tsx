@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { createAppServicesTestOverrides } from '../../../testing/appServicesTestDoubles';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -167,11 +168,7 @@ describe('useRunWorkspace', () => {
           }
         >
           <AppServicesProvider
-            overrides={{
-              mode: 'mock',
-              runsService,
-              sessionContext,
-            }}
+            overrides={{ ...createAppServicesTestOverrides(), runsService, sessionContext }}
           >
             <HookHost runId="run-detail" />
           </AppServicesProvider>

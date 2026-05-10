@@ -64,7 +64,9 @@ describe('RootShell chrome', () => {
 
   it('preserves focus-mode behavior by hiding the left rail while keeping the shell top bar', async () => {
     setRootShellFocusMode(true);
-    const mounted = await withTestQueryClient(createRootShellNode(createHealthyPlatformCapability()));
+    const mounted = await withTestQueryClient(
+      createRootShellNode(createHealthyPlatformCapability())
+    );
 
     try {
       await waitForShellBootstrapSurface(mounted);
@@ -79,7 +81,9 @@ describe('RootShell chrome', () => {
 
   it('renders the bottom console drawer inside the app shell frame when enabled', async () => {
     setRootShellConsoleDrawer({ visible: true, height: 160 });
-    const mounted = await withTestQueryClient(createRootShellNode(createHealthyPlatformCapability()));
+    const mounted = await withTestQueryClient(
+      createRootShellNode(createHealthyPlatformCapability())
+    );
 
     try {
       await waitForShellBootstrapSurface(mounted);
@@ -92,7 +96,9 @@ describe('RootShell chrome', () => {
       expect(bottomDrawer?.closest('[data-slot="app-shell-main"]')).toBe(appShellMain);
       expect(consoleDrawer).not.toBeNull();
       expect(bottomDrawer?.textContent).toContain('Console');
-      expect(bottomDrawer?.textContent).toContain('Start a run to see execution output here.');
+      expect(bottomDrawer?.textContent).toContain(
+        'Start a run to see run events here. Live log streaming is not available in API mode yet.'
+      );
     } finally {
       await mounted.cleanup();
     }

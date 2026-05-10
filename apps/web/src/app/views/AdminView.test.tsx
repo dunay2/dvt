@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import React, { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, waitFor } from '@testing-library/dom';
@@ -57,7 +58,7 @@ function createAdminRouteElement(
   return (
     <AppServicesProvider
       overrides={{
-        mode: 'mock',
+        ...createAppServicesTestOverrides(),
         capabilitiesPort: {
           loadCapabilities: async () => ({
             apiVersion: '1.0.0',

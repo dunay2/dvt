@@ -23,7 +23,6 @@ import { createPlansService } from '../plans/plansService';
 import { createRunsService } from '../runs/runsService';
 import { createSessionContextPort } from '../session/sessionContextPort';
 import { createApiWorkspaceGraphDraftAuthoringPort } from '../workspace/workspaceGraphDraftAuthoring.api';
-import { createMockWorkspaceGraphDraftAuthoringPort } from '../workspace/workspaceGraphDraftAuthoring.mock';
 import { createWorkspacePorts } from '../workspace/workspacePorts';
 
 export interface AppServices {
@@ -45,7 +44,6 @@ export interface AppServices {
 }
 
 export interface AppServicesOverrides {
-  readonly mode?: DataSourceMode;
   readonly apiClient?: ApiClient;
   readonly workspaceGraphSnapshotQuery?: IWorkspaceGraphSnapshotQueryPort;
   readonly workspaceFilesQuery?: IWorkspaceFilesQueryPort;
@@ -63,11 +61,11 @@ export interface AppServicesOverrides {
 }
 
 export function buildAppServices(overrides: AppServicesOverrides = {}): AppServices {
-  const dataSourceMode = overrides.mode ?? resolveDataSource();
+  const dataSourceMode = resolveDataSource();
   setRuntimeDataSourceMode(dataSourceMode);
   const apiClient = overrides.apiClient ?? createApiClient();
   const sessionContext = overrides.sessionContext ?? createSessionContextPort();
-  const workspacePorts = createWorkspacePorts(dataSourceMode, apiClient);
+  const workspacePorts = createWorkspacePorts(apiClient);
   const workspaceGraphSnapshotQuery =
     overrides.workspaceGraphSnapshotQuery ?? workspacePorts.workspaceGraphSnapshotQuery;
   const workspaceFilesQuery = overrides.workspaceFilesQuery ?? workspacePorts.workspaceFilesQuery;
@@ -81,12 +79,7 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     overrides.workspaceFileContentCommand ?? workspacePorts.workspaceFileContentCommand;
   const workspaceGraphDraftAuthoringPort =
     overrides.workspaceGraphDraftAuthoringPort ??
-    (dataSourceMode === 'api'
-      ? createApiWorkspaceGraphDraftAuthoringPort(apiClient)
-      : createMockWorkspaceGraphDraftAuthoringPort({
-          draftStoreKey: workspacePorts,
-          sessionContext,
-        }));
+    createApiWorkspaceGraphDraftAuthoringPort(apiClient);
 
   return {
     dataSourceMode,
@@ -99,9 +92,8 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     warehouseSourceImport,
     workspaceFileContentCommand,
     workspaceGraphDraftAuthoringPort,
-    runsService:
-      overrides.runsService ?? createRunsService(dataSourceMode, apiClient, { sessionContext }),
-    plansService: overrides.plansService ?? createPlansService(dataSourceMode, apiClient),
+    runsService: overrides.runsService ?? createRunsService(apiClient, { sessionContext }),
+    plansService: overrides.plansService ?? createPlansService(apiClient),
     capabilitiesPort: overrides.capabilitiesPort ?? createCapabilitiesPort(apiClient),
     sessionContext,
     shellFeedback: overrides.shellFeedback ?? createToastShellFeedbackPort(),
