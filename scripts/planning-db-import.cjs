@@ -837,6 +837,423 @@ function listChangedFiles(baseRef, headRef) {
     .map(toPosix);
 }
 
+function listTrackedMarkdownDocuments() {
+  const output = execFileSync('git', ['ls-files', '--', 'docs/*.md', 'docs/**/*.md'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  });
+
+  return [
+    ...new Set(
+      output
+        .split('\n')
+        .map((value) => normalizeText(value).trim())
+        .filter(Boolean)
+        .map(toPosix)
+    ),
+  ]
+    .sort()
+    .map((sourcePath) => ({
+      sourcePath,
+      raw: fs.readFileSync(path.join(repoRoot, sourcePath), 'utf8'),
+    }));
+}
+
+function parseMarkdownFrontmatter(raw) {
+  const text = normalizeText(raw);
+  const lines = text.split(/\r?\n/);
+  if (lines[0] !== '---') {
+    return { frontmatter: {}, body: text };
+  }
+
+  const closingIndex = lines.findIndex((line, index) => index > 0 && line.trim() === '---');
+  if (closingIndex < 0) {
+    return { frontmatter: {}, body: text };
+  }
+
+  const frontmatterText = lines.slice(1, closingIndex).join('\n');
+  let parsed;
+  try {
+    parsed = yaml.load(frontmatterText);
+  } catch (error) {
+    parsed = parseLooseFrontmatter(frontmatterText);
+    parsed._parse_error = normalizeText(error.message);
+  }
+  const frontmatter =
+    parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? cleanJson(parsed) : {};
+
+  return {
+    frontmatter,
+    body: lines.slice(closingIndex + 1).join('\n'),
+  };
+}
+
+function parseLooseFrontmatter(frontmatterText) {
+  const parsed = {};
+  for (const line of normalizeText(frontmatterText).split(/\r?\n/)) {
+    const match = /^([A-Za-z0-9_-]+):\s*(.*)$/.exec(line.trim());
+    if (!match) {
+      continue;
+    }
+    parsed[match[1]] = match[2].replace(/^['"]|['"]$/g, '');
+  }
+
+  return parsed;
+}
+
+const pendingMarkerTerms = [
+  'pending',
+  'remaining',
+  'debt',
+  'gap',
+  'follow-up',
+  'followup',
+  'not implemented',
+  'todo',
+  'next step',
+  'tbd',
+  'open question',
+];
+
+const taskLikeReferencePattern =
+  /\b(?:ADR-\d{4}|ED-\d{8}-[A-Za-z0-9][A-Za-z0-9-]*|R-\d{8}-[A-Za-z0-9][A-Za-z0-9-]*|US-\d+[A-Za-z0-9-]*|[A-Z][A-Z0-9]{1,12}(?:-[A-Z0-9][A-Z0-9]{0,24})+)\b/g;
+
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+}
+
+function lineNumbersForPattern(raw, pattern) {
+  const lines = normalizeText(raw).split(/\r?\n/);
+  const samples = [];
+  let occurrenceCount = 0;
+
+  for (const [index, line] of lines.entries()) {
+    const matches = line.match(pattern);
+    if (!matches) {
+      continue;
+    }
+    occurrenceCount += matches.length;
+    if (samples.length < 5) {
+      samples.push({
+        lineNumber: index + 1,
+        line: line.trim().slice(0, 240),
+      });
+    }
+  }
+
+  return { occurrenceCount, sampleLines: samples };
+}
+
+function markerPattern(markerKind) {
+  return new RegExp(
+    `(?<![A-Za-z0-9-])${escapeRegExp(markerKind).replace(/ /g, '\\s+')}(?![A-Za-z0-9-])`,
+    'gi'
+  );
+}
+
+function buildPendingMarkerRows(document) {
+  const rows = [];
+  for (const markerKind of pendingMarkerTerms) {
+    const { occurrenceCount, sampleLines } = lineNumbersForPattern(
+      document.raw,
+      markerPattern(markerKind)
+    );
+    if (occurrenceCount === 0) {
+      continue;
+    }
+
+    rows.push({
+      markerId: `doc-marker:${sha256(`${document.sourcePath}:${markerKind}`).slice(0, 32)}`,
+      documentPath: document.sourcePath,
+      markerKind,
+      occurrenceCount,
+      sampleLines,
+      sourceContentSha256: document.contentSha256,
+      rawMarker: {
+        markerKind,
+        occurrenceCount,
+        sampleLines,
+      },
+    });
+  }
+
+  return rows;
+}
+
+function referencePrefix(referenceText) {
+  return normalizeText(referenceText).split('-')[0].toUpperCase();
+}
+
+function classifyTaskLikeReference(referenceText, planningTaskIdSet) {
+  const value = normalizeText(referenceText);
+  const upperValue = value.toUpperCase();
+
+  if (planningTaskIdSet.has(value) || planningTaskIdSet.has(upperValue)) {
+    return { classification: 'registered_planning_task', registeredPlanningTask: true };
+  }
+  if (/^ADR-\d{4}$/.test(upperValue)) {
+    return { classification: 'adr_id', registeredPlanningTask: false };
+  }
+  if (/^ARC-\d+$/.test(upperValue)) {
+    return { classification: 'arc_level', registeredPlanningTask: false };
+  }
+  if (/^ED-\d{8}-/.test(upperValue)) {
+    return { classification: 'evidence_id', registeredPlanningTask: false };
+  }
+  if (/^R-\d{8}-/.test(upperValue)) {
+    return { classification: 'risk_id', registeredPlanningTask: false };
+  }
+  if (/^US-/.test(upperValue)) {
+    return { classification: 'user_story', registeredPlanningTask: false };
+  }
+  if (/^(?:G\d+|F\d{2}|S\d{2})-/.test(upperValue)) {
+    return { classification: 'historical_gap', registeredPlanningTask: false };
+  }
+  if (/^SHA-\d+$/.test(upperValue)) {
+    return { classification: 'algorithm_reference', registeredPlanningTask: false };
+  }
+  if (/^(?:GAP|MVP|RESIDUAL|RISK|LEGACY|INV)-/.test(upperValue) || /^F-\d{2}/.test(upperValue)) {
+    return { classification: 'historical_planning_reference', registeredPlanningTask: false };
+  }
+  if (/^SYS-/.test(upperValue)) {
+    return { classification: 'governance_unit_reference', registeredPlanningTask: false };
+  }
+  if (/^CMD-/.test(upperValue)) {
+    return { classification: 'command_reference', registeredPlanningTask: false };
+  }
+  if (/^PS-[CQ]\d+/.test(upperValue)) {
+    return { classification: 'plan_store_matrix_reference', registeredPlanningTask: false };
+  }
+
+  return { classification: 'unknown_task_like_id', registeredPlanningTask: false };
+}
+
+function extractTaskLikeReferences(document, planningTaskIdSet) {
+  const raw = normalizeText(document.raw);
+  const matches = raw.match(taskLikeReferencePattern) || [];
+  const grouped = new Map();
+
+  for (const referenceText of matches) {
+    const entry = grouped.get(referenceText) || {
+      referenceText,
+      occurrenceCount: 0,
+    };
+    entry.occurrenceCount += 1;
+    grouped.set(referenceText, entry);
+  }
+
+  return [...grouped.values()]
+    .sort((left, right) => left.referenceText.localeCompare(right.referenceText))
+    .map((entry) => {
+      const classification = classifyTaskLikeReference(entry.referenceText, planningTaskIdSet);
+      const escapedReference = escapeRegExp(entry.referenceText);
+      const { sampleLines } = lineNumbersForPattern(
+        raw,
+        new RegExp(`\\b${escapedReference}\\b`, 'g')
+      );
+      return {
+        referenceId: `doc-reference:${sha256(`${document.sourcePath}:${entry.referenceText}`).slice(
+          0,
+          32
+        )}`,
+        documentPath: document.sourcePath,
+        referenceText: entry.referenceText,
+        referencePrefix: referencePrefix(entry.referenceText),
+        classification: classification.classification,
+        registeredPlanningTask: classification.registeredPlanningTask,
+        occurrenceCount: entry.occurrenceCount,
+        sampleLines,
+        sourceContentSha256: document.contentSha256,
+        rawReference: {
+          referenceText: entry.referenceText,
+          referencePrefix: referencePrefix(entry.referenceText),
+          classification: classification.classification,
+          occurrenceCount: entry.occurrenceCount,
+          sampleLines,
+        },
+      };
+    });
+}
+
+function isArchivedDocumentPath(documentPath) {
+  const normalizedPath = toPosix(documentPath);
+  return (
+    normalizedPath.startsWith('docs/archive/') ||
+    normalizedPath.includes('/archive/') ||
+    normalizedPath.includes('/superseded/') ||
+    normalizedPath.includes('/_archive/')
+  );
+}
+
+function dispositionPriorityRank(priority) {
+  const match = /^P?(\d+)$/i.exec(normalizeText(priority));
+  return match ? Number(match[1]) : 9;
+}
+
+function buildDocsDispositionActions(document, references, pendingHotspotThreshold) {
+  if (!document.isActive) {
+    return [];
+  }
+
+  const actions = [];
+
+  function pushAction({ priority, actionKind, referenceText = null, reason, blocking, evidence }) {
+    actions.push({
+      actionId: `doc-action:${sha256(
+        `${document.documentPath}:${actionKind}:${referenceText || ''}`
+      ).slice(0, 32)}`,
+      priority,
+      actionKind,
+      documentPath: document.documentPath,
+      referenceText,
+      reason,
+      blocking,
+      evidence,
+      sourceContentSha256: document.sourceContentSha256,
+      rawAction: {
+        priority,
+        actionKind,
+        documentPath: document.documentPath,
+        referenceText,
+        reason,
+        blocking,
+        evidence,
+      },
+    });
+  }
+
+  if (!document.status) {
+    pushAction({
+      priority: 'P2',
+      actionKind: 'missing_status_frontmatter',
+      reason: 'Active documentation has no frontmatter status.',
+      blocking: false,
+      evidence: { documentPath: document.documentPath },
+    });
+  }
+
+  if (document.status.toLowerCase() === 'draft') {
+    pushAction({
+      priority: document.documentPath.includes('/closeouts/') ? 'P1' : 'P2',
+      actionKind: 'draft_active_doc',
+      reason: 'Active documentation still declares Draft status.',
+      blocking: false,
+      evidence: { status: document.status },
+    });
+  }
+
+  if (document.status.toLowerCase() === 'superseded') {
+    pushAction({
+      priority: 'P1',
+      actionKind: 'superseded_active_doc',
+      reason: 'Superseded documentation is still in an active documentation path.',
+      blocking: false,
+      evidence: { status: document.status },
+    });
+  }
+
+  if (document.pendingMarkerCount >= pendingHotspotThreshold) {
+    pushAction({
+      priority: 'P2',
+      actionKind: 'pending_marker_hotspot',
+      reason: 'Documentation contains enough pending-style markers to require triage.',
+      blocking: false,
+      evidence: {
+        pendingMarkerCount: document.pendingMarkerCount,
+        pendingHotspotThreshold,
+      },
+    });
+  }
+
+  for (const reference of references) {
+    if (reference.classification !== 'unknown_task_like_id') {
+      continue;
+    }
+
+    pushAction({
+      priority: 'P1',
+      actionKind: 'unknown_task_like_id',
+      referenceText: reference.referenceText,
+      reason:
+        'Task-like reference is not registered in planning lanes or a known governance ID family.',
+      blocking: false,
+      evidence: {
+        referenceText: reference.referenceText,
+        occurrenceCount: reference.occurrenceCount,
+        sampleLines: reference.sampleLines,
+      },
+    });
+  }
+
+  return actions.sort(
+    (left, right) =>
+      dispositionPriorityRank(left.priority) - dispositionPriorityRank(right.priority) ||
+      left.actionKind.localeCompare(right.actionKind) ||
+      normalizeText(left.referenceText).localeCompare(normalizeText(right.referenceText))
+  );
+}
+
+function buildDocsDispositionSnapshot(options = {}) {
+  const planningTaskIdSet = new Set(
+    normalizeArray(options.planningTaskIds).flatMap((taskId) => {
+      const normalized = normalizeText(taskId);
+      return [normalized, normalized.toUpperCase()];
+    })
+  );
+  const sourceDocuments = normalizeArray(options.documents).length
+    ? normalizeArray(options.documents)
+    : listTrackedMarkdownDocuments();
+  const pendingHotspotThreshold = Math.max(
+    1,
+    normalizeNumber(options.pendingHotspotThreshold) ?? 10
+  );
+  const documents = [];
+  const markers = [];
+  const references = [];
+  const actions = [];
+
+  for (const sourceDocument of sourceDocuments) {
+    const sourcePath = toPosix(normalizeText(sourceDocument.sourcePath));
+    const raw = normalizeText(sourceDocument.raw);
+    const contentSha256 = sha256(raw);
+    const { frontmatter } = parseMarkdownFrontmatter(raw);
+    const isArchive = isArchivedDocumentPath(sourcePath);
+    const documentInput = { sourcePath, raw, contentSha256 };
+    const documentMarkers = buildPendingMarkerRows(documentInput);
+    const documentReferences = extractTaskLikeReferences(documentInput, planningTaskIdSet);
+    const document = {
+      documentPath: sourcePath,
+      title: normalizeText(frontmatter.title),
+      status: normalizeText(frontmatter.status),
+      planningType: normalizeText(frontmatter.planning_type),
+      owner: normalizeText(frontmatter.owner),
+      isActive: !isArchive,
+      isArchive,
+      pendingMarkerCount: documentMarkers.reduce((sum, marker) => sum + marker.occurrenceCount, 0),
+      taskLikeReferenceCount: documentReferences.reduce(
+        (sum, reference) => sum + reference.occurrenceCount,
+        0
+      ),
+      sourceContentSha256: contentSha256,
+      rawFrontmatter: frontmatter,
+      rawDocument: {
+        documentPath: sourcePath,
+        sourceBytes: Buffer.byteLength(raw, 'utf8'),
+        frontmatter,
+      },
+    };
+
+    documents.push(document);
+    markers.push(...documentMarkers);
+    references.push(...documentReferences);
+    actions.push(
+      ...buildDocsDispositionActions(document, documentReferences, pendingHotspotThreshold)
+    );
+  }
+
+  return { documents, markers, references, actions };
+}
+
 function globToRegExp(glob) {
   const escaped = String(glob).replaceAll(/[.+^${}()|[\]\\]/g, String.raw`\$&`);
   const doubleStarMarker = '__DOUBLESTAR__';
@@ -1387,6 +1804,98 @@ async function insertPrReadinessSnapshot(client, snapshot) {
   );
 }
 
+async function insertDocsDispositionSnapshot(client, snapshot) {
+  await client.query(`delete from ${schemaName}.doc_disposition_actions`);
+  await client.query(`delete from ${schemaName}.doc_task_like_references`);
+  await client.query(`delete from ${schemaName}.doc_disposition_markers`);
+  await client.query(`delete from ${schemaName}.doc_disposition_documents`);
+
+  for (const document of snapshot.documents) {
+    await client.query(
+      `insert into ${schemaName}.doc_disposition_documents
+        (document_path, title, status, planning_type, owner, is_active, is_archive,
+         pending_marker_count, task_like_reference_count, source_content_sha256,
+         raw_frontmatter, raw_document)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12::jsonb)`,
+      [
+        document.documentPath,
+        document.title,
+        document.status,
+        document.planningType,
+        document.owner,
+        document.isActive,
+        document.isArchive,
+        document.pendingMarkerCount,
+        document.taskLikeReferenceCount,
+        document.sourceContentSha256,
+        toJson(document.rawFrontmatter),
+        toJson(document.rawDocument),
+      ]
+    );
+  }
+
+  for (const marker of snapshot.markers) {
+    await client.query(
+      `insert into ${schemaName}.doc_disposition_markers
+        (marker_id, document_path, marker_kind, occurrence_count, sample_lines,
+         source_content_sha256, raw_marker)
+       values ($1, $2, $3, $4, $5::jsonb, $6, $7::jsonb)`,
+      [
+        marker.markerId,
+        marker.documentPath,
+        marker.markerKind,
+        marker.occurrenceCount,
+        toJson(marker.sampleLines),
+        marker.sourceContentSha256,
+        toJson(marker.rawMarker),
+      ]
+    );
+  }
+
+  for (const reference of snapshot.references) {
+    await client.query(
+      `insert into ${schemaName}.doc_task_like_references
+        (reference_id, document_path, reference_text, reference_prefix, classification,
+         registered_planning_task, occurrence_count, sample_lines, source_content_sha256,
+         raw_reference)
+       values ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10::jsonb)`,
+      [
+        reference.referenceId,
+        reference.documentPath,
+        reference.referenceText,
+        reference.referencePrefix,
+        reference.classification,
+        reference.registeredPlanningTask,
+        reference.occurrenceCount,
+        toJson(reference.sampleLines),
+        reference.sourceContentSha256,
+        toJson(reference.rawReference),
+      ]
+    );
+  }
+
+  for (const action of snapshot.actions) {
+    await client.query(
+      `insert into ${schemaName}.doc_disposition_actions
+        (action_id, priority, action_kind, document_path, reference_text, reason, blocking,
+         evidence, source_content_sha256, raw_action)
+       values ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10::jsonb)`,
+      [
+        action.actionId,
+        action.priority,
+        action.actionKind,
+        action.documentPath,
+        action.referenceText,
+        action.reason,
+        action.blocking,
+        toJson(action.evidence),
+        action.sourceContentSha256,
+        toJson(action.rawAction),
+      ]
+    );
+  }
+}
+
 async function beginImportTransaction(client) {
   await client.query('begin');
   await client.query('select pg_advisory_xact_lock(hashtext($1), hashtext($2))', [
@@ -1406,6 +1915,13 @@ async function importContent(options = {}) {
     ? await buildRepositoryCommandSnapshot()
     : null;
   const prReadinessSnapshot = includeGovernance ? buildPrReadinessSnapshot() : null;
+  const docsDispositionPlanningSnapshot =
+    includeGovernance && !planningSnapshot ? buildPlanningContentSnapshot() : planningSnapshot;
+  const docsDispositionSnapshot = includeGovernance
+    ? buildDocsDispositionSnapshot({
+        planningTaskIds: (docsDispositionPlanningSnapshot?.tasks || []).map((task) => task.taskId),
+      })
+    : null;
   const client = options.client || new Client({ connectionString: url });
   const ownsClient = !options.client;
 
@@ -1423,6 +1939,7 @@ async function importContent(options = {}) {
       await insertGovernanceSnapshot(client, governanceSnapshot);
       await insertRepositoryCommandSnapshot(client, repositoryCommandSnapshot);
       await insertPrReadinessSnapshot(client, prReadinessSnapshot);
+      await insertDocsDispositionSnapshot(client, docsDispositionSnapshot);
     }
     await client.query('commit');
   } catch (error) {
@@ -1445,6 +1962,9 @@ async function importContent(options = {}) {
     governanceRemediationTasks: governanceSnapshot?.remediationTasks.length ?? 0,
     repositoryCommands: repositoryCommandSnapshot?.commands.length ?? 0,
     prReadinessChecks: prReadinessSnapshot ? 1 : 0,
+    docsDispositionDocuments: docsDispositionSnapshot?.documents.length ?? 0,
+    docsDispositionActions: docsDispositionSnapshot?.actions.length ?? 0,
+    docsTaskLikeReferences: docsDispositionSnapshot?.references.length ?? 0,
   };
 
   if (!silent) {
@@ -1456,6 +1976,7 @@ async function importContent(options = {}) {
       `governanceRemediationTasks=${result.governanceRemediationTasks}`,
       `repositoryCommands=${result.repositoryCommands}`,
       `prReadinessChecks=${result.prReadinessChecks}`,
+      `docsDispositionActions=${result.docsDispositionActions}`,
     ].join(' ');
     console.log(message);
   }
@@ -1476,6 +1997,7 @@ if (require.main === module) {
 
 module.exports = {
   beginImportTransaction,
+  buildDocsDispositionSnapshot,
   buildGovernanceFileSnapshot,
   buildPlanningContentSnapshot,
   buildPrReadinessSnapshot,
@@ -1483,6 +2005,7 @@ module.exports = {
   databaseUrl,
   evaluateArcPolicyReadiness,
   importContent,
+  insertDocsDispositionSnapshot,
   insertPrReadinessSnapshot,
   insertRepositoryCommandSnapshot,
   normalizeText,
