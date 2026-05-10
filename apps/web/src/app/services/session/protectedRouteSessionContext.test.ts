@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { classifyProtectedRouteSessionError } from '../../bootstrap/AuthRouteGate';
 import { useSessionStore } from '../../stores/sessionStore';
 import { resolveProtectedRouteSessionContext } from './protectedRouteSessionContext';
 
@@ -85,5 +86,35 @@ describe('resolveProtectedRouteSessionContext', () => {
       projectId: 'local-project',
       environmentId: 'local-env',
     });
+  });
+
+  it('classifies missing workspace grants as workspace denial instead of login recovery', () => {
+    expect(
+      classifyProtectedRouteSessionError({
+        endpoint: '/workspace/context',
+        statusCode: 403,
+        responseBody: {
+          error: {
+            type: 'forbidden',
+            reason: 'workspace_context_not_granted',
+          },
+        },
+      })
+    ).toBe('workspace_context_not_granted');
+  });
+
+  it('keeps authentication failures on the login recovery path', () => {
+    expect(
+      classifyProtectedRouteSessionError({
+        endpoint: '/session',
+        statusCode: 401,
+        responseBody: {
+          error: {
+            type: 'unauthorized',
+            reason: 'authentication_failed',
+          },
+        },
+      })
+    ).toBe('unauthenticated');
   });
 });
