@@ -1,4 +1,5 @@
 const crypto = require('node:crypto');
+const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
@@ -819,6 +820,203 @@ async function buildRepositoryCommandSnapshot() {
   };
 }
 
+function resolveRepoPath(filePath) {
+  return path.isAbsolute(filePath) ? filePath : path.join(repoRoot, filePath);
+}
+
+function listChangedFiles(baseRef, headRef) {
+  const output = execFileSync('git', ['diff', '--name-only', `${baseRef}...${headRef}`], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  });
+
+  return output
+    .split('\n')
+    .map((value) => normalizeText(value).trim())
+    .filter(Boolean)
+    .map(toPosix);
+}
+
+function globToRegExp(glob) {
+  const escaped = String(glob).replaceAll(/[.+^${}()|[\]\\]/g, String.raw`\$&`);
+  const doubleStarMarker = '__DOUBLESTAR__';
+  const pattern = escaped
+    .replaceAll('**', doubleStarMarker)
+    .replaceAll('*', '[^/]*')
+    .replaceAll(doubleStarMarker, '.*');
+  return new RegExp(`^${pattern}$`);
+}
+
+function levelRank(level) {
+  switch (String(level || '').toUpperCase()) {
+    case 'ARC-0':
+      return 0;
+    case 'ARC-1':
+      return 1;
+    case 'ARC-2':
+      return 2;
+    case 'ARC-3':
+      return 3;
+    default:
+      return -1;
+  }
+}
+
+function maxArcLevel(left, right) {
+  return levelRank(left) >= levelRank(right) ? left : right;
+}
+
+function isEvidenceDocPath(filePath, policy) {
+  const evidenceDir = toPosix(policy.artifacts?.evidence_dir || 'docs/evidence').replace(/\/$/, '');
+  const normalizedPath = toPosix(filePath);
+  return normalizedPath.startsWith(`${evidenceDir}/`) && /\.md$/i.test(normalizedPath);
+}
+
+function isRiskUpdatePath(filePath, policy) {
+  const riskDir = toPosix(policy.artifacts?.risk_dir || 'docs/risk-register').replace(/\/$/, '');
+  const normalizedPath = toPosix(filePath);
+  return normalizedPath.startsWith(`${riskDir}/`) && /\.ya?ml$/i.test(normalizedPath);
+}
+
+function evaluateArcPolicyReadiness(options) {
+  const policy = options.policy || {};
+  const changedFiles = normalizeArray(options.changedFiles).map((filePath) =>
+    toPosix(normalizeText(filePath))
+  );
+  const declaredArcLevel = normalizeText(options.declaredArcLevel || 'NA').toUpperCase();
+  let effectiveArcLevel = 'ARC-0';
+  const triggerHits = [];
+
+  for (const trigger of policy.triggers || []) {
+    const regexes = normalizeArray(trigger.globs).map(globToRegExp);
+    const hits = changedFiles.filter((filePath) => regexes.some((regex) => regex.test(filePath)));
+    if (hits.length === 0) {
+      continue;
+    }
+
+    const minArcLevel = normalizeText(trigger.min_arc_level || 'ARC-0').toUpperCase();
+    effectiveArcLevel = maxArcLevel(effectiveArcLevel, minArcLevel);
+    triggerHits.push({
+      triggerName: normalizeText(trigger.name),
+      name: normalizeText(trigger.name),
+      minArcLevel,
+      min_arc_level: minArcLevel,
+      guides: normalizeArray(trigger.guides),
+      require: trigger.require || {},
+      hits: hits.slice(0, 200),
+    });
+  }
+
+  const isArc = levelRank(effectiveArcLevel) > 0;
+  const recommendedGuideSet = new Set();
+  for (const hit of triggerHits) {
+    for (const guide of normalizeArray(hit.guides)) {
+      recommendedGuideSet.add(normalizeText(guide));
+    }
+  }
+
+  const requirements = {
+    evidenceDoc: false,
+    riskUpdate: false,
+    rolloutNotes: false,
+    compatMatrix: false,
+  };
+  for (const hit of triggerHits) {
+    const requireConfig = hit.require || {};
+    if (requireConfig.evidence_doc) requirements.evidenceDoc = true;
+    if (requireConfig.risk_update) requirements.riskUpdate = true;
+    if (requireConfig.rollout_notes) requirements.rolloutNotes = true;
+    if (requireConfig.compat_matrix) requirements.compatMatrix = true;
+  }
+  if (levelRank(effectiveArcLevel) >= levelRank('ARC-2')) requirements.evidenceDoc = true;
+  if (effectiveArcLevel === 'ARC-3') requirements.riskUpdate = true;
+
+  const evidenceDocs = changedFiles.filter((filePath) => isEvidenceDocPath(filePath, policy));
+  const riskUpdates = changedFiles.filter((filePath) => isRiskUpdatePath(filePath, policy));
+  const missingRequirements = [];
+  if (requirements.evidenceDoc && evidenceDocs.length === 0) {
+    missingRequirements.push('evidenceDoc');
+  }
+  if (requirements.riskUpdate && riskUpdates.length === 0) {
+    missingRequirements.push('riskUpdate');
+  }
+  if (requirements.rolloutNotes) {
+    missingRequirements.push('rolloutNotes');
+  }
+  if (requirements.compatMatrix) {
+    missingRequirements.push('compatMatrix');
+  }
+
+  const requiredChecks = normalizeArray(policy.checks?.[effectiveArcLevel] || ['lint', 'test']);
+  const recommendedGuides = [...recommendedGuideSet];
+  const rawReadiness = {
+    isArc,
+    declaredArcLevel,
+    effectiveArcLevel,
+    reasons: {
+      triggerHits,
+      changedFiles: changedFiles.slice(0, 500),
+    },
+    requirements,
+    requiredChecks,
+    policyVersion: policy.version ?? 1,
+    recommendedGuides,
+    evidenceDocs,
+    riskUpdates,
+    missingRequirements,
+    blocking: missingRequirements.length > 0,
+  };
+
+  return {
+    readinessId: normalizeText(options.readinessId || 'current'),
+    baseRef: normalizeText(options.baseRef || 'origin/main'),
+    headRef: normalizeText(options.headRef || 'HEAD'),
+    sourcePath: normalizeText(options.sourcePath || '.arc-policy.yaml'),
+    sourceContentSha256: normalizeText(options.sourceContentSha256 || ''),
+    effectiveArcLevel,
+    isArc,
+    blocking: missingRequirements.length > 0,
+    requirements,
+    requiredChecks,
+    recommendedGuides,
+    changedFiles,
+    evidenceDocs,
+    riskUpdates,
+    triggerHits,
+    missingRequirements,
+    rawReadiness,
+  };
+}
+
+function buildPrReadinessSnapshot(options = {}) {
+  const baseRef = normalizeText(options.baseRef || process.env.GIT_BASE || 'origin/main');
+  const headRef = normalizeText(options.headRef || process.env.GIT_HEAD || 'HEAD');
+  const declaredArcLevel = normalizeText(
+    options.declaredArcLevel || process.env.DECLARED_ARC_LEVEL || 'NA'
+  ).toUpperCase();
+  const policyPath = resolveRepoPath(
+    options.policyPath || process.env.ARC_POLICY || '.arc-policy.yaml'
+  );
+  const policySource = readYamlSource(policyPath);
+  const changedFiles =
+    options.changedFiles === undefined ? listChangedFiles(baseRef, headRef) : options.changedFiles;
+  const readiness = evaluateArcPolicyReadiness({
+    readinessId: options.readinessId || 'current',
+    policy: policySource.parsed || {},
+    changedFiles,
+    declaredArcLevel,
+    baseRef,
+    headRef,
+    sourcePath: policySource.sourcePath,
+    sourceContentSha256: policySource.contentSha256,
+  });
+
+  return {
+    source: policySource,
+    readiness,
+  };
+}
+
 async function insertPlanningSnapshot(client, snapshot) {
   await client.query(`delete from ${schemaName}.planning_sources`);
 
@@ -1154,6 +1352,41 @@ async function insertRepositoryCommandSnapshot(client, snapshot) {
   }
 }
 
+async function insertPrReadinessSnapshot(client, snapshot) {
+  await client.query(`delete from ${schemaName}.pr_readiness_checks`);
+
+  const readiness = snapshot.readiness;
+  await client.query(
+    `insert into ${schemaName}.pr_readiness_checks
+      (readiness_id, base_ref, head_ref, source_path, source_content_sha256,
+       effective_arc_level, is_arc, blocking, requirements, required_checks,
+       recommended_guides, changed_files, evidence_docs, risk_updates, trigger_hits,
+       missing_requirements, raw_readiness)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::jsonb,
+       $11::jsonb, $12::jsonb, $13::jsonb, $14::jsonb, $15::jsonb,
+       $16::jsonb, $17::jsonb)`,
+    [
+      readiness.readinessId,
+      readiness.baseRef,
+      readiness.headRef,
+      readiness.sourcePath,
+      readiness.sourceContentSha256,
+      readiness.effectiveArcLevel,
+      readiness.isArc,
+      readiness.blocking,
+      toJson(readiness.requirements),
+      toJson(readiness.requiredChecks),
+      toJson(readiness.recommendedGuides),
+      toJson(readiness.changedFiles),
+      toJson(readiness.evidenceDocs),
+      toJson(readiness.riskUpdates),
+      toJson(readiness.triggerHits),
+      toJson(readiness.missingRequirements),
+      toJson(readiness.rawReadiness),
+    ]
+  );
+}
+
 async function beginImportTransaction(client) {
   await client.query('begin');
   await client.query('select pg_advisory_xact_lock(hashtext($1), hashtext($2))', [
@@ -1172,6 +1405,7 @@ async function importContent(options = {}) {
   const repositoryCommandSnapshot = includeGovernance
     ? await buildRepositoryCommandSnapshot()
     : null;
+  const prReadinessSnapshot = includeGovernance ? buildPrReadinessSnapshot() : null;
   const client = options.client || new Client({ connectionString: url });
   const ownsClient = !options.client;
 
@@ -1188,6 +1422,7 @@ async function importContent(options = {}) {
     if (includeGovernance) {
       await insertGovernanceSnapshot(client, governanceSnapshot);
       await insertRepositoryCommandSnapshot(client, repositoryCommandSnapshot);
+      await insertPrReadinessSnapshot(client, prReadinessSnapshot);
     }
     await client.query('commit');
   } catch (error) {
@@ -1209,6 +1444,7 @@ async function importContent(options = {}) {
     governanceCoverageRows: governanceSnapshot?.coverageRows.length ?? 0,
     governanceRemediationTasks: governanceSnapshot?.remediationTasks.length ?? 0,
     repositoryCommands: repositoryCommandSnapshot?.commands.length ?? 0,
+    prReadinessChecks: prReadinessSnapshot ? 1 : 0,
   };
 
   if (!silent) {
@@ -1219,6 +1455,7 @@ async function importContent(options = {}) {
       `governanceComponents=${result.governanceComponents}`,
       `governanceRemediationTasks=${result.governanceRemediationTasks}`,
       `repositoryCommands=${result.repositoryCommands}`,
+      `prReadinessChecks=${result.prReadinessChecks}`,
     ].join(' ');
     console.log(message);
   }
@@ -1241,9 +1478,12 @@ module.exports = {
   beginImportTransaction,
   buildGovernanceFileSnapshot,
   buildPlanningContentSnapshot,
+  buildPrReadinessSnapshot,
   buildRepositoryCommandSnapshot,
   databaseUrl,
+  evaluateArcPolicyReadiness,
   importContent,
+  insertPrReadinessSnapshot,
   insertRepositoryCommandSnapshot,
   normalizeText,
   readYamlSource,

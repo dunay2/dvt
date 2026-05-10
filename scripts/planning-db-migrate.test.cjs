@@ -321,3 +321,20 @@ test('tracked migrations include repository command catalog read model after W16
     /create or replace view planning_query_store\.repository_command_query/
   );
 });
+
+test('tracked migrations include PR readiness projection after W17', () => {
+  const migrations = readMigrationFiles();
+  const prReadinessMigration = migrations.find(
+    (migration) => migration.fileName === '016_pr_readiness_projection.sql'
+  );
+
+  assert.ok(prReadinessMigration);
+  assert.match(
+    prReadinessMigration.sql,
+    /create table if not exists planning_query_store\.pr_readiness_checks/
+  );
+  assert.match(
+    prReadinessMigration.sql,
+    /create or replace view planning_query_store\.pr_readiness_query/
+  );
+});

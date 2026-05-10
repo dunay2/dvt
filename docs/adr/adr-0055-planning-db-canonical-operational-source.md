@@ -42,8 +42,8 @@ Git remains the review, bootstrap, and recovery boundary. The repository keeps
 the YAML/docs sources needed to rebuild the database, but daily planning
 operations must use the DB command/query rails:
 
-- `planning:db:query` for task, dependency, evidence, status, artifact, and
-  governance inspection;
+- `planning:db:query` for task, dependency, evidence, status, artifact,
+  repository command, PR readiness, and governance inspection;
 - `planning:db:operate` for task lifecycle operations;
 - `planning:db:export` and `governance:db:export` for deterministic,
   reviewable exported surfaces;
@@ -62,6 +62,9 @@ normal generation must fail closed if the canonical DB is unavailable or stale.
 - Governance generated artifacts can be exported from DB-held raw source
   documents; raw text is retained for byte-stable export while `jsonb` remains
   available for query projections.
+- Repository command and PR readiness inspection can use imported DB rows
+  instead of re-walking command catalogs or ARC policy state for operator
+  output.
 - Closeout must run DB import/check/export gates before a branch is called ready.
 - A database reset is acceptable only because Git remains the bootstrap and
   review boundary; it is not a license to bypass DB command rails during normal

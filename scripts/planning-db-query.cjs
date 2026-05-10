@@ -27,6 +27,7 @@ const knownQueries = new Set([
   'remediation',
   'drift',
   'commands',
+  'pr-readiness',
 ]);
 
 function databaseUrl() {
@@ -146,6 +147,8 @@ function buildSummaryRows(summary) {
     ['repository.commands', summary.repositoryCommands],
     ['repository.commands.unknown', summary.repositoryCommandUnknown],
     ['repository.commands.runtime_fanout', summary.repositoryCommandRuntimeFanout],
+    ['repository.pr_readiness', summary.prReadinessChecks],
+    ['repository.pr_readiness.blocking', summary.prReadinessBlocking],
     ['governance.files', summary.governanceFiles],
     ['governance.files.drift', summary.driftFiles],
     ['governance.files.legacy', summary.legacyFiles],
@@ -232,6 +235,24 @@ function buildRepositoryCommandRows(rows) {
     row.sensitivity,
     flagLabel(row.runtime_fanout ?? row.runtimeFanout, 'runtime-fanout'),
     row.referenced_file_count ?? row.referencedFileCount ?? 0,
+  ]);
+}
+
+function joinJsonArray(value) {
+  const values = Array.isArray(value) ? value : [];
+  return values.length > 0 ? values.join(',') : '-';
+}
+
+function buildPrReadinessRows(rows) {
+  return rows.map((row) => [
+    row.readiness_id ?? row.readinessId,
+    row.effective_arc_level ?? row.effectiveArcLevel,
+    row.blocking ? 'blocking' : 'ready',
+    row.trigger_count ?? row.triggerCount ?? 0,
+    joinJsonArray(row.missing_requirements ?? row.missingRequirements),
+    `evidence:${row.evidence_doc_status ?? row.evidenceDocStatus ?? '-'}`,
+    `risk:${row.risk_update_status ?? row.riskUpdateStatus ?? '-'}`,
+    joinJsonArray(row.required_checks ?? row.requiredChecks),
   ]);
 }
 
@@ -414,6 +435,30 @@ function repositoryCommandSelect() {
     from ${schemaName}.repository_command_query`;
 }
 
+function prReadinessSelect() {
+  return `
+    select
+      readiness_id,
+      base_ref,
+      head_ref,
+      effective_arc_level,
+      is_arc,
+      blocking,
+      trigger_count,
+      missing_requirements,
+      evidence_doc_status,
+      risk_update_status,
+      required_checks,
+      recommended_guides,
+      changed_file_count,
+      evidence_doc_count,
+      risk_update_count,
+      source_path,
+      source_content_sha256,
+      imported_at
+    from ${schemaName}.pr_readiness_query`;
+}
+
 function governanceFileSelect() {
   return `
     select
@@ -515,6 +560,8 @@ async function readSummary(client) {
       (select count(*)::int from ${schemaName}.repository_commands) as "repositoryCommands",
       (select count(*)::int from ${schemaName}.repository_commands where domain = 'unknown') as "repositoryCommandUnknown",
       (select count(*)::int from ${schemaName}.repository_commands where runtime_fanout = true) as "repositoryCommandRuntimeFanout",
+      (select count(*)::int from ${schemaName}.pr_readiness_checks) as "prReadinessChecks",
+      (select count(*)::int from ${schemaName}.pr_readiness_checks where blocking = true) as "prReadinessBlocking",
       (select count(*)::int from ${schemaName}.governance_files) as "governanceFiles",
       (select count(*)::int from ${schemaName}.governance_files where is_drift = true) as "driftFiles",
       (select count(*)::int from ${schemaName}.governance_files where is_legacy = true) as "legacyFiles",
@@ -687,6 +734,21 @@ async function readRepositoryCommandRows(client, filters = {}) {
     `${repositoryCommandSelect()}
      ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
      order by runtime_fanout desc, domain, command_type, coalesce(command_name, command_path)
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readPrReadinessRows(client, filters = {}) {
+  const params = [];
+  const limit = parseLimit(filters.limit, 20);
+  params.push(limit);
+
+  const result = await client.query(
+    `${prReadinessSelect()}
+     order by blocking desc, readiness_id
      limit $${params.length}`,
     params
   );
@@ -941,6 +1003,15 @@ async function runQuery(options = {}) {
       return commandRows;
     }
 
+    if (queryName === 'pr-readiness') {
+      const rows = await readPrReadinessRows(client, options.filters || {});
+      const readinessRows = buildPrReadinessRows(rows);
+      if (options.print !== false) {
+        printTaskRows(readinessRows);
+      }
+      return readinessRows;
+    }
+
     if (queryName === 'files') {
       const rows = await readGovernanceFileRows(client, options.filters || {});
       const fileRows = buildGovernanceFileRows(rows);
@@ -1059,6 +1130,7 @@ module.exports = {
   buildPlanningDependencyRows,
   buildPlanningEvidenceRows,
   buildPlanningStatusEventRows,
+  buildPrReadinessRows,
   buildRepositoryCommandRows,
   buildSummaryRows,
   buildTaskRows,
@@ -1075,6 +1147,7 @@ module.exports = {
   readPlanningDependencyRows,
   readPlanningEvidenceRows,
   readPlanningStatusEventRows,
+  readPrReadinessRows,
   readRepositoryCommandRows,
   readOpenTaskRows,
   printSummary,

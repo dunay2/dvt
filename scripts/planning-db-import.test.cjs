@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const {
   buildGovernanceFileSnapshot,
   buildPlanningContentSnapshot,
+  buildPrReadinessSnapshot,
   buildRepositoryCommandSnapshot,
   importContent,
   normalizeText,
@@ -151,6 +152,45 @@ test('repository command snapshot imports package scripts and command files for 
   assert.equal(planningQuery.domain, 'planning-db');
   assert.equal(planningQuery.sensitivity, 'planning-query-store');
   assert.deepEqual(planningQuery.referencedFiles, ['scripts/planning-db-query.cjs']);
+});
+
+test('PR readiness snapshot blocks ARC-triggered adapter changes without evidence and risk updates', () => {
+  const snapshot = buildPrReadinessSnapshot({
+    baseRef: 'origin/main',
+    headRef: 'HEAD',
+    changedFiles: ['packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts'],
+  });
+
+  assert.equal(snapshot.readiness.readinessId, 'current');
+  assert.equal(snapshot.readiness.effectiveArcLevel, 'ARC-2');
+  assert.equal(snapshot.readiness.isArc, true);
+  assert.equal(snapshot.readiness.blocking, true);
+  assert.equal(snapshot.readiness.requirements.evidenceDoc, true);
+  assert.equal(snapshot.readiness.requirements.riskUpdate, true);
+  assert.deepEqual(snapshot.readiness.evidenceDocs, []);
+  assert.deepEqual(snapshot.readiness.riskUpdates, []);
+  assert.deepEqual(snapshot.readiness.missingRequirements, ['evidenceDoc', 'riskUpdate']);
+  assert.equal(snapshot.readiness.triggerHits[0].triggerName, 'adapters');
+});
+
+test('PR readiness snapshot clears ARC evidence and risk blockers from changed docs', () => {
+  const snapshot = buildPrReadinessSnapshot({
+    baseRef: 'origin/main',
+    headRef: 'HEAD',
+    changedFiles: [
+      'packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts',
+      'docs/evidence/ED-20260510-pr-readiness.md',
+      'docs/risk-register/quality/R-20260510-PR-READINESS.yaml',
+    ],
+  });
+
+  assert.equal(snapshot.readiness.effectiveArcLevel, 'ARC-2');
+  assert.equal(snapshot.readiness.blocking, false);
+  assert.deepEqual(snapshot.readiness.evidenceDocs, ['docs/evidence/ED-20260510-pr-readiness.md']);
+  assert.deepEqual(snapshot.readiness.riskUpdates, [
+    'docs/risk-register/quality/R-20260510-PR-READINESS.yaml',
+  ]);
+  assert.deepEqual(snapshot.readiness.missingRequirements, []);
 });
 
 test('normalizeText keeps structured lane fields queryable without dropping content', () => {
