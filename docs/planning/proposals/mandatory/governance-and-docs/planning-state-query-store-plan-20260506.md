@@ -2124,6 +2124,12 @@ symbols:
   - <<: *planningDbContentSymbol
     name: runQuery
     path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: queryErrorDetails
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: formatQueryError
+    path: scripts/planning-db-query.cjs
   - &planningDbEffectiveTaskSymbol
     name: PlanningEffectiveTaskReadModelMigration
     path: tools/planning-db/migrations/005_planning_effective_task_read_model.sql

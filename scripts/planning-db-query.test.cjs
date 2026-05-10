@@ -25,6 +25,7 @@ const {
   readOpenTaskRows,
   readSummary,
   readTaskRows,
+  formatQueryError,
   resolveQueryName,
 } = require('./planning-db-query.cjs');
 
@@ -93,6 +94,23 @@ test('parseArgs parses governance query filters for DB-first governance inspecti
       limit: 5,
     },
   });
+});
+
+test('formatQueryError preserves nested connection failures for unavailable DB', () => {
+  const ipv6Error = Object.assign(new Error('connect ECONNREFUSED ::1:55432'), {
+    code: 'ECONNREFUSED',
+  });
+  const ipv4Error = Object.assign(new Error('connect ECONNREFUSED 127.0.0.1:55432'), {
+    code: 'ECONNREFUSED',
+  });
+  const error = new AggregateError([ipv6Error, ipv4Error]);
+
+  const message = formatQueryError(error);
+
+  assert.match(message, /Planning DB is unavailable/);
+  assert.match(message, /connect ECONNREFUSED ::1:55432/);
+  assert.match(message, /connect ECONNREFUSED 127\.0\.0\.1:55432/);
+  assert.match(message, /pnpm planning:db:up/);
 });
 
 test('buildSummaryRows exposes planning and governance content counts without expensive hash drift', () => {

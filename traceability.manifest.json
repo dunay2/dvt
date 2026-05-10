@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-05-07",
+  "generated": "2026-05-10",
   "repo": {
     "sha": "local"
   },
@@ -128,7 +128,6 @@
         "Decision — Reserve a typed core module to evolve internal semantics without exposing implementation",
         "Decision — Tenant access rejections are represented with a typed error and stable code",
         "Decision — The engine exposes an abstract metrics port for observability without coupling to a specific provider",
-        "Decision — The plan resolver defines an explicit port for fetching bytes/text under domain control",
         "Decision — The token-bucket rate limiter controls outbox write pressure per tenant in memory",
         "Define an adapter contract oriented to run-driven execution and explicit signaling",
         "Define local write/read repository ports for run events",
@@ -282,7 +281,6 @@
         "packages/@dvt/engine/src/metrics/IMetricsCollector.ts",
         "packages/@dvt/engine/src/outbox/IOutboxRateLimiter.ts",
         "packages/@dvt/engine/src/outbox/TokenBucketRateLimiter.ts",
-        "packages/@dvt/engine/src/ports/IPlanResolver.ts",
         "packages/@dvt/engine/src/ports/IWorkflowEngine.ts",
         "packages/@dvt/engine/src/security/AuthorizationError.ts",
         "packages/@dvt/engine/src/security/RunAccessPolicy.ts",
@@ -318,8 +316,8 @@
         "Centralize SQL text used by PostgresSnapshotStalenessQuery",
         "Centralize SQL used by PostgresSchemaManager orchestration methods",
         "Decision — Idempotency keys are derived from the logical identity of the event and the logical attempt",
+        "Delegate stable outbox shard assignment to the Delivery-owned tenant-aware policy",
         "Delivery-facing port delegation remains the stable aggregate entrypoint for PostgreSQL state storage",
-        "Derive stable outbox shard ownership from runId using deterministic hashing",
         "Extract state/outbox transactional orchestration from facade adapter",
         "Implement in-memory run-state writes through event-log authority and port-owned lifecycle state",
         "Isolate coordinator literals and protocol constants from orchestration logic",
@@ -777,7 +775,7 @@
       "number": "ADR-0033",
       "decisions": [
         "Coordinate one lineage worker tick without owning lifecycle mechanics",
-        "Derive stable outbox shard ownership from runId using deterministic hashing",
+        "Delegate stable outbox shard assignment to the Delivery-owned tenant-aware policy",
         "Keep lineage runtime log message keys explicit and separate from published lineage warning contracts",
         "Manage lineage dead-letter counting, alerting, and replay as worker-owned recovery behavior",
         "Normalize arbitrary lineage runtime errors into structured fail-open diagnostics",
@@ -895,11 +893,13 @@
     {
       "number": "ADR-0043",
       "decisions": [
-        "Fetch engine dispatch artifacts through the engine-owned integrity port before segment projection."
+        "Fetch engine dispatch artifacts through the artifacts-owned reader before segment projection.",
+        "Keep scoped plan artifact integrity validation as an engine-owned dispatch port."
       ],
       "implemented_by": [
         "packages/@dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts",
-        "packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts"
+        "packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts",
+        "packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts"
       ],
       "title": "ADR-0043 - Plan record, plan store, and artifacts ownership"
     },
@@ -910,7 +910,7 @@
         "Define workflow ports and cursor contracts at the DVT boundary before Temporal-specific execution",
         "Drive Temporal layer execution from resolved DVT execution segments and canonical workflow state",
         "Enforce the shared plan admission matrix before provider dispatch.",
-        "Fetch engine dispatch artifacts through the engine-owned integrity port before segment projection.",
+        "Fetch engine dispatch artifacts through the artifacts-owned reader before segment projection.",
         "Keep DBT execution contracts outside the Temporal core activity dispatcher",
         "Keep DBT step-kind ownership in the worker plugin profile instead of core Temporal dispatch",
         "Keep layer cursor, skipped-step emission, and continue-as-new handoff derived from DVT workflow state",
@@ -997,6 +997,24 @@
         "packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts"
       ],
       "title": "ADR-0052: PlanRef Continuation Safety"
+    },
+    {
+      "number": "ADR-0054",
+      "decisions": [
+        "Keep scoped plan artifact integrity validation as an engine-owned dispatch port."
+      ],
+      "implemented_by": [
+        "packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts"
+      ],
+      "title": "ADR-0054: Plan Store Scoped Record Identity"
+    },
+    {
+      "number": "ADR-0055",
+      "decisions": [
+        "Expose DB-owned planning and governance read models through one operator query command."
+      ],
+      "implemented_by": ["scripts/planning-db-query.cjs"],
+      "title": "ADR-0055 - Planning DB Canonical Operational Source"
     }
   ]
 }

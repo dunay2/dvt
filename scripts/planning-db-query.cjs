@@ -1,3 +1,11 @@
+/**
+ * @file scripts/planning-db-query.cjs
+ * @baseline ADR-0055: Planning DB canonical operational source
+ * @decision Expose DB-owned planning and governance read models through one operator query command.
+ * @consequence Planning workboard and next-task reads consume normalized DB views instead of
+ *   reparsing lane YAML as the operational source.
+ * @version 1.0.0
+ */
 const { Client } = require('pg');
 
 const { defaultPgUrl } = require('./planning-db-run.cjs');
@@ -912,6 +920,48 @@ async function runQuery(options = {}) {
   }
 }
 
+function queryErrorDetails(error) {
+  const details = [];
+  const nestedErrors = Array.isArray(error && error.errors) ? error.errors : [];
+  for (const nestedError of nestedErrors) {
+    const nestedMessage =
+      nestedError && (nestedError.message || nestedError.code || nestedError.name);
+    if (nestedMessage) {
+      details.push(String(nestedMessage));
+    }
+  }
+
+  const cause = error && error.cause;
+  const causeMessage = cause && (cause.message || cause.code || cause.name);
+  if (causeMessage) {
+    details.push(String(causeMessage));
+  }
+
+  const directMessage = error && (error.message || error.code || error.name);
+  if (directMessage) {
+    details.push(String(directMessage));
+  }
+
+  return [...new Set(details)];
+}
+
+function formatQueryError(error) {
+  const details = queryErrorDetails(error);
+  const hasConnectionRefusal =
+    (error && error.code === 'ECONNREFUSED') ||
+    details.some((detail) => /ECONNREFUSED|connection refused/i.test(detail));
+
+  if (hasConnectionRefusal) {
+    return [
+      'Planning DB is unavailable.',
+      'Run `pnpm planning:db:up`, then `pnpm planning:db:migrate` and `pnpm planning:db:import` if the database has not been seeded.',
+      `Details: ${details.join('; ')}`,
+    ].join(' ');
+  }
+
+  return details[0] || String(error);
+}
+
 async function main() {
   const command = parseArgs();
   await runQuery(command);
@@ -919,7 +969,7 @@ async function main() {
 
 if (require.main === module) {
   main().catch((error) => {
-    console.error(`[planning:db:query] ${error.message}`);
+    console.error(`[planning:db:query] ${formatQueryError(error)}`);
     process.exit(1);
   });
 }
@@ -938,6 +988,7 @@ module.exports = {
   buildSummaryRows,
   buildTaskRows,
   databaseUrl,
+  formatQueryError,
   parseArgs,
   printHashDriftSummary,
   readGovernanceComponentRows,

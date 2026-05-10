@@ -66,13 +66,20 @@ test('governance snapshot preserves component, fingerprint, coverage, and remedi
   assert.equal(snapshot.coverageRows.length > 0, true);
   assert.equal(snapshot.remediationTasks.length, snapshot.remediationQueue.totals.tasks);
 
-  const planstoreDrift = snapshot.remediationTasks.find(
-    (task) => task.taskId === 'GRQ-DRIFT_REMOVAL-SYS-PLANSTORE-API-COMPOSITION'
-  );
-  assert.ok(planstoreDrift);
-  assert.equal(planstoreDrift.priority, 'P0');
-  assert.equal(planstoreDrift.fileCount, 20);
-  assert.equal(planstoreDrift.files.length, 20);
+  const priorityCounts = new Map();
+  for (const task of snapshot.remediationTasks) {
+    priorityCounts.set(task.priority, (priorityCounts.get(task.priority) ?? 0) + 1);
+    assert.equal(task.fileCount, task.files.length);
+  }
+  assert.equal(priorityCounts.get('P0') ?? 0, snapshot.remediationQueue.totals.p0);
+  assert.equal(priorityCounts.get('P1') ?? 0, snapshot.remediationQueue.totals.p1);
+  assert.equal(priorityCounts.get('P2') ?? 0, snapshot.remediationQueue.totals.p2);
+  assert.equal(priorityCounts.get('P3') ?? 0, snapshot.remediationQueue.totals.p3);
+
+  const cqRailGap = snapshot.remediationTasks.find((task) => task.taskType === 'cq-rail-gap');
+  assert.ok(cqRailGap);
+  assert.match(cqRailGap.taskId, /^GRQ-CQ_RAIL_GAP-/);
+  assert.ok(cqRailGap.expectedValidation.includes('pnpm docs:governance:remediation-queue:check'));
 });
 
 test('governance snapshot builds DB import sources from in-memory generator projections', () => {
