@@ -2,7 +2,7 @@
 title: CI Scope Optimization Plan
 status: Review
 owner: Engineering / CI Governance
-last_reviewed: 2026-05-08
+last_reviewed: 2026-05-10
 planning_type: mandatory-proposal
 ---
 
@@ -15,6 +15,13 @@ planning_type: mandatory-proposal
 
 **Goal:** Reduce unnecessary PR CI fan-out while preserving merge-blocking
 coverage for real runtime, contract, root-build, and governance changes.
+
+**2026-05-10 implementation note:** The contracts, adapter-postgres,
+determinism, and coverage workflow consumers now read semantic outputs from
+`tools/ci/emit-scope.mjs` instead of retaining local `dorny/paths-filter`
+package-root rules. The slice closes the CI scope portion of
+`CI-AUDIT-CONTRACTS-SCOPE` and `CI-AUDIT-ENGINE-COVERAGE`; local hook
+convergence remains separately governed by `CDG-W1-3`.
 
 **Architecture:** Keep `tools/ci/scope-config.mjs` as the workflow scope API and
 orchestrator, but move package-script and script-path semantics into the
@@ -207,6 +214,7 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/governance-and-docs/repository-command-catalog-normalization-plan-20260508.md
   - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
   - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
+  - docs/planning/state/agent-lane-c.yaml
   - docs/planning/status/**
   - docs/.manifest.json
   - docs/**/index.md
@@ -447,6 +455,72 @@ symbols:
     cypressCoverage: N/A - CI scope tooling only
     unitTests:
       - node --test tools/ci/test/path-matcher.test.mjs
+  - name: TEST_ROOT_BUILD_PATTERNS
+    path: tools/ci/scope-config.mjs
+    dddOwner: WorkflowModeScopeOutputs
+    cqRails:
+      - EmitWorkflowCapabilityScopes
+    fowlerSignals:
+      - Duplicate scope authority between workflow paths and local gates
+    architectureGuard: node --test tools/ci/emit-scope.test.mjs tools/ci/workflow-pattern-parity.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-scope.test.mjs tools/ci/workflow-pattern-parity.test.mjs
+  - name: TEST_DETERMINISM_PATTERNS
+    path: tools/ci/scope-config.mjs
+    dddOwner: WorkflowModeScopeOutputs
+    cqRails:
+      - EmitWorkflowCapabilityScopes
+    fowlerSignals:
+      - Duplicate scope authority between workflow paths and local gates
+    architectureGuard: node --test tools/ci/emit-scope.test.mjs tools/ci/workflow-pattern-parity.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-scope.test.mjs tools/ci/workflow-pattern-parity.test.mjs
+  - name: TEST_COVERAGE_PATTERNS
+    path: tools/ci/scope-config.mjs
+    dddOwner: WorkflowModeScopeOutputs
+    cqRails:
+      - EmitWorkflowCapabilityScopes
+    fowlerSignals:
+      - Duplicate scope authority between workflow paths and local gates
+    architectureGuard: node --test tools/ci/emit-scope.test.mjs tools/ci/workflow-pattern-parity.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-scope.test.mjs tools/ci/workflow-pattern-parity.test.mjs
+  - name: PR_QUALITY_ROOT_BUILD_PATTERNS
+    path: tools/ci/scope-config.mjs
+    dddOwner: WorkflowModeScopeOutputs
+    cqRails:
+      - EmitWorkflowCapabilityScopes
+    fowlerSignals:
+      - Duplicate scope authority between workflow paths and local gates
+    architectureGuard: node --test tools/ci/emit-scope.test.mjs tools/ci/workflow-pattern-parity.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-scope.test.mjs tools/ci/workflow-pattern-parity.test.mjs
+  - name: PR_QUALITY_CI_TOOLING_PATTERNS
+    path: tools/ci/scope-config.mjs
+    dddOwner: WorkflowModeScopeOutputs
+    cqRails:
+      - EmitWorkflowCapabilityScopes
+    fowlerSignals:
+      - Duplicate scope authority between workflow paths and local gates
+    architectureGuard: node --test tools/ci/emit-scope.test.mjs tools/ci/workflow-pattern-parity.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-scope.test.mjs tools/ci/workflow-pattern-parity.test.mjs
+  - name: PR_QUALITY_GOVERNANCE_TOOLING_PATTERNS
+    path: tools/ci/scope-config.mjs
+    dddOwner: WorkflowModeScopeOutputs
+    cqRails:
+      - EmitWorkflowCapabilityScopes
+    fowlerSignals:
+      - Duplicate scope authority between workflow paths and local gates
+    architectureGuard: node --test tools/ci/emit-scope.test.mjs tools/ci/workflow-pattern-parity.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-scope.test.mjs tools/ci/workflow-pattern-parity.test.mjs
   - name: computeWorkflowModeScopeOutputs
     path: tools/ci/scope-config.mjs
     dddOwner: WorkflowModeScopeOutputs

@@ -2,7 +2,7 @@
 title: Testing and CI Capabilities
 status: Active
 owner: engineering
-last_reviewed: 2026-04-18
+last_reviewed: 2026-05-10
 ---
 
 # Testing and CI Capabilities
@@ -272,10 +272,12 @@ classification before they are merged. Unknown classifications fail closed in
 tests and are treated as runtime-fanout sensitive by CI scope code.
 
 For root `package.json` changes, CI reads the base and head package blobs on
-pull requests. Scripts-only governance, planning DB, CI tooling, and developer
-workflow aliases can keep the workspace matrix empty, while
+pull requests. Scripts-only governance and planning DB aliases can keep the
+workspace matrix, runtime package tests, adapter-postgres integration,
+contracts, determinism, golden, and coverage lanes closed, while
 `changed_file_validation_relevant` still keeps changed-file lint/format checks
-active.
+active. Dependency, lifecycle, unknown, and runtime-capability script changes
+remain fail-closed and root-build sensitive.
 
 ## Shared CI Scope Logic
 
@@ -289,7 +291,7 @@ These files are the canonical source of truth for:
 
 - affected workspace detection
 - package test scope detection in [`.github/workflows/test.yml`](../../.github/workflows/test.yml)
-- contracts/determinism scope detection
+- adapter-postgres, contracts, determinism, and coverage scope detection
 - Temporal integration scope detection
 
 Current workflow consumers:
@@ -302,15 +304,20 @@ Current workflow consumers:
   to `No affected workspaces`.
 - [`.github/workflows/test.yml`](../../.github/workflows/test.yml) uses `emit-scope --mode test`
   for PR test routing across the web app, workers, and library workspaces. Its
-  push/manual full-suite lane and PR `root_config` fast-path both run
+  push/manual full-suite lane and PR `root_build_sensitive` fast-path both run
   `pnpm build`, so the merge gate exercises the same Turbo-backed root build
   path that local root builds now use. Non-root PR affected dependency builds
   use `node scripts/run-turbo-workspace-task.cjs build` with the PR base filter,
-  avoiding a manually maintained package-to-build map. The shared `root_config`
-  scope now also includes `turbo.json` and
-  `scripts/skip-prebuild-if-orchestrated.cjs`, so PRs that change the Turbo
-  graph or its orchestration helper cannot skip `Test Suite`, while
-  `@dvt/adapter-postgres` remains on its dedicated PostgreSQL-backed lane.
+  avoiding a manually maintained package-to-build map. The shared
+  `root_build_sensitive` scope includes root build graph inputs and runtime
+  orchestration helpers, so PRs that change the Turbo graph or its
+  orchestration helper cannot skip `Test Suite`. Adapter-postgres integration,
+  determinism/replay, and engine coverage also consume `emit-scope --mode test`
+  outputs instead of local `dorny/paths-filter` package-root rules.
+- [`.github/workflows/contracts.yml`](../../.github/workflows/contracts.yml) uses
+  `emit-scope --mode contracts` for contract, determinism, and golden routing.
+  The workflow no longer owns parallel inline `package.json` filters for those
+  lanes.
 - [`.github/workflows/pr-quality-gate.yml`](../../.github/workflows/pr-quality-gate.yml) uses the
   same shared scope surfaces for workflow/global change routing and Temporal capability lanes.
   It also runs the merge-blocking governance subset from `pnpm verify:prepush`

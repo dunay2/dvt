@@ -44,11 +44,12 @@ test('adapter-postgres policy stays wired into the PR quality gate and test work
     'node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json'
   );
   assertWorkflowContains(testWorkflow, 'node tools/ci/emit-scope.mjs --mode test');
-  assertWorkflowContains(prQualityGate, 'node tools/ci/emit-scope.mjs --mode pr-quality');
   assertWorkflowContains(
     testWorkflow,
-    'node .github/scripts/generate-paths-filter.js tools/ci/policy/adapter-postgres-relevance.json adapter_postgres_relevant'
+    'adapter_postgres_changed: ${{ steps.scope.outputs.postgres_capability_changed }}'
   );
+  assertWorkflowContains(prQualityGate, 'node tools/ci/emit-scope.mjs --mode pr-quality');
+  assert.doesNotMatch(testWorkflow, /generate-paths-filter\.js/u);
 
   assert.deepEqual(ADAPTER_POSTGRES_RELEVANT_PATTERNS, policy.adapter_postgres_relevant);
   assert.deepEqual(
@@ -199,6 +200,22 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
     generated_capability_relevant: workflowScopePolicy.generated_capability_relevant,
     changed_file_validation_relevant: workflowScopePolicy.changed_file_validation_relevant,
   });
+});
+
+test('contracts and test workflows consume semantic scope outputs instead of inline filters', () => {
+  const contractsWorkflow = readFileSync('.github/workflows/contracts.yml', 'utf8');
+  const testWorkflow = readFileSync('.github/workflows/test.yml', 'utf8');
+
+  assertWorkflowContains(contractsWorkflow, 'node tools/ci/emit-scope.mjs --mode contracts');
+  assertWorkflowContains(testWorkflow, 'node tools/ci/emit-scope.mjs --mode test');
+  assertWorkflowContains(testWorkflow, 'steps.scope.outputs.determinism_relevant');
+  assertWorkflowContains(testWorkflow, 'steps.scope.outputs.coverage_relevant');
+  assertWorkflowContains(testWorkflow, 'steps.scope.outputs.root_build_sensitive');
+
+  assert.doesNotMatch(contractsWorkflow, /dorny\/paths-filter/u);
+  assert.doesNotMatch(testWorkflow, /dorny\/paths-filter/u);
+  assert.doesNotMatch(testWorkflow, /steps\.det_changes\.outputs/u);
+  assert.doesNotMatch(testWorkflow, /steps\.cov_changes\.outputs/u);
 });
 
 test('PR quality gate keeps merge-blocking governance commands wired', () => {

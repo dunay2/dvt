@@ -41,6 +41,44 @@ test('emit-scope contracts mode keeps scripts-only package json out of contract 
   assert.equal(scope.contracts_relevant, false);
   assert.equal(scope.determinism_relevant, false);
   assert.equal(scope.golden_relevant, false);
+  assert.equal(scope.contract_capability_changed, false);
+});
+
+test('emit-scope contracts mode routes contract tooling package aliases to contracts', () => {
+  const contractToolingContext = {
+    packageJsonChange: {
+      ...scriptsOnlyContext.packageJsonChange,
+      contractCapabilitySensitive: true,
+    },
+  };
+  const scope = computeWorkflowModeScopeOutputs(
+    'contracts',
+    ['package.json'],
+    contractToolingContext
+  );
+
+  assert.equal(scope.contracts_relevant, true);
+  assert.equal(scope.contract_capability_changed, true);
+});
+
+test('emit-scope test mode keeps scripts-only package json out of runtime capability lanes', () => {
+  const scope = computeWorkflowModeScopeOutputs('test', ['package.json'], scriptsOnlyContext);
+
+  assert.equal(scope.any_test, false);
+  assert.equal(scope.root_config, false);
+  assert.equal(scope.root_build_sensitive, false);
+  assert.equal(scope.determinism_relevant, false);
+  assert.equal(scope.coverage_relevant, false);
+  assert.equal(scope.postgres_capability_changed, false);
+});
+
+test('emit-scope test mode marks engine changes coverage relevant', () => {
+  const scope = computeWorkflowModeScopeOutputs('test', [
+    'packages/@dvt/engine/src/WorkflowEngine.ts',
+  ]);
+
+  assert.equal(scope.engine, true);
+  assert.equal(scope.coverage_relevant, true);
 });
 
 test('emit-scope test mode preserves workspace setup flags mixed with scripts-only package json', () => {
@@ -62,6 +100,7 @@ test('emit-scope pr-quality mode preserves adapter flags mixed with scripts-only
   );
 
   assert.equal(scope.adapter_postgres_changed, true);
+  assert.equal(scope.postgres_capability_changed, true);
 });
 
 test('parseScopeMode accepts known modes and rejects missing or unknown mode', () => {
