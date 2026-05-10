@@ -8,6 +8,7 @@ const {
   buildGovernanceFileRows,
   buildGovernanceRemediationRows,
   buildHashDriftRows,
+  buildPrReadinessRows,
   buildSummaryRows,
   buildTaskRows,
   buildRepositoryCommandRows,
@@ -21,6 +22,7 @@ const {
   readPlanningDependencyRows,
   readPlanningEvidenceRows,
   readPlanningStatusEventRows,
+  readPrReadinessRows,
   readRepositoryCommandRows,
   readNextTaskRows,
   readHashDriftSummary,
@@ -48,6 +50,7 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('remediation'), 'remediation');
   assert.equal(resolveQueryName('drift'), 'drift');
   assert.equal(resolveQueryName('commands'), 'commands');
+  assert.equal(resolveQueryName('pr-readiness'), 'pr-readiness');
   assert.throws(() => resolveQueryName('unknown'), /Unknown planning DB query "unknown"/);
 });
 
@@ -160,6 +163,8 @@ test('buildSummaryRows exposes planning and governance content counts without ex
     repositoryCommands: 220,
     repositoryCommandUnknown: 4,
     repositoryCommandRuntimeFanout: 16,
+    prReadinessChecks: 1,
+    prReadinessBlocking: 1,
   });
 
   assert.deepEqual(rows, [
@@ -174,6 +179,8 @@ test('buildSummaryRows exposes planning and governance content counts without ex
     ['repository.commands', 220],
     ['repository.commands.unknown', 4],
     ['repository.commands.runtime_fanout', 16],
+    ['repository.pr_readiness', 1],
+    ['repository.pr_readiness.blocking', 1],
     ['governance.files', 4255],
     ['governance.files.drift', 41],
     ['governance.files.legacy', 0],
@@ -221,6 +228,8 @@ test('readSummary counts review tasks from the effective task view without hash 
             repositoryCommands: 220,
             repositoryCommandUnknown: 4,
             repositoryCommandRuntimeFanout: 16,
+            prReadinessChecks: 1,
+            prReadinessBlocking: 1,
           },
         ],
       };
@@ -236,6 +245,7 @@ test('readSummary counts review tasks from the effective task view without hash 
   assert.match(capturedSql, /planning_task_status_events/);
   assert.match(capturedSql, /planning_artifacts/);
   assert.match(capturedSql, /repository_commands/);
+  assert.match(capturedSql, /pr_readiness_checks/);
   assert.doesNotMatch(capturedSql, /governance_file_hash_drift/);
 });
 
@@ -452,6 +462,52 @@ test('buildRepositoryCommandRows formats DB-owned repository command catalog row
       'planning-query-store',
       '-',
       0,
+    ],
+  ]);
+});
+
+test('readPrReadinessRows queries the DB-owned PR readiness view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readPrReadinessRows(client, { limit: 5 });
+
+  assert.match(captured.sql, /from planning_query_store\.pr_readiness_query/);
+  assert.match(captured.sql, /order by blocking desc, readiness_id/);
+  assert.match(captured.sql, /limit \$1/);
+  assert.deepEqual(captured.params, [5]);
+});
+
+test('buildPrReadinessRows formats DB-owned ARC blockers for CLI output', () => {
+  const rows = buildPrReadinessRows([
+    {
+      readiness_id: 'current',
+      effective_arc_level: 'ARC-2',
+      blocking: true,
+      trigger_count: 1,
+      missing_requirements: ['evidenceDoc', 'riskUpdate'],
+      evidence_doc_status: 'missing',
+      risk_update_status: 'missing',
+      required_checks: ['lint', 'test', 'docs-validation'],
+    },
+  ]);
+
+  assert.deepEqual(rows, [
+    [
+      'current',
+      'ARC-2',
+      'blocking',
+      1,
+      'evidenceDoc,riskUpdate',
+      'evidence:missing',
+      'risk:missing',
+      'lint,test,docs-validation',
     ],
   ]);
 });

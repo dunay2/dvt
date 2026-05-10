@@ -574,13 +574,16 @@ that encapsulates queued actionable task selection after dependency
 resolution. `governance:db:query files`, `components`, `coverage`,
 `remediation`, and `drift` are aliases over the same SQL query adapter and read
 DB-owned governance query views instead of parsing generated YAML/Markdown
-surfaces. Scope is local developer tooling only; authorization is local OS and
-Docker/Postgres access. Negative tests cover migration checksum mismatch,
-unknown query names, fast summary isolation from the hash-drift projection,
-explicit hash-drift querying, effective task filtering, open-task view
-selection, next-task view selection, governance query view selection, content
-extraction from real lane YAML, and governance file-count parity with the
-Git-tracked file index.
+surfaces. `planning:db:query pr-readiness` also implements
+`QueryGovernanceStateReadModel` by reading the DB-owned ARC/PR readiness
+projection derived from `.arc-policy.yaml`, changed files, evidence docs, and
+risk-register updates. Scope is local developer tooling only; authorization is
+local OS and Docker/Postgres access. Negative tests cover migration checksum
+mismatch, unknown query names, fast summary isolation from the hash-drift
+projection, explicit hash-drift querying, effective task filtering, open-task
+view selection, next-task view selection, governance query view selection, PR
+readiness blocker formatting, content extraction from real lane YAML, and
+governance file-count parity with the Git-tracked file index.
 
 `planning:db:operate` implements `ApplyPlanningLocalOperation`,
 `CreatePlanningTaskDefinition`, `DeletePlanningTaskDefinition`, and
@@ -1209,6 +1212,11 @@ Current implementation status on 2026-05-08:
   `governance:db:export`, and `governance:db:export:check` make generated
   governance source documents DB-exportable instead of leaving `.generated-docs`
   as a hidden second source;
+- W17 is implemented: `planning:db:import` records the current ARC/PR readiness
+  projection in `pr_readiness_checks`, and `planning:db:query pr-readiness`
+  reports effective ARC level, missing evidence/risk requirements, required
+  checks, and blocking state from DB rows instead of recomputing the review
+  posture in operator-facing query output;
 - the obsolete `governance:artifacts:generate` package alias is removed;
   `pnpm governance:refresh` is the single local orchestration command for
   generated inspection artifacts plus planning/governance DB import and checks;
@@ -1236,6 +1244,7 @@ Current implementation status on 2026-05-08:
 | Local DB audit is lost in temp DB         | durable audit uses the shared local Postgres volume           |
 | Non-code gate cost grows unchecked        | Treat CI policy reduction as a separate governed optimization |
 | Governance report churn is hidden         | Governance artifact hashes and source causes are queryable    |
+| PR readiness blockers are hidden in CI    | ARC/readiness blockers are queryable in `pr_readiness_checks` |
 | DB treated as hidden repository authority | No committed database files; export must remain reviewable    |
 | GitHub mirror edits bypass PR review      | Mirror is read-only or imports as reviewed repo changes first |
 
@@ -1264,6 +1273,8 @@ Current implementation status on 2026-05-08:
   hashes.
 - Governance generated source documents can be imported and exported from the
   DB, and `governance:db:export:check` fails when the repo copy diverges.
+- ARC/PR readiness can be inspected through `planning:db:query pr-readiness`
+  without reparsing policy and changed-file state in operator-facing output.
 - The governance refresh sequence is executable through one local command and
   fails closed if generated output does not stabilize before DB import/check.
 
@@ -1909,6 +1920,9 @@ symbols:
     name: PlanningDbRepositoryCommandCatalogMigration
     path: tools/planning-db/migrations/015_repository_command_catalog.sql
   - <<: *planningDbContentSymbol
+    name: PlanningDbPrReadinessProjectionMigration
+    path: tools/planning-db/migrations/016_pr_readiness_projection.sql
+  - <<: *planningDbContentSymbol
     name: PlanningDbMigrateRunner
     path: scripts/planning-db-migrate.cjs
   - <<: *planningDbContentSymbol
@@ -1967,6 +1981,9 @@ symbols:
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
     name: crypto
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: execFileSync
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
     name: fs
@@ -2077,6 +2094,33 @@ symbols:
     name: buildRepositoryCommandSnapshot
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
+    name: resolveRepoPath
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: listChangedFiles
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: globToRegExp
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: levelRank
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: maxArcLevel
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: isEvidenceDocPath
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: isRiskUpdatePath
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: evaluateArcPolicyReadiness
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: buildPrReadinessSnapshot
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
     name: insertPlanningSnapshot
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
@@ -2084,6 +2128,9 @@ symbols:
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
     name: insertRepositoryCommandSnapshot
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: insertPrReadinessSnapshot
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
     name: beginImportTransaction
@@ -2132,6 +2179,18 @@ symbols:
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: readRepositoryCommandRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: joinJsonArray
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: buildPrReadinessRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: prReadinessSelect
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: readPrReadinessRows
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: printRows
