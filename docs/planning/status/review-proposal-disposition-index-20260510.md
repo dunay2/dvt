@@ -276,6 +276,21 @@ Support window, replacement path, deprecation trigger, migration path, and
 removal conditions.
 ```
 
+## Component Question Map
+
+Use this map to decide where a component record should answer each maintainer
+question. A missing answer is a disposition gap for active work.
+
+| Question                             | Where it should be answered                  |
+| ------------------------------------ | -------------------------------------------- |
+| What forms the component?            | Component Engineering Record                 |
+| What information caused it to exist? | Requirements and ADRs                        |
+| Where is the expected shape defined? | Contract and design description              |
+| What can and cannot it do?           | Invariants and boundaries                    |
+| How is it tested?                    | Test strategy linked to the contract         |
+| Who maintains it?                    | Ownership                                    |
+| How do we know it is still correct?  | Runtime evidence, tests, and contract checks |
+
 ## Current Planning State
 
 Planning DB is the operational source of truth for work state.
