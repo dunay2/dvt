@@ -88,6 +88,19 @@ function buildGeneratedYamlSource(sourcePath, parsed) {
     sourceBytes: Buffer.byteLength(raw, 'utf8'),
     parsed,
     rawSourceText,
+    sourceMode: 'in-memory-generator',
+  };
+}
+
+function readGeneratedYamlSourceOrBuild(sourcePath, parsed) {
+  const absolutePath = path.join(repoRoot, sourcePath);
+  if (!fs.existsSync(absolutePath)) {
+    return buildGeneratedYamlSource(sourcePath, parsed);
+  }
+
+  return {
+    ...readYamlSource(absolutePath),
+    sourceMode: 'generated-artifact',
   };
 }
 
@@ -217,6 +230,13 @@ function addGovernanceSource(sources, source, sourceType, metadata = {}) {
 function inMemorySourceMetadata(metadata = {}) {
   return {
     sourceMode: 'in-memory-generator',
+    ...metadata,
+  };
+}
+
+function generatedSourceMetadata(source, metadata = {}) {
+  return {
+    sourceMode: source.sourceMode || 'in-memory-generator',
     ...metadata,
   };
 }
@@ -467,11 +487,11 @@ function buildGovernanceGeneratedInputs() {
       repoRelative(governanceFingerprintBaselinePath),
       fingerprintBaseline
     ),
-    coverageReportSource: buildGeneratedYamlSource(
+    coverageReportSource: readGeneratedYamlSourceOrBuild(
       repoRelative(governanceCoverageReportPath),
       coverageReport
     ),
-    remediationQueueSource: buildGeneratedYamlSource(
+    remediationQueueSource: readGeneratedYamlSourceOrBuild(
       repoRelative(governanceRemediationQueuePath),
       remediationQueue
     ),
@@ -550,7 +570,7 @@ function buildGovernanceFileSnapshot() {
     sources,
     coverageReportSource,
     'governance_coverage_report',
-    inMemorySourceMetadata({
+    generatedSourceMetadata(coverageReportSource, {
       totals: coverageReport.totals || {},
     })
   );
@@ -558,7 +578,7 @@ function buildGovernanceFileSnapshot() {
     sources,
     remediationQueueSource,
     'governance_remediation_queue',
-    inMemorySourceMetadata({
+    generatedSourceMetadata(remediationQueueSource, {
       totals: remediationQueue.totals || {},
     })
   );

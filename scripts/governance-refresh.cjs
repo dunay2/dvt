@@ -52,16 +52,12 @@ function buildRefreshStages() {
       {
         id: 'coverage-report',
         script: 'docs:governance:coverage-report',
-        env: {
-          DVT_GOVERNANCE_REPORT_SOURCE: 'db',
-        },
+        args: ['--', '--source', 'db'],
       },
       {
         id: 'remediation-queue',
         script: 'docs:governance:remediation-queue',
-        env: {
-          DVT_GOVERNANCE_REPORT_SOURCE: 'db',
-        },
+        args: ['--', '--source', 'db'],
       },
     ],
     databaseStages: [
@@ -76,6 +72,10 @@ function buildRefreshStages() {
       {
         id: 'planning-db-export-check',
         script: 'planning:db:export:check',
+      },
+      {
+        id: 'planning-db-import-before-governance-check',
+        script: 'planning:db:import',
       },
       {
         id: 'governance-db-check',
@@ -95,7 +95,7 @@ function pnpmCommand() {
 
 function runPnpmScript(script, stage = {}) {
   const command = pnpmCommand();
-  const result = childProcess.spawnSync(command, [script], {
+  const result = childProcess.spawnSync(command, [script, ...(stage.args || [])], {
     cwd: repoRoot,
     env: {
       ...process.env,

@@ -31,22 +31,23 @@ test('governance refresh imports planning DB before DB-backed generated surfaces
       'docs:governance:remediation-queue',
     ]
   );
-  assert.equal(
-    stages.generationStages.find((stage) => stage.id === 'coverage-report').env
-      .DVT_GOVERNANCE_REPORT_SOURCE,
-    'db'
-  );
-  assert.equal(
-    stages.generationStages.find((stage) => stage.id === 'remediation-queue').env
-      .DVT_GOVERNANCE_REPORT_SOURCE,
-    'db'
-  );
+  assert.deepEqual(stages.generationStages.find((stage) => stage.id === 'coverage-report').args, [
+    '--',
+    '--source',
+    'db',
+  ]);
+  assert.deepEqual(stages.generationStages.find((stage) => stage.id === 'remediation-queue').args, [
+    '--',
+    '--source',
+    'db',
+  ]);
   assert.deepEqual(
     stages.databaseStages.map((stage) => stage.script),
     [
       'planning:db:import',
       'planning:db:check',
       'planning:db:export:check',
+      'planning:db:import',
       'governance:db:check',
       'governance:db:export:check',
     ]

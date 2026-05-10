@@ -105,9 +105,13 @@ not only from the generic task-like regex.
 - Hardened `governance:refresh` stabilization so ignored generated governance
   status artifacts under `.generated-docs/planning/status` are included in the
   convergence fingerprint before DB drift checks run.
+- Hardened DB-backed governance report refresh so `coverage-report` and
+  `remediation-queue` use explicit `--source db` arguments and the final import
+  reads those generated artifacts back into the query store.
 - Added focused tests for the migration, query parser/output/readers, and short
   task ID import behavior.
-- Added focused tests for ignored generated governance artifact fingerprinting.
+- Added focused tests for ignored generated governance artifact fingerprinting,
+  DB-backed governance report arguments, and generated-artifact import.
 
 ### Validation Evidence
 
@@ -168,6 +172,13 @@ not only from the generic task-like regex.
     `readGeneratedGovernanceArtifactHashes` did not exist.
 - `node --test scripts/governance-refresh.test.cjs`
   - passed after implementation; 7/7 tests.
+- `node --test scripts/planning-db-import.test.cjs scripts/governance-refresh.test.cjs`
+  - first focused run failed as expected while the import still ignored
+    DB-backed generated coverage/remediation artifacts and refresh still used
+    env-only source selection.
+- `node --test scripts/planning-db-import.test.cjs scripts/governance-refresh.test.cjs`
+  - passed after importing DB-backed generated artifacts and using explicit
+    `--source db` refresh arguments; 21/21 tests.
 - `pnpm governance:refresh`
   - passed after the stabilization fix; generation stabilized in two passes,
     then planning DB check, planning DB export check, governance DB check, and

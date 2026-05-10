@@ -2209,6 +2209,9 @@ symbols:
     name: buildGeneratedYamlSource
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
+    name: readGeneratedYamlSourceOrBuild
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
     name: cleanJson
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
@@ -2240,6 +2243,9 @@ symbols:
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
     name: inMemorySourceMetadata
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: generatedSourceMetadata
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
     name: buildCoverageRows

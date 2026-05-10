@@ -91,10 +91,17 @@ test('governance snapshot builds DB import sources from in-memory generator proj
   const generatedSources = snapshot.sources.filter((source) =>
     source.sourcePath.startsWith('.generated-docs/')
   );
+  const artifactBackedTypes = new Set([
+    'governance_coverage_report',
+    'governance_remediation_queue',
+  ]);
+  const inMemorySources = generatedSources.filter(
+    (source) => !artifactBackedTypes.has(source.sourceType)
+  );
 
   assert.ok(generatedSources.length > 0);
   assert.equal(
-    generatedSources.every((source) => source.metadata?.sourceMode === 'in-memory-generator'),
+    inMemorySources.every((source) => source.metadata?.sourceMode === 'in-memory-generator'),
     true
   );
   assert.equal(
@@ -107,6 +114,94 @@ test('governance snapshot builds DB import sources from in-memory generator proj
   );
   assert.ok(generatedSources.every((source) => source.rawSource));
   assert.ok(generatedSources.every((source) => typeof source.rawSourceText === 'string'));
+});
+
+test('governance snapshot imports DB-backed coverage and remediation generated artifacts', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const coveragePath = governanceGeneratedPath('system-governance-coverage-report.coverage.yaml');
+  const remediationPath = governanceGeneratedPath('system-governance-remediation-queue.queue.yaml');
+  const originals = new Map(
+    [coveragePath, remediationPath].map((filePath) => [
+      filePath,
+      fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : null,
+    ])
+  );
+  const coverageRaw = [
+    'totals:',
+    '  files: 7',
+    '  governedFiles: 7',
+    '  ungovernedFiles: 0',
+    '  driftFiles: 0',
+    '  legacyFiles: 0',
+    'ciPosture:',
+    '  blockingStatus: fixture',
+    'byCanonicalRole:',
+    '  - name: fixture-role',
+    '    count: 7',
+    'componentCoverage: []',
+    'governanceDocuments: []',
+    'findings: []',
+    '',
+  ].join('\n');
+  const remediationRaw = [
+    'totals:',
+    '  tasks: 1',
+    '  p0: 0',
+    '  p1: 1',
+    '  p2: 0',
+    '  p3: 0',
+    '  driftFiles: 0',
+    '  componentsRequiringSubdivision: 1',
+    'byType: []',
+    'byPriority: []',
+    'tasks:',
+    '  - id: GRQ-FIXTURE',
+    '    type: component-subdivision',
+    '    priority: P1',
+    '    componentUnit: SYS-FIXTURE',
+    '    rootUnit: SYS',
+    '    domainUnit: Docs',
+    '    dddOwner: Docs',
+    '    cqRails: none',
+    '    blocking: no',
+    '    reason: Fixture generated artifact',
+    '    fileCount: 0',
+    '    documentCount: 0',
+    '    files: []',
+    '    documents: []',
+    '    expectedValidation: []',
+    '',
+  ].join('\n');
+
+  fs.mkdirSync(path.dirname(coveragePath), { recursive: true });
+  fs.writeFileSync(coveragePath, coverageRaw, 'utf8');
+  fs.writeFileSync(remediationPath, remediationRaw, 'utf8');
+
+  try {
+    const snapshot = buildGovernanceFileSnapshot();
+    const coverageSource = snapshot.sources.find(
+      (source) => source.sourceType === 'governance_coverage_report'
+    );
+    const remediationSource = snapshot.sources.find(
+      (source) => source.sourceType === 'governance_remediation_queue'
+    );
+
+    assert.ok(snapshot.coverageRows.some((row) => row.name === 'fixture-role'));
+    assert.ok(snapshot.remediationTasks.some((task) => task.taskId === 'GRQ-FIXTURE'));
+    assert.equal(coverageSource.metadata.sourceMode, 'generated-artifact');
+    assert.equal(remediationSource.metadata.sourceMode, 'generated-artifact');
+    assert.equal(coverageSource.rawSourceText, coverageRaw);
+    assert.equal(remediationSource.rawSourceText, remediationRaw);
+  } finally {
+    for (const [filePath, original] of originals) {
+      if (original === null) {
+        fs.unlinkSync(filePath);
+      } else {
+        fs.writeFileSync(filePath, original, 'utf8');
+      }
+    }
+  }
 });
 
 test('governance snapshot does not use stale generated YAML as structured import input', () => {
