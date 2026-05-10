@@ -32,6 +32,7 @@ const knownQueries = new Set([
   'task-references',
   'task-trace',
   'task-gaps',
+  'focus',
 ]);
 
 function databaseUrl() {
@@ -317,6 +318,30 @@ function buildTaskGapRows(rows) {
   ]);
 }
 
+function buildFocusRows(rows) {
+  return rows.map((row) => [
+    row.rank_score ?? row.rankScore,
+    row.priority ?? '-',
+    row.intake_kind ?? row.intakeKind,
+    row.item_id ?? row.itemId,
+    taskScope(row),
+    row.document_path ?? row.documentPath ?? '-',
+    compactText(row.title),
+    compactText(row.reason),
+    row.suggested_query ?? row.suggestedQuery ?? '-',
+  ]);
+}
+
+function taskScope(row) {
+  const laneId = row.lane_id ?? row.laneId;
+  const taskId = row.task_id ?? row.taskId;
+  if (!laneId && !taskId) {
+    return '-';
+  }
+
+  return `${laneId || '-'}/${taskId || '-'}`;
+}
+
 function compactText(value) {
   return String(value ?? '-')
     .replace(/\s+/g, ' ')
@@ -588,6 +613,25 @@ function taskGapSelect() {
       source_path,
       source_content_sha256
     from ${schemaName}.planning_task_gap_query`;
+}
+
+function workIntakeSelect() {
+  return `
+    select
+      rank_score,
+      priority,
+      intake_kind,
+      item_id,
+      lane_id,
+      task_id,
+      document_path,
+      source_path,
+      title,
+      reason,
+      suggested_query,
+      source_view,
+      source_content_sha256
+    from ${schemaName}.planning_work_intake_query`;
 }
 
 function governanceFileSelect() {
@@ -1000,6 +1044,32 @@ async function readTaskGapRows(client, filters = {}) {
   return result.rows;
 }
 
+async function readFocusRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'intake_kind', filters.kind);
+  appendFilter(predicates, params, 'lane_id', filters.laneId);
+  appendFilter(predicates, params, 'priority', filters.priority);
+  appendFilter(predicates, params, 'task_id', filters.taskId);
+  appendFilter(predicates, params, 'document_path', filters.path);
+
+  const limit = parseLimit(filters.limit, 20);
+  params.push(limit);
+
+  const result = await client.query(
+    `${workIntakeSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by
+      rank_score,
+      intake_kind,
+      item_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
 function appendGovernanceFileFilters(predicates, params, filters = {}) {
   appendFilter(predicates, params, 'component_unit', filters.component);
   appendFilter(predicates, params, 'root_unit', filters.rootUnit);
@@ -1292,6 +1362,15 @@ async function runQuery(options = {}) {
       return gapRows;
     }
 
+    if (queryName === 'focus') {
+      const rows = await readFocusRows(client, options.filters || {});
+      const focusRows = buildFocusRows(rows);
+      if (options.print !== false) {
+        printTaskRows(focusRows);
+      }
+      return focusRows;
+    }
+
     if (queryName === 'files') {
       const rows = await readGovernanceFileRows(client, options.filters || {});
       const fileRows = buildGovernanceFileRows(rows);
@@ -1401,6 +1480,7 @@ if (require.main === module) {
 
 module.exports = {
   buildDocsDispositionRows,
+  buildFocusRows,
   buildGovernanceComponentRows,
   buildGovernanceCoverageRows,
   buildGovernanceDriftRows,
@@ -1423,6 +1503,7 @@ module.exports = {
   parseArgs,
   printHashDriftSummary,
   readDocsDispositionRows,
+  readFocusRows,
   readGovernanceComponentRows,
   readGovernanceCoverageRows,
   readGovernanceDriftRows,
