@@ -2976,6 +2976,9 @@ symbols:
   - <<: *planningDbLocalOperationSymbol
     name: operationPayload
     path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: docsResolutionIdempotencyPayload
+    path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: defaultIdempotencyKey
     path: scripts/planning-db-operate.cjs
@@ -3038,6 +3041,9 @@ symbols:
     path: scripts/planning-db-operate.cjs
   - <<: *planningDbDocsResolutionOverlaySymbol
     name: planDocsResolutionOperation
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: materializeDocsResolutionCommand
     path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: buildAuditRows
