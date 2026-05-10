@@ -60,7 +60,7 @@ Additional operational rails covered by this inventory:
   - Adapter surface: `scripts/governance-db-import.cjs`
   - Scope and auth: repo-local maintainer and CI command; no product tenant data
   - Negative tests: fresh-scope skip through delegated planning import and
-    governance-only scope delegation
+    governance-only scope delegation; auxiliary projection drift forces reimport
 
 ## Surface Inventory
 

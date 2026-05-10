@@ -71,6 +71,7 @@ test('planning DB import skips all selected scopes when stale-aware checks are f
     {
       checkPlanningDatabase: async () => ({ ok: true }),
       checkGovernanceDatabase: async () => ({ ok: true }),
+      checkGovernanceAuxiliaryProjections: async () => ({ ok: true }),
       importContent: async (options) => {
         calls.push(options);
         return { lanes: 99 };
@@ -101,6 +102,48 @@ test('planning DB import only imports stale selected scopes', async () => {
       importContent: async (options) => {
         calls.push(options);
         return { governanceFiles: 3, governanceComponents: 2 };
+      },
+      logger: { log() {} },
+    }
+  );
+
+  assert.deepEqual(calls, [
+    {
+      databaseUrl: 'postgres://example/planning',
+      includePlanning: false,
+      includeGovernance: true,
+    },
+  ]);
+  assert.deepEqual(result.importedScopes, ['governance']);
+  assert.deepEqual(result.skippedScopes, ['planning']);
+});
+
+test('planning DB import reimports governance when auxiliary projections are stale', async () => {
+  const calls = [];
+
+  const result = await runPlanningImport(
+    {
+      databaseUrl: 'postgres://example/planning',
+      ifStale: true,
+      includePlanning: true,
+      includeGovernance: true,
+    },
+    {
+      checkPlanningDatabase: async () => ({ ok: true }),
+      checkGovernanceDatabase: async () => ({ ok: true }),
+      checkGovernanceAuxiliaryProjections: async () => ({
+        ok: false,
+        sections: {
+          repositoryCommands: {
+            missing: ['script:planning:db:query'],
+            unexpected: [],
+            stale: [],
+          },
+        },
+      }),
+      importContent: async (options) => {
+        calls.push(options);
+        return { repositoryCommands: 3, docsDispositionActions: 2 };
       },
       logger: { log() {} },
     }

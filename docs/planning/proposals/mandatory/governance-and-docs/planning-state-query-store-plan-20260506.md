@@ -2583,6 +2583,21 @@ symbols:
     name: importContent
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
+    name: compareImportRows
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: compareGovernanceAuxiliaryState
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: buildGovernanceAuxiliaryExpectedState
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: readGovernanceAuxiliaryState
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: checkGovernanceAuxiliaryProjections
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
     name: isScopeFresh
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
