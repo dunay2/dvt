@@ -8,7 +8,10 @@ import type {
   IWorkspaceGraphDraftAuthoringPort,
   WorkspaceGraphDraftAuthoringSaveResult,
 } from '../../ports/workspaceGraphDraftAuthoring';
-import type { IWorkspacePort } from '../../ports/workspace';
+import type {
+  IWorkspaceFileContentCommandPort,
+  IWorkspaceFilesQueryPort,
+} from '../../ports/workspace';
 import { makeRunContext } from '../../testing/contractTestUtils';
 import type { CanvasHarnessState } from './useCanvasController.test.types';
 import type { PlanViewModel } from '../../types/plans';
@@ -69,26 +72,7 @@ export function buildDefaultCanvasHarnessServices(
       }),
   };
 
-  const workspaceService: IWorkspacePort = {
-    getGraphSnapshot: vi.fn(async () => ({ nodes: [], edges: [] })),
-    getDiffChanges: vi.fn(async () => []),
-    getPlugins: vi.fn(async () => []),
-    getRoles: vi.fn(async () => []),
-    getAuditLog: vi.fn(async () => []),
-    listWarehouseConnections: vi.fn(async () => []),
-    listWarehouseTables: vi.fn(async () => []),
-    importSources: vi.fn(async () => ({
-      success: true as const,
-      sourcesCreated: 0,
-      tablesImported: 0,
-      yamlFiles: [],
-      grouping: 'schema' as const,
-      options: {
-        includeColumns: false,
-        addTests: false,
-        addFreshness: false,
-      },
-    })),
+  const workspaceFilesQuery: IWorkspaceFilesQueryPort = {
     listFiles: vi.fn(async () => []),
     getFileContent: vi.fn(async (path: string) => ({
       path,
@@ -97,6 +81,8 @@ export function buildDefaultCanvasHarnessServices(
       content: '',
       lastModified: '2026-04-08T00:00:00Z',
     })),
+  };
+  const workspaceFileContentCommand: IWorkspaceFileContentCommandPort = {
     saveFileContent: vi.fn(async (path: string, content: string) => ({
       path,
       name: path.split('/').at(-1) ?? path,
@@ -132,7 +118,8 @@ export function buildDefaultCanvasHarnessServices(
   };
 
   return {
-    workspaceService,
+    workspaceFilesQuery,
+    workspaceFileContentCommand,
     workspaceGraphDraftAuthoringPort,
     plansService,
     runsService,

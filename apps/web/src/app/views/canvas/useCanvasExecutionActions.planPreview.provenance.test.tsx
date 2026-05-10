@@ -3,7 +3,6 @@
 import { sha256HexUtf8 } from '@dvt/contracts';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { IWorkspacePort } from '../../ports/workspace';
 import { canvasViewCopy } from './copy';
 import { buildPreviewDesignGraphArtifactContent } from './previewGraphSource';
 import {
@@ -12,7 +11,7 @@ import {
   createPlansServiceMock,
   createRunsServiceMock,
   createSessionContext,
-  createWorkspaceServiceMock,
+  createWorkspaceFilePortMocks,
   DEFAULT_PREVIEW_PROVENANCE_CONFIG,
   renderExecutionActionsHarness,
   resetExecutionActionsTestDoubles,
@@ -39,7 +38,7 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
       node.id === 'transform-node' ? { ...node, path: 'models/transform.sql' } : node
     );
     const plansService = createPlansServiceMock();
-    const workspaceService = createWorkspaceServiceMock({
+    const workspaceFilePorts = createWorkspaceFilePortMocks({
       'pipelines/sales_pipeline.yaml': 'name: sales_pipeline\nsteps: []',
       'models/transform.sql': 'select * from analytics.orders',
     });
@@ -47,7 +46,7 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
     harness = renderExecutionActionsHarness({
       plansService,
       runsService: createRunsServiceMock(),
-      workspaceService,
+      ...workspaceFilePorts,
       sessionContext: createSessionContext('temporal'),
       canonicalNodes: nodesWithTransformPath,
       canonicalEdges,
@@ -101,7 +100,7 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
         },
       })
     );
-    expect(workspaceService.saveFileContent).toHaveBeenCalledWith(
+    expect(workspaceFilePorts.workspaceFileContentCommand.saveFileContent).toHaveBeenCalledWith(
       'pipelines/sales_pipeline.yaml',
       expectedGraphArtifactContent
     );
@@ -114,19 +113,20 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
       node.id === 'transform-node' ? { ...node, path: 'models/transform.sql' } : node
     );
     const plansService = createPlansServiceMock();
-    const workspaceService = {
-      ...createWorkspaceServiceMock({
-        'models/transform.sql': 'select * from analytics.orders',
-      }),
+    const workspaceFilePorts = createWorkspaceFilePortMocks({
+      'models/transform.sql': 'select * from analytics.orders',
+    });
+    const workspaceFileContentCommand = {
       saveFileContent: vi.fn(async () => {
         throw new Error('Graph artifact could not be written to the workspace.');
       }),
-    } satisfies IWorkspacePort;
+    };
 
     harness = renderExecutionActionsHarness({
       plansService,
       runsService: createRunsServiceMock(),
-      workspaceService,
+      workspaceFilesQuery: workspaceFilePorts.workspaceFilesQuery,
+      workspaceFileContentCommand,
       canonicalNodes: nodesWithTransformPath,
       canonicalEdges,
     });

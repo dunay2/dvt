@@ -7,7 +7,10 @@ import type { IPlansPort } from '../../ports/plans';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
-import type { IWorkspacePort } from '../../ports/workspace';
+import type {
+  IWorkspaceFileContentCommandPort,
+  IWorkspaceFilesQueryPort,
+} from '../../ports/workspace';
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import { makeRunContext, nb } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -31,7 +34,8 @@ type ExecutionActionsHookCommonProps = Readonly<{
   onRunStarted: (runId: string) => void;
   sessionContext: SessionContextPort;
   shellFeedback: ShellFeedbackPort;
-  workspaceService: IWorkspacePort;
+  workspaceFilesQuery: IWorkspaceFilesQueryPort;
+  workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   previewProvenanceConfig: PreviewProvenanceConfig;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
@@ -45,13 +49,17 @@ type ExecutionActionsHookCommonProps = Readonly<{
   toggleConsolePanel: () => void;
 }>;
 
-type ControlledExecutionActionsHookHostProps = Readonly<ExecutionActionsHookCommonProps & {
-  currentPlan: PlanViewModel | null;
-}>;
+type ControlledExecutionActionsHookHostProps = Readonly<
+  ExecutionActionsHookCommonProps & {
+    currentPlan: PlanViewModel | null;
+  }
+>;
 
-type StatefulExecutionActionsHookHostProps = Readonly<ExecutionActionsHookCommonProps & {
-  initialPlan: PlanViewModel | null;
-}>;
+type StatefulExecutionActionsHookHostProps = Readonly<
+  ExecutionActionsHookCommonProps & {
+    initialPlan: PlanViewModel | null;
+  }
+>;
 
 export type RenderExecutionActionsHarnessArgs = {
   plansService: IPlansPort;
@@ -62,7 +70,8 @@ export type RenderExecutionActionsHarnessArgs = {
   onRunStarted?: (runId: string) => void;
   sessionContext?: SessionContextPort;
   shellFeedback?: ShellFeedbackPort;
-  workspaceService?: IWorkspacePort;
+  workspaceFilesQuery?: IWorkspaceFilesQueryPort;
+  workspaceFileContentCommand?: IWorkspaceFileContentCommandPort;
   previewProvenanceConfig?: Partial<PreviewProvenanceConfig>;
   canonicalNodes?: CanonicalNode[];
   canonicalEdges?: CanonicalEdge[];
@@ -88,7 +97,8 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   | 'onRunStarted'
   | 'sessionContext'
   | 'shellFeedback'
-  | 'workspaceService'
+  | 'workspaceFilesQuery'
+  | 'workspaceFileContentCommand'
   | 'previewProvenanceConfig'
   | 'canPlan'
   | 'canRun'
@@ -102,7 +112,8 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   onRunStarted: (runId: string) => void;
   sessionContext: SessionContextPort;
   shellFeedback: ShellFeedbackPort;
-  workspaceService: IWorkspacePort;
+  workspaceFilesQuery: IWorkspaceFilesQueryPort;
+  workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   previewProvenanceConfig: Partial<PreviewProvenanceConfig>;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
@@ -194,7 +205,8 @@ function resolveCommonHookProps(
     onRunStarted: args.onRunStarted,
     sessionContext: args.sessionContext,
     shellFeedback: args.shellFeedback,
-    workspaceService: args.workspaceService,
+    workspaceFilesQuery: args.workspaceFilesQuery,
+    workspaceFileContentCommand: args.workspaceFileContentCommand,
     previewProvenanceConfig: args.previewProvenanceConfig as PreviewProvenanceConfig,
     canonicalNodes: args.canonicalNodes,
     canonicalEdges: args.canonicalEdges,
@@ -209,6 +221,19 @@ function resolveCommonHookProps(
   };
 }
 
+function resolveWorkspaceFilePortMocks(args: RenderExecutionActionsHarnessArgs): {
+  workspaceFilesQuery: IWorkspaceFilesQueryPort;
+  workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
+} {
+  const defaults = createWorkspaceFilePortMocks();
+
+  return {
+    workspaceFilesQuery: args.workspaceFilesQuery ?? defaults.workspaceFilesQuery,
+    workspaceFileContentCommand:
+      args.workspaceFileContentCommand ?? defaults.workspaceFileContentCommand,
+  };
+}
+
 function resolveHarnessArgs(
   args: RenderExecutionActionsHarnessArgs
 ): ResolvedExecutionActionsHarnessArgs {
@@ -220,7 +245,7 @@ function resolveHarnessArgs(
     onRunStarted: args.onRunStarted ?? vi.fn<(runId: string) => void>(),
     sessionContext: args.sessionContext ?? createSessionContext(),
     shellFeedback: args.shellFeedback ?? createShellFeedbackMock(),
-    workspaceService: args.workspaceService ?? createWorkspaceServiceMock(),
+    ...resolveWorkspaceFilePortMocks(args),
     previewProvenanceConfig: args.previewProvenanceConfig ?? DEFAULT_PREVIEW_PROVENANCE_CONFIG,
     canonicalNodes: args.canonicalNodes ?? buildCanonicalNodes(),
     canonicalEdges: args.canonicalEdges ?? buildCanonicalEdges(),
@@ -307,51 +332,39 @@ export function buildCanonicalEdges(): CanonicalEdge[] {
   ];
 }
 
-export function createWorkspaceServiceMock(
+export function createWorkspaceFilePortMocks(
   fileContents: Readonly<Record<string, string>> = DEFAULT_WORKSPACE_FILE_CONTENTS
-): IWorkspacePort {
+): {
+  workspaceFilesQuery: IWorkspaceFilesQueryPort;
+  workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
+} {
   return {
-    getGraphSnapshot: vi.fn(async () => ({ nodes: [], edges: [] })),
-    getDiffChanges: vi.fn(async () => []),
-    getPlugins: vi.fn(async () => []),
-    getRoles: vi.fn(async () => []),
-    getAuditLog: vi.fn(async () => []),
-    listWarehouseConnections: vi.fn(async () => []),
-    listWarehouseTables: vi.fn(async () => []),
-    importSources: vi.fn(async () => ({
-      success: true as const,
-      sourcesCreated: 0,
-      tablesImported: 0,
-      yamlFiles: [],
-      grouping: 'schema' as const,
-      options: {
-        includeColumns: false,
-        addTests: false,
-        addFreshness: false,
-      },
-    })),
-    listFiles: vi.fn(async () => []),
-    getFileContent: vi.fn(async (path: string) => {
-      const content = fileContents[path];
-      if (content === undefined) {
-        throw new Error(`Workspace file not found: ${path}`);
-      }
+    workspaceFilesQuery: {
+      listFiles: vi.fn(async () => []),
+      getFileContent: vi.fn(async (path: string) => {
+        const content = fileContents[path];
+        if (content === undefined) {
+          throw new Error(`Workspace file not found: ${path}`);
+        }
 
-      return {
+        return {
+          path,
+          name: path.split('/').at(-1) ?? path,
+          language: path.endsWith('.sql') ? 'sql' : 'yaml',
+          content,
+          lastModified: '2026-04-08T00:00:00Z',
+        };
+      }),
+    },
+    workspaceFileContentCommand: {
+      saveFileContent: vi.fn(async (path: string, content: string) => ({
         path,
         name: path.split('/').at(-1) ?? path,
         language: path.endsWith('.sql') ? 'sql' : 'yaml',
         content,
         lastModified: '2026-04-08T00:00:00Z',
-      };
-    }),
-    saveFileContent: vi.fn(async (path: string, content: string) => ({
-      path,
-      name: path.split('/').at(-1) ?? path,
-      language: path.endsWith('.sql') ? 'sql' : 'yaml',
-      content,
-      lastModified: '2026-04-08T00:00:00Z',
-    })),
+      })),
+    },
   };
 }
 
@@ -452,7 +465,8 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
   onRunStarted: ResolvedExecutionActionsHarnessArgs['onRunStarted'];
   sessionContext: SessionContextPort;
   shellFeedback: ResolvedExecutionActionsHarnessArgs['shellFeedback'];
-  workspaceService: IWorkspacePort;
+  workspaceFilesQuery: IWorkspaceFilesQueryPort;
+  workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   setConsolePanelHeight: ResolvedExecutionActionsHarnessArgs['setConsolePanelHeight'];
   toggleConsolePanel: ResolvedExecutionActionsHarnessArgs['toggleConsolePanel'];
 } {
@@ -512,25 +526,20 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
     onRunStarted: currentArgs.onRunStarted,
     sessionContext: currentArgs.sessionContext,
     shellFeedback: currentArgs.shellFeedback,
-    workspaceService: currentArgs.workspaceService,
+    workspaceFilesQuery: currentArgs.workspaceFilesQuery,
+    workspaceFileContentCommand: currentArgs.workspaceFileContentCommand,
     setConsolePanelHeight: currentArgs.setConsolePanelHeight,
     toggleConsolePanel: currentArgs.toggleConsolePanel,
   };
 }
 
 export function resetExecutionActionsTestDoubles() {
-  (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+  (
+    globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
+  ).IS_REACT_ACT_ENVIRONMENT = true;
 }
 
 export function restoreExecutionActionsTestDoubles() {
   vi.clearAllMocks();
   vi.useRealTimers();
 }
-
-
-
-
-
-
-
-

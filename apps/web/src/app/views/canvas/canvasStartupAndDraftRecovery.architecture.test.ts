@@ -87,8 +87,8 @@ const ownedConcernModules = [
   },
   {
     label: 'workspace service API snapshot projection',
-    path: '../../services/workspace/workspaceService.api.ts',
-    phrase: 'Owned concern: adapt the workspace service port',
+    path: '../../services/workspace/workspacePorts.api.ts',
+    phrase: 'Owned concern: adapt workspace capability ports',
   },
   {
     label: 'workspace draft DBT snapshot projection',
@@ -348,9 +348,7 @@ describe('canvas startup and draft recovery architecture', () => {
     const tabStripTemplateSource = readAppSource('CanvasPlaygroundTabStrip.templates.tsx');
     const createCommandSource = readAppSource('canvasCreateCanvasDocumentCommand.ts');
     const createCommandPolicySource = readAppSource('canvasCreateCanvasDocumentCommandPolicy.ts');
-    const workspaceServiceSource = readAppSource(
-      '../../services/workspace/workspaceService.api.ts'
-    );
+    const workspaceApiPortsSource = readAppSource('../../services/workspace/workspacePorts.api.ts');
 
     expect(tabStripSource).toContain('CanvasPlaygroundTabStripTemplate');
     expect(tabStripModelSource).toContain("mode: 'replace_current'");
@@ -365,10 +363,10 @@ describe('canvas startup and draft recovery architecture', () => {
     expect(createCommandPolicySource).toContain('resolveReplaceCurrentCanvasDocumentEligibility');
     expect(createCommandPolicySource).toContain('expectedRevision: existingRecord.revision');
 
-    expect(workspaceServiceSource).toContain('requestRaw(endpoint');
-    expect(workspaceServiceSource).toContain('projectWorkspaceGraphDraftReadResponseSnapshot');
-    expect(workspaceServiceSource).toContain("from './workspaceGraphDraftSnapshotProjection'");
-    expect(workspaceServiceSource).not.toContain(
+    expect(workspaceApiPortsSource).toContain('requestRaw(endpoint');
+    expect(workspaceApiPortsSource).toContain('projectWorkspaceGraphDraftReadResponseSnapshot');
+    expect(workspaceApiPortsSource).toContain("from './workspaceGraphDraftSnapshotProjection'");
+    expect(workspaceApiPortsSource).not.toContain(
       "getJson<WorkspaceGraphSnapshot>('/workspace/graph'"
     );
   });
@@ -507,7 +505,7 @@ describe('canvas startup and draft recovery architecture', () => {
 
   it('keeps Canvas authoring draft persistence on aggregate-native types', () => {
     const workspacePortSource = readAppSource('../../ports/workspace.ts');
-    const workspaceServiceSource = readAppSource('../../services/workspace/workspaceService.ts');
+    const workspacePortsSource = readAppSource('../../services/workspace/workspacePorts.ts');
     const repositorySource = readAppSource('canvasDraftRepository.ts');
     const authoringSource = readAppSource('canvasDraftAuthoring.ts');
     const structuralSignatureSource = readAppSource('canvasDraftStructuralSignature.ts');
@@ -519,7 +517,7 @@ describe('canvas startup and draft recovery architecture', () => {
       'export type SaveWorkspaceGraphDraftResult',
     ]) {
       expect(workspacePortSource).not.toContain(retiredExport);
-      expect(workspaceServiceSource).not.toContain(retiredExport.replace('export type ', ''));
+      expect(workspacePortsSource).not.toContain(retiredExport.replace('export type ', ''));
     }
 
     expect(repositorySource).toContain('draft: WorkspaceGraphAuthoringDraft');
@@ -718,7 +716,7 @@ describe('canvas startup and draft recovery architecture', () => {
     const activeSources = [
       readRepoFile('apps/web/src/app/services/plans/plansService.ts'),
       readRepoFile('apps/web/src/app/services/runs/runsService.ts'),
-      readRepoFile('apps/web/src/app/services/workspace/workspaceService.api.test.ts'),
+      readRepoFile('apps/web/src/app/services/workspace/workspacePorts.api.test.ts'),
       readRepoFile('apps/web/src/app/stores/uiLayoutStore.test.ts'),
       readRepoFile('apps/web/src/app/views/Canvas.routeStates.test.tsx'),
       readRepoFile('apps/web/src/app/views/canvas/CanvasViewport.test.tsx'),

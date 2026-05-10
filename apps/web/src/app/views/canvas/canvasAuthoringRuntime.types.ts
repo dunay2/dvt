@@ -1,6 +1,5 @@
 /** Owned concern: define the public local contract for the Canvas authoring-runtime component. */
 import type { WorkspaceScope } from '../../ports/sessionContext';
-import type { IWorkspacePort } from '../../ports/workspace';
 import type { IWorkspaceGraphDraftAuthoringPort } from '../../ports/workspaceGraphDraftAuthoring';
 import type { DataSourceMode } from '../../services/config/dataSource';
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
@@ -25,7 +24,6 @@ export type CanvasAuthoringRuntimePreviewProvenanceConfig = Pick<
 export type UseCanvasAuthoringRuntimeArgs = {
   dataSourceMode: DataSourceMode;
   platformHealthQuery: CanvasAuthoringRuntimePlatformHealthQuery;
-  workspaceService: IWorkspacePort;
   workspaceGraphDraftAuthoringPort: IWorkspaceGraphDraftAuthoringPort;
   workspaceLayoutKey: string;
   columnLevelLineageEnabled: boolean;
@@ -40,7 +38,6 @@ export type UseCanvasAuthoringRuntimeArgs = {
 
 export type UseCanvasAuthoringRuntimeDraftFlowArgs = Pick<
   UseCanvasAuthoringRuntimeArgs,
-  | 'workspaceService'
   | 'workspaceGraphDraftAuthoringPort'
   | 'workspaceLayoutKey'
   | 'columnLevelLineageEnabled'
@@ -54,5 +51,5 @@ export type UseCanvasAuthoringRuntimeDraftFlowArgs = Pick<
 
 export type CanvasAuthoringRuntimeBaselineArgs = Pick<
   UseCanvasAuthoringRuntimeDraftFlowArgs,
-  'workspaceService' | 'workspaceGraphDraftAuthoringPort' | 'workspaceLayoutKey'
+  'workspaceGraphDraftAuthoringPort' | 'workspaceLayoutKey'
 >;

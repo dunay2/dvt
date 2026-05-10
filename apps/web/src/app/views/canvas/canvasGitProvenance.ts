@@ -1,11 +1,12 @@
+/** Owned concern: read workspace SQL provenance through the file query port. */
 import { sha256HexUtf8 } from '@dvt/contracts';
 
 import type { PlanPreviewProvenance } from '../../ports/plans';
-import type { IWorkspacePort } from '../../ports/workspace';
+import type { IWorkspaceFilesQueryPort } from '../../ports/workspace';
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 
 type ReadPreviewSqlArtifactArgs = {
-  workspaceService: Pick<IWorkspacePort, 'getFileContent'>;
+  workspaceFilesQuery: IWorkspaceFilesQueryPort;
   path: string;
   gitRepo: string;
   gitRef: string;
@@ -13,7 +14,7 @@ type ReadPreviewSqlArtifactArgs = {
 };
 
 export async function readPreviewSqlArtifact({
-  workspaceService,
+  workspaceFilesQuery,
   path,
   gitRepo,
   gitRef,
@@ -22,7 +23,7 @@ export async function readPreviewSqlArtifact({
   sqlArtifact: PlanPreviewProvenance['sqlArtifact'];
   sqlText: string;
 }> {
-  const sqlArtifactFile = await workspaceService.getFileContent(path);
+  const sqlArtifactFile = await workspaceFilesQuery.getFileContent(path);
   const sqlText = sqlArtifactFile.content;
 
   return {

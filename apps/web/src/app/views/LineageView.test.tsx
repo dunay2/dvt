@@ -3,15 +3,15 @@
 import React, { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import type { IWorkspacePort } from '../ports/workspace';
+import type { IWorkspaceGraphSnapshotQueryPort, WorkspaceGraphSnapshot } from '../ports/workspace';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { waitForReactQuery, withTestQueryClient } from '../../testing/reactQueryHarness';
 import LineageView from './LineageView';
 
 function buildGraphSnapshot(overrides?: {
-  nodes?: Awaited<ReturnType<IWorkspacePort['getGraphSnapshot']>>['nodes'];
-  edges?: Awaited<ReturnType<IWorkspacePort['getGraphSnapshot']>>['edges'];
-}): Awaited<ReturnType<IWorkspacePort['getGraphSnapshot']>> {
+  nodes?: WorkspaceGraphSnapshot['nodes'];
+  edges?: WorkspaceGraphSnapshot['edges'];
+}): WorkspaceGraphSnapshot {
   return {
     nodes: overrides?.nodes ?? [
       {
@@ -48,42 +48,11 @@ function buildGraphSnapshot(overrides?: {
   };
 }
 
-function buildWorkspaceService(overrides?: Partial<IWorkspacePort>): IWorkspacePort {
+function buildWorkspaceGraphSnapshotQueryPort(
+  overrides?: Partial<IWorkspaceGraphSnapshotQueryPort>
+): IWorkspaceGraphSnapshotQueryPort {
   return {
     getGraphSnapshot: async () => buildGraphSnapshot(),
-    getDiffChanges: async () => [],
-    getPlugins: async () => [],
-    getRoles: async () => [],
-    getAuditLog: async () => [],
-    listWarehouseConnections: async () => [],
-    listWarehouseTables: async () => [],
-    importSources: async () => ({
-      success: true,
-      sourcesCreated: 0,
-      tablesImported: 0,
-      yamlFiles: [],
-      grouping: 'schema',
-      options: {
-        includeColumns: false,
-        addTests: false,
-        addFreshness: false,
-      },
-    }),
-    listFiles: async () => [],
-    getFileContent: async (path) => ({
-      path,
-      name: path.split('/').at(-1) ?? path,
-      language: 'sql',
-      content: '',
-      lastModified: '2026-04-06T00:00:00Z',
-    }),
-    saveFileContent: async (path, content) => ({
-      path,
-      name: path.split('/').at(-1) ?? path,
-      language: 'sql',
-      content,
-      lastModified: '2026-04-06T00:00:00Z',
-    }),
     ...overrides,
   };
 }
@@ -116,7 +85,7 @@ describe('LineageView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'mock',
-          workspaceService: buildWorkspaceService(),
+          workspaceGraphSnapshotQuery: buildWorkspaceGraphSnapshotQueryPort(),
         }}
       >
         <LineageView />
@@ -143,7 +112,7 @@ describe('LineageView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'mock',
-          workspaceService: buildWorkspaceService({
+          workspaceGraphSnapshotQuery: buildWorkspaceGraphSnapshotQueryPort({
             getGraphSnapshot: async () => graphSnapshotPromise,
           }),
         }}
@@ -166,7 +135,7 @@ describe('LineageView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'mock',
-          workspaceService: buildWorkspaceService({
+          workspaceGraphSnapshotQuery: buildWorkspaceGraphSnapshotQueryPort({
             getGraphSnapshot: async () => buildGraphSnapshot({ nodes: [], edges: [] }),
           }),
         }}
@@ -190,7 +159,7 @@ describe('LineageView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'mock',
-          workspaceService: buildWorkspaceService({
+          workspaceGraphSnapshotQuery: buildWorkspaceGraphSnapshotQueryPort({
             getGraphSnapshot: async () => {
               throw new Error('Graph snapshot unavailable');
             },
@@ -216,7 +185,7 @@ describe('LineageView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'mock',
-          workspaceService: buildWorkspaceService(),
+          workspaceGraphSnapshotQuery: buildWorkspaceGraphSnapshotQueryPort(),
         }}
       >
         <LineageView />
@@ -253,7 +222,7 @@ describe('LineageView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'mock',
-          workspaceService: buildWorkspaceService({
+          workspaceGraphSnapshotQuery: buildWorkspaceGraphSnapshotQueryPort({
             getGraphSnapshot: async () =>
               buildGraphSnapshot({
                 nodes: [
@@ -309,7 +278,7 @@ describe('LineageView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'mock',
-          workspaceService: buildWorkspaceService({
+          workspaceGraphSnapshotQuery: buildWorkspaceGraphSnapshotQueryPort({
             getGraphSnapshot: async () =>
               buildGraphSnapshot({
                 nodes: [

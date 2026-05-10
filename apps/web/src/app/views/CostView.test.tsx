@@ -3,7 +3,7 @@
 import React, { act, type ReactElement, type ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { IWorkspacePort } from '../ports/workspace';
+import type { IWorkspaceGraphSnapshotQueryPort } from '../ports/workspace';
 import type { IRunsPort } from '../ports/runs';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { useExecutionStore } from '../stores/executionStore';
@@ -39,7 +39,9 @@ vi.mock('recharts', async (importOriginal) => {
   };
 });
 
-function buildWorkspaceService(overrides?: Partial<IWorkspacePort>): IWorkspacePort {
+function buildWorkspaceGraphSnapshotQueryPort(
+  overrides?: Partial<IWorkspaceGraphSnapshotQueryPort>
+): IWorkspaceGraphSnapshotQueryPort {
   return {
     getGraphSnapshot: async () => ({
       nodes: [
@@ -57,39 +59,6 @@ function buildWorkspaceService(overrides?: Partial<IWorkspacePort>): IWorkspaceP
         },
       ],
       edges: [],
-    }),
-    getDiffChanges: async () => [],
-    getPlugins: async () => [],
-    getRoles: async () => [],
-    getAuditLog: async () => [],
-    listWarehouseConnections: async () => [],
-    listWarehouseTables: async () => [],
-    importSources: async () => ({
-      success: true,
-      sourcesCreated: 0,
-      tablesImported: 0,
-      yamlFiles: [],
-      grouping: 'schema',
-      options: {
-        includeColumns: false,
-        addTests: false,
-        addFreshness: false,
-      },
-    }),
-    listFiles: async () => [],
-    getFileContent: async (path) => ({
-      path,
-      name: path.split('/').at(-1) ?? path,
-      language: 'sql',
-      content: '',
-      lastModified: '2026-04-06T00:00:00Z',
-    }),
-    saveFileContent: async (path, content) => ({
-      path,
-      name: path.split('/').at(-1) ?? path,
-      language: 'sql',
-      content,
-      lastModified: '2026-04-06T00:00:00Z',
     }),
     ...overrides,
   };
@@ -155,7 +124,7 @@ describe('CostView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'mock',
-          workspaceService: buildWorkspaceService(),
+          workspaceGraphSnapshotQuery: buildWorkspaceGraphSnapshotQueryPort(),
           runsService: buildRunsService(),
         }}
       >
@@ -213,7 +182,7 @@ describe('CostView', () => {
       <AppServicesProvider
         overrides={{
           mode: 'api',
-          workspaceService: buildWorkspaceService({
+          workspaceGraphSnapshotQuery: buildWorkspaceGraphSnapshotQueryPort({
             getGraphSnapshot: async () => {
               throw new Error('workspace unavailable');
             },

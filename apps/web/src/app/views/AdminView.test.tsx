@@ -4,16 +4,15 @@ import React, { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, waitFor } from '@testing-library/dom';
 import { createMemoryRouter, RouterProvider } from 'react-router';
-import type { IWorkspacePort } from '../ports/workspace';
 import { AppServicesProvider } from '../services/AppServicesContext';
+import type { IWorkspaceAdminReadPort } from '../ports/workspace';
 import { waitForReactQuery, withTestQueryClient } from '../../testing/reactQueryHarness';
 import AdminView from './AdminView';
 
-function buildWorkspaceService(overrides?: Partial<IWorkspacePort>): IWorkspacePort {
+function buildWorkspaceAdminReadPort(
+  overrides?: Partial<IWorkspaceAdminReadPort>
+): IWorkspaceAdminReadPort {
   return {
-    getGraphSnapshot: async () => ({ nodes: [], edges: [] }),
-    getDiffChanges: async () => [],
-    getPlugins: async () => [],
     getRoles: async () => [
       {
         id: 'role-admin',
@@ -48,31 +47,6 @@ function buildWorkspaceService(overrides?: Partial<IWorkspacePort>): IWorkspaceP
         status: 'failed',
       },
     ],
-    listWarehouseConnections: async () => [],
-    listWarehouseTables: async () => [],
-    importSources: async () => ({
-      success: true,
-      sourcesCreated: 0,
-      tablesImported: 0,
-      yamlFiles: [],
-      grouping: 'schema',
-      options: { includeColumns: false, addTests: false, addFreshness: false },
-    }),
-    listFiles: async () => [],
-    getFileContent: async (path) => ({
-      path,
-      name: path.split('/').at(-1) ?? path,
-      language: 'json',
-      content: '',
-      lastModified: '2026-04-06T00:00:00Z',
-    }),
-    saveFileContent: async (path, content) => ({
-      path,
-      name: path.split('/').at(-1) ?? path,
-      language: 'json',
-      content,
-      lastModified: '2026-04-06T00:00:00Z',
-    }),
     ...overrides,
   };
 }
@@ -91,7 +65,7 @@ function createAdminRouteElement(
             plugins: { dbt: { available: true } },
           }),
         },
-        workspaceService: buildWorkspaceService(),
+        workspaceAdminRead: buildWorkspaceAdminReadPort(),
       }}
     >
       <AdminView initialTab={initialTab} />

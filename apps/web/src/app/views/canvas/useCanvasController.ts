@@ -27,8 +27,9 @@ export function useCanvasController() {
     dataSourceMode,
     capabilities,
     platformHealthQuery,
-    workspaceService,
-    workspaceServiceCapabilities,
+    workspaceFilesQuery,
+    workspaceFileContentCommand,
+    workspacePortCapabilities,
     workspaceGraphDraftAuthoringPort,
     plansService,
     runsService,
@@ -49,7 +50,6 @@ export function useCanvasController() {
       failureCount: platformHealthQuery.failureCount,
       errorUpdatedAt: platformHealthQuery.errorUpdatedAt,
     },
-    workspaceService,
     workspaceGraphDraftAuthoringPort,
     workspaceLayoutKey: store.workspaceLayoutKey,
     columnLevelLineageEnabled: store.columnLevelLineageEnabled,
@@ -97,7 +97,7 @@ export function useCanvasController() {
     return resolveCanvasRuntimePolicy({
       activeRuntime: activeCanvasGraphStrategyResolution,
       canMutateGraph: draftAdmission.canMutateGraph,
-      canOpenSourceImport: workspaceServiceCapabilities.sourceImportAvailable,
+      canOpenSourceImport: workspacePortCapabilities.sourceImportAvailable,
       canPlan: draftAdmission.canPlan,
       canRun: draftAdmission.canRun,
       canReloadLatestDraft: draftAdmission.canReloadLatestDraft,
@@ -110,7 +110,7 @@ export function useCanvasController() {
     isDraftRecoveryBlocked,
     store.userPermissions.canPlan,
     store.userPermissions.canRun,
-    workspaceServiceCapabilities.sourceImportAvailable,
+    workspacePortCapabilities.sourceImportAvailable,
   ]);
   const canMutateActiveCanvas = runtimePolicy.commands.canMutateGraph;
 
@@ -185,7 +185,8 @@ export function useCanvasController() {
   const executionActions = useCanvasExecutionActions({
     plansService,
     runsService,
-    workspaceService,
+    workspaceFilesQuery,
+    workspaceFileContentCommand,
     executionStrategy,
     canonicalNodes: visibleScope.canonicalNodes,
     canonicalEdges: visibleScope.canonicalEdges,

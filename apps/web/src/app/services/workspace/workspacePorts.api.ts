@@ -1,14 +1,20 @@
-/** Owned concern: adapt the workspace service port to protected API read-model projections. */
+/** Owned concern: adapt workspace capability ports to protected API rails. */
 import { parseWorkspaceGraphDraftReadResponse } from '@dvt/contracts';
 
 import type {
   FileContent,
-  IWorkspacePort,
+  IWarehouseSourceImportPort,
+  IWorkspaceAdminReadPort,
+  IWorkspaceDiffQueryPort,
+  IWorkspaceFileContentCommandPort,
+  IWorkspaceFilesQueryPort,
+  IWorkspaceGraphSnapshotQueryPort,
+  IWorkspacePluginCatalogQueryPort,
   WorkspaceFileEntry,
   WorkspaceGraphSnapshot,
 } from '../../ports/workspace';
 import { ApiError, type ApiClient } from '../api/createApiClient';
-import { detectWorkspaceServiceLocale, resolveWorkspaceServiceCopy } from './workspaceServiceCopy';
+import { detectWorkspacePortLocale, resolveWorkspacePortCopy } from './workspacePortCopy';
 import {
   WorkspaceApiCapabilityUnsupportedError,
   WorkspaceFileLoadError,
@@ -31,7 +37,7 @@ import {
 } from './workspaceGraphDraftHttp';
 import { projectWorkspaceGraphDraftReadResponseSnapshot } from './workspaceGraphDraftSnapshotProjection';
 
-export const apiWorkspaceServiceCapabilities = {
+export const apiWorkspacePortCapabilities = {
   sourceImportAvailable: false,
 } as const;
 
@@ -73,35 +79,59 @@ function rejectUnsupportedApiWorkspaceCapability(
   return Promise.reject(new WorkspaceApiCapabilityUnsupportedError(capability, rail));
 }
 
-export function createApiWorkspaceService(apiClient: ApiClient): IWorkspacePort {
+export function createApiWorkspaceGraphSnapshotQueryPort(
+  apiClient: ApiClient
+): IWorkspaceGraphSnapshotQueryPort {
   return {
     getGraphSnapshot: () => getWorkspaceGraphSnapshot(apiClient),
+  };
+}
+
+export function createApiWorkspaceDiffQueryPort(): IWorkspaceDiffQueryPort {
+  return {
     getDiffChanges: () =>
       rejectUnsupportedApiWorkspaceCapability('workspace.diffChanges', 'GetWorkspaceDiffChanges'),
+  };
+}
+
+export function createApiWorkspacePluginCatalogQueryPort(): IWorkspacePluginCatalogQueryPort {
+  return {
     getPlugins: () =>
       rejectUnsupportedApiWorkspaceCapability('workspace.plugins', 'ListWorkspacePlugins'),
+  };
+}
+
+export function createApiWorkspaceAdminReadPort(): IWorkspaceAdminReadPort {
+  return {
     getRoles: () =>
       rejectUnsupportedApiWorkspaceCapability('workspace.adminRoles', 'ListAdminRoles'),
     getAuditLog: () =>
       rejectUnsupportedApiWorkspaceCapability('workspace.adminAuditLog', 'ListAdminAuditLog'),
+  };
+}
+
+export function createApiWarehouseSourceImportPort(): IWarehouseSourceImportPort {
+  return {
     listWarehouseConnections: async () => {
       throw new Error(
-        resolveWorkspaceServiceCopy(detectWorkspaceServiceLocale())
-          .warehouseImportApiModeUnavailable
+        resolveWorkspacePortCopy(detectWorkspacePortLocale()).warehouseImportApiModeUnavailable
       );
     },
     listWarehouseTables: async () => {
       throw new Error(
-        resolveWorkspaceServiceCopy(detectWorkspaceServiceLocale())
-          .warehouseImportApiModeUnavailable
+        resolveWorkspacePortCopy(detectWorkspacePortLocale()).warehouseImportApiModeUnavailable
       );
     },
     importSources: async () => {
       throw new Error(
-        resolveWorkspaceServiceCopy(detectWorkspaceServiceLocale())
-          .warehouseImportApiModeUnavailable
+        resolveWorkspacePortCopy(detectWorkspacePortLocale()).warehouseImportApiModeUnavailable
       );
     },
+  };
+}
+
+export function createApiWorkspaceFilesQueryPort(apiClient: ApiClient): IWorkspaceFilesQueryPort {
+  return {
     listFiles: () =>
       apiClient.getJson<WorkspaceFileEntry[]>(
         buildWorkspaceFilesEndpoint(readWorkspaceFilesScope())
@@ -119,6 +149,11 @@ export function createApiWorkspaceService(apiClient: ApiClient): IWorkspacePort 
         throw error;
       }
     },
+  };
+}
+
+export function createApiWorkspaceFileContentCommandPort(): IWorkspaceFileContentCommandPort {
+  return {
     saveFileContent: () =>
       rejectUnsupportedApiWorkspaceCapability('workspace.fileWrite', 'SaveWorkspaceFileContent'),
   };

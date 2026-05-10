@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { ApiError } from '../api/createApiClient';
-import { createWorkspaceService } from './workspaceService';
+import { createWorkspacePorts } from './workspacePorts';
 import { flattenWorkspaceEntries } from './workspaceFileTree.test.fixtures';
-import { createApiWorkspaceServiceHarness } from './workspaceServiceApi.test.harness';
+import { createApiWorkspacePortHarness } from './workspacePortsApi.test.harness';
 import { WorkspaceFileLoadError, WORKSPACE_HTTP_ERROR_REASON } from './workspaceErrors';
 import {
   buildWorkspaceScope,
@@ -11,27 +11,30 @@ import {
   setWorkspaceScope,
 } from './workspaceScope.test.harness';
 
-describe('workspaceService files', () => {
+describe('workspace ports files', () => {
   installWorkspaceScopeHarness();
 
   it('keeps file-content edits local to each default mock service instance', async () => {
-    const firstService = createWorkspaceService('mock');
-    const secondService = createWorkspaceService('mock');
-    const original = await secondService.getFileContent('README.md');
+    const firstPorts = createWorkspacePorts('mock');
+    const secondPorts = createWorkspacePorts('mock');
+    const original = await secondPorts.workspaceFilesQuery.getFileContent('README.md');
 
-    await firstService.saveFileContent('README.md', '# Mutated in first instance only');
+    await firstPorts.workspaceFileContentCommand.saveFileContent(
+      'README.md',
+      '# Mutated in first instance only'
+    );
 
-    const firstAfter = await firstService.getFileContent('README.md');
-    const secondAfter = await secondService.getFileContent('README.md');
+    const firstAfter = await firstPorts.workspaceFilesQuery.getFileContent('README.md');
+    const secondAfter = await secondPorts.workspaceFilesQuery.getFileContent('README.md');
 
     expect(firstAfter.content).toBe('# Mutated in first instance only');
     expect(secondAfter.content).toBe(original.content);
   });
 
   it('returns a unique default file tree without duplicated workspace paths', async () => {
-    const service = createWorkspaceService('mock');
+    const ports = createWorkspacePorts('mock');
 
-    const fileTree = flattenWorkspaceEntries(await service.listFiles());
+    const fileTree = flattenWorkspaceEntries(await ports.workspaceFilesQuery.listFiles());
 
     expect(fileTree).toContain('models/staging');
     expect(fileTree).toContain('models/marts');
@@ -42,15 +45,15 @@ describe('workspaceService files', () => {
   });
 
   it('adds newly saved files to the instance-local file tree', async () => {
-    const firstService = createWorkspaceService('mock');
-    const secondService = createWorkspaceService('mock');
+    const firstPorts = createWorkspacePorts('mock');
+    const secondPorts = createWorkspacePorts('mock');
     const newFilePath = 'models/generated/new_model.sql';
 
-    await firstService.saveFileContent(newFilePath, 'select 1 as id');
+    await firstPorts.workspaceFileContentCommand.saveFileContent(newFilePath, 'select 1 as id');
 
-    const firstTree = flattenWorkspaceEntries(await firstService.listFiles());
-    const secondTree = flattenWorkspaceEntries(await secondService.listFiles());
-    const firstFile = await firstService.getFileContent(newFilePath);
+    const firstTree = flattenWorkspaceEntries(await firstPorts.workspaceFilesQuery.listFiles());
+    const secondTree = flattenWorkspaceEntries(await secondPorts.workspaceFilesQuery.listFiles());
+    const firstFile = await firstPorts.workspaceFilesQuery.getFileContent(newFilePath);
 
     expect(firstTree).toContain('models/generated');
     expect(firstTree).toContain(newFilePath);
@@ -59,9 +62,9 @@ describe('workspaceService files', () => {
   });
 
   it('maps missing mock files to a typed workspace file load error', async () => {
-    const service = createWorkspaceService('mock');
+    const ports = createWorkspacePorts('mock');
 
-    await expect(service.getFileContent('models/missing.sql')).rejects.toEqual(
+    await expect(ports.workspaceFilesQuery.getFileContent('models/missing.sql')).rejects.toEqual(
       expect.objectContaining<Partial<WorkspaceFileLoadError>>({
         name: 'WorkspaceFileLoadError',
         kind: 'not_found',
@@ -71,7 +74,7 @@ describe('workspaceService files', () => {
   });
 
   it('maps canonical workspace file-not-found envelopes to a typed workspace file load error', async () => {
-    const { service } = createApiWorkspaceServiceHarness({
+    const { workspaceFilesQuery } = createApiWorkspacePortHarness({
       getJson: async () => {
         throw new ApiError({
           message: 'Request to /workspace/files/models%2Fmissing.sql failed (404)',
@@ -88,7 +91,7 @@ describe('workspaceService files', () => {
       },
     });
 
-    await expect(service.getFileContent('models/missing.sql')).rejects.toEqual(
+    await expect(workspaceFilesQuery.getFileContent('models/missing.sql')).rejects.toEqual(
       expect.objectContaining<Partial<WorkspaceFileLoadError>>({
         name: 'WorkspaceFileLoadError',
         kind: 'not_found',
@@ -100,11 +103,11 @@ describe('workspaceService files', () => {
   it('lists files through the scoped workspace files query endpoint', async () => {
     const scope = buildWorkspaceScope();
     setWorkspaceScope(scope);
-    const { getJson, service } = createApiWorkspaceServiceHarness({
+    const { getJson, workspaceFilesQuery } = createApiWorkspacePortHarness({
       getJson: async <TResponse>() => [] as TResponse,
     });
 
-    await service.listFiles();
+    await workspaceFilesQuery.listFiles();
 
     expect(getJson).toHaveBeenCalledWith(
       `/workspace/files?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}`
@@ -114,7 +117,7 @@ describe('workspaceService files', () => {
   it('loads file content through the scoped workspace file content query endpoint', async () => {
     const scope = buildWorkspaceScope();
     setWorkspaceScope(scope);
-    const { getJson, service } = createApiWorkspaceServiceHarness({
+    const { getJson, workspaceFilesQuery } = createApiWorkspacePortHarness({
       getJson: async <TResponse>() =>
         ({
           path: 'models/staging/stg_orders.sql',
@@ -125,7 +128,7 @@ describe('workspaceService files', () => {
         }) as TResponse,
     });
 
-    await service.getFileContent('models/staging/stg_orders.sql');
+    await workspaceFilesQuery.getFileContent('models/staging/stg_orders.sql');
 
     expect(getJson).toHaveBeenCalledWith(
       `/workspace/files/models%2Fstaging%2Fstg_orders.sql?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}`
@@ -145,12 +148,14 @@ describe('workspaceService files', () => {
         },
       },
     });
-    const { service } = createApiWorkspaceServiceHarness({
+    const { workspaceFilesQuery } = createApiWorkspacePortHarness({
       getJson: async () => {
         throw unrelatedNotFound;
       },
     });
 
-    await expect(service.getFileContent('models/missing.sql')).rejects.toBe(unrelatedNotFound);
+    await expect(workspaceFilesQuery.getFileContent('models/missing.sql')).rejects.toBe(
+      unrelatedNotFound
+    );
   });
 });

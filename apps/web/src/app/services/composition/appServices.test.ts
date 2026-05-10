@@ -6,7 +6,15 @@ import type { CapabilitiesPort } from '../../ports/capabilities';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
-import type { IWorkspacePort } from '../../ports/workspace';
+import type {
+  IWarehouseSourceImportPort,
+  IWorkspaceAdminReadPort,
+  IWorkspaceDiffQueryPort,
+  IWorkspaceFileContentCommandPort,
+  IWorkspaceFilesQueryPort,
+  IWorkspaceGraphSnapshotQueryPort,
+  IWorkspacePluginCatalogQueryPort,
+} from '../../ports/workspace';
 import { makeRunContext } from '../../testing/contractTestUtils';
 import { ApiError, type ApiClient } from '../api/createApiClient';
 import { getRuntimeDataSourceMode } from '../config/runtimeDataSourceMode';
@@ -81,38 +89,60 @@ function buildApiClientStub(): ApiClientStub {
   };
 }
 
-function buildWorkspacePortStub(): IWorkspacePort {
+function buildWorkspacePortStubs(): {
+  workspaceGraphSnapshotQuery: IWorkspaceGraphSnapshotQueryPort;
+  workspaceFilesQuery: IWorkspaceFilesQueryPort;
+  workspaceDiffQuery: IWorkspaceDiffQueryPort;
+  workspacePluginCatalogQuery: IWorkspacePluginCatalogQueryPort;
+  workspaceAdminRead: IWorkspaceAdminReadPort;
+  warehouseSourceImport: IWarehouseSourceImportPort;
+  workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
+} {
   return {
-    getGraphSnapshot: vi.fn(async () => ({ nodes: [], edges: [] })),
-    getDiffChanges: vi.fn(async () => []),
-    getPlugins: vi.fn(async () => []),
-    getRoles: vi.fn(async () => []),
-    getAuditLog: vi.fn(async () => []),
-    listWarehouseConnections: vi.fn(async () => []),
-    listWarehouseTables: vi.fn(async () => []),
-    importSources: vi.fn(async () => ({
-      success: true as const,
-      sourcesCreated: 0,
-      tablesImported: 0,
-      yamlFiles: [],
-      grouping: 'schema' as const,
-      options: { includeColumns: false, addTests: false, addFreshness: false },
-    })),
-    listFiles: vi.fn(async () => []),
-    getFileContent: vi.fn(async (path) => ({
-      path,
-      name: path,
-      language: 'sql',
-      content: '',
-      lastModified: '2026-04-23T00:00:00Z',
-    })),
-    saveFileContent: vi.fn(async (path, content) => ({
-      path,
-      name: path,
-      language: 'sql',
-      content,
-      lastModified: '2026-04-23T00:00:00Z',
-    })),
+    workspaceGraphSnapshotQuery: {
+      getGraphSnapshot: vi.fn(async () => ({ nodes: [], edges: [] })),
+    },
+    workspaceFilesQuery: {
+      listFiles: vi.fn(async () => []),
+      getFileContent: vi.fn(async (path: string) => ({
+        path,
+        name: path,
+        language: 'sql',
+        content: '',
+        lastModified: '2026-04-23T00:00:00Z',
+      })),
+    },
+    workspaceDiffQuery: {
+      getDiffChanges: vi.fn(async () => []),
+    },
+    workspacePluginCatalogQuery: {
+      getPlugins: vi.fn(async () => []),
+    },
+    workspaceAdminRead: {
+      getRoles: vi.fn(async () => []),
+      getAuditLog: vi.fn(async () => []),
+    },
+    warehouseSourceImport: {
+      listWarehouseConnections: vi.fn(async () => []),
+      listWarehouseTables: vi.fn(async () => []),
+      importSources: vi.fn(async () => ({
+        success: true as const,
+        sourcesCreated: 0,
+        tablesImported: 0,
+        yamlFiles: [],
+        grouping: 'schema' as const,
+        options: { includeColumns: false, addTests: false, addFreshness: false },
+      })),
+    },
+    workspaceFileContentCommand: {
+      saveFileContent: vi.fn(async (path: string, content: string) => ({
+        path,
+        name: path,
+        language: 'sql',
+        content,
+        lastModified: '2026-04-23T00:00:00Z',
+      })),
+    },
   };
 }
 
@@ -148,7 +178,13 @@ describe('buildAppServices', () => {
 
     expect(appServices.dataSourceMode).toBe('mock');
     expect(getRuntimeDataSourceMode()).toBe('mock');
-    expect(appServices.workspaceService).toBeDefined();
+    expect(appServices.workspaceGraphSnapshotQuery).toBeDefined();
+    expect(appServices.workspaceFilesQuery).toBeDefined();
+    expect(appServices.workspaceDiffQuery).toBeDefined();
+    expect(appServices.workspacePluginCatalogQuery).toBeDefined();
+    expect(appServices.workspaceAdminRead).toBeDefined();
+    expect(appServices.warehouseSourceImport).toBeDefined();
+    expect(appServices.workspaceFileContentCommand).toBeDefined();
     expect(appServices.runsService).toBeDefined();
     expect(appServices.plansService).toBeDefined();
     expect(typeof appServices.capabilitiesPort.loadCapabilities).toBe('function');
@@ -160,9 +196,9 @@ describe('buildAppServices', () => {
   it('builds isolated mock workspace services for independent composition roots', async () => {
     const firstServices = buildAppServices({ mode: 'mock' });
     const secondServices = buildAppServices({ mode: 'mock' });
-    const secondBefore = await secondServices.workspaceService.getGraphSnapshot();
+    const secondBefore = await secondServices.workspaceGraphSnapshotQuery.getGraphSnapshot();
 
-    await firstServices.workspaceService.importSources({
+    await firstServices.warehouseSourceImport.importSources({
       connectionId: 'conn-1',
       tables: [
         {
@@ -179,13 +215,13 @@ describe('buildAppServices', () => {
       addFreshness: false,
     });
 
-    const secondAfter = await secondServices.workspaceService.getGraphSnapshot();
+    const secondAfter = await secondServices.workspaceGraphSnapshotQuery.getGraphSnapshot();
 
     expect(secondAfter.nodes.some((node) => node.id === 'src_finance_ledger_entries')).toBe(false);
     expect(secondAfter.nodes).toHaveLength(secondBefore.nodes.length);
   });
 
-  it('lets a fresh mock authoring port read a draft that already exists in the shared mock workspace', async () => {
+  it('lets the mock authoring port read a draft saved through the same composition root', async () => {
     const firstServices = buildAppServices({ mode: 'mock' });
 
     await firstServices.workspaceGraphDraftAuthoringPort.saveGraphDraft({
@@ -194,11 +230,7 @@ describe('buildAppServices', () => {
       draft: AUTHORING_DRAFT,
     });
 
-    const recreatedAuthoringPort = buildAppServices({
-      mode: 'mock',
-      workspaceService: firstServices.workspaceService,
-      sessionContext: firstServices.sessionContext,
-    }).workspaceGraphDraftAuthoringPort;
+    const recreatedAuthoringPort = firstServices.workspaceGraphDraftAuthoringPort;
 
     await expect(recreatedAuthoringPort.readGraphDraft()).resolves.toMatchObject({
       kind: 'ok',
@@ -222,11 +254,12 @@ describe('buildAppServices', () => {
     });
   });
 
-  it('hard-cuts graph-draft persistence out of workspaceService while keeping mock authoring operational', async () => {
+  it('hard-cuts graph-draft persistence out of workspace ports while keeping mock authoring operational', async () => {
     const services = buildAppServices({ mode: 'mock' });
 
-    expect(services.workspaceService).not.toHaveProperty('getGraphDraft');
-    expect(services.workspaceService).not.toHaveProperty('saveGraphDraft');
+    expect('workspaceService' in services).toBe(false);
+    expect(services.workspaceGraphSnapshotQuery).not.toHaveProperty('getGraphDraft');
+    expect(services.workspaceFilesQuery).not.toHaveProperty('saveGraphDraft');
 
     const saveResult = await services.workspaceGraphDraftAuthoringPort.saveGraphDraft({
       expectedRevision: null,
@@ -255,7 +288,7 @@ describe('buildAppServices', () => {
 
   it('uses explicit overrides instead of rebuilding runtime seams', () => {
     const apiClient = buildApiClientStub();
-    const workspaceService = buildWorkspacePortStub();
+    const workspacePorts = buildWorkspacePortStubs();
     const runsService = buildRunsPortStub();
     const plansService = buildPlansPortStub();
     const capabilitiesPort: CapabilitiesPort = {
@@ -291,7 +324,7 @@ describe('buildAppServices', () => {
     const appServices = buildAppServices({
       mode: 'api',
       apiClient,
-      workspaceService,
+      ...workspacePorts,
       runsService,
       plansService,
       capabilitiesPort,
@@ -301,7 +334,19 @@ describe('buildAppServices', () => {
 
     expect(appServices.dataSourceMode).toBe('api');
     expect(appServices.apiClient).toBe(apiClient);
-    expect(appServices.workspaceService).toBe(workspaceService);
+    expect(appServices.workspaceGraphSnapshotQuery).toBe(
+      workspacePorts.workspaceGraphSnapshotQuery
+    );
+    expect(appServices.workspaceFilesQuery).toBe(workspacePorts.workspaceFilesQuery);
+    expect(appServices.workspaceDiffQuery).toBe(workspacePorts.workspaceDiffQuery);
+    expect(appServices.workspacePluginCatalogQuery).toBe(
+      workspacePorts.workspacePluginCatalogQuery
+    );
+    expect(appServices.workspaceAdminRead).toBe(workspacePorts.workspaceAdminRead);
+    expect(appServices.warehouseSourceImport).toBe(workspacePorts.warehouseSourceImport);
+    expect(appServices.workspaceFileContentCommand).toBe(
+      workspacePorts.workspaceFileContentCommand
+    );
     expect(appServices.runsService).toBe(runsService);
     expect(appServices.plansService).toBe(plansService);
     expect(appServices.capabilitiesPort).toBe(capabilitiesPort);

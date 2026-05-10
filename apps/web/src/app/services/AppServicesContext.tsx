@@ -1,3 +1,4 @@
+/** Owned concern: publish React hooks for application service ports. */
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 
 import type { CapabilitiesPort } from '../ports/capabilities';
@@ -5,7 +6,15 @@ import type { IPlansPort } from '../ports/plans';
 import type { IRunsPort } from '../ports/runs';
 import type { SessionContextPort } from '../ports/sessionContext';
 import type { ShellFeedbackPort } from '../ports/shellFeedback';
-import type { IWorkspacePort } from '../ports/workspace';
+import type {
+  IWarehouseSourceImportPort,
+  IWorkspaceAdminReadPort,
+  IWorkspaceDiffQueryPort,
+  IWorkspaceFileContentCommandPort,
+  IWorkspaceFilesQueryPort,
+  IWorkspaceGraphSnapshotQueryPort,
+  IWorkspacePluginCatalogQueryPort,
+} from '../ports/workspace';
 import type { IWorkspaceGraphDraftAuthoringPort } from '../ports/workspaceGraphDraftAuthoring';
 import type { AppServices, AppServicesOverrides } from './composition/appServices';
 import { buildAppServices } from './composition/appServices';
@@ -27,10 +36,7 @@ export type AppServicesProviderProps = Readonly<{
   overrides?: AppServicesOverrides;
 }>;
 
-export function AppServicesProvider({
-  children,
-  overrides,
-}: AppServicesProviderProps) {
+export function AppServicesProvider({ children, overrides }: AppServicesProviderProps) {
   const value = useMemo(
     () => buildAppServices(overrides),
     [
@@ -38,7 +44,13 @@ export function AppServicesProvider({
       overrides?.mode,
       overrides?.plansService,
       overrides?.runsService,
-      overrides?.workspaceService,
+      overrides?.workspaceGraphSnapshotQuery,
+      overrides?.workspaceFilesQuery,
+      overrides?.workspaceDiffQuery,
+      overrides?.workspacePluginCatalogQuery,
+      overrides?.workspaceAdminRead,
+      overrides?.warehouseSourceImport,
+      overrides?.workspaceFileContentCommand,
       overrides?.workspaceGraphDraftAuthoringPort,
       overrides?.capabilitiesPort,
       overrides?.sessionContext,
@@ -61,8 +73,32 @@ export function useAppDataSourceMode(): AppServices['dataSourceMode'] {
   return useRequiredAppServicesContext().dataSourceMode;
 }
 
-export function useWorkspaceService(): IWorkspacePort {
-  return useRequiredAppServicesContext().workspaceService;
+export function useWorkspaceGraphSnapshotQueryPort(): IWorkspaceGraphSnapshotQueryPort {
+  return useRequiredAppServicesContext().workspaceGraphSnapshotQuery;
+}
+
+export function useWorkspaceFilesQueryPort(): IWorkspaceFilesQueryPort {
+  return useRequiredAppServicesContext().workspaceFilesQuery;
+}
+
+export function useWorkspaceDiffQueryPort(): IWorkspaceDiffQueryPort {
+  return useRequiredAppServicesContext().workspaceDiffQuery;
+}
+
+export function useWorkspacePluginCatalogQueryPort(): IWorkspacePluginCatalogQueryPort {
+  return useRequiredAppServicesContext().workspacePluginCatalogQuery;
+}
+
+export function useWorkspaceAdminReadPort(): IWorkspaceAdminReadPort {
+  return useRequiredAppServicesContext().workspaceAdminRead;
+}
+
+export function useWarehouseSourceImportPort(): IWarehouseSourceImportPort {
+  return useRequiredAppServicesContext().warehouseSourceImport;
+}
+
+export function useWorkspaceFileContentCommandPort(): IWorkspaceFileContentCommandPort {
+  return useRequiredAppServicesContext().workspaceFileContentCommand;
 }
 
 export function useWorkspaceGraphDraftAuthoringPort(): IWorkspaceGraphDraftAuthoringPort {

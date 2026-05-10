@@ -1,9 +1,10 @@
+/** Owned concern: coordinate source import wizard state through the import port. */
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import type {
   ImportSourcesResult,
-  IWorkspacePort,
+  IWarehouseSourceImportPort,
   WarehouseConnection,
 } from '../../ports/workspace';
 import { sourceImportWizardCopy as copy } from './copy';
@@ -18,7 +19,7 @@ import type { DataObjectSourceType, SourceImportWizardState, WizardStep } from '
 
 interface UseSourceImportWizardParams {
   open: boolean;
-  workspaceService: IWorkspacePort;
+  warehouseSourceImport: IWarehouseSourceImportPort;
   onComplete?: (result: ImportSourcesResult) => void;
   onClose: () => void;
 }
@@ -46,7 +47,7 @@ function hasImportedCanvasNodes(result: ImportSourcesResult): boolean {
 
 export function useSourceImportWizard({
   open,
-  workspaceService,
+  warehouseSourceImport,
   onComplete,
   onClose,
 }: UseSourceImportWizardParams) {
@@ -57,11 +58,11 @@ export function useSourceImportWizard({
     [state.connections, state.selectedConnection]
   );
 
-  useConnectionsLoader({ open, workspaceService, setState });
+  useConnectionsLoader({ open, warehouseSourceImport, setState });
   useTablesLoader({
     open,
     selectedConnection: state.selectedConnection,
-    workspaceService,
+    warehouseSourceImport,
     setState,
   });
 
@@ -104,7 +105,7 @@ export function useSourceImportWizard({
     }
     setState((prev) => ({ ...prev, isProcessing: true, loadError: null }));
     try {
-      const result = await workspaceService.importSources({
+      const result = await warehouseSourceImport.importSources({
         connectionId: state.selectedConnection,
         tables: state.tables
           .filter((table) => table.selected)

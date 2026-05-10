@@ -424,9 +424,6 @@ describe('useCanvasController reload conflict recovery', () => {
         '2026-04-17T00:00:01Z'
       )
     );
-    harness.state.services.workspaceService.getGraphSnapshot = vi.fn(async () => {
-      throw new Error('RETIRED_GRAPH_SNAPSHOT_SHOULD_NOT_BE_USED');
-    });
     harness.state.services.workspaceGraphDraftAuthoringPort.readGraphDraft = vi.fn(async () =>
       buildProtectedDraftReadResult({
         revision: 'rev-remote',
@@ -455,7 +452,7 @@ describe('useCanvasController reload conflict recovery', () => {
     expect(
       harness.state.services.workspaceGraphDraftAuthoringPort.readGraphDraft
     ).toHaveBeenCalled();
-    expect(harness.state.services.workspaceService.getGraphSnapshot).not.toHaveBeenCalled();
+    expect('workspaceService' in harness.state.services).toBe(false);
     expect(harness.getLatestResult()?.nodesWithImpact.map((node) => node.id)).toEqual([
       'node_1',
       'node_3',

@@ -4,7 +4,7 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { IWorkspacePort } from '../ports/workspace';
+import type { ImportSourcesResult, IWarehouseSourceImportPort } from '../ports/workspace';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import SourceImportWizard from './SourceImportWizard';
 
@@ -30,13 +30,10 @@ function requireElement<T>(value: T | undefined, errorCode: string): T {
   return value;
 }
 
-function buildWorkspaceService(overrides?: Partial<IWorkspacePort>): IWorkspacePort {
+function buildWarehouseSourceImportPort(
+  overrides?: Partial<IWarehouseSourceImportPort>
+): IWarehouseSourceImportPort {
   return {
-    getGraphSnapshot: async () => ({ nodes: [], edges: [] }),
-    getDiffChanges: async () => [],
-    getPlugins: async () => [],
-    getRoles: async () => [],
-    getAuditLog: async () => [],
     listWarehouseConnections: async () => [
       {
         id: 'conn-1',
@@ -65,21 +62,6 @@ function buildWorkspaceService(overrides?: Partial<IWorkspacePort>): IWorkspaceP
         addTests: false,
         addFreshness: false,
       },
-    }),
-    listFiles: async () => [],
-    getFileContent: async (path) => ({
-      path,
-      name: path.split('/').at(-1) ?? path,
-      language: 'yaml',
-      content: '',
-      lastModified: '2026-04-06T00:00:00Z',
-    }),
-    saveFileContent: async (path, content) => ({
-      path,
-      name: path.split('/').at(-1) ?? path,
-      language: 'yaml',
-      content,
-      lastModified: '2026-04-06T00:00:00Z',
     }),
     ...overrides,
   };
@@ -117,16 +99,16 @@ describe('SourceImportWizard', () => {
   });
 
   async function renderWizard(args?: {
-    workspaceService?: IWorkspacePort;
+    warehouseSourceImport?: IWarehouseSourceImportPort;
     onClose?: () => void;
-    onComplete?: (result: Awaited<ReturnType<IWorkspacePort['importSources']>>) => void;
+    onComplete?: (result: ImportSourcesResult) => void;
   }): Promise<void> {
     await act(async () => {
       root.render(
         <AppServicesProvider
           overrides={{
             mode: 'mock',
-            workspaceService: args?.workspaceService ?? buildWorkspaceService(),
+            warehouseSourceImport: args?.warehouseSourceImport ?? buildWarehouseSourceImportPort(),
           }}
         >
           <SourceImportWizard
@@ -239,7 +221,7 @@ describe('SourceImportWizard', () => {
 
     await renderWizard({
       onComplete,
-      workspaceService: buildWorkspaceService({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
         importSources: async () => ({
           success: true,
           sourcesCreated: 0,

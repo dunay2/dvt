@@ -10,7 +10,6 @@ import { useCanvasAuthoringRuntimeDraftFlow } from './useCanvasAuthoringRuntimeD
 export function useCanvasAuthoringRuntime({
   dataSourceMode,
   platformHealthQuery,
-  workspaceService,
   workspaceGraphDraftAuthoringPort,
   workspaceLayoutKey,
   columnLevelLineageEnabled,
@@ -32,7 +31,6 @@ export function useCanvasAuthoringRuntime({
   );
   const canPersistDraftTransport = canEditDraftTransport && backendPosture.backendAllowsMutations;
   const draftFlow = useCanvasAuthoringRuntimeDraftFlow({
-    workspaceService,
     workspaceGraphDraftAuthoringPort,
     workspaceLayoutKey,
     columnLevelLineageEnabled,
