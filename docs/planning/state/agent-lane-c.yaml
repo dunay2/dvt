@@ -833,7 +833,7 @@ tasks:
   - task_id: CI-AUDIT-ENGINE-COVERAGE
     parent_task: RC-C2
     priority: P2
-    status: done
+    status: queued
     objective: >-
       align the Engine Coverage Gate change detector with the actual engine package scope so engine
       Vitest configuration changes cannot bypass coverage threshold enforcement.
@@ -844,23 +844,20 @@ tasks:
       path mapping.
     complexity: S
     effort_points: 2
-    progress_pct: 100
+    progress_pct: 0
     evidence_refs:
       - docs/planning/reviews/ci-and-delivery/20260506-ci-build-audit-review.md
       - .github/workflows/test.yml
       - tools/ci/policy/workflow-scope.json
-      - tools/ci/scope-config.mjs
-      - tools/ci/emit-scope.test.mjs
-      - tools/ci/workflow-pattern-parity.test.mjs
     status_reason: >-
-      The Engine Coverage Gate now consumes `emit-scope --mode test` through
-      `steps.scope.outputs.coverage_relevant`, with shared CI tool tests proving the semantic
-      coverage scope and scripts-only package aliases staying out of runtime lanes.
-    last_verified: '2026-05-10'
+      The audit confirmed that engine tests run for broad engine changes, but the separate coverage
+      gate still uses a local `coverage_relevant` filter that omits the package-local engine Vitest
+      config.
+    last_verified: '2026-05-09'
   - task_id: CI-AUDIT-CONTRACTS-SCOPE
     parent_task: RC-C2
     priority: P2
-    status: done
+    status: queued
     objective: >-
       decide whether `contracts.yml` should keep inline `dorny/paths-filter` scope rules or move to
       the central workflow-scope policy used by newer CI gates.
@@ -870,19 +867,16 @@ tasks:
       CI-tool tests lock the chosen contract-scope behavior.
     complexity: S
     effort_points: 2
-    progress_pct: 100
+    progress_pct: 0
     evidence_refs:
       - docs/planning/reviews/ci-and-delivery/20260506-ci-build-audit-review.md
       - .github/workflows/contracts.yml
       - tools/ci/policy/workflow-scope.json
       - tools/ci/emit-scope.mjs
-      - tools/ci/scope-config.mjs
-      - tools/ci/emit-scope.test.mjs
-      - tools/ci/workflow-pattern-parity.test.mjs
     status_reason: >-
-      The contracts workflow now consumes `emit-scope --mode contracts` for contracts, determinism,
-      and golden routing instead of owning local inline `dorny/paths-filter` package-root rules.
-    last_verified: '2026-05-10'
+      The audit identified workflow-scope ownership drift: most newer gates use the central scope
+      policy and emitter, while the contracts workflow still carries local inline filters.
+    last_verified: '2026-05-09'
   - task_id: CI-AUDIT-ADR0-OWNER
     parent_task: RC-C2
     priority: P2
