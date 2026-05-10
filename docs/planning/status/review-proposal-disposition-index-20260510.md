@@ -178,37 +178,103 @@ implemented, tested, and still visible in operation.
   runbook proof, incident signal, or evidence doc that shows the behavior is
   observable after shipping.
 
-Illustrative shape:
+Illustrative shape using the existing run-domain transition guard surface:
 
 ```text
 Requirement
-REQ-RUN-017
-Cancelled runs cannot transition back to RUNNING.
+AR-B1-B / AR-B1-C
+Invalid run-level and step-level transitions are rejected by @dvt/run-domain.
 
 Decision
-ADR-0031
-Run state transitions are validated in the domain layer.
+ADR-0003 / ADR-0004
+Execution lifecycle authority stays DVT-owned and event-sourced.
 
 Design
-RunStateTransitionPolicy owns allowed transitions.
+@dvt/run-domain owns terminal-state guards and explicit allowed-from maps.
 
 Contract
-validateTransition(from, to): TransitionResult
+applyRunEvent(snapshot, eventEnvelope): void
+Invalid transitions raise InvalidStateTransitionError.
 
 Code
-packages/engine/domain/RunStateTransitionPolicy.ts
+packages/@dvt/run-domain/src/applyRunEvent.ts
+packages/@dvt/run-domain/src/transitionPolicy.ts
 
 Test
-RunStateTransitionPolicy.spec.ts
+packages/@dvt/run-domain/test/applyRunEvent.test.ts
 
 Runtime evidence
-metric: dvt.run.transition.rejected
-event: RunTransitionRejected
+docs/evidence/ED-20260404-guards-alignment-adapter-postgres.md
+packages/@dvt/adapter-postgres/test/PostgresStateTransitions.integration.test.ts
 ```
 
 If the chain stops before `Runtime evidence`, the item may still be valid, but
 the disposition must say whether runtime observability is not applicable,
 already covered elsewhere, or still pending as follow-up work.
+
+## Component Engineering Record Template
+
+When a component needs its own engineering record, use this shape. The record is
+the concrete version of the dossier and traceability chain above; it should
+contain verified links, not invented IDs or aspirational paths.
+
+```markdown
+# Component Engineering Record: ComponentName
+
+## Identity
+
+Component ID: Stable component or requirement identifier.
+Package: Owning package or app.
+Owner: Owning bounded context, team, role, or lane.
+Lifecycle: Active, review, deprecated, superseded, or reference-only.
+
+## Purpose
+
+What the component exists to centralize, enforce, expose, or protect.
+
+## Requirements
+
+- Requirement ID: requirement statement.
+- Requirement ID: requirement statement.
+
+## Public Contract
+
+- Exported function, interface, command/query rail, route, schema, event, or UI
+  contract.
+
+## Invariants
+
+- Rule that must remain true.
+- Rule that must remain true.
+
+## Decisions
+
+- ADR, accepted proposal, review, closeout, or tradeoff that shaped the design.
+
+## Design
+
+Owned policy, aggregate, service boundary, state model, diagram, or interaction
+model that explains the solution shape.
+
+## Tests
+
+- Test path or test case proving an accepted path.
+- Test path or test case proving a rejected path.
+
+## Observability / Runtime Evidence
+
+- Metric, event, log, trace, audit record, dashboard, runbook, or evidence doc.
+
+## Related Code
+
+- Owning implementation path.
+- Owning test path.
+
+## Lifecycle / Deprecation
+
+Support window, replacement path, deprecation trigger, migration path, and
+removal conditions.
+```
 
 ## Current Planning State
 
