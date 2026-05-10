@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { resolveWorkspacePortCopy } from './workspacePortCopy';
 import { createWorkspacePorts, resolveWorkspacePortCapabilities } from './workspacePorts';
 import { createMockWorkspacePorts, createMockWorkspaceState } from './workspacePorts.mock';
 
@@ -11,6 +12,12 @@ describe('workspace ports source import', () => {
     expect(resolveWorkspacePortCapabilities('api')).toEqual({
       sourceImportAvailable: false,
     });
+  });
+
+  it('keeps api-mode Spanish source import copy encoded as readable text', () => {
+    expect(resolveWorkspacePortCopy('es-ES').warehouseImportApiModeUnavailable).toBe(
+      'La importación de fuentes del warehouse no está disponible en modo API hasta que exista el endpoint del backend.'
+    );
   });
 
   it('imports selected warehouse tables into the mock workspace graph', async () => {

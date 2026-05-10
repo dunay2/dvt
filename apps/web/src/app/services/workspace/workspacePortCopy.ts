@@ -18,7 +18,7 @@ const LOCALIZED_COPY_BY_LANGUAGE: Record<WorkspacePortLanguage, WorkspacePortCop
   en: null,
   es: {
     warehouseImportApiModeUnavailable:
-      'La importaci�n de fuentes del warehouse no est� disponible en modo API hasta que exista el endpoint del backend.',
+      'La importación de fuentes del warehouse no está disponible en modo API hasta que exista el endpoint del backend.',
   },
 };
 
