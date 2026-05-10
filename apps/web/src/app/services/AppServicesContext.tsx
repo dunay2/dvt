@@ -41,7 +41,6 @@ export function AppServicesProvider({ children, overrides }: AppServicesProvider
     () => buildAppServices(overrides),
     [
       overrides?.apiClient,
-      overrides?.mode,
       overrides?.plansService,
       overrides?.runsService,
       overrides?.workspaceGraphSnapshotQuery,

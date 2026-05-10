@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { createAppServicesTestOverrides } from '../../../testing/appServicesTestDoubles';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -59,7 +60,7 @@ describe('useArtifactsViewModel', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
-          mode: 'mock',
+          ...createAppServicesTestOverrides(),
           workspaceFilesQuery: buildWorkspaceFilesQueryPort({
             listFiles: async () => [
               {
@@ -107,7 +108,7 @@ describe('useArtifactsViewModel', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
-          mode: 'mock',
+          ...createAppServicesTestOverrides(),
           workspaceFilesQuery: buildWorkspaceFilesQueryPort(),
         }}
       >
@@ -139,7 +140,6 @@ describe('useArtifactsViewModel', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
-          mode: 'api',
           workspaceFilesQuery: buildWorkspaceFilesQueryPort({
             listFiles: async () => {
               throw new Error('workspace unavailable');

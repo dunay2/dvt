@@ -91,14 +91,6 @@ export const canvasViewRouteCopyByKey = {
     key: 'canvas.route.disabledCanvasPluginMessageSuffix',
     fallback: ' because its plugin is disabled or unavailable.',
   },
-  runtimeBlockedTitle: {
-    key: 'canvas.runtime.blockedTitle',
-    fallback: 'Canvas runtime unavailable',
-  },
-  runtimeBlockedFallbackMessage: {
-    key: 'canvas.runtime.blockedFallbackMessage',
-    fallback: 'Canvas authoring requires API runtime mode and protected workspace draft access.',
-  },
   backendBlockedTitle: {
     key: 'canvas.backend.blockedTitle',
     fallback: 'Backend not ready',

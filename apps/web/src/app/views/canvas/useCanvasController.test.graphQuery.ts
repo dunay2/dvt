@@ -1,8 +1,10 @@
-import type {
-  CanvasHarnessMocks,
-  CanvasHarnessState,
-} from './useCanvasController.test.types';
+import type { CanvasHarnessMocks, CanvasHarnessState } from './useCanvasController.test.types';
 import { projectCanvasHarnessDraftReadModel } from './useCanvasController.test.draftAuthoring';
+import { createPlatformHealthSnapshot } from '../../../capabilities/platform-health/testing/platformHealthFixtures';
+
+function isPlatformHealthQuery(queryKey: readonly unknown[]): boolean {
+  return queryKey[0] === 'shell' && queryKey[1] === 'platform-health';
+}
 
 export function resolveCurrentGraphDraftQueryData(state: CanvasHarnessState) {
   if (state.graphDraftQueryData !== undefined) {
@@ -17,11 +19,59 @@ export function setCanvasHarnessGraphQueryError(
   mocks: CanvasHarnessMocks
 ): void {
   mocks.useQuery.mockImplementation((queryConfig?: { queryKey?: readonly string[] }) => {
+    const queryKey = queryConfig?.queryKey ?? [];
+    if (isPlatformHealthQuery(queryKey)) {
+      return {
+        data: createPlatformHealthSnapshot(),
+        isPending: false,
+        isError: false,
+      };
+    }
+
+    if (queryKey[1] === 'graph-draft') {
+      return {
+        data: resolveCurrentGraphDraftQueryData(state),
+        isPending: false,
+        isError: false,
+      };
+    }
+
     return {
       data: undefined,
       isPending: false,
       isError: true,
       error: new Error('Graph query failed'),
+    };
+  });
+}
+
+export function setCanvasHarnessGraphQueryPending(
+  state: CanvasHarnessState,
+  mocks: CanvasHarnessMocks,
+  isPending: boolean
+): void {
+  mocks.useQuery.mockImplementation((queryConfig?: { queryKey?: readonly string[] }) => {
+    const queryKey = queryConfig?.queryKey ?? [];
+    if (isPlatformHealthQuery(queryKey)) {
+      return {
+        data: createPlatformHealthSnapshot(),
+        isPending: false,
+        isError: false,
+      };
+    }
+
+    if (queryKey[1] === 'graph-draft') {
+      return {
+        data: resolveCurrentGraphDraftQueryData(state),
+        isPending,
+        isError: false,
+      };
+    }
+
+    return {
+      data: state.graphData,
+      isPending,
+      isError: false,
     };
   });
 }
@@ -37,6 +87,14 @@ export function refreshCanvasHarnessGraphSnapshotWithoutNodeCosts(
 
   mocks.useQuery.mockImplementation((queryConfig?: { queryKey?: readonly string[] }) => {
     const queryKey = queryConfig?.queryKey ?? [];
+    if (isPlatformHealthQuery(queryKey)) {
+      return {
+        data: createPlatformHealthSnapshot(),
+        isPending: false,
+        isError: false,
+      };
+    }
+
     if (queryKey[1] === 'graph-draft') {
       return {
         data: resolveCurrentGraphDraftQueryData(state),

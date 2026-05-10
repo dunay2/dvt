@@ -1,3 +1,4 @@
+import { createAppServicesTestOverrides } from '../../../testing/appServicesTestDoubles';
 import { describe, expect, it, vi } from 'vitest';
 import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
@@ -173,11 +174,11 @@ function buildPlansPortStub(): IPlansPort {
 }
 
 describe('buildAppServices', () => {
-  it('owns boot-time mode resolution and publishes the runtime mode', () => {
-    const appServices = buildAppServices({ mode: 'mock' });
+  it('owns API-only boot-time service composition', () => {
+    const appServices = buildAppServices(createAppServicesTestOverrides());
 
-    expect(appServices.dataSourceMode).toBe('mock');
-    expect(getRuntimeDataSourceMode()).toBe('mock');
+    expect(appServices.dataSourceMode).toBe('api');
+    expect(getRuntimeDataSourceMode()).toBe('api');
     expect(appServices.workspaceGraphSnapshotQuery).toBeDefined();
     expect(appServices.workspaceFilesQuery).toBeDefined();
     expect(appServices.workspaceDiffQuery).toBeDefined();
@@ -193,9 +194,9 @@ describe('buildAppServices', () => {
     expect(typeof appServices.shellFeedback.success).toBe('function');
   });
 
-  it('builds isolated mock workspace services for independent composition roots', async () => {
-    const firstServices = buildAppServices({ mode: 'mock' });
-    const secondServices = buildAppServices({ mode: 'mock' });
+  it('builds isolated test-double workspace services for independent composition roots', async () => {
+    const firstServices = buildAppServices(createAppServicesTestOverrides());
+    const secondServices = buildAppServices(createAppServicesTestOverrides());
     const secondBefore = await secondServices.workspaceGraphSnapshotQuery.getGraphSnapshot();
 
     await firstServices.warehouseSourceImport.importSources({
@@ -222,7 +223,7 @@ describe('buildAppServices', () => {
   });
 
   it('lets the mock authoring port read a draft saved through the same composition root', async () => {
-    const firstServices = buildAppServices({ mode: 'mock' });
+    const firstServices = buildAppServices(createAppServicesTestOverrides());
 
     await firstServices.workspaceGraphDraftAuthoringPort.saveGraphDraft({
       expectedRevision: null,
@@ -255,7 +256,7 @@ describe('buildAppServices', () => {
   });
 
   it('hard-cuts graph-draft persistence out of workspace ports while keeping mock authoring operational', async () => {
-    const services = buildAppServices({ mode: 'mock' });
+    const services = buildAppServices(createAppServicesTestOverrides());
 
     expect('workspaceService' in services).toBe(false);
     expect(services.workspaceGraphSnapshotQuery).not.toHaveProperty('getGraphDraft');
@@ -322,7 +323,6 @@ describe('buildAppServices', () => {
     };
 
     const appServices = buildAppServices({
-      mode: 'api',
       apiClient,
       ...workspacePorts,
       runsService,
@@ -364,7 +364,6 @@ describe('buildAppServices', () => {
     apiClient.getJson.mockResolvedValue(payload);
 
     const appServices = buildAppServices({
-      mode: 'api',
       apiClient,
     });
 
@@ -386,7 +385,6 @@ describe('buildAppServices', () => {
     );
 
     const appServices = buildAppServices({
-      mode: 'api',
       apiClient,
     });
 
@@ -411,7 +409,6 @@ describe('buildAppServices', () => {
     apiClient.getJson.mockRejectedValue(failure);
 
     const appServices = buildAppServices({
-      mode: 'api',
       apiClient,
     });
 

@@ -10,6 +10,7 @@ import {
   setHarnessRemoteDraftRecord,
 } from './useCanvasController.draftLifecycle.test.support';
 import { setupCanvasControllerHarness } from './useCanvasController.test.harness';
+import { setCanvasHarnessGraphQueryPending } from './useCanvasController.test.graphQuery';
 import { useCanvasLayoutPersistence } from './useCanvasLayoutPersistence';
 
 type LayoutPersistenceArgs = Parameters<typeof useCanvasLayoutPersistence>[0];
@@ -62,11 +63,7 @@ describe('useCanvasController persistence guards', () => {
   });
 
   it('persists node positions while graph query is pending after layout hydration', async () => {
-    harness.mocks.useQuery.mockReturnValue({
-      data: harness.state.graphData,
-      isPending: true,
-      isError: false,
-    });
+    setCanvasHarnessGraphQueryPending(harness.state, harness.mocks, true);
     await harness.renderProbe();
 
     await act(async () => {
@@ -91,11 +88,7 @@ describe('useCanvasController persistence guards', () => {
 
   it('queues a drag-stop payload until layout hydration settles', async () => {
     harness.state.store._hasHydrated = false;
-    harness.mocks.useQuery.mockReturnValue({
-      data: harness.state.graphData,
-      isPending: false,
-      isError: false,
-    });
+    setCanvasHarnessGraphQueryPending(harness.state, harness.mocks, false);
     await harness.renderProbe();
 
     await act(async () => {
@@ -112,11 +105,7 @@ describe('useCanvasController persistence guards', () => {
     expect(harness.state.store.setCanvasNodePositions).not.toHaveBeenCalled();
 
     harness.state.store._hasHydrated = true;
-    harness.mocks.useQuery.mockReturnValue({
-      data: harness.state.graphData,
-      isPending: false,
-      isError: false,
-    });
+    setCanvasHarnessGraphQueryPending(harness.state, harness.mocks, false);
     await harness.renderProbe();
 
     expect(harness.state.store.setCanvasNodePositions).toHaveBeenCalledWith(
@@ -129,11 +118,7 @@ describe('useCanvasController persistence guards', () => {
   });
 
   it('does not persist viewport while graph query is pending', async () => {
-    harness.mocks.useQuery.mockReturnValue({
-      data: harness.state.graphData,
-      isPending: true,
-      isError: false,
-    });
+    setCanvasHarnessGraphQueryPending(harness.state, harness.mocks, true);
     await harness.renderProbe();
 
     await act(async () => {

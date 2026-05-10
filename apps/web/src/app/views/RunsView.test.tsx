@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import React from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -65,7 +66,7 @@ describe('RunsView', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
-          mode: 'mock',
+          ...createAppServicesTestOverrides(),
           runsService: buildRunsService(),
           sessionContext: buildSessionContext(),
         }}
@@ -91,7 +92,7 @@ describe('RunsView', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
-          mode: 'mock',
+          ...createAppServicesTestOverrides(),
           runsService: buildRunsService({
             getRunSnapshot: async () => null,
           }),
@@ -119,7 +120,7 @@ describe('RunsView', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
-          mode: 'mock',
+          ...createAppServicesTestOverrides(),
           runsService: buildRunsService({
             getRunSnapshot: async () => ({
               runId: 'run_completed',
@@ -168,7 +169,7 @@ describe('RunsView', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
-          mode: 'mock',
+          ...createAppServicesTestOverrides(),
           runsService: buildRunsService({
             getRunSnapshot: async () => ({
               runId: 'run_failed',
@@ -216,7 +217,7 @@ describe('RunsView', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
-          mode: 'mock',
+          ...createAppServicesTestOverrides(),
           runsService: buildRunsService({
             listRunSummaries: async () => {
               throw new ApiError({

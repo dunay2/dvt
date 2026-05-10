@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router';
 
 import { createApiClient, type ApiError } from '../services/api/createApiClient';
-import { getRuntimeDataSourceMode } from '../services/config/runtimeDataSourceMode';
 import { resolveProtectedRouteSessionContext } from '../services/session/protectedRouteSessionContext';
 
 type AuthGateState =
@@ -46,16 +45,9 @@ export default function AuthRouteGate({
   children,
 }: Readonly<{ children: React.ReactNode }>): JSX.Element {
   const location = useLocation();
-  const [state, setState] = useState<AuthGateState>(() =>
-    getRuntimeDataSourceMode() === 'mock' ? { kind: 'allowed' } : { kind: 'checking' }
-  );
+  const [state, setState] = useState<AuthGateState>({ kind: 'checking' });
 
   useEffect(() => {
-    if (getRuntimeDataSourceMode() === 'mock') {
-      setState({ kind: 'allowed' });
-      return;
-    }
-
     let cancelled = false;
     setState({ kind: 'checking' });
     resolveProtectedRouteSessionContext(sessionApiClient)

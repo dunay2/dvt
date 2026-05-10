@@ -173,7 +173,6 @@ describe('Canvas route authoring bootstrap integration', () => {
             <AppProviders
               queryClient={queryClient}
               overrides={{
-                mode: 'api',
                 workspaceFilesQuery: harness.state.services.workspaceFilesQuery,
                 workspaceFileContentCommand: harness.state.services.workspaceFileContentCommand,
                 workspaceGraphDraftAuthoringPort:

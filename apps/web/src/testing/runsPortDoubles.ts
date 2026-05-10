@@ -1,21 +1,21 @@
 /**
- * Owned concern: provide deterministic local runs-port behavior for frontend
- * development while preserving the API/Web start-run identity boundary.
+ * Owned concern: provide deterministic runs-port test-double behavior while
+ * preserving the API/Web start-run identity boundary.
  */
 import { asIsoUtcString, asNonBlankString, asStepId } from '@dvt/contracts';
 
-import { mockRun } from '../../data/mockDbtData';
+import { mockRun } from './fixtures/mockDbtData';
 import type {
   IRunsPort,
   RunEventTimelinePage,
   RunSnapshot,
   RunStartReceipt,
   RunSummaryItem,
-} from '../../ports/runs';
-import type { SessionContextPort } from '../../ports/sessionContext';
-import type { Run, RunEvent as DbtRunEvent } from '../../types/dbt';
-import type { RunEvent } from '../../types/engine';
-import { createSessionContextPort } from '../session/sessionContextPort';
+} from '../app/ports/runs';
+import type { SessionContextPort } from '../app/ports/sessionContext';
+import type { Run, RunEvent as DbtRunEvent } from '../app/types/dbt';
+import type { RunEvent } from '../app/types/engine';
+import { createSessionContextPort } from '../app/services/session/sessionContextPort';
 
 function buildMockRunList(): Run[] {
   const completedRun: Run = {

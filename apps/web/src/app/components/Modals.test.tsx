@@ -4,7 +4,7 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { mockExecutionPlan } from '../data/mockDbtData';
+import { mockExecutionPlan } from '../../testing/fixtures/mockDbtData';
 import { PlanPreviewModal } from './Modals';
 
 describe('PlanPreviewModal', () => {

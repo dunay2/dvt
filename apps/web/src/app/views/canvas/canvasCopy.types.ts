@@ -22,8 +22,6 @@ export type CanvasViewCopy = {
   readonly unsupportedCanvasKindMessageSuffix: string;
   readonly disabledCanvasPluginMessagePrefix: string;
   readonly disabledCanvasPluginMessageSuffix: string;
-  readonly runtimeBlockedTitle: string;
-  readonly runtimeBlockedFallbackMessage: string;
   readonly backendBlockedTitle: string;
   readonly backendBlockedFallbackMessage: string;
   readonly mutationUnavailableMessage: string;

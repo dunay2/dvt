@@ -5,6 +5,7 @@ import { ApiError } from '../api/createApiClient';
 import type { ApiClient } from '../api/createApiClient';
 
 import { makePlanRef, makeRunContext } from '../../testing/contractTestUtils';
+import { createMockPlansService } from '../../../testing/plansPortDoubles';
 import { createPlansService } from './plansService';
 
 const VALID_TRANSFORMATION_GRAPH_SOURCE = {
@@ -285,8 +286,8 @@ function createPlanRejectedApiError(details: Record<string, unknown>): ApiError 
 }
 
 describe('createPlansService', () => {
-  it('uses mock implementation in mock mode', async () => {
-    const service = createPlansService('mock');
+  it('keeps the explicit plan-port test double contract usable', async () => {
+    const service = createMockPlansService();
 
     const plan = await service.previewPlan({
       previewProfile: 'transformation-sql-first-v1',
@@ -305,10 +306,9 @@ describe('createPlansService', () => {
     expect(plan.steps.length).toBeGreaterThan(0);
   });
 
-  it('routes to api implementation in api mode', async () => {
+  it('routes to the API implementation', async () => {
     const postJsonMock = vi.fn(async () => buildTransformationPreviewPayload());
     const service = createPlansService(
-      'api',
       buildApiClientStub({
         postJson: postJsonMock as ApiClient['postJson'],
       })
@@ -379,7 +379,6 @@ describe('createPlansService', () => {
       })
     );
     const service = createPlansService(
-      'api',
       buildApiClientStub({
         postJson: postJsonMock as ApiClient['postJson'],
       })
@@ -408,7 +407,6 @@ describe('createPlansService', () => {
       })
     );
     const service = createPlansService(
-      'api',
       buildApiClientStub({
         postJson: postJsonMock as ApiClient['postJson'],
       })
@@ -441,7 +439,6 @@ describe('createPlansService', () => {
       return payload;
     });
     const service = createPlansService(
-      'api',
       buildApiClientStub({
         postJson: postJsonMock as ApiClient['postJson'],
       })
@@ -507,7 +504,6 @@ describe('createPlansService', () => {
         throw createPlanRejectedApiError(details);
       });
       const service = createPlansService(
-        'api',
         buildApiClientStub({
           postJson: postJsonMock as ApiClient['postJson'],
         })
@@ -539,7 +535,6 @@ describe('createPlansService', () => {
       },
     }));
     const service = createPlansService(
-      'api',
       buildApiClientStub({
         postJson: postJsonMock as ApiClient['postJson'],
       })
@@ -566,7 +561,6 @@ describe('createPlansService', () => {
   it('maps step retryPolicy into UI retry counts from the canonical field only', async () => {
     const postJsonMock = vi.fn(async () => buildGenericPreviewPayload());
     const service = createPlansService(
-      'api',
       buildApiClientStub({
         postJson: postJsonMock as ApiClient['postJson'],
       })
@@ -601,7 +595,6 @@ describe('createPlansService', () => {
       buildGenericPreviewPayload(buildContractPlanWithRetiredRetryConfig())
     );
     const service = createPlansService(
-      'api',
       buildApiClientStub({
         postJson: postJsonMock as ApiClient['postJson'],
       })
@@ -632,7 +625,6 @@ describe('createPlansService', () => {
       plan: buildValidTransformationPlan(),
     }));
     const service = createPlansService(
-      'api',
       buildApiClientStub({
         postJson: postJsonMock as ApiClient['postJson'],
       })

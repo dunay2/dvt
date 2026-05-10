@@ -2,7 +2,7 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { vi } from 'vitest';
 
-import { mockExecutionPlan } from '../../data/mockDbtData';
+import { mockExecutionPlan } from '../../../testing/fixtures/mockDbtData';
 import type { IPlansPort } from '../../ports/plans';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';

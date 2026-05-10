@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { createAppServicesTestOverrides } from '../testing/appServicesTestDoubles';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -48,6 +49,53 @@ function mountBootstrapDom(): void {
   );
 }
 
+function stubAuthenticatedSessionFetch(): ReturnType<typeof vi.fn> {
+  const jsonHeaders = {
+    'content-type': 'application/json',
+  };
+  const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+    const url = String(input);
+
+    if (url.endsWith('/session')) {
+      return new Response(JSON.stringify({ authenticated: true }), {
+        status: 200,
+        headers: jsonHeaders,
+      });
+    }
+
+    if (url.endsWith('/workspace/context')) {
+      return new Response(
+        JSON.stringify({
+          effectiveWorkspace: {
+            tenantId: 'tenant-a',
+            projectId: 'project-a',
+            environmentId: 'dev',
+          },
+          availableWorkspaces: [
+            {
+              tenantId: 'tenant-a',
+              projectId: 'project-a',
+              environmentId: 'dev',
+            },
+          ],
+        }),
+        {
+          status: 200,
+          headers: jsonHeaders,
+        }
+      );
+    }
+
+    return new Response(JSON.stringify({}), {
+      status: 200,
+      headers: jsonHeaders,
+    });
+  });
+
+  vi.stubGlobal('fetch', fetchMock);
+  return fetchMock;
+}
+
 describe('app routes', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -72,6 +120,7 @@ describe('app routes', () => {
     container.remove();
     consoleErrorSpy.mockRestore();
     vi.useRealTimers();
+    vi.unstubAllGlobals();
 
     const globalObject = globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean };
     if (previousActEnvironment === undefined) {
@@ -113,7 +162,7 @@ describe('app routes', () => {
 
     await act(async () => {
       root.render(
-        <AppProviders overrides={{ mode: 'api' }}>
+        <AppProviders>
           <RouterProvider router={router} />
         </AppProviders>
       );
@@ -131,6 +180,7 @@ describe('app routes', () => {
   });
 
   it('renders the canvas route when app providers are present', async () => {
+    stubAuthenticatedSessionFetch();
     const capabilitiesPort = {
       loadCapabilities: vi.fn().mockResolvedValue({
         apiVersion: '1.0.0',
@@ -144,7 +194,7 @@ describe('app routes', () => {
 
     await act(async () => {
       root.render(
-        <AppProviders overrides={{ mode: 'mock', capabilitiesPort }}>
+        <AppProviders overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
           <RouterProvider router={router} />
         </AppProviders>
       );
@@ -227,6 +277,7 @@ describe('app routes', () => {
   });
 
   it('publishes the default redirect route through explicit route bootstrap ownership', async () => {
+    stubAuthenticatedSessionFetch();
     const capabilitiesPort = {
       loadCapabilities: vi.fn().mockResolvedValue({
         apiVersion: '1.0.0',
@@ -240,7 +291,7 @@ describe('app routes', () => {
 
     await act(async () => {
       root.render(
-        <AppProviders overrides={{ mode: 'mock', capabilitiesPort }}>
+        <AppProviders overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
           <RouterProvider router={router} />
         </AppProviders>
       );

@@ -37,7 +37,6 @@ function deriveBackendBlockMessage(
 }
 
 export function deriveCanvasBackendPosture({
-  dataSourceMode,
   platformHealthQuery,
 }: DeriveCanvasBackendPostureArgs): CanvasBackendPosture {
   const hasSettledBackendProbe =
@@ -45,11 +44,9 @@ export function deriveCanvasBackendPosture({
     platformHealthQuery.isError ||
     (platformHealthQuery.failureCount ?? 0) > 0 ||
     (platformHealthQuery.errorUpdatedAt ?? 0) > 0;
-  const isBackendCheckPending =
-    dataSourceMode === 'api' && platformHealthQuery.isPending && !hasSettledBackendProbe;
-  const backendReady = dataSourceMode !== 'api' || isPlatformReady(platformHealthQuery.data);
-  const shouldExposeBackendBlockMessage =
-    dataSourceMode === 'api' && !isBackendCheckPending && !backendReady;
+  const isBackendCheckPending = platformHealthQuery.isPending && !hasSettledBackendProbe;
+  const backendReady = isPlatformReady(platformHealthQuery.data);
+  const shouldExposeBackendBlockMessage = !isBackendCheckPending && !backendReady;
 
   return {
     isBackendCheckPending,
@@ -58,6 +55,6 @@ export function deriveCanvasBackendPosture({
       shouldExposeBackendBlockMessage,
       platformHealthQuery
     ),
-    backendAllowsMutations: dataSourceMode !== 'api' || (!isBackendCheckPending && backendReady),
+    backendAllowsMutations: !isBackendCheckPending && backendReady,
   };
 }

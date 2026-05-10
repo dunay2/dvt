@@ -119,8 +119,8 @@ export type RunEventTimelinePage = {
 /**
  * Port interface for run operations consumed by the presentation layer.
  *
- * Implementations (mock, API) satisfy this contract through adapters wired
- * in the composition root. Views and hooks depend only on this interface.
+ * The product composition root wires the API adapter. Tests may satisfy this
+ * contract with explicit doubles injected at the AppServices boundary.
  */
 export interface IRunsPort {
   listRunSummaries: () => Promise<RunSummaryItem[]>;

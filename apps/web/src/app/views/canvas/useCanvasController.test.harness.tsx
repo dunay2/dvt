@@ -172,7 +172,6 @@ export function setupCanvasControllerHarness() {
           <MemoryRouter>
             <AppServicesProvider
               overrides={{
-                mode: 'mock',
                 workspaceFilesQuery: state.services.workspaceFilesQuery,
                 workspaceFileContentCommand: state.services.workspaceFileContentCommand,
                 workspaceGraphDraftAuthoringPort: state.services.workspaceGraphDraftAuthoringPort,

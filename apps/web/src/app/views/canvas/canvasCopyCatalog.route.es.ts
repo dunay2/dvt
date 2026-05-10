@@ -30,9 +30,6 @@ export const canvasViewRouteCopyEs = {
   unsupportedCanvasKindMessageSuffix: ' porque no hay un registro de runtime disponible.',
   disabledCanvasPluginMessagePrefix: 'Canvas no puede abrir el tipo de canvas persistido ',
   disabledCanvasPluginMessageSuffix: ' porque su plugin esta deshabilitado o no disponible.',
-  runtimeBlockedTitle: 'Runtime de Canvas no disponible',
-  runtimeBlockedFallbackMessage:
-    'Canvas authoring requiere modo API y acceso protegido al workspace draft.',
   backendBlockedTitle: 'Backend no preparado',
   backendBlockedFallbackMessage:
     'Canvas permanece bloqueado hasta que se recupere la disponibilidad del backend en modo API.',

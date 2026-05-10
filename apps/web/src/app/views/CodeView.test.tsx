@@ -1,3 +1,4 @@
+import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import { act } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createRoot, type Root } from 'react-dom/client';
@@ -98,7 +99,7 @@ describe('CodeView', () => {
           {' '}
           <AppServicesProvider
             overrides={{
-              mode: 'mock',
+              ...createAppServicesTestOverrides(),
               workspaceFilesQuery: buildWorkspaceFilesQueryPort(),
             }}
           >
@@ -140,7 +141,7 @@ describe('CodeView', () => {
           {' '}
           <AppServicesProvider
             overrides={{
-              mode: 'mock',
+              ...createAppServicesTestOverrides(),
               workspaceFilesQuery: buildWorkspaceFilesQueryPort({ listFiles: async () => [] }),
             }}
           >
@@ -177,7 +178,6 @@ describe('CodeView', () => {
           {' '}
           <AppServicesProvider
             overrides={{
-              mode: 'api',
               workspaceFilesQuery: buildWorkspaceFilesQueryPort({
                 listFiles: async () => {
                   throw new Error('request failed');
@@ -218,7 +218,7 @@ describe('CodeView', () => {
           {' '}
           <AppServicesProvider
             overrides={{
-              mode: 'mock',
+              ...createAppServicesTestOverrides(),
               workspaceFilesQuery: buildWorkspaceFilesQueryPort({
                 getFileContent: async (path) => {
                   throw new WorkspaceFileLoadError('not_found', path);

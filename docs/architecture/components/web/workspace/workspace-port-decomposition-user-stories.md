@@ -49,8 +49,8 @@ Acceptance:
 - Given API mode is active and no `GetWorkspaceDiffChanges` backend rail exists,
   when `DiffView` requests diff changes, then the diff port returns an
   unavailable state before any HTTP call.
-- Given mock/demo mode is active, when diff fixtures are used, then the UI marks
-  the capability as demo-local rather than backend truth.
+- Given a test harness injects diff fixtures, when diff data renders, then the
+  fixture path stays test-only and is not product backend truth.
 
 ## Story 4: Keep plugin catalog separate from runtime execution
 
@@ -77,8 +77,8 @@ Acceptance:
 - Given API mode is active and no admin read rail exists, when admin roles or
   audit log are requested, then the admin read port returns unavailable before
   transport.
-- Given mock/demo mode is active, when fixture roles and audit entries render,
-  then they remain demo-local and do not imply production RBAC truth.
+- Given a test harness injects fixture roles and audit entries, when they
+  render, then they remain test-only and do not imply production RBAC truth.
 
 ## Story 6: Fence warehouse source import as command-oriented work
 
@@ -90,8 +90,8 @@ Acceptance:
 
 - Given API mode is active and warehouse source rails do not exist, when the
   wizard opens, then the source import port returns unavailable capability.
-- Given mock/demo mode is active, when sources are imported, then generated
-  graph/file changes remain demo-local.
+- Given a test harness injects source-import doubles, when sources are imported,
+  then generated graph/file changes remain test-only.
 - Given backend import rails are introduced later, then discovery queries and
   import commands are cataloged separately.
 

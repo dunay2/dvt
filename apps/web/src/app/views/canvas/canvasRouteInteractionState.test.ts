@@ -133,27 +133,6 @@ describe('canvasRouteInteractionState', () => {
     expect(interactionState.workbenchErrorMessage).toBeNull();
   });
 
-  it('fails closed when the canvas route is mounted outside api runtime mode', () => {
-    const controller = buildController({
-      dataSourceMode: 'mock',
-    });
-
-    const interactionState = deriveCanvasRouteInteractionState(controller, null);
-
-    expect(interactionState.startupBlockState).toEqual({
-      kind: 'runtime_mode',
-      title: 'Canvas runtime unavailable',
-      message: 'Canvas authoring requires API runtime mode and protected workspace draft access.',
-    });
-    expect(interactionState.effectiveWorkbenchState).toEqual({ kind: 'ready' });
-    expect(interactionState.effectiveUserPermissions).toMatchObject({
-      canPlan: false,
-      canRun: false,
-      canEditEdges: false,
-    });
-    expect(interactionState.readOnlyState).toBeNull();
-  });
-
   it('blocks interactions in api mode before backend readiness is available', () => {
     const controller = buildController({
       dataSourceMode: 'api',

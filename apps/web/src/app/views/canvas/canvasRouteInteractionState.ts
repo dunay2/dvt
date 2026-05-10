@@ -15,17 +15,11 @@ import type { useCanvasController } from './useCanvasController';
 
 type CanvasController = ReturnType<typeof useCanvasController>;
 
-export type CanvasRouteStartupBlockState =
-  | {
-      kind: 'runtime_mode';
-      title: string;
-      message: string;
-    }
-  | {
-      kind: 'backend_readiness';
-      title: string;
-      message: string;
-    };
+export type CanvasRouteStartupBlockState = {
+  kind: 'backend_readiness';
+  title: string;
+  message: string;
+};
 
 export type CanvasRouteInteractionState = {
   effectiveWorkbenchState: ReturnType<typeof getCanvasWorkbenchState>;
@@ -95,14 +89,6 @@ function resolveEffectiveUserPermissions(args: {
 function resolveStartupBlockState(
   controller: CanvasController
 ): CanvasRouteStartupBlockState | null {
-  if (controller.dataSourceMode !== 'api') {
-    return {
-      kind: 'runtime_mode',
-      title: canvasViewCopy.runtimeBlockedTitle,
-      message: canvasViewCopy.runtimeBlockedFallbackMessage,
-    };
-  }
-
   if (!controller.isBackendCheckPending && !controller.backendReady) {
     return {
       kind: 'backend_readiness',

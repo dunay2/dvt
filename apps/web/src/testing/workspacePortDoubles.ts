@@ -1,4 +1,4 @@
-/** Owned concern: provide demo-local workspace capability ports backed by fixture state. */
+/** Owned concern: provide test-only workspace capability ports backed by fixture state. */
 import {
   mockAuditLog,
   mockDiffChanges,
@@ -6,8 +6,8 @@ import {
   mockNodes,
   mockPlugins,
   mockRoles,
-} from '../../data/mockDbtData';
-import type { DbtNode } from '../../types/dbt';
+} from './fixtures/mockDbtData';
+import type { DbtNode } from '../app/types/dbt';
 import type {
   FileContent,
   ImportSourcesInput,
@@ -24,8 +24,8 @@ import type {
   WarehouseTable,
   WorkspaceFileEntry,
   WorkspaceGraphSnapshot,
-} from '../../ports/workspace';
-import { WorkspaceFileLoadError } from './workspaceErrors';
+} from '../app/ports/workspace';
+import { WorkspaceFileLoadError } from '../app/services/workspace/workspaceErrors';
 
 export const mockWorkspacePortCapabilities = {
   sourceImportAvailable: true,
