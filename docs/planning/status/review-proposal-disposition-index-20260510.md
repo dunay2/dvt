@@ -141,6 +141,75 @@ or reference-only documents. They are defects for active work only when the
 missing field prevents us from deciding whether the work is implemented, still
 required, risky, or deliberately out of scope.
 
+## Minimum Traceability Chain
+
+For every active component, externally observable behavior, security rule,
+state invariant, persistence rule, or runtime lifecycle claim, the repository
+should be able to follow this chain:
+
+```text
+Requirement -> Decision -> Design -> Contract -> Code -> Test -> Runtime evidence
+```
+
+The chain does not require every answer to live in one document. It does require
+the links to be explicit enough that a maintainer can answer whether the
+behavior is required, intentionally designed, contractually exposed,
+implemented, tested, and still visible in operation.
+
+- Requirement:
+  Product requirement, planning task, review finding, security requirement,
+  operational requirement, or risk mitigation that states the need.
+- Decision:
+  ADR, accepted proposal, review disposition, closeout, or explicit tradeoff
+  that records why this path was chosen.
+- Design:
+  Architecture component, policy object, service boundary, state model, flow,
+  diagram, or dossier section that explains the shape of the solution.
+- Contract:
+  Public API, command/query rail, schema, route, event, interface, policy
+  method, UI contract, or compatibility promise.
+- Code:
+  Owning implementation file or package surface.
+- Test:
+  Unit, integration, contract, architecture, E2E, replay, determinism, or CI
+  check that should fail if the behavior regresses.
+- Runtime evidence:
+  Metric, log, trace, audit record, emitted event, consumed event, dashboard,
+  runbook proof, incident signal, or evidence doc that shows the behavior is
+  observable after shipping.
+
+Illustrative shape:
+
+```text
+Requirement
+REQ-RUN-017
+Cancelled runs cannot transition back to RUNNING.
+
+Decision
+ADR-0031
+Run state transitions are validated in the domain layer.
+
+Design
+RunStateTransitionPolicy owns allowed transitions.
+
+Contract
+validateTransition(from, to): TransitionResult
+
+Code
+packages/engine/domain/RunStateTransitionPolicy.ts
+
+Test
+RunStateTransitionPolicy.spec.ts
+
+Runtime evidence
+metric: dvt.run.transition.rejected
+event: RunTransitionRejected
+```
+
+If the chain stops before `Runtime evidence`, the item may still be valid, but
+the disposition must say whether runtime observability is not applicable,
+already covered elsewhere, or still pending as follow-up work.
+
 ## Current Planning State
 
 Planning DB is the operational source of truth for work state.
