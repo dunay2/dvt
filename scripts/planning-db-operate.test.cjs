@@ -2,9 +2,11 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
+  assertDocsResolutionIdempotentReplayMatches,
   assertIdempotentReplayMatches,
   buildAuditRows,
   buildDocsResolutionAuditRows,
+  materializeDocsResolutionCommand,
   parseArgs,
   planDocsResolutionOperation,
   planTaskDefinitionOperation,
@@ -195,6 +197,91 @@ test('parseArgs builds docs disposition and task gap resolution commands', () =>
   assert.equal(taskGapCommand.resolutionStatus, 'resolved');
   assert.equal(taskGapCommand.targetLaneId, 'A');
   assert.equal(taskGapCommand.targetTaskId, 'GOV-S3');
+});
+
+test('materializeDocsResolutionCommand derives source-aware default idempotency keys', () => {
+  const command = parseArgs([
+    'docs-disposition',
+    'resolve',
+    '--kind',
+    'unknown_task_like_id',
+    '--path',
+    'docs/planning/status/example.md',
+    '--reference',
+    'WEB-123',
+    '--actor',
+    'codex',
+    '--resolution',
+    'ignored',
+    '--reason',
+    'Historical reference, not an active planning task.',
+  ]);
+
+  const first = materializeDocsResolutionCommand(command, {
+    action_kind: 'unknown_task_like_id',
+    document_path: 'docs/planning/status/example.md',
+    reference_text: 'WEB-123',
+    source_content_sha256: 'c'.repeat(64),
+  });
+  const second = materializeDocsResolutionCommand(command, {
+    action_kind: 'unknown_task_like_id',
+    document_path: 'docs/planning/status/example.md',
+    reference_text: 'WEB-123',
+    source_content_sha256: 'd'.repeat(64),
+  });
+
+  assert.notEqual(first.idempotencyKey, second.idempotencyKey);
+  assert.equal(first.sourceContentSha256, 'c'.repeat(64));
+  assert.equal(second.sourceContentSha256, 'd'.repeat(64));
+});
+
+test('assertDocsResolutionIdempotentReplayMatches rejects stale source-hash replays', () => {
+  assert.throws(
+    () =>
+      assertDocsResolutionIdempotentReplayMatches(
+        {
+          operation_type: 'docs_disposition_resolve',
+          actor: 'codex',
+          resolution_scope: 'docs_disposition',
+          issue_kind: 'unknown_task_like_id',
+          document_path: 'docs/planning/status/example.md',
+          reference_text: 'WEB-123',
+          lane_id: null,
+          task_id: null,
+          resolution_status: 'ignored',
+          source_content_sha256: 'c'.repeat(64),
+          payload: {
+            resolutionScope: 'docs_disposition',
+            issueKind: 'unknown_task_like_id',
+            documentPath: 'docs/planning/status/example.md',
+            referenceText: 'WEB-123',
+            laneId: null,
+            taskId: null,
+            resolutionStatus: 'ignored',
+            reason: 'Historical reference, not an active planning task.',
+            targetLaneId: null,
+            targetTaskId: null,
+          },
+        },
+        {
+          kind: 'docs_disposition_resolve',
+          actor: 'codex',
+          resolutionScope: 'docs_disposition',
+          issueKind: 'unknown_task_like_id',
+          documentPath: 'docs/planning/status/example.md',
+          referenceText: 'WEB-123',
+          laneId: null,
+          taskId: null,
+          resolutionStatus: 'ignored',
+          reason: 'Historical reference, not an active planning task.',
+          targetLaneId: null,
+          targetTaskId: null,
+          sourceContentSha256: 'd'.repeat(64),
+          idempotencyKey: 'resolve-doc-gap',
+        }
+      ),
+    /already completed for source hash/
+  );
 });
 
 test('parseArgs validates docs resolution scope and status', () => {

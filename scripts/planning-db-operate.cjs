@@ -184,6 +184,13 @@ function operationPayload(command) {
   return {};
 }
 
+function docsResolutionIdempotencyPayload(command) {
+  return {
+    ...operationPayload(command),
+    sourceContentSha256: normalizeOptionalText(command.sourceContentSha256),
+  };
+}
+
 function defaultIdempotencyKey(command) {
   if (command.kind === 'docs_disposition_resolve' || command.kind === 'task_gap_resolve') {
     return [
@@ -197,7 +204,7 @@ function defaultIdempotencyKey(command) {
       command.taskId || 'no-task',
       crypto
         .createHash('sha256')
-        .update(JSON.stringify(operationPayload(command)))
+        .update(canonicalJson(docsResolutionIdempotencyPayload(command)))
         .digest('hex')
         .slice(0, 16),
     ].join(':');
@@ -220,6 +227,10 @@ function defaultIdempotencyKey(command) {
 function assertDocsResolutionIdempotentReplayMatches(existingOperation, command) {
   const expectedPayload = operationPayload(command);
   const existingPayload = normalizeExistingPayload(existingOperation.payload);
+  const expectedSourceContentSha256 = normalizeOptionalText(command.sourceContentSha256);
+  const existingSourceContentSha256 = normalizeOptionalText(
+    existingOperation.source_content_sha256 ?? existingOperation.sourceContentSha256
+  );
   const sameOperation =
     existingOperation.operation_type === command.kind &&
     existingOperation.actor === command.actor &&
@@ -233,6 +244,14 @@ function assertDocsResolutionIdempotentReplayMatches(existingOperation, command)
     normalizeOptionalText(existingOperation.task_id) === normalizeOptionalText(command.taskId) &&
     existingOperation.resolution_status === command.resolutionStatus &&
     canonicalJson(existingPayload) === canonicalJson(expectedPayload);
+
+  if (expectedSourceContentSha256 && existingSourceContentSha256 !== expectedSourceContentSha256) {
+    throw new Error(
+      `Idempotency key "${command.idempotencyKey}" already completed for source hash ${
+        existingSourceContentSha256 ?? 'unknown'
+      }, but current source hash is ${expectedSourceContentSha256}. Use a new idempotency key for a new docs resolution operation.`
+    );
+  }
 
   if (!sameOperation) {
     throw new Error(
@@ -437,6 +456,7 @@ function parseDocsResolutionCommand(resource, action, args) {
     targetLaneId: normalizeOptionalText(options.targetLane),
     targetTaskId: normalizeOptionalText(options.targetTask),
     idempotencyKey: options.idempotencyKey,
+    idempotencyKeyDefaulted: !options.idempotencyKey,
   };
 
   if (resource === 'docs-disposition') {
@@ -876,6 +896,27 @@ function planDocsResolutionOperation({ command, sourceRow, operationId, now }) {
   return { resolution, audit };
 }
 
+function materializeDocsResolutionCommand(command, sourceRow) {
+  const source = normalizeDocsResolutionSource(command, sourceRow);
+  if (!source) {
+    throw new Error(
+      `Docs resolution source ${command.resolutionScope}/${command.issueKind} was not imported into the planning DB.`
+    );
+  }
+
+  const materialized = {
+    ...command,
+    sourceContentSha256: source.sourceContentSha256,
+  };
+
+  if (!materialized.idempotencyKey || materialized.idempotencyKeyDefaulted) {
+    materialized.idempotencyKey = defaultIdempotencyKey(materialized);
+    materialized.idempotencyKeyDefaulted = true;
+  }
+
+  return materialized;
+}
+
 function buildAuditRows(rows) {
   return rows.map(
     (row) =>
@@ -1313,19 +1354,24 @@ async function applyDocsResolutionOperation(command, options = {}) {
     await runMigrations({ client, silent: true });
     await client.query('begin');
 
-    const existing = await readExistingDocsResolutionOperation(client, command.idempotencyKey);
-    if (existing) {
-      assertDocsResolutionIdempotentReplayMatches(existing, command);
-      await client.query('commit');
-      return { idempotent: true, audit: existing };
-    }
-
     const sourceRow =
       command.resolutionScope === 'docs_disposition'
         ? await readDocsDispositionAction(client, command)
         : await readTaskGapSource(client, command);
+    const materializedCommand = materializeDocsResolutionCommand(command, sourceRow);
+
+    const existing = await readExistingDocsResolutionOperation(
+      client,
+      materializedCommand.idempotencyKey
+    );
+    if (existing) {
+      assertDocsResolutionIdempotentReplayMatches(existing, materializedCommand);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+
     const planned = planDocsResolutionOperation({
-      command,
+      command: materializedCommand,
       sourceRow,
       operationId: options.operationId || crypto.randomUUID(),
       now: options.now || new Date(),
@@ -1559,6 +1605,7 @@ module.exports = {
   buildAuditRows,
   buildDocsResolutionAuditRows,
   databaseUrl,
+  materializeDocsResolutionCommand,
   parseArgs,
   planDocsResolutionOperation,
   planTaskDefinitionOperation,
