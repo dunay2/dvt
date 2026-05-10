@@ -38,7 +38,13 @@ test('governance refresh imports planning DB before DB-backed generated surfaces
   );
   assert.deepEqual(
     stages.databaseStages.map((stage) => stage.script),
-    ['planning:db:check', 'planning:db:export:check', 'governance:db:check']
+    [
+      'planning:db:import',
+      'planning:db:check',
+      'planning:db:export:check',
+      'governance:db:check',
+      'governance:db:export:check',
+    ]
   );
 });
 
@@ -99,6 +105,9 @@ test('planning DB test suite does not pre-generate governance artifacts', () => 
 
 test('package scripts expose governance refresh instead of the obsolete artifact alias', () => {
   assert.equal(typeof packageJson.scripts['governance:refresh'], 'string');
+  assert.equal(typeof packageJson.scripts['governance:db:import'], 'string');
+  assert.equal(typeof packageJson.scripts['governance:db:export'], 'string');
+  assert.equal(typeof packageJson.scripts['governance:db:export:check'], 'string');
   assert.equal(Object.hasOwn(packageJson.scripts, 'governance:artifacts:generate'), false);
 });
 

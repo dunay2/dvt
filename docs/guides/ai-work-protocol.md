@@ -48,13 +48,17 @@ When a task touches planning material, the agent MUST start from
 [Planning Control Tower](../planning/state/planning-control-tower.md) and update
 the document surfaces defined there in the same task.
 
+The planning DB is the canonical local operational source for task lifecycle
+writes and next-work queries; lane YAML is bootstrap/export compatibility unless
+the task explicitly changes lane taxonomy or reviewable snapshots.
+
 Minimum rule for every planning-affecting task:
 
-1. for an existing task, apply claim/status/progress/evidence changes through
-   `pnpm planning:db:operate`, then confirm effective state with
+1. apply task claim, release, create, delete, status, progress, and evidence
+   changes through `pnpm planning:db:operate`, then confirm effective state with
    `pnpm planning:db:query tasks` or `pnpm planning:db:query next`;
-2. for a new, deleted, or structurally re-scoped task, update the canonical task
-   definition in the relevant `agent-lane-*.yaml` file, then run
+2. for lane-level taxonomy, ownership, or sequencing changes outside a single
+   task row, update the relevant planning source surfaces, then run
    `pnpm planning:db:import` and regenerate the local planning-derived views;
 3. update the relevant source surface (`proposals`, `reviews`, `closeouts`,
    `gaps`, or `roadmap`) based on task type;

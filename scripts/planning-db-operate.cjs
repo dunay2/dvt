@@ -56,6 +56,19 @@ function parseIntegerOption(value, optionName) {
   return parsed;
 }
 
+function parseNonNegativeNumberOption(value, optionName) {
+  if (value === undefined || value === null || value === '') {
+    return null;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw new Error(`Invalid --${optionName} "${value}". Expected a non-negative number.`);
+  }
+
+  return parsed;
+}
+
 function parseProgress(value) {
   if (value === undefined || value === null || value === '') {
     return null;
@@ -114,6 +127,29 @@ function operationPayload(command) {
       progressPct: command.progressPct ?? null,
       statusReason: normalizeOptionalText(command.statusReason),
       evidenceRefs: command.evidenceRefs || [],
+    };
+  }
+
+  if (command.kind === 'task_create') {
+    return {
+      parentTaskId: normalizeOptionalText(command.parentTaskId),
+      priority: normalizeOptionalText(command.priority),
+      status: command.status,
+      objective: command.objective,
+      dependency: normalizeOptionalText(command.dependency),
+      target: normalizeOptionalText(command.target),
+      complexity: normalizeOptionalText(command.complexity),
+      effortPoints: command.effortPoints ?? null,
+      progressPct: command.progressPct ?? null,
+      evidenceRefs: command.evidenceRefs || [],
+      statusReason: normalizeOptionalText(command.statusReason),
+      lastVerified: normalizeOptionalText(command.lastVerified),
+    };
+  }
+
+  if (command.kind === 'task_delete') {
+    return {
+      statusReason: normalizeOptionalText(command.statusReason),
     };
   }
 
@@ -261,8 +297,47 @@ function parseTaskCommand(action, args) {
     return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
   }
 
+  if (action === 'create') {
+    const status = options.status === undefined ? 'queued' : validateTaskStatus(options.status);
+    const progressPct = parseProgress(options.progress);
+    const effortPoints = parseNonNegativeNumberOption(options.effortPoints, 'effort-points');
+    const command = {
+      kind: 'task_create',
+      laneId,
+      taskId,
+      actor,
+      parentTaskId: options.parentTask,
+      priority: options.priority,
+      status,
+      objective: requireOption(options, 'objective'),
+      dependency: options.dependency,
+      target: options.target,
+      complexity: options.complexity,
+      effortPoints,
+      progressPct,
+      statusReason: options.reason,
+      evidenceRefs: options.evidence,
+      lastVerified: options.lastVerified,
+      idempotencyKey: options.idempotencyKey,
+    };
+    return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+  }
+
+  if (action === 'delete') {
+    const command = {
+      kind: 'task_delete',
+      laneId,
+      taskId,
+      actor,
+      statusReason: options.reason,
+      expectedRevision,
+      idempotencyKey: options.idempotencyKey,
+    };
+    return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+  }
+
   throw new Error(
-    `Unknown planning task operation "${action}". Expected claim, release, update, or show.`
+    `Unknown planning task operation "${action}". Expected claim, release, update, create, delete, or show.`
   );
 }
 
@@ -271,7 +346,9 @@ function parseArgs(args = process.argv.slice(2)) {
 
   if (resource === 'task') {
     if (!action) {
-      throw new Error('Missing task operation. Expected claim, release, update, or show.');
+      throw new Error(
+        'Missing task operation. Expected claim, release, update, create, delete, or show.'
+      );
     }
 
     return parseTaskCommand(action, rest);
@@ -403,6 +480,193 @@ function planTaskLocalOperation({ command, importedTask, currentState, operation
   return { state, audit };
 }
 
+function buildRawTaskFromCreateCommand(command) {
+  const rawTask = {
+    task_id: command.taskId,
+    status: command.status,
+    objective: command.objective,
+  };
+
+  const optionalFields = [
+    ['parent_task', command.parentTaskId],
+    ['priority', command.priority],
+    ['dependency', command.dependency],
+    ['target', command.target],
+    ['complexity', command.complexity],
+    ['effort_points', command.effortPoints],
+    ['progress_pct', command.progressPct],
+    ['status_reason', command.statusReason],
+    ['last_verified', command.lastVerified],
+  ];
+
+  for (const [key, value] of optionalFields) {
+    if (value !== undefined && value !== null && value !== '') {
+      rawTask[key] = value;
+    }
+  }
+
+  if (command.evidenceRefs && command.evidenceRefs.length > 0) {
+    rawTask.evidence_refs = command.evidenceRefs;
+  }
+
+  return rawTask;
+}
+
+function buildDefinitionFromCreateCommand({ command, importedLane, now }) {
+  const rawTask = buildRawTaskFromCreateCommand(command);
+
+  return {
+    laneId: command.laneId,
+    taskId: command.taskId,
+    sourcePath: importedLane.sourcePath,
+    sourceContentSha256: importedLane.sourceContentSha256,
+    parentTaskId: normalizeOptionalText(command.parentTaskId),
+    priority: normalizeOptionalText(command.priority),
+    status: command.status,
+    objective: command.objective,
+    dependency: normalizeOptionalText(command.dependency),
+    target: normalizeOptionalText(command.target),
+    complexity: normalizeOptionalText(command.complexity),
+    effortPoints: command.effortPoints ?? null,
+    progressPct: command.progressPct ?? null,
+    evidenceRefs: command.evidenceRefs || [],
+    statusReason: normalizeOptionalText(command.statusReason),
+    lastVerified: normalizeOptionalText(command.lastVerified),
+    createdBy: command.actor,
+    createdAt: toIso(now),
+    rawTask,
+  };
+}
+
+function normalizeTaskDefinition(row) {
+  if (!row) {
+    return null;
+  }
+
+  return {
+    laneId: row.lane_id ?? row.laneId,
+    taskId: row.task_id ?? row.taskId,
+    sourcePath: row.source_path ?? row.sourcePath,
+    sourceContentSha256: row.source_content_sha256 ?? row.sourceContentSha256,
+    parentTaskId: row.parent_task_id ?? row.parentTaskId ?? null,
+    priority: row.priority ?? null,
+    status: row.status,
+    objective: row.objective,
+    dependency: row.dependency ?? null,
+    target: row.target ?? null,
+    complexity: row.complexity ?? null,
+    effortPoints: row.effort_points ?? row.effortPoints ?? null,
+    progressPct: row.progress_pct ?? row.progressPct ?? null,
+    evidenceRefs: row.evidence_refs ?? row.evidenceRefs ?? [],
+    statusReason: row.status_reason ?? row.statusReason ?? null,
+    lastVerified: row.last_verified ?? row.lastVerified ?? null,
+    rawTask: row.raw_task ?? row.rawTask,
+  };
+}
+
+function planTaskDefinitionOperation({
+  command,
+  importedLane,
+  importedTask,
+  localDefinition,
+  localTombstone,
+  currentState,
+  operationId,
+  now,
+}) {
+  if (localTombstone) {
+    throw new Error(
+      `Planning task ${command.laneId}/${command.taskId} is already deleted locally.`
+    );
+  }
+
+  if (command.kind === 'task_create') {
+    if (!importedLane) {
+      throw new Error(`Planning lane ${command.laneId} was not imported into the planning DB.`);
+    }
+    if (importedTask || localDefinition) {
+      throw new Error(`Planning task ${command.laneId}/${command.taskId} already exists.`);
+    }
+
+    const definition = buildDefinitionFromCreateCommand({ command, importedLane, now });
+    const audit = {
+      operationId,
+      idempotencyKey: command.idempotencyKey,
+      operationType: command.kind,
+      actor: command.actor,
+      laneId: command.laneId,
+      taskId: command.taskId,
+      sourcePath: importedLane.sourcePath,
+      baseSourceContentSha256: importedLane.sourceContentSha256,
+      expectedRevision: null,
+      previousRevision: 0,
+      resultingRevision: 0,
+      payload: operationPayload(command),
+      createdAt: toIso(now),
+    };
+
+    return { definition, audit };
+  }
+
+  if (command.kind === 'task_delete') {
+    const effectiveTask = normalizeTaskDefinition(importedTask || localDefinition);
+    if (!effectiveTask) {
+      throw new Error(`Planning task ${command.laneId}/${command.taskId} does not exist.`);
+    }
+
+    const previous = {
+      ...buildInitialState(effectiveTask),
+      ...(normalizeState(currentState) || {}),
+    };
+    const expectedRevision = command.expectedRevision;
+    if (
+      expectedRevision !== null &&
+      expectedRevision !== undefined &&
+      expectedRevision !== previous.revision
+    ) {
+      throw new Error(
+        `Stale planning task revision for ${command.laneId}/${command.taskId}: expected ${expectedRevision} but current revision is ${previous.revision}.`
+      );
+    }
+
+    const resultingRevision = previous.revision + 1;
+    const state = {
+      ...previous,
+      revision: resultingRevision,
+      statusReason: normalizeOptionalText(command.statusReason),
+      updatedAt: toIso(now),
+    };
+    const tombstone = {
+      laneId: command.laneId,
+      taskId: command.taskId,
+      sourcePath: effectiveTask.sourcePath,
+      baseSourceContentSha256: effectiveTask.sourceContentSha256,
+      deletedBy: command.actor,
+      deletedAt: toIso(now),
+      statusReason: normalizeOptionalText(command.statusReason),
+    };
+    const audit = {
+      operationId,
+      idempotencyKey: command.idempotencyKey,
+      operationType: command.kind,
+      actor: command.actor,
+      laneId: command.laneId,
+      taskId: command.taskId,
+      sourcePath: effectiveTask.sourcePath,
+      baseSourceContentSha256: effectiveTask.sourceContentSha256,
+      expectedRevision: expectedRevision ?? null,
+      previousRevision: previous.revision,
+      resultingRevision,
+      payload: operationPayload(command),
+      createdAt: toIso(now),
+    };
+
+    return { state, tombstone, audit };
+  }
+
+  throw new Error(`Unsupported task definition operation kind "${command.kind}".`);
+}
+
 function buildAuditRows(rows) {
   return rows.map(
     (row) =>
@@ -423,6 +687,64 @@ async function readImportedTask(client, command) {
        source_content_sha256 as "sourceContentSha256"
      from ${schemaName}.planning_tasks
      where lane_id = $1 and task_id = $2`,
+    [command.laneId, command.taskId]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function readImportedLane(client, command) {
+  const result = await client.query(
+    `select
+       lane_id as "laneId",
+       source_path as "sourcePath",
+       source_content_sha256 as "sourceContentSha256"
+     from ${schemaName}.planning_lanes
+     where lane_id = $1`,
+    [command.laneId]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function readEffectiveTask(client, command) {
+  const result = await client.query(
+    `select
+       lane_id as "laneId",
+       task_id as "taskId",
+       status,
+       progress_pct as "progressPct",
+       evidence_refs as "evidenceRefs",
+       status_reason as "statusReason",
+       source_path as "sourcePath",
+       source_content_sha256 as "sourceContentSha256",
+       raw_task as "rawTask"
+     from ${schemaName}.planning_effective_tasks
+     where lane_id = $1 and task_id = $2`,
+    [command.laneId, command.taskId]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function readLocalDefinition(client, command, lock = false) {
+  const result = await client.query(
+    `select *
+     from ${schemaName}.planning_task_local_definitions
+     where lane_id = $1 and task_id = $2
+     ${lock ? 'for update' : ''}`,
+    [command.laneId, command.taskId]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function readLocalTombstone(client, command, lock = false) {
+  const result = await client.query(
+    `select *
+     from ${schemaName}.planning_task_local_tombstones
+     where lane_id = $1 and task_id = $2
+     ${lock ? 'for update' : ''}`,
     [command.laneId, command.taskId]
   );
 
@@ -514,6 +836,120 @@ async function writePlannedOperation(client, planned) {
   );
 }
 
+async function writePlannedDefinitionOperation(client, planned) {
+  if (planned.state) {
+    await client.query(
+      `insert into ${schemaName}.planning_task_local_state
+        (lane_id, task_id, source_path, base_source_content_sha256, revision, status,
+         progress_pct, evidence_refs, status_reason, claimed_by, claim_token,
+         claim_expires_at, updated_at, raw_overlay)
+       values ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13, $14::jsonb)
+       on conflict (lane_id, task_id) do update set
+         source_path = excluded.source_path,
+         base_source_content_sha256 = excluded.base_source_content_sha256,
+         revision = excluded.revision,
+         status = excluded.status,
+         progress_pct = excluded.progress_pct,
+         evidence_refs = excluded.evidence_refs,
+         status_reason = excluded.status_reason,
+         claimed_by = excluded.claimed_by,
+         claim_token = excluded.claim_token,
+         claim_expires_at = excluded.claim_expires_at,
+         updated_at = excluded.updated_at,
+         raw_overlay = excluded.raw_overlay`,
+      [
+        planned.state.laneId,
+        planned.state.taskId,
+        planned.state.sourcePath,
+        planned.state.baseSourceContentSha256,
+        planned.state.revision,
+        planned.state.status,
+        planned.state.progressPct,
+        toJson(planned.state.evidenceRefs),
+        planned.state.statusReason,
+        planned.state.claimedBy,
+        planned.state.claimToken,
+        planned.state.claimExpiresAt,
+        planned.state.updatedAt,
+        toJson(planned.state),
+      ]
+    );
+  }
+
+  if (planned.definition) {
+    await client.query(
+      `insert into ${schemaName}.planning_task_local_definitions
+        (lane_id, task_id, source_path, source_content_sha256, parent_task_id, priority,
+         status, objective, dependency, target, complexity, effort_points, progress_pct,
+         evidence_refs, status_reason, last_verified, created_by, created_at, raw_task)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
+               $14::jsonb, $15, $16, $17, $18, $19::jsonb)`,
+      [
+        planned.definition.laneId,
+        planned.definition.taskId,
+        planned.definition.sourcePath,
+        planned.definition.sourceContentSha256,
+        planned.definition.parentTaskId,
+        planned.definition.priority,
+        planned.definition.status,
+        planned.definition.objective,
+        planned.definition.dependency,
+        planned.definition.target,
+        planned.definition.complexity,
+        planned.definition.effortPoints,
+        planned.definition.progressPct,
+        toJson(planned.definition.evidenceRefs),
+        planned.definition.statusReason,
+        planned.definition.lastVerified,
+        planned.definition.createdBy,
+        planned.definition.createdAt,
+        toJson(planned.definition.rawTask),
+      ]
+    );
+  }
+
+  if (planned.tombstone) {
+    await client.query(
+      `insert into ${schemaName}.planning_task_local_tombstones
+        (lane_id, task_id, source_path, base_source_content_sha256, deleted_by,
+         deleted_at, status_reason)
+       values ($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        planned.tombstone.laneId,
+        planned.tombstone.taskId,
+        planned.tombstone.sourcePath,
+        planned.tombstone.baseSourceContentSha256,
+        planned.tombstone.deletedBy,
+        planned.tombstone.deletedAt,
+        planned.tombstone.statusReason,
+      ]
+    );
+  }
+
+  await client.query(
+    `insert into ${schemaName}.planning_local_operations
+      (operation_id, idempotency_key, operation_type, actor, lane_id, task_id,
+       source_path, base_source_content_sha256, expected_revision, previous_revision,
+       resulting_revision, payload, created_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13)`,
+    [
+      planned.audit.operationId,
+      planned.audit.idempotencyKey,
+      planned.audit.operationType,
+      planned.audit.actor,
+      planned.audit.laneId,
+      planned.audit.taskId,
+      planned.audit.sourcePath,
+      planned.audit.baseSourceContentSha256,
+      planned.audit.expectedRevision,
+      planned.audit.previousRevision,
+      planned.audit.resultingRevision,
+      toJson(planned.audit.payload),
+      planned.audit.createdAt,
+    ]
+  );
+}
+
 async function applyTaskLocalOperation(command, options = {}) {
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
@@ -535,7 +971,34 @@ async function applyTaskLocalOperation(command, options = {}) {
       return { idempotent: true, audit: existing };
     }
 
-    const importedTask = await readImportedTask(client, command);
+    if (command.kind === 'task_create' || command.kind === 'task_delete') {
+      const importedLane =
+        command.kind === 'task_create' ? await readImportedLane(client, command) : null;
+      const importedTask =
+        command.kind === 'task_create'
+          ? await readImportedTask(client, command)
+          : await readEffectiveTask(client, command);
+      const localDefinition = await readLocalDefinition(client, command, true);
+      const localTombstone = await readLocalTombstone(client, command, true);
+      const currentState =
+        command.kind === 'task_delete' ? await readCurrentState(client, command, true) : null;
+      const planned = planTaskDefinitionOperation({
+        command,
+        importedLane,
+        importedTask,
+        localDefinition,
+        localTombstone,
+        currentState,
+        operationId: options.operationId || crypto.randomUUID(),
+        now: options.now || new Date(),
+      });
+
+      await writePlannedDefinitionOperation(client, planned);
+      await client.query('commit');
+      return { idempotent: false, ...planned };
+    }
+
+    const importedTask = await readEffectiveTask(client, command);
     const currentState = await readCurrentState(client, command, true);
     const planned = planTaskLocalOperation({
       command,
@@ -570,9 +1033,15 @@ async function showTask(command, options = {}) {
   try {
     await runMigrations({ client, silent: true });
     const importedTask = await readImportedTask(client, command);
+    const effectiveTask = await readEffectiveTask(client, command);
     const currentState = await readCurrentState(client, command);
+    const localDefinition = await readLocalDefinition(client, command);
+    const localTombstone = await readLocalTombstone(client, command);
     return {
       importedTask,
+      effectiveTask,
+      localDefinition: normalizeTaskDefinition(localDefinition),
+      localTombstone,
       localState: normalizeState(currentState),
     };
   } finally {
@@ -677,6 +1146,7 @@ module.exports = {
   buildAuditRows,
   databaseUrl,
   parseArgs,
+  planTaskDefinitionOperation,
   planTaskLocalOperation,
   readAudit,
   showTask,

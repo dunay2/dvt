@@ -125,7 +125,7 @@ const SCRIPT_FILE_RULES = [
     'contracts',
   ],
   [/^scripts\/planning-db-[\w-]+(\.test)?\.cjs$/u, 'planning-db'],
-  [/^scripts\/governance-db-check(\.test)?\.cjs$/u, 'planning-db'],
+  [/^scripts\/governance-db-(check|import|export)(\.test)?\.cjs$/u, 'planning-db'],
   [/^scripts\/governance-generated-paths(\.test)?\.cjs$/u, 'planning-db'],
   [/^scripts\/governance-refresh(\.test)?\.cjs$/u, 'planning-db'],
   [/^scripts\/generate-workboard(\.test)?\.cjs$/u, 'planning-db'],

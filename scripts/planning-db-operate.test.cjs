@@ -5,6 +5,7 @@ const {
   assertIdempotentReplayMatches,
   buildAuditRows,
   parseArgs,
+  planTaskDefinitionOperation,
   planTaskLocalOperation,
   validateTaskStatus,
 } = require('./planning-db-operate.cjs');
@@ -77,6 +78,90 @@ test('parseArgs rejects missing actor and invalid task status', () => {
         'almost-done',
       ]),
     /Invalid planning task status "almost-done"/
+  );
+});
+
+test('parseArgs builds task create and delete commands for DB-owned task structure', () => {
+  const createCommand = parseArgs([
+    'task',
+    'create',
+    '--lane',
+    'E',
+    '--task',
+    'F-29-E2E',
+    '--actor',
+    'codex',
+    '--priority',
+    'P0',
+    '--objective',
+    'Prove the next E2E route through the planning DB command rail.',
+    '--dependency',
+    'F-28-C',
+    '--target',
+    'apps/web/cypress/e2e/canvas',
+    '--complexity',
+    'M',
+    '--effort-points',
+    '3',
+    '--evidence',
+    'aider/tasks/07-f-29-e2e.md',
+  ]);
+
+  assert.equal(createCommand.kind, 'task_create');
+  assert.equal(createCommand.laneId, 'E');
+  assert.equal(createCommand.taskId, 'F-29-E2E');
+  assert.equal(createCommand.status, 'queued');
+  assert.equal(createCommand.priority, 'P0');
+  assert.equal(
+    createCommand.objective,
+    'Prove the next E2E route through the planning DB command rail.'
+  );
+  assert.equal(createCommand.effortPoints, 3);
+  assert.deepEqual(createCommand.evidenceRefs, ['aider/tasks/07-f-29-e2e.md']);
+
+  const deleteCommand = parseArgs([
+    'task',
+    'delete',
+    '--lane',
+    'E',
+    '--task',
+    'F-29-E2E',
+    '--actor',
+    'codex',
+    '--reason',
+    'Superseded by F-30.',
+    '--expected-revision',
+    '0',
+  ]);
+
+  assert.equal(deleteCommand.kind, 'task_delete');
+  assert.equal(deleteCommand.statusReason, 'Superseded by F-30.');
+  assert.equal(deleteCommand.expectedRevision, 0);
+});
+
+test('parseArgs requires task create objective and validates effort points', () => {
+  assert.throws(
+    () => parseArgs(['task', 'create', '--lane', 'E', '--task', 'F-29-E2E', '--actor', 'codex']),
+    /Missing required --objective/
+  );
+
+  assert.throws(
+    () =>
+      parseArgs([
+        'task',
+        'create',
+        '--lane',
+        'E',
+        '--task',
+        'F-29-E2E',
+        '--actor',
+        'codex',
+        '--objective',
+        'Invalid effort.',
+        '--effort-points',
+        '-1',
+      ]),
+    /Invalid --effort-points "-1"/
   );
 });
 
@@ -281,6 +366,114 @@ test('planTaskLocalOperation creates a claim token and preserves audit across co
   assert.equal(operation.state.claimToken, 'op-claim');
   assert.equal(operation.state.claimExpiresAt, '2026-05-07T11:30:00.000Z');
   assert.equal(operation.audit.operationType, 'task_claim');
+});
+
+test('planTaskDefinitionOperation creates a local task definition with auditable raw task', () => {
+  const operation = planTaskDefinitionOperation({
+    command: {
+      kind: 'task_create',
+      actor: 'codex',
+      laneId: 'E',
+      taskId: 'F-29-E2E',
+      parentTaskId: 'F-29',
+      priority: 'P0',
+      status: 'queued',
+      objective: 'Prove the next E2E route through the planning DB command rail.',
+      dependency: 'F-28-C',
+      target: 'apps/web/cypress/e2e/canvas',
+      complexity: 'M',
+      effortPoints: 3,
+      progressPct: 0,
+      evidenceRefs: ['aider/tasks/07-f-29-e2e.md'],
+      statusReason: 'Created through planning DB command rail.',
+      idempotencyKey: 'create-f29',
+    },
+    importedLane: {
+      laneId: 'E',
+      sourcePath: 'docs/planning/state/agent-lane-e.yaml',
+      sourceContentSha256: 'b'.repeat(64),
+    },
+    importedTask: null,
+    localDefinition: null,
+    localTombstone: null,
+    operationId: 'op-create',
+    now: '2026-05-10T10:00:00.000Z',
+  });
+
+  assert.equal(operation.definition.laneId, 'E');
+  assert.equal(operation.definition.taskId, 'F-29-E2E');
+  assert.equal(operation.definition.sourcePath, 'docs/planning/state/agent-lane-e.yaml');
+  assert.equal(operation.definition.sourceContentSha256, 'b'.repeat(64));
+  assert.equal(operation.definition.parentTaskId, 'F-29');
+  assert.equal(operation.definition.rawTask.task_id, 'F-29-E2E');
+  assert.equal(operation.definition.rawTask.parent_task, 'F-29');
+  assert.equal(operation.definition.rawTask.parent_task_id, undefined);
+  assert.equal(
+    operation.definition.rawTask.objective,
+    'Prove the next E2E route through the planning DB command rail.'
+  );
+  assert.equal(operation.definition.rawTask.effort_points, 3);
+  assert.equal(operation.audit.operationType, 'task_create');
+  assert.equal(operation.audit.resultingRevision, 0);
+});
+
+test('planTaskDefinitionOperation rejects duplicate task creation', () => {
+  assert.throws(
+    () =>
+      planTaskDefinitionOperation({
+        command: {
+          kind: 'task_create',
+          actor: 'codex',
+          laneId: 'E',
+          taskId: 'F-29-E2E',
+          objective: 'Duplicate task.',
+          status: 'queued',
+          idempotencyKey: 'duplicate',
+        },
+        importedLane: {
+          laneId: 'E',
+          sourcePath: 'docs/planning/state/agent-lane-e.yaml',
+          sourceContentSha256: 'b'.repeat(64),
+        },
+        importedTask,
+        localDefinition: null,
+        localTombstone: null,
+        operationId: 'op-duplicate',
+        now: '2026-05-10T10:00:00.000Z',
+      }),
+    /Planning task E\/F-29-E2E already exists/
+  );
+});
+
+test('planTaskDefinitionOperation deletes an effective task with revision guard', () => {
+  const operation = planTaskDefinitionOperation({
+    command: {
+      kind: 'task_delete',
+      actor: 'codex',
+      laneId: 'A',
+      taskId: 'GOV-S3',
+      expectedRevision: 2,
+      statusReason: 'Closed by DB-owned task lifecycle command.',
+      idempotencyKey: 'delete-gov-s3',
+    },
+    importedLane: null,
+    importedTask,
+    localDefinition: null,
+    localTombstone: null,
+    currentState: { revision: 2 },
+    operationId: 'op-delete',
+    now: '2026-05-10T10:00:00.000Z',
+  });
+
+  assert.equal(operation.tombstone.laneId, 'A');
+  assert.equal(operation.tombstone.taskId, 'GOV-S3');
+  assert.equal(operation.tombstone.baseSourceContentSha256, importedTask.sourceContentSha256);
+  assert.equal(operation.tombstone.statusReason, 'Closed by DB-owned task lifecycle command.');
+  assert.equal(operation.state.revision, 3);
+  assert.equal(operation.state.statusReason, 'Closed by DB-owned task lifecycle command.');
+  assert.equal(operation.audit.operationType, 'task_delete');
+  assert.equal(operation.audit.previousRevision, 2);
+  assert.equal(operation.audit.resultingRevision, 3);
 });
 
 test('buildAuditRows formats durable local audit rows for CLI output', () => {

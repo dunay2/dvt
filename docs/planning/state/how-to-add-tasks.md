@@ -8,17 +8,17 @@ planning_type: guide
 
 # How to Add Tasks to an Agent Lane
 
-New task definitions live in the `agent-lane-*.yaml` files. Existing task
-claims, releases, status changes, progress updates, evidence refs, and status
-reasons are local DB-first operations through `pnpm planning:db:operate`. The
-lane Markdown views, workboard, open-task-route, and planning landing indexes
-are generated local/CI artifacts and must never be edited directly or
-committed.
+New task definitions, deletions, claims, releases, status changes, progress
+updates, evidence refs, and status reasons are local DB-first operations through
+`pnpm planning:db:operate`. The lane Markdown views, workboard,
+open-task-route, and planning landing indexes are generated local/CI artifacts
+and must never be edited directly or committed.
 
-The lane YAML remains the bootstrap and PR-review compatibility registry until
-create/delete task commands move to the DB. Effective task state for existing
-work items is the Postgres overlay plus the imported lane row. Task closure is
-evidence-based:
+The planning DB is the canonical local operational source. Lane YAML remains
+the bootstrap, export, and PR-review compatibility registry while the
+repository still reviews planning snapshots through Git. Effective task state
+is the imported lane row plus DB task lifecycle rows, local overlays, and
+tombstones. Task closure is evidence-based:
 
 - `done` means the task has accepted evidence or equivalent verifiable closure.
 - `review` means implementation or documentation exists, but final closure still
@@ -38,7 +38,17 @@ evidence-based:
 
 ## Step 2 - Add the task entry
 
-For new tasks, open the lane file and append to the `tasks` list:
+For new tasks, use the DB command rail:
+
+```bash
+pnpm planning:db:operate task create --lane A --task S21 --actor codex --priority P1 --objective "Implement the governed slice" --dependency S18 --target "Concrete deliverable or acceptance criterion" --complexity M --effort-points 5 --progress 0 --evidence docs/evidence/critical/ED-20260331-s21-example.md
+pnpm planning:db:query tasks --lane A --task S21
+pnpm planning:db:export:check
+```
+
+The command creates an auditable local task definition in Postgres. The YAML
+shape below remains the exported/bootstrap shape, not the daily manual write
+surface:
 
 ```yaml
 - task_id: S21
@@ -77,7 +87,7 @@ parent:
 ```
 
 For existing tasks, do not edit the lane YAML just to claim work or change
-status/progress/evidence. Use the DB command rail:
+status/progress/evidence. Use the same DB command rail:
 
 ```bash
 pnpm planning:db:operate task claim --lane A --task S21 --actor codex
@@ -85,6 +95,14 @@ pnpm planning:db:operate task update --lane A --task S21 --actor codex --status 
 pnpm planning:db:query open --lane A
 pnpm planning:db:query tasks --lane A --status review
 pnpm planning:db:query next --lane A
+```
+
+Delete a task through the DB rail as well:
+
+```bash
+pnpm planning:db:operate task delete --lane A --task S21 --actor codex --reason "Superseded by S22" --expected-revision 0
+pnpm planning:db:query tasks --lane A
+pnpm planning:db:export:check
 ```
 
 `planning:db:query open` reads `planning_open_tasks`, the DB view that hides
@@ -131,8 +149,8 @@ of tasks with status `done`.
 
 ## Step 4 - Regenerate the views
 
-For new task definitions or structural lane changes, import the lane YAML into
-the DB before regenerating or checking derived views:
+For bootstrap lane changes or structural lane changes outside a single task row,
+import the lane YAML into the DB before regenerating or checking derived views:
 
 ```bash
 pnpm planning:db:import
@@ -143,13 +161,13 @@ pnpm docs:planning:lanes:generate
 pnpm docs:workboard:generate
 ```
 
-`docs:workboard:generate` defaults to `--source auto`: it reads the imported
+`docs:workboard:generate` defaults to `--source db`: it reads the imported
 `planning_effective_tasks` DB view for task state and `planning_next_tasks` for
-the `open-task-route.md` `Actionable Now` section when the shared planning DB
-is reachable and fresh. It falls back to lane YAML only when the DB is
-unavailable. Use `node scripts/generate-workboard.cjs --source yaml` only for
-an explicit deterministic fallback preview. If the DB is reachable but stale,
-refresh with `pnpm planning:db:import` instead of accepting YAML-derived output.
+the `open-task-route.md` `Actionable Now` section. It does not silently fall
+back to lane YAML. Use `node scripts/generate-workboard.cjs --source yaml` only
+for an explicit deterministic bootstrap/export preview. If the DB is reachable
+but stale, refresh with `pnpm planning:db:import` instead of accepting
+YAML-derived output.
 
 If you added, removed, or renamed documentation files under `docs/`, also run:
 

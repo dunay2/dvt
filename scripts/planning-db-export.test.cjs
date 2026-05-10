@@ -104,6 +104,34 @@ node.test('planning DB export reads effective task rows from the query store', a
   node.assert.match(capturedSql.join('\n'), /from planning_query_store\.planning_effective_tasks/);
 });
 
+node.test('planning DB export renders generated views from the canonical DB source', () => {
+  const calls = [];
+  const runner = new PlanningDbExportRunner({
+    path: node.path,
+    repoRoot: 'F:/repo',
+    childProcess: {
+      spawnSync(command, args, options) {
+        calls.push({ command, args, cwd: options.cwd });
+        return { status: 0, stdout: '', stderr: '' };
+      },
+    },
+  });
+
+  runner.runWorkboardGenerator({
+    outputRoot: 'F:/repo/.generated-docs/planning-db-export',
+    databaseUrl: 'postgres://example/planning',
+  });
+
+  node.assert.deepEqual(calls[0].args.slice(1), [
+    '--source',
+    'db',
+    '--database-url',
+    'postgres://example/planning',
+    '--output-root',
+    'F:/repo/.generated-docs/planning-db-export',
+  ]);
+});
+
 node.test('planning DB export rejects task rows that reference a missing lane', () => {
   const runner = new PlanningDbExportRunner();
 

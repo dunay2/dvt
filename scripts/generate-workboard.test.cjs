@@ -29,10 +29,10 @@ function writeLaneFixture(root, status = 'queued') {
   );
 }
 
-test('parseArgs defaults workboard generation to automatic DB source selection', () => {
+test('parseArgs defaults workboard generation to the planning DB source', () => {
   const parsed = parseArgs([]);
 
-  assert.equal(parsed.source, 'auto');
+  assert.equal(parsed.source, 'db');
   assert.match(parsed.sourceStateDir, /docs[\\/]planning[\\/]state$/);
 });
 
@@ -131,7 +131,7 @@ test('resolveLaneSource reads effective task state from the planning DB when it 
 
   const resolved = await resolveLaneSource(
     {
-      source: 'auto',
+      source: 'db',
       sourceStateDir,
       databaseUrl: 'postgres://example/planning',
     },
@@ -161,22 +161,14 @@ test('resolveLaneSource reads effective task state from the planning DB when it 
   ]);
 });
 
-test('resolveLaneSource falls back to lane YAML when auto mode cannot reach the DB', async () => {
+test('resolveLaneSource uses lane YAML only when explicitly requested', async () => {
   const sourceStateDir = fs.mkdtempSync(path.join(os.tmpdir(), 'workboard-source-yaml-'));
   writeLaneFixture(sourceStateDir, 'in_progress');
 
-  class UnreachableClient {
-    async connect() {
-      const error = new Error('connect ECONNREFUSED');
-      error.code = 'ECONNREFUSED';
-      throw error;
-    }
-  }
-
   const resolved = await resolveLaneSource(
-    { source: 'auto', sourceStateDir, databaseUrl: 'postgres://example/planning' },
+    { source: 'yaml', sourceStateDir, databaseUrl: 'postgres://example/planning' },
     {
-      Client: UnreachableClient,
+      Client: class {},
       PlanningDbExportRunner: class {},
       checkPlanningDatabase: async () => ({ ok: true }),
       formatDriftReport: () => '[planning:db:check] OK',
@@ -189,6 +181,30 @@ test('resolveLaneSource falls back to lane YAML when auto mode cannot reach the 
   assert.equal(resolved.lanes[0].tasks[0].status, 'in_progress');
 });
 
+test('resolveLaneSource does not silently fall back when the canonical DB is unavailable', async () => {
+  class UnreachableClient {
+    async connect() {
+      const error = new Error('connect ECONNREFUSED');
+      error.code = 'ECONNREFUSED';
+      throw error;
+    }
+  }
+
+  await assert.rejects(
+    () =>
+      resolveLaneSource(
+        { source: 'db', sourceStateDir: 'unused', databaseUrl: 'postgres://example/planning' },
+        {
+          Client: UnreachableClient,
+          PlanningDbExportRunner: class {},
+          checkPlanningDatabase: async () => ({ ok: true }),
+          formatDriftReport: () => '[planning:db:check] OK',
+        }
+      ),
+    /connect ECONNREFUSED/
+  );
+});
+
 test('resolveLaneSource fails closed when the reachable planning DB is stale', async () => {
   class ReachableClient {
     async connect() {}
@@ -199,7 +215,7 @@ test('resolveLaneSource fails closed when the reachable planning DB is stale', a
   await assert.rejects(
     () =>
       resolveLaneSource(
-        { source: 'auto', sourceStateDir: 'unused', databaseUrl: 'postgres://example/planning' },
+        { source: 'db', sourceStateDir: 'unused', databaseUrl: 'postgres://example/planning' },
         {
           Client: ReachableClient,
           PlanningDbExportRunner: class {},
