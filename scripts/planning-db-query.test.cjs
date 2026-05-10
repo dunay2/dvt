@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
+  buildDocsDispositionRows,
   buildGovernanceComponentRows,
   buildGovernanceCoverageRows,
   buildGovernanceDriftRows,
@@ -11,6 +12,7 @@ const {
   buildPrReadinessRows,
   buildSummaryRows,
   buildTaskRows,
+  buildTaskReferenceRows,
   buildRepositoryCommandRows,
   parseArgs,
   readGovernanceComponentRows,
@@ -23,7 +25,9 @@ const {
   readPlanningEvidenceRows,
   readPlanningStatusEventRows,
   readPrReadinessRows,
+  readDocsDispositionRows,
   readRepositoryCommandRows,
+  readTaskReferenceRows,
   readNextTaskRows,
   readHashDriftSummary,
   readOpenTaskRows,
@@ -51,6 +55,8 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('drift'), 'drift');
   assert.equal(resolveQueryName('commands'), 'commands');
   assert.equal(resolveQueryName('pr-readiness'), 'pr-readiness');
+  assert.equal(resolveQueryName('docs-disposition'), 'docs-disposition');
+  assert.equal(resolveQueryName('task-references'), 'task-references');
   assert.throws(() => resolveQueryName('unknown'), /Unknown planning DB query "unknown"/);
 });
 
@@ -123,6 +129,30 @@ test('parseArgs parses repository command query filters for DB-first catalog ins
   });
 });
 
+test('parseArgs parses docs disposition queue filters for DB-first cleanup work', () => {
+  const command = parseArgs([
+    'docs-disposition',
+    '--priority',
+    'P1',
+    '--kind',
+    'unknown_task_like_id',
+    '--path',
+    'docs/planning/status/example.md',
+    '--limit',
+    '5',
+  ]);
+
+  assert.deepEqual(command, {
+    queryName: 'docs-disposition',
+    filters: {
+      priority: 'P1',
+      kind: 'unknown_task_like_id',
+      path: 'docs/planning/status/example.md',
+      limit: 5,
+    },
+  });
+});
+
 test('formatQueryError preserves nested connection failures for unavailable DB', () => {
   const ipv6Error = Object.assign(new Error('connect ECONNREFUSED ::1:55432'), {
     code: 'ECONNREFUSED',
@@ -165,6 +195,10 @@ test('buildSummaryRows exposes planning and governance content counts without ex
     repositoryCommandRuntimeFanout: 16,
     prReadinessChecks: 1,
     prReadinessBlocking: 1,
+    docsDispositionDocuments: 120,
+    docsDispositionActions: 8,
+    docsTaskLikeReferences: 30,
+    docsTaskLikeReferencesUnknown: 4,
   });
 
   assert.deepEqual(rows, [
@@ -181,6 +215,10 @@ test('buildSummaryRows exposes planning and governance content counts without ex
     ['repository.commands.runtime_fanout', 16],
     ['repository.pr_readiness', 1],
     ['repository.pr_readiness.blocking', 1],
+    ['docs.disposition_documents', 120],
+    ['docs.disposition_actions', 8],
+    ['docs.task_like_references', 30],
+    ['docs.task_like_references.unknown', 4],
     ['governance.files', 4255],
     ['governance.files.drift', 41],
     ['governance.files.legacy', 0],
@@ -230,6 +268,10 @@ test('readSummary counts review tasks from the effective task view without hash 
             repositoryCommandRuntimeFanout: 16,
             prReadinessChecks: 1,
             prReadinessBlocking: 1,
+            docsDispositionDocuments: 120,
+            docsDispositionActions: 8,
+            docsTaskLikeReferences: 30,
+            docsTaskLikeReferencesUnknown: 4,
           },
         ],
       };
@@ -246,6 +288,9 @@ test('readSummary counts review tasks from the effective task view without hash 
   assert.match(capturedSql, /planning_artifacts/);
   assert.match(capturedSql, /repository_commands/);
   assert.match(capturedSql, /pr_readiness_checks/);
+  assert.match(capturedSql, /doc_disposition_documents/);
+  assert.match(capturedSql, /doc_disposition_actions/);
+  assert.match(capturedSql, /doc_task_like_references/);
   assert.doesNotMatch(capturedSql, /governance_file_hash_drift/);
 });
 
@@ -510,6 +555,95 @@ test('buildPrReadinessRows formats DB-owned ARC blockers for CLI output', () => 
       'lint,test,docs-validation',
     ],
   ]);
+});
+
+test('readDocsDispositionRows queries the DB-owned docs disposition action view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readDocsDispositionRows(client, {
+    priority: 'P1',
+    kind: 'unknown_task_like_id',
+    path: 'docs/planning/status/example.md',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.doc_disposition_action_query/);
+  assert.match(captured.sql, /priority = \$1/);
+  assert.match(captured.sql, /action_kind = \$2/);
+  assert.match(captured.sql, /document_path = \$3/);
+  assert.match(captured.sql, /limit \$4/);
+  assert.deepEqual(captured.params, [
+    'P1',
+    'unknown_task_like_id',
+    'docs/planning/status/example.md',
+    5,
+  ]);
+});
+
+test('readTaskReferenceRows queries the DB-owned task-like reference view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readTaskReferenceRows(client, {
+    kind: 'unknown_task_like_id',
+    path: 'docs/planning/status/example.md',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.doc_task_reference_query/);
+  assert.match(captured.sql, /classification = \$1/);
+  assert.match(captured.sql, /document_path = \$2/);
+  assert.match(captured.sql, /limit \$3/);
+  assert.deepEqual(captured.params, ['unknown_task_like_id', 'docs/planning/status/example.md', 5]);
+});
+
+test('docs disposition row builders format cleanup queues for operator output', () => {
+  assert.deepEqual(
+    buildDocsDispositionRows([
+      {
+        priority: 'P1',
+        action_kind: 'unknown_task_like_id',
+        document_path: 'docs/planning/status/example.md',
+        reference_text: 'WEB-123',
+        reason: 'Task-like reference is not registered in planning lanes.',
+      },
+    ]),
+    [
+      [
+        'P1',
+        'unknown_task_like_id',
+        'docs/planning/status/example.md',
+        'WEB-123',
+        'Task-like reference is not registered in planning lanes.',
+      ],
+    ]
+  );
+
+  assert.deepEqual(
+    buildTaskReferenceRows([
+      {
+        classification: 'unknown_task_like_id',
+        reference_text: 'WEB-123',
+        reference_prefix: 'WEB',
+        document_path: 'docs/planning/status/example.md',
+        occurrence_count: 2,
+      },
+    ]),
+    [['unknown_task_like_id', 'WEB-123', 'WEB', 'docs/planning/status/example.md', 2]]
+  );
 });
 
 test('buildGovernanceFileRows formats DB-owned governance file rows', () => {

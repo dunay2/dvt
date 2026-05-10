@@ -338,3 +338,32 @@ test('tracked migrations include PR readiness projection after W17', () => {
     /create or replace view planning_query_store\.pr_readiness_query/
   );
 });
+
+test('tracked migrations include docs disposition queue after W18', () => {
+  const migrations = readMigrationFiles();
+  const docsDispositionMigration = migrations.find(
+    (migration) => migration.fileName === '017_docs_disposition_queue.sql'
+  );
+
+  assert.ok(docsDispositionMigration);
+  assert.match(
+    docsDispositionMigration.sql,
+    /create table if not exists planning_query_store\.doc_disposition_documents/
+  );
+  assert.match(
+    docsDispositionMigration.sql,
+    /create table if not exists planning_query_store\.doc_task_like_references/
+  );
+  assert.match(
+    docsDispositionMigration.sql,
+    /create table if not exists planning_query_store\.doc_disposition_actions/
+  );
+  assert.match(
+    docsDispositionMigration.sql,
+    /create or replace view planning_query_store\.doc_disposition_action_query/
+  );
+  assert.match(
+    docsDispositionMigration.sql,
+    /create or replace view planning_query_store\.doc_task_reference_query/
+  );
+});

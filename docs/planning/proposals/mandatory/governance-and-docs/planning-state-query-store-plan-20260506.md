@@ -1217,6 +1217,11 @@ Current implementation status on 2026-05-08:
   reports effective ARC level, missing evidence/risk requirements, required
   checks, and blocking state from DB rows instead of recomputing the review
   posture in operator-facing query output;
+- W18 is implemented: `planning:db:import` imports active documentation
+  frontmatter, pending-style markers, and task-like references into normalized
+  DB rows, then `planning:db:query docs-disposition` and
+  `planning:db:query task-references` expose the triage queue without turning
+  the status inventory into a parallel workboard;
 - the obsolete `governance:artifacts:generate` package alias is removed;
   `pnpm governance:refresh` is the single local orchestration command for
   generated inspection artifacts plus planning/governance DB import and checks;
@@ -1229,6 +1234,66 @@ Current implementation status on 2026-05-08:
 - steps 13 through 15 remain future concrete follow-up work. They do not keep
   `GOV-S2` open; `GOV-S2` is the closed framework umbrella and this plan owns
   any remaining query-store parity or generated-artifact compaction work.
+
+## W18 Docs Disposition Queue Design
+
+The current docs task disposition inventory is a non-normative status snapshot.
+It proves that documentation cleanup is expensive because active docs contain
+frontmatter gaps, draft/superseded states, pending-style markers, and many
+task-like identifiers that are not planning task IDs. W18 moves that analysis
+into the planning/governance query store so operators can inspect a stable
+queue instead of rereading the corpus by hand.
+
+Current state:
+
+```mermaid
+flowchart LR
+  Docs["docs/**/*.md"] --> ManualScan["manual rg / inventory scripts"]
+  PlanningDb["planning DB tasks"] --> ManualScan
+  ManualScan --> StatusDoc["docs-task-disposition-inventory status snapshot"]
+  StatusDoc --> HumanQueue["manual cleanup decisions"]
+```
+
+Target state:
+
+```mermaid
+flowchart LR
+  Docs["tracked docs/**/*.md"] --> Import["planning:db:import"]
+  PlanningTasks["planning_tasks"] --> Import
+  Import --> Documents["doc_disposition_documents"]
+  Import --> Markers["doc_disposition_markers"]
+  Import --> References["doc_task_like_references"]
+  Documents --> Actions["doc_disposition_actions"]
+  Markers --> Actions
+  References --> Actions
+  Actions --> Queue["planning:db:query docs-disposition"]
+  References --> RefQuery["planning:db:query task-references"]
+```
+
+`ImportGovernanceStateQueryStore` owns the import because the source corpus is
+tracked documentation and governance metadata. `QueryDocsDispositionQueue` owns
+the operator queries. Git remains the review/bootstrap boundary; the DB queue is
+a derived operational read model.
+
+The first slice is intentionally classification-first:
+
+- import tracked Markdown documents, while marking archive, `_archive`, and
+  superseded-path documents inactive for cleanup actions;
+- parse top-level frontmatter into document rows and keep a raw frontmatter
+  payload for reviewer inspection;
+- count pending-style markers using the inventory's marker vocabulary:
+  `pending`, `remaining`, `debt`, `gap`, `follow-up`, `followup`, `not
+implemented`, `todo`, `next step`, `tbd`, and `open question`;
+- extract task-like identifiers and classify them as registered planning tasks,
+  ADR IDs, ARC levels, evidence IDs, risk IDs, user-story IDs, governance-unit
+  references, repository-command references, PlanStore matrix references,
+  algorithm references, historical planning/gap IDs, or unknown task-like IDs;
+- create action rows for active `Draft` docs, active `Superseded` docs outside
+  archive or superseded locations, missing frontmatter status,
+  pending-marker hotspots, and unknown task-like IDs.
+
+This slice does not archive or promote documents. It only makes disposition
+work queryable and auditable enough for focused cleanup PRs.
 
 ## Failure Modes And Guardrails
 
@@ -1245,6 +1310,7 @@ Current implementation status on 2026-05-08:
 | Non-code gate cost grows unchecked        | Treat CI policy reduction as a separate governed optimization |
 | Governance report churn is hidden         | Governance artifact hashes and source causes are queryable    |
 | PR readiness blockers are hidden in CI    | ARC/readiness blockers are queryable in `pr_readiness_checks` |
+| Docs disposition stays manual and stale   | Docs disposition queues are imported and queryable in the DB  |
 | DB treated as hidden repository authority | No committed database files; export must remain reviewable    |
 | GitHub mirror edits bypass PR review      | Mirror is read-only or imports as reviewed repo changes first |
 
@@ -1275,6 +1341,9 @@ Current implementation status on 2026-05-08:
   DB, and `governance:db:export:check` fails when the repo copy diverges.
 - ARC/PR readiness can be inspected through `planning:db:query pr-readiness`
   without reparsing policy and changed-file state in operator-facing output.
+- Documentation disposition can be inspected through `planning:db:query
+docs-disposition` and `planning:db:query task-references` without treating a
+  one-off status inventory as a parallel workboard.
 - The governance refresh sequence is executable through one local command and
   fails closed if generated output does not stabilize before DB import/check.
 
@@ -1393,6 +1462,9 @@ commandQueryRails:
   - name: QueryGovernanceStateReadModel
     type: query
     dddOwner: GovernanceStateReadModel
+  - name: QueryDocsDispositionQueue
+    type: query
+    dddOwner: DocsDispositionQueue
   - name: ExportGovernanceStateSnapshot
     type: command
     dddOwner: GovernanceStateExport
@@ -1445,6 +1517,12 @@ domainObjects:
   - name: GovernanceStateReadModel
     type: read model
     owner: Docs governance
+  - name: DocsDispositionQueue
+    type: read model
+    owner: Docs governance
+  - name: DocsTaskReferenceInventory
+    type: read model
+    owner: Docs governance
   - name: GovernanceStateExport
     type: command model
     owner: Docs governance
@@ -1465,6 +1543,7 @@ fowlerSignals:
   - Generated artifact churn
   - Hidden query model inside YAML
   - Hidden query model inside governance shards
+  - Manual docs disposition inventory
   - Mutable external tracker authority risk
 architectureGuards:
   - pnpm test:governance:refresh
@@ -1923,6 +2002,9 @@ symbols:
     name: PlanningDbPrReadinessProjectionMigration
     path: tools/planning-db/migrations/016_pr_readiness_projection.sql
   - <<: *planningDbContentSymbol
+    name: PlanningDbDocsDispositionQueueMigration
+    path: tools/planning-db/migrations/017_docs_disposition_queue.sql
+  - <<: *planningDbContentSymbol
     name: PlanningDbMigrateRunner
     path: scripts/planning-db-migrate.cjs
   - <<: *planningDbContentSymbol
@@ -2100,6 +2182,54 @@ symbols:
     name: listChangedFiles
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
+    name: listTrackedMarkdownDocuments
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: parseMarkdownFrontmatter
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: parseLooseFrontmatter
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: pendingMarkerTerms
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: taskLikeReferencePattern
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: escapeRegExp
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: lineNumbersForPattern
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: markerPattern
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: buildPendingMarkerRows
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: referencePrefix
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: classifyTaskLikeReference
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: extractTaskLikeReferences
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: isArchivedDocumentPath
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: dispositionPriorityRank
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: buildDocsDispositionActions
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: buildDocsDispositionSnapshot
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
     name: globToRegExp
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
@@ -2131,6 +2261,9 @@ symbols:
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
     name: insertPrReadinessSnapshot
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: insertDocsDispositionSnapshot
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
     name: beginImportTransaction
@@ -2191,6 +2324,24 @@ symbols:
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: readPrReadinessRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: buildDocsDispositionRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: buildTaskReferenceRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: docsDispositionActionSelect
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: taskReferenceSelect
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: readDocsDispositionRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: readTaskReferenceRows
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: printRows

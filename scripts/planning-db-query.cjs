@@ -28,6 +28,8 @@ const knownQueries = new Set([
   'drift',
   'commands',
   'pr-readiness',
+  'docs-disposition',
+  'task-references',
 ]);
 
 function databaseUrl() {
@@ -123,6 +125,10 @@ function parseArgs(args = process.argv.slice(2)) {
       filters.kind = value;
       continue;
     }
+    if (arg === '--prefix') {
+      filters.prefix = value;
+      continue;
+    }
     if (arg === '--limit') {
       filters.limit = parseLimit(value, 20);
       continue;
@@ -149,6 +155,10 @@ function buildSummaryRows(summary) {
     ['repository.commands.runtime_fanout', summary.repositoryCommandRuntimeFanout],
     ['repository.pr_readiness', summary.prReadinessChecks],
     ['repository.pr_readiness.blocking', summary.prReadinessBlocking],
+    ['docs.disposition_documents', summary.docsDispositionDocuments],
+    ['docs.disposition_actions', summary.docsDispositionActions],
+    ['docs.task_like_references', summary.docsTaskLikeReferences],
+    ['docs.task_like_references.unknown', summary.docsTaskLikeReferencesUnknown],
     ['governance.files', summary.governanceFiles],
     ['governance.files.drift', summary.driftFiles],
     ['governance.files.legacy', summary.legacyFiles],
@@ -253,6 +263,26 @@ function buildPrReadinessRows(rows) {
     `evidence:${row.evidence_doc_status ?? row.evidenceDocStatus ?? '-'}`,
     `risk:${row.risk_update_status ?? row.riskUpdateStatus ?? '-'}`,
     joinJsonArray(row.required_checks ?? row.requiredChecks),
+  ]);
+}
+
+function buildDocsDispositionRows(rows) {
+  return rows.map((row) => [
+    row.priority,
+    row.action_kind ?? row.actionKind,
+    row.document_path ?? row.documentPath,
+    row.reference_text ?? row.referenceText ?? '-',
+    compactText(row.reason),
+  ]);
+}
+
+function buildTaskReferenceRows(rows) {
+  return rows.map((row) => [
+    row.classification,
+    row.reference_text ?? row.referenceText,
+    row.reference_prefix ?? row.referencePrefix,
+    row.document_path ?? row.documentPath,
+    row.occurrence_count ?? row.occurrenceCount ?? 0,
   ]);
 }
 
@@ -459,6 +489,43 @@ function prReadinessSelect() {
     from ${schemaName}.pr_readiness_query`;
 }
 
+function docsDispositionActionSelect() {
+  return `
+    select
+      action_id,
+      priority,
+      action_kind,
+      document_path,
+      document_status,
+      planning_type,
+      is_active,
+      reference_text,
+      reason,
+      blocking,
+      evidence,
+      source_content_sha256,
+      raw_action,
+      imported_at
+    from ${schemaName}.doc_disposition_action_query`;
+}
+
+function taskReferenceSelect() {
+  return `
+    select
+      reference_id,
+      document_path,
+      reference_text,
+      reference_prefix,
+      classification,
+      registered_planning_task,
+      occurrence_count,
+      sample_lines,
+      source_content_sha256,
+      raw_reference,
+      imported_at
+    from ${schemaName}.doc_task_reference_query`;
+}
+
 function governanceFileSelect() {
   return `
     select
@@ -562,6 +629,10 @@ async function readSummary(client) {
       (select count(*)::int from ${schemaName}.repository_commands where runtime_fanout = true) as "repositoryCommandRuntimeFanout",
       (select count(*)::int from ${schemaName}.pr_readiness_checks) as "prReadinessChecks",
       (select count(*)::int from ${schemaName}.pr_readiness_checks where blocking = true) as "prReadinessBlocking",
+      (select count(*)::int from ${schemaName}.doc_disposition_documents) as "docsDispositionDocuments",
+      (select count(*)::int from ${schemaName}.doc_disposition_actions) as "docsDispositionActions",
+      (select count(*)::int from ${schemaName}.doc_task_like_references) as "docsTaskLikeReferences",
+      (select count(*)::int from ${schemaName}.doc_task_like_references where classification = 'unknown_task_like_id') as "docsTaskLikeReferencesUnknown",
       (select count(*)::int from ${schemaName}.governance_files) as "governanceFiles",
       (select count(*)::int from ${schemaName}.governance_files where is_drift = true) as "driftFiles",
       (select count(*)::int from ${schemaName}.governance_files where is_legacy = true) as "legacyFiles",
@@ -749,6 +820,60 @@ async function readPrReadinessRows(client, filters = {}) {
   const result = await client.query(
     `${prReadinessSelect()}
      order by blocking desc, readiness_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readDocsDispositionRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'priority', filters.priority);
+  appendFilter(predicates, params, 'action_kind', filters.kind);
+  appendFilter(predicates, params, 'document_path', filters.path);
+  appendFilter(predicates, params, 'document_status', filters.status);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${docsDispositionActionSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by
+      case
+        when priority ~* '^P?[0-9]+$' then regexp_replace(priority, '^P', '', 'i')::int
+        else 9
+      end,
+      action_kind,
+      document_path,
+      reference_text
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readTaskReferenceRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'classification', filters.kind);
+  appendFilter(predicates, params, 'reference_prefix', filters.prefix);
+  appendFilter(predicates, params, 'document_path', filters.path);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${taskReferenceSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by
+      case when classification = 'unknown_task_like_id' then 0 else 1 end,
+      occurrence_count desc,
+      reference_text,
+      document_path
      limit $${params.length}`,
     params
   );
@@ -1012,6 +1137,24 @@ async function runQuery(options = {}) {
       return readinessRows;
     }
 
+    if (queryName === 'docs-disposition') {
+      const rows = await readDocsDispositionRows(client, options.filters || {});
+      const dispositionRows = buildDocsDispositionRows(rows);
+      if (options.print !== false) {
+        printTaskRows(dispositionRows);
+      }
+      return dispositionRows;
+    }
+
+    if (queryName === 'task-references') {
+      const rows = await readTaskReferenceRows(client, options.filters || {});
+      const referenceRows = buildTaskReferenceRows(rows);
+      if (options.print !== false) {
+        printTaskRows(referenceRows);
+      }
+      return referenceRows;
+    }
+
     if (queryName === 'files') {
       const rows = await readGovernanceFileRows(client, options.filters || {});
       const fileRows = buildGovernanceFileRows(rows);
@@ -1120,6 +1263,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  buildDocsDispositionRows,
   buildGovernanceComponentRows,
   buildGovernanceCoverageRows,
   buildGovernanceDriftRows,
@@ -1134,10 +1278,12 @@ module.exports = {
   buildRepositoryCommandRows,
   buildSummaryRows,
   buildTaskRows,
+  buildTaskReferenceRows,
   databaseUrl,
   formatQueryError,
   parseArgs,
   printHashDriftSummary,
+  readDocsDispositionRows,
   readGovernanceComponentRows,
   readGovernanceCoverageRows,
   readGovernanceDriftRows,
@@ -1156,6 +1302,7 @@ module.exports = {
   readHashDriftSummary,
   readSummary,
   readTaskRows,
+  readTaskReferenceRows,
   resolveQueryName,
   runQuery,
 };

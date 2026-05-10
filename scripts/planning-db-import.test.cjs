@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
+  buildDocsDispositionSnapshot,
   buildGovernanceFileSnapshot,
   buildPlanningContentSnapshot,
   buildPrReadinessSnapshot,
@@ -191,6 +192,120 @@ test('PR readiness snapshot clears ARC evidence and risk blockers from changed d
     'docs/risk-register/quality/R-20260510-PR-READINESS.yaml',
   ]);
   assert.deepEqual(snapshot.readiness.missingRequirements, []);
+});
+
+test('docs disposition snapshot classifies active-doc cleanup actions and task-like references', () => {
+  const snapshot = buildDocsDispositionSnapshot({
+    pendingHotspotThreshold: 2,
+    planningTaskIds: ['AR-A6'],
+    documents: [
+      {
+        sourcePath: 'docs/planning/closeouts/example.md',
+        raw: [
+          '---',
+          'title: Example closeout',
+          'status: Draft',
+          'planning_type: closeout',
+          'owner: Docs',
+          '---',
+          [
+            'AR-A6 WEB-123 ADR-0055 ARC-2 ED-20260510-example',
+            'R-20260510-EXAMPLE US-1 F04-W4 SYS-DOCS CMD-RET PS-Q08',
+            'SHA-256 GAP-1 MVP-E1-A RESIDUAL-A RISK-B LEGACY-DRIFT INV-SCOPE-03',
+          ].join(' '),
+          'pending follow-up remains open',
+          'TODO: resolve this item',
+        ].join('\n'),
+      },
+    ],
+  });
+
+  assert.equal(snapshot.documents.length, 1);
+  assert.equal(snapshot.documents[0].documentPath, 'docs/planning/closeouts/example.md');
+  assert.equal(snapshot.documents[0].status, 'Draft');
+  assert.equal(snapshot.documents[0].pendingMarkerCount, 3);
+
+  assert.deepEqual(snapshot.markers.map((marker) => marker.markerKind).sort(), [
+    'follow-up',
+    'pending',
+    'todo',
+  ]);
+
+  const classifications = new Map(
+    snapshot.references.map((reference) => [reference.referenceText, reference.classification])
+  );
+  assert.equal(classifications.get('AR-A6'), 'registered_planning_task');
+  assert.equal(classifications.get('WEB-123'), 'unknown_task_like_id');
+  assert.equal(classifications.get('ADR-0055'), 'adr_id');
+  assert.equal(classifications.get('ARC-2'), 'arc_level');
+  assert.equal(classifications.get('ED-20260510-example'), 'evidence_id');
+  assert.equal(classifications.get('R-20260510-EXAMPLE'), 'risk_id');
+  assert.equal(classifications.get('US-1'), 'user_story');
+  assert.equal(classifications.get('F04-W4'), 'historical_gap');
+  assert.equal(classifications.get('SYS-DOCS'), 'governance_unit_reference');
+  assert.equal(classifications.get('CMD-RET'), 'command_reference');
+  assert.equal(classifications.get('PS-Q08'), 'plan_store_matrix_reference');
+  assert.equal(classifications.get('SHA-256'), 'algorithm_reference');
+  assert.equal(classifications.get('GAP-1'), 'historical_planning_reference');
+  assert.equal(classifications.get('MVP-E1-A'), 'historical_planning_reference');
+  assert.equal(classifications.get('RESIDUAL-A'), 'historical_planning_reference');
+  assert.equal(classifications.get('RISK-B'), 'historical_planning_reference');
+  assert.equal(classifications.get('LEGACY-DRIFT'), 'historical_planning_reference');
+  assert.equal(classifications.get('INV-SCOPE-03'), 'historical_planning_reference');
+
+  assert.deepEqual(snapshot.actions.map((action) => action.actionKind).sort(), [
+    'draft_active_doc',
+    'pending_marker_hotspot',
+    'unknown_task_like_id',
+  ]);
+});
+
+test('docs disposition snapshot keeps archived documents visible without active cleanup actions', () => {
+  const snapshot = buildDocsDispositionSnapshot({
+    planningTaskIds: [],
+    documents: [
+      {
+        sourcePath: 'docs/archive/old-program.md',
+        raw: [
+          '---',
+          'title: Archived program',
+          'status: Superseded',
+          '---',
+          'WEB-999 pending TODO',
+        ].join('\n'),
+      },
+      {
+        sourcePath: 'docs/planning/archive/gaps/README.md',
+        raw: [
+          '---',
+          'title: Archived planning gaps',
+          'status: Superseded',
+          '---',
+          'WEB-998 pending TODO',
+        ].join('\n'),
+      },
+      {
+        sourcePath: 'docs/planning/proposals/superseded/runtime/example.md',
+        raw: [
+          '---',
+          'title: Superseded proposal',
+          'status: Superseded',
+          '---',
+          'WEB-997 pending TODO',
+        ].join('\n'),
+      },
+    ],
+  });
+
+  assert.equal(snapshot.documents.length, 3);
+  assert.equal(snapshot.documents[0].isArchive, true);
+  assert.equal(snapshot.documents[0].isActive, false);
+  assert.equal(snapshot.documents[1].isArchive, true);
+  assert.equal(snapshot.documents[1].isActive, false);
+  assert.equal(snapshot.documents[2].isArchive, true);
+  assert.equal(snapshot.documents[2].isActive, false);
+  assert.equal(snapshot.references[0].classification, 'unknown_task_like_id');
+  assert.deepEqual(snapshot.actions, []);
 });
 
 test('normalizeText keeps structured lane fields queryable without dropping content', () => {
