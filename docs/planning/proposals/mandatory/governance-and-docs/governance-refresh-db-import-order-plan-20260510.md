@@ -53,6 +53,8 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/governance-and-docs/governance-refresh-db-import-order-plan-20260510.md
   - scripts/governance-refresh.cjs
   - scripts/governance-refresh.test.cjs
+  - scripts/planning-db-import.cjs
+  - scripts/planning-db-import.test.cjs
   - docs/planning/status/**
   - docs/.manifest.json
   - docs/**/index.md
@@ -73,10 +75,12 @@ fowlerSignals:
   - Pipeline Drift from missing post-generation DB import
 architectureGuards:
   - node --test scripts/governance-refresh.test.cjs
+  - node --test scripts/planning-db-import.test.cjs
 cypressFlows:
   - N/A - governance command pipeline only
 completionGate:
   - node --test scripts/governance-refresh.test.cjs
+  - node --test scripts/planning-db-import.test.cjs
   - pnpm governance:refresh
   - pnpm docs:feature-mechanization:implementation
   - pnpm verify:prepush
@@ -88,6 +92,13 @@ redGreenCycles:
       - scripts/governance-refresh.test.cjs
       - scripts/governance-refresh.cjs
     greenTest: node --test scripts/governance-refresh.test.cjs
+  - id: governance-import-clears-repopulated-tables
+    redTest: node --test scripts/planning-db-import.test.cjs
+    expectedFailure: governance import deletes only governance_sources and can leave stale coverage or remediation rows in older local databases.
+    patchSurfaces:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-import.cjs
+    greenTest: node --test scripts/planning-db-import.test.cjs
 symbols:
   - name: buildRefreshStages
     path: scripts/governance-refresh.cjs
@@ -100,6 +111,28 @@ symbols:
     cypressCoverage: N/A
     unitTests:
       - scripts/governance-refresh.test.cjs
+  - name: governanceImportDeleteTables
+    path: scripts/planning-db-import.cjs
+    dddOwner: Governance query-store import
+    cqRails:
+      - GovernanceRefresh
+    fowlerSignals:
+      - Make governance import idempotent across repeated generated-surface refreshes
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: clearGovernanceSnapshotTables
+    path: scripts/planning-db-import.cjs
+    dddOwner: Governance query-store import
+    cqRails:
+      - GovernanceRefresh
+    fowlerSignals:
+      - Clear repopulated governance read-model tables explicitly instead of relying on cascade behavior
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
 ```
 
 ## User Stories
@@ -116,4 +149,6 @@ symbols:
 - [x] Add a test expectation that `governance:db:import` runs before
       `governance:db:check`.
 - [x] Add the missing database stage to `governance:refresh`.
+- [x] Make governance imports clear every repopulated governance table before
+      inserting current rows.
 - [x] Run governance refresh and prepush closeout.

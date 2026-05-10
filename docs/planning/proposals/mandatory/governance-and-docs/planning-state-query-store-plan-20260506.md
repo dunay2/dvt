@@ -628,12 +628,13 @@ source for those values.
 
 `governance:refresh` implements `RefreshGovernanceDerivedSurfaces`. It runs the
 canonical generation order from the system-governance workflow component,
-repeats generation until staged, unstaged, and untracked non-ignored worktree
-fingerprints stop changing, then imports and checks the planning/governance
-query store. Scope is local developer tooling only; authorization is local OS
-and Docker/Postgres access. Negative tests in
-`scripts/governance-refresh.test.cjs` prove the stage order, repeat-until-stable
-behavior, and fail-closed posture when generated output does not converge.
+repeats generation until staged, unstaged, untracked non-ignored worktree files,
+and ignored generated governance status artifacts stop changing, then imports
+and checks the planning/governance query store. Scope is local developer tooling
+only; authorization is local OS and Docker/Postgres access. Negative tests in
+`scripts/governance-refresh.test.cjs` prove the stage order,
+repeat-until-stable behavior, ignored generated governance artifact
+fingerprinting, and fail-closed posture when generated output does not converge.
 
 ### W4 Implementation Plan
 
@@ -1222,6 +1223,10 @@ Current implementation status on 2026-05-08:
   DB rows, then `planning:db:query docs-disposition` and
   `planning:db:query task-references` expose the triage queue without turning
   the status inventory into a parallel workboard;
+- W19 is active: the next planning-query slice adds a task provenance ledger
+  over existing planning, document-disposition, dependency, and evidence rows so
+  agents can ask which reviews, proposals, closeouts, evidence refs, and
+  unresolved gaps explain a task before selecting or closing work;
 - the obsolete `governance:artifacts:generate` package alias is removed;
   `pnpm governance:refresh` is the single local orchestration command for
   generated inspection artifacts plus planning/governance DB import and checks;
@@ -1295,6 +1300,61 @@ implemented`, `todo`, `next step`, `tbd`, and `open question`;
 This slice does not archive or promote documents. It only makes disposition
 work queryable and auditable enough for focused cleanup PRs.
 
+## W19 Task Provenance Ledger Design
+
+The task registry answers what is active, queued, or closed. The review and
+proposal corpus answers why a task exists. Evidence and closeouts answer whether
+the task has actually been proven. Today those surfaces are imported, but the
+task-level relationship is still an implicit reading exercise.
+
+W19 derives the first task-provenance ledger from existing DB-owned read models.
+It does not add a second task store and it does not create new task state. It
+adds query views that join:
+
+- `planning_effective_tasks`;
+- `planning_task_dependencies`;
+- `planning_task_evidence_refs`;
+- `doc_task_reference_query`;
+- `doc_disposition_document_query`;
+- `doc_disposition_action_query`.
+
+Target state:
+
+```mermaid
+flowchart LR
+  Tasks["planning_effective_tasks"] --> Trace["planning_task_trace_query"]
+  Dependencies["planning_task_dependencies"] --> Trace
+  Evidence["planning_task_evidence_refs"] --> Trace
+  DocRefs["doc_task_reference_query"] --> Trace
+  Docs["doc_disposition_document_query"] --> Trace
+  Actions["doc_disposition_action_query"] --> Gaps["planning_task_gap_query"]
+  Trace --> TaskTrace["planning:db:query task-trace --task TASK_ID"]
+  Gaps --> TaskGaps["planning:db:query task-gaps"]
+```
+
+`QueryTaskProvenanceLedger` owns the operator queries. The ledger is derived
+from imported planning and documentation rows, so `ImportPlanningStateQueryStore`
+and `ImportGovernanceStateQueryStore` remain the write/import rails.
+
+The first W19 implementation is intentionally read-model only:
+
+- `task-trace` lists one task's task row, parent, dependencies, evidence refs,
+  and source documents that explicitly reference the task ID;
+- source document rows are typed as `review`, `proposal`, `closeout`,
+  `evidence_doc`, `risk_doc`, or `source_doc` by active document path and
+  frontmatter;
+- `task-gaps` lists high-signal task/provenance gaps, including review or done
+  tasks without evidence, open tasks without any task-referencing document or
+  evidence ref, active reviews without task links, mandatory active proposals
+  without task links, and task-linked documents that still have unresolved
+  disposition actions;
+- the gap query exposes a `--kind` filter so agents can inspect one class of
+  task-governance failure without rereading all planning docs.
+
+W19 does not change task status, create tasks, archive reviews, promote
+proposals, or infer closure. It only makes the relationships visible enough for
+the next work selection or closeout decision to be evidence-led.
+
 ## Failure Modes And Guardrails
 
 | Failure mode                              | Guardrail                                                     |
@@ -1311,6 +1371,7 @@ work queryable and auditable enough for focused cleanup PRs.
 | Governance report churn is hidden         | Governance artifact hashes and source causes are queryable    |
 | PR readiness blockers are hidden in CI    | ARC/readiness blockers are queryable in `pr_readiness_checks` |
 | Docs disposition stays manual and stale   | Docs disposition queues are imported and queryable in the DB  |
+| Task provenance stays manual and stale    | Task trace and task gap queues are derived in DB query views  |
 | DB treated as hidden repository authority | No committed database files; export must remain reviewable    |
 | GitHub mirror edits bypass PR review      | Mirror is read-only or imports as reviewed repo changes first |
 
@@ -1344,6 +1405,10 @@ work queryable and auditable enough for focused cleanup PRs.
 - Documentation disposition can be inspected through `planning:db:query
 docs-disposition` and `planning:db:query task-references` without treating a
   one-off status inventory as a parallel workboard.
+- Task provenance can be inspected through `planning:db:query task-trace --task
+<TASK_ID>` and task-governance gaps can be inspected through
+  `planning:db:query task-gaps` without rereading every lane, review, proposal,
+  and closeout file by hand.
 - The governance refresh sequence is executable through one local command and
   fails closed if generated output does not stabilize before DB import/check.
 
@@ -1465,6 +1530,9 @@ commandQueryRails:
   - name: QueryDocsDispositionQueue
     type: query
     dddOwner: DocsDispositionQueue
+  - name: QueryTaskProvenanceLedger
+    type: query
+    dddOwner: TaskProvenanceLedger
   - name: ExportGovernanceStateSnapshot
     type: command
     dddOwner: GovernanceStateExport
@@ -1523,6 +1591,9 @@ domainObjects:
   - name: DocsTaskReferenceInventory
     type: read model
     owner: Docs governance
+  - name: TaskProvenanceLedger
+    type: read model
+    owner: Product / Architecture / Delivery / Docs
   - name: GovernanceStateExport
     type: command model
     owner: Docs governance
@@ -1544,6 +1615,7 @@ fowlerSignals:
   - Hidden query model inside YAML
   - Hidden query model inside governance shards
   - Manual docs disposition inventory
+  - Manual task provenance reconstruction
   - Mutable external tracker authority risk
 architectureGuards:
   - pnpm test:governance:refresh
@@ -1561,6 +1633,8 @@ completionGate:
   - pnpm planning:db:migrate
   - pnpm planning:db:import
   - pnpm planning:db:query
+  - pnpm planning:db:query task-trace --task F-28-C
+  - pnpm planning:db:query task-gaps --limit 10
   - pnpm planning:db:query hash-drift
   - pnpm planning:db:export
   - pnpm planning:db:export:check
@@ -1790,6 +1864,14 @@ redGreenCycles:
       - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/generate-governance-coverage-report.test.cjs scripts/generate-governance-remediation-queue.test.cjs scripts/governance-refresh.test.cjs
+  - id: planning-db-task-provenance-ledger
+    redTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+    expectedFailure: Task selection still requires manual reconstruction across lane tasks, reviews, proposals, evidence refs, and docs disposition rows because no task trace or task gap query view exists.
+    patchSurfaces:
+      - tools/planning-db/**
+      - scripts/planning-db-*.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
 symbols:
   - name: PlanningAndGovernanceQueryStorePlan
     path: docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
@@ -1807,6 +1889,7 @@ symbols:
       - InspectPlanningQueryStoreRuntime
       - ImportGovernanceStateQueryStore
       - QueryGovernanceStateReadModel
+      - QueryTaskProvenanceLedger
       - ExportGovernanceStateSnapshot
       - ValidateGovernanceStateDrift
       - RefreshGovernanceDerivedSurfaces
@@ -1817,6 +1900,7 @@ symbols:
       - Generated artifact churn
       - Hidden query model inside YAML
       - Hidden query model inside governance shards
+      - Manual task provenance reconstruction
       - Mutable external tracker authority risk
     architectureGuard: pnpm docs:feature-mechanization:implementation
     cypressCoverage: N/A - planning query-store proposal has no browser workflow.
@@ -2005,6 +2089,9 @@ symbols:
     name: PlanningDbDocsDispositionQueueMigration
     path: tools/planning-db/migrations/017_docs_disposition_queue.sql
   - <<: *planningDbContentSymbol
+    name: PlanningDbTaskProvenanceLedgerMigration
+    path: tools/planning-db/migrations/018_task_provenance_ledger.sql
+  - <<: *planningDbContentSymbol
     name: PlanningDbMigrateRunner
     path: scripts/planning-db-migrate.cjs
   - <<: *planningDbContentSymbol
@@ -2122,6 +2209,9 @@ symbols:
     name: buildGeneratedYamlSource
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
+    name: readGeneratedYamlSourceOrBuild
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
     name: cleanJson
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
@@ -2153,6 +2243,9 @@ symbols:
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
     name: inMemorySourceMetadata
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: generatedSourceMetadata
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
     name: buildCoverageRows
@@ -2332,16 +2425,34 @@ symbols:
     name: buildTaskReferenceRows
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
+    name: buildTaskTraceRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: buildTaskGapRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
     name: docsDispositionActionSelect
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: taskReferenceSelect
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
+    name: taskTraceSelect
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: taskGapSelect
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
     name: readDocsDispositionRows
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: readTaskReferenceRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: readTaskTraceRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: readTaskGapRows
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: printRows
@@ -3278,6 +3389,9 @@ symbols:
     name: fs
     path: scripts/governance-refresh.cjs
   - <<: *governanceRefreshSymbol
+    name: os
+    path: scripts/governance-refresh.test.cjs
+  - <<: *governanceRefreshSymbol
     name: path
     path: scripts/governance-refresh.cjs
   - <<: *governanceRefreshSymbol
@@ -3303,6 +3417,12 @@ symbols:
     path: scripts/governance-refresh.cjs
   - <<: *governanceRefreshSymbol
     name: readUntrackedFileHashes
+    path: scripts/governance-refresh.cjs
+  - <<: *governanceRefreshSymbol
+    name: walkFiles
+    path: scripts/governance-refresh.cjs
+  - <<: *governanceRefreshSymbol
+    name: readGeneratedGovernanceArtifactHashes
     path: scripts/governance-refresh.cjs
   - <<: *governanceRefreshSymbol
     name: readWorktreeFingerprint

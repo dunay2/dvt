@@ -59,7 +59,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [[ "${{ steps.scope.outputs.root_config }}" == "true" ]]; then
+          if [[ "${{ steps.scope.outputs.root_build_sensitive }}" == "true" ]]; then
             pnpm build
             exit 0
           fi
@@ -69,7 +69,7 @@ jobs:
       - name: Run web tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.scope.outputs.web == 'true' ||
-          steps.scope.outputs.root_config == 'true')
+          steps.scope.outputs.root_build_sensitive == 'true')
         run: pnpm test:web
         env:
           DVT_CI: '1'
@@ -77,7 +77,7 @@ jobs:
       - name: Run engine tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.scope.outputs.engine == 'true' ||
-          steps.scope.outputs.root_config == 'true')
+          steps.scope.outputs.root_build_sensitive == 'true')
         run: pnpm test:engine
         env:
           DVT_CI: '1'
@@ -85,13 +85,13 @@ jobs:
       - name: Run contracts tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.scope.outputs.contracts == 'true' ||
-          steps.scope.outputs.root_config == 'true')
+          steps.scope.outputs.root_build_sensitive == 'true')
         run: pnpm test:contracts
 
       - name: Run adapter-temporal tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.scope.outputs.adapter_temporal == 'true' ||
-          steps.scope.outputs.root_config == 'true')
+          steps.scope.outputs.root_build_sensitive == 'true')
         run: pnpm test:adapter-temporal
         env:
           DVT_CI: '1'
@@ -99,13 +99,13 @@ jobs:
       - name: Run cli tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.scope.outputs.cli == 'true' ||
-          steps.scope.outputs.root_config == 'true')
+          steps.scope.outputs.root_build_sensitive == 'true')
         run: pnpm test:cli
 
       - name: Run api tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.scope.outputs.api == 'true' ||
-          steps.scope.outputs.root_config == 'true')
+          steps.scope.outputs.root_build_sensitive == 'true')
         run: pnpm test:api
         env:
           DVT_CI: '1'
@@ -113,7 +113,8 @@ jobs:
       - name: Run planner tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.scope.outputs.planner == 'true' ||
-          steps.scope.outputs.contracts == 'true' || steps.scope.outputs.root_config == 'true')
+          steps.scope.outputs.contracts == 'true' || steps.scope.outputs.root_build_sensitive ==
+          'true')
         run: pnpm test:planner
         env:
           DVT_CI: '1'
@@ -121,7 +122,7 @@ jobs:
       - name: Run delivery tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.scope.outputs.delivery == 'true' ||
-          steps.scope.outputs.root_config == 'true')
+          steps.scope.outputs.root_build_sensitive == 'true')
         run: pnpm --filter @dvt/delivery test
         env:
           DVT_CI: '1'
@@ -129,7 +130,7 @@ jobs:
       - name: Run dsl tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.scope.outputs.dsl == 'true' ||
-          steps.scope.outputs.root_config == 'true')
+          steps.scope.outputs.root_build_sensitive == 'true')
         run: pnpm --filter @dvt/dsl test
         env:
           DVT_CI: '1'
@@ -137,7 +138,7 @@ jobs:
       - name: Run observability tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.scope.outputs.observability == 'true' ||
-          steps.scope.outputs.root_config == 'true')
+          steps.scope.outputs.root_build_sensitive == 'true')
         run: pnpm --filter @dvt/observability test
         env:
           DVT_CI: '1'
@@ -145,7 +146,7 @@ jobs:
       - name: Run observability-otel tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.scope.outputs.observability_otel == 'true'
-          || steps.scope.outputs.root_config == 'true')
+          || steps.scope.outputs.root_build_sensitive == 'true')
         run: pnpm --filter @dvt/observability-otel test
         env:
           DVT_CI: '1'
@@ -153,7 +154,7 @@ jobs:
       - name: Run plan-interpreter tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.scope.outputs.plan_interpreter == 'true' ||
-          steps.scope.outputs.root_config == 'true')
+          steps.scope.outputs.root_build_sensitive == 'true')
         run: pnpm --filter @dvt/plan-interpreter test
         env:
           DVT_CI: '1'
@@ -161,7 +162,7 @@ jobs:
       - name: Run plan-verifier tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.scope.outputs.plan_verifier == 'true' ||
-          steps.scope.outputs.root_config == 'true')
+          steps.scope.outputs.root_build_sensitive == 'true')
         run: pnpm --filter @dvt/plan-verifier test
         env:
           DVT_CI: '1'
@@ -169,7 +170,7 @@ jobs:
       - name: Run run-domain tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.scope.outputs.run_domain == 'true' ||
-          steps.scope.outputs.root_config == 'true')
+          steps.scope.outputs.root_build_sensitive == 'true')
         run: pnpm --filter @dvt/run-domain test
         env:
           DVT_CI: '1'
@@ -177,7 +178,7 @@ jobs:
       - name: Run state-store tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.scope.outputs.state_store == 'true' ||
-          steps.scope.outputs.root_config == 'true')
+          steps.scope.outputs.root_build_sensitive == 'true')
         run: pnpm --filter @dvt/state-store test
         env:
           DVT_CI: '1'
@@ -185,7 +186,7 @@ jobs:
       - name: Run artifacts tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.scope.outputs.artifacts == 'true' ||
-          steps.scope.outputs.root_config == 'true')
+          steps.scope.outputs.root_build_sensitive == 'true')
         run: pnpm --filter @dvt/artifacts test
         env:
           DVT_CI: '1'
@@ -193,7 +194,7 @@ jobs:
       - name: Run crypto tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.scope.outputs.crypto == 'true' ||
-          steps.scope.outputs.root_config == 'true')
+          steps.scope.outputs.root_build_sensitive == 'true')
         run: pnpm --filter @dvt/crypto test
         env:
           DVT_CI: '1'
@@ -201,7 +202,7 @@ jobs:
       - name: Run traceability-service tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.scope.outputs.traceability_service == 'true'
-          || steps.scope.outputs.root_config == 'true')
+          || steps.scope.outputs.root_build_sensitive == 'true')
         run: pnpm --filter @dvt/traceability-service test
         env:
           DVT_CI: '1'
@@ -209,7 +210,7 @@ jobs:
       - name: Run lineage-worker tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.scope.outputs.lineage_worker == 'true' ||
-          steps.scope.outputs.root_config == 'true')
+          steps.scope.outputs.root_build_sensitive == 'true')
         run: pnpm --filter dvt-lineage-worker test
         env:
           DVT_CI: '1'
@@ -217,7 +218,7 @@ jobs:
       - name: Run outbox-worker tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.scope.outputs.outbox_worker == 'true' ||
-          steps.scope.outputs.root_config == 'true')
+          steps.scope.outputs.root_build_sensitive == 'true')
         run: pnpm --filter dvt-outbox-worker test
         env:
           DVT_CI: '1'
@@ -225,7 +226,7 @@ jobs:
       - name: Run projector-worker tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.scope.outputs.projector_worker == 'true' ||
-          steps.scope.outputs.root_config == 'true')
+          steps.scope.outputs.root_build_sensitive == 'true')
         run: pnpm --filter dvt-projector-worker test
         env:
           DVT_CI: '1'
@@ -233,7 +234,7 @@ jobs:
       - name: Run temporal-worker tests (affected package)
         if:
           github.event_name == 'pull_request' && (steps.scope.outputs.temporal_worker == 'true' ||
-          steps.scope.outputs.root_config == 'true')
+          steps.scope.outputs.root_build_sensitive == 'true')
         run: pnpm --filter dvt-temporal-worker test
         env:
           DVT_CI: '1'
@@ -244,31 +245,22 @@ jobs:
     timeout-minutes: 5
     if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
     outputs:
-      adapter_postgres_changed:
-        ${{ steps.changes.outputs.adapter_postgres_relevant || steps.push_all.outputs.changed }}
+      adapter_postgres_changed: ${{ steps.scope.outputs.postgres_capability_changed }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-
-      - name: Mark all changed (push/dispatch — no diff available)
-        id: push_all
-        if: github.event_name != 'pull_request'
-        run: echo "changed=true" >> $GITHUB_OUTPUT
-
-      - name: Generate adapter-postgres filters
-        id: filters
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "filters<<EOF" >> $GITHUB_OUTPUT
-          node .github/scripts/generate-paths-filter.js tools/ci/policy/adapter-postgres-relevance.json adapter_postgres_relevant >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Detect adapter-postgres changes
-        id: changes
-        if: github.event_name == 'pull_request'
-        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4
         with:
-          filters: ${{ steps.filters.outputs.filters }}
+          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
+
+      - name: Validate workflow scope policy JSON
+        run: node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json
+
+      - name: Emit adapter-postgres scope output
+        id: scope
+        run: node tools/ci/emit-scope.mjs --mode test
+        env:
+          GIT_BASE: origin/${{ github.base_ref }}
+          GIT_HEAD: ${{ github.sha }}
 
   adapter-postgres:
     name: Adapter Postgres Tests
@@ -337,47 +329,41 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-
-      - name: Detect determinism-relevant changes (PR only)
-        id: det_changes
-        if: github.event_name == 'pull_request'
-        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4
         with:
-          filters: |
-            determinism_relevant:
-              - 'packages/@dvt/engine/**'
-              - 'packages/@dvt/contracts/**'
-              - 'package.json'
-              - 'pnpm-lock.yaml'
-              - 'pnpm-workspace.yaml'
-              - '.github/workflows/test.yml'
+          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
+
+      - name: Validate workflow scope policy JSON
+        run: node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json
+
+      - name: Emit determinism scope output
+        id: scope
+        run: node tools/ci/emit-scope.mjs --mode test
+        env:
+          GIT_BASE: origin/${{ github.base_ref }}
+          GIT_HEAD: ${{ github.sha }}
 
       - name: Setup pnpm, cache and dependencies
         if:
-          github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
-          'true'
+          github.event_name != 'pull_request' || steps.scope.outputs.determinism_relevant == 'true'
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
 
       - name: Build engine dependency graph (once, before tests)
         if:
-          github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
-          'true'
+          github.event_name != 'pull_request' || steps.scope.outputs.determinism_relevant == 'true'
         run: pnpm --filter "@dvt/engine^..." --workspace-concurrency=4 build
 
       - name: Run determinism tests
         if:
-          github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
-          'true'
+          github.event_name != 'pull_request' || steps.scope.outputs.determinism_relevant == 'true'
         run: pnpm test:determinism
         env:
           DVT_CI: '1'
 
       - name: Verify replay consistency
         if:
-          github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
-          'true'
+          github.event_name != 'pull_request' || steps.scope.outputs.determinism_relevant == 'true'
         run: pnpm test:replay
         env:
           DVT_CI: '1'
@@ -390,39 +376,31 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-
-      - name: Detect coverage-relevant changes (PR only)
-        id: cov_changes
-        if: github.event_name == 'pull_request'
-        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4
         with:
-          filters: |
-            coverage_relevant:
-              - 'packages/@dvt/engine/src/**'
-              - 'packages/@dvt/engine/test/**'
-              - 'package.json'
-              - 'pnpm-lock.yaml'
-              - 'vitest.config.ts'
-              - '.github/workflows/test.yml'
+          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
+
+      - name: Validate workflow scope policy JSON
+        run: node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json
+
+      - name: Emit coverage scope output
+        id: scope
+        run: node tools/ci/emit-scope.mjs --mode test
+        env:
+          GIT_BASE: origin/${{ github.base_ref }}
+          GIT_HEAD: ${{ github.sha }}
 
       - name: Setup pnpm, cache and dependencies
-        if:
-          github.event_name != 'pull_request' || steps.cov_changes.outputs.coverage_relevant ==
-          'true'
+        if: github.event_name != 'pull_request' || steps.scope.outputs.coverage_relevant == 'true'
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
 
       - name: Build engine dependency graph (once, before tests)
-        if:
-          github.event_name != 'pull_request' || steps.cov_changes.outputs.coverage_relevant ==
-          'true'
+        if: github.event_name != 'pull_request' || steps.scope.outputs.coverage_relevant == 'true'
         run: pnpm --filter "@dvt/engine^..." --workspace-concurrency=4 build
 
       - name: Run engine coverage (with threshold enforcement)
-        if:
-          github.event_name != 'pull_request' || steps.cov_changes.outputs.coverage_relevant ==
-          'true'
+        if: github.event_name != 'pull_request' || steps.scope.outputs.coverage_relevant == 'true'
         run: pnpm test:coverage:engine
         env:
           DVT_CI: '1'

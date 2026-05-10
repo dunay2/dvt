@@ -43,7 +43,7 @@ describe('workspace files query rail architecture', () => {
   });
 
   it('requires scoped web API endpoints and keeps file writes out of the live rail', () => {
-    const apiAdapter = read('apps/web/src/app/services/workspace/workspaceService.api.ts');
+    const apiAdapter = read('apps/web/src/app/services/workspace/workspacePorts.api.ts');
 
     expect(apiAdapter).not.toContain("getJson<WorkspaceFileEntry[]>('/workspace/files')");
     expect(apiAdapter).toContain('buildWorkspaceFilesEndpoint');

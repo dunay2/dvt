@@ -76,6 +76,7 @@ Evidence documents that justify or validate relevant changes.
 - [Ed 20260430 Ar D2 Temporal Planref Capacity Sla](ed-20260430-ar-d2-temporal-planref-capacity-sla.md)
 - [Ed 20260509 Stored Plan Artifact Port Ownership](ed-20260509-stored-plan-artifact-port-ownership.md)
 - [Ed 20260509 Tenant Aware Outbox Sharding](ed-20260509-tenant-aware-outbox-sharding.md)
+- [Ed 20260510 Engine Artifacts Path Resolution](ed-20260510-engine-artifacts-path-resolution.md)
 - [Ed 20260510 Plan Integrity Validator Traceability Baseline](ed-20260510-plan-integrity-validator-traceability-baseline.md)
 - [Ed 20260510 Web Api Effective Workspace Context](ed-20260510-web-api-effective-workspace-context.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)

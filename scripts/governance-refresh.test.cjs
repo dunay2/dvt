@@ -1,10 +1,15 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 
 const packageJson = require('../package.json');
-const { buildRefreshStages, runGovernanceRefresh } = require('./governance-refresh.cjs');
+const {
+  buildRefreshStages,
+  readGeneratedGovernanceArtifactHashes,
+  runGovernanceRefresh,
+} = require('./governance-refresh.cjs');
 
 test('governance refresh imports planning DB before DB-backed generated surfaces', () => {
   const stages = buildRefreshStages();
@@ -26,16 +31,16 @@ test('governance refresh imports planning DB before DB-backed generated surfaces
       'docs:governance:remediation-queue',
     ]
   );
-  assert.equal(
-    stages.generationStages.find((stage) => stage.id === 'coverage-report').env
-      .DVT_GOVERNANCE_REPORT_SOURCE,
-    'db'
-  );
-  assert.equal(
-    stages.generationStages.find((stage) => stage.id === 'remediation-queue').env
-      .DVT_GOVERNANCE_REPORT_SOURCE,
-    'db'
-  );
+  assert.deepEqual(stages.generationStages.find((stage) => stage.id === 'coverage-report').args, [
+    '--',
+    '--source',
+    'db',
+  ]);
+  assert.deepEqual(stages.generationStages.find((stage) => stage.id === 'remediation-queue').args, [
+    '--',
+    '--source',
+    'db',
+  ]);
   assert.deepEqual(
     stages.databaseStages.map((stage) => stage.script),
     [
@@ -68,6 +73,29 @@ test('governance refresh repeats generation until the worktree fingerprint stabi
     ...stages.generationStages.map((stage) => stage.script),
     ...stages.databaseStages.map((stage) => stage.script),
   ]);
+});
+
+test('governance refresh fingerprints ignored generated governance artifacts', () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'governance-refresh-fingerprint-'));
+
+  try {
+    const artifactDir = path.join(tempRoot, '.generated-docs', 'planning', 'status');
+    const artifactPath = path.join(artifactDir, 'system-governance-coverage-report.coverage.yaml');
+    fs.mkdirSync(artifactDir, { recursive: true });
+    fs.writeFileSync(artifactPath, 'version: 1\n', 'utf8');
+
+    const firstHash = readGeneratedGovernanceArtifactHashes(tempRoot);
+    fs.writeFileSync(artifactPath, 'version: 2\n', 'utf8');
+    const secondHash = readGeneratedGovernanceArtifactHashes(tempRoot);
+
+    assert.match(
+      firstHash,
+      /\.generated-docs\/planning\/status\/system-governance-coverage-report\.coverage\.yaml/
+    );
+    assert.notEqual(secondHash, firstHash);
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
 });
 
 test('governance refresh fails closed when generated output does not stabilize', () => {

@@ -37,6 +37,17 @@ const governanceCoverageReportPath = governanceGeneratedPath(
 const governanceRemediationQueuePath = governanceGeneratedPath(
   'system-governance-remediation-queue.queue.yaml'
 );
+const governanceImportDeleteTables = [
+  'governance_component_files',
+  'governance_component_file_shards',
+  'governance_fingerprints',
+  'governance_files',
+  'governance_file_shards',
+  'governance_components',
+  'governance_coverage',
+  'governance_remediation',
+  'governance_sources',
+];
 
 function databaseUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
@@ -88,6 +99,19 @@ function buildGeneratedYamlSource(sourcePath, parsed) {
     sourceBytes: Buffer.byteLength(raw, 'utf8'),
     parsed,
     rawSourceText,
+    sourceMode: 'in-memory-generator',
+  };
+}
+
+function readGeneratedYamlSourceOrBuild(sourcePath, parsed) {
+  const absolutePath = path.join(repoRoot, sourcePath);
+  if (!fs.existsSync(absolutePath)) {
+    return buildGeneratedYamlSource(sourcePath, parsed);
+  }
+
+  return {
+    ...readYamlSource(absolutePath),
+    sourceMode: 'generated-artifact',
   };
 }
 
@@ -217,6 +241,13 @@ function addGovernanceSource(sources, source, sourceType, metadata = {}) {
 function inMemorySourceMetadata(metadata = {}) {
   return {
     sourceMode: 'in-memory-generator',
+    ...metadata,
+  };
+}
+
+function generatedSourceMetadata(source, metadata = {}) {
+  return {
+    sourceMode: source.sourceMode || 'in-memory-generator',
     ...metadata,
   };
 }
@@ -467,11 +498,11 @@ function buildGovernanceGeneratedInputs() {
       repoRelative(governanceFingerprintBaselinePath),
       fingerprintBaseline
     ),
-    coverageReportSource: buildGeneratedYamlSource(
+    coverageReportSource: readGeneratedYamlSourceOrBuild(
       repoRelative(governanceCoverageReportPath),
       coverageReport
     ),
-    remediationQueueSource: buildGeneratedYamlSource(
+    remediationQueueSource: readGeneratedYamlSourceOrBuild(
       repoRelative(governanceRemediationQueuePath),
       remediationQueue
     ),
@@ -550,7 +581,7 @@ function buildGovernanceFileSnapshot() {
     sources,
     coverageReportSource,
     'governance_coverage_report',
-    inMemorySourceMetadata({
+    generatedSourceMetadata(coverageReportSource, {
       totals: coverageReport.totals || {},
     })
   );
@@ -558,7 +589,7 @@ function buildGovernanceFileSnapshot() {
     sources,
     remediationQueueSource,
     'governance_remediation_queue',
-    inMemorySourceMetadata({
+    generatedSourceMetadata(remediationQueueSource, {
       totals: remediationQueue.totals || {},
     })
   );
@@ -1030,16 +1061,41 @@ function classifyTaskLikeReference(referenceText, planningTaskIdSet) {
 
 function extractTaskLikeReferences(document, planningTaskIdSet) {
   const raw = normalizeText(document.raw);
-  const matches = raw.match(taskLikeReferencePattern) || [];
   const grouped = new Map();
 
-  for (const referenceText of matches) {
+  function addReference(referenceText, occurrenceCount = 1) {
     const entry = grouped.get(referenceText) || {
       referenceText,
       occurrenceCount: 0,
     };
-    entry.occurrenceCount += 1;
+    entry.occurrenceCount += occurrenceCount;
     grouped.set(referenceText, entry);
+  }
+
+  for (const referenceText of raw.match(taskLikeReferencePattern) || []) {
+    addReference(referenceText);
+  }
+
+  const planningTaskIds = [...new Set([...planningTaskIdSet].map((taskId) => taskId.toUpperCase()))]
+    .filter(Boolean)
+    .sort();
+  for (const taskId of planningTaskIds) {
+    const alreadyCaptured = [...grouped.keys()].some(
+      (referenceText) => referenceText.toUpperCase() === taskId
+    );
+    if (alreadyCaptured) {
+      continue;
+    }
+
+    const taskPattern = new RegExp(
+      `(?<![A-Za-z0-9-])${escapeRegExp(taskId)}(?![A-Za-z0-9-])`,
+      'gi'
+    );
+    const taskMatches = raw.match(taskPattern) || [];
+    if (taskMatches.length === 0) {
+      continue;
+    }
+    addReference(taskMatches[0], taskMatches.length);
   }
 
   return [...grouped.values()]
@@ -1507,8 +1563,14 @@ async function insertPlanningSnapshot(client, snapshot) {
   }
 }
 
+async function clearGovernanceSnapshotTables(client) {
+  for (const tableName of governanceImportDeleteTables) {
+    await client.query(`delete from ${schemaName}.${tableName}`);
+  }
+}
+
 async function insertGovernanceSnapshot(client, snapshot) {
-  await client.query(`delete from ${schemaName}.governance_sources`);
+  await clearGovernanceSnapshotTables(client);
 
   for (const source of snapshot.sources) {
     await client.query(
@@ -2002,8 +2064,10 @@ module.exports = {
   buildPlanningContentSnapshot,
   buildPrReadinessSnapshot,
   buildRepositoryCommandSnapshot,
+  clearGovernanceSnapshotTables,
   databaseUrl,
   evaluateArcPolicyReadiness,
+  governanceImportDeleteTables,
   importContent,
   insertDocsDispositionSnapshot,
   insertPrReadinessSnapshot,
