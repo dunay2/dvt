@@ -7,6 +7,7 @@ const {
   importContent,
   normalizeText,
 } = require('./planning-db-import.cjs');
+const { governanceGeneratedPath } = require('./governance-generated-paths.cjs');
 
 test('planning content snapshot preserves real lane task content and hashes', () => {
   const snapshot = buildPlanningContentSnapshot();
@@ -25,6 +26,23 @@ test('planning content snapshot preserves real lane task content and hashes', ()
       'docs/evidence/critical/ED-20260331-mvp-a1-backend-contractual-inventory.md'
     )
   );
+});
+
+test('planning content snapshot normalizes dependencies and evidence refs for DB reads', () => {
+  const snapshot = buildPlanningContentSnapshot();
+  const dependency = snapshot.dependencies.find(
+    (row) => row.taskId === 'F-28-C' && row.dependencyTaskId === 'F-28-B'
+  );
+  const evidenceRef = snapshot.evidenceRefs.find(
+    (row) => row.taskId === 'MVP-A1' && /ED-20260331-mvp-a1/.test(row.evidenceRef)
+  );
+
+  assert.ok(dependency);
+  assert.equal(dependency.sourceKind, 'planning_task');
+  assert.ok(Number.isInteger(dependency.dependencyOrder));
+  assert.ok(evidenceRef);
+  assert.equal(evidenceRef.sourceKind, 'planning_task');
+  assert.ok(Number.isInteger(evidenceRef.evidenceOrder));
 });
 
 test('governance file snapshot preserves every file entry declared by the index', () => {
@@ -49,13 +67,20 @@ test('governance snapshot preserves component, fingerprint, coverage, and remedi
   assert.equal(snapshot.coverageRows.length > 0, true);
   assert.equal(snapshot.remediationTasks.length, snapshot.remediationQueue.totals.tasks);
 
-  const planstoreDrift = snapshot.remediationTasks.find(
-    (task) => task.taskId === 'GRQ-DRIFT_REMOVAL-SYS-PLANSTORE-API-COMPOSITION'
-  );
-  assert.ok(planstoreDrift);
-  assert.equal(planstoreDrift.priority, 'P0');
-  assert.equal(planstoreDrift.fileCount, 20);
-  assert.equal(planstoreDrift.files.length, 20);
+  const priorityCounts = new Map();
+  for (const task of snapshot.remediationTasks) {
+    priorityCounts.set(task.priority, (priorityCounts.get(task.priority) ?? 0) + 1);
+    assert.equal(task.fileCount, task.files.length);
+  }
+  assert.equal(priorityCounts.get('P0') ?? 0, snapshot.remediationQueue.totals.p0);
+  assert.equal(priorityCounts.get('P1') ?? 0, snapshot.remediationQueue.totals.p1);
+  assert.equal(priorityCounts.get('P2') ?? 0, snapshot.remediationQueue.totals.p2);
+  assert.equal(priorityCounts.get('P3') ?? 0, snapshot.remediationQueue.totals.p3);
+
+  const cqRailGap = snapshot.remediationTasks.find((task) => task.taskType === 'cq-rail-gap');
+  assert.ok(cqRailGap);
+  assert.match(cqRailGap.taskId, /^GRQ-CQ_RAIL_GAP-/);
+  assert.ok(cqRailGap.expectedValidation.includes('pnpm docs:governance:remediation-queue:check'));
 });
 
 test('governance snapshot builds DB import sources from in-memory generator projections', () => {
@@ -77,6 +102,36 @@ test('governance snapshot builds DB import sources from in-memory generator proj
     generatedSources.some((source) => source.sourceType === 'governance_component_shard'),
     true
   );
+  assert.ok(generatedSources.every((source) => source.rawSource));
+  assert.ok(generatedSources.every((source) => typeof source.rawSourceText === 'string'));
+});
+
+test('governance snapshot does not use stale generated YAML as structured import input', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const fileIndexPath = governanceGeneratedPath('system-governance-file-index.files.yaml');
+  const original = fs.existsSync(fileIndexPath) ? fs.readFileSync(fileIndexPath, 'utf8') : null;
+  const staleRaw = 'fileCount: 999999\nshards: []\n';
+
+  fs.mkdirSync(path.dirname(fileIndexPath), { recursive: true });
+  fs.writeFileSync(fileIndexPath, staleRaw, 'utf8');
+
+  try {
+    const snapshot = buildGovernanceFileSnapshot();
+    const source = snapshot.sources.find((entry) => entry.sourceType === 'governance_file_index');
+
+    assert.ok(source);
+    assert.notEqual(snapshot.index.fileCount, 999999);
+    assert.equal(snapshot.files.length, snapshot.index.fileCount);
+    assert.equal(source.rawSource.fileCount, snapshot.index.fileCount);
+    assert.equal(source.rawSourceText, staleRaw);
+  } finally {
+    if (original === null) {
+      fs.unlinkSync(fileIndexPath);
+    } else {
+      fs.writeFileSync(fileIndexPath, original, 'utf8');
+    }
+  }
 });
 
 test('normalizeText keeps structured lane fields queryable without dropping content', () => {

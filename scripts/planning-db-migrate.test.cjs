@@ -236,3 +236,71 @@ test('tracked migrations include governance report query payloads after W12B', (
     /create or replace view planning_query_store\.governance_remediation_query/
   );
 });
+
+test('tracked migrations include DB-owned task lifecycle commands after W13', () => {
+  const migrations = readMigrationFiles();
+  const taskLifecycleMigration = migrations.find(
+    (migration) => migration.fileName === '011_planning_task_lifecycle_commands.sql'
+  );
+
+  assert.ok(taskLifecycleMigration);
+  assert.match(
+    taskLifecycleMigration.sql,
+    /create table if not exists planning_query_store\.planning_task_local_definitions/
+  );
+  assert.match(
+    taskLifecycleMigration.sql,
+    /create table if not exists planning_query_store\.planning_task_local_tombstones/
+  );
+  assert.match(taskLifecycleMigration.sql, /'task_create'/);
+  assert.match(taskLifecycleMigration.sql, /'task_delete'/);
+  assert.match(taskLifecycleMigration.sql, /union all/);
+  assert.match(taskLifecycleMigration.sql, /imported_task\.task_id is null/);
+});
+
+test('tracked migrations include normalized planning task relation views after W14', () => {
+  const migrations = readMigrationFiles();
+  const normalizedMigration = migrations.find(
+    (migration) => migration.fileName === '012_planning_task_normalized_relations.sql'
+  );
+
+  assert.ok(normalizedMigration);
+  assert.match(
+    normalizedMigration.sql,
+    /create or replace view planning_query_store\.planning_task_dependencies/
+  );
+  assert.match(
+    normalizedMigration.sql,
+    /create or replace view planning_query_store\.planning_task_evidence_refs/
+  );
+  assert.match(
+    normalizedMigration.sql,
+    /create or replace view planning_query_store\.planning_task_status_events/
+  );
+  assert.match(
+    normalizedMigration.sql,
+    /create table if not exists planning_query_store\.planning_artifacts/
+  );
+  assert.match(normalizedMigration.sql, /from planning_query_store\.planning_task_dependencies/);
+});
+
+test('tracked migrations include canonical governance source documents after W15', () => {
+  const migrations = readMigrationFiles();
+  const sourceDocumentsMigration = migrations.find(
+    (migration) => migration.fileName === '013_governance_source_documents.sql'
+  );
+  const sourceTextMigration = migrations.find(
+    (migration) => migration.fileName === '014_source_document_text_exports.sql'
+  );
+
+  assert.ok(sourceDocumentsMigration);
+  assert.match(sourceDocumentsMigration.sql, /alter table planning_query_store\.planning_sources/);
+  assert.match(sourceDocumentsMigration.sql, /raw_source jsonb/);
+  assert.match(
+    sourceDocumentsMigration.sql,
+    /alter table planning_query_store\.governance_sources/
+  );
+  assert.match(sourceDocumentsMigration.sql, /source_authority text not null default 'database'/);
+  assert.ok(sourceTextMigration);
+  assert.match(sourceTextMigration.sql, /raw_source_text text/);
+});

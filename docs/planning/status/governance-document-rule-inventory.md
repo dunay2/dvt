@@ -150,6 +150,7 @@ Usage rules already declared in the ADR index:
 | `ADR-0037`  | Accepted   | Run-event lifecycle archival, verification, and restore model                                                   | [ADR-0037](../../adr/ADR-0037-run-event-lifecycle-archival-verification-and-restore-model.md) |
 | `ADR-0038`  | Accepted   | Delivery-buffer retention and purge policy                                                                      | [ADR-0038](../../adr/ADR-0038-delivery-buffer-retention-and-purge-policy.md)                  |
 | `ADR-0053`  | Accepted   | File identity, content hash, governance hash, and aggregate state fingerprint governance                        | [ADR-0053](../../adr/ADR-0053-file-state-fingerprint-governance.md)                           |
+| `ADR-0055`  | Accepted   | Planning DB canonical operational source, DB-first commands, normalized read models, and export gates           | [ADR-0055](../../adr/adr-0055-planning-db-canonical-operational-source.md)                    |
 
 ### Normative contract and execution documents
 

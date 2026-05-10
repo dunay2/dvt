@@ -29,12 +29,21 @@ The helper reads the local changed-file set and builds a deterministic closeout
 sequence:
 
 - `pnpm docs:sync` when files under `docs/` changed;
-- `pnpm docs:workboard:generate` when lane YAML changed;
+- `pnpm planning:db:import` before `pnpm docs:workboard:generate` when lane
+  YAML changed;
+- `pnpm docs:workboard:generate` from the imported DB effective task view when
+  lane YAML changed;
 - `pnpm docs:status:generate` when `apps/` or `packages/` source structure
   changed;
 - governance regeneration for manifest, document-unit map, file-component
   index, fingerprints, impact, coverage report, and remediation queue;
 - a final file-component and fingerprint stabilization pass before validation;
+- a final `pnpm planning:db:import` after coverage/remediation so DB drift
+  checks compare against the generated surfaces from the same closeout pass;
+- `pnpm planning:db:check`, `pnpm planning:db:export:check`,
+  `pnpm governance:db:check`, and `pnpm governance:db:export:check` so
+  closeout uses the planning/governance DB read models and export rails instead
+  of trusting stale generated views;
 - `git diff --check` and `git diff --cached --check`;
 - an internal unresolved-conflict-marker scan over changed text files;
 - `pnpm verify:prepush`.

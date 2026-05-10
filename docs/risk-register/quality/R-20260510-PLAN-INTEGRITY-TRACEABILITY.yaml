@@ -1,0 +1,20 @@
+---
+id: R-20260510-PLAN-INTEGRITY-TRACEABILITY
+title: Engine plan-integrity ports can lose ADR traceability metadata
+status: Open
+date: 2026-05-10
+owners:
+  - packages/@dvt/engine
+severity: Low
+probability: Low
+context: >
+  Engine ports are validated by the ADR-0000 traceability gate, which requires baseline ADR metadata
+  on governed source files.
+risk: >
+  Future engine port additions could omit baseline metadata and block PR integration late in the CI
+  cycle.
+mitigations:
+  - ADR-0000 traceability gate fails closed on missing baseline metadata.
+  - CI tool contract tests classify governance command surfaces before merge.
+review_after: 2026-06-15
+---

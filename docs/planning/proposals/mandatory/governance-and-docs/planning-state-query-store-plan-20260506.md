@@ -10,19 +10,24 @@ planning_type: mandatory-proposal
 
 ## Summary
 
-The lane YAML registry remains the canonical planning state, but the current
-monolithic lane files and generated `system-governance-*` shards are no longer
-ergonomic for repeated human and agent work.
+The planning and governance Postgres database is the canonical local
+operational source for task lifecycle writes, daily queries, normalized planning
+relations, and generated governance source exports. The lane YAML registry
+remains the Git review, bootstrap, and recovery surface while the repository
+still reviews planning snapshots through pull requests.
 
-This plan introduces a local Postgres-backed planning and governance query store
-as a derived read model. The database is persistent on disk for local speed, but
-it is rebuildable from Git-tracked planning and governance sources and must not
-become the only copy of repository truth in this slice.
+This plan introduces and extends a local Postgres-backed planning and governance
+store. The database is persistent on disk for local speed, writes are entered
+through command rails, and export/check commands prove that the DB state remains
+reviewable and recoverable from repository sources.
 
 ## Decision
 
-Adopt Postgres as a local and CI-capable derived query store for planning state
-and file-governance state.
+Adopt Postgres as the local and CI-capable operational planning/governance
+store for planning state, file-governance state, normalized planning relations,
+generated artifact hashes, and governance generated-source exports. ADR-0055
+records the canonicality boundary: DB for operational command/query state; Git
+for review, bootstrap, and recovery.
 
 Git remains the canonical review and authority boundary:
 
@@ -36,9 +41,13 @@ Git remains the canonical review and authority boundary:
   generator modules and imports them into normalized tables for queries, status
   reconciliation, dashboards, generated planning outputs, and governance
   coverage analysis;
-- export and drift checks prove that the database state matches the repository
-  state before a branch can be called ready;
-- the Docker volume is local persistence, not canonical state.
+- import, export, and drift checks prove that database state and repository
+  review surfaces stay synchronized before a branch can be called ready;
+- the Docker volume is local persistence, not canonical state;
+- task create/delete now enter through audited DB commands, with lane YAML kept
+  as bootstrap/export compatibility instead of the daily write backend;
+- governance generated source documents are imported with raw source payloads
+  and exported from the DB through checkable command rails.
 
 GitHub Issues and Projects remain optional collaboration mirrors. They must not
 be the first canonical task store because they introduce network dependency,
@@ -50,12 +59,13 @@ YAML shape, but GOV-S3's current correctness problem is not document storage; it
 is deterministic comparison across Git-tracked sources, imported rows, hashes,
 counts, and composite identities. Postgres keeps those checks explicit with SQL
 constraints, joins, transactions, and `jsonb` columns that preserve the full
-source document without making the database canonical.
+source document while still giving operational commands and queries a canonical
+local DB authority.
 
 ## System Governance Scope
 
 This proposal explicitly includes the `system-governance-*` family under the
-derived Postgres query-store path.
+Postgres operational/query-store path.
 
 The target is not only lane/task state. The query store should also import,
 query, drift-check, and eventually regenerate these governance read models:
@@ -377,17 +387,13 @@ pnpm planning:db:check
 pnpm planning:db:export
 pnpm planning:db:export:check
 pnpm governance:db:check
+pnpm governance:db:import
+pnpm governance:db:export
+pnpm governance:db:export:check
 pnpm governance:db:query
 pnpm governance:refresh
 pnpm test:planning:db
 pnpm test:planning:db:integration
-```
-
-Planned for later governance export and parity slices:
-
-```bash
-pnpm governance:db:import
-pnpm governance:db:export
 ```
 
 The closeout baseline for the local Docker substrate slice includes:
@@ -400,6 +406,7 @@ pnpm planning:db:import
 pnpm planning:db:query
 pnpm planning:db:check
 pnpm governance:db:check
+pnpm governance:db:export:check
 pnpm docs:feature-mechanization --feature GOV-S3-PLANNING-STATE-QUERY-STORE
 pnpm docs:feature-mechanization:implementation
 pnpm verify:prepush
@@ -423,6 +430,7 @@ include:
 pnpm governance:refresh
 pnpm planning:db:check
 pnpm governance:db:check
+pnpm governance:db:export:check
 pnpm docs:workboard:generate
 pnpm docs:feature-mechanization:implementation
 pnpm verify:prepush
@@ -434,32 +442,34 @@ The first schema should cover two derived read-model families.
 
 ### Planning tables
 
-| Table                       | W2/W6 status | Purpose                                                                  |
-| --------------------------- | ------------ | ------------------------------------------------------------------------ |
-| `planning_sources`          | implemented  | Git path, content hash, source type, byte size, and local import time    |
-| `planning_lanes`            | implemented  | Lane id, source path/hash, title, owner, status, goal, and raw YAML      |
-| `planning_tasks`            | implemented  | Task id, lane, status, priority, objective, target, evidence, raw YAML   |
-| `planning_task_local_state` | implemented  | Local DB-first task overlay, optimistic revision, claim, and status data |
-| `planning_local_operations` | implemented  | Append-only audit log for local planning task commands                   |
-| `planning_dependencies`     | planned      | Explicit task-to-task dependency edges parsed out of task dependencies   |
-| `planning_evidence_refs`    | planned      | Evidence, closeout, PR, commit, and doc references per task as rows      |
-| `planning_status_events`    | planned      | Derived status history when imports detect changed state                 |
-| `planning_artifacts`        | planned      | Generated output path, source hash, and artifact hash                    |
+| Table                             | W2/W6 status | Purpose                                                                  |
+| --------------------------------- | ------------ | ------------------------------------------------------------------------ |
+| `planning_sources`                | implemented  | Git path, content hash, raw JSON/text source, authority, and import time |
+| `planning_lanes`                  | implemented  | Lane id, source path/hash, title, owner, status, goal, and raw YAML      |
+| `planning_tasks`                  | implemented  | Task id, lane, status, priority, objective, target, evidence, raw YAML   |
+| `planning_task_local_state`       | implemented  | Local DB-first task overlay, optimistic revision, claim, and status data |
+| `planning_task_local_definitions` | implemented  | Local DB-first task definitions created through `task create`            |
+| `planning_task_local_tombstones`  | implemented  | Local DB-first task deletions that hide matching imported/source rows    |
+| `planning_local_operations`       | implemented  | Append-only audit log for local planning task commands                   |
+| `planning_task_dependencies`      | implemented  | Explicit task-to-task dependency edges parsed out of task dependencies   |
+| `planning_task_evidence_refs`     | implemented  | Evidence, closeout, PR, commit, and doc references per task as rows      |
+| `planning_task_status_events`     | implemented  | Imported/local status history as queryable rows                          |
+| `planning_artifacts`              | implemented  | Generated output path, source hash, and artifact hash                    |
 
 ### Governance tables
 
-| Table                              | Status      | Purpose                                                     |
-| ---------------------------------- | ----------- | ----------------------------------------------------------- |
-| `governance_sources`               | implemented | Source path, source type, content hash, byte size           |
-| `governance_file_shards`           | implemented | File-index shard id, path, count, and upstream content hash |
-| `governance_files`                 | implemented | Tracked path, owning unit, component, root, drift flags     |
-| `governance_components`            | implemented | Component/source units and ownership metadata               |
-| `governance_component_file_shards` | implemented | Component shard provenance, file counts, and content hashes |
-| `governance_component_files`       | implemented | File-to-component membership and shard provenance           |
-| `governance_fingerprints`          | implemented | Imported baseline compatibility rows                        |
-| `governance_coverage`              | implemented | Governed, ungoverned, drift, legacy, and summary counters   |
-| `governance_remediation`           | implemented | Remediation queue items, priority, owner, and source cause  |
-| `governance_generated_assets`      | planned     | Generated report path, source hash, and artifact hash       |
+| Table                              | Status      | Purpose                                                             |
+| ---------------------------------- | ----------- | ------------------------------------------------------------------- |
+| `governance_sources`               | implemented | Source path, source type, raw JSON/text source, authority, and hash |
+| `governance_file_shards`           | implemented | File-index shard id, path, count, and upstream content hash         |
+| `governance_files`                 | implemented | Tracked path, owning unit, component, root, drift flags             |
+| `governance_components`            | implemented | Component/source units and ownership metadata                       |
+| `governance_component_file_shards` | implemented | Component shard provenance, file counts, and content hashes         |
+| `governance_component_files`       | implemented | File-to-component membership and shard provenance                   |
+| `governance_fingerprints`          | implemented | Imported baseline compatibility rows                                |
+| `governance_coverage`              | implemented | Governed, ungoverned, drift, legacy, and summary counters           |
+| `governance_remediation`           | implemented | Remediation queue items, priority, owner, and source cause          |
+| `governance_generated_assets`      | deferred    | Replaced for now by `governance_sources.raw_source` export checks   |
 
 ### Governance derived projections
 
@@ -519,6 +529,8 @@ behavior.
 | `ExportPlanningStateSnapshot`      | command | Planning registry     | `PlanningStateExport`         | SQL + file-system                 |
 | `ValidatePlanningStateDrift`       | query   | Planning governance   | `PlanningStateDriftReport`    | SQL + Git comparison              |
 | `ApplyPlanningLocalOperation`      | command | Planning registry     | `PlanningLocalOperation`      | SQL transaction                   |
+| `CreatePlanningTaskDefinition`     | command | Planning registry     | `PlanningTaskDefinition`      | SQL transaction                   |
+| `DeletePlanningTaskDefinition`     | command | Planning registry     | `PlanningTaskDefinition`      | SQL transaction                   |
 | `QueryPlanningLocalOperationAudit` | query   | Planning registry     | `PlanningLocalOperationAudit` | SQL query adapter                 |
 | `GeneratePlanningDerivedSurfaces`  | command | Documentation tooling | `PlanningGeneratedArtifact`   | docs generator                    |
 | `MigratePlanningQueryStoreSchema`  | command | Planning tooling      | `PlanningQueryStoreSchema`    | SQL migration runner              |
@@ -570,16 +582,19 @@ selection, next-task view selection, governance query view selection, content
 extraction from real lane YAML, and governance file-count parity with the
 Git-tracked file index.
 
-`planning:db:operate` implements `ApplyPlanningLocalOperation` and
+`planning:db:operate` implements `ApplyPlanningLocalOperation`,
+`CreatePlanningTaskDefinition`, `DeletePlanningTaskDefinition`, and
 `QueryPlanningLocalOperationAudit`. It is the local DB-first command surface for
-agents: `task claim`, `task release`, `task update`, `task show`, and `audit`.
-It validates that a task exists in the imported planning read model, writes a
-local overlay with an optimistic revision, and appends an audit row in the same
-transaction. Scope is local developer tooling only; authorization is local OS
-and Docker/Postgres access. Negative tests cover required actor/lane/task
-arguments, invalid statuses, stale expected revisions, idempotency, jsonb
+agents: `task create`, `task delete`, `task claim`, `task release`,
+`task update`, `task show`, and `audit`. It validates lane/task existence,
+writes task definitions, tombstones, or local overlays with optimistic
+revisions, and appends an audit row in the same transaction. Scope is local
+developer tooling only; authorization is local OS and Docker/Postgres access.
+Negative tests cover required actor/lane/task/objective arguments, invalid
+statuses, invalid effort values, stale expected revisions, idempotency, jsonb
 payload key-order stability, stale replay rejection after task revision
-advances, and audit row formatting.
+advances, duplicate task creation, task deletion revision guards, missing
+imported task rejection, and audit row formatting.
 
 `planning:db:check` implements `ValidatePlanningStateDrift`. It compares the
 current Git-tracked planning lane snapshot with imported Postgres rows by source
@@ -849,31 +864,30 @@ flowchart LR
   LaneYaml["agent-lane-*.yaml"] --> Import["planning:db:import"]
   Import --> EffectiveTasks["planning_effective_tasks"]
   LocalOverlays["planning_task_local_state"] --> EffectiveTasks
-  EffectiveTasks --> WorkboardGenerator["generate-workboard.cjs --source auto"]
+  EffectiveTasks --> WorkboardGenerator["generate-workboard.cjs --source db"]
   LaneYaml -. "fallback when DB unavailable" .-> WorkboardGenerator
   WorkboardGenerator --> ExecutionWorkboard["execution-workboard.md"]
   WorkboardGenerator --> OpenTaskRoute["open-task-route.md"]
 ```
 
-1. Add red workboard-generator tests proving `--source auto` reads
+1. Add red workboard-generator tests proving the default DB source reads
    `planning_effective_tasks` through the existing planning DB export read
    model when the DB is reachable and `planning:db:check` semantics report no
    drift.
-2. Add red fallback tests proving `--source auto` falls back to lane YAML only
-   when the DB is unavailable or the query-store schema is missing; a reachable
-   but stale DB must fail closed instead of silently hiding drift.
+2. Add red fallback tests proving lane YAML is used only when the caller
+   explicitly requests `--source yaml`; an unavailable or stale DB must fail
+   closed instead of silently hiding drift.
 3. Add red governance-refresh tests proving `planning:db:import` runs before
-   `docs:workboard:generate`, while `planning:db:check`,
-   `planning:db:export:check`, and `governance:db:check` remain after the
+   `docs:workboard:generate`, and again after coverage/remediation generation,
+   while `planning:db:check`, `planning:db:export:check`,
+   `governance:db:check`, and `governance:db:export:check` remain after the
    generated surfaces stabilize.
 4. Refactor `scripts/generate-workboard.cjs` into exported, testable source
    selection helpers without changing the rendered table semantics.
-5. Teach the workboard generator `--source auto|db|yaml` and
-   `--database-url`; keep `auto` as the default for local use and CI-safe YAML
-   fallback when no shared DB exists.
+5. Teach the workboard generator `--source db|yaml` and `--database-url`; keep
+   DB as the default and reserve YAML for explicit bootstrap/export previews.
 6. Update `governance:refresh` so the planning DB import precedes workboard
-   generation, then the existing stabilization loop validates the rendered
-   planning route before the database drift/export checks run.
+   generation and a final import precedes database drift/export checks.
 7. Update planning operation docs to state that generated workboard/open route
    views are DB-effective when the local query store is fresh and YAML-derived
    only during explicit fallback.
@@ -1111,11 +1125,10 @@ surfaces without network access.
 10. Build governance DB import from in-memory generator projections instead of
     reading `.generated-docs` files as import input.
 11. Move workboard and open-task-route generation to read from the query store
-    when available, with deterministic file fallback during transition. The
-    first slice of this step is the effective task read model for existing task
-    operations only: local claim/status/progress/evidence overlays are queried
-    and exported through Postgres, while task creation and deletion stay in lane
-    YAML until a later slice declares those command semantics.
+    by default, with deterministic file fallback only when the caller
+    explicitly asks for `--source yaml`. The DB now owns the effective task read
+    model, local overlays, local task definitions, local tombstones, exported
+    snapshots, and normalized dependency/evidence/status views.
 12. Move governance report generation to read from the query store only after
     parity proves it matches the current generators.
 13. Split large lane YAML files into smaller Git-tracked task shards only after
@@ -1147,9 +1160,10 @@ Current implementation status on 2026-05-08:
   `governance_file_hash_projection`, and `governance:db:check` compares against
   that projection instead of the imported fingerprint baseline;
 - step 10 is implemented: `planning:db:import` builds governance rows from
-  generator projections in memory instead of reading `.generated-docs` files as
-  the DB import source, `docs:governance:changed-files:check` reads the same
-  in-memory current index/baseline, and `test:planning:db` no longer
+  generator projections in memory, and when a generated source document already
+  exists it preserves that raw text as the exportable DB document while keeping
+  structured rows normalized. `docs:governance:changed-files:check` reads the
+  same in-memory current index/baseline, and `test:planning:db` no longer
   pregenerates governance artifacts before the DB tests. The import transaction
   also takes a transaction-scoped advisory lock before replacing read-model rows
   so concurrent local agents cannot race on the shared Postgres volume;
@@ -1157,11 +1171,12 @@ Current implementation status on 2026-05-08:
   lightweight read-model counts, while `pnpm planning:db:query hash-drift`
   owns the explicit heavy hash projection inspection;
 - W11 first slice is implemented: `planning_effective_tasks` overlays
-  `planning_task_local_state` on imported `planning_tasks` only while the
-  overlay base source hash matches the imported task source hash;
-  `planning:db:query tasks` reads effective task state, and
-  `planning:db:export` exports reviewable effective status/progress/evidence
-  fields without exporting local claim tokens or audit rows;
+  `planning_task_local_state`, local task definitions, and local tombstones on
+  imported `planning_tasks` only while the overlay base source hash matches the
+  imported task source hash; `planning:db:query tasks` reads effective task
+  state, and `planning:db:export` exports reviewable effective
+  status/progress/evidence fields without exporting local claim tokens or audit
+  rows;
 - W11C is implemented: `planning_open_tasks` is the SQL view for daily
   non-`done`, non-`blocked` planning inspection, and `planning:db:query open`
   reads that view instead of duplicating the open-task filter in CLI SQL;
@@ -1172,6 +1187,15 @@ Current implementation status on 2026-05-08:
 - W11E is implemented: DB-backed `docs:workboard:generate` reads
   `planning_next_tasks` for the `open-task-route.md` `Actionable Now` section,
   leaving local dependency parsing only for explicit YAML fallback;
+- W11F is implemented: `planning:db:operate task create` and
+  `planning:db:operate task delete` create auditable DB-owned definitions and
+  tombstones, then `planning:db:export:check` proves the exported review shape
+  remains deterministic;
+- W11G is implemented: `planning_task_dependencies`,
+  `planning_task_evidence_refs`, and `planning_task_status_events` normalize
+  task dependencies, evidence, and status history into queryable SQL surfaces;
+- W11H is implemented: `planning_artifacts` records generated planning output
+  hashes from the export/check rail so generated churn is inspectable as rows;
 - W12A is implemented: `governance:db:query files`, `components`,
   `coverage`, `remediation`, and `drift` read DB-owned governance query views
   for daily inspection instead of requiring agents to open generated
@@ -1181,6 +1205,10 @@ Current implementation status on 2026-05-08:
   generation, then runs those report generators against DB-owned governance
   query views. Standalone no-DB checks retain deterministic local generator
   input for CI/development parity;
+- W12C is implemented: `governance:db:import`,
+  `governance:db:export`, and `governance:db:export:check` make generated
+  governance source documents DB-exportable instead of leaving `.generated-docs`
+  as a hidden second source;
 - the obsolete `governance:artifacts:generate` package alias is removed;
   `pnpm governance:refresh` is the single local orchestration command for
   generated inspection artifacts plus planning/governance DB import and checks;
@@ -1190,8 +1218,7 @@ Current implementation status on 2026-05-08:
 - the shared DB checksum-repair route is implemented through
   `pnpm planning:db:reset -- --confirm-destroy-shared-planning-db`, not through
   manual edits to `schema_migrations`;
-- the remainder of step 11 and steps 13 through 15 remain future concrete
-  follow-up work. They do not keep
+- steps 13 through 15 remain future concrete follow-up work. They do not keep
   `GOV-S2` open; `GOV-S2` is the closed framework umbrella and this plan owns
   any remaining query-store parity or generated-artifact compaction work.
 
@@ -1216,8 +1243,9 @@ Current implementation status on 2026-05-08:
 
 - A clean checkout can start Postgres, run migrations, import planning sources,
   and produce the same query-state hash.
-- Resetting `C:\dvt\planning-db\postgres-data` does not lose canonical planning
-  truth because Git-tracked files remain the bootstrap and review boundary.
+- Resetting `C:\dvt\planning-db\postgres-data` does not lose reviewable
+  planning truth because Git-tracked files remain the bootstrap and review
+  boundary, while DB command/export rails own daily operational writes.
 - The drift check fails when a task differs between Git and exported DB state.
 - The governance drift check fails when a file index, component map,
   fingerprint, coverage, or remediation row differs between Git and exported DB
@@ -1234,6 +1262,8 @@ Current implementation status on 2026-05-08:
 - Generated planning views remain deterministic and traceable to source hashes.
 - Generated governance reports remain deterministic and traceable to source
   hashes.
+- Governance generated source documents can be imported and exported from the
+  DB, and `governance:db:export:check` fails when the repo copy diverges.
 - The governance refresh sequence is executable through one local command and
   fails closed if generated output does not stabilize before DB import/check.
 
@@ -1290,9 +1320,11 @@ allowedImplementationSurfaces:
   - scripts/check-feature-mechanization.cjs
   - scripts/check-feature-mechanization.test.cjs
   - docs/DOCS_README.md
+  - docs/adr/**
   - docs/guides/ai-work-protocol.md
   - docs/architecture/components/ci-governance/index.md
   - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
+  - docs/runbooks/**
   - docs/planning/state/planning-control-tower.md
   - docs/planning/state/how-to-add-tasks.md
   - docs/planning/closeouts/**
@@ -1323,6 +1355,12 @@ commandQueryRails:
   - name: ApplyPlanningLocalOperation
     type: command
     dddOwner: PlanningLocalOperation
+  - name: CreatePlanningTaskDefinition
+    type: command
+    dddOwner: PlanningTaskDefinition
+  - name: DeletePlanningTaskDefinition
+    type: command
+    dddOwner: PlanningTaskDefinition
   - name: QueryPlanningLocalOperationAudit
     type: query
     dddOwner: PlanningLocalOperationAudit
@@ -1375,6 +1413,9 @@ domainObjects:
   - name: PlanningLocalOperation
     type: command model
     owner: Product / Architecture / Delivery / Docs
+  - name: PlanningTaskDefinition
+    type: command model
+    owner: Product / Architecture / Delivery / Docs
   - name: PlanningLocalOperationAudit
     type: read model
     owner: Product / Architecture / Delivery / Docs
@@ -1418,6 +1459,7 @@ architectureGuards:
   - pnpm test:governance:refresh
   - pnpm test:planning:db
   - pnpm test:planning:db:integration
+  - pnpm governance:db:export:check
   - pnpm docs:feature-mechanization --feature GOV-S3-PLANNING-STATE-QUERY-STORE
   - pnpm docs:feature-mechanization:implementation
 cypressFlows:
@@ -1435,7 +1477,10 @@ completionGate:
   - pnpm planning:db:reset -- --confirm-destroy-shared-planning-db
   - pnpm planning:db:operate
   - pnpm planning:db:check
+  - pnpm governance:db:import
   - pnpm governance:db:check
+  - pnpm governance:db:export
+  - pnpm governance:db:export:check
   - pnpm governance:db:query files
   - pnpm governance:refresh
   - pnpm docs:sync
@@ -1993,6 +2038,15 @@ symbols:
     name: normalizeDate
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
+    name: normalizeDependencyTokens
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: buildTaskDependencyRows
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: buildTaskEvidenceRows
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
     name: addGovernanceSource
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
@@ -2069,6 +2123,12 @@ symbols:
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: runQuery
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: queryErrorDetails
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: formatQueryError
     path: scripts/planning-db-query.cjs
   - &planningDbEffectiveTaskSymbol
     name: PlanningEffectiveTaskReadModelMigration
@@ -2163,6 +2223,42 @@ symbols:
   - <<: *planningDbNextTaskSymbol
     name: readNextTaskRows
     path: scripts/planning-db-query.cjs
+  - <<: *planningDbNextTaskSymbol
+    name: planningDependencySelect
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbNextTaskSymbol
+    name: planningEvidenceSelect
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbNextTaskSymbol
+    name: planningStatusEventSelect
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbNextTaskSymbol
+    name: planningArtifactSelect
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbNextTaskSymbol
+    name: buildPlanningDependencyRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbNextTaskSymbol
+    name: buildPlanningEvidenceRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbNextTaskSymbol
+    name: buildPlanningStatusEventRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbNextTaskSymbol
+    name: buildPlanningArtifactRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbNextTaskSymbol
+    name: readPlanningDependencyRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbNextTaskSymbol
+    name: readPlanningEvidenceRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbNextTaskSymbol
+    name: readPlanningStatusEventRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbNextTaskSymbol
+    name: readPlanningArtifactRows
+    path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: main
     path: scripts/planning-db-query.cjs
@@ -2200,6 +2296,79 @@ symbols:
       - pnpm test:planning:db
       - pnpm test:planning:db:integration
   - <<: *planningDbLocalOperationSymbol
+    name: PlanningDbTaskLifecycleCommandMigration
+    path: tools/planning-db/migrations/011_planning_task_lifecycle_commands.sql
+    dddOwner: PlanningTaskDefinition
+    cqRails:
+      - CreatePlanningTaskDefinition
+      - DeletePlanningTaskDefinition
+      - ApplyPlanningLocalOperation
+      - MigratePlanningQueryStoreSchema
+      - QueryPlanningStateReadModel
+    fowlerSignals:
+      - Large planning file operating cost
+      - Hidden query model inside YAML
+      - Generated artifact churn
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - planning DB task lifecycle commands have no browser workflow.
+    unitTests:
+      - pnpm test:planning:db
+      - pnpm test:planning:db:integration
+  - <<: *planningDbLocalOperationSymbol
+    name: PlanningDbTaskNormalizedRelationsMigration
+    path: tools/planning-db/migrations/012_planning_task_normalized_relations.sql
+    dddOwner: PlanningStateReadModel
+    cqRails:
+      - QueryPlanningStateReadModel
+      - ExportPlanningStateSnapshot
+      - GeneratePlanningDerivedSurfaces
+      - MigratePlanningQueryStoreSchema
+    fowlerSignals:
+      - Large planning file operating cost
+      - Hidden query model inside YAML
+      - Generated artifact churn
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - planning DB normalized task relations have no browser workflow.
+    unitTests:
+      - pnpm test:planning:db
+      - pnpm planning:db:query dependencies
+      - pnpm planning:db:query evidence
+      - pnpm planning:db:query status-events
+  - <<: *planningDbLocalOperationSymbol
+    name: GovernanceSourceDocumentsMigration
+    path: tools/planning-db/migrations/013_governance_source_documents.sql
+    dddOwner: GovernanceStateExport
+    cqRails:
+      - ImportGovernanceStateQueryStore
+      - ExportGovernanceStateSnapshot
+      - ValidateGovernanceStateDrift
+      - MigratePlanningQueryStoreSchema
+    fowlerSignals:
+      - Hidden query model inside governance shards
+      - Generated artifact churn
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - governance DB source export has no browser workflow.
+    unitTests:
+      - pnpm test:planning:db
+      - pnpm governance:db:export:check
+  - <<: *planningDbLocalOperationSymbol
+    name: SourceDocumentTextExportsMigration
+    path: tools/planning-db/migrations/014_source_document_text_exports.sql
+    dddOwner: GovernanceStateExport
+    cqRails:
+      - ImportGovernanceStateQueryStore
+      - ExportGovernanceStateSnapshot
+      - ValidateGovernanceStateDrift
+      - MigratePlanningQueryStoreSchema
+    fowlerSignals:
+      - Hidden query model inside governance shards
+      - Generated artifact churn
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - source document text export has no browser workflow.
+    unitTests:
+      - pnpm test:planning:db
+      - pnpm governance:db:export:check
+  - <<: *planningDbLocalOperationSymbol
     name: PlanningDbOperateRunner
     path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
@@ -2225,6 +2394,9 @@ symbols:
     path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: parseIntegerOption
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: parseNonNegativeNumberOption
     path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: parseProgress
@@ -2269,10 +2441,34 @@ symbols:
     name: planTaskLocalOperation
     path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
+    name: buildRawTaskFromCreateCommand
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: buildDefinitionFromCreateCommand
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: normalizeTaskDefinition
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: planTaskDefinitionOperation
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbLocalOperationSymbol
     name: buildAuditRows
     path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: readImportedTask
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: readImportedLane
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: readEffectiveTask
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: readLocalDefinition
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: readLocalTombstone
     path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: readCurrentState
@@ -2282,6 +2478,9 @@ symbols:
     path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: writePlannedOperation
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: writePlannedDefinitionOperation
     path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: applyTaskLocalOperation
@@ -2309,6 +2508,9 @@ symbols:
     path: scripts/planning-db-operate.test.cjs
   - <<: *planningDbLocalOperationSymbol
     name: assertIdempotentReplayMatches
+    path: scripts/planning-db-operate.test.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: planTaskDefinitionOperation
     path: scripts/planning-db-operate.test.cjs
   - &planningDbExportSymbol
     name: PlanningDbExportRunner
@@ -2755,6 +2957,68 @@ symbols:
   - <<: *governanceDbDriftSymbol
     name: assert
     path: scripts/governance-db-check.test.cjs
+  - &governanceDbExportSymbol
+    name: GovernanceDbExportRunner
+    path: scripts/governance-db-export.cjs
+    dddOwner: GovernanceStateExport
+    cqRails:
+      - ExportGovernanceStateSnapshot
+      - ValidateGovernanceStateDrift
+    fowlerSignals:
+      - Generated artifact churn
+      - Hidden query model inside governance shards
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - governance DB export has no browser workflow.
+    unitTests:
+      - pnpm test:planning:db
+      - pnpm governance:db:export:check
+  - <<: *governanceDbExportSymbol
+    name: dependencies
+    path: scripts/governance-db-export.cjs
+  - <<: *governanceDbExportSymbol
+    name: exportedGovernanceArtifactPaths
+    path: scripts/governance-db-export.cjs
+  - <<: *governanceDbExportSymbol
+    name: main
+    path: scripts/governance-db-export.cjs
+  - <<: *governanceDbExportSymbol
+    name: node
+    path: scripts/governance-db-export.test.cjs
+  - <<: *governanceDbExportSymbol
+    name: test
+    path: scripts/governance-db-export.test.cjs
+  - <<: *governanceDbExportSymbol
+    name: assert
+    path: scripts/governance-db-export.test.cjs
+  - &governanceDbImportSymbol
+    name: runGovernanceImport
+    path: scripts/governance-db-import.cjs
+    dddOwner: GovernanceStateImport
+    cqRails:
+      - ImportGovernanceStateQueryStore
+    fowlerSignals:
+      - Hidden query model inside governance shards
+      - Generated artifact churn
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - governance DB import has no browser workflow.
+    unitTests:
+      - pnpm test:planning:db
+      - pnpm governance:db:import
+  - <<: *governanceDbImportSymbol
+    name: parseArgs
+    path: scripts/governance-db-import.cjs
+  - <<: *governanceDbImportSymbol
+    name: printHelp
+    path: scripts/governance-db-import.cjs
+  - <<: *governanceDbImportSymbol
+    name: main
+    path: scripts/governance-db-import.cjs
+  - <<: *governanceDbImportSymbol
+    name: test
+    path: scripts/governance-db-import.test.cjs
+  - <<: *governanceDbImportSymbol
+    name: assert
+    path: scripts/governance-db-import.test.cjs
   - &governanceRefreshSymbol
     name: GovernanceRefreshRunner
     path: scripts/governance-refresh.cjs

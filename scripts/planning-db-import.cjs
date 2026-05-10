@@ -61,6 +61,7 @@ function readYamlSource(filePath) {
     contentSha256: sha256(raw),
     sourceBytes: Buffer.byteLength(raw, 'utf8'),
     parsed: yaml.load(raw),
+    rawSourceText: raw,
   };
 }
 
@@ -73,14 +74,18 @@ function renderYamlSourcePayload(payload) {
 }
 
 function buildGeneratedYamlSource(sourcePath, parsed) {
+  const absolutePath = path.join(repoRoot, sourcePath);
+  const hasExistingGeneratedSource = fs.existsSync(absolutePath);
   const raw = renderYamlSourcePayload(parsed);
+  const rawSourceText = hasExistingGeneratedSource ? fs.readFileSync(absolutePath, 'utf8') : raw;
   return {
-    absolutePath: path.join(repoRoot, sourcePath),
+    absolutePath,
     sourcePath,
     raw,
     contentSha256: sha256(raw),
     sourceBytes: Buffer.byteLength(raw, 'utf8'),
     parsed,
+    rawSourceText,
   };
 }
 
@@ -149,6 +154,48 @@ function normalizeDate(value) {
   return String(value).slice(0, 10);
 }
 
+function normalizeDependencyTokens(value) {
+  const text = normalizeText(value).trim();
+  if (!text || text.toLowerCase() === 'none') {
+    return [];
+  }
+
+  return text
+    .split(/,|\band\b/i)
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .map((entry) => ({
+      dependencyTaskId: entry.split(/\s+/)[0] || null,
+      dependencyText: entry,
+    }))
+    .filter((entry) => entry.dependencyTaskId && entry.dependencyTaskId.toLowerCase() !== 'none');
+}
+
+function buildTaskDependencyRows(task, sourceKind) {
+  return normalizeDependencyTokens(task.dependency).map((dependency, index) => ({
+    laneId: task.laneId,
+    taskId: task.taskId,
+    dependencyOrder: index + 1,
+    dependencyTaskId: dependency.dependencyTaskId,
+    dependencyText: dependency.dependencyText,
+    sourceKind,
+    sourcePath: task.sourcePath,
+    sourceContentSha256: task.sourceContentSha256,
+  }));
+}
+
+function buildTaskEvidenceRows(task, sourceKind) {
+  return normalizeArray(task.evidenceRefs).map((evidenceRef, index) => ({
+    laneId: task.laneId,
+    taskId: task.taskId,
+    evidenceOrder: index + 1,
+    evidenceRef: normalizeText(evidenceRef),
+    sourceKind,
+    sourcePath: task.sourcePath,
+    sourceContentSha256: task.sourceContentSha256,
+  }));
+}
+
 function addGovernanceSource(sources, source, sourceType, metadata = {}) {
   if (sources.some((entry) => entry.sourcePath === source.sourcePath)) {
     return;
@@ -160,6 +207,8 @@ function addGovernanceSource(sources, source, sourceType, metadata = {}) {
     contentSha256: source.contentSha256,
     sourceBytes: source.sourceBytes,
     metadata,
+    rawSource: source.parsed,
+    rawSourceText: source.rawSourceText || source.raw,
   });
 }
 
@@ -313,6 +362,8 @@ function buildPlanningContentSnapshot() {
   const sources = [];
   const lanes = [];
   const tasks = [];
+  const dependencies = [];
+  const evidenceRefs = [];
 
   for (const laneFile of planningLaneFiles()) {
     const source = readYamlSource(laneFile);
@@ -328,6 +379,8 @@ function buildPlanningContentSnapshot() {
         laneId: normalizeText(lane.lane_id),
         taskCount: laneTasks.length,
       },
+      rawSource: lane,
+      rawSourceText: source.rawSourceText,
     });
 
     lanes.push({
@@ -345,7 +398,7 @@ function buildPlanningContentSnapshot() {
     });
 
     for (const task of laneTasks) {
-      tasks.push({
+      const row = {
         laneId: normalizeText(lane.lane_id),
         taskId: normalizeText(task.task_id),
         parentTaskId: task.parent_task === undefined ? null : normalizeText(task.parent_task),
@@ -363,11 +416,20 @@ function buildPlanningContentSnapshot() {
         sourcePath: source.sourcePath,
         sourceContentSha256: source.contentSha256,
         rawTask: task,
-      });
+      };
+      tasks.push(row);
+
+      for (const dependency of buildTaskDependencyRows(row, 'planning_task')) {
+        dependencies.push(dependency);
+      }
+
+      for (const evidenceRef of buildTaskEvidenceRows(row, 'planning_task')) {
+        evidenceRefs.push(evidenceRef);
+      }
     }
   }
 
-  return { sources, lanes, tasks };
+  return { sources, lanes, tasks, dependencies, evidenceRefs };
 }
 
 function buildGovernanceGeneratedInputs() {
@@ -698,14 +760,17 @@ async function insertPlanningSnapshot(client, snapshot) {
   for (const source of snapshot.sources) {
     await client.query(
       `insert into ${schemaName}.planning_sources
-        (source_path, source_type, content_sha256, source_bytes, metadata)
-       values ($1, $2, $3, $4, $5::jsonb)`,
+        (source_path, source_type, content_sha256, source_bytes, metadata, raw_source, raw_source_text, source_authority)
+       values ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7, $8)`,
       [
         source.sourcePath,
         source.sourceType,
         source.contentSha256,
         source.sourceBytes,
         toJson(source.metadata),
+        toJson(source.rawSource),
+        source.rawSourceText || null,
+        'database',
       ]
     );
   }
@@ -768,14 +833,17 @@ async function insertGovernanceSnapshot(client, snapshot) {
   for (const source of snapshot.sources) {
     await client.query(
       `insert into ${schemaName}.governance_sources
-        (source_path, source_type, content_sha256, source_bytes, metadata)
-       values ($1, $2, $3, $4, $5::jsonb)`,
+        (source_path, source_type, content_sha256, source_bytes, metadata, raw_source, raw_source_text, source_authority)
+       values ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7, $8)`,
       [
         source.sourcePath,
         source.sourceType,
         source.contentSha256,
         source.sourceBytes,
         toJson(source.metadata),
+        toJson(source.rawSource),
+        source.rawSourceText || null,
+        'database',
       ]
     );
   }
@@ -1003,8 +1071,10 @@ async function beginImportTransaction(client) {
 async function importContent(options = {}) {
   const url = options.databaseUrl || databaseUrl();
   const silent = options.silent === true;
-  const planningSnapshot = buildPlanningContentSnapshot();
-  const governanceSnapshot = buildGovernanceFileSnapshot();
+  const includePlanning = options.includePlanning !== false;
+  const includeGovernance = options.includeGovernance !== false;
+  const planningSnapshot = includePlanning ? buildPlanningContentSnapshot() : null;
+  const governanceSnapshot = includeGovernance ? buildGovernanceFileSnapshot() : null;
   const client = options.client || new Client({ connectionString: url });
   const ownsClient = !options.client;
 
@@ -1015,8 +1085,12 @@ async function importContent(options = {}) {
   try {
     await runMigrations({ client, silent: true });
     await beginImportTransaction(client);
-    await insertPlanningSnapshot(client, planningSnapshot);
-    await insertGovernanceSnapshot(client, governanceSnapshot);
+    if (includePlanning) {
+      await insertPlanningSnapshot(client, planningSnapshot);
+    }
+    if (includeGovernance) {
+      await insertGovernanceSnapshot(client, governanceSnapshot);
+    }
     await client.query('commit');
   } catch (error) {
     await client.query('rollback');
@@ -1028,14 +1102,14 @@ async function importContent(options = {}) {
   }
 
   const result = {
-    lanes: planningSnapshot.lanes.length,
-    tasks: planningSnapshot.tasks.length,
-    governanceFiles: governanceSnapshot.files.length,
-    governanceComponents: governanceSnapshot.components.length,
-    governanceComponentFiles: governanceSnapshot.componentFiles.length,
-    governanceFingerprints: governanceSnapshot.fingerprints.length,
-    governanceCoverageRows: governanceSnapshot.coverageRows.length,
-    governanceRemediationTasks: governanceSnapshot.remediationTasks.length,
+    lanes: planningSnapshot?.lanes.length ?? 0,
+    tasks: planningSnapshot?.tasks.length ?? 0,
+    governanceFiles: governanceSnapshot?.files.length ?? 0,
+    governanceComponents: governanceSnapshot?.components.length ?? 0,
+    governanceComponentFiles: governanceSnapshot?.componentFiles.length ?? 0,
+    governanceFingerprints: governanceSnapshot?.fingerprints.length ?? 0,
+    governanceCoverageRows: governanceSnapshot?.coverageRows.length ?? 0,
+    governanceRemediationTasks: governanceSnapshot?.remediationTasks.length ?? 0,
   };
 
   if (!silent) {
