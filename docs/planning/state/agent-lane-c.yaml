@@ -808,7 +808,7 @@ tasks:
   - task_id: CI-AUDIT-ARC-STATE-STORE
     parent_task: RC-C2
     priority: P1
-    status: queued
+    status: done
     objective: >-
       decide and implement the ARC policy posture for `packages/@dvt/state-store/**` so state-store
       changes are either intentionally ARC-2 governed or the stale `state-core` trigger is removed.
@@ -818,17 +818,18 @@ tasks:
       state-store package path and required evidence/risk posture.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
+      - docs/planning/proposals/mandatory/governance-and-docs/arc-state-store-policy-routing-plan-20260510.md
       - docs/planning/reviews/ci-and-delivery/20260506-ci-build-audit-review.md
       - .arc-policy.yaml
       - tools/ci/arc-check.mjs
+      - tools/ci/arc-policy-state-store.test.mjs
     status_reason: >-
-      The 2026-05-06 CI build config audit found that `.arc-policy.yaml` still targets
-      `packages/@dvt/state/**` even though the current package path is
-      `packages/@dvt/state-store/**`. This is a real governance routing gap, not a direct
-      implementation authorization.
-    last_verified: '2026-05-09'
+      `.arc-policy.yaml` now routes the ARC-2 state-store trigger through the canonical
+      `packages/@dvt/state-store/**` package path and the CI tool contract test rejects the legacy
+      `packages/@dvt/state/**` glob.
+    last_verified: '2026-05-10'
   - task_id: CI-AUDIT-ENGINE-COVERAGE
     parent_task: RC-C2
     priority: P2

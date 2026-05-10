@@ -29,10 +29,10 @@ triggers:
       evidence_doc: true
       risk_update: true
 
-  - name: state-core
+  - name: state-store
     guides: ['event-driven', 'observability', 'append-authority', 'determinism-replay']
     globs:
-      - 'packages/@dvt/state/**'
+      - 'packages/@dvt/state-store/**'
     min_arc_level: ARC-2
     require:
       evidence_doc: true
