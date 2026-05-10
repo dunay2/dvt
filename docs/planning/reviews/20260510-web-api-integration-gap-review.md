@@ -267,6 +267,10 @@ Prioritized capability migrations:
      until an API command exists.
    - Disable or route-gate diff/admin/plugin reads in API mode until real
      routes exist.
+   - Remediation slice 1 implemented in
+     [`web-api-workspace-port-route-parity-remediation-plan-20260510.md`](../proposals/mandatory/frontend-and-ux/web-api-workspace-port-route-parity-remediation-plan-20260510.md):
+     API mode now fails closed before transport for the missing diff, plugin
+     catalog, admin roles, admin audit, and workspace file write rails.
 2. Add server-owned effective workspace context.
    - Extend `GET /session` or add a workspace context query.
    - Seed `sessionStore` from server-granted options, not env/localStorage as

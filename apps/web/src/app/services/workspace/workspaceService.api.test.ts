@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import { buildDraftReadOkResponse } from './workspaceGraphDraftProtocol.test.fixtures';
@@ -12,6 +15,46 @@ import {
   setWorkspaceScope,
 } from './workspaceScope.test.harness';
 import { httpErrorResponse, jsonResponse } from './workspaceApiClient.test.harness';
+
+type ApiWorkspaceService = ReturnType<typeof createApiWorkspaceServiceHarness>['service'];
+
+const unsupportedApiWorkspaceOperations: ReadonlyArray<{
+  readonly operation: string;
+  readonly capability: string;
+  readonly rail: string;
+  readonly call: (service: ApiWorkspaceService) => Promise<unknown>;
+}> = [
+  {
+    operation: 'getDiffChanges',
+    capability: 'workspace.diffChanges',
+    rail: 'GetWorkspaceDiffChanges',
+    call: (service) => service.getDiffChanges(),
+  },
+  {
+    operation: 'getPlugins',
+    capability: 'workspace.plugins',
+    rail: 'ListWorkspacePlugins',
+    call: (service) => service.getPlugins(),
+  },
+  {
+    operation: 'getRoles',
+    capability: 'workspace.adminRoles',
+    rail: 'ListAdminRoles',
+    call: (service) => service.getRoles(),
+  },
+  {
+    operation: 'getAuditLog',
+    capability: 'workspace.adminAuditLog',
+    rail: 'ListAdminAuditLog',
+    call: (service) => service.getAuditLog(),
+  },
+  {
+    operation: 'saveFileContent',
+    capability: 'workspace.fileWrite',
+    rail: 'SaveWorkspaceFileContent',
+    call: (service) => service.saveFileContent('models/generated.sql', 'select 1'),
+  },
+] as const;
 
 describe('workspaceService api graph snapshot', () => {
   installWorkspaceScopeHarness();
@@ -70,5 +113,36 @@ describe('workspaceService api graph snapshot', () => {
 
     await expect(service.getGraphSnapshot()).resolves.toEqual({ nodes: [], edges: [] });
     expect(getJson).not.toHaveBeenCalled();
+  });
+});
+
+describe('workspaceService api route parity posture', () => {
+  it.each(unsupportedApiWorkspaceOperations)(
+    'fails closed for %s before issuing transport calls',
+    async ({ call, capability, rail }) => {
+      const { getJson, postJson, requestRaw, service } = createApiWorkspaceServiceHarness();
+
+      await expect(call(service)).rejects.toMatchObject({
+        name: 'WorkspaceApiCapabilityUnsupportedError',
+        capability,
+        rail,
+      });
+      expect(getJson).not.toHaveBeenCalled();
+      expect(postJson).not.toHaveBeenCalled();
+      expect(requestRaw).not.toHaveBeenCalled();
+    }
+  );
+
+  it('does not retain orphan API route literals for missing workspace rails', () => {
+    const source = readFileSync(
+      resolve(process.cwd(), 'src/app/services/workspace/workspaceService.api.ts'),
+      'utf8'
+    );
+
+    expect(source).not.toContain('/diff/changes');
+    expect(source).not.toContain('/plugins');
+    expect(source).not.toContain('/admin/roles');
+    expect(source).not.toContain('/admin/audit');
+    expect(source).not.toContain('postJson<{ content: string }, FileContent>');
   });
 });
