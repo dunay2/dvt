@@ -147,6 +147,8 @@ test('parseArgs parses docs disposition queue filters for DB-first cleanup work'
     'unknown_task_like_id',
     '--path',
     'docs/planning/status/example.md',
+    '--resolution',
+    'all',
     '--limit',
     '5',
   ]);
@@ -157,6 +159,7 @@ test('parseArgs parses docs disposition queue filters for DB-first cleanup work'
       priority: 'P1',
       kind: 'unknown_task_like_id',
       path: 'docs/planning/status/example.md',
+      resolution: 'all',
       limit: 5,
     },
   });
@@ -175,6 +178,14 @@ test('parseArgs parses task provenance query filters for DB-first task triage', 
     queryName: 'task-gaps',
     filters: {
       kind: 'active_review_without_task_link',
+    },
+  });
+
+  assert.deepEqual(parseArgs(['task-gaps', '--resolution', 'resolved', '--limit', '10']), {
+    queryName: 'task-gaps',
+    filters: {
+      resolution: 'resolved',
+      limit: 10,
     },
   });
 });
@@ -253,6 +264,7 @@ test('buildSummaryRows exposes planning and governance content counts without ex
     prReadinessBlocking: 1,
     docsDispositionDocuments: 120,
     docsDispositionActions: 8,
+    docsResolutionOverlays: 2,
     docsTaskLikeReferences: 30,
     docsTaskLikeReferencesUnknown: 4,
   });
@@ -273,6 +285,7 @@ test('buildSummaryRows exposes planning and governance content counts without ex
     ['repository.pr_readiness.blocking', 1],
     ['docs.disposition_documents', 120],
     ['docs.disposition_actions', 8],
+    ['docs.resolution_overlays', 2],
     ['docs.task_like_references', 30],
     ['docs.task_like_references.unknown', 4],
     ['governance.files', 4255],
@@ -326,6 +339,7 @@ test('readSummary counts review tasks from the effective task view without hash 
             prReadinessBlocking: 1,
             docsDispositionDocuments: 120,
             docsDispositionActions: 8,
+            docsResolutionOverlays: 2,
             docsTaskLikeReferences: 30,
             docsTaskLikeReferencesUnknown: 4,
           },
@@ -346,6 +360,7 @@ test('readSummary counts review tasks from the effective task view without hash 
   assert.match(capturedSql, /pr_readiness_checks/);
   assert.match(capturedSql, /doc_disposition_documents/);
   assert.match(capturedSql, /doc_disposition_actions/);
+  assert.match(capturedSql, /doc_resolution_overlays/);
   assert.match(capturedSql, /doc_task_like_references/);
   assert.doesNotMatch(capturedSql, /governance_file_hash_drift/);
 });
@@ -634,13 +649,36 @@ test('readDocsDispositionRows queries the DB-owned docs disposition action view'
   assert.match(captured.sql, /priority = \$1/);
   assert.match(captured.sql, /action_kind = \$2/);
   assert.match(captured.sql, /document_path = \$3/);
-  assert.match(captured.sql, /limit \$4/);
+  assert.match(captured.sql, /resolution_status = \$4/);
+  assert.match(captured.sql, /limit \$5/);
   assert.deepEqual(captured.params, [
     'P1',
     'unknown_task_like_id',
     'docs/planning/status/example.md',
+    'pending',
     5,
   ]);
+});
+
+test('readDocsDispositionRows can include resolved overlays explicitly', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readDocsDispositionRows(client, {
+    resolution: 'resolved',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.doc_disposition_action_query/);
+  assert.match(captured.sql, /resolution_status <> \$1/);
+  assert.match(captured.sql, /limit \$2/);
+  assert.deepEqual(captured.params, ['pending', 5]);
 });
 
 test('readTaskReferenceRows queries the DB-owned task-like reference view', async () => {
@@ -706,8 +744,9 @@ test('readTaskGapRows queries the DB-owned task provenance gap view', async () =
   assert.match(captured.sql, /gap_kind = \$1/);
   assert.match(captured.sql, /lane_id = \$2/);
   assert.match(captured.sql, /severity = \$3/);
-  assert.match(captured.sql, /limit \$4/);
-  assert.deepEqual(captured.params, ['active_review_without_task_link', 'C', 'P1', 5]);
+  assert.match(captured.sql, /resolution_status = \$4/);
+  assert.match(captured.sql, /limit \$5/);
+  assert.deepEqual(captured.params, ['active_review_without_task_link', 'C', 'P1', 'pending', 5]);
 });
 
 test('readFocusRows queries the DB-owned planning work intake view', async () => {
@@ -755,6 +794,7 @@ test('docs disposition row builders format cleanup queues for operator output', 
         action_kind: 'unknown_task_like_id',
         document_path: 'docs/planning/status/example.md',
         reference_text: 'WEB-123',
+        resolution_status: 'pending',
         reason: 'Task-like reference is not registered in planning lanes.',
       },
     ]),
@@ -764,6 +804,7 @@ test('docs disposition row builders format cleanup queues for operator output', 
         'unknown_task_like_id',
         'docs/planning/status/example.md',
         'WEB-123',
+        'pending',
         'Task-like reference is not registered in planning lanes.',
       ],
     ]
@@ -814,6 +855,7 @@ test('task provenance row builders format task trace and gap queues for operator
         severity: 'P1',
         task_id: 'AR-A12',
         document_path: null,
+        resolution_status: 'resolved',
         reason: 'Task is in review or done without evidence refs.',
       },
     ]),
@@ -823,6 +865,7 @@ test('task provenance row builders format task trace and gap queues for operator
         'done_or_review_without_evidence',
         'AR-A12',
         '-',
+        'resolved',
         'Task is in review or done without evidence refs.',
       ],
     ]

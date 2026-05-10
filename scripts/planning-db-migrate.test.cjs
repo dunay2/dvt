@@ -423,3 +423,24 @@ test('tracked migrations quote focus suggested query arguments after W20 hardeni
   assert.match(workIntakeHardeningMigration.sql, /quote_literal\(gap\.document_path\)/);
   assert.match(workIntakeHardeningMigration.sql, /quote_literal\(action\.document_path\)/);
 });
+
+test('tracked migrations include docs resolution overlays after W21', () => {
+  const migrations = readMigrationFiles();
+  const docsResolutionMigration = migrations.find(
+    (migration) => migration.fileName === '021_docs_resolution_overlays.sql'
+  );
+
+  assert.ok(docsResolutionMigration);
+  assert.match(
+    docsResolutionMigration.sql,
+    /create table if not exists planning_query_store\.doc_resolution_overlays/
+  );
+  assert.match(
+    docsResolutionMigration.sql,
+    /create table if not exists planning_query_store\.doc_resolution_operations/
+  );
+  assert.match(docsResolutionMigration.sql, /source_content_sha256/);
+  assert.match(docsResolutionMigration.sql, /resolution_status/);
+  assert.match(docsResolutionMigration.sql, /doc_disposition_action_query/);
+  assert.match(docsResolutionMigration.sql, /planning_task_gap_query/);
+});

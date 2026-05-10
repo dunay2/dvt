@@ -128,6 +128,10 @@ function parseArgs(args = process.argv.slice(2)) {
       filters.governanceState = value;
       continue;
     }
+    if (arg === '--resolution') {
+      filters.resolution = value;
+      continue;
+    }
     if (arg === '--kind') {
       filters.kind = value;
       continue;
@@ -168,6 +172,7 @@ function buildSummaryRows(summary) {
     ['repository.pr_readiness.blocking', summary.prReadinessBlocking],
     ['docs.disposition_documents', summary.docsDispositionDocuments],
     ['docs.disposition_actions', summary.docsDispositionActions],
+    ['docs.resolution_overlays', summary.docsResolutionOverlays],
     ['docs.task_like_references', summary.docsTaskLikeReferences],
     ['docs.task_like_references.unknown', summary.docsTaskLikeReferencesUnknown],
     ['governance.files', summary.governanceFiles],
@@ -283,6 +288,7 @@ function buildDocsDispositionRows(rows) {
     row.action_kind ?? row.actionKind,
     row.document_path ?? row.documentPath,
     row.reference_text ?? row.referenceText ?? '-',
+    row.resolution_status ?? row.resolutionStatus ?? 'pending',
     compactText(row.reason),
   ]);
 }
@@ -314,6 +320,7 @@ function buildTaskGapRows(rows) {
     row.gap_kind ?? row.gapKind,
     row.task_id ?? row.taskId ?? '-',
     row.document_path ?? row.documentPath ?? '-',
+    row.resolution_status ?? row.resolutionStatus ?? 'pending',
     compactText(row.reason),
   ]);
 }
@@ -410,6 +417,22 @@ function appendFilter(predicates, params, column, value) {
 
   params.push(value);
   predicates.push(`${column} = $${params.length}`);
+}
+
+function appendResolutionFilter(predicates, params, value) {
+  const resolution = value || 'pending';
+  if (resolution === 'all') {
+    return;
+  }
+
+  params.push('pending');
+  if (resolution === 'resolved') {
+    predicates.push(`resolution_status <> $${params.length}`);
+    return;
+  }
+
+  params[params.length - 1] = resolution;
+  predicates.push(`resolution_status = $${params.length}`);
 }
 
 function effectiveTaskSelect() {
@@ -561,7 +584,13 @@ function docsDispositionActionSelect() {
       evidence,
       source_content_sha256,
       raw_action,
-      imported_at
+      imported_at,
+      resolution_status,
+      resolved_by,
+      resolved_at,
+      resolution_reason,
+      target_lane_id,
+      target_task_id
     from ${schemaName}.doc_disposition_action_query`;
 }
 
@@ -611,7 +640,13 @@ function taskGapSelect() {
       document_path,
       reason,
       source_path,
-      source_content_sha256
+      source_content_sha256,
+      resolution_status,
+      resolved_by,
+      resolved_at,
+      resolution_reason,
+      target_lane_id,
+      target_task_id
     from ${schemaName}.planning_task_gap_query`;
 }
 
@@ -739,6 +774,7 @@ async function readSummary(client) {
       (select count(*)::int from ${schemaName}.pr_readiness_checks where blocking = true) as "prReadinessBlocking",
       (select count(*)::int from ${schemaName}.doc_disposition_documents) as "docsDispositionDocuments",
       (select count(*)::int from ${schemaName}.doc_disposition_actions) as "docsDispositionActions",
+      (select count(*)::int from ${schemaName}.doc_resolution_overlays) as "docsResolutionOverlays",
       (select count(*)::int from ${schemaName}.doc_task_like_references) as "docsTaskLikeReferences",
       (select count(*)::int from ${schemaName}.doc_task_like_references where classification = 'unknown_task_like_id') as "docsTaskLikeReferencesUnknown",
       (select count(*)::int from ${schemaName}.governance_files) as "governanceFiles",
@@ -942,6 +978,7 @@ async function readDocsDispositionRows(client, filters = {}) {
   appendFilter(predicates, params, 'action_kind', filters.kind);
   appendFilter(predicates, params, 'document_path', filters.path);
   appendFilter(predicates, params, 'document_status', filters.status);
+  appendResolutionFilter(predicates, params, filters.resolution);
 
   const limit = parseLimit(filters.limit, 50);
   params.push(limit);
@@ -1023,6 +1060,7 @@ async function readTaskGapRows(client, filters = {}) {
   appendFilter(predicates, params, 'severity', filters.priority);
   appendFilter(predicates, params, 'task_id', filters.taskId);
   appendFilter(predicates, params, 'document_path', filters.path);
+  appendResolutionFilter(predicates, params, filters.resolution);
 
   const limit = parseLimit(filters.limit, 100);
   params.push(limit);
