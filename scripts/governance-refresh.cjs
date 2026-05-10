@@ -153,6 +153,37 @@ function readUntrackedFileHashes() {
     .join('\0');
 }
 
+function walkFiles(rootPath) {
+  const stat = fs.statSync(rootPath, { throwIfNoEntry: false });
+  if (!stat) {
+    return [];
+  }
+
+  if (stat.isFile()) {
+    return [rootPath];
+  }
+
+  if (!stat.isDirectory()) {
+    return [];
+  }
+
+  return fs
+    .readdirSync(rootPath, { withFileTypes: true })
+    .flatMap((entry) => walkFiles(path.join(rootPath, entry.name)))
+    .sort();
+}
+
+function readGeneratedGovernanceArtifactHashes(rootPath = repoRoot) {
+  const generatedStatusDir = path.join(rootPath, '.generated-docs', 'planning', 'status');
+  return walkFiles(generatedStatusDir)
+    .map((file) => {
+      const stat = fs.statSync(file);
+      const relativePath = path.relative(rootPath, file).replace(/\\/g, '/');
+      return `${relativePath}\0${stat.size}\0${sha256(fs.readFileSync(file))}`;
+    })
+    .join('\0');
+}
+
 function readWorktreeFingerprint() {
   const hash = crypto.createHash('sha256');
 
@@ -162,6 +193,8 @@ function readWorktreeFingerprint() {
   hash.update(runText('git', ['diff', '--cached', '--binary', '--', '.']));
   hash.update('\0untracked\0');
   hash.update(readUntrackedFileHashes());
+  hash.update('\0generated-governance\0');
+  hash.update(readGeneratedGovernanceArtifactHashes());
 
   return hash.digest('hex');
 }
@@ -279,6 +312,7 @@ module.exports = {
   repoRoot,
   buildRefreshStages,
   pnpmCommand,
+  readGeneratedGovernanceArtifactHashes,
   runPnpmScript,
   runText,
   sha256,

@@ -367,3 +367,22 @@ test('tracked migrations include docs disposition queue after W18', () => {
     /create or replace view planning_query_store\.doc_task_reference_query/
   );
 });
+
+test('tracked migrations include task provenance ledger after W19', () => {
+  const migrations = readMigrationFiles();
+  const taskProvenanceMigration = migrations.find(
+    (migration) => migration.fileName === '018_task_provenance_ledger.sql'
+  );
+
+  assert.ok(taskProvenanceMigration);
+  assert.match(
+    taskProvenanceMigration.sql,
+    /create or replace view planning_query_store\.planning_task_trace_query/
+  );
+  assert.match(
+    taskProvenanceMigration.sql,
+    /create or replace view planning_query_store\.planning_task_gap_query/
+  );
+  assert.match(taskProvenanceMigration.sql, /doc_task_reference_query/);
+  assert.match(taskProvenanceMigration.sql, /doc_disposition_action_query/);
+});

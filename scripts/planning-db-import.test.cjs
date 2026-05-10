@@ -197,7 +197,7 @@ test('PR readiness snapshot clears ARC evidence and risk blockers from changed d
 test('docs disposition snapshot classifies active-doc cleanup actions and task-like references', () => {
   const snapshot = buildDocsDispositionSnapshot({
     pendingHotspotThreshold: 2,
-    planningTaskIds: ['AR-A6'],
+    planningTaskIds: ['AR-A6', 'F-28', 'S08'],
     documents: [
       {
         sourcePath: 'docs/planning/closeouts/example.md',
@@ -209,7 +209,7 @@ test('docs disposition snapshot classifies active-doc cleanup actions and task-l
           'owner: Docs',
           '---',
           [
-            'AR-A6 WEB-123 ADR-0055 ARC-2 ED-20260510-example',
+            'AR-A6 F-28 S08 WEB-123 ADR-0055 ARC-2 ED-20260510-example',
             'R-20260510-EXAMPLE US-1 F04-W4 SYS-DOCS CMD-RET PS-Q08',
             'SHA-256 GAP-1 MVP-E1-A RESIDUAL-A RISK-B LEGACY-DRIFT INV-SCOPE-03',
           ].join(' '),
@@ -235,6 +235,8 @@ test('docs disposition snapshot classifies active-doc cleanup actions and task-l
     snapshot.references.map((reference) => [reference.referenceText, reference.classification])
   );
   assert.equal(classifications.get('AR-A6'), 'registered_planning_task');
+  assert.equal(classifications.get('F-28'), 'registered_planning_task');
+  assert.equal(classifications.get('S08'), 'registered_planning_task');
   assert.equal(classifications.get('WEB-123'), 'unknown_task_like_id');
   assert.equal(classifications.get('ADR-0055'), 'adr_id');
   assert.equal(classifications.get('ARC-2'), 'arc_level');

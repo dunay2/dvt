@@ -1030,16 +1030,41 @@ function classifyTaskLikeReference(referenceText, planningTaskIdSet) {
 
 function extractTaskLikeReferences(document, planningTaskIdSet) {
   const raw = normalizeText(document.raw);
-  const matches = raw.match(taskLikeReferencePattern) || [];
   const grouped = new Map();
 
-  for (const referenceText of matches) {
+  function addReference(referenceText, occurrenceCount = 1) {
     const entry = grouped.get(referenceText) || {
       referenceText,
       occurrenceCount: 0,
     };
-    entry.occurrenceCount += 1;
+    entry.occurrenceCount += occurrenceCount;
     grouped.set(referenceText, entry);
+  }
+
+  for (const referenceText of raw.match(taskLikeReferencePattern) || []) {
+    addReference(referenceText);
+  }
+
+  const planningTaskIds = [...new Set([...planningTaskIdSet].map((taskId) => taskId.toUpperCase()))]
+    .filter(Boolean)
+    .sort();
+  for (const taskId of planningTaskIds) {
+    const alreadyCaptured = [...grouped.keys()].some(
+      (referenceText) => referenceText.toUpperCase() === taskId
+    );
+    if (alreadyCaptured) {
+      continue;
+    }
+
+    const taskPattern = new RegExp(
+      `(?<![A-Za-z0-9-])${escapeRegExp(taskId)}(?![A-Za-z0-9-])`,
+      'gi'
+    );
+    const taskMatches = raw.match(taskPattern) || [];
+    if (taskMatches.length === 0) {
+      continue;
+    }
+    addReference(taskMatches[0], taskMatches.length);
   }
 
   return [...grouped.values()]
