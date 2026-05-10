@@ -1,4 +1,11 @@
-/** Owned concern: project static plugin contributions into route, shell, and workbench query rails. */
+/** Owned concern: project static plugin contributions into route, shell, and workbench query rails.
+ * @file apps/web/src/app/plugins/registry.ts
+ * @baseline ADR-0056: Web UI authority is server-projected
+ * @decision Section 3 - Runtime plugin projection fails closed when backend capability rows are absent
+ * @consequence Shell navigation only exposes backend-backed plugins after server projection confirms availability
+ * @version 1.0.0
+ * @date 2026-05-10
+ */
 import type React from 'react';
 
 import type { PluginPortDescriptor, PluginPortMap } from './contracts/ConnectionRules';

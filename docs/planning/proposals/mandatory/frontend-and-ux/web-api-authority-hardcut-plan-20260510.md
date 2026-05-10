@@ -126,6 +126,7 @@ allowedImplementationSurfaces:
   - docs/planning/status/**
   - docs/.manifest.json
   - docs/**/index.md
+  - traceability.config.json
   - apps/web/src/app/stores/authorizationStore.ts
   - apps/web/src/app/stores/authorizationStore.test.ts
   - apps/web/src/app/stores/webStoreDomainOwnership.architecture.test.ts
