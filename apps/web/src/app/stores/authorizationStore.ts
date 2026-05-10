@@ -1,4 +1,4 @@
-/** Owned concern: expose effective web UI authorization capabilities outside runtime evidence. */
+/** Owned concern: cache server-projected web UI authorization capabilities. */
 import { create } from 'zustand';
 
 export type UserPermissions = {
@@ -15,11 +15,11 @@ type AuthorizationState = {
 };
 
 export const DEFAULT_USER_PERMISSIONS: UserPermissions = {
-  canPlan: true,
-  canRun: true,
-  canEditEdges: true,
-  canManagePlugins: true,
-  canManageRBAC: true,
+  canPlan: false,
+  canRun: false,
+  canEditEdges: false,
+  canManagePlugins: false,
+  canManageRBAC: false,
 };
 
 export const useAuthorizationStore = create<AuthorizationState>()((set) => ({

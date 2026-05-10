@@ -26,12 +26,13 @@ describe('buildShellRuntimeState', () => {
     ]);
   });
 
-  it('keeps plugin runtime views when backend capability data is absent', () => {
+  it('keeps frontend-only runtime views while excluding backend-backed plugins when capability data is absent', () => {
     const state = buildShellRuntimeState(undefined);
 
-    expect(state.enabledPluginIds.has('cost')).toBe(true);
-    expect(state.registeredPluginIds.has('cost')).toBe(true);
+    expect(state.enabledPluginIds.has('cost')).toBe(false);
+    expect(state.registeredPluginIds.has('cost')).toBe(false);
     expect(state.navigationViews.some((view) => view.path === '/canvas')).toBe(true);
+    expect(state.navigationViews.some((view) => view.path === '/cost')).toBe(false);
     expect(state.navigationModel.primaryItems.some((item) => item.to === '/canvas')).toBe(true);
   });
 });

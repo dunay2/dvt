@@ -102,6 +102,10 @@ function isPluginEnabled(plugin: PluginContributions): boolean {
   return envFlagValue !== 'false' && envFlagValue !== false;
 }
 
+function requiresBackendCapability(plugin: PluginContributions): boolean {
+  return typeof plugin.backendPluginId === 'string' && plugin.backendPluginId.trim().length > 0;
+}
+
 function isPluginAvailableAtRuntime(
   plugin: PluginContributions,
   capabilities?: RuntimeCapabilities
@@ -111,7 +115,7 @@ function isPluginAvailableAtRuntime(
   }
 
   if (!capabilities) {
-    return true;
+    return !requiresBackendCapability(plugin);
   }
 
   const capabilityIds = Array.from(
@@ -122,7 +126,7 @@ function isPluginAvailableAtRuntime(
     .filter((info): info is { available: boolean; reason?: string } => info != null);
 
   if (runtimeInfos.length === 0) {
-    return true;
+    return !requiresBackendCapability(plugin);
   }
 
   return runtimeInfos.every((info) => info.available);
@@ -167,8 +171,8 @@ function hasRouteRegistration(view: ViewContribution): view is RouteViewContribu
   return typeof view.path === 'string' && view.handle != null;
 }
 
-export function getRouteViews(capabilities?: RuntimeCapabilities): RouteViewContribution[] {
-  return getAllViews(capabilities).filter(hasRouteRegistration);
+export function getRouteViews(): RouteViewContribution[] {
+  return PLUGIN_REGISTRY.flatMap((plugin) => plugin.views ?? []).filter(hasRouteRegistration);
 }
 
 export function getShellNavigationViews(
