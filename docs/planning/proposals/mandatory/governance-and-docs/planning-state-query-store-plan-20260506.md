@@ -25,7 +25,7 @@ reviewable and recoverable from repository sources.
 
 Adopt Postgres as the local and CI-capable operational planning/governance
 store for planning state, file-governance state, normalized planning relations,
-generated artifact hashes, and governance generated-source exports. ADR-0054
+generated artifact hashes, and governance generated-source exports. ADR-0055
 records the canonicality boundary: DB for operational command/query state; Git
 for review, bootstrap, and recovery.
 

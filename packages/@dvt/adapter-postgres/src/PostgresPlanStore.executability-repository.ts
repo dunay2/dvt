@@ -1,4 +1,7 @@
-import type { PlanExecutabilityRecord } from '@dvt/contracts';
+/**
+ * Owned concern: persist scoped adapter executability records.
+ */
+import type { PlanExecutabilityRecord, ScopedPlanId } from '@dvt/contracts';
 import type { PoolClient } from 'pg';
 
 import { type ExecutabilityState, toPlanExecutabilityRecord } from './PostgresPlanStore.mappers.js';
@@ -11,18 +14,24 @@ export class PostgresPlanExecutabilityRepository {
     await client.query(
       `
         INSERT INTO ${quoteIdentifier(this.schema)}.plan_executability_records (
+          tenant_id,
+          project_id,
+          environment_id,
           plan_id,
           adapter_id,
           state,
           validated_at,
           rejection_report_json
-        ) VALUES ($1, $2, $3, $4::timestamptz, $5::jsonb)
-        ON CONFLICT (plan_id, adapter_id) DO UPDATE
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7::timestamptz, $8::jsonb)
+        ON CONFLICT (tenant_id, project_id, environment_id, plan_id, adapter_id) DO UPDATE
         SET state = EXCLUDED.state,
             validated_at = EXCLUDED.validated_at,
             rejection_report_json = EXCLUDED.rejection_report_json
       `,
       [
+        record.tenantId,
+        record.projectId,
+        record.environmentId,
         record.planId,
         record.adapterId,
         record.state,
@@ -34,9 +43,12 @@ export class PostgresPlanExecutabilityRepository {
 
   public async listByPlanId(
     client: PoolClient,
-    planId: string
+    input: ScopedPlanId & { readonly adapterId?: string }
   ): Promise<ReadonlyArray<PlanExecutabilityRecord>> {
     const result = await client.query<{
+      tenant_id: string;
+      project_id: string;
+      environment_id: string;
       plan_id: string;
       adapter_id: string;
       state: ExecutabilityState;
@@ -45,15 +57,22 @@ export class PostgresPlanExecutabilityRepository {
     }>(
       `
         SELECT
+          tenant_id,
+          project_id,
+          environment_id,
           plan_id,
           adapter_id,
           state,
           validated_at::text AS validated_at_iso,
           rejection_report_json
         FROM ${quoteIdentifier(this.schema)}.plan_executability_records
-        WHERE plan_id = $1
+        WHERE tenant_id = $1
+          AND project_id = $2
+          AND environment_id = $3
+          AND plan_id = $4
+          AND ($5::text IS NULL OR adapter_id = $5)
       `,
-      [planId]
+      [input.tenantId, input.projectId, input.environmentId, input.planId, input.adapterId ?? null]
     );
     return result.rows.map((row) => toPlanExecutabilityRecord(row));
   }

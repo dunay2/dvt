@@ -1,3 +1,5 @@
+import type { ArchivePlanInput, MarkPlanSupersededInput } from '@dvt/artifacts';
+import type { ScopedPlanId } from '@dvt/contracts';
 import { expect, test } from 'vitest';
 
 import type { PostgresPlanStore } from '../src/PostgresPlanStore.js';
@@ -5,6 +7,7 @@ import { quoteIdentifier } from '../src/sqlUtils.js';
 
 import {
   NOW,
+  PLAN_STORE_SCOPE,
   createPgClient,
   describeIfPg,
   dropSchema,
@@ -19,6 +22,25 @@ const PLAN_ID = {
   r4_12: toCanonicalPlanId('plan-r4-12'),
   r4_missing: toCanonicalPlanId('plan-r4-missing'),
 } as const;
+
+function scopedPlan(planId: string): ScopedPlanId {
+  return { ...PLAN_STORE_SCOPE, planId };
+}
+
+function supersession(planId: string, supersededByPlanId: string): MarkPlanSupersededInput {
+  return { ...PLAN_STORE_SCOPE, planId, supersededByPlanId };
+}
+
+function archive(planId: string): ArchivePlanInput {
+  return { ...PLAN_STORE_SCOPE, planId, archivedAtIso: NOW };
+}
+
+function storePlanArtifact(
+  store: PostgresPlanStore,
+  planId: string
+): ReturnType<PostgresPlanStore['storePlanArtifact']> {
+  return store.storePlanArtifact({ buildResult: makeBuildResult(planId) });
+}
 
 describeIfPg('PostgresPlanStore records guard integration', () => {
   let schemaCounter = 0;
@@ -39,38 +61,38 @@ describeIfPg('PostgresPlanStore records guard integration', () => {
 
   test('markSuperseded rejects missing superseder target', () =>
     withIsolatedStore(async (store) => {
-      await store.storePlan(makeBuildResult(PLAN_ID.r4_10));
-      await expect(store.markSuperseded(PLAN_ID.r4_10, PLAN_ID.r4_missing)).rejects.toThrow(
-        'PLAN_RECORD_SUPERSEDER_NOT_ACTIVE_OR_NOT_FOUND'
-      );
+      await storePlanArtifact(store, PLAN_ID.r4_10);
+      await expect(
+        store.markSuperseded(supersession(PLAN_ID.r4_10, PLAN_ID.r4_missing))
+      ).rejects.toThrow('PLAN_RECORD_SUPERSEDER_NOT_ACTIVE_OR_NOT_FOUND');
     }));
 
   test('markSuperseded rejects self supersession', () =>
     withIsolatedStore(async (store) => {
-      await store.storePlan(makeBuildResult(PLAN_ID.r4_10));
-      await expect(store.markSuperseded(PLAN_ID.r4_10, PLAN_ID.r4_10)).rejects.toThrow(
-        'PLAN_RECORD_INVALID_SUPERSESSION_SELF'
-      );
+      await storePlanArtifact(store, PLAN_ID.r4_10);
+      await expect(
+        store.markSuperseded(supersession(PLAN_ID.r4_10, PLAN_ID.r4_10))
+      ).rejects.toThrow('PLAN_RECORD_INVALID_SUPERSESSION_SELF');
     }));
 
   test('markSuperseded rejects non-active superseder target', () =>
     withIsolatedStore(async (store) => {
-      await store.storePlan(makeBuildResult(PLAN_ID.r4_10));
-      await store.storePlan(makeBuildResult(PLAN_ID.r4_11));
-      await store.archivePlan(PLAN_ID.r4_11, NOW);
-      await expect(store.markSuperseded(PLAN_ID.r4_10, PLAN_ID.r4_11)).rejects.toThrow(
-        'PLAN_RECORD_SUPERSEDER_NOT_ACTIVE_OR_NOT_FOUND'
-      );
+      await storePlanArtifact(store, PLAN_ID.r4_10);
+      await storePlanArtifact(store, PLAN_ID.r4_11);
+      await store.archivePlan(archive(PLAN_ID.r4_11));
+      await expect(
+        store.markSuperseded(supersession(PLAN_ID.r4_10, PLAN_ID.r4_11))
+      ).rejects.toThrow('PLAN_RECORD_SUPERSEDER_NOT_ACTIVE_OR_NOT_FOUND');
     }));
 
   test('markSuperseded re-run rejects already linked superseder', () =>
     withIsolatedStore(async (store) => {
-      await store.storePlan(makeBuildResult(PLAN_ID.r4_10));
-      await store.storePlan(makeBuildResult(PLAN_ID.r4_11));
-      await store.markSuperseded(PLAN_ID.r4_10, PLAN_ID.r4_11);
-      await expect(store.markSuperseded(PLAN_ID.r4_10, PLAN_ID.r4_11)).rejects.toThrow(
-        'PLAN_RECORD_SUPERSEDER_ALREADY_LINKED'
-      );
+      await storePlanArtifact(store, PLAN_ID.r4_10);
+      await storePlanArtifact(store, PLAN_ID.r4_11);
+      await store.markSuperseded(supersession(PLAN_ID.r4_10, PLAN_ID.r4_11));
+      await expect(
+        store.markSuperseded(supersession(PLAN_ID.r4_10, PLAN_ID.r4_11))
+      ).rejects.toThrow('PLAN_RECORD_SUPERSEDER_ALREADY_LINKED');
     }));
 
   test('markSuperseded rejects superseder already linked to another plan', () =>
@@ -78,45 +100,42 @@ describeIfPg('PostgresPlanStore records guard integration', () => {
       const oldA = toCanonicalPlanId('old-a');
       const oldB = toCanonicalPlanId('old-b');
       const superseder = toCanonicalPlanId('superseder');
-      await store.storePlan(makeBuildResult(oldA));
-      await store.storePlan(makeBuildResult(oldB));
-      await store.storePlan(makeBuildResult(superseder));
-      await store.markSuperseded(oldA, superseder);
-      await expect(store.markSuperseded(oldB, superseder)).rejects.toThrow(
+      await storePlanArtifact(store, oldA);
+      await storePlanArtifact(store, oldB);
+      await storePlanArtifact(store, superseder);
+      await store.markSuperseded(supersession(oldA, superseder));
+      await expect(store.markSuperseded(supersession(oldB, superseder))).rejects.toThrow(
         'PLAN_RECORD_SUPERSEDER_ALREADY_LINKED'
       );
     }));
 
   test('archivePlan rejects unknown plan id', () =>
     withIsolatedStore(async (store) => {
-      await expect(store.archivePlan(PLAN_ID.r4_missing, NOW)).rejects.toThrow(
+      await expect(store.archivePlan(archive(PLAN_ID.r4_missing))).rejects.toThrow(
         'PLAN_RECORD_NOT_FOUND'
       );
     }));
 
   test('storePlan rejects duplicates for ARCHIVED records (no lifecycle reopening)', () =>
     withIsolatedStore(async (store) => {
-      await store.storePlan(makeBuildResult(PLAN_ID.r4_10));
-      await store.archivePlan(PLAN_ID.r4_10, NOW);
-      await expect(store.storePlan(makeBuildResult(PLAN_ID.r4_10))).rejects.toThrow(
-        'PLAN_RECORD_CONFLICT'
-      );
+      await storePlanArtifact(store, PLAN_ID.r4_10);
+      await store.archivePlan(archive(PLAN_ID.r4_10));
+      await expect(storePlanArtifact(store, PLAN_ID.r4_10)).rejects.toThrow('PLAN_RECORD_CONFLICT');
     }));
 
   test('storePlan rejects duplicates for SUPERSEDED records (no lifecycle reopening)', () =>
     withIsolatedStore(async (store) => {
-      await store.storePlan(makeBuildResult(PLAN_ID.r4_11));
-      await store.storePlan(makeBuildResult(PLAN_ID.r4_12));
-      await store.markSuperseded(PLAN_ID.r4_11, PLAN_ID.r4_12);
-      await expect(store.storePlan(makeBuildResult(PLAN_ID.r4_11))).rejects.toThrow(
-        'PLAN_RECORD_CONFLICT'
-      );
+      await storePlanArtifact(store, PLAN_ID.r4_11);
+      await storePlanArtifact(store, PLAN_ID.r4_12);
+      await store.markSuperseded(supersession(PLAN_ID.r4_11, PLAN_ID.r4_12));
+      await expect(storePlanArtifact(store, PLAN_ID.r4_11)).rejects.toThrow('PLAN_RECORD_CONFLICT');
     }));
 
   test('listExecutabilityByAdapter fails fast when persisted VALID row is corrupted', () =>
     withIsolatedStore(async (store, schema) => {
-      await store.storePlan(makeBuildResult(PLAN_ID.r4_11));
+      await storePlanArtifact(store, PLAN_ID.r4_11);
       await store.recordExecutability({
+        ...PLAN_STORE_SCOPE,
         planId: PLAN_ID.r4_11,
         adapterId: 'temporal',
         state: 'VALID',
@@ -128,34 +147,48 @@ describeIfPg('PostgresPlanStore records guard integration', () => {
           `
             UPDATE ${quoteIdentifier(schema)}.plan_executability_records
             SET validated_at = NULL
-            WHERE plan_id = $1 AND adapter_id = 'temporal'
+            WHERE tenant_id = $1
+              AND project_id = $2
+              AND environment_id = $3
+              AND plan_id = $4
+              AND adapter_id = 'temporal'
           `,
-          [PLAN_ID.r4_11]
+          [
+            PLAN_STORE_SCOPE.tenantId,
+            PLAN_STORE_SCOPE.projectId,
+            PLAN_STORE_SCOPE.environmentId,
+            PLAN_ID.r4_11,
+          ]
         );
       } finally {
         await client.end();
       }
-      await expect(store.listExecutabilityByAdapter(PLAN_ID.r4_11)).rejects.toThrow(
+      await expect(store.listExecutabilityByAdapter(scopedPlan(PLAN_ID.r4_11))).rejects.toThrow(
         'PLAN_EXECUTABILITY_ROW_INVALID'
       );
     }));
 
   test('schema enforces lineage FKs at DB level', () =>
     withIsolatedStore(async (store, schema) => {
-      await store.storePlan(makeBuildResult(PLAN_ID.r4_10));
+      await storePlanArtifact(store, PLAN_ID.r4_10);
       const client = await createPgClient();
       try {
         await expect(
           client.query(
             `
               INSERT INTO ${quoteIdentifier(schema)}.plan_records (
-                plan_id, canonical_plan_json, canonical_hash, plan_version, schema_version,
-                contract_version, source_ref, state, created_at, updated_at, derived_from_plan_id
+                tenant_id, project_id, environment_id, plan_id, canonical_plan_json, canonical_hash,
+                plan_version, schema_version, contract_version, source_ref, state, created_at,
+                updated_at, derived_from_plan_id
               ) VALUES (
-                $1, $2, $3, '1.0', 'v1.2', '1.0.0', $4, 'ACTIVE', NOW(), NOW(), $5
+                $1, $2, $3, $4, $5, $6, '1.0', 'v1.2', '1.0.0', $7, 'ACTIVE',
+                NOW(), NOW(), $8
               )
             `,
             [
+              PLAN_STORE_SCOPE.tenantId,
+              PLAN_STORE_SCOPE.projectId,
+              PLAN_STORE_SCOPE.environmentId,
               toCanonicalPlanId('lineage-fk-invalid'),
               '{"metadata":{"planId":"lineage-fk-invalid"}}',
               'f'.repeat(64),

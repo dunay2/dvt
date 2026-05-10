@@ -1,3 +1,4 @@
+import type { ScopedPlanRef } from '@dvt/contracts';
 import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
 import { describe, expect, it } from 'vitest';
 
@@ -34,6 +35,18 @@ function createPlanBytes(
     ),
     'utf-8'
   );
+}
+
+function scopedPlanRef(
+  ctx: ReturnType<typeof createRunContext>,
+  planRef: Parameters<typeof createDbtRunExecutionContext>[1]
+): ScopedPlanRef {
+  return {
+    tenantId: ctx.tenantId,
+    projectId: ctx.projectId,
+    environmentId: ctx.environmentId,
+    planRef,
+  };
 }
 
 describe('dbtRuntimeFixtures', () => {
@@ -151,8 +164,14 @@ describe('dbtRuntimeFixtures', () => {
       ],
     });
 
-    const firstFetched = await deps.integrity.fetchAndValidate(firstPlanRef, deps.fetcher);
-    const secondFetched = await deps.integrity.fetchAndValidate(secondPlanRef, deps.fetcher);
+    const firstFetched = await deps.integrity.fetchAndValidate(
+      scopedPlanRef(firstContext, firstPlanRef),
+      deps.fetcher
+    );
+    const secondFetched = await deps.integrity.fetchAndValidate(
+      scopedPlanRef(secondContext, secondPlanRef),
+      deps.fetcher
+    );
 
     expect(firstFetched.plan.metadata.planId).toBe(firstPlanRef.planId);
     expect(firstFetched.executionPolicy).toEqual({});
@@ -161,7 +180,7 @@ describe('dbtRuntimeFixtures', () => {
     expect(secondFetched.executionPolicy).toEqual({});
     await expect(
       deps.integrity.fetchAndValidate(
-        createPlanRef('it-plan-c', createPlanBytes('it-plan-c')),
+        scopedPlanRef(firstContext, createPlanRef('it-plan-c', createPlanBytes('it-plan-c'))),
         deps.fetcher
       )
     ).rejects.toThrow('PLAN_BYTES_NOT_REGISTERED');
@@ -185,7 +204,10 @@ describe('dbtRuntimeFixtures', () => {
       bindings: [{ ctx, planRef: registeredPlanRef, planBytes }],
     });
 
-    const fetched = await deps.integrity.fetchAndValidate(requestedPlanRef, deps.fetcher);
+    const fetched = await deps.integrity.fetchAndValidate(
+      scopedPlanRef(ctx, requestedPlanRef),
+      deps.fetcher
+    );
 
     expect(fetched.plan.metadata.planId).toBe(registeredPlanRef.planId);
     expect(fetched.executionPolicy).toEqual({});

@@ -1,10 +1,12 @@
 import { createHash } from 'node:crypto';
 
+import type { IStoredPlanArtifactReader } from '@dvt/artifacts';
 import {
   parseExecutionPlan,
   type ExecutionPlan,
   type PlanRef,
   type RunExecutionPolicy,
+  type ScopedPlanRef,
 } from '@dvt/contracts';
 import type { RunStateCommandPort } from '@dvt/engine';
 
@@ -20,9 +22,7 @@ export interface TestPlanArtifact {
   executionPolicy: RunExecutionPolicy;
 }
 
-export interface TestPlanFetcher {
-  fetch(planRef: PlanRef): Promise<TestPlanArtifact>;
-}
+export type TestPlanFetcher = IStoredPlanArtifactReader;
 
 export interface TestPlanIntegrityResult {
   executionPolicy: RunExecutionPolicy;
@@ -30,7 +30,10 @@ export interface TestPlanIntegrityResult {
 }
 
 export interface TestPlanIntegrity {
-  fetchAndValidate(planRef: PlanRef, fetcher: TestPlanFetcher): Promise<TestPlanIntegrityResult>;
+  fetchAndValidate(
+    input: ScopedPlanRef,
+    fetcher: TestPlanFetcher
+  ): Promise<TestPlanIntegrityResult>;
 }
 
 export interface TestActivityDeps extends ActivityDeps {
@@ -45,13 +48,13 @@ interface CreateActivityDepsOptions {
 
 class TestIntegrity implements TestPlanIntegrity {
   async fetchAndValidate(
-    planRef: PlanRef,
+    input: ScopedPlanRef,
     fetcher: TestPlanFetcher
   ): Promise<TestPlanIntegrityResult> {
-    const artifact = await fetcher.fetch(planRef);
+    const artifact = await fetcher.fetchStoredPlanArtifact(input);
     const bytes = artifact.bytes;
     const actual = createHash('sha256').update(bytes).digest('hex');
-    if (actual !== planRef.sha256) {
+    if (actual !== input.planRef.sha256) {
       throw new Error('PLAN_INTEGRITY_VALIDATION_FAILED');
     }
 
@@ -78,10 +81,20 @@ function createPlanFetcher(
   options?: CreateActivityDepsOptions
 ): TestPlanFetcher {
   return {
-    fetch: async (planRef: PlanRef) => {
-      options?.onFetch?.(planRef);
+    getStoredPlanValidationRecord: async () => undefined,
+    fetchStoredPlanArtifact: async (input: ScopedPlanRef): Promise<TestPlanArtifact> => {
+      options?.onFetch?.(input.planRef);
       return {
-        bytes: (await options?.fetchPlanBytes?.(planRef)) ?? planBytes,
+        bytes: (await options?.fetchPlanBytes?.(input.planRef)) ?? planBytes,
+        executionPolicy: {},
+      };
+    },
+    fetchStoredPlanArtifactForValidation: async (
+      input: ScopedPlanRef
+    ): Promise<TestPlanArtifact> => {
+      options?.onFetch?.(input.planRef);
+      return {
+        bytes: (await options?.fetchPlanBytes?.(input.planRef)) ?? planBytes,
         executionPolicy: {},
       };
     },

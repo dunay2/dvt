@@ -17,21 +17,23 @@ persistence.
 
 ## User Stories
 
-### US-WE-HX-1-001: fetch plan artifacts through an engine-owned port
+### US-WE-HX-1-001: fetch plan artifacts through the artifacts-owned port
 
 As an engine maintainer, I want start-run and recovery to depend on an
-engine-owned `IPlanFetcher`, so the engine describes its execution need without
-owning artifact storage implementation.
+artifacts-owned `IStoredPlanArtifactReader`, so executable plan
+materialization remains in one canonical package while the engine owns only the
+dispatch integrity rule.
 
 Acceptance criteria:
 
-- `IPlanFetcher`, `StoredPlanArtifact`, and `IPlanIntegrityValidator` live in
-  `packages/@dvt/engine/src/ports/IPlanArtifactReader.ts`.
+- `IStoredPlanArtifactReader` and `StoredPlanArtifact` live in
+  `packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts`.
+- `IPlanIntegrityValidator` lives in
+  `packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts`.
 - `StartRunApplicationService` and `RecoverRunApplicationService` import the
-  plan artifact reader port from that module.
-- The API composition root can still wire a concrete reader through the public
-  `@dvt/engine` export.
-- Artifact storage behavior remains outside the engine package.
+  plan artifact reader from `@dvt/artifacts`.
+- Fetch and validation calls require `ScopedPlanRef`.
+- No engine-local `IPlanFetcher` or API-local stored-plan port exists.
 
 ### US-WE-HX-1-002: keep run-state persistence free of plan artifact concerns
 
@@ -41,7 +43,7 @@ boundary.
 
 Acceptance criteria:
 
-- `IRunStateStore.ts` does not declare `IPlanFetcher`,
+- `IRunStateStore.ts` does not declare `IStoredPlanArtifactReader`,
   `IPlanIntegrityValidator`, or `StoredPlanArtifact`.
 - State-store read, write, and maintenance ports remain focused on run
   metadata, events, snapshots, retries, and maintenance.
@@ -56,11 +58,11 @@ artifact DTO for the same plan-integrity seam.
 
 Acceptance criteria:
 
-- `apps/api/src/application/ports/storedPlan.ts` imports
-  `StoredPlanArtifact` from `@dvt/engine`.
-- The API port owns only the API validation method name,
-  `fetchForValidation`.
-- The API file does not redeclare `StoredPlanArtifact`.
+- API services import `IStoredPlanArtifactReader` and `StoredPlanArtifact`
+  from `@dvt/artifacts`.
+- API validation calls `fetchStoredPlanArtifactForValidation(ScopedPlanRef)`.
+- `apps/api/src/application/ports/storedPlan.ts` does not exist.
+- The API does not redeclare `StoredPlanArtifact`.
 
 ### US-WE-HX-1-004: keep boundary documentation and module concerns aligned
 
@@ -79,8 +81,8 @@ Acceptance criteria:
 
 ## Negative Scenarios
 
-- A future change that adds `IPlanFetcher` back to `IRunStateStore.ts` fails the
-  architecture guard.
+- A future change that adds stored-plan artifact reading back to
+  `IRunStateStore.ts` fails the architecture guard.
 - A future change that recreates `packages/@dvt/engine/src/adapters/IPlanFetcher.ts`
   fails the architecture guard.
 - A future change that redeclares `StoredPlanArtifact` in `apps/api` fails the
@@ -92,24 +94,24 @@ Acceptance criteria:
 
 ## Scenario Coverage Matrix
 
-| Story            | Primary code                                                 | Primary guard                                          |
-| ---------------- | ------------------------------------------------------------ | ------------------------------------------------------ |
-| `US-WE-HX-1-001` | `packages/@dvt/engine/src/ports/IPlanArtifactReader.ts`      | `workflowEngineBoundaryOwnership.architecture.test.ts` |
-| `US-WE-HX-1-002` | `packages/@dvt/engine/src/ports/IRunStateStore.ts`           | `workflowEngineBoundaryOwnership.architecture.test.ts` |
-| `US-WE-HX-1-003` | `apps/api/src/application/ports/storedPlan.ts`               | `workflowEngineBoundaryOwnership.architecture.test.ts` |
-| `US-WE-HX-1-004` | local docs and touched engine module owned-concern docblocks | `workflowEngineBoundaryOwnership.architecture.test.ts` |
+| Story            | Primary code                                                            | Primary guard                                          |
+| ---------------- | ----------------------------------------------------------------------- | ------------------------------------------------------ |
+| `US-WE-HX-1-001` | `packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts`         | `workflowEngineBoundaryOwnership.architecture.test.ts` |
+| `US-WE-HX-1-002` | `packages/@dvt/engine/src/ports/IRunStateStore.ts`                      | `workflowEngineBoundaryOwnership.architecture.test.ts` |
+| `US-WE-HX-1-003` | `apps/api/src/application/services/StoredPlanExecutabilityValidator.ts` | `workflowEngineBoundaryOwnership.architecture.test.ts` |
+| `US-WE-HX-1-004` | local docs and touched engine module owned-concern docblocks            | `workflowEngineBoundaryOwnership.architecture.test.ts` |
 
 ## TDD Traceability
 
 ```mermaid
 flowchart LR
   Stories["WE-HX-1 stories"] --> Guard["Semantic architecture guard"]
-  Guard --> EnginePort["IPlanArtifactReader"]
+  Guard --> ArtifactPort["IStoredPlanArtifactReader"]
   Guard --> RunState["IRunStateStore"]
-  Guard --> ApiPort["API stored-plan port"]
+  Guard --> ApiService["API stored-plan services"]
   Guard --> Review["Fowler review mailbox"]
-  EnginePort --> Prepush["verify:prepush"]
-  ApiPort --> Prepush
+  ArtifactPort --> Prepush["verify:prepush"]
+  ApiService --> Prepush
 ```
 
 Red case:
@@ -121,5 +123,5 @@ Green case:
 
 - add the stories and review;
 - add module-owned concern headers;
-- reuse the engine-owned `StoredPlanArtifact` shape from API validation;
+- reuse the artifacts-owned `StoredPlanArtifact` shape from API validation;
 - rerun the guard and affected package validation.

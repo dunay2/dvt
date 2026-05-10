@@ -1,5 +1,5 @@
 ---
-title: ADR-0054 - Planning DB canonical operational source
+title: ADR-0055 - Planning DB canonical operational source
 status: Accepted
 date: 2026-05-10
 owners:
@@ -8,7 +8,7 @@ owners:
   - planning
 ---
 
-# ADR-0054 - Planning DB Canonical Operational Source
+# ADR-0055 - Planning DB Canonical Operational Source
 
 ## Status
 

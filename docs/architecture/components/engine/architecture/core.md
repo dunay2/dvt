@@ -32,7 +32,7 @@ component tree, while end-to-end lifecycle flow lives under
 - `packages/@dvt/engine/src/core/WorkflowEngine.ts`
 - `packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts`
 - `packages/@dvt/engine/src/application/StartRunApplicationService.ts`
-- `packages/@dvt/engine/src/ports/IPlanArtifactReader.ts`
+- `packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts`
 - `packages/@dvt/engine/src/security/RunAccessPolicy.ts`
 
 ## Navigation

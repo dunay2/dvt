@@ -13,7 +13,7 @@ import {
   type ActivityDeps,
 } from '../src/activities/stepActivities.js';
 import type {
-  IPlanFetcher,
+  IStoredPlanArtifactReader,
   IPlanIntegrityValidator,
   RunStateCommandPort,
 } from '../src/engine-types.js';
@@ -29,8 +29,13 @@ const runStateCommandPort: RunStateCommandPort = {
   appendTransitions: async () => ({ appended: [], deduped: [], lastSeq: 0 }),
 };
 
-const fetcher: IPlanFetcher = {
-  fetch: async () => ({
+const fetcher: IStoredPlanArtifactReader = {
+  getStoredPlanValidationRecord: async () => undefined,
+  fetchStoredPlanArtifact: async () => ({
+    bytes: new Uint8Array(),
+    executionPolicy: {},
+  }),
+  fetchStoredPlanArtifactForValidation: async () => ({
     bytes: new Uint8Array(),
     executionPolicy: {},
   }),

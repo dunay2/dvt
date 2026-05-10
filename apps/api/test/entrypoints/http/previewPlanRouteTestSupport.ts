@@ -8,10 +8,10 @@ import { okAuthDeps, type TestAuthDeps } from './planRouteHttpTestSupport.js';
 export type PreviewRouteTestDeps = TestAuthDeps & {
   planner: Pick<IPlanner, 'buildPlan' | 'deriveExecutableSubgraph'>;
   planStore: {
-    storePlan: ReturnType<typeof vi.fn>;
-    markValid: ReturnType<typeof vi.fn>;
-    markInvalid: ReturnType<typeof vi.fn>;
-    getValidationRecord: ReturnType<typeof vi.fn>;
+    storePlanArtifact: ReturnType<typeof vi.fn>;
+    markStoredPlanArtifactValid: ReturnType<typeof vi.fn>;
+    markStoredPlanArtifactInvalid: ReturnType<typeof vi.fn>;
+    getStoredPlanValidationRecord: ReturnType<typeof vi.fn>;
   };
   planValidator: { validatePlan: ReturnType<typeof vi.fn> };
   executableSubgraphResolver: { execute: ReturnType<typeof vi.fn> };
@@ -27,19 +27,17 @@ type PreviewRouteTestOverrides = Partial<
   executableSubgraphResolver?: Partial<PreviewRouteTestDeps['executableSubgraphResolver']>;
 };
 
-export function createPreviewDeps(
-  overrides: PreviewRouteTestOverrides = {}
-): PreviewRouteTestDeps {
+export function createPreviewDeps(overrides: PreviewRouteTestOverrides = {}): PreviewRouteTestDeps {
   const planner = {
     buildPlan: vi.fn(),
     deriveExecutableSubgraph: vi.fn(),
     ...overrides.planner,
   };
   const planStore = {
-    storePlan: vi.fn(),
-    markValid: vi.fn(),
-    markInvalid: vi.fn(),
-    getValidationRecord: vi.fn(),
+    storePlanArtifact: vi.fn(),
+    markStoredPlanArtifactValid: vi.fn(),
+    markStoredPlanArtifactInvalid: vi.fn(),
+    getStoredPlanValidationRecord: vi.fn(),
     ...overrides.planStore,
   };
   const planValidator = {

@@ -29,7 +29,7 @@ not redefine which ports belong to the seven-port surface.
 | `IRunStateStore`               | `runtime-wired`               | Canonical run metadata, event log, snapshot, and maintenance store seam                       |
 | `IStartRunIntentStore`         | `runtime-wired`               | Crash-consistency seam for pre-dispatch start-run intents                                     |
 | `IProviderAdapter`             | `runtime-wired`               | Provider runtime seam                                                                         |
-| `IPlanFetcher`                 | `runtime-wired`               | Plan artifact reader seam on the start-run path, declared in `IPlanArtifactReader`            |
+| `IPlanIntegrityValidator`      | `runtime-wired`               | Engine integrity gate that consumes `IStoredPlanArtifactReader` before dispatch               |
 | `IRunExecutionContextResolver` | `optional runtime wiring`     | Conditional seam when `runExecutionContextRef` is supplied                                    |
 | `IProjector`                   | `package-exposed target seam` | Kept visible as a projector seam even though mainline uses `SnapshotProjector` directly today |
 | `IMetricsCollector`            | `source-tree target seam`     | Declared in source; current runtime still injects `IObservability` instead                    |
@@ -89,8 +89,8 @@ Target note:
 - public contract:
   [IWorkflowEngine.ts](../../../../packages/@dvt/engine/src/ports/IWorkflowEngine.ts)
   with canonical consumer import `import type { IWorkflowEngine } from '@dvt/engine'`
-- plan artifact reader port:
-  [IPlanArtifactReader.ts](../../../../packages/@dvt/engine/src/ports/IPlanArtifactReader.ts)
+- plan integrity validator port:
+  [IPlanIntegrityValidator.ts](../../../../packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts)
 
 ## Component Topology
 
@@ -115,7 +115,7 @@ flowchart LR
   Ports --> State["IRunStateStore<br/>(runtime-wired)"]
   Ports --> Intent["IStartRunIntentStore<br/>(runtime-wired)"]
   Ports --> Providers["IProviderAdapter<br/>(runtime-wired)"]
-  Ports --> Plan["IPlanFetcher<br/>(runtime-wired)"]
+  Ports --> Plan["IPlanIntegrityValidator<br/>(runtime-wired)"]
   Ports --> RunCtx["IRunExecutionContextResolver<br/>(optional runtime wiring)"]
   Ports -.-> Projector["IProjector<br/>(package-exposed target seam)"]
   Ports -.-> Metrics["IMetricsCollector<br/>(source-tree target seam)"]

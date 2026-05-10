@@ -31,11 +31,11 @@ The global exhaustive projections are
 | Unit                                 | Files | Status   | Where governed                                           |
 | ------------------------------------ | ----: | -------- | -------------------------------------------------------- |
 | `SYS-PLANSTORE-CONTRACTS`            |     3 | `drift`  | contracts, artifacts ports                               |
-| `SYS-PLANSTORE-ARTIFACTS-PORTS`      |    23 | `review` | `packages/@dvt/artifacts`                                |
-| `SYS-PLANSTORE-POSTGRES`             |    16 | `drift`  | `packages/@dvt/adapter-postgres`                         |
-| `SYS-PLANSTORE-API-COMPOSITION`      |    20 | `drift`  | `apps/api`                                               |
+| `SYS-PLANSTORE-ARTIFACTS-PORTS`      |    24 | `review` | `packages/@dvt/artifacts`                                |
+| `SYS-PLANSTORE-POSTGRES`             |    16 | `review` | `packages/@dvt/adapter-postgres`                         |
+| `SYS-PLANSTORE-API-COMPOSITION`      |    19 | `review` | `apps/api`                                               |
 | `SYS-PLANSTORE-TEMPORAL-COMPOSITION` |    11 | `review` | `apps/temporal-worker`, `packages/@dvt/adapter-temporal` |
-| `SYS-PLANSTORE-ENGINE-FETCH`         |     5 | `drift`  | `packages/@dvt/engine`                                   |
+| `SYS-PLANSTORE-ENGINE-FETCH`         |     5 | `review` | `packages/@dvt/engine`                                   |
 | `SYS-PLANSTORE-DOCS-RISK`            |    32 | `review` | docs, ADRs, evidence, risk, reviews                      |
 
 ## File Ownership
@@ -43,7 +43,6 @@ The global exhaustive projections are
 | Unit                                 | File                                                                                                            |
 | ------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
 | `SYS-PLANSTORE-API-COMPOSITION`      | `apps/api/src/application/errors/ManifestArtifactResolutionError.ts`                                            |
-| `SYS-PLANSTORE-API-COMPOSITION`      | `apps/api/src/application/ports/storedPlan.ts`                                                                  |
 | `SYS-PLANSTORE-API-COMPOSITION`      | `apps/api/src/application/services/StoredExecutablePlanResolver.ts`                                             |
 | `SYS-PLANSTORE-API-COMPOSITION`      | `apps/api/src/application/services/StoredPlanExecutabilityValidator.ts`                                         |
 | `SYS-PLANSTORE-API-COMPOSITION`      | `apps/api/src/application/services/WorkflowEngineFactory.ts`                                                    |
@@ -74,6 +73,7 @@ The global exhaustive projections are
 | `SYS-PLANSTORE-ARTIFACTS-PORTS`      | `packages/@dvt/artifacts/src/ports/ICompiledCodeStorage.ts`                                                     |
 | `SYS-PLANSTORE-ARTIFACTS-PORTS`      | `packages/@dvt/artifacts/src/ports/IDbtProjectBundleReader.ts`                                                  |
 | `SYS-PLANSTORE-ARTIFACTS-PORTS`      | `packages/@dvt/artifacts/src/ports/IRunExecutionContextReader.ts`                                               |
+| `SYS-PLANSTORE-ARTIFACTS-PORTS`      | `packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts`                                                 |
 | `SYS-PLANSTORE-ARTIFACTS-PORTS`      | `packages/@dvt/artifacts/src/runtime/ArtifactBackedDbtProjectBundleReader.ts`                                   |
 | `SYS-PLANSTORE-ARTIFACTS-PORTS`      | `packages/@dvt/artifacts/src/runtime/ArtifactBackedRunExecutionContextReader.ts`                                |
 | `SYS-PLANSTORE-ARTIFACTS-PORTS`      | `packages/@dvt/artifacts/src/runtime/ArtifactReadError.ts`                                                      |
@@ -85,7 +85,7 @@ The global exhaustive projections are
 | `SYS-PLANSTORE-ARTIFACTS-PORTS`      | `packages/@dvt/artifacts/test/validateArtifactIntegrity.test.ts`                                                |
 | `SYS-PLANSTORE-ARTIFACTS-PORTS`      | `packages/@dvt/artifacts/tsconfig.json`                                                                         |
 | `SYS-PLANSTORE-ARTIFACTS-PORTS`      | `packages/@dvt/artifacts/vitest.config.ts`                                                                      |
-| `SYS-PLANSTORE-CONTRACTS`            | `docs/contracts/planner/PlanStoreRecords.v1.md`                                                                 |
+| `SYS-PLANSTORE-CONTRACTS`            | `docs/contracts/planner/plan-store-records-v1.md`                                                               |
 | `SYS-PLANSTORE-CONTRACTS`            | `packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts`                                                         |
 | `SYS-PLANSTORE-CONTRACTS`            | `packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts`                                                         |
 | `SYS-PLANSTORE-DOCS-RISK`            | `docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md`                                           |
@@ -120,7 +120,7 @@ The global exhaustive projections are
 | `SYS-PLANSTORE-DOCS-RISK`            | `docs/risk-register/quality/R-20260405-PLAN-STORE-CANONICAL-SHAPE-DRIFT.yaml`                                   |
 | `SYS-PLANSTORE-DOCS-RISK`            | `docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml`                              |
 | `SYS-PLANSTORE-DOCS-RISK`            | `docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml`                                  |
-| `SYS-PLANSTORE-ENGINE-FETCH`         | `packages/@dvt/engine/src/ports/IPlanArtifactReader.ts`                                                         |
+| `SYS-PLANSTORE-ENGINE-FETCH`         | `packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts`                                                     |
 | `SYS-PLANSTORE-ENGINE-FETCH`         | `packages/@dvt/engine/src/security/planRefPolicy.ts`                                                            |
 | `SYS-PLANSTORE-ENGINE-FETCH`         | `packages/@dvt/engine/src/security/planRefPolicyRules.ts`                                                       |
 | `SYS-PLANSTORE-ENGINE-FETCH`         | `packages/@dvt/engine/test/core/WorkflowEngine.planRef.test.ts`                                                 |

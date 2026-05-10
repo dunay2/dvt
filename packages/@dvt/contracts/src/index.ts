@@ -242,7 +242,13 @@ export type {
   PlanBindingRecord,
   StepBindingEntry,
 } from './contracts/planner/ExecutionBindingVerification.v1.js';
-export type { PlanRecord, PlanRecordState } from './contracts/planner/PlanRecord.v1.js';
+export type {
+  PlanRecord,
+  PlanRecordState,
+  ScopedPlanId,
+  ScopedPlanRef,
+  PlanStoreScope,
+} from './contracts/planner/PlanRecord.v1.js';
 export type {
   PlanExecutabilityRecord,
   PlanExecutabilityRejectionReport,
@@ -294,7 +300,6 @@ export type {
   RunEventInput,
   RunEventInputBase,
   RunMetadata,
-  StoredPlanArtifact,
   StepEventInput,
   WorkflowSnapshot,
 } from './engine/IRunStateStore.v1.js';

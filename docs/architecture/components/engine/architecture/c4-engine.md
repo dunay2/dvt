@@ -14,7 +14,7 @@
 - [IRunStateStore.ts](../../../../packages/@dvt/engine/src/ports/IRunStateStore.ts)
 - [IStartRunIntentStore.ts](../../../../packages/@dvt/engine/src/ports/IStartRunIntentStore.ts)
 - [IProviderAdapter.ts](../../../../packages/@dvt/engine/src/adapters/IProviderAdapter.ts)
-- [IPlanArtifactReader.ts](../../../../packages/@dvt/engine/src/ports/IPlanArtifactReader.ts)
+- [IPlanIntegrityValidator.ts](../../../../packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts)
 - [IRunExecutionContextResolver.ts](../../../../packages/@dvt/engine/src/ports/IRunExecutionContextResolver.ts)
 - [IProjector.ts](../../../../packages/@dvt/engine/src/ports/IProjector.ts)
 - [IMetricsCollector.ts](../../../../packages/@dvt/engine/src/metrics/IMetricsCollector.ts)
@@ -46,7 +46,7 @@ Rel(ops, engine, "Operates", "IRunMaintenanceService / workers")
 Rel(engine, provider_runtime, "Orchestrates execution", "IProviderAdapter")
 Rel(engine, state_store, "Reads/writes run state", "IRunStateStore + IOutboxStorage")
 Rel(engine, intent_store, "Protects startRun against crashes", "IStartRunIntentStore")
-Rel(engine, plan_artifacts, "Fetches plan and optional run execution context", "IPlanFetcher / IRunExecutionContextResolver")
+Rel(engine, plan_artifacts, "Fetches plan and optional run execution context", "IStoredPlanArtifactReader / IRunExecutionContextResolver")
 Rel(engine, obs, "Emits", "logs / metrics / traces")
 Rel(engine, event_bus, "Publishes indirectly", "OutboxWorker")
 
@@ -82,7 +82,7 @@ Rel(api_app, engine_lib, "Invokes", "IWorkflowEngine")
 Rel(ops_user, reconcile_worker, "Schedules / supervises")
 Rel(ops_user, delivery_worker, "Schedules / supervises")
 
-Rel(engine_lib, plan_registry, "Fetches plan artifact and optional execution context", "IPlanFetcher / IRunExecutionContextResolver")
+Rel(engine_lib, plan_registry, "Fetches plan artifact and optional execution context", "IStoredPlanArtifactReader / IRunExecutionContextResolver")
 Rel(engine_lib, provider_adapter, "Delegates execution", "IProviderAdapter")
 Rel(provider_adapter, provider_runtime, "startRun / cancelRun / signal / provider-live status")
 
@@ -112,7 +112,7 @@ Container_Ext(callers, "apps/api / callers", "Node.js", "Invokes lifecycle API")
 Container_Ext(state_store, "@dvt/adapter-postgres", "TypeScript + PostgreSQL", "IRunStateStore + IOutboxStorage")
 Container_Ext(intent_store, "IStartRunIntentStore", "InMemory + Postgres", "startRun intent persistence")
 Container_Ext(provider_adapter, "@dvt/adapter-temporal", "TypeScript", "IProviderAdapter")
-Container_Ext(plan_artifacts, "Plan / artifact source", "Artifact store + resolver", "IPlanFetcher + IRunExecutionContextResolver")
+Container_Ext(plan_artifacts, "Plan / artifact source", "Artifact store + resolver", "IStoredPlanArtifactReader + IRunExecutionContextResolver")
 Container_Ext(event_bus, "Event bus", "Kafka or equivalent", "Consumes outbox publications")
 Container_Ext(obs, "Observability stack", "OTel / logs / metrics", "Telemetry backend")
 
@@ -130,7 +130,7 @@ Rel(callers, workflow, "Calls")
 
 Rel(workflow, policies, "Validates")
 Rel(workflow, idempotency, "Generates ids")
-Rel(workflow, plan_artifacts, "fetchAndValidate / resolve optional runExecutionContext", "IPlanFetcher / IRunExecutionContextResolver")
+Rel(workflow, plan_artifacts, "fetchAndValidate / resolve optional runExecutionContext", "IStoredPlanArtifactReader / IRunExecutionContextResolver")
 Rel(workflow, provider_adapter, "startRun / cancelRun / signal / getRunStatus (live provider view)", "IProviderAdapter")
 Rel(workflow, intent_store, "createIntent / markDispatched / markResolved", "IStartRunIntentStore")
 Rel(workflow, state_store, "bootstrapRunTx / appendAndEnqueueTx / getSnapshot / listEvents", "IRunStateStore")
@@ -165,7 +165,7 @@ flowchart LR
   Engine["@dvt/engine"] --> State["IRunStateStore<br/>(runtime-wired)"]
   Engine --> Intent["IStartRunIntentStore<br/>(runtime-wired)"]
   Engine --> Provider["IProviderAdapter<br/>(runtime-wired)"]
-  Engine --> Plan["IPlanFetcher<br/>(runtime-wired)"]
+  Engine --> Plan["IPlanIntegrityValidator<br/>(runtime-wired)"]
   Engine --> RunCtx["IRunExecutionContextResolver<br/>(runtime-wired when ref exists)"]
   Engine -.-> Proj["IProjector<br/>(target-line exposed)"]
   Engine -.-> Metrics["IMetricsCollector<br/>(target-line exposed)"]
@@ -177,7 +177,7 @@ flowchart LR
 | `IRunStateStore`               | `runtime-wired`       | Canonical persistence/query seam                                |
 | `IStartRunIntentStore`         | `runtime-wired`       | Crash-consistency seam                                          |
 | `IProviderAdapter`             | `runtime-wired`       | Provider runtime seam                                           |
-| `IPlanFetcher`                 | `runtime-wired`       | Plan/artifact fetch seam                                        |
+| `IPlanIntegrityValidator`      | `runtime-wired`       | Plan integrity gate using the artifacts-owned reader            |
 | `IRunExecutionContextResolver` | `runtime-wired`       | Conditional start-run seam                                      |
 | `IProjector`                   | `target-line exposed` | Declared seam; mainline still uses `SnapshotProjector` directly |
 | `IMetricsCollector`            | `target-line exposed` | Declared seam; mainline still injects `IObservability`          |

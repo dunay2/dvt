@@ -115,6 +115,9 @@ describe('PostgresPlanStore invariants (unit, always-on)', () => {
   test('toPlanExecutabilityRecord rejects VALID rows without validated_at', () => {
     expect(() =>
       toPlanExecutabilityRecord({
+        tenant_id: 'tenant-a',
+        project_id: 'analytics',
+        environment_id: 'prod',
         plan_id: 'p1',
         adapter_id: 'temporal',
         state: 'VALID',
@@ -127,6 +130,9 @@ describe('PostgresPlanStore invariants (unit, always-on)', () => {
   test('toPlanExecutabilityRecord rejects INVALID rows without rejection_report_json', () => {
     expect(() =>
       toPlanExecutabilityRecord({
+        tenant_id: 'tenant-a',
+        project_id: 'analytics',
+        environment_id: 'prod',
         plan_id: 'p1',
         adapter_id: 'temporal',
         state: 'INVALID',

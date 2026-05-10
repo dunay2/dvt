@@ -8,15 +8,16 @@
  * @consequence Adapters receive an immutable PlanRef and must revalidate fetched plan bytes
  *   before executing runtime segments.
  */
+import type { IStoredPlanArtifactReader } from '@dvt/artifacts';
 import {
   parseExecutionPlan,
   type ExecutionPlan,
   type PlanRef,
   type RunExecutionPolicy,
+  type ScopedPlanRef,
 } from '@dvt/contracts';
 import { jcsCanonicalize } from '@dvt/crypto';
 
-import type { IPlanFetcher } from '../ports/IPlanArtifactReader.js';
 import { type IClock, parseIsoUtcToEpochMs } from '../utils/clock.js';
 import { sha256Hex } from '../utils/sha256.js';
 
@@ -28,11 +29,12 @@ export class PlanIntegrityValidator {
   }
 
   async fetchAndValidate(
-    planRef: PlanRef,
-    fetcher: IPlanFetcher
+    input: ScopedPlanRef,
+    fetcher: IStoredPlanArtifactReader
   ): Promise<{ plan: ExecutionPlan; executionPolicy: RunExecutionPolicy }> {
+    const planRef = input.planRef;
     assertPlanRefNotExpired(planRef, this.clock);
-    const artifact = await fetcher.fetch(planRef);
+    const artifact = await fetcher.fetchStoredPlanArtifact(input);
     const bytes = artifact.bytes;
     validatePlanBytesAgainstRef(bytes, planRef);
     const plan = parseExecutablePlan(bytes);

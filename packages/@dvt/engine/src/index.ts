@@ -54,11 +54,7 @@ export type {
   StepEventInput,
 } from './ports/IRunStateStore.js';
 export { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION } from './ports/IRunStateStore.js';
-export type {
-  IPlanFetcher,
-  IPlanIntegrityValidator,
-  StoredPlanArtifact,
-} from './ports/IPlanArtifactReader.js';
+export type { IPlanIntegrityValidator } from './ports/IPlanIntegrityValidator.js';
 export * from './ports/IRunSnapshotStalenessQuery.js';
 export * from './ports/IRunMaintenanceService.js';
 export * from './ports/IStartRunIntentStore.js';

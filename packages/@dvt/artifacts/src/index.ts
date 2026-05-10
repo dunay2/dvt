@@ -9,8 +9,20 @@ export type {
   DbtProjectBundleReadOptions,
   IDbtProjectBundleReader,
 } from './ports/IDbtProjectBundleReader.js';
-export type { IPlanStoreReader } from './ports/IPlanStoreReader.js';
-export type { IPlanStoreWriter } from './ports/IPlanStoreWriter.js';
+export type { IPlanStoreReader, ScopedPlanExecutabilityQuery } from './ports/IPlanStoreReader.js';
+export type {
+  ArchivePlanInput,
+  IPlanStoreWriter,
+  MarkPlanSupersededInput,
+} from './ports/IPlanStoreWriter.js';
+export type {
+  IStoredPlanArtifactReader,
+  IStoredPlanArtifactStore,
+  IStoredPlanArtifactWriter,
+  MarkStoredPlanArtifactInvalidInput,
+  StoredPlanArtifact,
+  StorePlanArtifactInput,
+} from './ports/IStoredPlanArtifactStore.js';
 export type { IRunExecutionContextReader } from './ports/IRunExecutionContextReader.js';
 export { ArtifactReadError, type ArtifactReadErrorCode } from './runtime/ArtifactReadError.js';
 export {

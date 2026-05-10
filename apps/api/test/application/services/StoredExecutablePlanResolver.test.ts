@@ -1,6 +1,11 @@
 import { createHash } from 'node:crypto';
 
-import { asNonBlankString, type IStepTypeRegistry, type PlanRef } from '@dvt/contracts';
+import {
+  asNonBlankString,
+  type IStepTypeRegistry,
+  type PlanRef,
+  type ScopedPlanRef,
+} from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import { StoredExecutablePlanResolver } from '../../../src/application/services/StoredExecutablePlanResolver.js';
@@ -27,17 +32,24 @@ const PLAN_REF: PlanRef = {
   planVersion: asNonBlankString('1.0'),
 };
 
+const SCOPED_PLAN_REF: ScopedPlanRef = {
+  tenantId: 'tenant-a',
+  projectId: 'project-a',
+  environmentId: 'prod',
+  planRef: PLAN_REF,
+};
+
 describe('StoredExecutablePlanResolver', () => {
   it('parses executable bytes for stored dvt-plan refs', async () => {
     const fetcher = {
-      fetch: vi.fn(async () => ({
+      fetchStoredPlanArtifact: vi.fn(async () => ({
         bytes: Buffer.from(EXECUTABLE_PLAN_TEXT, 'utf8'),
         executionPolicy: {},
       })),
     };
     const resolver = new StoredExecutablePlanResolver({ fetcher: fetcher as never });
 
-    const plan = await resolver.fetch(PLAN_REF);
+    const plan = await resolver.fetch(SCOPED_PLAN_REF);
 
     expect(plan).toEqual({
       metadata: {
@@ -50,19 +62,21 @@ describe('StoredExecutablePlanResolver', () => {
       },
       steps: [{ stepId: 'step-1', kind: 'DBT_MODEL', dependsOn: [] }],
     });
-    expect(fetcher.fetch).toHaveBeenCalledWith(PLAN_REF);
+    expect(fetcher.fetchStoredPlanArtifact).toHaveBeenCalledWith(SCOPED_PLAN_REF);
   });
 
   it('rejects stored dvt-plan refs when the executable bytes do not match the ref hash', async () => {
     const fetcher = {
-      fetch: vi.fn(async () => ({
+      fetchStoredPlanArtifact: vi.fn(async () => ({
         bytes: Buffer.from(`${EXECUTABLE_PLAN_TEXT}\n`, 'utf8'),
         executionPolicy: {},
       })),
     };
     const resolver = new StoredExecutablePlanResolver({ fetcher: fetcher as never });
 
-    await expect(resolver.fetch(PLAN_REF)).rejects.toThrow('PLAN_INTEGRITY_VALIDATION_FAILED');
+    await expect(resolver.fetch(SCOPED_PLAN_REF)).rejects.toThrow(
+      'PLAN_INTEGRITY_VALIDATION_FAILED'
+    );
   });
 
   it('rejects stored dvt-plan refs when persisted metadata does not match the ref', async () => {
@@ -78,7 +92,7 @@ describe('StoredExecutablePlanResolver', () => {
       steps: [{ stepId: 'step-1', kind: 'DBT_MODEL', dependsOn: [] }],
     });
     const fetcher = {
-      fetch: vi.fn(async () => ({
+      fetchStoredPlanArtifact: vi.fn(async () => ({
         bytes: Buffer.from(mismatchedText, 'utf8'),
         executionPolicy: {},
       })),
@@ -89,7 +103,9 @@ describe('StoredExecutablePlanResolver', () => {
       sha256: asNonBlankString(createHash('sha256').update(mismatchedText).digest('hex')),
     };
 
-    await expect(resolver.fetch(planRef)).rejects.toThrow('PLAN_REF_MISMATCH: planId');
+    await expect(resolver.fetch({ ...SCOPED_PLAN_REF, planRef })).rejects.toThrow(
+      'PLAN_REF_MISMATCH: planId'
+    );
   });
 
   it('accepts custom step kinds when an explicit stepTypeRegistry is injected', async () => {
@@ -100,7 +116,7 @@ describe('StoredExecutablePlanResolver', () => {
       steps: [{ stepId: 'step-1', kind: 'SPARK_SQL', dependsOn: [] }],
     });
     const fetcher = {
-      fetch: vi.fn(async () => ({
+      fetchStoredPlanArtifact: vi.fn(async () => ({
         bytes: Buffer.from(executablePlanText, 'utf8'),
         executionPolicy: {},
       })),
@@ -114,20 +130,26 @@ describe('StoredExecutablePlanResolver', () => {
       sha256: asNonBlankString(createHash('sha256').update(executablePlanText).digest('hex')),
     };
 
-    await expect(resolver.fetch(planRef)).resolves.toMatchObject({
+    await expect(resolver.fetch({ ...SCOPED_PLAN_REF, planRef })).resolves.toMatchObject({
       steps: [{ stepId: 'step-1', kind: 'SPARK_SQL', dependsOn: [] }],
     });
   });
 
-  it('preserves legacy external planRef behavior for non-dvt-plan schemes', async () => {
+  it('preserves external planRef behavior for non-dvt-plan schemes', async () => {
     const fetcher = {
-      fetch: vi.fn(async () => ({ bytes: new Uint8Array(), executionPolicy: {} })),
+      fetchStoredPlanArtifact: vi.fn(async () => ({
+        bytes: new Uint8Array(),
+        executionPolicy: {},
+      })),
     };
     const resolver = new StoredExecutablePlanResolver({ fetcher: fetcher as never });
 
     const plan = await resolver.fetch({
-      ...PLAN_REF,
-      uri: asNonBlankString('https://plans.example.com/plan-1.json'),
+      ...SCOPED_PLAN_REF,
+      planRef: {
+        ...PLAN_REF,
+        uri: asNonBlankString('https://plans.example.com/plan-1.json'),
+      },
     });
 
     expect(plan).toEqual({
@@ -141,7 +163,7 @@ describe('StoredExecutablePlanResolver', () => {
       },
       steps: [],
     });
-    expect(fetcher.fetch).not.toHaveBeenCalled();
+    expect(fetcher.fetchStoredPlanArtifact).not.toHaveBeenCalled();
   });
 });
 
