@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { computeWorkflowModeScopeOutputs, parseScopeMode } from './scope-config.mjs';
+import {
+  classifyPackageJsonChange,
+  computeWorkflowModeScopeOutputs,
+  parseScopeMode,
+} from './scope-config.mjs';
 
 const scriptsOnlyContext = {
   packageJsonChange: {
@@ -16,6 +20,13 @@ const scriptsOnlyContext = {
     contractCapabilitySensitive: false,
   },
 };
+
+function packageJsonScriptChange(scriptName, previousCommand, nextCommand) {
+  return classifyPackageJsonChange(
+    { scripts: { [scriptName]: previousCommand } },
+    { scripts: { [scriptName]: nextCommand } }
+  );
+}
 
 test('emit-scope workflow mode keeps changed-file validation for scripts-only package json', () => {
   const scope = computeWorkflowModeScopeOutputs('workflow', ['package.json'], scriptsOnlyContext);
@@ -41,6 +52,83 @@ test('emit-scope contracts mode keeps scripts-only package json out of contract 
   assert.equal(scope.contracts_relevant, false);
   assert.equal(scope.determinism_relevant, false);
   assert.equal(scope.golden_relevant, false);
+  assert.equal(scope.contract_capability_changed, false);
+});
+
+test('emit-scope contracts mode routes contract tooling package aliases to contracts', () => {
+  const contractToolingContext = {
+    packageJsonChange: {
+      ...scriptsOnlyContext.packageJsonChange,
+      contractCapabilitySensitive: true,
+    },
+  };
+  const scope = computeWorkflowModeScopeOutputs(
+    'contracts',
+    ['package.json'],
+    contractToolingContext
+  );
+
+  assert.equal(scope.contracts_relevant, true);
+  assert.equal(scope.contract_capability_changed, true);
+});
+
+test('emit-scope contracts mode routes lint:determinism script changes to determinism scan', () => {
+  const scope = computeWorkflowModeScopeOutputs('contracts', ['package.json'], {
+    packageJsonChange: packageJsonScriptChange(
+      'lint:determinism',
+      'pnpm --filter @dvt/engine lint',
+      'pnpm --filter @dvt/engine lint --max-warnings 0'
+    ),
+  });
+
+  assert.equal(scope.contracts_relevant, false);
+  assert.equal(scope.determinism_relevant, true);
+});
+
+test('emit-scope test mode keeps scripts-only package json out of runtime capability lanes', () => {
+  const scope = computeWorkflowModeScopeOutputs('test', ['package.json'], scriptsOnlyContext);
+
+  assert.equal(scope.any_test, false);
+  assert.equal(scope.root_config, false);
+  assert.equal(scope.root_build_sensitive, false);
+  assert.equal(scope.determinism_relevant, false);
+  assert.equal(scope.coverage_relevant, false);
+  assert.equal(scope.postgres_capability_changed, false);
+});
+
+test('emit-scope test mode routes test:determinism script changes to determinism job', () => {
+  const scope = computeWorkflowModeScopeOutputs('test', ['package.json'], {
+    packageJsonChange: packageJsonScriptChange(
+      'test:determinism',
+      'pnpm --filter @dvt/engine test --testNamePattern determinism',
+      'pnpm --filter @dvt/engine test --testNamePattern deterministic'
+    ),
+  });
+
+  assert.equal(scope.root_build_sensitive, false);
+  assert.equal(scope.determinism_relevant, true);
+});
+
+test('emit-scope test mode routes test:replay script changes to determinism job', () => {
+  const scope = computeWorkflowModeScopeOutputs('test', ['package.json'], {
+    packageJsonChange: packageJsonScriptChange(
+      'test:replay',
+      'pnpm --filter @dvt/engine test --testNamePattern replay',
+      'pnpm --filter @dvt/engine test --testNamePattern replay-consistency'
+    ),
+  });
+
+  assert.equal(scope.root_build_sensitive, false);
+  assert.equal(scope.determinism_relevant, true);
+});
+
+test('emit-scope test mode marks engine changes coverage relevant', () => {
+  const scope = computeWorkflowModeScopeOutputs('test', [
+    'packages/@dvt/engine/src/WorkflowEngine.ts',
+  ]);
+
+  assert.equal(scope.engine, true);
+  assert.equal(scope.coverage_relevant, true);
 });
 
 test('emit-scope test mode preserves workspace setup flags mixed with scripts-only package json', () => {
@@ -62,6 +150,7 @@ test('emit-scope pr-quality mode preserves adapter flags mixed with scripts-only
   );
 
   assert.equal(scope.adapter_postgres_changed, true);
+  assert.equal(scope.postgres_capability_changed, true);
 });
 
 test('parseScopeMode accepts known modes and rejects missing or unknown mode', () => {

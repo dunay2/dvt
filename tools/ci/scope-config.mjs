@@ -220,6 +220,71 @@ export const WORKSPACE_ENTRIES = [
 
 export const CI_GLOBAL_PATTERNS = WORKFLOW_SCOPE_POLICY.workspace_global;
 
+const TEST_ROOT_BUILD_PATTERNS = [
+  ...ROOT_CONFIG_PATTERNS,
+  'vitest.config.ts',
+  'tsconfig*.json',
+  '.github/actions/setup-node-pnpm/**',
+  '.github/scripts/**',
+  '.github/workflows/test.yml',
+  'tools/ci/**',
+  'scripts/skip-pretest-if-ci.cjs',
+  'scripts/skip-prebuild-if-orchestrated.cjs',
+  'scripts/build-workspace-runtime-deps.cjs',
+];
+
+const TEST_DETERMINISM_PATTERNS = [
+  'packages/@dvt/engine/**',
+  'packages/@dvt/contracts/**',
+  'package.json',
+  'pnpm-lock.yaml',
+  'pnpm-workspace.yaml',
+  '.github/workflows/test.yml',
+];
+
+const TEST_COVERAGE_PATTERNS = [
+  'packages/@dvt/engine/src/**',
+  'packages/@dvt/engine/test/**',
+  'packages/@dvt/contracts/**',
+  'package.json',
+  'pnpm-lock.yaml',
+  'pnpm-workspace.yaml',
+  'vitest.config.ts',
+  'tsconfig*.json',
+  '.github/workflows/test.yml',
+];
+
+const PR_QUALITY_ROOT_BUILD_PATTERNS = [
+  ...ROOT_CONFIG_PATTERNS,
+  'vitest.config.ts',
+  'tsconfig*.json',
+  'tools/ci/**',
+  '.github/actions/setup-node-pnpm/**',
+  '.github/scripts/**',
+  '.github/workflows/pr-quality-gate.yml',
+  '.github/workflows/test.yml',
+  'scripts/build-workspace-runtime-deps.cjs',
+];
+
+const PR_QUALITY_CI_TOOLING_PATTERNS = [
+  'tools/ci/**',
+  '.github/actions/setup-node-pnpm/**',
+  '.github/scripts/**',
+  '.github/workflows/**',
+  'package.json',
+  'pnpm-lock.yaml',
+  'pnpm-workspace.yaml',
+];
+
+const PR_QUALITY_GOVERNANCE_TOOLING_PATTERNS = [
+  'docs/planning/**',
+  'docs/guides/**',
+  'scripts/planning-*.cjs',
+  'scripts/governance-*.cjs',
+  'tools/docs/**',
+  'package.json',
+];
+
 export const TEST_SCOPE_PATTERNS = {
   any_test: [
     'apps/**',
@@ -257,18 +322,11 @@ export const TEST_SCOPE_PATTERNS = {
   run_domain: ['packages/@dvt/run-domain/**'],
   state_store: ['packages/@dvt/state-store/**'],
   traceability_service: ['packages/@dvt/traceability-service/**'],
-  root_config: [
-    ...ROOT_CONFIG_PATTERNS,
-    'vitest.config.ts',
-    'tsconfig*.json',
-    '.github/actions/setup-node-pnpm/**',
-    '.github/scripts/**',
-    '.github/workflows/test.yml',
-    'tools/ci/**',
-    'scripts/skip-pretest-if-ci.cjs',
-    'scripts/skip-prebuild-if-orchestrated.cjs',
-    'scripts/build-workspace-runtime-deps.cjs',
-  ],
+  root_config: TEST_ROOT_BUILD_PATTERNS,
+  root_build_sensitive: TEST_ROOT_BUILD_PATTERNS,
+  postgres_capability_changed: ADAPTER_POSTGRES_RELEVANT_PATTERNS,
+  determinism_relevant: TEST_DETERMINISM_PATTERNS,
+  coverage_relevant: TEST_COVERAGE_PATTERNS,
 };
 
 export const CONTRACT_SCOPE_PATTERNS = {
@@ -354,6 +412,10 @@ export const PR_QUALITY_SCOPE_PATTERNS = {
     '.github/workflows/test.yml',
   ],
   adapter_postgres_changed: ADAPTER_POSTGRES_RELEVANT_PATTERNS,
+  root_build_sensitive: PR_QUALITY_ROOT_BUILD_PATTERNS,
+  ci_tooling_changed: PR_QUALITY_CI_TOOLING_PATTERNS,
+  governance_tooling_changed: PR_QUALITY_GOVERNANCE_TOOLING_PATTERNS,
+  postgres_capability_changed: ADAPTER_POSTGRES_RELEVANT_PATTERNS,
 };
 
 export const SCOPE_MODES = {
@@ -437,6 +499,10 @@ function isLifecycleScript(name) {
   return /^(pre|post)?(install|pack|publish|version)$/u.test(name) || name === 'prepare';
 }
 
+function isDeterminismJobScript(name) {
+  return name === 'lint:determinism' || name === 'test:determinism' || name === 'test:replay';
+}
+
 export function classifyPackageJsonChange(previousPackageJson, nextPackageJson) {
   const previousScripts = previousPackageJson?.scripts ?? {};
   const nextScripts = nextPackageJson?.scripts ?? {};
@@ -473,6 +539,7 @@ export function classifyPackageJsonChange(previousPackageJson, nextPackageJson) 
     ciToolingSensitive: commandClasses.some((commandClass) =>
       ['ci-tooling', 'developer-workflow', 'test-tooling'].includes(commandClass.domain)
     ),
+    determinismSensitive: changedScriptNames.some(isDeterminismJobScript),
     temporalCapabilitySensitive: commandClasses.some(
       (commandClass) => commandClass.domain === 'runtime-capability'
     ),
@@ -521,6 +588,70 @@ export function computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext
   }
 
   const scope = computeBooleanScope(changedFiles, scopePatterns, scopeContext);
+  const packageJsonChange = scopeContext.packageJsonChange;
+
+  if (mode === 'contracts') {
+    return {
+      ...scope,
+      contracts_relevant: Boolean(
+        scope.contracts_relevant || packageJsonChange?.contractCapabilitySensitive
+      ),
+      determinism_relevant: Boolean(
+        scope.determinism_relevant || packageJsonChange?.determinismSensitive
+      ),
+      contract_capability_changed: Boolean(
+        scope.contracts_relevant ||
+        scope.determinism_relevant ||
+        scope.golden_relevant ||
+        packageJsonChange?.contractCapabilitySensitive
+      ),
+    };
+  }
+
+  if (mode === 'pr-quality') {
+    return {
+      ...scope,
+      root_build_sensitive: Boolean(
+        scope.root_build_sensitive || packageJsonChange?.rootBuildSensitive
+      ),
+      ci_tooling_changed: Boolean(
+        scope.ci_tooling_changed || packageJsonChange?.ciToolingSensitive
+      ),
+      governance_tooling_changed: Boolean(
+        scope.governance_tooling_changed || packageJsonChange?.governanceToolingOnly
+      ),
+      temporal_capability_changed: Boolean(
+        scope.temporal_changed ||
+        scope.temporal_transformation_changed ||
+        scope.temporal_postgres_changed ||
+        packageJsonChange?.temporalCapabilitySensitive
+      ),
+      postgres_capability_changed: Boolean(
+        scope.postgres_capability_changed ||
+        scope.adapter_postgres_changed ||
+        scope.temporal_postgres_changed ||
+        packageJsonChange?.postgresCapabilitySensitive
+      ),
+    };
+  }
+
+  if (mode === 'test') {
+    return {
+      ...scope,
+      root_build_sensitive: Boolean(
+        scope.root_build_sensitive || scope.root_config || packageJsonChange?.rootBuildSensitive
+      ),
+      postgres_capability_changed: Boolean(
+        scope.postgres_capability_changed || packageJsonChange?.postgresCapabilitySensitive
+      ),
+      determinism_relevant: Boolean(
+        scope.determinism_relevant ||
+        packageJsonChange?.determinismSensitive ||
+        packageJsonChange?.rootBuildSensitive
+      ),
+      coverage_relevant: Boolean(scope.coverage_relevant || packageJsonChange?.rootBuildSensitive),
+    };
+  }
 
   return {
     ...scope,

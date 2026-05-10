@@ -2,7 +2,7 @@
 title: CI Delivery Governance Consolidated Action Plan
 status: Active
 owner: engineering
-last_reviewed: 2026-03-31
+last_reviewed: 2026-05-10
 planning_type: proposal
 ---
 
@@ -450,6 +450,12 @@ instead of repeating path lists in workflows and scope helpers.
 | `CDG-W1-1` | `ci.yml`, `tools/ci/emit-workspace-matrix.mjs`, `tools/ci/scope-config.mjs`                        | Rewire `detect-affected` in `ci.yml` to use `emit-workspace-matrix.mjs` instead of maintaining inline workspace inventories.                | `pnpm test:ci-tools`, targeted workflow parity tests, `pnpm verify:prepush`                | `ci.yml` no longer owns a separate workspace path inventory.                                      |
 | `CDG-W1-2` | `test.yml`, `contracts.yml`, `tools/ci/emit-scope.mjs`, `tools/ci/scope-config.mjs`                | Move remaining inline PR scope definitions into shared scope modules. Preserve the adapter-postgres policy JSON as the canonical exception. | `pnpm test:ci-tools`, `pnpm verify:prepush`                                                | `test.yml` and `contracts.yml` read scope from shared tooling rather than duplicating path rules. |
 | `CDG-W1-3` | `.husky/pre-push`, `scripts/check-changed.cjs`, new local scope helper under `tools/ci/` if needed | Replace grep-based hook scope classification with the same underlying scope policy used by CI. Standardize diff-base fallback order.        | `pnpm test:ci-tools`, manual docs-only and code-change smoke checks, `pnpm verify:prepush` | Hook and workflow scope decisions are derived from the same source of truth.                      |
+
+2026-05-10 update: `CDG-W1-2` is now the active remediation slice for
+`CI-AUDIT-CONTRACTS-SCOPE` and `CI-AUDIT-ENGINE-COVERAGE`. `test.yml` and
+`contracts.yml` consume semantic outputs from `tools/ci/emit-scope.mjs` for
+adapter-postgres, determinism, coverage, contracts, and golden lanes instead of
+owning local `dorny/paths-filter` package-root rules.
 
 ### Wave 2 - Local / CI Contract Cleanup
 

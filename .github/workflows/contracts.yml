@@ -33,57 +33,24 @@ jobs:
     name: Detect contracts/determinism scope
     runs-on: ubuntu-latest
     outputs:
-      contracts_relevant: ${{ steps.changes.outputs.contracts_relevant }}
-      determinism_relevant: ${{ steps.changes.outputs.determinism_relevant }}
-      golden_relevant: ${{ steps.changes.outputs.golden_relevant }}
+      contracts_relevant: ${{ steps.scope.outputs.contracts_relevant }}
+      determinism_relevant: ${{ steps.scope.outputs.determinism_relevant }}
+      golden_relevant: ${{ steps.scope.outputs.golden_relevant }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
 
-      - name: Detect changed areas (PR only)
-        id: changes
-        if: github.event_name == 'pull_request'
-        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4
-        with:
-          filters: |
-            contracts_relevant:
-              - 'packages/@dvt/contracts/**'
-              - 'packages/@dvt/engine/test/contracts/**'
-              - 'docs/architecture/engine/contracts/**'
-              - '.golden/**'
-              - 'scripts/compare-hashes.cjs'
-              - 'scripts/db-migrate.cjs'
-              - 'scripts/validate-contracts.cjs'
-              - '.github/workflows/contracts.yml'
-              - 'package.json'
-              - 'pnpm-lock.yaml'
-              - 'pnpm-workspace.yaml'
-            determinism_relevant:
-              - 'packages/@dvt/engine/**'
-              - 'packages/@dvt/contracts/**'
-              - '.github/workflows/contracts.yml'
-              - 'package.json'
-              - 'pnpm-lock.yaml'
-              - 'pnpm-workspace.yaml'
-            golden_relevant:
-              - 'packages/@dvt/engine/test/contracts/**'
-              - 'docs/architecture/engine/contracts/**'
-              - '.golden/**'
-              - 'scripts/compare-hashes.cjs'
-              - 'scripts/db-migrate.cjs'
-              - '.github/workflows/contracts.yml'
-              - 'package.json'
-              - 'pnpm-lock.yaml'
+      - name: Validate workflow scope policy JSON
+        run: node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json
 
-      - name: Set default outputs (non-PR events)
-        if: github.event_name != 'pull_request'
-        run: |
-          echo "contracts_relevant=true" >> "$GITHUB_OUTPUT"
-          echo "determinism_relevant=true" >> "$GITHUB_OUTPUT"
-          echo "golden_relevant=true" >> "$GITHUB_OUTPUT"
-        shell: bash
+      - name: Emit contracts scope outputs
+        id: scope
+        run: node tools/ci/emit-scope.mjs --mode contracts
+        env:
+          GIT_BASE: origin/${{ github.base_ref }}
+          GIT_HEAD: ${{ github.sha }}
 
   validate-json-schemas:
     name: Validate JSON Schemas
