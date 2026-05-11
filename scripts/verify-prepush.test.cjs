@@ -120,4 +120,14 @@
       'node --test scripts/verify-prepush.test.cjs'
     );
   });
+
+  test('prepush router delegates repository path semantics to shared CI scope query', () => {
+    const source = fs.readFileSync(path.resolve(__dirname, 'verify-prepush.cjs'), 'utf8');
+
+    assert.match(source, /repository-change-scope\.mjs/u);
+    assert.doesNotMatch(source, /function isPlanningDbRelevant/u);
+    assert.doesNotMatch(source, /function isGovernanceGlobalRelevant/u);
+    assert.doesNotMatch(source, /function isFeatureMechanizationRelevant/u);
+    assert.doesNotMatch(source, /function isCodeValidationRelevant/u);
+  });
 }
