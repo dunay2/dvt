@@ -150,6 +150,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
   - apps/web/src/app/views/canvas/useCanvasDraftLifecycle.ts
   - apps/web/src/app/views/canvas/canvasDraftLifecycle.types.ts
+  - apps/web/src/app/views/canvas/canvasDraftPersistenceRuntime.ts
   - apps/web/src/app/views/canvas/canvasControllerViewModel.ts
   - apps/web/src/app/views/canvas/canvasShellBuilder.types.ts
   - apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx
@@ -269,6 +270,16 @@ redGreenCycles:
       - docs/architecture/components/web/graph/canvas-project-snapshot-user-stories.md
       - buzon/20260511-codex-fowler-canvas-project-snapshot-analysis-and-remediation.md
     greenTest: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasProjectSnapshot.architecture.test.ts
+  - id: project-snapshot-import-autosave-cancellation
+    redTest: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
+    expectedFailure: Importing a valid project snapshot does not cancel pending or in-flight autosaves before the authoritative import save.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
+      - apps/web/src/app/views/canvas/canvasProjectSnapshotImportCommand.ts
+      - apps/web/src/app/views/canvas/canvasDraftLifecycle.types.ts
+      - apps/web/src/app/views/canvas/canvasDraftPersistenceRuntime.ts
+      - apps/web/src/app/views/canvas/useCanvasDraftLifecycle.ts
+    greenTest: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
 symbols:
   - name: canvasProjectSnapshot
     path: apps/web/src/app/views/canvas/canvasProjectSnapshot.ts
@@ -438,6 +449,19 @@ symbols:
     cypressCoverage: canvas-project-snapshot-roundtrip.cy.ts
     unitTests:
       - pnpm --filter @dvt/web test -- src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
+  - name: clearSaveDebounce
+    path: apps/web/src/app/views/canvas/canvasDraftPersistenceRuntime.ts
+    dddOwner: WorkspaceGraphAuthoringDraft persistence runtime
+    cqRails:
+      - SaveWorkspaceGraphDraft
+      - ImportProjectSnapshot
+    fowlerSignals:
+      - Service Layer
+      - Semantic Fitness Function
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: canvas-project-snapshot-roundtrip.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/views/canvas/canvasDraftPersistenceRuntime.test.ts
   - name: DraftRecordFixture
     path: apps/web/src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
     dddOwner: ProjectSnapshotImport test fixture
@@ -498,6 +522,18 @@ symbols:
     dddOwner: ProjectSnapshotImport test fixture
     cqRails:
       - ImportProjectSnapshot
+    fowlerSignals:
+      - Semantic Fitness Function
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: canvas-project-snapshot-roundtrip.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
+  - name: createDraftAttemptRefs
+    path: apps/web/src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
+    dddOwner: ProjectSnapshotImport test fixture
+    cqRails:
+      - ImportProjectSnapshot
+      - SaveWorkspaceGraphDraft
     fowlerSignals:
       - Semantic Fitness Function
     architectureGuard: pnpm docs:feature-mechanization:implementation
