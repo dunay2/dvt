@@ -46,6 +46,7 @@ describe('PostgresTenantIsolationPolicy', () => {
     expect(statements).toContain('CREATE POLICY dvt_tenant_isolation');
     expect(statements).toContain("current_setting('dvt.access_mode', true) = 'service'");
     expect(statements).toContain("current_setting('dvt.service_access_owner', true)");
+    expect(statements).toContain("current_setting('dvt.access_mode', true) = 'tenant'");
     expect(statements).toContain("'run-metadata-tenant-resolver'");
     expect(statements).not.toContain("'outbox-worker'");
     expect(statements).not.toContain("'run-archive-maintenance'");
