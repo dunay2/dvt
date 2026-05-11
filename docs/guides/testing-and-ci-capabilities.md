@@ -206,6 +206,19 @@ Command semantics:
   [Local Changed Files Gate Component](../architecture/components/ci-governance/local-changed-files-gate-component.md).
 - `pnpm verify:prepush` uses `node scripts/docs-workboard-check-changed.cjs`, so workboard drift is enforced when lane YAML changed, not for every module-only commit.
 - `pnpm verify:prepush` includes `pnpm docs:gov:filenames:changed`, `pnpm docs:gov:frontmatter:changed`, and `pnpm docs:gov:generated-policy` after the changed-only Markdown location gate, keeping changed docs fail-closed for placement, naming, ADR/evidence metadata, and generated-doc ownership before the heavier code checks run.
+- `pnpm verify:prepush` is routed through
+  [`scripts/verify-prepush.cjs`](../../scripts/verify-prepush.cjs). The router
+  always runs cheap changed-file posture checks, then conditionally runs the
+  heavier groups:
+  - planning DB inventory checks only for planning/query-store surfaces;
+  - global governance maps, fingerprints, coverage, and remediation checks only
+    for docs/governance/planning/generated surfaces;
+  - `pnpm traceability:adr0` for accepted ADRs, traceability config/baseline
+    files, or source paths governed by `traceability.config.json`;
+  - architecture dependency and affected type-check checks for code, CI policy,
+    command tooling, or root TypeScript graph inputs.
+- `pnpm verify:prepush -- --full` forces all conditional groups and is the
+  diagnostic equivalent of the historical full local pre-push posture.
 - `pnpm verify:prepush` now keeps three outcomes for code diffs:
   - skip when no TypeScript-affecting files changed
   - run `pnpm ci:affected:typecheck` when the diff is workspace-scoped
