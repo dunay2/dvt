@@ -104,13 +104,16 @@ flowchart TD
   ComponentMap --> Fingerprint
   ComponentShards --> Fingerprint
   Fingerprint --> FingerprintBaseline[".generated-docs/.../system-governance-file-fingerprint-baseline.yaml"]
+  Fingerprint --> FingerprintShards[".generated-docs/.../governance-file-fingerprints/*.fingerprints.yaml"]
   FingerprintBaseline --> FingerprintImpact
+  FingerprintShards --> FingerprintImpact
   FileIndex --> FingerprintImpact
   FileIndex --> Import["planning:db:import"]
   ComponentIndex --> Import
   ComponentMap --> Import
   DocumentMapOutputs --> Import
   FingerprintBaseline --> Import
+  FingerprintShards --> Import
   FingerprintImpact --> Import
   Import --> Coverage
   Coverage --> CoverageOutputs[".generated-docs/.../system-governance-coverage-report.*"]
@@ -120,6 +123,7 @@ flowchart TD
   RemediationOutputs --> ImportFinal["planning:db:import final"]
   FileIndex --> ChangedFiles
   FingerprintBaseline --> ChangedFiles
+  FingerprintShards --> ChangedFiles
   Worktree --> ChangedFiles
   UnitCoverage --> Prepush
   DocumentMapOutputs --> Prepush
@@ -149,12 +153,15 @@ flowchart TD
   regenerates ignored artifacts.
 - `Fingerprint baseline` runs `pnpm docs:governance:file-fingerprint-baseline`
   through `scripts/check-governance-file-fingerprint-baseline.cjs --write`. It
-  reads the current generated file index and shards, writes
-  `.generated-docs/planning/status/system-governance-file-fingerprint-baseline.yaml`,
-  and its check command regenerates the ignored current baseline.
+  reads the current generated file index and shards, writes a compact
+  `.generated-docs/planning/status/system-governance-file-fingerprint-baseline.yaml`
+  manifest plus deterministic
+  `.generated-docs/planning/status/governance-file-fingerprints/*.fingerprints.yaml`
+  shards, and its check command regenerates the ignored current baseline.
 - `Fingerprint impact` runs `pnpm docs:governance:file-fingerprint-impact`
   through `scripts/check-governance-file-fingerprint-baseline.cjs --report`. It
-  reads the current generated baseline and file index, writes
+  reads the current generated baseline manifest, fingerprint shards, and file
+  index, writes
   `.generated-docs/planning/status/system-governance-file-fingerprint-impact-20260501.md`,
   and its check command regenerates the ignored current impact report.
 - `Coverage report` runs `pnpm docs:governance:coverage-report` through
@@ -253,6 +260,7 @@ These output families used to be tracked review files under
 - `docs/planning/status/system-governance-remediation-queue-20260502.md`
 - `docs/planning/status/governance-files/*.files.yaml`
 - `docs/planning/status/governance-components/*.component-files.yaml`
+- `docs/planning/status/governance-file-fingerprints/*.fingerprints.yaml`
 
 That fan-out is no longer expected in PR file lists. The same payload is still
 deterministically generated under `.generated-docs/planning/status/` for local
