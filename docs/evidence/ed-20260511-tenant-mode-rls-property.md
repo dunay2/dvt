@@ -7,6 +7,7 @@ owners:
 arc_level: ARC-2
 breaking: false
 code_refs:
+  - docs/planning/proposals/mandatory/runtime-and-contracts/postgres-tenant-isolation-service-access-remediation-plan-20260425.md
   - packages/@dvt/adapter-postgres/src/PostgresTenantIsolationPolicy.ts
   - packages/@dvt/adapter-postgres/test/PostgresTenantIsolationPolicy.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresTenantRlsEnforcement.integration.test.ts
@@ -16,6 +17,7 @@ evidence:
     - '$env:DVT_PG_ADMIN_URL="postgresql://dvt_planning:dvt_planning_local@localhost:55432/dvt_planning"; $env:DVT_PG_APP_USER="dvt_app"; $env:DVT_PG_APP_PASSWORD="dvt_app"; node scripts/provision-postgres-app-role.cjs'
     - '$env:DVT_PG_ADMIN_URL="postgresql://dvt_planning:dvt_planning_local@localhost:55432/dvt_planning"; $env:DVT_PG_RLS_URL="postgresql://dvt_app:dvt_app@localhost:55432/dvt_planning"; $env:DVT_PG_INTEGRATION="1"; $env:DVT_PG_URL=$env:DVT_PG_ADMIN_URL; $env:DATABASE_URL=$env:DVT_PG_ADMIN_URL; pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts PostgresTenantRlsEnforcement.integration.test.ts'
     - pnpm --filter @dvt/adapter-postgres typecheck
+    - pnpm docs:feature-mechanization:implementation
     - pnpm verify:prepush
 ---
 
