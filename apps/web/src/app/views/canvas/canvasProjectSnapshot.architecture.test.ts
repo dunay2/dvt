@@ -35,6 +35,8 @@ describe('Canvas project snapshot architecture', () => {
       '## Import State Machine',
       '## Local Traceability',
       'canvasProjectSnapshot.ts',
+      'canvasProjectSnapshotImportCommand.ts',
+      'canvasProjectSnapshotImportCommand.test.ts',
       'canvasProjectSnapshot.test.ts',
       'canvasProjectSnapshot.architecture.test.ts',
       'canvas-project-snapshot-roundtrip.cy.ts',
@@ -43,6 +45,7 @@ describe('Canvas project snapshot architecture', () => {
       '```mermaid',
       'canvasProjectSnapshot.exportFile',
       'canvasProjectSnapshot.validateImport',
+      'executeImportProjectSnapshotCommand',
       'ProjectSnapshot',
       'ProjectSnapshotImportReadModel',
     ]) {
@@ -93,8 +96,12 @@ describe('Canvas project snapshot architecture', () => {
 
   it('keeps snapshot behavior behind a namespaced semantic API and existing draft save rail', () => {
     const snapshotSource = readAppSource('views/canvas/canvasProjectSnapshot.ts');
+    const importCommandSource = readAppSource('views/canvas/canvasProjectSnapshotImportCommand.ts');
     const lifecycleSource = readAppSource('views/canvas/useCanvasDraftLifecycle.ts');
     const snapshotTestSource = readAppSource('views/canvas/canvasProjectSnapshot.test.ts');
+    const importCommandTestSource = readAppSource(
+      'views/canvas/canvasProjectSnapshotImportCommand.test.ts'
+    );
     const cypressSpec = readFileSync(
       path.join(appRoot, '../../cypress/e2e/canvas/canvas-project-snapshot-roundtrip.cy.ts'),
       'utf8'
@@ -103,6 +110,8 @@ describe('Canvas project snapshot architecture', () => {
     for (const [modulePath, source] of [
       ['canvasProjectSnapshot.ts', snapshotSource],
       ['canvasProjectSnapshot.test.ts', snapshotTestSource],
+      ['canvasProjectSnapshotImportCommand.ts', importCommandSource],
+      ['canvasProjectSnapshotImportCommand.test.ts', importCommandTestSource],
       ['canvas-project-snapshot-roundtrip.cy.ts', cypressSpec],
     ] as const) {
       expect(source.trimStart().startsWith('/** Owned concern:'), modulePath).toBe(true);
@@ -113,8 +122,10 @@ describe('Canvas project snapshot architecture', () => {
     expect(snapshotSource).toContain('validateImport: validateProjectImport');
     expect(snapshotSource).toContain('buildFileName: buildProjectSnapshotFileName');
     expect(lifecycleSource).toContain('canvasProjectSnapshot.exportFile');
-    expect(lifecycleSource).toContain('canvasProjectSnapshot.validateImport');
-    expect(lifecycleSource).toContain('draftRepository.saveGraphDraft');
+    expect(lifecycleSource).toContain('executeImportProjectSnapshotCommand({');
+    expect(lifecycleSource).not.toContain('draftRepository.saveGraphDraft({');
+    expect(importCommandSource).toContain('canvasProjectSnapshot.validateImport');
+    expect(importCommandSource).toContain('draftRepository.saveGraphDraft({');
     expect(lifecycleSource).not.toContain('saveWorkspaceGraphDraft(');
     expect(cypressSpec).toContain("Cypress.Buffer.from('{not-json')");
     expect(cypressSpec).toContain("expect(snapshot.format).to.equal('dvt.project-snapshot')");

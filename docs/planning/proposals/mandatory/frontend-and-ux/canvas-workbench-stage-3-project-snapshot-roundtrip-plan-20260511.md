@@ -146,6 +146,8 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasProjectSnapshot.ts
   - apps/web/src/app/views/canvas/canvasProjectSnapshot.test.ts
   - apps/web/src/app/views/canvas/canvasProjectSnapshot.architecture.test.ts
+  - apps/web/src/app/views/canvas/canvasProjectSnapshotImportCommand.ts
+  - apps/web/src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
   - apps/web/src/app/views/canvas/useCanvasDraftLifecycle.ts
   - apps/web/src/app/views/canvas/canvasDraftLifecycle.types.ts
   - apps/web/src/app/views/canvas/canvasControllerViewModel.ts
@@ -259,6 +261,8 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/canvasProjectSnapshot.architecture.test.ts
       - apps/web/src/app/views/canvas/canvasProjectSnapshot.ts
       - apps/web/src/app/views/canvas/canvasProjectSnapshot.test.ts
+      - apps/web/src/app/views/canvas/canvasProjectSnapshotImportCommand.ts
+      - apps/web/src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
       - apps/web/src/app/views/canvas/useCanvasDraftLifecycle.ts
       - apps/web/cypress/e2e/canvas/canvas-project-snapshot-roundtrip.cy.ts
       - docs/architecture/components/web/graph/canvas-project-snapshot-component.md
@@ -410,4 +414,105 @@ symbols:
     cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-project-snapshot-roundtrip.cy.ts
     unitTests:
       - N/A - Cypress proof owner
+  - name: CanvasImportProjectSnapshotCommandDto
+    path: apps/web/src/app/views/canvas/canvasDraftLifecycle.types.ts
+    dddOwner: ProjectSnapshotImport
+    cqRails:
+      - ImportProjectSnapshot
+    fowlerSignals:
+      - Intention-Revealing Interface
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: canvas-project-snapshot-roundtrip.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
+  - name: executeImportProjectSnapshotCommand
+    path: apps/web/src/app/views/canvas/canvasProjectSnapshotImportCommand.ts
+    dddOwner: ProjectSnapshotImport
+    cqRails:
+      - ImportProjectSnapshot
+      - SaveWorkspaceGraphDraft
+    fowlerSignals:
+      - Service Layer
+      - Anti-corruption Layer
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasDraftLifecycle.architecture.test.ts src/app/views/canvas/canvasProjectSnapshot.architecture.test.ts
+    cypressCoverage: canvas-project-snapshot-roundtrip.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
+  - name: DraftRecordFixture
+    path: apps/web/src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
+    dddOwner: ProjectSnapshotImport test fixture
+    cqRails:
+      - ImportProjectSnapshot
+    fowlerSignals:
+      - Semantic Fitness Function
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: canvas-project-snapshot-roundtrip.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
+  - name: BuildImportArgsResult
+    path: apps/web/src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
+    dddOwner: ProjectSnapshotImport test fixture
+    cqRails:
+      - ImportProjectSnapshot
+    fowlerSignals:
+      - Semantic Fitness Function
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: canvas-project-snapshot-roundtrip.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
+  - name: BuildImportArgsOverrides
+    path: apps/web/src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
+    dddOwner: ProjectSnapshotImport test fixture
+    cqRails:
+      - ImportProjectSnapshot
+    fowlerSignals:
+      - Semantic Fitness Function
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: canvas-project-snapshot-roundtrip.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
+  - name: buildRecord
+    path: apps/web/src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
+    dddOwner: ProjectSnapshotImport test fixture
+    cqRails:
+      - ImportProjectSnapshot
+    fowlerSignals:
+      - Semantic Fitness Function
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: canvas-project-snapshot-roundtrip.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
+  - name: buildSnapshotFile
+    path: apps/web/src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
+    dddOwner: ProjectSnapshotImport test fixture
+    cqRails:
+      - ImportProjectSnapshot
+    fowlerSignals:
+      - Semantic Fitness Function
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: canvas-project-snapshot-roundtrip.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
+  - name: applyStateUpdater
+    path: apps/web/src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
+    dddOwner: ProjectSnapshotImport test fixture
+    cqRails:
+      - ImportProjectSnapshot
+    fowlerSignals:
+      - Semantic Fitness Function
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: canvas-project-snapshot-roundtrip.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
+  - name: buildImportArgs
+    path: apps/web/src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
+    dddOwner: ProjectSnapshotImport test fixture
+    cqRails:
+      - ImportProjectSnapshot
+    fowlerSignals:
+      - Semantic Fitness Function
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: canvas-project-snapshot-roundtrip.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts
 ```

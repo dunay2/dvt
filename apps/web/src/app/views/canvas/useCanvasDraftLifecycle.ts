@@ -13,10 +13,7 @@ import { useCanvasDraftAttemptRefs } from './useCanvasDraftAttemptRefs';
 import { useCanvasDraftBootstrapSync } from './useCanvasDraftBootstrapSync';
 import { useCanvasDraftPersistence } from './useCanvasDraftPersistence';
 import { executeCreateCanvasDocumentCommand } from './canvasCreateCanvasDocumentCommand';
-import {
-  applyCanvasDocumentSaveConflict,
-  applyCanvasDocumentSaveSuccess,
-} from './canvasCreateCanvasDocumentSaveResult';
+import { executeImportProjectSnapshotCommand } from './canvasProjectSnapshotImportCommand';
 import { canvasProjectSnapshot } from './canvasProjectSnapshot';
 import { canvasViewCopy } from './copy';
 
@@ -154,48 +151,16 @@ export function useCanvasDraftLifecycle({
     CanvasDraftLifecycle['handleImportProjectSnapshotFile']
   >(
     async (file) => {
-      if (!canImportProjectSnapshot) {
-        return;
-      }
-
-      setDraftSaveStatus('saving');
-      try {
-        const validation = canvasProjectSnapshot.validateImport(await file.text());
-        if (validation.kind === 'rejected') {
-          setDraftSaveStatus('failed');
-          toast.error(
-            `${canvasViewCopy.projectSnapshotImportRejectedMessage} ${validation.message}`
-          );
-          return;
-        }
-
-        const result = await draftRepository.saveGraphDraft({
-          expectedRevision: graphDraftQuery.data?.record?.revision ?? null,
-          idempotencyKey: createCanvasDraftIdempotencyKey(),
-          draft: validation.snapshot.draft,
-        });
-
-        if (result.outcome === 'saved') {
-          applyCanvasDocumentSaveSuccess({
-            result,
-            draftQueryCache,
-            setDraftSession,
-            setDraftSaveStatus,
-            lastSavedSignatureRef: refs.lastSavedSignatureRef,
-          });
-          return;
-        }
-
-        applyCanvasDocumentSaveConflict({
-          result,
-          draftQueryCache,
-          setDraftSession,
-          setDraftSaveStatus,
-        });
-      } catch {
-        setDraftSaveStatus('failed');
-        toast.error(canvasViewCopy.projectSnapshotImportFailedMessage);
-      }
+      await executeImportProjectSnapshotCommand({
+        file,
+        canImportProjectSnapshot,
+        draftRepository,
+        graphDraftQuery,
+        draftQueryCache,
+        setDraftSession,
+        setDraftSaveStatus,
+        lastSavedSignatureRef: refs.lastSavedSignatureRef,
+      });
     },
     [
       canImportProjectSnapshot,

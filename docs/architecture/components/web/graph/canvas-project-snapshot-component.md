@@ -31,16 +31,20 @@ Read the component in this order:
 
 1. `canvasProjectSnapshot.ts`
    the semantic public API and value-object validation boundary
-2. `useCanvasDraftLifecycle.ts`
+2. `canvasProjectSnapshotImportCommand.ts`
+   the import command that owns validation-to-save transition semantics
+3. `useCanvasDraftLifecycle.ts`
    the application-controller consumer that bridges toolbar file commands to
    the existing draft repository
-3. `CanvasToolbarPrimaryControls.tsx`
+4. `CanvasToolbarPrimaryControls.tsx`
    the passive browser file-input surface
-4. `canvasProjectSnapshot.test.ts`
+5. `canvasProjectSnapshot.test.ts`
    value-object and rejection proof
-5. `canvasProjectSnapshot.architecture.test.ts`
+6. `canvasProjectSnapshotImportCommand.test.ts`
+   command proof for accepted import, rejected import, and closed admission
+7. `canvasProjectSnapshot.architecture.test.ts`
    semantic component guard
-6. `canvas-project-snapshot-roundtrip.cy.ts`
+8. `canvas-project-snapshot-roundtrip.cy.ts`
    browser round-trip and fail-closed import proof
 
 If a change needs backend storage, stable long-term file compatibility, or
@@ -83,9 +87,11 @@ individual exported types for compile-time vocabulary.
 | File                                         | Owned concern                                                                    | Public to other modules |
 | -------------------------------------------- | -------------------------------------------------------------------------------- | ----------------------- |
 | `canvasProjectSnapshot.ts`                   | namespaced component API, file envelope, versioning, validation, filename policy | yes                     |
+| `canvasProjectSnapshotImportCommand.ts`      | import command transition from validated snapshot to authoritative draft save    | lifecycle consumer      |
 | `canvasProjectSnapshot.test.ts`              | value-object round-trip and rejection semantics                                  | test only               |
+| `canvasProjectSnapshotImportCommand.test.ts` | command persistence, rejection, and closed-admission proof                       | test only               |
 | `canvasProjectSnapshot.architecture.test.ts` | semantic docs/API/boundary architecture guard                                    | test only               |
-| `useCanvasDraftLifecycle.ts`                 | application-controller bridge to existing draft save authority                   | existing lifecycle API  |
+| `useCanvasDraftLifecycle.ts`                 | application-controller bridge to snapshot export/import commands                 | existing lifecycle API  |
 | `CanvasToolbarPrimaryControls.tsx`           | passive export/import controls and hidden file input                             | shell consumer only     |
 | `canvas-project-snapshot-roundtrip.cy.ts`    | browser proof for export, rejected import, valid import, and reload              | Cypress only            |
 | `canvas-project-snapshot-user-stories.md`    | operator scenario coverage                                                       | docs                    |
@@ -100,6 +106,7 @@ flowchart TD
   Toolbar["CanvasToolbarPrimaryControls"]
   Lifecycle["useCanvasDraftLifecycle"]
   API["canvasProjectSnapshot"]
+  ImportCommand["canvasProjectSnapshotImportCommand"]
   DraftRecord["CanvasAuthoringDraftRecord"]
   File["project snapshot JSON file"]
   Validator["WorkspaceGraphAuthoringDraftSchema"]
@@ -111,10 +118,11 @@ flowchart TD
   DraftRecord --> API
   API -->|versioned payload| File
   Toolbar -->|ImportProjectSnapshot file| Lifecycle
-  Lifecycle -->|ValidateProjectImport| API
+  Lifecycle -->|ImportProjectSnapshot| ImportCommand
+  ImportCommand -->|ValidateProjectImport| API
   API --> Validator
-  Validator -->|accepted draft| Lifecycle
-  Lifecycle -->|SaveWorkspaceGraphDraft| Repository
+  Validator -->|accepted draft| ImportCommand
+  ImportCommand -->|SaveWorkspaceGraphDraft| Repository
   Repository --> ProtectedDraft
 ```
 
@@ -146,20 +154,22 @@ sequenceDiagram
   participant Operator
   participant Toolbar
   participant Lifecycle
+  participant ImportCommand
   participant Snapshot as canvasProjectSnapshot
   participant DraftRepo as CanvasDraftRepository
 
   Operator->>Toolbar: choose Import
   Toolbar->>Lifecycle: handleImportProjectSnapshotFile(file)
-  Lifecycle->>Snapshot: validateImport(await file.text())
+  Lifecycle->>ImportCommand: executeImportProjectSnapshotCommand(file)
+  ImportCommand->>Snapshot: validateImport(await file.text())
   alt rejected
-    Snapshot-->>Lifecycle: typed rejection reason
-    Lifecycle-->>Operator: import rejected toast
+    Snapshot-->>ImportCommand: typed rejection reason
+    ImportCommand-->>Operator: import rejected toast
   else accepted
-    Snapshot-->>Lifecycle: ProjectSnapshot
-    Lifecycle->>DraftRepo: saveGraphDraft(validated draft)
-    DraftRepo-->>Lifecycle: saved or conflict
-    Lifecycle-->>Operator: existing draft posture
+    Snapshot-->>ImportCommand: ProjectSnapshot
+    ImportCommand->>DraftRepo: saveGraphDraft(validated draft)
+    DraftRepo-->>ImportCommand: saved or conflict
+    ImportCommand-->>Operator: existing draft posture
   end
 ```
 
@@ -196,7 +206,10 @@ sequenceDiagram
 ## Consumers
 
 - `useCanvasDraftLifecycle.ts`
-  owns command admission, toast fallout, and repository save orchestration.
+  exposes command admission and delegates import persistence to the semantic
+  command.
+- `canvasProjectSnapshotImportCommand.ts`
+  owns import validation fallout and repository save orchestration.
 - `CanvasToolbarPrimaryControls.tsx`
   raises export/import events and does not inspect snapshot internals.
 - `CanvasToolbar.tsx`, `CanvasShellMainPanel.tsx`, and shell builders
@@ -219,6 +232,7 @@ sequenceDiagram
   `buzon/20260511-codex-fowler-canvas-project-snapshot-analysis-and-remediation.md`
 - Unit tests:
   `apps/web/src/app/views/canvas/canvasProjectSnapshot.test.ts`
+  `apps/web/src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts`
 - Architecture test:
   `apps/web/src/app/views/canvas/canvasProjectSnapshot.architecture.test.ts`
 - Cypress proof:

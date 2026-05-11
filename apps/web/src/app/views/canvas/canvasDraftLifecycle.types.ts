@@ -94,6 +94,17 @@ export type CanvasCreateCanvasDocumentCommandDto = {
   lastSavedSignatureRef: { current: string | null };
 };
 
+export type CanvasImportProjectSnapshotCommandDto = {
+  file: File;
+  canImportProjectSnapshot: boolean;
+  draftRepository: CanvasDraftRepository;
+  graphDraftQuery: GraphDraftQueryState;
+  draftQueryCache: CanvasDraftQueryCache;
+  setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
+  setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
+  lastSavedSignatureRef: { current: string | null };
+};
+
 export type CanvasDraftLifecycleDto = {
   baseline: CanvasDraftLifecycleBaselineDto;
   session: CanvasDraftLifecycleSessionDto;

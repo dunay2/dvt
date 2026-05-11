@@ -77,7 +77,7 @@ application command. The Canvas branch now follows that shape:
 | File envelope     | Replace Primitive with Object       | `ProjectSnapshot` includes format, version, project, canvas               |
 | Import boundary   | Anti-corruption Layer               | `canvasProjectSnapshot.validateImport` rejects before save                |
 | Command naming    | Intention-Revealing Interface       | `ExportProjectSnapshot`, `ValidateProjectImport`, `ImportProjectSnapshot` |
-| Persistence       | Service Layer over existing command | lifecycle uses `CanvasDraftRepository.saveGraphDraft`                     |
+| Persistence       | Service Layer over existing command | import command uses `CanvasDraftRepository.saveGraphDraft`                |
 | UI surface        | Passive View                        | toolbar forwards file events and command availability                     |
 | Architecture test | Semantic Fitness Function           | `canvasProjectSnapshot.architecture.test.ts` guards docs/API/rails        |
 
@@ -121,6 +121,7 @@ Recommended grouping:
 
 - component API: `canvasProjectSnapshot.ts`
 - application-controller consumer: `useCanvasDraftLifecycle.ts`
+- import command boundary: `canvasProjectSnapshotImportCommand.ts`
 - passive controls: `CanvasToolbarPrimaryControls.tsx` and shell propagation
 - semantic proof: `canvasProjectSnapshot.architecture.test.ts`
 - behavior proof: `canvasProjectSnapshot.test.ts` and Cypress round trip
