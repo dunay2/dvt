@@ -148,6 +148,8 @@ export function CanvasShellMainPanel({
           onToggleGridVisible={chromeCommands.onToggleGridVisible}
           onGridColorChange={chromeCommands.onGridColorChange}
           onToggleSnapToGrid={chromeCommands.onToggleSnapToGrid}
+          onExportProjectSnapshot={chromeCommands.onExportProjectSnapshot}
+          onImportProjectSnapshotFile={chromeCommands.onImportProjectSnapshotFile}
           onReloadLatestDraft={chromeCommands.onReloadLatestDraft}
           onPlan={chromeCommands.onPlan}
           onRun={chromeCommands.onRun}
@@ -156,6 +158,8 @@ export function CanvasShellMainPanel({
           canPlan={panels.userPermissions.canPlan}
           canRun={panels.userPermissions.canRun}
           canEditEdges={panels.userPermissions.canEditEdges}
+          canExportProjectSnapshot={toolbar.canExportProjectSnapshot}
+          canImportProjectSnapshot={toolbar.canImportProjectSnapshot}
           canStartRun={toolbar.canStartRun}
           planStatusSummary={toolbar.planStatusSummary}
           canvasAuthoringMode={toolbar.canvasAuthoringMode}

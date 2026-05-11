@@ -75,6 +75,8 @@ export type CanvasShellToolbarBuilderArgs = Readonly<{
     CanvasRouteController,
     | 'canvasAuthoringMode'
     | 'canStartRun'
+    | 'canExportProjectSnapshot'
+    | 'canImportProjectSnapshot'
     | 'planStatusSummary'
     | 'exclusiveOverlayMode'
     | 'canUseCostOverlay'
@@ -121,6 +123,8 @@ export type CanvasShellChromeCommandsBuilderArgs = Readonly<{
     | 'setCanvasGridVisible'
     | 'setCanvasGridColor'
     | 'setCanvasSnapToGrid'
+    | 'handleExportProjectSnapshot'
+    | 'handleImportProjectSnapshotFile'
     | 'reloadLatestDraft'
     | 'handlePlan'
     | 'handleStartRun'

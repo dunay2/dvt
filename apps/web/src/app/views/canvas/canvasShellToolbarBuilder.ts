@@ -13,6 +13,8 @@ export function buildCanvasShellToolbar({
     routeState: routePresentation.presentationState.routeState,
     draftToolbarState: routePresentation.presentationState.draftToolbarState,
     canStartRun: toolbarState.canStartRun,
+    canExportProjectSnapshot: toolbarState.canExportProjectSnapshot,
+    canImportProjectSnapshot: toolbarState.canImportProjectSnapshot,
     planStatusSummary: toolbarState.planStatusSummary,
     exclusiveOverlayMode: toolbarState.exclusiveOverlayMode,
     canUseCostOverlay: toolbarState.canUseCostOverlay,

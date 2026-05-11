@@ -1,3 +1,4 @@
+/** Owned concern: project Canvas controller state into a shell-ready view model. */
 import { type NodeTypes } from '@xyflow/react';
 
 import DbtNodeComponent from '../../components/canvas/DbtNodeComponent';
@@ -122,6 +123,8 @@ function buildCanvasInteractionViewModel(args: CanvasControllerViewModelArgs) {
     handleDragOver: graphHandlers.handleDragOver,
     handleCreateAuthoringNode: graphHandlers.handleCreateAuthoringNode,
     handleCreateCanvasDocument,
+    handleExportProjectSnapshot: args.authoringRuntime.handleExportProjectSnapshot,
+    handleImportProjectSnapshotFile: args.authoringRuntime.handleImportProjectSnapshotFile,
     handleSourceImportComplete: mutationHandlers.handleSourceImportComplete,
     importedNodeFocusIds: mutationHandlers.importedNodeFocusIds,
     handleImportedNodeFocusComplete: mutationHandlers.handleImportedNodeFocusComplete,
@@ -183,6 +186,8 @@ function buildCanvasDraftViewModel(args: CanvasControllerViewModelArgs) {
       hasDraftProjectionGap,
       draftRecoveryReason,
       draftToolbarState,
+      canExportProjectSnapshot,
+      canImportProjectSnapshot,
     },
   } = args;
 
@@ -196,6 +201,8 @@ function buildCanvasDraftViewModel(args: CanvasControllerViewModelArgs) {
     draftFormatMeta,
     draftRecoveryReason,
     draftToolbarState,
+    canExportProjectSnapshot,
+    canImportProjectSnapshot,
     draftConflictRevision:
       draftSession.syncState === 'conflict' ? draftSession.draftRevision : null,
     hasStaleDraftVersion: isStaleDraftConflict,

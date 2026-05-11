@@ -1,13 +1,17 @@
+/** Owned concern: render primary Canvas toolbar controls without owning route command semantics. */
 import {
   Columns,
   DollarSign,
+  Download,
   FileCheck,
   Grid3X3,
   LayoutGrid,
   Magnet,
   Play,
   Target,
+  Upload,
 } from 'lucide-react';
+import { useRef } from 'react';
 
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
@@ -24,11 +28,15 @@ type CanvasToolbarPrimaryControlsProps = {
   onToggleGridVisible: () => void;
   onGridColorChange: (color: CanvasPaletteId) => void;
   onToggleSnapToGrid: () => void;
+  onExportProjectSnapshot: () => void;
+  onImportProjectSnapshotFile: (file: File) => void;
   onPlan: () => void;
   onRun: () => void;
   canPlan: boolean;
   canRun: boolean;
   canEditEdges: boolean;
+  canExportProjectSnapshot: boolean;
+  canImportProjectSnapshot: boolean;
   canStartRun: boolean;
   exclusiveOverlayMode: 'runtime' | 'cost';
   canUseCostOverlay: boolean;
@@ -51,11 +59,15 @@ export function CanvasToolbarPrimaryControls({
   onToggleGridVisible,
   onGridColorChange,
   onToggleSnapToGrid,
+  onExportProjectSnapshot,
+  onImportProjectSnapshotFile,
   onPlan,
   onRun,
   canPlan,
   canRun,
   canEditEdges,
+  canExportProjectSnapshot,
+  canImportProjectSnapshot,
   canStartRun,
   exclusiveOverlayMode,
   canUseCostOverlay,
@@ -69,6 +81,8 @@ export function CanvasToolbarPrimaryControls({
   workflowStatusTitle,
   canPlanTransformation,
 }: CanvasToolbarPrimaryControlsProps): JSX.Element {
+  const importInputRef = useRef<HTMLInputElement>(null);
+
   return (
     <>
       <Badge
@@ -186,6 +200,44 @@ export function CanvasToolbarPrimaryControls({
         <Magnet className="size-4" />
         {canvasViewCopy.toolbarSnapToGridLabel}
       </Button>
+
+      <Separator orientation="vertical" className="h-5 bg-slate-700" />
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={onExportProjectSnapshot}
+        disabled={!canExportProjectSnapshot}
+        className="h-8 gap-1.5 px-3 text-xs text-slate-300 hover:bg-slate-800 hover:text-white"
+      >
+        <Download className="size-4" />
+        {canvasViewCopy.toolbarExportSnapshotLabel}
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={() => importInputRef.current?.click()}
+        disabled={!canImportProjectSnapshot}
+        className="h-8 gap-1.5 px-3 text-xs text-slate-300 hover:bg-slate-800 hover:text-white"
+      >
+        <Upload className="size-4" />
+        {canvasViewCopy.toolbarImportSnapshotLabel}
+      </Button>
+      <input
+        ref={importInputRef}
+        type="file"
+        accept="application/json,.json"
+        className="hidden"
+        aria-label={canvasViewCopy.toolbarImportSnapshotLabel}
+        onChange={(event) => {
+          const file = event.currentTarget.files?.[0];
+          event.currentTarget.value = '';
+          if (file != null) {
+            onImportProjectSnapshotFile(file);
+          }
+        }}
+      />
 
       <Separator orientation="vertical" className="h-5 bg-slate-700" />
       <Button
