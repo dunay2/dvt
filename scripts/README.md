@@ -240,6 +240,27 @@ Diff policy:
 - prefers `origin/main...HEAD` when `origin/main` exists
 - falls back to the configured upstream or `HEAD~1..HEAD`
 
+### `verify-changed.cjs`
+
+Runs the fast changed-slice verification plan used during local iteration. It
+keeps `verify:prepush` as the final closeout gate and only selects checks from
+the canonical changed-file set.
+
+Always runs:
+
+- changed docs location, filename, frontmatter, ARC, QA, markdown, feature
+  mechanization, lint/format, forbidden-file, and type-check scope checks
+
+Adds scoped checks:
+
+- `pnpm planning:db:inventory:check` and `pnpm test:planning:db` when planning
+  DB surfaces changed
+- `node --test scripts/verify-changed.test.cjs` when the verifier itself
+  changed
+
+Use `pnpm verify:changed -- --dry-run` to print the selected plan without
+executing it.
+
 ### `type-check-prepush.cjs`
 
 Chooses the strict pre-push type-check path from the changed diff.
