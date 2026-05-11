@@ -181,10 +181,14 @@ test('closeout helper regression tests are wired into the prepush gate', () => {
   const packageJson = JSON.parse(
     fs.readFileSync(path.resolve(__dirname, '..', 'package.json'), 'utf8')
   );
+  const { buildPrepushPlan } = require('./verify-prepush.cjs');
 
   assert.equal(
     packageJson.scripts['test:closeout-changed'],
     'node --test scripts/closeout-changed.test.cjs'
   );
-  assert.match(packageJson.scripts['verify:prepush'], /pnpm test:closeout-changed/);
+  assert.equal(packageJson.scripts['verify:prepush'], 'node scripts/verify-prepush.cjs');
+  assert.ok(
+    buildPrepushPlan(['apps/web/src/main.tsx']).some((step) => step.id === 'test-closeout-changed')
+  );
 });
