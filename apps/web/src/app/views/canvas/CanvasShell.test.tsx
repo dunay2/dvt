@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+/** Owned concern: prove CanvasShell contract rendering and command propagation. */
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -130,6 +131,8 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
       routeState: 'ready',
       draftToolbarState: defaultDraftToolbarState,
       canStartRun: false,
+      canExportProjectSnapshot: true,
+      canImportProjectSnapshot: true,
       planStatusSummary: canvasViewCopy.planStatusPreviewRequiredMessage,
       exclusiveOverlayMode: 'runtime',
       canUseCostOverlay: false,
@@ -174,6 +177,8 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
       onToggleGridVisible: vi.fn(),
       onGridColorChange: vi.fn(),
       onToggleSnapToGrid: vi.fn(),
+      onExportProjectSnapshot: vi.fn(),
+      onImportProjectSnapshotFile: vi.fn(),
       onReloadLatestDraft: vi.fn(),
       onPlan: vi.fn(),
       onRun: vi.fn(),

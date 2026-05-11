@@ -11,7 +11,8 @@ planning_type: architecture
 ## Purpose
 
 This catalog is the Web Graph bounded-context C&Q list for the Canvas
-workbench, Canvas route placement, and route-local layout preferences.
+workbench, Canvas route placement, route-local layout preferences, and
+project-snapshot file handoff.
 
 It exists to keep product intent out of routes, components, plugin manifests,
 and Cypress helpers. Those surfaces implement rails; they do not define new
@@ -25,6 +26,8 @@ product semantics.
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/architecture/components/web/graph/canvas-workbench-tabs-component.md`
 - `docs/architecture/components/web/graph/canvas-layout-persistence-component.md`
+- `docs/architecture/components/web/graph/canvas-project-snapshot-component.md`
+- `docs/architecture/components/web/graph/canvas-project-snapshot-user-stories.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md`
 
 ## Bounded Context
@@ -40,6 +43,9 @@ DDD ownership rules:
 - Canvas layout presentation owns viewport and node-coordinate projection.
 - Canvas viewport presentation owns route-local visual preferences such as grid
   visibility, grid color, and snap-to-grid.
+- Project workspace I/O owns project snapshot file validation, export read
+  models, and import commands before imported data can become workspace draft
+  authority.
 - Protected authoring draft owns graph meaning. It does not own local layout
   preferences or workbench tab placement.
 
@@ -56,6 +62,9 @@ DDD ownership rules:
 | `PersistCanvasLayout`                | command | accepted      | Canvas layout presentation    | `CanvasLayoutProjection`                |
 | `GetCanvasLayout`                    | query   | accepted      | Canvas layout presentation    | `CanvasLayoutProjection`                |
 | `ConfigureCanvasViewportPreferences` | command | accepted      | Canvas viewport presentation  | `CanvasViewportPreferences`             |
+| `ExportProjectSnapshot`              | query   | proposed      | Project workspace I/O         | `ProjectSnapshot`                       |
+| `ValidateProjectImport`              | query   | proposed      | Project workspace I/O         | `ProjectSnapshotImportReadModel`        |
+| `ImportProjectSnapshot`              | command | proposed      | Project workspace I/O         | `ProjectSnapshotImport`                 |
 | `VerifyCanvasWorkbenchVisualPosture` | query   | proposed-test | Browser verification          | `CanvasWorkbenchVisualPostureReadModel` |
 
 `VerifyCanvasWorkbenchVisualPosture` is a test-only query rail. It is not a
@@ -75,6 +84,9 @@ product semantics in ad hoc DOM assertions.
 | `PersistCanvasLayout`                | Persist route-local viewport or card coordinates.                 | layout key, node position map, viewport, hydration state                                   | updated `CanvasLayoutProjection`                         | Canvas layout command port              | `useCanvasLayoutPersistence(...)`, `canvasInteractionStore`                 | route-local browser persistence, no backend draft write             | pre-hydration writes queued; pending graph query blocks viewport persistence; stale React Flow arrays cannot overwrite dragged payload |
 | `GetCanvasLayout`                    | Restore route-local layout projection.                            | layout key, hydrated local store                                                           | `CanvasLayoutProjection`                                 | Canvas layout query port                | `canvasInteractionStore` hydration, `useCanvasViewportGraphModel(...)`      | local browser persistence keyed by workspace                        | protected draft reload cannot overwrite existing local positions                                                                       |
 | `ConfigureCanvasViewportPreferences` | Change grid visibility, grid color, and snap-to-grid preferences. | `CanvasViewportPreferences` value object                                                   | updated visual preference state                          | Canvas viewport preference command port | `uiLayoutStore`, `CanvasToolbar*`, `CanvasViewport`                         | route-local UI preference; no protected draft authority             | invalid colors normalize; hidden grid does not disable dragging; snap changes coordinates only                                         |
+| `ExportProjectSnapshot`              | Serialize persisted Canvas draft into a versioned snapshot file.  | persisted `CanvasAuthoringDraftRecord`, workspace scope, export timestamp                  | project snapshot file name and JSON payload              | Project snapshot query port             | `canvasProjectSnapshot.ts`, Canvas toolbar export action                    | current workspace scope; export reads persisted draft only          | missing persisted draft, malformed snapshot construction, unsupported draft schema                                                     |
+| `ValidateProjectImport`              | Validate a snapshot before it can become draft authority.         | uploaded file text or parsed unknown payload                                               | accepted snapshot read model or typed rejection reason   | Project snapshot validation query port  | `canvasProjectSnapshot.ts`, Canvas toolbar import file action               | current browser session only until import command is accepted       | malformed JSON, unsupported format, version, invalid draft, canvas mismatch, missing project metadata                                  |
+| `ImportProjectSnapshot`              | Import a validated snapshot into the workspace draft.             | validated `ProjectSnapshot`, draft revision, idempotency key                               | protected draft save receipt or conflict posture         | Canvas project snapshot import command  | `canvasProjectSnapshotImportCommand.ts`, `saveGraphDraft(...)`              | current workspace scope and existing `SaveWorkspaceGraphDraft` auth | invalid file does not save; stale revision conflicts; read-only draft rejects through existing save rail                               |
 | `VerifyCanvasWorkbenchVisualPosture` | Prove the rendered workbench tab posture in the browser.          | DOM rectangles for shell navigation compatibility surfaces, top bar, tab strip, tab labels | `CanvasWorkbenchVisualPostureReadModel` assertion result | Cypress visual verification query       | `canvas-workbench-tabs.cy.ts`                                               | e2e browser only                                                    | tabs cannot live in fixed left navigation; labels cannot be truncated; tabs must be horizontal and inside Canvas outlet                |
 
 ## Fowler / DDD Mapping
@@ -85,6 +97,8 @@ product semantics in ad hoc DOM assertions.
 | Primitive obsession: one placement field represented several UI concepts. | `RegisterPluginViewPlacement` uses `ViewPlacement` variants.                | Replace Type Code with Value Object. |
 | Duplicate semantics: global Runs and Canvas Runs had one visual meaning.  | `OpenCanvasScopedRunTab` separates Canvas-scoped evidence from global Runs. | Intention-Revealing Interface.       |
 | Hidden authority: local layout could look like graph truth.               | `PersistCanvasLayout` and `GetCanvasLayout` own projection only.            | Policy Object and Projection.        |
+| Hidden authority: files could silently become graph truth.                | `ValidateProjectImport` rejects unsupported or incoherent snapshots first.  | Anti-corruption Layer.               |
+| Primitive obsession: snapshot JSON could become an unversioned blob.      | `ExportProjectSnapshot` emits a versioned `ProjectSnapshot` value object.   | Replace Primitive with Object.       |
 | Documentation drift: tests proved routes but not visual posture.          | `VerifyCanvasWorkbenchVisualPosture` names the Cypress read model.          | Semantic Fitness Function.           |
 
 ## Rail Flow
@@ -100,10 +114,14 @@ flowchart TD
   LayoutQuery["GetCanvasLayout"]
   LayoutCommand["PersistCanvasLayout"]
   Prefs["ConfigureCanvasViewportPreferences"]
+  ExportSnapshot["ExportProjectSnapshot"]
+  ValidateImport["ValidateProjectImport"]
+  ImportSnapshot["ImportProjectSnapshot"]
   VisualProof["VerifyCanvasWorkbenchVisualPosture"]
   Shell["ShellNavigationCompatibilitySurface"]
   Canvas["Canvas route"]
   Viewport["CanvasViewport"]
+  File["Project snapshot file"]
   Cypress["Cypress"]
 
   Plugin --> Placement
@@ -116,6 +134,11 @@ flowchart TD
   LayoutQuery --> Viewport
   LayoutCommand --> Viewport
   Prefs --> Viewport
+  Canvas --> ExportSnapshot
+  ExportSnapshot --> File
+  File --> ValidateImport
+  ValidateImport --> ImportSnapshot
+  ImportSnapshot --> Canvas
   Canvas --> VisualProof
   VisualProof --> Cypress
 ```
@@ -134,6 +157,8 @@ parallel command or query names for the same product intent.
 Runtime rails and test-only rails must stay explicit:
 
 - product behavior uses accepted runtime command/query rails;
+- project snapshot file behavior uses the proposed Project workspace I/O rails
+  until the format is proven and promoted;
 - browser-only visual proof uses `VerifyCanvasWorkbenchVisualPosture`;
 - new backend persistence, adapter authority, protected draft behavior, or
   cross-context ownership requires a catalog update and an ADR check before

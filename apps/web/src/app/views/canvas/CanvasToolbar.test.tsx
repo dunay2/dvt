@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+/** Owned concern: prove Canvas toolbar command wiring and passive control behavior. */
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -22,6 +23,8 @@ function buildToolbarProps(
     onGridColorChange: vi.fn(),
     onToggleSnapToGrid: vi.fn(),
     onReloadLatestDraft: vi.fn(),
+    onExportProjectSnapshot: vi.fn(),
+    onImportProjectSnapshotFile: vi.fn(),
     onPlan: vi.fn(),
     onRun: vi.fn(),
     routeState: 'ready',
@@ -33,6 +36,8 @@ function buildToolbarProps(
     canPlan: true,
     canRun: true,
     canEditEdges: true,
+    canExportProjectSnapshot: true,
+    canImportProjectSnapshot: true,
     canStartRun: false,
     planStatusSummary: canvasViewCopy.planStatusPreviewRequiredMessage,
     canvasAuthoringMode: 'transformation',
@@ -168,6 +173,44 @@ describe('CanvasToolbar', () => {
     expect(onToggleGridVisible).toHaveBeenCalledTimes(1);
     expect(onToggleSnapToGrid).toHaveBeenCalledTimes(1);
     expect(onGridColorChange).toHaveBeenCalledWith('#22c55e');
+  });
+
+  it('exposes project snapshot export and import commands without adding manual Save', async () => {
+    const onExportProjectSnapshot = vi.fn();
+    const onImportProjectSnapshotFile = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <CanvasToolbar
+          {...buildToolbarProps({
+            draftToolbarState: defaultDraftToolbarState,
+            onExportProjectSnapshot,
+            onImportProjectSnapshotFile,
+          })}
+        />
+      );
+    });
+
+    const buttons = Array.from(portalHost.querySelectorAll('button'));
+    const exportButton = buttons.find((button) =>
+      button.textContent?.includes(canvasViewCopy.toolbarExportSnapshotLabel)
+    );
+    const importButton = buttons.find((button) =>
+      button.textContent?.includes(canvasViewCopy.toolbarImportSnapshotLabel)
+    );
+
+    expect(exportButton).toBeDefined();
+    expect(importButton).toBeDefined();
+    expect(portalHost.textContent).not.toContain('Save');
+
+    await act(async () => {
+      exportButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      importButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(onExportProjectSnapshot).toHaveBeenCalledTimes(1);
+    expect(onImportProjectSnapshotFile).not.toHaveBeenCalled();
+    expect(portalHost.querySelector('input[type="file"]')).not.toBeNull();
   });
 
   it('keeps plan button disabled when transformation validation is invalid', async () => {

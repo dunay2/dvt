@@ -105,6 +105,8 @@ function buildCanvasShellToolbarArgs({
     toolbarState: {
       canvasAuthoringMode: controller.canvasAuthoringMode,
       canStartRun: controller.canStartRun,
+      canExportProjectSnapshot: controller.canExportProjectSnapshot,
+      canImportProjectSnapshot: controller.canImportProjectSnapshot,
       planStatusSummary: controller.planStatusSummary,
       exclusiveOverlayMode: controller.exclusiveOverlayMode,
       canUseCostOverlay: controller.canUseCostOverlay,
@@ -159,6 +161,8 @@ function buildCanvasShellChromeCommandsArgs({
       setCanvasGridVisible: controller.setCanvasGridVisible,
       setCanvasGridColor: controller.setCanvasGridColor,
       setCanvasSnapToGrid: controller.setCanvasSnapToGrid,
+      handleExportProjectSnapshot: controller.handleExportProjectSnapshot,
+      handleImportProjectSnapshotFile: controller.handleImportProjectSnapshotFile,
       reloadLatestDraft: controller.reloadLatestDraft,
       handlePlan: controller.handlePlan,
       handleStartRun: controller.handleStartRun,

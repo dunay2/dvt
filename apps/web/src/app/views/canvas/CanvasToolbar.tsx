@@ -1,3 +1,4 @@
+/** Owned concern: render the Canvas toolbar as a passive shell command surface. */
 import { createPortal } from 'react-dom';
 
 import { Separator } from '../../components/ui/separator';
@@ -20,6 +21,8 @@ export type CanvasToolbarProps = {
   readonly onToggleGridVisible: () => void;
   readonly onGridColorChange: (color: CanvasPaletteId) => void;
   readonly onToggleSnapToGrid: () => void;
+  readonly onExportProjectSnapshot: () => void;
+  readonly onImportProjectSnapshotFile: (file: File) => void;
   readonly onReloadLatestDraft: () => void;
   readonly onPlan: () => void;
   readonly onRun: () => void;
@@ -28,6 +31,8 @@ export type CanvasToolbarProps = {
   readonly canPlan: boolean;
   readonly canRun: boolean;
   readonly canEditEdges: boolean;
+  readonly canExportProjectSnapshot: boolean;
+  readonly canImportProjectSnapshot: boolean;
   readonly canStartRun: boolean;
   readonly planStatusSummary: string;
   readonly canvasAuthoringMode: CanvasGraphAuthoringMode;
@@ -58,11 +63,15 @@ export default function CanvasToolbar(props: CanvasToolbarProps) {
         onToggleGridVisible={props.onToggleGridVisible}
         onGridColorChange={props.onGridColorChange}
         onToggleSnapToGrid={props.onToggleSnapToGrid}
+        onExportProjectSnapshot={props.onExportProjectSnapshot}
+        onImportProjectSnapshotFile={props.onImportProjectSnapshotFile}
         onPlan={props.onPlan}
         onRun={props.onRun}
         canPlan={props.canPlan}
         canRun={props.canRun}
         canEditEdges={props.canEditEdges}
+        canExportProjectSnapshot={props.canExportProjectSnapshot}
+        canImportProjectSnapshot={props.canImportProjectSnapshot}
         canStartRun={props.canStartRun}
         exclusiveOverlayMode={props.exclusiveOverlayMode}
         canUseCostOverlay={props.canUseCostOverlay}

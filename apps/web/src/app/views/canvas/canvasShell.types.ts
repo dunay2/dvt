@@ -71,6 +71,8 @@ export type CanvasShellToolbar = {
   routeState: CanvasRouteState;
   draftToolbarState: CanvasDraftToolbarState;
   canStartRun: boolean;
+  canExportProjectSnapshot: boolean;
+  canImportProjectSnapshot: boolean;
   planStatusSummary: string;
   exclusiveOverlayMode: 'runtime' | 'cost';
   canUseCostOverlay: boolean;
@@ -108,6 +110,8 @@ export type CanvasShellChromeCommands = {
   onToggleGridVisible: () => void;
   onGridColorChange: (color: CanvasPaletteId) => void;
   onToggleSnapToGrid: () => void;
+  onExportProjectSnapshot: () => void;
+  onImportProjectSnapshotFile: (file: File) => void;
   onReloadLatestDraft: () => void;
   onPlan: () => void;
   onRun: () => void;
