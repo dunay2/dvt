@@ -444,3 +444,20 @@ test('tracked migrations include docs resolution overlays after W21', () => {
   assert.match(docsResolutionMigration.sql, /doc_disposition_action_query/);
   assert.match(docsResolutionMigration.sql, /planning_task_gap_query/);
 });
+
+test('tracked migrations keep resolved docs issues out of the focus queue after W22', () => {
+  const migrations = readMigrationFiles();
+  const focusResolutionMigration = migrations.find(
+    (migration) => migration.fileName === '022_planning_work_intake_resolution_filter.sql'
+  );
+
+  assert.ok(focusResolutionMigration);
+  assert.match(
+    focusResolutionMigration.sql,
+    /create or replace view planning_query_store\.planning_work_intake_query/
+  );
+  assert.match(focusResolutionMigration.sql, /planning_task_gap_query gap/);
+  assert.match(focusResolutionMigration.sql, /where gap\.resolution_status = 'pending'/);
+  assert.match(focusResolutionMigration.sql, /doc_disposition_action_query action/);
+  assert.match(focusResolutionMigration.sql, /where action\.resolution_status = 'pending'/);
+});
