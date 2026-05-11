@@ -102,7 +102,8 @@ export type CanvasImportProjectSnapshotCommandDto = {
   draftQueryCache: CanvasDraftQueryCache;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
   setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
-  lastSavedSignatureRef: { current: string | null };
+  refs: DraftAttemptRefs;
+  invalidateInFlightSaveAttempt: () => void;
 };
 
 export type CanvasDraftLifecycleDto = {

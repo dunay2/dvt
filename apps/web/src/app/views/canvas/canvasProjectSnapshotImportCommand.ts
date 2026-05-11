@@ -7,6 +7,7 @@ import {
   applyCanvasDocumentSaveConflict,
   applyCanvasDocumentSaveSuccess,
 } from './canvasCreateCanvasDocumentSaveResult';
+import { clearSaveDebounce } from './canvasDraftPersistenceRuntime';
 import { canvasProjectSnapshot } from './canvasProjectSnapshot';
 import { canvasViewCopy } from './copy';
 
@@ -18,7 +19,8 @@ export async function executeImportProjectSnapshotCommand({
   draftQueryCache,
   setDraftSession,
   setDraftSaveStatus,
-  lastSavedSignatureRef,
+  refs,
+  invalidateInFlightSaveAttempt,
 }: CanvasImportProjectSnapshotCommandDto): Promise<void> {
   if (!canImportProjectSnapshot) {
     return;
@@ -33,6 +35,10 @@ export async function executeImportProjectSnapshotCommand({
       return;
     }
 
+    clearSaveDebounce(refs);
+    invalidateInFlightSaveAttempt();
+    refs.lastFailedSignatureRef.current = null;
+
     const result = await draftRepository.saveGraphDraft({
       expectedRevision: graphDraftQuery.data?.record?.revision ?? null,
       idempotencyKey: createCanvasDraftIdempotencyKey(),
@@ -45,7 +51,7 @@ export async function executeImportProjectSnapshotCommand({
         draftQueryCache,
         setDraftSession,
         setDraftSaveStatus,
-        lastSavedSignatureRef,
+        lastSavedSignatureRef: refs.lastSavedSignatureRef,
       });
       return;
     }

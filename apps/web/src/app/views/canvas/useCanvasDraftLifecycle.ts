@@ -159,7 +159,8 @@ export function useCanvasDraftLifecycle({
         draftQueryCache,
         setDraftSession,
         setDraftSaveStatus,
-        lastSavedSignatureRef: refs.lastSavedSignatureRef,
+        refs,
+        invalidateInFlightSaveAttempt,
       });
     },
     [
@@ -167,7 +168,8 @@ export function useCanvasDraftLifecycle({
       draftQueryCache,
       draftRepository,
       graphDraftQuery.data?.record?.revision,
-      refs.lastSavedSignatureRef,
+      invalidateInFlightSaveAttempt,
+      refs,
       setDraftSession,
       setDraftSaveStatus,
     ]

@@ -8,7 +8,10 @@ import {
   createUnknownCanvasAuthoringDraftReadModel,
   createWritableCanvasAuthoringDraftReadModel,
 } from './canvasDraftReadModel';
-import type { CanvasImportProjectSnapshotCommandDto } from './canvasDraftLifecycle.types';
+import type {
+  CanvasImportProjectSnapshotCommandDto,
+  DraftAttemptRefs,
+} from './canvasDraftLifecycle.types';
 import { canvasProjectSnapshot } from './canvasProjectSnapshot';
 import { executeImportProjectSnapshotCommand } from './canvasProjectSnapshotImportCommand';
 import { buildAuthoringDraft } from './canvasDraftRepository.test.fixtures';
@@ -60,6 +63,17 @@ function applyStateUpdater<T>(updater: SetStateAction<T>, current: T): T {
   return typeof updater === 'function' ? (updater as (value: T) => T)(current) : updater;
 }
 
+function createDraftAttemptRefs(): DraftAttemptRefs {
+  return {
+    saveDebounceTimerRef: { current: null },
+    lastSavedSignatureRef: { current: null },
+    lastFailedSignatureRef: { current: null },
+    saveAttemptGenerationRef: { current: 0 },
+    nextSaveAttemptIdRef: { current: 0 },
+    activeSaveAttemptRef: { current: null },
+  };
+}
+
 type BuildImportArgsResult = {
   args: CanvasImportProjectSnapshotCommandDto;
   draftRepository: {
@@ -108,6 +122,13 @@ function buildImportArgs(overrides: BuildImportArgsOverrides = {}): BuildImportA
     replaceRemoteDraft: vi.fn(),
     replaceRemoteDraftState: vi.fn(),
   };
+  const refs = overrides.refs ?? createDraftAttemptRefs();
+  const invalidateInFlightSaveAttempt =
+    overrides.invalidateInFlightSaveAttempt ??
+    vi.fn(() => {
+      refs.saveAttemptGenerationRef.current += 1;
+      refs.activeSaveAttemptRef.current = null;
+    });
   const setDraftSession = vi.fn();
   const setDraftSaveStatus = vi.fn();
   const effectiveDraftRepository = overrides.draftRepository ?? draftRepository;
@@ -128,7 +149,8 @@ function buildImportArgs(overrides: BuildImportArgsOverrides = {}): BuildImportA
       draftQueryCache: effectiveDraftQueryCache,
       setDraftSession: effectiveSetDraftSession,
       setDraftSaveStatus: effectiveSetDraftSaveStatus,
-      lastSavedSignatureRef: { current: null },
+      refs,
+      invalidateInFlightSaveAttempt,
       ...overrides,
     },
     draftRepository: effectiveDraftRepository,
@@ -141,6 +163,44 @@ function buildImportArgs(overrides: BuildImportArgsOverrides = {}): BuildImportA
 describe('canvasProjectSnapshotImportCommand', () => {
   beforeEach(() => {
     toastError.mockClear();
+  });
+
+  it('cancels pending autosaves before saving an imported project snapshot', async () => {
+    const { args, draftRepository } = buildImportArgs();
+    const refs = createDraftAttemptRefs();
+    const pendingTimer = globalThis.setTimeout(() => undefined, 1000);
+    refs.saveDebounceTimerRef.current = pendingTimer;
+    refs.saveAttemptGenerationRef.current = 7;
+    refs.activeSaveAttemptRef.current = { id: 3, generation: 7 };
+    refs.lastFailedSignatureRef.current = 'stale-local-signature';
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout');
+    const invalidateInFlightSaveAttempt = vi.fn(() => {
+      refs.saveAttemptGenerationRef.current += 1;
+      refs.activeSaveAttemptRef.current = null;
+    });
+
+    try {
+      await executeImportProjectSnapshotCommand({
+        ...args,
+        refs,
+        invalidateInFlightSaveAttempt,
+      });
+
+      expect(clearTimeoutSpy).toHaveBeenCalledWith(pendingTimer);
+      expect(refs.saveDebounceTimerRef.current).toBeNull();
+      expect(invalidateInFlightSaveAttempt).toHaveBeenCalledTimes(1);
+      expect(refs.activeSaveAttemptRef.current).toBeNull();
+      expect(refs.lastFailedSignatureRef.current).toBeNull();
+      const invalidateCallOrder = invalidateInFlightSaveAttempt.mock.invocationCallOrder[0];
+      const saveCallOrder = draftRepository.saveGraphDraft.mock.invocationCallOrder[0];
+      if (invalidateCallOrder == null || saveCallOrder == null) {
+        throw new Error('Expected import to invalidate autosaves and then save the snapshot.');
+      }
+      expect(invalidateCallOrder).toBeLessThan(saveCallOrder);
+    } finally {
+      clearTimeoutSpy.mockRestore();
+      globalThis.clearTimeout(pendingTimer);
+    }
   });
 
   it('persists an accepted project snapshot through the authoritative draft save rail', async () => {
