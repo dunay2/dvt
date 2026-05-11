@@ -49,6 +49,9 @@ governance query projection.
   generated artifact model.
 - Added feature mechanization for the slice, including rails, allowed
   implementation surfaces, TDD cycles, and new top-level symbols.
+- Updated the DB surface inventory test to validate the current
+  `verify:changed` and `verify:prepush` command plans instead of expecting the
+  inventory command to be inlined in `package.json`.
 
 ## Fowler Reading
 
@@ -83,6 +86,9 @@ governance query projection.
 - `pnpm docs:governance:file-fingerprint-impact` accepted 4,372 file
   fingerprints.
 - `pnpm docs:gov:generated-policy` passed with 14 generated artifact classes.
+- `node --test scripts/planning-db-surface-inventory-check.test.cjs` passed
+  with 4 tests after the pre-push hook exposed the stale inline-script
+  assertion.
 - `pnpm docs:sync` passed after adding this closeout.
 - `pnpm governance:refresh` passed after the documentation and generated
   governance surfaces converged.
