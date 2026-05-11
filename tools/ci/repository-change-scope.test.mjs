@@ -17,6 +17,7 @@ test('classifies root CI policy config as code validation without workspace fan-
 
 test('classifies repository command files through the command catalog', () => {
   const planning = classifyRepositoryFileScope('scripts/planning-db-query.cjs');
+  const runtimeCapability = classifyRepositoryFileScope('scripts/db-migrate.cjs');
   const ciTooling = classifyRepositoryFileScope('tools/ci/emit-scope.mjs');
   const docsTooling = classifyRepositoryFileScope('tools/docs/check-filenames.ts');
 
@@ -24,6 +25,10 @@ test('classifies repository command files through the command catalog', () => {
   assert.equal(planning.planningDbInventoryRelevant, true);
   assert.equal(planning.governanceGlobalRelevant, true);
   assert.equal(planning.codeValidationRelevant, true);
+
+  assert.equal(runtimeCapability.commandClass.domain, 'runtime-capability');
+  assert.equal(runtimeCapability.codeValidationRelevant, true);
+  assert.equal(runtimeCapability.runtimeWorkspaceFanout, true);
 
   assert.equal(ciTooling.commandClass.domain, 'ci-tooling');
   assert.equal(ciTooling.codeValidationRelevant, true);

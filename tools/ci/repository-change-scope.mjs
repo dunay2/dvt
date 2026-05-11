@@ -186,7 +186,10 @@ export function classifyRepositoryFileScope(filePath, options = {}) {
     workflowPolicyInput ||
     CODE_VALIDATION_COMMAND_DOMAINS.has(commandClass?.domain);
   const runtimeWorkspaceFanout =
-    rootBuildInput || commandClass?.runtimeFanout === true || commandClass?.domain === 'unknown';
+    rootBuildInput ||
+    commandClass?.runtimeFanout === true ||
+    commandClass?.domain === 'runtime-capability' ||
+    commandClass?.domain === 'unknown';
   const changedFileValidationRelevant =
     rootCiPolicyInput ||
     workflowPolicyInput ||
