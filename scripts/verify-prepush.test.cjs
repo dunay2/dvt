@@ -68,6 +68,16 @@
     assertIncludes(ids, 'type-check-prepush');
   });
 
+  test('architecture dependency config change keeps dependency architecture validation', () => {
+    const plan = buildPrepushPlan(['.dependency-cruiser.cjs']);
+    const ids = stepIds(plan);
+
+    assertIncludes(ids, 'arch-deps');
+    assertIncludes(ids, 'type-check-prepush');
+    assertExcludes(ids, 'docs-governance-document-unit-map');
+    assertExcludes(ids, 'traceability-adr0');
+  });
+
   test('full mode preserves all conditional validation groups', () => {
     const plan = buildPrepushPlan(['apps/web/src/main.tsx'], { full: true });
     const ids = stepIds(plan);

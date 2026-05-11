@@ -291,6 +291,7 @@
       filePath.startsWith('.github/scripts/') ||
       [
         'package.json',
+        '.dependency-cruiser.cjs',
         'pnpm-lock.yaml',
         'pnpm-workspace.yaml',
         'turbo.json',
