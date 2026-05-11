@@ -157,11 +157,16 @@ allowedImplementationSurfaces:
   - scripts/closeout-changed.test.cjs
   - scripts/verify-prepush.cjs
   - scripts/verify-prepush.test.cjs
+  - tools/ci/repository-change-scope.mjs
+  - tools/ci/repository-change-scope.test.mjs
   - tools/ci/repository-command-catalog.mjs
   - tools/ci/repository-command-catalog.test.mjs
+  - tools/ci/scope-config.mjs
+  - tools/ci/policy/workflow-scope.json
   - tools/ci/architecture-dependency-guard.test.mjs
   - tools/ci/docs-changed-governance-policy.test.mjs
   - tools/ci/generated-docs-single-writer-policy.test.mjs
+  - tools/ci/workflow-scope-classification.test.mjs
   - docs/guides/testing-and-ci-capabilities.md
   - docs/planning/proposals/mandatory/governance-and-docs/verify-prepush-scope-router-plan-20260511.md
   - docs/planning/status/**
@@ -182,7 +187,11 @@ fowlerSignals:
   - Hidden local/remote gate drift
 architectureGuards:
   - scripts/verify-prepush.test.cjs validates routing semantics.
+  - tools/ci/repository-change-scope.test.mjs validates the shared local/remote
+    changed-file classifier.
   - tools/ci/repository-command-catalog.test.mjs validates command catalog coverage.
+  - tools/ci/workflow-scope-classification.test.mjs validates GitHub Actions
+    fan-out parity for root CI policy files.
   - package.json keeps `verify:prepush` as the single public command.
 cypressFlows:
   - none
@@ -207,6 +216,18 @@ commandQueryRails:
     negativeTests:
       - No changed files still runs universal cheap posture checks only.
       - Full mode forces all conditional groups.
+  - name: ClassifyRepositoryChangedScope
+    type: query
+    dddOwner: Repository CI governance
+    object: RepositoryChangedScope
+    applicationPort: tools/ci/repository-change-scope.mjs classifyRepositoryChangedScope
+    adapterSurface: scripts/verify-prepush.cjs and tools/ci/scope-config.mjs
+    scopeAuthorization: local or CI changed-file read only
+    negativeTests:
+      - Root CI policy inputs must run changed-file code validation without
+        forcing runtime workspace fan-out.
+      - Docs-governance command files must not be misclassified as runtime code
+        fan-out triggers.
 redGreenCycles:
   - id: PREPUSH-ROUTER-WEB-SOURCE
     redTest: scripts/verify-prepush.test.cjs web-source change excludes global governance checks
@@ -229,6 +250,15 @@ redGreenCycles:
       - scripts/verify-prepush.cjs
       - package.json
     greenTest: node --test scripts/verify-prepush.test.cjs
+  - id: PREPUSH-REMOTE-SCOPE-PARITY
+    redTest: tools/ci/repository-change-scope.test.mjs and tools/ci/workflow-scope-classification.test.mjs root CI policy inputs
+    expectedFailure: local pre-push and remote workflow fan-out can classify the same repository path through separate taxonomies.
+    patchSurfaces:
+      - scripts/verify-prepush.cjs
+      - tools/ci/repository-change-scope.mjs
+      - tools/ci/scope-config.mjs
+      - tools/ci/policy/workflow-scope.json
+    greenTest: node --test tools/ci/repository-change-scope.test.mjs scripts/verify-prepush.test.cjs tools/ci/workflow-scope-classification.test.mjs
 symbols:
   - name: buildPrepushPlan
     path: scripts/verify-prepush.cjs
@@ -251,6 +281,228 @@ symbols:
     architectureGuard: scripts/verify-prepush.test.cjs
     cypressCoverage: not applicable; local CI command planner has no browser flow
     unitTests:
+      - node --test scripts/verify-prepush.test.cjs
+  - name: ROOT_BUILD_INPUTS
+    path: tools/ci/repository-change-scope.mjs
+    dddOwner: Repository CI governance
+    cqRails:
+      - ClassifyRepositoryChangedScope
+    fowlerSignals:
+      - Hidden local/remote gate drift
+    architectureGuard: tools/ci/repository-change-scope.test.mjs
+    cypressCoverage: not applicable; repository scope query has no browser flow
+    unitTests:
+      - node --test tools/ci/repository-change-scope.test.mjs
+  - name: ROOT_CI_POLICY_INPUTS
+    path: tools/ci/repository-change-scope.mjs
+    dddOwner: Repository CI governance
+    cqRails:
+      - ClassifyRepositoryChangedScope
+    fowlerSignals:
+      - Hidden local/remote gate drift
+    architectureGuard: tools/ci/repository-change-scope.test.mjs
+    cypressCoverage: not applicable; repository scope query has no browser flow
+    unitTests:
+      - node --test tools/ci/repository-change-scope.test.mjs
+  - name: PLANNING_DB_DOCUMENTS
+    path: tools/ci/repository-change-scope.mjs
+    dddOwner: Repository CI governance
+    cqRails:
+      - ClassifyRepositoryChangedScope
+    fowlerSignals:
+      - Hidden local/remote gate drift
+    architectureGuard: tools/ci/repository-change-scope.test.mjs
+    cypressCoverage: not applicable; repository scope query has no browser flow
+    unitTests:
+      - node --test tools/ci/repository-change-scope.test.mjs
+  - name: TRACEABILITY_CONFIG_FILES
+    path: tools/ci/repository-change-scope.mjs
+    dddOwner: Repository CI governance
+    cqRails:
+      - ClassifyRepositoryChangedScope
+    fowlerSignals:
+      - Hidden local/remote gate drift
+    architectureGuard: tools/ci/repository-change-scope.test.mjs
+    cypressCoverage: not applicable; repository scope query has no browser flow
+    unitTests:
+      - node --test tools/ci/repository-change-scope.test.mjs
+  - name: GOVERNANCE_COMMAND_DOMAINS
+    path: tools/ci/repository-change-scope.mjs
+    dddOwner: Repository CI governance
+    cqRails:
+      - ClassifyRepositoryChangedScope
+    fowlerSignals:
+      - Hidden local/remote gate drift
+    architectureGuard: tools/ci/repository-change-scope.test.mjs
+    cypressCoverage: not applicable; repository scope query has no browser flow
+    unitTests:
+      - node --test tools/ci/repository-change-scope.test.mjs
+  - name: CODE_VALIDATION_COMMAND_DOMAINS
+    path: tools/ci/repository-change-scope.mjs
+    dddOwner: Repository CI governance
+    cqRails:
+      - ClassifyRepositoryChangedScope
+    fowlerSignals:
+      - Hidden local/remote gate drift
+    architectureGuard: tools/ci/repository-change-scope.test.mjs
+    cypressCoverage: not applicable; repository scope query has no browser flow
+    unitTests:
+      - node --test tools/ci/repository-change-scope.test.mjs
+  - name: normalizeRepositoryPath
+    path: tools/ci/repository-change-scope.mjs
+    dddOwner: Repository CI governance
+    cqRails:
+      - ClassifyRepositoryChangedScope
+    fowlerSignals:
+      - Hidden local/remote gate drift
+    architectureGuard: tools/ci/repository-change-scope.test.mjs
+    cypressCoverage: not applicable; repository scope query has no browser flow
+    unitTests:
+      - node --test tools/ci/repository-change-scope.test.mjs
+  - name: escapeRegexCharacter
+    path: tools/ci/repository-change-scope.mjs
+    dddOwner: Repository CI governance
+    cqRails:
+      - ClassifyRepositoryChangedScope
+    fowlerSignals:
+      - Hidden local/remote gate drift
+    architectureGuard: tools/ci/repository-change-scope.test.mjs
+    cypressCoverage: not applicable; repository scope query has no browser flow
+    unitTests:
+      - node --test tools/ci/repository-change-scope.test.mjs
+  - name: globToRegExp
+    path: tools/ci/repository-change-scope.mjs
+    dddOwner: Repository CI governance
+    cqRails:
+      - ClassifyRepositoryChangedScope
+    fowlerSignals:
+      - Hidden local/remote gate drift
+    architectureGuard: tools/ci/repository-change-scope.test.mjs
+    cypressCoverage: not applicable; repository scope query has no browser flow
+    unitTests:
+      - node --test tools/ci/repository-change-scope.test.mjs
+  - name: matchesRepositoryPattern
+    path: tools/ci/repository-change-scope.mjs
+    dddOwner: Repository CI governance
+    cqRails:
+      - ClassifyRepositoryChangedScope
+    fowlerSignals:
+      - Hidden local/remote gate drift
+    architectureGuard: tools/ci/repository-change-scope.test.mjs
+    cypressCoverage: not applicable; repository scope query has no browser flow
+    unitTests:
+      - node --test tools/ci/repository-change-scope.test.mjs
+  - name: matchesAnyRepositoryPattern
+    path: tools/ci/repository-change-scope.mjs
+    dddOwner: Repository CI governance
+    cqRails:
+      - ClassifyRepositoryChangedScope
+    fowlerSignals:
+      - Hidden local/remote gate drift
+    architectureGuard: tools/ci/repository-change-scope.test.mjs
+    cypressCoverage: not applicable; repository scope query has no browser flow
+    unitTests:
+      - node --test tools/ci/repository-change-scope.test.mjs
+  - name: readTraceabilityGovernedPaths
+    path: tools/ci/repository-change-scope.mjs
+    dddOwner: Repository CI governance
+    cqRails:
+      - ClassifyRepositoryChangedScope
+    fowlerSignals:
+      - Hidden local/remote gate drift
+    architectureGuard: tools/ci/repository-change-scope.test.mjs
+    cypressCoverage: not applicable; repository scope query has no browser flow
+    unitTests:
+      - node --test tools/ci/repository-change-scope.test.mjs
+  - name: isTraceabilityGovernedFile
+    path: tools/ci/repository-change-scope.mjs
+    dddOwner: Repository CI governance
+    cqRails:
+      - ClassifyRepositoryChangedScope
+    fowlerSignals:
+      - Hidden local/remote gate drift
+    architectureGuard: tools/ci/repository-change-scope.test.mjs
+    cypressCoverage: not applicable; repository scope query has no browser flow
+    unitTests:
+      - node --test tools/ci/repository-change-scope.test.mjs
+  - name: isRootTypeScriptGraphInput
+    path: tools/ci/repository-change-scope.mjs
+    dddOwner: Repository CI governance
+    cqRails:
+      - ClassifyRepositoryChangedScope
+    fowlerSignals:
+      - Hidden local/remote gate drift
+    architectureGuard: tools/ci/repository-change-scope.test.mjs
+    cypressCoverage: not applicable; repository scope query has no browser flow
+    unitTests:
+      - node --test tools/ci/repository-change-scope.test.mjs
+  - name: isRootBuildInput
+    path: tools/ci/repository-change-scope.mjs
+    dddOwner: Repository CI governance
+    cqRails:
+      - ClassifyRepositoryChangedScope
+    fowlerSignals:
+      - Hidden local/remote gate drift
+    architectureGuard: tools/ci/repository-change-scope.test.mjs
+    cypressCoverage: not applicable; repository scope query has no browser flow
+    unitTests:
+      - node --test tools/ci/repository-change-scope.test.mjs
+  - name: isRootCiPolicyInput
+    path: tools/ci/repository-change-scope.mjs
+    dddOwner: Repository CI governance
+    cqRails:
+      - ClassifyRepositoryChangedScope
+    fowlerSignals:
+      - Hidden local/remote gate drift
+    architectureGuard: tools/ci/repository-change-scope.test.mjs
+    cypressCoverage: not applicable; repository scope query has no browser flow
+    unitTests:
+      - node --test tools/ci/repository-change-scope.test.mjs
+  - name: isWorkflowPolicyInput
+    path: tools/ci/repository-change-scope.mjs
+    dddOwner: Repository CI governance
+    cqRails:
+      - ClassifyRepositoryChangedScope
+    fowlerSignals:
+      - Hidden local/remote gate drift
+    architectureGuard: tools/ci/repository-change-scope.test.mjs
+    cypressCoverage: not applicable; repository scope query has no browser flow
+    unitTests:
+      - node --test tools/ci/repository-change-scope.test.mjs
+  - name: commandClassForPath
+    path: tools/ci/repository-change-scope.mjs
+    dddOwner: Repository CI governance
+    cqRails:
+      - ClassifyRepositoryChangedScope
+    fowlerSignals:
+      - Hidden local/remote gate drift
+    architectureGuard: tools/ci/repository-change-scope.test.mjs
+    cypressCoverage: not applicable; repository scope query has no browser flow
+    unitTests:
+      - node --test tools/ci/repository-change-scope.test.mjs
+  - name: classifyRepositoryFileScope
+    path: tools/ci/repository-change-scope.mjs
+    dddOwner: Repository CI governance
+    cqRails:
+      - ClassifyRepositoryChangedScope
+    fowlerSignals:
+      - Hidden local/remote gate drift
+    architectureGuard: tools/ci/repository-change-scope.test.mjs
+    cypressCoverage: not applicable; repository scope query has no browser flow
+    unitTests:
+      - node --test tools/ci/repository-change-scope.test.mjs
+      - node --test tools/ci/workflow-scope-classification.test.mjs
+  - name: classifyRepositoryChangedScope
+    path: tools/ci/repository-change-scope.mjs
+    dddOwner: Repository CI governance
+    cqRails:
+      - ClassifyRepositoryChangedScope
+    fowlerSignals:
+      - Hidden local/remote gate drift
+    architectureGuard: tools/ci/repository-change-scope.test.mjs
+    cypressCoverage: not applicable; repository scope query has no browser flow
+    unitTests:
+      - node --test tools/ci/repository-change-scope.test.mjs
       - node --test scripts/verify-prepush.test.cjs
   - name: executePrepushPlan
     path: scripts/verify-prepush.cjs
@@ -284,16 +536,50 @@ completionGate:
    indexes and fingerprints stay aligned.
 4. As a release engineer diagnosing a hard failure, I want a full-mode pre-push
    command, so I can force the historical all-check posture when needed.
+5. As a CI maintainer changing repository tooling, I want local and remote
+   scope decisions to consume the same command catalog semantics, so a path like
+   `.dependency-cruiser.cjs`, `tools/ci/**`, or a governance script cannot drift
+   between workstation pre-push and GitHub Actions fan-out.
+
+## Follow-Up Scope Parity Slice
+
+The first router implementation intentionally kept local pre-push logic inside
+`scripts/verify-prepush.cjs`. PR review exposed the weakness in that boundary:
+`.dependency-cruiser.cjs` was a CI architecture-policy input, but it had to be
+added to a second local-only list after review.
+
+The next slice keeps `verify:prepush` as the local command adapter but moves
+repository change semantics into a shared CI query module that consumes
+`tools/ci/repository-command-catalog.mjs`. The shared module owns:
+
+- root CI policy inputs such as `.dependency-cruiser.cjs`, workflow files, root
+  package metadata, TypeScript config, and Turbo config;
+- repository command-file classes from `tools/ci/repository-command-catalog.mjs`;
+- high-level booleans needed by local pre-push and remote scope consumers:
+  planning query-store, governance tooling, feature mechanization,
+  traceability source, and code validation relevance.
+
+`scripts/verify-prepush.cjs` must stop carrying an independent command/script
+path taxonomy. `tools/ci/scope-config.mjs` remains the GitHub Actions fan-out
+owner and may consume the shared query where it needs the same root/tooling
+classification. Workflow matrices remain unchanged in this slice.
 
 ## Implementation Tasks
 
-- [ ] Write failing router tests for web-source, ADR traceability, governance,
+- [x] Write failing router tests for web-source, ADR traceability, governance,
       and full-mode routing.
-- [ ] Add `scripts/verify-prepush.cjs` with a pure `buildPrepushPlan` query and
+- [x] Add `scripts/verify-prepush.cjs` with a pure `buildPrepushPlan` query and
       a CLI executor.
-- [ ] Route `package.json` `verify:prepush` through the new script and add a
+- [x] Route `package.json` `verify:prepush` through the new script and add a
       `test:verify-prepush` command.
-- [ ] Update repository command catalog classifications for the new script and
+- [x] Update repository command catalog classifications for the new script and
       test command.
-- [ ] Update testing/CI documentation with the new conditional semantics.
-- [ ] Run feature mechanization, CI-tool, and pre-push validations.
+- [x] Update testing/CI documentation with the new conditional semantics.
+- [x] Run feature mechanization, CI-tool, and pre-push validations.
+- [x] Add a shared repository change-scope query under `tools/ci/` and prove it
+      classifies root CI policy, command files, runtime source, docs governance,
+      planning DB, and traceability surfaces.
+- [x] Refactor `scripts/verify-prepush.cjs` to consume that query instead of
+      keeping parallel command/path semantics.
+- [x] Add parity tests proving `verify:prepush` and `scope-config.mjs` agree on
+      repository command-file and root CI policy inputs.

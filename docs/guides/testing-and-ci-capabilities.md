@@ -208,8 +208,13 @@ Command semantics:
 - `pnpm verify:prepush` includes `pnpm docs:gov:filenames:changed`, `pnpm docs:gov:frontmatter:changed`, and `pnpm docs:gov:generated-policy` after the changed-only Markdown location gate, keeping changed docs fail-closed for placement, naming, ADR/evidence metadata, and generated-doc ownership before the heavier code checks run.
 - `pnpm verify:prepush` is routed through
   [`scripts/verify-prepush.cjs`](../../scripts/verify-prepush.cjs). The router
-  always runs cheap changed-file posture checks, then conditionally runs the
-  heavier groups:
+  gets repository path semantics from
+  [`tools/ci/repository-change-scope.mjs`](../../tools/ci/repository-change-scope.mjs)
+  instead of owning a parallel path taxonomy. That shared query consumes the
+  repository command catalog for `scripts/**`, `tools/ci/**`, `tools/docs/**`,
+  `tools/ops/**`, and `.github/scripts/**`, and it also names root CI policy
+  inputs such as `.dependency-cruiser.cjs`. The router always runs cheap
+  changed-file posture checks, then conditionally runs the heavier groups:
   - planning DB inventory checks only for planning/query-store surfaces;
   - global governance maps, fingerprints, coverage, and remediation checks only
     for docs/governance/planning/generated surfaces;

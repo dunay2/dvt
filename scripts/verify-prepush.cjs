@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 /** Owned concern: build and execute the local pre-push validation command plan. */
 {
-  const fs = require('node:fs');
   const path = require('node:path');
   const { spawnSync } = require('node:child_process');
 
-  const { listLocalChangedFiles, toPosix } = require('./git-local-changes.cjs');
+  const { classifyRepositoryChangedScope } = require('../tools/ci/repository-change-scope.mjs');
+  const { listLocalChangedFiles } = require('./git-local-changes.cjs');
 
   const repoRoot = path.resolve(__dirname, '..');
-  const traceabilityConfigPath = path.join(repoRoot, 'traceability.config.json');
 
   const UNIVERSAL_STEPS = [
     {
@@ -158,165 +157,19 @@
     },
   ];
 
-  function normalizeChangedFiles(changedFiles) {
-    return Array.from(new Set((changedFiles || []).map(toPosix).filter(Boolean))).sort();
-  }
-
-  function escapeRegexCharacter(character) {
-    return /[|\\{}()[\]^$+?.]/.test(character) ? `\\${character}` : character;
-  }
-
-  function globToRegExp(pattern) {
-    let source = '^';
-    for (let index = 0; index < pattern.length; index += 1) {
-      const current = pattern[index];
-      const next = pattern[index + 1];
-
-      if (current === '*' && next === '*') {
-        if (pattern[index + 2] === '/') {
-          source += '(?:.*/)?';
-          index += 2;
-          continue;
-        }
-        source += '.*';
-        index += 1;
-        continue;
-      }
-      if (current === '*') {
-        source += '[^/]*';
-        continue;
-      }
-      source += escapeRegexCharacter(current);
-    }
-
-    return new RegExp(`${source}$`, 'u');
-  }
-
-  function matchesGlob(filePath, pattern) {
-    return globToRegExp(toPosix(pattern).replace(/^\.\//u, '')).test(filePath);
-  }
-
-  function matchesAnyGlob(filePath, patterns) {
-    return patterns.some((pattern) => matchesGlob(filePath, pattern));
-  }
-
-  function readTraceabilityGovernedPaths() {
-    try {
-      const config = JSON.parse(fs.readFileSync(traceabilityConfigPath, 'utf8'));
-      return {
-        governed: (config.governedPaths || []).filter((pattern) => !pattern.startsWith('!')),
-        exempt: [
-          ...(config.exemptPaths || []),
-          ...(config.governedPaths || [])
-            .filter((pattern) => pattern.startsWith('!'))
-            .map((pattern) => pattern.slice(1)),
-        ],
-      };
-    } catch {
-      return {
-        governed: [
-          'packages/@dvt/traceability-service/src/**/*.ts',
-          'packages/@dvt/engine/src/**/*.ts',
-          'packages/@dvt/contracts/src/**/*.ts',
-          'packages/@dvt/adapter-temporal/src/**/*.ts',
-          'packages/@dvt/adapter-temporal/test/**/*.ts',
-          'packages/@dvt/adapter-postgres/src/**/*.ts',
-          'scripts/planning-db-query.cjs',
-        ],
-        exempt: ['apps/web/**', 'packages/frontend/**', '**/*.stories.tsx'],
-      };
-    }
-  }
-
-  function isTraceabilityGovernedFile(filePath) {
-    const { governed, exempt } = readTraceabilityGovernedPaths();
-
-    return matchesAnyGlob(filePath, governed) && !matchesAnyGlob(filePath, exempt);
-  }
-
-  function isPlanningDbRelevant(filePath) {
-    return (
-      /^scripts\/(?:planning-db|governance-db|governance-refresh|generate-workboard|generate-planning-lanes)[\w.-]*\.cjs$/u.test(
-        filePath
-      ) ||
-      filePath.startsWith('tools/planning-db/') ||
-      filePath === 'docs/planning/status/db-surface-inventory.md' ||
-      filePath ===
-        'docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md'
-    );
-  }
-
-  function isGovernanceGlobalRelevant(filePath) {
-    return (
-      filePath.startsWith('docs/') ||
-      filePath === 'docs/.manifest.json' ||
-      filePath === 'docs/generated-docs-policy.json' ||
-      filePath.startsWith('tools/docs/') ||
-      filePath.startsWith('tools/planning-db/') ||
-      /^scripts\/(?:check-(?:feature-mechanization|generated-docs-policy|governance|markdown-locations)|generate-(?:governance|code-status|capability-coverage|planning-lanes|workboard)|sync-docs|docs-|planning-db|governance-db|governance-refresh|lint-markdown-changed|validate-arc-evidence-frontmatter|qa-artifact-check)[\w.-]*\.(?:cjs|js)$/u.test(
-        filePath
-      ) ||
-      filePath === 'package.json'
-    );
-  }
-
-  function isFeatureMechanizationRelevant(filePath) {
-    return (
-      filePath.startsWith('apps/') ||
-      filePath.startsWith('packages/') ||
-      filePath.startsWith('scripts/') ||
-      filePath.startsWith('tools/ci/') ||
-      filePath.startsWith('tools/docs/') ||
-      filePath.startsWith('docs/planning/proposals/mandatory/')
-    );
-  }
-
-  function isTraceabilityRelevant(filePath) {
-    return (
-      filePath === 'traceability.config.json' ||
-      filePath === 'traceability.manifest.json' ||
-      filePath === 'traceability.issue-baseline.json' ||
-      /^docs\/adr\/ADR-[^/]+\.md$/u.test(filePath) ||
-      isTraceabilityGovernedFile(filePath)
-    );
-  }
-
-  function isCodeValidationRelevant(filePath) {
-    return (
-      filePath.startsWith('apps/') ||
-      filePath.startsWith('packages/') ||
-      filePath.startsWith('scripts/') ||
-      filePath.startsWith('tools/ci/') ||
-      filePath.startsWith('.github/workflows/') ||
-      filePath.startsWith('.github/scripts/') ||
-      [
-        'package.json',
-        '.dependency-cruiser.cjs',
-        'pnpm-lock.yaml',
-        'pnpm-workspace.yaml',
-        'turbo.json',
-        'vitest.config.ts',
-      ].includes(filePath) ||
-      /^tsconfig[^/]*\.json$/u.test(filePath)
-    );
-  }
-
   function classifyPrepushScope(changedFiles, options = {}) {
-    const normalizedChangedFiles = normalizeChangedFiles(changedFiles);
     const full = options.full === true;
+    const scope = classifyRepositoryChangedScope(changedFiles, {
+      repoRootPath: options.repoRootPath || repoRoot,
+    });
 
     return {
-      hasChangedFiles: normalizedChangedFiles.length > 0,
-      needsPlanningDbInventory:
-        full || normalizedChangedFiles.some((filePath) => isPlanningDbRelevant(filePath)),
-      needsGovernanceGlobal:
-        full || normalizedChangedFiles.some((filePath) => isGovernanceGlobalRelevant(filePath)),
-      needsFeatureMechanization:
-        full || normalizedChangedFiles.some((filePath) => isFeatureMechanizationRelevant(filePath)),
-      needsTraceabilityAdr0:
-        full || normalizedChangedFiles.some((filePath) => isTraceabilityRelevant(filePath)),
-      needsCodeValidation:
-        full || normalizedChangedFiles.some((filePath) => isCodeValidationRelevant(filePath)),
+      hasChangedFiles: scope.hasChangedFiles,
+      needsPlanningDbInventory: full || scope.needsPlanningDbInventory,
+      needsGovernanceGlobal: full || scope.needsGovernanceGlobal,
+      needsFeatureMechanization: full || scope.needsFeatureMechanization,
+      needsTraceabilityAdr0: full || scope.needsTraceabilityAdr0,
+      needsCodeValidation: full || scope.needsCodeValidation,
     };
   }
 

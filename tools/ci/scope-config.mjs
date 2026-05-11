@@ -3,10 +3,9 @@ import { appendFileSync, readFileSync } from 'node:fs';
 import { promisify } from 'node:util';
 import {
   classifyPackageScriptCommand,
-  classifyScriptFilePath,
   isGovernanceToolingCommand,
-  isRepositoryCommandFile,
 } from './repository-command-catalog.mjs';
+import { classifyRepositoryFileScope } from './repository-change-scope.mjs';
 
 const execFileAsync = promisify(execFile);
 
@@ -679,11 +678,11 @@ export function computeWorkspaceMatrix(changedFiles, options = {}) {
     packageJsonChanged &&
     (!options.packageJsonChange || options.packageJsonChange.rootBuildSensitive === true);
   const filesForPathPolicy = normalizedFiles.filter((path) => path !== 'package.json');
-  const commandFiles = filesForPathPolicy.filter(isRepositoryCommandFile);
-  const nonCommandFiles = filesForPathPolicy.filter((path) => !isRepositoryCommandFile(path));
-  const runtimeFanoutScriptChanged = commandFiles.some((path) =>
-    isRuntimeFanoutCommand(classifyScriptFilePath(path))
-  );
+  const fileScopes = filesForPathPolicy.map((path) => classifyRepositoryFileScope(path));
+  const nonCommandFiles = fileScopes
+    .filter((scope) => !scope.repositoryCommandFile)
+    .map((scope) => scope.path);
+  const runtimeFanoutScriptChanged = fileScopes.some((scope) => scope.runtimeWorkspaceFanout);
   const globalChanged =
     packageJsonRootSensitive ||
     runtimeFanoutScriptChanged ||
