@@ -195,6 +195,12 @@ test('governance snapshot preserves component, fingerprint, coverage, and remedi
   assert.equal(snapshot.components.length, snapshot.componentIndex.componentCount);
   assert.equal(snapshot.componentFileShards.length, snapshot.componentFileMap.componentCount);
   assert.equal(snapshot.componentFiles.length, snapshot.componentFileMap.fileCount);
+  assert.ok(snapshot.fingerprintBaseline.shards.length > 0);
+  assert.ok(
+    snapshot.fingerprintBaseline.shards.every((shard) =>
+      shard.path.includes('/governance-file-fingerprints/')
+    )
+  );
   assert.equal(snapshot.fingerprints.length, snapshot.fingerprintBaseline.fileCount);
   assert.equal(snapshot.coverageRows.length > 0, true);
   assert.equal(snapshot.remediationTasks.length, snapshot.remediationQueue.totals.tasks);

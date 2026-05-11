@@ -201,6 +201,7 @@
       "description": "Ignored current file-state fingerprint baseline and reviewer impact report generated from local governance indexes.",
       "artifacts": [
         ".generated-docs/planning/status/system-governance-file-fingerprint-baseline.yaml",
+        ".generated-docs/planning/status/governance-file-fingerprints/*.fingerprints.yaml",
         ".generated-docs/planning/status/system-governance-file-fingerprint-impact-20260501.md"
       ],
       "sourcePaths": [

@@ -7,7 +7,10 @@ const { Client } = require('pg');
 const yaml = require('js-yaml');
 
 const { governanceGeneratedPath } = require('./governance-generated-paths.cjs');
-const { buildFingerprintBaseline } = require('./check-governance-file-fingerprint-baseline.cjs');
+const {
+  buildFingerprintBaseline,
+  expandFingerprintBaseline,
+} = require('./check-governance-file-fingerprint-baseline.cjs');
 const {
   buildOutputs: buildDocumentUnitOutputs,
 } = require('./generate-governance-document-unit-map.cjs');
@@ -576,8 +579,9 @@ function buildGovernanceGeneratedInputs() {
     ),
     fingerprintBaselineSource: buildGeneratedYamlSource(
       repoRelative(governanceFingerprintBaselinePath),
-      fingerprintBaseline
+      fingerprintBaseline.manifest
     ),
+    fingerprintBaselineShardPayloads: fingerprintBaseline.shards,
     coverageReportSource: readGeneratedYamlSourceOrBuild(
       repoRelative(governanceCoverageReportPath),
       coverageReport
@@ -807,7 +811,10 @@ function buildGovernanceFileSnapshot() {
     }
   }
 
-  for (const fingerprint of fingerprintBaseline.files || []) {
+  for (const fingerprint of expandFingerprintBaseline({
+    manifest: fingerprintBaseline,
+    shards: generatedInputs.fingerprintBaselineShardPayloads,
+  })) {
     fingerprints.push({
       path: normalizeText(fingerprint.path),
       fileId: normalizeText(fingerprint.fileId),

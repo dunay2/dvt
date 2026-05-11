@@ -4,6 +4,7 @@ const {
   buildFingerprintBaseline,
   buildImpactReport,
   compareFingerprintBaseline,
+  expandFingerprintBaseline,
   renderImpactMarkdown,
 } = require('./check-governance-file-fingerprint-baseline.cjs');
 
@@ -32,36 +33,52 @@ const currentEntries = [
   },
 ];
 
-test('buildFingerprintBaseline projects stable fingerprint rows from current file index', () => {
-  assert.deepEqual(buildFingerprintBaseline(currentEntries), {
+test('buildFingerprintBaseline projects stable fingerprint rows into deterministic shards', () => {
+  const baseline = buildFingerprintBaseline(currentEntries, {
+    shardDirectory: '.generated-docs/planning/status/governance-file-fingerprints',
+  });
+
+  assert.deepEqual(baseline.manifest, {
     version: 1,
     source: '.generated-docs/planning/status/system-governance-file-index.files.yaml',
+    shardDirectory: '.generated-docs/planning/status/governance-file-fingerprints',
     fileCount: 2,
-    files: [
+    shards: [
       {
-        fileId: 'F-AAA111AAA111',
-        path: 'apps/api/src/main.ts',
-        contentHash: 'content-a',
-        governanceHash: 'governance-a',
-        stateFingerprint: 'state-a',
-        rootUnit: 'SYS-DVT',
-        domainUnit: 'SYS-RUNTIME',
-        componentUnit: 'SYS-API-ROOT',
-        owningUnit: 'SYS-API-ROOT',
-      },
-      {
-        fileId: 'F-BBB222BBB222',
-        path: 'packages/@dvt/engine/src/application/RecoverRunApplicationService.ts',
-        contentHash: 'content-b',
-        governanceHash: 'governance-b',
-        stateFingerprint: 'state-b',
-        rootUnit: 'SYS-DVT',
-        domainUnit: 'SYS-RUNTIME',
-        componentUnit: 'SYS-ENGINE-ROOT',
-        owningUnit: 'SYS-ENGINE-APPLICATION',
+        id: 'SYS-RUNTIME',
+        path: '.generated-docs/planning/status/governance-file-fingerprints/SYS-RUNTIME.fingerprints.yaml',
+        fileCount: 2,
+        contentHash: baseline.manifest.shards[0].contentHash,
       },
     ],
   });
+  assert.deepEqual(Object.keys(baseline.shards), [
+    '.generated-docs/planning/status/governance-file-fingerprints/SYS-RUNTIME.fingerprints.yaml',
+  ]);
+  assert.deepEqual(expandFingerprintBaseline(baseline), [
+    {
+      fileId: 'F-AAA111AAA111',
+      path: 'apps/api/src/main.ts',
+      contentHash: 'content-a',
+      governanceHash: 'governance-a',
+      stateFingerprint: 'state-a',
+      rootUnit: 'SYS-DVT',
+      domainUnit: 'SYS-RUNTIME',
+      componentUnit: 'SYS-API-ROOT',
+      owningUnit: 'SYS-API-ROOT',
+    },
+    {
+      fileId: 'F-BBB222BBB222',
+      path: 'packages/@dvt/engine/src/application/RecoverRunApplicationService.ts',
+      contentHash: 'content-b',
+      governanceHash: 'governance-b',
+      stateFingerprint: 'state-b',
+      rootUnit: 'SYS-DVT',
+      domainUnit: 'SYS-RUNTIME',
+      componentUnit: 'SYS-ENGINE-ROOT',
+      owningUnit: 'SYS-ENGINE-APPLICATION',
+    },
+  ]);
 });
 
 test('compareFingerprintBaseline reports drift with component impact', () => {
@@ -148,6 +165,33 @@ test('compareFingerprintBaseline reports drift with component impact', () => {
       },
     ],
   });
+});
+
+test('expandFingerprintBaseline rejects duplicate paths across shards', () => {
+  assert.throws(
+    () =>
+      expandFingerprintBaseline({
+        manifest: {
+          version: 1,
+          fileCount: 2,
+          shards: [
+            { id: 'SYS-API', path: 'SYS-API.fingerprints.yaml', fileCount: 1 },
+            { id: 'SYS-WEB', path: 'SYS-WEB.fingerprints.yaml', fileCount: 1 },
+          ],
+        },
+        shards: {
+          'SYS-API.fingerprints.yaml': {
+            fileCount: 1,
+            files: [{ path: 'apps/shared.ts', fileId: 'F-ONE' }],
+          },
+          'SYS-WEB.fingerprints.yaml': {
+            fileCount: 1,
+            files: [{ path: 'apps/shared.ts', fileId: 'F-TWO' }],
+          },
+        },
+      }),
+    /Duplicate file path in governance fingerprint shards: apps\/shared\.ts/
+  );
 });
 
 test('buildImpactReport renders reviewable fingerprint drift by component', () => {
