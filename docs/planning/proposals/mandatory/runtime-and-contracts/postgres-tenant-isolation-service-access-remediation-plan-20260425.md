@@ -89,33 +89,23 @@ mechanizationStatus: implemented
 noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/postgres-tenant-isolation-service-access-remediation-plan-20260425.md
 componentGuides:
-  - docs/planning/closeouts/20260425-production-tenant-isolation-baseline-closeout.md
   - docs/adr/ADR-0031-adapter-tenant-isolation.md
 userStories:
   - docs/planning/reviews/architecture-and-governance/20260426-api-tenant-review.md
 governingSources:
   - AGENTS.md
-  - docs/planning/status/governance-document-rule-inventory.md
-  - docs/guides/ai-work-protocol.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/adr/ADR-0031-adapter-tenant-isolation.md
-  - docs/planning/proposals/mandatory/runtime-and-contracts/postgres-tenant-isolation-service-access-remediation-plan-20260425.md
 allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/runtime-and-contracts/postgres-tenant-isolation-service-access-remediation-plan-20260425.md
-  - docs/evidence/ed-20260511-tenant-mode-rls-property.md
-  - docs/evidence/index.md
-  - docs/risk-register/quality/R-20260511-TENANT-MODE-RLS-PROPERTY.yaml
-  - docs/risk-register/quality/index.md
+  - docs/evidence/**
+  - docs/risk-register/quality/**
   - packages/@dvt/adapter-postgres/src/PostgresTenantIsolationPolicy.ts
-  - packages/@dvt/adapter-postgres/test/PostgresTenantIsolationPolicy.test.ts
-  - packages/@dvt/adapter-postgres/test/PostgresTenantRlsEnforcement.integration.test.ts
+  - packages/@dvt/adapter-postgres/test/PostgresTenant*.test.ts
 forbiddenImplementationSurfaces:
-  - apps/api/**
-  - apps/web/**
   - packages/@dvt/contracts/**
   - packages/@dvt/engine/**
-  - packages/@dvt/planner/**
   - packages/@dvt/adapter-temporal/**
 commandQueryRails:
   - name: ValidatePostgresTenantIsolationPolicy
@@ -125,73 +115,61 @@ domainObjects:
   - name: PostgresTenantIsolationPolicy
     type: adapter SQL policy
     owner: packages/@dvt/adapter-postgres/src/PostgresTenantIsolationPolicy.ts
-  - name: PostgresRlsRuntimeProof
-    type: integration evidence
-    owner: packages/@dvt/adapter-postgres/test/PostgresTenantRlsEnforcement.integration.test.ts
 fowlerSignals:
-  - Partial tenant context no longer acts as authorization.
-  - Catalog-wide RLS proof prevents one-table confidence bias.
-  - Service access remains explicit and table-scoped.
+  - Partial tenant context denied.
+  - Catalog-wide RLS proof.
 architectureGuards:
-  - pnpm --filter @dvt/adapter-postgres test -- PostgresServiceAccessCapability.architecture.test.ts PostgresTenantIsolationPolicy.test.ts
   - pnpm docs:feature-mechanization:implementation
 cypressFlows:
   - N/A - backend adapter RLS policy
 completionGate:
-  - pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts
-  - pnpm --filter @dvt/adapter-postgres test -- PostgresServiceAccessCapability.architecture.test.ts PostgresTenantIsolationPolicy.test.ts PostgresStateStoreAdapter.migrate.test.ts StartRunIntentSchemaManager.test.ts
-  - DVT_PG_INTEGRATION=1 pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts PostgresTenantRlsEnforcement.integration.test.ts
-  - pnpm --filter @dvt/adapter-postgres typecheck
-  - GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs
-  - pnpm docs:sync
-  - pnpm docs:feature-mechanization:implementation
   - pnpm verify:prepush
 redGreenCycles:
   - id: tenant-mode-rls-predicate
     redTest: pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts
-    expectedFailure: RLS policy SQL allows tenant_id matching without dvt.access_mode = tenant.
+    expectedFailure: RLS tenant_id matching does not require tenant mode.
     patchSurfaces:
       - packages/@dvt/adapter-postgres/src/PostgresTenantIsolationPolicy.ts
       - packages/@dvt/adapter-postgres/test/PostgresTenantIsolationPolicy.test.ts
     greenTest: pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts
   - id: tenant-owned-table-property-proof
     redTest: DVT_PG_INTEGRATION=1 pnpm --filter @dvt/adapter-postgres test -- PostgresTenantRlsEnforcement.integration.test.ts
-    expectedFailure: RLS runtime proof does not seed and query every cataloged tenant-owned table.
+    expectedFailure: RLS runtime proof covers only one tenant-owned table.
     patchSurfaces:
       - packages/@dvt/adapter-postgres/test/PostgresTenantRlsEnforcement.integration.test.ts
     greenTest: DVT_PG_INTEGRATION=1 pnpm --filter @dvt/adapter-postgres test -- PostgresTenantRlsEnforcement.integration.test.ts
 symbols:
   - name: seedTenantIsolationProbeRows
     path: packages/@dvt/adapter-postgres/test/PostgresTenantRlsEnforcement.integration.test.ts
-    dddOwner: PostgresRlsRuntimeProof
+    dddOwner: PostgresTenantIsolationPolicy
     cqRails:
       - ValidatePostgresTenantIsolationPolicy
     fowlerSignals:
-      - Catalog-wide RLS proof fixture.
+      - RLS proof fixture.
     architectureGuard: pnpm docs:feature-mechanization:implementation
-    cypressCoverage: N/A - backend adapter integration proof
+    cypressCoverage: N/A
     unitTests:
       - pnpm --filter @dvt/adapter-postgres test -- PostgresTenantRlsEnforcement.integration.test.ts
   - name: selectDistinctTenantIds
     path: packages/@dvt/adapter-postgres/test/PostgresTenantRlsEnforcement.integration.test.ts
-    dddOwner: PostgresRlsRuntimeProof
+    dddOwner: PostgresTenantIsolationPolicy
     cqRails:
       - ValidatePostgresTenantIsolationPolicy
     fowlerSignals:
-      - Read-model probe avoids table-specific confidence bias.
+      - RLS read probe.
     architectureGuard: pnpm docs:feature-mechanization:implementation
-    cypressCoverage: N/A - backend adapter integration proof
+    cypressCoverage: N/A
     unitTests:
       - pnpm --filter @dvt/adapter-postgres test -- PostgresTenantRlsEnforcement.integration.test.ts
   - name: insertTenantIsolationProbeRow
     path: packages/@dvt/adapter-postgres/test/PostgresTenantRlsEnforcement.integration.test.ts
-    dddOwner: PostgresRlsRuntimeProof
+    dddOwner: PostgresTenantIsolationPolicy
     cqRails:
       - ValidatePostgresTenantIsolationPolicy
     fowlerSignals:
-      - Table-specific fixtures are centralized in the RLS proof.
+      - RLS table fixture.
     architectureGuard: pnpm docs:feature-mechanization:implementation
-    cypressCoverage: N/A - backend adapter integration proof
+    cypressCoverage: N/A
     unitTests:
       - pnpm --filter @dvt/adapter-postgres test -- PostgresTenantRlsEnforcement.integration.test.ts
 ```

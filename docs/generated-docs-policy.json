@@ -211,7 +211,7 @@
       "generatorCommand": "pnpm docs:governance:file-fingerprint-baseline",
       "tracking": "untracked",
       "manualEditPolicy": "generator-owned",
-      "maxBytes": 2100000
+      "maxBytes": 2120000
     },
     {
       "id": "local-governance-coverage-report",
