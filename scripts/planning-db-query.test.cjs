@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 
 const {
   buildDocsDispositionRows,
+  buildComponentEngineeringRecordRows,
   buildFocusRows,
   buildGovernanceComponentRows,
   buildGovernanceCoverageRows,
@@ -29,6 +30,7 @@ const {
   readPlanningStatusEventRows,
   readPrReadinessRows,
   readDocsDispositionRows,
+  readComponentEngineeringRecordRows,
   readFocusRows,
   readTaskGapRows,
   readRepositoryCommandRows,
@@ -66,6 +68,7 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('task-trace'), 'task-trace');
   assert.equal(resolveQueryName('task-gaps'), 'task-gaps');
   assert.equal(resolveQueryName('focus'), 'focus');
+  assert.equal(resolveQueryName('cer'), 'cer');
   assert.throws(() => resolveQueryName('unknown'), /Unknown planning DB query "unknown"/);
 });
 
@@ -216,6 +219,18 @@ test('parseArgs parses work intake focus filters for DB-first work selection', (
       taskId: 'F-28-C',
       path: 'docs/planning/reviews/example.md',
       limit: 10,
+    },
+  });
+});
+
+test('parseArgs parses component engineering record filters for DB-first governance inspection', () => {
+  const command = parseArgs(['cer', '--component', 'SYS-API-HTTP-ENTRYPOINTS', '--limit', '1']);
+
+  assert.deepEqual(command, {
+    queryName: 'cer',
+    filters: {
+      component: 'SYS-API-HTTP-ENTRYPOINTS',
+      limit: 1,
     },
   });
 });
@@ -1050,6 +1065,30 @@ test('readGovernanceDriftRows queries the DB governance drift view', async () =>
   assert.deepEqual(captured.params, ['SYS-DOCS-GOVERNANCE', 5]);
 });
 
+test('readComponentEngineeringRecordRows queries the DB CER view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readComponentEngineeringRecordRows(client, {
+    component: 'SYS-API-HTTP-ENTRYPOINTS',
+    limit: 1,
+  });
+
+  assert.match(
+    captured.sql,
+    /from planning_query_store\.governance_component_engineering_record_query/
+  );
+  assert.match(captured.sql, /component_id = \$1/);
+  assert.match(captured.sql, /limit \$2/);
+  assert.deepEqual(captured.params, ['SYS-API-HTTP-ENTRYPOINTS', 1]);
+});
+
 test('governance row builders format DB rows for CLI output', () => {
   assert.deepEqual(
     buildGovernanceComponentRows([
@@ -1104,6 +1143,33 @@ test('governance row builders format DB rows for CLI output', () => {
         'SYS-DOCS-GOVERNANCE',
         'governance_hash,state_fingerprint',
       ],
+    ]
+  );
+  assert.deepEqual(
+    buildComponentEngineeringRecordRows([
+      {
+        component_id: 'SYS-API-HTTP-ENTRYPOINTS',
+        record: {
+          identity: {
+            componentId: 'SYS-API-HTTP-ENTRYPOINTS',
+            name: 'API HTTP entrypoints',
+          },
+          publicContract: {
+            commandQueryRails: 'API HTTP command/query route rails',
+          },
+        },
+      },
+    ]),
+    [
+      {
+        identity: {
+          componentId: 'SYS-API-HTTP-ENTRYPOINTS',
+          name: 'API HTTP entrypoints',
+        },
+        publicContract: {
+          commandQueryRails: 'API HTTP command/query route rails',
+        },
+      },
     ]
   );
 });

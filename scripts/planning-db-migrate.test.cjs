@@ -461,3 +461,36 @@ test('tracked migrations keep resolved docs issues out of the focus queue after 
   assert.match(focusResolutionMigration.sql, /doc_disposition_action_query action/);
   assert.match(focusResolutionMigration.sql, /where action\.resolution_status = 'pending'/);
 });
+
+test('tracked migrations include component engineering record query after W23', () => {
+  const migrations = readMigrationFiles();
+  const cerMigration = migrations.find(
+    (migration) => migration.fileName === '023_component_engineering_record_query.sql'
+  );
+
+  assert.ok(cerMigration);
+  assert.match(
+    cerMigration.sql,
+    /create or replace view planning_query_store\.governance_component_engineering_record_query/
+  );
+  assert.match(cerMigration.sql, /governance_component_query/);
+  assert.match(cerMigration.sql, /governance_remediation_query/);
+  assert.match(cerMigration.sql, /doc_task_reference_query/);
+  assert.match(cerMigration.sql, /componentEngineeringRecord/);
+});
+
+test('tracked migrations link component engineering records to related test components after W24', () => {
+  const migrations = readMigrationFiles();
+  const cerTestMigration = migrations.find(
+    (migration) => migration.fileName === '024_component_engineering_record_test_components.sql'
+  );
+
+  assert.ok(cerTestMigration);
+  assert.match(
+    cerTestMigration.sql,
+    /create or replace view planning_query_store\.governance_component_engineering_record_query/
+  );
+  assert.match(cerTestMigration.sql, /related_test_component_links/);
+  assert.match(cerTestMigration.sql, /testComponents/);
+  assert.match(cerTestMigration.sql, /related_test_files/);
+});
