@@ -33,6 +33,7 @@ const knownQueries = new Set([
   'task-trace',
   'task-gaps',
   'focus',
+  'cer',
 ]);
 
 function databaseUrl() {
@@ -408,6 +409,10 @@ function buildGovernanceDriftRows(rows) {
     row.owning_unit ?? row.owningUnit,
     (row.drift_fields ?? row.driftFields ?? []).join(','),
   ]);
+}
+
+function buildComponentEngineeringRecordRows(rows) {
+  return rows.map((row) => row.record ?? row.componentEngineeringRecord);
 }
 
 function appendFilter(predicates, params, column, value) {
@@ -1228,6 +1233,26 @@ async function readGovernanceDriftRows(client, filters = {}) {
   return result.rows;
 }
 
+async function readComponentEngineeringRecordRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'component_id', filters.component);
+
+  const limit = parseLimit(filters.limit, 20);
+  params.push(limit);
+
+  const result = await client.query(
+    `select component_id, record
+     from ${schemaName}.governance_component_engineering_record_query
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by component_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
 async function readHashDriftSummary(client) {
   const result = await client.query(`
     select
@@ -1254,6 +1279,12 @@ function printHashDriftSummary(summary) {
 function printTaskRows(rows) {
   for (const row of rows) {
     console.log(row.join('\t'));
+  }
+}
+
+function printJsonRows(rows) {
+  for (const row of rows) {
+    console.log(JSON.stringify(row, null, 2));
   }
 }
 
@@ -1454,6 +1485,15 @@ async function runQuery(options = {}) {
       return driftRows;
     }
 
+    if (queryName === 'cer') {
+      const rows = await readComponentEngineeringRecordRows(client, options.filters || {});
+      const cerRows = buildComponentEngineeringRecordRows(rows);
+      if (options.print !== false) {
+        printJsonRows(cerRows);
+      }
+      return cerRows;
+    }
+
     throw new Error(`Unhandled planning DB query "${queryName}".`);
   } finally {
     if (ownsClient) {
@@ -1517,6 +1557,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  buildComponentEngineeringRecordRows,
   buildDocsDispositionRows,
   buildFocusRows,
   buildGovernanceComponentRows,
@@ -1556,7 +1597,9 @@ module.exports = {
   readOpenTaskRows,
   readTaskGapRows,
   printSummary,
+  printJsonRows,
   printTaskRows,
+  readComponentEngineeringRecordRows,
   readTaskTraceRows,
   readNextTaskRows,
   readHashDriftSummary,

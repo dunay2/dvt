@@ -1657,6 +1657,9 @@ commandQueryRails:
   - name: QueryGovernanceStateReadModel
     type: query
     dddOwner: GovernanceStateReadModel
+  - name: ReadComponentEngineeringRecord
+    type: query
+    dddOwner: ComponentEngineeringRecordReadModel
   - name: QueryDocsDispositionQueue
     type: query
     dddOwner: DocsDispositionQueue
@@ -1727,6 +1730,9 @@ domainObjects:
   - name: GovernanceStateReadModel
     type: read model
     owner: Docs governance
+  - name: ComponentEngineeringRecordReadModel
+    type: read model
+    owner: Docs governance
   - name: DocsDispositionQueue
     type: read model
     owner: Docs governance
@@ -1764,6 +1770,7 @@ fowlerSignals:
   - Hidden query model inside governance shards
   - Manual docs disposition inventory
   - Manual task provenance reconstruction
+  - Manual component contract reconstruction
   - Manual docs disposition resolution
   - Manual work intake reconstruction
   - Mutable external tracker authority risk
@@ -1788,6 +1795,7 @@ completionGate:
   - pnpm planning:db:query docs-disposition --resolution all --limit 10
   - pnpm planning:db:query task-gaps --resolution all --limit 10
   - pnpm planning:db:query focus --limit 10
+  - pnpm planning:db:query cer --component SYS-API-HTTP-ENTRYPOINTS --limit 1
   - pnpm planning:db:query hash-drift
   - pnpm planning:db:export
   - pnpm planning:db:export:check
@@ -2042,6 +2050,16 @@ redGreenCycles:
     patchSurfaces:
       - tools/planning-db/**
       - scripts/planning-db-*.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+  - id: planning-db-component-engineering-record-query
+    redTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+    expectedFailure: Component engineering questions still require manually reconstructing purpose, ownership, contracts, tests, risks, and runtime evidence across governance indexes because no DB-owned component engineering record query view or planning:db:query cer adapter exists.
+    patchSurfaces:
+      - tools/planning-db/**
+      - scripts/planning-db-*.cjs
+      - docs/planning/status/db-surface-inventory.md
+      - docs/planning/templates/**
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
   - id: planning-db-docs-resolution-overlays
@@ -3431,6 +3449,36 @@ symbols:
     path: scripts/planning-db-query.cjs
   - <<: *governanceDbQuerySurfaceSymbol
     name: readGovernanceDriftRows
+    path: scripts/planning-db-query.cjs
+  - &componentEngineeringRecordQuerySymbol
+    name: PlanningDbComponentEngineeringRecordQueryMigration
+    path: tools/planning-db/migrations/023_component_engineering_record_query.sql
+    dddOwner: ComponentEngineeringRecordReadModel
+    cqRails:
+      - ReadComponentEngineeringRecord
+      - QueryGovernanceStateReadModel
+      - MigratePlanningQueryStoreSchema
+    fowlerSignals:
+      - Generated artifact churn
+      - Hidden query model inside governance shards
+      - Manual component contract reconstruction
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - component engineering records have no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+      - pnpm test:planning:db
+      - pnpm planning:db:query cer --component SYS-API-HTTP-ENTRYPOINTS --limit 1
+  - <<: *componentEngineeringRecordQuerySymbol
+    name: PlanningDbComponentEngineeringRecordTestComponentMigration
+    path: tools/planning-db/migrations/024_component_engineering_record_test_components.sql
+  - <<: *componentEngineeringRecordQuerySymbol
+    name: buildComponentEngineeringRecordRows
+    path: scripts/planning-db-query.cjs
+  - <<: *componentEngineeringRecordQuerySymbol
+    name: readComponentEngineeringRecordRows
+    path: scripts/planning-db-query.cjs
+  - <<: *componentEngineeringRecordQuerySymbol
+    name: printJsonRows
     path: scripts/planning-db-query.cjs
   - &governanceDbReportSourceSymbol
     name: GovernanceReportQueryPayloadMigration
