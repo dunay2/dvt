@@ -510,6 +510,61 @@ test('docs disposition snapshot classifies active-doc cleanup actions and task-l
   ]);
 });
 
+test('docs disposition snapshot treats closed feature mechanization ids as registered links', () => {
+  const snapshot = buildDocsDispositionSnapshot({
+    planningTaskIds: [],
+    featureMechanizationIds: ['VERIFY-PREPUSH-SCOPE-ROUTER-20260511'],
+    documents: [
+      {
+        sourcePath:
+          'docs/planning/proposals/mandatory/governance-and-docs/verify-prepush-scope-router-plan-20260511.md',
+        raw: [
+          '---',
+          'title: Verify Prepush Scope Router Plan',
+          'status: Review',
+          'planning_type: mandatory-proposal',
+          '---',
+          '> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans.',
+          '```feature-mechanization',
+          'version: 1',
+          'featureId: VERIFY-PREPUSH-SCOPE-ROUTER-20260511',
+          'mechanizationStatus: closed',
+          'noHumanDecisionsRemaining: true',
+          'redGreenCycles:',
+          '  - id: PREPUSH-ROUTER-WEB-SOURCE',
+          '    redTest: scripts/verify-prepush.test.cjs',
+          '    greenTest: node --test scripts/verify-prepush.test.cjs',
+          '```',
+        ].join('\n'),
+      },
+    ],
+  });
+
+  const featureReference = snapshot.references.find(
+    (reference) => reference.referenceText === 'VERIFY-PREPUSH-SCOPE-ROUTER-20260511'
+  );
+
+  assert.ok(featureReference);
+  assert.equal(featureReference.classification, 'registered_feature_mechanization');
+  assert.equal(featureReference.registeredPlanningTask, true);
+
+  const cycleReference = snapshot.references.find(
+    (reference) => reference.referenceText === 'PREPUSH-ROUTER-WEB-SOURCE'
+  );
+  assert.ok(cycleReference);
+  assert.equal(cycleReference.classification, 'feature_mechanization_cycle');
+  assert.equal(cycleReference.registeredPlanningTask, false);
+
+  const skillReference = snapshot.references.find(
+    (reference) => reference.referenceText === 'SUB-SKILL'
+  );
+  assert.ok(skillReference);
+  assert.equal(skillReference.classification, 'skill_reference');
+  assert.equal(skillReference.registeredPlanningTask, false);
+
+  assert.deepEqual(snapshot.actions, []);
+});
+
 test('docs disposition snapshot keeps archived documents visible without active cleanup actions', () => {
   const snapshot = buildDocsDispositionSnapshot({
     planningTaskIds: [],
