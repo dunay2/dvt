@@ -37,6 +37,8 @@ Use it when the question is:
 - [Workflow engine runtime path decomposition user stories](./workflow-engine-runtime-path-decomposition-user-stories.md)
 - [Workflow engine semantic closure component](./workflow-engine-semantic-closure-component.md)
 - [Workflow engine semantic closure user stories](./workflow-engine-semantic-closure-user-stories.md)
+- [Workflow engine boundary fitness component](./workflow-engine-boundary-fitness-component.md)
+- [Workflow engine boundary fitness user stories](./workflow-engine-boundary-fitness-user-stories.md)
 
 ## Related pages
 

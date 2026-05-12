@@ -71,7 +71,7 @@ flowchart LR
 | Compatibility-facade narrowing                    | `WE-HX-2`            | Queued      | Shrinks `WorkflowEngine` toward delegation over narrow use-case services                         | Enables real decomposition and cleanup of portability claims       |
 | Start-run decomposition                           | `WE-HX-3`            | Queued      | Narrows admission, dispatch, failure, and bootstrap concerns into smaller collaborators          | Makes engine orchestration easier to change safely                 |
 | Query and signal split hardening                  | `WE-HX-4`            | Completed   | Closed signal ownership, canonical signal narrowing, provider mapping, and read/enrichment split | Removed a major source of semantic drift                           |
-| Provider and telemetry seam tightening            | `WE-HX-5`, `WE-HX-6` | Queued      | Consolidates provider resolution, telemetry seams, and fitness checks                            | Reduces orchestration duplication and hidden boundary drift        |
+| Provider, telemetry, and boundary fitness         | `WE-HX-5`, `WE-HX-6` | In progress | Consolidates provider resolution, telemetry seams, test doubles, and semantic fitness checks     | Reduces orchestration duplication and hidden boundary drift        |
 | Provider-vocabulary hard cut                      | `AR-A8`              | Completed   | Removes stub-driven portability promises from runtime typing and docs                            | Prevents roadmap and product claims from outrunning implementation |
 | Step-kind dispatch generalization                 | `MW-C1`              | Completed   | Moved Temporal runtime dispatch from dbt-only assumptions to step-kind routing                   | Enabled capability-specific non-dbt execution paths                |
 | First PostgreSQL execution-first runtime vertical | `TF-C2-A`, `TF-C2-B` | In progress | Adds executor path plus caller-visible materialization evidence                                  | Closes the first real transformation run loop                      |
@@ -85,7 +85,7 @@ flowchart LR
   HX2 --> HX3["WE-HX-3 startRun decomposition"]
   HX2 --> A8["AR-A8 provider-vocabulary hard cut"]
   HX3 --> HX5["WE-HX-5 provider and telemetry seams"]
-  HX5 --> HX6["WE-HX-6 fitness checks"]
+  HX5 --> HX6["WE-HX-6 semantic boundary fitness"]
   HX3 --> MW["MW-C1 step dispatcher (landed)"]
   MW --> TFC2A["TF-C2-A PostgreSQL executor path"]
   TFC2A --> TFC2B["TF-C2-B caller-visible evidence"]
