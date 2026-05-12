@@ -188,6 +188,24 @@ redGreenCycles:
       - scripts/pr-closeout.cjs
       - scripts/pr-closeout.test.cjs
     greenTest: node --test scripts/pr-closeout.test.cjs
+  - id: pr-closeout-staged-prep-guard
+    redTest: node --test scripts/pr-closeout.test.cjs
+    expectedFailure: staged-files mode can omit generated outputs left
+      unstaged by prep commands before commit.
+    patchSurfaces:
+      - scripts/pr-closeout.cjs
+      - scripts/pr-closeout.test.cjs
+      - docs/runbooks/governed-changed-slice-closeout-20260506.md
+      - docs/guides/testing-and-ci-capabilities.md
+    greenTest: node --test scripts/pr-closeout.test.cjs
+  - id: pr-closeout-windows-pnpm-launcher
+    redTest: pnpm pr:closeout chore ci "Guard staged PR closeout outputs" --stage-all --dry-run
+    expectedFailure: Windows cannot reliably spawn pnpm.cmd with shell false
+      in the agent execution environment.
+    patchSurfaces:
+      - scripts/pr-closeout.cjs
+      - scripts/pr-closeout.test.cjs
+    greenTest: node -e "const {runCommand}=require('./scripts/pr-closeout.cjs'); runCommand({id:'pnpm-version',command:'pnpm',args:['--version']});"
 symbolDefaults: &closeoutSymbolDefaults
   dddOwner: ChangedSliceCloseoutGate
   cqRails:
@@ -292,6 +310,9 @@ symbols:
     name: test
     path: scripts/closeout-changed.test.cjs
   - <<: *prCloseoutSymbolDefaults
+    name: fs
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
     name: path
     path: scripts/pr-closeout.cjs
   - <<: *prCloseoutSymbolDefaults
@@ -326,6 +347,18 @@ symbols:
     path: scripts/pr-closeout.cjs
   - <<: *prCloseoutSymbolDefaults
     name: resolveExecutable
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: resolvePnpmCliPath
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: resolveCommandInvocation
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: listPrCloseoutUnstagedFiles
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: assertNoUnstagedChanges
     path: scripts/pr-closeout.cjs
   - <<: *prCloseoutSymbolDefaults
     name: runCommand
@@ -374,6 +407,9 @@ symbols:
     path: scripts/pr-closeout.test.cjs
   - <<: *prCloseoutSymbolDefaults
     name: parseArgs
+    path: scripts/pr-closeout.test.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: resolveCommandInvocation
     path: scripts/pr-closeout.test.cjs
   - <<: *prCloseoutSymbolDefaults
     name: stepIds
