@@ -29,6 +29,8 @@ Use it when the question is:
 - [Workflow engine facade use-cases component](./workflow-engine-facade-use-cases-component.md)
 - [Workflow engine boundary ownership user stories](./workflow-engine-boundary-ownership-user-stories.md)
 - [Workflow engine facade use-case user stories](./workflow-engine-facade-use-cases-user-stories.md)
+- [Start-run application decomposition component](./start-run-application-decomposition-component.md)
+- [Start-run application decomposition user stories](./start-run-application-decomposition-user-stories.md)
 - [Start-run admission component](./start-run-admission-component.md)
 - [Start-run admission user stories](./start-run-admission-user-stories.md)
 

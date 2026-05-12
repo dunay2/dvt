@@ -1,3 +1,7 @@
+/**
+ * @ownedConcern Apply start-run failure reporting, intent cleanup, and guarded
+ * RunFailed emission.
+ */
 import type { StartRunTraceContext } from '../../core/lifecycle/StartRunTraceContext.js';
 import { toErrorMessage } from '../../utils/errorUtils.js';
 
