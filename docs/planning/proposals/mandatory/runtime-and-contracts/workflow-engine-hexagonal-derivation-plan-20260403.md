@@ -164,3 +164,358 @@ pnpm docs:workboard:generate
 pnpm docs:sync
 pnpm verify:prepush
 ```
+
+## WE-HX-3 feature mechanization
+
+```feature-mechanization
+version: 1
+featureId: WE-HX-3-START-RUN-DECOMPOSITION
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+componentGuides:
+  - docs/architecture/components/engine/architecture/start-run-application-decomposition-component.md
+  - docs/architecture/components/engine/contracts/engine/StartRunProtocol.v1.md
+  - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
+userStories:
+  - docs/architecture/components/engine/architecture/start-run-application-decomposition-user-stories.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+  - docs/architecture/components/engine/contracts/engine/StartRunProtocol.v1.md
+  - docs/adr/ADR-0003-execution-model.md
+  - docs/adr/ADR-0004-event-sourcing-strategy.md
+  - docs/adr/ADR-0012-plan-integrity-ownership.md
+  - docs/adr/ADR-0014-run-driven-adapter-model.md
+  - docs/adr/ADR-0030-pre-dispatch-intent-log.md
+  - docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md
+allowedImplementationSurfaces:
+  - buzon/20260512-codex-fowler-we-hx-3-start-run-decomposition-analysis-and-remediation.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+  - docs/planning/closeouts/20260512-we-hx-3-start-run-application-decomposition-closeout.md
+  - docs/planning/status/generated-code-state.md
+  - docs/planning/status/system-operations-inventory-20260501.md
+  - docs/architecture/components/engine/architecture/index.md
+  - docs/architecture/components/engine/architecture/start-run-application-decomposition-component.md
+  - docs/architecture/components/engine/architecture/start-run-application-decomposition-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
+  - docs/architecture/components/engine/contracts/engine/StartRunProtocol.v1.md
+  - docs/evidence/ed-20260512-we-hx-3-start-run-decomposition.md
+  - docs/evidence/index.md
+  - docs/risk-register/quality/R-20260512-WE-HX-3-START-RUN-DECOMPOSITION.yaml
+  - docs/risk-register/quality/index.md
+  - packages/@dvt/engine/src/application/StartRunApplicationService.ts
+  - packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts
+  - packages/@dvt/engine/src/services/startRun/StartRunDomainConstants.ts
+  - packages/@dvt/engine/src/services/startRun/StartRunEventFactory.ts
+  - packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts
+  - packages/@dvt/engine/src/services/startRun/StartRunFailurePolicy.ts
+  - packages/@dvt/engine/src/services/startRun/StartRunIntentService.ts
+  - packages/@dvt/engine/src/services/startRun/StartRunTypes.ts
+  - packages/@dvt/engine/src/services/startRun/StartRunValidationPolicy.ts
+  - packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
+  - packages/@dvt/engine/test/services/StartRunApplicationDecomposition.test.ts
+forbiddenImplementationSurfaces:
+  - packages/@dvt/contracts/**
+  - packages/@dvt/adapter-*/**
+  - packages/@dvt/planner/**
+  - apps/web/**
+  - apps/api/**
+  - specs/**
+commandQueryRails:
+  - name: IWorkflowEngine.startRun
+    type: command
+    dddOwner: StartRunApplicationFlow
+domainObjects:
+  - name: StartRunApplicationFlow
+    type: application service
+    owner: packages/@dvt/engine/src/application/StartRunApplicationService.ts
+  - name: StartRunAdmissionPhase
+    type: application service / policy coordinator
+    owner: packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts
+  - name: StartRunIntentPhase
+    type: domain service
+    owner: packages/@dvt/engine/src/services/startRun/StartRunIntentService.ts
+fowlerSignals:
+  - Responsibility overload reduced in StartRunApplicationService.
+  - Deterministic intent creation moved behind an intention-revealing service.
+  - Scoped plan integrity conversion moved to the admission phase owner.
+  - Architecture guard validates semantic phase ownership.
+architectureGuards:
+  - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+cypressFlows:
+  - N/A - internal engine start-run decomposition
+completionGate:
+  - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
+  - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+  - pnpm --filter @dvt/engine typecheck
+  - pnpm --filter @dvt/engine test
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: start-run-phase-service-behavior
+    redTest: pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
+    expectedFailure: StartRunAdmissionService and StartRunIntentService are missing, so admission and intent creation cannot be tested as independent phases.
+    patchSurfaces:
+      - packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts
+      - packages/@dvt/engine/src/services/startRun/StartRunIntentService.ts
+      - packages/@dvt/engine/src/application/StartRunApplicationService.ts
+      - packages/@dvt/engine/test/services/StartRunApplicationDecomposition.test.ts
+    greenTest: pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
+  - id: start-run-semantic-architecture-guard
+    redTest: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    expectedFailure: StartRunApplicationService still owns scoped plan integrity and private intent creation, and WE-HX-3 docs do not exist.
+    patchSurfaces:
+      - packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
+      - docs/architecture/components/engine/architecture/start-run-application-decomposition-component.md
+      - docs/architecture/components/engine/architecture/start-run-application-decomposition-user-stories.md
+      - buzon/20260512-codex-fowler-we-hx-3-start-run-decomposition-analysis-and-remediation.md
+    greenTest: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+symbols:
+  - name: StartRunAdmissionGuardPort
+    path: packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts
+    dddOwner: StartRunAdmissionPhase
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Defines an intention-revealing internal admission port.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    cypressCoverage: N/A - engine-internal phase port
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
+  - name: StartRunAdmissionRequest
+    path: packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts
+    dddOwner: StartRunAdmissionPhase
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Replaces an implicit parameter train with a phase request object.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    cypressCoverage: N/A - engine-internal phase request
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
+  - name: StartRunAdmissionResult
+    path: packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts
+    dddOwner: StartRunAdmissionPhase
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Names the pre-dispatch admission output.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    cypressCoverage: N/A - engine-internal phase result
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
+  - name: StartRunAdmissionService
+    path: packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts
+    dddOwner: StartRunAdmissionPhase
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Extracts pre-dispatch admission from the application coordinator.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    cypressCoverage: N/A - engine-internal phase service
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
+  - name: StartRunAdmissionServiceDeps
+    path: packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts
+    dddOwner: StartRunAdmissionPhase
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Makes phase dependencies explicit.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    cypressCoverage: N/A - engine-internal phase deps
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
+  - name: StartRunExecutionPolicyAdmission
+    path: packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts
+    dddOwner: StartRunAdmissionPhase
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Names the capability-check handoff.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    cypressCoverage: N/A - engine-internal phase DTO
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
+  - name: StartRunVerifiedArtifact
+    path: packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts
+    dddOwner: StartRunAdmissionPhase
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Names the verified plan artifact returned by admission.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    cypressCoverage: N/A - engine-internal phase DTO
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
+  - name: toScopedPlanRef
+    path: packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts
+    dddOwner: StartRunAdmissionPhase
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Moves scoped artifact conversion to the admission phase owner.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    cypressCoverage: N/A - pure helper
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
+  - name: StartRunIntentService
+    path: packages/@dvt/engine/src/services/startRun/StartRunIntentService.ts
+    dddOwner: StartRunIntentPhase
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Extracts deterministic intent creation from the application coordinator.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    cypressCoverage: N/A - engine-internal phase service
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
+  - name: StartRunIntentServiceDeps
+    path: packages/@dvt/engine/src/services/startRun/StartRunIntentService.ts
+    dddOwner: StartRunIntentPhase
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Makes deterministic intent dependencies explicit.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    cypressCoverage: N/A - engine-internal phase deps
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
+  - name: CLOSEOUT
+    path: packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    dddOwner: StartRunArchitectureGuard
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Keeps closeout evidence tied to semantic architecture guard.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+  - name: COMPONENT_GUIDE
+    path: packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    dddOwner: StartRunArchitectureGuard
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Requires local component documentation.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+  - name: ENGINE_ROOT
+    path: packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    dddOwner: StartRunArchitectureGuard
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Locates package sources for semantic inspection.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+  - name: FOWLER_MAILBOX
+    path: packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    dddOwner: StartRunArchitectureGuard
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Requires Fowler analysis evidence.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+  - name: REPO_ROOT
+    path: packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    dddOwner: StartRunArchitectureGuard
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Locates repository docs for semantic inspection.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+  - name: START_RUN_SOURCE
+    path: packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    dddOwner: StartRunArchitectureGuard
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Locates phase modules for owned-concern checks.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+  - name: TEST_ROOT
+    path: packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    dddOwner: StartRunArchitectureGuard
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Locates architecture test package root.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+  - name: USER_STORIES
+    path: packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    dddOwner: StartRunArchitectureGuard
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Requires local story coverage.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+  - name: readEngineSource
+    path: packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    dddOwner: StartRunArchitectureGuard
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Reads current implementation truth for semantic guard assertions.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    cypressCoverage: N/A - architecture test helper
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+  - name: readStartRunPhaseSources
+    path: packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    dddOwner: StartRunArchitectureGuard
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Reads all phase sources to verify declared component API.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    cypressCoverage: N/A - architecture test helper
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+  - name: makeResolvedContext
+    path: packages/@dvt/engine/test/services/StartRunApplicationDecomposition.test.ts
+    dddOwner: StartRunPhaseBehaviorTest
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Provides canonical resolved context fixture for phase tests.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    cypressCoverage: N/A - unit test helper
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
+  - name: makeTemporalAdapter
+    path: packages/@dvt/engine/test/services/StartRunApplicationDecomposition.test.ts
+    dddOwner: StartRunPhaseBehaviorTest
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Provides provider adapter fixture for admission phase tests.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    cypressCoverage: N/A - unit test helper
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
+```
