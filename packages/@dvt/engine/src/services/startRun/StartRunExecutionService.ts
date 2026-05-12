@@ -1,3 +1,7 @@
+/**
+ * @ownedConcern Dispatch admitted start-run requests to provider adapters and
+ * bootstrap run state with compensation.
+ */
 import type { StartRunTraceContext } from '../../core/lifecycle/StartRunTraceContext.js';
 import { toErrorMessage } from '../../utils/errorUtils.js';
 

@@ -1,3 +1,7 @@
+/**
+ * @ownedConcern Validate start-run preconditions and provider capability
+ * compatibility before dispatch.
+ */
 import type { PlanRef, RunContext, RunExecutionPolicy } from '@dvt/contracts';
 
 import type { IProviderAdapter } from '../../adapters/IProviderAdapter.js';

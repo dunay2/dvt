@@ -1,8 +1,8 @@
 /**
- * @ownedConcern Orchestrate start-run authorization, admission, integrity validation, and dispatch.
+ * @ownedConcern Orchestrate start-run phase services without owning phase rules.
  */
 import type { IStoredPlanArtifactReader } from '@dvt/artifacts';
-import type { EngineRunRef, PlanRef, ResolvedRunContext, ScopedPlanRef } from '@dvt/contracts';
+import type { EngineRunRef, PlanRef, ResolvedRunContext } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 
 import type { IdempotencyKeyBuilder } from '../core/idempotency.js';
@@ -12,10 +12,12 @@ import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunState
 import type { IStartRunIntentStore } from '../ports/IStartRunIntentStore.js';
 import { PlanIntegrityValidator } from '../security/planIntegrity.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
+import { StartRunAdmissionService } from '../services/startRun/StartRunAdmissionService.js';
 import { START_RUN_MESSAGE } from '../services/startRun/StartRunDomainConstants.js';
 import { StartRunEventFactory } from '../services/startRun/StartRunEventFactory.js';
 import { StartRunExecutionService } from '../services/startRun/StartRunExecutionService.js';
 import { StartRunFailurePolicy } from '../services/startRun/StartRunFailurePolicy.js';
+import { StartRunIntentService } from '../services/startRun/StartRunIntentService.js';
 import type { StartRunErrorContext } from '../services/startRun/StartRunTypes.js';
 import type { IClock } from '../utils/clock.js';
 
@@ -40,11 +42,13 @@ export interface StartRunApplicationServiceDeps {
 }
 
 /**
- * Application-layer start-run use case.
- * Owns authorization/admission, intent log, adapter dispatch, and compensation.
+ * Application-layer start-run coordinator.
+ * Sequences admission, intent creation, dispatch, metrics, and failure policy.
  */
 export class StartRunApplicationService {
+  private readonly admissionService: StartRunAdmissionService;
   private readonly failurePolicy: StartRunFailurePolicy;
+  private readonly intentService: StartRunIntentService;
   private readonly executionService: StartRunExecutionService;
   private readonly planIntegrityValidator: IPlanIntegrityValidator;
 
@@ -75,6 +79,16 @@ export class StartRunApplicationService {
     });
     this.planIntegrityValidator =
       deps.planIntegrityValidator ?? new PlanIntegrityValidator({ clock: deps.clock });
+    this.admissionService = new StartRunAdmissionService({
+      guard: deps.guard,
+      planFetcher: deps.planFetcher,
+      planIntegrityValidator: this.planIntegrityValidator,
+    });
+    this.intentService = new StartRunIntentService({
+      idempotency: deps.idempotency,
+      intentStore: deps.intentStore,
+      clock: deps.clock,
+    });
   }
 
   async startRun(
@@ -129,63 +143,24 @@ export class StartRunApplicationService {
     traceContext: StartRunTraceContext,
     errorContext: StartRunErrorContext
   ): Promise<EngineRunRef> {
-    await this.deps.guard.assertStartRunAllowed(planRef, resolvedContext);
-    const adapter = this.deps.guard.resolveAdapter(resolvedContext);
-    const verifiedArtifact = await this.planIntegrityValidator.fetchAndValidate(
-      toScopedPlanRef(planRef, resolvedContext),
-      this.deps.planFetcher
-    );
-    await this.deps.guard.assertExecutionPolicyAllowed({
-      plan: verifiedArtifact.plan,
+    const admission = await this.admissionService.admit({
       planRef,
-      executionPolicy: verifiedArtifact.executionPolicy,
-      context: resolvedContext,
-      adapter,
-    });
-
-    const intentId = await this.createStartRunIntent(
       resolvedContext,
-      resolvedContext.targetAdapter
+    });
+    const intentId = await this.intentService.createIntent(
+      resolvedContext,
+      admission.adapter.provider
     );
     errorContext.intentId = intentId;
 
     return this.executionService.executeStartRun({
-      adapter,
+      adapter: admission.adapter,
       planRef,
       resolvedContext,
       traceContext,
       intentId,
     });
   }
-
-  private async createStartRunIntent(
-    resolvedContext: ResolvedRunContext,
-    provider: EngineRunRef['provider']
-  ): Promise<string> {
-    const intentId = this.deps.idempotency.startRunIntentId(
-      resolvedContext.tenantId,
-      resolvedContext.runId,
-      resolvedContext.logicalAttemptId,
-      provider
-    );
-    await this.deps.intentStore.createIntent({
-      intentId,
-      tenantId: resolvedContext.tenantId,
-      runId: resolvedContext.runId,
-      provider,
-      createdAt: this.deps.clock.nowIsoUtc(),
-    });
-    return intentId;
-  }
-}
-
-function toScopedPlanRef(planRef: PlanRef, context: ResolvedRunContext): ScopedPlanRef {
-  return {
-    tenantId: context.tenantId,
-    projectId: context.projectId,
-    environmentId: context.environmentId,
-    planRef,
-  };
 }
 
 function buildMetricTags(

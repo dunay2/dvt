@@ -202,9 +202,12 @@ under already accepted principles from `ADR-0003` and `ADR-0014`.
   residual mixed responsibility in current docs.
   Gap signal: deeper start-run/control decomposition convergence.
 - `startRun` application flow
-  Current: coordinator/guard mix concerns.
-  Target: split into narrow use cases plus policies.
-  Gap signal: SRP drift.
+  Current: `StartRunApplicationService` now sequences explicit phase services:
+  [Start-run application decomposition component](./start-run-application-decomposition-component.md)
+  covers admission, intent creation, dispatch, and failure policy ownership.
+  Target: keep phase services narrow and move remaining cross-flow provider and
+  telemetry duplication through `WE-HX-5`.
+  Gap signal: provider and telemetry seam standardization.
 - status/read path
   Current: dedicated canonical query and enrichment services are now shipped,
   and the facade reaches the canonical query path through a named
