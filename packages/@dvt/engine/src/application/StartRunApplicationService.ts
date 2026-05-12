@@ -13,11 +13,11 @@ import type { IStartRunIntentStore } from '../ports/IStartRunIntentStore.js';
 import { PlanIntegrityValidator } from '../security/planIntegrity.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
 import { StartRunAdmissionService } from '../services/startRun/StartRunAdmissionService.js';
-import { START_RUN_MESSAGE } from '../services/startRun/StartRunDomainConstants.js';
 import { StartRunEventFactory } from '../services/startRun/StartRunEventFactory.js';
 import { StartRunExecutionService } from '../services/startRun/StartRunExecutionService.js';
 import { StartRunFailurePolicy } from '../services/startRun/StartRunFailurePolicy.js';
 import { StartRunIntentService } from '../services/startRun/StartRunIntentService.js';
+import { StartRunTelemetryPolicy } from '../services/startRun/StartRunTelemetryPolicy.js';
 import type {
   IStartRunExecutionService,
   IStartRunFailurePolicy,
@@ -66,6 +66,7 @@ export class StartRunApplicationService {
   private readonly failurePolicy: IStartRunFailurePolicy;
   private readonly intentService: StartRunIntentService;
   private readonly executionService: IStartRunExecutionService;
+  private readonly telemetryPolicy: StartRunTelemetryPolicy;
 
   constructor(private readonly deps: StartRunApplicationServiceDeps) {
     this.failurePolicy = deps.failurePolicy;
@@ -80,6 +81,10 @@ export class StartRunApplicationService {
       intentStore: deps.intentStore,
       clock: deps.clock,
     });
+    this.telemetryPolicy = new StartRunTelemetryPolicy({
+      observability: deps.observability,
+      clock: deps.clock,
+    });
   }
 
   async startRun(
@@ -87,35 +92,19 @@ export class StartRunApplicationService {
     resolvedContext: ResolvedRunContext,
     traceContext: StartRunTraceContext
   ): Promise<EngineRunRef> {
-    const startMs = Date.parse(this.deps.clock.nowIsoUtc());
-    const metricTags = buildMetricTags(resolvedContext.targetAdapter, resolvedContext.tenantId, {
-      operation: 'startRun',
-    });
+    const startMs = this.telemetryPolicy.nowMs();
+    const metricTags = this.telemetryPolicy.buildMetricTags(
+      resolvedContext.targetAdapter,
+      resolvedContext.tenantId,
+      { operation: 'startRun' }
+    );
     const errorContext: StartRunErrorContext = {};
 
-    try {
-      this.deps.observability.logs.info({
-        msg: START_RUN_MESSAGE.startingRun,
-        context: traceContext,
-        attributes: {
-          provider: resolvedContext.targetAdapter,
-          planUri: planRef.uri,
-        },
-      });
-    } catch {
-      // no-op: observability reporting must not fail startRun.
-    }
+    this.telemetryPolicy.recordStart(planRef, resolvedContext, traceContext);
 
     try {
       const runRef = await this.startRunCore(planRef, resolvedContext, traceContext, errorContext);
-      try {
-        this.deps.observability.metrics.counter('dvt.run.started_total', metricTags).add(1);
-        this.deps.observability.metrics
-          .histogram('dvt.run.start.duration_ms', metricTags)
-          .record(Date.parse(this.deps.clock.nowIsoUtc()) - startMs);
-      } catch {
-        // no-op: observability reporting must not fail startRun.
-      }
+      this.telemetryPolicy.recordStarted({ resolvedContext, startedAtMs: startMs });
       return runRef;
     } catch (error) {
       return this.failurePolicy.handleStartRunError({
@@ -194,12 +183,4 @@ export function buildStartRunApplicationService(
     executionService,
     failurePolicy,
   });
-}
-
-function buildMetricTags(
-  provider: EngineRunRef['provider'],
-  tenantId: string,
-  extras?: Record<string, string>
-): Record<string, string> {
-  return extras ? { provider, tenantId, ...extras } : { provider, tenantId };
 }

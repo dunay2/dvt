@@ -160,6 +160,7 @@
         "Keep recent control-signal ids in continue-as-new cursor state without making cursor size unbounded",
         "Keep signal command behavior behind a signal-specific runtime port.",
         "Keep start-run admission in a named phase service before provider dispatch.",
+        "Keep start-run start and success telemetry in a policy seam instead of the application coordinator.",
         "Keep the facade use-case export surface local to the component boundary.",
         "Keep workflow side effects behind Temporal activities while DVT-owned retry policy drives step execution attempts",
         "Model executable plugin runtimes behind a generic runner port",
@@ -300,6 +301,7 @@
         "packages/@dvt/engine/src/services/runControl/RunSignalService.ts",
         "packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts",
         "packages/@dvt/engine/src/services/startRun/StartRunIntentService.ts",
+        "packages/@dvt/engine/src/services/startRun/StartRunTelemetryPolicy.ts",
         "packages/@dvt/engine/src/state/InMemoryRunStateAdminSupport.ts",
         "packages/@dvt/engine/src/state/InMemoryRunStateCore.ts",
         "packages/@dvt/engine/src/state/InMemoryRunStateReadSupport.ts",
@@ -574,6 +576,7 @@
         "Keep process execution behind a DBT CLI command runner seam",
         "Keep provider-test behavior behind the real provider adapter contract.",
         "Keep start-run admission in a named phase service before provider dispatch.",
+        "Keep start-run start and success telemetry in a policy seam instead of the application coordinator.",
         "Model executable plugin runtimes behind a generic runner port",
         "Normalize facade start-run input before delegating to the start application service.",
         "Represent executor plugins as explicit step-activity profile inputs",
@@ -596,7 +599,8 @@
         "packages/@dvt/engine/src/adapters/inMemory/InMemoryProviderAdapter.ts",
         "packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowStartRunUseCase.ts",
         "packages/@dvt/engine/src/core/WorkflowEngine.ts",
-        "packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts"
+        "packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts",
+        "packages/@dvt/engine/src/services/startRun/StartRunTelemetryPolicy.ts"
       ],
       "title": "ADR-0014 — Run-Driven Adapter Model"
     },

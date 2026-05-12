@@ -213,9 +213,13 @@ combined run-control shape.
   covers admission and intent creation, and
   [WorkflowEngine Start-Run Decomposition Component](./workflow-engine-start-run-decomposition-component.md)
   covers injected execution and failure seams.
-  Target: keep phase services narrow and move remaining cross-flow provider and
-  telemetry duplication through `WE-HX-5`.
-  Gap signal: provider and telemetry seam standardization.
+  `WE-HX-5` adds
+  [WorkflowEngine Provider And Telemetry Seams Component](./workflow-engine-provider-telemetry-seams-component.md)
+  for provider lookup and start/success telemetry ownership.
+  Target: keep phase services narrow and route provider lookup and start/success
+  telemetry through named seams.
+  Gap signal: remaining runtime telemetry policy breadth outside start/success
+  events should be handled by a later cross-cutting observability slice.
 - status/read path
   Current: dedicated canonical query and enrichment services are now shipped,
   and the facade reaches the canonical query path through a named
@@ -226,13 +230,19 @@ combined run-control shape.
   telemetry seams.
   Gap signal: residual telemetry-policy breadth.
 - provider resolution
-  Current: repeated in multiple paths.
-  Target: single resolver seam.
-  Gap signal: duplication.
+  Current: start-run admission, run control, signal, and enrichment use
+  `IEngineProviderResolver` / `MapBackedEngineProviderResolver` instead of raw
+  adapter-map lookup.
+  Target: keep new provider consumers on the resolver seam.
+  Gap signal: any new `.adapters.get(...)` or private adapter lookup helper in
+  engine runtime paths is drift.
 - telemetry handling
-  Current: spread across core services.
-  Target: decorator/policy boundary.
-  Gap signal: cross-cutting noise.
+  Current: start-run start and success telemetry is owned by
+  `StartRunTelemetryPolicy`; failure telemetry remains in
+  `StartRunFailurePolicy`.
+  Target: policy/decorator boundaries for cross-cutting instrumentation.
+  Gap signal: business coordinators directly constructing metric names or
+  duplicated metric tags.
 - artifacts/engine seam
   Current: explicit for plan artifact reading and run execution context
   resolution through

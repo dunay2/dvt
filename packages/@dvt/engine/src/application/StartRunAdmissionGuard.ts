@@ -11,7 +11,6 @@ import type {
 } from '@dvt/contracts';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
-import { AdapterNotRegisteredError } from '../contracts/errors.js';
 import type { IRunExecutionContextBindingPolicy } from '../ports/IRunExecutionContextBindingPolicy.js';
 import type { IRunExecutionContextResolver } from '../ports/IRunExecutionContextResolver.js';
 import type { IRunStateStoreRead } from '../ports/IRunStateStore.js';
@@ -19,10 +18,16 @@ import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
 import { RunExecutionContextAdmissionPolicy } from '../services/startRun/RunExecutionContextAdmissionPolicy.js';
 import { StartRunValidationPolicy } from '../services/startRun/StartRunValidationPolicy.js';
 
+import {
+  type IEngineProviderResolver,
+  MapBackedEngineProviderResolver,
+} from './providerSelection.js';
+
 export interface StartRunAdmissionGuardDeps {
   policy: IRunAccessPolicy;
   stateStoreRead: IRunStateStoreRead;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
+  providerResolver?: IEngineProviderResolver;
   runExecutionContextResolver?: IRunExecutionContextResolver;
   runExecutionContextBindingPolicy?: IRunExecutionContextBindingPolicy;
 }
@@ -36,10 +41,13 @@ export interface StartRunExecutionPolicyAdmission {
 }
 
 export class StartRunAdmissionGuard {
+  private readonly providerResolver: IEngineProviderResolver;
   private readonly validationPolicy: StartRunValidationPolicy;
   private readonly runExecutionContextPolicy: RunExecutionContextAdmissionPolicy;
 
   constructor(private readonly deps: StartRunAdmissionGuardDeps) {
+    this.providerResolver =
+      deps.providerResolver ?? new MapBackedEngineProviderResolver(deps.adapters);
     this.validationPolicy = new StartRunValidationPolicy({
       policy: deps.policy,
       stateStoreRead: deps.stateStoreRead,
@@ -72,8 +80,6 @@ export class StartRunAdmissionGuard {
   }
 
   resolveAdapter(context: ResolvedRunContext): IProviderAdapter {
-    const adapter = this.deps.adapters.get(context.targetAdapter);
-    if (adapter === undefined) throw new AdapterNotRegisteredError(context.targetAdapter);
-    return adapter;
+    return this.providerResolver.resolveContextTarget(context);
   }
 }

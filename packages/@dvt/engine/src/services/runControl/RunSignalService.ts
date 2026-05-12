@@ -11,6 +11,10 @@ import type { IObservability } from '@dvt/observability';
 import type { GuardedRunEventType } from '@dvt/run-domain';
 
 import type { IProviderAdapter } from '../../adapters/IProviderAdapter.js';
+import {
+  type IEngineProviderResolver,
+  MapBackedEngineProviderResolver,
+} from '../../application/providerSelection.js';
 import type { IdempotencyKeyBuilder } from '../../core/idempotency.js';
 import {
   CORE_SPAN,
@@ -20,7 +24,6 @@ import {
 import {
   buildTraceContext,
   emitSignalDerivedRunEvent,
-  getAdapterOrThrow,
   normalizeEngineRunRef,
   normalizeSignalRequest,
   resolveMetaOrThrow,
@@ -39,6 +42,7 @@ export interface RunSignalServiceDeps {
   idempotency: IdempotencyKeyBuilder;
   policy: IRunAccessPolicy;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
+  providerResolver?: IEngineProviderResolver;
   observability: IObservability;
   timeouts?: {
     adapterCallMs?: number;
@@ -47,9 +51,12 @@ export interface RunSignalServiceDeps {
 }
 
 export class RunSignalService implements IRunSignalService {
+  private readonly providerResolver: IEngineProviderResolver;
   private readonly signalTransitionGuard: SignalTransitionGuard;
 
   constructor(private readonly deps: RunSignalServiceDeps) {
+    this.providerResolver =
+      deps.providerResolver ?? new MapBackedEngineProviderResolver(deps.adapters);
     this.signalTransitionGuard = new SignalTransitionGuard({
       stateStoreRead: deps.stateStoreRead,
       idempotency: deps.idempotency,
@@ -63,7 +70,7 @@ export class RunSignalService implements IRunSignalService {
     await this.deps.policy.assertTenantAccess(validatedRunRef.tenantId);
 
     const meta = await resolveMetaOrThrow(this.deps.stateStoreRead, validatedRunRef);
-    const adapter = getAdapterOrThrow(this.deps.adapters, meta.providerRef.provider);
+    const adapter = this.providerResolver.resolveProviderRef(meta.providerRef);
     const traceContext = buildTraceContext(meta, meta.planId);
 
     await this.deps.observability.withContext(traceContext, () =>
