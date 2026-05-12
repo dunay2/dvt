@@ -4,6 +4,8 @@
  * @baseline ADR-0014: Run-Driven Adapter Model
  * @decision Decorate IProviderAdapter calls at the engine outbound boundary so provider outages fail fast.
  * @consequence Runtime safety is centralized without changing provider adapter semantics.
+ * @version 1.0.0
+ * @date 2026-05-12
  */
 import type {
   EngineRunRef,
