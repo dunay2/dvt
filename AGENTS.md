@@ -154,6 +154,11 @@ committed while bypassing the pre-commit hook; fix it with a follow-up commit
 that runs `pnpm format:changed` (if it exists) or stages and recommits the
 affected files.
 
+`pnpm verify:prepush` checks formatting; it does not apply Prettier. For PR
+closeout, commit first with the helper so the pre-commit hook can format and
+re-stage files, then run `pnpm verify:prepush` against the committed,
+hook-normalized tree. "Before PR" does not mean "before commit".
+
 ## ARC Requirements For Contracts And Adapter Changes
 
 `.arc-policy.yaml` mandates **ARC-2** (evidence doc + risk register update) for
@@ -301,6 +306,8 @@ A failed validation here means a failed CI check — fix the title before creati
 **Full PR creation sequence:**
 
 ```bash
+git add <intended files>
+pnpm commit <type> <scope> "<Subject>"
 pnpm verify:prepush
 pnpm pr:validate-title "<title>"
 gh pr create --title "<title>" --body "..."
