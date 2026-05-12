@@ -101,7 +101,12 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/runtime-and-contracts/postgres-tenant-isolation-service-access-remediation-plan-20260425.md
   - docs/evidence/**
   - docs/risk-register/quality/**
+  - packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts
+  - packages/@dvt/adapter-postgres/src/StartRunIntentSchemaManager.ts
   - packages/@dvt/adapter-postgres/src/PostgresTenantIsolationPolicy.ts
+  - packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts
+  - packages/@dvt/adapter-postgres/test/PostgresSchemaManager.rollback.test.ts
+  - packages/@dvt/adapter-postgres/test/StartRunIntentSchemaManager.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresTenant*.test.ts
 forbiddenImplementationSurfaces:
   - packages/@dvt/contracts/**
@@ -118,6 +123,7 @@ domainObjects:
 fowlerSignals:
   - Partial tenant context denied.
   - Catalog-wide RLS proof.
+  - Already-migrated schemas receive a new versioned hardening step.
 architectureGuards:
   - pnpm docs:feature-mechanization:implementation
 cypressFlows:
@@ -138,7 +144,39 @@ redGreenCycles:
     patchSurfaces:
       - packages/@dvt/adapter-postgres/test/PostgresTenantRlsEnforcement.integration.test.ts
     greenTest: DVT_PG_INTEGRATION=1 pnpm --filter @dvt/adapter-postgres test -- PostgresTenantRlsEnforcement.integration.test.ts
+  - id: tenant-mode-rls-upgrade-migrations
+    redTest: pnpm --filter @dvt/adapter-postgres test -- PostgresStateStoreAdapter.migrate.test.ts StartRunIntentSchemaManager.test.ts PostgresSchemaManager.rollback.test.ts
+    expectedFailure: Already-recorded prior RLS migrations skip the hardened tenant-mode policy.
+    patchSurfaces:
+      - packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts
+      - packages/@dvt/adapter-postgres/src/StartRunIntentSchemaManager.ts
+      - packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts
+      - packages/@dvt/adapter-postgres/test/PostgresSchemaManager.rollback.test.ts
+      - packages/@dvt/adapter-postgres/test/StartRunIntentSchemaManager.test.ts
+    greenTest: pnpm --filter @dvt/adapter-postgres test -- PostgresStateStoreAdapter.migrate.test.ts StartRunIntentSchemaManager.test.ts PostgresSchemaManager.rollback.test.ts
 symbols:
+  - name: core_021_tenant_mode_rls_hardening
+    path: packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts
+    dddOwner: PostgresTenantIsolationPolicy
+    cqRails:
+      - ValidatePostgresTenantIsolationPolicy
+    fowlerSignals:
+      - Core schemas with prior RLS migrations reapply current tenant-mode policy.
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A
+    unitTests:
+      - pnpm --filter @dvt/adapter-postgres test -- PostgresStateStoreAdapter.migrate.test.ts PostgresSchemaManager.rollback.test.ts
+  - name: 20260512_006_start_run_intents_tenant_mode_rls_hardening
+    path: packages/@dvt/adapter-postgres/src/StartRunIntentSchemaManager.ts
+    dddOwner: PostgresTenantIsolationPolicy
+    cqRails:
+      - ValidatePostgresTenantIsolationPolicy
+    fowlerSignals:
+      - Start-run-intent schemas with prior RLS migrations reapply current tenant-mode policy.
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A
+    unitTests:
+      - pnpm --filter @dvt/adapter-postgres test -- StartRunIntentSchemaManager.test.ts
   - name: seedTenantIsolationProbeRows
     path: packages/@dvt/adapter-postgres/test/PostgresTenantRlsEnforcement.integration.test.ts
     dddOwner: PostgresTenantIsolationPolicy

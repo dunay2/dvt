@@ -1008,6 +1008,27 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
       );
     },
   },
+  {
+    version: 'core_021_tenant_mode_rls_hardening',
+    description:
+      'Reapply current tenant isolation policy requiring explicit tenant access mode; idempotent hardening step without historical policy snapshot semantics',
+    run: async (client, schema) => {
+      for (const table of CORE_TENANT_ISOLATION_TABLES) {
+        for (const statement of buildTenantIsolationPolicySql(schema, table)) {
+          await client.query(statement);
+        }
+      }
+    },
+    rollbackDescription:
+      'Reapply current tenant-mode tenant isolation policy during rollback planning; tenant access-mode hardening is intentionally not downgraded',
+    rollback: async (client, schema) => {
+      for (const table of CORE_TENANT_ISOLATION_TABLES) {
+        for (const statement of buildTenantIsolationPolicySql(schema, table)) {
+          await client.query(statement);
+        }
+      }
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------

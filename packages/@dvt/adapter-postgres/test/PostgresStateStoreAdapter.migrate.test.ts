@@ -282,7 +282,7 @@ describe('PostgresStateStoreAdapter migration state', () => {
       (q) => q.sql.includes('INSERT INTO') && q.sql.includes('schema_migrations')
     );
     // One INSERT per named migration step.
-    expect(insertQueries.length).toBe(20);
+    expect(insertQueries.length).toBe(21);
 
     const versions = insertQueries.map((q) => (q.params as string[])[1]);
     expect(versions).toContain('core_001_initial_tables');
@@ -298,6 +298,7 @@ describe('PostgresStateStoreAdapter migration state', () => {
     expect(versions).toContain('core_018_service_access_owner_rls_hardening');
     expect(versions).toContain('core_019_table_scoped_service_owner_rls');
     expect(versions).toContain('core_020_run_events_tenant_run_idx');
+    expect(versions).toContain('core_021_tenant_mode_rls_hardening');
   });
 
   it('records hardening migration descriptions as idempotent policy reapplications', async () => {
@@ -320,6 +321,51 @@ describe('PostgresStateStoreAdapter migration state', () => {
     expect(descriptions).toContain(
       'Reapply current tenant isolation policy with table-scoped service owners; idempotent hardening step without historical policy snapshot semantics'
     );
+    expect(descriptions).toContain(
+      'Reapply current tenant isolation policy requiring explicit tenant access mode; idempotent hardening step without historical policy snapshot semantics'
+    );
+  });
+
+  it('reapplies hardened tenant-mode RLS for schemas that already recorded prior RLS migrations', async () => {
+    const appliedVersions = new Set<string>([
+      'core_001_initial_tables',
+      'core_002_run_snapshots_table',
+      'core_003_outbox_dead_letter_table',
+      'core_004_lineage_tables',
+      'core_005_archive_catalog_tables',
+      'core_006_archive_lease_restore_tables',
+      'core_007_compat_columns',
+      'core_008_compat_cleanup',
+      'core_009_core_indexes',
+      'core_010_purge_indexes',
+      'core_011_retry_lineage_columns',
+      'core_012_lineage_outbox_retry_schedule',
+      'core_013_lineage_outbox_claim_timeout',
+      'core_014_lineage_tenant_scope_hardening',
+      'core_015_run_event_heads',
+      'core_016_snapshot_work_queue',
+      'core_017_tenant_rls_baseline',
+      'core_018_service_access_owner_rls_hardening',
+      'core_019_table_scoped_service_owner_rls',
+      'core_020_run_events_tenant_run_idx',
+    ]);
+    const client = new PartiallyAppliedMigrationClient(appliedVersions);
+    const adapter = new PostgresStateStoreAdapter({
+      pool: { connect: async () => client } as never,
+      schema: 'DvtOps',
+    });
+
+    await adapter.migrate();
+
+    const insertedVersions = client.queries
+      .filter((q) => q.sql.includes('INSERT INTO') && q.sql.includes('schema_migrations'))
+      .map((q) => q.params?.[1]);
+    expect(insertedVersions).toEqual(['core_021_tenant_mode_rls_hardening']);
+
+    const executedSql = client.queries.map((q) => q.sql).join('\n');
+    expect(executedSql).toContain('DROP POLICY IF EXISTS dvt_tenant_isolation');
+    expect(executedSql).toContain("current_setting('dvt.access_mode', true) = 'tenant'");
+    expect(executedSql).toContain("tenant_id = current_setting('dvt.tenant_id', true)");
   });
 
   it('creates the production tenant RLS baseline for tenant-owned online tables', async () => {
