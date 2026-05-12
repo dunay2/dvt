@@ -9,6 +9,7 @@ const {
   buildGovernanceCoverageRows,
   buildGovernanceDriftRows,
   buildGovernanceFileRows,
+  buildGovernanceUnitRows,
   buildGovernanceRemediationRows,
   buildHashDriftRows,
   buildTaskGapRows,
@@ -23,6 +24,7 @@ const {
   readGovernanceCoverageRows,
   readGovernanceDriftRows,
   readGovernanceFileRows,
+  readGovernanceUnitRows,
   readGovernanceRemediationRows,
   readPlanningArtifactRows,
   readPlanningDependencyRows,
@@ -58,6 +60,7 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('artifacts'), 'artifacts');
   assert.equal(resolveQueryName('files'), 'files');
   assert.equal(resolveQueryName('components'), 'components');
+  assert.equal(resolveQueryName('units'), 'units');
   assert.equal(resolveQueryName('coverage'), 'coverage');
   assert.equal(resolveQueryName('remediation'), 'remediation');
   assert.equal(resolveQueryName('drift'), 'drift');
@@ -115,6 +118,30 @@ test('parseArgs parses governance query filters for DB-first governance inspecti
       component: 'SYS-DOCS-GOVERNANCE',
       governanceState: 'drift',
       path: 'docs/planning/status/example.md',
+      limit: 5,
+    },
+  });
+});
+
+test('parseArgs parses governance unit tree filters for DB-first parent navigation', () => {
+  const command = parseArgs([
+    'units',
+    '--unit',
+    'SYS-API-ROOT',
+    '--parent',
+    'SYS-API',
+    '--state',
+    'coverage-required',
+    '--limit',
+    '5',
+  ]);
+
+  assert.deepEqual(command, {
+    queryName: 'units',
+    filters: {
+      component: 'SYS-API-ROOT',
+      parentUnit: 'SYS-API',
+      governanceState: 'coverage-required',
       limit: 5,
     },
   });
@@ -997,6 +1024,31 @@ test('readGovernanceComponentRows queries the DB governance component view', asy
   assert.deepEqual(captured.params, ['SYS-DOCS-GOVERNANCE', 'stable', 5]);
 });
 
+test('readGovernanceUnitRows queries the DB governance unit tree view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readGovernanceUnitRows(client, {
+    component: 'SYS-API-ROOT',
+    parentUnit: 'SYS-API',
+    governanceState: 'coverage-required',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.governance_unit_query/);
+  assert.match(captured.sql, /unit_id = \$1/);
+  assert.match(captured.sql, /parent_id = \$2/);
+  assert.match(captured.sql, /governance_state = \$3/);
+  assert.match(captured.sql, /limit \$4/);
+  assert.deepEqual(captured.params, ['SYS-API-ROOT', 'SYS-API', 'coverage-required', 5]);
+});
+
 test('readGovernanceCoverageRows queries the DB governance coverage view', async () => {
   const captured = { sql: '', params: null };
   const client = {
@@ -1090,6 +1142,22 @@ test('readComponentEngineeringRecordRows queries the DB CER view', async () => {
 });
 
 test('governance row builders format DB rows for CLI output', () => {
+  assert.deepEqual(
+    buildGovernanceUnitRows([
+      {
+        unit_id: 'SYS-API-ROOT',
+        name: 'API root module',
+        level: 'module',
+        parent_id: 'SYS-API',
+        governance_state: 'coverage-required',
+        direct_file_count: 0,
+        descendant_file_count: 243,
+        ddd_owner: null,
+        is_materialized_component: false,
+      },
+    ]),
+    [['SYS-API-ROOT', 'API root module', 'module', 'SYS-API', 'coverage-required', 0, 243, '-']]
+  );
   assert.deepEqual(
     buildGovernanceComponentRows([
       {

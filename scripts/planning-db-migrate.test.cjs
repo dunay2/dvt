@@ -494,3 +494,19 @@ test('tracked migrations link component engineering records to related test comp
   assert.match(cerTestMigration.sql, /testComponents/);
   assert.match(cerTestMigration.sql, /related_test_files/);
 });
+
+test('tracked migrations expose governance unit tree query after W25', () => {
+  const migrations = readMigrationFiles();
+  const unitQueryMigration = migrations.find(
+    (migration) => migration.fileName === '025_governance_unit_tree_query.sql'
+  );
+
+  assert.ok(unitQueryMigration);
+  assert.match(
+    unitQueryMigration.sql,
+    /create or replace view planning_query_store\.governance_unit_query/
+  );
+  assert.match(unitQueryMigration.sql, /unitReferences/);
+  assert.match(unitQueryMigration.sql, /parent_id/);
+  assert.match(unitQueryMigration.sql, /is_materialized_component/);
+});
