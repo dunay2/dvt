@@ -9,10 +9,11 @@
  */
 import type { IStoredPlanArtifactReader } from '@dvt/artifacts';
 import {
-  buildRunControlService,
+  buildRunCommandService,
   buildWorkflowEngineUseCases,
   buildRunHealthService,
   buildRunRecoveryService,
+  buildRunSignalService,
   buildRunStatusQueryService,
   buildWorkflowEngineFacade,
   IdempotencyKeyBuilder,
@@ -138,7 +139,15 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
     observability: config.infrastructure.observability,
     ...optionalConfig('timeouts', config.runtime.timeouts),
   });
-  const runControlService = buildRunControlService({
+  const runCommandService = buildRunCommandService({
+    stateStoreRead: config.persistence.stateStoreRead,
+    policy,
+    adapters: config.runtime.adapters,
+    observability: config.infrastructure.observability,
+    ...optionalConfig('timeouts', config.runtime.timeouts),
+    clock: config.infrastructure.clock,
+  });
+  const runSignalService = buildRunSignalService({
     stateStoreRead: config.persistence.stateStoreRead,
     stateStoreWrite: config.persistence.stateStoreWrite,
     idempotency,
@@ -182,7 +191,8 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
     observability: config.infrastructure.observability,
     startRunApplicationService,
     runRecoveryService,
-    runControlService,
+    runCommandService,
+    runSignalService,
     runStatusQueryService,
   });
   return {

@@ -22,6 +22,7 @@ Evidence documents that justify or validate relevant changes.
 - [DBT CLI Plugin Runner SRP Hardening](ed-20260429-dbt-cli-plugin-runner-srp.md)
 - [Dev Stack Local Temporal Bootstrap](ed-20260427-dev-stack-local-temporal-bootstrap.md)
 - [DHM-WS3 Start-Run Application Decomposition](ed-20260512-dhm-ws3-start-run-decomposition.md)
+- [DHM-WS4 Runtime Path Decomposition](ed-20260512-dhm-ws4-runtime-path-decomposition.md)
 - [ED 20260401 Temporal Live Status Query](ED-20260401-temporal-live-status-query.md)
 - [ED 20260404 Guards Alignment Adapter Postgres](ED-20260404-guards-alignment-adapter-postgres.md)
 - [ED 20260404 Inmemory State Store Invariants Hardening](ED-20260404-inmemory-state-store-invariants-hardening.md)

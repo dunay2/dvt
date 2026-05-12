@@ -8,18 +8,18 @@
  */
 import type { EngineRunRef } from '@dvt/contracts';
 
-import type { IRunControlService } from '../../domain/IRunControlService.js';
+import type { IRunCommandService } from '../../domain/IRunCommandService.js';
 
 import type { IWorkflowCancelRunUseCase } from './types.js';
 
 export interface WorkflowCancelRunUseCaseDeps {
-  runControlService: IRunControlService;
+  runCommandService: IRunCommandService;
 }
 
 export class WorkflowCancelRunUseCase implements IWorkflowCancelRunUseCase {
   constructor(private readonly deps: WorkflowCancelRunUseCaseDeps) {}
 
   cancelRun(engineRunRef: EngineRunRef): Promise<void> {
-    return this.deps.runControlService.cancel(engineRunRef);
+    return this.deps.runCommandService.cancel(engineRunRef);
   }
 }

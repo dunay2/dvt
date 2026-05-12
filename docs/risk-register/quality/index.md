@@ -106,6 +106,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Run read evidence derivation can regress if attempt authority and event-history scope diverge](R-20260409-TF-C2-B-RUN-READ-EVIDENCE-ATTEMPT-SAFETY.yaml)
 - [Runtime boundary hardening can drift across engine ownership and API authorization seams](R-20260423-RUNTIME-BOUNDARY-HARDENING.yaml)
 - [Runtime circuit-breaker and worker operation tuning can drift after merge](R-20260415-AR-C4-RUNTIME-CIRCUIT-BREAKER-ROLL-OUT.yaml)
+- [Runtime control compatibility wrapper can regain cancel or signal ownership](R-20260512-DHM-WS4-RUNTIME-PATH-DECOMPOSITION.yaml)
 - [Runtime provider vocabulary can drift back to synthetic or non-implemented providers](R-20260424-HARD-CUT-RUNTIME-PROVIDER-VOCABULARY.yaml)
 - [Runtime step-kind routing can regress to catch-all execution in adapter-temporal](R-20260408-MW-C1-STEP-KIND-DISPATCH-DRIFT.yaml)
 - [Shared-kernel consumers can regress to parsing contracts error text instead of structured metadata](R-20260403-CONTRACT-ERROR-SEMANTIC-DRIFT.yaml)

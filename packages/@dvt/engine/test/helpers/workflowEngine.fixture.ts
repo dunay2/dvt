@@ -22,16 +22,15 @@ import { buildWorkflowEngineFacade } from '../../src/core/buildWorkflowEngineFac
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
-import {
-  buildRunControlService,
-  WorkflowEngineCoreService,
-} from '../../src/core/WorkflowEngineCoreService.js';
+import { WorkflowEngineCoreService } from '../../src/core/WorkflowEngineCoreService.js';
 import type { IRunExecutionContextBindingPolicy } from '../../src/ports/IRunExecutionContextBindingPolicy.js';
 import type { IRunExecutionContextResolver } from '../../src/ports/IRunExecutionContextResolver.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import type { IAuthorizer } from '../../src/security/authorizer.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
 import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
+import { buildRunCommandService } from '../../src/services/runControl/RunCommandService.js';
+import { buildRunSignalService } from '../../src/services/runControl/RunSignalService.js';
 import { RunEnrichmentService } from '../../src/services/RunEnrichmentService.js';
 import {
   buildRunStatusQueryService,
@@ -150,7 +149,14 @@ export function createWorkflowEngineFixture(
       ? {}
       : { observabilityFallbackThrottleMs: input.observabilityFallbackThrottleMs }),
   });
-  const runControlService = buildRunControlService({
+  const runCommandService = buildRunCommandService({
+    stateStoreRead,
+    policy,
+    adapters,
+    observability,
+    clock,
+  });
+  const runSignalService = buildRunSignalService({
     stateStoreRead,
     stateStoreWrite,
     idempotency,
@@ -187,7 +193,8 @@ export function createWorkflowEngineFixture(
     observability,
     startRunApplicationService,
     runRecoveryService,
-    runControlService,
+    runCommandService,
+    runSignalService,
     runStatusQueryService,
   });
   const engine = buildWorkflowEngineFacade({

@@ -18,10 +18,11 @@ import {
 } from '@dvt/contracts';
 import {
   AllowAllAuthorizer,
+  buildRunCommandService,
   buildWorkflowEngineUseCases,
   buildWorkflowEngineFacade,
   buildRunRecoveryService,
-  buildRunControlService,
+  buildRunSignalService,
   buildRunStatusQueryService,
   IdempotencyKeyBuilder,
   PlanRefPolicy,
@@ -181,7 +182,14 @@ function createStack(
     observability: createNoopObservability(),
     planFetcher,
   });
-  const runControlService = buildRunControlService({
+  const runCommandService = buildRunCommandService({
+    stateStoreRead: store,
+    policy,
+    adapters,
+    observability: createNoopObservability(),
+    clock,
+  });
+  const runSignalService = buildRunSignalService({
     stateStoreRead: store,
     stateStoreWrite: store,
     idempotency,
@@ -218,7 +226,8 @@ function createStack(
     observability: createNoopObservability(),
     startRunApplicationService,
     runRecoveryService,
-    runControlService,
+    runCommandService,
+    runSignalService,
     runStatusQueryService,
   });
   const engine = buildWorkflowEngineFacade({
