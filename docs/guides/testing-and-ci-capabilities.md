@@ -236,7 +236,14 @@ Command semantics:
   forwards Cypress arguments after `--`, and removes `ELECTRON_RUN_AS_NODE`
   from the Cypress child process so Electron does not run as Node.
 - GitHub workflows keep using explicit strict checks rather than relying on `pnpm docs:ci` as a merge gate.
-- `pnpm traceability:adr0` remains a blocking governance gate on push to `main`, but it now compares current ADR-0000 issues against the tracked baseline in [`traceability.issue-baseline.json`](../../traceability.issue-baseline.json) so CI fails on regressions rather than re-reporting the known historical backlog on every run.
+- `pnpm traceability:adr0` remains a blocking governance gate, with
+  [`.github/workflows/pr-quality-gate.yml`](../../.github/workflows/pr-quality-gate.yml)
+  as the single remote workflow owner for PR, push, and explicit manual
+  governance runs. The command compares current ADR-0000 issues against the
+  tracked baseline in
+  [`traceability.issue-baseline.json`](../../traceability.issue-baseline.json)
+  so CI fails on regressions rather than re-reporting the known historical
+  backlog on every run.
 
 Planning-generated pages that are intentionally untracked:
 
@@ -251,7 +258,8 @@ Planning-generated pages that are intentionally untracked:
 ## GitHub Workflow Coverage
 
 - `CI - Code Quality`: affected workspace matrix, changed-file lint/format,
-  changed-only markdown lint on PRs.
+  changed-only markdown lint on PRs, and CI tool contract tests. It does not own
+  ADR-0000 traceability.
   Source: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)
 - `Test Suite`: package tests, affected test routing, Turbo-backed root build
   coverage for full-root lanes, coverage, determinism/replay tests.
@@ -341,9 +349,10 @@ Current workflow consumers:
   It also runs the merge-blocking governance subset from `pnpm verify:prepush`
   on PRs and pushes: changed-doc filename/frontmatter checks when docs changed,
   governance unit coverage, document-unit map, file fingerprints,
-  feature-mechanization manifests, implementation mechanization, and QA artifact
-  validation. It also runs `pnpm arch:deps` so package/app dependency-boundary
-  drift fails remotely, not only on local prepush.
+  ADR-0000 traceability, feature-mechanization manifests, implementation
+  mechanization, and QA artifact validation. It also runs `pnpm arch:deps` so
+  package/app dependency-boundary drift fails remotely, not only on local
+  prepush.
 
 ## Notes
 
