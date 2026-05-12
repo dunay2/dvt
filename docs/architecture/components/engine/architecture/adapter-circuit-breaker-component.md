@@ -37,6 +37,10 @@ The API is local to `@dvt/engine` and production composition.
 - Open state fails fast without invoking the delegate adapter.
 - Half-open state permits a probe; success closes the breaker and failure opens
   it again.
+- Half-open probe execution is single-flight; concurrent protected calls fail
+  fast until the probe resolves.
+- Production composition injects the engine clock. Standalone construction uses
+  a live process clock so an opened breaker can still reach the retry window.
 - Metrics are best-effort and never mask adapter or breaker errors.
 - Health exposes breaker posture as operational state, not lifecycle truth.
 

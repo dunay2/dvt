@@ -1,7 +1,7 @@
 import type { EngineRunRef, PlanRef, ResolvedRunContext, SignalRequest } from '@dvt/contracts';
 import { createNoopObservability } from '@dvt/observability';
 import type { IObservability } from '@dvt/observability';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   AdapterCircuitOpenError,
@@ -40,6 +40,10 @@ const SIGNAL: SignalRequest = {
 };
 
 describe('CircuitBreakingProviderAdapter', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('opens after the failure threshold and fails fast without invoking startRun', async () => {
     let startCalls = 0;
     const adapter = new CircuitBreakingProviderAdapter(
@@ -95,6 +99,64 @@ describe('CircuitBreakingProviderAdapter', () => {
       state: 'closed',
       failureCount: 0,
     });
+  });
+
+  it('uses a live default clock so an opened breaker can reach half-open', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-12T00:00:00.000Z'));
+    let startCalls = 0;
+    const adapter = new CircuitBreakingProviderAdapter(
+      makeAdapter({
+        startRun: async () => {
+          startCalls += 1;
+          if (startCalls === 1) throw new Error('transient outage');
+          return RUN_REF;
+        },
+      }),
+      { failureThreshold: 1, openStateMs: 500 }
+    );
+
+    await expect(adapter.startRun(PLAN_REF, CONTEXT)).rejects.toThrow('transient outage');
+    await vi.advanceTimersByTimeAsync(600);
+    await expect(adapter.startRun(PLAN_REF, CONTEXT)).resolves.toEqual(RUN_REF);
+
+    expect(startCalls).toBe(2);
+    expect(getAdapterCircuitBreakerSnapshot(adapter)).toMatchObject({
+      state: 'closed',
+      failureCount: 0,
+    });
+  });
+
+  it('rejects concurrent calls while a half-open probe is in flight', async () => {
+    let now = 1_000;
+    let releaseProbe: ((value: EngineRunRef) => void) | undefined;
+    let startCalls = 0;
+    const adapter = new CircuitBreakingProviderAdapter(
+      makeAdapter({
+        startRun: async () => {
+          startCalls += 1;
+          if (startCalls === 1) throw new Error('initial outage');
+          if (startCalls > 2) return RUN_REF;
+          return new Promise<EngineRunRef>((resolve) => {
+            releaseProbe = resolve;
+          });
+        },
+      }),
+      { failureThreshold: 1, openStateMs: 500, nowMs: () => now }
+    );
+
+    await expect(adapter.startRun(PLAN_REF, CONTEXT)).rejects.toThrow('initial outage');
+    now = 1_600;
+    const probe = adapter.startRun(PLAN_REF, CONTEXT);
+
+    await expect(adapter.startRun(PLAN_REF, CONTEXT)).rejects.toBeInstanceOf(
+      AdapterCircuitOpenError
+    );
+    expect(startCalls).toBe(2);
+
+    releaseProbe?.(RUN_REF);
+    await expect(probe).resolves.toEqual(RUN_REF);
+    expect(getAdapterCircuitBreakerSnapshot(adapter)?.state).toBe('closed');
   });
 
   it('reopens when the half-open probe fails', async () => {

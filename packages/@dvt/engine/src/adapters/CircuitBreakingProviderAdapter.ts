@@ -95,7 +95,8 @@ export class CircuitBreakingProviderAdapter implements IProviderAdapter {
     this.provider = delegate.provider;
     this.failureThreshold = Math.max(1, options.failureThreshold ?? DEFAULT_FAILURE_THRESHOLD);
     this.openStateMs = Math.max(1, options.openStateMs ?? DEFAULT_OPEN_STATE_MS);
-    this.nowMs = options.nowMs ?? (() => 0);
+    this.nowMs =
+      options.nowMs ?? (() => globalThis.performance.timeOrigin + globalThis.performance.now());
     this.observability = options.observability;
     if (delegate.ping) this.ping = () => delegate.ping!();
     if (delegate.estimateRunRef) this.estimateRunRef = (ctx) => delegate.estimateRunRef!(ctx);
@@ -147,6 +148,12 @@ export class CircuitBreakingProviderAdapter implements IProviderAdapter {
 
   private beforeCall(operation: AdapterCircuitBreakerOperation): void {
     const now = this.nowMs();
+    if (this.state === 'half_open') {
+      this.lastOperation = operation;
+      this.emitFailFast(operation);
+      throw new AdapterCircuitOpenError(this.provider, operation, this.retryAtEpochMs);
+    }
+
     if (this.state !== 'open') return;
 
     if (this.retryAtEpochMs !== undefined && now >= this.retryAtEpochMs) {
