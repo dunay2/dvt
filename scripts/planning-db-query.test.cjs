@@ -235,6 +235,34 @@ test('parseArgs parses component engineering record filters for DB-first governa
   });
 });
 
+test('parseArgs parses component engineering record schema version filters', () => {
+  const command = parseArgs([
+    'cer',
+    '--component',
+    'SYS-API-HTTP-ENTRYPOINTS',
+    '--schema-version',
+    'v2',
+    '--limit',
+    '1',
+  ]);
+
+  assert.deepEqual(command, {
+    queryName: 'cer',
+    filters: {
+      component: 'SYS-API-HTTP-ENTRYPOINTS',
+      schemaVersion: 'v2',
+      limit: 1,
+    },
+  });
+});
+
+test('parseArgs rejects unsupported component engineering record schema versions', () => {
+  assert.throws(
+    () => parseArgs(['cer', '--schema-version', 'v3']),
+    /Invalid --schema-version "v3". Expected v1 or v2./
+  );
+});
+
 test('formatQueryError preserves nested connection failures for unavailable DB', () => {
   const ipv6Error = Object.assign(new Error('connect ECONNREFUSED ::1:55432'), {
     code: 'ECONNREFUSED',
@@ -1083,6 +1111,31 @@ test('readComponentEngineeringRecordRows queries the DB CER view', async () => {
   assert.match(
     captured.sql,
     /from planning_query_store\.governance_component_engineering_record_query/
+  );
+  assert.match(captured.sql, /component_id = \$1/);
+  assert.match(captured.sql, /limit \$2/);
+  assert.deepEqual(captured.params, ['SYS-API-HTTP-ENTRYPOINTS', 1]);
+});
+
+test('readComponentEngineeringRecordRows queries the DB CER v2 view when requested', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readComponentEngineeringRecordRows(client, {
+    component: 'SYS-API-HTTP-ENTRYPOINTS',
+    schemaVersion: 'v2',
+    limit: 1,
+  });
+
+  assert.match(
+    captured.sql,
+    /from planning_query_store\.governance_component_engineering_record_v2_query/
   );
   assert.match(captured.sql, /component_id = \$1/);
   assert.match(captured.sql, /limit \$2/);
