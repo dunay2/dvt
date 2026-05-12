@@ -152,6 +152,12 @@ under already accepted principles from `ADR-0003` and `ADR-0014`.
 5. Deprecate internal wide services only after functional parity and
    architecture fitness checks pass.
 
+Current DHM-WS4 state: cancel and signal behavior now run through dedicated
+`RunCommandService` and `RunSignalService` implementations behind
+`IRunCommandService` and `IRunSignalService`. `WorkflowEngineCoreService`
+remains only as a compatibility adapter for callers that still need the older
+combined run-control shape.
+
 ## Class responsibility rules (target)
 
 - `WorkflowEngine`: only public contract normalization + delegation.
@@ -204,18 +210,21 @@ under already accepted principles from `ADR-0003` and `ADR-0014`.
 - `startRun` application flow
   Current: `StartRunApplicationService` now sequences explicit phase services:
   [Start-run application decomposition component](./start-run-application-decomposition-component.md)
-  covers admission, intent creation, dispatch, and failure policy ownership.
+  covers admission and intent creation, and
+  [WorkflowEngine Start-Run Decomposition Component](./workflow-engine-start-run-decomposition-component.md)
+  covers injected execution and failure seams.
   Target: keep phase services narrow and move remaining cross-flow provider and
   telemetry duplication through `WE-HX-5`.
   Gap signal: provider and telemetry seam standardization.
 - status/read path
   Current: dedicated canonical query and enrichment services are now shipped,
   and the facade reaches the canonical query path through a named
-  `IWorkflowRunStatusUseCase`; control operations still share one runtime-control
-  service behind cancel/signal use-case adapters.
+  `IWorkflowRunStatusUseCase`; cancel and signal now route through dedicated
+  `IRunCommandService` and `IRunSignalService` boundaries documented in
+  [WorkflowEngine Runtime Path Decomposition Component](./workflow-engine-runtime-path-decomposition-component.md).
   Target: dedicated query vs enrichment services plus narrower control and
   telemetry seams.
-  Gap signal: residual control-service breadth.
+  Gap signal: residual telemetry-policy breadth.
 - provider resolution
   Current: repeated in multiple paths.
   Target: single resolver seam.
@@ -323,6 +332,7 @@ flowchart LR
   B --> C["WE-HX-2 compatibility facade narrowing"]
   C --> D["WE-HX-3 startRun decomposition"]
   C --> E["WE-HX-4 query/command decomposition"]
+  E --> E2["DHM-WS4 runtime path residual closure"]
   D --> F["WE-HX-5 provider + telemetry standardization"]
   E --> F
   F --> G["WE-HX-6 test doubles + fitness checks"]

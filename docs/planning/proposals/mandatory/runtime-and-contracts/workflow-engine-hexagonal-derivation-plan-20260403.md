@@ -90,6 +90,260 @@ No-go constraints:
 - split admission, provider/capability resolution, intent creation, execution
   dispatch, and failure policy
 
+```feature-mechanization
+version: 1
+featureId: DHM-WS3-START-RUN-DECOMPOSITION
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+componentGuides:
+  - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
+  - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
+  - docs/architecture/components/engine/architecture/workflow-engine-start-run-decomposition-component.md
+userStories:
+  - docs/architecture/components/engine/architecture/workflow-engine-start-run-decomposition-user-stories.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md
+  - docs/adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md
+allowedImplementationSurfaces:
+  - apps/api/src/application/services/WorkflowEngineFactory.ts
+  - apps/api/test/integration/plannerEngineContract.test.ts
+  - docs/.manifest.json
+  - docs/architecture/components/engine/architecture/workflow-engine-start-run-decomposition-component.md
+  - docs/architecture/components/engine/architecture/workflow-engine-start-run-decomposition-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
+  - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
+  - docs/evidence/ed-20260512-dhm-ws3-start-run-decomposition.md
+  - docs/evidence/index.md
+  - docs/planning/closeouts/20260512-dhm-ws3-start-run-application-decomposition-closeout.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+  - docs/planning/status/**
+  - docs/risk-register/quality/R-20260512-DHM-WS3-START-RUN-DECOMPOSITION.yaml
+  - docs/risk-register/quality/index.md
+  - packages/@dvt/engine/src/application/StartRunApplicationService.ts
+  - packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts
+  - packages/@dvt/engine/src/services/startRun/StartRunFailurePolicy.ts
+  - packages/@dvt/engine/src/services/startRun/StartRunTypes.ts
+  - packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
+  - packages/@dvt/engine/test/helpers/workflowEngine.fixture.ts
+  - packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
+forbiddenImplementationSurfaces:
+  - packages/@dvt/contracts/**
+  - packages/@dvt/adapter-*/**
+  - apps/web/**
+  - specs/contracts/**
+commandQueryRails:
+  - name: StartRunApplicationDecomposition
+    type: command
+    dddOwner: Workflow run application service
+domainObjects:
+  - name: StartRunApplicationService
+    type: application service
+    owner: Engine runtime
+  - name: StartRunExecutionService
+    type: execution port implementation
+    owner: Engine runtime
+  - name: StartRunFailurePolicy
+    type: failure policy
+    owner: Engine runtime
+fowlerSignals:
+  - Boundary drift
+  - Divergent change
+  - Shotgun surgery risk
+architectureGuards:
+  - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts test/services/StartRunApplicationService.test.ts
+  - pnpm docs:feature-mechanization:implementation
+cypressFlows:
+  - Not applicable - engine start-run application-service decomposition only
+completionGate:
+  - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts test/services/StartRunApplicationService.test.ts
+  - pnpm --filter @dvt/engine typecheck
+  - pnpm --filter dvt-api typecheck
+  - pnpm --filter @dvt/engine test
+  - pnpm --filter dvt-api test -- test/integration/plannerEngineContract.test.ts
+  - pnpm docs:status:generate
+  - pnpm docs:sync
+  - pnpm governance:refresh
+  - pnpm docs:feature-mechanization -- --feature DHM-WS3-START-RUN-DECOMPOSITION
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: dhm-ws3-start-run-decomposition-architecture-guard
+    redTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts test/services/StartRunApplicationService.test.ts
+    expectedFailure: StartRunApplicationService still constructs execution, failure, event, and plan-integrity collaborators internally instead of accepting injected application seams.
+    patchSurfaces:
+      - packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
+      - packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
+      - packages/@dvt/engine/src/application/StartRunApplicationService.ts
+      - packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts
+      - packages/@dvt/engine/src/services/startRun/StartRunFailurePolicy.ts
+      - packages/@dvt/engine/src/services/startRun/StartRunTypes.ts
+      - packages/@dvt/engine/test/helpers/workflowEngine.fixture.ts
+      - apps/api/src/application/services/WorkflowEngineFactory.ts
+      - apps/api/test/integration/plannerEngineContract.test.ts
+    greenTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts test/services/StartRunApplicationService.test.ts
+symbols:
+  - name: BuildStartRunApplicationServiceDeps
+    path: packages/@dvt/engine/src/application/StartRunApplicationService.ts
+    dddOwner: Workflow run application service
+    cqRails:
+      - StartRunApplicationDecomposition
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - engine application-service composition
+    unitTests:
+      - packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
+  - name: buildStartRunApplicationService
+    path: packages/@dvt/engine/src/application/StartRunApplicationService.ts
+    dddOwner: Workflow run application service
+    cqRails:
+      - StartRunApplicationDecomposition
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - engine application-service composition
+    unitTests:
+      - packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
+  - name: StartRunExecutionService
+    path: packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts
+    dddOwner: Workflow run execution dispatch
+    cqRails:
+      - StartRunApplicationDecomposition
+    fowlerSignals:
+      - Divergent change
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - engine application-service composition
+    unitTests:
+      - packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
+  - name: StartRunFailurePolicy
+    path: packages/@dvt/engine/src/services/startRun/StartRunFailurePolicy.ts
+    dddOwner: Workflow run failure policy
+    cqRails:
+      - StartRunApplicationDecomposition
+    fowlerSignals:
+      - Divergent change
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - engine application-service composition
+    unitTests:
+      - packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
+  - name: StartRunExecutionInput
+    path: packages/@dvt/engine/src/services/startRun/StartRunTypes.ts
+    dddOwner: Workflow run execution dispatch
+    cqRails:
+      - StartRunApplicationDecomposition
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - engine application-service composition
+    unitTests:
+      - packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
+  - name: IStartRunExecutionService
+    path: packages/@dvt/engine/src/services/startRun/StartRunTypes.ts
+    dddOwner: Workflow run execution dispatch
+    cqRails:
+      - StartRunApplicationDecomposition
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - engine application-service composition
+    unitTests:
+      - packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
+  - name: IStartRunFailurePolicy
+    path: packages/@dvt/engine/src/services/startRun/StartRunTypes.ts
+    dddOwner: Workflow run failure policy
+    cqRails:
+      - StartRunApplicationDecomposition
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - engine application-service composition
+    unitTests:
+      - packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
+  - name: DHM_WS3_CLOSEOUT
+    path: packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
+    dddOwner: Workflow run application service architecture guard
+    cqRails:
+      - StartRunApplicationDecomposition
+    fowlerSignals:
+      - Shotgun surgery risk
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
+    cypressCoverage: Not applicable - engine architecture guard
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
+  - name: ENGINE_ROOT
+    path: packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
+    dddOwner: Workflow run application service architecture guard
+    cqRails:
+      - StartRunApplicationDecomposition
+    fowlerSignals:
+      - Shotgun surgery risk
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
+    cypressCoverage: Not applicable - engine architecture guard
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
+  - name: REPO_ROOT
+    path: packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
+    dddOwner: Workflow run application service architecture guard
+    cqRails:
+      - StartRunApplicationDecomposition
+    fowlerSignals:
+      - Shotgun surgery risk
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
+    cypressCoverage: Not applicable - engine architecture guard
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
+  - name: START_RUN_COMPONENT_GUIDE
+    path: packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
+    dddOwner: Workflow run application service architecture guard
+    cqRails:
+      - StartRunApplicationDecomposition
+    fowlerSignals:
+      - Shotgun surgery risk
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
+    cypressCoverage: Not applicable - engine architecture guard
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
+  - name: START_RUN_USER_STORIES
+    path: packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
+    dddOwner: Workflow run application service architecture guard
+    cqRails:
+      - StartRunApplicationDecomposition
+    fowlerSignals:
+      - Shotgun surgery risk
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
+    cypressCoverage: Not applicable - engine architecture guard
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
+  - name: TEST_ROOT
+    path: packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
+    dddOwner: Workflow run application service architecture guard
+    cqRails:
+      - StartRunApplicationDecomposition
+    fowlerSignals:
+      - Shotgun surgery risk
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
+    cypressCoverage: Not applicable - engine architecture guard
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
+  - name: readEngineSource
+    path: packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
+    dddOwner: Workflow run application service architecture guard
+    cqRails:
+      - StartRunApplicationDecomposition
+    fowlerSignals:
+      - Shotgun surgery risk
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
+    cypressCoverage: Not applicable - engine architecture guard
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
+```
+
 ### `WE-HX-4` Runtime query/command decomposition
 
 - depends on `WE-HX-2`
@@ -98,6 +352,312 @@ No-go constraints:
 - fold `AR-A3` into this wave
 - once that structural split lands, finish the remaining `AR-A3` facade-purity
   intent through `AR-A12-C` by removing enrichment from `IWorkflowEngine`
+
+```feature-mechanization
+version: 1
+featureId: DHM-WS4-RUNTIME-PATH-DECOMPOSITION
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+componentGuides:
+  - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
+  - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
+  - docs/architecture/components/engine/architecture/workflow-engine-runtime-path-decomposition-component.md
+userStories:
+  - docs/architecture/components/engine/architecture/workflow-engine-runtime-path-decomposition-user-stories.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md
+  - docs/adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md
+allowedImplementationSurfaces:
+  - apps/api/src/application/services/WorkflowEngineFactory.ts
+  - apps/api/test/integration/plannerEngineContract.test.ts
+  - docs/.manifest.json
+  - docs/architecture/components/engine/architecture/workflow-engine-facade-use-cases-component.md
+  - docs/architecture/components/engine/architecture/workflow-engine-facade-use-cases-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-runtime-path-decomposition-component.md
+  - docs/architecture/components/engine/architecture/workflow-engine-runtime-path-decomposition-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
+  - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
+  - docs/evidence/ed-20260512-dhm-ws4-runtime-path-decomposition.md
+  - docs/evidence/index.md
+  - docs/planning/closeouts/20260512-dhm-ws4-runtime-path-decomposition-closeout.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+  - docs/planning/status/**
+  - docs/risk-register/quality/R-20260512-DHM-WS4-RUNTIME-PATH-DECOMPOSITION.yaml
+  - docs/risk-register/quality/index.md
+  - packages/@dvt/engine/src/application/workflow-engine-use-cases/**
+  - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
+  - packages/@dvt/engine/src/domain/IRunCommandService.ts
+  - packages/@dvt/engine/src/domain/IRunSignalService.ts
+  - packages/@dvt/engine/src/index.ts
+  - packages/@dvt/engine/src/services/runControl/**
+  - packages/@dvt/engine/test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+  - packages/@dvt/engine/test/application/workflowEngineUseCases.factory.test.ts
+  - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
+  - packages/@dvt/engine/test/helpers/workflowEngine.fixture.ts
+forbiddenImplementationSurfaces:
+  - packages/@dvt/contracts/**
+  - packages/@dvt/adapter-*/**
+  - apps/web/**
+  - specs/contracts/**
+commandQueryRails:
+  - name: RuntimeRunCommandDecomposition
+    type: command
+    dddOwner: Engine runtime command service
+  - name: RuntimeRunSignalDecomposition
+    type: command
+    dddOwner: Engine runtime signal service
+domainObjects:
+  - name: RunCommandService
+    type: domain service
+    owner: Engine runtime
+  - name: RunSignalService
+    type: domain service
+    owner: Engine runtime
+  - name: WorkflowEngineCoreService
+    type: compatibility assembler
+    owner: Engine runtime
+fowlerSignals:
+  - Boundary drift
+  - Responsibility overload
+  - Documentation drift
+architectureGuards:
+  - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts test/core/WorkflowEngineCoreService.test.ts
+  - pnpm docs:feature-mechanization:implementation
+cypressFlows:
+  - Not applicable - internal engine runtime-control decomposition only
+completionGate:
+  - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts test/core/WorkflowEngineCoreService.test.ts
+  - pnpm --filter @dvt/engine typecheck
+  - pnpm --filter dvt-api typecheck
+  - pnpm --filter @dvt/engine test
+  - pnpm --filter dvt-api test -- test/integration/plannerEngineContract.test.ts
+  - pnpm docs:status:generate
+  - pnpm docs:sync
+  - pnpm governance:refresh
+  - pnpm docs:feature-mechanization -- --feature DHM-WS4-RUNTIME-PATH-DECOMPOSITION
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: dhm-ws4-runtime-path-decomposition-architecture-guard
+    redTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts test/core/WorkflowEngineCoreService.test.ts
+    expectedFailure: WorkflowEngineCoreService still owns cancel adapter dispatch, signal adapter dispatch, signal transition guard construction, and facade use cases still share one run-control dependency.
+    patchSurfaces:
+      - packages/@dvt/engine/test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+      - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
+      - packages/@dvt/engine/src/domain/IRunCommandService.ts
+      - packages/@dvt/engine/src/domain/IRunSignalService.ts
+      - packages/@dvt/engine/src/services/runControl/RunCommandService.ts
+      - packages/@dvt/engine/src/services/runControl/RunSignalService.ts
+      - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
+      - packages/@dvt/engine/src/application/workflow-engine-use-cases/buildWorkflowEngineUseCases.ts
+      - packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowCancelRunUseCase.ts
+      - packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowSignalRunUseCase.ts
+      - packages/@dvt/engine/test/helpers/workflowEngine.fixture.ts
+      - apps/api/src/application/services/WorkflowEngineFactory.ts
+      - apps/api/test/integration/plannerEngineContract.test.ts
+    greenTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts test/core/WorkflowEngineCoreService.test.ts
+symbols:
+  - name: IRunCommandService
+    path: packages/@dvt/engine/src/domain/IRunCommandService.ts
+    dddOwner: Engine runtime command service
+    cqRails:
+      - RuntimeRunCommandDecomposition
+    fowlerSignals:
+      - Responsibility overload
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - internal engine runtime-control decomposition
+    unitTests:
+      - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
+  - name: IRunSignalService
+    path: packages/@dvt/engine/src/domain/IRunSignalService.ts
+    dddOwner: Engine runtime signal service
+    cqRails:
+      - RuntimeRunSignalDecomposition
+    fowlerSignals:
+      - Responsibility overload
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - internal engine runtime-control decomposition
+    unitTests:
+      - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
+  - name: IRunControlService
+    path: packages/@dvt/engine/src/domain/IRunControlService.ts
+    dddOwner: Engine runtime compatibility control service
+    cqRails:
+      - RuntimeRunCommandDecomposition
+      - RuntimeRunSignalDecomposition
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - internal engine runtime-control decomposition
+    unitTests:
+      - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
+  - name: buildRunCommandService
+    path: packages/@dvt/engine/src/index.ts
+    dddOwner: Engine runtime command service root export
+    cqRails:
+      - RuntimeRunCommandDecomposition
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - internal engine runtime-control decomposition
+    unitTests:
+      - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
+  - name: buildRunSignalService
+    path: packages/@dvt/engine/src/index.ts
+    dddOwner: Engine runtime signal service root export
+    cqRails:
+      - RuntimeRunSignalDecomposition
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - internal engine runtime-control decomposition
+    unitTests:
+      - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
+  - name: RunCommandServiceDeps
+    path: packages/@dvt/engine/src/services/runControl/RunCommandService.ts
+    dddOwner: Engine runtime command service
+    cqRails:
+      - RuntimeRunCommandDecomposition
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - internal engine runtime-control decomposition
+    unitTests:
+      - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
+  - name: RunCommandService
+    path: packages/@dvt/engine/src/services/runControl/RunCommandService.ts
+    dddOwner: Engine runtime command service
+    cqRails:
+      - RuntimeRunCommandDecomposition
+    fowlerSignals:
+      - Responsibility overload
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - internal engine runtime-control decomposition
+    unitTests:
+      - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
+  - name: buildRunCommandService
+    path: packages/@dvt/engine/src/services/runControl/RunCommandService.ts
+    dddOwner: Engine runtime command service
+    cqRails:
+      - RuntimeRunCommandDecomposition
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - internal engine runtime-control decomposition
+    unitTests:
+      - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
+  - name: RunSignalServiceDeps
+    path: packages/@dvt/engine/src/services/runControl/RunSignalService.ts
+    dddOwner: Engine runtime signal service
+    cqRails:
+      - RuntimeRunSignalDecomposition
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - internal engine runtime-control decomposition
+    unitTests:
+      - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
+  - name: RunSignalService
+    path: packages/@dvt/engine/src/services/runControl/RunSignalService.ts
+    dddOwner: Engine runtime signal service
+    cqRails:
+      - RuntimeRunSignalDecomposition
+    fowlerSignals:
+      - Responsibility overload
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - internal engine runtime-control decomposition
+    unitTests:
+      - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
+  - name: buildRunSignalService
+    path: packages/@dvt/engine/src/services/runControl/RunSignalService.ts
+    dddOwner: Engine runtime signal service
+    cqRails:
+      - RuntimeRunSignalDecomposition
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - internal engine runtime-control decomposition
+    unitTests:
+      - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
+  - name: RUNTIME_PATH_COMPONENT_GUIDE
+    path: packages/@dvt/engine/test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+    dddOwner: Engine runtime architecture guard
+    cqRails:
+      - RuntimeRunCommandDecomposition
+      - RuntimeRunSignalDecomposition
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+    cypressCoverage: Not applicable - internal engine architecture guard
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+  - name: RUNTIME_PATH_USER_STORIES
+    path: packages/@dvt/engine/test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+    dddOwner: Engine runtime architecture guard
+    cqRails:
+      - RuntimeRunCommandDecomposition
+      - RuntimeRunSignalDecomposition
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+    cypressCoverage: Not applicable - internal engine architecture guard
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+  - name: ENGINE_ROOT
+    path: packages/@dvt/engine/test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+    dddOwner: Engine runtime architecture guard
+    cqRails:
+      - RuntimeRunCommandDecomposition
+      - RuntimeRunSignalDecomposition
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+    cypressCoverage: Not applicable - internal engine architecture guard
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+  - name: REPO_ROOT
+    path: packages/@dvt/engine/test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+    dddOwner: Engine runtime architecture guard
+    cqRails:
+      - RuntimeRunCommandDecomposition
+      - RuntimeRunSignalDecomposition
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+    cypressCoverage: Not applicable - internal engine architecture guard
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+  - name: TEST_ROOT
+    path: packages/@dvt/engine/test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+    dddOwner: Engine runtime architecture guard
+    cqRails:
+      - RuntimeRunCommandDecomposition
+      - RuntimeRunSignalDecomposition
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+    cypressCoverage: Not applicable - internal engine architecture guard
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+  - name: readEngineSource
+    path: packages/@dvt/engine/test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+    dddOwner: Engine runtime architecture guard
+    cqRails:
+      - RuntimeRunCommandDecomposition
+      - RuntimeRunSignalDecomposition
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+    cypressCoverage: Not applicable - internal engine architecture guard
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+```
 
 ### `WE-HX-5` Provider and telemetry standardization
 
