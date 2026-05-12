@@ -87,6 +87,15 @@
       ]
     },
     {
+      "id": "tracked-docs-status-code-state",
+      "description": "Tracked stable navigation pointer for the locally rendered code-state inventory.",
+      "artifacts": ["docs/planning/status/generated-code-state.md"],
+      "sourcePaths": ["docs/planning/status/generated-code-state.md"],
+      "generatorCommand": "pnpm docs:status:generate",
+      "tracking": "tracked",
+      "manualEditPolicy": "source-owned"
+    },
+    {
       "id": "local-docs-status-code-state",
       "description": "Ignored code-state inventory generated from workspace source and test signals.",
       "artifacts": [".generated-docs/planning/status/generated-code-state.md"],
