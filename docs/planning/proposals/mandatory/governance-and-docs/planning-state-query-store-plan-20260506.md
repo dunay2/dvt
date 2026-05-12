@@ -1242,6 +1242,11 @@ Current implementation status on 2026-05-08:
 - W21 is implemented: docs disposition and task-provenance gaps can now be
   resolved through DB-owned source-hash-guarded overlays instead of requiring
   agents to edit status/inventory files to remove operational noise;
+- W26 is implemented: `planning_task_gap_raw_query` now links document
+  disposition actions to planning tasks only when the action's
+  `reference_text` matches the registered task reference, preventing
+  document-level or unrelated task-like actions from multiplying false task
+  gaps in `planning:db:query focus`;
 - the obsolete `governance:artifacts:generate` package alias is removed;
   `pnpm governance:refresh` is the single local orchestration command for
   generated inspection artifacts plus planning/governance DB import and checks;
@@ -1807,6 +1812,7 @@ completionGate:
   - pnpm planning:db:query
   - pnpm planning:db:query task-trace --task F-28-C
   - pnpm planning:db:query task-gaps --limit 10
+  - pnpm planning:db:query task-gaps --task AR-A11 --resolution all --limit 50
   - pnpm planning:db:query docs-disposition --resolution all --limit 10
   - pnpm planning:db:query task-gaps --resolution all --limit 10
   - pnpm planning:db:query focus --limit 10
@@ -2339,6 +2345,25 @@ symbols:
   - <<: *planningDbContentSymbol
     name: PlanningDbWorkIntakeQuerySuggestionHardeningMigration
     path: tools/planning-db/migrations/020_planning_work_intake_query_suggestions.sql
+  - &planningTaskGapReferenceFilterSymbol
+    name: PlanningTaskGapReferenceFilterMigration
+    path: tools/planning-db/migrations/026_task_gap_reference_filter.sql
+    dddOwner: TaskProvenanceLedger
+    cqRails:
+      - QueryTaskProvenanceLedger
+      - QueryPlanningWorkIntake
+      - ResolveTaskProvenanceGap
+      - MigratePlanningQueryStoreSchema
+    fowlerSignals:
+      - Manual task provenance reconstruction
+      - Manual work intake reconstruction
+      - Hidden query model inside YAML
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - planning task-gap reference filtering has no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-migrate.test.cjs
+      - pnpm planning:db:query task-gaps --task AR-A11 --resolution all --limit 50
+      - pnpm planning:db:query focus --kind task_gap --limit 20
   - <<: *planningDbContentSymbol
     name: PlanningDbMigrateRunner
     path: scripts/planning-db-migrate.cjs

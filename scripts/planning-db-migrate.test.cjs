@@ -510,3 +510,25 @@ test('tracked migrations expose governance unit tree query after W25', () => {
   assert.match(unitQueryMigration.sql, /parent_id/);
   assert.match(unitQueryMigration.sql, /is_materialized_component/);
 });
+
+test('tracked migrations constrain task-gap disposition actions to their referenced task after W26', () => {
+  const migrations = readMigrationFiles();
+  const taskGapMigration = migrations.find(
+    (migration) => migration.fileName === '026_task_gap_reference_filter.sql'
+  );
+
+  assert.ok(taskGapMigration);
+  assert.match(
+    taskGapMigration.sql,
+    /create or replace view planning_query_store\.planning_task_gap_raw_query/
+  );
+  assert.match(taskGapMigration.sql, /action\.reference_text is not null/);
+  assert.match(
+    taskGapMigration.sql,
+    /upper\(reference\.reference_text\) = upper\(action\.reference_text\)/
+  );
+  assert.doesNotMatch(
+    taskGapMigration.sql,
+    /on reference\.document_path = action\.document_path\s+and reference\.registered_planning_task = true\s+join/s
+  );
+});
