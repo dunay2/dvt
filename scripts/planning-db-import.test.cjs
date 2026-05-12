@@ -546,7 +546,7 @@ test('docs disposition snapshot treats closed feature mechanization ids as regis
 
   assert.ok(featureReference);
   assert.equal(featureReference.classification, 'registered_feature_mechanization');
-  assert.equal(featureReference.registeredPlanningTask, true);
+  assert.equal(featureReference.registeredPlanningTask, false);
 
   const cycleReference = snapshot.references.find(
     (reference) => reference.referenceText === 'PREPUSH-ROUTER-WEB-SOURCE'

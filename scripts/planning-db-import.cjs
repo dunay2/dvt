@@ -1162,7 +1162,7 @@ function classifyTaskLikeReference(
   if (featureMechanizationIdSet.has(value) || featureMechanizationIdSet.has(upperValue)) {
     return {
       classification: 'registered_feature_mechanization',
-      registeredPlanningTask: true,
+      registeredPlanningTask: false,
     };
   }
   if (featureMechanizationCycleIdSet.has(value) || featureMechanizationCycleIdSet.has(upperValue)) {
