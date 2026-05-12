@@ -52,6 +52,9 @@ service name, or public DTO is introduced.
   application coordinator and requires docs/stories/buzon coverage.
 - Added component guide, user stories, and Fowler mailbox analysis for WE-HX-3.
 - Added owned-concern module headers for start-run phase modules.
+- Corrected the start-run protocol documentation so the adapter boundary matches
+  the implemented `IProviderAdapter.startRun(planRef, context)` contract and
+  runtime plan-material fetches revalidate `PlanRef.sha256`.
 
 ## Validation Evidence
 
@@ -78,6 +81,10 @@ service name, or public DTO is introduced.
   `pnpm docs:status:check`, `pnpm docs:arc:evidence:check`, and
   `pnpm docs:quality:check` passed. `docs:quality:check` emitted existing
   non-English-content warnings unrelated to this slice.
+- QA/Fowler fix:
+  `pnpm exec markdownlint-cli2 "docs/architecture/components/engine/contracts/engine/StartRunProtocol.v1.md"`,
+  `pnpm docs:feature-mechanization:implementation`, and `git diff --check`
+  passed after correcting the adapter-input wording.
 
 ## ADR Decision
 

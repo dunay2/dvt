@@ -235,8 +235,9 @@ The dispatch phase currently performs:
 5. treat post-start intent persistence failure as a first-class error
    (`PostStartIntentPersistenceError`)
 
-The adapter receives the already verified `ExecutionPlan` plus the original
-`PlanRef`.
+The adapter receives the engine-approved immutable `PlanRef` plus the resolved
+run context. Provider runtimes that fetch plan material at runtime MUST
+revalidate `PlanRef.sha256` before execution.
 
 ### 4.5 Bootstrap Behavior
 
@@ -343,8 +344,8 @@ This protocol MUST preserve:
 
 - engine-side fetch and verification before adapter dispatch
 - centralized `planId` verification from plan core
-- adapter execution of the same verified `ExecutionPlan` object the engine
-  approved
+- adapter execution from the engine-approved immutable `PlanRef`, with runtime
+  plan-material fetches revalidating `PlanRef.sha256`
 - fail-closed rejection before any adapter execution if integrity fails
 
 Implemented today by:
