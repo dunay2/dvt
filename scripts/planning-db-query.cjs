@@ -23,6 +23,7 @@ const knownQueries = new Set([
   'artifacts',
   'files',
   'components',
+  'units',
   'coverage',
   'remediation',
   'drift',
@@ -103,6 +104,14 @@ function parseArgs(args = process.argv.slice(2)) {
     }
     if (arg === '--component') {
       filters.component = value;
+      continue;
+    }
+    if (arg === '--unit') {
+      filters.component = value;
+      continue;
+    }
+    if (arg === '--parent') {
+      filters.parentUnit = value;
       continue;
     }
     if (arg === '--command-domain') {
@@ -378,6 +387,19 @@ function buildGovernanceComponentRows(rows) {
     row.governance_state ?? row.governanceState,
     flagLabel(row.is_drift ?? row.isDrift, 'drift'),
     flagLabel(row.is_legacy ?? row.isLegacy, 'legacy'),
+    row.ddd_owner ?? row.dddOwner ?? '-',
+  ]);
+}
+
+function buildGovernanceUnitRows(rows) {
+  return rows.map((row) => [
+    row.unit_id ?? row.unitId,
+    compactText(row.name),
+    row.level,
+    row.parent_id ?? row.parentId ?? '-',
+    row.governance_state ?? row.governanceState,
+    row.direct_file_count ?? row.directFileCount ?? 0,
+    row.descendant_file_count ?? row.descendantFileCount ?? 0,
     row.ddd_owner ?? row.dddOwner ?? '-',
   ]);
 }
@@ -707,6 +729,29 @@ function governanceComponentSelect() {
       ddd_owner,
       cq_rails
     from ${schemaName}.governance_component_query`;
+}
+
+function governanceUnitSelect() {
+  return `
+    select
+      unit_id,
+      name,
+      level,
+      parent_id,
+      root_unit,
+      domain_unit,
+      status,
+      governance_state,
+      is_drift,
+      is_legacy,
+      children_required,
+      direct_file_count,
+      descendant_component_count,
+      descendant_file_count,
+      ddd_owner,
+      cq_rails,
+      is_materialized_component
+    from ${schemaName}.governance_unit_query`;
 }
 
 function governanceCoverageSelect() {
@@ -1128,6 +1173,14 @@ function appendGovernanceComponentFilters(predicates, params, filters = {}) {
   appendFilter(predicates, params, 'governance_state', filters.governanceState);
 }
 
+function appendGovernanceUnitFilters(predicates, params, filters = {}) {
+  appendFilter(predicates, params, 'unit_id', filters.component);
+  appendFilter(predicates, params, 'parent_id', filters.parentUnit);
+  appendFilter(predicates, params, 'root_unit', filters.rootUnit);
+  appendFilter(predicates, params, 'domain_unit', filters.domainUnit);
+  appendFilter(predicates, params, 'governance_state', filters.governanceState);
+}
+
 async function readGovernanceFileRows(client, filters = {}) {
   const params = [];
   const predicates = [];
@@ -1159,6 +1212,25 @@ async function readGovernanceComponentRows(client, filters = {}) {
     `${governanceComponentSelect()}
      ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
      order by file_count desc, component_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readGovernanceUnitRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendGovernanceUnitFilters(predicates, params, filters);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${governanceUnitSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by parent_id nulls first, level, unit_id
      limit $${params.length}`,
     params
   );
@@ -1458,6 +1530,15 @@ async function runQuery(options = {}) {
       return componentRows;
     }
 
+    if (queryName === 'units') {
+      const rows = await readGovernanceUnitRows(client, options.filters || {});
+      const unitRows = buildGovernanceUnitRows(rows);
+      if (options.print !== false) {
+        printTaskRows(unitRows);
+      }
+      return unitRows;
+    }
+
     if (queryName === 'coverage') {
       const rows = await readGovernanceCoverageRows(client, options.filters || {});
       const coverageRows = buildGovernanceCoverageRows(rows);
@@ -1564,6 +1645,7 @@ module.exports = {
   buildGovernanceCoverageRows,
   buildGovernanceDriftRows,
   buildGovernanceFileRows,
+  buildGovernanceUnitRows,
   buildGovernanceRemediationRows,
   buildHashDriftRows,
   buildPlanningArtifactRows,
@@ -1587,6 +1669,7 @@ module.exports = {
   readGovernanceCoverageRows,
   readGovernanceDriftRows,
   readGovernanceFileRows,
+  readGovernanceUnitRows,
   readGovernanceRemediationRows,
   readPlanningArtifactRows,
   readPlanningDependencyRows,
