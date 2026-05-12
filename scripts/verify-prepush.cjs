@@ -16,6 +16,11 @@
       args: ['scripts/docs-workboard-check-changed.cjs'],
     },
     {
+      id: 'check-changed',
+      command: 'node',
+      args: ['scripts/check-changed.cjs'],
+    },
+    {
       id: 'docs-gov-locations-changed',
       command: 'pnpm',
       args: ['docs:gov:locations', '--', '--changed-only'],
@@ -41,6 +46,11 @@
       args: ['test:verify-prepush'],
     },
     {
+      id: 'test-pr-closeout',
+      command: 'pnpm',
+      args: ['test:pr-closeout'],
+    },
+    {
       id: 'docs-arc-evidence-changed',
       command: 'pnpm',
       args: ['docs:arc:evidence:check', '--', '--changed-only'],
@@ -54,11 +64,6 @@
       id: 'lint-md-changed',
       command: 'pnpm',
       args: ['lint:md:changed'],
-    },
-    {
-      id: 'check-changed',
-      command: 'node',
-      args: ['scripts/check-changed.cjs'],
     },
     {
       id: 'check-forbidden-tracked-files',

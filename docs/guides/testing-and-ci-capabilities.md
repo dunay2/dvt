@@ -32,6 +32,7 @@ See also:
 | Pre-push verification gate     | `pnpm verify:prepush`            | [`package.json`](../../package.json)                                                               |
 | Changed-files auto-fix         | `pnpm fix:changed`               | [`package.json`](../../package.json)                                                               |
 | Changed-files lint/format gate | `node scripts/check-changed.cjs` | [`scripts/check-changed.cjs`](../../scripts/check-changed.cjs)                                     |
+| PR closeout rail               | `pnpm pr:closeout`               | [`scripts/pr-closeout.cjs`](../../scripts/pr-closeout.cjs)                                         |
 | CI tool contract suite         | `pnpm test:ci-tools`             | [`package.json`](../../package.json)                                                               |
 | Affected workspace build       | `pnpm ci:affected:build`         | [`package.json`](../../package.json)                                                               |
 | Affected workspace test        | `pnpm ci:affected:test`          | [`package.json`](../../package.json)                                                               |
@@ -213,8 +214,10 @@ Command semantics:
   instead of owning a parallel path taxonomy. That shared query consumes the
   repository command catalog for `scripts/**`, `tools/ci/**`, `tools/docs/**`,
   `tools/ops/**`, and `.github/scripts/**`, and it also names root CI policy
-  inputs such as `.dependency-cruiser.cjs`. The router always runs cheap
-  changed-file posture checks, then conditionally runs the heavier groups:
+  inputs such as `.dependency-cruiser.cjs`. The router now runs the changed-file
+  lint/format gate before self-tests, governance evidence, traceability, and
+  architecture checks so formatting failures fail before expensive validation.
+  It then conditionally runs the heavier groups:
   - planning DB inventory checks only for planning/query-store surfaces;
   - global governance maps, fingerprints, coverage, and remediation checks only
     for docs/governance/planning/generated surfaces;
@@ -224,6 +227,12 @@ Command semantics:
     command tooling, or root TypeScript graph inputs.
 - `pnpm verify:prepush -- --full` forces all conditional groups and is the
   diagnostic equivalent of the historical full local pre-push posture.
+- `pnpm pr:closeout` is the governed final PR rail for committed slices. It can
+  run docs/status/governance preparation, caller-supplied targeted checks,
+  `pnpm commit`, one final `pnpm verify:prepush`, and optional `git push` in the
+  repository order. Use `--stage-all` when the full local changed set is the
+  intended PR scope; without it, the rail requires files to be staged already
+  and fails before commit if preparation or checks leave unstaged outputs.
 - `pnpm verify:prepush` now keeps three outcomes for code diffs:
   - skip when no TypeScript-affecting files changed
   - run `pnpm ci:affected:typecheck` when the diff is workspace-scoped

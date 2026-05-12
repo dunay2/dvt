@@ -237,6 +237,11 @@ Usage rules already declared in the ADR index:
   Enforces: root type-check, planning workboard drift check, changed-markdown
   validation, governance file-index freshness, accepted file-fingerprint
   baseline validation, and changed-file checks.
+- [package.json `pr:closeout`](../../../package.json)
+  Role: `PR closeout rail`
+  Enforces: ordered docs/status/governance preparation, optional targeted
+  checks, staged-mode unstaged-output guarding, commit-helper execution, one
+  final pre-push validation pass, and explicit push.
 - [package.json `governance:refresh`](../../../package.json)
   Role: `canonical governance refresh orchestrator`
   Enforces: ordered docs/planning/governance generation, repeat-until-stable
@@ -262,6 +267,11 @@ Usage rules already declared in the ADR index:
   Role: `deterministic docs PR wrapper`
   Enforces: ordered local docs validation, PR title/body validation, and the
   push/PR creation sequence.
+- [scripts/pr-closeout.cjs](../../../scripts/pr-closeout.cjs)
+  Role: `governed PR closeout rail`
+  Enforces: commit-before-final-prepush ordering, prevents hidden hook bypasses
+  in local PR finalization, and rejects staged-mode commits when prep leaves
+  unstaged files behind.
 - [scripts/docs-pr-local.cjs](../../../scripts/docs-pr-local.cjs)
   Role: `local docs PR orchestrator`
   Enforces: ordered local execution of fast/full docs PR checks and optional
