@@ -32,6 +32,8 @@
     "closeout:changed": "node scripts/closeout-changed.cjs",
     "test:closeout-changed": "node --test scripts/closeout-changed.test.cjs",
     "test:verify-prepush": "node --test scripts/verify-prepush.test.cjs",
+    "pr:closeout": "node scripts/pr-closeout.cjs",
+    "test:pr-closeout": "node --test scripts/pr-closeout.test.cjs",
     "ops:ar-c2:evidence": "node tools/ops/ar-c2-evidence-collector.mjs",
     "qa:artifact:check": "node scripts/qa-artifact-check.cjs",
     "verify:prepush": "node scripts/verify-prepush.cjs",

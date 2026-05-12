@@ -17,6 +17,11 @@ workboard, diff-check, conflict-marker, and prepush sequence by hand.
 The helper does not relax any gate. It runs the existing gates in a deterministic
 order and records the planned sequence before execution.
 
+`pnpm pr:closeout` layers the final PR lifecycle on top of that posture. It
+keeps the commit step behind the repository commit helper and normal hooks,
+then runs a single full pre-push gate after hook-managed formatting has settled
+the index.
+
 ## Governing Sources
 
 - `AGENTS.md`
@@ -32,10 +37,13 @@ order and records the planned sequence before execution.
 In scope:
 
 - add `pnpm closeout:changed`;
+- add `pnpm pr:closeout` as the final PR closeout rail;
 - plan generators from the local changed-file set;
 - run `docs:sync`, workboard generation, governance regeneration,
   unstaged and staged `git diff --check`, conflict-marker scan, and
   `pnpm verify:prepush`;
+- run commit-helper, normal hooks, one final `pnpm verify:prepush`, and
+  optional push in a mechanically enforced order;
 - register the closeout helper regression test in the prepush gate;
 - add a runbook entry documenting usage and the untracked-doc caveat;
 - prove the planner with `node --test scripts/closeout-changed.test.cjs`.
@@ -44,7 +52,7 @@ Out of scope:
 
 - changing the semantics of existing verification commands;
 - bypassing hooks or checks;
-- auto-committing, pushing, or creating PRs;
+- creating PRs;
 - modifying apps, packages, contracts, adapters, or workflows.
 
 ## Design Notes
@@ -81,8 +89,11 @@ allowedImplementationSurfaces:
   - package.json
   - scripts/closeout-changed.cjs
   - scripts/closeout-changed.test.cjs
+  - scripts/pr-closeout.cjs
+  - scripts/pr-closeout.test.cjs
   - docs/runbooks/governed-changed-slice-closeout-20260506.md
   - docs/runbooks/index.md
+  - docs/guides/testing-and-ci-capabilities.md
   - docs/planning/proposals/mandatory/governance-and-docs/governed-changed-slice-closeout-plan-20260506.md
   - docs/planning/proposals/index.md
   - docs/planning/index.md
@@ -103,6 +114,12 @@ commandQueryRails:
   - name: ScanChangedFilesForConflictMarkers
     type: query
     dddOwner: ChangedTextFileSet
+  - name: BuildPrCloseoutPlan
+    type: query
+    dddOwner: PrCloseoutPlan
+  - name: RunPrCloseout
+    type: command
+    dddOwner: PrCloseoutGate
 domainObjects:
   - name: ChangedSliceCloseoutPlan
     type: read-model
@@ -112,6 +129,12 @@ domainObjects:
     owner: CI governance
   - name: ChangedTextFileSet
     type: read-model
+    owner: CI governance
+  - name: PrCloseoutPlan
+    type: read-model
+    owner: CI governance
+  - name: PrCloseoutGate
+    type: policy
     owner: CI governance
 fowlerSignals:
   - Scripted Process
@@ -125,8 +148,11 @@ cypressFlows:
   - not-applicable: CI governance helper has no browser workflow.
 completionGate:
   - node --test scripts/closeout-changed.test.cjs
+  - node --test scripts/pr-closeout.test.cjs
   - pnpm test:closeout-changed
+  - pnpm test:pr-closeout
   - pnpm closeout:changed
+  - pnpm pr:closeout chore ci "Mechanize PR closeout rail" --stage-all --dry-run
   - pnpm verify:prepush
 redGreenCycles:
   - id: closeout-plan-contract
@@ -145,6 +171,23 @@ redGreenCycles:
       - scripts/closeout-changed.test.cjs
       - docs/runbooks/governed-changed-slice-closeout-20260506.md
     greenTest: pnpm closeout:changed
+  - id: pr-closeout-rail-order
+    redTest: node --test scripts/pr-closeout.test.cjs
+    expectedFailure: no PR closeout rail exists to enforce commit before the
+      final pre-push gate.
+    patchSurfaces:
+      - scripts/pr-closeout.cjs
+      - scripts/pr-closeout.test.cjs
+      - package.json
+    greenTest: node --test scripts/pr-closeout.test.cjs
+  - id: pr-closeout-commit-argv
+    redTest: node --test scripts/pr-closeout.test.cjs
+    expectedFailure: Windows shell execution can split a commit subject with
+      spaces before it reaches the commit helper.
+    patchSurfaces:
+      - scripts/pr-closeout.cjs
+      - scripts/pr-closeout.test.cjs
+    greenTest: node --test scripts/pr-closeout.test.cjs
 symbolDefaults: &closeoutSymbolDefaults
   dddOwner: ChangedSliceCloseoutGate
   cqRails:
@@ -159,6 +202,19 @@ symbolDefaults: &closeoutSymbolDefaults
   cypressCoverage: "not-applicable: CI governance helper has no browser workflow."
   unitTests:
     - node --test scripts/closeout-changed.test.cjs
+prSymbolDefaults: &prCloseoutSymbolDefaults
+  dddOwner: PrCloseoutGate
+  cqRails:
+    - BuildPrCloseoutPlan
+    - RunPrCloseout
+  fowlerSignals:
+    - Scripted Process
+    - Explicit Gate
+    - Fail Fast
+  architectureGuard: node --test scripts/pr-closeout.test.cjs
+  cypressCoverage: "not-applicable: CI governance helper has no browser workflow."
+  unitTests:
+    - node --test scripts/pr-closeout.test.cjs
 symbols:
   - <<: *closeoutSymbolDefaults
     name: fs
@@ -235,4 +291,97 @@ symbols:
   - <<: *closeoutSymbolDefaults
     name: test
     path: scripts/closeout-changed.test.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: path
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: repoRoot
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: normalizeChangedFiles
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: hasDocsChange
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: hasWorkspaceSourceChange
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: hasGovernanceRefreshChange
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: pushStepOnce
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: quoteLabelArg
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: commandLabel
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: commitArgs
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: buildPrCloseoutPlan
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: resolveExecutable
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: runCommand
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: executePrCloseoutPlan
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: defaultRunGitLines
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: listPrCloseoutChangedFiles
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: listPrCloseoutStagedFiles
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: parseArgs
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: printUsage
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: main
+    path: scripts/pr-closeout.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: test
+    path: scripts/pr-closeout.test.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: assert
+    path: scripts/pr-closeout.test.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: fs
+    path: scripts/pr-closeout.test.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: path
+    path: scripts/pr-closeout.test.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: buildPrCloseoutPlan
+    path: scripts/pr-closeout.test.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: commandLabel
+    path: scripts/pr-closeout.test.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: executePrCloseoutPlan
+    path: scripts/pr-closeout.test.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: parseArgs
+    path: scripts/pr-closeout.test.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: stepIds
+    path: scripts/pr-closeout.test.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: indexOf
+    path: scripts/pr-closeout.test.cjs
+  - <<: *prCloseoutSymbolDefaults
+    name: commit
+    path: scripts/pr-closeout.test.cjs
 ```
