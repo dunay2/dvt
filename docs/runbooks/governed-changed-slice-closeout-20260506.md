@@ -61,7 +61,7 @@ Mechanized PR closeout:
 flowchart LR
     Work[Local changes] --> Prep[Docs/status/governance prep when needed]
     Prep --> Targeted[Optional targeted checks]
-    Targeted --> Stage[git add -A when --stage-all is explicit]
+    Targeted --> Stage[Stage all or assert no unstaged changes]
     Stage --> Commit[pnpm commit with hooks]
     Commit --> FullGate[pnpm verify:prepush once]
     FullGate --> Push[git push when --push is explicit]
@@ -108,12 +108,16 @@ finalization sequence:
 - each `--check "<command>"` supplied by the caller for slice-specific targeted
   tests;
 - `git add -A` only when `--stage-all` is explicit;
+- if `--stage-all` is omitted, a pre-commit guard fails when preparation or
+  checks leave unstaged files outside the index;
 - `pnpm commit <type> <scope> "<Subject>"`, preserving the repository commit
   helper and normal pre-commit hooks;
 - one final `pnpm verify:prepush`;
 - `git push` only when `--push` is explicit.
 
 The rail refuses to commit with no staged files unless `--stage-all` is passed.
+In staged-files mode, it also refuses to commit generated or prep outputs that
+were left unstaged; stage those files explicitly or rerun with `--stage-all`.
 It does not create a PR, bypass hooks, relax checks, or infer a commit message.
 
 ## Before Running

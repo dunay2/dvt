@@ -9,6 +9,7 @@ const {
   commandLabel,
   executePrCloseoutPlan,
   parseArgs,
+  resolveCommandInvocation,
 } = require('./pr-closeout.cjs');
 
 function stepIds(plan) {
@@ -37,6 +38,8 @@ test('buildPrCloseoutPlan commits before the only full prepush validation and pu
   const ids = stepIds(plan);
 
   assert.ok(indexOf(ids, 'governance-refresh') < indexOf(ids, 'commit'));
+  assert.ok(indexOf(ids, 'governance-refresh') < indexOf(ids, 'assert-no-unstaged'));
+  assert.ok(indexOf(ids, 'assert-no-unstaged') < indexOf(ids, 'commit'));
   assert.ok(indexOf(ids, 'commit') < indexOf(ids, 'verify-prepush'));
   assert.ok(indexOf(ids, 'verify-prepush') < indexOf(ids, 'push'));
   assert.equal(ids.filter((id) => id === 'verify-prepush').length, 1);
@@ -68,6 +71,7 @@ test('buildPrCloseoutPlan can stage all local changes explicitly before commit',
   const ids = stepIds(plan);
 
   assert.ok(indexOf(ids, 'stage-all') < indexOf(ids, 'commit'));
+  assert.equal(ids.includes('assert-no-unstaged'), false);
 });
 
 test('buildPrCloseoutPlan prepares docs and generated code status before commit when needed', () => {
@@ -86,6 +90,8 @@ test('buildPrCloseoutPlan prepares docs and generated code status before commit 
 
   assert.ok(indexOf(ids, 'docs-sync') < indexOf(ids, 'commit'));
   assert.ok(indexOf(ids, 'docs-status-generate') < indexOf(ids, 'commit'));
+  assert.ok(indexOf(ids, 'docs-status-generate') < indexOf(ids, 'assert-no-unstaged'));
+  assert.ok(indexOf(ids, 'assert-no-unstaged') < indexOf(ids, 'commit'));
 });
 
 test('buildPrCloseoutPlan refreshes governance for mandatory planning proposals', () => {
@@ -101,6 +107,37 @@ test('buildPrCloseoutPlan refreshes governance for mandatory planning proposals'
   const ids = stepIds(plan);
 
   assert.ok(indexOf(ids, 'governance-refresh') < indexOf(ids, 'commit'));
+});
+
+test('executePrCloseoutPlan fails staged-file mode if prep leaves unstaged files', () => {
+  const plan = buildPrCloseoutPlan({
+    changedFiles: ['docs/runbooks/governed-changed-slice-closeout-20260506.md'],
+    stagedFiles: ['docs/runbooks/governed-changed-slice-closeout-20260506.md'],
+    commit,
+  });
+  const calls = [];
+  let unstagedFiles = [];
+
+  assert.throws(
+    () =>
+      executePrCloseoutPlan(plan, {
+        spawnCommand: (command, args) => {
+          calls.push([command, ...args].join(' '));
+          if (args.includes('docs:sync')) {
+            unstagedFiles = ['docs/index.md'];
+          }
+          return { status: 0 };
+        },
+        listUnstagedFiles: () => unstagedFiles,
+      }),
+    /UNSTAGED_CHANGES_AFTER_PREP[\s\S]*docs\/index\.md/u
+  );
+
+  assert.equal(calls[0].endsWith(' docs:sync'), true);
+  assert.equal(
+    calls.some((call) => call.includes(' commit ')),
+    false
+  );
 });
 
 test('parseArgs exposes commit, stage, push, dry-run, and custom check intent', () => {
@@ -144,9 +181,36 @@ test('executePrCloseoutPlan preserves commit subjects with spaces as one argv it
     }
   );
 
-  assert.match(calls[0].command, /^pnpm(?:\.cmd)?$/u);
-  assert.deepEqual(calls[0].args, ['commit', 'chore', 'ci', 'Mechanize PR closeout rail']);
+  const commitArgIndex = calls[0].args.indexOf('commit');
+  assert.ok(commitArgIndex >= 0, `Expected commit argv in ${calls[0].args.join(' ')}`);
+  assert.deepEqual(calls[0].args.slice(commitArgIndex), [
+    'commit',
+    'chore',
+    'ci',
+    'Mechanize PR closeout rail',
+  ]);
   assert.equal(calls[0].options.shell, false);
+});
+
+test('resolveCommandInvocation launches pnpm through node on Windows', () => {
+  const invocation = resolveCommandInvocation(
+    'pnpm',
+    ['commit', 'chore', 'ci', 'Mechanize PR closeout rail'],
+    {
+      platform: 'win32',
+      pnpmCliPath: 'C:/tools/pnpm/bin/pnpm.cjs',
+    }
+  );
+
+  assert.equal(invocation.command, process.execPath);
+  assert.deepEqual(invocation.args, [
+    'C:/tools/pnpm/bin/pnpm.cjs',
+    'commit',
+    'chore',
+    'ci',
+    'Mechanize PR closeout rail',
+  ]);
+  assert.equal(invocation.shell, false);
 });
 
 test('package scripts expose the PR closeout rail and its regression suite', () => {

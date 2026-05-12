@@ -231,7 +231,8 @@ Command semantics:
   run docs/status/governance preparation, caller-supplied targeted checks,
   `pnpm commit`, one final `pnpm verify:prepush`, and optional `git push` in the
   repository order. Use `--stage-all` when the full local changed set is the
-  intended PR scope; without it, the rail requires files to be staged already.
+  intended PR scope; without it, the rail requires files to be staged already
+  and fails before commit if preparation or checks leave unstaged outputs.
 - `pnpm verify:prepush` now keeps three outcomes for code diffs:
   - skip when no TypeScript-affecting files changed
   - run `pnpm ci:affected:typecheck` when the diff is workspace-scoped

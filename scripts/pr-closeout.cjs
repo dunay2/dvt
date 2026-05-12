@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /** Owned concern: run the governed PR closeout rail without pre-commit/prepush duplication. */
 const { execFileSync, spawnSync } = require('node:child_process');
+const fs = require('node:fs');
 const path = require('node:path');
 
 const { listLocalChangedFiles, parseGitLines, toPosix } = require('./git-local-changes.cjs');
@@ -49,6 +50,9 @@ function quoteLabelArg(value) {
 }
 
 function commandLabel(step) {
+  if (step.internal) {
+    return step.label || step.id;
+  }
   if (step.commandLine) {
     return step.commandLine;
   }
@@ -111,6 +115,12 @@ function buildPrCloseoutPlan(options = {}) {
       command: 'git',
       args: ['add', '-A'],
     });
+  } else {
+    pushStepOnce(steps, {
+      id: 'assert-no-unstaged',
+      internal: 'assertNoUnstagedChanges',
+      label: 'assert no unstaged changes before commit',
+    });
   }
 
   pushStepOnce(steps, {
@@ -142,17 +152,92 @@ function resolveExecutable(command) {
   return command;
 }
 
+function resolvePnpmCliPath(options = {}) {
+  if (options.pnpmCliPath) {
+    return options.pnpmCliPath;
+  }
+
+  const pathEntries = (process.env.PATH || '').split(path.delimiter).filter(Boolean);
+  for (const pathEntry of pathEntries) {
+    const candidate = path.join(pathEntry, 'node_modules', 'pnpm', 'bin', 'pnpm.cjs');
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+function resolveCommandInvocation(command, args, options = {}) {
+  const platform = options.platform || process.platform;
+
+  if (platform === 'win32' && command === 'pnpm') {
+    const pnpmCliPath = resolvePnpmCliPath(options);
+    if (!pnpmCliPath) {
+      throw new Error('PNPM_CLI_NOT_FOUND: unable to locate pnpm.cjs on PATH.');
+    }
+
+    return {
+      command: process.execPath,
+      args: [pnpmCliPath, ...args],
+      shell: false,
+    };
+  }
+
+  return {
+    command: platform === 'win32' ? resolveExecutable(command) : command,
+    args,
+    shell: false,
+  };
+}
+
+function listPrCloseoutUnstagedFiles(options = {}) {
+  const runGitLines = options.runGitLines || defaultRunGitLines;
+  const repoOptions = { repoRootPath: options.repoRootPath || repoRoot };
+  const files = new Set();
+
+  for (const filePath of runGitLines(['diff', '--name-only', '--diff-filter=ACMRD'], repoOptions)) {
+    files.add(filePath);
+  }
+  for (const filePath of runGitLines(['ls-files', '--others', '--exclude-standard'], repoOptions)) {
+    files.add(filePath);
+  }
+
+  return normalizeChangedFiles(Array.from(files));
+}
+
+function assertNoUnstagedChanges(options = {}) {
+  const listUnstagedFiles = options.listUnstagedFiles || listPrCloseoutUnstagedFiles;
+  const unstagedFiles = normalizeChangedFiles(listUnstagedFiles(options));
+
+  if (unstagedFiles.length > 0) {
+    throw new Error(
+      [
+        'UNSTAGED_CHANGES_AFTER_PREP: staged-files mode cannot commit while prep or checks left unstaged files.',
+        'Stage the listed files or rerun with --stage-all:',
+        ...unstagedFiles.map((filePath) => `- ${filePath}`),
+      ].join('\n')
+    );
+  }
+}
+
 function runCommand(step, options = {}) {
+  if (step.internal === 'assertNoUnstagedChanges') {
+    assertNoUnstagedChanges(options);
+    return;
+  }
+
   const spawnCommand = options.spawnCommand || spawnSync;
+  const invocation = resolveCommandInvocation(step.command, step.args, options);
   const result = step.commandLine
     ? spawnCommand(step.commandLine, [], {
         cwd: options.repoRootPath || repoRoot,
         shell: true,
         stdio: 'inherit',
       })
-    : spawnCommand(resolveExecutable(step.command), step.args, {
+    : spawnCommand(invocation.command, invocation.args, {
         cwd: options.repoRootPath || repoRoot,
-        shell: false,
+        shell: invocation.shell,
         stdio: 'inherit',
       });
 
@@ -310,8 +395,10 @@ module.exports = {
   buildPrCloseoutPlan,
   commandLabel,
   executePrCloseoutPlan,
+  listPrCloseoutUnstagedFiles,
   listPrCloseoutChangedFiles,
   listPrCloseoutStagedFiles,
   parseArgs,
+  resolveCommandInvocation,
   runCommand,
 };
