@@ -1,3 +1,10 @@
+/**
+ * @ownedConcern Execute runtime cancel commands behind the command role interface.
+ * @baseline ADR-0003: Execution Model Sovereignty
+ * @baseline ADR-0039: Hexagonal Port Hardening and SOLID Remediation
+ * @decision Isolate cancel adapter dispatch from the compatibility run-control wrapper.
+ * @version 1.0.0
+ */
 import type { EngineRunRef } from '@dvt/contracts';
 import { parseEngineRunRef } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';

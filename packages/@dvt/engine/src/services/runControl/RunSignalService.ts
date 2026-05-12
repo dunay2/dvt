@@ -1,3 +1,10 @@
+/**
+ * @ownedConcern Execute runtime signal commands behind the signal role interface.
+ * @baseline ADR-0003: Execution Model Sovereignty
+ * @baseline ADR-0039: Hexagonal Port Hardening and SOLID Remediation
+ * @decision Isolate signal transition checks and dispatch from the compatibility wrapper.
+ * @version 1.0.0
+ */
 import type { EngineRunRef, EventType, SignalRequest } from '@dvt/contracts';
 import { getSignalDerivedEventType, parseEngineRunRef, parseSignalRequest } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
