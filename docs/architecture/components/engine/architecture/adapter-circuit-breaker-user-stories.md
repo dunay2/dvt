@@ -16,7 +16,7 @@ last_reviewed: 2026-05-12
 | `US-AR-C5-003` | Runtime operator       | See breaker posture in health output                  | `IRunHealthService.healthCheck()` reports `closed`, `open`, or `half_open` posture for adapter components.                 |
 | `US-AR-C5-004` | Observability consumer | Track breaker transitions                             | The breaker emits state gauges and fail-fast counters with provider and operation labels.                                  |
 | `US-AR-C5-005` | Engine maintainer      | Recover without restart after a transient outage      | After the retry window elapses, a half-open successful probe closes the breaker.                                           |
-| `US-AR-C5-006` | Architecture reviewer  | Prevent timeout-only regression                       | A semantic architecture guard validates the component guide, production composition, and health posture.                   |
+| `US-AR-C5-006` | Architecture reviewer  | Prevent timeout-only regression                       | A semantic guard imports the breaker API and validates fail-fast, protected composition, and health posture behavior.      |
 
 ## Negative Scenarios
 
