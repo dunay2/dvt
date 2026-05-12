@@ -195,6 +195,29 @@ test('parseArgs parses docs disposition queue filters for DB-first cleanup work'
   });
 });
 
+test('parseArgs normalizes open resolution filters to pending', () => {
+  assert.deepEqual(parseArgs(['docs-disposition', '--resolution', 'open']), {
+    queryName: 'docs-disposition',
+    filters: {
+      resolution: 'pending',
+    },
+  });
+
+  assert.deepEqual(parseArgs(['task-gaps', '--resolution', 'open']), {
+    queryName: 'task-gaps',
+    filters: {
+      resolution: 'pending',
+    },
+  });
+});
+
+test('parseArgs rejects unknown resolution filters before querying the DB', () => {
+  assert.throws(
+    () => parseArgs(['docs-disposition', '--resolution', 'stale']),
+    /Invalid --resolution "stale"/
+  );
+});
+
 test('parseArgs parses task provenance query filters for DB-first task triage', () => {
   assert.deepEqual(parseArgs(['task-trace', 'F-28-C', '--limit', '20']), {
     queryName: 'task-trace',
