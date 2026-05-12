@@ -11,11 +11,6 @@ on:
         required: false
         type: boolean
         default: false
-      run_traceability_gate:
-        description: 'Run ADR-0000 traceability gate (deprecated: now runs automatically on push)'
-        required: false
-        type: boolean
-        default: false
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -90,10 +85,6 @@ jobs:
 
       - name: Run changed-file checks
         run: node scripts/check-changed.cjs
-
-      - name: ADR-0000 traceability gate
-        if: github.event_name == 'push'
-        run: pnpm traceability:adr0
 
   workspace-ci:
     name: Workspace CI (${{ matrix.name }})
