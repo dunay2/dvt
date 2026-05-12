@@ -60,6 +60,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [In-memory engine state-store invariant drift on snapshot and outbox paths](R-20260404-INMEMORY-STATE-STORE-INVARIANTS.yaml)
 - [Incremental snapshot checkpoint drift can mask replay assumptions](R-20260416-AR-D1-INCREMENTAL-SNAPSHOT-PROJECTION.yaml)
 - [Integration-smoke drift from shared schema test state in S08-4](R-20260403-S08-4-CI-REGRESSION-FIX.yaml)
+- [Intent reconciler runtime factory can regain direct assembly ownership](R-20260512-DHM-WS2-RUNTIME-COMPOSITION-ROOT.yaml)
 - [Intent reconciliation outcomes can overreport cancelled workflows](R-20260408-INTENT-RECONCILE-OUTCOME-CLASSIFICATION.yaml)
 - [Legacy ExecutionPlanV2 imports can break after canonical naming retirement](R-20260401-EXECUTIONPLANV2-CANONICAL-NAMING-BREAK.yaml)
 - [Lineage stale-claimer concurrency remains timestamp-fenced without lease tokens](R-20260328-RCB5F2-LINEAGE-CLAIM-RACE.md)

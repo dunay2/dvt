@@ -63,6 +63,186 @@ No-go constraints:
 - no shadow roadmap parallel to lane planning
 - no peer-domain runtime behavior inside engine internals
 
+### `DHM-WS2` Runtime composition root simplification
+
+`DHM-WS2` executes the runtime composition-root slice from the DDD/hexagonal
+modularization plan. It keeps the intent reconciler runtime behavior unchanged
+while extracting the startup assembly order into a named API composition object:
+config resolution, store creation, adapter resolution, maintenance service
+creation, worker creation, and runtime handle publication.
+
+```feature-mechanization
+version: 1
+featureId: DHM-WS2-RUNTIME-COMPOSITION-ROOT
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+componentGuides:
+  - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-component.md
+userStories:
+  - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-user-stories.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md
+  - docs/adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md
+allowedImplementationSurfaces:
+  - apps/api/src/runtime/intentReconcilerRuntime.ts
+  - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+  - apps/api/test/server.test.ts
+  - docs/.manifest.json
+  - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-component.md
+  - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-user-stories.md
+  - docs/evidence/ed-20260512-dhm-ws2-runtime-composition-root.md
+  - docs/evidence/index.md
+  - docs/planning/closeouts/20260512-dhm-ws2-runtime-composition-root-closeout.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+  - docs/planning/status/**
+  - docs/risk-register/quality/R-20260512-DHM-WS2-RUNTIME-COMPOSITION-ROOT.yaml
+  - docs/risk-register/quality/index.md
+forbiddenImplementationSurfaces:
+  - packages/@dvt/contracts/**
+  - packages/@dvt/adapter-*/**
+  - packages/@dvt/engine/**
+  - apps/web/**
+  - specs/contracts/**
+commandQueryRails:
+  - name: IntentReconcilerRuntimeComposition
+    type: command
+    dddOwner: API runtime composition root
+domainObjects:
+  - name: IntentReconcilerRuntimeComposition
+    type: composition object
+    owner: API runtime
+  - name: ReconcilerRuntimeConfig
+    type: configuration value object
+    owner: API runtime
+  - name: IntentReconcilerRuntimeHandle
+    type: runtime handle
+    owner: API runtime
+fowlerSignals:
+  - Boundary drift
+  - Responsibility overload
+  - Documentation drift
+architectureGuards:
+  - pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+  - pnpm docs:feature-mechanization:implementation
+cypressFlows:
+  - Not applicable - API background runtime composition only
+completionGate:
+  - pnpm docs:feature-mechanization -- --feature DHM-WS2-RUNTIME-COMPOSITION-ROOT
+  - pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+  - pnpm --filter dvt-api test -- test/server.test.ts
+  - pnpm --filter dvt-api typecheck
+  - pnpm docs:status:generate
+  - pnpm docs:sync
+  - pnpm governance:refresh
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: dhm-ws2-runtime-composition-architecture-guard
+    redTest: pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+    expectedFailure: intentReconcilerRuntime still assembles config, stores, adapters, maintenance, worker, and handle directly in createIntentReconcilerRuntime without a named composition object and ordering guard.
+    patchSurfaces:
+      - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+      - apps/api/src/runtime/intentReconcilerRuntime.ts
+      - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-component.md
+      - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-user-stories.md
+    greenTest: pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+symbols:
+  - name: IntentReconcilerRuntimeComposition
+    path: apps/api/src/runtime/intentReconcilerRuntime.ts
+    dddOwner: API runtime composition root
+    cqRails:
+      - IntentReconcilerRuntimeComposition
+    fowlerSignals:
+      - Responsibility overload
+    architectureGuard: pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+    cypressCoverage: Not applicable - background runtime composition
+    unitTests:
+      - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+  - name: createIntentReconcilerRuntimeComposition
+    path: apps/api/src/runtime/intentReconcilerRuntime.ts
+    dddOwner: API runtime composition root
+    cqRails:
+      - IntentReconcilerRuntimeComposition
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+    cypressCoverage: Not applicable - background runtime composition
+    unitTests:
+      - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+  - name: TEST_ROOT
+    path: apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+    dddOwner: API runtime composition root
+    cqRails:
+      - IntentReconcilerRuntimeComposition
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+    cypressCoverage: Not applicable - background runtime composition
+    unitTests:
+      - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+  - name: API_ROOT
+    path: apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+    dddOwner: API runtime composition root
+    cqRails:
+      - IntentReconcilerRuntimeComposition
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+    cypressCoverage: Not applicable - background runtime composition
+    unitTests:
+      - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+  - name: REPO_ROOT
+    path: apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+    dddOwner: API runtime composition root
+    cqRails:
+      - IntentReconcilerRuntimeComposition
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+    cypressCoverage: Not applicable - background runtime composition
+    unitTests:
+      - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+  - name: COMPONENT_GUIDE
+    path: apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+    dddOwner: API runtime composition root
+    cqRails:
+      - IntentReconcilerRuntimeComposition
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+    cypressCoverage: Not applicable - background runtime composition
+    unitTests:
+      - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+  - name: USER_STORIES
+    path: apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+    dddOwner: API runtime composition root
+    cqRails:
+      - IntentReconcilerRuntimeComposition
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+    cypressCoverage: Not applicable - background runtime composition
+    unitTests:
+      - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+  - name: readApiSource
+    path: apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+    dddOwner: API runtime composition root
+    cqRails:
+      - IntentReconcilerRuntimeComposition
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+    cypressCoverage: Not applicable - background runtime composition
+    unitTests:
+      - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+```
+
 ## Gap closure waves
 
 ### `WE-HX-0` Canonical map and doc replacement

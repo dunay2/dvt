@@ -218,45 +218,106 @@ function createRuntimeHandle(
   };
 }
 
+class IntentReconcilerRuntimeComposition {
+  constructor(
+    private readonly env: Env,
+    private readonly logger: FastifyBaseLogger,
+    private readonly observability: IObservability,
+    private readonly healthHooks: ReconcilerRuntimeHealthHooks
+  ) {}
+
+  async create(): Promise<IntentReconcilerRuntimeHandle | null> {
+    const config = this.resolveConfig();
+    if (config === null) return null;
+
+    const stores = this.createStores(config);
+    await this.migrateStores(stores);
+    const adapters = await this.resolveAdapters(config, stores);
+    if (adapters.size === 0) {
+      throw new Error('INTENT_RECONCILER_NO_PROVIDER_ADAPTERS');
+    }
+
+    const maintenance = this.createMaintenance(stores, adapters);
+    const worker = this.createWorker(maintenance, config);
+    return this.createHandle(worker, stores);
+  }
+
+  private resolveConfig(): ReconcilerRuntimeConfig | null {
+    return resolveRuntimeConfig(this.env, this.logger);
+  }
+
+  private createStores(config: ReconcilerRuntimeConfig): RuntimeStores {
+    return createRuntimeStores(config);
+  }
+
+  private async migrateStores(stores: RuntimeStores): Promise<void> {
+    await migratePostgresRuntimeStores({
+      stateStore: stores.stateStore,
+      startRunIntentStore: stores.intentStore,
+    });
+  }
+
+  private async resolveAdapters(
+    config: ReconcilerRuntimeConfig,
+    stores: RuntimeStores
+  ): Promise<Map<EngineRunRef['provider'], IProviderAdapter>> {
+    return resolveReconcilerAdapters(
+      this.env,
+      config.providers,
+      stores.stateStoreRoles.read,
+      stores.stateStoreRoles.write,
+      this.observability
+    );
+  }
+
+  private createMaintenance(
+    stores: RuntimeStores,
+    adapters: Map<EngineRunRef['provider'], IProviderAdapter>
+  ): RunMaintenanceService {
+    return createMaintenanceService(
+      stores.stateStoreRoles.read,
+      stores.stateStoreRoles.write,
+      stores.intentStore,
+      adapters,
+      this.observability
+    );
+  }
+
+  private createWorker(
+    maintenance: RunMaintenanceService,
+    config: ReconcilerRuntimeConfig
+  ): IntentReconcilerWorker {
+    return createWorker({
+      maintenance,
+      logger: this.logger,
+      observability: this.observability,
+      options: config.workerOptions,
+      healthHooks: this.healthHooks,
+    });
+  }
+
+  private createHandle(
+    worker: IntentReconcilerWorker,
+    stores: RuntimeStores
+  ): IntentReconcilerRuntimeHandle {
+    return createRuntimeHandle(worker, stores, this.logger);
+  }
+}
+
+function createIntentReconcilerRuntimeComposition(
+  env: Env,
+  logger: FastifyBaseLogger,
+  observability: IObservability,
+  healthHooks: ReconcilerRuntimeHealthHooks
+): IntentReconcilerRuntimeComposition {
+  return new IntentReconcilerRuntimeComposition(env, logger, observability, healthHooks);
+}
+
 export async function createIntentReconcilerRuntime(
   env: Env,
   logger: FastifyBaseLogger,
   observability: IObservability,
   healthHooks: ReconcilerRuntimeHealthHooks = {}
 ): Promise<IntentReconcilerRuntimeHandle | null> {
-  const config = resolveRuntimeConfig(env, logger);
-  if (config === null) return null;
-
-  const stores = createRuntimeStores(config);
-  const { stateStore, stateStoreRoles, intentStore } = stores;
-  await migratePostgresRuntimeStores({
-    stateStore,
-    startRunIntentStore: intentStore,
-  });
-  const adapters = await resolveReconcilerAdapters(
-    env,
-    config.providers,
-    stateStoreRoles.read,
-    stateStoreRoles.write,
-    observability
-  );
-  if (adapters.size === 0) {
-    throw new Error('INTENT_RECONCILER_NO_PROVIDER_ADAPTERS');
-  }
-
-  const maintenance = createMaintenanceService(
-    stateStoreRoles.read,
-    stateStoreRoles.write,
-    intentStore,
-    adapters,
-    observability
-  );
-  const worker = createWorker({
-    maintenance,
-    logger,
-    observability,
-    options: config.workerOptions,
-    healthHooks,
-  });
-  return createRuntimeHandle(worker, stores, logger);
+  return createIntentReconcilerRuntimeComposition(env, logger, observability, healthHooks).create();
 }

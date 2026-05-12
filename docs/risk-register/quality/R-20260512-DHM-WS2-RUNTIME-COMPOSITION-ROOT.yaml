@@ -1,0 +1,21 @@
+---
+id: R-20260512-DHM-WS2-RUNTIME-COMPOSITION-ROOT
+title: Intent reconciler runtime factory can regain direct assembly ownership
+status: Open
+date: 2026-05-12
+owners:
+  - dvt-api
+severity: Low
+probability: Low
+---
+summary: >
+  Future edits could reintroduce config, store, adapter, maintenance, worker, or handle assembly
+  directly into createIntentReconcilerRuntime instead of keeping that sequence inside the named
+  IntentReconcilerRuntimeComposition command rail.
+mitigation: >
+  intentReconcilerRuntimeComposition.architecture.test.ts fails if the exported factory directly
+  assembles stores, migrations, adapters, maintenance, workers, or runtime handles, or if the
+  ordered composition calls are removed.
+evidence:
+  - docs/evidence/ed-20260512-dhm-ws2-runtime-composition-root.md
+  - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
