@@ -1,6 +1,13 @@
 /**
  * @ownedConcern Coordinate pre-dispatch start-run admission, provider resolution,
  * plan integrity, and execution-policy capability checks.
+ * @baseline ADR-0003: Execution Model Sovereignty
+ * @baseline ADR-0012: Plan Integrity Ownership
+ * @baseline ADR-0014: Run-Driven Adapter Model
+ * @decision Keep start-run admission in a named phase service before provider dispatch.
+ * @consequence StartRunApplicationService coordinates phases without owning
+ * provider, artifact, or capability semantics.
+ * @version 1.0.0
  */
 import type { IStoredPlanArtifactReader } from '@dvt/artifacts';
 import type {

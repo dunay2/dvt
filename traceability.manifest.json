@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-05-10",
+  "generated": "2026-05-12",
   "repo": {
     "sha": "local"
   },
@@ -149,11 +149,13 @@
         "Keep DBT plan-step support in one plugin-owned manifest instead of scattered allowlists",
         "Keep DBT process failure mapping separate from runner orchestration",
         "Keep DBT step-kind ownership in the worker plugin profile instead of core Temporal dispatch",
+        "Keep deterministic start-run intent creation in a named phase service.",
         "Keep layer cursor, skipped-step emission, and continue-as-new handoff derived from DVT workflow state",
         "Keep process execution behind a DBT CLI command runner seam",
         "Keep provider-ref and retry-attempt administration behind DVT-owned in-memory run-state support",
         "Keep provider-test behavior behind the real provider adapter contract.",
         "Keep recent control-signal ids in continue-as-new cursor state without making cursor size unbounded",
+        "Keep start-run admission in a named phase service before provider dispatch.",
         "Keep the facade use-case export surface local to the component boundary.",
         "Keep workflow side effects behind Temporal activities while DVT-owned retry policy drives step execution attempts",
         "Model executable plugin runtimes behind a generic runner port",
@@ -288,6 +290,8 @@
         "packages/@dvt/engine/src/security/planIntegrity.ts",
         "packages/@dvt/engine/src/security/planRefPolicy.ts",
         "packages/@dvt/engine/src/services/RunMaintenanceService.ts",
+        "packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts",
+        "packages/@dvt/engine/src/services/startRun/StartRunIntentService.ts",
         "packages/@dvt/engine/src/state/InMemoryRunStateAdminSupport.ts",
         "packages/@dvt/engine/src/state/InMemoryRunStateCore.ts",
         "packages/@dvt/engine/src/state/InMemoryRunStateReadSupport.ts",
@@ -532,11 +536,13 @@
       "number": "ADR-0012",
       "decisions": [
         "Define an adapter contract oriented to run-driven execution and explicit signaling",
-        "Engine entry-point plan integrity verification resolves the executable plan,"
+        "Engine entry-point plan integrity verification resolves the executable plan,",
+        "Keep start-run admission in a named phase service before provider dispatch."
       ],
       "implemented_by": [
         "packages/@dvt/engine/src/adapters/IProviderAdapter.ts",
-        "packages/@dvt/engine/src/security/planIntegrity.ts"
+        "packages/@dvt/engine/src/security/planIntegrity.ts",
+        "packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts"
       ],
       "title": "ADR-0012 - Plan Integrity Ownership"
     },
@@ -559,6 +565,7 @@
         "Keep DBT process failure mapping separate from runner orchestration",
         "Keep process execution behind a DBT CLI command runner seam",
         "Keep provider-test behavior behind the real provider adapter contract.",
+        "Keep start-run admission in a named phase service before provider dispatch.",
         "Model executable plugin runtimes behind a generic runner port",
         "Normalize facade start-run input before delegating to the start application service.",
         "Represent executor plugins as explicit step-activity profile inputs",
@@ -580,7 +587,8 @@
         "packages/@dvt/engine/src/adapters/IProviderAdapter.ts",
         "packages/@dvt/engine/src/adapters/inMemory/InMemoryProviderAdapter.ts",
         "packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowStartRunUseCase.ts",
-        "packages/@dvt/engine/src/core/WorkflowEngine.ts"
+        "packages/@dvt/engine/src/core/WorkflowEngine.ts",
+        "packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts"
       ],
       "title": "ADR-0014 — Run-Driven Adapter Model"
     },
@@ -658,6 +666,7 @@
         "Define an adapter contract oriented to run-driven execution and explicit signaling",
         "In-memory intent store for unit tests; mirrors InMemoryTxStore patterns",
         "Intent errors are defined in the canonical contracts package",
+        "Keep deterministic start-run intent creation in a named phase service.",
         "Periodic reconciler with single-flight execution and infra-only backoff",
         "Runtime bootstrap may require both core state-store and start-run intent schema migrations",
         "SQL-backed intent store with explicit status-transition guards",
@@ -681,6 +690,7 @@
         "packages/@dvt/engine/src/ports/IRunMaintenanceService.ts",
         "packages/@dvt/engine/src/ports/IStartRunIntentStore.ts",
         "packages/@dvt/engine/src/services/RunMaintenanceService.ts",
+        "packages/@dvt/engine/src/services/startRun/StartRunIntentService.ts",
         "packages/@dvt/engine/src/state/InMemoryStartRunIntentStore.ts",
         "packages/@dvt/engine/src/workers/IntentReconcilerWorker.ts"
       ],

@@ -208,6 +208,7 @@ allowedImplementationSurfaces:
   - docs/evidence/index.md
   - docs/risk-register/quality/R-20260512-WE-HX-3-START-RUN-DECOMPOSITION.yaml
   - docs/risk-register/quality/index.md
+  - traceability.manifest.json
   - packages/@dvt/engine/src/application/StartRunApplicationService.ts
   - packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts
   - packages/@dvt/engine/src/services/startRun/StartRunDomainConstants.ts
