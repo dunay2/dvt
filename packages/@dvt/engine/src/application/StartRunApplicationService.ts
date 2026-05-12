@@ -18,12 +18,28 @@ import { StartRunEventFactory } from '../services/startRun/StartRunEventFactory.
 import { StartRunExecutionService } from '../services/startRun/StartRunExecutionService.js';
 import { StartRunFailurePolicy } from '../services/startRun/StartRunFailurePolicy.js';
 import { StartRunIntentService } from '../services/startRun/StartRunIntentService.js';
-import type { StartRunErrorContext } from '../services/startRun/StartRunTypes.js';
+import type {
+  IStartRunExecutionService,
+  IStartRunFailurePolicy,
+  StartRunErrorContext,
+} from '../services/startRun/StartRunTypes.js';
 import type { IClock } from '../utils/clock.js';
 
 import { StartRunAdmissionGuard } from './StartRunAdmissionGuard.js';
 
 export interface StartRunApplicationServiceDeps {
+  guard: StartRunAdmissionGuard;
+  idempotency: IdempotencyKeyBuilder;
+  clock: IClock;
+  intentStore: IStartRunIntentStore;
+  observability: IObservability;
+  planFetcher: IStoredPlanArtifactReader;
+  planIntegrityValidator: IPlanIntegrityValidator;
+  executionService: IStartRunExecutionService;
+  failurePolicy: IStartRunFailurePolicy;
+}
+
+export interface BuildStartRunApplicationServiceDeps {
   policy: IRunAccessPolicy;
   guard: StartRunAdmissionGuard;
   stateStoreRead: IRunStateStoreRead;
@@ -47,42 +63,17 @@ export interface StartRunApplicationServiceDeps {
  */
 export class StartRunApplicationService {
   private readonly admissionService: StartRunAdmissionService;
-  private readonly failurePolicy: StartRunFailurePolicy;
+  private readonly failurePolicy: IStartRunFailurePolicy;
   private readonly intentService: StartRunIntentService;
-  private readonly executionService: StartRunExecutionService;
-  private readonly planIntegrityValidator: IPlanIntegrityValidator;
+  private readonly executionService: IStartRunExecutionService;
 
   constructor(private readonly deps: StartRunApplicationServiceDeps) {
-    const eventFactory = new StartRunEventFactory({
-      idempotency: deps.idempotency,
-      clock: deps.clock,
-    });
-    this.failurePolicy = new StartRunFailurePolicy({
-      stateStoreRead: deps.stateStoreRead,
-      stateStoreWrite: deps.stateStoreWrite,
-      intentStore: deps.intentStore,
-      observability: deps.observability,
-      eventFactory,
-      clock: deps.clock,
-      ...(deps.observabilityFallbackThrottleMs === undefined
-        ? {}
-        : { observabilityFallbackThrottleMs: deps.observabilityFallbackThrottleMs }),
-    });
-    this.executionService = new StartRunExecutionService({
-      stateStoreWrite: deps.stateStoreWrite,
-      intentStore: deps.intentStore,
-      eventFactory,
-      failurePolicy: this.failurePolicy,
-      observability: deps.observability,
-      clock: deps.clock,
-      ...(deps.timeouts ? { timeouts: deps.timeouts } : {}),
-    });
-    this.planIntegrityValidator =
-      deps.planIntegrityValidator ?? new PlanIntegrityValidator({ clock: deps.clock });
+    this.failurePolicy = deps.failurePolicy;
+    this.executionService = deps.executionService;
     this.admissionService = new StartRunAdmissionService({
       guard: deps.guard,
       planFetcher: deps.planFetcher,
-      planIntegrityValidator: this.planIntegrityValidator,
+      planIntegrityValidator: deps.planIntegrityValidator,
     });
     this.intentService = new StartRunIntentService({
       idempotency: deps.idempotency,
@@ -161,6 +152,48 @@ export class StartRunApplicationService {
       intentId,
     });
   }
+}
+
+export function buildStartRunApplicationService(
+  deps: BuildStartRunApplicationServiceDeps
+): StartRunApplicationService {
+  const eventFactory = new StartRunEventFactory({
+    idempotency: deps.idempotency,
+    clock: deps.clock,
+  });
+  const failurePolicy = new StartRunFailurePolicy({
+    stateStoreRead: deps.stateStoreRead,
+    stateStoreWrite: deps.stateStoreWrite,
+    intentStore: deps.intentStore,
+    observability: deps.observability,
+    eventFactory,
+    clock: deps.clock,
+    ...(deps.observabilityFallbackThrottleMs === undefined
+      ? {}
+      : { observabilityFallbackThrottleMs: deps.observabilityFallbackThrottleMs }),
+  });
+  const executionService = new StartRunExecutionService({
+    stateStoreWrite: deps.stateStoreWrite,
+    intentStore: deps.intentStore,
+    eventFactory,
+    failurePolicy,
+    observability: deps.observability,
+    clock: deps.clock,
+    ...(deps.timeouts ? { timeouts: deps.timeouts } : {}),
+  });
+
+  return new StartRunApplicationService({
+    guard: deps.guard,
+    idempotency: deps.idempotency,
+    clock: deps.clock,
+    intentStore: deps.intentStore,
+    observability: deps.observability,
+    planFetcher: deps.planFetcher,
+    planIntegrityValidator:
+      deps.planIntegrityValidator ?? new PlanIntegrityValidator({ clock: deps.clock }),
+    executionService,
+    failurePolicy,
+  });
 }
 
 function buildMetricTags(

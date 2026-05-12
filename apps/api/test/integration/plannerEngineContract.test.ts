@@ -29,7 +29,7 @@ import {
   SequenceClock,
   SnapshotProjector,
   StartRunAdmissionGuard,
-  StartRunApplicationService,
+  buildStartRunApplicationService,
   type EngineRunRef,
   type ExecutionPlan,
   type IProviderAdapter,
@@ -160,7 +160,7 @@ function createStack(
       executionPolicy: {},
     }),
   };
-  const startRunApplicationService = new StartRunApplicationService({
+  const startRunApplicationService = buildStartRunApplicationService({
     policy,
     guard: new StartRunAdmissionGuard({
       policy,

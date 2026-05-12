@@ -204,7 +204,9 @@ under already accepted principles from `ADR-0003` and `ADR-0014`.
 - `startRun` application flow
   Current: `StartRunApplicationService` now sequences explicit phase services:
   [Start-run application decomposition component](./start-run-application-decomposition-component.md)
-  covers admission, intent creation, dispatch, and failure policy ownership.
+  covers admission and intent creation, and
+  [WorkflowEngine Start-Run Decomposition Component](./workflow-engine-start-run-decomposition-component.md)
+  covers injected execution and failure seams.
   Target: keep phase services narrow and move remaining cross-flow provider and
   telemetry duplication through `WE-HX-5`.
   Gap signal: provider and telemetry seam standardization.

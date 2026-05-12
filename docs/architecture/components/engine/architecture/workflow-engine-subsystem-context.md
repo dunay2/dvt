@@ -251,17 +251,20 @@ sequenceDiagram
   [WorkflowEngine boundary ownership component](./workflow-engine-boundary-ownership-component.md)
 - public facade tracing drift is closed by
   [WorkflowEngine Facade Use-Cases Component](./workflow-engine-facade-use-cases-component.md)
+- start-run internal collaborator construction drift is closed by
+  [WorkflowEngine Start-Run Decomposition Component](./workflow-engine-start-run-decomposition-component.md)
 
 ```mermaid
 flowchart LR
   Guard["StartRunAdmissionGuard"] -->|mixed concerns| W2["Admission + capability + adapter + rate-limit"]
   Core["WorkflowEngineCoreService"] -->|mixed concerns| W3["Cancel + signal + telemetry"]
-  StartRun["StartRunApplicationService"] -->|internal construction| W4["Builds failure/exec collaborators directly"]
+  StartRun["StartRunApplicationService"] -->|closed by DHM-WS3| W4["Execution/failure collaborators injected"]
 ```
 
 ## Fowler/SOLID/hexagonal assessment (as-is)
 
-- Fowler-style use-case decomposition is present but incomplete.
+- Fowler-style use-case decomposition is present and the start-run application
+  construction seam is now explicit.
 - SOLID posture is partially aligned:
   - SRP improved vs earlier monolith, but key classes remain wide.
   - DIP is mostly aligned through ports, but composition boundaries are not yet

@@ -21,7 +21,7 @@ import {
   RunEnrichmentService,
   SnapshotProjector,
   StartRunAdmissionGuard,
-  StartRunApplicationService,
+  buildStartRunApplicationService,
   type EngineRunRef,
   type IAuthorizer,
   type IClock,
@@ -114,7 +114,7 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
   });
   const projector = new SnapshotProjector();
   const idempotency = new IdempotencyKeyBuilder();
-  const startRunApplicationService = new StartRunApplicationService({
+  const startRunApplicationService = buildStartRunApplicationService({
     policy,
     guard: new StartRunAdmissionGuard({
       policy,
