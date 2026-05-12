@@ -162,6 +162,7 @@
         "Keep start-run admission in a named phase service before provider dispatch.",
         "Keep start-run start and success telemetry in a policy seam instead of the application coordinator.",
         "Keep the facade use-case export surface local to the component boundary.",
+        "Keep the legacy combined control surface without owning cancel or signal semantics.",
         "Keep workflow side effects behind Temporal activities while DVT-owned retry policy drives step execution attempts",
         "Model executable plugin runtimes behind a generic runner port",
         "Model facade operations as explicit command and query use-case ports.",
@@ -281,6 +282,7 @@
         "packages/@dvt/engine/src/contracts/types.ts",
         "packages/@dvt/engine/src/core/SnapshotProjector.ts",
         "packages/@dvt/engine/src/core/WorkflowEngine.ts",
+        "packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts",
         "packages/@dvt/engine/src/core/idempotency.ts",
         "packages/@dvt/engine/src/core/index.ts",
         "packages/@dvt/engine/src/core/types.ts",
@@ -888,10 +890,12 @@
         "Isolate signal transition checks and dispatch from the compatibility wrapper.",
         "Keep cancel command behavior behind a command-specific runtime port.",
         "Keep signal command behavior behind a signal-specific runtime port.",
+        "Keep the legacy combined control surface without owning cancel or signal semantics.",
         "Rebuild in-memory snapshots as secondary projections from ordered run events",
         "Serve in-memory run reads from DVT-owned metadata, events, and projections under tenant scope"
       ],
       "implemented_by": [
+        "packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts",
         "packages/@dvt/engine/src/domain/IRunCommandService.ts",
         "packages/@dvt/engine/src/domain/IRunSignalService.ts",
         "packages/@dvt/engine/src/services/runControl/RunCommandService.ts",

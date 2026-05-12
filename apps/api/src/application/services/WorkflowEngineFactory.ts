@@ -1,4 +1,5 @@
 /**
+ * @ownedConcern Compose API WorkflowEngine runtime composition through a production factory and test seam.
  * @file apps/api/src/application/services/WorkflowEngineFactory.ts
  * @baseline ADR-0003: Execution Model Sovereignty
  * @decision Provide two construction paths:

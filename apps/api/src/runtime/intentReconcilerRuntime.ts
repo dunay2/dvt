@@ -1,3 +1,10 @@
+/**
+ * @ownedConcern Own API-side intent reconciler runtime composition; not an engine domain service.
+ * @baseline ADR-0039: Hexagonal Port Hardening and SOLID Remediation
+ * @decision Keep Postgres, provider adapter, maintenance, worker, and handle assembly in apps/api.
+ * @consequence @dvt/engine receives runtime ports and services without reading API environment.
+ * @version 1.0.0
+ */
 import {
   migratePostgresRuntimeStores,
   PostgresStartRunIntentStore,

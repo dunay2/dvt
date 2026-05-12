@@ -839,6 +839,255 @@ symbols:
       - packages/@dvt/engine/test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
 ```
 
+### `DHM-WS6` Semantic closure and component engineering record
+
+`DHM-WS6` closes the modularization stream after WS2, WS3, and WS4 by
+mechanizing semantic encapsulation. The slice does not add runtime behavior. It
+adds the component engineering record, owned-concern module headers, user
+stories, and an architecture guard that proves API composition, engine
+compatibility, command, signal, and documentation ownership stay aligned.
+
+```feature-mechanization
+version: 1
+featureId: DHM-WS6-SEMANTIC-CLOSURE
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+componentGuides:
+  - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
+userStories:
+  - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-user-stories.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+  - docs/adr/ADR-0003-execution-model.md
+  - docs/adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md
+allowedImplementationSurfaces:
+  - apps/api/src/application/services/WorkflowEngineFactory.ts
+  - apps/api/src/runtime/intentReconcilerRuntime.ts
+  - buzon/20260512-codex-fowler-dhm-ws6-semantic-closure-analysis.md
+  - docs/.manifest.json
+  - docs/architecture/components/engine/architecture/index.md
+  - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
+  - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-user-stories.md
+  - docs/evidence/ed-20260512-dhm-ws6-semantic-closure.md
+  - docs/evidence/index.md
+  - docs/planning/closeouts/20260512-dhm-ws6-semantic-closure-closeout.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+  - docs/planning/status/**
+  - docs/risk-register/quality/R-20260512-DHM-WS6-SEMANTIC-CLOSURE.yaml
+  - docs/risk-register/quality/index.md
+  - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
+  - packages/@dvt/engine/src/domain/IRunCommandService.ts
+  - packages/@dvt/engine/src/domain/IRunSignalService.ts
+  - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+forbiddenImplementationSurfaces:
+  - packages/@dvt/contracts/**
+  - packages/@dvt/adapter-*/**
+  - packages/@dvt/planner/**
+  - apps/web/**
+  - specs/contracts/**
+commandQueryRails:
+  - name: WorkflowEngineSemanticClosure
+    type: command
+    dddOwner: Engine architecture governance
+domainObjects:
+  - name: WorkflowEngineSemanticClosureComponent
+    type: component engineering record
+    owner: Architecture / Engine
+  - name: WorkflowEngineSemanticClosureGuard
+    type: architecture fitness function
+    owner: Architecture / Engine
+  - name: WorkflowEngineCoreService
+    type: compatibility adapter
+    owner: Engine runtime
+fowlerSignals:
+  - Documentation drift
+  - Hidden authority
+  - Duplicate semantics
+  - Boundary drift
+architectureGuards:
+  - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+  - pnpm docs:feature-mechanization:implementation
+cypressFlows:
+  - Not applicable - architecture semantic closure only
+completionGate:
+  - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+  - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts test/architecture/startRunApplicationDecomposition.architecture.test.ts
+  - pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+  - pnpm --filter @dvt/engine typecheck
+  - pnpm --filter dvt-api typecheck
+  - pnpm docs:status:generate
+  - pnpm docs:sync
+  - pnpm governance:refresh
+  - pnpm docs:feature-mechanization -- --feature DHM-WS6-SEMANTIC-CLOSURE
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: dhm-ws6-semantic-closure-architecture-guard
+    redTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    expectedFailure: composition and compatibility modules lack owned concern headers and the DHM-WS6 component guide does not exist.
+    patchSurfaces:
+      - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+      - apps/api/src/runtime/intentReconcilerRuntime.ts
+      - apps/api/src/application/services/WorkflowEngineFactory.ts
+      - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
+      - packages/@dvt/engine/src/domain/IRunCommandService.ts
+      - packages/@dvt/engine/src/domain/IRunSignalService.ts
+      - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
+      - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-user-stories.md
+      - buzon/20260512-codex-fowler-dhm-ws6-semantic-closure-analysis.md
+    greenTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+symbols:
+  - name: WorkflowEngineSemanticClosureComponent
+    path: docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
+    dddOwner: Engine architecture governance
+    cqRails:
+      - WorkflowEngineSemanticClosure
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    cypressCoverage: Not applicable - architecture semantic closure only
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+  - name: workflowEngineSemanticClosure
+    path: packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    dddOwner: Engine architecture governance
+    cqRails:
+      - WorkflowEngineSemanticClosure
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    cypressCoverage: Not applicable - architecture semantic closure only
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+  - name: WorkflowEngineCoreService
+    path: packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
+    dddOwner: Engine runtime compatibility control service
+    cqRails:
+      - WorkflowEngineSemanticClosure
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    cypressCoverage: Not applicable - internal engine compatibility adapter
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+  - name: IntentReconcilerRuntimeComposition
+    path: apps/api/src/runtime/intentReconcilerRuntime.ts
+    dddOwner: API runtime composition root
+    cqRails:
+      - WorkflowEngineSemanticClosure
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    cypressCoverage: Not applicable - API background runtime composition
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+  - name: CLOSEOUT
+    path: packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    dddOwner: Engine architecture governance
+    cqRails:
+      - WorkflowEngineSemanticClosure
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    cypressCoverage: Not applicable - architecture semantic closure only
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+  - name: COMPONENT_GUIDE
+    path: packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    dddOwner: Engine architecture governance
+    cqRails:
+      - WorkflowEngineSemanticClosure
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    cypressCoverage: Not applicable - architecture semantic closure only
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+  - name: ENGINE_ROOT
+    path: packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    dddOwner: Engine architecture governance
+    cqRails:
+      - WorkflowEngineSemanticClosure
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    cypressCoverage: Not applicable - architecture semantic closure only
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+  - name: FOWLER_MAILBOX
+    path: packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    dddOwner: Engine architecture governance
+    cqRails:
+      - WorkflowEngineSemanticClosure
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    cypressCoverage: Not applicable - architecture semantic closure only
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+  - name: REPO_ROOT
+    path: packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    dddOwner: Engine architecture governance
+    cqRails:
+      - WorkflowEngineSemanticClosure
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    cypressCoverage: Not applicable - architecture semantic closure only
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+  - name: TEST_ROOT
+    path: packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    dddOwner: Engine architecture governance
+    cqRails:
+      - WorkflowEngineSemanticClosure
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    cypressCoverage: Not applicable - architecture semantic closure only
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+  - name: USER_STORIES
+    path: packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    dddOwner: Engine architecture governance
+    cqRails:
+      - WorkflowEngineSemanticClosure
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    cypressCoverage: Not applicable - architecture semantic closure only
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+  - name: readEngineSource
+    path: packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    dddOwner: Engine architecture governance
+    cqRails:
+      - WorkflowEngineSemanticClosure
+    fowlerSignals:
+      - Hidden authority
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    cypressCoverage: Not applicable - architecture semantic closure only
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+  - name: readRepoSource
+    path: packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    dddOwner: Engine architecture governance
+    cqRails:
+      - WorkflowEngineSemanticClosure
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    cypressCoverage: Not applicable - architecture semantic closure only
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+```
+
 ### `WE-HX-5` Provider and telemetry standardization
 
 - depends on `WE-HX-3`, `WE-HX-4`
