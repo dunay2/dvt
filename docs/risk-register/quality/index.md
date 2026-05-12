@@ -83,6 +83,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Postgres three-part model migration and compatibility drift](R-20260403-S08-4-POSTGRES-THREE-PART-MODEL.yaml)
 - [Protected runtime rail catalog documentation source of truth is closed](R-20260503-PROTECTED-RUNTIME-RAIL-SSOT-DEBT.yaml)
 - [Protected runtime rail closure is governed by executable C&Q evidence](R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml)
+- [Provider and telemetry seam extraction could diverge from existing runtime behavior](R-20260512-WE-HX-5-PROVIDER-TELEMETRY-SEAMS.yaml)
 - [Provider runtimes can regress to unchecked PlanRef execution](R-20260424-TEMPORAL-PLAN-REF-CONTRACT.yaml)
 - [R-20260307-GOLDEN-PATH-01 - Golden-path coverage debt can hide engine and adapter regressions](R-20260307-golden-path-coverage-debt.md)
 - [R-20260308-API-AUTH-01 - API auth runtime can regress without a full OIDC plus Postgres integration lane](R-20260308-api-auth-runtime-integration-coverage.md)

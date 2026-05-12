@@ -8,7 +8,7 @@ import type {
   SignalRequest,
 } from '@dvt/contracts';
 
-import { AdapterNotRegisteredError, RunMetadataNotFoundError } from '../../contracts/errors.js';
+import { RunMetadataNotFoundError } from '../../contracts/errors.js';
 import type { IClock } from '../../utils/clock.js';
 import type { IdempotencyKeyBuilder } from '../idempotency.js';
 import { SnapshotProjector, snapshotToStatus } from '../SnapshotProjector.js';
@@ -20,18 +20,8 @@ import {
 } from './coreDomainConstants.js';
 import type { StartRunTraceContext } from './StartRunTraceContext.js';
 
-type IProviderAdapter = import('../../adapters/IProviderAdapter.js').IProviderAdapter;
 type IRunStateStoreRead = import('../../ports/IRunStateStore.js').IRunStateStoreRead;
 type IRunStateStoreWrite = import('../../ports/IRunStateStore.js').IRunStateStoreWrite;
-
-export function getAdapterOrThrow(
-  adapters: Map<EngineRunRef['provider'], IProviderAdapter>,
-  provider: EngineRunRef['provider']
-): IProviderAdapter {
-  const adapter = adapters.get(provider);
-  if (adapter === undefined) throw new AdapterNotRegisteredError(provider);
-  return adapter;
-}
 
 export async function resolveMetaOrThrow(
   stateStoreRead: IRunStateStoreRead,

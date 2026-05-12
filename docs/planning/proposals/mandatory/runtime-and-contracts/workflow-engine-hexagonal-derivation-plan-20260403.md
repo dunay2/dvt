@@ -844,6 +844,258 @@ symbols:
 - depends on `WE-HX-3`, `WE-HX-4`
 - consolidate provider-resolution seam and telemetry/decorator policy
 
+```feature-mechanization
+version: 1
+featureId: WE-HX-5-PROVIDER-TELEMETRY-SEAMS
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+componentGuides:
+  - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-component.md
+  - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
+userStories:
+  - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-user-stories.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+  - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
+  - docs/adr/ADR-0003-execution-model.md
+  - docs/adr/ADR-0014-run-driven-adapter-model.md
+  - docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md
+allowedImplementationSurfaces:
+  - buzon/20260512-codex-fowler-we-hx-5-provider-telemetry-seams-analysis-and-remediation.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+  - docs/planning/closeouts/20260512-we-hx-5-provider-telemetry-seams-closeout.md
+  - docs/planning/status/generated-code-state.md
+  - docs/planning/status/system-operations-inventory-20260501.md
+  - docs/architecture/components/engine/architecture/index.md
+  - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-component.md
+  - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
+  - docs/evidence/ed-20260512-we-hx-5-provider-telemetry-seams.md
+  - docs/evidence/index.md
+  - docs/risk-register/quality/R-20260512-WE-HX-5-PROVIDER-TELEMETRY-SEAMS.yaml
+  - docs/risk-register/quality/index.md
+  - traceability.manifest.json
+  - packages/@dvt/engine/src/application/providerSelection.ts
+  - packages/@dvt/engine/src/application/StartRunAdmissionGuard.ts
+  - packages/@dvt/engine/src/application/StartRunApplicationService.ts
+  - packages/@dvt/engine/src/services/RunEnrichmentService.ts
+  - packages/@dvt/engine/src/services/runControl/RunCommandService.ts
+  - packages/@dvt/engine/src/services/runControl/RunSignalService.ts
+  - packages/@dvt/engine/src/services/startRun/StartRunTelemetryPolicy.ts
+  - packages/@dvt/engine/test/application/providerSelection.test.ts
+  - packages/@dvt/engine/test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+  - packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
+forbiddenImplementationSurfaces:
+  - packages/@dvt/contracts/**
+  - packages/@dvt/adapter-*/**
+  - packages/@dvt/planner/**
+  - apps/web/**
+  - apps/api/**
+  - specs/**
+commandQueryRails:
+  - name: EngineProviderResolution
+    type: command
+    dddOwner: Workflow engine runtime provider seam
+  - name: StartRunTelemetryPolicy
+    type: command
+    dddOwner: Workflow engine start-run observability policy
+domainObjects:
+  - name: IEngineProviderResolver
+    type: application port
+    owner: packages/@dvt/engine/src/application/providerSelection.ts
+  - name: MapBackedEngineProviderResolver
+    type: application service
+    owner: packages/@dvt/engine/src/application/providerSelection.ts
+  - name: StartRunTelemetryPolicy
+    type: policy service
+    owner: packages/@dvt/engine/src/services/startRun/StartRunTelemetryPolicy.ts
+fowlerSignals:
+  - Repeated provider lookup replaced by one resolver seam.
+  - Start-run telemetry extracted from the application coordinator.
+  - Documentation drift closed with local component API, invariants, transitions, consumers, and diagrams.
+  - Semantic architecture guard validates ownership rather than barrel thinness.
+architectureGuards:
+  - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+  - pnpm docs:feature-mechanization:implementation
+cypressFlows:
+  - N/A - engine-internal provider and telemetry seam
+completionGate:
+  - pnpm docs:feature-mechanization -- --feature WE-HX-5-PROVIDER-TELEMETRY-SEAMS
+  - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+  - pnpm --filter @dvt/engine test -- test/application/providerSelection.test.ts test/services/StartRunApplicationService.test.ts
+  - pnpm --filter @dvt/engine typecheck
+  - pnpm --filter @dvt/engine test
+  - GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs
+  - pnpm docs:status:generate
+  - pnpm docs:sync
+  - pnpm governance:refresh
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: provider-telemetry-semantic-architecture-guard
+    redTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+    expectedFailure: Provider resolution is still repeated through adapter maps and getAdapterOrThrow, start-run telemetry is still owned by StartRunApplicationService, and the WE-HX-5 local component guide is not yet enforced.
+    patchSurfaces:
+      - packages/@dvt/engine/test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+      - packages/@dvt/engine/src/application/providerSelection.ts
+      - packages/@dvt/engine/src/application/StartRunAdmissionGuard.ts
+      - packages/@dvt/engine/src/application/StartRunApplicationService.ts
+      - packages/@dvt/engine/src/services/RunEnrichmentService.ts
+      - packages/@dvt/engine/src/services/runControl/RunCommandService.ts
+      - packages/@dvt/engine/src/services/runControl/RunSignalService.ts
+      - packages/@dvt/engine/src/services/startRun/StartRunTelemetryPolicy.ts
+      - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-component.md
+      - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-user-stories.md
+      - buzon/20260512-codex-fowler-we-hx-5-provider-telemetry-seams-analysis-and-remediation.md
+    greenTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+symbols:
+  - name: IEngineProviderResolver
+    path: packages/@dvt/engine/src/application/providerSelection.ts
+    dddOwner: Workflow engine runtime provider seam
+    cqRails:
+      - EngineProviderResolution
+    fowlerSignals:
+      - Names provider resolution as an application-owned seam.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+    cypressCoverage: N/A - engine-internal seam
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/application/providerSelection.test.ts
+  - name: MapBackedEngineProviderResolver
+    path: packages/@dvt/engine/src/application/providerSelection.ts
+    dddOwner: Workflow engine runtime provider seam
+    cqRails:
+      - EngineProviderResolution
+    fowlerSignals:
+      - Removes repeated map lookup and error mapping.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+    cypressCoverage: N/A - engine-internal seam
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/application/providerSelection.test.ts
+  - name: StartRunTelemetryPolicy
+    path: packages/@dvt/engine/src/services/startRun/StartRunTelemetryPolicy.ts
+    dddOwner: Workflow engine start-run observability policy
+    cqRails:
+      - StartRunTelemetryPolicy
+    fowlerSignals:
+      - Moves non-blocking telemetry behavior out of the application coordinator.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+    cypressCoverage: N/A - engine-internal telemetry policy
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationService.test.ts
+  - name: StartRunTelemetryPolicyDeps
+    path: packages/@dvt/engine/src/services/startRun/StartRunTelemetryPolicy.ts
+    dddOwner: Workflow engine start-run observability policy
+    cqRails:
+      - StartRunTelemetryPolicy
+    fowlerSignals:
+      - Makes telemetry dependencies explicit.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+    cypressCoverage: N/A - engine-internal telemetry policy
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationService.test.ts
+  - name: StartRunTelemetrySuccessInput
+    path: packages/@dvt/engine/src/services/startRun/StartRunTelemetryPolicy.ts
+    dddOwner: Workflow engine start-run observability policy
+    cqRails:
+      - StartRunTelemetryPolicy
+    fowlerSignals:
+      - Names the success telemetry transition payload.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+    cypressCoverage: N/A - engine-internal telemetry policy
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationService.test.ts
+  - name: TEST_ROOT
+    path: packages/@dvt/engine/test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+    dddOwner: Workflow engine provider telemetry architecture guard
+    cqRails:
+      - EngineProviderResolution
+      - StartRunTelemetryPolicy
+    fowlerSignals:
+      - Locates architecture test package root.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+  - name: ENGINE_ROOT
+    path: packages/@dvt/engine/test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+    dddOwner: Workflow engine provider telemetry architecture guard
+    cqRails:
+      - EngineProviderResolution
+      - StartRunTelemetryPolicy
+    fowlerSignals:
+      - Locates engine source for semantic inspections.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+  - name: REPO_ROOT
+    path: packages/@dvt/engine/test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+    dddOwner: Workflow engine provider telemetry architecture guard
+    cqRails:
+      - EngineProviderResolution
+      - StartRunTelemetryPolicy
+    fowlerSignals:
+      - Locates repository documentation evidence.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+  - name: COMPONENT_GUIDE
+    path: packages/@dvt/engine/test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+    dddOwner: Workflow engine provider telemetry architecture guard
+    cqRails:
+      - EngineProviderResolution
+      - StartRunTelemetryPolicy
+    fowlerSignals:
+      - Requires local component API and invariants documentation.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+  - name: USER_STORIES
+    path: packages/@dvt/engine/test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+    dddOwner: Workflow engine provider telemetry architecture guard
+    cqRails:
+      - EngineProviderResolution
+      - StartRunTelemetryPolicy
+    fowlerSignals:
+      - Requires scenario coverage before implementation.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+  - name: MAILBOX
+    path: packages/@dvt/engine/test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+    dddOwner: Workflow engine provider telemetry architecture guard
+    cqRails:
+      - EngineProviderResolution
+      - StartRunTelemetryPolicy
+    fowlerSignals:
+      - Requires Fowler analysis evidence in buzon.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+  - name: readEngineSource
+    path: packages/@dvt/engine/test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+    dddOwner: Workflow engine provider telemetry architecture guard
+    cqRails:
+      - EngineProviderResolution
+      - StartRunTelemetryPolicy
+    fowlerSignals:
+      - Reads source ownership semantics for the architecture guard.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+    cypressCoverage: N/A - architecture test helper
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+```
+
 ### `WE-HX-6` Test-double and fitness-function hardening
 
 - depends on `WE-HX-5`

@@ -71,6 +71,7 @@ export * from './services/RunMaintenanceService.js';
 export * from './services/RunEnrichmentService.js';
 export { buildRunCommandService } from './services/runControl/RunCommandService.js';
 export { buildRunSignalService } from './services/runControl/RunSignalService.js';
+export * from './services/startRun/StartRunTelemetryPolicy.js';
 export { buildRunHealthService } from './services/RunHealthService.js';
 export { buildRunStatusQueryService } from './services/RunStatusQueryService.js';
 export { buildRunRecoveryService } from './application/RecoverRunApplicationService.js';

@@ -11,6 +11,10 @@ import type { IObservability } from '@dvt/observability';
 
 import type { IProviderAdapter } from '../../adapters/IProviderAdapter.js';
 import {
+  type IEngineProviderResolver,
+  MapBackedEngineProviderResolver,
+} from '../../application/providerSelection.js';
+import {
   CORE_LOG_MESSAGE,
   CORE_METRIC,
   CORE_OPERATION,
@@ -21,7 +25,6 @@ import {
 import {
   buildMetricTags,
   buildTraceContext,
-  getAdapterOrThrow,
   normalizeEngineRunRef,
   resolveMetaOrThrow,
   withTimeout,
@@ -36,6 +39,7 @@ export interface RunCommandServiceDeps {
   stateStoreRead: IRunStateStoreRead;
   policy: IRunAccessPolicy;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
+  providerResolver?: IEngineProviderResolver;
   observability: IObservability;
   timeouts?: {
     adapterCallMs?: number;
@@ -44,13 +48,18 @@ export interface RunCommandServiceDeps {
 }
 
 export class RunCommandService implements IRunCommandService {
-  constructor(private readonly deps: RunCommandServiceDeps) {}
+  private readonly providerResolver: IEngineProviderResolver;
+
+  constructor(private readonly deps: RunCommandServiceDeps) {
+    this.providerResolver =
+      deps.providerResolver ?? new MapBackedEngineProviderResolver(deps.adapters);
+  }
 
   async cancel(ref: EngineRunRef): Promise<void> {
     const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(ref));
     await this.deps.policy.assertTenantAccess(validatedRunRef.tenantId);
     const meta = await resolveMetaOrThrow(this.deps.stateStoreRead, validatedRunRef);
-    const adapter = getAdapterOrThrow(this.deps.adapters, meta.providerRef.provider);
+    const adapter = this.providerResolver.resolveProviderRef(meta.providerRef);
     const startMs = Date.parse(this.deps.clock.nowIsoUtc());
     const metricTags = buildMetricTags(meta.providerRef.provider, meta.tenantId, {
       operation: CORE_OPERATION.cancelRun,
