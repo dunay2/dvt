@@ -1,6 +1,7 @@
 /**
  * @ownedConcern Compose API WorkflowEngine runtime composition through a production factory and test seam.
  * @file apps/api/src/application/services/WorkflowEngineFactory.ts
+ * @ownedConcern Compose the production workflow engine runtime from API infrastructure.
  * @baseline ADR-0003: Execution Model Sovereignty
  * @decision Provide two construction paths:
  *   - buildWorkflowEngine: production path - accepts subsystem-grouped config,
@@ -10,6 +11,7 @@
  */
 import type { IStoredPlanArtifactReader } from '@dvt/artifacts';
 import {
+  buildCircuitBreakingAdapterRegistry,
   buildRunCommandService,
   buildWorkflowEngineUseCases,
   buildRunHealthService,
@@ -70,6 +72,7 @@ export interface EngineRuntimeConfig {
   /** Providers that MUST be registered at boot time. Engine throws at construction if missing. */
   requiredProviders?: EngineRunRef['provider'][];
   timeouts?: { adapterCallMs?: number; outboxEnqueueMs?: number };
+  circuitBreaker?: { failureThreshold?: number; openStateMs?: number };
 }
 
 export interface EngineInfrastructureConfig {
@@ -106,6 +109,11 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
     );
   }
 
+  const protectedAdapters = buildCircuitBreakingAdapterRegistry(config.runtime.adapters, {
+    observability: config.infrastructure.observability,
+    nowMs: () => Date.parse(config.infrastructure.clock.nowIsoUtc()),
+    ...(config.runtime.circuitBreaker ?? {}),
+  });
   const policy: IRunAccessPolicy = new RunAccessPolicy({
     authorizer: config.security.authorizer,
     planRefPolicy: new PlanRefPolicy({
@@ -121,7 +129,7 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
     guard: new StartRunAdmissionGuard({
       policy,
       stateStoreRead: config.persistence.stateStoreRead,
-      adapters: config.runtime.adapters,
+      adapters: protectedAdapters,
       ...optionalConfig(
         'runExecutionContextResolver',
         config.persistence.runExecutionContextResolver
@@ -143,7 +151,7 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
   const runCommandService = buildRunCommandService({
     stateStoreRead: config.persistence.stateStoreRead,
     policy,
-    adapters: config.runtime.adapters,
+    adapters: protectedAdapters,
     observability: config.infrastructure.observability,
     ...optionalConfig('timeouts', config.runtime.timeouts),
     clock: config.infrastructure.clock,
@@ -153,7 +161,7 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
     stateStoreWrite: config.persistence.stateStoreWrite,
     idempotency,
     policy,
-    adapters: config.runtime.adapters,
+    adapters: protectedAdapters,
     observability: config.infrastructure.observability,
     ...optionalConfig('timeouts', config.runtime.timeouts),
     clock: config.infrastructure.clock,
@@ -171,7 +179,7 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
     projector,
     policy,
     planFetcher: config.persistence.planFetcher,
-    adapters: config.runtime.adapters,
+    adapters: protectedAdapters,
     observability: config.infrastructure.observability,
     clock: config.infrastructure.clock,
     startRunApplicationService,
@@ -186,7 +194,7 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
   });
   const runHealthService = buildRunHealthService({
     stateStoreRead: config.persistence.stateStoreRead,
-    adapters: config.runtime.adapters,
+    adapters: protectedAdapters,
   });
   const workflowUseCases = buildWorkflowEngineUseCases({
     observability: config.infrastructure.observability,
@@ -199,7 +207,7 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
   return {
     engine: buildWorkflowEngineFacade({
       ...workflowUseCases,
-      adapters: config.runtime.adapters,
+      adapters: protectedAdapters,
       ...optionalConfig('requiredProviders', config.runtime.requiredProviders),
     }),
     runHealthService,
@@ -207,7 +215,7 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
       stateStoreRead: config.persistence.stateStoreRead,
       projector,
       policy,
-      adapters: config.runtime.adapters,
+      adapters: protectedAdapters,
       observability: config.infrastructure.observability,
       ...optionalConfig('timeouts', config.runtime.timeouts),
     }),

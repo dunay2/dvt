@@ -25,6 +25,8 @@ Use it when the question is:
 - [C4 engine](./c4-engine.md)
 - [Workflow engine subsystem context](./workflow-engine-subsystem-context.md)
 - [Workflow engine target architecture](./workflow-engine-target-architecture.v1.md)
+- [Engine adapter circuit breaker component](./adapter-circuit-breaker-component.md)
+- [Engine adapter circuit breaker user stories](./adapter-circuit-breaker-user-stories.md)
 - [Workflow engine boundary ownership component](./workflow-engine-boundary-ownership-component.md)
 - [Workflow engine facade use-cases component](./workflow-engine-facade-use-cases-component.md)
 - [Workflow engine boundary ownership user stories](./workflow-engine-boundary-ownership-user-stories.md)

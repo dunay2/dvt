@@ -62,6 +62,7 @@ export * from './ports/IProjector.js';
 export * from './ports/IRunExecutionContextResolver.js';
 export * from './ports/IRunExecutionContextBindingPolicy.js';
 export * from './adapters/IProviderAdapter.js';
+export * from './adapters/CircuitBreakingProviderAdapter.js';
 export * from './domain/IRunCommandService.js';
 export * from './domain/IRunSignalService.js';
 export * from './domain/IRunRecoveryService.js';

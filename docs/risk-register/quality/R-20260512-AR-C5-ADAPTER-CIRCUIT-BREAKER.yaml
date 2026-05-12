@@ -1,0 +1,17 @@
+---
+id: R-20260512-AR-C5-ADAPTER-CIRCUIT-BREAKER
+title: Adapter breaker thresholds may need production tuning
+status: Open
+date: 2026-05-12
+owners:
+  - '@dvt/engine'
+  - 'dvt-api'
+severity: Low
+probability: Medium
+---
+context: >
+  AR-C5 introduces default circuit-breaker thresholds for provider adapter calls. The defaults
+  prevent timeout pileups but may need adjustment after sustained production telemetry is available.
+mitigation: >
+  The production composition exposes optional threshold and open-state configuration. Breaker state
+  metrics and health posture provide the signals required for later SLA tuning.
