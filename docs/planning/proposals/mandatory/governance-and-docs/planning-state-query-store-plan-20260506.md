@@ -1247,6 +1247,10 @@ Current implementation status on 2026-05-08:
   `reference_text` matches the registered task reference, preventing
   document-level or unrelated task-like actions from multiplying false task
   gaps in `planning:db:query focus`;
+- W27 is implemented: `planning:db:query` now normalizes the operator-facing
+  `--resolution open` alias to `pending` and rejects unknown resolution values
+  before SQL generation, preventing empty result sets caused by invalid
+  resolution filters from being mistaken for a clean docs/task queue;
 - the obsolete `governance:artifacts:generate` package alias is removed;
   `pnpm governance:refresh` is the single local orchestration command for
   generated inspection artifacts plus planning/governance DB import and checks;
@@ -2364,6 +2368,24 @@ symbols:
       - node --test scripts/planning-db-migrate.test.cjs
       - pnpm planning:db:query task-gaps --task AR-A11 --resolution all --limit 50
       - pnpm planning:db:query focus --kind task_gap --limit 20
+  - <<: *planningDbContentSymbol
+    name: normalizeResolutionFilter
+    path: scripts/planning-db-query.cjs
+    dddOwner: PlanningWorkIntakeReadModel
+    cqRails:
+      - QueryDocsDispositionQueue
+      - QueryTaskProvenanceLedger
+      - QueryPlanningWorkIntake
+    fowlerSignals:
+      - Manual docs disposition resolution
+      - Manual task provenance reconstruction
+      - Hidden query model inside YAML
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - planning DB CLI filter normalization has no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
+      - pnpm planning:db:query docs-disposition --resolution open --limit 1
+      - pnpm planning:db:query task-gaps --resolution open --limit 1
   - <<: *planningDbContentSymbol
     name: PlanningDbMigrateRunner
     path: scripts/planning-db-migrate.cjs

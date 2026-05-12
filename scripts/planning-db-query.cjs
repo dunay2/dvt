@@ -65,6 +65,25 @@ function parseLimit(value, defaultLimit) {
   return parsed;
 }
 
+function normalizeResolutionFilter(value) {
+  if (value === undefined || value === null || value === '') {
+    return undefined;
+  }
+
+  const normalized = String(value).toLowerCase();
+  if (normalized === 'open') {
+    return 'pending';
+  }
+
+  if (['all', 'pending', 'resolved'].includes(normalized)) {
+    return normalized;
+  }
+
+  throw new Error(
+    `Invalid --resolution "${value}". Expected one of: pending, resolved, all, open.`
+  );
+}
+
 function parseArgs(args = process.argv.slice(2)) {
   const [queryNameArg, ...rest] = args;
   const queryName = resolveQueryName(queryNameArg);
@@ -139,7 +158,7 @@ function parseArgs(args = process.argv.slice(2)) {
       continue;
     }
     if (arg === '--resolution') {
-      filters.resolution = value;
+      filters.resolution = normalizeResolutionFilter(value);
       continue;
     }
     if (arg === '--kind') {
@@ -447,7 +466,7 @@ function appendFilter(predicates, params, column, value) {
 }
 
 function appendResolutionFilter(predicates, params, value) {
-  const resolution = value || 'pending';
+  const resolution = normalizeResolutionFilter(value) || 'pending';
   if (resolution === 'all') {
     return;
   }
