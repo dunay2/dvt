@@ -33,6 +33,10 @@ Use it when the question is:
 - [Start-run application decomposition user stories](./start-run-application-decomposition-user-stories.md)
 - [Start-run admission component](./start-run-admission-component.md)
 - [Start-run admission user stories](./start-run-admission-user-stories.md)
+- [Workflow engine runtime path decomposition component](./workflow-engine-runtime-path-decomposition-component.md)
+- [Workflow engine runtime path decomposition user stories](./workflow-engine-runtime-path-decomposition-user-stories.md)
+- [Workflow engine semantic closure component](./workflow-engine-semantic-closure-component.md)
+- [Workflow engine semantic closure user stories](./workflow-engine-semantic-closure-user-stories.md)
 
 ## Related pages
 
