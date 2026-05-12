@@ -538,6 +538,7 @@ behavior.
 | `InspectPlanningQueryStoreRuntime` | query   | Planning tooling      | `PlanningQueryStoreRuntime`   | Docker Compose + env              |
 | `ImportGovernanceStateQueryStore`  | command | Docs governance       | `GovernanceStateImport`       | file-system + SQL                 |
 | `QueryGovernanceStateReadModel`    | query   | Docs governance       | `GovernanceStateReadModel`    | SQL query adapter                 |
+| `ReadGovernanceUnitTree`           | query   | Docs governance       | `GovernanceUnitTreeReadModel` | SQL query adapter                 |
 | `ExportGovernanceStateSnapshot`    | command | Docs governance       | `GovernanceStateExport`       | SQL + file-system                 |
 | `ValidateGovernanceStateDrift`     | query   | Docs governance       | `GovernanceStateDriftReport`  | SQL + Git comparison              |
 | `RefreshGovernanceDerivedSurfaces` | command | Docs governance       | `GovernanceRefreshWorkflow`   | package scripts + Git fingerprint |
@@ -574,16 +575,20 @@ that encapsulates queued actionable task selection after dependency
 resolution. `governance:db:query files`, `components`, `coverage`,
 `remediation`, and `drift` are aliases over the same SQL query adapter and read
 DB-owned governance query views instead of parsing generated YAML/Markdown
-surfaces. `planning:db:query pr-readiness` also implements
+surfaces. `planning:db:query units` implements `ReadGovernanceUnitTree` by
+exposing logical parent units derived from governance component
+`unitReferences`, including non-materialized parents such as `SYS-API-ROOT`.
+`planning:db:query pr-readiness` also implements
 `QueryGovernanceStateReadModel` by reading the DB-owned ARC/PR readiness
 projection derived from `.arc-policy.yaml`, changed files, evidence docs, and
 risk-register updates. Scope is local developer tooling only; authorization is
 local OS and Docker/Postgres access. Negative tests cover migration checksum
 mismatch, unknown query names, fast summary isolation from the hash-drift
 projection, explicit hash-drift querying, effective task filtering, open-task
-view selection, next-task view selection, governance query view selection, PR
-readiness blocker formatting, content extraction from real lane YAML, and
-governance file-count parity with the Git-tracked file index.
+view selection, next-task view selection, governance query view selection,
+governance unit parent navigation, PR readiness blocker formatting, content
+extraction from real lane YAML, and governance file-count parity with the
+Git-tracked file index.
 
 `planning:db:operate` implements `ApplyPlanningLocalOperation`,
 `CreatePlanningTaskDefinition`, `DeletePlanningTaskDefinition`, and
@@ -1021,7 +1026,7 @@ flowchart LR
   GeneratorProjections["in-memory governance generator projections"] --> Import["planning:db:import"]
   Import --> GovernanceTables["governance_* tables"]
   GovernanceTables --> QueryViews["governance_*_query views"]
-  QueryViews --> GovernanceQuery["governance:db:query files/components/coverage/remediation/drift"]
+  QueryViews --> GovernanceQuery["governance:db:query files/components/coverage/remediation/drift\nplanning:db:query units"]
   QueryViews -. "W12B" .-> ReportGenerators["system-governance report generators"]
 ```
 
@@ -1204,6 +1209,10 @@ Current implementation status on 2026-05-08:
   `coverage`, `remediation`, and `drift` read DB-owned governance query views
   for daily inspection instead of requiring agents to open generated
   `system-governance-*` artifacts;
+- W12D is implemented: `planning:db:query units` reads the DB-owned
+  `governance_unit_query` view so logical parent units such as `SYS-API-ROOT`
+  can be searched directly even when the parent is derived from
+  `unitReferences` rather than stored as a materialized component row;
 - W12B is implemented: `governance:refresh` imports the query store after
   source-affecting governance generators and before coverage/remediation
   generation, then runs those report generators against DB-owned governance
@@ -1233,6 +1242,15 @@ Current implementation status on 2026-05-08:
 - W21 is implemented: docs disposition and task-provenance gaps can now be
   resolved through DB-owned source-hash-guarded overlays instead of requiring
   agents to edit status/inventory files to remove operational noise;
+- W26 is implemented: `planning_task_gap_raw_query` now links document
+  disposition actions to planning tasks only when the action's
+  `reference_text` matches the registered task reference, preventing
+  document-level or unrelated task-like actions from multiplying false task
+  gaps in `planning:db:query focus`;
+- W27 is implemented: `planning:db:query` now normalizes the operator-facing
+  `--resolution open` alias to `pending` and rejects unknown resolution values
+  before SQL generation, preventing empty result sets caused by invalid
+  resolution filters from being mistaken for a clean docs/task queue;
 - the obsolete `governance:artifacts:generate` package alias is removed;
   `pnpm governance:refresh` is the single local orchestration command for
   generated inspection artifacts plus planning/governance DB import and checks;
@@ -1660,6 +1678,9 @@ commandQueryRails:
   - name: QueryGovernanceStateReadModel
     type: query
     dddOwner: GovernanceStateReadModel
+  - name: ReadGovernanceUnitTree
+    type: query
+    dddOwner: GovernanceUnitTreeReadModel
   - name: ReadComponentEngineeringRecord
     type: query
     dddOwner: ComponentEngineeringRecordReadModel
@@ -1733,6 +1754,9 @@ domainObjects:
   - name: GovernanceStateReadModel
     type: read model
     owner: Docs governance
+  - name: GovernanceUnitTreeReadModel
+    type: read model
+    owner: Docs governance
   - name: ComponentEngineeringRecordReadModel
     type: read model
     owner: Docs governance
@@ -1795,10 +1819,12 @@ completionGate:
   - pnpm planning:db:query
   - pnpm planning:db:query task-trace --task F-28-C
   - pnpm planning:db:query task-gaps --limit 10
+  - pnpm planning:db:query task-gaps --task AR-A11 --resolution all --limit 50
   - pnpm planning:db:query docs-disposition --resolution all --limit 10
   - pnpm planning:db:query task-gaps --resolution all --limit 10
   - pnpm planning:db:query focus --limit 10
   - pnpm planning:db:query cer --component SYS-API-HTTP-ENTRYPOINTS --limit 1
+  - pnpm planning:db:query units --unit SYS-API-ROOT --limit 5
   - pnpm planning:db:query hash-drift
   - pnpm planning:db:export
   - pnpm planning:db:export:check
@@ -2099,6 +2125,7 @@ symbols:
       - RefreshGovernanceDerivedSurfaces
       - QuerySystemGovernanceGenerationWorkflow
       - ValidateSystemGovernanceGenerationWorkflow
+      - ReadGovernanceUnitTree
     fowlerSignals:
       - Large planning file operating cost
       - Generated artifact churn
@@ -2108,6 +2135,7 @@ symbols:
       - Manual task provenance reconstruction
       - Manual docs disposition resolution
       - Manual work intake reconstruction
+      - Manual governance hierarchy reconstruction
       - Mutable external tracker authority risk
     architectureGuard: pnpm docs:feature-mechanization:implementation
     cypressCoverage: N/A - planning query-store proposal has no browser workflow.
@@ -2324,6 +2352,43 @@ symbols:
   - <<: *planningDbContentSymbol
     name: PlanningDbWorkIntakeQuerySuggestionHardeningMigration
     path: tools/planning-db/migrations/020_planning_work_intake_query_suggestions.sql
+  - &planningTaskGapReferenceFilterSymbol
+    name: PlanningTaskGapReferenceFilterMigration
+    path: tools/planning-db/migrations/026_task_gap_reference_filter.sql
+    dddOwner: TaskProvenanceLedger
+    cqRails:
+      - QueryTaskProvenanceLedger
+      - QueryPlanningWorkIntake
+      - ResolveTaskProvenanceGap
+      - MigratePlanningQueryStoreSchema
+    fowlerSignals:
+      - Manual task provenance reconstruction
+      - Manual work intake reconstruction
+      - Hidden query model inside YAML
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - planning task-gap reference filtering has no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-migrate.test.cjs
+      - pnpm planning:db:query task-gaps --task AR-A11 --resolution all --limit 50
+      - pnpm planning:db:query focus --kind task_gap --limit 20
+  - <<: *planningDbContentSymbol
+    name: normalizeResolutionFilter
+    path: scripts/planning-db-query.cjs
+    dddOwner: PlanningWorkIntakeReadModel
+    cqRails:
+      - QueryDocsDispositionQueue
+      - QueryTaskProvenanceLedger
+      - QueryPlanningWorkIntake
+    fowlerSignals:
+      - Manual docs disposition resolution
+      - Manual task provenance reconstruction
+      - Hidden query model inside YAML
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - planning DB CLI filter normalization has no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
+      - pnpm planning:db:query docs-disposition --resolution open --limit 1
+      - pnpm planning:db:query task-gaps --resolution open --limit 1
   - <<: *planningDbContentSymbol
     name: PlanningDbMigrateRunner
     path: scripts/planning-db-migrate.cjs
@@ -3489,6 +3554,36 @@ symbols:
   - <<: *codeStatusLocalRenderSymbol
     name: test
     path: scripts/generate-code-status.test.cjs
+  - &governanceUnitTreeQuerySymbol
+    name: GovernanceUnitTreeQueryMigration
+    path: tools/planning-db/migrations/025_governance_unit_tree_query.sql
+    dddOwner: GovernanceUnitTreeReadModel
+    cqRails:
+      - ReadGovernanceUnitTree
+      - QueryGovernanceStateReadModel
+      - MigratePlanningQueryStoreSchema
+    fowlerSignals:
+      - Generated artifact churn
+      - Hidden query model inside governance shards
+      - Manual governance hierarchy reconstruction
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - governance unit tree queries have no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+      - pnpm test:planning:db
+      - pnpm planning:db:query units --unit SYS-API-ROOT --limit 5
+  - <<: *governanceUnitTreeQuerySymbol
+    name: buildGovernanceUnitRows
+    path: scripts/planning-db-query.cjs
+  - <<: *governanceUnitTreeQuerySymbol
+    name: governanceUnitSelect
+    path: scripts/planning-db-query.cjs
+  - <<: *governanceUnitTreeQuerySymbol
+    name: appendGovernanceUnitFilters
+    path: scripts/planning-db-query.cjs
+  - <<: *governanceUnitTreeQuerySymbol
+    name: readGovernanceUnitRows
+    path: scripts/planning-db-query.cjs
   - &componentEngineeringRecordQuerySymbol
     name: PlanningDbComponentEngineeringRecordQueryMigration
     path: tools/planning-db/migrations/023_component_engineering_record_query.sql
@@ -3512,16 +3607,16 @@ symbols:
     path: tools/planning-db/migrations/024_component_engineering_record_test_components.sql
   - <<: *componentEngineeringRecordQuerySymbol
     name: PlanningDbComponentEngineeringRecordV2Migration
-    path: tools/planning-db/migrations/025_component_engineering_record_v2.sql
+    path: tools/planning-db/migrations/027_component_engineering_record_v2.sql
   - <<: *componentEngineeringRecordQuerySymbol
     name: PlanningDbComponentEngineeringRecordV21Migration
-    path: tools/planning-db/migrations/026_component_engineering_record_v21.sql
+    path: tools/planning-db/migrations/028_component_engineering_record_v21.sql
   - <<: *componentEngineeringRecordQuerySymbol
     name: PlanningDbComponentEngineeringRecordRelationalCoreMigration
-    path: tools/planning-db/migrations/027_component_engineering_record_relational_core.sql
+    path: tools/planning-db/migrations/029_component_engineering_record_relational_core.sql
   - <<: *componentEngineeringRecordQuerySymbol
     name: PlanningDbComponentEngineeringRecordFileRoleProjectionMigration
-    path: tools/planning-db/migrations/028_component_engineering_record_file_role_projection.sql
+    path: tools/planning-db/migrations/030_component_engineering_record_file_role_projection.sql
   - <<: *componentEngineeringRecordQuerySymbol
     name: buildComponentEngineeringRecordRows
     path: scripts/planning-db-query.cjs

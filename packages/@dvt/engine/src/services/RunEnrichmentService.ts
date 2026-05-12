@@ -1,8 +1,15 @@
+/**
+ * @ownedConcern Read canonical and provider-specific run enrichment views.
+ */
 import type { EngineRunRef, RunStatusEnrichment } from '@dvt/contracts';
 import { parseEngineRunRef } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
+import {
+  type IEngineProviderResolver,
+  MapBackedEngineProviderResolver,
+} from '../application/providerSelection.js';
 import type { IRunEnrichmentService } from '../contracts/IRunEnrichmentService.v1.js';
 import {
   CORE_SPAN,
@@ -11,7 +18,6 @@ import {
 } from '../core/lifecycle/coreDomainConstants.js';
 import {
   buildTraceContext,
-  getAdapterOrThrow,
   normalizeEngineRunRef,
   readCanonicalRunStatus,
   resolveMetaOrThrow,
@@ -27,6 +33,7 @@ export interface RunEnrichmentServiceDeps {
   projector: SnapshotProjector;
   policy: IRunAccessPolicy;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
+  providerResolver?: IEngineProviderResolver;
   observability: IObservability;
   timeouts?: {
     adapterCallMs?: number;
@@ -35,13 +42,18 @@ export interface RunEnrichmentServiceDeps {
 }
 
 export class RunEnrichmentService implements IRunEnrichmentService {
-  constructor(private readonly deps: RunEnrichmentServiceDeps) {}
+  private readonly providerResolver: IEngineProviderResolver;
+
+  constructor(private readonly deps: RunEnrichmentServiceDeps) {
+    this.providerResolver =
+      deps.providerResolver ?? new MapBackedEngineProviderResolver(deps.adapters);
+  }
 
   async getRunEnrichment(ref: EngineRunRef): Promise<RunStatusEnrichment> {
     const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(ref));
     await this.deps.policy.assertTenantAccess(validatedRunRef.tenantId);
     const meta = await resolveMetaOrThrow(this.deps.stateStoreRead, validatedRunRef);
-    const adapter = getAdapterOrThrow(this.deps.adapters, meta.providerRef.provider);
+    const adapter = this.providerResolver.resolveProviderRef(meta.providerRef);
     const traceContext = buildTraceContext(meta, meta.planId);
 
     return this.deps.observability.withContext(traceContext, () =>

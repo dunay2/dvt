@@ -1,0 +1,21 @@
+---
+id: R-20260512-DHM-WS3-START-RUN-DECOMPOSITION
+title: Start-run application composition can drift back into hidden concrete construction
+status: Open
+date: 2026-05-12
+owners:
+  - '@dvt/engine'
+severity: Low
+probability: Low
+---
+summary: >
+  Future edits could reintroduce direct construction of start-run execution, failure, event-factory,
+  or plan-integrity collaborators inside StartRunApplicationService instead of using the explicit
+  builder.
+mitigation: >
+  workflowEngineStartRunDecomposition.architecture.test.ts fails if concrete collaborator
+  construction returns to StartRunApplicationService, and the component guide names
+  buildStartRunApplicationService as the default composition seam.
+evidence:
+  - docs/evidence/ed-20260512-dhm-ws3-start-run-decomposition.md
+  - packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts

@@ -495,10 +495,48 @@ test('tracked migrations link component engineering records to related test comp
   assert.match(cerTestMigration.sql, /related_test_files/);
 });
 
-test('tracked migrations expose component engineering record v2 after W25', () => {
+test('tracked migrations expose governance unit tree query after W25', () => {
+  const migrations = readMigrationFiles();
+  const unitQueryMigration = migrations.find(
+    (migration) => migration.fileName === '025_governance_unit_tree_query.sql'
+  );
+
+  assert.ok(unitQueryMigration);
+  assert.match(
+    unitQueryMigration.sql,
+    /create or replace view planning_query_store\.governance_unit_query/
+  );
+  assert.match(unitQueryMigration.sql, /unitReferences/);
+  assert.match(unitQueryMigration.sql, /parent_id/);
+  assert.match(unitQueryMigration.sql, /is_materialized_component/);
+});
+
+test('tracked migrations constrain task-gap disposition actions to their referenced task after W26', () => {
+  const migrations = readMigrationFiles();
+  const taskGapMigration = migrations.find(
+    (migration) => migration.fileName === '026_task_gap_reference_filter.sql'
+  );
+
+  assert.ok(taskGapMigration);
+  assert.match(
+    taskGapMigration.sql,
+    /create or replace view planning_query_store\.planning_task_gap_raw_query/
+  );
+  assert.match(taskGapMigration.sql, /action\.reference_text is not null/);
+  assert.match(
+    taskGapMigration.sql,
+    /upper\(reference\.reference_text\) = upper\(action\.reference_text\)/
+  );
+  assert.doesNotMatch(
+    taskGapMigration.sql,
+    /on reference\.document_path = action\.document_path\s+and reference\.registered_planning_task = true\s+join/s
+  );
+});
+
+test('tracked migrations expose component engineering record v2 after W27', () => {
   const migrations = readMigrationFiles();
   const cerV2Migration = migrations.find(
-    (migration) => migration.fileName === '025_component_engineering_record_v2.sql'
+    (migration) => migration.fileName === '027_component_engineering_record_v2.sql'
   );
 
   assert.ok(cerV2Migration);
@@ -514,10 +552,10 @@ test('tracked migrations expose component engineering record v2 after W25', () =
   assert.match(cerV2Migration.sql, /'costModel'/);
 });
 
-test('tracked migrations normalize component engineering record v2 surfaces after W26', () => {
+test('tracked migrations normalize component engineering record v2 surfaces after W28', () => {
   const migrations = readMigrationFiles();
   const cerV21Migration = migrations.find(
-    (migration) => migration.fileName === '026_component_engineering_record_v21.sql'
+    (migration) => migration.fileName === '028_component_engineering_record_v21.sql'
   );
 
   assert.ok(cerV21Migration);
@@ -535,10 +573,10 @@ test('tracked migrations normalize component engineering record v2 surfaces afte
   assert.match(cerV21Migration.sql, /missing_component_connection_index/);
 });
 
-test('tracked migrations expose relational component engineering records after W27', () => {
+test('tracked migrations expose relational component engineering records after W29', () => {
   const migrations = readMigrationFiles();
   const cerRelationalMigration = migrations.find(
-    (migration) => migration.fileName === '027_component_engineering_record_relational_core.sql'
+    (migration) => migration.fileName === '029_component_engineering_record_relational_core.sql'
   );
 
   assert.ok(cerRelationalMigration);
@@ -576,11 +614,11 @@ test('tracked migrations expose relational component engineering records after W
   );
 });
 
-test('tracked migrations keep component engineering owned and test files disjoint after W28', () => {
+test('tracked migrations keep component engineering owned and test files disjoint after W30', () => {
   const migrations = readMigrationFiles();
   const cerFileRoleMigration = migrations.find(
     (migration) =>
-      migration.fileName === '028_component_engineering_record_file_role_projection.sql'
+      migration.fileName === '030_component_engineering_record_file_role_projection.sql'
   );
 
   assert.ok(cerFileRoleMigration);

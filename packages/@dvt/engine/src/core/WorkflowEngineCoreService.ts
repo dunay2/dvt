@@ -1,35 +1,25 @@
-import type { EngineRunRef, EventType, SignalRequest } from '@dvt/contracts';
-import { getSignalDerivedEventType, parseEngineRunRef, parseSignalRequest } from '@dvt/contracts';
+/**
+ * @ownedConcern Preserve the compatibility run-control adapter that delegates to command and signal services.
+ * @baseline ADR-0003: Execution Model Sovereignty
+ * @baseline ADR-0039: Hexagonal Port Hardening and SOLID Remediation
+ * @decision Keep the legacy combined control surface without owning cancel or signal semantics.
+ * @consequence Runtime command and signal behavior stay in role-specific services.
+ * @version 1.0.0
+ */
+import type { EngineRunRef, SignalRequest } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
-import type { GuardedRunEventType } from '@dvt/run-domain';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
+import type { IRunCommandService } from '../domain/IRunCommandService.js';
 import type { IRunControlService } from '../domain/IRunControlService.js';
+import type { IRunSignalService } from '../domain/IRunSignalService.js';
 import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunStateStore.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
-import { SignalTransitionGuard } from '../services/signal/SignalTransitionGuard.js';
+import { RunCommandService } from '../services/runControl/RunCommandService.js';
+import { RunSignalService } from '../services/runControl/RunSignalService.js';
 import type { IClock } from '../utils/clock.js';
-import { toErrorMessage } from '../utils/errorUtils.js';
 
 import type { IdempotencyKeyBuilder } from './idempotency.js';
-import {
-  CORE_LOG_MESSAGE,
-  CORE_METRIC,
-  CORE_OPERATION,
-  CORE_SPAN,
-  CORE_TIMEOUT_MS,
-  CORE_TIMEOUT_OPERATION,
-} from './lifecycle/coreDomainConstants.js';
-import {
-  buildMetricTags,
-  buildTraceContext,
-  emitSignalDerivedRunEvent,
-  getAdapterOrThrow,
-  normalizeEngineRunRef,
-  normalizeSignalRequest,
-  resolveMetaOrThrow,
-  withTimeout,
-} from './lifecycle/coreRuntime.js';
 
 export interface WorkflowEngineCoreDeps {
   stateStoreRead: IRunStateStoreRead;
@@ -46,143 +36,39 @@ export interface WorkflowEngineCoreDeps {
 }
 
 export class WorkflowEngineCoreService implements IRunControlService {
-  private readonly signalTransitionGuard: SignalTransitionGuard;
+  private readonly runCommandService: IRunCommandService;
+  private readonly runSignalService: IRunSignalService;
 
-  constructor(private readonly deps: WorkflowEngineCoreDeps) {
-    this.signalTransitionGuard = new SignalTransitionGuard({
+  constructor(deps: WorkflowEngineCoreDeps) {
+    const commandDeps = {
       stateStoreRead: deps.stateStoreRead,
-      idempotency: deps.idempotency,
+      policy: deps.policy,
+      adapters: deps.adapters,
+      observability: deps.observability,
       clock: deps.clock,
-    });
+      ...(deps.timeouts === undefined ? {} : { timeouts: deps.timeouts }),
+    };
+    const signalDeps = {
+      stateStoreRead: deps.stateStoreRead,
+      stateStoreWrite: deps.stateStoreWrite,
+      idempotency: deps.idempotency,
+      policy: deps.policy,
+      adapters: deps.adapters,
+      observability: deps.observability,
+      clock: deps.clock,
+      ...(deps.timeouts === undefined ? {} : { timeouts: deps.timeouts }),
+    };
+
+    this.runCommandService = new RunCommandService(commandDeps);
+    this.runSignalService = new RunSignalService(signalDeps);
   }
 
   async cancel(ref: EngineRunRef): Promise<void> {
-    const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(ref));
-    await this.deps.policy.assertTenantAccess(validatedRunRef.tenantId);
-    const meta = await resolveMetaOrThrow(this.deps.stateStoreRead, validatedRunRef);
-    const adapter = getAdapterOrThrow(this.deps.adapters, meta.providerRef.provider);
-    const startMs = Date.parse(this.deps.clock.nowIsoUtc());
-    const metricTags = buildMetricTags(meta.providerRef.provider, meta.tenantId, {
-      operation: CORE_OPERATION.cancelRun,
-    });
-    const traceContext = buildTraceContext(meta, meta.planId);
-
-    await this.deps.observability.withContext(traceContext, () =>
-      this.deps.observability.traces.withSpan(
-        CORE_SPAN.cancelRun,
-        {
-          context: traceContext,
-          attributes: { provider: meta.providerRef.provider },
-        },
-        async (span) => {
-          try {
-            this.deps.observability.logs.info({
-              msg: CORE_LOG_MESSAGE.cancellingRun,
-              context: traceContext,
-              attributes: { provider: meta.providerRef.provider },
-            });
-
-            await withTimeout(
-              adapter.cancelRun(validatedRunRef),
-              this.deps.timeouts?.adapterCallMs ?? CORE_TIMEOUT_MS.adapterCall,
-              CORE_TIMEOUT_OPERATION.adapterCancelRun
-            );
-            this.deps.observability.metrics
-              .counter(CORE_METRIC.cancelRequestedTotal, metricTags)
-              .add(1);
-            this.deps.observability.metrics
-              .histogram(CORE_METRIC.cancelDurationMs, metricTags)
-              .record(Date.parse(this.deps.clock.nowIsoUtc()) - startMs);
-            span.setStatus('ok');
-          } catch (error) {
-            span.recordException(error);
-            span.setStatus('error', toErrorMessage(error));
-            throw error;
-          }
-        }
-      )
-    );
+    return this.runCommandService.cancel(ref);
   }
 
   async signal(ref: EngineRunRef, req: SignalRequest): Promise<void> {
-    const validatedRunRef = normalizeEngineRunRef(parseEngineRunRef(ref));
-    const validatedRequest = normalizeSignalRequest(parseSignalRequest(req));
-    await this.deps.policy.assertTenantAccess(validatedRunRef.tenantId);
-
-    const meta = await resolveMetaOrThrow(this.deps.stateStoreRead, validatedRunRef);
-    const adapter = getAdapterOrThrow(this.deps.adapters, meta.providerRef.provider);
-    const traceContext = buildTraceContext(meta, meta.planId);
-
-    await this.deps.observability.withContext(traceContext, () =>
-      this.deps.observability.traces.withSpan(
-        CORE_SPAN.signal,
-        {
-          context: traceContext,
-          attributes: { provider: meta.providerRef.provider, signalType: validatedRequest.type },
-        },
-        async (span) => {
-          try {
-            const validationEventType = this.mapSignalToValidationEventType(validatedRequest.type);
-            const mappedEventType = this.mapSignalToRunEventType(
-              validatedRequest.type,
-              adapter.signalSemanticsVersions?.()
-            );
-
-            if (validationEventType) {
-              const validationResult = await this.signalTransitionGuard.assertAllowed(
-                meta,
-                validatedRequest,
-                validationEventType
-              );
-              if (validationResult === 'already_applied') {
-                span.setStatus('ok');
-                return;
-              }
-            }
-
-            await withTimeout(
-              adapter.signal(validatedRunRef, validatedRequest),
-              this.deps.timeouts?.adapterCallMs ?? CORE_TIMEOUT_MS.adapterCall,
-              CORE_TIMEOUT_OPERATION.adapterSignal
-            );
-
-            if (mappedEventType) {
-              await emitSignalDerivedRunEvent({
-                stateStoreWrite: this.deps.stateStoreWrite,
-                idempotency: this.deps.idempotency,
-                clock: this.deps.clock,
-                meta,
-                req: validatedRequest,
-                eventType: mappedEventType,
-              });
-            }
-            span.setStatus('ok');
-          } catch (error) {
-            span.recordException(error);
-            span.setStatus('error', toErrorMessage(error));
-            throw error;
-          }
-        }
-      )
-    );
-  }
-
-  private mapSignalToRunEventType(
-    type: SignalRequest['type'],
-    supportedVersions?: readonly string[]
-  ): EventType | null {
-    return getSignalDerivedEventType(type, supportedVersions);
-  }
-
-  private mapSignalToValidationEventType(type: SignalRequest['type']): GuardedRunEventType | null {
-    switch (type) {
-      case 'PAUSE':
-        return 'RunPaused';
-      case 'RESUME':
-        return 'RunResumed';
-      default:
-        return null;
-    }
+    return this.runSignalService.signal(ref, req);
   }
 }
 

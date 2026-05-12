@@ -4,7 +4,10 @@ import { describe, expect, it } from 'vitest';
 
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import { StartRunAdmissionGuard } from '../../src/application/StartRunAdmissionGuard.js';
-import { StartRunApplicationService } from '../../src/application/StartRunApplicationService.js';
+import {
+  buildStartRunApplicationService,
+  StartRunApplicationService,
+} from '../../src/application/StartRunApplicationService.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import type { StartRunTraceContext } from '../../src/core/lifecycle/StartRunTraceContext.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
@@ -64,6 +67,73 @@ function makeTemporalAdapter(): IProviderAdapter {
 }
 
 describe('StartRunApplicationService', () => {
+  it('delegates adapter dispatch through injected start-run execution and failure seams', async () => {
+    const plan = makeDefaultExecutionPlan();
+    const planRef = makePlanRefForPlan(plan);
+    const runId = 's03-injected-execution-1';
+    const resolvedContext = makeResolvedContext(runId);
+    const traceContext = makeTraceContext(runId, planRef.planId);
+    const adapter = makeTemporalAdapter();
+    const executionCalls: Array<{ intentId: string; adapterProvider: string }> = [];
+    const failureCalls: unknown[] = [];
+    const expectedRunRef: EngineRunRef = {
+      provider: 'temporal',
+      tenantId: 't',
+      namespace: 'default',
+      workflowId: `wf-${runId}`,
+      runId,
+    };
+
+    const service = new StartRunApplicationService({
+      guard: {
+        async assertStartRunAllowed() {},
+        resolveAdapter() {
+          return adapter;
+        },
+        async assertExecutionPolicyAllowed() {},
+      },
+      idempotency: new IdempotencyKeyBuilder(),
+      clock: new SequenceClock('2026-03-26T00:00:00.000Z'),
+      intentStore: new InMemoryStartRunIntentStore(),
+      observability: createNoopObservability(),
+      planFetcher: makePlanFetcherForPlan(plan),
+      planIntegrityValidator: {
+        async fetchAndValidate() {
+          return { plan, executionPolicy: {} };
+        },
+      },
+      executionService: {
+        async executeStartRun(input) {
+          executionCalls.push({
+            intentId: input.intentId,
+            adapterProvider: input.adapter.provider,
+          });
+          return expectedRunRef;
+        },
+      },
+      failurePolicy: {
+        async markIntentResolvedBestEffort() {},
+        async handleStartRunError(input) {
+          failureCalls.push(input.error);
+          throw input.error;
+        },
+      },
+    } as never);
+
+    await expect(service.startRun(planRef, resolvedContext, traceContext)).resolves.toEqual(
+      expectedRunRef
+    );
+
+    expect(executionCalls).toEqual([
+      {
+        intentId: expect.any(String),
+        adapterProvider: 'temporal',
+      },
+    ]);
+    expect(executionCalls[0]?.intentId).toHaveLength(64);
+    expect(failureCalls).toEqual([]);
+  });
+
   it('checks tenant access before planRef validation', async () => {
     const planRef = makePlanRef('ftp://not-allowed.example/plan');
     const calls: string[] = [];
@@ -82,7 +152,7 @@ describe('StartRunApplicationService', () => {
       },
     };
 
-    const service = new StartRunApplicationService({
+    const service = buildStartRunApplicationService({
       policy,
       guard: new StartRunAdmissionGuard({
         policy,
@@ -113,7 +183,7 @@ describe('StartRunApplicationService', () => {
     const store = new InMemoryTxStore();
     const plan = makeDefaultExecutionPlan();
     const planRef = makePlanRefForPlan(plan);
-    const service = new StartRunApplicationService({
+    const service = buildStartRunApplicationService({
       policy: {
         async assertTenantAccess() {},
         validatePlanRef() {},
@@ -182,7 +252,7 @@ describe('StartRunApplicationService', () => {
       validatePlanRef() {},
       checkRateLimit() {},
     };
-    const service = new StartRunApplicationService({
+    const service = buildStartRunApplicationService({
       policy,
       guard: new StartRunAdmissionGuard({
         policy,
@@ -231,7 +301,7 @@ describe('StartRunApplicationService', () => {
       validatePlanRef() {},
       checkRateLimit() {},
     };
-    const service = new StartRunApplicationService({
+    const service = buildStartRunApplicationService({
       policy,
       guard: new StartRunAdmissionGuard({
         policy,
@@ -290,7 +360,7 @@ describe('StartRunApplicationService', () => {
       validatePlanRef() {},
       checkRateLimit() {},
     };
-    const service = new StartRunApplicationService({
+    const service = buildStartRunApplicationService({
       policy,
       guard: new StartRunAdmissionGuard({
         policy,

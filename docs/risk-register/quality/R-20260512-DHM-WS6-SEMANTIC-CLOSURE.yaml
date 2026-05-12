@@ -1,0 +1,20 @@
+---
+id: R-20260512-DHM-WS6-SEMANTIC-CLOSURE
+title: WorkflowEngine semantic closure can drift from runtime authority
+status: Open
+date: 2026-05-12
+owners:
+  - '@dvt/engine'
+severity: Low
+probability: Low
+---
+summary: >
+  Future edits could preserve thin exports while moving runtime authority back into compatibility or
+  composition modules, leaving documentation apparently complete but semantically stale.
+mitigation: >
+  workflowEngineSemanticClosure.architecture.test.ts validates owned concern headers, forbidden
+  runtime authority in WorkflowEngineCoreService, local component documentation, user stories,
+  mailbox analysis, and closeout evidence.
+evidence:
+  - docs/evidence/ed-20260512-dhm-ws6-semantic-closure.md
+  - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts

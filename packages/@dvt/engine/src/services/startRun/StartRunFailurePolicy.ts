@@ -7,7 +7,7 @@ import { toErrorMessage } from '../../utils/errorUtils.js';
 
 import { START_RUN_FAILURE_REASON, START_RUN_MESSAGE } from './StartRunDomainConstants.js';
 import type { StartRunEventFactory } from './StartRunEventFactory.js';
-import type { StartRunErrorContext } from './StartRunTypes.js';
+import type { IStartRunFailurePolicy, StartRunErrorContext } from './StartRunTypes.js';
 
 type EngineRunRef = import('@dvt/contracts').EngineRunRef;
 type ResolvedRunContext = import('@dvt/contracts').ResolvedRunContext;
@@ -44,7 +44,7 @@ export interface StartRunFailurePolicyDeps {
   observabilityFallbackThrottleMs?: number;
 }
 
-export class StartRunFailurePolicy {
+export class StartRunFailurePolicy implements IStartRunFailurePolicy {
   private readonly stderrFallbackThrottleMs: number;
   private lastStderrFallbackAtMs = 0;
 
