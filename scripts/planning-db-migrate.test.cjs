@@ -532,3 +532,110 @@ test('tracked migrations constrain task-gap disposition actions to their referen
     /on reference\.document_path = action\.document_path\s+and reference\.registered_planning_task = true\s+join/s
   );
 });
+
+test('tracked migrations expose component engineering record v2 after W27', () => {
+  const migrations = readMigrationFiles();
+  const cerV2Migration = migrations.find(
+    (migration) => migration.fileName === '027_component_engineering_record_v2.sql'
+  );
+
+  assert.ok(cerV2Migration);
+  assert.match(
+    cerV2Migration.sql,
+    /create or replace view planning_query_store\.governance_component_engineering_record_v2_query/
+  );
+  assert.match(cerV2Migration.sql, /governance_component_engineering_record_query/);
+  assert.match(cerV2Migration.sql, /'schemaVersion', 'v2'/);
+  assert.match(cerV2Migration.sql, /'contracts'/);
+  assert.match(cerV2Migration.sql, /'capabilities'/);
+  assert.match(cerV2Migration.sql, /'failureModes'/);
+  assert.match(cerV2Migration.sql, /'costModel'/);
+});
+
+test('tracked migrations normalize component engineering record v2 surfaces after W28', () => {
+  const migrations = readMigrationFiles();
+  const cerV21Migration = migrations.find(
+    (migration) => migration.fileName === '028_component_engineering_record_v21.sql'
+  );
+
+  assert.ok(cerV21Migration);
+  assert.match(
+    cerV21Migration.sql,
+    /create or replace view planning_query_store\.governance_component_engineering_record_v2_query/
+  );
+  assert.match(cerV21Migration.sql, /governance_component_engineering_record_query/);
+  assert.match(cerV21Migration.sql, /'relatedDocuments'/);
+  assert.match(cerV21Migration.sql, /'domain'/);
+  assert.match(cerV21Migration.sql, /'composition'/);
+  assert.match(cerV21Migration.sql, /'codeSurface'/);
+  assert.match(cerV21Migration.sql, /'connections'/);
+  assert.match(cerV21Migration.sql, /missing_code_symbol_index/);
+  assert.match(cerV21Migration.sql, /missing_component_connection_index/);
+});
+
+test('tracked migrations expose relational component engineering records after W29', () => {
+  const migrations = readMigrationFiles();
+  const cerRelationalMigration = migrations.find(
+    (migration) => migration.fileName === '029_component_engineering_record_relational_core.sql'
+  );
+
+  assert.ok(cerRelationalMigration);
+  assert.match(
+    cerRelationalMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_component_query/
+  );
+  assert.match(
+    cerRelationalMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_document_query/
+  );
+  assert.match(
+    cerRelationalMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_file_query/
+  );
+  assert.match(
+    cerRelationalMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_relation_query/
+  );
+  assert.match(
+    cerRelationalMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_contract_query/
+  );
+  assert.match(
+    cerRelationalMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_gap_query/
+  );
+  assert.match(
+    cerRelationalMigration.sql,
+    /from planning_query_store\.component_engineering_document_query/
+  );
+  assert.match(
+    cerRelationalMigration.sql,
+    /from planning_query_store\.component_engineering_relation_query/
+  );
+});
+
+test('tracked migrations keep component engineering owned and test files disjoint after W30', () => {
+  const migrations = readMigrationFiles();
+  const cerFileRoleMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '030_component_engineering_record_file_role_projection.sql'
+  );
+
+  assert.ok(cerFileRoleMigration);
+  assert.match(
+    cerFileRoleMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_file_rollup_query/
+  );
+  assert.match(
+    cerFileRoleMigration.sql,
+    /jsonb_agg\(file_path order by file_path\) filter \(where file_role = 'owned'\)/
+  );
+  assert.match(
+    cerFileRoleMigration.sql,
+    /jsonb_agg\(file_path order by file_path\) filter \(where file_role = 'test'\)/
+  );
+  assert.match(
+    cerFileRoleMigration.sql,
+    /join planning_query_store\.component_engineering_file_rollup_query/
+  );
+});

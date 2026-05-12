@@ -11,7 +11,7 @@ const {
   runGovernanceRefresh,
 } = require('./governance-refresh.cjs');
 
-test('governance refresh uses stale-aware scoped DB imports before DB-backed surfaces', () => {
+test('governance refresh uses local governance reports before DB validation', () => {
   const stages = buildRefreshStages();
 
   assert.deepEqual(
@@ -40,16 +40,14 @@ test('governance refresh uses stale-aware scoped DB imports before DB-backed sur
     stages.generationStages.find((stage) => stage.id === 'governance-db-import').args,
     ['--', '--if-stale']
   );
-  assert.deepEqual(stages.generationStages.find((stage) => stage.id === 'coverage-report').args, [
-    '--',
-    '--source',
-    'db',
-  ]);
-  assert.deepEqual(stages.generationStages.find((stage) => stage.id === 'remediation-queue').args, [
-    '--',
-    '--source',
-    'db',
-  ]);
+  assert.equal(
+    stages.generationStages.find((stage) => stage.id === 'coverage-report').args,
+    undefined
+  );
+  assert.equal(
+    stages.generationStages.find((stage) => stage.id === 'remediation-queue').args,
+    undefined
+  );
   assert.deepEqual(
     stages.databaseStages.map((stage) => stage.script),
     [

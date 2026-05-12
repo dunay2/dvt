@@ -65,6 +65,15 @@ function parseLimit(value, defaultLimit) {
   return parsed;
 }
 
+function parseCerSchemaVersion(value) {
+  const schemaVersion = value || 'v1';
+  if (schemaVersion !== 'v1' && schemaVersion !== 'v2') {
+    throw new Error(`Invalid --schema-version "${value}". Expected v1 or v2.`);
+  }
+
+  return schemaVersion;
+}
+
 function normalizeResolutionFilter(value) {
   if (value === undefined || value === null || value === '') {
     return undefined;
@@ -123,6 +132,10 @@ function parseArgs(args = process.argv.slice(2)) {
     }
     if (arg === '--component') {
       filters.component = value;
+      continue;
+    }
+    if (arg === '--schema-version') {
+      filters.schemaVersion = parseCerSchemaVersion(value);
       continue;
     }
     if (arg === '--unit') {
@@ -1331,10 +1344,14 @@ async function readComponentEngineeringRecordRows(client, filters = {}) {
 
   const limit = parseLimit(filters.limit, 20);
   params.push(limit);
+  const viewName =
+    parseCerSchemaVersion(filters.schemaVersion) === 'v2'
+      ? 'governance_component_engineering_record_v2_query'
+      : 'governance_component_engineering_record_query';
 
   const result = await client.query(
     `select component_id, record
-     from ${schemaName}.governance_component_engineering_record_query
+     from ${schemaName}.${viewName}
      ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
      order by component_id
      limit $${params.length}`,
@@ -1681,6 +1698,7 @@ module.exports = {
   databaseUrl,
   formatQueryError,
   parseArgs,
+  parseCerSchemaVersion,
   printHashDriftSummary,
   readDocsDispositionRows,
   readFocusRows,

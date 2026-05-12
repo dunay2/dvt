@@ -1597,6 +1597,7 @@ allowedImplementationSurfaces:
   - scripts/planning-db-*.cjs
   - scripts/governance-db-*.cjs
   - scripts/governance-refresh*.cjs
+  - scripts/generate-code-status*.cjs
   - scripts/generate-workboard*.cjs
   - scripts/generate-planning-lanes*.cjs
   - scripts/docs-planning-generated-check.cjs
@@ -1606,6 +1607,7 @@ allowedImplementationSurfaces:
   - scripts/check-feature-mechanization.cjs
   - scripts/check-feature-mechanization.test.cjs
   - docs/DOCS_README.md
+  - docs/generated-docs-policy.json
   - docs/adr/**
   - docs/guides/ai-work-protocol.md
   - docs/architecture/components/ci-governance/index.md
@@ -1624,6 +1626,7 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/index.md
   - docs/planning/status/**
   - docs/.manifest.json
+  - tools/ci/policy/workflow-scope.json
 forbiddenImplementationSurfaces:
   - apps/**
   - packages/**
@@ -3515,6 +3518,42 @@ symbols:
   - <<: *governanceDbQuerySurfaceSymbol
     name: readGovernanceDriftRows
     path: scripts/planning-db-query.cjs
+  - &codeStatusLocalRenderSymbol
+    name: outputPath
+    path: scripts/generate-code-status.cjs
+    dddOwner: GovernanceStatusProjection
+    cqRails:
+      - RefreshGovernanceDerivedSurfaces
+    fowlerSignals:
+      - Generated artifact churn
+      - Tracked generated-doc conflict surface
+    architectureGuard: node --test scripts/generate-code-status.test.cjs
+    cypressCoverage: N/A - code-state status render has no browser workflow.
+    unitTests:
+      - node --test scripts/generate-code-status.test.cjs
+      - pnpm docs:status:generate
+      - pnpm docs:gov:generated-policy
+  - <<: *codeStatusLocalRenderSymbol
+    name: assert
+    path: scripts/generate-code-status.test.cjs
+  - <<: *codeStatusLocalRenderSymbol
+    name: fs
+    path: scripts/generate-code-status.test.cjs
+  - <<: *codeStatusLocalRenderSymbol
+    name: generatorPath
+    path: scripts/generate-code-status.test.cjs
+  - <<: *codeStatusLocalRenderSymbol
+    name: path
+    path: scripts/generate-code-status.test.cjs
+  - <<: *codeStatusLocalRenderSymbol
+    name: policyPath
+    path: scripts/generate-code-status.test.cjs
+  - <<: *codeStatusLocalRenderSymbol
+    name: repoRoot
+    path: scripts/generate-code-status.test.cjs
+  - <<: *codeStatusLocalRenderSymbol
+    name: test
+    path: scripts/generate-code-status.test.cjs
   - &governanceUnitTreeQuerySymbol
     name: GovernanceUnitTreeQueryMigration
     path: tools/planning-db/migrations/025_governance_unit_tree_query.sql
@@ -3567,7 +3606,22 @@ symbols:
     name: PlanningDbComponentEngineeringRecordTestComponentMigration
     path: tools/planning-db/migrations/024_component_engineering_record_test_components.sql
   - <<: *componentEngineeringRecordQuerySymbol
+    name: PlanningDbComponentEngineeringRecordV2Migration
+    path: tools/planning-db/migrations/027_component_engineering_record_v2.sql
+  - <<: *componentEngineeringRecordQuerySymbol
+    name: PlanningDbComponentEngineeringRecordV21Migration
+    path: tools/planning-db/migrations/028_component_engineering_record_v21.sql
+  - <<: *componentEngineeringRecordQuerySymbol
+    name: PlanningDbComponentEngineeringRecordRelationalCoreMigration
+    path: tools/planning-db/migrations/029_component_engineering_record_relational_core.sql
+  - <<: *componentEngineeringRecordQuerySymbol
+    name: PlanningDbComponentEngineeringRecordFileRoleProjectionMigration
+    path: tools/planning-db/migrations/030_component_engineering_record_file_role_projection.sql
+  - <<: *componentEngineeringRecordQuerySymbol
     name: buildComponentEngineeringRecordRows
+    path: scripts/planning-db-query.cjs
+  - <<: *componentEngineeringRecordQuerySymbol
+    name: parseCerSchemaVersion
     path: scripts/planning-db-query.cjs
   - <<: *componentEngineeringRecordQuerySymbol
     name: readComponentEngineeringRecordRows
