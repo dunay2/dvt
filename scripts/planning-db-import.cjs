@@ -1102,12 +1102,71 @@ function referencePrefix(referenceText) {
   return normalizeText(referenceText).split('-')[0].toUpperCase();
 }
 
-function classifyTaskLikeReference(referenceText, planningTaskIdSet) {
+function addNormalizedId(idSet, value) {
+  const normalized = normalizeText(value);
+  if (!normalized) {
+    return;
+  }
+  idSet.add(normalized);
+  idSet.add(normalized.toUpperCase());
+}
+
+function collectFeatureMechanizationReferenceIds(sourceDocuments) {
+  const featureIds = new Set();
+  const cycleIds = new Set();
+  const fencePattern = /```feature-mechanization\s*\r?\n([\s\S]*?)\r?\n```/g;
+
+  for (const sourceDocument of sourceDocuments) {
+    const raw = normalizeText(sourceDocument.raw);
+    let match;
+
+    while ((match = fencePattern.exec(raw)) !== null) {
+      let manifest;
+      try {
+        manifest = yaml.load(match[1]);
+      } catch {
+        continue;
+      }
+
+      if (!manifest || typeof manifest !== 'object') {
+        continue;
+      }
+
+      const status = normalizeText(manifest.mechanizationStatus).toLowerCase();
+      if (status !== 'closed' && status !== 'implemented') {
+        continue;
+      }
+
+      addNormalizedId(featureIds, manifest.featureId);
+      for (const cycle of normalizeArray(manifest.redGreenCycles)) {
+        addNormalizedId(cycleIds, cycle?.id);
+      }
+    }
+  }
+
+  return { featureIds, cycleIds };
+}
+
+function classifyTaskLikeReference(
+  referenceText,
+  planningTaskIdSet,
+  featureMechanizationIdSet = new Set(),
+  featureMechanizationCycleIdSet = new Set()
+) {
   const value = normalizeText(referenceText);
   const upperValue = value.toUpperCase();
 
   if (planningTaskIdSet.has(value) || planningTaskIdSet.has(upperValue)) {
     return { classification: 'registered_planning_task', registeredPlanningTask: true };
+  }
+  if (featureMechanizationIdSet.has(value) || featureMechanizationIdSet.has(upperValue)) {
+    return {
+      classification: 'registered_feature_mechanization',
+      registeredPlanningTask: false,
+    };
+  }
+  if (featureMechanizationCycleIdSet.has(value) || featureMechanizationCycleIdSet.has(upperValue)) {
+    return { classification: 'feature_mechanization_cycle', registeredPlanningTask: false };
   }
   if (/^ADR-\d{4}$/.test(upperValue)) {
     return { classification: 'adr_id', registeredPlanningTask: false };
@@ -1142,11 +1201,19 @@ function classifyTaskLikeReference(referenceText, planningTaskIdSet) {
   if (/^PS-[CQ]\d+/.test(upperValue)) {
     return { classification: 'plan_store_matrix_reference', registeredPlanningTask: false };
   }
+  if (upperValue === 'SUB-SKILL') {
+    return { classification: 'skill_reference', registeredPlanningTask: false };
+  }
 
   return { classification: 'unknown_task_like_id', registeredPlanningTask: false };
 }
 
-function extractTaskLikeReferences(document, planningTaskIdSet) {
+function extractTaskLikeReferences(
+  document,
+  planningTaskIdSet,
+  featureMechanizationIdSet = new Set(),
+  featureMechanizationCycleIdSet = new Set()
+) {
   const raw = normalizeText(document.raw);
   const grouped = new Map();
 
@@ -1188,7 +1255,12 @@ function extractTaskLikeReferences(document, planningTaskIdSet) {
   return [...grouped.values()]
     .sort((left, right) => left.referenceText.localeCompare(right.referenceText))
     .map((entry) => {
-      const classification = classifyTaskLikeReference(entry.referenceText, planningTaskIdSet);
+      const classification = classifyTaskLikeReference(
+        entry.referenceText,
+        planningTaskIdSet,
+        featureMechanizationIdSet,
+        featureMechanizationCycleIdSet
+      );
       const escapedReference = escapeRegExp(entry.referenceText);
       const { sampleLines } = lineNumbersForPattern(
         raw,
@@ -1346,6 +1418,15 @@ function buildDocsDispositionSnapshot(options = {}) {
   const sourceDocuments = normalizeArray(options.documents).length
     ? normalizeArray(options.documents)
     : listTrackedMarkdownDocuments();
+  const collectedFeatureReferences = collectFeatureMechanizationReferenceIds(sourceDocuments);
+  const featureMechanizationIdSet = new Set(collectedFeatureReferences.featureIds);
+  const featureMechanizationCycleIdSet = new Set(collectedFeatureReferences.cycleIds);
+  for (const featureId of normalizeArray(options.featureMechanizationIds)) {
+    addNormalizedId(featureMechanizationIdSet, featureId);
+  }
+  for (const cycleId of normalizeArray(options.featureMechanizationCycleIds)) {
+    addNormalizedId(featureMechanizationCycleIdSet, cycleId);
+  }
   const pendingHotspotThreshold = Math.max(
     1,
     normalizeNumber(options.pendingHotspotThreshold) ?? 10
@@ -1363,7 +1444,12 @@ function buildDocsDispositionSnapshot(options = {}) {
     const isArchive = isArchivedDocumentPath(sourcePath);
     const documentInput = { sourcePath, raw, contentSha256 };
     const documentMarkers = buildPendingMarkerRows(documentInput);
-    const documentReferences = extractTaskLikeReferences(documentInput, planningTaskIdSet);
+    const documentReferences = extractTaskLikeReferences(
+      documentInput,
+      planningTaskIdSet,
+      featureMechanizationIdSet,
+      featureMechanizationCycleIdSet
+    );
     const document = {
       documentPath: sourcePath,
       title: normalizeText(frontmatter.title),

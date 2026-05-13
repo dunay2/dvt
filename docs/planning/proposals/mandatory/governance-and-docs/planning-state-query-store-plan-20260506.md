@@ -2609,6 +2609,12 @@ symbols:
     name: referencePrefix
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
+    name: addNormalizedId
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: collectFeatureMechanizationReferenceIds
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
     name: classifyTaskLikeReference
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol

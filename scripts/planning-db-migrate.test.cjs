@@ -639,3 +639,22 @@ test('tracked migrations keep component engineering owned and test files disjoin
     /join planning_query_store\.component_engineering_file_rollup_query/
   );
 });
+
+test('tracked migrations keep feature mechanization links distinct from planning task links after W31', () => {
+  const migrations = readMigrationFiles();
+  const featureMechanizationMigration = migrations.find(
+    (migration) => migration.fileName === '031_feature_mechanization_task_gap_links.sql'
+  );
+
+  assert.ok(featureMechanizationMigration);
+  assert.match(
+    featureMechanizationMigration.sql,
+    /create or replace view planning_query_store\.planning_task_gap_raw_query/
+  );
+  assert.match(featureMechanizationMigration.sql, /document_governed_work_links/);
+  assert.match(
+    featureMechanizationMigration.sql,
+    /classification = 'registered_feature_mechanization'/
+  );
+  assert.match(featureMechanizationMigration.sql, /registered_planning_task = true/);
+});
