@@ -118,6 +118,35 @@ test('planning DB import only imports stale selected scopes', async () => {
   assert.deepEqual(result.skippedScopes, ['planning']);
 });
 
+test('planning DB import can silence importContent output for query-time refreshes', async () => {
+  const calls = [];
+
+  await runPlanningImport(
+    {
+      databaseUrl: 'postgres://example/planning',
+      includePlanning: false,
+      includeGovernance: true,
+      silent: true,
+    },
+    {
+      importContent: async (options) => {
+        calls.push(options);
+        return { governanceFiles: 3, governanceComponents: 2 };
+      },
+      logger: { log() {} },
+    }
+  );
+
+  assert.deepEqual(calls, [
+    {
+      databaseUrl: 'postgres://example/planning',
+      includePlanning: false,
+      includeGovernance: true,
+      silent: true,
+    },
+  ]);
+});
+
 test('planning DB import reimports governance when auxiliary projections are stale', async () => {
   const calls = [];
 

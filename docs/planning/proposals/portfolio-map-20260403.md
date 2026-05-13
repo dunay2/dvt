@@ -23,6 +23,8 @@ planning_type: proposal
 - [System Governance Unit Index Plan](./mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md)
 - [Planning Knowledge Rail DB-First Plan
   2026-05-13](./mandatory/governance-and-docs/planning-knowledge-rail-db-first-plan-20260513.md)
+- [Component Engineering Composite Hierarchy Plan
+  2026-05-13](./mandatory/governance-and-docs/component-engineering-composite-hierarchy-plan-20260513.md)
 - [Governance file index sharding plan
   2026-05-03](./mandatory/governance-and-docs/governance-file-index-sharding-plan-20260503.md)
 - [Runtime And Contracts](./mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)
