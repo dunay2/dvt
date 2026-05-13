@@ -39,9 +39,17 @@ Commands run during implementation:
 
 - `pnpm docs:feature-mechanization -- --feature EA-20260429-01-PLAN-SCHEMA-VERSION-ADMISSION`
 - `pnpm --filter @dvt/engine test -- test/contracts/PlanSchemaVersionPolicy.test.ts test/architecture/planSchemaVersionAdmission.architecture.test.ts`
+- `pnpm --filter @dvt/engine test -- test/core/WorkflowEngine.test.ts`
+- `pnpm --filter @dvt/engine typecheck`
+- `pnpm --filter @dvt/engine test`
+- `pnpm docs:feature-mechanization:implementation`
+- `pnpm lint`
+- `pnpm governance:refresh`
+- `$env:GIT_BASE='origin/main'; $env:GIT_HEAD='HEAD'; node tools/ci/arc-check.mjs`
+- `pnpm verify:prepush`
 
-Final closeout validation is recorded in the PR and task closeout after full
-pre-push execution.
+All listed commands passed after the schema-version policy traceability
+metadata and evidence filename fixes were committed.
 
 ## No-Debt Evidence
 
