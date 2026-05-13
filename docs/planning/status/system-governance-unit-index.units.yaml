@@ -108,24 +108,328 @@ units:
     parent: SYS-RUNTIME-ROOT
     level: component
     status: coverage-required
-    owns:
-      - packages/@dvt/engine/**
-    excludes:
-      - packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts
-      - packages/@dvt/engine/src/security/planRefPolicy.ts
-      - packages/@dvt/engine/src/security/planRefPolicyRules.ts
-      - packages/@dvt/engine/test/core/WorkflowEngine.planRef.test.ts
-      - packages/@dvt/engine/test/security/planRefPolicy.test.ts
-    childrenRequired: false
+    owns: []
+    childrenRequired: true
     dddOwner: AS
     cqRails: RT-C01, RT-Q01
     governance:
       - docs/planning/execution-model/dvt-execution-model.md
       - docs/contracts/engine/index.md
       - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-component.md
+      - docs/architecture/components/ci-governance/component-engineering-record-component.md
     fowlerSignals:
       - responsibility overload
       - boundary drift
+
+  - id: SYS-RUNTIME-ENGINE-PACKAGE-SURFACE
+    name: Runtime engine package and public surface
+    parent: SYS-RUNTIME-ENGINE-CORE
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/engine/package.json
+      - packages/@dvt/engine/tsconfig*.json
+      - packages/@dvt/engine/vitest.config.ts
+      - packages/@dvt/engine/src/index.ts
+      - packages/@dvt/engine/src/testing.ts
+      - packages/@dvt/engine/src/types/**
+      - packages/@dvt/engine/test/types/**
+    childrenRequired: false
+    dddOwner: AS
+    cqRails: RT-C01, RT-Q01
+    governance:
+      - docs/contracts/engine/index.md
+      - docs/planning/execution-model/dvt-execution-model.md
+    fowlerSignals:
+      - hidden authority
+      - boundary drift
+
+  - id: SYS-RUNTIME-ENGINE-ADAPTERS
+    name: Runtime engine provider adapters
+    parent: SYS-RUNTIME-ENGINE-CORE
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/engine/src/adapters/**
+      - packages/@dvt/engine/test/adapters/**
+    childrenRequired: false
+    dddOwner: ADP
+    cqRails: RT-C01
+    governance:
+      - docs/architecture/components/engine/architecture/adapter-circuit-breaker-user-stories.md
+      - docs/contracts/engine/index.md
+    fowlerSignals:
+      - adapter boundary drift
+      - duplicate semantics
+
+  - id: SYS-RUNTIME-ENGINE-APPLICATION
+    name: Runtime engine application services
+    parent: SYS-RUNTIME-ENGINE-CORE
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/engine/src/application/*.ts
+      - packages/@dvt/engine/test/application/providerSelection.test.ts
+    childrenRequired: false
+    dddOwner: AS
+    cqRails: RT-C01, RT-Q01
+    governance:
+      - docs/planning/execution-model/dvt-execution-model.md
+      - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-user-stories.md
+    fowlerSignals:
+      - responsibility overload
+      - feature envy
+
+  - id: SYS-RUNTIME-ENGINE-WORKFLOW-USE-CASES
+    name: Runtime engine workflow use cases
+    parent: SYS-RUNTIME-ENGINE-CORE
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/engine/src/application/workflow-engine-use-cases/**
+      - packages/@dvt/engine/test/application/workflowEngineUseCases.factory.test.ts
+    childrenRequired: false
+    dddOwner: AS
+    cqRails: RT-C01, RT-Q01
+    governance:
+      - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-user-stories.md
+      - docs/planning/execution-model/dvt-execution-model.md
+    fowlerSignals:
+      - boundary drift
+      - responsibility overload
+
+  - id: SYS-RUNTIME-ENGINE-CONTRACTS
+    name: Runtime engine contracts
+    parent: SYS-RUNTIME-ENGINE-CORE
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/engine/src/contracts/**
+      - packages/@dvt/engine/test/contracts/**
+    childrenRequired: false
+    dddOwner: PORT
+    cqRails: RT-C01, RT-Q01
+    governance:
+      - docs/contracts/engine/index.md
+      - docs/architecture/components/engine/contracts/engine/start-run-boundary.v1.md
+    fowlerSignals:
+      - contract drift
+      - primitive obsession
+
+  - id: SYS-RUNTIME-ENGINE-CORE-LIFECYCLE
+    name: Runtime engine lifecycle core
+    parent: SYS-RUNTIME-ENGINE-CORE
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/engine/src/core/**
+      - packages/@dvt/engine/test/core/**
+    excludes:
+      - packages/@dvt/engine/test/core/WorkflowEngine.planRef.test.ts
+    childrenRequired: false
+    dddOwner: DS
+    cqRails: RT-C01, RT-Q01
+    governance:
+      - docs/planning/execution-model/dvt-execution-model.md
+      - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-user-stories.md
+    fowlerSignals:
+      - responsibility overload
+      - hidden authority
+
+  - id: SYS-RUNTIME-ENGINE-DOMAIN-PORTS
+    name: Runtime engine domain ports
+    parent: SYS-RUNTIME-ENGINE-CORE
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/engine/src/domain/**
+      - packages/@dvt/engine/src/ports/**
+      - packages/@dvt/engine/test/domain/**
+    excludes:
+      - packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts
+    childrenRequired: false
+    dddOwner: PORT
+    cqRails: RT-C01, RT-Q01
+    governance:
+      - docs/planning/execution-model/dvt-execution-model.md
+      - docs/contracts/engine/index.md
+    fowlerSignals:
+      - boundary drift
+      - duplicate semantics
+
+  - id: SYS-RUNTIME-ENGINE-SECURITY
+    name: Runtime engine authorization and URI policy
+    parent: SYS-RUNTIME-ENGINE-CORE
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/engine/src/security/**
+      - packages/@dvt/engine/test/security/**
+    excludes:
+      - packages/@dvt/engine/src/security/planRefPolicy.ts
+      - packages/@dvt/engine/src/security/planRefPolicyRules.ts
+      - packages/@dvt/engine/test/security/planRefPolicy.test.ts
+    childrenRequired: false
+    dddOwner: DS
+    cqRails: RT-C01
+    governance:
+      - docs/architecture/components/engine/contracts/plan-verifier-admission.md
+      - docs/planning/execution-model/dvt-execution-model.md
+    fowlerSignals:
+      - hidden authority
+      - boundary drift
+
+  - id: SYS-RUNTIME-ENGINE-RUNTIME-SERVICES
+    name: Runtime engine run status and enrichment services
+    parent: SYS-RUNTIME-ENGINE-CORE
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/engine/src/services/*.ts
+      - packages/@dvt/engine/test/services/RunEnrichmentService.test.ts
+      - packages/@dvt/engine/test/services/RunStatusQueryService.test.ts
+    childrenRequired: false
+    dddOwner: AS
+    cqRails: RT-Q01
+    governance:
+      - docs/planning/execution-model/dvt-execution-model.md
+      - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-component.md
+    fowlerSignals:
+      - responsibility overload
+      - anemic domain
+
+  - id: SYS-RUNTIME-ENGINE-START-RUN
+    name: Runtime engine start-run orchestration
+    parent: SYS-RUNTIME-ENGINE-CORE
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/engine/src/services/startRun/**
+      - packages/@dvt/engine/test/services/StartRun*.test.ts
+      - packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy*.test.ts
+      - packages/@dvt/engine/test/services/runExecutionContextAdmissionPolicy.fixtures.ts
+    childrenRequired: false
+    dddOwner: AS
+    cqRails: RT-C01
+    governance:
+      - docs/architecture/components/engine/contracts/engine/start-run-boundary.v1.md
+      - docs/planning/execution-model/dvt-execution-model.md
+    fowlerSignals:
+      - responsibility overload
+      - data clump
+
+  - id: SYS-RUNTIME-ENGINE-RUN-CONTROL
+    name: Runtime engine run control and signal services
+    parent: SYS-RUNTIME-ENGINE-CORE
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/engine/src/services/runControl/**
+      - packages/@dvt/engine/src/services/signal/**
+      - packages/@dvt/engine/test/services/SignalTransitionGuard.test.ts
+    childrenRequired: false
+    dddOwner: AS
+    cqRails: RT-C01
+    governance:
+      - docs/planning/execution-model/dvt-execution-model.md
+      - docs/contracts/engine/index.md
+    fowlerSignals:
+      - boundary drift
+      - duplicate semantics
+
+  - id: SYS-RUNTIME-ENGINE-RUN-MAINTENANCE
+    name: Runtime engine run maintenance and reconciliation
+    parent: SYS-RUNTIME-ENGINE-CORE
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/engine/src/services/runMaintenance/**
+      - packages/@dvt/engine/src/workers/**
+      - packages/@dvt/engine/test/services/RunMaintenanceService.test.ts
+      - packages/@dvt/engine/test/workers/**
+    childrenRequired: false
+    dddOwner: AS
+    cqRails: RT-C01, RT-Q01
+    governance:
+      - docs/planning/execution-model/dvt-execution-model.md
+      - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-component.md
+    fowlerSignals:
+      - responsibility overload
+      - hidden authority
+
+  - id: SYS-RUNTIME-ENGINE-STATE
+    name: Runtime engine in-memory state and snapshots
+    parent: SYS-RUNTIME-ENGINE-CORE
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/engine/src/state/**
+      - packages/@dvt/engine/test/state/**
+    childrenRequired: false
+    dddOwner: ADP
+    cqRails: RT-C02, RT-Q02
+    governance:
+      - docs/architecture/components/engine/contracts/state-store/IRunStateStore.v2.0.md
+      - docs/planning/execution-model/dvt-execution-model.md
+    fowlerSignals:
+      - data clump
+      - boundary drift
+
+  - id: SYS-RUNTIME-ENGINE-OUTBOX
+    name: Runtime engine outbox rate limiting
+    parent: SYS-RUNTIME-ENGINE-CORE
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/engine/src/outbox/**
+    childrenRequired: false
+    dddOwner: PORT
+    cqRails: RT-C02
+    governance:
+      - docs/planning/execution-model/dvt-execution-model.md
+      - docs/architecture/components/engine/contracts/state-store/IRunStateStore.v2.0.md
+    fowlerSignals:
+      - hidden authority
+      - primitive obsession
+
+  - id: SYS-RUNTIME-ENGINE-DETERMINISM-UTILS
+    name: Runtime engine determinism and utility support
+    parent: SYS-RUNTIME-ENGINE-CORE
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/engine/src/metrics/**
+      - packages/@dvt/engine/src/utils/**
+      - packages/@dvt/engine/test/utils/**
+      - packages/@dvt/engine/test/idempotency.vectors.test.ts
+    childrenRequired: false
+    dddOwner: DS
+    cqRails: none - deterministic support utilities
+    governance:
+      - docs/planning/execution-model/dvt-execution-model.md
+      - docs/contracts/engine/index.md
+    fowlerSignals:
+      - primitive obsession
+      - duplicate semantics
+
+  - id: SYS-RUNTIME-ENGINE-ARCHITECTURE-TESTS
+    name: Runtime engine architecture test harness
+    parent: SYS-RUNTIME-ENGINE-CORE
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/engine/test/architecture/**
+      - packages/@dvt/engine/test/gaps/**
+      - packages/@dvt/engine/test/helpers/**
+    childrenRequired: false
+    dddOwner: AS
+    cqRails: none - architecture and fixture validation harness
+    governance:
+      - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-user-stories.md
+      - docs/architecture/components/ci-governance/component-engineering-record-component.md
+    fowlerSignals:
+      - test-only confidence
+      - documentation drift
 
   - id: SYS-RUNTIME-RUN-DOMAIN
     name: Runtime run domain model
@@ -1076,6 +1380,17 @@ units:
     parent: SYS-REPO-METADATA
     level: component
     status: canonical
+    ownedConcern: Repository metadata and workspace configuration ownership.
+    publicApi:
+      - repository metadata reviewed through governance checks
+    invariants:
+      - repository metadata files have exactly one governance owner
+      - generated outputs remain outside committed metadata ownership unless explicitly governed
+    transitions:
+      - metadata or config change -> governance refresh and pre-push validation
+    consumers:
+      - repository validation gates
+      - planning and governance generators
     owns:
       - .claude/**
       - .gh-comments/**

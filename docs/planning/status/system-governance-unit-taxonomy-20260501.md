@@ -21,8 +21,9 @@ manifest:
 
 The rule is strict: every tracked repository file must belong to exactly one
 governance unit. File ownership belongs to `component` or `source` units only.
-Components must belong to a module, workspace, domain, or system unit. Source
-units must belong to a component. Symbol units must belong to a source unit.
+Components may belong to a module, workspace, domain, system unit, or another
+component. Source units must belong to a component. Symbol units must belong to
+a source unit.
 
 ## Governing Sources
 
@@ -43,6 +44,7 @@ flowchart TB
   WORKSPACE["workspace / app / package"]
   MODULE["module"]
   COMPONENT["component<br/>file ownership allowed"]
+  COMPONENT_CHILD["component child<br/>file ownership allowed"]
   SOURCE["source file<br/>file ownership allowed"]
   SYMBOL["symbol / operation"]
 
@@ -55,7 +57,8 @@ flowchart TB
   WORKSPACE --> MODULE
   WORKSPACE --> COMPONENT
   MODULE --> COMPONENT
-  COMPONENT --> SOURCE
+  COMPONENT --> COMPONENT_CHILD
+  COMPONENT_CHILD --> SOURCE
   SOURCE --> SYMBOL
 ```
 
@@ -67,8 +70,9 @@ system
     -> workspace / app / package
       -> module
         -> component
-          -> source file
-            -> exported symbol / operation
+          -> component
+            -> source file
+              -> exported symbol / operation
 ```
 
 ## Levels
@@ -118,6 +122,16 @@ but has not yet decomposed it deeply enough to judge every child surface.
 | `governance`       | ADRs, contracts, proposals, reviews, status docs, risk entries, or evidence docs      |
 | `fowlerSignals`    | Fowler opportunity signals that explain the split or current drift                    |
 
+Canonical component units also require semantic metadata:
+
+| Field          | Rule                                                                                  |
+| -------------- | ------------------------------------------------------------------------------------- |
+| `ownedConcern` | Short statement of the owned concern and boundary                                     |
+| `publicApi`    | Commands, queries, ports, package exports, or operator surfaces the component exposes |
+| `invariants`   | Behavioral or governance facts that must remain true                                  |
+| `transitions`  | Accepted state, lifecycle, or ownership transitions                                   |
+| `consumers`    | Runtime, docs, CI, or operator consumers that depend on the component                 |
+
 ## Mechanical Rules
 
 The manifest is validated by:
@@ -134,6 +148,10 @@ The guard checks:
   excluded files explicitly;
 - every non-root unit has a valid parent;
 - parent levels follow the hierarchy in this taxonomy;
+- component parents may be components, which makes component assemblies
+  recursive instead of flat;
+- canonical components declare owned concern, public API, invariants,
+  transitions, and consumers;
 - source units have component parents;
 - symbol units have source parents;
 - parent chains are acyclic;

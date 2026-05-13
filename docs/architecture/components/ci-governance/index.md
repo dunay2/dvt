@@ -28,6 +28,8 @@ workflow parity, and local-to-remote quality gates.
 
 - [Local Changed Files Gate Component](./local-changed-files-gate-component.md)
 - [System Governance Generation Workflow Component](./system-governance-generation-workflow-component.md)
+- [Component Engineering Record Component](./component-engineering-record-component.md)
+- [Component Engineering Record User Stories](./component-engineering-record-user-stories.md)
 
 ## Public Operational Surface
 
@@ -35,6 +37,9 @@ workflow parity, and local-to-remote quality gates.
 - [`scripts/check-changed.cjs`](../../../../scripts/check-changed.cjs)
 - [`scripts/check-governance-changed-files.cjs`](../../../../scripts/check-governance-changed-files.cjs)
 - [`scripts/check-feature-mechanization.cjs`](../../../../scripts/check-feature-mechanization.cjs)
+- [`scripts/check-governance-unit-coverage.cjs`](../../../../scripts/check-governance-unit-coverage.cjs)
+- [`scripts/generate-governance-file-component-index.cjs`](../../../../scripts/generate-governance-file-component-index.cjs)
+- [`scripts/planning-db-query.cjs`](../../../../scripts/planning-db-query.cjs)
 - [`scripts/type-check-prepush.cjs`](../../../../scripts/type-check-prepush.cjs)
 - [`tools/docs/check-filenames.ts`](../../../../tools/docs/check-filenames.ts)
 - [`tools/docs/check-frontmatter.ts`](../../../../tools/docs/check-frontmatter.ts)

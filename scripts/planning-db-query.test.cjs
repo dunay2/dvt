@@ -6,6 +6,8 @@ const {
   buildComponentEngineeringRecordRows,
   buildFeatureWorkRows,
   buildFocusRows,
+  buildComponentEngineeringComponentDriftRows,
+  buildComponentEngineeringComponentTreeRows,
   buildGovernanceComponentRows,
   buildGovernanceCoverageRows,
   buildGovernanceDriftRows,
@@ -34,6 +36,8 @@ const {
   readPrReadinessRows,
   readDocsDispositionRows,
   readFeatureWorkRows,
+  readComponentEngineeringComponentDriftRows,
+  readComponentEngineeringComponentTreeRows,
   readComponentEngineeringRecordRows,
   readFocusRows,
   readTaskGapRows,
@@ -47,6 +51,7 @@ const {
   readTaskRows,
   formatQueryError,
   resolveQueryName,
+  runQuery,
 } = require('./planning-db-query.cjs');
 
 test('resolveQueryName defaults to summary and rejects unknown query names', () => {
@@ -75,6 +80,8 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('task-gaps'), 'task-gaps');
   assert.equal(resolveQueryName('focus'), 'focus');
   assert.equal(resolveQueryName('cer'), 'cer');
+  assert.equal(resolveQueryName('component-tree'), 'component-tree');
+  assert.equal(resolveQueryName('component-drift'), 'component-drift');
   assert.throws(() => resolveQueryName('unknown'), /Unknown planning DB query "unknown"/);
 });
 
@@ -331,6 +338,107 @@ test('formatQueryError preserves nested connection failures for unavailable DB',
   assert.match(message, /connect ECONNREFUSED ::1:55432/);
   assert.match(message, /connect ECONNREFUSED 127\.0\.0\.1:55432/);
   assert.match(message, /pnpm planning:db:up/);
+});
+
+test('runQuery refreshes stale governance projections before component tree reads', async () => {
+  const events = [];
+  const client = {
+    async query(sql, params) {
+      events.push(['query', sql, params]);
+      return {
+        rows: [
+          {
+            component_id: 'SYS-RUNTIME-ENGINE-CORE',
+            name: 'Runtime engine core',
+            component_level: 'component',
+            parent_component_id: 'SYS-RUNTIME-ROOT',
+            governance_state: 'coverage-required',
+            direct_file_count: 0,
+            descendant_file_count: 189,
+            ddd_owner: 'AS',
+            is_leaf_component: false,
+          },
+        ],
+      };
+    },
+  };
+  const importMessages = [];
+
+  const rows = await runQuery({
+    queryName: 'component-tree',
+    filters: { component: 'SYS-RUNTIME-ENGINE-CORE' },
+    databaseUrl: 'postgresql://example/db',
+    client,
+    print: false,
+    logger: { error: (message) => importMessages.push(message) },
+    runPlanningImport: async (options, deps) => {
+      events.push(['import', options, Boolean(deps?.logger)]);
+      return {
+        importedScopes: ['governance'],
+        skippedScopes: [],
+        governanceFiles: 4487,
+        governanceComponents: 57,
+        governanceRemediationTasks: 39,
+      };
+    },
+  });
+
+  assert.deepEqual(events[0][0], 'import');
+  assert.deepEqual(events[0][1], {
+    databaseUrl: 'postgresql://example/db',
+    ifStale: true,
+    includePlanning: false,
+    includeGovernance: true,
+    silent: true,
+  });
+  assert.equal(events[1][0], 'query');
+  assert.deepEqual(rows[0], [
+    'SYS-RUNTIME-ENGINE-CORE',
+    'Runtime engine core',
+    'component',
+    'SYS-RUNTIME-ROOT',
+    'coverage-required',
+    0,
+    189,
+    'AS',
+    'false',
+  ]);
+  assert.deepEqual(importMessages, [
+    '[planning:db:query] refreshed stale governance projection before component-tree',
+  ]);
+});
+
+test('runQuery does not refresh governance projections for planning-only reads', async () => {
+  const client = {
+    async query() {
+      return {
+        rows: [
+          {
+            lane_id: 'A',
+            task_id: 'A-1',
+            priority: 'P1',
+            status: 'todo',
+            progress_pct: 0,
+            claimed_by: null,
+            dependency: '',
+            objective: 'Planning task',
+            target: 'planning',
+          },
+        ],
+      };
+    },
+  };
+
+  const rows = await runQuery({
+    queryName: 'tasks',
+    client,
+    print: false,
+    runPlanningImport: async () => {
+      throw new Error('planning-only query must not import governance');
+    },
+  });
+
+  assert.equal(rows[0][1], 'A-1');
 });
 
 test('buildSummaryRows exposes planning and governance content counts without expensive hash drift', () => {
@@ -1150,6 +1258,60 @@ test('readGovernanceUnitRows queries the DB governance unit tree view', async ()
   assert.deepEqual(captured.params, ['SYS-API-ROOT', 'SYS-API', 'coverage-required', 5]);
 });
 
+test('readComponentEngineeringComponentTreeRows queries the DB component tree view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readComponentEngineeringComponentTreeRows(client, {
+    component: 'SYS-RUNTIME-ENGINE-CORE',
+    parentUnit: 'SYS-RUNTIME-ROOT',
+    governanceState: 'coverage-required',
+    limit: 5,
+  });
+
+  assert.match(
+    captured.sql,
+    /from planning_query_store\.component_engineering_component_tree_query/
+  );
+  assert.match(captured.sql, /component_id = \$1/);
+  assert.match(captured.sql, /parent_component_id = \$2/);
+  assert.match(captured.sql, /governance_state = \$3/);
+  assert.match(captured.sql, /limit \$4/);
+  assert.deepEqual(captured.params, [
+    'SYS-RUNTIME-ENGINE-CORE',
+    'SYS-RUNTIME-ROOT',
+    'coverage-required',
+    5,
+  ]);
+});
+
+test('readComponentEngineeringComponentDriftRows queries the DB component drift view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readComponentEngineeringComponentDriftRows(client, {
+    component: 'SYS-RUNTIME-ENGINE-CORE',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.component_engineering_drift_query/);
+  assert.match(captured.sql, /component_id = \$1/);
+  assert.match(captured.sql, /limit \$2/);
+  assert.deepEqual(captured.params, ['SYS-RUNTIME-ENGINE-CORE', 5]);
+});
+
 test('readGovernanceCoverageRows queries the DB governance coverage view', async () => {
   const captured = { sql: '', params: null };
   const client = {
@@ -1296,6 +1458,43 @@ test('governance row builders format DB rows for CLI output', () => {
       },
     ]),
     [['SYS-DOCS-GOVERNANCE', 42, 'stable', '-', '-', 'DocsGovernance']]
+  );
+  assert.deepEqual(
+    buildComponentEngineeringComponentTreeRows([
+      {
+        component_id: 'SYS-RUNTIME-ENGINE-CORE',
+        name: 'Runtime engine core',
+        component_level: 'component',
+        parent_component_id: 'SYS-RUNTIME-ROOT',
+        governance_state: 'coverage-required',
+        direct_file_count: 12,
+        descendant_file_count: 189,
+        ddd_owner: 'AS',
+        is_leaf_component: false,
+      },
+    ]),
+    [
+      [
+        'SYS-RUNTIME-ENGINE-CORE',
+        'Runtime engine core',
+        'component',
+        'SYS-RUNTIME-ROOT',
+        'coverage-required',
+        12,
+        189,
+        'AS',
+        'false',
+      ],
+    ]
+  );
+  assert.deepEqual(
+    buildComponentEngineeringComponentDriftRows([
+      {
+        component_id: 'SYS-RUNTIME-ENGINE-CORE',
+        drift_code: 'children_required_without_children',
+      },
+    ]),
+    [['SYS-RUNTIME-ENGINE-CORE', 'children_required_without_children']]
   );
   assert.deepEqual(
     buildGovernanceCoverageRows([
