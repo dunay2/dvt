@@ -79,9 +79,13 @@ Commands run:
   - Passed.
 - `pnpm planning:db:export:check`
   - Passed.
-
-Final commit and pre-push validation are still pending at this point in the
-slice.
+- `pnpm verify:prepush`
+  - First post-commit run failed because
+    `docs/planning/reviews/architecture-and-governance/20260404-ar-c2-fowler-hard-qa-review.md`
+    was outside the `AR-C2-INV-4-SUSTAINED-VALIDATION-WINDOW-GATE` manifest
+    `allowedImplementationSurfaces`.
+  - Passed after declaring the AR-C2 QA artifact and this closeout as allowed
+    surfaces for the AR-C2 evidence-gate slice.
 
 ## No-Debt Evidence
 
