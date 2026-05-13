@@ -76,6 +76,7 @@ allowedImplementationSurfaces:
   - docs/planning/status/db-surface-inventory.md
   - docs/planning/status/system-governance-unit-taxonomy-20260501.md
   - docs/planning/status/system-governance-unit-index.units.yaml
+  - docs/architecture/components/ci-governance/component-engineering-invariants.md
   - docs/architecture/components/ci-governance/component-engineering-record-component.md
   - docs/architecture/components/ci-governance/component-engineering-record-user-stories.md
   - docs/architecture/components/ci-governance/index.md
@@ -91,6 +92,7 @@ allowedImplementationSurfaces:
   - scripts/generate-governance-file-component-index.test.cjs
   - tools/planning-db/migrations/032_component_engineering_composite_hierarchy.sql
   - tools/planning-db/migrations/033_component_engineering_component_tree_leaf_filter.sql
+  - tools/planning-db/migrations/034_component_engineering_rule_runtime.sql
   - docs/.manifest.json
   - docs/**/index.md
 forbiddenImplementationSurfaces:
@@ -108,6 +110,15 @@ commandQueryRails:
   - name: ValidateComponentEngineeringDrift
     type: query
     dddOwner: Governance local operations
+  - name: ReadComponentEngineeringRules
+    type: query
+    dddOwner: Governance local operations
+  - name: EvaluateComponentEngineeringRules
+    type: query
+    dddOwner: Governance local operations
+  - name: ReadComponentEngineeringQuality
+    type: query
+    dddOwner: Governance local operations
 domainObjects:
   - name: Component engineering composite hierarchy plan
     type: governance proposal
@@ -119,6 +130,15 @@ domainObjects:
     type: planned read model
     owner: Governance local operations
   - name: Component engineering drift
+    type: planned read model
+    owner: Governance local operations
+  - name: Component engineering invariant catalog
+    type: planned read model
+    owner: Governance local operations
+  - name: Component engineering rule evaluation
+    type: planned read model
+    owner: Governance local operations
+  - name: Component engineering quality rollup
     type: planned read model
     owner: Governance local operations
 fowlerSignals:
@@ -143,6 +163,9 @@ completionGate:
   - pnpm planning:db:migrate
   - pnpm planning:db:query component-tree --component SYS-RUNTIME-ENGINE-CORE
   - pnpm planning:db:query component-tree --parent SYS-RUNTIME-ENGINE-CORE
+  - pnpm planning:db:query component-rules --kind responsibility --limit 5
+  - pnpm planning:db:query component-rule-evaluations --component SYS-RUNTIME-ENGINE-CORE --kind CEI-ID-006 --limit 5
+  - pnpm planning:db:query component-quality --component SYS-RUNTIME-ENGINE-CORE
   - pnpm planning:db:query component-drift --component SYS-RUNTIME-ENGINE-CORE
   - node --test scripts/planning-db-migrate.test.cjs
   - node --test scripts/planning-db-query.test.cjs
@@ -208,6 +231,17 @@ redGreenCycles:
       - docs/planning/status/db-surface-inventory.md
       - docs/architecture/components/ci-governance/component-engineering-record-component.md
     greenTest: node --test scripts/planning-db-query.test.cjs
+  - id: component-engineering-rule-runtime
+    redTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+    expectedFailure: component engineering rules, evaluations, and quality rollups are not DB-backed query rails.
+    patchSurfaces:
+      - tools/planning-db/migrations/034_component_engineering_rule_runtime.sql
+      - scripts/planning-db-migrate.test.cjs
+      - scripts/planning-db-query.cjs
+      - scripts/planning-db-query.test.cjs
+      - docs/architecture/components/ci-governance/component-engineering-invariants.md
+      - docs/planning/status/db-surface-inventory.md
+    greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
 symbols:
   - name: ComponentEngineeringCompositeHierarchyPlan
     path: docs/planning/proposals/mandatory/governance-and-docs/component-engineering-composite-hierarchy-plan-20260513.md
@@ -244,6 +278,40 @@ symbols:
     fowlerSignals:
       - Boundary Drift from source records being treated as component children
       - Documentation Drift from leaf ownership checks disagreeing with component semantics
+    architectureGuard: node --test scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/planning-db-migrate.test.cjs
+  - name: component_engineering_rule_catalog_query
+    path: tools/planning-db/migrations/034_component_engineering_rule_runtime.sql
+    dddOwner: Governance local operations
+    cqRails:
+      - ReadComponentEngineeringRules
+    fowlerSignals:
+      - Hidden Authority from invariant rules living outside the DB query surface
+    architectureGuard: node --test scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/planning-db-migrate.test.cjs
+  - name: component_engineering_rule_evaluation_query
+    path: tools/planning-db/migrations/034_component_engineering_rule_runtime.sql
+    dddOwner: Governance local operations
+    cqRails:
+      - EvaluateComponentEngineeringRules
+      - ValidateComponentEngineeringDrift
+    fowlerSignals:
+      - Boundary Drift from unresolved parents and file ownership checks outside a rule model
+    architectureGuard: node --test scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/planning-db-migrate.test.cjs
+  - name: component_engineering_quality_query
+    path: tools/planning-db/migrations/034_component_engineering_rule_runtime.sql
+    dddOwner: Governance local operations
+    cqRails:
+      - ReadComponentEngineeringQuality
+    fowlerSignals:
+      - Responsibility Overload from component size and rule failures without a rollup view
     architectureGuard: node --test scripts/planning-db-migrate.test.cjs
     cypressCoverage: N/A
     unitTests:
@@ -307,6 +375,39 @@ symbols:
     cypressCoverage: N/A
     unitTests:
       - node --test scripts/planning-db-query.test.cjs
+  - name: buildComponentEngineeringRuleCatalogRows
+    path: scripts/planning-db-query.cjs
+    dddOwner: Governance local operations
+    cqRails:
+      - ReadComponentEngineeringRules
+    fowlerSignals:
+      - Hidden Authority from DB rule rows without operator output
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
+  - name: buildComponentEngineeringRuleEvaluationRows
+    path: scripts/planning-db-query.cjs
+    dddOwner: Governance local operations
+    cqRails:
+      - EvaluateComponentEngineeringRules
+    fowlerSignals:
+      - Hidden Authority from DB evaluation rows without operator output
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
+  - name: buildComponentEngineeringQualityRows
+    path: scripts/planning-db-query.cjs
+    dddOwner: Governance local operations
+    cqRails:
+      - ReadComponentEngineeringQuality
+    fowlerSignals:
+      - Hidden Authority from component quality rows without operator output
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
   - name: componentEngineeringComponentTreeSelect
     path: scripts/planning-db-query.cjs
     dddOwner: Governance local operations
@@ -325,6 +426,39 @@ symbols:
       - ValidateComponentEngineeringDrift
     fowlerSignals:
       - Boundary Drift from drift checks outside DB query rails
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
+  - name: componentEngineeringRuleCatalogSelect
+    path: scripts/planning-db-query.cjs
+    dddOwner: Governance local operations
+    cqRails:
+      - ReadComponentEngineeringRules
+    fowlerSignals:
+      - Hidden Authority from rule catalog reads outside the query rail
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
+  - name: componentEngineeringRuleEvaluationSelect
+    path: scripts/planning-db-query.cjs
+    dddOwner: Governance local operations
+    cqRails:
+      - EvaluateComponentEngineeringRules
+    fowlerSignals:
+      - Hidden Authority from rule evaluation reads outside the query rail
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
+  - name: componentEngineeringQualitySelect
+    path: scripts/planning-db-query.cjs
+    dddOwner: Governance local operations
+    cqRails:
+      - ReadComponentEngineeringQuality
+    fowlerSignals:
+      - Hidden Authority from quality rollup reads outside the query rail
     architectureGuard: node --test scripts/planning-db-query.test.cjs
     cypressCoverage: N/A
     unitTests:
@@ -351,12 +485,48 @@ symbols:
     cypressCoverage: N/A
     unitTests:
       - node --test scripts/planning-db-query.test.cjs
+  - name: readComponentEngineeringRuleCatalogRows
+    path: scripts/planning-db-query.cjs
+    dddOwner: Governance local operations
+    cqRails:
+      - ReadComponentEngineeringRules
+    fowlerSignals:
+      - Hidden Authority from direct DB reads without CLI rail
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
+  - name: readComponentEngineeringRuleEvaluationRows
+    path: scripts/planning-db-query.cjs
+    dddOwner: Governance local operations
+    cqRails:
+      - EvaluateComponentEngineeringRules
+    fowlerSignals:
+      - Hidden Authority from direct DB reads without CLI rail
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
+  - name: readComponentEngineeringQualityRows
+    path: scripts/planning-db-query.cjs
+    dddOwner: Governance local operations
+    cqRails:
+      - ReadComponentEngineeringQuality
+    fowlerSignals:
+      - Hidden Authority from direct DB reads without CLI rail
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
   - name: governanceProjectionQueryNames
     path: scripts/planning-db-query.cjs
     dddOwner: Governance local operations
     cqRails:
       - ReadComponentHierarchy
       - ValidateComponentEngineeringDrift
+      - ReadComponentEngineeringRules
+      - EvaluateComponentEngineeringRules
+      - ReadComponentEngineeringQuality
     fowlerSignals:
       - Hidden Authority from query results depending on a manual import step
     architectureGuard: node --test scripts/planning-db-query.test.cjs
@@ -393,6 +563,9 @@ requiredTests:
   - pnpm planning:db:migrate
   - pnpm planning:db:query component-tree --component SYS-RUNTIME-ENGINE-CORE
   - pnpm planning:db:query component-tree --parent SYS-RUNTIME-ENGINE-CORE
+  - pnpm planning:db:query component-rules --kind responsibility --limit 5
+  - pnpm planning:db:query component-rule-evaluations --component SYS-RUNTIME-ENGINE-CORE --kind CEI-ID-006 --limit 5
+  - pnpm planning:db:query component-quality --component SYS-RUNTIME-ENGINE-CORE
   - pnpm planning:db:query component-drift --component SYS-RUNTIME-ENGINE-CORE
   - node --test scripts/planning-db-migrate.test.cjs
   - node --test scripts/planning-db-query.test.cjs
