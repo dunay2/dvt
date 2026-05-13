@@ -27,6 +27,7 @@ export function createTemporalProviderAdapterFactory(): ProviderAdapterFactory {
         TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES:
           context.env.TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES,
         TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: context.env.TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS,
+        TEMPORAL_STEP_ACTIVITY_ROUTES: context.env.TEMPORAL_STEP_ACTIVITY_ROUTES,
       });
       const clientManager = new TemporalClientManager(temporalConfig, context.observability);
 

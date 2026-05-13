@@ -17,6 +17,8 @@ Current invariant:
 - `TemporalAdapter` starts tenant-scoped workflows on `<baseQueue>-<tenantId>`.
 - each worker process polls exactly one `TEMPORAL_TASK_QUEUE`.
 - a "pool" means multiple worker replicas polling the same queue.
+- `TEMPORAL_STEP_ACTIVITY_ROUTES` can route only `executeStep` activities to
+  capability-specific activity queues.
 - a global shared pool that polls all tenant queues is not implemented.
 
 ## Queue Naming
@@ -45,6 +47,7 @@ match `<baseQueue>-<tenantId>`.
 | `TEMPORAL_TASK_QUEUE`                | Yes      | none      | The single queue this worker polls |
 | `DVT_PG_SCHEMA`                      | No       | `dvt`     | State-store schema                 |
 | `DVT_TEMPORAL_WORKER_RUN_MIGRATIONS` | No       | `false`   | Run worker-owned migrations        |
+| `TEMPORAL_STEP_ACTIVITY_ROUTES`      | No       | none      | Optional step kind activity routes |
 | `DVT_TEMPORAL_ADMIN_HOST`            | No       | `0.0.0.0` | Operational server bind host       |
 | `DVT_TEMPORAL_ADMIN_PORT`            | No       | `9468`    | Operational server port            |
 | `DVT_TEMPORAL_DBT_ENABLED`           | No       | `false`   | Enable DBT worker profile          |
@@ -139,6 +142,38 @@ worker pool exists for that queue.
 Do not change a generic worker from `dvt-temporal` to `dvt-temporal-tenant-a`
 unless that worker was intended to stop polling the generic queue.
 
+## Route A Step Kind To A Capability Activity Queue
+
+Use this when one step kind needs a specialized runtime image or dependency set.
+
+1. Choose the activity queue.
+
+   ```bash
+   TEMPORAL_TASK_QUEUE=dvt-temporal-python
+   ```
+
+2. Configure the API Temporal adapter to freeze the route into new workflow
+   inputs.
+
+   ```json
+   {
+     "PYTHON_SCRIPT": {
+       "capability": "executor.python",
+       "taskQueue": "dvt-temporal-python"
+     }
+   }
+   ```
+
+3. Deploy a worker pool with `TEMPORAL_TASK_QUEUE=dvt-temporal-python`.
+4. Ensure that worker image and composition root register the matching step
+   activity plugin.
+5. Verify Temporal pollers exist for `dvt-temporal-python`.
+6. Start a run containing the routed step kind and confirm activity
+   schedule-to-start latency stays within target.
+
+The workflow itself still starts on `<baseQueue>-<tenantId>`. Only the
+`executeStep` activity moves to the configured capability queue.
+
 ## Monitoring Saturation
 
 ### Worker Metrics
@@ -221,6 +256,15 @@ stopped.
 2. Compare it with worker `TEMPORAL_TASK_QUEUE`.
 3. If they differ, deploy a worker for the workflow queue.
 4. If they match, scale replicas or inspect worker errors.
+
+### Routed Activities Queued But Not Executing
+
+1. Identify the activity task queue from `TEMPORAL_STEP_ACTIVITY_ROUTES`.
+2. Confirm Temporal shows pollers for that activity queue.
+3. Confirm the worker image has the runtime dependency for the capability.
+4. Confirm the worker composed the matching plugin registry for the step kind.
+5. If pollers are present but work fails closed, inspect
+   `UnsupportedStepKindError` and plugin startup logs.
 
 ### DBT-Enabled Worker Failing
 

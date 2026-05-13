@@ -40,6 +40,7 @@ function makeAdapter(
     connection?: TemporalAdapterConfigOverrides['connection'];
     timeouts?: TemporalAdapterConfigOverrides['timeouts'];
     workflowBudget?: TemporalAdapterConfigOverrides['workflowBudget'];
+    activityRouting?: unknown;
   } = {}
 ): {
   adapter: TemporalAdapter;
@@ -58,7 +59,10 @@ function makeAdapter(
 
   const adapter = new TemporalAdapter({
     workflowClient,
-    config: createTemporalAdapterConfig(args),
+    config: {
+      ...createTemporalAdapterConfig(args),
+      ...(args.activityRouting === undefined ? {} : { activityRouting: args.activityRouting }),
+    },
   });
 
   return { adapter, workflowClient };
@@ -148,5 +152,40 @@ describe('TemporalAdapter.startRun', () => {
       ],
     });
     expect(JSON.stringify(startOptions)).not.toContain('"steps":');
+  });
+
+  it('freezes configured step activity routing into workflow input without changing the run ref queue', async () => {
+    const { adapter, workflowClient } = makeAdapter({
+      activityRouting: {
+        routesByStepKind: {
+          PYTHON_SCRIPT: {
+            capability: 'executor.python',
+            taskQueue: 'dvt-temporal-python',
+          },
+        },
+      },
+    });
+
+    const runRef = await adapter.startRun(BASE_PLAN_REF, BASE_CTX);
+
+    expect(workflowClient.start).toHaveBeenCalledWith(
+      RUN_PLAN_WORKFLOW,
+      expect.objectContaining({
+        taskQueue: 'q-main-tenant-1',
+        args: [
+          expect.objectContaining({
+            stepActivityRouting: {
+              routesByStepKind: {
+                PYTHON_SCRIPT: {
+                  capability: 'executor.python',
+                  taskQueue: 'dvt-temporal-python',
+                },
+              },
+            },
+          }),
+        ],
+      })
+    );
+    expect(runRef.taskQueue).toBe('q-main-tenant-1');
   });
 });

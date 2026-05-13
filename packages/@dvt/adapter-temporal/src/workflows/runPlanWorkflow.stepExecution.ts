@@ -68,7 +68,10 @@ async function executeLayerStep(args: {
       args.runtime.gatewayDependencyFacts
     );
 
-    const result = await createStepActivities(args.step).executeStep({
+    const result = await createStepActivities(
+      args.step,
+      args.runtime.stepActivityRouting
+    ).executeStep({
       step: args.step,
       ctx: args.ctx,
       ...(gatewayContext === undefined ? {} : { gatewayContext }),

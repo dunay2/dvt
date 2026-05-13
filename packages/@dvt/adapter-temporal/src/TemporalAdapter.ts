@@ -39,6 +39,7 @@ import {
   toTemporalTaskQueue,
   toTemporalWorkflowId,
 } from './WorkflowMapper.js';
+import type { WorkflowStepActivityRouting } from './workflows/runPlanWorkflow.types.js';
 
 interface WorkflowHandleLike {
   cancel(): Promise<unknown>;
@@ -110,6 +111,7 @@ export class TemporalAdapter implements IProviderAdapter {
       ctx: validatedCtx,
       maxContinueAsNewPayloadBytes: this.deps.config.workflowBudget.maxContinueAsNewPayloadBytes,
       continueAsNewAfterLayerCount: this.deps.config.workflowBudget.continueAsNewAfterLayerCount,
+      ...toWorkflowStepActivityRoutingInput(this.deps.config),
     };
 
     assertWorkflowStartPayloadWithinLimit(
@@ -253,6 +255,21 @@ export class TemporalAdapter implements IProviderAdapter {
       'lookupRunRef.describe'
     );
   }
+}
+
+function toWorkflowStepActivityRoutingInput(config: TemporalAdapterConfig): {
+  stepActivityRouting?: WorkflowStepActivityRouting;
+} {
+  const routes = config.activityRouting.routesByStepKind;
+  if (Object.keys(routes).length === 0) {
+    return {};
+  }
+
+  return {
+    stepActivityRouting: {
+      routesByStepKind: { ...routes },
+    },
+  };
 }
 
 function mapCanonicalSignalToTemporalDispatch(request: SignalRequest): {

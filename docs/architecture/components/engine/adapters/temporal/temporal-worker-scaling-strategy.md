@@ -27,6 +27,9 @@ The current runtime has three hard invariants:
    tenant to `<baseQueue>-<tenantId>`.
 3. `TemporalWorkerHost` creates one Temporal SDK `Worker` for one configured
    `TEMPORAL_TASK_QUEUE`.
+4. `RunPlanWorkflow` may route only `executeStep` activities to
+   capability-specific activity task queues from the frozen
+   `RunPlanWorkflowInput.stepActivityRouting` snapshot.
 
 Code references:
 
@@ -39,6 +42,10 @@ Code references:
 Consequence: a worker process does not subscribe to every tenant queue. Scaling
 is currently queue-local: add more worker replicas for the exact queue that
 receives the workflows.
+
+Step activity routing adds a second queue axis. Workflow tasks remain on the
+tenant workflow queue, while selected `executeStep` activities can be delivered
+to a capability activity queue such as `dvt-temporal-python`.
 
 ## Owned Concern
 
@@ -137,6 +144,7 @@ convention.
 | One queue has rising latency          | Add worker replicas with the same `TEMPORAL_TASK_QUEUE`. |
 | One tenant is noisy                   | Scale that tenant queue's worker deployment.             |
 | New active tenant appears             | Provision a worker pool for `<baseQueue>-<tenantId>`.    |
+| One activity capability queue is hot  | Scale workers polling that configured activity queue.    |
 | Many low-traffic tenants exist        | Provisioning automation is required before scale claim.  |
 | One global pool for all tenant queues | Not implemented; keep as future architecture work.       |
 
@@ -145,16 +153,36 @@ pool subscribed to every tenant queue".
 
 ## Worker Image Specialization
 
-All current Temporal worker pools run the same `apps/temporal-worker` image.
-Runtime capabilities are controlled by environment and composition:
+Temporal worker pools still run `apps/temporal-worker`, but operators may build
+or deploy specialized variants of that image for capability queues. Runtime
+capabilities are controlled by environment, image contents, and plugin
+composition:
 
-| Worker profile        | Required configuration                                      |
-| --------------------- | ----------------------------------------------------------- |
-| Generic workflow host | `DVT_TEMPORAL_DBT_ENABLED=false`                            |
-| DBT-capable host      | `DVT_TEMPORAL_DBT_ENABLED=true` plus valid `DVT_DBT_*` vars |
+| Worker profile             | Required configuration                                      |
+| -------------------------- | ----------------------------------------------------------- |
+| Generic workflow host      | `DVT_TEMPORAL_DBT_ENABLED=false`                            |
+| DBT-capable host           | `DVT_TEMPORAL_DBT_ENABLED=true` plus valid `DVT_DBT_*` vars |
+| Capability activity worker | `TEMPORAL_TASK_QUEUE` equals the configured activity queue  |
 
-Step-kind-specific images remain future work. Do not claim a SPARK/DBT split
-until worker routing by capability is implemented.
+Activity routing is configured by `TEMPORAL_STEP_ACTIVITY_ROUTES` in the API
+composition root and frozen into workflow input at start-run time. The worker
+that polls the target activity queue must still compose the matching plugin
+activity registry.
+
+Example route:
+
+```json
+{
+  "PYTHON_SCRIPT": {
+    "capability": "executor.python",
+    "taskQueue": "dvt-temporal-python"
+  }
+}
+```
+
+Do not claim a working Python, Spark, SQL, or DBT split unless the route queue
+has live pollers and the worker image has the required plugin/runtime
+dependencies.
 
 ## Cold-Start Targets
 
@@ -281,7 +309,8 @@ These limits are not closed by documentation:
 - no tenant-to-queue assignment catalog beyond deterministic suffix mapping;
 - no worker deployment automation for 1000+ tenant queues;
 - no production load evidence proving 1000+ tenant queue operation;
-- no step-kind/capability routing model for specialized worker images.
+- no production proof for capability-specialized worker images beyond the
+  implemented activity routing seam.
 
 AR-D3 remains in progress until those limits are either implemented, accepted as
 explicit production constraints, or backed by production-scale evidence.
