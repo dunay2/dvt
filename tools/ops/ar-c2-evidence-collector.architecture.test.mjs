@@ -203,11 +203,15 @@ test('renders canonical SLA source reference for every AR-C2 alert threshold', (
   const root = path.resolve(import.meta.dirname, '../..');
   const outputPath = path.join(mkdtempSync(path.join(tmpdir(), 'ar-c2-evidence-')), 'evidence.md');
 
-  const result = spawnSync(process.execPath, [path.join(root, 'tools/ops/ar-c2-evidence-collector.mjs')], {
-    cwd: root,
-    env: { ...process.env, AR_C2_EVIDENCE_OUTPUT_PATH: outputPath },
-    encoding: 'utf8',
-  });
+  const result = spawnSync(
+    process.execPath,
+    [path.join(root, 'tools/ops/ar-c2-evidence-collector.mjs')],
+    {
+      cwd: root,
+      env: { ...process.env, AR_C2_EVIDENCE_OUTPUT_PATH: outputPath },
+      encoding: 'utf8',
+    }
+  );
 
   assert.equal(result.status, 0, result.stderr);
 
@@ -229,9 +233,7 @@ test('renders canonical SLA source reference for every AR-C2 alert threshold', (
   ]) {
     assert.match(
       artifact,
-      new RegExp(
-        '\\| `' + escapeRegExp(thresholdKey) + '`\\s+\\| `docs/runbooks/[^\\n|]+`\\s+\\|'
-      )
+      new RegExp('\\| `' + escapeRegExp(thresholdKey) + '`\\s+\\| `docs/runbooks/[^\\n|]+`\\s+\\|')
     );
   }
 });
@@ -252,15 +254,19 @@ test('fails closed when a threshold-backed AR-C2 mapping row omits its SLA sourc
     'utf8'
   );
 
-  const result = spawnSync(process.execPath, [path.join(root, 'tools/ops/ar-c2-evidence-collector.mjs')], {
-    cwd: root,
-    env: {
-      ...process.env,
-      AR_C2_EVIDENCE_OUTPUT_PATH: outputPath,
-      AR_C2_MAPPING_PATH: mappingPath,
-    },
-    encoding: 'utf8',
-  });
+  const result = spawnSync(
+    process.execPath,
+    [path.join(root, 'tools/ops/ar-c2-evidence-collector.mjs')],
+    {
+      cwd: root,
+      env: {
+        ...process.env,
+        AR_C2_EVIDENCE_OUTPUT_PATH: outputPath,
+        AR_C2_MAPPING_PATH: mappingPath,
+      },
+      encoding: 'utf8',
+    }
+  );
 
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /AR-C2_THRESHOLD_SOURCE_MISSING/);
