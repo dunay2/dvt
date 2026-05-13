@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/** Owned concern: collect AR-C2 operational evidence and enforce immutable dashboard/alert closure evidence. */
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
@@ -15,14 +16,20 @@ function utcNowIso() {
   return new Date().toISOString();
 }
 
+function parseArgs(argv) {
+  return {
+    requireDashboardAlertEvidence: argv.includes('--require-dashboard-alert-evidence'),
+  };
+}
+
 function cleanCell(value) {
   return value.replaceAll('`', '').trim();
 }
 
 function parseMarkdownTableRows(markdown) {
   const lines = markdown.split(/\r?\n/);
-  const headerIdx = lines.findIndex((line) =>
-    line.includes('| Logical signal') && line.includes('| Target dashboard panel key')
+  const headerIdx = lines.findIndex(
+    (line) => line.includes('| Logical signal') && line.includes('| Target dashboard panel key')
   );
   if (headerIdx < 0) {
     throw new Error(`Cannot find mapping table header in ${MAPPING_PATH}`);
@@ -95,9 +102,40 @@ function deriveThresholdRows(mappingRows) {
 }
 
 function normalizeDashboardSnapshot(snapshot) {
-  if (!snapshot) return new Set();
+  const panelsByKey = new Map();
+  if (!snapshot) return panelsByKey;
+
   const panelKeys = Array.isArray(snapshot.panelKeys) ? snapshot.panelKeys : [];
-  return new Set(panelKeys.map((x) => String(x).trim()));
+  for (const panelKey of panelKeys) {
+    const key = String(panelKey).trim();
+    if (!key) continue;
+    panelsByKey.set(key, { panelKey: key, complete: false });
+  }
+
+  const panels = Array.isArray(snapshot.panels) ? snapshot.panels : [];
+  for (const panel of panels) {
+    const panelKey = String(panel.panelKey ?? '').trim();
+    if (!panelKey) continue;
+    const requiredFields = [
+      'dashboardSystem',
+      'environment',
+      'immutableDashboardReference',
+      'queryExpression',
+      'capturedAt',
+      'reviewer',
+    ];
+    panelsByKey.set(panelKey, {
+      panelKey,
+      dashboardSystem: String(panel.dashboardSystem ?? 'unknown'),
+      environment: String(panel.environment ?? 'unknown'),
+      immutableDashboardReference: String(panel.immutableDashboardReference ?? 'unknown'),
+      queryExpression: String(panel.queryExpression ?? 'unknown'),
+      capturedAt: String(panel.capturedAt ?? 'unknown'),
+      reviewer: String(panel.reviewer ?? 'unknown'),
+      complete: requiredFields.every((field) => String(panel[field] ?? '').trim() !== ''),
+    });
+  }
+  return panelsByKey;
 }
 
 function normalizeAlertSnapshot(snapshot) {
@@ -114,6 +152,18 @@ function normalizeAlertSnapshot(snapshot) {
       severity: String(rule.severity ?? 'unknown'),
       routingTarget: String(rule.routingTarget ?? 'unknown'),
       configSource: String(rule.configSource ?? 'unknown'),
+      capturedAt: String(rule.capturedAt ?? 'unknown'),
+      reviewer: String(rule.reviewer ?? 'unknown'),
+      complete: [
+        'alertRuleId',
+        'expression',
+        'window',
+        'severity',
+        'routingTarget',
+        'configSource',
+        'capturedAt',
+        'reviewer',
+      ].every((field) => String(rule[field] ?? '').trim() !== ''),
     });
   }
   return byKey;
@@ -138,6 +188,67 @@ function normalizeMetricsSnapshot(snapshot) {
   return bySignal;
 }
 
+function collectDashboardAlertEvidenceBlockers({
+  mappingRows,
+  dashboardPanelKeys,
+  alertRulesByThreshold,
+}) {
+  const missingDashboardPanelKeys = mappingRows
+    .filter((row) => !dashboardPanelKeys.has(row.targetPanelKey))
+    .map((row) => row.targetPanelKey);
+  const incompleteDashboardPanelKeys = mappingRows
+    .filter((row) => {
+      const panel = dashboardPanelKeys.get(row.targetPanelKey);
+      return panel && !panel.complete;
+    })
+    .map((row) => row.targetPanelKey);
+  const missingAlertThresholdKeys = deriveThresholdRows(mappingRows)
+    .filter((row) => !alertRulesByThreshold.has(row.thresholdKey))
+    .map((row) => row.thresholdKey);
+  const incompleteAlertThresholdKeys = deriveThresholdRows(mappingRows)
+    .filter((row) => {
+      const rule = alertRulesByThreshold.get(row.thresholdKey);
+      return rule && !rule.complete;
+    })
+    .map((row) => row.thresholdKey);
+
+  return {
+    missingDashboardPanelKeys,
+    incompleteDashboardPanelKeys,
+    missingAlertThresholdKeys,
+    incompleteAlertThresholdKeys,
+  };
+}
+
+function assertImmutableDashboardAlertEvidence(blockers) {
+  const dashboardCount = blockers.missingDashboardPanelKeys.length;
+  const incompleteDashboardCount = blockers.incompleteDashboardPanelKeys.length;
+  const alertCount = blockers.missingAlertThresholdKeys.length;
+  const incompleteAlertCount = blockers.incompleteAlertThresholdKeys.length;
+  if (
+    dashboardCount === 0 &&
+    incompleteDashboardCount === 0 &&
+    alertCount === 0 &&
+    incompleteAlertCount === 0
+  ) {
+    return;
+  }
+
+  throw new Error(
+    [
+      'AR-C2_IMMUTABLE_EVIDENCE_MISSING',
+      `missing dashboard panels: ${dashboardCount}`,
+      `incomplete dashboard evidence: ${incompleteDashboardCount}`,
+      `missing alert rules: ${alertCount}`,
+      `incomplete alert evidence: ${incompleteAlertCount}`,
+      `dashboard blockers: ${blockers.missingDashboardPanelKeys.join(', ') || 'none'}`,
+      `dashboard incomplete: ${blockers.incompleteDashboardPanelKeys.join(', ') || 'none'}`,
+      `alert blockers: ${blockers.missingAlertThresholdKeys.join(', ') || 'none'}`,
+      `alert incomplete: ${blockers.incompleteAlertThresholdKeys.join(', ') || 'none'}`,
+    ].join('\n')
+  );
+}
+
 function renderArtifact({
   mappingRows,
   dashboardPanelKeys,
@@ -146,11 +257,11 @@ function renderArtifact({
   generatedAt,
 }) {
   const dashboardRows = mappingRows.map((row) => {
-    const hasPanel = dashboardPanelKeys.has(row.targetPanelKey);
+    const panel = dashboardPanelKeys.get(row.targetPanelKey);
     return {
       signalKey: row.logicalMetricId,
       panelKey: row.targetPanelKey,
-      status: hasPanel ? 'pass' : 'missing_panel',
+      status: panel?.complete ? 'pass' : 'missing_panel',
     };
   });
 
@@ -172,7 +283,7 @@ function renderArtifact({
       expression: rule.expression,
       window: rule.window,
       routingTarget: rule.routingTarget,
-      status: 'pass',
+      status: rule.complete ? 'pass' : 'missing_alert',
     };
   });
 
@@ -262,6 +373,7 @@ ${sustainedRows
 }
 
 async function main() {
+  const options = parseArgs(process.argv.slice(2));
   const outputPath = process.env.AR_C2_EVIDENCE_OUTPUT_PATH
     ? path.resolve(ROOT, process.env.AR_C2_EVIDENCE_OUTPUT_PATH)
     : DEFAULT_OUTPUT_PATH;
@@ -272,11 +384,13 @@ async function main() {
 
   const mappingRaw = await fs.readFile(MAPPING_PATH, 'utf8');
   const mappingRows = parseMarkdownTableRows(mappingRaw);
+  const dashboardPanelKeys = normalizeDashboardSnapshot(dashboardSnapshot);
+  const alertRulesByThreshold = normalizeAlertSnapshot(alertSnapshot);
 
   const markdown = renderArtifact({
     mappingRows,
-    dashboardPanelKeys: normalizeDashboardSnapshot(dashboardSnapshot),
-    alertRulesByThreshold: normalizeAlertSnapshot(alertSnapshot),
+    dashboardPanelKeys,
+    alertRulesByThreshold,
     metricsBySignal: normalizeMetricsSnapshot(metricsSnapshot),
     generatedAt: utcNowIso(),
   });
@@ -289,9 +403,21 @@ async function main() {
   await fs.mkdir(path.dirname(outputPath), { recursive: true });
   await fs.writeFile(outputPath, formattedMarkdown, 'utf8');
   process.stdout.write(`[ar-c2:evidence] Generated ${path.relative(ROOT, outputPath)}\n`);
+
+  if (options.requireDashboardAlertEvidence) {
+    assertImmutableDashboardAlertEvidence(
+      collectDashboardAlertEvidenceBlockers({
+        mappingRows,
+        dashboardPanelKeys,
+        alertRulesByThreshold,
+      })
+    );
+  }
 }
 
 main().catch((error) => {
-  process.stderr.write(`[ar-c2:evidence] FAIL ${error instanceof Error ? error.message : String(error)}\n`);
+  process.stderr.write(
+    `[ar-c2:evidence] FAIL ${error instanceof Error ? error.message : String(error)}\n`
+  );
   process.exit(1);
 });

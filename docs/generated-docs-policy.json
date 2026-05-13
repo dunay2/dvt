@@ -213,7 +213,7 @@
           "checkCommand": "pnpm governance:db:check"
         }
       ],
-      "maxBytes": 1900000
+      "maxBytes": 1910000
     },
     {
       "id": "local-governance-file-fingerprint-baseline",
