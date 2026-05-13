@@ -167,10 +167,9 @@ governingSources:
 allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/runtime-and-contracts/run-events-hash-partitioning-plan-20260513.md
   - docs/planning/closeouts/20260513-run-events-hash-partitioning-closeout.md
-  - docs/architecture/components/engine/adapters/state-store/postgres/StateStoreAdapter.md
   - docs/architecture/components/engine/adapters/state-store/postgres/run-events-partitioning-component.md
   - docs/architecture/components/engine/adapters/state-store/postgres/run-events-partitioning-user-stories.md
-  - docs/evidence/ED-20260513-run-events-hash-partitioning.md
+  - docs/evidence/ed-20260513-run-events-hash-partitioning.md
   - docs/risk-register/quality/R-20260513-RUN-EVENTS-HASH-PARTITIONING.yaml
   - docs/**/index.md
   - docs/.manifest.json
