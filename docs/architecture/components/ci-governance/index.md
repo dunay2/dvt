@@ -29,6 +29,7 @@ workflow parity, and local-to-remote quality gates.
 - [Local Changed Files Gate Component](./local-changed-files-gate-component.md)
 - [System Governance Generation Workflow Component](./system-governance-generation-workflow-component.md)
 - [Component Engineering Record Component](./component-engineering-record-component.md)
+- [Component Engineering Invariant Model](./component-engineering-invariants.md)
 - [Component Engineering Record User Stories](./component-engineering-record-user-stories.md)
 
 ## Public Operational Surface
