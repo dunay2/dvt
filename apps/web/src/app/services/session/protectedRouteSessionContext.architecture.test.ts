@@ -50,8 +50,8 @@ describe('protected route session context architecture', () => {
     );
 
     expect(authGate).toContain('resolveProtectedRouteSessionContext');
-    expect(authGate).not.toContain("getJson('/session'");
-    expect(resolver).toContain("getJson('/session'");
+    expect(authGate).not.toContain("'/session'");
+    expect(resolver).toContain("'/session'");
     expect(resolver).toContain("'/workspace/context'");
     expect(resolver.indexOf("'/session'")).toBeLessThan(resolver.indexOf("'/workspace/context'"));
     expect(resolver).toContain('setSessionContext');
