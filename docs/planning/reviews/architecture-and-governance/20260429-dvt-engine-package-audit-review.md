@@ -1,8 +1,8 @@
 ---
 title: DVT Engine Package Audit Review
-status: Active
+status: Accepted
 date: 2026-04-29
-last_reviewed: 2026-04-29
+last_reviewed: 2026-05-13
 reviewer: Principal / Staff Architect
 scope: >-
   packages/@dvt/engine current-state audit with direct touchpoints in
@@ -459,6 +459,24 @@ Likely ownership:
 | 6     | EA-20260429-06 | It improves long-term fitness-function quality                                |
 | 7     | EA-20260429-04 | It should land before a second provider, not before the current Temporal path |
 | 8     | EA-20260429-08 | It improves extension ergonomics once the core admission story is stable      |
+
+## Disposition Addendum - 2026-05-13
+
+`EA-20260429` converted the eight candidate stories above into planning DB
+tasks rather than leaving the review as open intake:
+
+- `EA-20260429-01`, `EA-20260429-03`, `EA-20260429-07`, and
+  `EA-20260429-08` are Lane C runtime safety/admission-control tasks.
+- `EA-20260429-02`, `EA-20260429-04`, `EA-20260429-05`, and
+  `EA-20260429-06` are Lane A contract, provider-boundary, package-boundary, or
+  architecture-fitness tasks.
+- The retired findings in this review remain closed as non-goals for future
+  work: DBT is plugin behavior, not engine kernel behavior, and the review does
+  not reopen that already-corrected drift.
+
+Closeout evidence:
+
+- [EA-20260429 Engine Audit Disposition Closeout](../../closeouts/20260513-ea-20260429-engine-audit-disposition-closeout.md)
 
 ## Documentation Drift To Fix When Stories Start
 
