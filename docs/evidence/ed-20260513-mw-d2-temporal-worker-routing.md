@@ -32,6 +32,8 @@ evidence:
     - pnpm --filter dvt-api typecheck
     - pnpm --filter dvt-temporal-worker test
     - pnpm --filter dvt-temporal-worker typecheck
+    - pnpm docs:feature-mechanization -- --feature MW-D2-PROVIDER-NEUTRAL-TEMPORAL-WORKER-ROUTING
+    - pnpm docs:feature-mechanization:implementation
     - pnpm verify:prepush
 ---
 

@@ -23,7 +23,7 @@ profile and does not define generic routing semantics.
 | ------------------------------------------------------ | ---------- | ------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------ | --------------------------- |
 | `MW-D2` route worker execution by step kind/capability | `ADR-0056` | Temporal worker routing by capability       | `TemporalAdapterConfig.activityRouting`, `RunPlanWorkflowInput.stepActivityRouting` | `packages/@dvt/adapter-temporal/src/config.ts`, `runPlanWorkflow.activities.ts` | `workflow-step-activity-routing.test.ts`   | activity `taskQueue` option |
 | Preserve tenant workflow queue                         | `ADR-0056` | workflow queue separate from activity queue | `EngineRunRef.taskQueue` unchanged                                                  | `TemporalAdapter.startRun`                                                      | `TemporalAdapter.startRun.test.ts`         | returned run ref queue      |
-| Freeze routing for in-flight runs                      | `ADR-0056` | workflow input snapshot                     | `RunPlanWorkflowInput.stepActivityRouting`                                          | `RunPlanWorkflow.ts`, `workflowCursorHelpers.ts`                                | `workflow-continue-as-new.test.ts`         | continue-as-new input       |
+| Freeze routing for in-flight runs                      | `ADR-0056` | workflow input snapshot                     | `RunPlanWorkflowInput.stepActivityRouting`                                          | `RunPlanWorkflow.ts`, `runPlanWorkflow.types.ts`                                | `workflow-continue-as-new.test.ts`         | continue-as-new input       |
 | Keep DBT as plugin consumer                            | `ADR-0056` | generic routing code DBT-free               | architecture guard                                                                  | `config.ts`, `TemporalAdapter.ts`, workflow helpers                             | `dbt-core-decoupling.architecture.test.ts` | component guide drift guard |
 
 ## Validation
@@ -34,6 +34,8 @@ Targeted red/green commands:
 - `pnpm --filter @dvt/adapter-temporal exec vitest run test/workflow-continue-as-new.test.ts`
 - `pnpm --filter dvt-api exec vitest run test/modules/providerAdapters/createTemporalProviderAdapterFactory.test.ts`
 - `pnpm --filter dvt-temporal-worker exec vitest run test/plugins/env.test.ts`
+- `pnpm docs:feature-mechanization -- --feature MW-D2-PROVIDER-NEUTRAL-TEMPORAL-WORKER-ROUTING`
+- `pnpm docs:feature-mechanization:implementation`
 
 Final closeout validation is recorded in
 [ED-20260513 MW-D2 Temporal worker routing](../../evidence/ed-20260513-mw-d2-temporal-worker-routing.md).
