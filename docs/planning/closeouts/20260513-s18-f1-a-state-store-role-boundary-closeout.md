@@ -72,6 +72,8 @@ construct it structurally without passing through the helper.
   - Passed; generated surfaces stabilized after two generation passes.
 - `pnpm docs:feature-mechanization:implementation`
   - Passed.
+- `pnpm verify:prepush`
+  - Passed.
 
 ## No-Debt Evidence
 
