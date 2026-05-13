@@ -106,6 +106,29 @@ explicit ADR, matrix, tests, evidence, and risk updates before becoming active.
   runtime policy on purpose, which is extra ceremony but intentional.
 - Older plan/schema pairs remain undeclared unless they are the active pair.
 
+## Addendum - 2026-05-13 AR-D6 Triple Versioning Review
+
+AR-D6 rechecked the governance burden called out by the 2026-04-02 deep
+architectural review. The decision is to retain the triple versioning model and
+defer simplification.
+
+Rationale:
+
+- the six-month checkpoint has not elapsed;
+- only `planVersion = 1.0` is active, but that is the intended current
+  development line rather than evidence of drift;
+- `schemaVersion` is part of the executable admission pair and prevents broad
+  `v1.*` compatibility assumptions;
+- `contractVersion` records the shared-kernel contract line independently from
+  plan grammar and payload shape;
+- current tests and component docs already guard the single active
+  `(planVersion, schemaVersion)` pair and negative cases.
+
+No new version line should be introduced merely to justify the registry. A
+future simplification proposal must prove that admission can remain fail-closed
+and plan records can retain contract provenance without separate
+`schemaVersion` and `contractVersion` fields.
+
 ## Verification
 
 - `@dvt/contracts` exposes a version registry and versioned plan schemas.
