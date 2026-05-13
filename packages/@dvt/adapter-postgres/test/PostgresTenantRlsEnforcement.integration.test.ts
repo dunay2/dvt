@@ -408,6 +408,11 @@ async function insertTenantIsolationProbeRow(
   const runId = `run-rls-catalog-${tableName}-${suffix}`;
   const rowId = `rls-catalog-${tableName}-${suffix}`;
 
+  if (/^run_events_h\d{2}$/.test(tableName)) {
+    await insertRunEventsPartitionProbeRow(client, schema, tableName, tenantId);
+    return;
+  }
+
   switch (tableName) {
     case 'run_metadata':
       await insertRunMetadataProbeRow(client, schema, { runId, tenantId });
@@ -564,4 +569,47 @@ async function insertTenantIsolationProbeRow(
     default:
       throw new Error(`UNHANDLED_TENANT_ISOLATION_PROBE_TABLE:${tableName}`);
   }
+}
+
+async function insertRunEventsPartitionProbeRow(
+  client: Client,
+  schema: string,
+  targetPartition: string,
+  tenantId: 'tenant-a' | 'tenant-b'
+): Promise<void> {
+  const suffix = tenantId === 'tenant-a' ? 'a' : 'b';
+
+  for (let attempt = 0; attempt < 512; attempt += 1) {
+    const runId = `run-rls-catalog-${targetPartition}-${suffix}-${attempt}`;
+    const rowId = `rls-catalog-${targetPartition}-${suffix}-${attempt}`;
+    const result = await client.query<{ inserted_relation: string }>(
+      `
+        INSERT INTO ${quoteIdentifier(schema)}.run_events (
+          run_id,
+          run_seq,
+          event_type,
+          emitted_at,
+          tenant_id,
+          project_id,
+          environment_id,
+          engine_attempt_id,
+          logical_attempt_id,
+          plan_id,
+          plan_version,
+          persisted_at,
+          idempotency_key,
+          payload
+        )
+        VALUES ($1, 1, 'RunQueued', $3, $2, 'project-rls', 'env-rls', 1, 1, 'plan-rls', 'v1', $3, $4, $5::jsonb)
+        RETURNING tableoid::regclass::text AS inserted_relation
+      `,
+      [runId, tenantId, POSTGRES_RLS_PROOF_NOW, `${rowId}:queued`, JSON.stringify({ tenantId })]
+    );
+
+    if (result.rows[0]?.inserted_relation.endsWith(targetPartition)) {
+      return;
+    }
+  }
+
+  throw new Error(`RUN_EVENTS_PARTITION_PROBE_NOT_ROUTED:${targetPartition}`);
 }
