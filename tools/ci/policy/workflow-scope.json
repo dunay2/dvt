@@ -35,7 +35,6 @@
   "generated_status_relevant": [
     "apps/**",
     "packages/**",
-    "docs/planning/status/generated-code-state.md",
     "scripts/generate-code-status.cjs",
     "package.json",
     "pnpm-lock.yaml",

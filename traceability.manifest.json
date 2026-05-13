@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-05-12",
+  "generated": "2026-05-13",
   "repo": {
     "sha": "local"
   },
@@ -129,6 +129,7 @@
         "Decision — Tenant access rejections are represented with a typed error and stable code",
         "Decision — The engine exposes an abstract metrics port for observability without coupling to a specific provider",
         "Decision — The token-bucket rate limiter controls outbox write pressure per tenant in memory",
+        "Decorate IProviderAdapter calls at the engine outbound boundary so provider outages fail fast.",
         "Define an adapter contract oriented to run-driven execution and explicit signaling",
         "Define local write/read repository ports for run events",
         "Define workflow ports and cursor contracts at the DVT boundary before Temporal-specific execution",
@@ -267,6 +268,7 @@
         "packages/@dvt/adapter-temporal/test/workflow-execution-segment.test.ts",
         "packages/@dvt/adapter-temporal/test/workflowMapper.typecheck.ts",
         "packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts",
+        "packages/@dvt/engine/src/adapters/CircuitBreakingProviderAdapter.ts",
         "packages/@dvt/engine/src/adapters/IProviderAdapter.ts",
         "packages/@dvt/engine/src/adapters/inMemory/InMemoryProviderAdapter.ts",
         "packages/@dvt/engine/src/application/providerSelection.ts",
@@ -571,6 +573,7 @@
     {
       "number": "ADR-0014",
       "decisions": [
+        "Decorate IProviderAdapter calls at the engine outbound boundary so provider outages fail fast.",
         "Define an adapter contract oriented to run-driven execution and explicit signaling",
         "Isolate bundle reading, archive extraction, project discovery, and cleanup",
         "Keep DBT CLI helper contracts plugin-local instead of leaking them into core dispatch",
@@ -597,6 +600,7 @@
         "packages/@dvt/adapter-temporal/src/plugins/dbt/dbtCliProjectMaterializer.ts",
         "packages/@dvt/adapter-temporal/src/plugins/dbt/dbtCliTypes.ts",
         "packages/@dvt/contracts/src/contracts/engine/SignalSemantics.v1.ts",
+        "packages/@dvt/engine/src/adapters/CircuitBreakingProviderAdapter.ts",
         "packages/@dvt/engine/src/adapters/IProviderAdapter.ts",
         "packages/@dvt/engine/src/adapters/inMemory/InMemoryProviderAdapter.ts",
         "packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowStartRunUseCase.ts",

@@ -58,12 +58,10 @@ function buildRefreshStages() {
       {
         id: 'coverage-report',
         script: 'docs:governance:coverage-report',
-        args: ['--', '--source', 'db'],
       },
       {
         id: 'remediation-queue',
         script: 'docs:governance:remediation-queue',
-        args: ['--', '--source', 'db'],
       },
     ],
     databaseStages: [
