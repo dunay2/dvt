@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 /**
+ * Owned concern: validate governance unit hierarchy and exact file ownership.
+ *
  * Validate the system governance unit manifest.
  */
 
@@ -39,10 +41,18 @@ const parentLevelByLevel = new Map([
   ['domain', new Set(['system'])],
   ['workspace', new Set(['system', 'domain'])],
   ['module', new Set(['domain', 'workspace'])],
-  ['component', new Set(['system', 'domain', 'workspace', 'module'])],
+  ['component', new Set(['system', 'domain', 'workspace', 'module', 'component'])],
   ['source', new Set(['component'])],
   ['symbol', new Set(['source'])],
 ]);
+
+const canonicalComponentSemanticFields = [
+  'ownedConcern',
+  'publicApi',
+  'invariants',
+  'transitions',
+  'consumers',
+];
 
 function toPosix(filePath) {
   return filePath.replace(/\\/g, '/');
@@ -150,6 +160,20 @@ function validateUnitShape(unit, unitIds, errors) {
     errors.push(
       `Unit ${unit.id} owns files but has level ${unit.level}; ownership belongs to component or source units.`
     );
+  }
+
+  if (unit.level === 'component' && unit.status === 'canonical') {
+    for (const field of canonicalComponentSemanticFields) {
+      const value = unit[field];
+      const missing =
+        value === undefined ||
+        value === null ||
+        value === '' ||
+        (Array.isArray(value) && value.length === 0);
+      if (missing) {
+        errors.push(`Unit ${unit.id} is canonical but missing ${field}.`);
+      }
+    }
   }
 
   if (unit.level === 'system') {

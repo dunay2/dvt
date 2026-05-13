@@ -111,6 +111,11 @@ function manifest(overrides = {}) {
         status: 'canonical',
         owns: ['package.json'],
         childrenRequired: false,
+        ownedConcern: 'Repository package metadata ownership.',
+        publicApi: ['package metadata reviewed through repository governance checks'],
+        invariants: ['package metadata has one governance owner'],
+        transitions: ['repository metadata change -> governance validation'],
+        consumers: ['repository validation gates'],
       },
     ],
     ...overrides,
@@ -161,6 +166,51 @@ test('validateManifest passes when every tracked file has exactly one owner and 
   const result = validateManifest(manifest(), fixtureFiles);
 
   assert.deepEqual(result.errors, []);
+});
+
+test('validateManifest allows component assemblies to contain child components', () => {
+  const result = validateManifest(
+    manifest({
+      units: [
+        ...manifest().units.map((unit) =>
+          unit.id === 'SYS-API-ROOT' ? { ...unit, owns: [], childrenRequired: true } : unit
+        ),
+        {
+          id: 'SYS-API-HTTP-ENTRYPOINTS',
+          parent: 'SYS-API-ROOT',
+          level: 'component',
+          status: 'coverage-required',
+          owns: ['apps/api/src/server.ts'],
+          childrenRequired: false,
+        },
+      ],
+    }),
+    fixtureFiles
+  );
+
+  assert.deepEqual(result.errors, []);
+});
+
+test('validateManifest fails when a canonical component lacks semantic metadata', () => {
+  const result = validateManifest(
+    manifest({
+      units: [
+        ...manifest().units,
+        {
+          id: 'SYS-EXAMPLE-LEAF',
+          name: 'Example leaf',
+          parent: 'SYS-DVT',
+          level: 'component',
+          status: 'canonical',
+          owns: [],
+          childrenRequired: false,
+        },
+      ],
+    }),
+    fixtureFiles
+  );
+
+  assert.match(result.errors.join('\n'), /SYS-EXAMPLE-LEAF is canonical but missing ownedConcern/);
 });
 
 test('validateManifest fails when a tracked file has no owning unit', () => {
@@ -327,7 +377,14 @@ test('real manifest subdivides runtime package files below the runtime root modu
     findOwnerMatches('packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts', units).map(
       (unit) => unit.id
     ),
-    ['SYS-RUNTIME-ENGINE-CORE']
+    ['SYS-RUNTIME-ENGINE-CORE-LIFECYCLE']
+  );
+  assert.deepEqual(
+    findOwnerMatches(
+      'packages/@dvt/engine/src/application/StartRunApplicationService.ts',
+      units
+    ).map((unit) => unit.id),
+    ['SYS-RUNTIME-ENGINE-APPLICATION']
   );
   assert.deepEqual(
     findOwnerMatches('packages/@dvt/state-store/src/index.ts', units).map((unit) => unit.id),

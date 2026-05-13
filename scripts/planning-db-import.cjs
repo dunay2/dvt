@@ -2731,11 +2731,16 @@ async function runPlanningImport(options = {}, deps = {}) {
     };
   }
 
-  const result = await actualDeps.importContent({
+  const importOptions = {
     databaseUrl: options.databaseUrl,
     includePlanning: selected.planning,
     includeGovernance: selected.governance,
-  });
+  };
+  if (options.silent === true) {
+    importOptions.silent = true;
+  }
+
+  const result = await actualDeps.importContent(importOptions);
 
   return {
     ...result,

@@ -77,7 +77,7 @@ allowedImplementationSurfaces:
   - scripts/planning-db-migrate.test.cjs
   - scripts/planning-db-query.test.cjs
   - tools/planning-db/knowledge/**
-  - tools/planning-db/migrations/032_planning_knowledge_document_relations.sql
+  - tools/planning-db/migrations/034_planning_knowledge_document_relations.sql
 forbiddenImplementationSurfaces:
   - apps/**
   - packages/**
@@ -396,7 +396,7 @@ Acceptance criteria:
 
 ### `PKR-2` Migration And Normalized Read Model
 
-- Add `tools/planning-db/migrations/032_planning_knowledge_document_relations.sql`.
+- Add `tools/planning-db/migrations/034_planning_knowledge_document_relations.sql`.
 - Create the first `knowledge_*` document, section, proposal, action, and link
   tables and query views under `planning_query_store`.
 - Add migration tests for every table and view.

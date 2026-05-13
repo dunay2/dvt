@@ -1,5 +1,6 @@
 /**
  * @file scripts/planning-db-query.cjs
+ * @ownedConcern Expose DB-owned planning and governance read models through one operator query command.
  * @baseline ADR-0055: Planning DB canonical operational source
  * @decision Expose DB-owned planning and governance read models through one operator query command.
  * @consequence Planning workboard and next-task reads consume normalized DB views instead of
@@ -10,6 +11,7 @@ const { Client } = require('pg');
 
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { schemaName } = require('./planning-db-migrate.cjs');
+const { runPlanningImport } = require('./planning-db-import.cjs');
 
 const knownQueries = new Set([
   'summary',
@@ -39,6 +41,22 @@ const knownQueries = new Set([
   'knowledge-documents',
   'knowledge-actions',
   'mandatory-proposal-gaps',
+  'component-tree',
+  'component-drift',
+]);
+const governanceProjectionQueryNames = new Set([
+  'files',
+  'components',
+  'units',
+  'coverage',
+  'remediation',
+  'drift',
+  'cer',
+  'component-tree',
+  'component-drift',
+  'knowledge-documents',
+  'knowledge-actions',
+  'mandatory-proposal-gaps',
 ]);
 
 function databaseUrl() {
@@ -54,6 +72,40 @@ function resolveQueryName(value) {
   }
 
   return queryName;
+}
+
+function usesGovernanceProjection(queryName) {
+  return governanceProjectionQueryNames.has(queryName);
+}
+
+async function ensureFreshGovernanceProjection(queryName, options = {}) {
+  if (options.autoImportGovernance === false || !usesGovernanceProjection(queryName)) {
+    return null;
+  }
+
+  const runImport = options.runPlanningImport || runPlanningImport;
+  const result = await runImport(
+    {
+      databaseUrl: options.databaseUrl || databaseUrl(),
+      ifStale: true,
+      includePlanning: false,
+      includeGovernance: true,
+      silent: true,
+    },
+    {
+      logger: {
+        log() {},
+      },
+    }
+  );
+
+  if ((result.importedScopes || []).includes('governance')) {
+    const logger = options.logger || console;
+    const write = typeof logger.error === 'function' ? logger.error.bind(logger) : console.error;
+    write(`[planning:db:query] refreshed stale governance projection before ${queryName}`);
+  }
+
+  return result;
 }
 
 function parseLimit(value, defaultLimit) {
@@ -450,6 +502,27 @@ function buildGovernanceUnitRows(rows) {
   ]);
 }
 
+function buildComponentEngineeringComponentTreeRows(rows) {
+  return rows.map((row) => [
+    row.component_id ?? row.componentId,
+    compactText(row.name),
+    row.component_level ?? row.componentLevel ?? '-',
+    row.parent_component_id ?? row.parentComponentId ?? '-',
+    row.governance_state ?? row.governanceState ?? '-',
+    row.direct_file_count ?? row.directFileCount ?? 0,
+    row.descendant_file_count ?? row.descendantFileCount ?? 0,
+    row.ddd_owner ?? row.dddOwner ?? '-',
+    String(row.is_leaf_component ?? row.isLeafComponent ?? false),
+  ]);
+}
+
+function buildComponentEngineeringComponentDriftRows(rows) {
+  return rows.map((row) => [
+    row.component_id ?? row.componentId ?? '-',
+    row.drift_code ?? row.driftCode ?? '-',
+  ]);
+}
+
 function buildGovernanceCoverageRows(rows) {
   return rows.map((row) => [
     row.coverage_kind ?? row.coverageKind,
@@ -828,6 +901,38 @@ function governanceUnitSelect() {
       cq_rails,
       is_materialized_component
     from ${schemaName}.governance_unit_query`;
+}
+
+function componentEngineeringComponentTreeSelect() {
+  return `
+    select
+      component_id,
+      name,
+      component_level,
+      parent_component_id,
+      root_unit,
+      domain_unit,
+      status,
+      governance_state,
+      children_required,
+      direct_file_count,
+      descendant_component_count,
+      descendant_file_count,
+      ddd_owner,
+      cq_rails,
+      is_materialized_component,
+      has_children,
+      is_leaf_component
+    from ${schemaName}.component_engineering_component_tree_query`;
+}
+
+function componentEngineeringComponentDriftSelect() {
+  return `
+    select
+      component_id,
+      drift_code,
+      metadata
+    from ${schemaName}.component_engineering_drift_query`;
 }
 
 function governanceCoverageSelect() {
@@ -1391,6 +1496,49 @@ async function readGovernanceUnitRows(client, filters = {}) {
   return result.rows;
 }
 
+async function readComponentEngineeringComponentTreeRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'component_id', filters.component);
+  appendFilter(predicates, params, 'parent_component_id', filters.parentUnit);
+  appendFilter(predicates, params, 'governance_state', filters.governanceState);
+  appendFilter(predicates, params, 'root_unit', filters.rootUnit);
+  appendFilter(predicates, params, 'domain_unit', filters.domainUnit);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${componentEngineeringComponentTreeSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by component_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readComponentEngineeringComponentDriftRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'component_id', filters.component);
+  appendFilter(predicates, params, 'drift_code', filters.kind);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${componentEngineeringComponentDriftSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by component_id, drift_code
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
 async function readGovernanceCoverageRows(client, filters = {}) {
   const params = [];
   const predicates = [];
@@ -1572,6 +1720,9 @@ function printJsonRows(rows) {
 
 async function runQuery(options = {}) {
   const queryName = resolveQueryName(options.queryName);
+
+  await ensureFreshGovernanceProjection(queryName, options);
+
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
   const ownsClient = !options.client;
@@ -1785,6 +1936,24 @@ async function runQuery(options = {}) {
       return unitRows;
     }
 
+    if (queryName === 'component-tree') {
+      const rows = await readComponentEngineeringComponentTreeRows(client, options.filters || {});
+      const componentRows = buildComponentEngineeringComponentTreeRows(rows);
+      if (options.print !== false) {
+        printTaskRows(componentRows);
+      }
+      return componentRows;
+    }
+
+    if (queryName === 'component-drift') {
+      const rows = await readComponentEngineeringComponentDriftRows(client, options.filters || {});
+      const driftRows = buildComponentEngineeringComponentDriftRows(rows);
+      if (options.print !== false) {
+        printTaskRows(driftRows);
+      }
+      return driftRows;
+    }
+
     if (queryName === 'coverage') {
       const rows = await readGovernanceCoverageRows(client, options.filters || {});
       const coverageRows = buildGovernanceCoverageRows(rows);
@@ -1884,6 +2053,8 @@ if (require.main === module) {
 }
 
 module.exports = {
+  buildComponentEngineeringComponentDriftRows,
+  buildComponentEngineeringComponentTreeRows,
   buildComponentEngineeringRecordRows,
   buildDocsDispositionRows,
   buildFeatureWorkRows,
@@ -1916,6 +2087,8 @@ module.exports = {
   printHashDriftSummary,
   readDocsDispositionRows,
   readFeatureWorkRows,
+  readComponentEngineeringComponentDriftRows,
+  readComponentEngineeringComponentTreeRows,
   readFocusRows,
   readGovernanceComponentRows,
   readGovernanceCoverageRows,
