@@ -57,6 +57,14 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.toolbar.snapToGridLabel',
     fallback: 'Snap',
   },
+  toolbarExportSnapshotLabel: {
+    key: 'canvas.toolbar.exportSnapshotLabel',
+    fallback: 'Export',
+  },
+  toolbarImportSnapshotLabel: {
+    key: 'canvas.toolbar.importSnapshotLabel',
+    fallback: 'Import',
+  },
   toolbarPlanLabel: {
     key: 'canvas.toolbar.planLabel',
     fallback: 'Plan',
@@ -64,6 +72,18 @@ export const canvasViewToolbarCopyByKey = {
   toolbarRunLabel: {
     key: 'canvas.toolbar.runLabel',
     fallback: 'Run',
+  },
+  projectSnapshotExportUnavailableMessage: {
+    key: 'canvas.projectSnapshot.exportUnavailableMessage',
+    fallback: 'Project snapshot export is available after the draft is saved.',
+  },
+  projectSnapshotImportRejectedMessage: {
+    key: 'canvas.projectSnapshot.importRejectedMessage',
+    fallback: 'Project snapshot import was rejected.',
+  },
+  projectSnapshotImportFailedMessage: {
+    key: 'canvas.projectSnapshot.importFailedMessage',
+    fallback: 'Project snapshot import failed.',
   },
   newCanvasLabel: {
     key: 'canvas.toolbar.newCanvasLabel',

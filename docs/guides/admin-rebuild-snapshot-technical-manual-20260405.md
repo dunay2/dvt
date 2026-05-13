@@ -2,7 +2,7 @@
 title: Admin Rebuild Snapshot Technical Manual
 status: Active
 owner: API / Runtime / Docs
-last_reviewed: 2026-04-05
+last_reviewed: 2026-05-13
 ---
 
 # Admin Rebuild Snapshot Technical Manual
@@ -85,6 +85,8 @@ Failure envelopes:
 2. Tenant is validated before authorization and store call.
 3. State-store call is scoped by `(tenantId, runId)`.
 4. `RunNotFoundError` maps to `404`, no silent fallback.
+5. The state-store maintenance port serializes durable snapshot mutation per
+   `(tenantId, runId)` or returns a typed transient concurrency failure.
 
 ## Failure behavior
 

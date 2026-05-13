@@ -71,6 +71,9 @@ const EXACT_PACKAGE_SCRIPT_DOMAINS = new Map([
   ['verify:changed', 'developer-workflow'],
   ['verify:prepush', 'developer-workflow'],
   ['closeout:changed', 'developer-workflow'],
+  ['pr:closeout', 'developer-workflow'],
+  ['test:verify-prepush', 'test-tooling'],
+  ['test:pr-closeout', 'test-tooling'],
   ['pr:validate-title', 'developer-workflow'],
   ['precommit:determinism', 'developer-workflow'],
   ['hooks:precommit', 'developer-workflow'],
@@ -135,7 +138,7 @@ const SCRIPT_FILE_RULES = [
   ],
   [/^tools\/docs\/.+\.ts$/u, 'docs-governance'],
   [
-    /^scripts\/(closeout-changed|commit|fix-changed|format-markdown-changed|git-local-changes|run-determinism-precommit|setup-git-hooks|validate-pr-title|verify-changed)(\.test)?\.cjs$/u,
+    /^scripts\/(closeout-changed|commit|fix-changed|format-markdown-changed|git-local-changes|pr-closeout|run-determinism-precommit|setup-git-hooks|validate-pr-title|verify-changed|verify-prepush)\.cjs$/u,
     'developer-workflow',
   ],
   [

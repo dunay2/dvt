@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 
 import { collectAdapterCanonicalContractFindings } from './check-architecture-dependencies.mjs';
+import verifyPrepush from '../../scripts/verify-prepush.cjs';
 
 const DEPCRUISE_CONFIG = resolve('.dependency-cruiser.cjs');
 const REQUIRED_ARCH_DEPENDENCY_RULES = [
@@ -190,7 +191,12 @@ test('root package exposes the architecture dependency guard', () => {
 
   assert.equal(pkg.devDependencies?.['dependency-cruiser'], '17.3.9');
   assert.equal(pkg.scripts?.['arch:deps'], 'node tools/ci/check-architecture-dependencies.mjs');
-  assert.match(pkg.scripts?.['verify:prepush'] ?? '', /pnpm arch:deps/);
+  assert.equal(pkg.scripts?.['verify:prepush'], 'node scripts/verify-prepush.cjs');
+  assert.ok(
+    verifyPrepush
+      .buildPrepushPlan(['apps/web/src/main.tsx'])
+      .some((step) => step.id === 'arch-deps')
+  );
   assert.match(pkg.scripts?.['ci:code'] ?? '', /pnpm arch:deps/);
 });
 

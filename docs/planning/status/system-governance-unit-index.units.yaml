@@ -68,35 +68,202 @@ units:
       - coverage refinement
 
   - id: SYS-RUNTIME-ROOT
-    name: Runtime root component
+    name: Runtime root module
     parent: SYS-RUNTIME
+    level: module
+    status: coverage-required
+    owns: []
+    childrenRequired: true
+    dddOwner: AS
+    cqRails: RT-C01, RT-Q01 runtime command and query families
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-component.md
+    fowlerSignals:
+      - coverage refinement
+
+  - id: SYS-RUNTIME-ARCHITECTURE-DOCS
+    name: Runtime subsystem architecture documentation
+    parent: SYS-RUNTIME-ROOT
+    level: component
+    status: coverage-required
+    owns:
+      - docs/architecture/system/subsystems/runtime/**
+      - docs/evidence/ed-20260513-runtime-root-subdivision.md
+      - docs/risk-register/quality/R-20260513-RUNTIME-ROOT-SUBDIVISION.yaml
+    childrenRequired: false
+    dddOwner: AS
+    cqRails: none - runtime architecture documentation and evidence
+    governance:
+      - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-component.md
+      - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-user-stories.md
+      - docs/evidence/ed-20260513-runtime-root-subdivision.md
+      - docs/risk-register/quality/R-20260513-RUNTIME-ROOT-SUBDIVISION.yaml
+    fowlerSignals:
+      - documentation drift
+      - ownership ambiguity
+
+  - id: SYS-RUNTIME-ENGINE-CORE
+    name: Runtime engine core
+    parent: SYS-RUNTIME-ROOT
     level: component
     status: coverage-required
     owns:
       - packages/@dvt/engine/**
-      - packages/@dvt/state-store/**
-      - packages/@dvt/run-domain/**
-      - packages/@dvt/delivery/**
-      - packages/@dvt/plan-interpreter/**
-      - packages/@dvt/plan-verifier/**
-      - packages/@dvt/canonical/**
-      - packages/@dvt/crypto/**
-      - packages/@dvt/dsl/**
-      - packages/@dvt/cli/**
-      - packages/cli/**
     excludes:
       - packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts
       - packages/@dvt/engine/src/security/planRefPolicy.ts
       - packages/@dvt/engine/src/security/planRefPolicyRules.ts
       - packages/@dvt/engine/test/core/WorkflowEngine.planRef.test.ts
       - packages/@dvt/engine/test/security/planRefPolicy.test.ts
-    childrenRequired: true
+    childrenRequired: false
     dddOwner: AS
-    cqRails: runtime commands and queries
+    cqRails: RT-C01, RT-Q01
+    governance:
+      - docs/planning/execution-model/dvt-execution-model.md
+      - docs/contracts/engine/index.md
+      - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-component.md
+    fowlerSignals:
+      - responsibility overload
+      - boundary drift
+
+  - id: SYS-RUNTIME-RUN-DOMAIN
+    name: Runtime run domain model
+    parent: SYS-RUNTIME-ROOT
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/run-domain/**
+    childrenRequired: false
+    dddOwner: AGG
+    cqRails: none - run aggregate and invariant library
+    governance:
+      - docs/planning/execution-model/dvt-execution-model.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-component.md
+    fowlerSignals:
+      - anemic domain
+      - duplicate semantics
+
+  - id: SYS-RUNTIME-STATE-STORE
+    name: Runtime state-store lifecycle
+    parent: SYS-RUNTIME-ROOT
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/state-store/**
+    childrenRequired: false
+    dddOwner: PORT
+    cqRails: RT-C02, RT-Q02
+    governance:
+      - docs/architecture/components/engine/contracts/state-store/IRunStateStore.v2.0.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-component.md
+    fowlerSignals:
+      - responsibility overload
+      - boundary drift
+
+  - id: SYS-RUNTIME-DELIVERY
+    name: Runtime delivery and projection movement
+    parent: SYS-RUNTIME-ROOT
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/delivery/**
+    childrenRequired: false
+    dddOwner: PROJ
+    cqRails: RT-C03, RT-Q03
     governance:
       - docs/planning/status/system-operations-inventory-20260501.md
+      - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-component.md
     fowlerSignals:
-      - coverage refinement
+      - boundary drift
+      - hidden authority
+
+  - id: SYS-RUNTIME-PLAN-INTERPRETATION
+    name: Runtime plan interpretation
+    parent: SYS-RUNTIME-ROOT
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/plan-interpreter/**
+    childrenRequired: false
+    dddOwner: DS
+    cqRails: RT-Q04
+    governance:
+      - docs/planning/execution-model/dvt-execution-model.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-component.md
+    fowlerSignals:
+      - responsibility overload
+
+  - id: SYS-RUNTIME-PLAN-VERIFICATION
+    name: Runtime plan verification
+    parent: SYS-RUNTIME-ROOT
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/plan-verifier/**
+    childrenRequired: false
+    dddOwner: DS
+    cqRails: RT-Q05
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-component.md
+    fowlerSignals:
+      - responsibility overload
+      - test-only confidence
+
+  - id: SYS-RUNTIME-DSL
+    name: Runtime DSL language layer
+    parent: SYS-RUNTIME-ROOT
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/dsl/**
+    childrenRequired: false
+    dddOwner: DS
+    cqRails: RT-Q06
+    governance:
+      - docs/planning/execution-model/dvt-execution-model.md
+      - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-component.md
+    fowlerSignals:
+      - boundary drift
+
+  - id: SYS-RUNTIME-DETERMINISM-UTILITIES
+    name: Runtime deterministic canonical utilities
+    parent: SYS-RUNTIME-ROOT
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/canonical/**
+    childrenRequired: false
+    dddOwner: DS
+    cqRails: none - deterministic utility library
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-component.md
+    fowlerSignals:
+      - duplicate semantics
+      - primitive obsession
+
+  - id: SYS-RUNTIME-CLI-VALIDATION
+    name: Runtime CLI validation surfaces
+    parent: SYS-RUNTIME-ROOT
+    level: component
+    status: coverage-required
+    owns:
+      - packages/@dvt/cli/**
+      - packages/cli/**
+    childrenRequired: false
+    dddOwner: ENTRY
+    cqRails: RT-C04, RT-Q07
+    governance:
+      - docs/planning/status/system-operations-inventory-20260501.md
+      - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-component.md
+    fowlerSignals:
+      - boundary drift
+      - documentation drift
 
   - id: SYS-PLANSTORE
     name: Plan-store domain
@@ -877,6 +1044,9 @@ units:
       - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
       - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
       - docs/risk-register/quality/r-20260502-s08-temporal-dispatch-scope.yaml
+      - docs/architecture/system/subsystems/runtime/**
+      - docs/evidence/ed-20260513-runtime-root-subdivision.md
+      - docs/risk-register/quality/R-20260513-RUNTIME-ROOT-SUBDIVISION.yaml
     childrenRequired: true
     dddOwner: INFRA
     cqRails: none - documentation governance

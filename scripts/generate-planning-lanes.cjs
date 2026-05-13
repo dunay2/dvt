@@ -200,7 +200,7 @@ function renderTasksSection(spec, yamlFileName) {
   const lines = [
     '## Tasks',
     '',
-    `> Verified registry source: \`${yamlFileName}\`. Edit the YAML and run \`pnpm docs:planning:lanes:generate\` plus \`pnpm docs:workboard:generate\`.`,
+    `> Bootstrap/export source: \`${yamlFileName}\`. Use \`pnpm planning:db:operate\` for daily task lifecycle changes, then \`pnpm planning:db:query\` to inspect effective state.`,
     '',
   ];
   for (const task of spec.tasks || []) {
@@ -244,7 +244,7 @@ function renderLaneMarkdown(spec, yamlFileName) {
     headerMarkdown ? '' : null,
     `# ${title}`,
     '',
-    `Generated from the verified lane registry \`${yamlFileName}\`. Use this file when assigning Agent ${spec.lane_id}.`,
+    `Generated from the lane bootstrap/export snapshot \`${yamlFileName}\`. Use \`pnpm planning:db:query next --lane ${spec.lane_id}\` when assigning Agent ${spec.lane_id}.`,
     '',
     '## Goal',
     '',
@@ -304,4 +304,16 @@ function main() {
   }
 }
 
-main();
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  coerceComplexity,
+  coerceEffort,
+  coerceProgress,
+  formatStatus,
+  normalizeStatus,
+  renderLaneMarkdown,
+  renderTasksSection,
+};

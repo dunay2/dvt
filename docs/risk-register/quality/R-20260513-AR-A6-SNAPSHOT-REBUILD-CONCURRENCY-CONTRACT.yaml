@@ -1,0 +1,30 @@
+---
+id: R-20260513-AR-A6-SNAPSHOT-REBUILD-CONCURRENCY-CONTRACT
+title: Future state-store adapters may miss snapshot rebuild mutual exclusion
+status: Open
+date: 2026-05-13
+owners:
+  - '@dvt/contracts'
+  - '@dvt/engine'
+  - '@dvt/adapter-postgres'
+severity: Medium
+probability: Low
+---
+context: >
+  AR-A6 clarified that IRunStateStoreMaintenance.rebuildSnapshot must serialize durable snapshot
+  mutation per (tenantId, runId) or fail competing commands with a typed transient concurrency
+  error.
+
+risk: >
+  A future non-PostgreSQL state-store adapter could implement deterministic replay without
+  equivalent mutual exclusion, allowing two repair or projector commands to race on the same
+  materialized snapshot.
+
+mitigation: >
+  Keep the semantic architecture guard in @dvt/contracts, require adapter guides to describe
+  equivalent mutual exclusion, and review any new state-store adapter against the snapshot rebuild
+  concurrency component guide.
+
+validation:
+  - pnpm --filter @dvt/contracts test --
+    test/run-state-store-maintenance-concurrency.architecture.test.ts

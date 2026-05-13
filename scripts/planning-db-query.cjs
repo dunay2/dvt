@@ -23,16 +23,19 @@ const knownQueries = new Set([
   'artifacts',
   'files',
   'components',
+  'units',
   'coverage',
   'remediation',
   'drift',
   'commands',
   'pr-readiness',
   'docs-disposition',
+  'feature-work',
   'task-references',
   'task-trace',
   'task-gaps',
   'focus',
+  'cer',
 ]);
 
 function databaseUrl() {
@@ -61,6 +64,34 @@ function parseLimit(value, defaultLimit) {
   }
 
   return parsed;
+}
+
+function parseCerSchemaVersion(value) {
+  const schemaVersion = value || 'v1';
+  if (schemaVersion !== 'v1' && schemaVersion !== 'v2') {
+    throw new Error(`Invalid --schema-version "${value}". Expected v1 or v2.`);
+  }
+
+  return schemaVersion;
+}
+
+function normalizeResolutionFilter(value) {
+  if (value === undefined || value === null || value === '') {
+    return undefined;
+  }
+
+  const normalized = String(value).toLowerCase();
+  if (normalized === 'open') {
+    return 'pending';
+  }
+
+  if (['all', 'pending', 'resolved'].includes(normalized)) {
+    return normalized;
+  }
+
+  throw new Error(
+    `Invalid --resolution "${value}". Expected one of: pending, resolved, all, open.`
+  );
 }
 
 function parseArgs(args = process.argv.slice(2)) {
@@ -104,6 +135,18 @@ function parseArgs(args = process.argv.slice(2)) {
       filters.component = value;
       continue;
     }
+    if (arg === '--schema-version') {
+      filters.schemaVersion = parseCerSchemaVersion(value);
+      continue;
+    }
+    if (arg === '--unit') {
+      filters.component = value;
+      continue;
+    }
+    if (arg === '--parent') {
+      filters.parentUnit = value;
+      continue;
+    }
     if (arg === '--command-domain') {
       filters.commandDomain = value;
       continue;
@@ -126,6 +169,10 @@ function parseArgs(args = process.argv.slice(2)) {
     }
     if (arg === '--state') {
       filters.governanceState = value;
+      continue;
+    }
+    if (arg === '--resolution') {
+      filters.resolution = normalizeResolutionFilter(value);
       continue;
     }
     if (arg === '--kind') {
@@ -168,6 +215,7 @@ function buildSummaryRows(summary) {
     ['repository.pr_readiness.blocking', summary.prReadinessBlocking],
     ['docs.disposition_documents', summary.docsDispositionDocuments],
     ['docs.disposition_actions', summary.docsDispositionActions],
+    ['docs.resolution_overlays', summary.docsResolutionOverlays],
     ['docs.task_like_references', summary.docsTaskLikeReferences],
     ['docs.task_like_references.unknown', summary.docsTaskLikeReferencesUnknown],
     ['governance.files', summary.governanceFiles],
@@ -283,6 +331,7 @@ function buildDocsDispositionRows(rows) {
     row.action_kind ?? row.actionKind,
     row.document_path ?? row.documentPath,
     row.reference_text ?? row.referenceText ?? '-',
+    row.resolution_status ?? row.resolutionStatus ?? 'pending',
     compactText(row.reason),
   ]);
 }
@@ -292,6 +341,16 @@ function buildTaskReferenceRows(rows) {
     row.classification,
     row.reference_text ?? row.referenceText,
     row.reference_prefix ?? row.referencePrefix,
+    row.document_path ?? row.documentPath,
+    row.occurrence_count ?? row.occurrenceCount ?? 0,
+  ]);
+}
+
+function buildFeatureWorkRows(rows) {
+  return rows.map((row) => [
+    row.feature_id ?? row.featureId,
+    row.document_status ?? row.documentStatus ?? '-',
+    row.planning_type ?? row.planningType ?? '-',
     row.document_path ?? row.documentPath,
     row.occurrence_count ?? row.occurrenceCount ?? 0,
   ]);
@@ -314,6 +373,7 @@ function buildTaskGapRows(rows) {
     row.gap_kind ?? row.gapKind,
     row.task_id ?? row.taskId ?? '-',
     row.document_path ?? row.documentPath ?? '-',
+    row.resolution_status ?? row.resolutionStatus ?? 'pending',
     compactText(row.reason),
   ]);
 }
@@ -374,6 +434,19 @@ function buildGovernanceComponentRows(rows) {
   ]);
 }
 
+function buildGovernanceUnitRows(rows) {
+  return rows.map((row) => [
+    row.unit_id ?? row.unitId,
+    compactText(row.name),
+    row.level,
+    row.parent_id ?? row.parentId ?? '-',
+    row.governance_state ?? row.governanceState,
+    row.direct_file_count ?? row.directFileCount ?? 0,
+    row.descendant_file_count ?? row.descendantFileCount ?? 0,
+    row.ddd_owner ?? row.dddOwner ?? '-',
+  ]);
+}
+
 function buildGovernanceCoverageRows(rows) {
   return rows.map((row) => [
     row.coverage_kind ?? row.coverageKind,
@@ -403,6 +476,10 @@ function buildGovernanceDriftRows(rows) {
   ]);
 }
 
+function buildComponentEngineeringRecordRows(rows) {
+  return rows.map((row) => row.record ?? row.componentEngineeringRecord);
+}
+
 function appendFilter(predicates, params, column, value) {
   if (value === undefined || value === null || value === '') {
     return;
@@ -410,6 +487,22 @@ function appendFilter(predicates, params, column, value) {
 
   params.push(value);
   predicates.push(`${column} = $${params.length}`);
+}
+
+function appendResolutionFilter(predicates, params, value) {
+  const resolution = normalizeResolutionFilter(value) || 'pending';
+  if (resolution === 'all') {
+    return;
+  }
+
+  params.push('pending');
+  if (resolution === 'resolved') {
+    predicates.push(`resolution_status <> $${params.length}`);
+    return;
+  }
+
+  params[params.length - 1] = resolution;
+  predicates.push(`resolution_status = $${params.length}`);
 }
 
 function effectiveTaskSelect() {
@@ -561,7 +654,13 @@ function docsDispositionActionSelect() {
       evidence,
       source_content_sha256,
       raw_action,
-      imported_at
+      imported_at,
+      resolution_status,
+      resolved_by,
+      resolved_at,
+      resolution_reason,
+      target_lane_id,
+      target_task_id
     from ${schemaName}.doc_disposition_action_query`;
 }
 
@@ -611,7 +710,13 @@ function taskGapSelect() {
       document_path,
       reason,
       source_path,
-      source_content_sha256
+      source_content_sha256,
+      resolution_status,
+      resolved_by,
+      resolved_at,
+      resolution_reason,
+      target_lane_id,
+      target_task_id
     from ${schemaName}.planning_task_gap_query`;
 }
 
@@ -667,6 +772,29 @@ function governanceComponentSelect() {
       ddd_owner,
       cq_rails
     from ${schemaName}.governance_component_query`;
+}
+
+function governanceUnitSelect() {
+  return `
+    select
+      unit_id,
+      name,
+      level,
+      parent_id,
+      root_unit,
+      domain_unit,
+      status,
+      governance_state,
+      is_drift,
+      is_legacy,
+      children_required,
+      direct_file_count,
+      descendant_component_count,
+      descendant_file_count,
+      ddd_owner,
+      cq_rails,
+      is_materialized_component
+    from ${schemaName}.governance_unit_query`;
 }
 
 function governanceCoverageSelect() {
@@ -739,6 +867,7 @@ async function readSummary(client) {
       (select count(*)::int from ${schemaName}.pr_readiness_checks where blocking = true) as "prReadinessBlocking",
       (select count(*)::int from ${schemaName}.doc_disposition_documents) as "docsDispositionDocuments",
       (select count(*)::int from ${schemaName}.doc_disposition_actions) as "docsDispositionActions",
+      (select count(*)::int from ${schemaName}.doc_resolution_overlays) as "docsResolutionOverlays",
       (select count(*)::int from ${schemaName}.doc_task_like_references) as "docsTaskLikeReferences",
       (select count(*)::int from ${schemaName}.doc_task_like_references where classification = 'unknown_task_like_id') as "docsTaskLikeReferencesUnknown",
       (select count(*)::int from ${schemaName}.governance_files) as "governanceFiles",
@@ -942,6 +1071,7 @@ async function readDocsDispositionRows(client, filters = {}) {
   appendFilter(predicates, params, 'action_kind', filters.kind);
   appendFilter(predicates, params, 'document_path', filters.path);
   appendFilter(predicates, params, 'document_status', filters.status);
+  appendResolutionFilter(predicates, params, filters.resolution);
 
   const limit = parseLimit(filters.limit, 50);
   params.push(limit);
@@ -989,6 +1119,40 @@ async function readTaskReferenceRows(client, filters = {}) {
   return result.rows;
 }
 
+async function readFeatureWorkRows(client, filters = {}) {
+  const params = [];
+  const predicates = ["reference.classification = 'registered_feature_mechanization'"];
+  appendFilter(predicates, params, 'reference.reference_prefix', filters.prefix);
+  appendFilter(predicates, params, 'reference.document_path', filters.path);
+  appendFilter(predicates, params, 'document.status', filters.status);
+  appendFilter(predicates, params, 'document.planning_type', filters.kind);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `select
+       reference.reference_text as feature_id,
+       document.status as document_status,
+       document.planning_type,
+       reference.document_path,
+       reference.occurrence_count,
+       reference.imported_at
+     from ${schemaName}.doc_task_reference_query reference
+     join ${schemaName}.doc_disposition_document_query document
+       on document.document_path = reference.document_path
+     where ${predicates.join(' and ')}
+     order by
+       document.status,
+       reference.reference_text,
+       reference.document_path
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
 async function readTaskTraceRows(client, filters = {}) {
   const params = [];
   const predicates = [];
@@ -1023,6 +1187,7 @@ async function readTaskGapRows(client, filters = {}) {
   appendFilter(predicates, params, 'severity', filters.priority);
   appendFilter(predicates, params, 'task_id', filters.taskId);
   appendFilter(predicates, params, 'document_path', filters.path);
+  appendResolutionFilter(predicates, params, filters.resolution);
 
   const limit = parseLimit(filters.limit, 100);
   params.push(limit);
@@ -1085,6 +1250,14 @@ function appendGovernanceComponentFilters(predicates, params, filters = {}) {
   appendFilter(predicates, params, 'governance_state', filters.governanceState);
 }
 
+function appendGovernanceUnitFilters(predicates, params, filters = {}) {
+  appendFilter(predicates, params, 'unit_id', filters.component);
+  appendFilter(predicates, params, 'parent_id', filters.parentUnit);
+  appendFilter(predicates, params, 'root_unit', filters.rootUnit);
+  appendFilter(predicates, params, 'domain_unit', filters.domainUnit);
+  appendFilter(predicates, params, 'governance_state', filters.governanceState);
+}
+
 async function readGovernanceFileRows(client, filters = {}) {
   const params = [];
   const predicates = [];
@@ -1116,6 +1289,25 @@ async function readGovernanceComponentRows(client, filters = {}) {
     `${governanceComponentSelect()}
      ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
      order by file_count desc, component_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readGovernanceUnitRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendGovernanceUnitFilters(predicates, params, filters);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${governanceUnitSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by parent_id nulls first, level, unit_id
      limit $${params.length}`,
     params
   );
@@ -1190,6 +1382,30 @@ async function readGovernanceDriftRows(client, filters = {}) {
   return result.rows;
 }
 
+async function readComponentEngineeringRecordRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'component_id', filters.component);
+
+  const limit = parseLimit(filters.limit, 20);
+  params.push(limit);
+  const viewName =
+    parseCerSchemaVersion(filters.schemaVersion) === 'v2'
+      ? 'governance_component_engineering_record_v2_query'
+      : 'governance_component_engineering_record_query';
+
+  const result = await client.query(
+    `select component_id, record
+     from ${schemaName}.${viewName}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by component_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
 async function readHashDriftSummary(client) {
   const result = await client.query(`
     select
@@ -1216,6 +1432,12 @@ function printHashDriftSummary(summary) {
 function printTaskRows(rows) {
   for (const row of rows) {
     console.log(row.join('\t'));
+  }
+}
+
+function printJsonRows(rows) {
+  for (const row of rows) {
+    console.log(JSON.stringify(row, null, 2));
   }
 }
 
@@ -1344,6 +1566,15 @@ async function runQuery(options = {}) {
       return referenceRows;
     }
 
+    if (queryName === 'feature-work') {
+      const rows = await readFeatureWorkRows(client, options.filters || {});
+      const featureRows = buildFeatureWorkRows(rows);
+      if (options.print !== false) {
+        printTaskRows(featureRows);
+      }
+      return featureRows;
+    }
+
     if (queryName === 'task-trace') {
       const rows = await readTaskTraceRows(client, options.filters || {});
       const traceRows = buildTaskTraceRows(rows);
@@ -1389,6 +1620,15 @@ async function runQuery(options = {}) {
       return componentRows;
     }
 
+    if (queryName === 'units') {
+      const rows = await readGovernanceUnitRows(client, options.filters || {});
+      const unitRows = buildGovernanceUnitRows(rows);
+      if (options.print !== false) {
+        printTaskRows(unitRows);
+      }
+      return unitRows;
+    }
+
     if (queryName === 'coverage') {
       const rows = await readGovernanceCoverageRows(client, options.filters || {});
       const coverageRows = buildGovernanceCoverageRows(rows);
@@ -1414,6 +1654,15 @@ async function runQuery(options = {}) {
         printTaskRows(driftRows);
       }
       return driftRows;
+    }
+
+    if (queryName === 'cer') {
+      const rows = await readComponentEngineeringRecordRows(client, options.filters || {});
+      const cerRows = buildComponentEngineeringRecordRows(rows);
+      if (options.print !== false) {
+        printJsonRows(cerRows);
+      }
+      return cerRows;
     }
 
     throw new Error(`Unhandled planning DB query "${queryName}".`);
@@ -1479,12 +1728,15 @@ if (require.main === module) {
 }
 
 module.exports = {
+  buildComponentEngineeringRecordRows,
   buildDocsDispositionRows,
+  buildFeatureWorkRows,
   buildFocusRows,
   buildGovernanceComponentRows,
   buildGovernanceCoverageRows,
   buildGovernanceDriftRows,
   buildGovernanceFileRows,
+  buildGovernanceUnitRows,
   buildGovernanceRemediationRows,
   buildHashDriftRows,
   buildPlanningArtifactRows,
@@ -1501,13 +1753,16 @@ module.exports = {
   databaseUrl,
   formatQueryError,
   parseArgs,
+  parseCerSchemaVersion,
   printHashDriftSummary,
   readDocsDispositionRows,
+  readFeatureWorkRows,
   readFocusRows,
   readGovernanceComponentRows,
   readGovernanceCoverageRows,
   readGovernanceDriftRows,
   readGovernanceFileRows,
+  readGovernanceUnitRows,
   readGovernanceRemediationRows,
   readPlanningArtifactRows,
   readPlanningDependencyRows,
@@ -1518,7 +1773,9 @@ module.exports = {
   readOpenTaskRows,
   readTaskGapRows,
   printSummary,
+  printJsonRows,
   printTaskRows,
+  readComponentEngineeringRecordRows,
   readTaskTraceRows,
   readNextTaskRows,
   readHashDriftSummary,

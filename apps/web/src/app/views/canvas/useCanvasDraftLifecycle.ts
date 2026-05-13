@@ -1,5 +1,6 @@
 /** Owned concern: compose bootstrapping, persistence, save-attempt policy, and first-canvas creation into one narrow Canvas draft-lifecycle seam. */
 import { useCallback, useState } from 'react';
+import { toast } from 'sonner';
 
 import { createCanvasDraftIdempotencyKey } from './canvasDraftIdempotencyKey';
 import type {
@@ -12,6 +13,9 @@ import { useCanvasDraftAttemptRefs } from './useCanvasDraftAttemptRefs';
 import { useCanvasDraftBootstrapSync } from './useCanvasDraftBootstrapSync';
 import { useCanvasDraftPersistence } from './useCanvasDraftPersistence';
 import { executeCreateCanvasDocumentCommand } from './canvasCreateCanvasDocumentCommand';
+import { executeImportProjectSnapshotCommand } from './canvasProjectSnapshotImportCommand';
+import { canvasProjectSnapshot } from './canvasProjectSnapshot';
+import { canvasViewCopy } from './copy';
 
 export function useCanvasDraftLifecycle({
   baseline,
@@ -108,10 +112,76 @@ export function useCanvasDraftLifecycle({
       setDraftSaveStatus,
     ]
   );
+  const canExportProjectSnapshot =
+    graphDraftQuery.data?.record != null &&
+    !graphDraftQuery.isPending &&
+    !graphDraftQuery.isError &&
+    draftSaveStatus !== 'saving' &&
+    draftSaveStatus !== 'failed';
+  const canImportProjectSnapshot =
+    canPersistGraphDraft && !graphDraftQuery.isPending && !graphDraftQuery.isError;
+  const handleExportProjectSnapshot = useCallback<
+    CanvasDraftLifecycle['handleExportProjectSnapshot']
+  >(() => {
+    const record = graphDraftQuery.data?.record ?? null;
+    if (!canExportProjectSnapshot || record == null) {
+      toast.error(canvasViewCopy.projectSnapshotExportUnavailableMessage);
+      return;
+    }
+
+    const exported = canvasProjectSnapshot.exportFile({
+      record,
+      workspaceScope,
+      exportedAt: new Date().toISOString(),
+    });
+    const blob = new Blob([exported.contents], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = exported.fileName;
+    anchor.rel = 'noopener';
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  }, [canExportProjectSnapshot, graphDraftQuery.data?.record, workspaceScope]);
+  const handleImportProjectSnapshotFile = useCallback<
+    CanvasDraftLifecycle['handleImportProjectSnapshotFile']
+  >(
+    async (file) => {
+      await executeImportProjectSnapshotCommand({
+        file,
+        canImportProjectSnapshot,
+        draftRepository,
+        graphDraftQuery,
+        draftQueryCache,
+        setDraftSession,
+        setDraftSaveStatus,
+        refs,
+        invalidateInFlightSaveAttempt,
+      });
+    },
+    [
+      canImportProjectSnapshot,
+      draftQueryCache,
+      draftRepository,
+      graphDraftQuery.data?.record?.revision,
+      invalidateInFlightSaveAttempt,
+      refs,
+      setDraftSession,
+      setDraftSaveStatus,
+    ]
+  );
 
   return {
     draftSaveStatus,
     reloadLatestDraft,
     handleCreateCanvasDocument,
+    canExportProjectSnapshot,
+    canImportProjectSnapshot,
+    handleExportProjectSnapshot,
+    handleImportProjectSnapshotFile,
   };
 }

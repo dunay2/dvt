@@ -44,26 +44,35 @@ function buildRefreshStages() {
       {
         id: 'planning-db-import',
         script: 'planning:db:import',
+        args: ['--', '--if-stale', '--planning-only'],
       },
       {
         id: 'workboard',
         script: 'docs:workboard:generate',
       },
       {
+        id: 'governance-db-import',
+        script: 'governance:db:import',
+        args: ['--', '--if-stale'],
+      },
+      {
         id: 'coverage-report',
         script: 'docs:governance:coverage-report',
-        args: ['--', '--source', 'db'],
       },
       {
         id: 'remediation-queue',
         script: 'docs:governance:remediation-queue',
-        args: ['--', '--source', 'db'],
+      },
+      {
+        id: 'governance-db-import-after-reports',
+        script: 'governance:db:import',
       },
     ],
     databaseStages: [
       {
         id: 'planning-db-import-final',
         script: 'planning:db:import',
+        args: ['--', '--if-stale', '--planning-only'],
       },
       {
         id: 'planning-db-check',

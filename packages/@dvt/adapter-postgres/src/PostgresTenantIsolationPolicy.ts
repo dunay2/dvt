@@ -20,11 +20,37 @@ export interface TenantIsolationTable {
   readonly serviceAccessOwners: readonly PostgresServiceAccessOwner[];
 }
 
+export const RUN_EVENTS_HASH_PARTITION_COUNT = 16;
+
 export const START_RUN_INTENTS_TENANT_ISOLATION_TABLE: TenantIsolationTable = {
   name: 'start_run_intents',
   tenantColumn: 'tenant_id',
   serviceAccessOwners: [POSTGRES_SERVICE_ACCESS.startRunIntentReconciler.owner],
 } as const;
+
+export const RUN_EVENTS_TENANT_ISOLATION_TABLE: TenantIsolationTable = {
+  name: 'run_events',
+  tenantColumn: 'tenant_id',
+  serviceAccessOwners: [
+    POSTGRES_SERVICE_ACCESS.runArchiveMaintenance.owner,
+    POSTGRES_SERVICE_ACCESS.snapshotStalenessQuery.owner,
+  ],
+} as const;
+
+export function runEventsHashPartitionName(partitionIndex: number): string {
+  return `run_events_h${String(partitionIndex).padStart(2, '0')}`;
+}
+
+export const RUN_EVENTS_HASH_PARTITION_TENANT_ISOLATION_TABLES: readonly TenantIsolationTable[] =
+  Array.from({ length: RUN_EVENTS_HASH_PARTITION_COUNT }, (_, partitionIndex) => ({
+    ...RUN_EVENTS_TENANT_ISOLATION_TABLE,
+    name: runEventsHashPartitionName(partitionIndex),
+  }));
+
+export const RUN_EVENTS_TENANT_ISOLATION_TABLES: readonly TenantIsolationTable[] = [
+  RUN_EVENTS_TENANT_ISOLATION_TABLE,
+  ...RUN_EVENTS_HASH_PARTITION_TENANT_ISOLATION_TABLES,
+] as const;
 
 export const CORE_TENANT_ISOLATION_TABLES: readonly TenantIsolationTable[] = [
   {
@@ -36,14 +62,7 @@ export const CORE_TENANT_ISOLATION_TABLES: readonly TenantIsolationTable[] = [
       POSTGRES_SERVICE_ACCESS.snapshotStalenessQuery.owner,
     ],
   },
-  {
-    name: 'run_events',
-    tenantColumn: 'tenant_id',
-    serviceAccessOwners: [
-      POSTGRES_SERVICE_ACCESS.runArchiveMaintenance.owner,
-      POSTGRES_SERVICE_ACCESS.snapshotStalenessQuery.owner,
-    ],
-  },
+  RUN_EVENTS_TENANT_ISOLATION_TABLE,
   {
     name: 'run_snapshots',
     tenantColumn: 'tenant_id',
@@ -100,7 +119,9 @@ export const START_RUN_INTENT_TENANT_ISOLATION_TABLES: readonly TenantIsolationT
 ] as const;
 
 export const TENANT_ISOLATION_TABLES: readonly TenantIsolationTable[] = [
-  ...CORE_TENANT_ISOLATION_TABLES,
+  CORE_TENANT_ISOLATION_TABLES[0]!,
+  ...RUN_EVENTS_TENANT_ISOLATION_TABLES,
+  ...CORE_TENANT_ISOLATION_TABLES.slice(2),
   ...START_RUN_INTENT_TENANT_ISOLATION_TABLES,
 ] as const;
 
@@ -137,7 +158,10 @@ export function buildTenantIsolationPolicySql(
       current_setting('dvt.access_mode', true) = 'service'
       AND current_setting('dvt.service_access_owner', true) IN (${serviceAccessOwnerList})
     )
-    OR ${tenantColumn} = current_setting('dvt.tenant_id', true)
+    OR (
+      current_setting('dvt.access_mode', true) = 'tenant'
+      AND ${tenantColumn} = current_setting('dvt.tenant_id', true)
+    )
   `;
 
   return [

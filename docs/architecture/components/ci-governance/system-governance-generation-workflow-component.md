@@ -68,6 +68,10 @@ This component does not own:
 Generated Markdown and YAML outputs are local artifacts, not manual authoring
 surfaces and not tracked review files. The editable root is the owning source
 plus the generator declared in the generated-docs policy.
+When `docs/generated-docs-policy.json` declares a generated shard family as
+DB-backed, the local shard remains an inspection artifact and the size gate must
+validate the declared DB projection contract instead of treating shard bytes as
+the authority.
 
 ## Current Workflow
 
@@ -104,13 +108,16 @@ flowchart TD
   ComponentMap --> Fingerprint
   ComponentShards --> Fingerprint
   Fingerprint --> FingerprintBaseline[".generated-docs/.../system-governance-file-fingerprint-baseline.yaml"]
+  Fingerprint --> FingerprintShards[".generated-docs/.../governance-file-fingerprints/*.fingerprints.yaml"]
   FingerprintBaseline --> FingerprintImpact
+  FingerprintShards --> FingerprintImpact
   FileIndex --> FingerprintImpact
   FileIndex --> Import["planning:db:import"]
   ComponentIndex --> Import
   ComponentMap --> Import
   DocumentMapOutputs --> Import
   FingerprintBaseline --> Import
+  FingerprintShards --> Import
   FingerprintImpact --> Import
   Import --> Coverage
   Coverage --> CoverageOutputs[".generated-docs/.../system-governance-coverage-report.*"]
@@ -120,6 +127,7 @@ flowchart TD
   RemediationOutputs --> ImportFinal["planning:db:import final"]
   FileIndex --> ChangedFiles
   FingerprintBaseline --> ChangedFiles
+  FingerprintShards --> ChangedFiles
   Worktree --> ChangedFiles
   UnitCoverage --> Prepush
   DocumentMapOutputs --> Prepush
@@ -146,15 +154,21 @@ flowchart TD
   unit index plus tracked and untracked non-ignored files, writes the
   `.generated-docs/planning/status/system-governance-*` outputs plus the
   `governance-files/` and `governance-components/` shards, and its check command
-  regenerates ignored artifacts.
+  regenerates ignored artifacts. `governance-files/*.files.yaml` is backed by
+  `planning_query_store.governance_file_query`; `docs:gov:generated-policy`
+  validates that projection metadata before exempting that shard family from
+  local `maxBytes` enforcement.
 - `Fingerprint baseline` runs `pnpm docs:governance:file-fingerprint-baseline`
   through `scripts/check-governance-file-fingerprint-baseline.cjs --write`. It
-  reads the current generated file index and shards, writes
-  `.generated-docs/planning/status/system-governance-file-fingerprint-baseline.yaml`,
-  and its check command regenerates the ignored current baseline.
+  reads the current generated file index and shards, writes a compact
+  `.generated-docs/planning/status/system-governance-file-fingerprint-baseline.yaml`
+  manifest plus deterministic
+  `.generated-docs/planning/status/governance-file-fingerprints/*.fingerprints.yaml`
+  shards, and its check command regenerates the ignored current baseline.
 - `Fingerprint impact` runs `pnpm docs:governance:file-fingerprint-impact`
   through `scripts/check-governance-file-fingerprint-baseline.cjs --report`. It
-  reads the current generated baseline and file index, writes
+  reads the current generated baseline manifest, fingerprint shards, and file
+  index, writes
   `.generated-docs/planning/status/system-governance-file-fingerprint-impact-20260501.md`,
   and its check command regenerates the ignored current impact report.
 - `Coverage report` runs `pnpm docs:governance:coverage-report` through
@@ -253,6 +267,7 @@ These output families used to be tracked review files under
 - `docs/planning/status/system-governance-remediation-queue-20260502.md`
 - `docs/planning/status/governance-files/*.files.yaml`
 - `docs/planning/status/governance-components/*.component-files.yaml`
+- `docs/planning/status/governance-file-fingerprints/*.fingerprints.yaml`
 
 That fan-out is no longer expected in PR file lists. The same payload is still
 deterministically generated under `.generated-docs/planning/status/` for local
@@ -307,6 +322,9 @@ not the database import source.
   import. It may keep generated repo paths as stable source identifiers, but the
   source content hash must be computed from the in-memory projection payload
   being imported.
+- DB-backed generated shard exemptions must name the query view, import command,
+  and drift-check command in `docs/generated-docs-policy.json`; undeclared or
+  invalid metadata must fail closed and keep the local `maxBytes` rule active.
 - The migration must move local operational state into DB audit and overlay
   rows while keeping reviewer attention on root source changes and summarized
   artifact hashes.

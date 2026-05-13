@@ -272,8 +272,11 @@ Before closing the work, verify all acceptance criteria:
 - [ ] tests pass in every touched package (happy path AND negative paths)
 - [ ] at least one negative-path test added if the slice introduces new behavior
 - [ ] lint and typecheck green in every touched package
-- [ ] `pnpm verify:prepush` green before the slice is presented as ready, unless
-      the user explicitly limits validation and that limit is reported
+- [ ] final commit created with `pnpm commit ...` before final pre-push
+      validation, so the pre-commit hook can apply Prettier/lint-staged fixes
+- [ ] `pnpm verify:prepush` green after the final commit and before the slice is
+      presented as ready, unless the user explicitly limits validation and that
+      limit is reported
 - [ ] `pnpm governance:refresh` run before final docs/prepush validation when
       governance, planning, docs generated surfaces, package scripts, or file
       inventory changes affect `system-governance-*`
@@ -317,6 +320,8 @@ Operational Git rule for the agent environment:
   environment does not reliably create `.git` lock files under sandboxed
   execution
 - this rule does not relax hooks or validation expectations
+- do not treat `pnpm verify:prepush` as a Prettier fixer; it verifies the
+  hook-normalized tree after `pnpm commit ...` has run pre-commit formatting
 
 The mandatory closeout file format is defined in `AGENTS.md`. See
 [`docs/planning/closeouts/G7.1-closeout.md`](../planning/closeouts/G7.1-closeout.md) for a

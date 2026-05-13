@@ -1,0 +1,19 @@
+---
+id: R-20260512-WE-HX-6-BOUNDARY-FITNESS
+title: Engine fixture boundary fitness can drift from runtime ownership rules
+status: Open
+date: 2026-05-12
+owners:
+  - '@dvt/engine'
+severity: Low
+probability: Low
+---
+description: >
+  WE-HX-6 hardens engine architecture tests and fixture boundaries. The primary risk is that
+  test-only helpers drift into hidden runtime authority by importing production adapters, provider
+  SDKs, API composition roots, database migration code, or environment-driven provider selection.
+
+mitigation: >
+  Add owned-concern headers to fixture modules, centralize architecture-test support, add a semantic
+  boundary-fitness guard for forbidden runtime imports and documentation coverage, and keep public
+  runtime contracts unchanged.

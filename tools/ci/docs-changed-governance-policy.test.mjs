@@ -4,6 +4,8 @@ import { dirname } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 
+import verifyPrepush from '../../scripts/verify-prepush.cjs';
+
 const rootPackage = JSON.parse(readFileSync('package.json', 'utf8'));
 
 function runPnpm(args, env = {}) {
@@ -39,8 +41,13 @@ test('changed-doc governance commands are wired into docs and pre-push gates', (
   );
   assert.match(rootPackage.scripts['docs:gov'], /\bpnpm docs:gov:filenames:changed\b/);
   assert.match(rootPackage.scripts['docs:gov'], /\bpnpm docs:gov:frontmatter:changed\b/);
-  assert.match(rootPackage.scripts['verify:prepush'], /\bpnpm docs:gov:filenames:changed\b/);
-  assert.match(rootPackage.scripts['verify:prepush'], /\bpnpm docs:gov:frontmatter:changed\b/);
+  assert.equal(rootPackage.scripts['verify:prepush'], 'node scripts/verify-prepush.cjs');
+
+  const prepushStepIds = verifyPrepush
+    .buildPrepushPlan(['docs/guides/testing-and-ci-capabilities.md'])
+    .map((step) => step.id);
+  assert.ok(prepushStepIds.includes('docs-gov-filenames-changed'));
+  assert.ok(prepushStepIds.includes('docs-gov-frontmatter-changed'));
 });
 
 test('changed-only strict filename gate fails non-canonical changed doc names', () => {

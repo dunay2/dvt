@@ -1,5 +1,6 @@
 ﻿/**
  * @file packages/@dvt/engine/src/index.ts
+ * @ownedConcern Runtime engine core public API, orchestration ports, and run lifecycle services.
  * @baseline ADR-0003: Execution Model Sovereignty
  * @decision Decision â€” Expose a stable public surface of the engine for orchestration decoupled from the runtime
  * @consequence Consumers integrate engine contracts/ports without depending on internal implementations
@@ -62,11 +63,17 @@ export * from './ports/IProjector.js';
 export * from './ports/IRunExecutionContextResolver.js';
 export * from './ports/IRunExecutionContextBindingPolicy.js';
 export * from './adapters/IProviderAdapter.js';
+export * from './adapters/CircuitBreakingProviderAdapter.js';
+export * from './domain/IRunCommandService.js';
+export * from './domain/IRunSignalService.js';
 export * from './domain/IRunRecoveryService.js';
 export * from './domain/IRunHealthService.js';
 
 export * from './services/RunMaintenanceService.js';
 export * from './services/RunEnrichmentService.js';
+export { buildRunCommandService } from './services/runControl/RunCommandService.js';
+export { buildRunSignalService } from './services/runControl/RunSignalService.js';
+export * from './services/startRun/StartRunTelemetryPolicy.js';
 export { buildRunHealthService } from './services/RunHealthService.js';
 export { buildRunStatusQueryService } from './services/RunStatusQueryService.js';
 export { buildRunRecoveryService } from './application/RecoverRunApplicationService.js';

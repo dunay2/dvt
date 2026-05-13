@@ -25,9 +25,11 @@ surface. This control tower is the update protocol.
   with `pnpm planning:db:query tasks`, or route candidates with
   `pnpm planning:db:query next`. Use `pnpm planning:db:export:check` before
   treating generated planning views as aligned.
-- Regenerates workboard or open-task-route views: run `pnpm planning:db:import`
-  before `pnpm docs:workboard:generate`. The workboard generator reads the
-  fresh `planning_effective_tasks` DB view for task state and
+- Regenerates workboard or open-task-route views: first ensure the planning DB
+  bootstrap rows are current with
+  `pnpm planning:db:import -- --if-stale --planning-only`, then run
+  `pnpm docs:workboard:generate`. The workboard generator reads the
+  `planning_effective_tasks` DB view for task state and
   `planning_next_tasks` for `Actionable Now` route candidates by default. It
   does not silently fall back to lane YAML; use
   `node scripts/generate-workboard.cjs --source yaml` only for an explicit
@@ -40,22 +42,23 @@ surface. This control tower is the update protocol.
   lifecycle changes must enter through the DB command rail.
 - Structurally re-scopes lane ownership, sequencing, or task taxonomy outside a
   single task row: update the relevant planning source surfaces, run
-  `pnpm planning:db:import`, and regenerate planning-derived views locally.
+  `pnpm planning:db:import -- --if-stale --planning-only`, and regenerate
+  planning-derived views locally.
 - Changes sequencing, dependencies, blockers, or parallel lanes:
   update [Roadmap Of Record](../roadmap/index.md),
   [Roadmap By Domain](../roadmap/roadmap-by-domain.md),
   [Review Remediation Roadmap 2026-04-02](../roadmap/review-remediation-roadmap-20260402.md),
-  and the affected lane YAML registry.
+  and the affected task rows through `pnpm planning:db:operate`.
 - Changes domain priorities or active objective focus:
   update [Domain Status Board](./domain-status-board.md) and
   [Roadmap By Domain](../roadmap/roadmap-by-domain.md).
 - Introduces or updates a plan/proposal:
   update the corresponding file under `docs/planning/proposals/` and its linked
-  work item through the DB overlay when the task already exists, or the relevant
-  lane YAML when the task is new.
+  work item through `pnpm planning:db:operate`, including
+  `planning:db:operate task create` when the task is new.
 - Produces review findings that require execution:
   update the corresponding file under `docs/planning/reviews/`, the relevant DB
-  task overlay or lane YAML task definition, and the roadmap or domain surface
+  task row through `pnpm planning:db:operate`, and the roadmap or domain surface
   that owns the follow-up.
 - Closes implementation work:
   update the corresponding file under `docs/planning/closeouts/`, move the
@@ -74,9 +77,9 @@ surface. This control tower is the update protocol.
 - Do not use legacy gap IDs as active work IDs, roadmap lanes, or current
   authority references.
 - Express live work as sprint boards, proposal slices, review intake items, or
-  lane `task_id` entries.
+  planning DB `task_id` entries.
 - If a historical gap document is still cited, treat it as archive-only context
-  and route active truth through current status, roadmap, and the lane registry.
+  and route active truth through current status, roadmap, and the planning DB.
 
 ## Canonical Planning Navigation
 
@@ -86,7 +89,10 @@ surface. This control tower is the update protocol.
   [Strategic Product Roadmap](../roadmap/strategic-product-roadmap.md)
 - Cross-domain roadmap view: [Roadmap By Domain](../roadmap/roadmap-by-domain.md)
 - Planning entrypoint: [Planning Control Tower](./planning-control-tower.md)
-- Task registry:
+- Operational task queries: `pnpm planning:db:query focus`,
+  `pnpm planning:db:query next`, `pnpm planning:db:query open`, and
+  `pnpm planning:db:query tasks`
+- Bootstrap/export lane snapshots:
   [Agent Lane A](./agent-lane-a.yaml), [Agent Lane B](./agent-lane-b.yaml),
   [Agent Lane C](./agent-lane-c.yaml), [Agent Lane D](./agent-lane-d.yaml),
   [Agent Lane E](./agent-lane-e.yaml)
@@ -115,7 +121,7 @@ When there is confusion about "what is active now" vs "where to continue":
    from `planning_next_tasks` after local DB overlays.
 4. `pnpm planning:db:operate task create/delete/update/claim/release`: the
    operational write rail for task lifecycle and closeout state.
-5. [Agent Lane YAML registry](./agent-lane-a.yaml)
+5. [Agent Lane YAML snapshots](./agent-lane-a.yaml)
    (`agent-lane-a.yaml` ... `agent-lane-e.yaml`): bootstrap/export
    compatibility surface while the database owns local operational writes and
    the repository still reviews planning snapshots through Git.
@@ -133,7 +139,7 @@ Interpretation rule:
 - `planning DB effective task view` = execution state now
 - `planning DB next-task view` = dependency-satisfied next work
 - `planning:db:operate` = operational task write rail, including create/delete
-- `lane yaml` = bootstrap/export compatibility
+- `lane yaml` = bootstrap/export compatibility, not daily task authority
 - `roadmap` = sequence
 - `reviews` = rationale and intake for follow-up work
 
@@ -153,7 +159,8 @@ Interpretation rule:
 2. [Planning Dashboard](./planning-dashboard.md)
 3. `pnpm planning:db:query open`, `pnpm planning:db:query next`, or
    `pnpm planning:db:query tasks`
-4. Relevant [Agent Lane YAML](./agent-lane-a.yaml) when creating/deleting tasks
+4. `pnpm planning:db:operate` when creating, deleting, claiming, or updating
+   tasks
 5. [Roadmap Of Record](../roadmap/index.md)
 6. [Strategic Product Roadmap](../roadmap/strategic-product-roadmap.md)
 7. [Roadmap By Domain](../roadmap/roadmap-by-domain.md)

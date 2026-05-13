@@ -538,6 +538,7 @@ behavior.
 | `InspectPlanningQueryStoreRuntime` | query   | Planning tooling      | `PlanningQueryStoreRuntime`   | Docker Compose + env              |
 | `ImportGovernanceStateQueryStore`  | command | Docs governance       | `GovernanceStateImport`       | file-system + SQL                 |
 | `QueryGovernanceStateReadModel`    | query   | Docs governance       | `GovernanceStateReadModel`    | SQL query adapter                 |
+| `ReadGovernanceUnitTree`           | query   | Docs governance       | `GovernanceUnitTreeReadModel` | SQL query adapter                 |
 | `ExportGovernanceStateSnapshot`    | command | Docs governance       | `GovernanceStateExport`       | SQL + file-system                 |
 | `ValidateGovernanceStateDrift`     | query   | Docs governance       | `GovernanceStateDriftReport`  | SQL + Git comparison              |
 | `RefreshGovernanceDerivedSurfaces` | command | Docs governance       | `GovernanceRefreshWorkflow`   | package scripts + Git fingerprint |
@@ -574,16 +575,20 @@ that encapsulates queued actionable task selection after dependency
 resolution. `governance:db:query files`, `components`, `coverage`,
 `remediation`, and `drift` are aliases over the same SQL query adapter and read
 DB-owned governance query views instead of parsing generated YAML/Markdown
-surfaces. `planning:db:query pr-readiness` also implements
+surfaces. `planning:db:query units` implements `ReadGovernanceUnitTree` by
+exposing logical parent units derived from governance component
+`unitReferences`, including non-materialized parents such as `SYS-API-ROOT`.
+`planning:db:query pr-readiness` also implements
 `QueryGovernanceStateReadModel` by reading the DB-owned ARC/PR readiness
 projection derived from `.arc-policy.yaml`, changed files, evidence docs, and
 risk-register updates. Scope is local developer tooling only; authorization is
 local OS and Docker/Postgres access. Negative tests cover migration checksum
 mismatch, unknown query names, fast summary isolation from the hash-drift
 projection, explicit hash-drift querying, effective task filtering, open-task
-view selection, next-task view selection, governance query view selection, PR
-readiness blocker formatting, content extraction from real lane YAML, and
-governance file-count parity with the Git-tracked file index.
+view selection, next-task view selection, governance query view selection,
+governance unit parent navigation, PR readiness blocker formatting, content
+extraction from real lane YAML, and governance file-count parity with the
+Git-tracked file index.
 
 `planning:db:operate` implements `ApplyPlanningLocalOperation`,
 `CreatePlanningTaskDefinition`, `DeletePlanningTaskDefinition`, and
@@ -1021,7 +1026,7 @@ flowchart LR
   GeneratorProjections["in-memory governance generator projections"] --> Import["planning:db:import"]
   Import --> GovernanceTables["governance_* tables"]
   GovernanceTables --> QueryViews["governance_*_query views"]
-  QueryViews --> GovernanceQuery["governance:db:query files/components/coverage/remediation/drift"]
+  QueryViews --> GovernanceQuery["governance:db:query files/components/coverage/remediation/drift\nplanning:db:query units"]
   QueryViews -. "W12B" .-> ReportGenerators["system-governance report generators"]
 ```
 
@@ -1204,6 +1209,10 @@ Current implementation status on 2026-05-08:
   `coverage`, `remediation`, and `drift` read DB-owned governance query views
   for daily inspection instead of requiring agents to open generated
   `system-governance-*` artifacts;
+- W12D is implemented: `planning:db:query units` reads the DB-owned
+  `governance_unit_query` view so logical parent units such as `SYS-API-ROOT`
+  can be searched directly even when the parent is derived from
+  `unitReferences` rather than stored as a materialized component row;
 - W12B is implemented: `governance:refresh` imports the query store after
   source-affecting governance generators and before coverage/remediation
   generation, then runs those report generators against DB-owned governance
@@ -1226,10 +1235,22 @@ Current implementation status on 2026-05-08:
 - W19 is implemented: `planning:db:query task-trace` and
   `planning:db:query task-gaps` expose the task provenance ledger over existing
   planning, document-disposition, dependency, and evidence rows;
-- W20 is active: the next planning-query slice adds a work-intake focus query
+- W20 is implemented: the planning-query slice adds a work-intake focus query
   over next tasks, task provenance gaps, docs disposition actions, governance
   remediation, and PR readiness blockers so agents can ask what to work on next
   and why without opening every specialized queue first;
+- W21 is implemented: docs disposition and task-provenance gaps can now be
+  resolved through DB-owned source-hash-guarded overlays instead of requiring
+  agents to edit status/inventory files to remove operational noise;
+- W26 is implemented: `planning_task_gap_raw_query` now links document
+  disposition actions to planning tasks only when the action's
+  `reference_text` matches the registered task reference, preventing
+  document-level or unrelated task-like actions from multiplying false task
+  gaps in `planning:db:query focus`;
+- W27 is implemented: `planning:db:query` now normalizes the operator-facing
+  `--resolution open` alias to `pending` and rejects unknown resolution values
+  before SQL generation, preventing empty result sets caused by invalid
+  resolution filters from being mistaken for a clean docs/task queue;
 - the obsolete `governance:artifacts:generate` package alias is removed;
   `pnpm governance:refresh` is the single local orchestration command for
   generated inspection artifacts plus planning/governance DB import and checks;
@@ -1408,26 +1429,87 @@ readiness, or infer task closure. It accelerates intake by making the first
 question DB-answerable: what deserves attention next, and which canonical query
 explains it?
 
+## W21 Docs Resolution Overlay Design
+
+After W18, W19, and W20, operators could inspect docs disposition actions, task
+provenance gaps, and the ranked work-intake queue in the DB, but the only way
+to keep already-reviewed cleanup signals out of the active queues was still to
+alter source files. That made the DB easier to query but did not make it the
+governed operational surface for triage decisions.
+
+W21 adds DB-owned resolution overlays for disposition actions and task gaps. The
+overlay is local operational state, not a replacement for Git-reviewed source
+truth. Each resolution stores the source content hash of the imported action or
+gap, so a later source-file change reopens the signal instead of silently
+hiding new evidence behind an old decision.
+
+Target state:
+
+```mermaid
+flowchart LR
+  Actions["doc_disposition_actions"] --> ActionView["doc_disposition_action_query"]
+  Gaps["planning_task_gap_raw_query"] --> GapView["planning_task_gap_query"]
+  ResolutionCommand["planning:db:operate docs-disposition/task-gap resolve"] --> Overlays["doc_resolution_overlays"]
+  ResolutionCommand --> Audit["doc_resolution_operations"]
+  Overlays --> ActionView
+  Overlays --> GapView
+  ActionView --> DocsQueue["planning:db:query docs-disposition --resolution pending|resolved|all"]
+  GapView --> GapQueue["planning:db:query task-gaps --resolution pending|resolved|all"]
+  GapView --> Intake["planning_work_intake_query"]
+  ActionView --> Intake
+```
+
+`ResolveDocsDispositionAction` and `ResolveTaskProvenanceGap` own the command
+rail. `QueryDocsDispositionQueue`, `QueryTaskProvenanceLedger`, and
+`QueryPlanningWorkIntake` remain the query rails. The overlay intentionally
+supports `resolved`, `accepted`, `ignored`, and `linked` statuses; it does not
+archive documents, create tasks, change ARC readiness, or rewrite lane YAML.
+
+Implementation plan:
+
+1. Add red tests in `scripts/planning-db-operate.test.cjs`,
+   `scripts/planning-db-query.test.cjs`, and
+   `scripts/planning-db-migrate.test.cjs` for resolution command parsing,
+   source-hash-guarded planning, query filtering, and migration coverage.
+2. Add `021_docs_resolution_overlays.sql` with `doc_resolution_overlays`,
+   `doc_resolution_operations`, source-hash-joined disposition views, and
+   task-gap views split into raw and resolution-aware projections.
+3. Extend `planning:db:operate` with `docs-disposition resolve` and
+   `task-gap resolve` commands that are idempotent and audited.
+4. Extend `planning:db:query docs-disposition` and `task-gaps` with
+   `--resolution pending|resolved|all`; default output remains the pending
+   operator queue.
+5. Validate W21 with
+   `node --test scripts/planning-db-operate.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs`,
+   `pnpm test:planning:db`, `pnpm planning:db:migrate`,
+   `pnpm planning:db:query docs-disposition --limit 5`,
+   `pnpm planning:db:query task-gaps --limit 5`,
+   `pnpm planning:db:query focus --limit 5`,
+   `pnpm governance:refresh`,
+   `pnpm docs:feature-mechanization:implementation`, and
+   `pnpm verify:prepush`.
+
 ## Failure Modes And Guardrails
 
-| Failure mode                              | Guardrail                                                     |
-| ----------------------------------------- | ------------------------------------------------------------- |
-| Local DB diverges from Git                | `planning:db:check` fails on drift                            |
-| Docker volume lost                        | Rebuild from Git with import command                          |
-| Import order affects output               | Stable ordering and hash checks                               |
-| Generated artifact churn returns          | Artifact hashes recorded in `planning_artifacts`              |
-| Agents forget refresh order               | `governance:refresh` owns order and repeats until stable      |
-| Agents collide on lane YAML edits         | `planning:db:operate` owns local task claims and revisions    |
-| Applied migration checksum mismatch       | `planning:db:reset` rebuilds the shared volume from Git       |
-| Local DB audit is lost in temp DB         | durable audit uses the shared local Postgres volume           |
-| Non-code gate cost grows unchecked        | Treat CI policy reduction as a separate governed optimization |
-| Governance report churn is hidden         | Governance artifact hashes and source causes are queryable    |
-| PR readiness blockers are hidden in CI    | ARC/readiness blockers are queryable in `pr_readiness_checks` |
-| Docs disposition stays manual and stale   | Docs disposition queues are imported and queryable in the DB  |
-| Task provenance stays manual and stale    | Task trace and task gap queues are derived in DB query views  |
-| Work intake stays split across queues     | Focus query ranks existing DB queues without creating writes  |
-| DB treated as hidden repository authority | No committed database files; export must remain reviewable    |
-| GitHub mirror edits bypass PR review      | Mirror is read-only or imports as reviewed repo changes first |
+| Failure mode                              | Guardrail                                                      |
+| ----------------------------------------- | -------------------------------------------------------------- |
+| Local DB diverges from Git                | `planning:db:check` fails on drift                             |
+| Docker volume lost                        | Rebuild from Git with import command                           |
+| Import order affects output               | Stable ordering and hash checks                                |
+| Generated artifact churn returns          | Artifact hashes recorded in `planning_artifacts`               |
+| Agents forget refresh order               | `governance:refresh` owns order and repeats until stable       |
+| Agents collide on lane YAML edits         | `planning:db:operate` owns local task claims and revisions     |
+| Applied migration checksum mismatch       | `planning:db:reset` rebuilds the shared volume from Git        |
+| Local DB audit is lost in temp DB         | durable audit uses the shared local Postgres volume            |
+| Non-code gate cost grows unchecked        | Treat CI policy reduction as a separate governed optimization  |
+| Governance report churn is hidden         | Governance artifact hashes and source causes are queryable     |
+| PR readiness blockers are hidden in CI    | ARC/readiness blockers are queryable in `pr_readiness_checks`  |
+| Docs disposition stays manual and stale   | Docs disposition queues are imported and queryable in the DB   |
+| Task provenance stays manual and stale    | Task trace and task gap queues are derived in DB query views   |
+| Work intake stays split across queues     | Focus query ranks existing DB queues without creating writes   |
+| Reviewed docs gaps keep polluting queues  | Source-hash-guarded resolution overlays hide only current rows |
+| DB treated as hidden repository authority | No committed database files; export must remain reviewable     |
+| GitHub mirror edits bypass PR review      | Mirror is read-only or imports as reviewed repo changes first  |
 
 ## Acceptance Criteria
 
@@ -1515,13 +1597,17 @@ allowedImplementationSurfaces:
   - scripts/planning-db-*.cjs
   - scripts/governance-db-*.cjs
   - scripts/governance-refresh*.cjs
+  - scripts/generate-code-status*.cjs
   - scripts/generate-workboard*.cjs
+  - scripts/generate-planning-lanes*.cjs
+  - scripts/docs-planning-generated-check.cjs
   - scripts/governance-generated-paths*.cjs
   - scripts/generate-governance-*.cjs
   - scripts/check-governance-*.cjs
   - scripts/check-feature-mechanization.cjs
   - scripts/check-feature-mechanization.test.cjs
   - docs/DOCS_README.md
+  - docs/generated-docs-policy.json
   - docs/adr/**
   - docs/guides/ai-work-protocol.md
   - docs/architecture/components/ci-governance/index.md
@@ -1529,6 +1615,10 @@ allowedImplementationSurfaces:
   - docs/runbooks/**
   - docs/planning/state/planning-control-tower.md
   - docs/planning/state/how-to-add-tasks.md
+  - docs/planning/state/planning-dashboard.md
+  - docs/planning/state/gap-execution-route.md
+  - docs/planning/state/inventory-and-coverage.md
+  - docs/planning/templates/**
   - docs/planning/closeouts/**
   - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
   - docs/planning/proposals/portfolio-map-20260403.md
@@ -1536,6 +1626,7 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/index.md
   - docs/planning/status/**
   - docs/.manifest.json
+  - tools/ci/policy/workflow-scope.json
 forbiddenImplementationSurfaces:
   - apps/**
   - packages/**
@@ -1587,12 +1678,27 @@ commandQueryRails:
   - name: QueryGovernanceStateReadModel
     type: query
     dddOwner: GovernanceStateReadModel
+  - name: ReadGovernanceUnitTree
+    type: query
+    dddOwner: GovernanceUnitTreeReadModel
+  - name: ReadComponentEngineeringRecord
+    type: query
+    dddOwner: ComponentEngineeringRecordReadModel
   - name: QueryDocsDispositionQueue
+    type: query
+    dddOwner: DocsDispositionQueue
+  - name: QueryGovernedFeatureWork
     type: query
     dddOwner: DocsDispositionQueue
   - name: QueryTaskProvenanceLedger
     type: query
     dddOwner: TaskProvenanceLedger
+  - name: ResolveDocsDispositionAction
+    type: command
+    dddOwner: DocsResolutionOverlay
+  - name: ResolveTaskProvenanceGap
+    type: command
+    dddOwner: DocsResolutionOverlay
   - name: QueryPlanningWorkIntake
     type: query
     dddOwner: PlanningWorkIntakeReadModel
@@ -1651,6 +1757,12 @@ domainObjects:
   - name: GovernanceStateReadModel
     type: read model
     owner: Docs governance
+  - name: GovernanceUnitTreeReadModel
+    type: read model
+    owner: Docs governance
+  - name: ComponentEngineeringRecordReadModel
+    type: read model
+    owner: Docs governance
   - name: DocsDispositionQueue
     type: read model
     owner: Docs governance
@@ -1660,6 +1772,9 @@ domainObjects:
   - name: TaskProvenanceLedger
     type: read model
     owner: Product / Architecture / Delivery / Docs
+  - name: DocsResolutionOverlay
+    type: command model
+    owner: Docs governance
   - name: PlanningWorkIntakeReadModel
     type: read model
     owner: Product / Architecture / Delivery / Docs
@@ -1685,6 +1800,8 @@ fowlerSignals:
   - Hidden query model inside governance shards
   - Manual docs disposition inventory
   - Manual task provenance reconstruction
+  - Manual component contract reconstruction
+  - Manual docs disposition resolution
   - Manual work intake reconstruction
   - Mutable external tracker authority risk
 architectureGuards:
@@ -1705,7 +1822,12 @@ completionGate:
   - pnpm planning:db:query
   - pnpm planning:db:query task-trace --task F-28-C
   - pnpm planning:db:query task-gaps --limit 10
+  - pnpm planning:db:query task-gaps --task AR-A11 --resolution all --limit 50
+  - pnpm planning:db:query docs-disposition --resolution all --limit 10
+  - pnpm planning:db:query task-gaps --resolution all --limit 10
   - pnpm planning:db:query focus --limit 10
+  - pnpm planning:db:query cer --component SYS-API-HTTP-ENTRYPOINTS --limit 1
+  - pnpm planning:db:query units --unit SYS-API-ROOT --limit 5
   - pnpm planning:db:query hash-drift
   - pnpm planning:db:export
   - pnpm planning:db:export:check
@@ -1962,6 +2084,24 @@ redGreenCycles:
       - scripts/planning-db-*.cjs
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+  - id: planning-db-component-engineering-record-query
+    redTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+    expectedFailure: Component engineering questions still require manually reconstructing purpose, ownership, contracts, tests, risks, and runtime evidence across governance indexes because no DB-owned component engineering record query view or planning:db:query cer adapter exists.
+    patchSurfaces:
+      - tools/planning-db/**
+      - scripts/planning-db-*.cjs
+      - docs/planning/status/db-surface-inventory.md
+      - docs/planning/templates/**
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+  - id: planning-db-docs-resolution-overlays
+    redTest: node --test scripts/planning-db-operate.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
+    expectedFailure: Docs disposition and task gap queues can be read from the DB but reviewed rows cannot be resolved through a DB-owned source-hash-guarded command rail.
+    patchSurfaces:
+      - tools/planning-db/**
+      - scripts/planning-db-*.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: node --test scripts/planning-db-operate.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
 symbols:
   - name: PlanningAndGovernanceQueryStorePlan
     path: docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
@@ -1980,19 +2120,25 @@ symbols:
       - ImportGovernanceStateQueryStore
       - QueryGovernanceStateReadModel
       - QueryTaskProvenanceLedger
+      - ResolveDocsDispositionAction
+      - ResolveTaskProvenanceGap
       - QueryPlanningWorkIntake
       - ExportGovernanceStateSnapshot
       - ValidateGovernanceStateDrift
       - RefreshGovernanceDerivedSurfaces
       - QuerySystemGovernanceGenerationWorkflow
       - ValidateSystemGovernanceGenerationWorkflow
+      - ReadGovernanceUnitTree
     fowlerSignals:
       - Large planning file operating cost
       - Generated artifact churn
       - Hidden query model inside YAML
       - Hidden query model inside governance shards
+      - Manual docs disposition inventory
       - Manual task provenance reconstruction
+      - Manual docs disposition resolution
       - Manual work intake reconstruction
+      - Manual governance hierarchy reconstruction
       - Mutable external tracker authority risk
     architectureGuard: pnpm docs:feature-mechanization:implementation
     cypressCoverage: N/A - planning query-store proposal has no browser workflow.
@@ -2183,12 +2329,69 @@ symbols:
   - <<: *planningDbContentSymbol
     name: PlanningDbTaskProvenanceLedgerMigration
     path: tools/planning-db/migrations/018_task_provenance_ledger.sql
+  - &planningDbDocsResolutionOverlaySymbol
+    name: PlanningDbDocsResolutionOverlayMigration
+    path: tools/planning-db/migrations/021_docs_resolution_overlays.sql
+    dddOwner: DocsResolutionOverlay
+    cqRails:
+      - ResolveDocsDispositionAction
+      - ResolveTaskProvenanceGap
+      - QueryDocsDispositionQueue
+      - QueryTaskProvenanceLedger
+      - QueryPlanningWorkIntake
+      - MigratePlanningQueryStoreSchema
+    fowlerSignals:
+      - Manual docs disposition inventory
+      - Manual docs disposition resolution
+      - Manual task provenance reconstruction
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - docs resolution overlays have no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-operate.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
+      - pnpm test:planning:db
   - <<: *planningDbContentSymbol
     name: PlanningDbWorkIntakeQueryMigration
     path: tools/planning-db/migrations/019_planning_work_intake_query.sql
   - <<: *planningDbContentSymbol
     name: PlanningDbWorkIntakeQuerySuggestionHardeningMigration
     path: tools/planning-db/migrations/020_planning_work_intake_query_suggestions.sql
+  - &planningTaskGapReferenceFilterSymbol
+    name: PlanningTaskGapReferenceFilterMigration
+    path: tools/planning-db/migrations/026_task_gap_reference_filter.sql
+    dddOwner: TaskProvenanceLedger
+    cqRails:
+      - QueryTaskProvenanceLedger
+      - QueryPlanningWorkIntake
+      - ResolveTaskProvenanceGap
+      - MigratePlanningQueryStoreSchema
+    fowlerSignals:
+      - Manual task provenance reconstruction
+      - Manual work intake reconstruction
+      - Hidden query model inside YAML
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - planning task-gap reference filtering has no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-migrate.test.cjs
+      - pnpm planning:db:query task-gaps --task AR-A11 --resolution all --limit 50
+      - pnpm planning:db:query focus --kind task_gap --limit 20
+  - <<: *planningDbContentSymbol
+    name: normalizeResolutionFilter
+    path: scripts/planning-db-query.cjs
+    dddOwner: PlanningWorkIntakeReadModel
+    cqRails:
+      - QueryDocsDispositionQueue
+      - QueryTaskProvenanceLedger
+      - QueryPlanningWorkIntake
+    fowlerSignals:
+      - Manual docs disposition resolution
+      - Manual task provenance reconstruction
+      - Hidden query model inside YAML
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - planning DB CLI filter normalization has no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
+      - pnpm planning:db:query docs-disposition --resolution open --limit 1
+      - pnpm planning:db:query task-gaps --resolution open --limit 1
   - <<: *planningDbContentSymbol
     name: PlanningDbMigrateRunner
     path: scripts/planning-db-migrate.cjs
@@ -2287,6 +2490,12 @@ symbols:
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
     name: databaseUrl
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: parseArgs
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: printHelp
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
     name: toPosix
@@ -2403,6 +2612,12 @@ symbols:
     name: referencePrefix
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
+    name: addNormalizedId
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: collectFeatureMechanizationReferenceIds
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
     name: classifyTaskLikeReference
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
@@ -2463,6 +2678,27 @@ symbols:
     name: importContent
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
+    name: compareImportRows
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: compareGovernanceAuxiliaryState
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: buildGovernanceAuxiliaryExpectedState
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: readGovernanceAuxiliaryState
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: checkGovernanceAuxiliaryProjections
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: isScopeFresh
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: runPlanningImport
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
     name: main
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
@@ -2471,6 +2707,12 @@ symbols:
   - <<: *planningDbContentSymbol
     name: assert
     path: scripts/planning-db-import.test.cjs
+  - <<: *planningDbContentSymbol
+    name: test
+    path: scripts/generate-planning-lanes.test.cjs
+  - <<: *planningDbContentSymbol
+    name: assert
+    path: scripts/generate-planning-lanes.test.cjs
   - <<: *planningDbContentSymbol
     name: PlanningDbQueryRunner
     path: scripts/planning-db-query.cjs
@@ -2523,6 +2765,9 @@ symbols:
     name: buildTaskReferenceRows
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
+    name: buildFeatureWorkRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
     name: buildTaskTraceRows
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
@@ -2545,6 +2790,9 @@ symbols:
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: readTaskReferenceRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: readFeatureWorkRows
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: readTaskTraceRows
@@ -2616,6 +2864,9 @@ symbols:
     path: scripts/planning-db-query.cjs
   - <<: *planningDbEffectiveTaskSymbol
     name: appendFilter
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: appendResolutionFilter
     path: scripts/planning-db-query.cjs
   - <<: *planningDbEffectiveTaskSymbol
     name: effectiveTaskSelect
@@ -2829,6 +3080,9 @@ symbols:
   - <<: *planningDbLocalOperationSymbol
     name: allowedStatuses
     path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: allowedDocsResolutionStatuses
+    path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: databaseUrl
     path: scripts/planning-db-operate.cjs
@@ -2843,6 +3097,9 @@ symbols:
     path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: validateTaskStatus
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: validateDocsResolutionStatus
     path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: parseIntegerOption
@@ -2859,6 +3116,9 @@ symbols:
   - <<: *planningDbLocalOperationSymbol
     name: operationPayload
     path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: docsResolutionIdempotencyPayload
+    path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: defaultIdempotencyKey
     path: scripts/planning-db-operate.cjs
@@ -2874,8 +3134,14 @@ symbols:
   - <<: *planningDbLocalOperationSymbol
     name: assertIdempotentReplayMatches
     path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: assertDocsResolutionIdempotentReplayMatches
+    path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: parseTaskCommand
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: parseDocsResolutionCommand
     path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: parseArgs
@@ -2904,8 +3170,26 @@ symbols:
   - <<: *planningDbLocalOperationSymbol
     name: planTaskDefinitionOperation
     path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: resolutionSourceValue
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: buildResolutionKey
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: normalizeDocsResolutionSource
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: planDocsResolutionOperation
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: materializeDocsResolutionCommand
+    path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: buildAuditRows
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: buildDocsResolutionAuditRows
     path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: readImportedTask
@@ -2928,11 +3212,26 @@ symbols:
   - <<: *planningDbLocalOperationSymbol
     name: readExistingOperation
     path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: readExistingDocsResolutionOperation
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: readDocsDispositionAction
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: readTaskGapSource
+    path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: writePlannedOperation
     path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: writePlannedDefinitionOperation
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: writePlannedDocsResolutionOperation
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbDocsResolutionOverlaySymbol
+    name: applyDocsResolutionOperation
     path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: applyTaskLocalOperation
@@ -3233,6 +3532,117 @@ symbols:
     path: scripts/planning-db-query.cjs
   - <<: *governanceDbQuerySurfaceSymbol
     name: readGovernanceDriftRows
+    path: scripts/planning-db-query.cjs
+  - &codeStatusLocalRenderSymbol
+    name: outputPath
+    path: scripts/generate-code-status.cjs
+    dddOwner: GovernanceStatusProjection
+    cqRails:
+      - RefreshGovernanceDerivedSurfaces
+    fowlerSignals:
+      - Generated artifact churn
+      - Tracked generated-doc conflict surface
+    architectureGuard: node --test scripts/generate-code-status.test.cjs
+    cypressCoverage: N/A - code-state status render has no browser workflow.
+    unitTests:
+      - node --test scripts/generate-code-status.test.cjs
+      - pnpm docs:status:generate
+      - pnpm docs:gov:generated-policy
+  - <<: *codeStatusLocalRenderSymbol
+    name: assert
+    path: scripts/generate-code-status.test.cjs
+  - <<: *codeStatusLocalRenderSymbol
+    name: fs
+    path: scripts/generate-code-status.test.cjs
+  - <<: *codeStatusLocalRenderSymbol
+    name: generatorPath
+    path: scripts/generate-code-status.test.cjs
+  - <<: *codeStatusLocalRenderSymbol
+    name: path
+    path: scripts/generate-code-status.test.cjs
+  - <<: *codeStatusLocalRenderSymbol
+    name: policyPath
+    path: scripts/generate-code-status.test.cjs
+  - <<: *codeStatusLocalRenderSymbol
+    name: repoRoot
+    path: scripts/generate-code-status.test.cjs
+  - <<: *codeStatusLocalRenderSymbol
+    name: test
+    path: scripts/generate-code-status.test.cjs
+  - &governanceUnitTreeQuerySymbol
+    name: GovernanceUnitTreeQueryMigration
+    path: tools/planning-db/migrations/025_governance_unit_tree_query.sql
+    dddOwner: GovernanceUnitTreeReadModel
+    cqRails:
+      - ReadGovernanceUnitTree
+      - QueryGovernanceStateReadModel
+      - MigratePlanningQueryStoreSchema
+    fowlerSignals:
+      - Generated artifact churn
+      - Hidden query model inside governance shards
+      - Manual governance hierarchy reconstruction
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - governance unit tree queries have no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+      - pnpm test:planning:db
+      - pnpm planning:db:query units --unit SYS-API-ROOT --limit 5
+  - <<: *governanceUnitTreeQuerySymbol
+    name: buildGovernanceUnitRows
+    path: scripts/planning-db-query.cjs
+  - <<: *governanceUnitTreeQuerySymbol
+    name: governanceUnitSelect
+    path: scripts/planning-db-query.cjs
+  - <<: *governanceUnitTreeQuerySymbol
+    name: appendGovernanceUnitFilters
+    path: scripts/planning-db-query.cjs
+  - <<: *governanceUnitTreeQuerySymbol
+    name: readGovernanceUnitRows
+    path: scripts/planning-db-query.cjs
+  - &componentEngineeringRecordQuerySymbol
+    name: PlanningDbComponentEngineeringRecordQueryMigration
+    path: tools/planning-db/migrations/023_component_engineering_record_query.sql
+    dddOwner: ComponentEngineeringRecordReadModel
+    cqRails:
+      - ReadComponentEngineeringRecord
+      - QueryGovernanceStateReadModel
+      - MigratePlanningQueryStoreSchema
+    fowlerSignals:
+      - Generated artifact churn
+      - Hidden query model inside governance shards
+      - Manual component contract reconstruction
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - component engineering records have no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+      - pnpm test:planning:db
+      - pnpm planning:db:query cer --component SYS-API-HTTP-ENTRYPOINTS --limit 1
+  - <<: *componentEngineeringRecordQuerySymbol
+    name: PlanningDbComponentEngineeringRecordTestComponentMigration
+    path: tools/planning-db/migrations/024_component_engineering_record_test_components.sql
+  - <<: *componentEngineeringRecordQuerySymbol
+    name: PlanningDbComponentEngineeringRecordV2Migration
+    path: tools/planning-db/migrations/027_component_engineering_record_v2.sql
+  - <<: *componentEngineeringRecordQuerySymbol
+    name: PlanningDbComponentEngineeringRecordV21Migration
+    path: tools/planning-db/migrations/028_component_engineering_record_v21.sql
+  - <<: *componentEngineeringRecordQuerySymbol
+    name: PlanningDbComponentEngineeringRecordRelationalCoreMigration
+    path: tools/planning-db/migrations/029_component_engineering_record_relational_core.sql
+  - <<: *componentEngineeringRecordQuerySymbol
+    name: PlanningDbComponentEngineeringRecordFileRoleProjectionMigration
+    path: tools/planning-db/migrations/030_component_engineering_record_file_role_projection.sql
+  - <<: *componentEngineeringRecordQuerySymbol
+    name: buildComponentEngineeringRecordRows
+    path: scripts/planning-db-query.cjs
+  - <<: *componentEngineeringRecordQuerySymbol
+    name: parseCerSchemaVersion
+    path: scripts/planning-db-query.cjs
+  - <<: *componentEngineeringRecordQuerySymbol
+    name: readComponentEngineeringRecordRows
+    path: scripts/planning-db-query.cjs
+  - <<: *componentEngineeringRecordQuerySymbol
+    name: printJsonRows
     path: scripts/planning-db-query.cjs
   - &governanceDbReportSourceSymbol
     name: GovernanceReportQueryPayloadMigration

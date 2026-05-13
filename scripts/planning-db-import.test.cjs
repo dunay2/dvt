@@ -11,6 +11,8 @@ const {
   governanceImportDeleteTables,
   importContent,
   normalizeText,
+  parseArgs,
+  runPlanningImport,
 } = require('./planning-db-import.cjs');
 const { governanceGeneratedPath } = require('./governance-generated-paths.cjs');
 const { schemaName } = require('./planning-db-migrate.cjs');
@@ -32,6 +34,130 @@ test('planning content snapshot preserves real lane task content and hashes', ()
       'docs/evidence/critical/ED-20260331-mvp-a1-backend-contractual-inventory.md'
     )
   );
+});
+
+test('planning DB import parses stale-aware scoped import flags', () => {
+  assert.deepEqual(
+    parseArgs([
+      '--',
+      '--if-stale',
+      '--planning-only',
+      '--database-url',
+      'postgres://example/planning',
+    ]),
+    {
+      databaseUrl: 'postgres://example/planning',
+      help: false,
+      ifStale: true,
+      includeGovernance: false,
+      includePlanning: true,
+    }
+  );
+
+  assert.throws(() => parseArgs(['--planning-only', '--governance-only']), /mutually exclusive/);
+});
+
+test('planning DB import skips all selected scopes when stale-aware checks are fresh', async () => {
+  const calls = [];
+  const logs = [];
+
+  const result = await runPlanningImport(
+    {
+      databaseUrl: 'postgres://example/planning',
+      ifStale: true,
+      includePlanning: true,
+      includeGovernance: true,
+    },
+    {
+      checkPlanningDatabase: async () => ({ ok: true }),
+      checkGovernanceDatabase: async () => ({ ok: true }),
+      checkGovernanceAuxiliaryProjections: async () => ({ ok: true }),
+      importContent: async (options) => {
+        calls.push(options);
+        return { lanes: 99 };
+      },
+      logger: { log: (message) => logs.push(message) },
+    }
+  );
+
+  assert.deepEqual(calls, []);
+  assert.deepEqual(result.importedScopes, []);
+  assert.deepEqual(result.skippedScopes, ['planning', 'governance']);
+  assert.match(logs.join('\n'), /skipped fresh scopes: planning, governance/);
+});
+
+test('planning DB import only imports stale selected scopes', async () => {
+  const calls = [];
+
+  const result = await runPlanningImport(
+    {
+      databaseUrl: 'postgres://example/planning',
+      ifStale: true,
+      includePlanning: true,
+      includeGovernance: true,
+    },
+    {
+      checkPlanningDatabase: async () => ({ ok: true }),
+      checkGovernanceDatabase: async () => ({ ok: false, sections: {} }),
+      importContent: async (options) => {
+        calls.push(options);
+        return { governanceFiles: 3, governanceComponents: 2 };
+      },
+      logger: { log() {} },
+    }
+  );
+
+  assert.deepEqual(calls, [
+    {
+      databaseUrl: 'postgres://example/planning',
+      includePlanning: false,
+      includeGovernance: true,
+    },
+  ]);
+  assert.deepEqual(result.importedScopes, ['governance']);
+  assert.deepEqual(result.skippedScopes, ['planning']);
+});
+
+test('planning DB import reimports governance when auxiliary projections are stale', async () => {
+  const calls = [];
+
+  const result = await runPlanningImport(
+    {
+      databaseUrl: 'postgres://example/planning',
+      ifStale: true,
+      includePlanning: true,
+      includeGovernance: true,
+    },
+    {
+      checkPlanningDatabase: async () => ({ ok: true }),
+      checkGovernanceDatabase: async () => ({ ok: true }),
+      checkGovernanceAuxiliaryProjections: async () => ({
+        ok: false,
+        sections: {
+          repositoryCommands: {
+            missing: ['script:planning:db:query'],
+            unexpected: [],
+            stale: [],
+          },
+        },
+      }),
+      importContent: async (options) => {
+        calls.push(options);
+        return { repositoryCommands: 3, docsDispositionActions: 2 };
+      },
+      logger: { log() {} },
+    }
+  );
+
+  assert.deepEqual(calls, [
+    {
+      databaseUrl: 'postgres://example/planning',
+      includePlanning: false,
+      includeGovernance: true,
+    },
+  ]);
+  assert.deepEqual(result.importedScopes, ['governance']);
+  assert.deepEqual(result.skippedScopes, ['planning']);
 });
 
 test('planning content snapshot normalizes dependencies and evidence refs for DB reads', () => {
@@ -69,6 +195,12 @@ test('governance snapshot preserves component, fingerprint, coverage, and remedi
   assert.equal(snapshot.components.length, snapshot.componentIndex.componentCount);
   assert.equal(snapshot.componentFileShards.length, snapshot.componentFileMap.componentCount);
   assert.equal(snapshot.componentFiles.length, snapshot.componentFileMap.fileCount);
+  assert.ok(snapshot.fingerprintBaseline.shards.length > 0);
+  assert.ok(
+    snapshot.fingerprintBaseline.shards.every((shard) =>
+      shard.path.includes('/governance-file-fingerprints/')
+    )
+  );
   assert.equal(snapshot.fingerprints.length, snapshot.fingerprintBaseline.fileCount);
   assert.equal(snapshot.coverageRows.length > 0, true);
   assert.equal(snapshot.remediationTasks.length, snapshot.remediationQueue.totals.tasks);
@@ -327,7 +459,7 @@ test('docs disposition snapshot classifies active-doc cleanup actions and task-l
           [
             'AR-A6 F-28 S08 WEB-123 ADR-0055 ARC-2 ED-20260510-example',
             'R-20260510-EXAMPLE US-1 F04-W4 SYS-DOCS CMD-RET PS-Q08',
-            'SHA-256 GAP-1 MVP-E1-A RESIDUAL-A RISK-B LEGACY-DRIFT INV-SCOPE-03',
+            'SHA-256 GAP-1 MVP-E1-A RESIDUAL-A RISK-B LEGACY-DRIFT INV-SCOPE-03 AR-C2-INV-1',
           ].join(' '),
           'pending follow-up remains open',
           'TODO: resolve this item',
@@ -370,12 +502,99 @@ test('docs disposition snapshot classifies active-doc cleanup actions and task-l
   assert.equal(classifications.get('RISK-B'), 'historical_planning_reference');
   assert.equal(classifications.get('LEGACY-DRIFT'), 'historical_planning_reference');
   assert.equal(classifications.get('INV-SCOPE-03'), 'historical_planning_reference');
+  assert.equal(classifications.get('AR-C2-INV-1'), 'review_invariant_reference');
 
   assert.deepEqual(snapshot.actions.map((action) => action.actionKind).sort(), [
     'draft_active_doc',
     'pending_marker_hotspot',
     'unknown_task_like_id',
   ]);
+});
+
+test('docs disposition snapshot treats closed feature mechanization ids as registered links', () => {
+  const snapshot = buildDocsDispositionSnapshot({
+    planningTaskIds: [],
+    featureMechanizationIds: ['VERIFY-PREPUSH-SCOPE-ROUTER-20260511'],
+    documents: [
+      {
+        sourcePath:
+          'docs/planning/proposals/mandatory/governance-and-docs/verify-prepush-scope-router-plan-20260511.md',
+        raw: [
+          '---',
+          'title: Verify Prepush Scope Router Plan',
+          'status: Review',
+          'planning_type: mandatory-proposal',
+          '---',
+          '> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans.',
+          '```feature-mechanization',
+          'version: 1',
+          'featureId: VERIFY-PREPUSH-SCOPE-ROUTER-20260511',
+          'mechanizationStatus: closed',
+          'noHumanDecisionsRemaining: true',
+          'redGreenCycles:',
+          '  - id: PREPUSH-ROUTER-WEB-SOURCE',
+          '    redTest: scripts/verify-prepush.test.cjs',
+          '    greenTest: node --test scripts/verify-prepush.test.cjs',
+          '```',
+        ].join('\n'),
+      },
+    ],
+  });
+
+  const featureReference = snapshot.references.find(
+    (reference) => reference.referenceText === 'VERIFY-PREPUSH-SCOPE-ROUTER-20260511'
+  );
+
+  assert.ok(featureReference);
+  assert.equal(featureReference.classification, 'registered_feature_mechanization');
+  assert.equal(featureReference.registeredPlanningTask, false);
+
+  const cycleReference = snapshot.references.find(
+    (reference) => reference.referenceText === 'PREPUSH-ROUTER-WEB-SOURCE'
+  );
+  assert.ok(cycleReference);
+  assert.equal(cycleReference.classification, 'feature_mechanization_cycle');
+  assert.equal(cycleReference.registeredPlanningTask, false);
+
+  const skillReference = snapshot.references.find(
+    (reference) => reference.referenceText === 'SUB-SKILL'
+  );
+  assert.ok(skillReference);
+  assert.equal(skillReference.classification, 'skill_reference');
+  assert.equal(skillReference.registeredPlanningTask, false);
+
+  assert.deepEqual(snapshot.actions, []);
+});
+
+test('docs disposition snapshot classifies priority markers and date placeholders as non-task references', () => {
+  const snapshot = buildDocsDispositionSnapshot({
+    planningTaskIds: [],
+    documents: [
+      {
+        sourcePath:
+          'docs/planning/reviews/architecture-and-governance/20260422-dvt-plus-principal-architect-action-plan.md',
+        raw: [
+          '---',
+          'title: Principal architect action plan',
+          'status: Review',
+          'planning_type: review',
+          '---',
+          '| Priority | Target date |',
+          '| P0-1 | YYYY-MM-DD |',
+          '| P1-2 | YYYY-MM-DD |',
+        ].join('\n'),
+      },
+    ],
+  });
+
+  const classifications = new Map(
+    snapshot.references.map((reference) => [reference.referenceText, reference.classification])
+  );
+
+  assert.equal(classifications.get('P0-1'), 'priority_work_item_marker');
+  assert.equal(classifications.get('P1-2'), 'priority_work_item_marker');
+  assert.equal(classifications.get('YYYY-MM-DD'), 'date_placeholder');
+  assert.deepEqual(snapshot.actions, []);
 });
 
 test('docs disposition snapshot keeps archived documents visible without active cleanup actions', () => {

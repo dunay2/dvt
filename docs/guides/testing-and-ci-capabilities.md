@@ -32,6 +32,7 @@ See also:
 | Pre-push verification gate     | `pnpm verify:prepush`            | [`package.json`](../../package.json)                                                               |
 | Changed-files auto-fix         | `pnpm fix:changed`               | [`package.json`](../../package.json)                                                               |
 | Changed-files lint/format gate | `node scripts/check-changed.cjs` | [`scripts/check-changed.cjs`](../../scripts/check-changed.cjs)                                     |
+| PR closeout rail               | `pnpm pr:closeout`               | [`scripts/pr-closeout.cjs`](../../scripts/pr-closeout.cjs)                                         |
 | CI tool contract suite         | `pnpm test:ci-tools`             | [`package.json`](../../package.json)                                                               |
 | Affected workspace build       | `pnpm ci:affected:build`         | [`package.json`](../../package.json)                                                               |
 | Affected workspace test        | `pnpm ci:affected:test`          | [`package.json`](../../package.json)                                                               |
@@ -206,6 +207,32 @@ Command semantics:
   [Local Changed Files Gate Component](../architecture/components/ci-governance/local-changed-files-gate-component.md).
 - `pnpm verify:prepush` uses `node scripts/docs-workboard-check-changed.cjs`, so workboard drift is enforced when lane YAML changed, not for every module-only commit.
 - `pnpm verify:prepush` includes `pnpm docs:gov:filenames:changed`, `pnpm docs:gov:frontmatter:changed`, and `pnpm docs:gov:generated-policy` after the changed-only Markdown location gate, keeping changed docs fail-closed for placement, naming, ADR/evidence metadata, and generated-doc ownership before the heavier code checks run.
+- `pnpm verify:prepush` is routed through
+  [`scripts/verify-prepush.cjs`](../../scripts/verify-prepush.cjs). The router
+  gets repository path semantics from
+  [`tools/ci/repository-change-scope.mjs`](../../tools/ci/repository-change-scope.mjs)
+  instead of owning a parallel path taxonomy. That shared query consumes the
+  repository command catalog for `scripts/**`, `tools/ci/**`, `tools/docs/**`,
+  `tools/ops/**`, and `.github/scripts/**`, and it also names root CI policy
+  inputs such as `.dependency-cruiser.cjs`. The router now runs the changed-file
+  lint/format gate before self-tests, governance evidence, traceability, and
+  architecture checks so formatting failures fail before expensive validation.
+  It then conditionally runs the heavier groups:
+  - planning DB inventory checks only for planning/query-store surfaces;
+  - global governance maps, fingerprints, coverage, and remediation checks only
+    for docs/governance/planning/generated surfaces;
+  - `pnpm traceability:adr0` for accepted ADRs, traceability config/baseline
+    files, or source paths governed by `traceability.config.json`;
+  - architecture dependency and affected type-check checks for code, CI policy,
+    command tooling, or root TypeScript graph inputs.
+- `pnpm verify:prepush -- --full` forces all conditional groups and is the
+  diagnostic equivalent of the historical full local pre-push posture.
+- `pnpm pr:closeout` is the governed final PR rail for committed slices. It can
+  run docs/status/governance preparation, caller-supplied targeted checks,
+  `pnpm commit`, one final `pnpm verify:prepush`, and optional `git push` in the
+  repository order. Use `--stage-all` when the full local changed set is the
+  intended PR scope; without it, the rail requires files to be staged already
+  and fails before commit if preparation or checks leave unstaged outputs.
 - `pnpm verify:prepush` now keeps three outcomes for code diffs:
   - skip when no TypeScript-affecting files changed
   - run `pnpm ci:affected:typecheck` when the diff is workspace-scoped
@@ -218,7 +245,14 @@ Command semantics:
   forwards Cypress arguments after `--`, and removes `ELECTRON_RUN_AS_NODE`
   from the Cypress child process so Electron does not run as Node.
 - GitHub workflows keep using explicit strict checks rather than relying on `pnpm docs:ci` as a merge gate.
-- `pnpm traceability:adr0` remains a blocking governance gate on push to `main`, but it now compares current ADR-0000 issues against the tracked baseline in [`traceability.issue-baseline.json`](../../traceability.issue-baseline.json) so CI fails on regressions rather than re-reporting the known historical backlog on every run.
+- `pnpm traceability:adr0` remains a blocking governance gate, with
+  [`.github/workflows/pr-quality-gate.yml`](../../.github/workflows/pr-quality-gate.yml)
+  as the single remote workflow owner for PR, push, and explicit manual
+  governance runs. The command compares current ADR-0000 issues against the
+  tracked baseline in
+  [`traceability.issue-baseline.json`](../../traceability.issue-baseline.json)
+  so CI fails on regressions rather than re-reporting the known historical
+  backlog on every run.
 
 Planning-generated pages that are intentionally untracked:
 
@@ -233,7 +267,8 @@ Planning-generated pages that are intentionally untracked:
 ## GitHub Workflow Coverage
 
 - `CI - Code Quality`: affected workspace matrix, changed-file lint/format,
-  changed-only markdown lint on PRs.
+  changed-only markdown lint on PRs, and CI tool contract tests. It does not own
+  ADR-0000 traceability.
   Source: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)
 - `Test Suite`: package tests, affected test routing, Turbo-backed root build
   coverage for full-root lanes, coverage, determinism/replay tests.
@@ -323,9 +358,10 @@ Current workflow consumers:
   It also runs the merge-blocking governance subset from `pnpm verify:prepush`
   on PRs and pushes: changed-doc filename/frontmatter checks when docs changed,
   governance unit coverage, document-unit map, file fingerprints,
-  feature-mechanization manifests, implementation mechanization, and QA artifact
-  validation. It also runs `pnpm arch:deps` so package/app dependency-boundary
-  drift fails remotely, not only on local prepush.
+  ADR-0000 traceability, feature-mechanization manifests, implementation
+  mechanization, and QA artifact validation. It also runs `pnpm arch:deps` so
+  package/app dependency-boundary drift fails remotely, not only on local
+  prepush.
 
 ## Notes
 

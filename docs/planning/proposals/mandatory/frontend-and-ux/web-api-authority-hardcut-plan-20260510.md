@@ -133,6 +133,10 @@ allowedImplementationSurfaces:
   - apps/web/src/app/services/capabilities/capabilitiesPort.ts
   - apps/web/src/app/services/composition/appServices.test.ts
   - apps/web/src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts
+  - apps/web/src/app/services/session/protectedRouteSessionContext.ts
+  - apps/web/src/app/services/session/protectedRouteSessionContext.test.ts
+  - apps/web/src/app/routes.ts
+  - apps/web/src/app/routes.test.tsx
   - apps/web/src/app/plugins/registry.ts
   - apps/web/src/app/plugins/registry.test.ts
   - apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts
@@ -247,6 +251,55 @@ symbols:
     cypressCoverage: N/A
     unitTests:
       - apps/web/src/app/services/composition/appServices.test.ts
+  - name: SessionResponse
+    path: apps/web/src/app/services/session/protectedRouteSessionContext.ts
+    dddOwner: Web authorization projection
+    cqRails:
+      - GetRuntimeSession
+    fowlerSignals:
+      - Names the server-owned session read model used to hydrate UI
+        permissions.
+    architectureGuard: pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts
+    cypressCoverage: N/A
+    unitTests:
+      - apps/web/src/app/services/session/protectedRouteSessionContext.test.ts
+  - name: readServerPermission
+    path: apps/web/src/app/services/session/protectedRouteSessionContext.ts
+    dddOwner: Web authorization projection
+    cqRails:
+      - GetRuntimeSession
+    fowlerSignals:
+      - Keeps optional permission-field hydration explicit instead of treating
+        missing values as grants.
+    architectureGuard: pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts
+    cypressCoverage: N/A
+    unitTests:
+      - apps/web/src/app/services/session/protectedRouteSessionContext.test.ts
+  - name: hasAnyScope
+    path: apps/web/src/app/services/session/protectedRouteSessionContext.ts
+    dddOwner: Web authorization projection
+    cqRails:
+      - GetRuntimeSession
+    fowlerSignals:
+      - Centralizes scope-to-permission fallback checks so browser defaults stay
+        fail-closed.
+    architectureGuard: pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts
+    cypressCoverage: N/A
+    unitTests:
+      - apps/web/src/app/services/session/protectedRouteSessionContext.test.ts
+  - name: projectPermissionsFromSession
+    path: apps/web/src/app/services/session/protectedRouteSessionContext.ts
+    dddOwner: Web authorization projection
+    cqRails:
+      - GetRuntimeSession
+      - GetEffectiveWorkspaceContext
+    fowlerSignals:
+      - Hydrates effective UI permissions from the server session projection
+        before protected route rendering.
+    architectureGuard: pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts
+    cypressCoverage: N/A
+    unitTests:
+      - apps/web/src/app/services/session/protectedRouteSessionContext.test.ts
   - name: getRuntimePlugins
     path: apps/web/src/app/plugins/registry.ts
     dddOwner: Web plugin composition projection

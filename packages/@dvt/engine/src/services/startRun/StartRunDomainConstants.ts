@@ -1,3 +1,6 @@
+/**
+ * @ownedConcern Centralize start-run log messages and failure-reason constants.
+ */
 export const START_RUN_MESSAGE = {
   startingRun: 'Starting run',
   compensationCancelFailed: 'Compensation cancelRun failed after bootstrap error',

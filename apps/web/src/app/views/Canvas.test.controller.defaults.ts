@@ -51,6 +51,8 @@ type CanvasDraftDefaultsDto = {
   draftFormatMeta: CanvasController['draftFormatMeta'];
   draftRecoveryReason: CanvasController['draftRecoveryReason'];
   draftToolbarState: CanvasController['draftToolbarState'];
+  canExportProjectSnapshot: CanvasController['canExportProjectSnapshot'];
+  canImportProjectSnapshot: CanvasController['canImportProjectSnapshot'];
   draftConflictRevision: CanvasController['draftConflictRevision'];
   hasStaleDraftVersion: CanvasController['hasStaleDraftVersion'];
   hasMissingRemoteDraft: CanvasController['hasMissingRemoteDraft'];
@@ -207,6 +209,8 @@ function buildDefaultCanvasDraftState(): CanvasDraftDefaultsDto {
     draftFormatMeta: null,
     draftRecoveryReason: null,
     draftToolbarState: buildDefaultCanvasToolbarState(),
+    canExportProjectSnapshot: true,
+    canImportProjectSnapshot: true,
     draftConflictRevision: null,
     hasStaleDraftVersion: false,
     hasMissingRemoteDraft: false,
@@ -252,6 +256,8 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'handleDragOver'
   | 'handleCreateAuthoringNode'
   | 'handleCreateCanvasDocument'
+  | 'handleExportProjectSnapshot'
+  | 'handleImportProjectSnapshotFile'
   | 'applyInspectorNodeDraft'
   | 'handleSourceImportComplete'
   | 'handleImportedNodeFocusComplete'
@@ -288,6 +294,8 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     handleDragOver: vi.fn(),
     handleCreateAuthoringNode: vi.fn(),
     handleCreateCanvasDocument: vi.fn(),
+    handleExportProjectSnapshot: vi.fn(),
+    handleImportProjectSnapshotFile: vi.fn(),
     applyInspectorNodeDraft: vi.fn(),
     handleSourceImportComplete: vi.fn(),
     importedNodeFocusIds: [],

@@ -24,7 +24,7 @@ This component owns planner-private behavior-port semantics for:
 
 - validating persisted plan executability before execution admission
 - verifying compiled artifact bindings for planner-authored steps
-- resolving custom policy namespace registration for planner policy checks
+- retaining the frozen custom policy namespace registry compatibility seam
 
 It does not own shared serializable DTO vocabulary. Rejection codes, validation
 results, binding records, validation records, `PlanRef`, and custom-policy DTOs
@@ -32,12 +32,12 @@ remain in `@dvt/contracts`.
 
 ## Public API
 
-| API                                                                                       | Module                                                                 | Consumer intent                                                                                               |
-| ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `IPlanExecutabilityValidator#validatePlan(input)`                                         | `packages/@dvt/planner/src/contracts/PlanExecutabilityValidation.ts`   | Check whether a scoped persisted plan reference is executable on a target adapter before start-run admission. |
-| `IExecutionBindingVerifier#verifyStepBinding(planId, stepId, storageUri, expectedSha256)` | `packages/@dvt/planner/src/contracts/ExecutionBindingVerification.ts`  | Verify that a compiled artifact binding still matches the expected digest before execution uses it.           |
-| `ICustomPolicyNamespaceRegistry#lookup(namespace)`                                        | `packages/@dvt/planner/src/contracts/CustomPolicyNamespaceRegistry.ts` | Resolve the registered namespace entry used by planner policy checks.                                         |
-| `ICustomPolicyNamespaceRegistry#listNamespaces()`                                         | `packages/@dvt/planner/src/contracts/CustomPolicyNamespaceRegistry.ts` | Enumerate registered custom policy namespaces without exposing registry internals.                            |
+| API                                                                                       | Module                                                                 | Consumer intent                                                                                                          |
+| ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `IPlanExecutabilityValidator#validatePlan(input)`                                         | `packages/@dvt/planner/src/contracts/PlanExecutabilityValidation.ts`   | Check whether a scoped persisted plan reference is executable on a target adapter before start-run admission.            |
+| `IExecutionBindingVerifier#verifyStepBinding(planId, stepId, storageUri, expectedSha256)` | `packages/@dvt/planner/src/contracts/ExecutionBindingVerification.ts`  | Verify that a compiled artifact binding still matches the expected digest before execution uses it.                      |
+| `ICustomPolicyNamespaceRegistry#lookup(namespace)`                                        | `packages/@dvt/planner/src/contracts/CustomPolicyNamespaceRegistry.ts` | Frozen compatibility API; must not gain implementation behavior until a real consumer and ADR-backed reactivation exist. |
+| `ICustomPolicyNamespaceRegistry#listNamespaces()`                                         | `packages/@dvt/planner/src/contracts/CustomPolicyNamespaceRegistry.ts` | Frozen compatibility API; must not imply an active registry implementation.                                              |
 
 ## DDD Diagram
 
@@ -114,6 +114,28 @@ stateDiagram-v2
   Invalid --> RejectedForAudit: admission reads rejection report
 ```
 
+## Custom Policy Namespace Freeze
+
+`ICustomPolicyNamespaceRegistry` is a frozen compatibility seam.
+
+The repository keeps the planner-owned port and shared
+`CustomPolicyNamespaceEntry` vocabulary source-compatible because those symbols
+are already published through local package boundaries. That does not make
+custom policy namespace registration an active capability.
+
+Reactivation requires all of the following in the same governed slice:
+
+- a real product or runtime consumer;
+- an ADR or mandatory proposal naming the owning bounded context and command or
+  query rail;
+- package tests for accepted and rejected namespace payloads;
+- architecture tests updating this freeze guard;
+- ARC evidence and risk updates for planner/contracts changes.
+
+Until then contributors MUST NOT add registry implementations, registration
+methods, validation behavior, application wiring, or adapter behavior for this
+seam.
+
 ## Admission Sequence
 
 ```mermaid
@@ -144,6 +166,7 @@ sequenceDiagram
 | Root barrel exports type-only ports                   | planner root barrel plus architecture test                                       | The public planner package surface publishes interface types without runtime adapter wiring.                               |
 | Adapter dependency is implementation-only             | `packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts`                        | Postgres implements artifacts-owned ports; it must not import planner services or aggregates.                              |
 | Start-run requires validated persisted plan semantics | `IStoredPlanArtifactStore` plus API admission flow                               | A plan moves through persisted validation state before execution eligibility is claimed.                                   |
+| Custom policy namespace registry is frozen            | planner private behavior-port architecture tests                                 | The custom namespace port remains compatibility-only until a real consumer and ADR-backed reactivation exist.              |
 
 ## Consumers
 
@@ -167,6 +190,8 @@ validates more than barrel thinness:
 - modules do not export DTO vocabulary such as `const`, `enum`, or `type`
 - modules do not import peer domains, concrete adapters, apps, or
   `@dvt/contracts/src` internals
+- custom policy namespace APIs remain frozen and cannot grow implementation,
+  registration, validation, or authorization behavior silently
 
 ## Extension Rules
 
@@ -179,3 +204,8 @@ validates more than barrel thinness:
   behavior ports.
 - Do not use adapter or application imports from the planner behavior-port
   modules.
+- Do not reactivate the custom policy namespace registry without a real
+  consumer and ADR-backed reactivation.
+- MUST NOT add registry implementations, registration methods, validation
+  behavior, or runtime authorization behavior to the frozen custom namespace
+  seam.

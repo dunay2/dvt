@@ -55,26 +55,31 @@ The component does not own:
 | `readUntrackedNameStatus(git)`                    | `check-governance-changed-files.cjs` | Converts untracked files into added name-status records.                      |
 | `validateFeatureImplementationManifests(options)` | `check-feature-mechanization.cjs`    | Validates that real diff files and added symbols match feature manifests.     |
 | `node scripts/check-changed.cjs`                  | changed lint/format gate             | Applies lint and format checks to the canonical changed-file set.             |
+| `node scripts/verify-changed.cjs`                 | changed-slice verification gate      | Plans and runs fast changed-only checks plus scoped planning DB/self tests.   |
 | `node scripts/type-check-prepush.cjs`             | pre-push type-check scope selector   | Selects no-op, affected workspace, or root type-check from changed files.     |
 | `pnpm docs:governance:changed-files:check`        | governance changed-files command     | Validates changed files against accepted governance indexes and fingerprints. |
 | `pnpm docs:feature-mechanization:implementation`  | feature mechanization implementation | Validates allowed surfaces, forbidden surfaces, symbols, and Cypress rules.   |
 
 ## Command And Query Rails
 
-| Rail                          | Type    | DDD owner                   | Application port                     | Adapter surface              | Negative tests                                                                 |
-| ----------------------------- | ------- | --------------------------- | ------------------------------------ | ---------------------------- | ------------------------------------------------------------------------------ |
-| `ListLocalChangedFiles`       | query   | `LocalChangedFileSet`       | local changed-file query rail        | git CLI adapter              | Empty branch diff still returns staged, unstaged, and untracked files.         |
-| `ValidateChangedFiles`        | command | `ChangedFileValidationGate` | changed-file validation command rail | lint/docs/governance scripts | Added files missing governance ownership fail closed.                          |
-| `SelectPrepushTypecheckScope` | query   | `PrepushTypecheckScope`     | pre-push type-check scope query rail | package manager scripts      | Root graph changes select root type-check; non-TS changes do not fake success. |
+| Rail                                | Type    | DDD owner                      | Application port                     | Adapter surface              | Negative tests                                                                 |
+| ----------------------------------- | ------- | ------------------------------ | ------------------------------------ | ---------------------------- | ------------------------------------------------------------------------------ |
+| `ListLocalChangedFiles`             | query   | `LocalChangedFileSet`          | local changed-file query rail        | git CLI adapter              | Empty branch diff still returns staged, unstaged, and untracked files.         |
+| `ValidateChangedFiles`              | command | `ChangedFileValidationGate`    | changed-file validation command rail | lint/docs/governance scripts | Added files missing governance ownership fail closed.                          |
+| `SelectPrepushTypecheckScope`       | query   | `PrepushTypecheckScope`        | pre-push type-check scope query rail | package manager scripts      | Root graph changes select root type-check; non-TS changes do not fake success. |
+| `BuildChangedSliceVerificationPlan` | query   | `ChangedSliceVerificationPlan` | changed-slice verification plan      | package manager scripts      | Docs-only changes do not run full governance scans.                            |
+| `RunChangedSliceVerification`       | command | `ChangedSliceVerificationGate` | changed-slice verification command   | package manager scripts      | Failed subchecks stop the plan immediately.                                    |
 
 ## DDD Objects
 
-| Object                       | Kind       | Invariants                                                                 |
-| ---------------------------- | ---------- | -------------------------------------------------------------------------- |
-| `LocalChangedFileSet`        | read model | Unique POSIX paths from branch, staged, unstaged, and untracked sources.   |
-| `ChangedFileValidationGate`  | policy     | A changed file is either governed and validated or rejected.               |
-| `PrepushTypecheckScope`      | read model | Type-check scope is derived from file ownership, not from human choice.    |
-| `FeatureImplementationGuard` | policy     | Real diff surfaces and symbols must match feature mechanization manifests. |
+| Object                         | Kind       | Invariants                                                                  |
+| ------------------------------ | ---------- | --------------------------------------------------------------------------- |
+| `LocalChangedFileSet`          | read model | Unique POSIX paths from branch, staged, unstaged, and untracked sources.    |
+| `ChangedFileValidationGate`    | policy     | A changed file is either governed and validated or rejected.                |
+| `PrepushTypecheckScope`        | read model | Type-check scope is derived from file ownership, not from human choice.     |
+| `ChangedSliceVerificationPlan` | read model | Fast local validation steps are derived from the changed-file set.          |
+| `ChangedSliceVerificationGate` | policy     | The fast gate may skip full scans only when `verify:prepush` remains final. |
+| `FeatureImplementationGuard`   | policy     | Real diff surfaces and symbols must match feature mechanization manifests.  |
 
 ## Invariants
 
@@ -90,6 +95,9 @@ The component does not own:
 - Cypress specs changed by a feature must not intercept or directly seed
   `/workspace/graph/draft` when the governing feature forbids that path.
 - No script may downgrade a failed local changed-file state into a silent no-op.
+- `verify:changed` is an iteration helper, not a replacement for the full
+  `verify:prepush` closeout gate.
+- Any skipped full-scan behavior must remain covered by `verify:prepush`.
 
 ## Transitions
 
@@ -112,11 +120,14 @@ sequenceDiagram
     participant Query as ListLocalChangedFiles
     participant Gates as Changed-file gates
     participant Feature as FeatureImplementationGuard
+    participant Fast as verify:changed
     participant Governance as Governance indexes
     participant Prepush as verify:prepush
 
     Worktree->>Query: branch, staged, unstaged, untracked paths
     Query-->>Gates: LocalChangedFileSet
+    Query-->>Fast: LocalChangedFileSet
+    Fast->>Gates: run changed-only checks and scoped tests
     Gates->>Feature: validate surfaces, symbols, Cypress posture
     Gates->>Governance: validate ownership and fingerprints
     Feature-->>Prepush: pass or reject
@@ -127,6 +138,9 @@ sequenceDiagram
 
 - `scripts/check-changed.cjs` consumes `ListLocalChangedFiles` for changed-only
   lint and format checks.
+- `scripts/verify-changed.cjs` consumes `ListLocalChangedFiles` to plan the
+  fast changed-slice verification command without running global governance
+  scans for docs-only work.
 - `scripts/type-check-prepush.cjs` consumes `ListLocalChangedFiles` to select
   the pre-push type-check scope.
 - `scripts/lint-markdown-changed.cjs` and
@@ -151,13 +165,14 @@ sequenceDiagram
 
 ## User Stories
 
-| Story            | Scenario                                                   | Acceptance criteria                                                                  | Negative coverage                                                           |
-| ---------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
-| `US-CI-LCFG-001` | As an agent, I create a new source file before committing. | `verify:prepush` sees the untracked file and validates governance/feature ownership. | The gate fails if the file is outside `allowedImplementationSurfaces`.      |
-| `US-CI-LCFG-002` | As an agent, I edit a tracked file without staging it.     | Changed-only lint, docs, and type-check routing see the unstaged path.               | The gate does not report "No changed files".                                |
-| `US-CI-LCFG-003` | As an agent, I stage a file after lint-staged changes it.  | The staged path remains in the local changed-file set.                               | The gate fails if generated governance indexes are stale.                   |
-| `US-CI-LCFG-004` | As a reviewer, I receive a PR after local validation.      | Local gates and CI use the same readiness semantics for changed files.               | Added symbols fail when missing from feature mechanization manifests.       |
-| `US-CI-LCFG-005` | As a maintainer, I add a new changed-only gate.            | The new gate consumes `listLocalChangedFiles()` instead of raw git diff logic.       | Architecture coverage fails if the gate invents a separate name-only query. |
+| Story            | Scenario                                                   | Acceptance criteria                                                                  | Negative coverage                                                            |
+| ---------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| `US-CI-LCFG-001` | As an agent, I create a new source file before committing. | `verify:prepush` sees the untracked file and validates governance/feature ownership. | The gate fails if the file is outside `allowedImplementationSurfaces`.       |
+| `US-CI-LCFG-002` | As an agent, I edit a tracked file without staging it.     | Changed-only lint, docs, and type-check routing see the unstaged path.               | The gate does not report "No changed files".                                 |
+| `US-CI-LCFG-003` | As an agent, I stage a file after lint-staged changes it.  | The staged path remains in the local changed-file set.                               | The gate fails if generated governance indexes are stale.                    |
+| `US-CI-LCFG-004` | As a reviewer, I receive a PR after local validation.      | Local gates and CI use the same readiness semantics for changed files.               | Added symbols fail when missing from feature mechanization manifests.        |
+| `US-CI-LCFG-005` | As a maintainer, I add a new changed-only gate.            | The new gate consumes `listLocalChangedFiles()` instead of raw git diff logic.       | Architecture coverage fails if the gate invents a separate name-only query.  |
+| `US-CI-LCFG-006` | As an agent, I need a fast preflight while iterating.      | `verify:changed` runs changed-only checks and scoped DB/self tests.                  | Docs-only changes do not run full governance scans or claim prepush closure. |
 
 ## Test Coverage
 
@@ -167,6 +182,8 @@ sequenceDiagram
   change inclusion for governance fingerprints.
 - `scripts/check-feature-mechanization.test.cjs` proves implementation-surface,
   symbol, forbidden-surface, and Cypress draft-boundary validation.
+- `scripts/verify-changed.test.cjs` proves fast changed-slice plan selection
+  and fail-fast execution.
 - `pnpm docs:feature-mechanization:implementation` proves changed files stay
   inside planned implementation rails.
 - `pnpm verify:prepush` proves the full local readiness gate.

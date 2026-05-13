@@ -1,3 +1,7 @@
+/**
+ * @ownedConcern Runtime state-store lifecycle API for run events, archive units,
+ * retention, restore, and object-store backed archive movement.
+ */
 export type { RunBootstrapCommand, RunStateCommandPort } from './types.js';
 export type {
   ArchiveDeleteEligibilityInput,

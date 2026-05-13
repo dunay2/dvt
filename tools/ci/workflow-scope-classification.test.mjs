@@ -101,6 +101,16 @@ test('classifies turbo root-build surfaces for workflow scope and workspace matr
   assert.equal(matrix.include.length, WORKSPACE_ENTRIES.length);
 });
 
+test('classifies dependency-cruiser config as CI policy validation without workspace fan-out', () => {
+  const scope = computeBooleanScope(['.dependency-cruiser.cjs'], WORKFLOW_SCOPE_PATTERNS);
+  const matrix = computeWorkspaceMatrix(['.dependency-cruiser.cjs']);
+
+  assert.equal(scope.any_code, true);
+  assert.equal(scope.changed_file_validation_relevant, true);
+  assert.equal(matrix.anyChanged, false);
+  assert.deepEqual(matrix.include, []);
+});
+
 test('planning db script path keeps workspace matrix empty while validation stays enabled', () => {
   const matrix = computeWorkspaceMatrix(['scripts/planning-db-query.cjs']);
   const scope = computeBooleanScope(['scripts/planning-db-query.cjs'], WORKFLOW_SCOPE_PATTERNS);

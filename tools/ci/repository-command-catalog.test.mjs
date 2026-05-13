@@ -68,6 +68,15 @@ test('classifies runtime, capability, contract, docs, workflow, and ops commands
     'developer-workflow'
   );
   assert.equal(
+    classifyPackageScriptCommand('pr:closeout', packageJson.scripts['pr:closeout']).domain,
+    'developer-workflow'
+  );
+  assert.equal(
+    classifyPackageScriptCommand('test:pr-closeout', packageJson.scripts['test:pr-closeout'])
+      .domain,
+    'test-tooling'
+  );
+  assert.equal(
     classifyPackageScriptCommand('test:ci-tools', packageJson.scripts['test:ci-tools']).domain,
     'ci-tooling'
   );
@@ -102,6 +111,8 @@ test('classifies current command file paths without broad script-directory assum
     classifyScriptFilePath('.github/scripts/generate_pr_manifest.sh').domain,
     'ci-tooling'
   );
+  assert.equal(classifyScriptFilePath('scripts/pr-closeout.cjs').domain, 'developer-workflow');
+  assert.equal(classifyScriptFilePath('scripts/pr-closeout.test.cjs').domain, 'test-tooling');
 });
 
 test('detects repository command files and excludes non-command metadata', () => {

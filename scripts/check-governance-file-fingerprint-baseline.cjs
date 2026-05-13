@@ -5,6 +5,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const crypto = require('node:crypto');
 const yaml = require('js-yaml');
 const { readFileIndexFromDisk } = require('./generate-governance-file-component-index.cjs');
 const {
@@ -15,12 +16,18 @@ const {
 } = require('./governance-generated-paths.cjs');
 
 const statusDir = generatedStatusDir;
+const baselineShardDir = path.join(statusDir, 'governance-file-fingerprints');
 const fileIndexPath = governanceGeneratedPath('system-governance-file-index.files.yaml');
 const baselinePath = governanceGeneratedPath('system-governance-file-fingerprint-baseline.yaml');
 const impactReportPath = governanceGeneratedPath(
   'system-governance-file-fingerprint-impact-20260501.md'
 );
 const sourcePath = repoRelative(fileIndexPath);
+const baselineShardDirRelativePath = repoRelative(baselineShardDir);
+
+function sha256(value) {
+  return crypto.createHash('sha256').update(value).digest('hex');
+}
 
 function renderYaml(payload) {
   return yaml.dump(payload, {
@@ -32,6 +39,25 @@ function renderYaml(payload) {
 
 function readYaml(filePath) {
   return yaml.load(fs.readFileSync(filePath, 'utf8'));
+}
+
+function readFingerprintBaselineFromDisk(manifestPath = baselinePath) {
+  const manifest = readYaml(manifestPath);
+  if (Array.isArray(manifest.files)) {
+    return manifest;
+  }
+
+  const shards = {};
+  for (const shard of Array.isArray(manifest.shards) ? manifest.shards : []) {
+    const shardPath = path.join(repoRoot, ...shard.path.split('/'));
+    const content = fs.readFileSync(shardPath, 'utf8');
+    if (shard.contentHash && sha256(content) !== shard.contentHash) {
+      throw new Error(`Governance fingerprint shard hash mismatch: ${shard.path}`);
+    }
+    shards[shard.path] = yaml.load(content);
+  }
+
+  return { manifest, shards };
 }
 
 function fingerprintRow(entry) {
@@ -48,17 +74,124 @@ function fingerprintRow(entry) {
   };
 }
 
-function buildFingerprintBaseline(currentEntries) {
-  const files = currentEntries
-    .map(fingerprintRow)
-    .sort((left, right) => left.path.localeCompare(right.path));
+function fingerprintShardIdForRow(entry) {
+  return entry.domainUnit || entry.rootUnit || 'UNOWNED';
+}
 
+function buildFingerprintShardPayload(shardId, files) {
   return {
     version: 1,
+    shardId,
     source: sourcePath,
     fileCount: files.length,
     files,
   };
+}
+
+function buildFingerprintBaseline(currentEntries, options = {}) {
+  const shardDirectory = options.shardDirectory || baselineShardDirRelativePath;
+  const files = currentEntries
+    .map(fingerprintRow)
+    .sort((left, right) => left.path.localeCompare(right.path));
+  const filesByShard = new Map();
+
+  for (const file of files) {
+    const shardId = fingerprintShardIdForRow(file);
+    const shardFiles = filesByShard.get(shardId) || [];
+    shardFiles.push(file);
+    filesByShard.set(shardId, shardFiles);
+  }
+
+  const shards = {};
+  const shardRows = [...filesByShard.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([shardId, shardFiles]) => {
+      const sortedFiles = [...shardFiles].sort((left, right) =>
+        left.path.localeCompare(right.path)
+      );
+      const shardPath = `${shardDirectory}/${shardId}.fingerprints.yaml`;
+      const payload = buildFingerprintShardPayload(shardId, sortedFiles);
+      const content = renderYaml(payload);
+
+      shards[shardPath] = payload;
+      return {
+        id: shardId,
+        path: shardPath,
+        fileCount: sortedFiles.length,
+        contentHash: sha256(content),
+      };
+    });
+
+  return {
+    manifest: {
+      version: 1,
+      source: sourcePath,
+      shardDirectory,
+      fileCount: files.length,
+      shards: shardRows,
+    },
+    shards,
+  };
+}
+
+function normalizeBaselineInput(baseline, explicitShardsByPath) {
+  if (baseline && baseline.manifest) {
+    return {
+      manifest: baseline.manifest,
+      shardsByPath: baseline.shards || explicitShardsByPath || {},
+    };
+  }
+
+  return {
+    manifest: baseline,
+    shardsByPath: explicitShardsByPath || {},
+  };
+}
+
+function expandFingerprintBaseline(baseline, explicitShardsByPath) {
+  const { manifest, shardsByPath } = normalizeBaselineInput(baseline, explicitShardsByPath);
+  if (Array.isArray(manifest.files)) {
+    return manifest.files;
+  }
+
+  const shardRows = Array.isArray(manifest.shards) ? manifest.shards : [];
+  const files = [];
+  const seenPaths = new Set();
+
+  for (const shard of shardRows) {
+    const shardPayload = shardsByPath[shard.path];
+    if (!shardPayload) {
+      throw new Error(`Missing governance fingerprint shard: ${shard.path}`);
+    }
+    if (shardPayload.shardId && shardPayload.shardId !== shard.id) {
+      throw new Error(
+        `Governance fingerprint shard ${shard.path} declares ${shardPayload.shardId} but manifest expected ${shard.id}`
+      );
+    }
+
+    const shardFiles = Array.isArray(shardPayload.files) ? shardPayload.files : [];
+    if (shard.fileCount !== shardFiles.length || shardPayload.fileCount !== shardFiles.length) {
+      throw new Error(
+        `Governance fingerprint shard ${shard.path} expected ${shard.fileCount} files but contained ${shardFiles.length}`
+      );
+    }
+
+    for (const file of shardFiles) {
+      if (seenPaths.has(file.path)) {
+        throw new Error(`Duplicate file path in governance fingerprint shards: ${file.path}`);
+      }
+      seenPaths.add(file.path);
+      files.push(file);
+    }
+  }
+
+  if (manifest.fileCount !== files.length) {
+    throw new Error(
+      `Governance fingerprint baseline expected ${manifest.fileCount} files but shards contained ${files.length}`
+    );
+  }
+
+  return files.sort((left, right) => left.path.localeCompare(right.path));
 }
 
 function keyFor(entry) {
@@ -94,7 +227,7 @@ function addImpact(impacts, entry, field) {
 }
 
 function compareFingerprintBaseline(baseline, currentEntries) {
-  const baselineFiles = Array.isArray(baseline.files) ? baseline.files : [];
+  const baselineFiles = expandFingerprintBaseline(baseline);
   const currentFiles = currentEntries.map(fingerprintRow);
   const baselineByPath = new Map(baselineFiles.map((entry) => [keyFor(entry), entry]));
   const currentByPath = new Map(currentFiles.map((entry) => [keyFor(entry), entry]));
@@ -383,6 +516,31 @@ function writeIfChanged(filePath, next) {
   return true;
 }
 
+function removeStaleFingerprintShardFiles(expectedRelativePaths) {
+  if (!fs.existsSync(baselineShardDir)) {
+    return false;
+  }
+
+  const expected = new Set(
+    expectedRelativePaths.map((relativePath) => path.join(repoRoot, ...relativePath.split('/')))
+  );
+  let removed = false;
+
+  for (const entry of fs.readdirSync(baselineShardDir, { withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.endsWith('.fingerprints.yaml')) {
+      continue;
+    }
+
+    const absolutePath = path.join(baselineShardDir, entry.name);
+    if (!expected.has(absolutePath)) {
+      fs.unlinkSync(absolutePath);
+      removed = true;
+    }
+  }
+
+  return removed;
+}
+
 function printReport(report) {
   console.error('[docs:governance:file-fingerprint-baseline] FAILED');
   console.error(
@@ -404,7 +562,15 @@ function main() {
   fs.mkdirSync(statusDir, { recursive: true });
 
   if (writeMode) {
-    const changed = writeIfChanged(baselinePath, renderYaml(nextBaseline));
+    fs.mkdirSync(baselineShardDir, { recursive: true });
+    const shardPaths = Object.keys(nextBaseline.shards);
+    const changed = [
+      writeIfChanged(baselinePath, renderYaml(nextBaseline.manifest)),
+      ...Object.entries(nextBaseline.shards).map(([shardPath, payload]) =>
+        writeIfChanged(path.join(repoRoot, ...shardPath.split('/')), renderYaml(payload))
+      ),
+      removeStaleFingerprintShardFiles(shardPaths),
+    ].some(Boolean);
     console.log(
       `[docs:governance:file-fingerprint-baseline] ${changed ? 'updated' : 'unchanged'} ${path.relative(
         repoRoot,
@@ -421,7 +587,7 @@ function main() {
     return;
   }
 
-  const baseline = readYaml(baselinePath);
+  const baseline = readFingerprintBaselineFromDisk(baselinePath);
   const report = compareFingerprintBaseline(baseline, currentEntries);
   const impactReport = buildImpactReport(report);
   const impactMarkdown = renderImpactMarkdown(impactReport);
@@ -446,7 +612,7 @@ function main() {
   }
 
   console.log(
-    `[docs:governance:file-fingerprint-baseline] accepted ${nextBaseline.fileCount} file fingerprints`
+    `[docs:governance:file-fingerprint-baseline] accepted ${nextBaseline.manifest.fileCount} file fingerprints`
   );
 }
 
@@ -458,5 +624,7 @@ module.exports = {
   buildFingerprintBaseline,
   buildImpactReport,
   compareFingerprintBaseline,
+  expandFingerprintBaseline,
+  readFingerprintBaselineFromDisk,
   renderImpactMarkdown,
 };

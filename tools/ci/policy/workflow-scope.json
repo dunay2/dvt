@@ -5,6 +5,7 @@
     "specs/**",
     "tools/**",
     ".github/workflows/**",
+    ".dependency-cruiser.cjs",
     "package.json",
     "pnpm-lock.yaml",
     "pnpm-workspace.yaml",
@@ -34,7 +35,6 @@
   "generated_status_relevant": [
     "apps/**",
     "packages/**",
-    "docs/planning/status/generated-code-state.md",
     "scripts/generate-code-status.cjs",
     "package.json",
     "pnpm-lock.yaml",
@@ -67,6 +67,7 @@
     ".github/scripts/**",
     ".github/workflows/**",
     ".github/actions/setup-node-pnpm/**",
+    ".dependency-cruiser.cjs",
     "package.json",
     "eslint.config.cjs",
     ".prettierrc.json"

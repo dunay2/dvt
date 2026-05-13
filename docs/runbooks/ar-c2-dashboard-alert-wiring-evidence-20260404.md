@@ -62,6 +62,25 @@ Result:
 - source of monitor config truth (file path or immutable external reference)
 - capture timestamp and reviewer
 
+For `AR-C2-INV-1`, closure reviewers must run the collector in assertion mode:
+
+```bash
+pnpm ops:ar-c2:evidence -- --require-dashboard-alert-evidence
+```
+
+The command must exit zero before dashboard and alert evidence can be treated as
+complete. A non-zero result with `AR-C2_IMMUTABLE_EVIDENCE_MISSING` means AR-C2
+stays open even though the generated artifact remains useful review evidence.
+
+The assertion requires complete immutable metadata, not just matching keys. A
+dashboard snapshot must provide `panels[]` rows with `panelKey`,
+`dashboardSystem`, `environment`, `immutableDashboardReference`,
+`queryExpression`, `capturedAt`, and `reviewer`. An alert snapshot must provide
+`rules[]` rows with `thresholdKey`, `alertRuleId`, `expression`, `window`,
+`severity`, `routingTarget`, `configSource`, `capturedAt`, and `reviewer`.
+Legacy key-only snapshots are useful for draft inventory, but they are closure
+blockers in assertion mode.
+
 ## Dashboard evidence matrix (`AR-C2-T2`)
 
 Populate one row per signal with immutable evidence when available.

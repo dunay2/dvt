@@ -490,15 +490,15 @@ largest backend package.
 
 ### 4.3 Engine application services — `src/application/`
 
-| Symbol                                                                            | DDD                            | C&Q               | Legacy                                                                | Notes                                         |
-| --------------------------------------------------------------------------------- | ------------------------------ | ----------------- | --------------------------------------------------------------------- | --------------------------------------------- |
-| `StartRunApplicationService.startRun(...)`                                        | `AS` (start-run orchestration) | `CMD-RET`         | `OK`                                                                  | Orchestrates admission, intent log, dispatch. |
-| `RecoverRunApplicationService.recoverRun(...)`                                    | `AS`                           | `CMD-RET`         | `OK`                                                                  | Implements `IRunRecoveryService`.             |
-| `StartRunAdmissionGuard.assertStartRunAllowed(planRef, ctx)`                      | `DS` (admission policy)        | `QRY` (assertion) | `OK` (but see S08-DRIFT-40 — admission ≠ scoped plan-store ownership) |                                               |
-| `StartRunAdmissionGuard.assertExecutionPolicyAllowed(admission)`                  | `DS`                           | `QRY` (assertion) | `OK`                                                                  |                                               |
-| `StartRunAdmissionGuard.resolveAdapter(context)`                                  | `DS`                           | `QRY`             | `OK`                                                                  |                                               |
-| `IStartRunApplicationService.startRun(...)`                                       | `PORT`                         | `CMD-RET`         | `OK`                                                                  |                                               |
-| `providerSelection.resolveEngineProvider/buildAdapterRegistry/pickDefaultAdapter` | `DS` (provider-routing)        | `QRY` (pure)      | `OK`                                                                  |                                               |
+| Symbol                                                                            | DDD                            | C&Q               | Legacy                                                                | Notes                               |
+| --------------------------------------------------------------------------------- | ------------------------------ | ----------------- | --------------------------------------------------------------------- | ----------------------------------- |
+| `StartRunApplicationService.startRun(...)`                                        | `AS` (start-run orchestration) | `CMD-RET`         | `OK`                                                                  | Sequences start-run phase services. |
+| `RecoverRunApplicationService.recoverRun(...)`                                    | `AS`                           | `CMD-RET`         | `OK`                                                                  | Implements `IRunRecoveryService`.   |
+| `StartRunAdmissionGuard.assertStartRunAllowed(planRef, ctx)`                      | `DS` (admission policy)        | `QRY` (assertion) | `OK` (but see S08-DRIFT-40 — admission ≠ scoped plan-store ownership) |                                     |
+| `StartRunAdmissionGuard.assertExecutionPolicyAllowed(admission)`                  | `DS`                           | `QRY` (assertion) | `OK`                                                                  |                                     |
+| `StartRunAdmissionGuard.resolveAdapter(context)`                                  | `DS`                           | `QRY`             | `OK`                                                                  |                                     |
+| `IStartRunApplicationService.startRun(...)`                                       | `PORT`                         | `CMD-RET`         | `OK`                                                                  |                                     |
+| `providerSelection.resolveEngineProvider/buildAdapterRegistry/pickDefaultAdapter` | `DS` (provider-routing)        | `QRY` (pure)      | `OK`                                                                  |                                     |
 
 ### 4.4 Engine workflow-engine use cases — `src/application/workflow-engine-use-cases/`
 
@@ -525,14 +525,16 @@ use-case separation in the repo. Other packages should mirror this pattern.
 
 ### 4.6 Engine startRun internals — `src/services/startRun/`
 
-| Symbol                                                        | DDD                               | C&Q               | Legacy | Notes                             |
-| ------------------------------------------------------------- | --------------------------------- | ----------------- | ------ | --------------------------------- |
-| `RunExecutionContextAdmissionPolicy`                          | `DS` (admission policy)           | `QRY`             | `OK`   |                                   |
-| `StartRunEventFactory`                                        | `DS` (event factory)              | `QRY` (pure)      | `OK`   | Deterministic event construction. |
-| `StartRunExecutionService`                                    | `AS` (intra-package collaborator) | `CMD-RET`         | `OK`   |                                   |
-| `StartRunFailurePolicy` (+ `PostStartIntentPersistenceError`) | `DS` (failure-handling policy)    | `CMD/QRY` mix     | `OK`   |                                   |
-| `StartRunValidationPolicy`                                    | `DS`                              | `QRY` (assertion) | `OK`   |                                   |
-| `START_RUN_MESSAGE`, `START_RUN_FAILURE_REASON`               | `N/A` (constants)                 | `N/A`             | `OK`   |                                   |
+| Symbol                                                        | DDD                               | C&Q               | Legacy | Notes                                                                                             |
+| ------------------------------------------------------------- | --------------------------------- | ----------------- | ------ | ------------------------------------------------------------------------------------------------- |
+| `RunExecutionContextAdmissionPolicy`                          | `DS` (admission policy)           | `QRY`             | `OK`   |                                                                                                   |
+| `StartRunAdmissionService`                                    | `AS` (admission coordinator)      | `QRY` (assertion) | `OK`   | Coordinates pre-dispatch admission, provider resolution, scoped integrity, and capability checks. |
+| `StartRunEventFactory`                                        | `DS` (event factory)              | `QRY` (pure)      | `OK`   | Deterministic event construction.                                                                 |
+| `StartRunExecutionService`                                    | `AS` (intra-package collaborator) | `CMD-RET`         | `OK`   |                                                                                                   |
+| `StartRunFailurePolicy` (+ `PostStartIntentPersistenceError`) | `DS` (failure-handling policy)    | `CMD/QRY` mix     | `OK`   |                                                                                                   |
+| `StartRunIntentService`                                       | `DS` (intent creation policy)     | `CMD`             | `OK`   | Derives deterministic pre-dispatch intent ids before provider side effects.                       |
+| `StartRunValidationPolicy`                                    | `DS`                              | `QRY` (assertion) | `OK`   |                                                                                                   |
+| `START_RUN_MESSAGE`, `START_RUN_FAILURE_REASON`               | `N/A` (constants)                 | `N/A`             | `OK`   |                                                                                                   |
 
 ### 4.7 Engine maintenance internals — `src/services/runMaintenance/`
 

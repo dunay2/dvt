@@ -7,7 +7,10 @@ const { Client } = require('pg');
 const yaml = require('js-yaml');
 
 const { governanceGeneratedPath } = require('./governance-generated-paths.cjs');
-const { buildFingerprintBaseline } = require('./check-governance-file-fingerprint-baseline.cjs');
+const {
+  buildFingerprintBaseline,
+  expandFingerprintBaseline,
+} = require('./check-governance-file-fingerprint-baseline.cjs');
 const {
   buildOutputs: buildDocumentUnitOutputs,
 } = require('./generate-governance-document-unit-map.cjs');
@@ -51,6 +54,86 @@ const governanceImportDeleteTables = [
 
 function databaseUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
+}
+
+function parseArgs(argv = process.argv.slice(2)) {
+  const options = {
+    databaseUrl: null,
+    help: false,
+    ifStale: false,
+    includePlanning: true,
+    includeGovernance: true,
+  };
+  let planningOnly = false;
+  let governanceOnly = false;
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const token = argv[index];
+
+    if (token === '--') {
+      continue;
+    }
+
+    if (token === '--database-url') {
+      const next = argv[index + 1];
+      if (!next) {
+        throw new Error('Missing value for --database-url');
+      }
+      options.databaseUrl = next;
+      index += 1;
+      continue;
+    }
+
+    if (token === '--if-stale') {
+      options.ifStale = true;
+      continue;
+    }
+
+    if (token === '--planning-only') {
+      planningOnly = true;
+      continue;
+    }
+
+    if (token === '--governance-only') {
+      governanceOnly = true;
+      continue;
+    }
+
+    if (token === '--help' || token === '-h') {
+      options.help = true;
+      continue;
+    }
+
+    throw new Error(`Unknown planning DB import option "${token}".`);
+  }
+
+  if (planningOnly && governanceOnly) {
+    throw new Error('--planning-only and --governance-only are mutually exclusive.');
+  }
+
+  if (planningOnly) {
+    options.includePlanning = true;
+    options.includeGovernance = false;
+  }
+
+  if (governanceOnly) {
+    options.includePlanning = false;
+    options.includeGovernance = true;
+  }
+
+  return options;
+}
+
+function printHelp() {
+  console.log(
+    [
+      'Usage: pnpm planning:db:import [--if-stale] [--planning-only|--governance-only] [--database-url <url>]',
+      '',
+      '--if-stale       Skip selected scopes that already match the imported DB state.',
+      '--planning-only  Import or check only planning lane/task bootstrap rows.',
+      '--governance-only Import or check only governance/query projection rows.',
+    ].join('\n')
+  );
 }
 
 function toPosix(filePath) {
@@ -496,8 +579,9 @@ function buildGovernanceGeneratedInputs() {
     ),
     fingerprintBaselineSource: buildGeneratedYamlSource(
       repoRelative(governanceFingerprintBaselinePath),
-      fingerprintBaseline
+      fingerprintBaseline.manifest
     ),
+    fingerprintBaselineShardPayloads: fingerprintBaseline.shards,
     coverageReportSource: readGeneratedYamlSourceOrBuild(
       repoRelative(governanceCoverageReportPath),
       coverageReport
@@ -727,7 +811,10 @@ function buildGovernanceFileSnapshot() {
     }
   }
 
-  for (const fingerprint of fingerprintBaseline.files || []) {
+  for (const fingerprint of expandFingerprintBaseline({
+    manifest: fingerprintBaseline,
+    shards: generatedInputs.fingerprintBaselineShardPayloads,
+  })) {
     fingerprints.push({
       path: normalizeText(fingerprint.path),
       fileId: normalizeText(fingerprint.fileId),
@@ -1015,12 +1102,71 @@ function referencePrefix(referenceText) {
   return normalizeText(referenceText).split('-')[0].toUpperCase();
 }
 
-function classifyTaskLikeReference(referenceText, planningTaskIdSet) {
+function addNormalizedId(idSet, value) {
+  const normalized = normalizeText(value);
+  if (!normalized) {
+    return;
+  }
+  idSet.add(normalized);
+  idSet.add(normalized.toUpperCase());
+}
+
+function collectFeatureMechanizationReferenceIds(sourceDocuments) {
+  const featureIds = new Set();
+  const cycleIds = new Set();
+  const fencePattern = /```feature-mechanization\s*\r?\n([\s\S]*?)\r?\n```/g;
+
+  for (const sourceDocument of sourceDocuments) {
+    const raw = normalizeText(sourceDocument.raw);
+    let match;
+
+    while ((match = fencePattern.exec(raw)) !== null) {
+      let manifest;
+      try {
+        manifest = yaml.load(match[1]);
+      } catch {
+        continue;
+      }
+
+      if (!manifest || typeof manifest !== 'object') {
+        continue;
+      }
+
+      const status = normalizeText(manifest.mechanizationStatus).toLowerCase();
+      if (status !== 'closed' && status !== 'implemented') {
+        continue;
+      }
+
+      addNormalizedId(featureIds, manifest.featureId);
+      for (const cycle of normalizeArray(manifest.redGreenCycles)) {
+        addNormalizedId(cycleIds, cycle?.id);
+      }
+    }
+  }
+
+  return { featureIds, cycleIds };
+}
+
+function classifyTaskLikeReference(
+  referenceText,
+  planningTaskIdSet,
+  featureMechanizationIdSet = new Set(),
+  featureMechanizationCycleIdSet = new Set()
+) {
   const value = normalizeText(referenceText);
   const upperValue = value.toUpperCase();
 
   if (planningTaskIdSet.has(value) || planningTaskIdSet.has(upperValue)) {
     return { classification: 'registered_planning_task', registeredPlanningTask: true };
+  }
+  if (featureMechanizationIdSet.has(value) || featureMechanizationIdSet.has(upperValue)) {
+    return {
+      classification: 'registered_feature_mechanization',
+      registeredPlanningTask: false,
+    };
+  }
+  if (featureMechanizationCycleIdSet.has(value) || featureMechanizationCycleIdSet.has(upperValue)) {
+    return { classification: 'feature_mechanization_cycle', registeredPlanningTask: false };
   }
   if (/^ADR-\d{4}$/.test(upperValue)) {
     return { classification: 'adr_id', registeredPlanningTask: false };
@@ -1046,6 +1192,9 @@ function classifyTaskLikeReference(referenceText, planningTaskIdSet) {
   if (/^(?:GAP|MVP|RESIDUAL|RISK|LEGACY|INV)-/.test(upperValue) || /^F-\d{2}/.test(upperValue)) {
     return { classification: 'historical_planning_reference', registeredPlanningTask: false };
   }
+  if (/^AR-[A-Z]\d+-INV-\d+$/.test(upperValue)) {
+    return { classification: 'review_invariant_reference', registeredPlanningTask: false };
+  }
   if (/^SYS-/.test(upperValue)) {
     return { classification: 'governance_unit_reference', registeredPlanningTask: false };
   }
@@ -1055,11 +1204,25 @@ function classifyTaskLikeReference(referenceText, planningTaskIdSet) {
   if (/^PS-[CQ]\d+/.test(upperValue)) {
     return { classification: 'plan_store_matrix_reference', registeredPlanningTask: false };
   }
+  if (/^P\d+-\d+$/i.test(value)) {
+    return { classification: 'priority_work_item_marker', registeredPlanningTask: false };
+  }
+  if (upperValue === 'YYYY-MM-DD') {
+    return { classification: 'date_placeholder', registeredPlanningTask: false };
+  }
+  if (upperValue === 'SUB-SKILL') {
+    return { classification: 'skill_reference', registeredPlanningTask: false };
+  }
 
   return { classification: 'unknown_task_like_id', registeredPlanningTask: false };
 }
 
-function extractTaskLikeReferences(document, planningTaskIdSet) {
+function extractTaskLikeReferences(
+  document,
+  planningTaskIdSet,
+  featureMechanizationIdSet = new Set(),
+  featureMechanizationCycleIdSet = new Set()
+) {
   const raw = normalizeText(document.raw);
   const grouped = new Map();
 
@@ -1101,7 +1264,12 @@ function extractTaskLikeReferences(document, planningTaskIdSet) {
   return [...grouped.values()]
     .sort((left, right) => left.referenceText.localeCompare(right.referenceText))
     .map((entry) => {
-      const classification = classifyTaskLikeReference(entry.referenceText, planningTaskIdSet);
+      const classification = classifyTaskLikeReference(
+        entry.referenceText,
+        planningTaskIdSet,
+        featureMechanizationIdSet,
+        featureMechanizationCycleIdSet
+      );
       const escapedReference = escapeRegExp(entry.referenceText);
       const { sampleLines } = lineNumbersForPattern(
         raw,
@@ -1259,6 +1427,15 @@ function buildDocsDispositionSnapshot(options = {}) {
   const sourceDocuments = normalizeArray(options.documents).length
     ? normalizeArray(options.documents)
     : listTrackedMarkdownDocuments();
+  const collectedFeatureReferences = collectFeatureMechanizationReferenceIds(sourceDocuments);
+  const featureMechanizationIdSet = new Set(collectedFeatureReferences.featureIds);
+  const featureMechanizationCycleIdSet = new Set(collectedFeatureReferences.cycleIds);
+  for (const featureId of normalizeArray(options.featureMechanizationIds)) {
+    addNormalizedId(featureMechanizationIdSet, featureId);
+  }
+  for (const cycleId of normalizeArray(options.featureMechanizationCycleIds)) {
+    addNormalizedId(featureMechanizationCycleIdSet, cycleId);
+  }
   const pendingHotspotThreshold = Math.max(
     1,
     normalizeNumber(options.pendingHotspotThreshold) ?? 10
@@ -1276,7 +1453,12 @@ function buildDocsDispositionSnapshot(options = {}) {
     const isArchive = isArchivedDocumentPath(sourcePath);
     const documentInput = { sourcePath, raw, contentSha256 };
     const documentMarkers = buildPendingMarkerRows(documentInput);
-    const documentReferences = extractTaskLikeReferences(documentInput, planningTaskIdSet);
+    const documentReferences = extractTaskLikeReferences(
+      documentInput,
+      planningTaskIdSet,
+      featureMechanizationIdSet,
+      featureMechanizationCycleIdSet
+    );
     const document = {
       documentPath: sourcePath,
       title: normalizeText(frontmatter.title),
@@ -2046,25 +2228,402 @@ async function importContent(options = {}) {
   return result;
 }
 
-async function main() {
-  await importContent();
+function compareImportRows(expectedRows, actualRows, options) {
+  const expectedByKey = new Map((expectedRows || []).map((row) => [options.keyOf(row), row]));
+  const actualByKey = new Map((actualRows || []).map((row) => [options.keyOf(row), row]));
+  const expectedKeys = [...expectedByKey.keys()];
+  const actualKeys = [...actualByKey.keys()];
+  const missing = expectedKeys.filter((key) => !actualByKey.has(key)).sort();
+  const unexpected = actualKeys.filter((key) => !expectedByKey.has(key)).sort();
+  const stale = [];
+
+  for (const key of expectedKeys) {
+    if (!actualByKey.has(key)) {
+      continue;
+    }
+
+    const expected = expectedByKey.get(key);
+    const actual = actualByKey.get(key);
+    const differences = [];
+
+    for (const field of options.compareFields) {
+      if (normalizeText(expected[field]) !== normalizeText(actual[field])) {
+        differences.push({ field });
+      }
+    }
+
+    if (differences.length > 0) {
+      stale.push({ key, differences });
+    }
+  }
+
+  return {
+    missing,
+    unexpected,
+    stale: stale.sort((left, right) => left.key.localeCompare(right.key)),
+  };
 }
 
-if (require.main === module) {
-  main().catch((error) => {
-    console.error(`[planning:db:import] ${error.message}`);
-    process.exit(1);
+function compareGovernanceAuxiliaryState(expected, actual) {
+  const sections = {
+    repositoryCommands: compareImportRows(expected.repositoryCommands, actual.repositoryCommands, {
+      keyOf: (row) => row.commandId,
+      compareFields: ['commandText', 'sourcePath', 'sourceContentSha256'],
+    }),
+    prReadinessChecks: compareImportRows(expected.prReadinessChecks, actual.prReadinessChecks, {
+      keyOf: (row) => row.readinessId,
+      compareFields: ['sourcePath', 'sourceContentSha256', 'effectiveArcLevel', 'blocking'],
+    }),
+    docDispositionDocuments: compareImportRows(
+      expected.docDispositionDocuments,
+      actual.docDispositionDocuments,
+      {
+        keyOf: (row) => row.documentPath,
+        compareFields: [
+          'status',
+          'planningType',
+          'pendingMarkerCount',
+          'taskLikeReferenceCount',
+          'sourceContentSha256',
+        ],
+      }
+    ),
+    docDispositionMarkers: compareImportRows(
+      expected.docDispositionMarkers,
+      actual.docDispositionMarkers,
+      {
+        keyOf: (row) => row.markerId,
+        compareFields: ['documentPath', 'markerKind', 'occurrenceCount', 'sourceContentSha256'],
+      }
+    ),
+    docTaskLikeReferences: compareImportRows(
+      expected.docTaskLikeReferences,
+      actual.docTaskLikeReferences,
+      {
+        keyOf: (row) => row.referenceId,
+        compareFields: [
+          'documentPath',
+          'referenceText',
+          'classification',
+          'registeredPlanningTask',
+          'occurrenceCount',
+          'sourceContentSha256',
+        ],
+      }
+    ),
+    docDispositionActions: compareImportRows(
+      expected.docDispositionActions,
+      actual.docDispositionActions,
+      {
+        keyOf: (row) => row.actionId,
+        compareFields: [
+          'priority',
+          'actionKind',
+          'documentPath',
+          'referenceText',
+          'reason',
+          'blocking',
+          'sourceContentSha256',
+        ],
+      }
+    ),
+  };
+  const ok = Object.values(sections).every(
+    (section) =>
+      section.missing.length === 0 && section.unexpected.length === 0 && section.stale.length === 0
+  );
+
+  return { ok, sections };
+}
+
+async function buildGovernanceAuxiliaryExpectedState(options = {}) {
+  const repositoryCommandSnapshot =
+    options.repositoryCommandSnapshot || (await buildRepositoryCommandSnapshot());
+  const prReadinessSnapshot = options.prReadinessSnapshot || buildPrReadinessSnapshot();
+  const planningSnapshot = options.planningSnapshot || buildPlanningContentSnapshot();
+  const docsDispositionSnapshot =
+    options.docsDispositionSnapshot ||
+    buildDocsDispositionSnapshot({
+      planningTaskIds: planningSnapshot.tasks.map((task) => task.taskId),
+    });
+
+  return {
+    repositoryCommands: repositoryCommandSnapshot.commands.map((command) => ({
+      commandId: command.commandId,
+      commandText: command.commandText,
+      sourcePath: command.sourcePath,
+      sourceContentSha256: command.sourceContentSha256,
+    })),
+    prReadinessChecks: [
+      {
+        readinessId: prReadinessSnapshot.readiness.readinessId,
+        sourcePath: prReadinessSnapshot.readiness.sourcePath,
+        sourceContentSha256: prReadinessSnapshot.readiness.sourceContentSha256,
+        effectiveArcLevel: prReadinessSnapshot.readiness.effectiveArcLevel,
+        blocking: prReadinessSnapshot.readiness.blocking,
+      },
+    ],
+    docDispositionDocuments: docsDispositionSnapshot.documents.map((document) => ({
+      documentPath: document.documentPath,
+      status: document.status,
+      planningType: document.planningType,
+      pendingMarkerCount: document.pendingMarkerCount,
+      taskLikeReferenceCount: document.taskLikeReferenceCount,
+      sourceContentSha256: document.sourceContentSha256,
+    })),
+    docDispositionMarkers: docsDispositionSnapshot.markers.map((marker) => ({
+      markerId: marker.markerId,
+      documentPath: marker.documentPath,
+      markerKind: marker.markerKind,
+      occurrenceCount: marker.occurrenceCount,
+      sourceContentSha256: marker.sourceContentSha256,
+    })),
+    docTaskLikeReferences: docsDispositionSnapshot.references.map((reference) => ({
+      referenceId: reference.referenceId,
+      documentPath: reference.documentPath,
+      referenceText: reference.referenceText,
+      classification: reference.classification,
+      registeredPlanningTask: reference.registeredPlanningTask,
+      occurrenceCount: reference.occurrenceCount,
+      sourceContentSha256: reference.sourceContentSha256,
+    })),
+    docDispositionActions: docsDispositionSnapshot.actions.map((action) => ({
+      actionId: action.actionId,
+      priority: action.priority,
+      actionKind: action.actionKind,
+      documentPath: action.documentPath,
+      referenceText: action.referenceText,
+      reason: action.reason,
+      blocking: action.blocking,
+      sourceContentSha256: action.sourceContentSha256,
+    })),
+  };
+}
+
+async function readGovernanceAuxiliaryState(client) {
+  const [
+    repositoryCommands,
+    prReadinessChecks,
+    docDispositionDocuments,
+    docDispositionMarkers,
+    docTaskLikeReferences,
+    docDispositionActions,
+  ] = await Promise.all([
+    client.query(`
+      select
+        command_id as "commandId",
+        command_text as "commandText",
+        source_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.repository_commands
+      order by command_id
+    `),
+    client.query(`
+      select
+        readiness_id as "readinessId",
+        source_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256",
+        effective_arc_level as "effectiveArcLevel",
+        blocking
+      from ${schemaName}.pr_readiness_checks
+      order by readiness_id
+    `),
+    client.query(`
+      select
+        document_path as "documentPath",
+        status,
+        planning_type as "planningType",
+        pending_marker_count::int as "pendingMarkerCount",
+        task_like_reference_count::int as "taskLikeReferenceCount",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.doc_disposition_documents
+      order by document_path
+    `),
+    client.query(`
+      select
+        marker_id as "markerId",
+        document_path as "documentPath",
+        marker_kind as "markerKind",
+        occurrence_count::int as "occurrenceCount",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.doc_disposition_markers
+      order by marker_id
+    `),
+    client.query(`
+      select
+        reference_id as "referenceId",
+        document_path as "documentPath",
+        reference_text as "referenceText",
+        classification,
+        registered_planning_task as "registeredPlanningTask",
+        occurrence_count::int as "occurrenceCount",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.doc_task_like_references
+      order by reference_id
+    `),
+    client.query(`
+      select
+        action_id as "actionId",
+        priority,
+        action_kind as "actionKind",
+        document_path as "documentPath",
+        reference_text as "referenceText",
+        reason,
+        blocking,
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.doc_disposition_actions
+      order by action_id
+    `),
+  ]);
+
+  return {
+    repositoryCommands: repositoryCommands.rows,
+    prReadinessChecks: prReadinessChecks.rows,
+    docDispositionDocuments: docDispositionDocuments.rows,
+    docDispositionMarkers: docDispositionMarkers.rows,
+    docTaskLikeReferences: docTaskLikeReferences.rows,
+    docDispositionActions: docDispositionActions.rows,
+  };
+}
+
+async function checkGovernanceAuxiliaryProjections(options = {}) {
+  const expected =
+    options.expected || (await buildGovernanceAuxiliaryExpectedState(options.expectedOptions));
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    const actual = await readGovernanceAuxiliaryState(client);
+    return compareGovernanceAuxiliaryState(expected, actual);
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
+async function isScopeFresh(scope, options, deps) {
+  try {
+    if (scope === 'planning') {
+      const checkPlanningDatabase =
+        deps.checkPlanningDatabase || require('./planning-db-check.cjs').checkPlanningDatabase;
+      const report = await checkPlanningDatabase({ databaseUrl: options.databaseUrl });
+      return report.ok;
+    }
+
+    if (scope === 'governance') {
+      const checkGovernanceDatabase =
+        deps.checkGovernanceDatabase ||
+        require('./governance-db-check.cjs').checkGovernanceDatabase;
+      const report = await checkGovernanceDatabase({ databaseUrl: options.databaseUrl });
+      if (!report.ok) {
+        return false;
+      }
+
+      const checkAuxiliary =
+        deps.checkGovernanceAuxiliaryProjections || checkGovernanceAuxiliaryProjections;
+      const auxiliaryReport = await checkAuxiliary({ databaseUrl: options.databaseUrl });
+      return auxiliaryReport.ok;
+    }
+  } catch {
+    return false;
+  }
+
+  throw new Error(`Unknown import scope "${scope}".`);
+}
+
+async function runPlanningImport(options = {}, deps = {}) {
+  const actualDeps = {
+    importContent,
+    logger: console,
+    ...deps,
+  };
+  const selected = {
+    planning: options.includePlanning !== false,
+    governance: options.includeGovernance !== false,
+  };
+  const skippedScopes = [];
+
+  if (options.ifStale) {
+    for (const scope of ['planning', 'governance']) {
+      if (!selected[scope]) {
+        continue;
+      }
+
+      if (await isScopeFresh(scope, options, actualDeps)) {
+        selected[scope] = false;
+        skippedScopes.push(scope);
+      }
+    }
+  }
+
+  if (skippedScopes.length > 0) {
+    actualDeps.logger.log(`[planning:db:import] skipped fresh scopes: ${skippedScopes.join(', ')}`);
+  }
+
+  const importedScopes = Object.entries(selected)
+    .filter(([, enabled]) => enabled)
+    .map(([scope]) => scope);
+
+  if (importedScopes.length === 0) {
+    return {
+      lanes: 0,
+      tasks: 0,
+      governanceFiles: 0,
+      governanceComponents: 0,
+      governanceComponentFiles: 0,
+      governanceFingerprints: 0,
+      governanceCoverageRows: 0,
+      governanceRemediationTasks: 0,
+      repositoryCommands: 0,
+      prReadinessChecks: 0,
+      docsDispositionDocuments: 0,
+      docsDispositionActions: 0,
+      docsTaskLikeReferences: 0,
+      importedScopes,
+      skippedScopes,
+    };
+  }
+
+  const result = await actualDeps.importContent({
+    databaseUrl: options.databaseUrl,
+    includePlanning: selected.planning,
+    includeGovernance: selected.governance,
   });
+
+  return {
+    ...result,
+    importedScopes,
+    skippedScopes,
+  };
+}
+
+async function main() {
+  const options = parseArgs();
+  if (options.help) {
+    printHelp();
+    return;
+  }
+
+  await runPlanningImport(options);
 }
 
 module.exports = {
   beginImportTransaction,
   buildDocsDispositionSnapshot,
+  buildGovernanceAuxiliaryExpectedState,
   buildGovernanceFileSnapshot,
   buildPlanningContentSnapshot,
   buildPrReadinessSnapshot,
   buildRepositoryCommandSnapshot,
+  checkGovernanceAuxiliaryProjections,
   clearGovernanceSnapshotTables,
+  compareGovernanceAuxiliaryState,
   databaseUrl,
   evaluateArcPolicyReadiness,
   governanceImportDeleteTables,
@@ -2073,6 +2632,16 @@ module.exports = {
   insertPrReadinessSnapshot,
   insertRepositoryCommandSnapshot,
   normalizeText,
+  parseArgs,
+  readGovernanceAuxiliaryState,
   readYamlSource,
+  runPlanningImport,
   sha256,
 };
+
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(`[planning:db:import] ${error.message}`);
+    process.exit(1);
+  });
+}
