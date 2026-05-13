@@ -68,12 +68,22 @@ sequenceDiagram
 
 ## Canonical Signal Contract
 
-AR-C2 closure is based on these logical signals:
+AR-C2 signal names are owned by the canonical mapping source. Do not create
+local aliases in dashboard, alert, evidence, or closeout artifacts.
 
-- `plan_compile_latency`
-- `run_start_latency`
-- `run_status_freshness`
-- `outbox_delivery_lag`
+The active mapped signals are:
+
+| Logical signal                     | Logical metric ID                                              | Dashboard panel key               |
+| ---------------------------------- | -------------------------------------------------------------- | --------------------------------- |
+| Start-run latency p50/p99          | `dvt.api.run_start.latency_ms`                                 | `ar-c2.start-run-latency`         |
+| Plan compile latency p50/p99       | `dvt.api.plan_compile.latency_ms`                              | `ar-c2.plan-compile-latency`      |
+| Snapshot staleness counts          | `dvt.api.run_status.snapshot_staleness_result_total`           | `ar-c2.snapshot-staleness-counts` |
+| Snapshot unknown fallback counts   | `dvt.api.run_status.snapshot_staleness_fallback_unknown_total` | `ar-c2.snapshot-unknown-fallback` |
+| Outbox claimed-lag gauge           | `dvt_outbox_oldest_claimed_lag_seconds`                        | `ar-c2.outbox-claimed-lag`        |
+| Outbox drain lag p95               | `dvt_delivery_outbox_drain_lag_seconds`                        | `ar-c2.outbox-drain-lag`          |
+| Event delivery latency p95/p99     | `dvt_delivery_event_delivery_latency_ms`                       | `ar-c2.event-delivery-latency`    |
+| Stale ratio for `GET /runs/:runId` | derived from staleness counts                                  | `ar-c2.run-status-stale-ratio`    |
+| Unknown freshness ratio            | derived from staleness counts                                  | `ar-c2.run-status-unknown-ratio`  |
 
 Canonical mapping and thresholds are governed in:
 
@@ -96,6 +106,12 @@ Canonical mapping and thresholds are governed in:
 | `AR-C2-INV-3` | Alert thresholds must be traceable to canonical SLA/runbook           |
 | `AR-C2-INV-4` | Sustained validation windows are mandatory for closure                |
 | `AR-C2-INV-5` | QA artifact gate must run in non-skip mode for changed artifacts      |
+
+`AR-C2-INV-3` is enforced by the AR-C2 evidence collector. Every
+threshold-backed mapping row must declare canonical alert threshold keys and a
+`docs/runbooks/**` SLA/runbook source reference. Generated evidence repeats
+that source next to each alert threshold so reviewers can trace alert wiring
+back to the SLA text without relying on local monitor names.
 
 ## Evidence Assembly Workflow
 

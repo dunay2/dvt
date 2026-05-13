@@ -26,6 +26,15 @@ const BASE_INPUT = {
     runId: 'r1',
   }),
   maxContinueAsNewPayloadBytes: 1_000_000,
+  continueAsNewAfterLayerCount: 3,
+  stepActivityRouting: {
+    routesByStepKind: {
+      PYTHON_SCRIPT: {
+        capability: 'executor.python',
+        taskQueue: 'dvt-temporal-python',
+      },
+    },
+  },
 };
 
 type ContinueAsNewTriggerArgs = Parameters<typeof shouldTriggerContinueAsNew>[0];
@@ -121,6 +130,7 @@ const CONTINUE_AS_NEW_ROLLOVER_CASES: Array<{
       expect(nextInput).not.toHaveProperty('gatewayDecisions');
       expect(nextInput).not.toHaveProperty('skippedStepIds');
       expect(nextInput.planRef.planId).toBe('plan-1');
+      expect(nextInput.stepActivityRouting).toEqual(BASE_INPUT.stepActivityRouting);
     },
   },
   {

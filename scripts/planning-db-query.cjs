@@ -40,6 +40,9 @@ const knownQueries = new Set([
   'task-gaps',
   'focus',
   'cer',
+  'knowledge-documents',
+  'knowledge-actions',
+  'mandatory-proposal-gaps',
   'component-tree',
   'component-metadata',
   'component-drift',
@@ -61,6 +64,9 @@ const governanceProjectionQueryNames = new Set([
   'component-rules',
   'component-rule-evaluations',
   'component-quality',
+  'knowledge-documents',
+  'knowledge-actions',
+  'mandatory-proposal-gaps',
 ]);
 
 function databaseUrl() {
@@ -604,6 +610,36 @@ function buildGovernanceDriftRows(rows) {
   ]);
 }
 
+function buildKnowledgeDocumentRows(rows) {
+  return rows.map((row) => [
+    row.document_type ?? row.documentType,
+    row.mandatory ? 'mandatory' : '-',
+    row.status ?? '-',
+    row.document_path ?? row.documentPath,
+    compactText(row.title),
+  ]);
+}
+
+function buildKnowledgeActionRows(rows) {
+  return rows.map((row) => [
+    row.status,
+    row.required ? 'required' : '-',
+    row.document_path ?? row.documentPath,
+    compactText(row.summary),
+    JSON.stringify(row.links ?? []),
+  ]);
+}
+
+function buildMandatoryProposalGapRows(rows) {
+  return rows.map((row) => [
+    row.gap_kind ?? row.gapKind,
+    row.required_action_count ?? row.requiredActionCount ?? 0,
+    row.linked_task_count ?? row.linkedTaskCount ?? 0,
+    row.document_path ?? row.documentPath,
+    compactText(row.title),
+  ]);
+}
+
 function buildComponentEngineeringRecordRows(rows) {
   return rows.map((row) => row.record ?? row.componentEngineeringRecord);
 }
@@ -1057,6 +1093,49 @@ function governanceCoverageSelect() {
       file_count,
       component_id
     from ${schemaName}.governance_coverage_query`;
+}
+
+function knowledgeDocumentSelect() {
+  return `
+    select
+      document_id,
+      document_path,
+      document_type,
+      title,
+      status,
+      planning_type,
+      owner,
+      mandatory,
+      source_content_sha256
+    from ${schemaName}.knowledge_document_query`;
+}
+
+function knowledgeActionSelect() {
+  return `
+    select
+      action_id,
+      document_path,
+      document_type,
+      mandatory,
+      summary,
+      status,
+      required,
+      line_number,
+      links
+    from ${schemaName}.knowledge_action_query`;
+}
+
+function mandatoryProposalGapSelect() {
+  return `
+    select
+      proposal_id,
+      document_path,
+      title,
+      status,
+      required_action_count,
+      linked_task_count,
+      gap_kind
+    from ${schemaName}.knowledge_mandatory_proposal_binding_gap`;
 }
 
 function governanceRemediationSelect() {
@@ -1778,6 +1857,59 @@ async function readGovernanceDriftRows(client, filters = {}) {
   return result.rows;
 }
 
+async function readKnowledgeDocumentRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'document_type', filters.type);
+  appendFilter(predicates, params, 'document_path', filters.path);
+  appendFilter(predicates, params, 'status', filters.status);
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+  const result = await client.query(
+    `${knowledgeDocumentSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by mandatory desc, document_type, document_path
+     limit $${params.length}`,
+    params
+  );
+  return result.rows;
+}
+
+async function readKnowledgeActionRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'document_path', filters.path);
+  appendFilter(predicates, params, 'status', filters.status);
+  appendFilter(predicates, params, 'document_type', filters.type);
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+  const result = await client.query(
+    `${knowledgeActionSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by required desc, status, document_path, line_number
+     limit $${params.length}`,
+    params
+  );
+  return result.rows;
+}
+
+async function readMandatoryProposalGapRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'document_path', filters.path);
+  appendFilter(predicates, params, 'gap_kind', filters.kind);
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+  const result = await client.query(
+    `${mandatoryProposalGapSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by gap_kind, document_path
+     limit $${params.length}`,
+    params
+  );
+  return result.rows;
+}
+
 async function readComponentEngineeringRecordRows(client, filters = {}) {
   const params = [];
   const predicates = [];
@@ -2001,6 +2133,33 @@ async function runQuery(options = {}) {
       return focusRows;
     }
 
+    if (queryName === 'knowledge-documents') {
+      const rows = await readKnowledgeDocumentRows(client, options.filters || {});
+      const documentRows = buildKnowledgeDocumentRows(rows);
+      if (options.print !== false) {
+        printTaskRows(documentRows);
+      }
+      return documentRows;
+    }
+
+    if (queryName === 'knowledge-actions') {
+      const rows = await readKnowledgeActionRows(client, options.filters || {});
+      const actionRows = buildKnowledgeActionRows(rows);
+      if (options.print !== false) {
+        printTaskRows(actionRows);
+      }
+      return actionRows;
+    }
+
+    if (queryName === 'mandatory-proposal-gaps') {
+      const rows = await readMandatoryProposalGapRows(client, options.filters || {});
+      const gapRows = buildMandatoryProposalGapRows(rows);
+      if (options.print !== false) {
+        printTaskRows(gapRows);
+      }
+      return gapRows;
+    }
+
     if (queryName === 'files') {
       const rows = await readGovernanceFileRows(client, options.filters || {});
       const fileRows = buildGovernanceFileRows(rows);
@@ -2201,6 +2360,9 @@ module.exports = {
   buildGovernanceRemediationRows,
   buildHashDriftRows,
   buildComponentEngineeringComponentMetadataRows,
+  buildKnowledgeActionRows,
+  buildKnowledgeDocumentRows,
+  buildMandatoryProposalGapRows,
   buildPlanningArtifactRows,
   buildPlanningDependencyRows,
   buildPlanningEvidenceRows,
@@ -2230,6 +2392,9 @@ module.exports = {
   readGovernanceFileRows,
   readGovernanceUnitRows,
   readGovernanceRemediationRows,
+  readKnowledgeActionRows,
+  readKnowledgeDocumentRows,
+  readMandatoryProposalGapRows,
   readPlanningArtifactRows,
   readPlanningDependencyRows,
   readPlanningEvidenceRows,

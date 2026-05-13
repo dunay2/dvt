@@ -1,5 +1,25 @@
 # Changelog
 
+## [5.24.0](https://github.com/dunay2/dvt/compare/v5.23.0...v5.24.0) (2026-05-13)
+
+
+### Features
+
+* **adapters:** Add zero-downtime schema rollback compatibility ([4461592](https://github.com/dunay2/dvt/commit/4461592eb90c8440f30e8df10f28f898205789cf))
+* **adapters:** Partition run events by run id hash ([74f0003](https://github.com/dunay2/dvt/commit/74f0003841ac48900325fd8c08c5e93cf333f01a))
+* **docs:** Add composite component hierarchy queries ([fbb65f3](https://github.com/dunay2/dvt/commit/fbb65f3c3b4af1ea0888fba280129e151a0ef2c1))
+* **docs:** Add planning knowledge document rail ([0f9e673](https://github.com/dunay2/dvt/commit/0f9e673d72200504bac46de6ac995e0149cd2c78))
+* **temporal:** Route Temporal step activities by capability ([2a9910b](https://github.com/dunay2/dvt/commit/2a9910bb14f47efe7a4724d102940b876ba90d50))
+
+
+### Bug Fixes
+
+* **adapters:** Require tenant mode in Postgres RLS ([#1173](https://github.com/dunay2/dvt/issues/1173)) ([3a8d470](https://github.com/dunay2/dvt/commit/3a8d4706ecc97d3a499bb7b02984a7b0db5561ba))
+* **ci:** Enforce AR-C2 immutable evidence gate ([aaf0e22](https://github.com/dunay2/dvt/commit/aaf0e22e69670c62392b0fedee4332b0d2925b81))
+* **ci:** Support DB-backed governance shard gate ([c4a109f](https://github.com/dunay2/dvt/commit/c4a109ff159124d572ffc5547dad16be0b32dc13))
+* **docs:** Classify review invariant references ([#1193](https://github.com/dunay2/dvt/issues/1193)) ([b3dc8ef](https://github.com/dunay2/dvt/commit/b3dc8ef047c10f90566fa0253f1268a40d3bdee9))
+* **web:** Hardcut local web authority to server projections ([#1162](https://github.com/dunay2/dvt/issues/1162)) ([bb84178](https://github.com/dunay2/dvt/commit/bb841786ab18972f3fc24cbc4b7c2330b2f8787d))
+
 ## [5.23.0](https://github.com/dunay2/dvt/compare/v5.22.0...v5.23.0) (2026-05-13)
 
 

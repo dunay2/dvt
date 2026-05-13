@@ -30,6 +30,58 @@ pending evidence explicit.
 - `AR-C2-T2`: pending external evidence
 - `AR-C2-T3`: pending external evidence
 - `AR-C2-T4`: blocked by `T2/T3` evidence
+- `AR-C2-INV-2`: done; active AR-C2 manuals use mapping-owned signal names and
+  panel keys from the canonical SLA mapping source.
+
+## AR-C2-INV-2 think-first analysis
+
+- Problem summary: AR-C2 reviewer-facing manuals used four shorthand signal
+  family keys while the canonical SLA mapping source defines nine exact signal
+  rows and panel keys.
+- Root cause: the manuals explained operator intent before the mapping table
+  became the single source of truth, leaving local aliases that were readable
+  but not mechanically traceable.
+- Constraints and invariants: `AGENTS.md`, the governance inventory, the AI work
+  protocol, the AR-C2 closure plan, and
+  `docs/runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md` require one
+  canonical source for logical signal identity, exported metric identity,
+  thresholds, alert posture, and dashboard panel keys.
+- Options considered: leave the shorthand as explanatory grouping, add a
+  second synonym table, or replace the shorthand with mapping-owned signal
+  rows. The selected option is replacement because it removes duplicate naming
+  instead of explaining it.
+- Selected option and rationale: make the AR-C2 technical and user manuals cite
+  the mapping table as the naming authority and use the exact logical signal
+  names, metric IDs, and panel keys from that table.
+- Rejected alternatives: a second synonym table would preserve drift risk; a
+  note-only correction would not prove `AR-C2-INV-2`.
+
+## AR-C2-INV-2 pre-implementation brief
+
+- Mode: Slim.
+- Scope: documentation-only signal naming alignment for AR-C2 manuals and this
+  closeout tracker.
+- Touched files or paths:
+  `docs/guides/ar-c2-observability-technical-manual-20260404.md`,
+  `docs/guides/ar-c2-observability-user-manual-20260404.md`, and this closeout.
+- Expected outcome: AR-C2 manuals no longer define local logical signal aliases
+  outside the canonical mapping.
+- Risks and mitigations: alert/dashboard wiring remains pending by design; this
+  slice only verifies naming and leaves `AR-C2-T2..T4` open.
+- Out-of-scope items: runtime telemetry changes, monitor configuration,
+  external dashboard evidence, alert routing evidence, and sustained validation
+  windows.
+- Validation plan: search for removed shorthand aliases, run docs/QA checks,
+  inspect planning task state, and run the required pre-push gate unless the
+  user limits validation.
+- Test coverage plan: documentation-only negative check is that local aliases no
+  longer appear in active AR-C2 manuals.
+- Libraries evaluated: None evaluated - no custom implementation.
+- Command/query rail impact: no externally observable runtime behavior changes;
+  planning lifecycle state is updated through `pnpm planning:db:operate`, the
+  owning planning command rail.
+- Fowler planning impact: addresses documentation drift and duplicate semantics
+  by reusing the canonical SLA mapping source.
 
 ## TODO board (execution)
 

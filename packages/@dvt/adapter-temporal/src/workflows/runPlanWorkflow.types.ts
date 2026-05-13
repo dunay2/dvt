@@ -18,6 +18,15 @@ export type WorkflowStep = ExecutionStep;
 export type WorkflowPlanRef = PlanRef;
 export type WorkflowCtx = ResolvedRunContext;
 
+export interface WorkflowStepActivityRoute {
+  capability: string;
+  taskQueue: string;
+}
+
+export interface WorkflowStepActivityRouting {
+  routesByStepKind: Readonly<Record<string, WorkflowStepActivityRoute>>;
+}
+
 export type ExecutedStepResult = {
   stepId: string;
   status: 'COMPLETED' | 'FAILED';
@@ -54,6 +63,7 @@ export interface RunPlanWorkflowInput {
   ctx: WorkflowCtx;
   maxContinueAsNewPayloadBytes: number;
   continueAsNewAfterLayerCount: number;
+  stepActivityRouting?: WorkflowStepActivityRouting;
   cursor?: WorkflowExecutionCursor;
 }
 
@@ -91,6 +101,7 @@ export interface LayerRuntimeState {
   completedSteps: number;
   processedLayersInCurrentExecution: number;
   latestResultEvidence?: MaterializationEvidence;
+  stepActivityRouting?: WorkflowStepActivityRouting;
 }
 
 export type LayerLoopOutcome =

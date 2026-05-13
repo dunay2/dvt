@@ -16,6 +16,10 @@ export type TemporalIdentity = NonBlankString & { readonly __brand: 'TemporalIde
 export type PositiveMilliseconds = number & { readonly __brand: 'PositiveMilliseconds' };
 export type PositivePayloadBytes = number & { readonly __brand: 'PositivePayloadBytes' };
 export type ContinueAsNewLayerCount = number & { readonly __brand: 'ContinueAsNewLayerCount' };
+export type TemporalStepCapability = NonBlankString & {
+  readonly __brand: 'TemporalStepCapability';
+};
+export type TemporalStepKindName = NonBlankString & { readonly __brand: 'TemporalStepKindName' };
 
 export interface TemporalConnectionConfig {
   address: TemporalAddress;
@@ -51,10 +55,20 @@ export interface TemporalWorkflowBudgetConfig {
   continueAsNewAfterLayerCount: ContinueAsNewLayerCount;
 }
 
+export interface TemporalStepActivityRoute {
+  capability: TemporalStepCapability;
+  taskQueue: TemporalTaskQueueName;
+}
+
+export interface TemporalActivityRoutingConfig {
+  routesByStepKind: Readonly<Record<string, TemporalStepActivityRoute>>;
+}
+
 export interface TemporalAdapterConfig {
   connection: TemporalConnectionConfig;
   timeouts: TemporalTimeoutConfig;
   workflowBudget: TemporalWorkflowBudgetConfig;
+  activityRouting: TemporalActivityRoutingConfig;
 }
 
 const DEFAULT_MAX_START_PAYLOAD_BYTES = 2_000_000;
@@ -77,11 +91,14 @@ const DEFAULT_WORKFLOW_BUDGET_CONFIG: TemporalWorkflowBudgetConfig =
     maxContinueAsNewPayloadBytes: deriveContinueAsNewPayloadBudget(DEFAULT_MAX_START_PAYLOAD_BYTES),
     continueAsNewAfterLayerCount: DEFAULT_CONTINUE_AS_NEW_AFTER_LAYER_COUNT,
   });
+const DEFAULT_ACTIVITY_ROUTING_CONFIG: TemporalActivityRoutingConfig =
+  createTemporalActivityRoutingConfig();
 
 const DEFAULTS: TemporalAdapterConfig = {
   connection: DEFAULT_CONNECTION_CONFIG,
   timeouts: DEFAULT_TIMEOUT_CONFIG,
   workflowBudget: DEFAULT_WORKFLOW_BUDGET_CONFIG,
+  activityRouting: DEFAULT_ACTIVITY_ROUTING_CONFIG,
 };
 
 export function loadTemporalAdapterConfig(
@@ -125,6 +142,7 @@ export function loadTemporalAdapterConfig(
         'TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS'
       ),
     }),
+    activityRouting: parseTemporalActivityRoutingEnv(env.TEMPORAL_STEP_ACTIVITY_ROUTES),
   };
 }
 
@@ -140,6 +158,12 @@ export function validateTemporalAdapterConfig(cfg: unknown): TemporalAdapterConf
     connection,
     timeouts,
     workflowBudget,
+    activityRouting:
+      root.activityRouting === undefined
+        ? DEFAULT_ACTIVITY_ROUTING_CONFIG
+        : createTemporalActivityRoutingConfig(
+            asConfigObject(root.activityRouting, 'activityRouting')
+          ),
   };
 }
 
@@ -189,6 +213,43 @@ function createTemporalWorkflowBudgetConfig(
   };
 }
 
+function createTemporalActivityRoutingConfig(
+  source: Record<string, unknown> = { routesByStepKind: {} }
+): TemporalActivityRoutingConfig {
+  const routesSource =
+    source.routesByStepKind === undefined
+      ? {}
+      : asConfigObject(source.routesByStepKind, 'routesByStepKind');
+  const routesByStepKind: Record<string, TemporalStepActivityRoute> = {};
+
+  for (const [stepKind, route] of Object.entries(routesSource)) {
+    const normalizedStepKind = asTemporalStepKindName(stepKind);
+    const routeConfig = asConfigObject(route, `routesByStepKind.${stepKind}`);
+    routesByStepKind[normalizedStepKind] = {
+      capability: asTemporalStepCapability(routeConfig.capability),
+      taskQueue: asTemporalTaskQueueName(routeConfig.taskQueue),
+    };
+  }
+
+  return { routesByStepKind };
+}
+
+function parseTemporalActivityRoutingEnv(raw: string | undefined): TemporalActivityRoutingConfig {
+  if (raw === undefined || raw.trim().length === 0) {
+    return DEFAULT_ACTIVITY_ROUTING_CONFIG;
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error('TEMPORAL_CONFIG_INVALID: TEMPORAL_STEP_ACTIVITY_ROUTES must be valid JSON');
+  }
+
+  const routesByStepKind = asConfigObject(parsed, 'TEMPORAL_STEP_ACTIVITY_ROUTES');
+  return createTemporalActivityRoutingConfig({ routesByStepKind });
+}
+
 function deriveContinueAsNewPayloadBudget(maxStartPayloadBytes: number): number {
   return Math.max(1, Math.floor(maxStartPayloadBytes / 4));
 }
@@ -210,6 +271,14 @@ function asTemporalNamespace(value: unknown): TemporalNamespace {
 
 function asTemporalTaskQueueName(value: unknown): TemporalTaskQueueName {
   return asBrandedNonBlankString(value, 'taskQueue') as TemporalTaskQueueName;
+}
+
+function asTemporalStepCapability(value: unknown): TemporalStepCapability {
+  return asBrandedNonBlankString(value, 'capability') as TemporalStepCapability;
+}
+
+function asTemporalStepKindName(value: unknown): TemporalStepKindName {
+  return asBrandedNonBlankString(value, 'stepKind') as TemporalStepKindName;
 }
 
 function asTemporalIdentity(value: unknown): TemporalIdentity {

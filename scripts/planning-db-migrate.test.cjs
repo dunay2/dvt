@@ -121,6 +121,31 @@ test('tracked migrations include DB-derived governance hash projections after W7
   );
 });
 
+test('tracked migrations include the planning knowledge document relation rail', () => {
+  const migrations = readMigrationFiles();
+  const knowledgeMigration = migrations.find(
+    (migration) => migration.fileName === '034_planning_knowledge_document_relations.sql'
+  );
+
+  assert.ok(knowledgeMigration);
+  assert.match(
+    knowledgeMigration.sql,
+    /create table if not exists planning_query_store\.knowledge_documents/
+  );
+  assert.match(
+    knowledgeMigration.sql,
+    /create table if not exists planning_query_store\.knowledge_document_sections/
+  );
+  assert.match(
+    knowledgeMigration.sql,
+    /create table if not exists planning_query_store\.knowledge_action_links/
+  );
+  assert.match(
+    knowledgeMigration.sql,
+    /create or replace view planning_query_store\.knowledge_mandatory_proposal_binding_gap/
+  );
+});
+
 test('tracked migrations include the effective planning task read model after W11', () => {
   const migrations = readMigrationFiles();
   const effectiveTaskMigration = migrations.find(

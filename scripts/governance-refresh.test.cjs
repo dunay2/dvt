@@ -60,6 +60,8 @@ test('governance refresh uses local governance reports before DB validation', ()
       'planning:db:check',
       'planning:db:inventory:check',
       'planning:db:export:check',
+      'docs:governance:coverage-report',
+      'docs:governance:remediation-queue',
       'governance:db:import',
       'governance:db:check',
       'governance:db:export:check',
