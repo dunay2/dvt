@@ -214,7 +214,7 @@ async function assertTenantIsolationCatalogIsProtected(
        AND p.tablename = c.relname
        AND p.policyname = 'dvt_tenant_isolation'
       WHERE n.nspname = $1
-        AND c.relkind = 'r'
+        AND c.relkind IN ('p', 'r')
         AND c.relname = ANY($2::text[])
       ORDER BY c.relname ASC
     `,
@@ -251,7 +251,7 @@ async function assertTenantOwnedTableCatalogHasNoDrift(
        AND a.attname = 'tenant_id'
        AND a.attisdropped = false
       WHERE n.nspname = $1
-        AND c.relkind = 'r'
+        AND c.relkind IN ('p', 'r')
       ORDER BY c.relname ASC
     `,
     [schema]

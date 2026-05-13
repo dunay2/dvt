@@ -87,6 +87,7 @@ Evidence documents that justify or validate relevant changes.
 - [Ed 20260510 Engine Artifacts Path Resolution](ed-20260510-engine-artifacts-path-resolution.md)
 - [Ed 20260510 Plan Integrity Validator Traceability Baseline](ed-20260510-plan-integrity-validator-traceability-baseline.md)
 - [Ed 20260510 Web Api Effective Workspace Context](ed-20260510-web-api-effective-workspace-context.md)
+- [Ed 20260513 Run Events Hash Partitioning](ed-20260513-run-events-hash-partitioning.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)
 - [ED-20260402 S05 envelope boundary hardening](ED-20260402-s05-envelope-boundary-hardening.md)
 - [ED-20260402 S08 contract-layer hardening](ED-20260402-s08-contract-layer-hardening.md)

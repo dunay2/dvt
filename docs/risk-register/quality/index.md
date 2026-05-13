@@ -109,6 +109,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [RC-G1 contract ownership migration can drift between tracker, proposal, and package moves](R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml)
 - [Residual S08 scoped dispatch depends on upstream plan-record migration](r-20260502-s08-temporal-dispatch-scope.yaml)
 - [Riesgo de inconsistencia en guards de transición y shape-checking entre run-domain y](R-20260404-guards-alignment-adapter-postgres.yaml)
+- [Run events partitioning could drift from idempotency and tenant isolation constraints](R-20260513-RUN-EVENTS-HASH-PARTITIONING.yaml)
 - [Run execution context provenance drift at start-run boundary](R-20260403-RUN-EXECUTION-CONTEXT-BOUNDARY.yaml)
 - [Run read evidence derivation can regress if attempt authority and event-history scope diverge](R-20260409-TF-C2-B-RUN-READ-EVIDENCE-ATTEMPT-SAFETY.yaml)
 - [Runtime boundary hardening can drift across engine ownership and API authorization seams](R-20260423-RUNTIME-BOUNDARY-HARDENING.yaml)

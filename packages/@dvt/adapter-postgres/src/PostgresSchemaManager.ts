@@ -2,7 +2,8 @@
  * @file packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts
  * @ownedConcern Owns PostgreSQL schema migration catalog, rollback planning/execution, and rollback compatibility classification for the state-store adapter.
  *
- * Owns all DDL lifecycle for the DVT Postgres schema.
+ * Owned concern: DVT Postgres schema DDL lifecycle, including reversible
+ * migration steps and the physical shape of adapter-owned storage tables.
  *
  * Migrations are applied as named, versioned steps using the shared
  * `schema_migrations` table (same table and schema used by
@@ -42,13 +43,35 @@ import {
 } from './PostgresSchemaManagerSql.js';
 import {
   CORE_TENANT_ISOLATION_TABLES,
+  RUN_EVENTS_HASH_PARTITION_COUNT,
+  RUN_EVENTS_TENANT_ISOLATION_TABLES,
   buildDropTenantIsolationPolicySql,
   buildTenantIsolationPolicySql,
+  runEventsHashPartitionName,
 } from './PostgresTenantIsolationPolicy.js';
 import { quoteIdentifier } from './sqlUtils.js';
 
 type MigrationState = 'not_called' | 'in_progress' | 'ready';
 const COMPONENT = coreComponent();
+const RUN_EVENTS_LEGACY_TABLE = 'run_events_unpartitioned_legacy';
+const RUN_EVENTS_ROLLBACK_TABLE = 'run_events_partitioned_rollback';
+const RUN_EVENTS_COLUMNS = [
+  'run_id',
+  'run_seq',
+  'event_type',
+  'emitted_at',
+  'tenant_id',
+  'project_id',
+  'environment_id',
+  'engine_attempt_id',
+  'logical_attempt_id',
+  'plan_id',
+  'plan_version',
+  'persisted_at',
+  'step_id',
+  'idempotency_key',
+  'payload',
+] as const;
 
 // ---------------------------------------------------------------------------
 // Named migration steps
@@ -195,9 +218,192 @@ function rollbackCompatibilityFor(version: string): PostgresSchemaRollbackCompat
         reason:
           'Rollback drops an index for tenant-scoped run sequence lookups without changing rows.',
       };
+    case 'core_021_run_events_hash_partitioning':
+      return {
+        mode: 'offline',
+        reason:
+          'Rollback rewrites the authoritative run_events table shape and requires quiesced writes.',
+      };
     default:
       throw new Error(`UNKNOWN_MIGRATION_VERSION: ${version}`);
   }
+}
+
+function runEventsColumnList(): string {
+  return RUN_EVENTS_COLUMNS.join(', ');
+}
+
+function runEventsRelation(schema: string, tableName = 'run_events'): string {
+  return `${sq(schema)}.${tableName}`;
+}
+
+function createRunEventsTableSql(
+  schema: string,
+  tableName = 'run_events',
+  options: { readonly partitioned: boolean; readonly includeConstraints: boolean }
+): string {
+  const constraints = options.includeConstraints
+    ? `,
+          PRIMARY KEY (run_id, run_seq),
+          UNIQUE (run_id, idempotency_key)`
+    : '';
+
+  return `
+        CREATE TABLE IF NOT EXISTS ${runEventsRelation(schema, tableName)} (
+          run_id TEXT NOT NULL,
+          run_seq INTEGER NOT NULL,
+          event_type TEXT NOT NULL,
+          emitted_at TIMESTAMPTZ NOT NULL,
+          tenant_id TEXT NOT NULL,
+          project_id TEXT NOT NULL,
+          environment_id TEXT NOT NULL,
+          engine_attempt_id INTEGER NOT NULL,
+          logical_attempt_id INTEGER NOT NULL,
+          plan_id TEXT,
+          plan_version TEXT,
+          persisted_at TIMESTAMPTZ,
+          step_id TEXT,
+          idempotency_key TEXT NOT NULL,
+          payload JSONB NOT NULL${constraints}
+        )${options.partitioned ? ' PARTITION BY HASH (run_id)' : ''}
+      `;
+}
+
+function addRunEventsCanonicalConstraintsSql(schema: string): readonly string[] {
+  return [
+    `
+        ALTER TABLE ${runEventsRelation(schema)}
+        ADD CONSTRAINT run_events_pkey PRIMARY KEY (run_id, run_seq)
+      `,
+    `
+        ALTER TABLE ${runEventsRelation(schema)}
+        ADD CONSTRAINT run_events_run_id_idempotency_key_key UNIQUE (run_id, idempotency_key)
+      `,
+  ];
+}
+
+function createRunEventsHashPartitionSql(schema: string, partitionIndex: number): string {
+  return `
+        CREATE TABLE IF NOT EXISTS ${runEventsRelation(schema, runEventsHashPartitionName(partitionIndex))}
+        PARTITION OF ${runEventsRelation(schema)}
+        FOR VALUES WITH (MODULUS ${RUN_EVENTS_HASH_PARTITION_COUNT}, REMAINDER ${partitionIndex})
+      `;
+}
+
+function copyRunEventsSql(schema: string, sourceTable: string): string {
+  const columns = runEventsColumnList();
+  return `
+        INSERT INTO ${runEventsRelation(schema)} (${columns})
+        SELECT ${columns}
+        FROM ${runEventsRelation(schema, sourceTable)}
+      `;
+}
+
+function createRunEventsTenantRunIndexSql(schema: string): string {
+  return `
+        CREATE INDEX IF NOT EXISTS run_events_tenant_run_id_idx
+        ON ${runEventsRelation(schema)} (tenant_id, run_id)
+      `;
+}
+
+function disableRunEventsTenantIsolationSql(schema: string, tableName: string): readonly string[] {
+  const relation = runEventsRelation(schema, tableName);
+  return [
+    `ALTER TABLE ${relation} NO FORCE ROW LEVEL SECURITY`,
+    `ALTER TABLE ${relation} DISABLE ROW LEVEL SECURITY`,
+  ];
+}
+
+async function isRunEventsPartitioned(client: PoolClient, schema: string): Promise<boolean> {
+  const result = await client.query<{ is_partitioned: boolean }>(
+    `
+      SELECT EXISTS (
+        SELECT 1
+        FROM pg_class c
+        INNER JOIN pg_namespace n ON n.oid = c.relnamespace
+        INNER JOIN pg_partitioned_table p ON p.partrelid = c.oid
+        WHERE n.nspname = $1
+          AND c.relname = 'run_events'
+      ) AS is_partitioned
+    `,
+    [schema]
+  );
+  return result.rows[0]?.is_partitioned === true;
+}
+
+async function ensureRunEventsHashPartitions(client: PoolClient, schema: string): Promise<void> {
+  for (let index = 0; index < RUN_EVENTS_HASH_PARTITION_COUNT; index += 1) {
+    await client.query(createRunEventsHashPartitionSql(schema, index));
+  }
+}
+
+async function reapplyRunEventsTenantIsolation(client: PoolClient, schema: string): Promise<void> {
+  for (const table of RUN_EVENTS_TENANT_ISOLATION_TABLES) {
+    for (const statement of buildTenantIsolationPolicySql(schema, table)) {
+      await client.query(statement);
+    }
+  }
+}
+
+async function disableRunEventsTenantIsolation(
+  client: PoolClient,
+  schema: string,
+  tableName: string
+): Promise<void> {
+  for (const statement of disableRunEventsTenantIsolationSql(schema, tableName)) {
+    await client.query(statement);
+  }
+}
+
+async function ensureRunEventsPartitionedShape(client: PoolClient, schema: string): Promise<void> {
+  await ensureRunEventsHashPartitions(client, schema);
+  await client.query(createRunEventsTenantRunIndexSql(schema));
+  await reapplyRunEventsTenantIsolation(client, schema);
+}
+
+async function convertRunEventsHeapToHashPartitions(
+  client: PoolClient,
+  schema: string
+): Promise<void> {
+  await client.query(
+    `ALTER TABLE ${runEventsRelation(schema)} RENAME TO ${quoteIdentifier(RUN_EVENTS_LEGACY_TABLE)}`
+  );
+  await disableRunEventsTenantIsolation(client, schema, RUN_EVENTS_LEGACY_TABLE);
+  await client.query(
+    createRunEventsTableSql(schema, 'run_events', { partitioned: true, includeConstraints: false })
+  );
+  await ensureRunEventsHashPartitions(client, schema);
+  await client.query(copyRunEventsSql(schema, RUN_EVENTS_LEGACY_TABLE));
+  await client.query(`DROP TABLE ${runEventsRelation(schema, RUN_EVENTS_LEGACY_TABLE)}`);
+  for (const statement of addRunEventsCanonicalConstraintsSql(schema)) {
+    await client.query(statement);
+  }
+  await client.query(createRunEventsTenantRunIndexSql(schema));
+  await reapplyRunEventsTenantIsolation(client, schema);
+}
+
+async function rollbackRunEventsHashPartitionsToHeap(
+  client: PoolClient,
+  schema: string
+): Promise<void> {
+  if (!(await isRunEventsPartitioned(client, schema))) {
+    return;
+  }
+
+  await client.query(
+    `ALTER TABLE ${runEventsRelation(schema)} RENAME TO ${quoteIdentifier(RUN_EVENTS_ROLLBACK_TABLE)}`
+  );
+  await disableRunEventsTenantIsolation(client, schema, RUN_EVENTS_ROLLBACK_TABLE);
+  await client.query(
+    createRunEventsTableSql(schema, 'run_events', { partitioned: false, includeConstraints: false })
+  );
+  await client.query(copyRunEventsSql(schema, RUN_EVENTS_ROLLBACK_TABLE));
+  await client.query(`DROP TABLE ${runEventsRelation(schema, RUN_EVENTS_ROLLBACK_TABLE)} CASCADE`);
+  for (const statement of addRunEventsCanonicalConstraintsSql(schema)) {
+    await client.query(statement);
+  }
+  await client.query(createRunEventsTenantRunIndexSql(schema));
+  await reapplyRunEventsTenantIsolation(client, schema);
 }
 
 const MIGRATION_STEPS: readonly MigrationStep[] = [
@@ -221,27 +427,13 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
           created_at TIMESTAMPTZ NOT NULL DEFAULT now()
         )
       `);
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS ${sq(schema)}.run_events (
-          run_id TEXT NOT NULL,
-          run_seq INTEGER NOT NULL,
-          event_type TEXT NOT NULL,
-          emitted_at TIMESTAMPTZ NOT NULL,
-          tenant_id TEXT NOT NULL,
-          project_id TEXT NOT NULL,
-          environment_id TEXT NOT NULL,
-          engine_attempt_id INTEGER NOT NULL,
-          logical_attempt_id INTEGER NOT NULL,
-          plan_id TEXT,
-          plan_version TEXT,
-          persisted_at TIMESTAMPTZ,
-          step_id TEXT,
-          idempotency_key TEXT NOT NULL,
-          payload JSONB NOT NULL,
-          PRIMARY KEY (run_id, run_seq),
-          UNIQUE (run_id, idempotency_key)
-        )
-      `);
+      await client.query(
+        createRunEventsTableSql(schema, 'run_events', {
+          partitioned: true,
+          includeConstraints: true,
+        })
+      );
+      await ensureRunEventsHashPartitions(client, schema);
       await client.query(`
         CREATE TABLE IF NOT EXISTS ${sq(schema)}.outbox (
           id TEXT PRIMARY KEY,
@@ -1116,16 +1308,31 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
     version: 'core_020_run_events_tenant_run_idx',
     description: 'Add tenant-leading run_events index for tenant-scoped run sequence lookups',
     run: async (client, schema) => {
-      await client.query(`
-        CREATE INDEX IF NOT EXISTS run_events_tenant_run_id_idx
-        ON ${sq(schema)}.run_events (tenant_id, run_id)
-      `);
+      await client.query(createRunEventsTenantRunIndexSql(schema));
     },
     rollbackDescription: 'Drop tenant-leading run_events index',
     rollback: async (client, schema) => {
       await client.query(
         `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('run_events_tenant_run_id_idx')}`
       );
+    },
+  },
+  {
+    version: 'core_021_run_events_hash_partitioning',
+    description:
+      'Partition run_events by run_id hash while preserving run sequence and idempotency uniqueness',
+    run: async (client, schema) => {
+      if (await isRunEventsPartitioned(client, schema)) {
+        await ensureRunEventsPartitionedShape(client, schema);
+        return;
+      }
+
+      await convertRunEventsHeapToHashPartitions(client, schema);
+    },
+    rollbackDescription:
+      'Convert run_events back to a heap table while preserving rows, constraints, indexes, and RLS',
+    rollback: async (client, schema) => {
+      await rollbackRunEventsHashPartitionsToHeap(client, schema);
     },
   },
 ];
