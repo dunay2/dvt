@@ -71,6 +71,7 @@ flowchart TB
   RuntimeRoot --> RuntimeState["SYS-RUNTIME-STATE-STORE<br/>coverage-required"]
   RuntimeRoot --> RuntimeDelivery["SYS-RUNTIME-DELIVERY<br/>coverage-required"]
   RuntimeRoot --> RuntimePlan["SYS-RUNTIME-PLAN-*<br/>coverage-required"]
+  RuntimeRoot --> RuntimeDocs["SYS-RUNTIME-ARCHITECTURE-DOCS<br/>coverage-required"]
   Web --> WebRoot["SYS-WEB-ROOT<br/>coverage-required"]
   Api --> ApiRoot["SYS-API-ROOT<br/>coverage-required"]
 ```
@@ -110,25 +111,26 @@ The first manifest pass intentionally uses broad component owners so every
 tracked file is covered mechanically. Broad component owners remain
 `coverage-required` until child units replace them.
 
-| Component                    | Owns                                                        | Next subdivision                               |
-| ---------------------------- | ----------------------------------------------------------- | ---------------------------------------------- |
-| `SYS-API-ROOT`               | `apps/api/**`                                               | routes, use cases, modules, db, ops            |
-| `SYS-WEB-ROOT`               | `apps/web/**`                                               | views, API client, state, tests, workflows     |
-| `SYS-CONTRACTS-ROOT`         | `packages/@dvt/contracts/**`, `contracts/**`                | contract families and schema packs             |
-| `SYS-RUNTIME-ENGINE-CORE`    | `packages/@dvt/engine/**` minus PlanStore plan-ref files    | engine application/core/security/source split  |
-| `SYS-RUNTIME-RUN-DOMAIN`     | `packages/@dvt/run-domain/**`                               | run aggregate source and symbol split          |
-| `SYS-RUNTIME-STATE-STORE`    | `packages/@dvt/state-store/**`                              | command port, archive lifecycle, object stores |
-| `SYS-RUNTIME-DELIVERY`       | `packages/@dvt/delivery/**`                                 | outbox, projector, backpressure surfaces       |
-| `SYS-RUNTIME-PLAN-*`         | plan interpreter, verifier, DSL, canonical utility packages | source/symbol split by API and invariant       |
-| `SYS-RUNTIME-CLI-VALIDATION` | `packages/@dvt/cli/**`, `packages/cli/**`                   | typed command module extraction                |
-| `SYS-PLANSTORE-*`            | 107 plan-store files across code, tests, docs, risks        | source/symbol split and legacy removal         |
-| `SYS-ADAPTERS-ROOT`          | adapter packages                                            | Postgres, Temporal, adapter test surfaces      |
-| `SYS-WORKERS-ROOT`           | worker apps                                                 | Temporal, outbox, projector, lineage workers   |
-| `SYS-OBSERVABILITY-ROOT`     | observability packages                                      | ports, OTEL adapter, ops endpoints             |
-| `SYS-TRACEABILITY-ROOT`      | traceability package and manifests                          | ADR-0000 graph, lineage, evidence exports      |
-| `SYS-CI-GOVERNANCE-ROOT`     | `.github/**`, `scripts/**`, `tools/**`, hooks and CI config | workflow checks, docs scripts, release config  |
-| `SYS-DOCS-GOVERNANCE-ROOT`   | `docs/**`, `runbooks/**`, root contributor docs             | ADRs, planning, risk, evidence, runbooks       |
-| `SYS-REPO-METADATA-ROOT`     | root metadata files and repository support folders          | package/build/tooling config groups            |
+| Component                       | Owns                                                        | Next subdivision                               |
+| ------------------------------- | ----------------------------------------------------------- | ---------------------------------------------- |
+| `SYS-API-ROOT`                  | `apps/api/**`                                               | routes, use cases, modules, db, ops            |
+| `SYS-WEB-ROOT`                  | `apps/web/**`                                               | views, API client, state, tests, workflows     |
+| `SYS-CONTRACTS-ROOT`            | `packages/@dvt/contracts/**`, `contracts/**`                | contract families and schema packs             |
+| `SYS-RUNTIME-ENGINE-CORE`       | `packages/@dvt/engine/**` minus PlanStore plan-ref files    | engine application/core/security/source split  |
+| `SYS-RUNTIME-RUN-DOMAIN`        | `packages/@dvt/run-domain/**`                               | run aggregate source and symbol split          |
+| `SYS-RUNTIME-STATE-STORE`       | `packages/@dvt/state-store/**`                              | command port, archive lifecycle, object stores |
+| `SYS-RUNTIME-DELIVERY`          | `packages/@dvt/delivery/**`                                 | outbox, projector, backpressure surfaces       |
+| `SYS-RUNTIME-PLAN-*`            | plan interpreter, verifier, DSL, canonical utility packages | source/symbol split by API and invariant       |
+| `SYS-RUNTIME-CLI-VALIDATION`    | `packages/@dvt/cli/**`, `packages/cli/**`                   | typed command module extraction                |
+| `SYS-RUNTIME-ARCHITECTURE-DOCS` | runtime subsystem docs, runtime evidence, runtime risk      | keep component records linked to owned runtime |
+| `SYS-PLANSTORE-*`               | 107 plan-store files across code, tests, docs, risks        | source/symbol split and legacy removal         |
+| `SYS-ADAPTERS-ROOT`             | adapter packages                                            | Postgres, Temporal, adapter test surfaces      |
+| `SYS-WORKERS-ROOT`              | worker apps                                                 | Temporal, outbox, projector, lineage workers   |
+| `SYS-OBSERVABILITY-ROOT`        | observability packages                                      | ports, OTEL adapter, ops endpoints             |
+| `SYS-TRACEABILITY-ROOT`         | traceability package and manifests                          | ADR-0000 graph, lineage, evidence exports      |
+| `SYS-CI-GOVERNANCE-ROOT`        | `.github/**`, `scripts/**`, `tools/**`, hooks and CI config | workflow checks, docs scripts, release config  |
+| `SYS-DOCS-GOVERNANCE-ROOT`      | `docs/**`, `runbooks/**`, root contributor docs             | ADRs, planning, risk, evidence, runbooks       |
+| `SYS-REPO-METADATA-ROOT`        | root metadata files and repository support folders          | package/build/tooling config groups            |
 
 ## First Deep Subdivisions
 
@@ -167,6 +169,7 @@ Current children under `SYS-RUNTIME-ROOT`:
 - `SYS-RUNTIME-DSL`
 - `SYS-RUNTIME-DETERMINISM-UTILITIES`
 - `SYS-RUNTIME-CLI-VALIDATION`
+- `SYS-RUNTIME-ARCHITECTURE-DOCS`
 
 Runtime guidance:
 

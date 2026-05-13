@@ -82,6 +82,27 @@ units:
     fowlerSignals:
       - coverage refinement
 
+  - id: SYS-RUNTIME-ARCHITECTURE-DOCS
+    name: Runtime subsystem architecture documentation
+    parent: SYS-RUNTIME-ROOT
+    level: component
+    status: coverage-required
+    owns:
+      - docs/architecture/system/subsystems/runtime/**
+      - docs/evidence/ed-20260513-runtime-root-subdivision.md
+      - docs/risk-register/quality/R-20260513-RUNTIME-ROOT-SUBDIVISION.yaml
+    childrenRequired: false
+    dddOwner: AS
+    cqRails: none - runtime architecture documentation and evidence
+    governance:
+      - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-component.md
+      - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-user-stories.md
+      - docs/evidence/ed-20260513-runtime-root-subdivision.md
+      - docs/risk-register/quality/R-20260513-RUNTIME-ROOT-SUBDIVISION.yaml
+    fowlerSignals:
+      - documentation drift
+      - ownership ambiguity
+
   - id: SYS-RUNTIME-ENGINE-CORE
     name: Runtime engine core
     parent: SYS-RUNTIME-ROOT
@@ -1023,6 +1044,9 @@ units:
       - docs/risk-register/quality/R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml
       - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
       - docs/risk-register/quality/r-20260502-s08-temporal-dispatch-scope.yaml
+      - docs/architecture/system/subsystems/runtime/**
+      - docs/evidence/ed-20260513-runtime-root-subdivision.md
+      - docs/risk-register/quality/R-20260513-RUNTIME-ROOT-SUBDIVISION.yaml
     childrenRequired: true
     dddOwner: INFRA
     cqRails: none - documentation governance

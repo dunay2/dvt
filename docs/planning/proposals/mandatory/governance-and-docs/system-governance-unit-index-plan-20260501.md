@@ -520,6 +520,9 @@ domainObjects:
   - name: RuntimeGovernanceComponentModel
     type: governed runtime component ownership model
     owner: SYS-RUNTIME-ROOT
+  - name: RuntimeArchitectureDocumentationComponent
+    type: runtime subsystem guide, evidence, and risk ownership component
+    owner: SYS-RUNTIME-ARCHITECTURE-DOCS
   - name: RuntimeCliValidationSurface
     type: package metadata read model
     owner: SYS-RUNTIME-CLI-VALIDATION
