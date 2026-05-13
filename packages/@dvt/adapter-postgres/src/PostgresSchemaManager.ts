@@ -195,6 +195,11 @@ function rollbackCompatibilityFor(version: string): PostgresSchemaRollbackCompat
         reason:
           'Rollback drops an index for tenant-scoped run sequence lookups without changing rows.',
       };
+    case 'core_021_tenant_mode_rls_hardening':
+      return {
+        mode: 'online',
+        reason: 'Rollback reapplies current tenant-mode tenant isolation policy without downgrade.',
+      };
     default:
       throw new Error(`UNKNOWN_MIGRATION_VERSION: ${version}`);
   }
