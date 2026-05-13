@@ -28,8 +28,8 @@ function cleanCell(value) {
 
 function parseMarkdownTableRows(markdown) {
   const lines = markdown.split(/\r?\n/);
-  const headerIdx = lines.findIndex((line) =>
-    line.includes('| Logical signal') && line.includes('| Target dashboard panel key')
+  const headerIdx = lines.findIndex(
+    (line) => line.includes('| Logical signal') && line.includes('| Target dashboard panel key')
   );
   if (headerIdx < 0) {
     throw new Error(`Cannot find mapping table header in ${MAPPING_PATH}`);
@@ -346,6 +346,8 @@ async function main() {
 }
 
 main().catch((error) => {
-  process.stderr.write(`[ar-c2:evidence] FAIL ${error instanceof Error ? error.message : String(error)}\n`);
+  process.stderr.write(
+    `[ar-c2:evidence] FAIL ${error instanceof Error ? error.message : String(error)}\n`
+  );
   process.exit(1);
 });

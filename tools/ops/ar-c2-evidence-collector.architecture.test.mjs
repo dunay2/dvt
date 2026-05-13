@@ -11,7 +11,10 @@ test('fails closed when immutable dashboard and alert evidence are missing', () 
 
   const result = spawnSync(
     process.execPath,
-    [path.join(root, 'tools/ops/ar-c2-evidence-collector.mjs'), '--require-dashboard-alert-evidence'],
+    [
+      path.join(root, 'tools/ops/ar-c2-evidence-collector.mjs'),
+      '--require-dashboard-alert-evidence',
+    ],
     {
       cwd: root,
       env: { ...process.env, AR_C2_EVIDENCE_OUTPUT_PATH: outputPath },
@@ -71,21 +74,24 @@ test('allows AR-C2 INV-1 when dashboard and alert snapshots cover every mapped r
         'ar-c2.run-status-stale-ratio.critical',
         'ar-c2.run-status-unknown-ratio.critical',
       ].map((thresholdKey) => ({
-          thresholdKey,
-          alertRuleId: `rule-${thresholdKey}`,
-          expression: `expr-${thresholdKey}`,
-          window: '15m',
-          severity: thresholdKey.endsWith('.critical') ? 'critical' : 'warning',
-          routingTarget: 'runtime-sre',
-          configSource: 'immutable://grafana-alert-export',
-        })),
+        thresholdKey,
+        alertRuleId: `rule-${thresholdKey}`,
+        expression: `expr-${thresholdKey}`,
+        window: '15m',
+        severity: thresholdKey.endsWith('.critical') ? 'critical' : 'warning',
+        routingTarget: 'runtime-sre',
+        configSource: 'immutable://grafana-alert-export',
+      })),
     }),
     'utf8'
   );
 
   const result = spawnSync(
     process.execPath,
-    [path.join(root, 'tools/ops/ar-c2-evidence-collector.mjs'), '--require-dashboard-alert-evidence'],
+    [
+      path.join(root, 'tools/ops/ar-c2-evidence-collector.mjs'),
+      '--require-dashboard-alert-evidence',
+    ],
     {
       cwd: root,
       env: {
@@ -102,7 +108,10 @@ test('allows AR-C2 INV-1 when dashboard and alert snapshots cover every mapped r
 
   const artifact = readFileSync(outputPath, 'utf8');
   assert.doesNotMatch(artifact, /\|[^|\n]*\|[^|\n]*\| `missing_panel` \|/);
-  assert.doesNotMatch(artifact, /\|[^|\n]*\|[^|\n]*\|[^|\n]*\|[^|\n]*\|[^|\n]*\| `missing_alert` \|/);
+  assert.doesNotMatch(
+    artifact,
+    /\|[^|\n]*\|[^|\n]*\|[^|\n]*\|[^|\n]*\|[^|\n]*\| `missing_alert` \|/
+  );
   assert.match(artifact, /`insufficient_window_data`/);
 });
 
@@ -124,10 +133,7 @@ test('keeps AR-C2 immutable evidence gate semantics documented with the collecto
     'utf8'
   );
   const mailbox = readFileSync(
-    path.join(
-      root,
-      'buzon/20260513-codex-fowler-ar-c2-inv-1-immutable-evidence-gate-analysis.md'
-    ),
+    path.join(root, 'buzon/20260513-codex-fowler-ar-c2-inv-1-immutable-evidence-gate-analysis.md'),
     'utf8'
   );
   const runbook = readFileSync(
