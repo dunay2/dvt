@@ -27,6 +27,7 @@
     assertIncludes(ids, 'docs-workboard-check-changed');
     assertIncludes(ids, 'docs-arc-evidence-changed');
     assertIncludes(ids, 'test-verify-prepush');
+    assertIncludes(ids, 'test-generated-docs-policy');
     assertIncludes(ids, 'arch-deps');
     assertIncludes(ids, 'type-check-prepush');
     assertExcludes(ids, 'planning-db-inventory-check');
@@ -144,6 +145,14 @@
       packageJson.scripts['test:pr-closeout'],
       'node --test scripts/pr-closeout.test.cjs'
     );
+  });
+
+  test('generated docs policy regression tests are wired into prepush gate', () => {
+    const plan = buildPrepushPlan(['docs/generated-docs-policy.json']);
+    const step = plan.find((candidate) => candidate.id === 'test-generated-docs-policy');
+
+    assert.ok(step);
+    assert.equal(commandLabel(step), 'node --test scripts/check-generated-docs-policy.test.cjs');
   });
 
   test('prepush router delegates repository path semantics to shared CI scope query', () => {
