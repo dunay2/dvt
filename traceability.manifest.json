@@ -632,11 +632,13 @@
       "number": "ADR-0017",
       "decisions": [
         "Adapters MUST declare their supported schemaVersion as a typed constant",
+        "Expose schema-version admission as an engine semantic policy while",
         "Run-state writes are exposed via command port bridge, avoiding direct adapter/runtime coupling to concrete persistence callers."
       ],
       "implemented_by": [
         "packages/@dvt/adapter-postgres/src/runStateCommandPortBridge.ts",
-        "packages/@dvt/adapter-temporal/src/versioning.ts"
+        "packages/@dvt/adapter-temporal/src/versioning.ts",
+        "packages/@dvt/engine/src/contracts/PlanSchemaVersionPolicy.ts"
       ],
       "title": "ADR-0017: ExecutionPlan Schema Versioning & Compatibility"
     },
@@ -869,11 +871,13 @@
       "number": "ADR-0036",
       "decisions": [
         "Enforce the shared plan admission matrix before provider dispatch.",
+        "Expose schema-version admission as an engine semantic policy while",
         "Publish admitted planVersion/schemaVersion pairs as executable shared-kernel contract data."
       ],
       "implemented_by": [
         "packages/@dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts",
-        "packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts"
+        "packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts",
+        "packages/@dvt/engine/src/contracts/PlanSchemaVersionPolicy.ts"
       ],
       "title": "ADR-0036 - ExecutionPlan planVersion registry and runtime admission matrix"
     },
