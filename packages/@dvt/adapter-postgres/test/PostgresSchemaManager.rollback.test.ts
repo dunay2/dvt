@@ -5,7 +5,7 @@ import {
   PostgresSchemaRollbackCompatibilityPolicy,
 } from '../src/PostgresSchemaManager.js';
 
-type QueryRow = { exists?: boolean; version?: string };
+type QueryRow = { exists?: boolean; is_partitioned?: boolean; version?: string };
 
 class RecordingRollbackClient {
   public readonly queries: Array<{ sql: string; params?: unknown[] }> = [];
@@ -22,6 +22,10 @@ class RecordingRollbackClient {
         rows: this.appliedVersions.map((version) => ({ version })),
         rowCount: this.appliedVersions.length,
       };
+    }
+
+    if (sql.includes('pg_partitioned_table') && sql.includes("c.relname = 'run_events'")) {
+      return { rows: [{ is_partitioned: true }], rowCount: 1 };
     }
 
     if (sql.includes('DELETE FROM') && sql.includes('schema_migrations')) {
@@ -270,24 +274,33 @@ describe('PostgresSchemaManager rollback', () => {
       'core_018_service_access_owner_rls_hardening',
       'core_019_table_scoped_service_owner_rls',
       'core_020_run_events_tenant_run_idx',
-      'core_021_tenant_mode_rls_hardening',
+      'core_021_run_events_hash_partitioning',
+      'core_022_tenant_mode_rls_hardening',
     ]);
     const manager = new PostgresSchemaManager({ connect: async () => client } as never, 'DvtOps');
 
     const plan = await manager.rollbackTo('core_017_tenant_rls_baseline');
 
     expect(plan.steps.map((step) => step.version)).toEqual([
-      'core_021_tenant_mode_rls_hardening',
+      'core_022_tenant_mode_rls_hardening',
+      'core_021_run_events_hash_partitioning',
       'core_020_run_events_tenant_run_idx',
       'core_019_table_scoped_service_owner_rls',
       'core_018_service_access_owner_rls_hardening',
     ]);
     expect(plan.steps[0]?.rollbackDescription).toContain('intentionally not downgraded');
-    expect(plan.steps[2]?.rollbackDescription).toContain('intentionally not downgraded');
     expect(plan.steps[3]?.rollbackDescription).toContain('intentionally not downgraded');
+    expect(plan.steps[4]?.rollbackDescription).toContain('intentionally not downgraded');
 
     const executedSql = client.queries.map((query) => query.sql).join('\n');
+    expect(executedSql).toContain('run_events_partitioned_rollback');
+    expect(executedSql).toContain(
+      'ALTER TABLE "DvtOps".run_events_partitioned_rollback NO FORCE ROW LEVEL SECURITY'
+    );
+    expect(executedSql).toContain('ADD CONSTRAINT run_events_pkey PRIMARY KEY (run_id, run_seq)');
     expect(executedSql).toContain('CREATE POLICY dvt_tenant_isolation');
-    expect(executedSql).not.toContain('DISABLE ROW LEVEL SECURITY');
+    expect(executedSql).not.toContain(
+      'ALTER TABLE "DvtOps"."run_events" DISABLE ROW LEVEL SECURITY'
+    );
   });
 });

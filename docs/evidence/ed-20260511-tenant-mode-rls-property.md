@@ -79,9 +79,10 @@ context and table-scoped service-owner checks in the same integration file.
 
 ## Upgrade Proof
 
-`core_021_tenant_mode_rls_hardening` and
+`core_022_tenant_mode_rls_hardening` and
 `20260512_006_start_run_intents_tenant_mode_rls_hardening` are new migration
 versions that re-run the current RLS policy generator for schemas that already
 recorded the previous tenant-isolation steps. Focused migration tests seed prior
-`schema_migrations` rows and prove only the new hardening versions execute,
-including the explicit tenant-mode predicate.
+`schema_migrations` rows and prove the pending post-baseline migration chain
+executes through the new hardening versions, including the explicit tenant-mode
+predicate.

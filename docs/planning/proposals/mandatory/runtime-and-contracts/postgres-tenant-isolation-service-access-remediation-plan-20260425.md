@@ -155,7 +155,7 @@ redGreenCycles:
       - packages/@dvt/adapter-postgres/test/StartRunIntentSchemaManager.test.ts
     greenTest: pnpm --filter @dvt/adapter-postgres test -- PostgresStateStoreAdapter.migrate.test.ts StartRunIntentSchemaManager.test.ts PostgresSchemaManager.rollback.test.ts
 symbols:
-  - name: core_021_tenant_mode_rls_hardening
+  - name: core_022_tenant_mode_rls_hardening
     path: packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts
     dddOwner: PostgresTenantIsolationPolicy
     cqRails:
