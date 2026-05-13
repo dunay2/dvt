@@ -27,6 +27,7 @@ components, and every tracked file must resolve to exactly one leaf component.
 - `docs/planning/status/db-surface-inventory.md`
 - `docs/planning/status/system-governance-unit-taxonomy-20260501.md`
 - `docs/planning/status/system-governance-unit-index.units.yaml`
+- `docs/architecture/components/ci-governance/component-engineering-invariants.md`
 - `docs/adr/adr-0055-planning-db-canonical-operational-source.md`
 
 ## Public API
@@ -59,6 +60,9 @@ components, and every tracked file must resolve to exactly one leaf component.
 - Query rails that read governance projections run a stale-aware governance
   import before reading, so routine inspection does not depend on a manual
   refresh.
+- Component engineering rules must be DB-backed; a Markdown invariant is not
+  complete until the planning query store exposes its catalog row, evaluation
+  state, drift code, and remediation metadata.
 - Generated `system-governance-*` files stay local inspection artifacts, not
   manual review surfaces.
 

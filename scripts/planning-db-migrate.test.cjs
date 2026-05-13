@@ -728,3 +728,63 @@ test('tracked migrations keep component tree leaf checks source-neutral after W3
   );
   assert.match(sourceChildFilterMigration.sql, /where unit\.level = 'component'/);
 });
+
+test('tracked migrations expose DB-backed component engineering rules after W34', () => {
+  const migrations = readMigrationFiles();
+  const ruleRuntimeMigration = migrations.find(
+    (migration) => migration.fileName === '034_component_engineering_rule_runtime.sql'
+  );
+
+  assert.ok(ruleRuntimeMigration);
+  assert.match(
+    ruleRuntimeMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_rule_catalog_query/
+  );
+  assert.match(
+    ruleRuntimeMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_rule_evaluation_query/
+  );
+  assert.match(
+    ruleRuntimeMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_quality_query/
+  );
+  assert.match(ruleRuntimeMigration.sql, /CEI-ID-002/);
+  assert.match(ruleRuntimeMigration.sql, /CEI-RESP-001/);
+  assert.match(ruleRuntimeMigration.sql, /'CEI-RESP-001'[\s\S]*?'error'[\s\S]*?'component'/);
+  assert.match(ruleRuntimeMigration.sql, /'CEI-API-001'[\s\S]*?'error'[\s\S]*?'component'/);
+  assert.match(ruleRuntimeMigration.sql, /CEI-SIZE-005/);
+  assert.match(ruleRuntimeMigration.sql, /from planning_query_store\.governance_unit_query parent/);
+});
+
+test('tracked migrations separate component engineering views into an owning schema after W35', () => {
+  const migrations = readMigrationFiles();
+  const schemaBoundaryMigration = migrations.find(
+    (migration) => migration.fileName === '035_component_engineering_schema_boundary.sql'
+  );
+
+  assert.ok(schemaBoundaryMigration);
+  assert.match(schemaBoundaryMigration.sql, /create schema if not exists component_engineering/);
+  assert.match(
+    schemaBoundaryMigration.sql,
+    /create or replace view component_engineering\.component_tree_query/
+  );
+  assert.match(
+    schemaBoundaryMigration.sql,
+    /create or replace view component_engineering\.component_metadata_query/
+  );
+  assert.match(
+    schemaBoundaryMigration.sql,
+    /create or replace view component_engineering\.rule_evaluation_query/
+  );
+  assert.match(
+    schemaBoundaryMigration.sql,
+    /drop view if exists planning_query_store\.component_engineering_component_metadata_query/
+  );
+  assert.match(
+    schemaBoundaryMigration.sql,
+    /create view planning_query_store\.component_engineering_component_metadata_query as/
+  );
+  assert.match(schemaBoundaryMigration.sql, /owned_concern/);
+  assert.match(schemaBoundaryMigration.sql, /responsibilities/);
+  assert.match(schemaBoundaryMigration.sql, /metadata_state/);
+});

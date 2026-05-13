@@ -13,6 +13,8 @@ const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { schemaName } = require('./planning-db-migrate.cjs');
 const { runPlanningImport } = require('./planning-db-import.cjs');
 
+const componentEngineeringSchemaName = 'component_engineering';
+
 const knownQueries = new Set([
   'summary',
   'hash-drift',
@@ -42,7 +44,11 @@ const knownQueries = new Set([
   'knowledge-actions',
   'mandatory-proposal-gaps',
   'component-tree',
+  'component-metadata',
   'component-drift',
+  'component-rules',
+  'component-rule-evaluations',
+  'component-quality',
 ]);
 const governanceProjectionQueryNames = new Set([
   'files',
@@ -53,7 +59,11 @@ const governanceProjectionQueryNames = new Set([
   'drift',
   'cer',
   'component-tree',
+  'component-metadata',
   'component-drift',
+  'component-rules',
+  'component-rule-evaluations',
+  'component-quality',
   'knowledge-documents',
   'knowledge-actions',
   'mandatory-proposal-gaps',
@@ -523,6 +533,54 @@ function buildComponentEngineeringComponentDriftRows(rows) {
   ]);
 }
 
+function buildComponentEngineeringComponentMetadataRows(rows) {
+  return rows.map((row) => [
+    row.component_id ?? row.componentId,
+    compactText(row.name),
+    row.metadata_state ?? row.metadataState ?? '-',
+    row.quality_state ?? row.qualityState ?? '-',
+    row.direct_file_count ?? row.directFileCount ?? 0,
+    row.descendant_file_count ?? row.descendantFileCount ?? 0,
+    joinJsonArray(row.drift_codes ?? row.driftCodes),
+    compactText(row.owned_concern ?? row.ownedConcern),
+  ]);
+}
+
+function buildComponentEngineeringRuleCatalogRows(rows) {
+  return rows.map((row) => [
+    row.rule_id ?? row.ruleId,
+    row.category,
+    row.severity,
+    row.subject_level ?? row.subjectLevel,
+    row.drift_code ?? row.driftCode ?? '-',
+  ]);
+}
+
+function buildComponentEngineeringRuleEvaluationRows(rows) {
+  return rows.map((row) => [
+    row.rule_id ?? row.ruleId,
+    row.subject_id ?? row.subjectId,
+    row.evaluation_state ?? row.evaluationState,
+    row.severity,
+    row.drift_code ?? row.driftCode ?? '-',
+  ]);
+}
+
+function buildComponentEngineeringQualityRows(rows) {
+  return rows.map((row) => [
+    row.component_id ?? row.componentId,
+    compactText(row.name),
+    row.component_level ?? row.componentLevel ?? '-',
+    row.quality_state ?? row.qualityState ?? '-',
+    row.direct_file_count ?? row.directFileCount ?? 0,
+    row.descendant_file_count ?? row.descendantFileCount ?? 0,
+    row.children_count ?? row.childrenCount ?? 0,
+    row.test_file_count ?? row.testFileCount ?? 0,
+    row.failing_rule_count ?? row.failingRuleCount ?? 0,
+    joinJsonArray(row.drift_codes ?? row.driftCodes),
+  ]);
+}
+
 function buildGovernanceCoverageRows(rows) {
   return rows.map((row) => [
     row.coverage_kind ?? row.coverageKind,
@@ -923,7 +981,7 @@ function componentEngineeringComponentTreeSelect() {
       is_materialized_component,
       has_children,
       is_leaf_component
-    from ${schemaName}.component_engineering_component_tree_query`;
+    from ${componentEngineeringSchemaName}.component_tree_query`;
 }
 
 function componentEngineeringComponentDriftSelect() {
@@ -932,7 +990,97 @@ function componentEngineeringComponentDriftSelect() {
       component_id,
       drift_code,
       metadata
-    from ${schemaName}.component_engineering_drift_query`;
+    from ${componentEngineeringSchemaName}.component_drift_query`;
+}
+
+function componentEngineeringComponentMetadataSelect() {
+  return `
+    select
+      component_id,
+      name,
+      component_level,
+      parent_component_id,
+      root_unit,
+      domain_unit,
+      status,
+      governance_state,
+      ddd_owner,
+      owned_concern,
+      responsibilities,
+      non_goals,
+      reasons_to_change,
+      public_api,
+      invariants,
+      transitions,
+      consumers,
+      direct_file_count,
+      descendant_component_count,
+      descendant_file_count,
+      children_count,
+      test_file_count,
+      quality_state,
+      drift_codes,
+      metadata_state,
+      source_paths,
+      source_content_sha256_values
+    from ${componentEngineeringSchemaName}.component_metadata_query`;
+}
+
+function componentEngineeringRuleCatalogSelect() {
+  return `
+    select
+      rule_id,
+      name,
+      category,
+      severity,
+      subject_level,
+      subject_scope,
+      predicate_owner,
+      evaluation_view,
+      drift_code,
+      governing_doc,
+      remediation,
+      validation_command
+    from ${componentEngineeringSchemaName}.rule_catalog_query`;
+}
+
+function componentEngineeringRuleEvaluationSelect() {
+  return `
+    select
+      rule_id,
+      rule_name,
+      category,
+      severity,
+      subject_id,
+      subject_level,
+      subject_name,
+      evaluation_state,
+      drift_code,
+      evidence,
+      remediation,
+      metadata
+    from ${componentEngineeringSchemaName}.rule_evaluation_query`;
+}
+
+function componentEngineeringQualitySelect() {
+  return `
+    select
+      component_id,
+      name,
+      component_level,
+      parent_component_id,
+      governance_state,
+      quality_state,
+      direct_file_count,
+      descendant_file_count,
+      children_count,
+      test_file_count,
+      rule_count,
+      failing_rule_count,
+      error_count,
+      warning_count,
+      drift_codes
+    from ${componentEngineeringSchemaName}.component_quality_query`;
 }
 
 function governanceCoverageSelect() {
@@ -1539,6 +1687,109 @@ async function readComponentEngineeringComponentDriftRows(client, filters = {}) 
   return result.rows;
 }
 
+async function readComponentEngineeringComponentMetadataRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'component_id', filters.component);
+  appendFilter(predicates, params, 'governance_state', filters.governanceState);
+  appendFilter(predicates, params, 'root_unit', filters.rootUnit);
+  appendFilter(predicates, params, 'domain_unit', filters.domainUnit);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${componentEngineeringComponentMetadataSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by
+      case metadata_state
+        when 'incomplete' then 0
+        when 'declared' then 1
+        else 2
+      end,
+      descendant_file_count desc,
+      component_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readComponentEngineeringRuleCatalogRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'category', filters.kind);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${componentEngineeringRuleCatalogSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by rule_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readComponentEngineeringRuleEvaluationRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'subject_id', filters.component);
+  appendFilter(predicates, params, 'evaluation_state', filters.governanceState);
+  appendFilter(predicates, params, 'rule_id', filters.kind);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${componentEngineeringRuleEvaluationSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by
+      case evaluation_state
+        when 'fail' then 0
+        when 'warn' then 1
+        else 2
+      end,
+      subject_id,
+      rule_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readComponentEngineeringQualityRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'component_id', filters.component);
+  appendFilter(predicates, params, 'governance_state', filters.governanceState);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${componentEngineeringQualitySelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by
+      case quality_state
+        when 'fail' then 0
+        when 'warn' then 1
+        else 2
+      end,
+      descendant_file_count desc,
+      component_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
 async function readGovernanceCoverageRows(client, filters = {}) {
   const params = [];
   const predicates = [];
@@ -1945,6 +2196,18 @@ async function runQuery(options = {}) {
       return componentRows;
     }
 
+    if (queryName === 'component-metadata') {
+      const rows = await readComponentEngineeringComponentMetadataRows(
+        client,
+        options.filters || {}
+      );
+      const metadataRows = buildComponentEngineeringComponentMetadataRows(rows);
+      if (options.print !== false) {
+        printTaskRows(metadataRows);
+      }
+      return metadataRows;
+    }
+
     if (queryName === 'component-drift') {
       const rows = await readComponentEngineeringComponentDriftRows(client, options.filters || {});
       const driftRows = buildComponentEngineeringComponentDriftRows(rows);
@@ -1952,6 +2215,33 @@ async function runQuery(options = {}) {
         printTaskRows(driftRows);
       }
       return driftRows;
+    }
+
+    if (queryName === 'component-rules') {
+      const rows = await readComponentEngineeringRuleCatalogRows(client, options.filters || {});
+      const ruleRows = buildComponentEngineeringRuleCatalogRows(rows);
+      if (options.print !== false) {
+        printTaskRows(ruleRows);
+      }
+      return ruleRows;
+    }
+
+    if (queryName === 'component-rule-evaluations') {
+      const rows = await readComponentEngineeringRuleEvaluationRows(client, options.filters || {});
+      const evaluationRows = buildComponentEngineeringRuleEvaluationRows(rows);
+      if (options.print !== false) {
+        printTaskRows(evaluationRows);
+      }
+      return evaluationRows;
+    }
+
+    if (queryName === 'component-quality') {
+      const rows = await readComponentEngineeringQualityRows(client, options.filters || {});
+      const qualityRows = buildComponentEngineeringQualityRows(rows);
+      if (options.print !== false) {
+        printTaskRows(qualityRows);
+      }
+      return qualityRows;
     }
 
     if (queryName === 'coverage') {
@@ -2055,7 +2345,10 @@ if (require.main === module) {
 module.exports = {
   buildComponentEngineeringComponentDriftRows,
   buildComponentEngineeringComponentTreeRows,
+  buildComponentEngineeringQualityRows,
   buildComponentEngineeringRecordRows,
+  buildComponentEngineeringRuleCatalogRows,
+  buildComponentEngineeringRuleEvaluationRows,
   buildDocsDispositionRows,
   buildFeatureWorkRows,
   buildFocusRows,
@@ -2066,6 +2359,7 @@ module.exports = {
   buildGovernanceUnitRows,
   buildGovernanceRemediationRows,
   buildHashDriftRows,
+  buildComponentEngineeringComponentMetadataRows,
   buildKnowledgeActionRows,
   buildKnowledgeDocumentRows,
   buildMandatoryProposalGapRows,
@@ -2088,7 +2382,9 @@ module.exports = {
   readDocsDispositionRows,
   readFeatureWorkRows,
   readComponentEngineeringComponentDriftRows,
+  readComponentEngineeringComponentMetadataRows,
   readComponentEngineeringComponentTreeRows,
+  readComponentEngineeringQualityRows,
   readFocusRows,
   readGovernanceComponentRows,
   readGovernanceCoverageRows,
@@ -2105,6 +2401,8 @@ module.exports = {
   readPlanningStatusEventRows,
   readPrReadinessRows,
   readRepositoryCommandRows,
+  readComponentEngineeringRuleCatalogRows,
+  readComponentEngineeringRuleEvaluationRows,
   readOpenTaskRows,
   readTaskGapRows,
   printSummary,
