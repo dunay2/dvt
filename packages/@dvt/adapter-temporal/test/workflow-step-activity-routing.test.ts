@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts
+ * @ownedConcern Temporal workflow step activity task-queue routing coverage
+ * @baseline ADR-0001: Temporal Integration Test Policy
+ * @baseline ADR-0056: Temporal Step Activity Routing By Capability
+ * @decision Verify that only executeStep activity proxies receive capability task queues
+ * @consequence Workflow/core activities stay on the workflow queue while step execution can route by capability
+ * @version 1.0.0
+ */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { proxyActivitiesMock, proxyLocalActivitiesMock } = vi.hoisted(() => ({
