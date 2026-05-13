@@ -59,7 +59,8 @@ idempotent step.
 
 ## Current Physical Objects
 
-The adapter manages six primary tables.
+The adapter manages six primary tables plus supporting lifecycle and index
+objects.
 
 ### `run_metadata`
 
@@ -83,6 +84,7 @@ Key fields:
 Purpose:
 
 - append-only persisted event log
+- hot authoritative run event history partitioned for write and read scale
 
 Key fields:
 
@@ -106,6 +108,24 @@ Constraints:
 
 - primary key `(run_id, run_seq)`
 - unique `(run_id, idempotency_key)`
+
+Physical shape:
+
+- `run_events` is a declarative partitioned parent table:
+  `PARTITION BY HASH (run_id)`.
+- The adapter creates 16 hash partitions named `run_events_h00` through
+  `run_events_h15`.
+- The partition key intentionally matches the existing uniqueness contract:
+  both canonical constraints include `run_id`.
+- Fresh schemas create the partitioned parent in the initial migration.
+- Legacy heap deployments are converted by
+  `core_021_run_events_hash_partitioning` using a rename, copy, constraint
+  restore, tenant index restore, and RLS reapplication sequence.
+- Rollback converts the partitioned table back to a heap table while preserving
+  rows and canonical constraints.
+
+This hot-storage partitioning does not implement ADR-0037 archive-unit
+deletion, `persisted_at` range partitions, or delete-after-grace behavior.
 
 ### `outbox`
 
@@ -190,9 +210,10 @@ Important active indexes:
 - `outbox_pending_idx`
 - `outbox_dead_letter_run_id_idx`
 - `run_metadata_tenant_created_idx`
+- `run_events_tenant_run_id_idx`
 
 This guide does not duplicate the full DDL. The authoritative DDL lives in
-`PostgresStateStoreAdapter.ts`.
+`PostgresSchemaManager.ts`.
 
 ## Transaction Model
 
@@ -245,6 +266,32 @@ The current adapter does not use:
 - materialized-view refresh for snapshots.
 
 Older docs that describe those patterns should be treated as historical.
+
+## Run Events Partitioning
+
+`run_events` uses hash partitioning by `run_id`.
+
+Rationale:
+
+- Most hot adapter operations append or replay one run at a time.
+- Existing run ordering and idempotency constraints are keyed by `run_id`.
+- PostgreSQL requires unique constraints on partitioned tables to include the
+  partition key, so range partitioning by `persisted_at` would require a wider
+  idempotency contract redesign.
+
+Implementation details:
+
+- `core_001_initial_tables` creates fresh schemas with the partitioned parent.
+- `core_021_run_events_hash_partitioning` converts previously migrated heap
+  tables.
+- The conversion copies only the canonical `run_events` columns and restores the
+  same primary key and idempotency unique constraint after copy.
+- Tenant RLS is disabled only on temporary conversion tables and re-applied to
+  canonical `run_events`.
+
+See
+[`run-events-partitioning-component.md`](./run-events-partitioning-component.md)
+for the local component record, transitions, diagrams, and test mapping.
 
 ## Snapshot Semantics
 
