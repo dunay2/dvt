@@ -30,6 +30,7 @@ test('governance refresh uses local governance reports before DB validation', ()
       'governance:db:import',
       'docs:governance:coverage-report',
       'docs:governance:remediation-queue',
+      'governance:db:import',
     ]
   );
   assert.deepEqual(
@@ -46,6 +47,10 @@ test('governance refresh uses local governance reports before DB validation', ()
   );
   assert.equal(
     stages.generationStages.find((stage) => stage.id === 'remediation-queue').args,
+    undefined
+  );
+  assert.deepEqual(
+    stages.generationStages.find((stage) => stage.id === 'governance-db-import-after-reports').args,
     undefined
   );
   assert.deepEqual(

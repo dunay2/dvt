@@ -1,24 +1,14 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { URL, fileURLToPath } from 'node:url';
-
 import { describe, expect, it } from 'vitest';
 
-const TEST_ROOT = fileURLToPath(new URL('.', import.meta.url));
-const ENGINE_ROOT = join(TEST_ROOT, '../../src');
-const REPO_ROOT = join(TEST_ROOT, '../../../../..');
-const COMPONENT_GUIDE = join(
-  REPO_ROOT,
-  'docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-component.md'
-);
-const USER_STORIES = join(
-  REPO_ROOT,
-  'docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-user-stories.md'
-);
-const MAILBOX = join(
-  REPO_ROOT,
-  'buzon/20260512-codex-fowler-we-hx-5-provider-telemetry-seams-analysis-and-remediation.md'
-);
+import {
+  engineArchitectureDocPath,
+  expectFileExists,
+  expectMarkdownSections,
+  readEngineArchitectureDoc,
+  readEngineSource,
+  readRepoSource,
+  repoPath,
+} from './engineArchitectureTestSupport.js';
 
 describe('WorkflowEngine provider and telemetry seams architecture', () => {
   it('routes provider lookup through one semantic resolver seam', () => {
@@ -61,26 +51,36 @@ describe('WorkflowEngine provider and telemetry seams architecture', () => {
   });
 
   it('documents the WE-HX-5 component, scenarios, mailbox analysis, and drift guards', () => {
-    expect(existsSync(COMPONENT_GUIDE)).toBe(true);
-    expect(existsSync(USER_STORIES)).toBe(true);
-    expect(existsSync(MAILBOX)).toBe(true);
+    expectFileExists(
+      engineArchitectureDocPath('workflow-engine-provider-telemetry-seams-component.md')
+    );
+    expectFileExists(
+      engineArchitectureDocPath('workflow-engine-provider-telemetry-seams-user-stories.md')
+    );
+    expectFileExists(
+      repoPath(
+        'buzon/20260512-codex-fowler-we-hx-5-provider-telemetry-seams-analysis-and-remediation.md'
+      )
+    );
 
-    const guide = readFileSync(COMPONENT_GUIDE, 'utf8');
-    for (const heading of [
+    const guide = readEngineArchitectureDoc(
+      'workflow-engine-provider-telemetry-seams-component.md'
+    );
+    expectMarkdownSections(guide, [
       '## Public API',
       '## Invariants',
       '## Transitions',
       '## Consumers',
       '## Diagrams',
       '## Drift Guards',
-    ]) {
-      expect(guide).toContain(heading);
-    }
+    ]);
     expect(guide).toContain('IEngineProviderResolver');
     expect(guide).toContain('StartRunTelemetryPolicy');
     expect(guide).toContain('```mermaid');
 
-    const stories = readFileSync(USER_STORIES, 'utf8');
+    const stories = readEngineArchitectureDoc(
+      'workflow-engine-provider-telemetry-seams-user-stories.md'
+    );
     for (const expectedStory of [
       'US-WE-HX-5-001',
       'US-WE-HX-5-002',
@@ -94,20 +94,16 @@ describe('WorkflowEngine provider and telemetry seams architecture', () => {
       expect(stories).toContain(expectedStory);
     }
 
-    const mailbox = readFileSync(MAILBOX, 'utf8');
-    for (const expected of [
+    const mailbox = readRepoSource(
+      'buzon/20260512-codex-fowler-we-hx-5-provider-telemetry-seams-analysis-and-remediation.md'
+    );
+    expectMarkdownSections(mailbox, [
       '## Fowler Architecture Analysis',
       '## Mature-System Comparison',
       '## Antipatterns Detected',
       '## Repetitions To Fix',
       '## Drift To Fix',
       '## Future Lessons',
-    ]) {
-      expect(mailbox).toContain(expected);
-    }
+    ]);
   });
 });
-
-function readEngineSource(relativePath: string): string {
-  return readFileSync(join(ENGINE_ROOT, relativePath), 'utf8');
-}

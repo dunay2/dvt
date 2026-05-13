@@ -68,6 +68,10 @@ This component does not own:
 Generated Markdown and YAML outputs are local artifacts, not manual authoring
 surfaces and not tracked review files. The editable root is the owning source
 plus the generator declared in the generated-docs policy.
+When `docs/generated-docs-policy.json` declares a generated shard family as
+DB-backed, the local shard remains an inspection artifact and the size gate must
+validate the declared DB projection contract instead of treating shard bytes as
+the authority.
 
 ## Current Workflow
 
@@ -150,7 +154,10 @@ flowchart TD
   unit index plus tracked and untracked non-ignored files, writes the
   `.generated-docs/planning/status/system-governance-*` outputs plus the
   `governance-files/` and `governance-components/` shards, and its check command
-  regenerates ignored artifacts.
+  regenerates ignored artifacts. `governance-files/*.files.yaml` is backed by
+  `planning_query_store.governance_file_query`; `docs:gov:generated-policy`
+  validates that projection metadata before exempting that shard family from
+  local `maxBytes` enforcement.
 - `Fingerprint baseline` runs `pnpm docs:governance:file-fingerprint-baseline`
   through `scripts/check-governance-file-fingerprint-baseline.cjs --write`. It
   reads the current generated file index and shards, writes a compact
@@ -315,6 +322,9 @@ not the database import source.
   import. It may keep generated repo paths as stable source identifiers, but the
   source content hash must be computed from the in-memory projection payload
   being imported.
+- DB-backed generated shard exemptions must name the query view, import command,
+  and drift-check command in `docs/generated-docs-policy.json`; undeclared or
+  invalid metadata must fail closed and keep the local `maxBytes` rule active.
 - The migration must move local operational state into DB audit and overlay
   rows while keeping reviewer attention on root source changes and summarized
   artifact hashes.

@@ -1687,6 +1687,9 @@ commandQueryRails:
   - name: QueryDocsDispositionQueue
     type: query
     dddOwner: DocsDispositionQueue
+  - name: QueryGovernedFeatureWork
+    type: query
+    dddOwner: DocsDispositionQueue
   - name: QueryTaskProvenanceLedger
     type: query
     dddOwner: TaskProvenanceLedger
@@ -2609,6 +2612,12 @@ symbols:
     name: referencePrefix
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
+    name: addNormalizedId
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: collectFeatureMechanizationReferenceIds
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
     name: classifyTaskLikeReference
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
@@ -2756,6 +2765,9 @@ symbols:
     name: buildTaskReferenceRows
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
+    name: buildFeatureWorkRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
     name: buildTaskTraceRows
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
@@ -2778,6 +2790,9 @@ symbols:
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: readTaskReferenceRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningDbContentSymbol
+    name: readFeatureWorkRows
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: readTaskTraceRows

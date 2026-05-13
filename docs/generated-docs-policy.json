@@ -203,7 +203,17 @@
       "generatorCommand": "pnpm docs:governance:file-component-index",
       "tracking": "untracked",
       "manualEditPolicy": "generator-owned",
-      "maxBytes": 1900000
+      "dbBackedArtifacts": [
+        {
+          "artifacts": [
+            ".generated-docs/planning/status/governance-files/*.files.yaml"
+          ],
+          "queryView": "planning_query_store.governance_file_query",
+          "importCommand": "pnpm governance:db:import",
+          "checkCommand": "pnpm governance:db:check"
+        }
+      ],
+      "maxBytes": 1910000
     },
     {
       "id": "local-governance-file-fingerprint-baseline",

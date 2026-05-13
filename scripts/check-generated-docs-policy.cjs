@@ -15,6 +15,7 @@ const policyPath = path.resolve(
 );
 const validTracking = new Set(['tracked', 'untracked']);
 const validManualEditPolicy = new Set(['generator-owned', 'source-owned']);
+const validDbBackedQueryViews = new Set(['planning_query_store.governance_file_query']);
 
 function toPosix(filePath) {
   return filePath.replace(/\\/g, '/');
@@ -164,9 +165,13 @@ function validateArtifactMarkers(entry, artifactPath, failures) {
   }
 }
 
-function validateArtifactSize(entry, artifactPath, failures) {
+function validateArtifactSize(entry, artifactPath, failures, options = {}) {
   const absolutePath = path.join(repoRoot, ...artifactPath.split('/'));
   if (!fs.existsSync(absolutePath)) {
+    return;
+  }
+
+  if (options.skipMaxBytes) {
     return;
   }
 
@@ -182,6 +187,78 @@ function validateArtifactSize(entry, artifactPath, failures) {
   if (size > entry.maxBytes) {
     failures.push(`${entry.id}: ${artifactPath} exceeds maxBytes (${size} > ${entry.maxBytes}).`);
   }
+}
+
+function patternMatchesPath(pattern, artifactPath) {
+  const normalizedPattern = toPosix(pattern);
+  const normalizedPath = toPosix(artifactPath);
+  if (!hasGlob(normalizedPattern)) {
+    return normalizedPattern === normalizedPath;
+  }
+
+  return globToRegExp(normalizedPattern).test(normalizedPath);
+}
+
+function dbBackedArtifactPatternMatches(artifactPath, dbBackedArtifactPatterns) {
+  return dbBackedArtifactPatterns.some((pattern) => patternMatchesPath(pattern, artifactPath));
+}
+
+function validateDbBackedArtifactGroups(entry, artifactPatterns, packageScripts, failures) {
+  if (entry.dbBackedArtifacts === undefined) {
+    return [];
+  }
+
+  const id = typeof entry.id === 'string' && entry.id.trim() ? entry.id : '<missing id>';
+  if (!Array.isArray(entry.dbBackedArtifacts) || entry.dbBackedArtifacts.length === 0) {
+    failures.push(`${id}: dbBackedArtifacts must be a non-empty array when declared`);
+    return [];
+  }
+
+  const declaredArtifactPatterns = new Set(artifactPatterns.map(toPosix));
+  const validPatterns = [];
+
+  entry.dbBackedArtifacts.forEach((group, index) => {
+    const prefix = `${id}: dbBackedArtifacts[${index}]`;
+    const groupFailures = [];
+    const groupArtifacts = Array.isArray(group?.artifacts) ? group.artifacts.map(toPosix) : [];
+
+    if (groupArtifacts.length === 0) {
+      groupFailures.push(`${prefix}.artifacts must be a non-empty array`);
+    }
+
+    for (const artifactPattern of groupArtifacts) {
+      if (!declaredArtifactPatterns.has(artifactPattern)) {
+        groupFailures.push(
+          `${prefix}.artifacts must reference declared artifact pattern: ${artifactPattern}`
+        );
+      }
+    }
+
+    if (!validDbBackedQueryViews.has(group?.queryView)) {
+      groupFailures.push(
+        `${prefix}.queryView must be one of ${[...validDbBackedQueryViews].join(', ')}`
+      );
+    }
+
+    if (typeof group?.importCommand !== 'string' || group.importCommand.trim() === '') {
+      groupFailures.push(`${prefix}.importCommand must be declared`);
+    } else if (!commandIsAvailable(group.importCommand, packageScripts)) {
+      groupFailures.push(`${prefix}.importCommand is not available: ${group.importCommand}`);
+    }
+
+    if (typeof group?.checkCommand !== 'string' || group.checkCommand.trim() === '') {
+      groupFailures.push(`${prefix}.checkCommand must be declared`);
+    } else if (!commandIsAvailable(group.checkCommand, packageScripts)) {
+      groupFailures.push(`${prefix}.checkCommand is not available: ${group.checkCommand}`);
+    }
+
+    failures.push(...groupFailures);
+    if (groupFailures.length === 0) {
+      validPatterns.push(...groupArtifacts);
+    }
+  });
+
+  return validPatterns;
 }
 
 function validatePolicy(policy, trackedFiles, existingFiles, packageScripts) {
@@ -247,6 +324,13 @@ function validatePolicy(policy, trackedFiles, existingFiles, packageScripts) {
     }
 
     const artifactPatterns = Array.isArray(entry.artifacts) ? entry.artifacts : [];
+    const dbBackedArtifactPatterns = validateDbBackedArtifactGroups(
+      entry,
+      artifactPatterns,
+      packageScripts,
+      failures
+    );
+
     for (const artifactPattern of artifactPatterns) {
       const trackedMatches = expandPattern(artifactPattern, trackedFiles);
       const existingMatches = expandPattern(artifactPattern, existingFiles);
@@ -269,7 +353,9 @@ function validatePolicy(policy, trackedFiles, existingFiles, packageScripts) {
       const markerTargets = [...new Set([...trackedMatches, ...existingMatches])];
       for (const artifactPath of markerTargets) {
         validateArtifactMarkers(entry, artifactPath, failures);
-        validateArtifactSize(entry, artifactPath, failures);
+        validateArtifactSize(entry, artifactPath, failures, {
+          skipMaxBytes: dbBackedArtifactPatternMatches(artifactPath, dbBackedArtifactPatterns),
+        });
       }
     }
   }
@@ -297,4 +383,17 @@ function main() {
   );
 }
 
-main();
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  commandIsAvailable,
+  dbBackedArtifactPatternMatches,
+  expandPattern,
+  globToRegExp,
+  patternMatchesPath,
+  validateArtifactSize,
+  validateDbBackedArtifactGroups,
+  validatePolicy,
+};
