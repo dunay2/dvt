@@ -1,3 +1,8 @@
+/**
+ * @ownedConcern Publish engine run-state persistence contracts and portable
+ * maintenance invariants shared by engine and state-store adapters.
+ */
+
 import type { ExecutionPlan as CanonicalExecutionPlan } from '../contracts/planner/ExecutionPlan.v1.js';
 import type {
   EngineRunRef,
@@ -235,6 +240,13 @@ export interface IRunStateStoreMaintenance {
    * consume events ordered by runSeq ASC.
    * ADR-0031: tenant isolation enforced - throws when the run does not belong
    * to the given tenantId.
+   *
+   * Snapshot rebuild is a per `(tenantId, runId)` maintenance command. Only
+   * one rebuild may mutate the durable snapshot at a time for the same run.
+   * Implementations MUST serialize competing rebuild commands or fail them
+   * with a typed transient concurrency error. The contract requires equivalent
+   * mutual exclusion semantics, not PostgreSQL-specific lock technology.
+   *
    * Implementations MUST throw a typed not-found error with stable `code`
    * `RUN_NOT_FOUND`; callers MUST NOT infer semantics by parsing `message`
    * text.

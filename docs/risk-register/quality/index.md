@@ -57,6 +57,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Flat utility modules can drift without explicit component APIs and semantic ownership](R-20260421-UTILITY-MODULE-COMPONENTIZATION-DRIFT.yaml)
 - [Future adapters may violate the validated providerRef reconciliation contract](R-20260409-PROVIDER-REF-EXACT-MATCH-ADAPTER-CONFORMANCE.yaml)
 - [Future recover-run feature could leak back into the generic signal boundary](R-20260408-RECOVER-RUN-BOUNDARY-DRIFT.yaml)
+- [Future state-store adapters may miss snapshot rebuild mutual exclusion](R-20260513-AR-A6-SNAPSHOT-REBUILD-CONCURRENCY-CONTRACT.yaml)
 - [Graph source cardinality drift between JSON schema and runtime parser](R-20260404-MWA2-GRAPH-SOURCE-CARDINALITY-DRIFT.yaml)
 - [Historical compile-boundary language could leak back into active contracts and route seams](R-20260419-PLAN-COMPILE-LANGUAGE-DRIFT.yaml)
 - [In-memory engine state-store invariant drift on snapshot and outbox paths](R-20260404-INMEMORY-STATE-STORE-INVARIANTS.yaml)
