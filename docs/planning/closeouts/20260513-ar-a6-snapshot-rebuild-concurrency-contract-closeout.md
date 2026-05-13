@@ -72,7 +72,7 @@ Passed after adding the contract invariant and aligned docs.
   - Passed.
 - `pnpm --filter @dvt/adapter-postgres typecheck`
   - Passed.
-- `pnpm docs:feature-mechanization -- --feature AR-A6-SNAPSHOT-REBUILD-CONCURRENCY-CONTRACT`
+- `pnpm docs:feature-mechanization --feature AR-A6-SNAPSHOT-REBUILD-CONCURRENCY-CONTRACT`
   - Passed.
 - `pnpm docs:feature-mechanization:implementation`
   - Passed.

@@ -155,7 +155,7 @@ architectureGuards:
 cypressFlows:
   - N/A - state-store maintenance contract only
 completionGate:
-  - pnpm docs:feature-mechanization -- --feature AR-A6-SNAPSHOT-REBUILD-CONCURRENCY-CONTRACT
+  - pnpm docs:feature-mechanization --feature AR-A6-SNAPSHOT-REBUILD-CONCURRENCY-CONTRACT
   - pnpm --filter @dvt/contracts test -- test/run-state-store-maintenance-concurrency.architecture.test.ts
   - pnpm --filter @dvt/engine test -- test/state/InMemoryRunStateStore.rebuildSnapshot.test.ts
   - pnpm --filter @dvt/adapter-postgres test -- test/PostgresRunSnapshotStore.test.ts
