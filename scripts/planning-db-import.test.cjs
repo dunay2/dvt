@@ -195,6 +195,12 @@ test('governance snapshot preserves component, fingerprint, coverage, and remedi
   assert.equal(snapshot.components.length, snapshot.componentIndex.componentCount);
   assert.equal(snapshot.componentFileShards.length, snapshot.componentFileMap.componentCount);
   assert.equal(snapshot.componentFiles.length, snapshot.componentFileMap.fileCount);
+  assert.ok(snapshot.fingerprintBaseline.shards.length > 0);
+  assert.ok(
+    snapshot.fingerprintBaseline.shards.every((shard) =>
+      shard.path.includes('/governance-file-fingerprints/')
+    )
+  );
   assert.equal(snapshot.fingerprints.length, snapshot.fingerprintBaseline.fileCount);
   assert.equal(snapshot.coverageRows.length > 0, true);
   assert.equal(snapshot.remediationTasks.length, snapshot.remediationQueue.totals.tasks);
@@ -453,7 +459,7 @@ test('docs disposition snapshot classifies active-doc cleanup actions and task-l
           [
             'AR-A6 F-28 S08 WEB-123 ADR-0055 ARC-2 ED-20260510-example',
             'R-20260510-EXAMPLE US-1 F04-W4 SYS-DOCS CMD-RET PS-Q08',
-            'SHA-256 GAP-1 MVP-E1-A RESIDUAL-A RISK-B LEGACY-DRIFT INV-SCOPE-03',
+            'SHA-256 GAP-1 MVP-E1-A RESIDUAL-A RISK-B LEGACY-DRIFT INV-SCOPE-03 AR-C2-INV-1',
           ].join(' '),
           'pending follow-up remains open',
           'TODO: resolve this item',
@@ -496,12 +502,99 @@ test('docs disposition snapshot classifies active-doc cleanup actions and task-l
   assert.equal(classifications.get('RISK-B'), 'historical_planning_reference');
   assert.equal(classifications.get('LEGACY-DRIFT'), 'historical_planning_reference');
   assert.equal(classifications.get('INV-SCOPE-03'), 'historical_planning_reference');
+  assert.equal(classifications.get('AR-C2-INV-1'), 'review_invariant_reference');
 
   assert.deepEqual(snapshot.actions.map((action) => action.actionKind).sort(), [
     'draft_active_doc',
     'pending_marker_hotspot',
     'unknown_task_like_id',
   ]);
+});
+
+test('docs disposition snapshot treats closed feature mechanization ids as registered links', () => {
+  const snapshot = buildDocsDispositionSnapshot({
+    planningTaskIds: [],
+    featureMechanizationIds: ['VERIFY-PREPUSH-SCOPE-ROUTER-20260511'],
+    documents: [
+      {
+        sourcePath:
+          'docs/planning/proposals/mandatory/governance-and-docs/verify-prepush-scope-router-plan-20260511.md',
+        raw: [
+          '---',
+          'title: Verify Prepush Scope Router Plan',
+          'status: Review',
+          'planning_type: mandatory-proposal',
+          '---',
+          '> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans.',
+          '```feature-mechanization',
+          'version: 1',
+          'featureId: VERIFY-PREPUSH-SCOPE-ROUTER-20260511',
+          'mechanizationStatus: closed',
+          'noHumanDecisionsRemaining: true',
+          'redGreenCycles:',
+          '  - id: PREPUSH-ROUTER-WEB-SOURCE',
+          '    redTest: scripts/verify-prepush.test.cjs',
+          '    greenTest: node --test scripts/verify-prepush.test.cjs',
+          '```',
+        ].join('\n'),
+      },
+    ],
+  });
+
+  const featureReference = snapshot.references.find(
+    (reference) => reference.referenceText === 'VERIFY-PREPUSH-SCOPE-ROUTER-20260511'
+  );
+
+  assert.ok(featureReference);
+  assert.equal(featureReference.classification, 'registered_feature_mechanization');
+  assert.equal(featureReference.registeredPlanningTask, false);
+
+  const cycleReference = snapshot.references.find(
+    (reference) => reference.referenceText === 'PREPUSH-ROUTER-WEB-SOURCE'
+  );
+  assert.ok(cycleReference);
+  assert.equal(cycleReference.classification, 'feature_mechanization_cycle');
+  assert.equal(cycleReference.registeredPlanningTask, false);
+
+  const skillReference = snapshot.references.find(
+    (reference) => reference.referenceText === 'SUB-SKILL'
+  );
+  assert.ok(skillReference);
+  assert.equal(skillReference.classification, 'skill_reference');
+  assert.equal(skillReference.registeredPlanningTask, false);
+
+  assert.deepEqual(snapshot.actions, []);
+});
+
+test('docs disposition snapshot classifies priority markers and date placeholders as non-task references', () => {
+  const snapshot = buildDocsDispositionSnapshot({
+    planningTaskIds: [],
+    documents: [
+      {
+        sourcePath:
+          'docs/planning/reviews/architecture-and-governance/20260422-dvt-plus-principal-architect-action-plan.md',
+        raw: [
+          '---',
+          'title: Principal architect action plan',
+          'status: Review',
+          'planning_type: review',
+          '---',
+          '| Priority | Target date |',
+          '| P0-1 | YYYY-MM-DD |',
+          '| P1-2 | YYYY-MM-DD |',
+        ].join('\n'),
+      },
+    ],
+  });
+
+  const classifications = new Map(
+    snapshot.references.map((reference) => [reference.referenceText, reference.classification])
+  );
+
+  assert.equal(classifications.get('P0-1'), 'priority_work_item_marker');
+  assert.equal(classifications.get('P1-2'), 'priority_work_item_marker');
+  assert.equal(classifications.get('YYYY-MM-DD'), 'date_placeholder');
+  assert.deepEqual(snapshot.actions, []);
 });
 
 test('docs disposition snapshot keeps archived documents visible without active cleanup actions', () => {

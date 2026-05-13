@@ -8,18 +8,18 @@
  */
 import type { EngineRunRef, SignalRequest } from '@dvt/contracts';
 
-import type { IRunControlService } from '../../domain/IRunControlService.js';
+import type { IRunSignalService } from '../../domain/IRunSignalService.js';
 
 import type { IWorkflowSignalRunUseCase } from './types.js';
 
 export interface WorkflowSignalRunUseCaseDeps {
-  runControlService: IRunControlService;
+  runSignalService: IRunSignalService;
 }
 
 export class WorkflowSignalRunUseCase implements IWorkflowSignalRunUseCase {
   constructor(private readonly deps: WorkflowSignalRunUseCaseDeps) {}
 
   signal(engineRunRef: EngineRunRef, request: SignalRequest): Promise<void> {
-    return this.deps.runControlService.signal(engineRunRef, request);
+    return this.deps.runSignalService.signal(engineRunRef, request);
   }
 }

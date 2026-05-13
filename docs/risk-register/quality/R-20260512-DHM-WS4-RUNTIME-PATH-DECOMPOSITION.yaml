@@ -1,0 +1,21 @@
+---
+id: R-20260512-DHM-WS4-RUNTIME-PATH-DECOMPOSITION
+title: Runtime control compatibility wrapper can regain cancel or signal ownership
+status: Open
+date: 2026-05-12
+owners:
+  - '@dvt/engine'
+severity: Low
+probability: Low
+---
+summary: >
+  Future edits could reintroduce cancel adapter dispatch, signal adapter dispatch, signal transition
+  mapping, or signal-derived event emission into WorkflowEngineCoreService instead of keeping those
+  responsibilities in RunCommandService and RunSignalService.
+mitigation: >
+  workflowEngineRuntimePathDecomposition.architecture.test.ts fails if WorkflowEngineCoreService
+  regains adapter dispatch, signal transition guard ownership, signal-derived event emission, or a
+  single facade run-control dependency.
+evidence:
+  - docs/evidence/ed-20260512-dhm-ws4-runtime-path-decomposition.md
+  - packages/@dvt/engine/test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts

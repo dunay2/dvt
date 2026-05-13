@@ -27,6 +27,7 @@
     assertIncludes(ids, 'docs-workboard-check-changed');
     assertIncludes(ids, 'docs-arc-evidence-changed');
     assertIncludes(ids, 'test-verify-prepush');
+    assertIncludes(ids, 'test-generated-docs-policy');
     assertIncludes(ids, 'arch-deps');
     assertIncludes(ids, 'type-check-prepush');
     assertExcludes(ids, 'planning-db-inventory-check');
@@ -89,6 +90,26 @@
     assertIncludes(ids, 'type-check-prepush');
   });
 
+  test('changed-file lint and format gate runs before expensive validation groups', () => {
+    const plan = buildPrepushPlan(['packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts']);
+    const ids = stepIds(plan);
+    const checkChangedIndex = ids.indexOf('check-changed');
+
+    assert.ok(checkChangedIndex >= 0, 'Expected check-changed in prepush plan');
+    assert.ok(
+      checkChangedIndex < ids.indexOf('test-verify-prepush'),
+      `Expected check-changed before test-verify-prepush in ${ids.join(', ')}`
+    );
+    assert.ok(
+      checkChangedIndex < ids.indexOf('docs-arc-evidence-changed'),
+      `Expected check-changed before docs-arc-evidence-changed in ${ids.join(', ')}`
+    );
+    assert.ok(
+      checkChangedIndex < ids.indexOf('arch-deps'),
+      `Expected check-changed before arch-deps in ${ids.join(', ')}`
+    );
+  });
+
   test('scope classification exposes reasons for skipped conditional groups', () => {
     const scope = classifyPrepushScope(['README.md']);
 
@@ -119,6 +140,19 @@
       packageJson.scripts['test:verify-prepush'],
       'node --test scripts/verify-prepush.test.cjs'
     );
+    assert.equal(packageJson.scripts['pr:closeout'], 'node scripts/pr-closeout.cjs');
+    assert.equal(
+      packageJson.scripts['test:pr-closeout'],
+      'node --test scripts/pr-closeout.test.cjs'
+    );
+  });
+
+  test('generated docs policy regression tests are wired into prepush gate', () => {
+    const plan = buildPrepushPlan(['docs/generated-docs-policy.json']);
+    const step = plan.find((candidate) => candidate.id === 'test-generated-docs-policy');
+
+    assert.ok(step);
+    assert.equal(commandLabel(step), 'node --test scripts/check-generated-docs-policy.test.cjs');
   });
 
   test('prepush router delegates repository path semantics to shared CI scope query', () => {

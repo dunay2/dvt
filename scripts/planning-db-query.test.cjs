@@ -4,11 +4,13 @@ const assert = require('node:assert/strict');
 const {
   buildDocsDispositionRows,
   buildComponentEngineeringRecordRows,
+  buildFeatureWorkRows,
   buildFocusRows,
   buildGovernanceComponentRows,
   buildGovernanceCoverageRows,
   buildGovernanceDriftRows,
   buildGovernanceFileRows,
+  buildGovernanceUnitRows,
   buildGovernanceRemediationRows,
   buildHashDriftRows,
   buildTaskGapRows,
@@ -23,6 +25,7 @@ const {
   readGovernanceCoverageRows,
   readGovernanceDriftRows,
   readGovernanceFileRows,
+  readGovernanceUnitRows,
   readGovernanceRemediationRows,
   readPlanningArtifactRows,
   readPlanningDependencyRows,
@@ -30,6 +33,7 @@ const {
   readPlanningStatusEventRows,
   readPrReadinessRows,
   readDocsDispositionRows,
+  readFeatureWorkRows,
   readComponentEngineeringRecordRows,
   readFocusRows,
   readTaskGapRows,
@@ -58,12 +62,14 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('artifacts'), 'artifacts');
   assert.equal(resolveQueryName('files'), 'files');
   assert.equal(resolveQueryName('components'), 'components');
+  assert.equal(resolveQueryName('units'), 'units');
   assert.equal(resolveQueryName('coverage'), 'coverage');
   assert.equal(resolveQueryName('remediation'), 'remediation');
   assert.equal(resolveQueryName('drift'), 'drift');
   assert.equal(resolveQueryName('commands'), 'commands');
   assert.equal(resolveQueryName('pr-readiness'), 'pr-readiness');
   assert.equal(resolveQueryName('docs-disposition'), 'docs-disposition');
+  assert.equal(resolveQueryName('feature-work'), 'feature-work');
   assert.equal(resolveQueryName('task-references'), 'task-references');
   assert.equal(resolveQueryName('task-trace'), 'task-trace');
   assert.equal(resolveQueryName('task-gaps'), 'task-gaps');
@@ -120,6 +126,30 @@ test('parseArgs parses governance query filters for DB-first governance inspecti
   });
 });
 
+test('parseArgs parses governance unit tree filters for DB-first parent navigation', () => {
+  const command = parseArgs([
+    'units',
+    '--unit',
+    'SYS-API-ROOT',
+    '--parent',
+    'SYS-API',
+    '--state',
+    'coverage-required',
+    '--limit',
+    '5',
+  ]);
+
+  assert.deepEqual(command, {
+    queryName: 'units',
+    filters: {
+      component: 'SYS-API-ROOT',
+      parentUnit: 'SYS-API',
+      governanceState: 'coverage-required',
+      limit: 5,
+    },
+  });
+});
+
 test('parseArgs parses repository command query filters for DB-first catalog inspection', () => {
   const command = parseArgs([
     'commands',
@@ -166,6 +196,29 @@ test('parseArgs parses docs disposition queue filters for DB-first cleanup work'
       limit: 5,
     },
   });
+});
+
+test('parseArgs normalizes open resolution filters to pending', () => {
+  assert.deepEqual(parseArgs(['docs-disposition', '--resolution', 'open']), {
+    queryName: 'docs-disposition',
+    filters: {
+      resolution: 'pending',
+    },
+  });
+
+  assert.deepEqual(parseArgs(['task-gaps', '--resolution', 'open']), {
+    queryName: 'task-gaps',
+    filters: {
+      resolution: 'pending',
+    },
+  });
+});
+
+test('parseArgs rejects unknown resolution filters before querying the DB', () => {
+  assert.throws(
+    () => parseArgs(['docs-disposition', '--resolution', 'stale']),
+    /Invalid --resolution "stale"/
+  );
 });
 
 test('parseArgs parses task provenance query filters for DB-first task triage', () => {
@@ -233,6 +286,34 @@ test('parseArgs parses component engineering record filters for DB-first governa
       limit: 1,
     },
   });
+});
+
+test('parseArgs parses component engineering record schema version filters', () => {
+  const command = parseArgs([
+    'cer',
+    '--component',
+    'SYS-API-HTTP-ENTRYPOINTS',
+    '--schema-version',
+    'v2',
+    '--limit',
+    '1',
+  ]);
+
+  assert.deepEqual(command, {
+    queryName: 'cer',
+    filters: {
+      component: 'SYS-API-HTTP-ENTRYPOINTS',
+      schemaVersion: 'v2',
+      limit: 1,
+    },
+  });
+});
+
+test('parseArgs rejects unsupported component engineering record schema versions', () => {
+  assert.throws(
+    () => parseArgs(['cer', '--schema-version', 'v3']),
+    /Invalid --schema-version "v3". Expected v1 or v2./
+  );
 });
 
 test('formatQueryError preserves nested connection failures for unavailable DB', () => {
@@ -719,6 +800,31 @@ test('readTaskReferenceRows queries the DB-owned task-like reference view', asyn
   assert.deepEqual(captured.params, ['unknown_task_like_id', 'docs/planning/status/example.md', 5]);
 });
 
+test('readFeatureWorkRows queries governed feature mechanization work from DB references', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readFeatureWorkRows(client, {
+    status: 'Accepted',
+    prefix: 'TF',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.doc_task_reference_query reference/);
+  assert.match(captured.sql, /join planning_query_store\.doc_disposition_document_query document/);
+  assert.match(captured.sql, /reference\.classification = 'registered_feature_mechanization'/);
+  assert.match(captured.sql, /reference\.reference_prefix = \$1/);
+  assert.match(captured.sql, /document\.status = \$2/);
+  assert.match(captured.sql, /limit \$3/);
+  assert.deepEqual(captured.params, ['TF', 'Accepted', 5]);
+});
+
 test('readTaskTraceRows queries the DB-owned task provenance trace view', async () => {
   const captured = { sql: '', params: null };
   const client = {
@@ -836,6 +942,28 @@ test('docs disposition row builders format cleanup queues for operator output', 
       },
     ]),
     [['unknown_task_like_id', 'WEB-123', 'WEB', 'docs/planning/status/example.md', 2]]
+  );
+
+  assert.deepEqual(
+    buildFeatureWorkRows([
+      {
+        feature_id: 'TF-E2-A-IMPLEMENTATION',
+        document_status: 'Accepted',
+        planning_type: 'proposal',
+        document_path:
+          'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-a-authoring-draft-hard-cut-implementation-plan-20260503.md',
+        occurrence_count: 1,
+      },
+    ]),
+    [
+      [
+        'TF-E2-A-IMPLEMENTATION',
+        'Accepted',
+        'proposal',
+        'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-a-authoring-draft-hard-cut-implementation-plan-20260503.md',
+        1,
+      ],
+    ]
   );
 });
 
@@ -997,6 +1125,31 @@ test('readGovernanceComponentRows queries the DB governance component view', asy
   assert.deepEqual(captured.params, ['SYS-DOCS-GOVERNANCE', 'stable', 5]);
 });
 
+test('readGovernanceUnitRows queries the DB governance unit tree view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readGovernanceUnitRows(client, {
+    component: 'SYS-API-ROOT',
+    parentUnit: 'SYS-API',
+    governanceState: 'coverage-required',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.governance_unit_query/);
+  assert.match(captured.sql, /unit_id = \$1/);
+  assert.match(captured.sql, /parent_id = \$2/);
+  assert.match(captured.sql, /governance_state = \$3/);
+  assert.match(captured.sql, /limit \$4/);
+  assert.deepEqual(captured.params, ['SYS-API-ROOT', 'SYS-API', 'coverage-required', 5]);
+});
+
 test('readGovernanceCoverageRows queries the DB governance coverage view', async () => {
   const captured = { sql: '', params: null };
   const client = {
@@ -1089,7 +1242,48 @@ test('readComponentEngineeringRecordRows queries the DB CER view', async () => {
   assert.deepEqual(captured.params, ['SYS-API-HTTP-ENTRYPOINTS', 1]);
 });
 
+test('readComponentEngineeringRecordRows queries the DB CER v2 view when requested', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readComponentEngineeringRecordRows(client, {
+    component: 'SYS-API-HTTP-ENTRYPOINTS',
+    schemaVersion: 'v2',
+    limit: 1,
+  });
+
+  assert.match(
+    captured.sql,
+    /from planning_query_store\.governance_component_engineering_record_v2_query/
+  );
+  assert.match(captured.sql, /component_id = \$1/);
+  assert.match(captured.sql, /limit \$2/);
+  assert.deepEqual(captured.params, ['SYS-API-HTTP-ENTRYPOINTS', 1]);
+});
+
 test('governance row builders format DB rows for CLI output', () => {
+  assert.deepEqual(
+    buildGovernanceUnitRows([
+      {
+        unit_id: 'SYS-API-ROOT',
+        name: 'API root module',
+        level: 'module',
+        parent_id: 'SYS-API',
+        governance_state: 'coverage-required',
+        direct_file_count: 0,
+        descendant_file_count: 243,
+        ddd_owner: null,
+        is_materialized_component: false,
+      },
+    ]),
+    [['SYS-API-ROOT', 'API root module', 'module', 'SYS-API', 'coverage-required', 0, 243, '-']]
+  );
   assert.deepEqual(
     buildGovernanceComponentRows([
       {

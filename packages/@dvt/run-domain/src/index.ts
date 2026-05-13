@@ -1,3 +1,7 @@
+/**
+ * @ownedConcern Runtime run-domain invariant API for event folding, transition
+ * guards, and projectable run event normalization.
+ */
 export { applyRunEvent } from './applyRunEvent.js';
 export { InvalidRunEventShapeError, InvalidStateTransitionError } from './errors.js';
 export { mapEventEnvelopeToProjectableEvent } from './mapEventEnvelopeToProjectableEvent.js';

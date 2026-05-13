@@ -35,6 +35,10 @@ function assertWorkflowContains(workflow, snippet) {
   assert.ok(workflow.includes(snippet), `workflow must include: ${snippet}`);
 }
 
+function countWorkflowCommand(workflow, command) {
+  return workflow.split(command).length - 1;
+}
+
 test('adapter-postgres policy stays wired into the PR quality gate and test workflow', () => {
   const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
   const testWorkflow = readFileSync('.github/workflows/test.yml', 'utf8');
@@ -224,6 +228,14 @@ test('PR quality gate keeps merge-blocking governance commands wired', () => {
   for (const command of PR_QUALITY_GOVERNANCE_COMMANDS) {
     assertWorkflowContains(prQualityGate, command);
   }
+});
+
+test('PR quality gate is the single remote owner for ADR-0000 traceability', () => {
+  const ciWorkflow = readFileSync('.github/workflows/ci.yml', 'utf8');
+  const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
+
+  assert.equal(countWorkflowCommand(prQualityGate, 'pnpm traceability:adr0'), 1);
+  assert.equal(countWorkflowCommand(ciWorkflow, 'pnpm traceability:adr0'), 0);
 });
 
 test('security and nightly workflows stay wired to pinned actions and failure notification', () => {

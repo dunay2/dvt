@@ -143,15 +143,32 @@ describe('PostgresStateStoreAdapter migration state', () => {
     await expect(adapter.listPending(0)).rejects.toThrow(/MIGRATE_NOT_CALLED/);
   });
 
-  it('rejects schema rollback while tracked clients are still active', async () => {
+  it('allows online-compatible schema rollback while tracked clients are still active', async () => {
     const adapter = new PostgresStateStoreAdapter({
       pool: {
         connect: async () => {
-          throw new Error('connect should not be called when active clients exist');
+          throw new Error('connect should not be called by the stubbed schema manager');
         },
       } as never,
       assumeSchemaReady: true,
     });
+    const rollbackPlan = {
+      component: 'core',
+      schema: 'dvt',
+      currentVersion: 'core_020_run_events_tenant_run_idx',
+      targetVersion: 'core_019_table_scoped_service_owner_rls',
+      steps: [
+        {
+          version: 'core_020_run_events_tenant_run_idx',
+          description: 'Add tenant-leading run_events index for tenant-scoped run sequence lookups',
+          rollbackDescription: 'Drop tenant-leading run_events index',
+          rollbackCompatibility: {
+            mode: 'online',
+            reason: 'Index removal preserves row shape and tenant semantics.',
+          },
+        },
+      ],
+    };
 
     (
       adapter as unknown as {
@@ -160,16 +177,36 @@ describe('PostgresStateStoreAdapter migration state', () => {
         };
       }
     ).clientSession.activeClients.add({ release() {} });
+    (
+      adapter as unknown as {
+        schemaManager: {
+          planRollback: (targetVersion: string | null) => Promise<unknown>;
+          rollbackTo: (targetVersion: string | null) => Promise<unknown>;
+        };
+      }
+    ).schemaManager.planRollback = vi.fn(async () => rollbackPlan);
+    (
+      adapter as unknown as {
+        schemaManager: {
+          rollbackTo: (targetVersion: string | null) => Promise<unknown>;
+        };
+      }
+    ).schemaManager.rollbackTo = vi.fn(async () => rollbackPlan);
 
-    await expect(adapter.rollbackSchemaTo('core_009_core_indexes')).rejects.toThrow(
-      /SCHEMA_ROLLBACK_ACTIVE_CLIENTS/
+    await expect(adapter.rollbackSchemaTo('core_019_table_scoped_service_owner_rls')).resolves.toBe(
+      rollbackPlan
     );
   });
 
-  it('holds maintenance gate during rollback to prevent new client acquisition race', async () => {
+  it('keeps reader acquisition open while online-compatible rollback executes', async () => {
     const pool = {
       connect: vi.fn(async () => {
-        throw new Error('connect should not run while maintenance gate is active');
+        return {
+          async query() {
+            return { rows: [], rowCount: 0 };
+          },
+          release() {},
+        };
       }),
     };
     const adapter = new PostgresStateStoreAdapter({
@@ -187,6 +224,10 @@ describe('PostgresStateStoreAdapter migration state', () => {
           description: 'Create all standard operational indexes',
           rollbackDescription:
             'Drop the standard operational indexes introduced by the core index step',
+          rollbackCompatibility: {
+            mode: 'online',
+            reason: 'Index-only rollback preserves table shape and tenant semantics.',
+          },
         },
       ],
     };
@@ -194,18 +235,37 @@ describe('PostgresStateStoreAdapter migration state', () => {
     (
       adapter as unknown as {
         schemaManager: {
+          planRollback: (targetVersion: string | null) => Promise<unknown>;
+          rollbackTo: (targetVersion: string | null) => Promise<unknown>;
+        };
+      }
+    ).schemaManager.planRollback = vi.fn(async (_targetVersion: string | null) => rollbackPlan);
+    (
+      adapter as unknown as {
+        clientSession: {
+          withClient: <T>(fn: (client: unknown) => Promise<T>) => Promise<T>;
+        };
+        schemaManager: {
           rollbackTo: (targetVersion: string | null) => Promise<unknown>;
         };
       }
     ).schemaManager.rollbackTo = vi.fn(async (_targetVersion: string | null) => {
-      await expect(adapter.listPending(1)).rejects.toThrow(/SESSION_MAINTENANCE_MODE_ACTIVE/);
+      await expect(
+        (
+          adapter as unknown as {
+            clientSession: {
+              withClient: <T>(fn: (client: unknown) => Promise<T>) => Promise<T>;
+            };
+          }
+        ).clientSession.withClient(async () => 'reader-ok')
+      ).resolves.toBe('reader-ok');
       return rollbackPlan;
     });
 
     await expect(adapter.rollbackSchemaTo('core_008_compat_cleanup')).resolves.toEqual(
       rollbackPlan
     );
-    expect(pool.connect).not.toHaveBeenCalled();
+    expect(pool.connect).toHaveBeenCalledTimes(1);
   });
 
   it('applies SET LOCAL statement_timeout inside each step transaction when configured', async () => {

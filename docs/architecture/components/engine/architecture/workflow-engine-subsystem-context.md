@@ -50,7 +50,7 @@ Inbound flow (primary):
 
 Outbound flow (primary):
 
-`WorkflowEngine -> StartRunAdmissionGuard/StartRunApplicationService/RunStatusQueryService/WorkflowEngineCoreService -> ports/adapters`
+`WorkflowEngine -> StartRunAdmissionGuard/StartRunApplicationService/RunStatusQueryService/RunCommandService/RunSignalService -> ports/adapters`
 
 Optional enrichment flow:
 
@@ -82,12 +82,14 @@ flowchart LR
   UseCase --> Enrich["IRunEnrichmentService"]
   Engine --> StartRun["StartRunApplicationService path"]
   Engine --> Query["RunStatusQueryService path"]
-  Engine --> Core["WorkflowEngineCoreService path"]
+  Engine --> Command["RunCommandService path"]
+  Engine --> Signal["RunSignalService path"]
   Health --> Ports
   Enrich --> Ports
   StartRun --> Ports["Engine ports"]
   Query --> Ports
-  Core --> Ports
+  Command --> Ports
+  Signal --> Ports
   Ports --> State["IRunStateStore (runtime-wired)"]
   Ports --> PlanStore["IPlanIntegrityValidator (runtime-wired)"]
   Ports --> Intent["IStartRunIntentStore (runtime-wired)"]
@@ -96,7 +98,8 @@ flowchart LR
   Ports -.-> Projector["IProjector (package-exposed target seam)"]
   Ports -.-> Metrics["IMetricsCollector (source-tree target seam)"]
   StartRun --> Obs["Observability facade"]
-  Core --> Obs
+  Command --> Obs
+  Signal --> Obs
 ```
 
 ## Current ports and adapters inventory
@@ -141,7 +144,10 @@ Main components in the subsystem:
 - `StartRunExecutionService` and `StartRunFailurePolicy`
 - `RunStatusQueryService` (canonical read path)
 - `IRunHealthService` / `RunHealthService` (runtime liveness probe path)
-- `WorkflowEngineCoreService` (cancel/signal runtime path)
+- `RunCommandService` (cancel command runtime path)
+- `RunSignalService` (runtime signal path)
+- `WorkflowEngineCoreService` (compatibility adapter over command and signal
+  services)
 - `RunEnrichmentService` (engine-owned implementation of enrichment)
 - `IRunEnrichmentService` (explicit provider-backed enrichment boundary)
 - `SnapshotProjector` (event-to-status read model projection)
@@ -151,7 +157,8 @@ flowchart TB
   WF --> Coord["StartRunApplicationService"]
   WF --> Recover["RecoverRunApplicationService"]
   WF --> Query["RunStatusQueryService"]
-  WF --> Core["WorkflowEngineCoreService"]
+  WF --> Command["RunCommandService"]
+  WF --> Signal["RunSignalService"]
   HealthApi["IRunHealthService"] --> Health["RunHealthService"]
   Recover --> Guard["StartRunAdmissionGuard"]
   Recover --> Coord
@@ -160,7 +167,8 @@ flowchart TB
   Enrich --> Provider["IProviderAdapter"]
   Coord --> Exec["StartRunExecutionService"]
   Coord --> Fail["StartRunFailurePolicy"]
-  Core --> Provider
+  Command --> Provider
+  Signal --> Provider
   Guard --> Validation["StartRunValidationPolicy"]
   Guard --> RunCtxPolicy["RunExecutionContextAdmissionPolicy"]
 ```
@@ -251,17 +259,24 @@ sequenceDiagram
   [WorkflowEngine boundary ownership component](./workflow-engine-boundary-ownership-component.md)
 - public facade tracing drift is closed by
   [WorkflowEngine Facade Use-Cases Component](./workflow-engine-facade-use-cases-component.md)
+- start-run internal collaborator construction drift is closed by
+  [WorkflowEngine Start-Run Decomposition Component](./workflow-engine-start-run-decomposition-component.md)
+- runtime cancel/signal responsibility drift is closed by
+  [WorkflowEngine Runtime Path Decomposition Component](./workflow-engine-runtime-path-decomposition-component.md)
 
 ```mermaid
 flowchart LR
   Guard["StartRunAdmissionGuard"] -->|mixed concerns| W2["Admission + capability + adapter + rate-limit"]
-  Core["WorkflowEngineCoreService"] -->|mixed concerns| W3["Cancel + signal + telemetry"]
-  StartRun["StartRunApplicationService"] -->|internal construction| W4["Builds failure/exec collaborators directly"]
+  Core["WorkflowEngineCoreService"] -->|closed by DHM-WS4| W3["Compatibility adapter only"]
+  Command["RunCommandService"] -->|closed by DHM-WS4| W5["Cancel command path"]
+  Signal["RunSignalService"] -->|closed by DHM-WS4| W6["Runtime signal path"]
+  StartRun["StartRunApplicationService"] -->|closed by DHM-WS3| W4["Execution/failure collaborators injected"]
 ```
 
 ## Fowler/SOLID/hexagonal assessment (as-is)
 
-- Fowler-style use-case decomposition is present but incomplete.
+- Fowler-style use-case decomposition is present; the start-run application
+  construction seam and runtime cancel/signal split are now explicit.
 - SOLID posture is partially aligned:
   - SRP improved vs earlier monolith, but key classes remain wide.
   - DIP is mostly aligned through ports, but composition boundaries are not yet
@@ -276,6 +291,8 @@ flowchart LR
 - `packages/@dvt/engine/src/application/StartRunApplicationService.ts`
 - `packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts`
 - `packages/@dvt/engine/src/services/RunStatusQueryService.ts`
+- `packages/@dvt/engine/src/services/runControl/RunCommandService.ts`
+- `packages/@dvt/engine/src/services/runControl/RunSignalService.ts`
 - `packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts`
 - `packages/@dvt/engine/src/services/RunEnrichmentService.ts`
 - `packages/@dvt/engine/src/core/SnapshotProjector.ts`

@@ -1,3 +1,9 @@
+/**
+ * @ownedConcern run lifecycle test fixture for in-memory run store setup.
+ *
+ * Creates persisted run events for tests without adapter or provider-runtime
+ * authority.
+ */
 import type { EngineRunRef, Provider } from '@dvt/contracts';
 
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';

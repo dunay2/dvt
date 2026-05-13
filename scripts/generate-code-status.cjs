@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
 const fs = require('node:fs');
 const path = require('node:path');
 const { resolveGeneratedDate } = require('./generated-doc-date.cjs');
@@ -7,7 +6,13 @@ const { resolveGeneratedDate } = require('./generated-doc-date.cjs');
 const repoRoot = path.resolve(__dirname, '..');
 const packagesRoot = path.join(repoRoot, 'packages');
 const appsRoot = path.join(repoRoot, 'apps');
-const outputPath = path.join(repoRoot, 'docs', 'planning', 'status', 'generated-code-state.md');
+const outputPath = path.join(
+  repoRoot,
+  '.generated-docs',
+  'planning',
+  'status',
+  'generated-code-state.md'
+);
 
 function toPosix(p) {
   return p.replace(/\\/g, '/');
@@ -95,9 +100,7 @@ function collectWorkspaceStats(dir) {
     ? walk(srcDir, (_, name) => isColocatedTestFile(name))
     : [];
   const testFiles = [
-    ...(fs.existsSync(testDir)
-      ? walk(testDir, (_, name) => /\.(ts|tsx|js|jsx)$/.test(name))
-      : []),
+    ...(fs.existsSync(testDir) ? walk(testDir, (_, name) => /\.(ts|tsx|js|jsx)$/.test(name)) : []),
     ...colocatedTestFiles,
   ];
 

@@ -40,6 +40,7 @@ export type {
   PostgresRuntimeStoresToMigrate,
 } from './migratePostgresRuntimeStores.js';
 export type {
+  PostgresSchemaRollbackCompatibility,
   PostgresSchemaRollbackPlan,
   PostgresSchemaRollbackPlanStep,
 } from './PostgresSchemaManager.js';
@@ -63,6 +64,7 @@ export type {
 } from './PostgresRelationalExecutionCapability.js';
 
 export { PostgresStateStoreAdapter } from './PostgresStateStoreAdapter.js';
+export { PostgresSchemaRollbackCompatibilityPolicy } from './PostgresSchemaManager.js';
 export { PostgresPlanStore } from './PostgresPlanStore.js';
 export { PostgresBackpressureSnapshotReader } from './PostgresBackpressureSnapshotReader.js';
 export { PostgresRunMetadataRepository } from './PostgresRunMetadataRepository.js';
