@@ -111,9 +111,17 @@ paths. Skipping.` This is not treated as INV-5 closure; `AR-C2-INV-5`
   - Passed.
 - `pnpm governance:refresh`
   - Passed.
-
-Final closeout gate still pending at this point in the slice:
-`pnpm verify:prepush`.
+- `pnpm planning:db:operate task update --lane C --task AR-C2-INV-4 --actor codex --status done --progress 100 ...`
+  - Passed with revision 2.
+- `pnpm docs:workboard:generate`
+  - Passed.
+- `pnpm planning:db:export:check`
+  - Passed.
+- `pnpm verify:prepush`
+  - First post-commit run failed on Prettier for
+    `tools/ops/ar-c2-evidence-collector*.mjs`; fixed by applying Prettier to
+    the affected files without changing behavior.
+  - Second post-commit run passed.
 
 ## No-Debt Evidence
 
