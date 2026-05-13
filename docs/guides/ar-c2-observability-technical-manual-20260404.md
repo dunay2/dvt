@@ -118,8 +118,10 @@ back to the SLA text without relying on local monitor names.
 1. Fill dashboard matrix rows in AR-C2 evidence runbook (`T2`).
 2. Fill alert matrix rows in AR-C2 evidence runbook (`T3`).
 3. Add sustained window outcomes and operator actions (`T4`).
-4. Update lane and review artifacts only after evidence is attached.
-5. Run `pnpm qa:artifact:check`, `pnpm docs:sync`,
+4. Run `pnpm ops:ar-c2:evidence -- --require-dashboard-alert-evidence`.
+5. Run `pnpm ops:ar-c2:evidence -- --require-sustained-validation-windows`.
+6. Update lane and review artifacts only after evidence is attached.
+7. Run `pnpm qa:artifact:check`, `pnpm docs:sync`,
    `pnpm docs:workboard:generate`, and `pnpm verify:prepush`.
 
 ## Primary References

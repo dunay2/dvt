@@ -2,7 +2,7 @@
 title: AR-C2 Fowler hard QA review
 status: Active
 owner: Product / Architecture / QA / Docs
-last_reviewed: 2026-04-04
+last_reviewed: 2026-05-13
 planning_type: review
 qa_artifact: true
 ---
@@ -52,6 +52,20 @@ qa_artifact: true
     Concrete recommendation: keep the hardened script and treat escalated QA run
     as the authoritative result in this agent environment.
 
+- Severity: `Medium`
+  Short title: AR-C2 INV-5 requires non-skipped QA artifact validation
+  Why it matters: AR-C2 evidence changes must prove that the QA artifact gate
+  inspected a governed artifact, not merely that no candidate artifact changed.
+  Exact evidence:
+  - `AR-C2-INV-4` initially closed with `pnpm qa:artifact:check` reporting
+    `No changed QA artifact docs detected in governed paths. Skipping.`
+  - `AR-C2-INV-5` changes this QA artifact directly so the gate must validate
+    `qa_artifact: true` content and return `[qa:artifact:check] OK`.
+    Real risk: without a non-skip run, AR-C2 closure evidence could overstate
+    review coverage.
+    Concrete recommendation: keep this QA artifact in the changed set whenever
+    AR-C2 evidence-gate posture changes require QA structural proof.
+
 ### Low
 
 - Severity: `Low`
@@ -80,7 +94,8 @@ qa_artifact: true
   and aligned.
 - Evidence and risk-doc status when applicable: evidence doc for final AR-C2
   closure is still required in `AR-C2-T4`; risk update depends on validation
-  outcomes.
+  outcomes. `AR-C2-INV-5` records a non-skipped QA artifact gate result for the
+  current AR-C2 evidence-gate posture.
 
 ## Architecture Assessment
 
@@ -114,13 +129,17 @@ qa_artifact: true
   - `pnpm docs:sync`
   - `pnpm verify:prepush`
 - What passed:
-  - all commands above passed in this slice.
+  - all commands above passed in the original slice.
+  - 2026-05-13 `pnpm qa:artifact:check` passed in non-skip mode for this
+    changed QA artifact.
 - What failed:
   - none.
 - What could not be verified:
   - runtime dashboard/alert behavior itself (requires AR-C2 execution evidence).
-  - QA artifact structure compliance for this worktree iteration because the
-    gate executed in skip mode (`No changed files detected`).
+  - original 2026-04-04 QA artifact structure compliance for that worktree
+    iteration because the gate executed in skip mode (`No changed files
+detected`); this is now superseded by `AR-C2-INV-5` non-skip validation for
+    the current artifact change.
 
 ## Opportunities
 
@@ -143,6 +162,8 @@ qa_artifact: true
 
 - [x] `AR-C2-T1` Freeze canonical signal-to-threshold mapping
 - [x] `AR-C2-QA-1` Re-run QA artifact gate with tracked AR-C2 artifact diffs
+- [x] `AR-C2-INV-5` Record non-skipped QA artifact gate for current AR-C2
+      evidence artifacts
 - [ ] `AR-C2-T2` Record dashboard coverage evidence per signal
 - [ ] `AR-C2-T3` Record alert-rule coverage evidence per threshold
 - [ ] `AR-C2-T4` Record sustained validation evidence and close AR-C2
@@ -160,6 +181,23 @@ qa_artifact: true
   success (or actionable failures are fixed and re-run passes).
 - Iteration status: completed after execution-path hardening and escalated run
   in this environment (`[qa:artifact:check] OK`).
+
+#### `AR-C2-INV-5` Record non-skipped QA artifact gate for current evidence artifacts
+
+- Objective: prove the QA artifact gate validates a changed AR-C2 QA artifact
+  instead of skipping because no governed artifact changed.
+- Scope: this QA artifact and `AR-C2-INV-5` closeout evidence.
+- In current task scope: yes.
+- Dependencies: `AR-C2-INV-4`.
+- Documentation impact: this review records the non-skip QA gate posture for
+  the current AR-C2 evidence-gate update.
+- Evidence / risk-doc impact: direct closeout evidence; no ARC evidence or risk
+  entry is required because no ARC-triggering paths are touched.
+- Comment with rationale: a skip-mode QA artifact gate is not proof that the
+  changed AR-C2 evidence posture was structurally validated.
+- Definition of Done: `pnpm qa:artifact:check` reports `[qa:artifact:check] OK`
+  while this `qa_artifact: true` review is in the changed-file set.
+- Iteration status: completed in `AR-C2-INV-5`.
 
 ### Task Details
 

@@ -63,6 +63,33 @@ Acceptance criteria:
 - The command reports blocker counts in stderr.
 - The runbook points closure reviewers to the assertion mode.
 
+### US-AR-C2-INV-4-001 Missing sustained windows block closure
+
+As a release reviewer, I want `pnpm ops:ar-c2:evidence` to fail closed when
+sustained validation windows are missing, so AR-C2 cannot be marked done from
+one-shot or dashboard-only evidence.
+
+Acceptance criteria:
+
+- Given no metrics snapshot, every required T4 row is reported as a sustained
+  validation blocker.
+- Given `--require-sustained-validation-windows`, the command exits non-zero.
+- The generated artifact remains inspectable and records
+  `insufficient_window_data` rows.
+
+### US-AR-C2-INV-4-002 Complete sustained windows pass
+
+As an SRE, I want complete metrics snapshots to satisfy `AR-C2-INV-4`, so AR-C2
+closure can distinguish missing evidence from passing sustained observations.
+
+Acceptance criteria:
+
+- Given one passing metrics window per mapped AR-C2 signal and expected
+  threshold, the sustained-window assertion exits zero.
+- Duplicate logical signals, such as stale and unknown ratios derived from
+  staleness counts, are matched to their distinct expected threshold rows.
+- Dashboard and alert evidence remain separately governed by `AR-C2-INV-1`.
+
 ## Scenario diagram
 
 ```mermaid
@@ -71,5 +98,7 @@ flowchart TB
   Artifact --> Gate{"Dashboard and alert evidence complete?"}
   Gate -->|No| Block["AR-C2 remains open"]
   Gate -->|Yes| Inv1["AR-C2-INV-1 can close"]
-  Inv1 --> Inv4["Sustained validation still required"]
+  Inv1 --> T4Gate{"Sustained windows complete?"}
+  T4Gate -->|No| Block
+  T4Gate -->|Yes| Inv4["AR-C2-INV-4 can close"]
 ```

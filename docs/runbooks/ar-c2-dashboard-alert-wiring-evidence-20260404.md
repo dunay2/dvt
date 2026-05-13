@@ -87,6 +87,23 @@ Each threshold row below also carries the SLA/runbook source that owns the
 threshold text. Do not substitute local alert names or dashboard labels for
 these keys.
 
+For `AR-C2-INV-4`, closure reviewers must run the collector in sustained-window
+assertion mode:
+
+```bash
+pnpm ops:ar-c2:evidence -- --require-sustained-validation-windows
+```
+
+The command must exit zero before sustained validation evidence can be treated
+as complete. A non-zero result with
+`AR-C2_SUSTAINED_VALIDATION_WINDOWS_MISSING` means AR-C2 stays open even if
+dashboard and alert evidence are complete.
+
+The assertion validates the supplied `AR_C2_METRICS_SNAPSHOT_FILE`; it does not
+collect live Prometheus data. Each `windows[]` row must provide `signalKey`,
+`window`, `observed`, `expected`, and `status: "pass"` for the mapped threshold
+row it proves.
+
 ## Dashboard evidence matrix (`AR-C2-T2`)
 
 Populate one row per signal with immutable evidence when available.
