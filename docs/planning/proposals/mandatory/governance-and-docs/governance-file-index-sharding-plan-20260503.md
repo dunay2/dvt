@@ -63,6 +63,7 @@ allowedImplementationSurfaces:
   - docs/planning/status/**
   - scripts/check-governance-file-fingerprint-baseline.cjs
   - scripts/check-governance-file-fingerprint-baseline.test.cjs
+  - scripts/docs-quality-check.cjs
   - scripts/planning-db-import.cjs
   - scripts/planning-db-import.test.cjs
 forbiddenImplementationSurfaces:
@@ -132,6 +133,17 @@ redGreenCycles:
       - docs/planning/status/**
     greenTest: pnpm docs:feature-mechanization:implementation
 symbols:
+  - name: explicitOwnerFiles
+    path: scripts/docs-quality-check.cjs
+    dddOwner: CI governance / docs governance
+    cqRails:
+      - ValidateSystemGovernanceGenerationWorkflow
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: pnpm docs:quality:check
+    cypressCoverage: N/A - repository governance validation only
+    unitTests:
+      - pnpm docs:quality:check
   - name: crypto
     path: scripts/check-governance-file-fingerprint-baseline.cjs
     dddOwner: CI governance / docs governance

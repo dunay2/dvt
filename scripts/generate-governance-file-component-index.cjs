@@ -376,7 +376,7 @@ function countBy(entries, key) {
 
 function renderYaml(payload) {
   return yaml.dump(payload, {
-    lineWidth: 100,
+    lineWidth: 1000,
     noRefs: true,
     sortKeys: false,
   });
