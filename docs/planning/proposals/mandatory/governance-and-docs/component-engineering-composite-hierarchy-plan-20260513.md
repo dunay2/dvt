@@ -647,14 +647,17 @@ select
     select 1
     from planning_query_store.governance_unit_query child
     where child.parent_id = unit.unit_id
+      and child.level = 'component'
   ) as has_children,
   not exists (
     select 1
     from planning_query_store.governance_unit_query child
     where child.parent_id = unit.unit_id
+      and child.level = 'component'
   ) as is_leaf_component,
   raw_units
-from planning_query_store.governance_unit_query unit;
+from planning_query_store.governance_unit_query unit
+where unit.level = 'component';
 ```
 
 The same migration must also define:
