@@ -36,7 +36,7 @@ Targeted red/green commands:
 - `pnpm --filter dvt-temporal-worker exec vitest run test/plugins/env.test.ts`
 
 Final closeout validation is recorded in
-[ED-20260513 MW-D2 Temporal worker routing](../../evidence/ED-20260513-mw-d2-temporal-worker-routing.md).
+[ED-20260513 MW-D2 Temporal worker routing](../../evidence/ed-20260513-mw-d2-temporal-worker-routing.md).
 
 ## Residual Scope
 
