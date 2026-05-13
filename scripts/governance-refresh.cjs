@@ -63,6 +63,10 @@ function buildRefreshStages() {
         id: 'remediation-queue',
         script: 'docs:governance:remediation-queue',
       },
+      {
+        id: 'governance-db-import-after-reports',
+        script: 'governance:db:import',
+      },
     ],
     databaseStages: [
       {

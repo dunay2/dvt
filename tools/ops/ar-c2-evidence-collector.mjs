@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/** Owned concern: collect AR-C2 operational evidence and enforce immutable dashboard/alert closure evidence. */
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
@@ -13,6 +14,12 @@ const DEFAULT_OUTPUT_PATH = path.join(ROOT, 'docs/runbooks/ar-c2-evidence-genera
 
 function utcNowIso() {
   return new Date().toISOString();
+}
+
+function parseArgs(argv) {
+  return {
+    requireDashboardAlertEvidence: argv.includes('--require-dashboard-alert-evidence'),
+  };
 }
 
 function cleanCell(value) {
@@ -136,6 +143,40 @@ function normalizeMetricsSnapshot(snapshot) {
     bySignal.set(signalKey, existing);
   }
   return bySignal;
+}
+
+function collectDashboardAlertEvidenceBlockers({
+  mappingRows,
+  dashboardPanelKeys,
+  alertRulesByThreshold,
+}) {
+  const missingDashboardPanelKeys = mappingRows
+    .filter((row) => !dashboardPanelKeys.has(row.targetPanelKey))
+    .map((row) => row.targetPanelKey);
+  const missingAlertThresholdKeys = deriveThresholdRows(mappingRows)
+    .filter((row) => !alertRulesByThreshold.has(row.thresholdKey))
+    .map((row) => row.thresholdKey);
+
+  return {
+    missingDashboardPanelKeys,
+    missingAlertThresholdKeys,
+  };
+}
+
+function assertImmutableDashboardAlertEvidence(blockers) {
+  const dashboardCount = blockers.missingDashboardPanelKeys.length;
+  const alertCount = blockers.missingAlertThresholdKeys.length;
+  if (dashboardCount === 0 && alertCount === 0) return;
+
+  throw new Error(
+    [
+      'AR-C2_IMMUTABLE_EVIDENCE_MISSING',
+      `missing dashboard panels: ${dashboardCount}`,
+      `missing alert rules: ${alertCount}`,
+      `dashboard blockers: ${blockers.missingDashboardPanelKeys.join(', ') || 'none'}`,
+      `alert blockers: ${blockers.missingAlertThresholdKeys.join(', ') || 'none'}`,
+    ].join('\n')
+  );
 }
 
 function renderArtifact({
@@ -262,6 +303,7 @@ ${sustainedRows
 }
 
 async function main() {
+  const options = parseArgs(process.argv.slice(2));
   const outputPath = process.env.AR_C2_EVIDENCE_OUTPUT_PATH
     ? path.resolve(ROOT, process.env.AR_C2_EVIDENCE_OUTPUT_PATH)
     : DEFAULT_OUTPUT_PATH;
@@ -272,11 +314,13 @@ async function main() {
 
   const mappingRaw = await fs.readFile(MAPPING_PATH, 'utf8');
   const mappingRows = parseMarkdownTableRows(mappingRaw);
+  const dashboardPanelKeys = normalizeDashboardSnapshot(dashboardSnapshot);
+  const alertRulesByThreshold = normalizeAlertSnapshot(alertSnapshot);
 
   const markdown = renderArtifact({
     mappingRows,
-    dashboardPanelKeys: normalizeDashboardSnapshot(dashboardSnapshot),
-    alertRulesByThreshold: normalizeAlertSnapshot(alertSnapshot),
+    dashboardPanelKeys,
+    alertRulesByThreshold,
     metricsBySignal: normalizeMetricsSnapshot(metricsSnapshot),
     generatedAt: utcNowIso(),
   });
@@ -289,6 +333,16 @@ async function main() {
   await fs.mkdir(path.dirname(outputPath), { recursive: true });
   await fs.writeFile(outputPath, formattedMarkdown, 'utf8');
   process.stdout.write(`[ar-c2:evidence] Generated ${path.relative(ROOT, outputPath)}\n`);
+
+  if (options.requireDashboardAlertEvidence) {
+    assertImmutableDashboardAlertEvidence(
+      collectDashboardAlertEvidenceBlockers({
+        mappingRows,
+        dashboardPanelKeys,
+        alertRulesByThreshold,
+      })
+    );
+  }
 }
 
 main().catch((error) => {
