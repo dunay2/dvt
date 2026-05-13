@@ -1053,6 +1053,20 @@
       ],
       "implemented_by": ["scripts/planning-db-query.cjs"],
       "title": "ADR-0055 - Planning DB Canonical Operational Source"
+    },
+    {
+      "number": "ADR-0056",
+      "decisions": [
+        "Section 2 - Authorization defaults deny privileged UI actions until server projection loads",
+        "Section 2 - Runtime capabilities are loaded from the server without browser-local fallback",
+        "Section 3 - Runtime plugin projection fails closed when backend capability rows are absent"
+      ],
+      "implemented_by": [
+        "apps/web/src/app/plugins/registry.ts",
+        "apps/web/src/app/services/capabilities/capabilitiesPort.ts",
+        "apps/web/src/app/stores/authorizationStore.ts"
+      ],
+      "title": "ADR-0056: Web UI Authority Is Server-Projected"
     }
   ]
 }

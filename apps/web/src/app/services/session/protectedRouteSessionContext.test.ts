@@ -1,11 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { classifyProtectedRouteSessionError } from '../../bootstrap/AuthRouteGate';
+import { DEFAULT_USER_PERMISSIONS, useAuthorizationStore } from '../../stores/authorizationStore';
 import { useSessionStore } from '../../stores/sessionStore';
 import { resolveProtectedRouteSessionContext } from './protectedRouteSessionContext';
 
 describe('resolveProtectedRouteSessionContext', () => {
   const originalSessionState = useSessionStore.getState();
+  const originalAuthorizationState = useAuthorizationStore.getState();
 
   beforeEach(() => {
     useSessionStore.setState({
@@ -13,6 +15,10 @@ describe('resolveProtectedRouteSessionContext', () => {
       projectId: 'local-project',
       environmentId: 'local-env',
       targetAdapter: 'temporal',
+    });
+    useAuthorizationStore.setState({
+      userPermissions: DEFAULT_USER_PERMISSIONS,
+      setUserPermissions: originalAuthorizationState.setUserPermissions,
     });
   });
 
@@ -23,6 +29,10 @@ describe('resolveProtectedRouteSessionContext', () => {
       environmentId: originalSessionState.environmentId,
       targetAdapter: originalSessionState.targetAdapter,
     });
+    useAuthorizationStore.setState({
+      userPermissions: originalAuthorizationState.userPermissions,
+      setUserPermissions: originalAuthorizationState.setUserPermissions,
+    });
   });
 
   it('resolves session and then applies backend-owned workspace context', async () => {
@@ -31,6 +41,13 @@ describe('resolveProtectedRouteSessionContext', () => {
         return {
           principal: { principalId: 'u-1' },
           grants: { tenantIds: ['tenant-a'], projectIds: ['project-a'], scopes: [] },
+          permissions: {
+            canPlan: true,
+            canRun: true,
+            canEditEdges: true,
+            canManagePlugins: false,
+            canManageRBAC: false,
+          },
         };
       }
 
@@ -66,6 +83,57 @@ describe('resolveProtectedRouteSessionContext', () => {
       tenantId: 'tenant-a',
       projectId: 'project-a',
       environmentId: 'prod',
+    });
+    expect(useAuthorizationStore.getState().userPermissions).toEqual({
+      canPlan: true,
+      canRun: true,
+      canEditEdges: true,
+      canManagePlugins: false,
+      canManageRBAC: false,
+    });
+  });
+
+  it('derives UI permissions from server-granted session scopes when explicit permissions are absent', async () => {
+    const getJson = vi.fn(async (endpoint: string) => {
+      if (endpoint === '/session') {
+        return {
+          principal: { principalId: 'u-1' },
+          grants: {
+            tenantIds: ['tenant-a'],
+            projectIds: ['project-a'],
+            scopes: ['run:start', 'workspace:graph-draft:save', 'plugins:manage'],
+          },
+        };
+      }
+
+      if (endpoint === '/workspace/context') {
+        return {
+          effectiveWorkspace: {
+            tenantId: 'tenant-a',
+            projectId: 'project-a',
+            environmentId: 'prod',
+          },
+          availableWorkspaces: [
+            {
+              tenantId: 'tenant-a',
+              projectId: 'project-a',
+              environmentId: 'prod',
+            },
+          ],
+        };
+      }
+
+      throw new Error(`Unexpected endpoint ${endpoint}`);
+    });
+
+    await resolveProtectedRouteSessionContext({ getJson } as never);
+
+    expect(useAuthorizationStore.getState().userPermissions).toEqual({
+      canPlan: true,
+      canRun: true,
+      canEditEdges: true,
+      canManagePlugins: true,
+      canManageRBAC: false,
     });
   });
 

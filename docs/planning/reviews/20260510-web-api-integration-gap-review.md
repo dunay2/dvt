@@ -357,3 +357,11 @@ The next valuable implementation slice is to replace optimistic browser-owned
 authorization and capability decisions with API-published read models. Route
 parity, server-owned workspace context, the hard-cut port split, and the
 API-only app-service composition now reduce false confidence in API mode.
+
+Implementation update on 2026-05-10: the authorization and capability authority
+hardcut closed that slice. `authorizationStore` defaults now deny every
+executable permission, `createCapabilitiesPort` no longer converts network
+failure into `frontend-local` readiness, and backend-backed plugins are
+projected only when `/capabilities` publishes an explicit available backend
+plugin row. The remaining web/API gaps are backend rails for diff, admin
+roles/audit, cost read models, lineage read models, and artifact ingestion.
