@@ -49,9 +49,9 @@ flowchart TB
 
 ## Canonical Component Homes
 
-- `@dvt/engine`: [component page](../../components/engine/index.md)
-- `@dvt/delivery`: [component page](../../components/delivery/index.md)
-- `@dvt/cli`: [shared CLI page](../../shared/cli.md)
+- `@dvt/engine`: [component page](../../../components/engine/index.md)
+- `@dvt/delivery`: [component page](../../../components/delivery/index.md)
+- `@dvt/cli`: [shared CLI page](../../../shared/cli.md)
 
 The remaining runtime package component pages should be added only when a
 package needs a single active component home with its own API, invariants, and
