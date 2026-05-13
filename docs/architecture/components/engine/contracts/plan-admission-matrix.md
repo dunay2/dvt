@@ -28,6 +28,7 @@ Code surface:
 
 - `packages/@dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts`
 - `packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts`
+- `packages/@dvt/engine/src/contracts/PlanSchemaVersionPolicy.ts`
 
 Exports:
 
@@ -36,6 +37,7 @@ Exports:
 - `EXECUTION_PLAN_ADMISSION_REGISTRY`
 - `isAdmittedExecutionPlanPair(planVersion, schemaVersion)`
 - `assertAdmittedPlanPair({ planVersion, schemaVersion })`
+- `assertSupportedPlanSchemaVersion({ planVersion, schemaVersion })`
 - `UnsupportedPlanVersionError`
 
 Current admitted pair:
@@ -63,6 +65,8 @@ flowchart LR
 - `PlanAdmission.v1.ts`: publish the executable admitted pair registry.
 - `PlanAdmissionPolicy.ts`: convert undeclared pairs into engine ingress fail
   and plan-version rejection.
+- `PlanSchemaVersionPolicy.ts`: expose the schema-version admission language
+  consumed by start-run preconditions while delegating to the matrix.
 - `StartRunValidationPolicy`: invoke admission before run creation or dispatch.
 - `@dvt/plan-verifier`: verify runtime admission for adapter-side plan
   integrity.
