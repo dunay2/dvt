@@ -90,6 +90,7 @@ allowedImplementationSurfaces:
   - scripts/generate-governance-file-component-index.cjs
   - scripts/generate-governance-file-component-index.test.cjs
   - tools/planning-db/migrations/032_component_engineering_composite_hierarchy.sql
+  - tools/planning-db/migrations/033_component_engineering_component_tree_leaf_filter.sql
   - docs/.manifest.json
   - docs/**/index.md
 forbiddenImplementationSurfaces:
@@ -156,6 +157,13 @@ redGreenCycles:
     expectedFailure: migration 032 and its component tree/drift views do not exist.
     patchSurfaces:
       - tools/planning-db/migrations/032_component_engineering_composite_hierarchy.sql
+      - scripts/planning-db-migrate.test.cjs
+    greenTest: node --test scripts/planning-db-migrate.test.cjs
+  - id: component-tree-source-neutral-leaves
+    redTest: node --test scripts/planning-db-migrate.test.cjs
+    expectedFailure: component leaf checks count source records as child components after migration 032.
+    patchSurfaces:
+      - tools/planning-db/migrations/033_component_engineering_component_tree_leaf_filter.sql
       - scripts/planning-db-migrate.test.cjs
     greenTest: node --test scripts/planning-db-migrate.test.cjs
   - id: component-tree-query-rails
@@ -227,6 +235,19 @@ symbols:
     cypressCoverage: N/A
     unitTests:
       - node --test scripts/planning-db-query.test.cjs
+  - name: component_engineering_component_tree_query_source_neutral_leaf_filter
+    path: tools/planning-db/migrations/033_component_engineering_component_tree_leaf_filter.sql
+    dddOwner: Governance local operations
+    cqRails:
+      - ReadComponentHierarchy
+      - ValidateComponentEngineeringDrift
+    fowlerSignals:
+      - Boundary Drift from source records being treated as component children
+      - Documentation Drift from leaf ownership checks disagreeing with component semantics
+    architectureGuard: node --test scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/planning-db-migrate.test.cjs
   - name: SYS-RUNTIME-ENGINE-CORE
     path: docs/planning/status/system-governance-unit-index.units.yaml
     dddOwner: Runtime engine application service
