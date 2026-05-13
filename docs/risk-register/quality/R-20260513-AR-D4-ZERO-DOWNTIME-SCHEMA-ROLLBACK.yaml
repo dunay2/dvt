@@ -1,0 +1,20 @@
+---
+id: R-20260513-AR-D4-ZERO-DOWNTIME-SCHEMA-ROLLBACK
+title: Online rollback classification could mislabel a future destructive schema step
+status: Open
+date: 2026-05-13
+owners:
+  - packages/@dvt/adapter-postgres
+severity: Medium
+probability: Low
+description: >
+  AR-D4 relies on every future migration step receiving explicit rollback compatibility
+  classification. A future destructive step misclassified as online could allow rollback under live
+  traffic.
+mitigation:
+  - PostgresSchemaRollbackZeroDowntime.architecture.test.ts requires the local component guide,
+    owned concerns, and compatibility policy to stay aligned.
+  - PostgresSchemaManager.rollback.test.ts covers online and offline policy classification.
+  - New migration PRs touching packages/@dvt/adapter-postgres/** trigger ARC-2 evidence and risk
+    review.
+---
