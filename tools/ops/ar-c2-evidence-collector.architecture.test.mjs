@@ -5,6 +5,10 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 test('fails closed when immutable dashboard and alert evidence are missing', () => {
   const root = path.resolve(import.meta.dirname, '../..');
   const outputPath = path.join(mkdtempSync(path.join(tmpdir(), 'ar-c2-evidence-')), 'evidence.md');
@@ -193,6 +197,74 @@ test('rejects key-only dashboard and alert snapshots without immutable metadata'
   assert.match(result.stderr, /AR-C2_IMMUTABLE_EVIDENCE_MISSING/);
   assert.match(result.stderr, /incomplete dashboard evidence: 9/);
   assert.match(result.stderr, /incomplete alert evidence: 11/);
+});
+
+test('renders canonical SLA source reference for every AR-C2 alert threshold', () => {
+  const root = path.resolve(import.meta.dirname, '../..');
+  const outputPath = path.join(mkdtempSync(path.join(tmpdir(), 'ar-c2-evidence-')), 'evidence.md');
+
+  const result = spawnSync(process.execPath, [path.join(root, 'tools/ops/ar-c2-evidence-collector.mjs')], {
+    cwd: root,
+    env: { ...process.env, AR_C2_EVIDENCE_OUTPUT_PATH: outputPath },
+    encoding: 'utf8',
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+
+  const artifact = readFileSync(outputPath, 'utf8');
+  assert.match(artifact, /\| Threshold key\s+\| Source reference\s+\| Alert rule id \|/);
+
+  for (const thresholdKey of [
+    'ar-c2.start-run-latency.warning',
+    'ar-c2.start-run-latency.critical',
+    'ar-c2.plan-compile-latency.warning',
+    'ar-c2.plan-compile-latency.critical',
+    'ar-c2.outbox-drain-lag.warning',
+    'ar-c2.outbox-drain-lag.critical',
+    'ar-c2.event-delivery-latency.warning',
+    'ar-c2.event-delivery-latency.critical',
+    'ar-c2.run-status-stale-ratio.warning',
+    'ar-c2.run-status-stale-ratio.critical',
+    'ar-c2.run-status-unknown-ratio.critical',
+  ]) {
+    assert.match(
+      artifact,
+      new RegExp(
+        '\\| `' + escapeRegExp(thresholdKey) + '`\\s+\\| `docs/runbooks/[^\\n|]+`\\s+\\|'
+      )
+    );
+  }
+});
+
+test('fails closed when a threshold-backed AR-C2 mapping row omits its SLA source reference', () => {
+  const root = path.resolve(import.meta.dirname, '../..');
+  const outputPath = path.join(mkdtempSync(path.join(tmpdir(), 'ar-c2-evidence-')), 'evidence.md');
+  const mappingPath = path.join(mkdtempSync(path.join(tmpdir(), 'ar-c2-evidence-')), 'mapping.md');
+
+  writeFileSync(
+    mappingPath,
+    `# Test AR-C2 mapping
+
+| Logical signal | Logical metric ID | Exported metric / derived expression | SLO threshold | Alert policy | Target dashboard panel key | Alert threshold key(s) | Alert threshold source | Signal owner |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Start-run latency p50/p99 | dvt.api.run_start.latency_ms | dvt_api_run_start_latency_ms_bucket | p50 <= 500ms, p99 <= 2500ms (15m) | warning p99 > 2000ms (10m), critical p99 > 2500ms (15m) | ar-c2.start-run-latency | ar-c2.start-run-latency.warning, ar-c2.start-run-latency.critical |  | API runtime |
+`,
+    'utf8'
+  );
+
+  const result = spawnSync(process.execPath, [path.join(root, 'tools/ops/ar-c2-evidence-collector.mjs')], {
+    cwd: root,
+    env: {
+      ...process.env,
+      AR_C2_EVIDENCE_OUTPUT_PATH: outputPath,
+      AR_C2_MAPPING_PATH: mappingPath,
+    },
+    encoding: 'utf8',
+  });
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /AR-C2_THRESHOLD_SOURCE_MISSING/);
+  assert.match(result.stderr, /ar-c2.start-run-latency/);
 });
 
 test('keeps AR-C2 immutable evidence gate semantics documented with the collector', () => {
