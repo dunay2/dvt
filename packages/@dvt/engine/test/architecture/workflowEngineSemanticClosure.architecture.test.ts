@@ -1,28 +1,14 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { URL, fileURLToPath } from 'node:url';
-
 import { describe, expect, it } from 'vitest';
 
-const TEST_ROOT = fileURLToPath(new URL('.', import.meta.url));
-const ENGINE_ROOT = join(TEST_ROOT, '../../src');
-const REPO_ROOT = join(TEST_ROOT, '../../../../..');
-const COMPONENT_GUIDE = join(
-  REPO_ROOT,
-  'docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md'
-);
-const USER_STORIES = join(
-  REPO_ROOT,
-  'docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-user-stories.md'
-);
-const FOWLER_MAILBOX = join(
-  REPO_ROOT,
-  'buzon/20260512-codex-fowler-dhm-ws6-semantic-closure-analysis.md'
-);
-const CLOSEOUT = join(
-  REPO_ROOT,
-  'docs/planning/closeouts/20260512-dhm-ws6-semantic-closure-closeout.md'
-);
+import {
+  engineArchitectureDocPath,
+  expectFileExists,
+  expectMarkdownSections,
+  readEngineArchitectureDoc,
+  readEngineSource,
+  readRepoSource,
+  repoPath,
+} from './engineArchitectureTestSupport.js';
 
 describe('WorkflowEngine semantic closure architecture', () => {
   it('declares owned concerns for the composition, compatibility, and role-interface seams', () => {
@@ -125,12 +111,17 @@ describe('WorkflowEngine semantic closure architecture', () => {
   });
 
   it('requires local semantic closure docs, Fowler analysis, and complete story coverage', () => {
-    for (const path of [COMPONENT_GUIDE, USER_STORIES, FOWLER_MAILBOX, CLOSEOUT]) {
-      expect(existsSync(path), `${path} should exist`).toBe(true);
+    for (const path of [
+      engineArchitectureDocPath('workflow-engine-semantic-closure-component.md'),
+      engineArchitectureDocPath('workflow-engine-semantic-closure-user-stories.md'),
+      repoPath('buzon/20260512-codex-fowler-dhm-ws6-semantic-closure-analysis.md'),
+      repoPath('docs/planning/closeouts/20260512-dhm-ws6-semantic-closure-closeout.md'),
+    ]) {
+      expectFileExists(path);
     }
 
-    const guide = readFileSync(COMPONENT_GUIDE, 'utf8');
-    for (const expected of [
+    const guide = readEngineArchitectureDoc('workflow-engine-semantic-closure-component.md');
+    expectMarkdownSections(guide, [
       '## Purpose',
       '## Public API',
       '## Invariants',
@@ -140,13 +131,13 @@ describe('WorkflowEngine semantic closure architecture', () => {
       '## Current-State Diagram',
       '## Runtime Sequence',
       '## Drift Guards',
-      '```mermaid',
-    ]) {
-      expect(guide).toContain(expected);
-    }
+    ]);
+    expect(guide).toContain('```mermaid');
 
-    const mailbox = readFileSync(FOWLER_MAILBOX, 'utf8');
-    for (const expected of [
+    const mailbox = readRepoSource(
+      'buzon/20260512-codex-fowler-dhm-ws6-semantic-closure-analysis.md'
+    );
+    expectMarkdownSections(mailbox, [
       '## Mature-System Comparison',
       '## Improved Patterns',
       '## Antipatterns Detected',
@@ -156,11 +147,9 @@ describe('WorkflowEngine semantic closure architecture', () => {
       '## Opportunity Register',
       '## Drift Register',
       '## Applied Fixes',
-    ]) {
-      expect(mailbox).toContain(expected);
-    }
+    ]);
 
-    const stories = readFileSync(USER_STORIES, 'utf8');
+    const stories = readEngineArchitectureDoc('workflow-engine-semantic-closure-user-stories.md');
     for (const expectedStory of [
       'US-DHM-WS6-001',
       'US-DHM-WS6-002',
@@ -174,11 +163,3 @@ describe('WorkflowEngine semantic closure architecture', () => {
     }
   });
 });
-
-function readEngineSource(relativePath: string): string {
-  return readFileSync(join(ENGINE_ROOT, relativePath), 'utf8');
-}
-
-function readRepoSource(relativePath: string): string {
-  return readFileSync(join(REPO_ROOT, relativePath), 'utf8');
-}

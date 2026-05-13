@@ -1351,6 +1351,304 @@ symbols:
 - narrow in-memory doubles, split heavy fixtures, and add architecture-boundary
   regression guards
 
+```feature-mechanization
+version: 1
+featureId: WE-HX-6-BOUNDARY-FITNESS
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+componentGuides:
+  - docs/architecture/components/engine/architecture/workflow-engine-boundary-fitness-component.md
+  - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
+userStories:
+  - docs/architecture/components/engine/architecture/workflow-engine-boundary-fitness-user-stories.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+  - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
+  - docs/adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md
+  - docs/adr/ADR-0003-execution-model.md
+  - docs/adr/ADR-0004-event-sourcing-strategy.md
+  - docs/adr/ADR-0014-run-driven-adapter-model.md
+  - docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md
+allowedImplementationSurfaces:
+  - buzon/20260512-codex-fowler-we-hx-6-boundary-fitness-analysis-and-remediation.md
+  - docs/.manifest.json
+  - docs/index.md
+  - docs/**/index.md
+  - docs/architecture/components/engine/architecture/workflow-engine-boundary-fitness-component.md
+  - docs/architecture/components/engine/architecture/workflow-engine-boundary-fitness-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-component.md
+  - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
+  - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
+  - docs/architecture/components/engine/roadmap/engine-phases.md
+  - docs/evidence/ed-20260512-we-hx-6-boundary-fitness.md
+  - docs/planning/closeouts/20260512-we-hx-6-boundary-fitness-closeout.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+  - docs/planning/state/**
+  - docs/planning/status/**
+  - docs/risk-register/quality/R-20260512-WE-HX-6-BOUNDARY-FITNESS.yaml
+  - packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+  - packages/@dvt/engine/test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+  - packages/@dvt/engine/test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+  - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+  - packages/@dvt/engine/test/core/WorkflowEngine.helpers.ts
+  - packages/@dvt/engine/test/helpers/runLifecycle.fixture.ts
+  - packages/@dvt/engine/test/helpers/workflowEngine.fixture.ts
+  - traceability.manifest.json
+forbiddenImplementationSurfaces:
+  - packages/@dvt/contracts/**
+  - packages/@dvt/adapter-*/**
+  - packages/@dvt/planner/**
+  - apps/web/**
+  - apps/api/**
+  - specs/**
+commandQueryRails:
+  - name: WorkflowEngineBoundaryFitness
+    type: query
+    dddOwner: Engine architecture fitness read model
+  - name: WorkflowEngineTestDoubleBoundary
+    type: query
+    dddOwner: Engine test fixture boundary
+domainObjects:
+  - name: EngineArchitectureTestSupport
+    type: test support component
+    owner: packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+  - name: WorkflowEngineBoundaryFitnessGuard
+    type: semantic architecture fitness function
+    owner: packages/@dvt/engine/test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+  - name: WorkflowEngineTestFixtureBoundary
+    type: test double boundary
+    owner: packages/@dvt/engine/test/helpers/workflowEngine.fixture.ts
+fowlerSignals:
+  - Test-only confidence replaced by semantic fixture and documentation checks.
+  - Duplicate architecture-test readers centralized behind one support module.
+  - Hidden adapter authority blocked in engine test doubles.
+  - Documentation drift closed with component guide, stories, mailbox, target architecture, and roadmap updates.
+architectureGuards:
+  - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+  - pnpm docs:feature-mechanization:implementation
+cypressFlows:
+  - N/A - engine-internal architecture and test-double boundary only
+completionGate:
+  - pnpm docs:feature-mechanization -- --feature WE-HX-6-BOUNDARY-FITNESS
+  - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+  - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+  - pnpm --filter @dvt/engine typecheck
+  - pnpm --filter @dvt/engine test
+  - GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs
+  - pnpm docs:status:generate
+  - pnpm docs:sync
+  - pnpm governance:refresh
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: boundary-fitness-docs-and-fixture-semantics
+    redTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+    expectedFailure: WE-HX-6 component docs, user stories, mailbox analysis, architecture support helper, fixture owned-concern headers, and forbidden runtime-bleed checks are missing.
+    patchSurfaces:
+      - packages/@dvt/engine/test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+      - packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+      - packages/@dvt/engine/test/helpers/workflowEngine.fixture.ts
+      - packages/@dvt/engine/test/helpers/runLifecycle.fixture.ts
+      - packages/@dvt/engine/test/core/WorkflowEngine.helpers.ts
+      - docs/architecture/components/engine/architecture/workflow-engine-boundary-fitness-component.md
+      - docs/architecture/components/engine/architecture/workflow-engine-boundary-fitness-user-stories.md
+      - buzon/20260512-codex-fowler-we-hx-6-boundary-fitness-analysis-and-remediation.md
+    greenTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+  - id: architecture-test-support-repetition-removal
+    redTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+    expectedFailure: Recent WE-HX architecture tests still declare local source/document readers instead of importing engineArchitectureTestSupport.
+    patchSurfaces:
+      - packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+      - packages/@dvt/engine/test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+      - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    greenTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+symbols:
+  - name: ENGINE_ARCHITECTURE_TEST_ROOT
+    path: packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+    dddOwner: Engine architecture fitness read model
+    cqRails:
+      - WorkflowEngineBoundaryFitness
+    fowlerSignals:
+      - Centralizes architecture-test path discovery.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+    cypressCoverage: N/A - engine architecture test support
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+  - name: ENGINE_PACKAGE_ROOT
+    path: packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+    dddOwner: Engine architecture fitness read model
+    cqRails:
+      - WorkflowEngineBoundaryFitness
+    fowlerSignals:
+      - Centralizes architecture-test path discovery.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+    cypressCoverage: N/A - engine architecture test support
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+  - name: ENGINE_SRC_ROOT
+    path: packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+    dddOwner: Engine architecture fitness read model
+    cqRails:
+      - WorkflowEngineBoundaryFitness
+    fowlerSignals:
+      - Centralizes source discovery.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+    cypressCoverage: N/A - engine architecture test support
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+  - name: ENGINE_TEST_ROOT
+    path: packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+    dddOwner: Engine test fixture boundary
+    cqRails:
+      - WorkflowEngineTestDoubleBoundary
+    fowlerSignals:
+      - Centralizes test fixture discovery.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+    cypressCoverage: N/A - engine architecture test support
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+  - name: REPO_ROOT
+    path: packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+    dddOwner: Engine architecture fitness read model
+    cqRails:
+      - WorkflowEngineBoundaryFitness
+    fowlerSignals:
+      - Centralizes repository document discovery.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+    cypressCoverage: N/A - engine architecture test support
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+  - name: ENGINE_ARCHITECTURE_DOC_ROOT
+    path: packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+    dddOwner: Engine architecture fitness read model
+    cqRails:
+      - WorkflowEngineBoundaryFitness
+    fowlerSignals:
+      - Centralizes component-guide discovery.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+    cypressCoverage: N/A - engine architecture test support
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+  - name: repoPath
+    path: packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+    dddOwner: Engine architecture fitness read model
+    cqRails:
+      - WorkflowEngineBoundaryFitness
+    fowlerSignals:
+      - Removes repeated repository path joins.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+    cypressCoverage: N/A - engine architecture test support
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+  - name: engineArchitectureDocPath
+    path: packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+    dddOwner: Engine architecture fitness read model
+    cqRails:
+      - WorkflowEngineBoundaryFitness
+    fowlerSignals:
+      - Removes repeated component-doc path joins.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+    cypressCoverage: N/A - engine architecture test support
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+  - name: readEngineSource
+    path: packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+    dddOwner: Engine architecture fitness read model
+    cqRails:
+      - WorkflowEngineBoundaryFitness
+    fowlerSignals:
+      - Removes repeated source readers.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+    cypressCoverage: N/A - engine architecture test support
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+  - name: readEngineTestSource
+    path: packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+    dddOwner: Engine test fixture boundary
+    cqRails:
+      - WorkflowEngineTestDoubleBoundary
+    fowlerSignals:
+      - Reads test fixture boundary semantics.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+    cypressCoverage: N/A - engine architecture test support
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+  - name: readRepoSource
+    path: packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+    dddOwner: Engine architecture fitness read model
+    cqRails:
+      - WorkflowEngineBoundaryFitness
+    fowlerSignals:
+      - Reads repository documentation evidence.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+    cypressCoverage: N/A - engine architecture test support
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+  - name: readEngineArchitectureDoc
+    path: packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+    dddOwner: Engine architecture fitness read model
+    cqRails:
+      - WorkflowEngineBoundaryFitness
+    fowlerSignals:
+      - Reads component-guide evidence.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+    cypressCoverage: N/A - engine architecture test support
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+  - name: expectFileExists
+    path: packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+    dddOwner: Engine architecture fitness read model
+    cqRails:
+      - WorkflowEngineBoundaryFitness
+    fowlerSignals:
+      - Names file-presence evidence.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+    cypressCoverage: N/A - engine architecture test support
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+  - name: expectMarkdownSections
+    path: packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+    dddOwner: Engine architecture fitness read model
+    cqRails:
+      - WorkflowEngineBoundaryFitness
+    fowlerSignals:
+      - Names documentation coverage checks.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+    cypressCoverage: N/A - engine architecture test support
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+  - name: expectOwnedConcernHeader
+    path: packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+    dddOwner: Engine test fixture boundary
+    cqRails:
+      - WorkflowEngineTestDoubleBoundary
+    fowlerSignals:
+      - Names semantic module ownership checks.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+    cypressCoverage: N/A - engine architecture test support
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+  - name: expectForbiddenTokensAbsent
+    path: packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+    dddOwner: Engine test fixture boundary
+    cqRails:
+      - WorkflowEngineTestDoubleBoundary
+    fowlerSignals:
+      - Names negative boundary checks for hidden adapter authority.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+    cypressCoverage: N/A - engine architecture test support
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+```
+
 ## Lane mapping
 
 Lane A execution mapping:
