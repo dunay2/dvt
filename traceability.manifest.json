@@ -79,6 +79,7 @@
         "Transformation-flow verification lives outside the Temporal baseline suite",
         "Type-check activity dependency fixtures against the scoped engine-dispatch plan query",
         "Type-check workflow mapping fixtures against canonical execution plan and task queue contracts",
+        "Verify that only executeStep activity proxies receive capability task queues",
         "Verify workflow layer order follows resolved DVT execution segments and lifecycle guards"
       ],
       "implemented_by": [
@@ -102,6 +103,7 @@
         "packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts",
         "packages/@dvt/adapter-temporal/test/integration.transformation.time-skipping.test.ts",
         "packages/@dvt/adapter-temporal/test/runPlanWorkflow.layers.order.test.ts",
+        "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts",
         "packages/@dvt/adapter-temporal/test/workflowMapper.typecheck.ts"
       ],
       "title": "ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)"
@@ -1053,6 +1055,16 @@
       ],
       "implemented_by": ["scripts/planning-db-query.cjs"],
       "title": "ADR-0055 - Planning DB Canonical Operational Source"
+    },
+    {
+      "number": "ADR-0056",
+      "decisions": [
+        "Verify that only executeStep activity proxies receive capability task queues"
+      ],
+      "implemented_by": [
+        "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts"
+      ],
+      "title": "ADR-0056: Temporal Step Activity Routing By Capability"
     }
   ]
 }
