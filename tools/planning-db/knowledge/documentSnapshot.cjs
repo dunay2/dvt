@@ -67,8 +67,13 @@ function sectionRows(documentId, body) {
   return sections;
 }
 
-function extractTaskIds(text) {
-  return [...new Set(normalizeText(text).match(/[A-Z][A-Z0-9]+(?:-[A-Z0-9]+){1,}/g) ?? [])];
+function normalizeTaskIdSet(taskIds = []) {
+  return new Set(taskIds.map((taskId) => normalizeText(taskId).toUpperCase()).filter(Boolean));
+}
+
+function extractTaskIds(text, planningTaskIds) {
+  const candidates = normalizeText(text).match(/[A-Z][A-Z0-9]+(?:-[A-Z0-9]+){1,}/g) ?? [];
+  return [...new Set(candidates)].filter((taskId) => planningTaskIds.has(taskId.toUpperCase()));
 }
 
 function actionStatusFromLine(line) {
@@ -87,7 +92,7 @@ function actionStatusFromLine(line) {
   return 'proposed';
 }
 
-function actionRows(document, body) {
+function actionRows(document, body, planningTaskIds) {
   const actions = [];
   const links = [];
   const actionLinePattern = /^\s*[-*]\s+(?:\[[ xX]\]\s*)?(.+)$/;
@@ -106,7 +111,7 @@ function actionRows(document, body) {
       required: document.mandatory,
       lineNumber: lineIndex + 1,
     });
-    for (const taskId of extractTaskIds(line)) {
+    for (const taskId of extractTaskIds(line, planningTaskIds)) {
       links.push({
         actionId,
         targetType: 'task',
@@ -118,9 +123,10 @@ function actionRows(document, body) {
   return { actions, links };
 }
 
-function buildKnowledgeSnapshotFromDocuments(sourceDocuments = []) {
+function buildKnowledgeSnapshotFromDocuments(sourceDocuments = [], options = {}) {
   const knowledgeSources = sourceDocuments.filter((entry) => isKnowledgePath(entry.sourcePath));
   const knownDocumentIds = new Set(knowledgeSources.map((source) => slugify(source.sourcePath)));
+  const planningTaskIds = normalizeTaskIdSet(options.planningTaskIds || []);
   const snapshot = {
     documents: [],
     sections: [],
@@ -156,7 +162,7 @@ function buildKnowledgeSnapshotFromDocuments(sourceDocuments = []) {
       });
     }
     snapshot.documentLinks.push(...documentLinks(document, body, knownDocumentIds, slugify));
-    const extracted = actionRows(document, body);
+    const extracted = actionRows(document, body, planningTaskIds);
     snapshot.actions.push(...extracted.actions);
     snapshot.actionLinks.push(...extracted.links);
   }

@@ -1532,7 +1532,9 @@ function buildKnowledgeDocumentSnapshot(options = {}) {
   const sourceDocuments = normalizeArray(options.documents).length
     ? normalizeArray(options.documents)
     : listTrackedKnowledgeDocuments();
-  return buildKnowledgeSnapshotFromDocuments(sourceDocuments);
+  return buildKnowledgeSnapshotFromDocuments(sourceDocuments, {
+    planningTaskIds: normalizeArray(options.planningTaskIds),
+  });
 }
 
 function globToRegExp(glob) {
@@ -2296,7 +2298,11 @@ async function importContent(options = {}) {
         planningTaskIds: (docsDispositionPlanningSnapshot?.tasks || []).map((task) => task.taskId),
       })
     : null;
-  const knowledgeSnapshot = includeGovernance ? buildKnowledgeDocumentSnapshot() : null;
+  const knowledgeSnapshot = includeGovernance
+    ? buildKnowledgeDocumentSnapshot({
+        planningTaskIds: (docsDispositionPlanningSnapshot?.tasks || []).map((task) => task.taskId),
+      })
+    : null;
   const client = options.client || new Client({ connectionString: url });
   const ownsClient = !options.client;
 

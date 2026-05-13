@@ -4,27 +4,30 @@ const assert = require('node:assert/strict');
 const { buildKnowledgeSnapshotFromDocuments } = require('./documentSnapshot.cjs');
 
 test('extracts mandatory proposal documents, sections, required actions, and task links', () => {
-  const snapshot = buildKnowledgeSnapshotFromDocuments([
-    {
-      sourcePath: 'docs/planning/proposals/mandatory/runtime-and-contracts/example-plan.md',
-      raw: [
-        '---',
-        'title: Example Plan',
-        'status: Review',
-        'owner: Runtime',
-        'planning_type: proposal',
-        '---',
-        '',
-        '# Example Plan',
-        '',
-        '## Action Items',
-        '',
-        '- [ ] Implement the DB rail. Task: AR-A4-CUSTOM-POLICY-NAMESPACE-FREEZE',
-        '',
-      ].join('\n'),
-      contentSha256: 'a'.repeat(64),
-    },
-  ]);
+  const snapshot = buildKnowledgeSnapshotFromDocuments(
+    [
+      {
+        sourcePath: 'docs/planning/proposals/mandatory/runtime-and-contracts/example-plan.md',
+        raw: [
+          '---',
+          'title: Example Plan',
+          'status: Review',
+          'owner: Runtime',
+          'planning_type: proposal',
+          '---',
+          '',
+          '# Example Plan',
+          '',
+          '## Action Items',
+          '',
+          '- [ ] Implement the DB rail. Task: AR-A4-CUSTOM-POLICY-NAMESPACE-FREEZE',
+          '',
+        ].join('\n'),
+        contentSha256: 'a'.repeat(64),
+      },
+    ],
+    { planningTaskIds: ['AR-A4-CUSTOM-POLICY-NAMESPACE-FREEZE'] }
+  );
 
   assert.equal(snapshot.documents.length, 1);
   assert.equal(snapshot.documents[0].documentType, 'proposal');
@@ -35,6 +38,32 @@ test('extracts mandatory proposal documents, sections, required actions, and tas
   assert.equal(snapshot.actions[0].required, true);
   assert.equal(snapshot.actionLinks[0].targetType, 'task');
   assert.equal(snapshot.actionLinks[0].targetId, 'AR-A4-CUSTOM-POLICY-NAMESPACE-FREEZE');
+});
+
+test('keeps governance reference ids out of task links', () => {
+  const snapshot = buildKnowledgeSnapshotFromDocuments(
+    [
+      {
+        sourcePath: 'docs/planning/proposals/mandatory/runtime-and-contracts/reference-plan.md',
+        raw: [
+          '---',
+          'title: Reference Plan',
+          'planning_type: proposal',
+          '---',
+          '# Reference Plan',
+          '',
+          '- [ ] Add coverage for ADR-0055 and ARC-2 in task AR-A4-CUSTOM-POLICY-NAMESPACE-FREEZE.',
+        ].join('\n'),
+        contentSha256: 'f'.repeat(64),
+      },
+    ],
+    { planningTaskIds: ['AR-A4-CUSTOM-POLICY-NAMESPACE-FREEZE'] }
+  );
+
+  assert.deepEqual(
+    snapshot.actionLinks.map((link) => link.targetId),
+    ['AR-A4-CUSTOM-POLICY-NAMESPACE-FREEZE']
+  );
 });
 
 test('classifies Fowler analysis and review documents without making them tasks', () => {
