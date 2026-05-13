@@ -9,17 +9,19 @@ last_reviewed: 2026-05-13
 
 ## Owned concern
 
-This component owns the AR-C2 closure assertion that dashboard and alert
-evidence is immutable and complete before AR-C2 can be marked done.
+This component owns the AR-C2 closure assertions that dashboard, alert, and
+sustained validation window evidence are complete before AR-C2 can be marked
+done.
 
 It does not own metric emission, live Grafana provisioning, Alertmanager
-routing, or sustained validation windows.
+routing, or live Prometheus collection.
 
 ## Public API
 
 - Command rail: `AR-C2OperationalEvidenceCommand`.
 - CLI surface: `pnpm ops:ar-c2:evidence`.
-- Assertion flag: `--require-dashboard-alert-evidence`.
+- Dashboard and alert assertion flag: `--require-dashboard-alert-evidence`.
+- Sustained-window assertion flag: `--require-sustained-validation-windows`.
 - Optional inputs:
   - `AR_C2_DASHBOARD_SNAPSHOT_FILE`
   - `AR_C2_ALERT_SNAPSHOT_FILE`
@@ -43,6 +45,12 @@ routing, or sustained validation windows.
   - `rules[].configSource`
   - `rules[].capturedAt`
   - `rules[].reviewer`
+- Metrics snapshot schema:
+  - `windows[].signalKey`
+  - `windows[].window`
+  - `windows[].observed`
+  - `windows[].expected`
+  - `windows[].status`
 - Output artifact:
   `docs/runbooks/ar-c2-evidence-generated-latest.md`.
 
@@ -56,18 +64,22 @@ routing, or sustained validation windows.
    reviewer accountability.
 5. A generated artifact with blockers is useful evidence, but not closure
    approval.
-6. Sustained window evidence remains owned by `AR-C2-INV-4`.
+6. Missing or non-passing sustained windows are closure blockers for
+   `AR-C2-INV-4`.
+7. The sustained-window assertion validates supplied evidence snapshots; it
+   does not collect live metrics.
 
 ## Transitions
 
-| State                                                  | Input                  | Result                                             |
-| ------------------------------------------------------ | ---------------------- | -------------------------------------------------- |
-| No snapshot                                            | assertion flag present | artifact generated, command exits non-zero         |
-| Partial dashboard snapshot                             | assertion flag present | missing panel blockers reported                    |
-| Partial alert snapshot                                 | assertion flag present | missing alert blockers reported                    |
-| Key-only dashboard and alert snapshots                 | assertion flag present | incomplete evidence blockers reported              |
-| Complete dashboard and alert snapshots                 | assertion flag present | command exits zero for `AR-C2-INV-1`               |
-| Complete dashboard/alert but missing sustained windows | assertion flag present | `AR-C2-INV-1` can pass; `AR-C2-INV-4` remains open |
+| State                                  | Input                  | Result                                     |
+| -------------------------------------- | ---------------------- | ------------------------------------------ |
+| No snapshot                            | assertion flag present | artifact generated, command exits non-zero |
+| Partial dashboard snapshot             | assertion flag present | missing panel blockers reported            |
+| Partial alert snapshot                 | assertion flag present | missing alert blockers reported            |
+| Key-only dashboard and alert snapshots | assertion flag present | incomplete evidence blockers reported      |
+| Complete dashboard and alert snapshots | assertion flag present | command exits zero for `AR-C2-INV-1`       |
+| Missing sustained windows              | T4 assertion present   | artifact generated, command exits non-zero |
+| Complete sustained windows             | T4 assertion present   | command exits zero for `AR-C2-INV-4`       |
 
 ## Consumers
 
@@ -85,10 +97,11 @@ flowchart LR
   Dash["Dashboard snapshot"] --> Collector
   Alert["Alert snapshot"] --> Collector
   Collector --> Artifact["Generated evidence artifact"]
-  Collector --> Gate{"--require-dashboard-alert-evidence"}
-  Gate -->|missing panel or alert| Block["Fail closed"]
-  Gate -->|complete T2/T3| Pass["AR-C2-INV-1 pass"]
-  Pass --> Sustained["AR-C2-INV-4 sustained windows"]
+  Metrics["Metrics window snapshot"] --> Collector
+  Collector --> Gate{"Assertion flags"}
+  Gate -->|missing panel, alert, or window| Block["Fail closed"]
+  Gate -->|complete T2/T3| Inv1["AR-C2-INV-1 pass"]
+  Gate -->|complete T4| Inv4["AR-C2-INV-4 pass"]
 ```
 
 ```mermaid
@@ -105,5 +118,11 @@ sequenceDiagram
     Collector-->>Reviewer: Non-zero exit with blockers
   else all dashboard and alert evidence exists
     Collector-->>Reviewer: Zero exit for INV-1
+  end
+  Reviewer->>Collector: pnpm ops:ar-c2:evidence -- --require-sustained-validation-windows
+  alt missing sustained windows
+    Collector-->>Reviewer: Non-zero exit with T4 blockers
+  else all sustained windows pass
+    Collector-->>Reviewer: Zero exit for INV-4
   end
 ```

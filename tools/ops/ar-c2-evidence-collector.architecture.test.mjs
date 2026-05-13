@@ -129,6 +129,138 @@ test('allows AR-C2 INV-1 when dashboard and alert snapshots cover every mapped r
   assert.match(artifact, /`insufficient_window_data`/);
 });
 
+test('fails closed when sustained validation window evidence is missing', () => {
+  const root = path.resolve(import.meta.dirname, '../..');
+  const outputPath = path.join(mkdtempSync(path.join(tmpdir(), 'ar-c2-evidence-')), 'evidence.md');
+
+  const result = spawnSync(
+    process.execPath,
+    [
+      path.join(root, 'tools/ops/ar-c2-evidence-collector.mjs'),
+      '--require-sustained-validation-windows',
+    ],
+    {
+      cwd: root,
+      env: { ...process.env, AR_C2_EVIDENCE_OUTPUT_PATH: outputPath },
+      encoding: 'utf8',
+    }
+  );
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /AR-C2_SUSTAINED_VALIDATION_WINDOWS_MISSING/);
+  assert.match(result.stderr, /missing sustained windows: 9/);
+
+  const artifact = readFileSync(outputPath, 'utf8');
+  assert.match(artifact, /`insufficient_window_data`/);
+});
+
+test('allows AR-C2 INV-4 when metrics snapshots cover every sustained window', () => {
+  const root = path.resolve(import.meta.dirname, '../..');
+  const outputPath = path.join(mkdtempSync(path.join(tmpdir(), 'ar-c2-evidence-')), 'evidence.md');
+  const metricsPath = path.join(
+    mkdtempSync(path.join(tmpdir(), 'ar-c2-evidence-')),
+    'metrics.json'
+  );
+
+  writeFileSync(
+    metricsPath,
+    JSON.stringify({
+      windows: [
+        {
+          signalKey: 'dvt.api.run_start.latency_ms',
+          window: '2026-05-13T12:00:00Z/2026-05-13T12:15:00Z',
+          observed: 'p50=410ms, p99=1900ms',
+          expected: 'p50 <= 500ms, p99 <= 2500ms (15m)',
+          status: 'pass',
+        },
+        {
+          signalKey: 'dvt.api.plan_compile.latency_ms',
+          window: '2026-05-13T12:00:00Z/2026-05-13T12:15:00Z',
+          observed: 'p50=900ms, p99=5200ms',
+          expected: 'p50 <= 1200ms, p99 <= 6000ms (15m)',
+          status: 'pass',
+        },
+        {
+          signalKey: 'dvt.api.run_status.snapshot_staleness_result_total',
+          window: '2026-05-13T12:00:00Z/2026-05-13T12:15:00Z',
+          observed: 'source counters present',
+          expected: 'source for stale/unknown ratios',
+          status: 'pass',
+        },
+        {
+          signalKey: 'dvt.api.run_status.snapshot_staleness_fallback_unknown_total',
+          window: '2026-05-13T12:00:00Z/2026-05-13T12:15:00Z',
+          observed: 'diagnostic counter present',
+          expected: 'source for unknown diagnostics',
+          status: 'pass',
+        },
+        {
+          signalKey: 'dvt_outbox_oldest_claimed_lag_seconds',
+          window: '2026-05-13T12:00:00Z/2026-05-13T12:15:00Z',
+          observed: 'observed baseline captured',
+          expected: 'observational baseline only',
+          status: 'pass',
+        },
+        {
+          signalKey: 'dvt_delivery_outbox_drain_lag_seconds',
+          window: '2026-05-13T12:00:00Z/2026-05-13T12:15:00Z',
+          observed: 'p95=18s',
+          expected: 'p95 <= 30s (15m)',
+          status: 'pass',
+        },
+        {
+          signalKey: 'dvt_delivery_event_delivery_latency_ms',
+          window: '2026-05-13T12:00:00Z/2026-05-13T12:15:00Z',
+          observed: 'p95=900ms, p99=3400ms',
+          expected: 'p95 <= 1500ms, p99 <= 5000ms (15m)',
+          status: 'pass',
+        },
+        {
+          signalKey: 'derived from staleness counts',
+          window: '2026-05-13T12:00:00Z/2026-05-13T12:15:00Z',
+          observed: 'stale=2.2%',
+          expected: 'stale <= 5% (15m)',
+          status: 'pass',
+        },
+        {
+          signalKey: 'derived from staleness counts',
+          window: '2026-05-13T00:00:00Z/2026-05-14T00:00:00Z',
+          observed: 'unknown=0.02%',
+          expected: 'unknown <= 0.1% (24h)',
+          status: 'pass',
+        },
+      ],
+    }),
+    'utf8'
+  );
+
+  const result = spawnSync(
+    process.execPath,
+    [
+      path.join(root, 'tools/ops/ar-c2-evidence-collector.mjs'),
+      '--require-sustained-validation-windows',
+    ],
+    {
+      cwd: root,
+      env: {
+        ...process.env,
+        AR_C2_EVIDENCE_OUTPUT_PATH: outputPath,
+        AR_C2_METRICS_SNAPSHOT_FILE: metricsPath,
+      },
+      encoding: 'utf8',
+    }
+  );
+
+  assert.equal(result.status, 0, result.stderr);
+
+  const artifact = readFileSync(outputPath, 'utf8');
+  assert.doesNotMatch(
+    artifact,
+    /\|[^|\n]*\|[^|\n]*\|[^|\n]*\|[^|\n]*\| `insufficient_window_data` \|/
+  );
+  assert.match(artifact, /`pass`/);
+});
+
 test('rejects key-only dashboard and alert snapshots without immutable metadata', () => {
   const root = path.resolve(import.meta.dirname, '../..');
   const outputPath = path.join(mkdtempSync(path.join(tmpdir(), 'ar-c2-evidence-')), 'evidence.md');
@@ -301,9 +433,10 @@ test('keeps AR-C2 immutable evidence gate semantics documented with the collecto
 
   assert.match(
     collector,
-    /Owned concern: collect AR-C2 operational evidence and enforce immutable dashboard\/alert closure evidence/
+    /Owned concern: collect AR-C2 operational evidence and enforce dashboard, alert, and sustained-window closure evidence/
   );
   assert.match(collector, /--require-dashboard-alert-evidence/);
+  assert.match(collector, /--require-sustained-validation-windows/);
 
   for (const section of ['## Public API', '## Invariants', '## Transitions', '## Consumers']) {
     assert.match(component, new RegExp(`^${section}$`, 'm'));
@@ -311,7 +444,9 @@ test('keeps AR-C2 immutable evidence gate semantics documented with the collecto
   assert.match(component, /AR-C2OperationalEvidenceCommand/);
   assert.match(stories, /US-AR-C2-INV-1-001/);
   assert.match(stories, /US-AR-C2-INV-1-002/);
+  assert.match(stories, /US-AR-C2-INV-4-001/);
   assert.match(mailbox, /Hidden authority/);
   assert.match(mailbox, /Mature-system comparison/);
   assert.match(runbook, /--require-dashboard-alert-evidence/);
+  assert.match(runbook, /--require-sustained-validation-windows/);
 });

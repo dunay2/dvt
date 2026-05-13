@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Owned concern: collect AR-C2 operational evidence and enforce immutable dashboard/alert closure evidence. */
+/** Owned concern: collect AR-C2 operational evidence and enforce dashboard, alert, and sustained-window closure evidence. */
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
@@ -25,6 +25,7 @@ function utcNowIso() {
 function parseArgs(argv) {
   return {
     requireDashboardAlertEvidence: argv.includes('--require-dashboard-alert-evidence'),
+    requireSustainedValidationWindows: argv.includes('--require-sustained-validation-windows'),
   };
 }
 
@@ -325,6 +326,62 @@ function assertImmutableDashboardAlertEvidence(blockers) {
   );
 }
 
+function buildSustainedRows({ mappingRows, metricsBySignal }) {
+  const consumedMetricIdx = new Map();
+  return mappingRows.map((row) => {
+    const candidates = metricsBySignal.get(row.logicalMetricId) ?? [];
+    const consumed = consumedMetricIdx.get(row.logicalMetricId) ?? new Set();
+
+    let metricIdx = candidates.findIndex(
+      (entry, idx) => !consumed.has(idx) && String(entry.expected) === row.sloThreshold
+    );
+    if (metricIdx < 0) {
+      metricIdx = candidates.findIndex((_, idx) => !consumed.has(idx));
+    }
+
+    const metricWindow = metricIdx >= 0 ? candidates[metricIdx] : null;
+    if (metricIdx >= 0) {
+      consumed.add(metricIdx);
+      consumedMetricIdx.set(row.logicalMetricId, consumed);
+    }
+
+    if (!metricWindow) {
+      return {
+        signalKey: row.logicalMetricId,
+        window: 'pending',
+        observed: 'pending',
+        expected: row.sloThreshold,
+        status: 'insufficient_window_data',
+      };
+    }
+    return {
+      signalKey: row.logicalMetricId,
+      window: String(metricWindow.window),
+      observed: String(metricWindow.observed),
+      expected: String(metricWindow.expected),
+      status: metricWindow.status,
+    };
+  });
+}
+
+function collectSustainedValidationWindowBlockers(sustainedRows) {
+  return sustainedRows.filter((row) => row.status !== 'pass').map((row) => row.signalKey);
+}
+
+function assertSustainedValidationWindows(blockers) {
+  if (blockers.length === 0) {
+    return;
+  }
+
+  throw new Error(
+    [
+      'AR-C2_SUSTAINED_VALIDATION_WINDOWS_MISSING',
+      `missing sustained windows: ${blockers.length}`,
+      `sustained blockers: ${blockers.join(', ')}`,
+    ].join('\n')
+  );
+}
+
 function renderArtifact({
   mappingRows,
   dashboardPanelKeys,
@@ -363,41 +420,7 @@ function renderArtifact({
     };
   });
 
-  const consumedMetricIdx = new Map();
-  const sustainedRows = mappingRows.map((row) => {
-    const candidates = metricsBySignal.get(row.logicalMetricId) ?? [];
-    const consumed = consumedMetricIdx.get(row.logicalMetricId) ?? new Set();
-
-    let metricIdx = candidates.findIndex(
-      (entry, idx) => !consumed.has(idx) && String(entry.expected) === row.sloThreshold
-    );
-    if (metricIdx < 0) {
-      metricIdx = candidates.findIndex((_, idx) => !consumed.has(idx));
-    }
-
-    const metricWindow = metricIdx >= 0 ? candidates[metricIdx] : null;
-    if (metricIdx >= 0) {
-      consumed.add(metricIdx);
-      consumedMetricIdx.set(row.logicalMetricId, consumed);
-    }
-
-    if (!metricWindow) {
-      return {
-        signalKey: row.logicalMetricId,
-        window: 'pending',
-        observed: 'pending',
-        expected: row.sloThreshold,
-        status: 'insufficient_window_data',
-      };
-    }
-    return {
-      signalKey: row.logicalMetricId,
-      window: String(metricWindow.window),
-      observed: String(metricWindow.observed),
-      expected: String(metricWindow.expected),
-      status: metricWindow.status,
-    };
-  });
+  const sustainedRows = buildSustainedRows({ mappingRows, metricsBySignal });
 
   return `---
 title: AR-C2 generated operational evidence
@@ -464,12 +487,13 @@ async function main() {
   assertThresholdTraceability(mappingRows);
   const dashboardPanelKeys = normalizeDashboardSnapshot(dashboardSnapshot);
   const alertRulesByThreshold = normalizeAlertSnapshot(alertSnapshot);
+  const metricsBySignal = normalizeMetricsSnapshot(metricsSnapshot);
 
   const markdown = renderArtifact({
     mappingRows,
     dashboardPanelKeys,
     alertRulesByThreshold,
-    metricsBySignal: normalizeMetricsSnapshot(metricsSnapshot),
+    metricsBySignal,
     generatedAt: utcNowIso(),
   });
   const prettierConfig = (await prettier.resolveConfig(outputPath)) ?? {};
@@ -489,6 +513,16 @@ async function main() {
         dashboardPanelKeys,
         alertRulesByThreshold,
       })
+    );
+  }
+  if (options.requireSustainedValidationWindows) {
+    assertSustainedValidationWindows(
+      collectSustainedValidationWindowBlockers(
+        buildSustainedRows({
+          mappingRows,
+          metricsBySignal,
+        })
+      )
     );
   }
 }
