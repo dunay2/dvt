@@ -137,7 +137,7 @@
     assert.equal(packageJson.scripts['verify:prepush'], 'node scripts/verify-prepush.cjs');
     assert.equal(
       packageJson.scripts['test:verify-prepush'],
-      'node --test scripts/verify-prepush.test.cjs'
+      'node --test scripts/verify-prepush.test.cjs scripts/check-generated-docs-policy.test.cjs'
     );
     assert.equal(packageJson.scripts['pr:closeout'], 'node scripts/pr-closeout.cjs');
     assert.equal(

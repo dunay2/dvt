@@ -1,6 +1,6 @@
 ---
 title: Governance File Shards DB-backed Policy Task
-status: Proposed
+status: Implemented
 owner: Engineering / CI Governance / Docs
 last_reviewed: 2026-05-13
 planning_type: proposal
@@ -51,6 +51,264 @@ only as optional inspection artifacts.
 - `scripts/check-generated-docs-policy.cjs`
 - `scripts/governance-db-import.cjs`
 - `scripts/planning-db-import.cjs`
+
+## Feature Mechanization
+
+```feature-mechanization
+version: 1
+featureId: GOV-SHARD-DB-1
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/governance-file-shards-db-backed-policy-task-20260513.md
+componentGuides:
+  - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
+userStories:
+  - docs/planning/proposals/mandatory/governance-and-docs/governance-file-shards-db-backed-policy-task-20260513.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
+  - docs/planning/status/db-surface-inventory.md
+allowedImplementationSurfaces:
+  - docs/generated-docs-policy.json
+  - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
+  - docs/planning/status/db-surface-inventory.md
+  - docs/planning/proposals/mandatory/governance-and-docs/governance-file-shards-db-backed-policy-task-20260513.md
+  - docs/planning/closeouts/20260513-governance-file-shards-db-backed-policy-closeout.md
+  - docs/.manifest.json
+  - docs/**/index.md
+  - package.json
+  - scripts/check-generated-docs-policy.cjs
+  - scripts/check-generated-docs-policy.test.cjs
+  - scripts/verify-prepush.test.cjs
+forbiddenImplementationSurfaces:
+  - apps/**
+  - packages/**
+  - specs/**
+commandQueryRails:
+  - name: ValidateGovernanceGeneratedPolicy
+    type: query
+    dddOwner: Docs governance local operations
+domainObjects:
+  - name: GovernanceGeneratedArtifactPolicy
+    type: policy
+    owner: Docs governance local operations
+  - name: GovernanceFileShardDbProjection
+    type: DB-backed read model projection
+    owner: Governance local operations
+fowlerSignals:
+  - Generated artifact byte budget drift
+  - Local inspection artifact used as gate authority
+architectureGuards:
+  - node --test scripts/check-generated-docs-policy.test.cjs
+  - pnpm docs:gov:generated-policy
+cypressFlows:
+  - N/A - repository governance policy gate only
+completionGate:
+  - node --test scripts/check-generated-docs-policy.test.cjs
+  - pnpm docs:gov:generated-policy
+  - pnpm governance:refresh
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: db-backed-shard-maxbytes-exemption
+    redTest: node --test scripts/check-generated-docs-policy.test.cjs
+    expectedFailure: generated docs policy checker has no importable helpers or DB-backed shard exemption.
+    patchSurfaces:
+      - scripts/check-generated-docs-policy.test.cjs
+      - scripts/check-generated-docs-policy.cjs
+      - docs/generated-docs-policy.json
+    greenTest: node --test scripts/check-generated-docs-policy.test.cjs
+symbols:
+  - name: validDbBackedQueryViews
+    path: scripts/check-generated-docs-policy.cjs
+    dddOwner: Docs governance local operations
+    cqRails:
+      - ValidateGovernanceGeneratedPolicy
+    fowlerSignals:
+      - Local inspection artifact used as gate authority
+    cypressCoverage: N/A - repository governance policy gate only
+    architectureGuard: node --test scripts/check-generated-docs-policy.test.cjs
+    unitTests:
+      - scripts/check-generated-docs-policy.test.cjs
+  - name: patternMatchesPath
+    path: scripts/check-generated-docs-policy.cjs
+    dddOwner: Docs governance local operations
+    cqRails:
+      - ValidateGovernanceGeneratedPolicy
+    fowlerSignals:
+      - Local inspection artifact used as gate authority
+    cypressCoverage: N/A - repository governance policy gate only
+    architectureGuard: node --test scripts/check-generated-docs-policy.test.cjs
+    unitTests:
+      - scripts/check-generated-docs-policy.test.cjs
+  - name: dbBackedArtifactPatternMatches
+    path: scripts/check-generated-docs-policy.cjs
+    dddOwner: Docs governance local operations
+    cqRails:
+      - ValidateGovernanceGeneratedPolicy
+    fowlerSignals:
+      - Local inspection artifact used as gate authority
+    cypressCoverage: N/A - repository governance policy gate only
+    architectureGuard: node --test scripts/check-generated-docs-policy.test.cjs
+    unitTests:
+      - scripts/check-generated-docs-policy.test.cjs
+  - name: validateArtifactSize
+    path: scripts/check-generated-docs-policy.cjs
+    dddOwner: Docs governance local operations
+    cqRails:
+      - ValidateGovernanceGeneratedPolicy
+    fowlerSignals:
+      - Local inspection artifact used as gate authority
+    cypressCoverage: N/A - repository governance policy gate only
+    architectureGuard: node --test scripts/check-generated-docs-policy.test.cjs
+    unitTests:
+      - scripts/check-generated-docs-policy.test.cjs
+  - name: validateDbBackedArtifactGroups
+    path: scripts/check-generated-docs-policy.cjs
+    dddOwner: Docs governance local operations
+    cqRails:
+      - ValidateGovernanceGeneratedPolicy
+    fowlerSignals:
+      - Local inspection artifact used as gate authority
+    cypressCoverage: N/A - repository governance policy gate only
+    architectureGuard: node --test scripts/check-generated-docs-policy.test.cjs
+    unitTests:
+      - scripts/check-generated-docs-policy.test.cjs
+  - name: assert
+    path: scripts/check-generated-docs-policy.test.cjs
+    dddOwner: Docs governance local operations
+    cqRails:
+      - ValidateGovernanceGeneratedPolicy
+    fowlerSignals:
+      - Local inspection artifact used as gate authority
+    cypressCoverage: N/A - repository governance policy gate only
+    architectureGuard: node --test scripts/check-generated-docs-policy.test.cjs
+    unitTests:
+      - scripts/check-generated-docs-policy.test.cjs
+  - name: fs
+    path: scripts/check-generated-docs-policy.test.cjs
+    dddOwner: Docs governance local operations
+    cqRails:
+      - ValidateGovernanceGeneratedPolicy
+    fowlerSignals:
+      - Local inspection artifact used as gate authority
+    cypressCoverage: N/A - repository governance policy gate only
+    architectureGuard: node --test scripts/check-generated-docs-policy.test.cjs
+    unitTests:
+      - scripts/check-generated-docs-policy.test.cjs
+  - name: os
+    path: scripts/check-generated-docs-policy.test.cjs
+    dddOwner: Docs governance local operations
+    cqRails:
+      - ValidateGovernanceGeneratedPolicy
+    fowlerSignals:
+      - Local inspection artifact used as gate authority
+    cypressCoverage: N/A - repository governance policy gate only
+    architectureGuard: node --test scripts/check-generated-docs-policy.test.cjs
+    unitTests:
+      - scripts/check-generated-docs-policy.test.cjs
+  - name: path
+    path: scripts/check-generated-docs-policy.test.cjs
+    dddOwner: Docs governance local operations
+    cqRails:
+      - ValidateGovernanceGeneratedPolicy
+    fowlerSignals:
+      - Local inspection artifact used as gate authority
+    cypressCoverage: N/A - repository governance policy gate only
+    architectureGuard: node --test scripts/check-generated-docs-policy.test.cjs
+    unitTests:
+      - scripts/check-generated-docs-policy.test.cjs
+  - name: test
+    path: scripts/check-generated-docs-policy.test.cjs
+    dddOwner: Docs governance local operations
+    cqRails:
+      - ValidateGovernanceGeneratedPolicy
+    fowlerSignals:
+      - Local inspection artifact used as gate authority
+    cypressCoverage: N/A - repository governance policy gate only
+    architectureGuard: node --test scripts/check-generated-docs-policy.test.cjs
+    unitTests:
+      - scripts/check-generated-docs-policy.test.cjs
+  - name: repoRoot
+    path: scripts/check-generated-docs-policy.test.cjs
+    dddOwner: Docs governance local operations
+    cqRails:
+      - ValidateGovernanceGeneratedPolicy
+    fowlerSignals:
+      - Local inspection artifact used as gate authority
+    cypressCoverage: N/A - repository governance policy gate only
+    architectureGuard: node --test scripts/check-generated-docs-policy.test.cjs
+    unitTests:
+      - scripts/check-generated-docs-policy.test.cjs
+  - name: checkerPath
+    path: scripts/check-generated-docs-policy.test.cjs
+    dddOwner: Docs governance local operations
+    cqRails:
+      - ValidateGovernanceGeneratedPolicy
+    fowlerSignals:
+      - Local inspection artifact used as gate authority
+    cypressCoverage: N/A - repository governance policy gate only
+    architectureGuard: node --test scripts/check-generated-docs-policy.test.cjs
+    unitTests:
+      - scripts/check-generated-docs-policy.test.cjs
+  - name: toPosix
+    path: scripts/check-generated-docs-policy.test.cjs
+    dddOwner: Docs governance local operations
+    cqRails:
+      - ValidateGovernanceGeneratedPolicy
+    fowlerSignals:
+      - Local inspection artifact used as gate authority
+    cypressCoverage: N/A - repository governance policy gate only
+    architectureGuard: node --test scripts/check-generated-docs-policy.test.cjs
+    unitTests:
+      - scripts/check-generated-docs-policy.test.cjs
+  - name: loadChecker
+    path: scripts/check-generated-docs-policy.test.cjs
+    dddOwner: Docs governance local operations
+    cqRails:
+      - ValidateGovernanceGeneratedPolicy
+    fowlerSignals:
+      - Local inspection artifact used as gate authority
+    cypressCoverage: N/A - repository governance policy gate only
+    architectureGuard: node --test scripts/check-generated-docs-policy.test.cjs
+    unitTests:
+      - scripts/check-generated-docs-policy.test.cjs
+  - name: makeOversizedArtifact
+    path: scripts/check-generated-docs-policy.test.cjs
+    dddOwner: Docs governance local operations
+    cqRails:
+      - ValidateGovernanceGeneratedPolicy
+    fowlerSignals:
+      - Local inspection artifact used as gate authority
+    cypressCoverage: N/A - repository governance policy gate only
+    architectureGuard: node --test scripts/check-generated-docs-policy.test.cjs
+    unitTests:
+      - scripts/check-generated-docs-policy.test.cjs
+  - name: basePolicyForArtifact
+    path: scripts/check-generated-docs-policy.test.cjs
+    dddOwner: Docs governance local operations
+    cqRails:
+      - ValidateGovernanceGeneratedPolicy
+    fowlerSignals:
+      - Local inspection artifact used as gate authority
+    cypressCoverage: N/A - repository governance policy gate only
+    architectureGuard: node --test scripts/check-generated-docs-policy.test.cjs
+    unitTests:
+      - scripts/check-generated-docs-policy.test.cjs
+  - name: validate
+    path: scripts/check-generated-docs-policy.test.cjs
+    dddOwner: Docs governance local operations
+    cqRails:
+      - ValidateGovernanceGeneratedPolicy
+    fowlerSignals:
+      - Local inspection artifact used as gate authority
+    cypressCoverage: N/A - repository governance policy gate only
+    architectureGuard: node --test scripts/check-generated-docs-policy.test.cjs
+    unitTests:
+      - scripts/check-generated-docs-policy.test.cjs
+```
 
 ## Command And Query Rail
 
