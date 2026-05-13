@@ -18,6 +18,7 @@ Evidence documents that justify or validate relevant changes.
 - [ADR-0000 Traceability Gate Restoration](ed-20260505-adr0-traceability-gate.md)
 - [AR-A6 Snapshot Rebuild Concurrency Contract](ed-20260513-ar-a6-snapshot-rebuild-concurrency-contract.md)
 - [AR-C5 Adapter Circuit Breaker Evidence](ed-20260512-ar-c5-adapter-circuit-breaker.md)
+- [AR-D4 zero-downtime schema rollback evidence](ed-20260513-ar-d4-zero-downtime-schema-rollback.md)
 - [Canvas happy-path draggable proof after create/save](ed-20260503-canvas-happy-path-draggable-proof.md)
 - [Context](ED-20260404-mw-a2-graph-source-cardinality-and-boundary-hardening.md)
 - [Context](ED-20260405-mwa2-policy-unbounded-precedence.md)
