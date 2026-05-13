@@ -44,7 +44,7 @@ test('allows AR-C2 INV-1 when dashboard and alert snapshots cover every mapped r
   writeFileSync(
     dashboardPath,
     JSON.stringify({
-      panelKeys: [
+      panels: [
         'ar-c2.start-run-latency',
         'ar-c2.plan-compile-latency',
         'ar-c2.snapshot-staleness-counts',
@@ -54,7 +54,15 @@ test('allows AR-C2 INV-1 when dashboard and alert snapshots cover every mapped r
         'ar-c2.event-delivery-latency',
         'ar-c2.run-status-stale-ratio',
         'ar-c2.run-status-unknown-ratio',
-      ],
+      ].map((panelKey) => ({
+        panelKey,
+        dashboardSystem: 'grafana',
+        environment: 'production',
+        immutableDashboardReference: `immutable://grafana-dashboard/${panelKey}`,
+        queryExpression: `query-${panelKey}`,
+        capturedAt: '2026-05-13T00:00:00.000Z',
+        reviewer: 'runtime-sre',
+      })),
     }),
     'utf8'
   );
@@ -81,6 +89,8 @@ test('allows AR-C2 INV-1 when dashboard and alert snapshots cover every mapped r
         severity: thresholdKey.endsWith('.critical') ? 'critical' : 'warning',
         routingTarget: 'runtime-sre',
         configSource: 'immutable://grafana-alert-export',
+        capturedAt: '2026-05-13T00:00:00.000Z',
+        reviewer: 'runtime-sre',
       })),
     }),
     'utf8'
@@ -113,6 +123,76 @@ test('allows AR-C2 INV-1 when dashboard and alert snapshots cover every mapped r
     /\|[^|\n]*\|[^|\n]*\|[^|\n]*\|[^|\n]*\|[^|\n]*\| `missing_alert` \|/
   );
   assert.match(artifact, /`insufficient_window_data`/);
+});
+
+test('rejects key-only dashboard and alert snapshots without immutable metadata', () => {
+  const root = path.resolve(import.meta.dirname, '../..');
+  const outputPath = path.join(mkdtempSync(path.join(tmpdir(), 'ar-c2-evidence-')), 'evidence.md');
+  const dashboardPath = path.join(
+    mkdtempSync(path.join(tmpdir(), 'ar-c2-evidence-')),
+    'dashboard.json'
+  );
+  const alertPath = path.join(mkdtempSync(path.join(tmpdir(), 'ar-c2-evidence-')), 'alerts.json');
+
+  writeFileSync(
+    dashboardPath,
+    JSON.stringify({
+      panelKeys: [
+        'ar-c2.start-run-latency',
+        'ar-c2.plan-compile-latency',
+        'ar-c2.snapshot-staleness-counts',
+        'ar-c2.snapshot-unknown-fallback',
+        'ar-c2.outbox-claimed-lag',
+        'ar-c2.outbox-drain-lag',
+        'ar-c2.event-delivery-latency',
+        'ar-c2.run-status-stale-ratio',
+        'ar-c2.run-status-unknown-ratio',
+      ],
+    }),
+    'utf8'
+  );
+  writeFileSync(
+    alertPath,
+    JSON.stringify({
+      rules: [
+        'ar-c2.start-run-latency.warning',
+        'ar-c2.start-run-latency.critical',
+        'ar-c2.plan-compile-latency.warning',
+        'ar-c2.plan-compile-latency.critical',
+        'ar-c2.outbox-drain-lag.warning',
+        'ar-c2.outbox-drain-lag.critical',
+        'ar-c2.event-delivery-latency.warning',
+        'ar-c2.event-delivery-latency.critical',
+        'ar-c2.run-status-stale-ratio.warning',
+        'ar-c2.run-status-stale-ratio.critical',
+        'ar-c2.run-status-unknown-ratio.critical',
+      ].map((thresholdKey) => ({ thresholdKey })),
+    }),
+    'utf8'
+  );
+
+  const result = spawnSync(
+    process.execPath,
+    [
+      path.join(root, 'tools/ops/ar-c2-evidence-collector.mjs'),
+      '--require-dashboard-alert-evidence',
+    ],
+    {
+      cwd: root,
+      env: {
+        ...process.env,
+        AR_C2_EVIDENCE_OUTPUT_PATH: outputPath,
+        AR_C2_DASHBOARD_SNAPSHOT_FILE: dashboardPath,
+        AR_C2_ALERT_SNAPSHOT_FILE: alertPath,
+      },
+      encoding: 'utf8',
+    }
+  );
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /AR-C2_IMMUTABLE_EVIDENCE_MISSING/);
+  assert.match(result.stderr, /incomplete dashboard evidence: 9/);
+  assert.match(result.stderr, /incomplete alert evidence: 11/);
 });
 
 test('keeps AR-C2 immutable evidence gate semantics documented with the collector', () => {

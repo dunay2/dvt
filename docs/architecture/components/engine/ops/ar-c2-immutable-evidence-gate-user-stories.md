@@ -29,12 +29,30 @@ windows.
 
 Acceptance criteria:
 
-- Given all mapped panel keys, dashboard evidence passes.
-- Given all mapped threshold rules, alert evidence passes.
+- Given all mapped panel keys with dashboard system, environment, immutable
+  dashboard reference, query expression, capture time, and reviewer, dashboard
+  evidence passes.
+- Given all mapped threshold rules with rule id, expression, window, severity,
+  routing target, config source, capture time, and reviewer, alert evidence
+  passes.
 - Missing sustained windows do not fail this invariant; they remain
   `AR-C2-INV-4`.
 
-### US-AR-C2-INV-1-003 Generated artifact remains inspectable
+### US-AR-C2-INV-1-003 Key-only snapshots are not closure evidence
+
+As an architecture reviewer, I want the collector to reject snapshots that only
+list panel or threshold keys, so AR-C2 closure cannot hide missing immutable
+dashboard and alert proof.
+
+Acceptance criteria:
+
+- Given every dashboard key but no immutable dashboard metadata, the assertion
+  exits non-zero.
+- Given every alert threshold key but no rule expression, window, routing,
+  config source, capture time, or reviewer, the assertion exits non-zero.
+- The command reports incomplete evidence counts separately from missing keys.
+
+### US-AR-C2-INV-1-004 Generated artifact remains inspectable
 
 As an architecture reviewer, I want the generated artifact to be written even
 when the assertion fails, so blockers are visible in review.

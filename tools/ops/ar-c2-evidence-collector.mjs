@@ -102,9 +102,40 @@ function deriveThresholdRows(mappingRows) {
 }
 
 function normalizeDashboardSnapshot(snapshot) {
-  if (!snapshot) return new Set();
+  const panelsByKey = new Map();
+  if (!snapshot) return panelsByKey;
+
   const panelKeys = Array.isArray(snapshot.panelKeys) ? snapshot.panelKeys : [];
-  return new Set(panelKeys.map((x) => String(x).trim()));
+  for (const panelKey of panelKeys) {
+    const key = String(panelKey).trim();
+    if (!key) continue;
+    panelsByKey.set(key, { panelKey: key, complete: false });
+  }
+
+  const panels = Array.isArray(snapshot.panels) ? snapshot.panels : [];
+  for (const panel of panels) {
+    const panelKey = String(panel.panelKey ?? '').trim();
+    if (!panelKey) continue;
+    const requiredFields = [
+      'dashboardSystem',
+      'environment',
+      'immutableDashboardReference',
+      'queryExpression',
+      'capturedAt',
+      'reviewer',
+    ];
+    panelsByKey.set(panelKey, {
+      panelKey,
+      dashboardSystem: String(panel.dashboardSystem ?? 'unknown'),
+      environment: String(panel.environment ?? 'unknown'),
+      immutableDashboardReference: String(panel.immutableDashboardReference ?? 'unknown'),
+      queryExpression: String(panel.queryExpression ?? 'unknown'),
+      capturedAt: String(panel.capturedAt ?? 'unknown'),
+      reviewer: String(panel.reviewer ?? 'unknown'),
+      complete: requiredFields.every((field) => String(panel[field] ?? '').trim() !== ''),
+    });
+  }
+  return panelsByKey;
 }
 
 function normalizeAlertSnapshot(snapshot) {
@@ -121,6 +152,18 @@ function normalizeAlertSnapshot(snapshot) {
       severity: String(rule.severity ?? 'unknown'),
       routingTarget: String(rule.routingTarget ?? 'unknown'),
       configSource: String(rule.configSource ?? 'unknown'),
+      capturedAt: String(rule.capturedAt ?? 'unknown'),
+      reviewer: String(rule.reviewer ?? 'unknown'),
+      complete: [
+        'alertRuleId',
+        'expression',
+        'window',
+        'severity',
+        'routingTarget',
+        'configSource',
+        'capturedAt',
+        'reviewer',
+      ].every((field) => String(rule[field] ?? '').trim() !== ''),
     });
   }
   return byKey;
@@ -153,28 +196,55 @@ function collectDashboardAlertEvidenceBlockers({
   const missingDashboardPanelKeys = mappingRows
     .filter((row) => !dashboardPanelKeys.has(row.targetPanelKey))
     .map((row) => row.targetPanelKey);
+  const incompleteDashboardPanelKeys = mappingRows
+    .filter((row) => {
+      const panel = dashboardPanelKeys.get(row.targetPanelKey);
+      return panel && !panel.complete;
+    })
+    .map((row) => row.targetPanelKey);
   const missingAlertThresholdKeys = deriveThresholdRows(mappingRows)
     .filter((row) => !alertRulesByThreshold.has(row.thresholdKey))
+    .map((row) => row.thresholdKey);
+  const incompleteAlertThresholdKeys = deriveThresholdRows(mappingRows)
+    .filter((row) => {
+      const rule = alertRulesByThreshold.get(row.thresholdKey);
+      return rule && !rule.complete;
+    })
     .map((row) => row.thresholdKey);
 
   return {
     missingDashboardPanelKeys,
+    incompleteDashboardPanelKeys,
     missingAlertThresholdKeys,
+    incompleteAlertThresholdKeys,
   };
 }
 
 function assertImmutableDashboardAlertEvidence(blockers) {
   const dashboardCount = blockers.missingDashboardPanelKeys.length;
+  const incompleteDashboardCount = blockers.incompleteDashboardPanelKeys.length;
   const alertCount = blockers.missingAlertThresholdKeys.length;
-  if (dashboardCount === 0 && alertCount === 0) return;
+  const incompleteAlertCount = blockers.incompleteAlertThresholdKeys.length;
+  if (
+    dashboardCount === 0 &&
+    incompleteDashboardCount === 0 &&
+    alertCount === 0 &&
+    incompleteAlertCount === 0
+  ) {
+    return;
+  }
 
   throw new Error(
     [
       'AR-C2_IMMUTABLE_EVIDENCE_MISSING',
       `missing dashboard panels: ${dashboardCount}`,
+      `incomplete dashboard evidence: ${incompleteDashboardCount}`,
       `missing alert rules: ${alertCount}`,
+      `incomplete alert evidence: ${incompleteAlertCount}`,
       `dashboard blockers: ${blockers.missingDashboardPanelKeys.join(', ') || 'none'}`,
+      `dashboard incomplete: ${blockers.incompleteDashboardPanelKeys.join(', ') || 'none'}`,
       `alert blockers: ${blockers.missingAlertThresholdKeys.join(', ') || 'none'}`,
+      `alert incomplete: ${blockers.incompleteAlertThresholdKeys.join(', ') || 'none'}`,
     ].join('\n')
   );
 }
@@ -187,11 +257,11 @@ function renderArtifact({
   generatedAt,
 }) {
   const dashboardRows = mappingRows.map((row) => {
-    const hasPanel = dashboardPanelKeys.has(row.targetPanelKey);
+    const panel = dashboardPanelKeys.get(row.targetPanelKey);
     return {
       signalKey: row.logicalMetricId,
       panelKey: row.targetPanelKey,
-      status: hasPanel ? 'pass' : 'missing_panel',
+      status: panel?.complete ? 'pass' : 'missing_panel',
     };
   });
 
@@ -213,7 +283,7 @@ function renderArtifact({
       expression: rule.expression,
       window: rule.window,
       routingTarget: rule.routingTarget,
-      status: 'pass',
+      status: rule.complete ? 'pass' : 'missing_alert',
     };
   });
 
