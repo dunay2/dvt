@@ -6,11 +6,21 @@ class RecordingMigrationClient {
   public readonly queries: Array<{ sql: string; params?: unknown[] }> = [];
   public releaseCalls = 0;
 
+  constructor(private readonly appliedVersions: ReadonlySet<string> = new Set<string>()) {}
+
   async query(
     sql: string,
     params?: unknown[]
   ): Promise<{ rows: { exists: boolean }[]; rowCount: number }> {
     this.queries.push({ sql, params });
+    if (
+      sql.includes('SELECT EXISTS') &&
+      Array.isArray(params) &&
+      params.length >= 2 &&
+      typeof params[1] === 'string'
+    ) {
+      return { rows: [{ exists: this.appliedVersions.has(params[1]) }], rowCount: 1 };
+    }
     return { rows: [{ exists: false }], rowCount: 0 };
   }
 
@@ -70,6 +80,41 @@ describe('StartRunIntentSchemaManager migration locking', () => {
     expect(client.queries.flatMap((query) => query.params ?? [])).toContain(
       '20260426_005_start_run_intents_table_scoped_service_owner_rls'
     );
+    expect(client.queries.flatMap((query) => query.params ?? [])).toContain(
+      '20260512_006_start_run_intents_tenant_mode_rls_hardening'
+    );
+  });
+
+  it('reapplies hardened tenant-mode RLS when earlier start-run intent RLS migrations are already recorded', async () => {
+    const client = new RecordingMigrationClient(
+      new Set([
+        '20260305_001_start_run_intents_base',
+        '20260305_002_start_run_intents_status_enum_upgrade',
+        '20260425_003_start_run_intents_rls_baseline',
+        '20260425_004_start_run_intents_service_owner_rls_hardening',
+        '20260426_005_start_run_intents_table_scoped_service_owner_rls',
+      ])
+    );
+    const manager = new StartRunIntentSchemaManager({
+      pool: {
+        connect: async () => client,
+      } as never,
+      schema: 'DvtOps',
+    });
+
+    await manager.migrate();
+
+    const insertedVersions = client.queries
+      .filter(
+        (query) => query.sql.includes('INSERT INTO') && query.sql.includes('schema_migrations')
+      )
+      .map((query) => query.params?.[1]);
+    expect(insertedVersions).toEqual(['20260512_006_start_run_intents_tenant_mode_rls_hardening']);
+
+    const migrationSql = client.queries.map((query) => query.sql).join('\n');
+    expect(migrationSql).toContain('DROP POLICY IF EXISTS dvt_tenant_isolation');
+    expect(migrationSql).toContain("current_setting('dvt.access_mode', true) = 'tenant'");
+    expect(migrationSql).toContain("tenant_id = current_setting('dvt.tenant_id', true)");
   });
 
   it('records hardening migration descriptions as idempotent reapplications, not historical snapshots', async () => {
@@ -98,6 +143,9 @@ describe('StartRunIntentSchemaManager migration locking', () => {
     );
     expect(descriptions).toContain(
       'Reapply current start_run_intents policy with table-scoped reconciler ownership; idempotent and not a historical policy snapshot'
+    );
+    expect(descriptions).toContain(
+      'Reapply current start_run_intents policy requiring explicit tenant access mode; idempotent and not a historical policy snapshot'
     );
   });
 });

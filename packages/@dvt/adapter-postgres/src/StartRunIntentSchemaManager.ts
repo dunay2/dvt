@@ -230,6 +230,14 @@ export class StartRunIntentSchemaManager {
           buildTenantIsolationPolicySql(this.schema, START_RUN_INTENTS_TENANT_ISOLATION_TABLE)
         ),
       },
+      {
+        version: '20260512_006_start_run_intents_tenant_mode_rls_hardening',
+        description:
+          'Reapply current start_run_intents policy requiring explicit tenant access mode; idempotent and not a historical policy snapshot',
+        sql: toSqlBatch(
+          buildTenantIsolationPolicySql(this.schema, START_RUN_INTENTS_TENANT_ISOLATION_TABLE)
+        ),
+      },
     ] as const;
   }
 }

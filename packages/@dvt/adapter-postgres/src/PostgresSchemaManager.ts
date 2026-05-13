@@ -224,6 +224,11 @@ function rollbackCompatibilityFor(version: string): PostgresSchemaRollbackCompat
         reason:
           'Rollback rewrites the authoritative run_events table shape and requires quiesced writes.',
       };
+    case 'core_022_tenant_mode_rls_hardening':
+      return {
+        mode: 'online',
+        reason: 'Rollback reapplies current tenant-mode tenant isolation policy without downgrade.',
+      };
     default:
       throw new Error(`UNKNOWN_MIGRATION_VERSION: ${version}`);
   }
@@ -1333,6 +1338,27 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
       'Convert run_events back to a heap table while preserving rows, constraints, indexes, and RLS',
     rollback: async (client, schema) => {
       await rollbackRunEventsHashPartitionsToHeap(client, schema);
+    },
+  },
+  {
+    version: 'core_022_tenant_mode_rls_hardening',
+    description:
+      'Reapply current tenant isolation policy requiring explicit tenant access mode; idempotent hardening step without historical policy snapshot semantics',
+    run: async (client, schema) => {
+      for (const table of CORE_TENANT_ISOLATION_TABLES) {
+        for (const statement of buildTenantIsolationPolicySql(schema, table)) {
+          await client.query(statement);
+        }
+      }
+    },
+    rollbackDescription:
+      'Reapply current tenant-mode tenant isolation policy during rollback planning; tenant access-mode hardening is intentionally not downgraded',
+    rollback: async (client, schema) => {
+      for (const table of CORE_TENANT_ISOLATION_TABLES) {
+        for (const statement of buildTenantIsolationPolicySql(schema, table)) {
+          await client.query(statement);
+        }
+      }
     },
   },
 ];

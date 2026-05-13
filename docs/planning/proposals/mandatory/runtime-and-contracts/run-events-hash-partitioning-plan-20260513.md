@@ -520,4 +520,15 @@ symbols:
     cypressCoverage: N/A - adapter storage only
     unitTests:
       - pnpm --filter @dvt/adapter-postgres test -- PostgresSchemaManager.rollback.test.ts
+  - name: insertRunEventsPartitionProbeRow
+    path: packages/@dvt/adapter-postgres/test/PostgresTenantRlsEnforcement.integration.test.ts
+    dddOwner: PostgresTenantRlsEnforcement
+    cqRails:
+      - PostgresStateStoreSchemaMigrationCommand
+    fowlerSignals:
+      - Seeds partition-routed run_events rows so RLS probes cover every physical hash child.
+    architectureGuard: pnpm --filter @dvt/adapter-postgres test -- PostgresTenantRlsEnforcement.integration.test.ts
+    cypressCoverage: N/A - adapter storage only
+    unitTests:
+      - pnpm --filter @dvt/adapter-postgres test -- PostgresTenantRlsEnforcement.integration.test.ts
 ```

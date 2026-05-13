@@ -158,7 +158,10 @@ export function buildTenantIsolationPolicySql(
       current_setting('dvt.access_mode', true) = 'service'
       AND current_setting('dvt.service_access_owner', true) IN (${serviceAccessOwnerList})
     )
-    OR ${tenantColumn} = current_setting('dvt.tenant_id', true)
+    OR (
+      current_setting('dvt.access_mode', true) = 'tenant'
+      AND ${tenantColumn} = current_setting('dvt.tenant_id', true)
+    )
   `;
 
   return [
