@@ -565,6 +565,37 @@ test('docs disposition snapshot treats closed feature mechanization ids as regis
   assert.deepEqual(snapshot.actions, []);
 });
 
+test('docs disposition snapshot classifies priority markers and date placeholders as non-task references', () => {
+  const snapshot = buildDocsDispositionSnapshot({
+    planningTaskIds: [],
+    documents: [
+      {
+        sourcePath:
+          'docs/planning/reviews/architecture-and-governance/20260422-dvt-plus-principal-architect-action-plan.md',
+        raw: [
+          '---',
+          'title: Principal architect action plan',
+          'status: Review',
+          'planning_type: review',
+          '---',
+          '| Priority | Target date |',
+          '| P0-1 | YYYY-MM-DD |',
+          '| P1-2 | YYYY-MM-DD |',
+        ].join('\n'),
+      },
+    ],
+  });
+
+  const classifications = new Map(
+    snapshot.references.map((reference) => [reference.referenceText, reference.classification])
+  );
+
+  assert.equal(classifications.get('P0-1'), 'priority_work_item_marker');
+  assert.equal(classifications.get('P1-2'), 'priority_work_item_marker');
+  assert.equal(classifications.get('YYYY-MM-DD'), 'date_placeholder');
+  assert.deepEqual(snapshot.actions, []);
+});
+
 test('docs disposition snapshot keeps archived documents visible without active cleanup actions', () => {
   const snapshot = buildDocsDispositionSnapshot({
     planningTaskIds: [],

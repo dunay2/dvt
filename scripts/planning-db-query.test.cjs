@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const {
   buildDocsDispositionRows,
   buildComponentEngineeringRecordRows,
+  buildFeatureWorkRows,
   buildFocusRows,
   buildGovernanceComponentRows,
   buildGovernanceCoverageRows,
@@ -32,6 +33,7 @@ const {
   readPlanningStatusEventRows,
   readPrReadinessRows,
   readDocsDispositionRows,
+  readFeatureWorkRows,
   readComponentEngineeringRecordRows,
   readFocusRows,
   readTaskGapRows,
@@ -67,6 +69,7 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('commands'), 'commands');
   assert.equal(resolveQueryName('pr-readiness'), 'pr-readiness');
   assert.equal(resolveQueryName('docs-disposition'), 'docs-disposition');
+  assert.equal(resolveQueryName('feature-work'), 'feature-work');
   assert.equal(resolveQueryName('task-references'), 'task-references');
   assert.equal(resolveQueryName('task-trace'), 'task-trace');
   assert.equal(resolveQueryName('task-gaps'), 'task-gaps');
@@ -797,6 +800,31 @@ test('readTaskReferenceRows queries the DB-owned task-like reference view', asyn
   assert.deepEqual(captured.params, ['unknown_task_like_id', 'docs/planning/status/example.md', 5]);
 });
 
+test('readFeatureWorkRows queries governed feature mechanization work from DB references', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readFeatureWorkRows(client, {
+    status: 'Accepted',
+    prefix: 'TF',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.doc_task_reference_query reference/);
+  assert.match(captured.sql, /join planning_query_store\.doc_disposition_document_query document/);
+  assert.match(captured.sql, /reference\.classification = 'registered_feature_mechanization'/);
+  assert.match(captured.sql, /reference\.reference_prefix = \$1/);
+  assert.match(captured.sql, /document\.status = \$2/);
+  assert.match(captured.sql, /limit \$3/);
+  assert.deepEqual(captured.params, ['TF', 'Accepted', 5]);
+});
+
 test('readTaskTraceRows queries the DB-owned task provenance trace view', async () => {
   const captured = { sql: '', params: null };
   const client = {
@@ -914,6 +942,28 @@ test('docs disposition row builders format cleanup queues for operator output', 
       },
     ]),
     [['unknown_task_like_id', 'WEB-123', 'WEB', 'docs/planning/status/example.md', 2]]
+  );
+
+  assert.deepEqual(
+    buildFeatureWorkRows([
+      {
+        feature_id: 'TF-E2-A-IMPLEMENTATION',
+        document_status: 'Accepted',
+        planning_type: 'proposal',
+        document_path:
+          'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-a-authoring-draft-hard-cut-implementation-plan-20260503.md',
+        occurrence_count: 1,
+      },
+    ]),
+    [
+      [
+        'TF-E2-A-IMPLEMENTATION',
+        'Accepted',
+        'proposal',
+        'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-a-authoring-draft-hard-cut-implementation-plan-20260503.md',
+        1,
+      ],
+    ]
   );
 });
 
