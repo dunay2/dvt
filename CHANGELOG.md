@@ -1,5 +1,31 @@
 # Changelog
 
+## [5.23.0](https://github.com/dunay2/dvt/compare/v5.22.0...v5.23.0) (2026-05-13)
+
+
+### Features
+
+* **docs:** Add component engineering record query ([b8aeaa2](https://github.com/dunay2/dvt/commit/b8aeaa28c457b6ce57b1d3aca407d1ccb6c84cc1))
+* **docs:** Add governance unit tree query ([56c3827](https://github.com/dunay2/dvt/commit/56c3827a28ae7103deef30fc4c261e4e82a82830))
+* **docs:** Add planning work intake focus query ([efa59c0](https://github.com/dunay2/dvt/commit/efa59c04e9532466cf0c5d06803550bcfd83b262))
+* **engine:** Add adapter call circuit breaker ([0f301b8](https://github.com/dunay2/dvt/commit/0f301b8f598bb1aa2f50ae8ac464c2fa75b9bc97))
+* **planner:** Add docs resolution overlays ([#1160](https://github.com/dunay2/dvt/issues/1160)) ([cf01d8b](https://github.com/dunay2/dvt/commit/cf01d8bce6eef915c463337b7cb17179bd9cd6f3))
+* **planner:** Add relational component engineering records ([c8e4af4](https://github.com/dunay2/dvt/commit/c8e4af4842a56fe098e7ed6891261ee07ead38cc))
+* **web:** Add Canvas project snapshot round trip ([39719d6](https://github.com/dunay2/dvt/commit/39719d6ebc5d05dab003c4ab03dcf154943148a1))
+* **web:** Hardcut mock runtime from product composition ([7bca59b](https://github.com/dunay2/dvt/commit/7bca59baadaf3c03f9c076973a432abcfed62f26))
+
+
+### Bug Fixes
+
+* **ci:** Consolidate ADR-0000 workflow ownership ([#1175](https://github.com/dunay2/dvt/issues/1175)) ([a44714a](https://github.com/dunay2/dvt/commit/a44714ada60d59af862ffbd163a440770f4b0c57))
+* **docs:** Expose governed feature work query ([ee31a18](https://github.com/dunay2/dvt/commit/ee31a180b8a4cf6542cf9f026805c0425516afba))
+* **docs:** Filter task gap actions by reference ([6794527](https://github.com/dunay2/dvt/commit/67945279e323a484f10aea98fbfd287e900add2d))
+* **docs:** Make planning DB the operational task source ([2cabebf](https://github.com/dunay2/dvt/commit/2cabebfbc9a4e083e135dc2afeaafdeb6690db23))
+* **docs:** Normalize planning DB resolution filters ([9c5ab3a](https://github.com/dunay2/dvt/commit/9c5ab3aeb1b4c79587ce96f64e6628bb598c95a8))
+* **docs:** Register feature mechanization references in planning DB ([#1187](https://github.com/dunay2/dvt/issues/1187)) ([6d50a32](https://github.com/dunay2/dvt/commit/6d50a32084c0d6ae0cd9a348ec432912e47cff07))
+* **docs:** Shard governance fingerprint baseline ([88ca7eb](https://github.com/dunay2/dvt/commit/88ca7ebddc192e75007f22c48eafb80c1d12c2ad))
+* **planner:** Filter resolved docs issues from focus queue ([4cff75f](https://github.com/dunay2/dvt/commit/4cff75f453092c430dd89ddf01fe0b6946a19683))
+
 ## [5.22.0](https://github.com/dunay2/dvt/compare/v5.21.0...v5.22.0) (2026-05-10)
 
 
