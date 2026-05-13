@@ -1704,12 +1704,12 @@ test('governance row builders format DB rows for CLI output', () => {
       {
         rule_id: 'CEI-RESP-001',
         category: 'responsibility',
-        severity: 'warning',
+        severity: 'error',
         subject_level: 'component',
         drift_code: 'missing_owned_concern',
       },
     ]),
-    [['CEI-RESP-001', 'responsibility', 'warning', 'component', 'missing_owned_concern']]
+    [['CEI-RESP-001', 'responsibility', 'error', 'component', 'missing_owned_concern']]
   );
   assert.deepEqual(
     buildComponentEngineeringRuleEvaluationRows([

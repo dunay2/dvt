@@ -750,6 +750,8 @@ test('tracked migrations expose DB-backed component engineering rules after W34'
   );
   assert.match(ruleRuntimeMigration.sql, /CEI-ID-002/);
   assert.match(ruleRuntimeMigration.sql, /CEI-RESP-001/);
+  assert.match(ruleRuntimeMigration.sql, /'CEI-RESP-001'[\s\S]*?'error'[\s\S]*?'component'/);
+  assert.match(ruleRuntimeMigration.sql, /'CEI-API-001'[\s\S]*?'error'[\s\S]*?'component'/);
   assert.match(ruleRuntimeMigration.sql, /CEI-SIZE-005/);
   assert.match(ruleRuntimeMigration.sql, /from planning_query_store\.governance_unit_query parent/);
 });
