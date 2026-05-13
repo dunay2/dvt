@@ -75,6 +75,9 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('task-gaps'), 'task-gaps');
   assert.equal(resolveQueryName('focus'), 'focus');
   assert.equal(resolveQueryName('cer'), 'cer');
+  assert.equal(resolveQueryName('knowledge-documents'), 'knowledge-documents');
+  assert.equal(resolveQueryName('knowledge-actions'), 'knowledge-actions');
+  assert.equal(resolveQueryName('mandatory-proposal-gaps'), 'mandatory-proposal-gaps');
   assert.throws(() => resolveQueryName('unknown'), /Unknown planning DB query "unknown"/);
 });
 
@@ -194,6 +197,24 @@ test('parseArgs parses docs disposition queue filters for DB-first cleanup work'
       path: 'docs/planning/status/example.md',
       resolution: 'all',
       limit: 5,
+    },
+  });
+});
+
+test('parseArgs parses planning knowledge filters', () => {
+  assert.deepEqual(parseArgs(['knowledge-documents', '--type', 'proposal', '--limit', '5']), {
+    queryName: 'knowledge-documents',
+    filters: {
+      type: 'proposal',
+      limit: 5,
+    },
+  });
+
+  assert.deepEqual(parseArgs(['knowledge-actions', '--status', 'proposed', '--path', 'x.md']), {
+    queryName: 'knowledge-actions',
+    filters: {
+      status: 'proposed',
+      path: 'x.md',
     },
   });
 });

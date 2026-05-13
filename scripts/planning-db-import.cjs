@@ -21,6 +21,9 @@ const { buildCoverageReport } = require('./generate-governance-coverage-report.c
 const { buildRemediationQueue } = require('./generate-governance-remediation-queue.cjs');
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { runMigrations, schemaName } = require('./planning-db-migrate.cjs');
+const {
+  buildKnowledgeSnapshotFromDocuments,
+} = require('../tools/planning-db/knowledge/documentSnapshot.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const laneDirectory = path.join(repoRoot, 'docs', 'planning', 'state');
@@ -41,6 +44,13 @@ const governanceRemediationQueuePath = governanceGeneratedPath(
   'system-governance-remediation-queue.queue.yaml'
 );
 const governanceImportDeleteTables = [
+  'knowledge_action_links',
+  'knowledge_document_links',
+  'knowledge_action_items',
+  'knowledge_findings',
+  'knowledge_proposals',
+  'knowledge_document_sections',
+  'knowledge_documents',
   'governance_component_files',
   'governance_component_file_shards',
   'governance_fingerprints',
@@ -977,6 +987,32 @@ function listTrackedMarkdownDocuments() {
     }));
 }
 
+function listTrackedKnowledgeDocuments() {
+  const output = execFileSync(
+    'git',
+    ['ls-files', '--', 'docs/*.md', 'docs/**/*.md', 'buzon/*.md'],
+    {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    }
+  );
+
+  return [
+    ...new Set(
+      output
+        .split('\n')
+        .map((value) => normalizeText(value).trim())
+        .filter(Boolean)
+        .map(toPosix)
+    ),
+  ]
+    .sort()
+    .map((sourcePath) => {
+      const raw = fs.readFileSync(path.join(repoRoot, sourcePath), 'utf8');
+      return { sourcePath, raw, contentSha256: sha256(raw) };
+    });
+}
+
 function parseMarkdownFrontmatter(raw) {
   const text = normalizeText(raw);
   const lines = text.split(/\r?\n/);
@@ -1490,6 +1526,13 @@ function buildDocsDispositionSnapshot(options = {}) {
   }
 
   return { documents, markers, references, actions };
+}
+
+function buildKnowledgeDocumentSnapshot(options = {}) {
+  const sourceDocuments = normalizeArray(options.documents).length
+    ? normalizeArray(options.documents)
+    : listTrackedKnowledgeDocuments();
+  return buildKnowledgeSnapshotFromDocuments(sourceDocuments);
 }
 
 function globToRegExp(glob) {
@@ -2140,6 +2183,93 @@ async function insertDocsDispositionSnapshot(client, snapshot) {
   }
 }
 
+async function insertKnowledgeSnapshot(client, snapshot) {
+  for (const document of snapshot.documents) {
+    await client.query(
+      `insert into ${schemaName}.knowledge_documents
+        (document_id, document_path, document_type, title, status, planning_type, owner,
+         mandatory, source_content_sha256, raw_frontmatter)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb)`,
+      [
+        document.documentId,
+        document.documentPath,
+        document.documentType,
+        document.title,
+        document.status,
+        document.planningType,
+        document.owner,
+        document.mandatory,
+        document.sourceContentSha256,
+        toJson(document.rawFrontmatter),
+      ]
+    );
+  }
+  for (const section of snapshot.sections) {
+    await client.query(
+      `insert into ${schemaName}.knowledge_document_sections
+        (section_id, document_id, heading, heading_level, ordinal, anchor, start_line)
+       values ($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        section.sectionId,
+        section.documentId,
+        section.heading,
+        section.headingLevel,
+        section.ordinal,
+        section.anchor,
+        section.startLine,
+      ]
+    );
+  }
+  for (const proposal of snapshot.proposals) {
+    await client.query(
+      `insert into ${schemaName}.knowledge_proposals
+        (proposal_id, document_id, proposal_status, mandatory, decision_state)
+       values ($1, $2, $3, $4, $5)`,
+      [
+        proposal.proposalId,
+        proposal.documentId,
+        proposal.proposalStatus,
+        proposal.mandatory,
+        proposal.decisionState,
+      ]
+    );
+  }
+  for (const link of snapshot.documentLinks) {
+    await client.query(
+      `insert into ${schemaName}.knowledge_document_links
+        (from_document_id, to_document_id, relation_type)
+       values ($1, $2, $3)
+       on conflict do nothing`,
+      [link.fromDocumentId, link.toDocumentId, link.relationType]
+    );
+  }
+  for (const action of snapshot.actions) {
+    await client.query(
+      `insert into ${schemaName}.knowledge_action_items
+        (action_id, source_document_id, source_section_id, summary, status, required, line_number)
+       values ($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        action.actionId,
+        action.sourceDocumentId,
+        action.sourceSectionId,
+        action.summary,
+        action.status,
+        action.required,
+        action.lineNumber,
+      ]
+    );
+  }
+  for (const link of snapshot.actionLinks) {
+    await client.query(
+      `insert into ${schemaName}.knowledge_action_links
+        (action_id, target_type, target_id, relation_type)
+       values ($1, $2, $3, $4)
+       on conflict do nothing`,
+      [link.actionId, link.targetType, link.targetId, link.relationType]
+    );
+  }
+}
+
 async function beginImportTransaction(client) {
   await client.query('begin');
   await client.query('select pg_advisory_xact_lock(hashtext($1), hashtext($2))', [
@@ -2166,6 +2296,7 @@ async function importContent(options = {}) {
         planningTaskIds: (docsDispositionPlanningSnapshot?.tasks || []).map((task) => task.taskId),
       })
     : null;
+  const knowledgeSnapshot = includeGovernance ? buildKnowledgeDocumentSnapshot() : null;
   const client = options.client || new Client({ connectionString: url });
   const ownsClient = !options.client;
 
@@ -2184,6 +2315,7 @@ async function importContent(options = {}) {
       await insertRepositoryCommandSnapshot(client, repositoryCommandSnapshot);
       await insertPrReadinessSnapshot(client, prReadinessSnapshot);
       await insertDocsDispositionSnapshot(client, docsDispositionSnapshot);
+      await insertKnowledgeSnapshot(client, knowledgeSnapshot);
     }
     await client.query('commit');
   } catch (error) {
@@ -2209,6 +2341,8 @@ async function importContent(options = {}) {
     docsDispositionDocuments: docsDispositionSnapshot?.documents.length ?? 0,
     docsDispositionActions: docsDispositionSnapshot?.actions.length ?? 0,
     docsTaskLikeReferences: docsDispositionSnapshot?.references.length ?? 0,
+    knowledgeDocuments: knowledgeSnapshot?.documents.length ?? 0,
+    knowledgeActions: knowledgeSnapshot?.actions.length ?? 0,
   };
 
   if (!silent) {
@@ -2221,6 +2355,7 @@ async function importContent(options = {}) {
       `repositoryCommands=${result.repositoryCommands}`,
       `prReadinessChecks=${result.prReadinessChecks}`,
       `docsDispositionActions=${result.docsDispositionActions}`,
+      `knowledgeDocuments=${result.knowledgeDocuments}`,
     ].join(' ');
     console.log(message);
   }
@@ -2618,6 +2753,7 @@ module.exports = {
   buildDocsDispositionSnapshot,
   buildGovernanceAuxiliaryExpectedState,
   buildGovernanceFileSnapshot,
+  buildKnowledgeDocumentSnapshot,
   buildPlanningContentSnapshot,
   buildPrReadinessSnapshot,
   buildRepositoryCommandSnapshot,
@@ -2629,6 +2765,7 @@ module.exports = {
   governanceImportDeleteTables,
   importContent,
   insertDocsDispositionSnapshot,
+  insertKnowledgeSnapshot,
   insertPrReadinessSnapshot,
   insertRepositoryCommandSnapshot,
   normalizeText,
