@@ -46,6 +46,11 @@
       args: ['test:verify-prepush'],
     },
     {
+      id: 'test-generated-docs-policy',
+      command: 'node',
+      args: ['--test', 'scripts/check-generated-docs-policy.test.cjs'],
+    },
+    {
       id: 'test-pr-closeout',
       command: 'pnpm',
       args: ['test:pr-closeout'],

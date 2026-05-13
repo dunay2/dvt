@@ -79,9 +79,9 @@ allowedImplementationSurfaces:
   - docs/planning/closeouts/20260513-governance-file-shards-db-backed-policy-closeout.md
   - docs/.manifest.json
   - docs/**/index.md
-  - package.json
   - scripts/check-generated-docs-policy.cjs
   - scripts/check-generated-docs-policy.test.cjs
+  - scripts/verify-prepush.cjs
   - scripts/verify-prepush.test.cjs
 forbiddenImplementationSurfaces:
   - apps/**
