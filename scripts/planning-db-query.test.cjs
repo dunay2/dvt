@@ -8,6 +8,7 @@ const {
   buildFocusRows,
   buildComponentEngineeringComponentDriftRows,
   buildComponentEngineeringComponentTreeRows,
+  buildComponentEngineeringQualityRows,
   buildGovernanceComponentRows,
   buildGovernanceCoverageRows,
   buildGovernanceDriftRows,
@@ -22,6 +23,8 @@ const {
   buildTaskTraceRows,
   buildTaskReferenceRows,
   buildRepositoryCommandRows,
+  buildComponentEngineeringRuleCatalogRows,
+  buildComponentEngineeringRuleEvaluationRows,
   parseArgs,
   readGovernanceComponentRows,
   readGovernanceCoverageRows,
@@ -38,7 +41,10 @@ const {
   readFeatureWorkRows,
   readComponentEngineeringComponentDriftRows,
   readComponentEngineeringComponentTreeRows,
+  readComponentEngineeringQualityRows,
   readComponentEngineeringRecordRows,
+  readComponentEngineeringRuleCatalogRows,
+  readComponentEngineeringRuleEvaluationRows,
   readFocusRows,
   readTaskGapRows,
   readRepositoryCommandRows,
@@ -82,6 +88,9 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('cer'), 'cer');
   assert.equal(resolveQueryName('component-tree'), 'component-tree');
   assert.equal(resolveQueryName('component-drift'), 'component-drift');
+  assert.equal(resolveQueryName('component-rules'), 'component-rules');
+  assert.equal(resolveQueryName('component-rule-evaluations'), 'component-rule-evaluations');
+  assert.equal(resolveQueryName('component-quality'), 'component-quality');
   assert.throws(() => resolveQueryName('unknown'), /Unknown planning DB query "unknown"/);
 });
 
@@ -312,6 +321,46 @@ test('parseArgs parses component engineering record schema version filters', () 
       component: 'SYS-API-HTTP-ENTRYPOINTS',
       schemaVersion: 'v2',
       limit: 1,
+    },
+  });
+});
+
+test('parseArgs parses component engineering rule filters', () => {
+  assert.deepEqual(parseArgs(['component-rules', '--kind', 'responsibility', '--limit', '5']), {
+    queryName: 'component-rules',
+    filters: {
+      kind: 'responsibility',
+      limit: 5,
+    },
+  });
+
+  assert.deepEqual(
+    parseArgs([
+      'component-rule-evaluations',
+      '--component',
+      'SYS-RUNTIME-ENGINE-CORE',
+      '--state',
+      'fail',
+      '--kind',
+      'CEI-ID-002',
+      '--limit',
+      '5',
+    ]),
+    {
+      queryName: 'component-rule-evaluations',
+      filters: {
+        component: 'SYS-RUNTIME-ENGINE-CORE',
+        governanceState: 'fail',
+        kind: 'CEI-ID-002',
+        limit: 5,
+      },
+    }
+  );
+
+  assert.deepEqual(parseArgs(['component-quality', '--component', 'SYS-RUNTIME-ENGINE-CORE']), {
+    queryName: 'component-quality',
+    filters: {
+      component: 'SYS-RUNTIME-ENGINE-CORE',
     },
   });
 });
@@ -1312,6 +1361,76 @@ test('readComponentEngineeringComponentDriftRows queries the DB component drift 
   assert.deepEqual(captured.params, ['SYS-RUNTIME-ENGINE-CORE', 5]);
 });
 
+test('readComponentEngineeringRuleCatalogRows queries DB-backed component rules', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readComponentEngineeringRuleCatalogRows(client, {
+    kind: 'responsibility',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.component_engineering_rule_catalog_query/);
+  assert.match(captured.sql, /category = \$1/);
+  assert.match(captured.sql, /limit \$2/);
+  assert.deepEqual(captured.params, ['responsibility', 5]);
+});
+
+test('readComponentEngineeringRuleEvaluationRows queries DB-backed rule evaluations', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readComponentEngineeringRuleEvaluationRows(client, {
+    component: 'SYS-RUNTIME-ENGINE-CORE',
+    governanceState: 'fail',
+    kind: 'CEI-ID-002',
+    limit: 5,
+  });
+
+  assert.match(
+    captured.sql,
+    /from planning_query_store\.component_engineering_rule_evaluation_query/
+  );
+  assert.match(captured.sql, /subject_id = \$1/);
+  assert.match(captured.sql, /evaluation_state = \$2/);
+  assert.match(captured.sql, /rule_id = \$3/);
+  assert.match(captured.sql, /limit \$4/);
+  assert.deepEqual(captured.params, ['SYS-RUNTIME-ENGINE-CORE', 'fail', 'CEI-ID-002', 5]);
+});
+
+test('readComponentEngineeringQualityRows queries DB-backed component quality rollups', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readComponentEngineeringQualityRows(client, {
+    component: 'SYS-RUNTIME-ENGINE-CORE',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.component_engineering_quality_query/);
+  assert.match(captured.sql, /component_id = \$1/);
+  assert.match(captured.sql, /limit \$2/);
+  assert.deepEqual(captured.params, ['SYS-RUNTIME-ENGINE-CORE', 5]);
+});
+
 test('readGovernanceCoverageRows queries the DB governance coverage view', async () => {
   const captured = { sql: '', params: null };
   const client = {
@@ -1495,6 +1614,47 @@ test('governance row builders format DB rows for CLI output', () => {
       },
     ]),
     [['SYS-RUNTIME-ENGINE-CORE', 'children_required_without_children']]
+  );
+  assert.deepEqual(
+    buildComponentEngineeringRuleCatalogRows([
+      {
+        rule_id: 'CEI-RESP-001',
+        category: 'responsibility',
+        severity: 'warning',
+        subject_level: 'component',
+        drift_code: 'missing_owned_concern',
+      },
+    ]),
+    [['CEI-RESP-001', 'responsibility', 'warning', 'component', 'missing_owned_concern']]
+  );
+  assert.deepEqual(
+    buildComponentEngineeringRuleEvaluationRows([
+      {
+        rule_id: 'CEI-ID-006',
+        subject_id: 'SYS-RUNTIME-ENGINE-CORE',
+        evaluation_state: 'pass',
+        severity: 'error',
+        drift_code: null,
+      },
+    ]),
+    [['CEI-ID-006', 'SYS-RUNTIME-ENGINE-CORE', 'pass', 'error', '-']]
+  );
+  assert.deepEqual(
+    buildComponentEngineeringQualityRows([
+      {
+        component_id: 'SYS-RUNTIME-ENGINE-CORE',
+        name: 'Runtime engine core',
+        component_level: 'component',
+        quality_state: 'pass',
+        direct_file_count: 0,
+        descendant_file_count: 189,
+        children_count: 16,
+        test_file_count: 0,
+        failing_rule_count: 0,
+        drift_codes: [],
+      },
+    ]),
+    [['SYS-RUNTIME-ENGINE-CORE', 'Runtime engine core', 'component', 'pass', 0, 189, 16, 0, 0, '-']]
   );
   assert.deepEqual(
     buildGovernanceCoverageRows([

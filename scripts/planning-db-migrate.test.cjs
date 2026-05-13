@@ -703,3 +703,28 @@ test('tracked migrations keep component tree leaf checks source-neutral after W3
   );
   assert.match(sourceChildFilterMigration.sql, /where unit\.level = 'component'/);
 });
+
+test('tracked migrations expose DB-backed component engineering rules after W34', () => {
+  const migrations = readMigrationFiles();
+  const ruleRuntimeMigration = migrations.find(
+    (migration) => migration.fileName === '034_component_engineering_rule_runtime.sql'
+  );
+
+  assert.ok(ruleRuntimeMigration);
+  assert.match(
+    ruleRuntimeMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_rule_catalog_query/
+  );
+  assert.match(
+    ruleRuntimeMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_rule_evaluation_query/
+  );
+  assert.match(
+    ruleRuntimeMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_quality_query/
+  );
+  assert.match(ruleRuntimeMigration.sql, /CEI-ID-002/);
+  assert.match(ruleRuntimeMigration.sql, /CEI-RESP-001/);
+  assert.match(ruleRuntimeMigration.sql, /CEI-SIZE-005/);
+  assert.match(ruleRuntimeMigration.sql, /from planning_query_store\.governance_unit_query parent/);
+});

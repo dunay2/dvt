@@ -62,11 +62,14 @@ these DB concepts:
 | `component_engineering_quality_query`         | Aggregates size, responsibility, coupling, coverage, and drift state |
 | `component_engineering_drift_query`           | Emits concrete drift codes for failing rule evaluations              |
 
-The current DB surface has `component_engineering_component_tree_query`,
+The executable DB surface has `component_engineering_component_tree_query`,
 `component_engineering_file_ownership_query`,
-`component_engineering_component_metadata_query`, and
-`component_engineering_drift_query`. Those views are the start of the model, not
-the full rule runtime.
+`component_engineering_component_metadata_query`,
+`component_engineering_rule_catalog_query`,
+`component_engineering_rule_evaluation_query`,
+`component_engineering_quality_query`, and
+`component_engineering_drift_query`. The rule catalog and evaluation views own
+the invariant semantics; operator commands only filter and render those rows.
 
 ### Rule Catalog Record
 
@@ -400,18 +403,22 @@ views exist.
 
 ### Phase 2: DB Rule Catalog
 
-Add a migration that exposes `component_engineering_rule_catalog_query` with
-one row for every active rule in this document.
+Implemented by `034_component_engineering_rule_runtime.sql` for the active
+identity, responsibility, interface, size, and source-owner rule families.
 
 ### Phase 3: Rule Evaluation Query
 
-Add `component_engineering_rule_evaluation_query` and convert existing drift
-codes into rule-backed evaluations.
+Implemented by `034_component_engineering_rule_runtime.sql`.
+`component_engineering_drift_query` derives from failed rule evaluations instead
+of maintaining a separate local drift predicate.
 
 ### Phase 4: Quality Metrics
 
-Add size, coupling, test, coverage, and documentation rollups. Metrics that
-cannot yet be extracted must evaluate as `not_indexed`.
+The first DB rollup is `component_engineering_quality_query`. It exposes
+hierarchy size, file size, test file count, failing rule counts, severity
+counts, and drift codes. Coupling, coverage, documentation, and lifecycle
+posture remain future rule families and must be added as DB rules, not Markdown
+exceptions.
 
 ### Phase 5: CI And Closeout Gate
 
