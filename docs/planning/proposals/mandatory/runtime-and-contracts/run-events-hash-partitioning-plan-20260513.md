@@ -177,7 +177,10 @@ allowedImplementationSurfaces:
   - docs/planning/status/system-governance-*.md
   - docs/planning/status/system-governance-*.yaml
   - docs/planning/status/governance-components/**
+  - packages/@dvt/adapter-postgres/src/PostgresTenantIsolationPolicy.ts
   - packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts
+  - packages/@dvt/adapter-postgres/test/PostgresTenantIsolationPolicy.test.ts
+  - packages/@dvt/adapter-postgres/test/PostgresTenantRlsEnforcement.integration.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresSchemaManager.rollback.test.ts
 forbiddenImplementationSurfaces:
@@ -241,18 +244,61 @@ redGreenCycles:
       - packages/@dvt/adapter-postgres/test/PostgresSchemaManager.rollback.test.ts
       - packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts
     greenTest: pnpm --filter @dvt/adapter-postgres test -- PostgresSchemaManager.rollback.test.ts
+  - id: run-events-partition-rls-catalog
+    redTest: pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts
+    expectedFailure: run_events hash partitions are absent from the tenant isolation catalog.
+    patchSurfaces:
+      - packages/@dvt/adapter-postgres/test/PostgresTenantIsolationPolicy.test.ts
+      - packages/@dvt/adapter-postgres/test/PostgresTenantRlsEnforcement.integration.test.ts
+      - packages/@dvt/adapter-postgres/src/PostgresTenantIsolationPolicy.ts
+      - packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts
+    greenTest: pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts
 symbols:
   - name: RUN_EVENTS_HASH_PARTITION_COUNT
-    path: packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts
-    dddOwner: PostgresSchemaManager
+    path: packages/@dvt/adapter-postgres/src/PostgresTenantIsolationPolicy.ts
+    dddOwner: PostgresTenantIsolationPolicy
     cqRails:
       - PostgresStateStoreSchemaMigrationCommand
     fowlerSignals:
-      - Defines the bounded physical partition count for hot run event storage.
+      - Defines the bounded physical partition count for hot run event storage and RLS catalog coverage.
     architectureGuard: pnpm --filter @dvt/adapter-postgres test -- PostgresStateStoreAdapter.migrate.test.ts
     cypressCoverage: N/A - adapter storage only
     unitTests:
       - pnpm --filter @dvt/adapter-postgres test -- PostgresStateStoreAdapter.migrate.test.ts
+      - pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts
+  - name: RUN_EVENTS_TENANT_ISOLATION_TABLE
+    path: packages/@dvt/adapter-postgres/src/PostgresTenantIsolationPolicy.ts
+    dddOwner: PostgresTenantIsolationPolicy
+    cqRails:
+      - PostgresStateStoreSchemaMigrationCommand
+    fowlerSignals:
+      - Gives the run_events parent table one RLS catalog owner.
+    architectureGuard: pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts
+    cypressCoverage: N/A - adapter storage only
+    unitTests:
+      - pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts
+  - name: RUN_EVENTS_HASH_PARTITION_TENANT_ISOLATION_TABLES
+    path: packages/@dvt/adapter-postgres/src/PostgresTenantIsolationPolicy.ts
+    dddOwner: PostgresTenantIsolationPolicy
+    cqRails:
+      - PostgresStateStoreSchemaMigrationCommand
+    fowlerSignals:
+      - Declares every physical run_events hash partition as tenant-owned RLS surface.
+    architectureGuard: pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts
+    cypressCoverage: N/A - adapter storage only
+    unitTests:
+      - pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts
+  - name: RUN_EVENTS_TENANT_ISOLATION_TABLES
+    path: packages/@dvt/adapter-postgres/src/PostgresTenantIsolationPolicy.ts
+    dddOwner: PostgresTenantIsolationPolicy
+    cqRails:
+      - PostgresStateStoreSchemaMigrationCommand
+    fowlerSignals:
+      - Groups the run_events parent and hash partitions for schema migration RLS reapplication.
+    architectureGuard: pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts
+    cypressCoverage: N/A - adapter storage only
+    unitTests:
+      - pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts
   - name: RUN_EVENTS_LEGACY_TABLE
     path: packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts
     dddOwner: PostgresSchemaManager
@@ -309,16 +355,17 @@ symbols:
     unitTests:
       - pnpm --filter @dvt/adapter-postgres test -- PostgresStateStoreAdapter.migrate.test.ts
   - name: runEventsHashPartitionName
-    path: packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts
-    dddOwner: PostgresSchemaManager
+    path: packages/@dvt/adapter-postgres/src/PostgresTenantIsolationPolicy.ts
+    dddOwner: PostgresTenantIsolationPolicy
     cqRails:
       - PostgresStateStoreSchemaMigrationCommand
     fowlerSignals:
-      - Gives partition names one deterministic owner.
+      - Gives partition names one deterministic owner shared by DDL and RLS catalog checks.
     architectureGuard: pnpm --filter @dvt/adapter-postgres test -- PostgresStateStoreAdapter.migrate.test.ts
     cypressCoverage: N/A - adapter storage only
     unitTests:
       - pnpm --filter @dvt/adapter-postgres test -- PostgresStateStoreAdapter.migrate.test.ts
+      - pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts
   - name: createRunEventsTableSql
     path: packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts
     dddOwner: PostgresSchemaManager
@@ -385,17 +432,6 @@ symbols:
     cypressCoverage: N/A - adapter storage only
     unitTests:
       - pnpm --filter @dvt/adapter-postgres test -- PostgresStateStoreAdapter.migrate.test.ts
-  - name: runEventsTenantIsolationTable
-    path: packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts
-    dddOwner: PostgresSchemaManager
-    cqRails:
-      - PostgresStateStoreSchemaMigrationCommand
-    fowlerSignals:
-      - Reuses the tenant-isolation catalog instead of duplicating RLS semantics.
-    architectureGuard: pnpm --filter @dvt/adapter-postgres test -- PostgresStateStoreAdapter.migrate.test.ts
-    cypressCoverage: N/A - adapter storage only
-    unitTests:
-      - pnpm --filter @dvt/adapter-postgres test -- PostgresStateStoreAdapter.migrate.test.ts
   - name: isRunEventsPartitioned
     path: packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts
     dddOwner: PostgresSchemaManager
@@ -424,7 +460,7 @@ symbols:
     cqRails:
       - PostgresStateStoreSchemaMigrationCommand
     fowlerSignals:
-      - Keeps RLS reapplication coupled to partition conversion.
+      - Keeps RLS reapplication coupled to the run_events parent and physical hash partitions.
     architectureGuard: pnpm --filter @dvt/adapter-postgres test -- PostgresStateStoreAdapter.migrate.test.ts
     cypressCoverage: N/A - adapter storage only
     unitTests:

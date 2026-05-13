@@ -24,6 +24,9 @@ requires partitioned unique constraints to include the partition key.
 | File                                                                                                        | Change                                                                                                                               | Why                                                                                         |
 | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
 | `packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts`                                               | Added `core_021_run_events_hash_partitioning`, fresh hash-partitioned DDL, heap conversion, rollback, and RLS reapplication helpers. | Reduce hot event-log table pressure while preserving adapter invariants.                    |
+| `packages/@dvt/adapter-postgres/src/PostgresTenantIsolationPolicy.ts`                                       | Declared the `run_events` parent and hash partitions as tenant-owned RLS catalog surfaces.                                           | Keep physical partition access aligned with ADR-0031 tenant isolation.                      |
+| `packages/@dvt/adapter-postgres/test/PostgresTenantIsolationPolicy.test.ts`                                 | Added catalog coverage for run event hash partitions.                                                                                | Prove partition tables stay declared in policy metadata.                                    |
+| `packages/@dvt/adapter-postgres/test/PostgresTenantRlsEnforcement.integration.test.ts`                      | Extended catalog proof to partitioned parents and physical partitions.                                                               | Prove forced RLS coverage for every tenant-owned physical relation.                         |
 | `packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts`                             | Added fresh-schema and legacy-heap migration coverage.                                                                               | Prove the partitioned shape and conversion path.                                            |
 | `packages/@dvt/adapter-postgres/test/PostgresSchemaManager.rollback.test.ts`                                | Added rollback coverage for partition-to-heap conversion and RLS posture.                                                            | Prove operational rollback.                                                                 |
 | `docs/architecture/components/engine/adapters/state-store/postgres/run-events-partitioning-component.md`    | Added local component guide with API, invariants, transitions, consumers, and diagrams.                                              | Make component behavior queryable and reviewable.                                           |
@@ -34,7 +37,9 @@ requires partitioned unique constraints to include the partition key.
 ## Validation Plan
 
 - `pnpm docs:feature-mechanization --feature RUN-EVENTS-HASH-PARTITIONING`
+- `pnpm --filter @dvt/adapter-postgres test -- PostgresTenantIsolationPolicy.test.ts`
 - `pnpm --filter @dvt/adapter-postgres test -- PostgresStateStoreAdapter.migrate.test.ts PostgresSchemaManager.rollback.test.ts`
+- `DVT_PG_INTEGRATION=1 pnpm --filter @dvt/adapter-postgres test -- PostgresAppRoleRuntime.integration.test.ts PostgresTenantRlsEnforcement.integration.test.ts`
 - `DVT_PG_INTEGRATION=1 DVT_PG_URL=postgresql://dvt:dvt@localhost:5432/dvt pnpm --filter @dvt/adapter-postgres test -- smoke.test.ts`
 - Live PostgreSQL heap-upgrade probe verifying partitioned parent, preserved
   row, 16 child partitions, and forced RLS.

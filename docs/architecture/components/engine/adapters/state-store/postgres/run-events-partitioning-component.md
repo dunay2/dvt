@@ -37,11 +37,15 @@ existing adapter entry points:
 - The partition key is `run_id`.
 - The parent table is created with `PARTITION BY HASH (run_id)`.
 - The partition count is 16.
+- The tenant-isolation catalog declares both the parent `run_events` table and
+  all physical hash partitions.
 - Canonical constraints remain:
   - `PRIMARY KEY (run_id, run_seq)`
   - `UNIQUE (run_id, idempotency_key)`
 - The canonical column list is unchanged during heap-to-partition conversion.
 - Tenant RLS is re-applied to the canonical `run_events` table after conversion.
+- Tenant RLS is also re-applied to `run_events_h00` through `run_events_h15`
+  so direct partition access remains fail-closed for proof roles.
 - Temporary migration tables may have RLS disabled only while they are the
   temporary copy source or rollback source.
 - The adapter does not introduce time-range deletion, compaction, or archive
@@ -139,6 +143,10 @@ flowchart TD
 - `packages/@dvt/adapter-postgres/test/PostgresSchemaManager.rollback.test.ts`
   - rollback includes `core_021_run_events_hash_partitioning`
   - rollback preserves constraints and re-applies tenant isolation
+- `packages/@dvt/adapter-postgres/test/PostgresTenantIsolationPolicy.test.ts`
+  - run event hash partitions remain listed in the tenant isolation catalog
+- `packages/@dvt/adapter-postgres/test/PostgresTenantRlsEnforcement.integration.test.ts`
+  - every tenant-owned physical table, including partitions, has forced RLS
 
 ## Runtime Evidence
 
@@ -146,7 +154,8 @@ flowchart TD
 - Child partitions `run_events_h00` through `run_events_h15` exist.
 - Constraint metadata includes `run_events_pkey` and
   `run_events_run_id_idempotency_key_key`.
-- RLS metadata remains enabled and forced for canonical `run_events`.
+- RLS metadata remains enabled and forced for canonical `run_events` and each
+  physical hash partition.
 
 ## Lifecycle Policy
 

@@ -43,15 +43,16 @@ import {
 } from './PostgresSchemaManagerSql.js';
 import {
   CORE_TENANT_ISOLATION_TABLES,
-  type TenantIsolationTable,
+  RUN_EVENTS_HASH_PARTITION_COUNT,
+  RUN_EVENTS_TENANT_ISOLATION_TABLES,
   buildDropTenantIsolationPolicySql,
   buildTenantIsolationPolicySql,
+  runEventsHashPartitionName,
 } from './PostgresTenantIsolationPolicy.js';
 import { quoteIdentifier } from './sqlUtils.js';
 
 type MigrationState = 'not_called' | 'in_progress' | 'ready';
 const COMPONENT = coreComponent();
-const RUN_EVENTS_HASH_PARTITION_COUNT = 16;
 const RUN_EVENTS_LEGACY_TABLE = 'run_events_unpartitioned_legacy';
 const RUN_EVENTS_ROLLBACK_TABLE = 'run_events_partitioned_rollback';
 const RUN_EVENTS_COLUMNS = [
@@ -236,10 +237,6 @@ function runEventsRelation(schema: string, tableName = 'run_events'): string {
   return `${sq(schema)}.${tableName}`;
 }
 
-function runEventsHashPartitionName(partitionIndex: number): string {
-  return `run_events_h${String(partitionIndex).padStart(2, '0')}`;
-}
-
 function createRunEventsTableSql(
   schema: string,
   tableName = 'run_events',
@@ -317,14 +314,6 @@ function disableRunEventsTenantIsolationSql(schema: string, tableName: string): 
   ];
 }
 
-function runEventsTenantIsolationTable(): TenantIsolationTable {
-  const table = CORE_TENANT_ISOLATION_TABLES.find((candidate) => candidate.name === 'run_events');
-  if (table === undefined) {
-    throw new Error('RUN_EVENTS_TENANT_ISOLATION_TABLE_NOT_CONFIGURED');
-  }
-  return table;
-}
-
 async function isRunEventsPartitioned(client: PoolClient, schema: string): Promise<boolean> {
   const result = await client.query<{ is_partitioned: boolean }>(
     `
@@ -349,8 +338,10 @@ async function ensureRunEventsHashPartitions(client: PoolClient, schema: string)
 }
 
 async function reapplyRunEventsTenantIsolation(client: PoolClient, schema: string): Promise<void> {
-  for (const statement of buildTenantIsolationPolicySql(schema, runEventsTenantIsolationTable())) {
-    await client.query(statement);
+  for (const table of RUN_EVENTS_TENANT_ISOLATION_TABLES) {
+    for (const statement of buildTenantIsolationPolicySql(schema, table)) {
+      await client.query(statement);
+    }
   }
 }
 
