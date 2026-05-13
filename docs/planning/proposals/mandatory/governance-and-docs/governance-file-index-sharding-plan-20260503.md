@@ -63,6 +63,7 @@ allowedImplementationSurfaces:
   - docs/planning/status/**
   - scripts/check-governance-file-fingerprint-baseline.cjs
   - scripts/check-governance-file-fingerprint-baseline.test.cjs
+  - scripts/docs-quality-check.cjs
   - scripts/planning-db-import.cjs
   - scripts/planning-db-import.test.cjs
 forbiddenImplementationSurfaces:
