@@ -459,7 +459,7 @@ test('docs disposition snapshot classifies active-doc cleanup actions and task-l
           [
             'AR-A6 F-28 S08 WEB-123 ADR-0055 ARC-2 ED-20260510-example',
             'R-20260510-EXAMPLE US-1 F04-W4 SYS-DOCS CMD-RET PS-Q08',
-            'SHA-256 GAP-1 MVP-E1-A RESIDUAL-A RISK-B LEGACY-DRIFT INV-SCOPE-03',
+            'SHA-256 GAP-1 MVP-E1-A RESIDUAL-A RISK-B LEGACY-DRIFT INV-SCOPE-03 AR-C2-INV-1',
           ].join(' '),
           'pending follow-up remains open',
           'TODO: resolve this item',
@@ -502,6 +502,7 @@ test('docs disposition snapshot classifies active-doc cleanup actions and task-l
   assert.equal(classifications.get('RISK-B'), 'historical_planning_reference');
   assert.equal(classifications.get('LEGACY-DRIFT'), 'historical_planning_reference');
   assert.equal(classifications.get('INV-SCOPE-03'), 'historical_planning_reference');
+  assert.equal(classifications.get('AR-C2-INV-1'), 'review_invariant_reference');
 
   assert.deepEqual(snapshot.actions.map((action) => action.actionKind).sort(), [
     'draft_active_doc',

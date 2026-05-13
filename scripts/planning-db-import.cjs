@@ -1192,6 +1192,9 @@ function classifyTaskLikeReference(
   if (/^(?:GAP|MVP|RESIDUAL|RISK|LEGACY|INV)-/.test(upperValue) || /^F-\d{2}/.test(upperValue)) {
     return { classification: 'historical_planning_reference', registeredPlanningTask: false };
   }
+  if (/^AR-[A-Z]\d+-INV-\d+$/.test(upperValue)) {
+    return { classification: 'review_invariant_reference', registeredPlanningTask: false };
+  }
   if (/^SYS-/.test(upperValue)) {
     return { classification: 'governance_unit_reference', registeredPlanningTask: false };
   }
