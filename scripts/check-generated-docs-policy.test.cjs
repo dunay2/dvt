@@ -48,9 +48,9 @@ function loadChecker() {
 }
 
 function makeOversizedArtifact() {
-  const artifactRoot = fs.mkdtempSync(
-    path.join(repoRoot, '.generated-docs', 'generated-policy-test-')
-  );
+  const generatedDocsRoot = path.join(repoRoot, '.generated-docs');
+  fs.mkdirSync(generatedDocsRoot, { recursive: true });
+  const artifactRoot = fs.mkdtempSync(path.join(generatedDocsRoot, 'generated-policy-test-'));
   const artifactPath = path.join(artifactRoot, 'SYS-DOCS-GOVERNANCE.files.yaml');
   fs.writeFileSync(artifactPath, '0123456789', 'utf8');
   return {
