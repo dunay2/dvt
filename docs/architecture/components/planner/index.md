@@ -90,6 +90,7 @@ flowchart LR
 - [Workspace authoring draft aggregate](./workspace-authoring-draft-aggregate.md)
 - [Executable subgraph derivation component](./executable-subgraph-derivation-component.md)
 - [Planner private behavior ports component](./planner-private-behavior-ports-component.md)
+- [Custom policy namespace freeze user stories](./custom-policy-namespace-freeze-user-stories.md)
 
 ## Notes
 

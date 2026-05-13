@@ -16,6 +16,7 @@ Evidence documents that justify or validate relevant changes.
 - [Critical](critical/index.md)
 - [Supporting](supporting/index.md)
 - [ADR-0000 Traceability Gate Restoration](ed-20260505-adr0-traceability-gate.md)
+- [AR-A4 Custom Policy Namespace Freeze Evidence](ed-20260513-ar-a4-custom-policy-namespace-freeze.md)
 - [AR-A6 Snapshot Rebuild Concurrency Contract](ed-20260513-ar-a6-snapshot-rebuild-concurrency-contract.md)
 - [AR-C5 Adapter Circuit Breaker Evidence](ed-20260512-ar-c5-adapter-circuit-breaker.md)
 - [AR-D4 zero-downtime schema rollback evidence](ed-20260513-ar-d4-zero-downtime-schema-rollback.md)
