@@ -87,6 +87,14 @@ function buildRefreshStages() {
         script: 'planning:db:export:check',
       },
       {
+        id: 'coverage-report-final',
+        script: 'docs:governance:coverage-report',
+      },
+      {
+        id: 'remediation-queue-final',
+        script: 'docs:governance:remediation-queue',
+      },
+      {
         id: 'governance-db-import-final',
         script: 'governance:db:import',
       },
@@ -218,6 +226,24 @@ function assertPositiveInteger(value, name) {
   }
 }
 
+function sleepMs(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+function waitForStableWorktreeFingerprint(readFingerprint, logger = console) {
+  let previous = readFingerprint();
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    sleepMs(250);
+    const current = readFingerprint();
+    if (current === previous) {
+      return current;
+    }
+    logger.log('[governance:refresh] generated writes still settling before DB validation');
+    previous = current;
+  }
+  return previous;
+}
+
 function runGovernanceRefresh(options = {}) {
   const stages = options.stages ?? buildRefreshStages();
   const maxPasses = options.maxPasses ?? defaultMaxPasses;
@@ -259,6 +285,10 @@ function runGovernanceRefresh(options = {}) {
   logger.log(
     `[governance:refresh] generated surfaces stable after ${generationPasses} generation pass(es)`
   );
+
+  if (readFingerprint === readWorktreeFingerprint) {
+    waitForStableWorktreeFingerprint(readFingerprint, logger);
+  }
 
   for (const stage of stages.databaseStages) {
     logger.log(`[governance:refresh] pnpm ${stage.script}`);
