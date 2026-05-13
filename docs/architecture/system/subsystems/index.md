@@ -28,6 +28,9 @@ serve a product capability.
   implemented run-state machine and the end-to-end command to event flow.
 - [Read subsystem](./read/index.md): operator read flows from browser to backend,
   read models, and engine-backed enrichment.
+- [Runtime subsystem](./runtime/index.md): governed runtime component grouping
+  across engine, run domain, state-store, delivery, interpretation,
+  verification, DSL, deterministic utilities, and CLI validation.
 
 ## Navigation Model
 

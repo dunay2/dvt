@@ -1,6 +1,10 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
+/**
+ * Owned concern: guard the governance unit manifest semantics and prevent broad
+ * root owners from hiding package-level component boundaries.
+ */
 const {
   validateManifest,
   findOwnerMatches,
@@ -295,15 +299,72 @@ test('real manifest keeps API route registrars under planned API components', ()
     'apps/api/src/routes/registerOperationalRoutes.ts',
     units
   )[0];
+  const operationalParent = units.find((unit) => unit.id === operationalOwner.parent);
   const protectedRuntimeOwner = findOwnerMatches(
     'apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts',
     units
   )[0];
 
-  assert.equal(operationalOwner.id, 'SYS-API-OPS-ROUTES');
+  assert.equal(operationalOwner.id, 'SYS-API-OPS-HEALTH');
+  assert.equal(operationalParent.id, 'SYS-API-OPS-ROUTES');
   assert.equal(protectedRuntimeOwner.id, 'SYS-API-HTTP-ENTRYPOINTS');
   assert.match(operationalOwner.name, /routes/i);
+  assert.match(operationalParent.name, /routes/i);
   assert.match(protectedRuntimeOwner.name, /entrypoints/i);
-  assert.ok(operationalOwner.governance.includes(routeRegistrationPlan));
+  assert.ok(operationalParent.governance.includes(routeRegistrationPlan));
   assert.ok(protectedRuntimeOwner.governance.includes(routeRegistrationPlan));
+});
+
+test('real manifest subdivides runtime package files below the runtime root module', () => {
+  const realManifest = readManifest();
+  const units = realManifest.units;
+  const runtimeRoot = units.find((unit) => unit.id === 'SYS-RUNTIME-ROOT');
+
+  assert.equal(runtimeRoot.level, 'module');
+  assert.deepEqual(runtimeRoot.owns || [], []);
+
+  assert.deepEqual(
+    findOwnerMatches('packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts', units).map(
+      (unit) => unit.id
+    ),
+    ['SYS-RUNTIME-ENGINE-CORE']
+  );
+  assert.deepEqual(
+    findOwnerMatches('packages/@dvt/state-store/src/index.ts', units).map((unit) => unit.id),
+    ['SYS-RUNTIME-STATE-STORE']
+  );
+  assert.deepEqual(
+    findOwnerMatches('packages/@dvt/delivery/src/index.ts', units).map((unit) => unit.id),
+    ['SYS-RUNTIME-DELIVERY']
+  );
+  assert.deepEqual(
+    findOwnerMatches('packages/@dvt/run-domain/src/index.ts', units).map((unit) => unit.id),
+    ['SYS-RUNTIME-RUN-DOMAIN']
+  );
+  assert.deepEqual(
+    findOwnerMatches('packages/@dvt/plan-interpreter/src/index.ts', units).map((unit) => unit.id),
+    ['SYS-RUNTIME-PLAN-INTERPRETATION']
+  );
+  assert.deepEqual(
+    findOwnerMatches('packages/@dvt/plan-verifier/src/index.ts', units).map((unit) => unit.id),
+    ['SYS-RUNTIME-PLAN-VERIFICATION']
+  );
+  assert.deepEqual(
+    findOwnerMatches('packages/@dvt/canonical/src/index.ts', units).map((unit) => unit.id),
+    ['SYS-RUNTIME-DETERMINISM-UTILITIES']
+  );
+  assert.deepEqual(
+    findOwnerMatches('packages/@dvt/dsl/src/index.ts', units).map((unit) => unit.id),
+    ['SYS-RUNTIME-DSL']
+  );
+  assert.deepEqual(
+    findOwnerMatches('packages/@dvt/cli/src/index.ts', units).map((unit) => unit.id),
+    ['SYS-RUNTIME-CLI-VALIDATION']
+  );
+  assert.deepEqual(
+    findOwnerMatches('packages/@dvt/engine/src/security/planRefPolicy.ts', units).map(
+      (unit) => unit.id
+    ),
+    ['SYS-PLANSTORE-ENGINE-FETCH']
+  );
 });

@@ -95,6 +95,7 @@ Evidence documents that justify or validate relevant changes.
 - [Plugin Admission Architecture Hardening](ed-20260429-plugin-admission-architecture.md)
 - [Restore ADR-0000 Traceability Gate On Main](ed-20260423-adr0-traceability-gate.md)
 - [Run Execution Context Admission Test SRP Hardening](ed-20260429-run-execution-context-admission-test-srp.md)
+- [Runtime Root Subdivision Evidence](ed-20260513-runtime-root-subdivision.md)
 - [StartRunApplicationService QA Closeout](ED-20260405-start-run-application-service-qa.md)
 - [Summary](ED-20260403-s08-4-ci-regression-fix.md)
 - [Summary](ED-20260403-s08-4-postgres-three-part-model-arc2.md)

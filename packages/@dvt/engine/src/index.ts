@@ -1,5 +1,6 @@
 ﻿/**
  * @file packages/@dvt/engine/src/index.ts
+ * @ownedConcern Runtime engine core public API, orchestration ports, and run lifecycle services.
  * @baseline ADR-0003: Execution Model Sovereignty
  * @decision Decision â€” Expose a stable public surface of the engine for orchestration decoupled from the runtime
  * @consequence Consumers integrate engine contracts/ports without depending on internal implementations
