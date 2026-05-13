@@ -365,8 +365,10 @@ noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md
 componentGuides:
   - docs/planning/status/system-governance-unit-taxonomy-20260501.md
+  - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-component.md
 userStories:
   - docs/planning/status/system-governance-unit-index-20260501.md
+  - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-user-stories.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -392,6 +394,9 @@ allowedImplementationSurfaces:
   - docs/.manifest.json
   - docs/adr/ADR-0053-file-state-fingerprint-governance.md
   - docs/adr/index.md
+  - docs/architecture/shared/cli.md
+  - docs/architecture/system/subsystems/index.md
+  - docs/architecture/system/subsystems/runtime/**
   - docs/generated-docs-policy.json
   - docs/guides/testing-and-ci-capabilities.md
   - docs/planning/proposals/mandatory/governance-and-docs/governance-file-index-sharding-plan-20260503.md
@@ -400,6 +405,17 @@ allowedImplementationSurfaces:
   - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
   - docs/planning/status/**
   - package.json
+  - packages/@dvt/canonical/src/index.ts
+  - packages/@dvt/cli/README.md
+  - packages/@dvt/cli/src/index.ts
+  - packages/@dvt/cli/test/smoke.test.ts
+  - packages/@dvt/delivery/src/index.ts
+  - packages/@dvt/dsl/src/index.ts
+  - packages/@dvt/engine/src/index.ts
+  - packages/@dvt/plan-interpreter/src/index.ts
+  - packages/@dvt/plan-verifier/src/index.ts
+  - packages/@dvt/run-domain/src/index.ts
+  - packages/@dvt/state-store/src/index.ts
   - pnpm-lock.yaml
   - scripts/check-governance-changed-files.cjs
   - scripts/check-governance-changed-files.test.cjs
@@ -423,7 +439,6 @@ forbiddenImplementationSurfaces:
   - apps/outbox-worker/**
   - apps/projector-worker/**
   - apps/lineage-worker/**
-  - packages/**
   - specs/contracts/**
 commandQueryRails:
   - name: GenerateGovernanceUnitCoverage
@@ -465,6 +480,12 @@ commandQueryRails:
   - name: RegisterApiProtectedRuntimeRoutesModule
     type: command
     dddOwner: SYS-API-HTTP-ENTRYPOINTS source/module registrar
+  - name: SubdivideRuntimeGovernanceRoot
+    type: command
+    dddOwner: SYS-RUNTIME-ROOT runtime component model
+  - name: DescribeRuntimeCliValidationSurface
+    type: query
+    dddOwner: SYS-RUNTIME-CLI-VALIDATION package metadata read model
 domainObjects:
   - name: GovernanceUnitIndex
     type: generated status aggregate
@@ -496,6 +517,15 @@ domainObjects:
   - name: ApiProtectedRuntimeRoutesComponent
     type: API protected runtime route composition component
     owner: SYS-API-HTTP-ENTRYPOINTS
+  - name: RuntimeGovernanceComponentModel
+    type: governed runtime component ownership model
+    owner: SYS-RUNTIME-ROOT
+  - name: RuntimeArchitectureDocumentationComponent
+    type: runtime subsystem guide, evidence, and risk ownership component
+    owner: SYS-RUNTIME-ARCHITECTURE-DOCS
+  - name: RuntimeCliValidationSurface
+    type: package metadata read model
+    owner: SYS-RUNTIME-CLI-VALIDATION
 fowlerSignals:
   - Documentation drift
   - Hidden authority
@@ -510,6 +540,7 @@ architectureGuards:
   - pnpm docs:governance:remediation-queue:check
   - pnpm docs:governance:changed-files:check
   - pnpm docs:gov:manifest:check
+  - node --test scripts/check-governance-unit-coverage.test.cjs
   - pnpm test:docs:governance:coverage-report
   - pnpm test:docs:governance:remediation-queue
   - pnpm test:docs:governance:changed-files
@@ -517,6 +548,7 @@ architectureGuards:
   - pnpm --filter dvt-api test -- test/routes/registerOperationalRoutes.test.ts
   - pnpm --filter dvt-api test -- test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
   - pnpm --filter dvt-api typecheck
+  - pnpm --filter @dvt/cli test
 cypressFlows:
   - N/A - repository governance docs and CI only
 completionGate:
@@ -530,6 +562,15 @@ completionGate:
   - pnpm --filter dvt-api test -- test/routes/registerOperationalRoutes.test.ts
   - pnpm --filter dvt-api test -- test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
   - pnpm --filter dvt-api typecheck
+  - pnpm --filter @dvt/cli test
+  - pnpm --filter @dvt/engine test
+  - pnpm --filter @dvt/state-store test
+  - pnpm --filter @dvt/delivery test
+  - pnpm --filter @dvt/run-domain test
+  - pnpm --filter @dvt/plan-interpreter test
+  - pnpm --filter @dvt/plan-verifier test
+  - pnpm --filter @dvt/dsl test
+  - pnpm --filter @dvt/crypto test
   - pnpm ci:docs
   - pnpm verify:prepush
 redGreenCycles:
@@ -607,7 +648,35 @@ redGreenCycles:
       - apps/api/test/modules/protectedRuntimeAndPlanCompileArchitecture.cases.ts
       - apps/api/src/app.ts
     greenTest: pnpm --filter dvt-api test -- test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
+  - id: runtime-root-subdivision
+    redTest: node --test scripts/check-governance-unit-coverage.test.cjs
+    expectedFailure: SYS-RUNTIME-ROOT is still a broad file-owning component instead of a module with child runtime components.
+    patchSurfaces:
+      - docs/planning/status/system-governance-unit-index.units.yaml
+      - scripts/check-governance-unit-coverage.test.cjs
+      - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-component.md
+    greenTest: node --test scripts/check-governance-unit-coverage.test.cjs
+  - id: runtime-cli-validation-surface
+    redTest: pnpm --filter @dvt/cli test
+    expectedFailure: cliPackageSurface is undefined while the package still exports placeholder metadata.
+    patchSurfaces:
+      - packages/@dvt/cli/src/index.ts
+      - packages/@dvt/cli/test/smoke.test.ts
+      - docs/architecture/shared/cli.md
+    greenTest: pnpm --filter @dvt/cli test
 symbols:
+  - name: cliPackageSurface
+    path: packages/@dvt/cli/src/index.ts
+    dddOwner: Runtime CLI validation package metadata read model
+    cqRails:
+      - DescribeRuntimeCliValidationSurface
+    fowlerSignals:
+      - Documentation drift
+      - Boundary drift
+    architectureGuard: packages/@dvt/cli/test/smoke.test.ts
+    cypressCoverage: N/A - package metadata and governance validation
+    unitTests:
+      - packages/@dvt/cli/test/smoke.test.ts
   - name: APP_SOURCE_PATH
     path: apps/api/test/entrypoints/http/startRunControlBoundary.architecture.test.ts
     dddOwner: API protected runtime HTTP entrypoint source/module architecture guard
