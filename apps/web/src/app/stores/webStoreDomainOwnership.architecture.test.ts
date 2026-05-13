@@ -31,8 +31,7 @@ const STORE_MODULES: readonly StoreModuleExpectation[] = [
   {
     label: 'authorization store',
     relativePath: 'apps/web/src/app/stores/authorizationStore.ts',
-    ownedConcern:
-      'Owned concern: expose effective web UI authorization capabilities outside runtime evidence',
+    ownedConcern: 'Owned concern: cache server-projected web UI authorization capabilities',
   },
   {
     label: 'UI layout store',

@@ -4,14 +4,14 @@ import type { BadgeContext } from './contracts/NodeRendering';
 import {
   getAllOverlays,
   getNodeBadges,
+  getRuntimePlugins,
+  PLUGIN_REGISTRY,
   getPluginPortMap,
   type RuntimeCapabilities,
 } from './registry';
 import type { CanonicalNode } from '../types/canonical';
 
-function buildRuntimeCapabilities(
-  unavailablePluginId: string
-): RuntimeCapabilities {
+function buildRuntimeCapabilities(unavailablePluginId: string): RuntimeCapabilities {
   return {
     plugins: {
       [unavailablePluginId]: {
@@ -35,6 +35,29 @@ function buildCanonicalNode(): CanonicalNode {
 }
 
 describe('plugin runtime projection', () => {
+  it('excludes backend-backed plugins until the backend publishes an available capability row', () => {
+    const backendPlugin = PLUGIN_REGISTRY.find((plugin) => plugin.backendPluginId);
+
+    expect(backendPlugin?.backendPluginId).toBeDefined();
+    if (!backendPlugin?.backendPluginId) {
+      return;
+    }
+
+    expect(getRuntimePlugins().map((plugin) => plugin.id)).not.toContain(backendPlugin.id);
+    expect(getRuntimePlugins({ plugins: {} }).map((plugin) => plugin.id)).not.toContain(
+      backendPlugin.id
+    );
+    expect(
+      getRuntimePlugins({
+        plugins: {
+          [backendPlugin.backendPluginId]: {
+            available: true,
+          },
+        },
+      }).map((plugin) => plugin.id)
+    ).toContain(backendPlugin.id);
+  });
+
   it('excludes unavailable plugins from connection port maps', () => {
     const pluginPortMap = getPluginPortMap(buildRuntimeCapabilities('dbt'));
 

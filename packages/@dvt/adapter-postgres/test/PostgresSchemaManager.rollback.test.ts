@@ -275,19 +275,22 @@ describe('PostgresSchemaManager rollback', () => {
       'core_019_table_scoped_service_owner_rls',
       'core_020_run_events_tenant_run_idx',
       'core_021_run_events_hash_partitioning',
+      'core_022_tenant_mode_rls_hardening',
     ]);
     const manager = new PostgresSchemaManager({ connect: async () => client } as never, 'DvtOps');
 
     const plan = await manager.rollbackTo('core_017_tenant_rls_baseline');
 
     expect(plan.steps.map((step) => step.version)).toEqual([
+      'core_022_tenant_mode_rls_hardening',
       'core_021_run_events_hash_partitioning',
       'core_020_run_events_tenant_run_idx',
       'core_019_table_scoped_service_owner_rls',
       'core_018_service_access_owner_rls_hardening',
     ]);
-    expect(plan.steps[2]?.rollbackDescription).toContain('intentionally not downgraded');
+    expect(plan.steps[0]?.rollbackDescription).toContain('intentionally not downgraded');
     expect(plan.steps[3]?.rollbackDescription).toContain('intentionally not downgraded');
+    expect(plan.steps[4]?.rollbackDescription).toContain('intentionally not downgraded');
 
     const executedSql = client.queries.map((query) => query.sql).join('\n');
     expect(executedSql).toContain('run_events_partitioned_rollback');

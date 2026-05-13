@@ -658,3 +658,48 @@ test('tracked migrations keep feature mechanization links distinct from planning
   );
   assert.match(featureMechanizationMigration.sql, /registered_planning_task = true/);
 });
+
+test('tracked migrations expose composite component hierarchy records after W32', () => {
+  const migrations = readMigrationFiles();
+  const compositeHierarchyMigration = migrations.find(
+    (migration) => migration.fileName === '032_component_engineering_composite_hierarchy.sql'
+  );
+
+  assert.ok(compositeHierarchyMigration);
+  assert.match(
+    compositeHierarchyMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_component_tree_query/
+  );
+  assert.match(
+    compositeHierarchyMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_file_ownership_query/
+  );
+  assert.match(
+    compositeHierarchyMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_component_metadata_query/
+  );
+  assert.match(
+    compositeHierarchyMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_drift_query/
+  );
+  assert.match(compositeHierarchyMigration.sql, /leaf_component_id/);
+  assert.match(compositeHierarchyMigration.sql, /children_required_without_children/);
+});
+
+test('tracked migrations keep component tree leaf checks source-neutral after W33', () => {
+  const migrations = readMigrationFiles();
+  const sourceChildFilterMigration = migrations.find(
+    (migration) => migration.fileName === '033_component_engineering_component_tree_leaf_filter.sql'
+  );
+
+  assert.ok(sourceChildFilterMigration);
+  assert.match(
+    sourceChildFilterMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_component_tree_query/
+  );
+  assert.match(
+    sourceChildFilterMigration.sql,
+    /child\.parent_id = unit\.unit_id\s+and child\.level = 'component'/
+  );
+  assert.match(sourceChildFilterMigration.sql, /where unit\.level = 'component'/);
+});

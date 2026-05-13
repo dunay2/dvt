@@ -7,12 +7,15 @@
     "packages/@dvt/adapter-temporal/src/**/*.ts",
     "packages/@dvt/adapter-temporal/test/**/*.ts",
     "packages/@dvt/adapter-postgres/src/**/*.ts",
+    "apps/web/src/app/services/capabilities/capabilitiesPort.ts",
+    "apps/web/src/app/plugins/registry.ts",
+    "apps/web/src/app/stores/authorizationStore.ts",
     "scripts/planning-db-query.cjs",
     "!**/*.d.ts",
     "!**/node_modules/**",
     "!**/dist/**"
   ],
-  "exemptPaths": ["apps/web/**", "packages/frontend/**", "**/*.stories.tsx"],
+  "exemptPaths": ["packages/frontend/**", "**/*.stories.tsx"],
   "validation": {
     "requireDecision": true,
     "requireConsequence": false,

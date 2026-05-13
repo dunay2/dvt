@@ -150,10 +150,14 @@ function findUnitByLevel(unitPath, level) {
   return unitPath.find((unit) => unit.level === level)?.id;
 }
 
+function findLastUnitByLevel(unitPath, level) {
+  return [...unitPath].reverse().find((unit) => unit.level === level)?.id;
+}
+
 function buildHierarchy(unit, unitById) {
   const unitPath = buildUnitPath(unit, unitById);
   const rootUnit = unitPath[0]?.id || unit?.id || 'UNOWNED';
-  const componentUnit = findUnitByLevel(unitPath, 'component') || unit?.id || 'UNOWNED';
+  const componentUnit = findLastUnitByLevel(unitPath, 'component') || unit?.id || 'UNOWNED';
   const domainUnit = findUnitByLevel(unitPath, 'domain') || rootUnit;
 
   return {

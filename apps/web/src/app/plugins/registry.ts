@@ -1,4 +1,11 @@
-/** Owned concern: project static plugin contributions into route, shell, and workbench query rails. */
+/** Owned concern: project static plugin contributions into route, shell, and workbench query rails.
+ * @file apps/web/src/app/plugins/registry.ts
+ * @baseline ADR-0056: Web UI authority is server-projected
+ * @decision Section 3 - Runtime plugin projection fails closed when backend capability rows are absent
+ * @consequence Shell navigation only exposes backend-backed plugins after server projection confirms availability
+ * @version 1.0.0
+ * @date 2026-05-10
+ */
 import type React from 'react';
 
 import type { PluginPortDescriptor, PluginPortMap } from './contracts/ConnectionRules';
@@ -102,6 +109,10 @@ function isPluginEnabled(plugin: PluginContributions): boolean {
   return envFlagValue !== 'false' && envFlagValue !== false;
 }
 
+function requiresBackendCapability(plugin: PluginContributions): boolean {
+  return typeof plugin.backendPluginId === 'string' && plugin.backendPluginId.trim().length > 0;
+}
+
 function isPluginAvailableAtRuntime(
   plugin: PluginContributions,
   capabilities?: RuntimeCapabilities
@@ -111,7 +122,7 @@ function isPluginAvailableAtRuntime(
   }
 
   if (!capabilities) {
-    return true;
+    return !requiresBackendCapability(plugin);
   }
 
   const capabilityIds = Array.from(
@@ -122,7 +133,7 @@ function isPluginAvailableAtRuntime(
     .filter((info): info is { available: boolean; reason?: string } => info != null);
 
   if (runtimeInfos.length === 0) {
-    return true;
+    return !requiresBackendCapability(plugin);
   }
 
   return runtimeInfos.every((info) => info.available);
@@ -167,8 +178,8 @@ function hasRouteRegistration(view: ViewContribution): view is RouteViewContribu
   return typeof view.path === 'string' && view.handle != null;
 }
 
-export function getRouteViews(capabilities?: RuntimeCapabilities): RouteViewContribution[] {
-  return getAllViews(capabilities).filter(hasRouteRegistration);
+export function getRouteViews(): RouteViewContribution[] {
+  return PLUGIN_REGISTRY.flatMap((plugin) => plugin.views ?? []).filter(hasRouteRegistration);
 }
 
 export function getShellNavigationViews(

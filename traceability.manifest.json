@@ -1059,12 +1059,26 @@
     {
       "number": "ADR-0056",
       "decisions": [
+        "Section 2 - Authorization defaults deny privileged UI actions until server projection loads",
+        "Section 2 - Runtime capabilities are loaded from the server without browser-local fallback",
+        "Section 3 - Runtime plugin projection fails closed when backend capability rows are absent"
+      ],
+      "implemented_by": [
+        "apps/web/src/app/plugins/registry.ts",
+        "apps/web/src/app/services/capabilities/capabilitiesPort.ts",
+        "apps/web/src/app/stores/authorizationStore.ts"
+      ],
+      "title": "ADR-0056: Web UI Authority Is Server-Projected"
+    },
+    {
+      "number": "ADR-0057",
+      "decisions": [
         "Verify that only executeStep activity proxies receive capability task queues"
       ],
       "implemented_by": [
         "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts"
       ],
-      "title": "ADR-0056: Temporal Step Activity Routing By Capability"
+      "title": "ADR-0057: Temporal Step Activity Routing By Capability"
     }
   ]
 }

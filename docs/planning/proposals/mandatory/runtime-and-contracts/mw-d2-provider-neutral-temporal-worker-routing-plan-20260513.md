@@ -117,11 +117,11 @@ governingSources:
   - docs/adr/ADR-0001-temporal-integration-test-policy.md
   - docs/adr/ADR-0003-execution-model.md
   - docs/adr/ADR-0014-run-driven-adapter-model.md
-  - docs/adr/ADR-0056-temporal-step-activity-routing-by-capability.md
+  - docs/adr/ADR-0057-temporal-step-activity-routing-by-capability.md
 allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/runtime-and-contracts/mw-d2-provider-neutral-temporal-worker-routing-plan-20260513.md
   - docs/planning/closeouts/20260513-mw-d2-provider-neutral-worker-routing-closeout.md
-  - docs/adr/ADR-0056-temporal-step-activity-routing-by-capability.md
+  - docs/adr/ADR-0057-temporal-step-activity-routing-by-capability.md
   - docs/architecture/components/engine/adapters/temporal/temporal-worker-routing-by-capability.md
   - docs/architecture/components/engine/adapters/temporal/temporal-worker-routing-by-capability-user-stories.md
   - docs/architecture/components/engine/adapters/temporal/temporal-worker-scaling-strategy.md

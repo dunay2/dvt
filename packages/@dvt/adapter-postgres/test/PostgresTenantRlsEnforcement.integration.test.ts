@@ -93,6 +93,43 @@ describeIfPg('Postgres RLS tenant isolation enforcement', () => {
     });
   }, 30000);
 
+  it('applies tenant-mode RLS across every tenant-owned catalog table', async () => {
+    const schema = await prepareTenantIsolationSchema(harness);
+    await seedTenantIsolationProbeRows(harness, schema);
+    await harness.grantRlsProbePrivileges(schema);
+
+    await harness.withAppClient(async (client) => {
+      for (const table of TENANT_ISOLATION_TABLES) {
+        const missingContextRows = await withTransaction(client, () =>
+          selectDistinctTenantIds(client, schema, table.name)
+        );
+        expect(missingContextRows.rows, `${table.name} must deny missing context`).toEqual([]);
+
+        const tenantIdOnlyRows = await withTransaction(client, async () => {
+          await client.query("SELECT set_config('dvt.tenant_id', $1, true)", ['tenant-a']);
+          return selectDistinctTenantIds(client, schema, table.name);
+        });
+        expect(tenantIdOnlyRows.rows, `${table.name} must deny partial tenant context`).toEqual([]);
+
+        const tenantARows = await withTransaction(client, async () => {
+          await client.query(setTenantContextSql(), ['tenant-a']);
+          return selectDistinctTenantIds(client, schema, table.name);
+        });
+        expect(tenantARows.rows, `${table.name} must return only tenant-a rows`).toEqual([
+          { tenant_id: 'tenant-a' },
+        ]);
+
+        const tenantBRows = await withTransaction(client, async () => {
+          await client.query(setTenantContextSql(), ['tenant-b']);
+          return selectDistinctTenantIds(client, schema, table.name);
+        });
+        expect(tenantBRows.rows, `${table.name} must return only tenant-b rows`).toEqual([
+          { tenant_id: 'tenant-b' },
+        ]);
+      }
+    });
+  }, 30000);
+
   it('rejects direct tenant-owned writes when tenant context is missing or mismatched', async () => {
     const schema = await prepareTenantIsolationSchema(harness);
     await harness.grantStateStoreRuntimePrivileges(schema);
@@ -284,6 +321,36 @@ function assertServiceOwnerCatalog(
   }
 }
 
+async function seedTenantIsolationProbeRows(
+  harness: PostgresRlsProofHarness,
+  schema: string
+): Promise<void> {
+  await harness.withAdminClient((client) =>
+    withTransaction(client, async () => {
+      for (const tenantId of ['tenant-a', 'tenant-b'] as const) {
+        await client.query(setTenantContextSql(), [tenantId]);
+        for (const table of TENANT_ISOLATION_TABLES) {
+          await insertTenantIsolationProbeRow(client, schema, table.name, tenantId);
+        }
+      }
+    })
+  );
+}
+
+async function selectDistinctTenantIds(
+  client: Client,
+  schema: string,
+  tableName: string
+): Promise<{ rows: Array<{ tenant_id: string }> }> {
+  return client.query<{ tenant_id: string }>(
+    `
+      SELECT DISTINCT tenant_id
+      FROM ${quoteIdentifier(schema)}.${quoteIdentifier(tableName)}
+      ORDER BY tenant_id ASC
+    `
+  );
+}
+
 function policyIncludesOwner(
   policySql: string | null | undefined,
   owner: (typeof POSTGRES_RLS_SERVICE_ACCESS_OWNERS)[number]
@@ -329,4 +396,220 @@ async function insertRunMetadataProbeRow(
     `,
     [row.runId, row.tenantId]
   );
+}
+
+async function insertTenantIsolationProbeRow(
+  client: Client,
+  schema: string,
+  tableName: string,
+  tenantId: 'tenant-a' | 'tenant-b'
+): Promise<void> {
+  const suffix = tenantId === 'tenant-a' ? 'a' : 'b';
+  const runId = `run-rls-catalog-${tableName}-${suffix}`;
+  const rowId = `rls-catalog-${tableName}-${suffix}`;
+
+  if (/^run_events_h\d{2}$/.test(tableName)) {
+    await insertRunEventsPartitionProbeRow(client, schema, tableName, tenantId);
+    return;
+  }
+
+  switch (tableName) {
+    case 'run_metadata':
+      await insertRunMetadataProbeRow(client, schema, { runId, tenantId });
+      return;
+    case 'run_events':
+      await client.query(
+        `
+          INSERT INTO ${quoteIdentifier(schema)}.run_events (
+            run_id,
+            run_seq,
+            event_type,
+            emitted_at,
+            tenant_id,
+            project_id,
+            environment_id,
+            engine_attempt_id,
+            logical_attempt_id,
+            plan_id,
+            plan_version,
+            persisted_at,
+            idempotency_key,
+            payload
+          )
+          VALUES ($1, 1, 'RunQueued', $3, $2, 'project-rls', 'env-rls', 1, 1, 'plan-rls', 'v1', $3, $4, $5::jsonb)
+        `,
+        [runId, tenantId, POSTGRES_RLS_PROOF_NOW, `${rowId}:queued`, JSON.stringify({ tenantId })]
+      );
+      return;
+    case 'run_snapshots':
+      await client.query(
+        `
+          INSERT INTO ${quoteIdentifier(schema)}.run_snapshots (
+            run_id,
+            tenant_id,
+            snapshot,
+            last_run_seq,
+            updated_at
+          )
+          VALUES ($1, $2, $3::jsonb, 1, $4)
+        `,
+        [runId, tenantId, JSON.stringify({ status: 'PENDING' }), POSTGRES_RLS_PROOF_NOW]
+      );
+      return;
+    case 'outbox':
+      await client.query(
+        `
+          INSERT INTO ${quoteIdentifier(schema)}.outbox (
+            id,
+            tenant_id,
+            run_id,
+            run_seq,
+            created_at,
+            idempotency_key,
+            payload
+          )
+          VALUES ($1, $2, $3, 1, $4, $5, $6::jsonb)
+        `,
+        [rowId, tenantId, runId, POSTGRES_RLS_PROOF_NOW, `${rowId}:outbox`, JSON.stringify({})]
+      );
+      return;
+    case 'outbox_dead_letter':
+      await client.query(
+        `
+          INSERT INTO ${quoteIdentifier(schema)}.outbox_dead_letter (
+            id,
+            original_id,
+            tenant_id,
+            run_id,
+            payload,
+            last_error,
+            dead_lettered_at
+          )
+          VALUES ($1, $2, $3, $4, $5::jsonb, 'rls-proof', $6)
+        `,
+        [rowId, `${rowId}:original`, tenantId, runId, JSON.stringify({}), POSTGRES_RLS_PROOF_NOW]
+      );
+      return;
+    case 'lineage_outbox':
+      await client.query(
+        `
+          INSERT INTO ${quoteIdentifier(schema)}.lineage_outbox (
+            id,
+            tenant_id,
+            run_id,
+            event_type,
+            payload
+          )
+          VALUES ($1, $2, $3, 'RunQueued', $4::jsonb)
+        `,
+        [rowId, tenantId, runId, JSON.stringify({})]
+      );
+      return;
+    case 'lineage_dead_letter':
+      await client.query(
+        `
+          INSERT INTO ${quoteIdentifier(schema)}.lineage_dead_letter (
+            id,
+            original_id,
+            tenant_id,
+            run_id,
+            event_type,
+            payload,
+            last_error
+          )
+          VALUES ($1, $2, $3, $4, 'RunQueued', $5::jsonb, 'rls-proof')
+        `,
+        [rowId, `${rowId}:original`, tenantId, runId, JSON.stringify({})]
+      );
+      return;
+    case 'run_event_heads':
+      await client.query(
+        `
+          INSERT INTO ${quoteIdentifier(schema)}.run_event_heads (
+            run_id,
+            tenant_id,
+            latest_run_seq,
+            updated_at
+          )
+          VALUES ($1, $2, 1, $3)
+        `,
+        [runId, tenantId, POSTGRES_RLS_PROOF_NOW]
+      );
+      return;
+    case 'snapshot_work_queue':
+      await client.query(
+        `
+          INSERT INTO ${quoteIdentifier(schema)}.snapshot_work_queue (
+            run_id,
+            tenant_id,
+            latest_run_seq,
+            enqueued_at
+          )
+          VALUES ($1, $2, 1, $3)
+        `,
+        [runId, tenantId, POSTGRES_RLS_PROOF_NOW]
+      );
+      return;
+    case 'start_run_intents':
+      await client.query(
+        `
+          INSERT INTO ${quoteIdentifier(schema)}.start_run_intents (
+            intent_id,
+            tenant_id,
+            run_id,
+            provider,
+            created_at,
+            updated_at
+          )
+          VALUES ($1, $2, $3, 'temporal', $4, $4)
+        `,
+        [rowId, tenantId, runId, POSTGRES_RLS_PROOF_NOW]
+      );
+      return;
+    default:
+      throw new Error(`UNHANDLED_TENANT_ISOLATION_PROBE_TABLE:${tableName}`);
+  }
+}
+
+async function insertRunEventsPartitionProbeRow(
+  client: Client,
+  schema: string,
+  targetPartition: string,
+  tenantId: 'tenant-a' | 'tenant-b'
+): Promise<void> {
+  const suffix = tenantId === 'tenant-a' ? 'a' : 'b';
+
+  for (let attempt = 0; attempt < 512; attempt += 1) {
+    const runId = `run-rls-catalog-${targetPartition}-${suffix}-${attempt}`;
+    const rowId = `rls-catalog-${targetPartition}-${suffix}-${attempt}`;
+    const result = await client.query<{ inserted_relation: string }>(
+      `
+        INSERT INTO ${quoteIdentifier(schema)}.run_events (
+          run_id,
+          run_seq,
+          event_type,
+          emitted_at,
+          tenant_id,
+          project_id,
+          environment_id,
+          engine_attempt_id,
+          logical_attempt_id,
+          plan_id,
+          plan_version,
+          persisted_at,
+          idempotency_key,
+          payload
+        )
+        VALUES ($1, 1, 'RunQueued', $3, $2, 'project-rls', 'env-rls', 1, 1, 'plan-rls', 'v1', $3, $4, $5::jsonb)
+        RETURNING tableoid::regclass::text AS inserted_relation
+      `,
+      [runId, tenantId, POSTGRES_RLS_PROOF_NOW, `${rowId}:queued`, JSON.stringify({ tenantId })]
+    );
+
+    if (result.rows[0]?.inserted_relation.endsWith(targetPartition)) {
+      return;
+    }
+  }
+
+  throw new Error(`RUN_EVENTS_PARTITION_PROBE_NOT_ROUTED:${targetPartition}`);
 }

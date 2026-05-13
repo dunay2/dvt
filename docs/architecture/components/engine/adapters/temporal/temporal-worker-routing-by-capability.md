@@ -17,7 +17,7 @@ Use this guide with:
 - [Temporal step plugin profile component](./temporal-step-plugin-profile.md)
 - [Temporal worker scaling strategy](./temporal-worker-scaling-strategy.md)
 - [Temporal Worker Scaling Operations](../../../../../runbooks/temporal-worker-scaling-operations.md)
-- [ADR-0056 Temporal Step Activity Routing By Capability](../../../../../adr/ADR-0056-temporal-step-activity-routing-by-capability.md)
+- [ADR-0057 Temporal Step Activity Routing By Capability](../../../../../adr/ADR-0057-temporal-step-activity-routing-by-capability.md)
 - [ADR-0003 execution model](../../../../../adr/ADR-0003-execution-model.md)
 - [ADR-0014 run-driven adapter model](../../../../../adr/ADR-0014-run-driven-adapter-model.md)
 

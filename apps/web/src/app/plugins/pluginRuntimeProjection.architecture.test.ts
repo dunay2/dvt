@@ -14,6 +14,7 @@ import {
   getAllOverlays,
   getAllViews,
   getCanvasWorkbenchTabViews,
+  getRouteViews,
   getShellNavigationViews,
   getNodeBadges,
   getNodeRenderer,
@@ -77,11 +78,21 @@ describe('plugin runtime projection architecture', () => {
     expect(getNodeBadges(buildCanonicalNode(), badgeContext, capabilities)).toEqual([]);
   });
 
-  it('keeps Cost route bootstrap ownership inside the Cost contribution', () => {
+  it('keeps Cost route bootstrap ownership inside the Cost contribution while runtime projection requires backend availability', () => {
     const costDashboard = costContributions.views?.find((view) => view.id === 'cost.dashboard');
 
     expect(costDashboard?.handle?.routeBootstrap).toBe(COST_ROUTE_BOOTSTRAP_HANDLE);
-    expect(getAllViews().find((view) => view.id === 'cost.dashboard')).toBe(costDashboard);
+    expect(getRouteViews().find((view) => view.id === 'cost.dashboard')).toBe(costDashboard);
+    expect(getAllViews().find((view) => view.id === 'cost.dashboard')).toBeUndefined();
+    expect(
+      getAllViews({
+        plugins: {
+          cost: {
+            available: true,
+          },
+        },
+      }).find((view) => view.id === 'cost.dashboard')
+    ).toBe(costDashboard);
   });
 
   it('separates shell navigation query rail from Canvas workbench tab query rail', () => {

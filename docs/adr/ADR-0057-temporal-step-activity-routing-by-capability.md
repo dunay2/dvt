@@ -9,7 +9,7 @@ owners:
 arc_level: ARC-2
 ---
 
-# ADR-0056: Temporal Step Activity Routing By Capability
+# ADR-0057: Temporal Step Activity Routing By Capability
 
 ## Status
 
