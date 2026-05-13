@@ -14,11 +14,16 @@ const ACTIVITY_ROOT = join(import.meta.dirname, '../src/activities');
 const PLUGIN_ROOT = join(import.meta.dirname, '../src/plugins');
 const DBT_PLUGIN_ROOT = join(import.meta.dirname, '../src/plugins/dbt');
 const WORKFLOW_ROOT = join(import.meta.dirname, '../src/workflows');
+const TEMPORAL_ADAPTER_ROOT = join(import.meta.dirname, '../src');
 const REPO_ROOT = join(import.meta.dirname, '../../../..');
 const ENGINE_SRC_ROOT = join(REPO_ROOT, 'packages/@dvt/engine/src');
 const DBT_PROFILE_GUIDE = join(
   REPO_ROOT,
   'docs/architecture/components/engine/adapters/temporal/temporal-dbt-worker-plugin-profile.md'
+);
+const CAPABILITY_ROUTING_GUIDE = join(
+  REPO_ROOT,
+  'docs/architecture/components/engine/adapters/temporal/temporal-worker-routing-by-capability.md'
 );
 const ACTIVE_DBT_DOCS = [
   'docs/evidence/ed-20260414-tf-c3-dbt-plugin-runtime-projection.md',
@@ -117,6 +122,20 @@ describe('Temporal DBT core decoupling architecture', () => {
     expect(source).not.toContain('DBT_');
     expect(source).not.toContain('Dbt');
     expect(source).not.toContain('dbt');
+  });
+
+  it('keeps step activity routing provider-neutral and DBT-free', () => {
+    const routingSources = [
+      readAdapterSource('config.ts'),
+      readAdapterSource('TemporalAdapter.ts'),
+      readWorkflowSource('runPlanWorkflow.activities.ts'),
+      readWorkflowSource('runPlanWorkflow.stepExecution.ts'),
+    ];
+
+    for (const source of routingSources) {
+      expect(source).toMatch(/activityRouting|stepActivityRouting/);
+      expect(source).not.toMatch(/\bDBT\b|Dbt|dbt/);
+    }
   });
 
   it('keeps DBT step-kind ownership inside the DBT plugin manifest', () => {
@@ -232,6 +251,27 @@ describe('Temporal DBT core decoupling architecture', () => {
     expect(guide).toContain('```mermaid');
   });
 
+  it('documents capability routing without making DBT the generic routing model', () => {
+    const guide = readFileSync(CAPABILITY_ROUTING_GUIDE, 'utf8');
+
+    for (const heading of [
+      '## Owned Concern',
+      '## Public API',
+      '## Invariants',
+      '## Transitions',
+      '## Consumers',
+      '## Diagrams',
+      '## Drift Guards',
+    ]) {
+      expect(guide).toContain(heading);
+    }
+
+    expect(guide).toContain('TEMPORAL_STEP_ACTIVITY_ROUTES');
+    expect(guide).toContain('RunPlanWorkflowInput.stepActivityRouting');
+    expect(guide).toContain('DBT remains a plugin consumer');
+    expect(guide).toContain('```mermaid');
+  });
+
   it('keeps active DBT architecture docs free of the retired core activity path', () => {
     for (const docPath of ACTIVE_DBT_DOCS) {
       const source = readFileSync(join(REPO_ROOT, docPath), 'utf8');
@@ -286,6 +326,10 @@ function readPluginSource(fileName: string): string {
 
 function readWorkflowSource(fileName: string): string {
   return readFileSync(join(WORKFLOW_ROOT, fileName), 'utf8');
+}
+
+function readAdapterSource(fileName: string): string {
+  return readFileSync(join(TEMPORAL_ADAPTER_ROOT, fileName), 'utf8');
 }
 
 function readTypeScriptSources(rootDirectory: string): string[] {

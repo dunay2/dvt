@@ -68,6 +68,30 @@ describe('createTemporalProviderAdapterFactory', () => {
       })
     );
   });
+
+  it('passes step activity routes into Temporal adapter config', async () => {
+    const factory = createTemporalProviderAdapterFactory();
+    const routes = JSON.stringify({
+      PYTHON_SCRIPT: {
+        capability: 'executor.python',
+        taskQueue: 'dvt-temporal-python',
+      },
+    });
+
+    const registration = await factory.build(
+      createContext({
+        TEMPORAL_ADDRESS: 'temporal.test:7233',
+        TEMPORAL_STEP_ACTIVITY_ROUTES: routes,
+      })
+    );
+
+    expect(registration).not.toBeNull();
+    expect(loadTemporalAdapterConfigMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        TEMPORAL_STEP_ACTIVITY_ROUTES: routes,
+      })
+    );
+  });
 });
 
 function createContext(envOverrides: Record<string, string>): ProviderAdapterFactoryContext {

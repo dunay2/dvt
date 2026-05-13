@@ -10,7 +10,13 @@
  */
 
 export { ADAPTER_SUPPORTED_SCHEMA } from './versioning.js';
-export type { TemporalAdapterConfig } from './config.js';
+export type {
+  TemporalActivityRoutingConfig,
+  TemporalAdapterConfig,
+  TemporalStepActivityRoute,
+  TemporalStepCapability,
+  TemporalStepKindName,
+} from './config.js';
 export { loadTemporalAdapterConfig, validateTemporalAdapterConfig } from './config.js';
 export type {
   TemporalPlanRefCapacityProfile,
