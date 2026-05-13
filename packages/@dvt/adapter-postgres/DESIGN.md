@@ -107,12 +107,18 @@ cleanup and index creation.
 The concrete adapter now also exposes:
 
 - `planSchemaRollback(targetVersion)` to inspect the reverse steps needed to
-  reach a known schema version
-- `rollbackSchemaTo(targetVersion)` to execute those reverse steps under the
-  same advisory lock discipline used by forward migrations
+  reach a known schema version, including online-compatible rollback metadata
+- `rollbackSchemaTo(targetVersion)` to execute online-compatible rollback plans
+  under the same advisory lock discipline used by forward migrations
 
 Rollback remains a PostgreSQL adapter concern. It is not part of the
 engine-facing state-store ports.
+
+`rollbackSchemaTo()` does not enter adapter maintenance mode for
+online-compatible rollback plans. Destructive rollback plans fail closed with
+`SCHEMA_ROLLBACK_REQUIRES_OFFLINE_COMPATIBILITY`; they are not silently converted
+into an outage window. In this component, destructive rollback plans fail closed
+before DDL executes.
 
 Env vars:
 

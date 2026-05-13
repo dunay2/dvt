@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { PostgresSchemaManager } from '../src/PostgresSchemaManager.js';
+import {
+  PostgresSchemaManager,
+  PostgresSchemaRollbackCompatibilityPolicy,
+} from '../src/PostgresSchemaManager.js';
 
 type QueryRow = { exists?: boolean; version?: string };
 
@@ -55,6 +58,73 @@ describe('PostgresSchemaManager rollback', () => {
       'core_003_outbox_dead_letter_table',
       'core_002_run_snapshots_table',
     ]);
+  });
+
+  it('classifies online-compatible rollback plans without blocking active readers', async () => {
+    const client = new RecordingRollbackClient([
+      'core_001_initial_tables',
+      'core_002_run_snapshots_table',
+      'core_003_outbox_dead_letter_table',
+      'core_004_lineage_tables',
+      'core_005_archive_catalog_tables',
+      'core_006_archive_lease_restore_tables',
+      'core_007_compat_columns',
+      'core_008_compat_cleanup',
+      'core_009_core_indexes',
+      'core_010_purge_indexes',
+      'core_011_retry_lineage_columns',
+      'core_012_lineage_outbox_retry_schedule',
+      'core_013_lineage_outbox_claim_timeout',
+      'core_014_lineage_tenant_scope_hardening',
+      'core_015_run_event_heads',
+      'core_016_snapshot_work_queue',
+      'core_017_tenant_rls_baseline',
+      'core_018_service_access_owner_rls_hardening',
+      'core_019_table_scoped_service_owner_rls',
+      'core_020_run_events_tenant_run_idx',
+    ]);
+    const manager = new PostgresSchemaManager({ connect: async () => client } as never, 'DvtOps');
+
+    const plan = await manager.planRollback('core_019_table_scoped_service_owner_rls');
+
+    expect(plan.steps).toHaveLength(1);
+    expect(plan.steps[0]?.rollbackCompatibility).toEqual({
+      mode: 'online',
+      reason: expect.stringContaining('tenant-scoped run sequence lookups'),
+    });
+    expect(() =>
+      PostgresSchemaRollbackCompatibilityPolicy.assertOnlineCompatible(plan)
+    ).not.toThrow();
+  });
+
+  it('rejects rollback plans that would remove canonical tables or isolation semantics', async () => {
+    const client = new RecordingRollbackClient([
+      'core_001_initial_tables',
+      'core_002_run_snapshots_table',
+      'core_003_outbox_dead_letter_table',
+      'core_004_lineage_tables',
+      'core_005_archive_catalog_tables',
+      'core_006_archive_lease_restore_tables',
+      'core_007_compat_columns',
+      'core_008_compat_cleanup',
+      'core_009_core_indexes',
+      'core_010_purge_indexes',
+      'core_011_retry_lineage_columns',
+      'core_012_lineage_outbox_retry_schedule',
+      'core_013_lineage_outbox_claim_timeout',
+      'core_014_lineage_tenant_scope_hardening',
+      'core_015_run_event_heads',
+      'core_016_snapshot_work_queue',
+      'core_017_tenant_rls_baseline',
+    ]);
+    const manager = new PostgresSchemaManager({ connect: async () => client } as never, 'DvtOps');
+
+    const destructivePlan = await manager.planRollback('core_014_lineage_tenant_scope_hardening');
+
+    expect(destructivePlan.steps[0]?.rollbackCompatibility.mode).toBe('offline');
+    expect(() =>
+      PostgresSchemaRollbackCompatibilityPolicy.assertOnlineCompatible(destructivePlan)
+    ).toThrow(/SCHEMA_ROLLBACK_REQUIRES_OFFLINE_COMPATIBILITY: core_017_tenant_rls_baseline/);
   });
 
   it('rejects unknown rollback target versions', async () => {

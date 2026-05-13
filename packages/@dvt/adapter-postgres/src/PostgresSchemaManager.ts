@@ -1,5 +1,6 @@
 /**
  * @file packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts
+ * @ownedConcern Owns PostgreSQL schema migration catalog, rollback planning/execution, and rollback compatibility classification for the state-store adapter.
  *
  * Owns all DDL lifecycle for the DVT Postgres schema.
  *
@@ -47,7 +48,6 @@ import {
 import { quoteIdentifier } from './sqlUtils.js';
 
 type MigrationState = 'not_called' | 'in_progress' | 'ready';
-
 const COMPONENT = coreComponent();
 
 // ---------------------------------------------------------------------------
@@ -66,6 +66,7 @@ export interface PostgresSchemaRollbackPlanStep {
   readonly version: string;
   readonly description: string;
   readonly rollbackDescription: string;
+  readonly rollbackCompatibility: PostgresSchemaRollbackCompatibility;
 }
 
 export interface PostgresSchemaRollbackPlan {
@@ -76,8 +77,124 @@ export interface PostgresSchemaRollbackPlan {
   readonly steps: readonly PostgresSchemaRollbackPlanStep[];
 }
 
+export interface PostgresSchemaRollbackCompatibility {
+  readonly mode: 'online' | 'offline';
+  readonly reason: string;
+}
+
+export class PostgresSchemaRollbackCompatibilityPolicy {
+  static assertOnlineCompatible(plan: PostgresSchemaRollbackPlan): void {
+    const offlineStep = plan.steps.find((step) => step.rollbackCompatibility.mode === 'offline');
+    if (offlineStep !== undefined) {
+      throw new Error(
+        `SCHEMA_ROLLBACK_REQUIRES_OFFLINE_COMPATIBILITY: ${offlineStep.version} - ${offlineStep.rollbackCompatibility.reason}`
+      );
+    }
+  }
+}
+
 function sq(schema: string): string {
   return quoteIdentifier(schema);
+}
+
+function rollbackCompatibilityFor(version: string): PostgresSchemaRollbackCompatibility {
+  switch (version) {
+    case 'core_001_initial_tables':
+      return {
+        mode: 'offline',
+        reason: 'Rollback drops canonical run metadata, event log, and outbox tables.',
+      };
+    case 'core_002_run_snapshots_table':
+      return {
+        mode: 'offline',
+        reason: 'Rollback drops the canonical run_snapshots read model table.',
+      };
+    case 'core_003_outbox_dead_letter_table':
+      return { mode: 'offline', reason: 'Rollback drops the outbox dead-letter storage table.' };
+    case 'core_004_lineage_tables':
+      return { mode: 'offline', reason: 'Rollback drops lineage outbox and dead-letter tables.' };
+    case 'core_005_archive_catalog_tables':
+      return { mode: 'offline', reason: 'Rollback drops archive catalog tables.' };
+    case 'core_006_archive_lease_restore_tables':
+      return { mode: 'offline', reason: 'Rollback drops archive lease and restore-log tables.' };
+    case 'core_007_compat_columns':
+      return {
+        mode: 'online',
+        reason: 'Rollback removes only migration bookkeeping and preserves canonical columns.',
+      };
+    case 'core_008_compat_cleanup':
+      return {
+        mode: 'offline',
+        reason:
+          'Rollback recreates historical constraints and indexes that may conflict with live writes.',
+      };
+    case 'core_009_core_indexes':
+      return {
+        mode: 'online',
+        reason: 'Rollback drops operational indexes while preserving row shape and data semantics.',
+      };
+    case 'core_010_purge_indexes':
+      return {
+        mode: 'online',
+        reason: 'Rollback drops delivery-buffer purge indexes without changing row shape.',
+      };
+    case 'core_011_retry_lineage_columns':
+      return {
+        mode: 'online',
+        reason: 'Rollback preserves additive retry lineage columns and only removes bookkeeping.',
+      };
+    case 'core_012_lineage_outbox_retry_schedule':
+      return {
+        mode: 'online',
+        reason: 'Rollback removes retry schedule indexes without changing row shape.',
+      };
+    case 'core_013_lineage_outbox_claim_timeout':
+      return {
+        mode: 'online',
+        reason: 'Rollback removes claim-timeout index support without changing row shape.',
+      };
+    case 'core_014_lineage_tenant_scope_hardening':
+      return {
+        mode: 'online',
+        reason:
+          'Rollback drops tenant-oriented lineage indexes while preserving additive tenant columns.',
+      };
+    case 'core_015_run_event_heads':
+      return {
+        mode: 'offline',
+        reason: 'Rollback drops run_event_heads, which is a live projection table.',
+      };
+    case 'core_016_snapshot_work_queue':
+      return {
+        mode: 'offline',
+        reason: 'Rollback drops snapshot_work_queue, which coordinates live snapshot rebuild work.',
+      };
+    case 'core_017_tenant_rls_baseline':
+      return {
+        mode: 'offline',
+        reason: 'Rollback disables canonical tenant RLS policy and weakens isolation semantics.',
+      };
+    case 'core_018_service_access_owner_rls_hardening':
+      return {
+        mode: 'online',
+        reason:
+          'Rollback reapplies current tenant isolation policy and intentionally avoids downgrade.',
+      };
+    case 'core_019_table_scoped_service_owner_rls':
+      return {
+        mode: 'online',
+        reason:
+          'Rollback reapplies current table-scoped tenant isolation policy without downgrade.',
+      };
+    case 'core_020_run_events_tenant_run_idx':
+      return {
+        mode: 'online',
+        reason:
+          'Rollback drops an index for tenant-scoped run sequence lookups without changing rows.',
+      };
+    default:
+      throw new Error(`UNKNOWN_MIGRATION_VERSION: ${version}`);
+  }
 }
 
 const MIGRATION_STEPS: readonly MigrationStep[] = [
@@ -1160,6 +1277,7 @@ export class PostgresSchemaManager {
         version: step.version,
         description: step.description,
         rollbackDescription: step.rollbackDescription,
+        rollbackCompatibility: rollbackCompatibilityFor(step.version),
       }));
 
     return {
