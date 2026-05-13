@@ -30,6 +30,7 @@ const knownQueries = new Set([
   'commands',
   'pr-readiness',
   'docs-disposition',
+  'feature-work',
   'task-references',
   'task-trace',
   'task-gaps',
@@ -340,6 +341,16 @@ function buildTaskReferenceRows(rows) {
     row.classification,
     row.reference_text ?? row.referenceText,
     row.reference_prefix ?? row.referencePrefix,
+    row.document_path ?? row.documentPath,
+    row.occurrence_count ?? row.occurrenceCount ?? 0,
+  ]);
+}
+
+function buildFeatureWorkRows(rows) {
+  return rows.map((row) => [
+    row.feature_id ?? row.featureId,
+    row.document_status ?? row.documentStatus ?? '-',
+    row.planning_type ?? row.planningType ?? '-',
     row.document_path ?? row.documentPath,
     row.occurrence_count ?? row.occurrenceCount ?? 0,
   ]);
@@ -1108,6 +1119,40 @@ async function readTaskReferenceRows(client, filters = {}) {
   return result.rows;
 }
 
+async function readFeatureWorkRows(client, filters = {}) {
+  const params = [];
+  const predicates = ["reference.classification = 'registered_feature_mechanization'"];
+  appendFilter(predicates, params, 'reference.reference_prefix', filters.prefix);
+  appendFilter(predicates, params, 'reference.document_path', filters.path);
+  appendFilter(predicates, params, 'document.status', filters.status);
+  appendFilter(predicates, params, 'document.planning_type', filters.kind);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `select
+       reference.reference_text as feature_id,
+       document.status as document_status,
+       document.planning_type,
+       reference.document_path,
+       reference.occurrence_count,
+       reference.imported_at
+     from ${schemaName}.doc_task_reference_query reference
+     join ${schemaName}.doc_disposition_document_query document
+       on document.document_path = reference.document_path
+     where ${predicates.join(' and ')}
+     order by
+       document.status,
+       reference.reference_text,
+       reference.document_path
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
 async function readTaskTraceRows(client, filters = {}) {
   const params = [];
   const predicates = [];
@@ -1521,6 +1566,15 @@ async function runQuery(options = {}) {
       return referenceRows;
     }
 
+    if (queryName === 'feature-work') {
+      const rows = await readFeatureWorkRows(client, options.filters || {});
+      const featureRows = buildFeatureWorkRows(rows);
+      if (options.print !== false) {
+        printTaskRows(featureRows);
+      }
+      return featureRows;
+    }
+
     if (queryName === 'task-trace') {
       const rows = await readTaskTraceRows(client, options.filters || {});
       const traceRows = buildTaskTraceRows(rows);
@@ -1676,6 +1730,7 @@ if (require.main === module) {
 module.exports = {
   buildComponentEngineeringRecordRows,
   buildDocsDispositionRows,
+  buildFeatureWorkRows,
   buildFocusRows,
   buildGovernanceComponentRows,
   buildGovernanceCoverageRows,
@@ -1701,6 +1756,7 @@ module.exports = {
   parseCerSchemaVersion,
   printHashDriftSummary,
   readDocsDispositionRows,
+  readFeatureWorkRows,
   readFocusRows,
   readGovernanceComponentRows,
   readGovernanceCoverageRows,

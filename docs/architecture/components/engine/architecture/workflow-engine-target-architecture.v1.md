@@ -243,6 +243,17 @@ combined run-control shape.
   Target: policy/decorator boundaries for cross-cutting instrumentation.
   Gap signal: business coordinators directly constructing metric names or
   duplicated metric tags.
+- boundary fitness and test doubles
+  Current: `WE-HX-6` adds
+  [WorkflowEngine Boundary Fitness Component](./workflow-engine-boundary-fitness-component.md)
+  to make fixture ownership, architecture-test support, and forbidden
+  adapter/runtime bleed mechanically visible.
+  Target: tests remain engine-owned fake/in-memory collaborators and
+  architecture guards validate semantic ownership instead of only barrel
+  thinness.
+  Gap signal: fixtures importing production adapters, provider SDKs, DB
+  migration, API runtime composition, environment provider selection, or copied
+  source/doc readers in new WE-HX architecture guards.
 - artifacts/engine seam
   Current: explicit for plan artifact reading and run execution context
   resolution through
@@ -345,7 +356,7 @@ flowchart LR
   E --> E2["DHM-WS4 runtime path residual closure"]
   D --> F["WE-HX-5 provider + telemetry standardization"]
   E --> F
-  F --> G["WE-HX-6 test doubles + fitness checks"]
+  F --> G["WE-HX-6 test doubles + semantic fitness checks"]
 ```
 
 ## Governing references

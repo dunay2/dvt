@@ -1201,6 +1201,12 @@ function classifyTaskLikeReference(
   if (/^PS-[CQ]\d+/.test(upperValue)) {
     return { classification: 'plan_store_matrix_reference', registeredPlanningTask: false };
   }
+  if (/^P\d+-\d+$/i.test(value)) {
+    return { classification: 'priority_work_item_marker', registeredPlanningTask: false };
+  }
+  if (upperValue === 'YYYY-MM-DD') {
+    return { classification: 'date_placeholder', registeredPlanningTask: false };
+  }
   if (upperValue === 'SUB-SKILL') {
     return { classification: 'skill_reference', registeredPlanningTask: false };
   }

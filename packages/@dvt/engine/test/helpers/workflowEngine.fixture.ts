@@ -1,3 +1,9 @@
+/**
+ * @ownedConcern WorkflowEngine test composition fixture using fake provider adapters and engine-owned ports.
+ *
+ * Composes in-memory stores and engine services for tests without production
+ * adapter or provider-runtime imports.
+ */
 import type { IStoredPlanArtifactReader, StoredPlanArtifact } from '@dvt/artifacts';
 import {
   asIsoUtcString,

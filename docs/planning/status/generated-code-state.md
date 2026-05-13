@@ -13,60 +13,15 @@ conflicts from source and test inventory churn.
 
 Run:
 
-<<<<<<< HEAD
-
 ```bash
 pnpm docs:status:generate
 ```
 
-=======
-| Metric | Value |
-| ---------------------------- | ----- |
-| Total workspaces | 24 |
-| Total source files | 1281 |
-| Total test files | 711 |
-| Workspaces with build script | 24/24 |
-| Workspaces with test script | 23/24 |
-
-> > > > > > > 6479f736... feat(engine): Add adapter call circuit breaker
-
 The local render is written to:
-
-<<<<<<< HEAD
 
 ```text
 .generated-docs/planning/status/generated-code-state.md
 ```
-
-=======
-| Workspace | Path | Src Files | Test Files | Build | Test | Typecheck | Exports in src/index.ts |
-| ------------------------- | ------------------------------------ | --------- | ---------- | ----- | ---- | --------- | ----------------------- |
-| dvt-api | `apps/api` | 227 | 166 | yes | yes | yes | - |
-| dvt-lineage-worker | `apps/lineage-worker` | 9 | 5 | yes | yes | yes | - |
-| dvt-outbox-worker | `apps/outbox-worker` | 25 | 29 | yes | yes | yes | - |
-| dvt-projector-worker | `apps/projector-worker` | 2 | 1 | yes | yes | yes | - |
-| dvt-temporal-worker | `apps/temporal-worker` | 13 | 5 | yes | yes | yes | - |
-| @dvt/web | `apps/web` | 551 | 248 | yes | yes | yes | - |
-| @dvt/adapter-postgres | `packages/@dvt/adapter-postgres` | 57 | 42 | yes | yes | yes | 26 |
-| @dvt/adapter-temporal | `packages/@dvt/adapter-temporal` | 53 | 44 | yes | yes | yes | 28 |
-| @dvt/artifacts | `packages/@dvt/artifacts` | 20 | 3 | yes | yes | yes | 18 |
-| @dvt/crypto | `packages/@dvt/canonical` | 3 | 1 | yes | yes | yes | 2 |
-| @dvt/cli | `packages/@dvt/cli` | 1 | 1 | yes | yes | yes | 1 |
-| @dvt/contracts | `packages/@dvt/contracts` | 79 | 37 | yes | yes | yes | 56 |
-| @dvt/delivery | `packages/@dvt/delivery` | 14 | 10 | yes | yes | yes | 6 |
-| @dvt/dsl | `packages/@dvt/dsl` | 4 | 1 | yes | yes | yes | 3 |
-| @dvt/engine | `packages/@dvt/engine` | 120 | 63 | yes | yes | yes | 52 |
-| @dvt/observability | `packages/@dvt/observability` | 5 | 1 | yes | yes | yes | 4 |
-| @dvt/observability-otel | `packages/@dvt/observability-otel` | 2 | 1 | yes | yes | yes | 1 |
-| @dvt/plan-interpreter | `packages/@dvt/plan-interpreter` | 4 | 1 | yes | yes | yes | 3 |
-| @dvt/plan-verifier | `packages/@dvt/plan-verifier` | 6 | 3 | yes | yes | yes | 5 |
-| @dvt/planner | `packages/@dvt/planner` | 27 | 21 | yes | yes | yes | 18 |
-| @dvt/planner-contracts | `packages/@dvt/planner-contracts` | 0 | 0 | yes | no | yes | - |
-| @dvt/run-domain | `packages/@dvt/run-domain` | 5 | 1 | yes | yes | yes | 6 |
-| @dvt/state-store | `packages/@dvt/state-store` | 15 | 12 | yes | yes | yes | 19 |
-| @dvt/traceability-service | `packages/@dvt/traceability-service` | 39 | 15 | yes | yes | yes | 8 |
-
-> > > > > > > 6479f736... feat(engine): Add adapter call circuit breaker
 
 Do not copy the rendered inventory back into tracked docs. The tracked page is
 only the stable navigation pointer.

@@ -1,3 +1,9 @@
+/**
+ * @ownedConcern WorkflowEngine facade behavior test helpers and test-only vocabulary.
+ *
+ * Builds facade inputs, fake provider adapters, observability collectors,
+ * clocks, and run event records for engine tests.
+ */
 import type { EngineRunRef, PlanRef, RunContext, RunEventInput, EventType } from '@dvt/contracts';
 import { createNoopObservability } from '@dvt/observability';
 import type { IObservability } from '@dvt/observability';
