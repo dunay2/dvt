@@ -81,6 +81,12 @@ dashboard snapshot must provide `panels[]` rows with `panelKey`,
 Legacy key-only snapshots are useful for draft inventory, but they are closure
 blockers in assertion mode.
 
+`thresholdKey` values must match the canonical keys from
+[AR-C2 SLA Signal Threshold Mapping](./ar-c2-sla-signal-threshold-mapping-20260404.md).
+Each threshold row below also carries the SLA/runbook source that owns the
+threshold text. Do not substitute local alert names or dashboard labels for
+these keys.
+
 ## Dashboard evidence matrix (`AR-C2-T2`)
 
 Populate one row per signal with immutable evidence when available.
@@ -101,19 +107,19 @@ Populate one row per signal with immutable evidence when available.
 
 Populate one row per threshold with immutable evidence when available.
 
-| Threshold key                       | Alert rule id | Expression | Window / duration | Severity | Routing target | Config source (path or immutable ref) | Captured at (UTC) | Reviewer | Status  |
-| ----------------------------------- | ------------- | ---------- | ----------------- | -------- | -------------- | ------------------------------------- | ----------------- | -------- | ------- |
-| `start-run.p99.warning`             | pending       | pending    | pending           | warning  | pending        | pending                               | pending           | pending  | pending |
-| `start-run.p99.critical`            | pending       | pending    | pending           | critical | pending        | pending                               | pending           | pending  | pending |
-| `plan-compile.p99.warning`          | pending       | pending    | pending           | warning  | pending        | pending                               | pending           | pending  | pending |
-| `plan-compile.p99.critical`         | pending       | pending    | pending           | critical | pending        | pending                               | pending           | pending  | pending |
-| `outbox-drain.p95.warning`          | pending       | pending    | pending           | warning  | pending        | pending                               | pending           | pending  | pending |
-| `outbox-drain.p95.critical`         | pending       | pending    | pending           | critical | pending        | pending                               | pending           | pending  | pending |
-| `event-delivery.p99.warning`        | pending       | pending    | pending           | warning  | pending        | pending                               | pending           | pending  | pending |
-| `event-delivery.p99.critical`       | pending       | pending    | pending           | critical | pending        | pending                               | pending           | pending  | pending |
-| `run-status-stale-ratio.warning`    | pending       | pending    | pending           | warning  | pending        | pending                               | pending           | pending  | pending |
-| `run-status-stale-ratio.critical`   | pending       | pending    | pending           | critical | pending        | pending                               | pending           | pending  | pending |
-| `run-status-unknown-ratio.critical` | pending       | pending    | pending           | critical | pending        | pending                               | pending           | pending  | pending |
+| Threshold key                             | Canonical SLA/runbook source                                                         | Alert rule id | Expression | Window / duration | Severity | Routing target | Config source (path or immutable ref) | Captured at (UTC) | Reviewer | Status  |
+| ----------------------------------------- | ------------------------------------------------------------------------------------ | ------------- | ---------- | ----------------- | -------- | -------------- | ------------------------------------- | ----------------- | -------- | ------- |
+| `ar-c2.start-run-latency.warning`         | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | pending       | pending    | pending           | warning  | pending        | pending                               | pending           | pending  | pending |
+| `ar-c2.start-run-latency.critical`        | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | pending       | pending    | pending           | critical | pending        | pending                               | pending           | pending  | pending |
+| `ar-c2.plan-compile-latency.warning`      | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | pending       | pending    | pending           | warning  | pending        | pending                               | pending           | pending  | pending |
+| `ar-c2.plan-compile-latency.critical`     | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | pending       | pending    | pending           | critical | pending        | pending                               | pending           | pending  | pending |
+| `ar-c2.outbox-drain-lag.warning`          | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | pending       | pending    | pending           | warning  | pending        | pending                               | pending           | pending  | pending |
+| `ar-c2.outbox-drain-lag.critical`         | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | pending       | pending    | pending           | critical | pending        | pending                               | pending           | pending  | pending |
+| `ar-c2.event-delivery-latency.warning`    | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | pending       | pending    | pending           | warning  | pending        | pending                               | pending           | pending  | pending |
+| `ar-c2.event-delivery-latency.critical`   | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | pending       | pending    | pending           | critical | pending        | pending                               | pending           | pending  | pending |
+| `ar-c2.run-status-stale-ratio.warning`    | `docs/runbooks/read-your-writes-freshness-slo-20260330.md#contract`                  | pending       | pending    | pending           | warning  | pending        | pending                               | pending           | pending  | pending |
+| `ar-c2.run-status-stale-ratio.critical`   | `docs/runbooks/read-your-writes-freshness-slo-20260330.md#contract`                  | pending       | pending    | pending           | critical | pending        | pending                               | pending           | pending  | pending |
+| `ar-c2.run-status-unknown-ratio.critical` | `docs/runbooks/read-your-writes-freshness-slo-20260330.md#contract`                  | pending       | pending    | pending           | critical | pending        | pending                               | pending           | pending  | pending |
 
 ## AR-C2 status implication
 

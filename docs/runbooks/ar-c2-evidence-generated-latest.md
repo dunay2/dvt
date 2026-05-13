@@ -7,7 +7,7 @@ last_reviewed: 2026-05-13
 
 # AR-C2 generated operational evidence
 
-Generated at (UTC): `2026-05-13T14:26:22.001Z`
+Generated at (UTC): `2026-05-13T21:42:07.651Z`
 
 Source mapping:
 
@@ -29,19 +29,19 @@ Source mapping:
 
 ## Alert wiring evidence (T3)
 
-| Threshold key                             | Alert rule id | Expression | Window    | Routing target | Status          |
-| ----------------------------------------- | ------------- | ---------- | --------- | -------------- | --------------- |
-| `ar-c2.start-run-latency.warning`         | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
-| `ar-c2.start-run-latency.critical`        | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
-| `ar-c2.plan-compile-latency.warning`      | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
-| `ar-c2.plan-compile-latency.critical`     | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
-| `ar-c2.outbox-drain-lag.warning`          | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
-| `ar-c2.outbox-drain-lag.critical`         | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
-| `ar-c2.event-delivery-latency.warning`    | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
-| `ar-c2.event-delivery-latency.critical`   | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
-| `ar-c2.run-status-stale-ratio.warning`    | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
-| `ar-c2.run-status-stale-ratio.critical`   | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
-| `ar-c2.run-status-unknown-ratio.critical` | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
+| Threshold key                             | Source reference                                                                     | Alert rule id | Expression | Window    | Routing target | Status          |
+| ----------------------------------------- | ------------------------------------------------------------------------------------ | ------------- | ---------- | --------- | -------------- | --------------- |
+| `ar-c2.start-run-latency.warning`         | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
+| `ar-c2.start-run-latency.critical`        | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
+| `ar-c2.plan-compile-latency.warning`      | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
+| `ar-c2.plan-compile-latency.critical`     | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
+| `ar-c2.outbox-drain-lag.warning`          | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
+| `ar-c2.outbox-drain-lag.critical`         | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
+| `ar-c2.event-delivery-latency.warning`    | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
+| `ar-c2.event-delivery-latency.critical`   | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
+| `ar-c2.run-status-stale-ratio.warning`    | `docs/runbooks/read-your-writes-freshness-slo-20260330.md#contract`                  | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
+| `ar-c2.run-status-stale-ratio.critical`   | `docs/runbooks/read-your-writes-freshness-slo-20260330.md#contract`                  | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
+| `ar-c2.run-status-unknown-ratio.critical` | `docs/runbooks/read-your-writes-freshness-slo-20260330.md#contract`                  | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
 
 ## Sustained validation windows (T4)
 

@@ -6,11 +6,17 @@ import process from 'node:process';
 import prettier from 'prettier';
 
 const ROOT = process.cwd();
-const MAPPING_PATH = path.join(
+const DEFAULT_MAPPING_PATH = path.join(
   ROOT,
   'docs/runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md'
 );
 const DEFAULT_OUTPUT_PATH = path.join(ROOT, 'docs/runbooks/ar-c2-evidence-generated-latest.md');
+
+function mappingPath() {
+  return process.env.AR_C2_MAPPING_PATH
+    ? path.resolve(ROOT, process.env.AR_C2_MAPPING_PATH)
+    : DEFAULT_MAPPING_PATH;
+}
 
 function utcNowIso() {
   return new Date().toISOString();
@@ -26,13 +32,13 @@ function cleanCell(value) {
   return value.replaceAll('`', '').trim();
 }
 
-function parseMarkdownTableRows(markdown) {
+function parseMarkdownTableRows(markdown, sourcePath) {
   const lines = markdown.split(/\r?\n/);
   const headerIdx = lines.findIndex(
     (line) => line.includes('| Logical signal') && line.includes('| Target dashboard panel key')
   );
   if (headerIdx < 0) {
-    throw new Error(`Cannot find mapping table header in ${MAPPING_PATH}`);
+    throw new Error(`Cannot find mapping table header in ${sourcePath}`);
   }
 
   const rows = [];
@@ -43,7 +49,11 @@ function parseMarkdownTableRows(markdown) {
       .split('|')
       .slice(1, -1)
       .map((cell) => cleanCell(cell));
-    if (parts.length < 7) continue;
+    if (parts.length < 9) {
+      throw new Error(
+        `AR-C2_THRESHOLD_TRACEABILITY_COLUMNS_MISSING in ${sourcePath}: expected mapping rows to include alert threshold key(s) and alert threshold source.`
+      );
+    }
     const [
       logicalSignal,
       logicalMetricId,
@@ -51,6 +61,8 @@ function parseMarkdownTableRows(markdown) {
       sloThreshold,
       alertPolicy,
       targetPanelKey,
+      alertThresholdKeys,
+      alertThresholdSource,
       signalOwner,
     ] = parts;
     rows.push({
@@ -60,10 +72,76 @@ function parseMarkdownTableRows(markdown) {
       sloThreshold,
       alertPolicy,
       targetPanelKey,
+      alertThresholdKeys: parseThresholdKeyList(alertThresholdKeys),
+      alertThresholdSource,
       signalOwner,
     });
   }
   return rows;
+}
+
+function isThresholdBackedPolicy(alertPolicy) {
+  const policy = alertPolicy.toLowerCase();
+  return !(policy.includes('no canonical threshold yet') || policy.includes('source metric only'));
+}
+
+function parseThresholdKeyList(value) {
+  const raw = value.trim();
+  if (!raw || ['none', 'n/a', 'not threshold-backed'].includes(raw.toLowerCase())) {
+    return [];
+  }
+
+  return raw
+    .split(',')
+    .map((key) => key.trim())
+    .filter(Boolean);
+}
+
+function assertThresholdTraceability(mappingRows) {
+  const missingKeys = [];
+  const missingSources = [];
+  const invalidSources = [];
+
+  for (const row of mappingRows) {
+    if (!isThresholdBackedPolicy(row.alertPolicy)) {
+      continue;
+    }
+
+    if (row.alertThresholdKeys.length === 0) {
+      missingKeys.push(row.targetPanelKey);
+    }
+
+    if (!row.alertThresholdSource) {
+      missingSources.push(row.targetPanelKey);
+      continue;
+    }
+
+    if (!row.alertThresholdSource.startsWith('docs/runbooks/')) {
+      invalidSources.push(`${row.targetPanelKey} -> ${row.alertThresholdSource}`);
+    }
+  }
+
+  if (missingKeys.length > 0) {
+    throw new Error(
+      `AR-C2_THRESHOLD_KEY_MISSING\nthreshold-backed rows without keys: ${missingKeys.join(', ')}`
+    );
+  }
+
+  if (missingSources.length > 0) {
+    throw new Error(
+      `AR-C2_THRESHOLD_SOURCE_MISSING\nthreshold-backed rows without SLA/runbook source: ${missingSources.join(
+        ', '
+      )}`
+    );
+  }
+
+  if (invalidSources.length > 0) {
+    throw new Error(
+      `AR-C2_THRESHOLD_SOURCE_INVALID\nthreshold sources must point at docs/runbooks: ${invalidSources.join(
+        ', '
+      )}`
+    );
+  }
 }
 
 async function readJsonFileMaybe(filePath) {
@@ -74,27 +152,25 @@ async function readJsonFileMaybe(filePath) {
 }
 
 function deriveThresholdRows(mappingRows) {
+  assertThresholdTraceability(mappingRows);
+
   const thresholds = [];
   for (const row of mappingRows) {
-    const policy = row.alertPolicy.toLowerCase();
-    if (policy.includes('no canonical threshold yet') || policy.includes('source metric only')) {
+    if (!isThresholdBackedPolicy(row.alertPolicy)) {
       continue;
     }
 
-    const severities = [];
-    if (policy.includes('warning')) severities.push('warning');
-    if (policy.includes('critical')) severities.push('critical');
-    if (severities.length === 0) {
-      // Keep a fallback severity bucket for policies without explicit severity.
-      severities.push('policy');
-    }
-
-    for (const severity of severities) {
+    for (const thresholdKey of row.alertThresholdKeys) {
       thresholds.push({
-        thresholdKey: `${row.targetPanelKey}.${severity}`,
+        thresholdKey,
         panelKey: row.targetPanelKey,
         signalKey: row.logicalMetricId,
-        severity,
+        severity: thresholdKey.endsWith('.critical')
+          ? 'critical'
+          : thresholdKey.endsWith('.warning')
+            ? 'warning'
+            : 'policy',
+        sourceReference: row.alertThresholdSource,
       });
     }
   }
@@ -345,12 +421,12 @@ ${dashboardRows.map((r) => `| \`${r.signalKey}\` | \`${r.panelKey}\` | \`${r.sta
 
 ## Alert wiring evidence (T3)
 
-| Threshold key | Alert rule id | Expression | Window | Routing target | Status |
-| --- | --- | --- | --- | --- | --- |
+| Threshold key | Source reference | Alert rule id | Expression | Window | Routing target | Status |
+| --- | --- | --- | --- | --- | --- | --- |
 ${thresholdRows
   .map(
     (r) =>
-      `| \`${r.thresholdKey}\` | \`${r.alertRuleId}\` | \`${r.expression}\` | \`${r.window}\` | \`${r.routingTarget}\` | \`${r.status}\` |`
+      `| \`${r.thresholdKey}\` | \`${r.sourceReference}\` | \`${r.alertRuleId}\` | \`${r.expression}\` | \`${r.window}\` | \`${r.routingTarget}\` | \`${r.status}\` |`
   )
   .join('\n')}
 
@@ -382,8 +458,10 @@ async function main() {
   const alertSnapshot = await readJsonFileMaybe(process.env.AR_C2_ALERT_SNAPSHOT_FILE);
   const metricsSnapshot = await readJsonFileMaybe(process.env.AR_C2_METRICS_SNAPSHOT_FILE);
 
-  const mappingRaw = await fs.readFile(MAPPING_PATH, 'utf8');
-  const mappingRows = parseMarkdownTableRows(mappingRaw);
+  const currentMappingPath = mappingPath();
+  const mappingRaw = await fs.readFile(currentMappingPath, 'utf8');
+  const mappingRows = parseMarkdownTableRows(mappingRaw, currentMappingPath);
+  assertThresholdTraceability(mappingRows);
   const dashboardPanelKeys = normalizeDashboardSnapshot(dashboardSnapshot);
   const alertRulesByThreshold = normalizeAlertSnapshot(alertSnapshot);
 
