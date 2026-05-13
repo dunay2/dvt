@@ -51,8 +51,7 @@ declared rails are internal architecture queries:
 ## Validation Evidence
 
 - Feature mechanization:
-  `pnpm docs:feature-mechanization -- --feature WE-HX-6-BOUNDARY-FITNESS`
-  passed.
+  `pnpm docs:feature-mechanization --feature WE-HX-6-BOUNDARY-FITNESS` passed.
 - Red:
   `pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts`
   failed because `engineArchitectureTestSupport.ts` did not exist.

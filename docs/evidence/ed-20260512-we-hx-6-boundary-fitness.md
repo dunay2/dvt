@@ -14,7 +14,7 @@ code_refs:
   - packages/@dvt/engine/test/core/WorkflowEngine.helpers.ts
 evidence:
   tests:
-    - pnpm docs:feature-mechanization -- --feature WE-HX-6-BOUNDARY-FITNESS
+    - pnpm docs:feature-mechanization --feature WE-HX-6-BOUNDARY-FITNESS
     - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
     - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts test/architecture/workflowEngineSemanticClosure.architecture.test.ts
 ---
