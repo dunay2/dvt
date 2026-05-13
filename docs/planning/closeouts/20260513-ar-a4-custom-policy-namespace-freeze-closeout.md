@@ -50,6 +50,8 @@ Commands run:
 - `pnpm docs:sync` - passed.
 - `pnpm docs:status:generate` - passed.
 - `pnpm governance:refresh` - passed after a first stale governance query-store check was corrected by re-importing the governance DB and rerunning the full refresh.
+- `GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs` - passed with effective `ARC-2`; evidence and risk update required and present.
+- `pnpm verify:prepush` - passed.
 
 ## No-Debt Evidence
 
