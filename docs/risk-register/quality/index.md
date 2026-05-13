@@ -54,6 +54,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [External compile SRP seams could regress into route-local policy and mixed transport-domain logic](R-20260417-MW-D1-EXTERNAL-COMPILE-BOUNDARY.yaml)
 - [F-23 web transformation flow can drift from engine run-lifecycle contracts](R-20260407-F23-ENGINE-WEB-ALIGNMENT.yaml)
 - [Flat utility modules can drift without explicit component APIs and semantic ownership](R-20260421-UTILITY-MODULE-COMPONENTIZATION-DRIFT.yaml)
+- [Frozen custom policy namespace seam may need future reactivation](R-20260513-AR-A4-CUSTOM-POLICY-NAMESPACE-FREEZE.yaml)
 - [Future adapters may violate the validated providerRef reconciliation contract](R-20260409-PROVIDER-REF-EXACT-MATCH-ADAPTER-CONFORMANCE.yaml)
 - [Future recover-run feature could leak back into the generic signal boundary](R-20260408-RECOVER-RUN-BOUNDARY-DRIFT.yaml)
 - [Graph source cardinality drift between JSON schema and runtime parser](R-20260404-MWA2-GRAPH-SOURCE-CARDINALITY-DRIFT.yaml)

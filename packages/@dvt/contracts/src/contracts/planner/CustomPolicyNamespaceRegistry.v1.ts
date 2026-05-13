@@ -1,6 +1,14 @@
 /**
  * Bounded `custom` namespace registration contract (Stage 1.1, G-01.3).
  *
+ * Owned concern: retain source-compatible custom policy namespace DTO
+ * vocabulary while the planner behavior seam is frozen.
+ *
+ * Frozen compatibility seam: AR-A4 keeps this serializable vocabulary available
+ * for compatibility, but no registry implementation or active namespace
+ * validation behavior is approved until a real consumer and ADR-backed
+ * reactivation exist.
+ *
  * ## Problem
  *
  * The `custom` passthrough field in `PlannerPolicyClassSet` is a deliberate

@@ -16,6 +16,7 @@ Evidence documents that justify or validate relevant changes.
 - [Critical](critical/index.md)
 - [Supporting](supporting/index.md)
 - [ADR-0000 Traceability Gate Restoration](ed-20260505-adr0-traceability-gate.md)
+- [AR-A4 Custom Policy Namespace Freeze Evidence](ed-20260513-ar-a4-custom-policy-namespace-freeze.md)
 - [AR-C5 Adapter Circuit Breaker Evidence](ed-20260512-ar-c5-adapter-circuit-breaker.md)
 - [Canvas happy-path draggable proof after create/save](ed-20260503-canvas-happy-path-draggable-proof.md)
 - [Context](ED-20260404-mw-a2-graph-source-cardinality-and-boundary-hardening.md)
