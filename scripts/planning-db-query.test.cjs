@@ -7,6 +7,7 @@ const {
   buildFeatureWorkRows,
   buildFocusRows,
   buildComponentEngineeringComponentDriftRows,
+  buildComponentEngineeringComponentMetadataRows,
   buildComponentEngineeringComponentTreeRows,
   buildComponentEngineeringQualityRows,
   buildGovernanceComponentRows,
@@ -40,6 +41,7 @@ const {
   readDocsDispositionRows,
   readFeatureWorkRows,
   readComponentEngineeringComponentDriftRows,
+  readComponentEngineeringComponentMetadataRows,
   readComponentEngineeringComponentTreeRows,
   readComponentEngineeringQualityRows,
   readComponentEngineeringRecordRows,
@@ -87,6 +89,7 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('focus'), 'focus');
   assert.equal(resolveQueryName('cer'), 'cer');
   assert.equal(resolveQueryName('component-tree'), 'component-tree');
+  assert.equal(resolveQueryName('component-metadata'), 'component-metadata');
   assert.equal(resolveQueryName('component-drift'), 'component-drift');
   assert.equal(resolveQueryName('component-rules'), 'component-rules');
   assert.equal(resolveQueryName('component-rule-evaluations'), 'component-rule-evaluations');
@@ -363,6 +366,23 @@ test('parseArgs parses component engineering rule filters', () => {
       component: 'SYS-RUNTIME-ENGINE-CORE',
     },
   });
+
+  assert.deepEqual(
+    parseArgs([
+      'component-metadata',
+      '--component',
+      'SYS-RUNTIME-ENGINE-CORE',
+      '--state',
+      'coverage-required',
+    ]),
+    {
+      queryName: 'component-metadata',
+      filters: {
+        component: 'SYS-RUNTIME-ENGINE-CORE',
+        governanceState: 'coverage-required',
+      },
+    }
+  );
 });
 
 test('parseArgs rejects unsupported component engineering record schema versions', () => {
@@ -1324,10 +1344,7 @@ test('readComponentEngineeringComponentTreeRows queries the DB component tree vi
     limit: 5,
   });
 
-  assert.match(
-    captured.sql,
-    /from planning_query_store\.component_engineering_component_tree_query/
-  );
+  assert.match(captured.sql, /from component_engineering\.component_tree_query/);
   assert.match(captured.sql, /component_id = \$1/);
   assert.match(captured.sql, /parent_component_id = \$2/);
   assert.match(captured.sql, /governance_state = \$3/);
@@ -1338,6 +1355,29 @@ test('readComponentEngineeringComponentTreeRows queries the DB component tree vi
     'coverage-required',
     5,
   ]);
+});
+
+test('readComponentEngineeringComponentMetadataRows queries the stable component metadata schema view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readComponentEngineeringComponentMetadataRows(client, {
+    component: 'SYS-RUNTIME-ENGINE-CORE',
+    governanceState: 'coverage-required',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from component_engineering\.component_metadata_query/);
+  assert.match(captured.sql, /component_id = \$1/);
+  assert.match(captured.sql, /governance_state = \$2/);
+  assert.match(captured.sql, /limit \$3/);
+  assert.deepEqual(captured.params, ['SYS-RUNTIME-ENGINE-CORE', 'coverage-required', 5]);
 });
 
 test('readComponentEngineeringComponentDriftRows queries the DB component drift view', async () => {
@@ -1355,7 +1395,7 @@ test('readComponentEngineeringComponentDriftRows queries the DB component drift 
     limit: 5,
   });
 
-  assert.match(captured.sql, /from planning_query_store\.component_engineering_drift_query/);
+  assert.match(captured.sql, /from component_engineering\.component_drift_query/);
   assert.match(captured.sql, /component_id = \$1/);
   assert.match(captured.sql, /limit \$2/);
   assert.deepEqual(captured.params, ['SYS-RUNTIME-ENGINE-CORE', 5]);
@@ -1376,7 +1416,7 @@ test('readComponentEngineeringRuleCatalogRows queries DB-backed component rules'
     limit: 5,
   });
 
-  assert.match(captured.sql, /from planning_query_store\.component_engineering_rule_catalog_query/);
+  assert.match(captured.sql, /from component_engineering\.rule_catalog_query/);
   assert.match(captured.sql, /category = \$1/);
   assert.match(captured.sql, /limit \$2/);
   assert.deepEqual(captured.params, ['responsibility', 5]);
@@ -1399,10 +1439,7 @@ test('readComponentEngineeringRuleEvaluationRows queries DB-backed rule evaluati
     limit: 5,
   });
 
-  assert.match(
-    captured.sql,
-    /from planning_query_store\.component_engineering_rule_evaluation_query/
-  );
+  assert.match(captured.sql, /from component_engineering\.rule_evaluation_query/);
   assert.match(captured.sql, /subject_id = \$1/);
   assert.match(captured.sql, /evaluation_state = \$2/);
   assert.match(captured.sql, /rule_id = \$3/);
@@ -1425,7 +1462,7 @@ test('readComponentEngineeringQualityRows queries DB-backed component quality ro
     limit: 5,
   });
 
-  assert.match(captured.sql, /from planning_query_store\.component_engineering_quality_query/);
+  assert.match(captured.sql, /from component_engineering\.component_quality_query/);
   assert.match(captured.sql, /component_id = \$1/);
   assert.match(captured.sql, /limit \$2/);
   assert.deepEqual(captured.params, ['SYS-RUNTIME-ENGINE-CORE', 5]);
@@ -1614,6 +1651,32 @@ test('governance row builders format DB rows for CLI output', () => {
       },
     ]),
     [['SYS-RUNTIME-ENGINE-CORE', 'children_required_without_children']]
+  );
+  assert.deepEqual(
+    buildComponentEngineeringComponentMetadataRows([
+      {
+        component_id: 'SYS-RUNTIME-ENGINE-CORE',
+        name: 'Runtime engine core',
+        owned_concern: 'Owns deterministic runtime orchestration.',
+        metadata_state: 'declared',
+        quality_state: 'warn',
+        direct_file_count: 0,
+        descendant_file_count: 189,
+        drift_codes: ['missing_public_api'],
+      },
+    ]),
+    [
+      [
+        'SYS-RUNTIME-ENGINE-CORE',
+        'Runtime engine core',
+        'declared',
+        'warn',
+        0,
+        189,
+        'missing_public_api',
+        'Owns deterministic runtime orchestration.',
+      ],
+    ]
   );
   assert.deepEqual(
     buildComponentEngineeringRuleCatalogRows([

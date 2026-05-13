@@ -55,20 +55,19 @@ The Markdown source may explain and govern the rule language, but routine
 inspection must use DB query rails. A complete implementation therefore needs
 these DB concepts:
 
-| DB concept                                    | Role                                                                 |
-| --------------------------------------------- | -------------------------------------------------------------------- |
-| `component_engineering_rule_catalog_query`    | Lists every active invariant rule and its evaluation contract        |
-| `component_engineering_rule_evaluation_query` | Evaluates each rule against architecture units and components        |
-| `component_engineering_quality_query`         | Aggregates size, responsibility, coupling, coverage, and drift state |
-| `component_engineering_drift_query`           | Emits concrete drift codes for failing rule evaluations              |
+| DB concept                                       | Role                                                                                                                          |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `component_engineering.component_tree_query`     | Lists component identities, recursive parents, file counts, and ownership state                                               |
+| `component_engineering.component_metadata_query` | Publishes stable component metadata columns for concern, API, invariants, transitions, consumers, sources, quality, and drift |
+| `component_engineering.rule_catalog_query`       | Lists every active invariant rule and its evaluation contract                                                                 |
+| `component_engineering.rule_evaluation_query`    | Evaluates each rule against architecture units and components                                                                 |
+| `component_engineering.component_quality_query`  | Aggregates size, responsibility, coupling, coverage, and drift state                                                          |
+| `component_engineering.component_drift_query`    | Emits concrete drift codes for failing rule evaluations                                                                       |
 
-The executable DB surface has `component_engineering_component_tree_query`,
-`component_engineering_file_ownership_query`,
-`component_engineering_component_metadata_query`,
-`component_engineering_rule_catalog_query`,
-`component_engineering_rule_evaluation_query`,
-`component_engineering_quality_query`, and
-`component_engineering_drift_query`. The rule catalog and evaluation views own
+The executable DB surface has a dedicated `component_engineering` schema. Older
+`planning_query_store.component_engineering_*` names are compatibility or
+upstream projection surfaces; new operator reads must target the owning schema
+through the `planning:db:query` rail. The rule catalog and evaluation views own
 the invariant semantics; operator commands only filter and render those rows.
 
 ### Rule Catalog Record
@@ -83,7 +82,7 @@ severity: error
 subject_level: component
 subject_scope: canonical_or_review
 predicate_owner: planning_query_store
-evaluation_view: component_engineering_rule_evaluation_query
+evaluation_view: component_engineering.rule_evaluation_query
 drift_code: missing_owned_concern
 governing_doc: docs/architecture/components/ci-governance/component-engineering-invariants.md
 remediation: Add an ownedConcern statement to the governed component metadata.
@@ -388,6 +387,9 @@ flowchart TB
 Required query behavior:
 
 - `component-tree` reads hierarchy and ownership context.
+- `component-metadata` reads stable metadata, source, quality, and drift columns
+  from `component_engineering.component_metadata_query`; callers must not parse
+  rule-evaluation `metadata` blobs as component metadata.
 - `component-drift` reads failing rule evaluations as drift rows.
 - `component-quality` reads aggregate Fowler/SOLID signals.
 - `cer --schema-version v2` renders the DB-backed record with explicit
