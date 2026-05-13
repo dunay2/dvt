@@ -127,6 +127,77 @@ describe('PostgresSchemaManager rollback', () => {
     ).toThrow(/SCHEMA_ROLLBACK_REQUIRES_OFFLINE_COMPATIBILITY: core_017_tenant_rls_baseline/);
   });
 
+  it('rejects retry-lineage rollback while clients may still depend on live columns', async () => {
+    const client = new RecordingRollbackClient([
+      'core_001_initial_tables',
+      'core_002_run_snapshots_table',
+      'core_003_outbox_dead_letter_table',
+      'core_004_lineage_tables',
+      'core_005_archive_catalog_tables',
+      'core_006_archive_lease_restore_tables',
+      'core_007_compat_columns',
+      'core_008_compat_cleanup',
+      'core_009_core_indexes',
+      'core_010_purge_indexes',
+      'core_011_retry_lineage_columns',
+    ]);
+    const manager = new PostgresSchemaManager({ connect: async () => client } as never, 'DvtOps');
+
+    const plan = await manager.planRollback('core_010_purge_indexes');
+
+    expect(plan.steps.map((step) => step.version)).toEqual(['core_011_retry_lineage_columns']);
+    expect(plan.steps[0]?.rollbackCompatibility).toEqual({
+      mode: 'offline',
+      reason: expect.stringContaining('drops retry lineage columns'),
+    });
+    expect(() => PostgresSchemaRollbackCompatibilityPolicy.assertOnlineCompatible(plan)).toThrow(
+      /SCHEMA_ROLLBACK_REQUIRES_OFFLINE_COMPATIBILITY: core_011_retry_lineage_columns/
+    );
+  });
+
+  it('rejects lineage outbox index rebuild rollbacks as online-compatible work', async () => {
+    const client = new RecordingRollbackClient([
+      'core_001_initial_tables',
+      'core_002_run_snapshots_table',
+      'core_003_outbox_dead_letter_table',
+      'core_004_lineage_tables',
+      'core_005_archive_catalog_tables',
+      'core_006_archive_lease_restore_tables',
+      'core_007_compat_columns',
+      'core_008_compat_cleanup',
+      'core_009_core_indexes',
+      'core_010_purge_indexes',
+      'core_011_retry_lineage_columns',
+      'core_012_lineage_outbox_retry_schedule',
+      'core_013_lineage_outbox_claim_timeout',
+    ]);
+    const manager = new PostgresSchemaManager({ connect: async () => client } as never, 'DvtOps');
+
+    const claimTimeoutPlan = await manager.planRollback('core_012_lineage_outbox_retry_schedule');
+    const retrySchedulePlan = await manager.planRollback('core_011_retry_lineage_columns');
+
+    expect(claimTimeoutPlan.steps.map((step) => step.version)).toEqual([
+      'core_013_lineage_outbox_claim_timeout',
+    ]);
+    expect(retrySchedulePlan.steps.map((step) => step.version)).toEqual([
+      'core_013_lineage_outbox_claim_timeout',
+      'core_012_lineage_outbox_retry_schedule',
+    ]);
+    expect(claimTimeoutPlan.steps[0]?.rollbackCompatibility).toEqual({
+      mode: 'offline',
+      reason: expect.stringContaining('rebuilds lineage outbox pending indexes'),
+    });
+    expect(retrySchedulePlan.steps[1]?.rollbackCompatibility).toEqual({
+      mode: 'offline',
+      reason: expect.stringContaining('rebuilds lineage outbox pending indexes'),
+    });
+    expect(() =>
+      PostgresSchemaRollbackCompatibilityPolicy.assertOnlineCompatible(claimTimeoutPlan)
+    ).toThrow(
+      /SCHEMA_ROLLBACK_REQUIRES_OFFLINE_COMPATIBILITY: core_013_lineage_outbox_claim_timeout/
+    );
+  });
+
   it('rejects unknown rollback target versions', async () => {
     const client = new RecordingRollbackClient(['core_001_initial_tables']);
     const manager = new PostgresSchemaManager({ connect: async () => client } as never, 'DvtOps');

@@ -120,6 +120,10 @@ online-compatible rollback plans. Destructive rollback plans fail closed with
 into an outage window. In this component, destructive rollback plans fail closed
 before DDL executes.
 
+Rollback compatibility is conservative: dropping retry lineage columns and
+rebuilding lineage outbox pending indexes with blocking DDL are offline-only
+operations, even when the forward migration was additive.
+
 Env vars:
 
 - `DATABASE_URL` (required)

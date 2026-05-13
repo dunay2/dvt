@@ -28,6 +28,10 @@ when `PostgresSchemaRollbackCompatibilityPolicy` accepts every planned step.
 - Compatibility is derived from migration-step semantics, not active clients.
 - Online-compatible rollback does not call `withMaintenanceMode()`.
 - Offline-only rollback fails before DDL executes.
+- Rollbacks that drop live columns, including retry-lineage metadata, are
+  offline-only.
+- Rollbacks that rebuild lineage outbox pending indexes with blocking DDL are
+  offline-only.
 - Rollback remains a concrete Postgres adapter admin command, not an engine port.
 - RLS hardening rollback reapplies current policy and never downgrades isolation.
 

@@ -24,6 +24,14 @@ As an operator, destructive plans are rejected before DDL with
 `SCHEMA_ROLLBACK_REQUIRES_OFFLINE_COMPATIBILITY`, including the incompatible
 migration version.
 
+Acceptance examples:
+
+- Rolling back `core_011_retry_lineage_columns` is rejected because it drops
+  retry lineage columns from `run_metadata`.
+- Rolling back `core_012_lineage_outbox_retry_schedule` or
+  `core_013_lineage_outbox_claim_timeout` is rejected because the rollback
+  rebuilds lineage outbox pending indexes with blocking DDL.
+
 ## US-ZDR-004: Tenant isolation hardening is not downgraded
 
 As a platform owner, RLS hardening rollback reapplies current tenant policy and

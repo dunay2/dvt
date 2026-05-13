@@ -140,18 +140,21 @@ function rollbackCompatibilityFor(version: string): PostgresSchemaRollbackCompat
       };
     case 'core_011_retry_lineage_columns':
       return {
-        mode: 'online',
-        reason: 'Rollback preserves additive retry lineage columns and only removes bookkeeping.',
+        mode: 'offline',
+        reason:
+          'Rollback drops retry lineage columns from run_metadata that active clients may still read or write.',
       };
     case 'core_012_lineage_outbox_retry_schedule':
       return {
-        mode: 'online',
-        reason: 'Rollback removes retry schedule indexes without changing row shape.',
+        mode: 'offline',
+        reason:
+          'Rollback rebuilds lineage outbox pending indexes with blocking DDL inside the rollback transaction.',
       };
     case 'core_013_lineage_outbox_claim_timeout':
       return {
-        mode: 'online',
-        reason: 'Rollback removes claim-timeout index support without changing row shape.',
+        mode: 'offline',
+        reason:
+          'Rollback rebuilds lineage outbox pending indexes with blocking DDL inside the rollback transaction.',
       };
     case 'core_014_lineage_tenant_scope_hardening':
       return {
