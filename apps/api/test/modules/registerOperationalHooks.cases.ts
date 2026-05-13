@@ -2,6 +2,8 @@ import type { FastifyInstance } from 'fastify';
 import { describe, expect, it } from 'vitest';
 
 import { registerOperationalHooks } from '../../src/modules/registerOperationalHooks.js';
+import type { StateStoreRoleSource } from '../../src/modules/stateStoreRoles.js';
+import { bindStateStoreRoles } from '../../src/modules/stateStoreRoles.js';
 
 /**
  * Operational-hook cases.
@@ -20,6 +22,18 @@ export function describeRegisterOperationalHooksCases(): void {
           hooks.set(name, hook);
         },
       } as unknown as FastifyInstance;
+      const stateStoreRoleSource: StateStoreRoleSource = {
+        bootstrapRunTx: async () => null as never,
+        appendAndEnqueueTx: async () => null as never,
+        saveProviderRef: async () => null as never,
+        reserveRetryAttempt: async () => null as never,
+        getRunMetadataByRunId: async () => null as never,
+        listEvents: async () => [],
+        listRuns: async () => [],
+        getSnapshot: async () => null as never,
+        rebuildSnapshot: async () => null as never,
+        isSnapshotStale: async () => false,
+      };
 
       registerOperationalHooks(fakeApp, {
         facade: {} as never,
@@ -37,12 +51,7 @@ export function describeRegisterOperationalHooksCases(): void {
             return [];
           },
         },
-        stateStore: {
-          read: {} as never,
-          write: {} as never,
-          maintenance: {} as never,
-          snapshotStaleness: {} as never,
-        },
+        stateStore: bindStateStoreRoles(stateStoreRoleSource),
         planner: {} as never,
         planCompilePlanner: {} as never,
         planStore: {} as never,

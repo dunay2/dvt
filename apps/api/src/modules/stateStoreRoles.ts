@@ -10,7 +10,10 @@ export type StateStoreRoleSource = IRunStateStoreRead &
   IRunStateStoreMaintenance &
   Pick<IRunSnapshotStalenessQuery, 'isSnapshotStale'>;
 
+const STATE_STORE_ROLE_BINDINGS_BRAND: unique symbol = Symbol('StateStoreRoleBindings');
+
 export interface StateStoreRoleBindings {
+  readonly [STATE_STORE_ROLE_BINDINGS_BRAND]: true;
   readonly read: IRunStateStoreRead;
   readonly write: IRunStateStoreWrite;
   readonly maintenance: IRunStateStoreMaintenance;
@@ -46,10 +49,18 @@ export function bindStateStoreRoles(stateStore: StateStoreRoleSource): StateStor
     );
   }
 
-  return Object.freeze({
+  const bindings: StateStoreRoleBindings = {
+    [STATE_STORE_ROLE_BINDINGS_BRAND]: true,
     read: stateStore,
     write: stateStore,
     maintenance: stateStore,
     snapshotStaleness: stateStore,
+  };
+
+  Object.defineProperty(bindings, STATE_STORE_ROLE_BINDINGS_BRAND, {
+    value: true,
+    enumerable: false,
   });
+
+  return Object.freeze(bindings);
 }

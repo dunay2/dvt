@@ -31,6 +31,22 @@ describe('bindStateStoreRoles', () => {
     expect(bindings.snapshotStaleness).toBe(source);
   });
 
+  it('marks the bundle as a root-owned boundary value without widening public role keys', () => {
+    const source = createStateStoreSource();
+
+    const bindings = bindStateStoreRoles(source);
+    const brandSymbols = Object.getOwnPropertySymbols(bindings);
+
+    expect(brandSymbols).toHaveLength(1);
+    const [brandSymbol] = brandSymbols;
+    if (brandSymbol === undefined) {
+      throw new Error('Expected state-store role bundle brand symbol');
+    }
+    expect(String(brandSymbol)).toContain('StateStoreRoleBindings');
+    expect(Object.keys(bindings)).toEqual(['read', 'write', 'maintenance', 'snapshotStaleness']);
+    expect(Object.getOwnPropertyDescriptor(bindings, brandSymbol)?.enumerable).toBe(false);
+  });
+
   it('rejects a partial source missing maintenance behavior', () => {
     const partialSource = {
       bootstrapRunTx: async () => null as never,
