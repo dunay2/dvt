@@ -43,6 +43,7 @@ import {
 } from './PostgresSchemaManagerSql.js';
 import {
   CORE_TENANT_ISOLATION_TABLES,
+  type TenantIsolationTable,
   buildDropTenantIsolationPolicySql,
   buildTenantIsolationPolicySql,
 } from './PostgresTenantIsolationPolicy.js';
@@ -316,7 +317,7 @@ function disableRunEventsTenantIsolationSql(schema: string, tableName: string): 
   ];
 }
 
-function runEventsTenantIsolationTable() {
+function runEventsTenantIsolationTable(): TenantIsolationTable {
   const table = CORE_TENANT_ISOLATION_TABLES.find((candidate) => candidate.name === 'run_events');
   if (table === undefined) {
     throw new Error('RUN_EVENTS_TENANT_ISOLATION_TABLE_NOT_CONFIGURED');
