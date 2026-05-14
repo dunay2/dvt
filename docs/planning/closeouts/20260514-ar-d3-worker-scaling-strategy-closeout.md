@@ -90,6 +90,8 @@ Touched files or paths:
 - `docs/evidence/ed-20260514-ar-d3-worker-scaling-strategy.md`
 - `docs/risk-register/quality/R-20260514-AR-D3-WORKER-SCALING.yaml`
 - `packages/@dvt/adapter-temporal/vitest.config.ts`
+- `tools/ci/policy/workflow-scope.json`
+- `tools/ci/scope-config.mjs`
 - planning closeout and generated docs indexes
 
 Expected outcome: AR-D3 has a closed, current-state strategy: queue-local
@@ -173,6 +175,9 @@ Fowler opportunity matrix:
   source-loaded DBT plugin tests resolve the adapter public boundary to the
   current adapter source graph after the DBT plugin package extraction on
   `main`.
+- Updated CI scope policy during PR rebase so the newly extracted
+  `@dvt/temporal-dbt-plugin` workspace is present in the build/typecheck matrix
+  and test scope coverage rails.
 
 ## Validation Evidence
 
@@ -192,6 +197,9 @@ Fowler opportunity matrix:
 - Rebase validation first reproduced the DBT plugin extraction harness failure
   in `activities.test.ts`; the adapter Vitest alias update fixed the root cause,
   and the adapter test command passed with `29` test files and `238` tests.
+- GitHub `CI tool contracts` then reproduced the missing workspace-matrix
+  coverage for `@dvt/temporal-dbt-plugin`; the scope policy update fixed the
+  root cause and is covered by `pnpm test:ci-tools`.
 - `pnpm verify:prepush` initially failed on undeclared feature-mechanization
   symbols, proving the gate was active. The follow-up plan update fixed the
   root cause. Final post-commit `verify:prepush` is recorded in the task

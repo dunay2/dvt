@@ -117,5 +117,6 @@
   "workspace_traceability_service": ["packages/@dvt/traceability-service/**"],
   "workspace_adapter_postgres": ["packages/@dvt/adapter-postgres/**"],
   "workspace_adapter_temporal": ["packages/@dvt/adapter-temporal/**"],
+  "workspace_temporal_dbt_plugin": ["packages/@dvt/temporal-dbt-plugin/**"],
   "workspace_cli": ["packages/@dvt/cli/**"]
 }

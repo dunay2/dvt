@@ -49,6 +49,8 @@ allowedImplementationSurfaces:
   - docs/risk-register/quality/index.md
   - packages/@dvt/adapter-temporal/vitest.config.ts
   - packages/@dvt/adapter-temporal/test/worker-scaling-strategy.architecture.test.ts
+  - tools/ci/policy/workflow-scope.json
+  - tools/ci/scope-config.mjs
 forbiddenImplementationSurfaces:
   - apps/**
   - packages/@dvt/adapter-temporal/src/**
@@ -56,7 +58,6 @@ forbiddenImplementationSurfaces:
   - packages/@dvt/contracts/**
   - specs/**
   - scripts/**
-  - tools/**
 commandQueryRails:
   - name: TemporalWorkerScalingStrategy
     type: query
@@ -101,6 +102,8 @@ symbols:
   - {name: WORKFLOW_MAPPER_SOURCE, path: packages/@dvt/adapter-temporal/test/worker-scaling-strategy.architecture.test.ts, dddOwner: Temporal worker scaling architecture test, cqRails: [N/A - test helper], fowlerSignals: [tenant queue assignment binding], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/adapter-temporal test -- test/worker-scaling-strategy.architecture.test.ts]}
   - {name: expectMarkdownSections, path: packages/@dvt/adapter-temporal/test/worker-scaling-strategy.architecture.test.ts, dddOwner: Temporal worker scaling architecture test, cqRails: [N/A - test helper], fowlerSignals: [semantic documentation guard], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/adapter-temporal test -- test/worker-scaling-strategy.architecture.test.ts]}
   - {name: adapterTemporalSourceEntry, path: packages/@dvt/adapter-temporal/vitest.config.ts, dddOwner: Temporal adapter test harness, cqRails: [N/A - test harness], fowlerSignals: [public-boundary source resolution], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/adapter-temporal test -- test/worker-scaling-strategy.architecture.test.ts]}
+  - {name: WORKSPACE_ENTRIES, path: tools/ci/scope-config.mjs, dddOwner: CI workspace matrix rail, cqRails: [CI affected-workspace query], fowlerSignals: [workspace coverage completeness], architectureGuard: pnpm test:ci-tools, cypressCoverage: N/A, unitTests: [pnpm test:ci-tools]}
+  - {name: TEST_SCOPE_PATTERNS, path: tools/ci/scope-config.mjs, dddOwner: CI test-scope rail, cqRails: [CI affected-test query], fowlerSignals: [workspace test coverage completeness], architectureGuard: pnpm test:ci-tools, cypressCoverage: N/A, unitTests: [pnpm test:ci-tools]}
 ```
 
 ## Fowler Matrix
