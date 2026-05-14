@@ -91,25 +91,27 @@ now says which promise is being consumed:
 
 ## Concrete Fix Plan
 
-| Step | Change                                                          | Why it fixes the drift                                                                                                     | Proof                                                                  |
-| ---- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| 1    | Add `./runtime` to `packages/@dvt/engine/package.json` exports. | Runtime composition gets a governed entrypoint instead of using root.                                                      | package-surface architecture test requires `./runtime`.                |
-| 2    | Create `packages/@dvt/engine/src/runtime.ts`.                   | Builders, policies, services, workers, clocks, idempotency, and security implementations move behind Service Layer import. | architecture test checks runtime exports include composition modules.  |
-| 3    | Narrow `packages/@dvt/engine/src/index.ts`.                     | Root becomes Fowler Published Interface: contracts, errors, ports, role interfaces.                                        | architecture test rejects forbidden implementation families from root. |
-| 4    | Keep `packages/@dvt/engine/src/testing.ts` test-only.           | In-memory stores and fake provider adapter remain explicit Test Doubles.                                                   | architecture test rejects testing exports from root/runtime.           |
-| 5    | Migrate production composition consumers.                       | API/worker code that assembles runtime imports from `@dvt/engine/runtime`; pure type consumers keep root.                  | package/app typechecks.                                                |
-| 6    | Add component docs, stories, and this analysis.                 | Documentation states the current implementation truth and the invariant.                                                   | architecture test requires docs, stories, proposal, and mailbox.       |
+| Step | Change                                                          | Why it fixes the drift                                                                                                     | Proof                                                                   |
+| ---- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| 1    | Add `./runtime` to `packages/@dvt/engine/package.json` exports. | Runtime composition gets a governed entrypoint instead of using root.                                                      | package-surface architecture test requires `./runtime`.                 |
+| 2    | Create `packages/@dvt/engine/src/runtime.ts`.                   | Builders, policies, services, workers, clocks, idempotency, and security implementations move behind Service Layer import. | architecture test checks runtime exports include composition modules.   |
+| 3    | Narrow `packages/@dvt/engine/src/index.ts`.                     | Root becomes Fowler Published Interface: contracts, errors, ports, role interfaces.                                        | architecture test rejects forbidden implementation families from root.  |
+| 4    | Keep `packages/@dvt/engine/src/testing.ts` test-only.           | In-memory stores and fake provider adapter remain explicit Test Doubles.                                                   | architecture test rejects testing exports from root/runtime.            |
+| 5    | Migrate production composition consumers.                       | API/worker code that assembles runtime imports from `@dvt/engine/runtime`; pure type consumers keep root.                  | package/app typechecks.                                                 |
+| 6    | Delete engine-local event compatibility aliases.                | Drift is removed rather than preserved as `RunEventPersisted`/run-level/step-level alias names.                            | architecture test rejects legacy event aliases in event contract files. |
+| 7    | Add component docs, stories, and this analysis.                 | Documentation states the current implementation truth and the invariant.                                                   | architecture test requires docs, stories, proposal, and mailbox.        |
 
 ## Export Movement Map
 
-| Symbol family                                                | Before                | After                 | Rationale                                             |
-| ------------------------------------------------------------ | --------------------- | --------------------- | ----------------------------------------------------- |
-| `ExecutionPlan`, `EngineRunRef`, errors, ports               | `@dvt/engine`         | `@dvt/engine`         | Stable public contract and role interface.            |
-| `IProviderAdapter`, state-store ports                        | `@dvt/engine`         | `@dvt/engine`         | Adapter and store packages need stable port types.    |
-| `buildWorkflowEngineFacade`, `buildWorkflowEngineUseCases`   | `@dvt/engine`         | `@dvt/engine/runtime` | Runtime composition builders, not stable root API.    |
-| `StartRunAdmissionGuard`, `RunAccessPolicy`, `PlanRefPolicy` | `@dvt/engine`         | `@dvt/engine/runtime` | Concrete policies/services used by composition roots. |
-| `RunMaintenanceService`, `IntentReconcilerWorker`            | `@dvt/engine`         | `@dvt/engine/runtime` | Worker/runtime implementation surface.                |
-| `InMemoryTxStore`, `InMemoryProviderAdapter`                 | `@dvt/engine/testing` | `@dvt/engine/testing` | Test doubles remain test-only.                        |
+| Symbol family                                                    | Before                | After                 | Rationale                                             |
+| ---------------------------------------------------------------- | --------------------- | --------------------- | ----------------------------------------------------- |
+| `ExecutionPlan`, `EngineRunRef`, errors, ports                   | `@dvt/engine`         | `@dvt/engine`         | Stable public contract and role interface.            |
+| `IProviderAdapter`, state-store ports                            | `@dvt/engine`         | `@dvt/engine`         | Adapter and store packages need stable port types.    |
+| `buildWorkflowEngineFacade`, `buildWorkflowEngineUseCases`       | `@dvt/engine`         | `@dvt/engine/runtime` | Runtime composition builders, not stable root API.    |
+| `StartRunAdmissionGuard`, `RunAccessPolicy`, `PlanRefPolicy`     | `@dvt/engine`         | `@dvt/engine/runtime` | Concrete policies/services used by composition roots. |
+| `RunMaintenanceService`, `IntentReconcilerWorker`                | `@dvt/engine`         | `@dvt/engine/runtime` | Worker/runtime implementation surface.                |
+| `InMemoryTxStore`, `InMemoryProviderAdapter`                     | `@dvt/engine/testing` | `@dvt/engine/testing` | Test doubles remain test-only.                        |
+| `EventInput`, `EventEnvelope`, `RunEventInput`, `StepEventInput` | engine-local aliases  | canonical names       | Event vocabulary follows `@dvt/contracts` directly.   |
 
 ## Transition Diagram
 
@@ -208,6 +210,10 @@ The branch applies these fixes in code:
      type-only contract/port imports remain on `@dvt/engine`.
 1. `enginePublicApiSurface.architecture.test.ts`
    - enforces the semantic split and requires docs/stories/mailbox evidence.
+1. Event contract vocabulary
+   - removes engine-local compatibility aliases and leaves canonical
+     `EventInput`, `EventEnvelope`, `RunEventInput`, and `StepEventInput`
+     names from `@dvt/contracts`.
 
 ## Future Lessons
 

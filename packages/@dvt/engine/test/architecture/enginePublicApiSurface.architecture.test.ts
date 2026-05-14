@@ -155,6 +155,32 @@ describe('@dvt/engine public API surface architecture', () => {
     ]);
   });
 
+  it('hard-cuts legacy event aliases instead of keeping compatibility drift', () => {
+    const runEventsSource = readEngineSource('contracts/runEvents.ts');
+    const versionedRunEventsSource = readEngineSource('contracts/engine/RunEvents.v1.ts');
+    const engineContractIndexSource = readEngineSource('contracts/engine/index.ts');
+    const forbiddenLegacyAliases = [
+      'RunEventPersisted',
+      'RunLevelEventInput',
+      'StepLevelEventInput',
+      'EventInput as RunEventInput',
+      'EventEnvelope as RunEventPersisted',
+      'engine-legacy',
+      'Alias re-exports',
+    ];
+
+    for (const source of [runEventsSource, versionedRunEventsSource, engineContractIndexSource]) {
+      for (const forbidden of forbiddenLegacyAliases) {
+        expect(source).not.toContain(forbidden);
+      }
+    }
+
+    expect(runEventsSource).toContain('EventInput');
+    expect(runEventsSource).toContain('EventEnvelope');
+    expect(runEventsSource).toContain('RunEventInput');
+    expect(runEventsSource).toContain('StepEventInput');
+  });
+
   it('keeps runtime composition explicit and free of in-memory test doubles', () => {
     const runtimeSource = readEngineSource('runtime.ts');
     const runtimeExports = exportedModuleSpecifiers(runtimeSource);

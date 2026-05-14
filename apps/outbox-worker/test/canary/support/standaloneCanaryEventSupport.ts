@@ -1,10 +1,10 @@
-import { asIsoUtcString, type EventEnvelope as RunEventPersisted } from '@dvt/contracts';
+import { asIsoUtcString, type EventEnvelope } from '@dvt/contracts';
 
-export function cloneEvent(event: RunEventPersisted): RunEventPersisted {
+export function cloneEvent(event: EventEnvelope): EventEnvelope {
   return { ...event };
 }
 
-export function makeRunQueuedEvent(runSeq = 1): RunEventPersisted {
+export function makeRunQueuedEvent(runSeq = 1): EventEnvelope {
   return {
     eventId: `evt-canary-${runSeq}`,
     eventType: 'RunQueued',

@@ -34,6 +34,9 @@ the testing entrypoint.
 - Consumers that compose production runtime infrastructure use
   `@dvt/engine/runtime`.
 - Consumers that only need engine contracts or ports use `@dvt/engine`.
+- Event contracts use canonical names from `@dvt/contracts`
+  (`EventInput`, `EventEnvelope`, `RunEventInput`, `StepEventInput`) without
+  engine-local alias names.
 - The package `exports` map must contain exactly the governed entrypoints for
   root, runtime, and testing.
 - Each entrypoint module must declare an owned-concern header near the top of
@@ -103,6 +106,8 @@ stateDiagram-v2
   runtime implementation modules, workers, security implementation classes,
   in-memory stores, or provider test doubles.
 - The guard fails if the package `exports` map drops `./runtime` or `./testing`.
+- The guard fails if engine event contracts reintroduce compatibility aliases
+  such as persisted/run-level/step-level legacy names.
 - The guard fails if entrypoint modules lose owned-concern headers.
 - The guard requires this component guide, the user stories, the implementation
   proposal, and the Fowler mailbox record to stay aligned.

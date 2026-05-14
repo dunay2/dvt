@@ -18,11 +18,11 @@ import {
 } from '@dvt/contracts';
 import {
   type EngineRunRef,
+  type EventInput,
   type ExecutionPlan,
   type IProviderAdapter,
   type IRunExecutionContextBindingPolicy,
   type IRunExecutionContextResolver,
-  type RunEventInput,
 } from '@dvt/engine';
 import {
   AllowAllAuthorizer,
@@ -295,7 +295,7 @@ function makeRunEvent(
   clock: SequenceClock,
   meta: { runId: string; planId: string; planVersion: string },
   eventType: 'RunStarted' | 'RunCompleted' | 'RunFailed'
-): RunEventInput {
+): EventInput {
   return {
     eventId: idempotency.eventId(),
     eventType,
@@ -325,7 +325,7 @@ function makeStepEvent(
   meta: { runId: string; planId: string; planVersion: string },
   stepId: string,
   eventType: 'StepStarted' | 'StepCompleted' | 'StepFailed'
-): RunEventInput {
+): EventInput {
   return {
     eventId: idempotency.eventId(),
     eventType,

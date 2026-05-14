@@ -30,6 +30,7 @@ entrypoint; in-memory test implementations remain behind `./testing`.
 | Root package import exposes implementation builders and workers | Boundary drift          | Facade and Published Interface         | engine public package API read model | none - package presentation boundary | `packages/@dvt/engine/src/index.ts`, `package.json`   | architecture test rejects implementation exports from root        | changing runtime behavior          |
 | API composition needs runtime builders                          | Responsibility overload | Service Layer behind named entrypoint  | engine runtime composition API       | existing engine runtime commands     | `packages/@dvt/engine/src/runtime.ts`, API imports    | typecheck proves consumers use `@dvt/engine/runtime`              | moving API composition into engine |
 | In-memory helpers are useful in integration tests               | Test-only confidence    | Test Double entrypoint                 | engine testing API                   | none - test support only             | `packages/@dvt/engine/src/testing.ts`                 | architecture test keeps in-memory exports out of root/runtime     | production adapter changes         |
+| Engine event names preserve aliases around canonical contracts  | Semantic drift          | Published Language                     | engine public package API read model | none - package presentation boundary | `packages/@dvt/engine/src/contracts/runEvents.ts`     | architecture test rejects legacy alias names                      | changing event schema              |
 | Future code re-adds broad root exports                          | Documentation drift     | Semantic architecture fitness function | engine package surface component     | none - package presentation boundary | package-surface architecture test and component guide | test validates public/runtime/testing invariants, docs, consumers | whole monorepo import migration    |
 
 ## Rail Declaration
@@ -46,6 +47,8 @@ entrypoint; in-memory test implementations remain behind `./testing`.
 - Negative tests: root entrypoint must not export runtime workers,
   implementation services, provider-selection helpers, security implementations,
   in-memory stores, or test doubles.
+- Negative tests: engine event contracts must not publish compatibility aliases
+  around canonical `@dvt/contracts` event names.
 
 ## Current-State Diagram
 
@@ -117,18 +120,25 @@ allowedImplementationSurfaces:
   - packages/@dvt/engine/src/index.ts
   - packages/@dvt/engine/src/runtime.ts
   - packages/@dvt/engine/src/testing.ts
+  - packages/@dvt/engine/src/contracts/**
+  - packages/@dvt/engine/src/state/**
+  - packages/@dvt/engine/src/services/runMaintenance/**
+  - packages/@dvt/engine/src/services/startRun/**
   - packages/@dvt/engine/test/architecture/enginePublicApiSurface.architecture.test.ts
+  - packages/@dvt/engine/test/state/**
   - apps/api/src/**
+  - apps/api/test/integration/**
+  - apps/outbox-worker/src/**
+  - apps/outbox-worker/test/**
   - apps/temporal-worker/src/**
   - packages/@dvt/adapter-postgres/src/**
   - packages/@dvt/adapter-temporal/src/**
+  - packages/@dvt/delivery/test/**
   - packages/@dvt/state-store/src/**
   - docs/evidence/**
   - docs/risk-register/quality/**
 forbiddenImplementationSurfaces:
-  - packages/@dvt/engine/src/state/**
   - packages/@dvt/engine/src/core/lifecycle/**
-  - packages/@dvt/engine/src/services/startRun/**
 commandQueryRails:
   - name: none - package presentation boundary
     type: query
@@ -297,4 +307,116 @@ symbols:
     architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/enginePublicApiSurface.architecture.test.ts
     cypressCoverage: N/A - package API boundary only
     unitTests: [pnpm --filter @dvt/engine test -- test/architecture/enginePublicApiSurface.architecture.test.ts]
+  - name: assertEventRunIdMatches
+    path: packages/@dvt/engine/src/state/runEventWritePolicy.ts
+    dddOwner: engine event vocabulary write policy
+    cqRails: [none - package presentation boundary]
+    fowlerSignals: [Semantic drift]
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/enginePublicApiSurface.architecture.test.ts
+    cypressCoverage: N/A - package API boundary only
+    unitTests: [pnpm --filter @dvt/engine typecheck]
+  - name: assertEventsMatchRunId
+    path: packages/@dvt/engine/src/state/runEventWritePolicy.ts
+    dddOwner: engine event vocabulary write policy
+    cqRails: [none - package presentation boundary]
+    fowlerSignals: [Semantic drift]
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/enginePublicApiSurface.architecture.test.ts
+    cypressCoverage: N/A - package API boundary only
+    unitTests: [pnpm --filter @dvt/engine typecheck]
+  - name: assertRunEventInput
+    path: packages/@dvt/engine/src/state/runEventWritePolicy.ts
+    dddOwner: engine event vocabulary write policy
+    cqRails: [none - package presentation boundary]
+    fowlerSignals: [Semantic drift]
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/enginePublicApiSurface.architecture.test.ts
+    cypressCoverage: N/A - package API boundary only
+    unitTests: [pnpm --filter @dvt/engine typecheck]
+  - name: parseRunEventEnvelope
+    path: packages/@dvt/engine/src/state/runEventWritePolicy.ts
+    dddOwner: engine event vocabulary write policy
+    cqRails: [none - package presentation boundary]
+    fowlerSignals: [Semantic drift]
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/enginePublicApiSurface.architecture.test.ts
+    cypressCoverage: N/A - package API boundary only
+    unitTests: [pnpm --filter @dvt/engine typecheck]
+  - name: makeEvent
+    path: apps/outbox-worker/test/bus/HttpEventBus.test.ts
+    dddOwner: outbox worker event vocabulary tests
+    cqRails: [none - package presentation boundary]
+    fowlerSignals: [Semantic drift]
+    architectureGuard: pnpm --filter dvt-outbox-worker typecheck
+    cypressCoverage: N/A - package API boundary only
+    unitTests: [pnpm --filter dvt-outbox-worker typecheck]
+  - name: cloneEvent
+    path: apps/outbox-worker/test/canary/support/standaloneCanaryEventSupport.ts
+    dddOwner: outbox worker event vocabulary tests
+    cqRails: [none - package presentation boundary]
+    fowlerSignals: [Semantic drift]
+    architectureGuard: pnpm --filter dvt-outbox-worker typecheck
+    cypressCoverage: N/A - package API boundary only
+    unitTests: [pnpm --filter dvt-outbox-worker typecheck]
+  - name: makeRunQueuedEvent
+    path: apps/outbox-worker/test/canary/support/standaloneCanaryEventSupport.ts
+    dddOwner: outbox worker event vocabulary tests
+    cqRails: [none - package presentation boundary]
+    fowlerSignals: [Semantic drift]
+    architectureGuard: pnpm --filter dvt-outbox-worker typecheck
+    cypressCoverage: N/A - package API boundary only
+    unitTests: [pnpm --filter dvt-outbox-worker typecheck]
+  - name: makeEvent
+    path: apps/outbox-worker/test/ops/outboxWorkerMonitorTestSupport.ts
+    dddOwner: outbox worker event vocabulary tests
+    cqRails: [none - package presentation boundary]
+    fowlerSignals: [Semantic drift]
+    architectureGuard: pnpm --filter dvt-outbox-worker typecheck
+    cypressCoverage: N/A - package API boundary only
+    unitTests: [pnpm --filter dvt-outbox-worker typecheck]
+  - name: makeRuntimeEvent
+    path: apps/outbox-worker/test/runtime/OutboxWorkerRuntime.ordering.test.ts
+    dddOwner: outbox worker event vocabulary tests
+    cqRails: [none - package presentation boundary]
+    fowlerSignals: [Semantic drift]
+    architectureGuard: pnpm --filter dvt-outbox-worker typecheck
+    cypressCoverage: N/A - package API boundary only
+    unitTests: [pnpm --filter dvt-outbox-worker typecheck]
+  - name: EventIdentifier
+    path: apps/outbox-worker/test/runtime/runtimeTestSupport.ts
+    dddOwner: outbox worker event vocabulary tests
+    cqRails: [none - package presentation boundary]
+    fowlerSignals: [Semantic drift]
+    architectureGuard: pnpm --filter dvt-outbox-worker typecheck
+    cypressCoverage: N/A - package API boundary only
+    unitTests: [pnpm --filter dvt-outbox-worker typecheck]
+  - name: IdempotencyKey
+    path: apps/outbox-worker/test/runtime/runtimeTestSupport.ts
+    dddOwner: outbox worker event vocabulary tests
+    cqRails: [none - package presentation boundary]
+    fowlerSignals: [Semantic drift]
+    architectureGuard: pnpm --filter dvt-outbox-worker typecheck
+    cypressCoverage: N/A - package API boundary only
+    unitTests: [pnpm --filter dvt-outbox-worker typecheck]
+  - name: RunIdentifier
+    path: apps/outbox-worker/test/runtime/runtimeTestSupport.ts
+    dddOwner: outbox worker event vocabulary tests
+    cqRails: [none - package presentation boundary]
+    fowlerSignals: [Semantic drift]
+    architectureGuard: pnpm --filter dvt-outbox-worker typecheck
+    cypressCoverage: N/A - package API boundary only
+    unitTests: [pnpm --filter dvt-outbox-worker typecheck]
+  - name: buildPersistedEvent
+    path: apps/outbox-worker/test/runtime/runtimeTestSupport.ts
+    dddOwner: outbox worker event vocabulary tests
+    cqRails: [none - package presentation boundary]
+    fowlerSignals: [Semantic drift]
+    architectureGuard: pnpm --filter dvt-outbox-worker typecheck
+    cypressCoverage: N/A - package API boundary only
+    unitTests: [pnpm --filter dvt-outbox-worker typecheck]
+  - name: makePendingEvent
+    path: apps/outbox-worker/test/runtime/runtimeTestUtils.ts
+    dddOwner: outbox worker event vocabulary tests
+    cqRails: [none - package presentation boundary]
+    fowlerSignals: [Semantic drift]
+    architectureGuard: pnpm --filter dvt-outbox-worker typecheck
+    cypressCoverage: N/A - package API boundary only
+    unitTests: [pnpm --filter dvt-outbox-worker typecheck]
 ```
