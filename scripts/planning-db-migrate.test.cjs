@@ -884,8 +884,12 @@ test('tracked migrations keep claimed or stale work out of next tasks after W40'
   const nextTaskClaimMigration = migrations.find(
     (migration) => migration.fileName === '040_planning_next_task_claim_boundary.sql'
   );
+  const activeClaimBoundaryMigration = migrations.find(
+    (migration) => migration.fileName === '041_planning_claim_recovery_active_claim_boundary.sql'
+  );
 
   assert.ok(nextTaskClaimMigration);
+  assert.ok(activeClaimBoundaryMigration);
   assert.match(
     nextTaskClaimMigration.sql,
     /create or replace view planning_query_store\.planning_next_tasks/
@@ -896,6 +900,15 @@ test('tracked migrations keep claimed or stale work out of next tasks after W40'
     nextTaskClaimMigration.sql,
     /create or replace view planning_query_store\.planning_claim_recovery_tasks/
   );
-  assert.match(nextTaskClaimMigration.sql, /in_progress_claim_missing/);
-  assert.match(nextTaskClaimMigration.sql, /claim_expired/);
+  assert.match(
+    activeClaimBoundaryMigration.sql,
+    /create or replace view planning_query_store\.planning_claim_recovery_tasks/
+  );
+  assert.match(activeClaimBoundaryMigration.sql, /in_progress_claim_missing/);
+  assert.match(activeClaimBoundaryMigration.sql, /claim_expired/);
+  assert.match(activeClaimBoundaryMigration.sql, /queued_claim_owner_missing/);
+  assert.doesNotMatch(
+    activeClaimBoundaryMigration.sql,
+    /lower\(task\.status\) = 'queued'\s+and\s+\(\s+task\.claimed_by is not null\s+or task\.claim_expires_at is not null/s
+  );
 });
