@@ -117,9 +117,14 @@ function importsNamedBinding(sourceFile: ts.SourceFile, bindingName: string): bo
     if (!statement.moduleSpecifier.text.endsWith('/stateStoreRoles.js')) return false;
 
     const bindings = statement.importClause?.namedBindings;
-    if (!bindings || !ts.isNamedImports(bindings)) return false;
+    if (!bindings) return false;
+    if (ts.isNamespaceImport(bindings)) return true;
+    if (!ts.isNamedImports(bindings)) return false;
 
-    return bindings.elements.some((element) => element.name.text === bindingName);
+    return bindings.elements.some((element) => {
+      const importedName = element.propertyName?.text ?? element.name.text;
+      return importedName === bindingName;
+    });
   });
 }
 
@@ -157,8 +162,11 @@ function findStateStoreRoleObjectLiteralViolations(
 
     const propertyNames = new Set(
       node.properties
-        .filter(ts.isPropertyAssignment)
-        .map((property) => getPropertyNameText(property.name))
+        .map((property) => {
+          if (ts.isPropertyAssignment(property)) return getPropertyNameText(property.name);
+          if (ts.isShorthandPropertyAssignment(property)) return property.name.text;
+          return null;
+        })
         .filter((name): name is string => name !== null)
     );
     if (
