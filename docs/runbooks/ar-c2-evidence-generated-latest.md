@@ -1,13 +1,13 @@
-﻿---
+---
 title: AR-C2 generated operational evidence
 status: Active
 owner: Runtime / SRE / Docs
-last_reviewed: 2026-05-13
+last_reviewed: 2026-05-14
 ---
 
 # AR-C2 generated operational evidence
 
-Generated at (UTC): `2026-05-13T22:21:53.289Z`
+Generated at (UTC): `2026-05-14T01:53:56.956Z`
 
 Source mapping:
 
