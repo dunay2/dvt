@@ -1158,6 +1158,24 @@ units:
     fowlerSignals:
       - coverage refinement
 
+  - id: SYS-ADAPTERS-TEMPORAL-DBT-PLUGIN
+    name: Temporal DBT plugin package
+    parent: SYS-ADAPTERS-ROOT
+    level: source
+    status: review
+    owns:
+      - packages/@dvt/temporal-dbt-plugin/**
+    childrenRequired: false
+    dddOwner: ADP
+    cqRails: Temporal step plugin execution and DBT CLI runner rails
+    governance:
+      - docs/architecture/components/engine/adapters/temporal/temporal-dbt-plugin-package.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-d-plan-pointer-dbt-plugin-package-extraction-plan-20260514.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - package boundary
+      - semantic encapsulation
+
   - id: SYS-WORKERS
     name: Worker domain
     parent: SYS-DVT
