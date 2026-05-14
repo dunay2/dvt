@@ -33,6 +33,7 @@ Evidence documents that justify or validate relevant changes.
 - [DHM-WS4 Runtime Path Decomposition](ed-20260512-dhm-ws4-runtime-path-decomposition.md)
 - [DHM-WS6 Semantic Closure](ed-20260512-dhm-ws6-semantic-closure.md)
 - [EA-20260429-01 plan schema-version admission evidence](ed-20260513-ea-20260429-01-plan-schema-version-admission.md)
+- [EA-20260429-07 Start-Run ProviderRef Proof](ed-20260514-ea-20260429-07-start-run-provider-ref-proof.md)
 - [ED 20260401 Temporal Live Status Query](ED-20260401-temporal-live-status-query.md)
 - [ED 20260404 Guards Alignment Adapter Postgres](ED-20260404-guards-alignment-adapter-postgres.md)
 - [ED 20260404 Inmemory State Store Invariants Hardening](ED-20260404-inmemory-state-store-invariants-hardening.md)

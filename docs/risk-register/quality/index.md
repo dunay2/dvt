@@ -133,6 +133,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Start-run application composition can drift back into hidden concrete construction](R-20260512-DHM-WS3-START-RUN-DECOMPOSITION.yaml)
 - [Start-run boundary and runtime composition can drift across contracts and API consumers](R-20260422-START-RUN-BOUNDARY-ADOPTION-DRIFT.yaml)
 - [Start-run phase decomposition could diverge from existing protocol semantics](R-20260512-WE-HX-3-START-RUN-DECOMPOSITION.yaml)
+- [start-run providerRef compensation proof could regress to boolean-only coverage](R-20260514-EA-20260429-07-START-RUN-PROVIDER-REF.yaml)
 - [StartRun trace context advertises an unreachable local adapter](R-20260409-TRACE-CONTEXT-ADAPTER-TYPE-DRIFT.yaml)
 - [Status-head contract cutover across adapter engine API web surfaces](R-20260407-STATUS-HEAD-CONTRACT-CUTOVER.yaml)
 - [Step retry policy could drift back into adapter-local ownership](R-20260412-AR-A11-STEP-RETRY-POLICY-DRIFT.yaml)
