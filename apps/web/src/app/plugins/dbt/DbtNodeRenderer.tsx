@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import type { CSSProperties, ReactElement } from 'react';
 import { ChevronDown, ChevronUp, Clock, Code, Info, Loader2, Settings, Table } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -7,8 +6,10 @@ import type { LucideIcon } from 'lucide-react';
 import { Badge } from '../../components/ui/badge';
 import { Card } from '../../components/ui/card';
 import { cn } from '../../components/ui/utils';
-import { queryKeys } from '../../queries/queryKeys';
-import { useRunsService } from '../../services/AppServicesContext';
+import {
+  useRunSnapshotQuery,
+  useScopedRunSummariesQueryForHistory,
+} from '../../queries/runsQueries';
 import { useSessionStore } from '../../stores/sessionStore';
 import type { Run, RunEvent } from '../../types/dbt';
 import type {
@@ -346,26 +347,20 @@ function DbtColumnsPanel({ node }: InspectorPanelProps) {
 }
 
 function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
-  const runsService = useRunsService();
   const tenantId = useSessionStore((state) => state.tenantId);
   const projectId = useSessionStore((state) => state.projectId);
   const environmentId = useSessionStore((state) => state.environmentId);
   const workspaceLayoutKey = `${tenantId}::${projectId}::${environmentId}`;
   const activeRunIdOrUndefined = activeRunId ?? undefined;
 
-  const { data: runSnapshot, isLoading } = useQuery({
-    queryKey: queryKeys.runs.snapshot(workspaceLayoutKey, activeRunIdOrUndefined),
-    queryFn: () => runsService.getRunSnapshot(activeRunIdOrUndefined!),
-    enabled: Boolean(activeRunId),
-    staleTime: 5_000,
-  });
-
-  const { data: runSummaries, isLoading: isLoadingList } = useQuery({
-    queryKey: queryKeys.runs.summaries(workspaceLayoutKey),
-    queryFn: () => runsService.listRunSummaries(),
-    enabled: !activeRunId,
-    staleTime: 30_000,
-  });
+  const { data: runSnapshot, isLoading } = useRunSnapshotQuery(
+    workspaceLayoutKey,
+    activeRunIdOrUndefined
+  );
+  const { data: runSummaries, isLoading: isLoadingList } = useScopedRunSummariesQueryForHistory(
+    workspaceLayoutKey,
+    !activeRunId
+  );
 
   const hasRuntimeSnapshotData =
     (activeRunId && runSnapshot != null) ||
