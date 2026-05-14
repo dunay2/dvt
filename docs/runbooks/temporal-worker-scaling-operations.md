@@ -2,7 +2,7 @@
 title: Temporal Worker Scaling Operations
 status: Active
 owner: Runtime / SRE / Delivery
-last_reviewed: 2026-05-07
+last_reviewed: 2026-05-14
 ---
 
 # Temporal Worker Scaling Operations
@@ -20,6 +20,8 @@ Current invariant:
 - `TEMPORAL_STEP_ACTIVITY_ROUTES` can route only `executeStep` activities to
   capability-specific activity queues.
 - a global shared pool that polls all tenant queues is not implemented.
+- AR-D3 closes on this queue-local strategy; automated 1000+ tenant worker
+  provisioning remains future platform work.
 
 ## Queue Naming
 
@@ -34,6 +36,28 @@ Use the same derivation as `toTemporalTaskQueue()`:
 
 For a non-empty tenant id, do not use `dvt_<tenantId>`. The worker queue must
 match `<baseQueue>-<tenantId>`.
+
+## Tenant Queue Assignment Policy
+
+Use the same assignment policy as the adapter:
+
+```bash
+TEMPORAL_TASK_QUEUE=<baseQueue>-<tenantId>
+```
+
+Rules:
+
+1. Use `<baseQueue>` only when the run has a blank tenant id.
+2. Use `<baseQueue>-<tenantId>` for every non-empty tenant id.
+3. Deploy one worker pool per queue that must be polled.
+4. Label the deployment, dashboard, and alert route with the queue name.
+5. Do not move in-flight workflows by changing worker environment variables;
+   queued workflow tasks stay on the queue selected at start-run time.
+
+Capability activity queues are separate. If
+`TEMPORAL_STEP_ACTIVITY_ROUTES` maps a step kind to `dvt-temporal-python`, the
+worker polling `dvt-temporal-python` must include the matching plugin/runtime.
+The workflow itself still starts on the tenant workflow queue.
 
 ## Required Environment
 
@@ -128,6 +152,30 @@ After scaling:
 
 Rollback: scale the deployment back to the previous replica count.
 
+## Capacity Model
+
+Capacity is queue-local. Estimate desired replicas per queue:
+
+```text
+desiredReplicas(queue) =
+  max(minReadyReplicas(queue),
+      ceil(peakConcurrentTasks(queue) / safeConcurrentTasksPerReplica(queue)))
+```
+
+Operator inputs:
+
+| Input                         | How to use it                                      |
+| ----------------------------- | -------------------------------------------------- |
+| `peakConcurrentTasks(queue)`  | highest expected workflow/activity tasks in queue  |
+| safe tasks per replica        | measured from the worker profile under load        |
+| minimum ready replicas        | protects cold-start-sensitive active tenant queues |
+| schedule-to-start latency     | shows work waiting for a worker slot               |
+| worker CPU, memory, and error | detects overloaded or failing replicas             |
+
+Generic workflow workers, DBT-enabled workers, and capability activity workers
+must be sized separately. Do not reuse a DBT-safe concurrency number for a
+generic worker profile without profiling.
+
 ## Add Capacity For A New Tenant Queue
 
 Use this when a tenant has started workflows on `<baseQueue>-<tenantId>` and no
@@ -212,6 +260,27 @@ environment-specific names but keep the same operational meaning.
 | worker memory  | > 75% for 10 min    | > 90% for 5 min     | Add replicas or larger nodes.  |
 | `error_total`  | any increase        | rapid increase      | Inspect logs and state metric. |
 
+## Autoscaling Policy
+
+Autoscaling must target the deployment that polls the affected
+`TEMPORAL_TASK_QUEUE`.
+
+Use these signals in priority order:
+
+1. schedule-to-start latency for the workflow or activity task queue;
+2. backlog or queued task count for the exact queue;
+3. ready replica count and Temporal poller count;
+4. worker CPU and memory;
+5. `dvt_temporal_worker_error_total` and failing worker state gauges.
+
+KEDA Temporal Worker scaler is the preferred future Kubernetes integration
+when queue metrics are available. Until this repository ships a KEDA
+ScaledObject or equivalent deployment artifact, use the same signal policy with
+the environment's existing autoscaler or manual scaling procedure.
+
+Scale down only after queue latency, backlog, and resource pressure stay below
+target for the environment cooldown window.
+
 ## Rebalance Or Drain
 
 ### Increase Tenant Queue Capacity
@@ -274,17 +343,20 @@ stopped.
 4. Verify `DVT_DBT_BIN` is available inside the worker image.
 5. Check artifact-read and bundle-integrity errors.
 
-## Evidence Before Claiming Scale Readiness
+## Production Readiness Contract
 
-Do not claim AR-D3 production scale readiness until evidence exists for:
+Before claiming production-scale readiness for a specific environment, collect
+evidence for:
 
 1. queue-local pool scale-up and scale-down;
 2. tenant queue provisioning for at least one tenant-scoped queue;
 3. a noisy-tenant drill showing only that tenant queue was scaled;
 4. readiness and metrics dashboards using the exact worker metric semantics;
 5. load evidence for the target tenant and queue count;
-6. an explicit decision on the 1000+ tenant provisioning model.
+6. an explicit decision on whether 1000+ tenant provisioning is manual,
+   generated, or controlled by a tenant-to-queue assignment service.
 
-Current status: the repository has the queue-local runtime building blocks, but
-does not yet have a global shared worker pool or automated 1000+ tenant worker
+Current status: AR-D3 provides the documented worker topology and operations
+contract. The repository has queue-local runtime building blocks, but does not
+yet have a global shared worker pool or automated 1000+ tenant worker
 provisioning.

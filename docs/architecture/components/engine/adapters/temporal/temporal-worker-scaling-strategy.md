@@ -2,7 +2,7 @@
 title: Temporal Worker Scaling Strategy
 status: Active
 owner: Runtime / SRE / Delivery
-last_reviewed: 2026-05-07
+last_reviewed: 2026-05-14
 ---
 
 # Temporal Worker Scaling Strategy
@@ -13,9 +13,29 @@ Define the worker scaling model for the current `apps/temporal-worker`
 runtime without claiming topology that the Temporal adapter does not implement.
 
 This document is intentionally current-state first. It captures the scaling
-paths that can be operated with the code in-repo today, then names the work
-needed before DVT can claim a global shared worker pool for 1000+ tenant
-queues.
+paths that can be operated with the code in-repo today, then names the
+production constraint that closes AR-D3 without claiming runtime topology that
+does not exist.
+
+## AR-D3 Closure Decision
+
+AR-D3 is closed as an explicit strategy decision:
+
+- the supported 1000+ tenant posture is many queue-local worker pools;
+- the global shared worker pool is not implemented;
+- tenant queue assignment is derived from `toTemporalTaskQueue()`;
+- capability-specific activity queues are allowed only for routed
+  `executeStep` activities;
+- 1000+ tenant provisioning automation is future platform work, not an
+  implicit capability of the current worker host.
+
+This follows Temporal's worker model: task queues are lightweight, workers poll
+task queues, multiple workers can poll the same queue for horizontal capacity,
+and all workers on a queue must be able to process the tasks they accept.
+
+Operational consequence: DVT can claim an architecture and runbook for 1000+
+tenant scaling, but it cannot claim automated 1000+ tenant worker provisioning
+or one process polling every tenant queue until those capabilities are built.
 
 ## Governing Implementation Truth
 
@@ -90,6 +110,13 @@ Characteristics:
 This model is useful. It lets operators add capacity for a hot tenant without
 changing workflow code.
 
+The mature production pattern is not a binary choice between one worker per
+tenant and one global pool. The current supported model is queue-local pools
+with repeatable naming and scaling rules. Low-volume tenants still receive
+their deterministic queue; platform automation can later decide whether several
+tenants are routed to an intentionally shared queue, but that is a future
+assignment service, not current runtime behavior.
+
 ### Tenant Queue Worker Pool
 
 For a base queue of `dvt-temporal` and tenant `tenant-a`, the adapter starts
@@ -137,6 +164,22 @@ The canonical queue mapping is adapter-owned:
 The older shorthand `dvt_${tenantId}` is not the current repository
 convention.
 
+## Tenant Queue Assignment Policy
+
+The assignment policy is deterministic and adapter-owned:
+
+1. A blank tenant uses the configured base queue.
+2. A non-empty tenant uses `<baseQueue>-<tenantId>`.
+3. A worker pool must set `TEMPORAL_TASK_QUEUE` to the exact queue it is meant
+   to poll.
+4. A capability worker uses the configured activity task queue from
+   `TEMPORAL_STEP_ACTIVITY_ROUTES`, not the tenant workflow queue.
+
+The assignment policy deliberately avoids a hidden routing table. If DVT later
+adds tenant classes, shard buckets, or pooled queues, that work must add a
+tenant-to-queue assignment catalog and migration policy before changing the
+operator runbook.
+
 ## Scaling Decision Model
 
 | Situation                             | Supported action today                                   |
@@ -150,6 +193,35 @@ convention.
 
 The practical near-term model is therefore "many queue-local pools", not "one
 pool subscribed to every tenant queue".
+
+## Capacity Model
+
+Capacity is calculated per task queue, not per namespace:
+
+| Dimension             | Meaning                                            | Operational rule                                      |
+| --------------------- | -------------------------------------------------- | ----------------------------------------------------- |
+| queue demand          | tasks scheduled for one workflow or activity queue | scale only the affected queue-local pool              |
+| replica capacity      | ready worker processes polling the same queue      | add replicas until schedule-to-start latency recovers |
+| execution slot budget | concurrent workflow/activity work per worker       | tune worker options before overloading CPU or memory  |
+| cold-start budget     | time for a new replica to become a useful poller   | keep minimum ready replicas for active tenants        |
+| capability saturation | routed activity queue pressure                     | scale the capability queue worker profile             |
+
+Temporal's worker tuning guidance treats schedule-to-start latency as the
+signal that work is waiting for a worker to pick it up. DVT therefore treats
+queue delay and ready poller count as first-class capacity signals instead of
+CPU-only autoscaling.
+
+For planning, the minimum queue-local capacity formula is:
+
+```text
+desiredReplicas(queue) =
+  max(minReadyReplicas(queue),
+      ceil(peakConcurrentTasks(queue) / safeConcurrentTasksPerReplica(queue)))
+```
+
+`safeConcurrentTasksPerReplica` must be derived from profiling for the worker
+profile. Generic workflow workers, DBT-enabled workers, and capability activity
+workers must not share one static capacity number.
 
 ## Worker Image Specialization
 
@@ -198,7 +270,26 @@ Cold start is measured per worker process:
 `/readyz` is the readiness gate. `/healthz` only proves the process is alive
 enough to report health.
 
-## Autoscaling Signals
+## Autoscaling Policy
+
+Autoscaling is queue-local. A scaler may be manual, HPA-based, KEDA-based, or
+environment-specific, but it must scale the deployment that polls the affected
+`TEMPORAL_TASK_QUEUE`.
+
+Recommended inputs:
+
+- Temporal schedule-to-start latency for workflow and activity tasks;
+- task backlog or equivalent queue depth for the exact task queue;
+- ready worker count for the queue;
+- worker CPU and memory;
+- worker error counters and failing state gauges.
+
+The KEDA Temporal Worker scaler is the preferred future Kubernetes integration
+when the environment can expose Temporal task queue metrics directly. Until a
+KEDA ScaledObject exists in this repository, KEDA remains an implementation
+option, not a shipped manifest.
+
+### Autoscaling Signals
 
 ### Queue-Local Worker Pool
 
@@ -303,7 +394,7 @@ by `toTemporalTaskQueue()`.
 
 ## Current Limits
 
-These limits are not closed by documentation:
+These limits remain explicit residual work outside AR-D3:
 
 - no global shared worker pool across all tenant queues;
 - no tenant-to-queue assignment catalog beyond deterministic suffix mapping;
@@ -312,5 +403,34 @@ These limits are not closed by documentation:
 - no production proof for capability-specialized worker images beyond the
   implemented activity routing seam.
 
-AR-D3 remains in progress until those limits are either implemented, accepted as
-explicit production constraints, or backed by production-scale evidence.
+They do not block AR-D3 because AR-D3 now closes on a documented, test-guarded
+strategy. They do block future claims that DVT has fully automated 1000+ tenant
+worker provisioning.
+
+## Production Readiness Contract
+
+Before claiming production-scale readiness for a specific environment, operators
+must collect evidence for:
+
+1. queue-local scale-up and scale-down for one tenant workflow queue;
+2. tenant queue provisioning for at least one `<baseQueue>-<tenantId>` queue;
+3. a noisy-tenant drill showing only that tenant queue was scaled;
+4. readiness and metrics dashboards using exact worker metric semantics;
+5. load evidence for the target tenant count, queue count, and worker profile;
+6. a decision on whether 1000+ tenant provisioning is manual, generated, or
+   controlled by a tenant-to-queue assignment service.
+
+AR-D3 supplies the strategy and operator contract. Environment-specific load
+tests, provisioning automation, and KEDA manifests are separate implementation
+work.
+
+## Industry References
+
+- Temporal workers: <https://docs.temporal.io/workers>
+- Temporal task queues: <https://docs.temporal.io/task-queue>
+- Temporal task queue naming: <https://docs.temporal.io/task-queue/naming>
+- Temporal worker performance: <https://docs.temporal.io/develop/worker-performance>
+- Temporal worker tuning reference:
+  <https://docs.temporal.io/develop/worker-tuning-reference>
+- Temporal KEDA worker scaler announcement:
+  <https://temporal.io/change-log/keda-based-auto-scaling-for-temporal-workers>
