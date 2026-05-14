@@ -89,6 +89,7 @@ Touched files or paths:
 - `packages/@dvt/adapter-temporal/test/worker-scaling-strategy.architecture.test.ts`
 - `docs/evidence/ed-20260514-ar-d3-worker-scaling-strategy.md`
 - `docs/risk-register/quality/R-20260514-AR-D3-WORKER-SCALING.yaml`
+- `packages/@dvt/adapter-temporal/vitest.config.ts`
 - planning closeout and generated docs indexes
 
 Expected outcome: AR-D3 has a closed, current-state strategy: queue-local
@@ -168,6 +169,10 @@ Fowler opportunity matrix:
 - Added mandatory feature mechanization plan in
   `docs/planning/proposals/mandatory/runtime-and-contracts/ar-d3-worker-scaling-strategy-plan-20260514.md`
   after `verify:prepush` correctly rejected undeclared test symbols.
+- Updated `packages/@dvt/adapter-temporal/vitest.config.ts` during PR rebase so
+  source-loaded DBT plugin tests resolve the adapter public boundary to the
+  current adapter source graph after the DBT plugin package extraction on
+  `main`.
 
 ## Validation Evidence
 
@@ -184,6 +189,9 @@ Fowler opportunity matrix:
 - `pnpm docs:feature-mechanization:implementation` passed.
 - `pnpm governance:refresh` passed after regenerating docs and governance DB
   projections.
+- Rebase validation first reproduced the DBT plugin extraction harness failure
+  in `activities.test.ts`; the adapter Vitest alias update fixed the root cause,
+  and the adapter test command passed with `29` test files and `238` tests.
 - `pnpm verify:prepush` initially failed on undeclared feature-mechanization
   symbols, proving the gate was active. The follow-up plan update fixed the
   root cause. Final post-commit `verify:prepush` is recorded in the task

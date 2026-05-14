@@ -8,6 +8,7 @@ arc_level: ARC-2
 breaking: false
 code_refs:
   - docs/planning/proposals/mandatory/runtime-and-contracts/ar-d3-worker-scaling-strategy-plan-20260514.md
+  - packages/@dvt/adapter-temporal/vitest.config.ts
   - packages/@dvt/adapter-temporal/test/worker-scaling-strategy.architecture.test.ts
   - docs/architecture/components/engine/adapters/temporal/temporal-worker-scaling-strategy.md
   - docs/runbooks/temporal-worker-scaling-operations.md
@@ -38,3 +39,8 @@ The architecture test
 `packages/@dvt/adapter-temporal/test/worker-scaling-strategy.architecture.test.ts`
 was introduced red against the previous docs, then passed after the strategy and
 runbook were updated.
+
+The merge validation also covered the adapter test harness after `main`
+extracted `@dvt/temporal-dbt-plugin`: `packages/@dvt/adapter-temporal/vitest.config.ts`
+keeps source-loaded DBT plugin tests bound to the adapter source public boundary
+so package-local tests do not read stale compiled adapter exports.

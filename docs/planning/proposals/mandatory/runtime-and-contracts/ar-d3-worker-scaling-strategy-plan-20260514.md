@@ -47,6 +47,7 @@ allowedImplementationSurfaces:
   - docs/evidence/index.md
   - docs/risk-register/quality/R-20260514-AR-D3-WORKER-SCALING.yaml
   - docs/risk-register/quality/index.md
+  - packages/@dvt/adapter-temporal/vitest.config.ts
   - packages/@dvt/adapter-temporal/test/worker-scaling-strategy.architecture.test.ts
 forbiddenImplementationSurfaces:
   - apps/**
@@ -99,6 +100,7 @@ symbols:
   - {name: WORKER_HOST_SOURCE, path: packages/@dvt/adapter-temporal/test/worker-scaling-strategy.architecture.test.ts, dddOwner: Temporal worker scaling architecture test, cqRails: [N/A - test helper], fowlerSignals: [executable topology binding], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/adapter-temporal test -- test/worker-scaling-strategy.architecture.test.ts]}
   - {name: WORKFLOW_MAPPER_SOURCE, path: packages/@dvt/adapter-temporal/test/worker-scaling-strategy.architecture.test.ts, dddOwner: Temporal worker scaling architecture test, cqRails: [N/A - test helper], fowlerSignals: [tenant queue assignment binding], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/adapter-temporal test -- test/worker-scaling-strategy.architecture.test.ts]}
   - {name: expectMarkdownSections, path: packages/@dvt/adapter-temporal/test/worker-scaling-strategy.architecture.test.ts, dddOwner: Temporal worker scaling architecture test, cqRails: [N/A - test helper], fowlerSignals: [semantic documentation guard], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/adapter-temporal test -- test/worker-scaling-strategy.architecture.test.ts]}
+  - {name: adapterTemporalSourceEntry, path: packages/@dvt/adapter-temporal/vitest.config.ts, dddOwner: Temporal adapter test harness, cqRails: [N/A - test harness], fowlerSignals: [public-boundary source resolution], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/adapter-temporal test -- test/worker-scaling-strategy.architecture.test.ts]}
 ```
 
 ## Fowler Matrix
