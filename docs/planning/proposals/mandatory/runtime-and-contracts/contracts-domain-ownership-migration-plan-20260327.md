@@ -606,6 +606,7 @@ allowedImplementationSurfaces:
   - packages/@dvt/contracts/test/provider-adapter.architecture.test.ts
   - packages/@dvt/contracts/test/run-state-store-maintenance-concurrency.architecture.test.ts
   - scripts/sync-docs.cjs
+  - traceability.manifest.json
 forbiddenImplementationSurfaces:
   - apps/**
   - packages/@dvt/engine/**

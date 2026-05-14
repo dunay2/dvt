@@ -1,6 +1,13 @@
 /**
+ * @baseline ADR-0018: Shared Kernel Ownership Governance
+ * @baseline ADR-0034: Bounded Context Boundaries and Communication Rules
  * @ownedConcern Publish shared run-state vocabulary for persisted events,
  * snapshots, and artifact refs without owning engine behavior ports.
+ * @decision Publish only serializable run-state DTO vocabulary from the shared
+ * kernel while keeping behavior ports in their owner package.
+ * @consequence Engine and adapters can share persisted event shapes without
+ * reintroducing shared-kernel authority over runtime behavior.
+ * @version 1.0.0
  */
 
 import type {
