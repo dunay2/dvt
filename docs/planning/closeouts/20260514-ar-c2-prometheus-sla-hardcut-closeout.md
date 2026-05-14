@@ -35,7 +35,7 @@ names without legacy aliases.
 ## Validation
 
 Validation evidence is recorded in
-`docs/evidence/ED-20260514-ar-c2-prometheus-sla-hardcut.md`.
+`docs/evidence/ed-20260514-ar-c2-prometheus-sla-hardcut.md`.
 
 ## Residual risk
 
