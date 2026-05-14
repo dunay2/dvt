@@ -843,3 +843,72 @@ test('tracked migrations separate component engineering views into an owning sch
   assert.match(schemaBoundaryMigration.sql, /responsibilities/);
   assert.match(schemaBoundaryMigration.sql, /metadata_state/);
 });
+
+test('tracked migrations reconcile DB-authored component file ownership after W38', () => {
+  const migrations = readMigrationFiles();
+  const ownershipReconciliationMigration = migrations.find(
+    (migration) => migration.fileName === '038_component_engineering_local_file_ownership.sql'
+  );
+
+  assert.ok(ownershipReconciliationMigration);
+  assert.match(
+    ownershipReconciliationMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_file_ownership_query/
+  );
+  assert.match(ownershipReconciliationMigration.sql, /governance_component_local_definitions/);
+  assert.match(ownershipReconciliationMigration.sql, /local_file_claims/);
+  assert.match(ownershipReconciliationMigration.sql, /claim_rank = 1/);
+  assert.match(ownershipReconciliationMigration.sql, /leaf_component_id/);
+  assert.match(ownershipReconciliationMigration.sql, /component_engineering\.file_ownership_query/);
+});
+
+test('tracked migrations derive component quality from effective file ownership after W39', () => {
+  const migrations = readMigrationFiles();
+  const effectiveQualityMigration = migrations.find(
+    (migration) => migration.fileName === '039_component_engineering_effective_quality.sql'
+  );
+
+  assert.ok(effectiveQualityMigration);
+  assert.match(
+    effectiveQualityMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_quality_query/
+  );
+  assert.match(effectiveQualityMigration.sql, /effective_file_counts/);
+  assert.match(effectiveQualityMigration.sql, /component_descendants/);
+  assert.match(effectiveQualityMigration.sql, /component_engineering_file_ownership_query/);
+  assert.match(effectiveQualityMigration.sql, /component_engineering\.component_quality_query/);
+});
+
+test('tracked migrations keep claimed or stale work out of next tasks after W40', () => {
+  const migrations = readMigrationFiles();
+  const nextTaskClaimMigration = migrations.find(
+    (migration) => migration.fileName === '040_planning_next_task_claim_boundary.sql'
+  );
+  const activeClaimBoundaryMigration = migrations.find(
+    (migration) => migration.fileName === '041_planning_claim_recovery_active_claim_boundary.sql'
+  );
+
+  assert.ok(nextTaskClaimMigration);
+  assert.ok(activeClaimBoundaryMigration);
+  assert.match(
+    nextTaskClaimMigration.sql,
+    /create or replace view planning_query_store\.planning_next_tasks/
+  );
+  assert.match(nextTaskClaimMigration.sql, /candidate\.claimed_by is null/);
+  assert.match(nextTaskClaimMigration.sql, /candidate\.claim_expires_at is null/);
+  assert.match(
+    nextTaskClaimMigration.sql,
+    /create or replace view planning_query_store\.planning_claim_recovery_tasks/
+  );
+  assert.match(
+    activeClaimBoundaryMigration.sql,
+    /create or replace view planning_query_store\.planning_claim_recovery_tasks/
+  );
+  assert.match(activeClaimBoundaryMigration.sql, /in_progress_claim_missing/);
+  assert.match(activeClaimBoundaryMigration.sql, /claim_expired/);
+  assert.match(activeClaimBoundaryMigration.sql, /queued_claim_owner_missing/);
+  assert.doesNotMatch(
+    activeClaimBoundaryMigration.sql,
+    /lower\(task\.status\) = 'queued'\s+and\s+\(\s+task\.claimed_by is not null\s+or task\.claim_expires_at is not null/s
+  );
+});

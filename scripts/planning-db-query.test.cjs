@@ -380,6 +380,24 @@ test('parseArgs parses component engineering record schema version filters', () 
 });
 
 test('parseArgs parses component engineering rule filters', () => {
+  assert.deepEqual(
+    parseArgs(['component-tree', '--children-of', 'SYS-RUNTIME-ENGINE-CORE', '--limit', '20']),
+    {
+      queryName: 'component-tree',
+      filters: {
+        parentUnit: 'SYS-RUNTIME-ENGINE-CORE',
+        limit: 20,
+      },
+    }
+  );
+
+  assert.deepEqual(parseArgs(['component-tree', '--parent-unit', 'SYS-RUNTIME-ENGINE-CORE']), {
+    queryName: 'component-tree',
+    filters: {
+      parentUnit: 'SYS-RUNTIME-ENGINE-CORE',
+    },
+  });
+
   assert.deepEqual(parseArgs(['component-rules', '--kind', 'responsibility', '--limit', '5']), {
     queryName: 'component-rules',
     filters: {
@@ -425,9 +443,11 @@ test('parseArgs parses component engineering rule filters', () => {
       'SYS-RUNTIME-ENGINE-CORE',
       '--state',
       'coverage-required',
+      '--no-refresh',
     ]),
     {
       queryName: 'component-metadata',
+      autoImportGovernance: false,
       filters: {
         component: 'SYS-RUNTIME-ENGINE-CORE',
         governanceState: 'coverage-required',
@@ -1764,9 +1784,16 @@ test('governance row builders format DB rows for CLI output', () => {
       {
         component_id: 'SYS-RUNTIME-ENGINE-CORE',
         drift_code: 'children_required_without_children',
+        metadata: { componentId: 'SYS-RUNTIME-ENGINE-CORE' },
       },
     ]),
-    [['SYS-RUNTIME-ENGINE-CORE', 'children_required_without_children']]
+    [
+      [
+        'SYS-RUNTIME-ENGINE-CORE',
+        'children_required_without_children',
+        '{"componentId":"SYS-RUNTIME-ENGINE-CORE"}',
+      ],
+    ]
   );
   assert.deepEqual(
     buildComponentEngineeringComponentMetadataRows([

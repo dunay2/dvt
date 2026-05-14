@@ -2047,6 +2047,15 @@ redGreenCycles:
       - docs/planning/state/how-to-add-tasks.md
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+  - id: planning-db-next-task-claim-boundary
+    redTest: node --test scripts/planning-db-migrate.test.cjs
+    expectedFailure: planning_next_tasks still includes queued rows that carry active or stale claim fields, and claim recovery treats active queued leases as recoverable work.
+    patchSurfaces:
+      - tools/planning-db/migrations/040_planning_next_task_claim_boundary.sql
+      - tools/planning-db/migrations/041_planning_claim_recovery_active_claim_boundary.sql
+      - scripts/planning-db-migrate.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: node --test scripts/planning-db-migrate.test.cjs
   - id: planning-db-backed-route-actionables
     redTest: node --test scripts/generate-workboard.test.cjs
     expectedFailure: DB-backed workboard generation still computes open-task-route Actionable Now rows from JavaScript dependency parsing instead of planning_next_tasks.
