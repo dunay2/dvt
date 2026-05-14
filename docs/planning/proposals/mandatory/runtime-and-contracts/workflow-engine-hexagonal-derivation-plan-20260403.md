@@ -341,7 +341,7 @@ architectureGuards:
 cypressFlows:
   - Not applicable - engine architecture documentation and semantic guard only
 completionGate:
-  - pnpm docs:feature-mechanization -- --feature WE-HX-0-HARDCUT-CANONICAL-MAP
+  - pnpm docs:feature-mechanization --feature WE-HX-0-HARDCUT-CANONICAL-MAP
   - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts test/architecture/workflowEngineSemanticClosure.architecture.test.ts test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
   - pnpm --filter @dvt/engine typecheck
   - pnpm docs:sync

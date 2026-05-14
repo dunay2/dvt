@@ -11,7 +11,7 @@ code_refs:
   - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
 evidence:
   tests:
-    - pnpm docs:feature-mechanization -- --feature WE-HX-0-HARDCUT-CANONICAL-MAP
+    - pnpm docs:feature-mechanization --feature WE-HX-0-HARDCUT-CANONICAL-MAP
     - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts test/architecture/workflowEngineSemanticClosure.architecture.test.ts test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
 ---
 
