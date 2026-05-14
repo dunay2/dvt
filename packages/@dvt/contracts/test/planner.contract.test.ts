@@ -4,6 +4,7 @@ import { URL } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
+import type { ExecutionPlan as EngineVisibleExecutionPlan } from '../src/contracts/engine/RunStateVocabulary.v1.js';
 import {
   type ExecutionPlan,
   GENERIC_GRAPH_SOURCE_KIND,
@@ -11,7 +12,6 @@ import {
   type PlannerInputEnvelopeV1,
 } from '../src/contracts/planner/ExecutionPlan.v1.js';
 import { type IPlanner } from '../src/contracts/planner/IExecutionPlanner.v1.js';
-import type { ExecutionPlan as EngineVisibleExecutionPlan } from '../src/engine/IRunStateStore.v1.js';
 import { CURRENT_EXECUTION_PLAN_VERSION } from '../src/index.js';
 import {
   ExecutionPlanSchema,

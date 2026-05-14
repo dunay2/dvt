@@ -30,7 +30,7 @@ That seam is not a one-off bug. It is a boundary-ownership problem.
 - [Run Events Contract v1](../../architecture/components/engine/contracts/engine/RunEvents.v1.md)
 - [TF-C2-B read-surface evidence closeout](../closeouts/20260408-tf-c2-b-read-surface-evidence-closeout.md)
 - [TF-C2-B runtime read-surface evidence](../../evidence/ED-20260408-tf-c2-b-read-surface-evidence.md)
-- [IRunStateStore.v1.ts](../../../packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts)
+- [RunStateVocabulary.v1.ts](../../../packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts)
 - [applyRunEvent.ts](../../../packages/@dvt/run-domain/src/applyRunEvent.ts)
 - [mapEventEnvelopeToProjectableEvent.ts](../../../packages/@dvt/run-domain/src/mapEventEnvelopeToProjectableEvent.ts)
 
@@ -395,7 +395,7 @@ Produce one short decision package that answers:
 
 - `packages/@dvt/contracts/src/schemas.ts`
 - `packages/@dvt/contracts/src/types/contracts.ts`
-- `packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts`
+- `packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts`
 - `packages/@dvt/run-domain/src/mapEventEnvelopeToProjectableEvent.ts`
 - write-boundary tests in contracts / engine / adapter layers
 

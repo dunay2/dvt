@@ -134,6 +134,7 @@ Evidence documents that justify or validate relevant changes.
 - [Summary](ed-20260426-api-tenant-qa-hardening.md)
 - [Summary](ed-20260427-rc-g1-d-planner-ownership-migration.md)
 - [Summary](ed-20260429-plan-admission-hard-cut.md)
+- [Summary](ed-20260514-rc-g1-contract-ownership-closure.md)
 - [Summary](ed-20260514-s08-plan-store-inventory-drift.md)
 - [Temporal SDK 1.16.1 Patch Upgrade](ed-20260430-temporal-sdk-1-16-1-patch-upgrade.md)
 - [Temporal Step Plugin Semantics Hardening](ed-20260429-temporal-step-plugin-semantics.md)

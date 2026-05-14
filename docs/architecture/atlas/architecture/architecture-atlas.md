@@ -24,8 +24,8 @@ For current truth, read:
 
 - [Atlas Home](../README.md)
 - [Atlas Index](../index.md)
-- [Engineering Playbook](../engineering/engineering_playbook.md)
-- [Completion Assessment](../status/code_completion_assessment_2026-03-06.md)
+- [Engineering Playbook](../engineering/engineering-playbook.md)
+- [Completion Assessment](../status/code-completion-assessment-2026-03-06.md)
 - [Current System Delivery Status](../../system-delivery-status.md)
 
 ## Historical Snapshot Notes
@@ -93,7 +93,7 @@ CANCELLED --> [*]
 
 ## Event Catalog (Code Contract)
 
-Persisted event types are defined in `packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts`:
+Persisted event types are defined in `packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts`:
 
 - RunQueued
 - RunStarted
@@ -168,7 +168,7 @@ Notes:
 
 ## References in This Atlas
 
-- Completion and effort model: `../status/code_completion_assessment_2026-03-06.md`
+- Completion and effort model: `../status/code-completion-assessment-2026-03-06.md`
 - Current execution status:
   `../../system-delivery-status.md`
 - Current planning route:
@@ -176,4 +176,4 @@ Notes:
 
 ## Next
 
-- Continue with [Engineering Playbook](../engineering/engineering_playbook.md)
+- Continue with [Engineering Playbook](../engineering/engineering-playbook.md)
