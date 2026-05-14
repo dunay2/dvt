@@ -7,7 +7,7 @@ Source: repository code snapshot on `main`
 
 - [Atlas Home](../README.md)
 - [Atlas Index](../index.md)
-- [Architecture Atlas](../architecture/architecture_atlas.md)
+- [Architecture Atlas](../architecture/architecture-atlas.md)
 - [Completion Assessment](../status/code_completion_assessment_2026-03-06.md)
 
 ## Repository Structure (Actual)
@@ -97,7 +97,7 @@ A feature is done when:
 
 ## Related Documents
 
-- Architecture atlas: `../architecture/architecture_atlas.md`
+- Architecture atlas: `../architecture/architecture-atlas.md`
 - Completion and effort assessment: `../status/code_completion_assessment_2026-03-06.md`
 - System delivery status: `../../system-delivery-status.md`
 - Roadmap of record: `../../planning/roadmap/index.md`

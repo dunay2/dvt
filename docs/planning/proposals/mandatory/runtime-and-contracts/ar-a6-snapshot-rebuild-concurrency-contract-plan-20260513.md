@@ -126,7 +126,7 @@ allowedImplementationSurfaces:
   - docs/guides/admin-rebuild-snapshot-technical-manual-20260405.md
   - docs/evidence/ed-20260513-ar-a6-snapshot-rebuild-concurrency-contract.md
   - docs/risk-register/quality/R-20260513-AR-A6-SNAPSHOT-REBUILD-CONCURRENCY-CONTRACT.yaml
-  - packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts
+  - packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts
   - packages/@dvt/contracts/test/run-state-store-maintenance-concurrency.architecture.test.ts
   - packages/@dvt/engine/src/ports/IRunStateStore.ts
   - packages/@dvt/adapter-postgres/src/PostgresRunSnapshotStore.ts
@@ -141,7 +141,7 @@ commandQueryRails:
 domainObjects:
   - name: IRunStateStoreMaintenance
     type: application port
-    owner: packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts
+    owner: packages/@dvt/engine/src/ports/IRunStateStore.ts
   - name: SnapshotRebuildConcurrencyInvariant
     type: contract invariant
     owner: docs/architecture/components/engine/contracts/state-store/snapshot-rebuild-concurrency-component.md
@@ -174,7 +174,7 @@ redGreenCycles:
     expectedFailure: live state-store port and docs do not yet declare portable per-run rebuild mutual exclusion semantics.
     patchSurfaces:
       - packages/@dvt/contracts/test/run-state-store-maintenance-concurrency.architecture.test.ts
-      - packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts
+      - packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts
       - packages/@dvt/engine/src/ports/IRunStateStore.ts
       - packages/@dvt/adapter-postgres/src/PostgresRunSnapshotStore.ts
       - docs/architecture/components/engine/contracts/state-store/snapshot-rebuild-concurrency-component.md
@@ -182,7 +182,7 @@ redGreenCycles:
     greenTest: pnpm --filter @dvt/contracts test -- test/run-state-store-maintenance-concurrency.architecture.test.ts
 symbols:
   - name: IRunStateStoreMaintenance.rebuildSnapshot
-    path: packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts
+    path: packages/@dvt/engine/src/ports/IRunStateStore.ts
     dddOwner: IRunStateStoreMaintenance
     cqRails:
       - StateStoreSnapshotRebuildMaintenanceCommand

@@ -93,7 +93,7 @@ CANCELLED --> [*]
 
 ## Event Catalog (Code Contract)
 
-Persisted event types are defined in `packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts`:
+Persisted event types are defined in `packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts`:
 
 - RunQueued
 - RunStarted

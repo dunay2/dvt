@@ -41,8 +41,8 @@ describe('state-store maintenance rebuild concurrency architecture', () => {
   });
 
   it('keeps rebuildSnapshot mutual exclusion in the live contracts', () => {
-    const contractSource = readFileSync(
-      join(import.meta.dirname, '../src/engine/IRunStateStore.v1.ts'),
+    const contractVocabularySource = readFileSync(
+      join(import.meta.dirname, '../src/contracts/engine/RunStateVocabulary.v1.ts'),
       'utf8'
     );
     const enginePortSource = readFileSync(
@@ -50,16 +50,47 @@ describe('state-store maintenance rebuild concurrency architecture', () => {
       'utf8'
     );
 
-    for (const source of [contractSource, enginePortSource]) {
-      expect(source).toContain('@ownedConcern');
-      expect(source).toContain('IRunStateStoreMaintenance');
-      expect(source).toContain('rebuildSnapshot(tenantId: string, runId: string)');
-      expect(source).toContain('per `(tenantId, runId)`');
-      expect(source).toContain('one rebuild may mutate the durable snapshot at a time');
-      expect(source).toContain('serialize');
-      expect(source).toContain('typed transient concurrency error');
-      expect(source).not.toContain('MUST use PostgreSQL advisory locks');
-      expect(source).not.toContain('MUST use pg_advisory_xact_lock');
+    expect(contractVocabularySource).toContain('@ownedConcern');
+    expect(contractVocabularySource).toMatch(/export\s+interface\s+WorkflowSnapshot\b/);
+    expect(contractVocabularySource).toMatch(/export\s+type\s+EventEnvelope\b/);
+
+    expect(enginePortSource).toContain('@ownedConcern');
+    expect(enginePortSource).toMatch(/export\s+interface\s+IRunStateStoreMaintenance\b/);
+    expect(enginePortSource).toMatch(
+      /rebuildSnapshot\(\s*tenantId:\s*string,\s*runId:\s*string\s*\):\s*Promise<WorkflowSnapshot>;/
+    );
+    expect(enginePortSource).toContain('per `(tenantId, runId)`');
+    expect(enginePortSource).toContain('typed transient concurrency error');
+    expect(enginePortSource).not.toContain('MUST use PostgreSQL advisory locks');
+    expect(enginePortSource).not.toContain('MUST use pg_advisory_xact_lock');
+  });
+
+  it('keeps engine-owned state-store behavior ports out of @dvt/contracts files and barrels', () => {
+    const contractRoot = readFileSync(join(import.meta.dirname, '../src/index.ts'), 'utf8');
+    const legacyRoot = readFileSync(join(import.meta.dirname, '../index.js'), 'utf8');
+    const contractVocabularySource = readFileSync(
+      join(import.meta.dirname, '../src/contracts/engine/RunStateVocabulary.v1.ts'),
+      'utf8'
+    );
+
+    expect(existsSync(join(import.meta.dirname, '../src/engine/IRunStateStore.v1.ts'))).toBe(false);
+
+    const forbiddenBehaviorSymbols = [
+      'IRunStateStore',
+      'IRunStateStoreWrite',
+      'IRunStateStoreRead',
+      'IRunStateStoreMaintenance',
+      'RunStateCommandPort',
+      'IClock',
+      'IIdempotencyKeyBuilder',
+    ] as const;
+
+    for (const forbiddenSymbol of forbiddenBehaviorSymbols) {
+      expect(contractVocabularySource).not.toMatch(
+        new RegExp(`export\\s+(?:interface|type)\\s+${forbiddenSymbol}\\b`)
+      );
+      expect(contractRoot).not.toContain(forbiddenSymbol);
+      expect(legacyRoot).not.toContain(forbiddenSymbol);
     }
   });
 

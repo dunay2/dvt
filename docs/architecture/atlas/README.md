@@ -1,4 +1,4 @@
-﻿# DVT Architecture Atlas
+# DVT Architecture Atlas
 
 Code-aligned snapshot under `docs/architecture/`.
 
@@ -7,14 +7,14 @@ reference set, not the canonical home for ADRs or active execution tracking.
 
 ## Start Here
 
-- [Architecture Atlas](./architecture/architecture_atlas.md): current implemented architecture map
+- [Architecture Atlas](./architecture/architecture-atlas.md): current implemented architecture map
 - [Completion Assessment](./status/code_completion_assessment_2026-03-06.md): completion percentages + effort
 - [System Delivery Status](../system-delivery-status.md): current repository truth
 - [Roadmap Of Record](../../planning/roadmap/index.md): active planning route
 
 ## Full Contents
 
-- [Architecture Atlas](./architecture/architecture_atlas.md)
+- [Architecture Atlas](./architecture/architecture-atlas.md)
 - [Engineering Playbook](./engineering/engineering_playbook.md)
 - [Code Completion Assessment (2026-03-06)](./status/code_completion_assessment_2026-03-06.md)
 - [System Delivery Status](../system-delivery-status.md)
@@ -22,7 +22,7 @@ reference set, not the canonical home for ADRs or active execution tracking.
 
 ## Suggested Reading Path
 
-1. [Architecture Atlas](./architecture/architecture_atlas.md)
+1. [Architecture Atlas](./architecture/architecture-atlas.md)
 2. [Engineering Playbook](./engineering/engineering_playbook.md)
 3. [Completion Assessment](./status/code_completion_assessment_2026-03-06.md)
 4. [System Delivery Status](../system-delivery-status.md)

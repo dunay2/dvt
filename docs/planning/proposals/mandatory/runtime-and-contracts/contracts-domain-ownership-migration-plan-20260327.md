@@ -1,8 +1,8 @@
 ---
 title: Contracts Domain Ownership Migration Plan
-status: Active
+status: Accepted
 owner: Architecture / Contracts / Engine / Planner / Delivery / Artifacts / Traceability
-last_reviewed: 2026-04-19
+last_reviewed: 2026-05-14
 planning_type: proposal
 ---
 
@@ -30,13 +30,13 @@ Separate physical and semantic ownership so that:
 3. the dependency graph reflects real domain ownership instead of historical
    convenience
 
-## Active tracker
+## Accepted tracker
 
-This document is the active canonical proposal for `RC-G1`.
+This document is the accepted canonical proposal for `RC-G1`.
 
 - operational tracker: `docs/planning/state/agent-lane-a.yaml`
 - umbrella task: `RC-G1`
-- active slices:
+- delivered slices:
   - `RC-G1-A`: ownership-matrix freeze
   - `RC-G1-B`: engine ports migration
     - `RC-G1-B1`: docs/contracts-first inventory freeze plus residual-import
@@ -46,10 +46,20 @@ This document is the active canonical proposal for `RC-G1`.
     - `RC-G1-B4`: guards, ARC-2, and closeout validation
   - `RC-G1-C`: delivery / traceability / artifacts migration
   - `RC-G1-D`: planner-private migration plus final shared-kernel cleanup
+- parent closure:
+  - `RC-G1`: final engine/planner/shared hardcut and truth sync, recorded in
+    `docs/planning/closeouts/20260514-rc-g1-contract-ownership-closure-closeout.md`
 - completion note:
+  - `RC-G1-B` is delivered by
+    `docs/evidence/ED-20260411-rc-g1-b4-engine-shared-kernel-hardening.md`
   - `RC-G1-C` is delivered by
     `docs/evidence/ED-20260419-rc-g1-c-owner-package-migration.md`
-  - remaining live `RC-G1` execution is `RC-G1-D`
+  - `RC-G1-D` is delivered by
+    `docs/evidence/ed-20260427-rc-g1-d-planner-ownership-migration.md`
+  - `RC-G1` parent closure is delivered by
+    `docs/evidence/ed-20260514-rc-g1-contract-ownership-closure.md`
+  - no live `RC-G1` execution remains; future ownership drift must open a new
+    task instead of extending this closed migration
 
 Do not open a second proposal for this same migration.
 
@@ -286,7 +296,16 @@ convenience wrappers.
 **Current repo-state closure note**
 
 - `packages/@dvt/contracts/src/index.ts` no longer re-exports
-  `IPlanFetcher` or `IPlanIntegrityValidator`
+  `IPlanFetcher`, `IPlanIntegrityValidator`, `IProviderAdapter`,
+  `IRunStateStore`, `RunStateCommandPort`, `IClock`, or
+  `IIdempotencyKeyBuilder`
+- `packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts`,
+  `packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts`, and
+  `packages/@dvt/contracts/src/contracts/engine/IProjector.v1.ts` are removed
+  from the shared kernel
+- `packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts`
+  retains only shared serializable run-state vocabulary such as events,
+  snapshots, artifact refs, metadata, and idempotency input shapes
 - `packages/@dvt/contracts/src/contracts/engine/ExecutionSemantics.v1.ts`
   no longer re-exports `IClock`, `IIdempotencyKeyBuilder`, `IPlanFetcher`, or
   `IPlanIntegrityValidator`
@@ -301,7 +320,9 @@ convenience wrappers.
 - consequence:
   - `RC-G1-B4` is closed
   - `RC-G1-B` is closed
-  - remaining `RC-G1` execution is `RC-G1-D`
+  - `RC-G1-D` subsequently closed planner-private ownership
+  - `RC-G1` parent closure removed the residual physical shared-kernel engine
+    behavior files and legacy root artifact
 
 ## Executable sub-slices for `RC-G1-C`
 
@@ -460,6 +481,15 @@ This document acts as the dedicated tracker for the work governed by ADR-0034.
   - validation baseline: ARC-2 evidence, touched-package tests, and
     `pnpm verify:prepush`
   - rollback note: preserve dual exports only until the full closure is ready
+- `RC-G1`
+  - owner: Architecture + Contracts + Engine + Planner
+  - target date: `2026-05-14`
+  - touched scope: `@dvt/contracts`, architecture tests, active architecture
+    docs, ARC evidence, risk register, and planning DB state
+  - validation baseline: ARC-2 evidence, contracts build/test/typecheck,
+    docs sync/status generation, planning DB closure, and `pnpm verify:prepush`
+  - rollback note: revert the parent closure if any removed shared-kernel
+    behavior port still has a governed consumer
 
 ## Risks and mitigations
 
@@ -487,6 +517,30 @@ This document acts as the dedicated tracker for the work governed by ADR-0034.
 3. No invalid residual imports remain between bounded contexts.
 4. Slice validations and `pnpm verify:prepush` pass.
 5. Contract and planning documentation stay in sync with no drift.
+
+## Parent Closure - 2026-05-14
+
+`RC-G1` is closed as of 2026-05-14.
+
+The final parent slice removed residual physical drift that remained after the
+sub-slice evidence:
+
+- `IProviderAdapter` exists only under `@dvt/engine`.
+- `IRunStateStore`, `RunStateCommandPort`, `IClock`, and
+  `IIdempotencyKeyBuilder` exist only as engine-owned behavior ports.
+- shared run-state DTOs now live in
+  `packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts`.
+- `IProjector` exists only under `@dvt/engine`.
+- the tracked legacy `packages/@dvt/contracts/index.js` entrypoint delegates to
+  the canonical source barrel instead of re-exporting removed adapter files.
+
+The closure guard is:
+
+- `packages/@dvt/contracts/test/provider-adapter.architecture.test.ts`
+- `packages/@dvt/contracts/test/run-state-store-maintenance-concurrency.architecture.test.ts`
+
+No compatibility alias or rollback seam remains in `@dvt/contracts` for the
+retired engine-owned behavior ports.
 
 ## References
 
