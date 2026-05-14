@@ -138,6 +138,7 @@ describe('WorkflowEngine boundary fitness architecture', () => {
       'expectMarkdownSections',
       'expectOwnedConcernHeader',
       'expectForbiddenTokensAbsent',
+      'getClassConstructorParameterPropertyTypes',
     ]) {
       expect(support).toContain(`export function ${exportedName}`);
     }

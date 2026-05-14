@@ -9,6 +9,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { URL, fileURLToPath } from 'node:url';
 
+import ts from 'typescript';
 import { expect } from 'vitest';
 
 export const ENGINE_ARCHITECTURE_TEST_ROOT = fileURLToPath(new URL('.', import.meta.url));
@@ -74,4 +75,52 @@ export function expectForbiddenTokensAbsent(
   for (const token of forbiddenTokens) {
     expect(source, `${sourcePath} must not contain ${token}`).not.toContain(token);
   }
+}
+
+export function getClassConstructorParameterPropertyTypes(
+  source: string,
+  className: string
+): Record<string, string> {
+  const sourceFile = ts.createSourceFile(
+    `${className}.architecture-fixture.ts`,
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TS
+  );
+  const constructorParameterProperties: Record<string, string> = {};
+
+  function visit(node: ts.Node): void {
+    if (ts.isClassDeclaration(node) && node.name?.text === className) {
+      for (const member of node.members) {
+        if (!ts.isConstructorDeclaration(member)) continue;
+        for (const parameter of member.parameters) {
+          if (!ts.isIdentifier(parameter.name) || !parameter.type) continue;
+          if (isParameterProperty(parameter)) {
+            constructorParameterProperties[parameter.name.text] =
+              parameter.type.getText(sourceFile);
+          }
+        }
+      }
+      return;
+    }
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return constructorParameterProperties;
+}
+
+function isParameterProperty(parameter: ts.ParameterDeclaration): boolean {
+  const modifiers = ts.canHaveModifiers(parameter) ? ts.getModifiers(parameter) : undefined;
+  return (
+    modifiers?.some((modifier) =>
+      [
+        ts.SyntaxKind.PublicKeyword,
+        ts.SyntaxKind.PrivateKeyword,
+        ts.SyntaxKind.ProtectedKeyword,
+        ts.SyntaxKind.ReadonlyKeyword,
+      ].includes(modifier.kind)
+    ) ?? false
+  );
 }
