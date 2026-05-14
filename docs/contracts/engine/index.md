@@ -12,6 +12,9 @@ Execution lifecycle, command, and event contracts for the workflow engine.
 ## Engine-owned behavior sources (`@dvt/engine`)
 
 - `packages/@dvt/engine/src/ports/IWorkflowEngine.ts`
+- `packages/@dvt/engine/src/adapters/IProviderAdapter.ts`
+- `packages/@dvt/engine/src/ports/IRunStateStore.ts`
+- `packages/@dvt/engine/src/ports/IProjector.ts`
 - `packages/@dvt/engine/src/ports/IStartRunIntentStore.ts`
 - `packages/@dvt/engine/src/domain/startRunIntentPolicy.ts`
 
@@ -19,10 +22,10 @@ Execution lifecycle, command, and event contracts for the workflow engine.
 
 - `packages/@dvt/contracts/src/contracts/engine/ExecutionSemantics.v1.ts`
 - `packages/@dvt/contracts/src/contracts/engine/IOutboxStorage.v1.ts`
-- `packages/@dvt/contracts/src/contracts/engine/IProjector.v1.ts`
 - `packages/@dvt/contracts/src/contracts/engine/RunEvents.v1.ts`
 - `packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts`
 - `packages/@dvt/contracts/src/contracts/engine/RunExecutionPolicy.v1.ts`
+- `packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts`
 - `packages/@dvt/contracts/src/contracts/engine/SignalSemantics.v1.ts`
 - `packages/@dvt/contracts/src/contracts/engine/StartRunBoundary.v1.ts`
 

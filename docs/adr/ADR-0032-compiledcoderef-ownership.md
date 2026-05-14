@@ -5,7 +5,7 @@
 - **Owners**: Engine Domain / Planner / Traceability
 - **ARC Level**: ARC-2 (non-breaking contract extension, optional field)
 - **Related files**:
-  - [IRunStateStore.v1.ts](../../packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts)
+  - [RunStateVocabulary.v1.ts](../../packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts)
   - [ExecutionPlan.v1.ts](../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts)
   - [ADR-0003 — Execution Model](./ADR-0003-execution-model.md)
   - [ADR-0004 — Event Sourcing Strategy](./ADR-0004-event-sourcing-strategy.md)
@@ -183,7 +183,7 @@ Additionally: in systems where SQL resolution depends on runtime environment var
 
 ### 3.1 Canonical contract
 
-**New type in `packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts`**:
+**New type in `packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts`**:
 
 ```typescript
 /**
@@ -380,7 +380,7 @@ flowchart LR
 
 ### 5.1 Contract changes
 
-**File**: `packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts`
+**File**: `packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts`
 
 Add `CompiledCodeRef` interface (see §3.1). No breaking change — `EventInput.payload` is already `Record<string, unknown>`.
 
