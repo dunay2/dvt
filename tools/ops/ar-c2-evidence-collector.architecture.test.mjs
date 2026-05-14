@@ -167,14 +167,14 @@ test('allows AR-C2 INV-4 when metrics snapshots cover every sustained window', (
     JSON.stringify({
       windows: [
         {
-          signalKey: 'dvt.api.run_start.latency_ms',
+          signalKey: 'dvt_api_run_start_latency_seconds',
           window: '2026-05-13T12:00:00Z/2026-05-13T12:15:00Z',
           observed: 'p50=410ms, p99=1900ms',
           expected: 'p50 <= 500ms, p99 <= 2500ms (15m)',
           status: 'pass',
         },
         {
-          signalKey: 'dvt.api.plan_compile.latency_ms',
+          signalKey: 'dvt_api_plan_compile_latency_seconds',
           window: '2026-05-13T12:00:00Z/2026-05-13T12:15:00Z',
           observed: 'p50=900ms, p99=5200ms',
           expected: 'p50 <= 1200ms, p99 <= 6000ms (15m)',
@@ -209,7 +209,7 @@ test('allows AR-C2 INV-4 when metrics snapshots cover every sustained window', (
           status: 'pass',
         },
         {
-          signalKey: 'dvt_delivery_event_delivery_latency_ms',
+          signalKey: 'dvt_delivery_event_delivery_latency_seconds',
           window: '2026-05-13T12:00:00Z/2026-05-13T12:15:00Z',
           observed: 'p95=900ms, p99=3400ms',
           expected: 'p95 <= 1500ms, p99 <= 5000ms (15m)',
@@ -381,7 +381,7 @@ test('fails closed when a threshold-backed AR-C2 mapping row omits its SLA sourc
 
 | Logical signal | Logical metric ID | Exported metric / derived expression | SLO threshold | Alert policy | Target dashboard panel key | Alert threshold key(s) | Alert threshold source | Signal owner |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Start-run latency p50/p99 | dvt.api.run_start.latency_ms | dvt_api_run_start_latency_ms_bucket | p50 <= 500ms, p99 <= 2500ms (15m) | warning p99 > 2000ms (10m), critical p99 > 2500ms (15m) | ar-c2.start-run-latency | ar-c2.start-run-latency.warning, ar-c2.start-run-latency.critical |  | API runtime |
+| Start-run latency p50/p99 | dvt_api_run_start_latency_seconds | dvt_api_run_start_latency_seconds_bucket | p50 <= 500ms, p99 <= 2500ms (15m) | warning p99 > 2000ms (10m), critical p99 > 2500ms (15m) | ar-c2.start-run-latency | ar-c2.start-run-latency.warning, ar-c2.start-run-latency.critical |  | API runtime |
 `,
     'utf8'
   );

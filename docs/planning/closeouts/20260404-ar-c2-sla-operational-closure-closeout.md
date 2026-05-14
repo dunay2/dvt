@@ -115,6 +115,23 @@ pending evidence explicit.
   dashboard/alert evidence can be attached row-by-row without redefining shape.
 - `TODO-AR-C2-05..07` cannot be marked done without immutable dashboard/alert
   references and sustained validation windows.
+- `TODO-AR-C2-05` execution attempt (2026-05-14):
+  - command:
+    `pnpm ops:ar-c2:evidence -- --require-dashboard-alert-evidence`
+  - result: generated
+    `docs/runbooks/ar-c2-evidence-generated-latest.md` and failed closed with
+    `AR-C2_IMMUTABLE_EVIDENCE_MISSING`.
+  - dashboard blockers: 9 mapped panel keys are still missing immutable
+    dashboard evidence.
+  - alert blockers: 11 alert threshold keys are still missing immutable alert
+    evidence; this confirms `AR-C2-T3` remains blocked as well.
+  - Fowler outcome: this is a hidden-authority and documentation-drift guard,
+    not a product failure. `AR-C2-T2` remains blocked until an external
+    dashboard snapshot provides panel key, query expression, environment,
+    immutable reference, capture timestamp, and reviewer for every mapped row.
+  - corrective action in this slice: aligned the collector sustained-window
+    architecture test with the canonical `_seconds` metric IDs so test evidence
+    no longer carries legacy `_ms` aliases.
 - `TODO-AR-C2-08` execution attempts (2026-04-04):
   - command: `pnpm qa:artifact:check`
   - sandbox result: `No changed files detected. Skipping.`
@@ -141,6 +158,9 @@ pending evidence explicit.
 - immutable dashboard reference (UID/URL/export hash)
 - query expression per panel
 - capture timestamp and reviewer
+- current status (2026-05-14): blocked. The collector reports 9 missing panels
+  because no `AR_C2_DASHBOARD_SNAPSHOT_FILE` with immutable dashboard metadata
+  is available in this workspace.
 
 ### `AR-C2-T3` alert wiring evidence
 

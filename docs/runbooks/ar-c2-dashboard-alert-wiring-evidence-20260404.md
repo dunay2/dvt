@@ -27,7 +27,7 @@ Companion manuals:
 - `docs/runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md`
 - `docs/runbooks/api-runtime-sla-canonical-20260404.md`
 
-## Current verification snapshot (2026-04-04)
+## Current verification snapshot (2026-05-14)
 
 Repository-level search for versioned dashboard/alert config artifacts in this
 workspace did not find a governed source of truth for runtime monitor wiring.
@@ -43,6 +43,19 @@ Result:
 - canonical mapping table exists (`AR-C2-T1`)
 - no in-repo monitor-config-as-code artifact was found for AR-C2 dashboards and
   alerts
+- `pnpm ops:ar-c2:evidence -- --require-dashboard-alert-evidence` generated
+  the latest evidence artifact and failed closed with
+  `AR-C2_IMMUTABLE_EVIDENCE_MISSING`: 9 dashboard panels and 11 alert rules are
+  still missing immutable metadata.
+
+Fowler posture:
+
+- this is a hidden-authority guard, because dashboard completion must come from
+  immutable dashboard metadata rather than manual row edits;
+- this is documentation-drift protection, because canonical panel keys remain
+  target truth while execution evidence remains explicitly missing;
+- `AR-C2-T2` must stay blocked until a real `AR_C2_DASHBOARD_SNAPSHOT_FILE`
+  supplies complete `panels[]` metadata for every mapped signal.
 
 ## Completion evidence required
 
