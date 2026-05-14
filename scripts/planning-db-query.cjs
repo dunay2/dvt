@@ -30,6 +30,7 @@ const knownQueries = new Set([
   'units',
   'coverage',
   'remediation',
+  'debt',
   'drift',
   'commands',
   'pr-readiness',
@@ -56,6 +57,7 @@ const governanceProjectionQueryNames = new Set([
   'units',
   'coverage',
   'remediation',
+  'debt',
   'drift',
   'cer',
   'component-tree',
@@ -283,6 +285,8 @@ function buildSummaryRows(summary) {
     ['docs.resolution_overlays', summary.docsResolutionOverlays],
     ['docs.task_like_references', summary.docsTaskLikeReferences],
     ['docs.task_like_references.unknown', summary.docsTaskLikeReferencesUnknown],
+    ['risk.debt_items', summary.riskDebtItems],
+    ['risk.debt_items.open', summary.riskDebtItemsOpen],
     ['governance.files', summary.governanceFiles],
     ['governance.files.drift', summary.driftFiles],
     ['governance.files.legacy', summary.legacyFiles],
@@ -598,6 +602,17 @@ function buildGovernanceRemediationRows(rows) {
     row.component_unit ?? row.componentUnit,
     row.file_count ?? row.fileCount,
     compactText(row.reason),
+  ]);
+}
+
+function buildRiskDebtRows(rows) {
+  return rows.map((row) => [
+    row.priority,
+    row.status,
+    row.risk_id ?? row.riskId,
+    row.component_unit ?? row.componentUnit,
+    row.source_path ?? row.sourcePath,
+    compactText(row.title),
   ]);
 }
 
@@ -1156,6 +1171,27 @@ function governanceRemediationSelect() {
     from ${schemaName}.governance_remediation_query`;
 }
 
+function riskDebtSelect() {
+  return `
+    select
+      risk_id,
+      source_path,
+      title,
+      status,
+      owners,
+      severity,
+      probability,
+      priority,
+      component_unit,
+      root_unit,
+      domain_unit,
+      ddd_owner,
+      cq_rails,
+      is_open,
+      source_content_sha256
+    from ${schemaName}.risk_debt_query`;
+}
+
 function governanceDriftSelect() {
   return `
     select
@@ -1199,6 +1235,8 @@ async function readSummary(client) {
       (select count(*)::int from ${schemaName}.doc_resolution_overlays) as "docsResolutionOverlays",
       (select count(*)::int from ${schemaName}.doc_task_like_references) as "docsTaskLikeReferences",
       (select count(*)::int from ${schemaName}.doc_task_like_references where classification = 'unknown_task_like_id') as "docsTaskLikeReferencesUnknown",
+      (select count(*)::int from ${schemaName}.risk_debt_items) as "riskDebtItems",
+      (select count(*)::int from ${schemaName}.risk_debt_query where is_open = true) as "riskDebtItemsOpen",
       (select count(*)::int from ${schemaName}.governance_files) as "governanceFiles",
       (select count(*)::int from ${schemaName}.governance_files where is_drift = true) as "driftFiles",
       (select count(*)::int from ${schemaName}.governance_files where is_legacy = true) as "legacyFiles",
@@ -1838,6 +1876,35 @@ async function readGovernanceRemediationRows(client, filters = {}) {
   return result.rows;
 }
 
+async function readRiskDebtRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'priority', filters.priority);
+  appendFilter(predicates, params, 'status', filters.status);
+  appendFilter(predicates, params, 'component_unit', filters.component);
+  appendFilter(predicates, params, 'root_unit', filters.rootUnit);
+  appendFilter(predicates, params, 'domain_unit', filters.domainUnit);
+  appendFilter(predicates, params, 'source_path', filters.path);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${riskDebtSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by
+      case
+        when priority ~* '^P?[0-9]+$' then regexp_replace(priority, '^P', '', 'i')::int
+        else 9
+      end,
+      risk_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
 async function readGovernanceDriftRows(client, filters = {}) {
   const params = [];
   const predicates = [];
@@ -2262,6 +2329,15 @@ async function runQuery(options = {}) {
       return remediationRows;
     }
 
+    if (queryName === 'debt') {
+      const rows = await readRiskDebtRows(client, options.filters || {});
+      const debtRows = buildRiskDebtRows(rows);
+      if (options.print !== false) {
+        printTaskRows(debtRows);
+      }
+      return debtRows;
+    }
+
     if (queryName === 'drift') {
       const rows = await readGovernanceDriftRows(client, options.filters || {});
       const driftRows = buildGovernanceDriftRows(rows);
@@ -2358,6 +2434,7 @@ module.exports = {
   buildGovernanceFileRows,
   buildGovernanceUnitRows,
   buildGovernanceRemediationRows,
+  buildRiskDebtRows,
   buildHashDriftRows,
   buildComponentEngineeringComponentMetadataRows,
   buildKnowledgeActionRows,
@@ -2392,6 +2469,7 @@ module.exports = {
   readGovernanceFileRows,
   readGovernanceUnitRows,
   readGovernanceRemediationRows,
+  readRiskDebtRows,
   readKnowledgeActionRows,
   readKnowledgeDocumentRows,
   readMandatoryProposalGapRows,

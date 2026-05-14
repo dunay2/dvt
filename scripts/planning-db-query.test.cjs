@@ -17,6 +17,7 @@ const {
   buildGovernanceUnitRows,
   buildGovernanceRemediationRows,
   buildHashDriftRows,
+  buildRiskDebtRows,
   buildTaskGapRows,
   buildPrReadinessRows,
   buildSummaryRows,
@@ -33,6 +34,7 @@ const {
   readGovernanceFileRows,
   readGovernanceUnitRows,
   readGovernanceRemediationRows,
+  readRiskDebtRows,
   readPlanningArtifactRows,
   readPlanningDependencyRows,
   readPlanningEvidenceRows,
@@ -78,6 +80,7 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('units'), 'units');
   assert.equal(resolveQueryName('coverage'), 'coverage');
   assert.equal(resolveQueryName('remediation'), 'remediation');
+  assert.equal(resolveQueryName('debt'), 'debt');
   assert.equal(resolveQueryName('drift'), 'drift');
   assert.equal(resolveQueryName('commands'), 'commands');
   assert.equal(resolveQueryName('pr-readiness'), 'pr-readiness');
@@ -311,6 +314,33 @@ test('parseArgs parses work intake focus filters for DB-first work selection', (
       priority: 'P1',
       taskId: 'F-28-C',
       path: 'docs/planning/reviews/example.md',
+      limit: 10,
+    },
+  });
+});
+
+test('parseArgs parses risk debt query filters for DB-first debt work selection', () => {
+  const command = parseArgs([
+    'debt',
+    '--priority',
+    'P1',
+    '--status',
+    'Open',
+    '--component',
+    'SYS-PLANNING-DB',
+    '--path',
+    'docs/risk-register/quality/R-20260514-EXAMPLE-DEBT.yaml',
+    '--limit',
+    '10',
+  ]);
+
+  assert.deepEqual(command, {
+    queryName: 'debt',
+    filters: {
+      priority: 'P1',
+      status: 'Open',
+      component: 'SYS-PLANNING-DB',
+      path: 'docs/risk-register/quality/R-20260514-EXAMPLE-DEBT.yaml',
       limit: 10,
     },
   });
@@ -561,6 +591,8 @@ test('buildSummaryRows exposes planning and governance content counts without ex
     docsResolutionOverlays: 2,
     docsTaskLikeReferences: 30,
     docsTaskLikeReferencesUnknown: 4,
+    riskDebtItems: 12,
+    riskDebtItemsOpen: 5,
   });
 
   assert.deepEqual(rows, [
@@ -582,6 +614,8 @@ test('buildSummaryRows exposes planning and governance content counts without ex
     ['docs.resolution_overlays', 2],
     ['docs.task_like_references', 30],
     ['docs.task_like_references.unknown', 4],
+    ['risk.debt_items', 12],
+    ['risk.debt_items.open', 5],
     ['governance.files', 4255],
     ['governance.files.drift', 41],
     ['governance.files.legacy', 0],
@@ -636,6 +670,8 @@ test('readSummary counts review tasks from the effective task view without hash 
             docsResolutionOverlays: 2,
             docsTaskLikeReferences: 30,
             docsTaskLikeReferencesUnknown: 4,
+            riskDebtItems: 12,
+            riskDebtItemsOpen: 5,
           },
         ],
       };
@@ -656,6 +692,7 @@ test('readSummary counts review tasks from the effective task view without hash 
   assert.match(capturedSql, /doc_disposition_actions/);
   assert.match(capturedSql, /doc_resolution_overlays/);
   assert.match(capturedSql, /doc_task_like_references/);
+  assert.match(capturedSql, /risk_debt_items/);
   assert.doesNotMatch(capturedSql, /governance_file_hash_drift/);
 });
 
@@ -1533,6 +1570,64 @@ test('readGovernanceRemediationRows queries the DB governance remediation view',
   assert.match(captured.sql, /component_unit = \$2/);
   assert.match(captured.sql, /limit \$3/);
   assert.deepEqual(captured.params, ['P0', 'SYS-DOCS-GOVERNANCE', 5]);
+});
+
+test('readRiskDebtRows queries DB-owned risk debt with task-like filters', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readRiskDebtRows(client, {
+    priority: 'P1',
+    status: 'Open',
+    component: 'SYS-PLANNING-DB',
+    path: 'docs/risk-register/quality/R-20260514-EXAMPLE-DEBT.yaml',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.risk_debt_query/);
+  assert.match(captured.sql, /priority = \$1/);
+  assert.match(captured.sql, /status = \$2/);
+  assert.match(captured.sql, /component_unit = \$3/);
+  assert.match(captured.sql, /source_path = \$4/);
+  assert.match(captured.sql, /limit \$5/);
+  assert.deepEqual(captured.params, [
+    'P1',
+    'Open',
+    'SYS-PLANNING-DB',
+    'docs/risk-register/quality/R-20260514-EXAMPLE-DEBT.yaml',
+    5,
+  ]);
+});
+
+test('buildRiskDebtRows formats risk debt as actionable task rows', () => {
+  assert.deepEqual(
+    buildRiskDebtRows([
+      {
+        priority: 'P1',
+        status: 'Open',
+        risk_id: 'R-20260514-EXAMPLE-DEBT',
+        component_unit: 'SYS-PLANNING-DB',
+        source_path: 'docs/risk-register/quality/R-20260514-EXAMPLE-DEBT.yaml',
+        title: 'Example planning debt remains visible',
+      },
+    ]),
+    [
+      [
+        'P1',
+        'Open',
+        'R-20260514-EXAMPLE-DEBT',
+        'SYS-PLANNING-DB',
+        'docs/risk-register/quality/R-20260514-EXAMPLE-DEBT.yaml',
+        'Example planning debt remains visible',
+      ],
+    ]
+  );
 });
 
 test('readGovernanceDriftRows queries the DB governance drift view', async () => {

@@ -146,6 +146,27 @@ test('tracked migrations include the planning knowledge document relation rail',
   );
 });
 
+test('tracked migrations include governance component definition command rail tables', () => {
+  const migrations = readMigrationFiles();
+  const componentDefinitionMigration = migrations.find(
+    (migration) => migration.fileName === '037_governance_component_definition_commands.sql'
+  );
+
+  assert.ok(componentDefinitionMigration);
+  assert.match(
+    componentDefinitionMigration.sql,
+    /create table if not exists planning_query_store\.governance_component_local_definitions/
+  );
+  assert.match(
+    componentDefinitionMigration.sql,
+    /create table if not exists planning_query_store\.governance_component_local_operations/
+  );
+  assert.match(
+    componentDefinitionMigration.sql,
+    /create or replace view planning_query_store\.governance_component_definition_query/
+  );
+});
+
 test('tracked migrations include the effective planning task read model after W11', () => {
   const migrations = readMigrationFiles();
   const effectiveTaskMigration = migrations.find(
@@ -502,6 +523,40 @@ test('tracked migrations include component engineering record query after W23', 
   assert.match(cerMigration.sql, /governance_remediation_query/);
   assert.match(cerMigration.sql, /doc_task_reference_query/);
   assert.match(cerMigration.sql, /componentEngineeringRecord/);
+});
+
+test('tracked migrations expose risk register debt as DB work intake after W36', () => {
+  const migrations = readMigrationFiles();
+  const riskDebtMigration = migrations.find(
+    (migration) => migration.fileName === '036_risk_debt_work_intake.sql'
+  );
+
+  assert.ok(riskDebtMigration);
+  assert.match(
+    riskDebtMigration.sql,
+    /create table if not exists planning_query_store\.risk_debt_items/
+  );
+  assert.match(
+    riskDebtMigration.sql,
+    /create or replace view planning_query_store\.risk_debt_query/
+  );
+  assert.match(
+    riskDebtMigration.sql,
+    /create or replace view planning_query_store\.planning_work_intake_query/
+  );
+  assert.match(riskDebtMigration.sql, /'risk_debt'::text as intake_kind/);
+  assert.match(riskDebtMigration.sql, /risk_debt_query debt/);
+});
+
+test('tracked migrations keep risk debt out of the next-task table shape', () => {
+  const migrations = readMigrationFiles();
+  const riskDebtMigration = migrations.find(
+    (migration) => migration.fileName === '036_risk_debt_work_intake.sql'
+  );
+
+  assert.ok(riskDebtMigration);
+  assert.doesNotMatch(riskDebtMigration.sql, /insert into planning_query_store\.planning_tasks/);
+  assert.doesNotMatch(riskDebtMigration.sql, /alter table planning_query_store\.planning_tasks/);
 });
 
 test('tracked migrations link component engineering records to related test components after W24', () => {

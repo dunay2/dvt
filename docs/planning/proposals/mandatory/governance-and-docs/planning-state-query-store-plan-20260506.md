@@ -1702,6 +1702,9 @@ commandQueryRails:
   - name: QueryPlanningWorkIntake
     type: query
     dddOwner: PlanningWorkIntakeReadModel
+  - name: QueryRiskDebtWorkIntake
+    type: query
+    dddOwner: RiskDebtWorkIntakeReadModel
   - name: ExportGovernanceStateSnapshot
     type: command
     dddOwner: GovernanceStateExport
@@ -1778,6 +1781,9 @@ domainObjects:
   - name: PlanningWorkIntakeReadModel
     type: read model
     owner: Product / Architecture / Delivery / Docs
+  - name: RiskDebtWorkIntakeReadModel
+    type: read model
+    owner: Product / Architecture / Delivery / Docs
   - name: GovernanceStateExport
     type: command model
     owner: Docs governance
@@ -1803,6 +1809,7 @@ fowlerSignals:
   - Manual component contract reconstruction
   - Manual docs disposition resolution
   - Manual work intake reconstruction
+  - Risk register debt outside planning work intake
   - Mutable external tracker authority risk
 architectureGuards:
   - pnpm test:governance:refresh
@@ -1826,6 +1833,7 @@ completionGate:
   - pnpm planning:db:query docs-disposition --resolution all --limit 10
   - pnpm planning:db:query task-gaps --resolution all --limit 10
   - pnpm planning:db:query focus --limit 10
+  - pnpm planning:db:query debt --limit 10
   - pnpm planning:db:query cer --component SYS-API-HTTP-ENTRYPOINTS --limit 1
   - pnpm planning:db:query units --unit SYS-API-ROOT --limit 5
   - pnpm planning:db:query hash-drift
@@ -2084,6 +2092,14 @@ redGreenCycles:
       - scripts/planning-db-*.cjs
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+  - id: planning-db-risk-debt-work-intake-query
+    redTest: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
+    expectedFailure: Risk-register debt remains outside DB-owned work intake and cannot be selected through the planning query store.
+    patchSurfaces:
+      - tools/planning-db/**
+      - scripts/planning-db-*.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
   - id: planning-db-component-engineering-record-query
     redTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
     expectedFailure: Component engineering questions still require manually reconstructing purpose, ownership, contracts, tests, risks, and runtime evidence across governance indexes because no DB-owned component engineering record query view or planning:db:query cer adapter exists.
@@ -2812,6 +2828,46 @@ symbols:
   - <<: *planningDbContentSymbol
     name: readFocusRows
     path: scripts/planning-db-query.cjs
+  - &riskDebtWorkIntakeSymbol
+    name: riskDebtSelect
+    path: scripts/planning-db-query.cjs
+    dddOwner: RiskDebtWorkIntakeReadModel
+    cqRails:
+      - QueryRiskDebtWorkIntake
+      - QueryPlanningWorkIntake
+      - ImportPlanningStateQueryStore
+      - MigratePlanningQueryStoreSchema
+    fowlerSignals:
+      - Risk register debt outside planning work intake
+      - Manual work intake reconstruction
+      - Hidden query model inside YAML
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - risk/debt work intake has no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
+      - pnpm test:planning:db
+      - pnpm planning:db:query debt --limit 10
+  - <<: *riskDebtWorkIntakeSymbol
+    name: readRiskDebtRows
+    path: scripts/planning-db-query.cjs
+  - <<: *riskDebtWorkIntakeSymbol
+    name: buildRiskDebtRows
+    path: scripts/planning-db-query.cjs
+  - <<: *riskDebtWorkIntakeSymbol
+    name: buildRiskDebtSnapshot
+    path: scripts/planning-db-import.cjs
+  - <<: *riskDebtWorkIntakeSymbol
+    name: governanceField
+    path: scripts/planning-db-import.cjs
+  - <<: *riskDebtWorkIntakeSymbol
+    name: isRiskRegisterItemPath
+    path: scripts/planning-db-import.cjs
+  - <<: *riskDebtWorkIntakeSymbol
+    name: listTrackedRiskDocuments
+    path: scripts/planning-db-import.cjs
+  - <<: *riskDebtWorkIntakeSymbol
+    name: riskPriorityFromSeverityProbability
+    path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
     name: printRows
     path: scripts/planning-db-query.cjs
@@ -3151,6 +3207,9 @@ symbols:
     path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: buildInitialState
+    path: scripts/planning-db-operate.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: rebaseLocalStateToImportedSource
     path: scripts/planning-db-operate.cjs
   - <<: *planningDbLocalOperationSymbol
     name: toIso
