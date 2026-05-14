@@ -1,8 +1,8 @@
 ---
 title: F-04 Pending Findings Todo
-status: In Progress
+status: Accepted
 owner: Frontend / Architecture / QA
-last_reviewed: 2026-04-04
+last_reviewed: 2026-05-14
 planning_type: closeout
 ---
 
