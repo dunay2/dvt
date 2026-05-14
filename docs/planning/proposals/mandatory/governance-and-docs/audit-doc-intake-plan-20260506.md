@@ -81,6 +81,7 @@ allowedImplementationSurfaces:
   - docs/planning/reviews/index.md
   - docs/planning/index.md
   - docs/planning/status/**
+  - docs/archive/planning/proposals/ci-adr0-owner-consolidation-plan-20260511.md
   - docs/.manifest.json
 forbiddenImplementationSurfaces:
   - apps/**

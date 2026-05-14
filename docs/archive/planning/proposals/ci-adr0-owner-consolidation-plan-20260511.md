@@ -1,8 +1,8 @@
 ---
 title: CI ADR-0000 Owner Consolidation Plan
-status: Review
+status: Archived
 owner: Engineering / CI Governance
-last_reviewed: 2026-05-11
+last_reviewed: 2026-05-14
 planning_type: mandatory-proposal
 ---
 
@@ -94,12 +94,12 @@ version: 1
 featureId: CI-AUDIT-ADR0-OWNER
 mechanizationStatus: closed
 noHumanDecisionsRemaining: true
-implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/ci-adr0-owner-consolidation-plan-20260511.md
+implementationPlan: docs/archive/planning/proposals/ci-adr0-owner-consolidation-plan-20260511.md
 componentGuides:
   - docs/guides/testing-and-ci-capabilities.md
   - docs/planning/proposals/mandatory/governance-and-docs/verify-prepush-scope-router-plan-20260511.md
 userStories:
-  - docs/planning/proposals/mandatory/governance-and-docs/ci-adr0-owner-consolidation-plan-20260511.md
+  - docs/archive/planning/proposals/ci-adr0-owner-consolidation-plan-20260511.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -114,7 +114,9 @@ allowedImplementationSurfaces:
   - docs/generated-docs-policy.json
   - tools/ci/workflow-pattern-parity.test.mjs
   - docs/guides/testing-and-ci-capabilities.md
-  - docs/planning/proposals/mandatory/governance-and-docs/ci-adr0-owner-consolidation-plan-20260511.md
+  - docs/planning/reviews/ci-and-delivery/20260506-ci-build-audit-review.md
+  - docs/archive/planning/proposals/ci-adr0-owner-consolidation-plan-20260511.md
+  - docs/planning/closeouts/20260514-ci-audit-adr0-owner-closeout.md
   - docs/planning/status/**
   - docs/.manifest.json
   - docs/**/index.md
@@ -198,3 +200,11 @@ Quality Gate`, so governance failures appear in the workflow that owns
 - [x] Keep generated-doc size policy current after the new governed plan increased the local fingerprint baseline artifact.
 - [x] Run focused CI tooling tests.
 - [x] Run `pnpm verify:prepush`.
+
+## Closeout Update 2026-05-14
+
+The current repository state already matches the target topology: `PR Quality
+Gate` invokes `pnpm traceability:adr0` exactly once and `CI - Code Quality`
+does not invoke it. This closeout slice removed remaining documentation drift in
+the intake review and extended the workflow-pattern parity test to fail if that
+stale duplicate-owner wording returns.
