@@ -145,9 +145,9 @@ pending evidence explicit.
     alert snapshot or monitor configuration source proves rule id, expression,
     duration, severity, routing target, config source, capture timestamp, and
     reviewer.
-  - corrective action in this slice: `AR-C2-T3` remains blocked in Planning DB
-    with evidence references to the runbook, generated evidence, and Fowler
-    analysis.
+  - corrective action in this slice: record the fail-closed evidence and keep
+    `AR-C2-T3` out of completion posture until the immutable alert snapshot is
+    attached. The tracked lane bootstrap snapshot is not changed by this PR.
 - `TODO-AR-C2-08` execution attempts (2026-04-04):
   - command: `pnpm qa:artifact:check`
   - sandbox result: `No changed files detected. Skipping.`
