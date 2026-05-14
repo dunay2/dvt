@@ -843,3 +843,38 @@ test('tracked migrations separate component engineering views into an owning sch
   assert.match(schemaBoundaryMigration.sql, /responsibilities/);
   assert.match(schemaBoundaryMigration.sql, /metadata_state/);
 });
+
+test('tracked migrations reconcile DB-authored component file ownership after W38', () => {
+  const migrations = readMigrationFiles();
+  const ownershipReconciliationMigration = migrations.find(
+    (migration) => migration.fileName === '038_component_engineering_local_file_ownership.sql'
+  );
+
+  assert.ok(ownershipReconciliationMigration);
+  assert.match(
+    ownershipReconciliationMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_file_ownership_query/
+  );
+  assert.match(ownershipReconciliationMigration.sql, /governance_component_local_definitions/);
+  assert.match(ownershipReconciliationMigration.sql, /local_file_claims/);
+  assert.match(ownershipReconciliationMigration.sql, /claim_rank = 1/);
+  assert.match(ownershipReconciliationMigration.sql, /leaf_component_id/);
+  assert.match(ownershipReconciliationMigration.sql, /component_engineering\.file_ownership_query/);
+});
+
+test('tracked migrations derive component quality from effective file ownership after W39', () => {
+  const migrations = readMigrationFiles();
+  const effectiveQualityMigration = migrations.find(
+    (migration) => migration.fileName === '039_component_engineering_effective_quality.sql'
+  );
+
+  assert.ok(effectiveQualityMigration);
+  assert.match(
+    effectiveQualityMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_quality_query/
+  );
+  assert.match(effectiveQualityMigration.sql, /effective_file_counts/);
+  assert.match(effectiveQualityMigration.sql, /component_descendants/);
+  assert.match(effectiveQualityMigration.sql, /component_engineering_file_ownership_query/);
+  assert.match(effectiveQualityMigration.sql, /component_engineering\.component_quality_query/);
+});

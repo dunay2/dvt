@@ -94,6 +94,8 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/033_component_engineering_component_tree_leaf_filter.sql
   - tools/planning-db/migrations/034_component_engineering_rule_runtime.sql
   - tools/planning-db/migrations/035_component_engineering_schema_boundary.sql
+  - tools/planning-db/migrations/038_component_engineering_local_file_ownership.sql
+  - tools/planning-db/migrations/039_component_engineering_effective_quality.sql
   - docs/.manifest.json
   - docs/**/index.md
 forbiddenImplementationSurfaces:
@@ -261,6 +263,20 @@ redGreenCycles:
       - docs/architecture/components/ci-governance/component-engineering-invariants.md
       - docs/planning/status/db-surface-inventory.md
     greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+  - id: local-component-file-ownership-reconciliation
+    redTest: node --test scripts/planning-db-migrate.test.cjs
+    expectedFailure: DB-authored governance components do not participate in file ownership projections.
+    patchSurfaces:
+      - tools/planning-db/migrations/038_component_engineering_local_file_ownership.sql
+      - scripts/planning-db-migrate.test.cjs
+    greenTest: node --test scripts/planning-db-migrate.test.cjs
+  - id: effective-component-quality-rollup
+    redTest: node --test scripts/planning-db-migrate.test.cjs
+    expectedFailure: component quality size metrics still ignore effective DB-authored file ownership.
+    patchSurfaces:
+      - tools/planning-db/migrations/039_component_engineering_effective_quality.sql
+      - scripts/planning-db-migrate.test.cjs
+    greenTest: node --test scripts/planning-db-migrate.test.cjs
 symbols:
   - name: ComponentEngineeringCompositeHierarchyPlan
     path: docs/planning/proposals/mandatory/governance-and-docs/component-engineering-composite-hierarchy-plan-20260513.md
@@ -348,6 +364,32 @@ symbols:
     fowlerSignals:
       - Hidden Authority from component engineering semantics living under a generic planning query schema
       - Documentation Drift from rule evaluation metadata being mistaken for stable component metadata
+    architectureGuard: node --test scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/planning-db-migrate.test.cjs
+  - name: component_engineering_local_file_ownership_query
+    path: tools/planning-db/migrations/038_component_engineering_local_file_ownership.sql
+    dddOwner: Governance local operations
+    cqRails:
+      - ReadComponentHierarchy
+      - ValidateComponentEngineeringDrift
+    fowlerSignals:
+      - Boundary Drift from DB-authored child components not owning their matched files
+      - Hidden Authority from local component definitions being absent from file ownership reads
+    architectureGuard: node --test scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/planning-db-migrate.test.cjs
+  - name: component_engineering_effective_quality_query
+    path: tools/planning-db/migrations/039_component_engineering_effective_quality.sql
+    dddOwner: Governance local operations
+    cqRails:
+      - ReadComponentEngineeringQuality
+      - ValidateComponentEngineeringDrift
+    fowlerSignals:
+      - Responsibility Overload from component size metrics ignoring effective leaf ownership
+      - Documentation Drift from quality rollups disagreeing with file ownership reads
     architectureGuard: node --test scripts/planning-db-migrate.test.cjs
     cypressCoverage: N/A
     unitTests:
