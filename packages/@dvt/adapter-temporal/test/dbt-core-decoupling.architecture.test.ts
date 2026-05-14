@@ -12,10 +12,10 @@ import { describe, expect, it } from 'vitest';
 
 const ACTIVITY_ROOT = join(import.meta.dirname, '../src/activities');
 const PLUGIN_ROOT = join(import.meta.dirname, '../src/plugins');
-const DBT_PLUGIN_ROOT = join(import.meta.dirname, '../src/plugins/dbt');
 const WORKFLOW_ROOT = join(import.meta.dirname, '../src/workflows');
 const TEMPORAL_ADAPTER_ROOT = join(import.meta.dirname, '../src');
 const REPO_ROOT = join(import.meta.dirname, '../../../..');
+const DBT_PLUGIN_ROOT = join(REPO_ROOT, 'packages/@dvt/temporal-dbt-plugin/src');
 const ENGINE_SRC_ROOT = join(REPO_ROOT, 'packages/@dvt/engine/src');
 const DBT_PROFILE_GUIDE = join(
   REPO_ROOT,
@@ -104,6 +104,14 @@ describe('Temporal DBT core decoupling architecture', () => {
       expect(source).not.toContain('dbtPluginRunner');
       expect(source).not.toMatch(/\bDBT_PLUGIN_/);
     }
+  });
+
+  it('keeps the concrete DBT implementation outside the Temporal adapter package', () => {
+    const adapterIndex = readAdapterSource('index.ts');
+
+    expect(adapterIndex).not.toMatch(/\bDbt|DBT_|dbtPlugin/);
+    expect(adapterIndex).toContain('TemporalStepPluginProfile');
+    expect(adapterIndex).toContain('TemporalStepPluginRunner');
   });
 
   it('keeps engine source free of DBT-specific plugin ownership', () => {

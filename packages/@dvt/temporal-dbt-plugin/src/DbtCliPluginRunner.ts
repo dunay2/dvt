@@ -1,5 +1,5 @@
 /**
- * @file packages/@dvt/adapter-temporal/src/plugins/dbt/DbtCliPluginRunner.ts
+ * @file packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts
  * @ownedConcern Orchestrate DBT CLI plugin execution through focused DBT helpers
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0040: Retry Ownership And Attempt Authority
@@ -10,9 +10,8 @@
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import type { StepResult } from '@dvt/adapter-temporal';
 import type { IDbtProjectBundleReader } from '@dvt/artifacts';
-
-import type { StepResult } from '../../activities/activityTypes.js';
 
 import { buildDbtCliArgs } from './dbtCliArguments.js';
 import {

@@ -1,5 +1,5 @@
 /**
- * @file packages/@dvt/adapter-temporal/src/plugins/dbt/dbtCliProjectMaterializer.ts
+ * @file packages/@dvt/temporal-dbt-plugin/src/dbtCliProjectMaterializer.ts
  * @ownedConcern Materialize DBT project bundles into worker-local temporary directories
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0014: Run-Driven Adapter Model

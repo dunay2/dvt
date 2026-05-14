@@ -1,5 +1,5 @@
 /**
- * @file packages/@dvt/adapter-temporal/src/plugins/dbt/dbtPluginManifest.ts
+ * @file packages/@dvt/temporal-dbt-plugin/src/dbtPluginManifest.ts
  * @ownedConcern Declare the Temporal DBT plugin manifest and its step-kind to CLI-command map
  * @baseline ADR-0003: Execution Model
  * @decision Keep DBT plan-step support in one plugin-owned manifest instead of scattered allowlists

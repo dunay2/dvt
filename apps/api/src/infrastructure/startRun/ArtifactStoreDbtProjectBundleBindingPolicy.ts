@@ -1,7 +1,6 @@
 /**
  * @ownedConcern Register DBT artifact-store admission as an API infrastructure plugin requirement.
  */
-import { DBT_PLUGIN_ID, TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS } from '@dvt/adapter-temporal';
 import {
   ArtifactReadError,
   assertDbtProjectBundleBinding,
@@ -13,6 +12,7 @@ import {
   type IRunExecutionContextBindingPolicy,
   type RunExecutionContextPluginRequirement,
 } from '@dvt/engine';
+import { DBT_PLUGIN_ID, TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS } from '@dvt/temporal-dbt-plugin';
 
 export interface ArtifactStoreDbtProjectBundleBindingPolicyOptions {
   readonly bundleStore: DbtProjectBundleArtifactStore | undefined;

@@ -3,7 +3,6 @@
  */
 import type {
   ActivityDeps,
-  DbtPluginRunner,
   RunStateCommandCircuitSnapshot,
   TemporalAdapterConfig,
   TemporalPlanArtifactReader,
@@ -11,6 +10,7 @@ import type {
 } from '@dvt/adapter-temporal';
 import type { IDbtProjectBundleReader, IRunExecutionContextReader } from '@dvt/artifacts';
 import type { AppendResult, EventInput, RunBootstrapInput } from '@dvt/engine';
+import type { DbtPluginRunner } from '@dvt/temporal-dbt-plugin';
 
 import type { Env } from '../plugins/env.js';
 

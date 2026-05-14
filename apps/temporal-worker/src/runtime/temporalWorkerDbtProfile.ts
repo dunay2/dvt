@@ -1,18 +1,18 @@
 /**
  * @ownedConcern Build the optional DBT worker profile and step activity registry.
  */
-import {
-  DbtCliPluginRunner,
-  DBT_PLUGIN_ID,
-  assertDbtCliAvailable,
-  createDbtStepActivityRegistry,
-  type TemporalStepPluginProfile,
-} from '@dvt/adapter-temporal';
+import { type TemporalStepPluginProfile } from '@dvt/adapter-temporal';
 import {
   ArtifactBackedDbtProjectBundleReader,
   ArtifactBackedRunExecutionContextReader,
   type DbtProjectBundleArtifactStore,
 } from '@dvt/artifacts';
+import {
+  DbtCliPluginRunner,
+  DBT_PLUGIN_ID,
+  assertDbtCliAvailable,
+  createDbtStepActivityRegistry,
+} from '@dvt/temporal-dbt-plugin';
 
 import type { Env } from '../plugins/env.js';
 

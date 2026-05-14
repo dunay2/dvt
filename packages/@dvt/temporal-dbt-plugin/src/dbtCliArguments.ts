@@ -1,5 +1,5 @@
 /**
- * @file packages/@dvt/adapter-temporal/src/plugins/dbt/dbtCliArguments.ts
+ * @file packages/@dvt/temporal-dbt-plugin/src/dbtCliArguments.ts
  * @ownedConcern Translate DBT plugin step metadata into DBT CLI arguments
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0014: Run-Driven Adapter Model

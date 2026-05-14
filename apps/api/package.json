@@ -29,6 +29,7 @@
     "@dvt/observability-otel": "workspace:*",
     "@dvt/plan-verifier": "workspace:*",
     "@dvt/planner": "workspace:*",
+    "@dvt/temporal-dbt-plugin": "workspace:*",
     "@fastify/cors": "^11.2.0",
     "@fastify/helmet": "^12.0.0",
     "@fastify/rate-limit": "^10.3.0",

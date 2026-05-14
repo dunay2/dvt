@@ -1,6 +1,6 @@
 /**
  * @file packages/@dvt/adapter-temporal/src/index.ts
- * @ownedConcern Publish the Temporal adapter and worker plugin public module surface
+ * @ownedConcern Publish the generic Temporal adapter and step-plugin public module surface
  * @baseline ADR-0001: Temporal Integration Test Policy (Build Preconditions + Lifecycle Discipline)
  * @baseline ADR-0003: Execution Model
  * @decision Section 3 — Expose a stable adapter boundary for client/worker/workflow mapping components
@@ -71,6 +71,11 @@ export type {
   StepResult,
   TemporalPlanArtifactReader,
 } from './activities/stepActivities.js';
+export type {
+  StepDefinition,
+  StepExecutionContext,
+  StepExecutionIdentity,
+} from './activities/activityTypes.js';
 export {
   createActivities,
   createDefaultStepActivityRegistry,
@@ -79,23 +84,10 @@ export {
   StepActivityDispatcher,
   UnsupportedStepKindError,
 } from './activities/stepActivities.js';
+export { ActivityErrorCode, createPermanentStepFailure } from './activities/activityFailures.js';
 export type { TemporalStepPluginRunner } from './plugins/TemporalStepPluginRunner.js';
 export type { TemporalStepPluginProfile } from './plugins/TemporalStepPluginProfile.js';
 export { composeTemporalStepPluginRegistries } from './plugins/TemporalStepPluginProfile.js';
-export type {
-  DbtPluginExecutionInput,
-  DbtPluginRunner,
-  DbtStepActivityDeps,
-} from './plugins/dbt/dbtPluginTypes.js';
-export { DbtStepActivity, createDbtStepActivityRegistry } from './plugins/dbt/DbtStepActivity.js';
-export {
-  DBT_PLUGIN_ID,
-  TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS,
-  resolveDbtCliSubcommand,
-  type DbtCliSubcommand,
-  type TemporalDbtPluginExecutableStepKind,
-} from './plugins/dbt/dbtPluginManifest.js';
-export { DbtCliPluginRunner, assertDbtCliAvailable } from './plugins/dbt/DbtCliPluginRunner.js';
 export type { RunStateCommandCircuitSnapshot } from './RunStateCommandPortCircuitBreaker.js';
 export { CircuitBreakingRunStateCommandPort } from './RunStateCommandPortCircuitBreaker.js';
 

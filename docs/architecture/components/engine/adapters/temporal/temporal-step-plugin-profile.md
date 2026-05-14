@@ -67,8 +67,9 @@ It does **not** own:
   implementation types.
 - Duplicate step-kind claims fail closed with
   `TEMPORAL_STEP_PLUGIN_KIND_CONFLICT:<pluginId>:<stepKind>`.
-- DBT-specific code may appear under `src/plugins/dbt` and worker/API
-  composition roots, but not in engine source or generic plugin composition.
+- DBT-specific code may appear under `@dvt/temporal-dbt-plugin` and worker/API
+  composition roots, but not in engine source, the generic Temporal adapter
+  root API, or generic plugin composition.
 - Workflow artifact event payloads are emitted from generic
   `compiledCodeRef`, not from DBT step-kind allowlists.
 - A future SQL plugin must be addable by providing a new
@@ -93,7 +94,7 @@ It does **not** own:
 - `packages/@dvt/adapter-temporal/src/activities/activityFactory.ts` receives
   the composed registry.
 - `StepActivityDispatcher` performs generic runtime dispatch.
-- `src/plugins/dbt` is the first concrete plugin profile.
+- `@dvt/temporal-dbt-plugin` is the first concrete plugin package.
 - API infrastructure may register plugin-specific admission requirements while
   keeping engine admission generic.
 - Architecture tests consume this guide as a semantic fitness function.
@@ -109,7 +110,8 @@ It does **not** own:
 | `src/activities/activityFactory.ts`                                  | Activity assembly with optional runtime registry         |
 | `src/workflows/workflowArtifactHelpers.ts`                           | Plugin-agnostic artifact payload interpretation          |
 | `apps/temporal-worker/src/runtime/temporalWorkerRuntimeResources.ts` | Worker resource composition and profile merge            |
-| `apps/temporal-worker/src/runtime/temporalWorkerDbtProfile.ts`       | First concrete DBT plugin profile                        |
+| `packages/@dvt/temporal-dbt-plugin/src/index.ts`                     | First concrete DBT plugin package public API             |
+| `apps/temporal-worker/src/runtime/temporalWorkerDbtProfile.ts`       | Worker-side DBT plugin profile composition               |
 
 ## Diagrams
 

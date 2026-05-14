@@ -114,9 +114,9 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginRunner.ts](../../../packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginRunner.ts)
   and
-  [packages/@dvt/adapter-temporal/src/plugins/dbt/DbtStepActivity.ts](../../../packages/@dvt/adapter-temporal/src/plugins/dbt/DbtStepActivity.ts)
+  [packages/@dvt/temporal-dbt-plugin/src/DbtStepActivity.ts](../../../packages/@dvt/temporal-dbt-plugin/src/DbtStepActivity.ts)
   and
-  [packages/@dvt/adapter-temporal/src/plugins/dbt/DbtCliPluginRunner.ts](../../../packages/@dvt/adapter-temporal/src/plugins/dbt/DbtCliPluginRunner.ts)
+  [packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts](../../../packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts)
 - Key tests:
   [packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts](../../../packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts),
   [packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts](../../../packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts),

@@ -6,6 +6,12 @@ import { PlanIntegrityValidator, SequenceClock } from '@dvt/engine/runtime';
 import { describe, expect, it } from 'vitest';
 
 import {
+  createDbtStepActivityRegistry,
+  TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS,
+  type DbtPluginExecutionInput,
+  type DbtPluginRunner,
+} from '../../temporal-dbt-plugin/src/index.js';
+import {
   createActivities,
   createScopedTemporalPlanArtifactReader,
   DEFAULT_STEP_ACTIVITY_REGISTRY,
@@ -22,13 +28,7 @@ import type {
   IIdempotencyKeyBuilder,
   RunMetadata,
 } from '../src/engine-types.js';
-import {
-  composeTemporalStepPluginRegistries,
-  createDbtStepActivityRegistry,
-  TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS,
-  type DbtPluginExecutionInput,
-  type DbtPluginRunner,
-} from '../src/index.js';
+import { composeTemporalStepPluginRegistries } from '../src/index.js';
 
 import { createExecutionPlan, createPlanRef } from './helpers/contractFixtures.js';
 import {
