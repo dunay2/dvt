@@ -165,6 +165,7 @@ function parseArgs(args = process.argv.slice(2)) {
   const [queryNameArg, ...rest] = args;
   const queryName = resolveQueryName(queryNameArg);
   const filters = {};
+  let autoImportGovernance;
 
   for (let index = 0; index < rest.length; index += 1) {
     const arg = rest[index];
@@ -174,6 +175,11 @@ function parseArgs(args = process.argv.slice(2)) {
         continue;
       }
       throw new Error(`Unexpected argument "${arg}". Expected --name value flags.`);
+    }
+
+    if (arg === '--no-refresh') {
+      autoImportGovernance = false;
+      continue;
     }
 
     const value = rest[index + 1];
@@ -210,7 +216,7 @@ function parseArgs(args = process.argv.slice(2)) {
       filters.component = value;
       continue;
     }
-    if (arg === '--parent') {
+    if (arg === '--parent' || arg === '--parent-unit' || arg === '--children-of') {
       filters.parentUnit = value;
       continue;
     }
@@ -262,7 +268,11 @@ function parseArgs(args = process.argv.slice(2)) {
     throw new Error(`Unknown planning DB query option "${arg}".`);
   }
 
-  return { queryName, filters };
+  return {
+    queryName,
+    ...(autoImportGovernance === undefined ? {} : { autoImportGovernance }),
+    filters,
+  };
 }
 
 function buildSummaryRows(summary) {
@@ -477,6 +487,18 @@ function compactText(value) {
     .trim();
 }
 
+function compactJson(value) {
+  if (value === undefined || value === null) {
+    return '-';
+  }
+
+  if (typeof value === 'string') {
+    return compactText(value);
+  }
+
+  return JSON.stringify(value);
+}
+
 function flagLabel(value, label) {
   return value ? label : '-';
 }
@@ -534,6 +556,7 @@ function buildComponentEngineeringComponentDriftRows(rows) {
   return rows.map((row) => [
     row.component_id ?? row.componentId ?? '-',
     row.drift_code ?? row.driftCode ?? '-',
+    compactJson(row.metadata),
   ]);
 }
 

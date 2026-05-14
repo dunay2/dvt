@@ -26,6 +26,7 @@ Evidence documents that justify or validate relevant changes.
 - [Context](ED-20260405-mwa2-policy-unbounded-precedence.md)
 - [DBT CLI Plugin Runner SRP Hardening](ed-20260429-dbt-cli-plugin-runner-srp.md)
 - [Dev Stack Local Temporal Bootstrap](ed-20260427-dev-stack-local-temporal-bootstrap.md)
+- [DHM DB-first engine component modeling](ed-20260514-dhm-db-first-engine-components.md)
 - [DHM-WS2 Runtime Composition Root](ed-20260512-dhm-ws2-runtime-composition-root.md)
 - [DHM-WS3 Start-Run Application Decomposition](ed-20260512-dhm-ws3-start-run-decomposition.md)
 - [DHM-WS4 Runtime Path Decomposition](ed-20260512-dhm-ws4-runtime-path-decomposition.md)

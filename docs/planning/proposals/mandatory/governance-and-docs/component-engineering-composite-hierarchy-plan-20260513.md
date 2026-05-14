@@ -422,6 +422,17 @@ symbols:
     cypressCoverage: N/A
     unitTests:
       - node --test scripts/planning-db-query.test.cjs
+  - name: compactJson
+    path: scripts/planning-db-query.cjs
+    dddOwner: Governance local operations
+    cqRails:
+      - ValidateComponentEngineeringDrift
+    fowlerSignals:
+      - Hidden Authority from drift rows without actionable metadata
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
   - name: buildComponentEngineeringComponentMetadataRows
     path: scripts/planning-db-query.cjs
     dddOwner: Governance local operations
