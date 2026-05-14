@@ -140,6 +140,224 @@ pnpm verify:prepush
 | 2026-04-01 | Lane C | Adoption open | Task remains open until 3 qualifying Lane C cycles are logged.        |
 | 2026-05-15 | Lane C | Gate hardened | `docs:ai-efficiency:check` now prevents narrative-only closure.       |
 
+## 2026-05-15 Adoption Gate Mechanization
+
+```feature-mechanization
+version: 1
+featureId: RC-C2-AI-EFFICIENCY-ADOPTION-GATE
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/rc-c2-shared-preflight-and-ci-log-first-triage-plan-20260401.md
+componentGuides:
+  - docs/planning/status/ai-efficiency-adoption-status.md
+userStories:
+  - docs/planning/status/ai-efficiency-adoption-status.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/planning/reviews/ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md
+  - docs/guides/pr-preflight-and-ci-triage.md
+allowedImplementationSurfaces:
+  - buzon/20260515-codex-fowler-rc-c2-adoption-gate-analysis.md
+  - docs/.manifest.json
+  - docs/planning/closeouts/20260515-rc-c2-adoption-gate-hardening-closeout.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/rc-c2-shared-preflight-and-ci-log-first-triage-plan-20260401.md
+  - docs/planning/status/ai-efficiency-adoption-log.yaml
+  - docs/planning/status/ai-efficiency-adoption-status.md
+  - package.json
+  - scripts/check-ai-efficiency-adoption.cjs
+  - scripts/check-ai-efficiency-adoption.test.cjs
+  - tools/ci/policy/workflow-scope.json
+  - tools/ci/repository-command-catalog.mjs
+  - tools/ci/repository-command-catalog.test.mjs
+  - tools/ci/scope-config.mjs
+forbiddenImplementationSurfaces:
+  - apps/**
+  - packages/@dvt/**
+commandQueryRails:
+  - name: RC-C2 AI efficiency adoption status query
+    type: query
+    dddOwner: CI delivery governance
+domainObjects:
+  - name: AI efficiency adoption log
+    type: governed planning status record
+    owner: docs/planning/status/ai-efficiency-adoption-log.yaml
+  - name: Repository command catalog
+    type: command classification policy
+    owner: tools/ci/repository-command-catalog.mjs
+fowlerSignals:
+  - Replaces narrative task closure with an executable policy query.
+  - Keeps adoption measurement separate from CI workflow execution.
+  - Routes new command surfaces through the repository command catalog.
+architectureGuards:
+  - pnpm test:ai-efficiency:adoption
+  - pnpm test:ci-tools
+  - pnpm docs:feature-mechanization:implementation
+cypressFlows:
+  - N/A - CI governance and planning status only
+completionGate:
+  - pnpm test:ai-efficiency:adoption
+  - node scripts/check-ai-efficiency-adoption.cjs
+  - pnpm test:ci-tools
+  - pnpm governance:refresh
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: rc-c2-adoption-log-fail-closed
+    redTest: node --test scripts/check-ai-efficiency-adoption.test.cjs
+    expectedFailure: adoption checker module does not exist and cannot prove the 0/3 open state.
+    patchSurfaces:
+      - scripts/check-ai-efficiency-adoption.cjs
+      - scripts/check-ai-efficiency-adoption.test.cjs
+    greenTest: pnpm test:ai-efficiency:adoption
+  - id: rc-c2-command-catalog-classification
+    redTest: pnpm test:ci-tools
+    expectedFailure: repository command catalog reports scripts/check-ai-efficiency-adoption.cjs as unclassified.
+    patchSurfaces:
+      - tools/ci/repository-command-catalog.mjs
+      - tools/ci/repository-command-catalog.test.mjs
+    greenTest: pnpm test:ci-tools
+  - id: temporal-dbt-plugin-workspace-scope
+    redTest: pnpm test:ci-tools
+    expectedFailure: workflow scope tests report @dvt/temporal-dbt-plugin missing from workspace build/test matrix ownership.
+    patchSurfaces:
+      - tools/ci/policy/workflow-scope.json
+      - tools/ci/scope-config.mjs
+    greenTest: pnpm test:ci-tools
+symbols:
+  - name: analyzeAdoptionLog
+    path: scripts/check-ai-efficiency-adoption.cjs
+    dddOwner: RC-C2 AI efficiency adoption status query
+    cqRails: [RC-C2 AI efficiency adoption status query]
+    fowlerSignals: [Computes the closure window from the log rather than from prose.]
+    architectureGuard: pnpm test:ai-efficiency:adoption
+    cypressCoverage: N/A
+    unitTests: [pnpm test:ai-efficiency:adoption]
+  - name: calculateRcu
+    path: scripts/check-ai-efficiency-adoption.cjs
+    dddOwner: RC-C2 AI efficiency adoption status query
+    cqRails: [RC-C2 AI efficiency adoption status query]
+    fowlerSignals: [Encapsulates the RC-C2 cost model in one reusable policy function.]
+    architectureGuard: pnpm test:ai-efficiency:adoption
+    cypressCoverage: N/A
+    unitTests: [pnpm test:ai-efficiency:adoption]
+  - name: defaultLogPath
+    path: scripts/check-ai-efficiency-adoption.cjs
+    dddOwner: RC-C2 AI efficiency adoption status query
+    cqRails: [RC-C2 AI efficiency adoption status query]
+    fowlerSignals: [Binds the checker to the canonical YAML status record.]
+    architectureGuard: pnpm test:ai-efficiency:adoption
+    cypressCoverage: N/A
+    unitTests: [pnpm test:ai-efficiency:adoption]
+  - name: fs
+    path: scripts/check-ai-efficiency-adoption.cjs
+    dddOwner: RC-C2 AI efficiency adoption status query
+    cqRails: [RC-C2 AI efficiency adoption status query]
+    fowlerSignals: [Reads the canonical adoption log without inventing a second state store.]
+    architectureGuard: pnpm test:ai-efficiency:adoption
+    cypressCoverage: N/A
+    unitTests: [pnpm test:ai-efficiency:adoption]
+  - name: isAcceptedTriageValue
+    path: scripts/check-ai-efficiency-adoption.cjs
+    dddOwner: RC-C2 AI efficiency adoption status query
+    cqRails: [RC-C2 AI efficiency adoption status query]
+    fowlerSignals: [Keeps first-red triage vocabulary explicit and bounded.]
+    architectureGuard: pnpm test:ai-efficiency:adoption
+    cypressCoverage: N/A
+    unitTests: [pnpm test:ai-efficiency:adoption]
+  - name: isQualifyingCycle
+    path: scripts/check-ai-efficiency-adoption.cjs
+    dddOwner: RC-C2 AI efficiency adoption status query
+    cqRails: [RC-C2 AI efficiency adoption status query]
+    fowlerSignals: [Encapsulates one adoption-cycle qualification rule.]
+    architectureGuard: pnpm test:ai-efficiency:adoption
+    cypressCoverage: N/A
+    unitTests: [pnpm test:ai-efficiency:adoption]
+  - name: loadAdoptionLog
+    path: scripts/check-ai-efficiency-adoption.cjs
+    dddOwner: RC-C2 AI efficiency adoption status query
+    cqRails: [RC-C2 AI efficiency adoption status query]
+    fowlerSignals: [Separates file loading from policy evaluation.]
+    architectureGuard: pnpm test:ai-efficiency:adoption
+    cypressCoverage: N/A
+    unitTests: [pnpm test:ai-efficiency:adoption]
+  - name: normalizeBaseline
+    path: scripts/check-ai-efficiency-adoption.cjs
+    dddOwner: RC-C2 AI efficiency adoption status query
+    cqRails: [RC-C2 AI efficiency adoption status query]
+    fowlerSignals: [Keeps YAML and test fixture field styles compatible without duplicating rules.]
+    architectureGuard: pnpm test:ai-efficiency:adoption
+    cypressCoverage: N/A
+    unitTests: [pnpm test:ai-efficiency:adoption]
+  - name: normalizeCycle
+    path: scripts/check-ai-efficiency-adoption.cjs
+    dddOwner: RC-C2 AI efficiency adoption status query
+    cqRails: [RC-C2 AI efficiency adoption status query]
+    fowlerSignals: [Gives each cycle a single normalized shape before qualification.]
+    architectureGuard: pnpm test:ai-efficiency:adoption
+    cypressCoverage: N/A
+    unitTests: [pnpm test:ai-efficiency:adoption]
+  - name: normalizeTargets
+    path: scripts/check-ai-efficiency-adoption.cjs
+    dddOwner: RC-C2 AI efficiency adoption status query
+    cqRails: [RC-C2 AI efficiency adoption status query]
+    fowlerSignals: [Keeps threshold semantics in one policy boundary.]
+    architectureGuard: pnpm test:ai-efficiency:adoption
+    cypressCoverage: N/A
+    unitTests: [pnpm test:ai-efficiency:adoption]
+  - name: numberFrom
+    path: scripts/check-ai-efficiency-adoption.cjs
+    dddOwner: RC-C2 AI efficiency adoption status query
+    cqRails: [RC-C2 AI efficiency adoption status query]
+    fowlerSignals: [Fails closed on malformed numeric evidence.]
+    architectureGuard: pnpm test:ai-efficiency:adoption
+    cypressCoverage: N/A
+    unitTests: [pnpm test:ai-efficiency:adoption]
+  - name: path
+    path: scripts/check-ai-efficiency-adoption.cjs
+    dddOwner: RC-C2 AI efficiency adoption status query
+    cqRails: [RC-C2 AI efficiency adoption status query]
+    fowlerSignals: [Resolves the canonical log path relative to the repository root.]
+    architectureGuard: pnpm test:ai-efficiency:adoption
+    cypressCoverage: N/A
+    unitTests: [pnpm test:ai-efficiency:adoption]
+  - name: readMetric
+    path: scripts/check-ai-efficiency-adoption.cjs
+    dddOwner: RC-C2 AI efficiency adoption status query
+    cqRails: [RC-C2 AI efficiency adoption status query]
+    fowlerSignals: [Localizes snake_case and camelCase compatibility to parsing only.]
+    architectureGuard: pnpm test:ai-efficiency:adoption
+    cypressCoverage: N/A
+    unitTests: [pnpm test:ai-efficiency:adoption]
+  - name: runCli
+    path: scripts/check-ai-efficiency-adoption.cjs
+    dddOwner: RC-C2 AI efficiency adoption status query
+    cqRails: [RC-C2 AI efficiency adoption status query]
+    fowlerSignals: [Provides the operator-facing query command without embedding policy in package scripts.]
+    architectureGuard: pnpm test:ai-efficiency:adoption
+    cypressCoverage: N/A
+    unitTests: [pnpm test:ai-efficiency:adoption]
+  - name: yaml
+    path: scripts/check-ai-efficiency-adoption.cjs
+    dddOwner: RC-C2 AI efficiency adoption status query
+    cqRails: [RC-C2 AI efficiency adoption status query]
+    fowlerSignals: [Parses the governed YAML adoption log through a structured parser.]
+    architectureGuard: pnpm test:ai-efficiency:adoption
+    cypressCoverage: N/A
+    unitTests: [pnpm test:ai-efficiency:adoption]
+  - name: assert
+    path: scripts/check-ai-efficiency-adoption.test.cjs
+    dddOwner: RC-C2 AI efficiency adoption status query
+    cqRails: [RC-C2 AI efficiency adoption status query]
+    fowlerSignals: [Keeps the adoption policy test assertions explicit.]
+    architectureGuard: pnpm test:ai-efficiency:adoption
+    cypressCoverage: N/A
+    unitTests: [pnpm test:ai-efficiency:adoption]
+```
+
 ## Risks And Coordination
 
 - `gh` output shape can drift; mitigation is to keep the parsing logic in one
