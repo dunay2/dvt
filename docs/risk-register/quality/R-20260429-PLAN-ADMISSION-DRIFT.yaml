@@ -26,8 +26,8 @@ mitigations:
   - 'Require positive and negative tests for every admitted schemaVersion under the single 1.0
     planVersion line.'
   - 'Keep engine start-run tests proving unsupported pairs fail before adapter dispatch.'
-  - 'Keep @dvt/plan-verifier on PLAN_RUNTIME_ADMISSION_MATRIX with no supportedMajor or
-    strictSameMinor parameters.'
+  - 'Keep @dvt/plan-verifier consuming `EXECUTION_PLAN_ADMISSION_MATRIX` from @dvt/contracts with no
+    package-local runtime matrix, supportedMajor, or strictSameMinor parameters.'
   - 'Keep plan-admission-matrix.architecture.test.ts guarding docs, stories, mailbox analysis, and
     naming drift.'
   - 'Update ADR-0017 or ADR-0036 if admission semantics change beyond replacing the current pair.'
