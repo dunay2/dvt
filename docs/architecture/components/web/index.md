@@ -74,7 +74,7 @@ out of the active tree.
 ```mermaid
 flowchart LR
   Browser["Browser"] --> Router["React Router shell"]
-  Router --> Views["Canvas, Runs, Lineage, Code, Diff, Artifacts"]
+  Router --> Views["Canvas, Runs, Cost, and Canvas workbench tabs"]
   Router --> Shell["Plugins and Admin shell routes"]
   Views --> Services["plansService / runsService / workspaceService"]
   Views --> Plugins["plugin registry and node renderers"]
@@ -84,16 +84,16 @@ flowchart LR
 
 ## Current Route Inventory
 
-| Route                   | Main responsibility                   |
-| ----------------------- | ------------------------------------- |
-| `/canvas`               | graph workbench and run-start flow    |
-| `/runs`, `/runs/:runId` | run list and run detail inspection    |
-| `/lineage`              | graph-derived lineage and impact      |
-| `/code`                 | file and compiled-source inspection   |
-| `/diff`                 | diff and review handoff surface       |
-| `/artifacts`            | manifest import and artifact browsing |
-| `/plugins`              | plugin management shell view          |
-| `/admin`                | shell-owned administrative view       |
+| Route                   | Main responsibility                                                           |
+| ----------------------- | ----------------------------------------------------------------------------- |
+| `/`                     | authenticated shell root redirect to the default core view                    |
+| `/login`                | public bootstrap route                                                        |
+| `/canvas`               | graph workbench and run-start flow                                            |
+| `/canvas/:workbenchTab` | Canvas-scoped workbench tabs such as Code, Lineage, Diff, Artifacts, and Runs |
+| `/runs`, `/runs/:runId` | run list and run detail inspection                                            |
+| `/cost`                 | optional cost dashboard route when the cost plugin is enabled and available   |
+| `/plugins`              | plugin management shell view                                                  |
+| `/admin`                | shell-owned administrative view                                               |
 
 ## Current Posture
 
@@ -109,9 +109,11 @@ The active documentation set for `web` is rooted under
 references remain archive and closeout context only; they are not the current
 component home.
 
-The route inventory above is grounded in `apps/web/src/app/routes.ts`. Core
-routes are registered through the shell router, plugin routes are contributed
-through the plugin registry, and `/login` remains the public bootstrap route.
+The route inventory above is grounded in `apps/web/src/app/routes.ts` plus
+route-bearing plugin contributions in `apps/web/src/app/plugins/**`. Core routes
+are registered through the shell router, plugin routes are contributed through
+the plugin registry, Canvas workbench tabs are mounted under
+`/canvas/:workbenchTab`, and `/login` remains the public bootstrap route.
 
 Runtime run behavior is described through the presentation port in
 `apps/web/src/app/ports/runs.ts`, the API adapter in
