@@ -165,6 +165,9 @@ Fowler opportunity matrix:
   `docs/risk-register/quality/R-20260514-AR-D3-WORKER-SCALING.yaml`.
 - Added Fowler analysis in
   `buzon/20260514-codex-fowler-ar-d3-worker-scaling-analysis.md`.
+- Added mandatory feature mechanization plan in
+  `docs/planning/proposals/mandatory/runtime-and-contracts/ar-d3-worker-scaling-strategy-plan-20260514.md`
+  after `verify:prepush` correctly rejected undeclared test symbols.
 
 ## Validation Evidence
 
@@ -174,9 +177,17 @@ Fowler opportunity matrix:
 - Green:
   `pnpm --filter @dvt/adapter-temporal test -- test/worker-scaling-strategy.architecture.test.ts`
   passed after the strategy/runbook update.
-
-Final validation will be recorded after docs sync, governance refresh,
-pre-push verification, and Planning DB export check.
+- `pnpm --filter @dvt/adapter-temporal typecheck` passed.
+- `pnpm lint:md:changed` passed.
+- `pnpm docs:feature-mechanization -- --feature AR-D3-WORKER-SCALING-STRATEGY`
+  passed after the mandatory plan declared allowed surfaces and test symbols.
+- `pnpm docs:feature-mechanization:implementation` passed.
+- `pnpm governance:refresh` passed after regenerating docs and governance DB
+  projections.
+- `pnpm verify:prepush` initially failed on undeclared feature-mechanization
+  symbols, proving the gate was active. The follow-up plan update fixed the
+  root cause. Final post-commit `verify:prepush` is recorded in the task
+  closeout response.
 
 ## No-Debt And No-Stub Evidence
 

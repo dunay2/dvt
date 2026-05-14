@@ -7,12 +7,15 @@ owners:
 arc_level: ARC-2
 breaking: false
 code_refs:
+  - docs/planning/proposals/mandatory/runtime-and-contracts/ar-d3-worker-scaling-strategy-plan-20260514.md
   - packages/@dvt/adapter-temporal/test/worker-scaling-strategy.architecture.test.ts
   - docs/architecture/components/engine/adapters/temporal/temporal-worker-scaling-strategy.md
   - docs/runbooks/temporal-worker-scaling-operations.md
 evidence:
   tests:
     - pnpm --filter @dvt/adapter-temporal test -- test/worker-scaling-strategy.architecture.test.ts
+    - pnpm docs:feature-mechanization -- --feature AR-D3-WORKER-SCALING-STRATEGY
+    - pnpm docs:feature-mechanization:implementation
 ---
 
 # AR-D3 Worker Scaling Strategy Closeout
