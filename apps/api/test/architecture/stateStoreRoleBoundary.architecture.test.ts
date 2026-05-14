@@ -30,6 +30,7 @@ describe('state-store role boundary architecture', () => {
     const guide = readFileSync(COMPONENT_GUIDE, 'utf8');
     for (const heading of [
       '## Public API',
+      '## Export Semantics',
       '## Invariants',
       '## Transitions',
       '## Consumers',
@@ -42,6 +43,7 @@ describe('state-store role boundary architecture', () => {
     for (const token of [
       'StateStoreRoleBindings',
       'bindStateStoreRoles',
+      'runtime export',
       'IRunStateStoreRead',
       'IRunStateStoreWrite',
       'IRunStateStoreMaintenance',
