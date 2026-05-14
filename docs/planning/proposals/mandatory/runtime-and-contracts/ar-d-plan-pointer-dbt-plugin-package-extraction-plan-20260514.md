@@ -389,6 +389,28 @@ symbols:
     cypressCoverage: Not applicable - package API only
     unitTests:
       - pnpm --filter @dvt/adapter-temporal exec vitest run test/dbt-core-decoupling.architecture.test.ts
+  - name: adapterPostgresDistEntry
+    path: packages/@dvt/adapter-temporal/vitest.config.ts
+    dddOwner: Temporal adapter test runtime
+    cqRails:
+      - none - test package resolution governance only
+    fowlerSignals:
+      - Boundary Drift
+    architectureGuard: pnpm --filter @dvt/adapter-temporal test
+    cypressCoverage: Not applicable - package API only
+    unitTests:
+      - pnpm --filter @dvt/adapter-temporal test
+  - name: cryptoDistEntry
+    path: packages/@dvt/adapter-temporal/vitest.config.ts
+    dddOwner: Temporal adapter test runtime
+    cqRails:
+      - none - test package resolution governance only
+    fowlerSignals:
+      - Boundary Drift
+    architectureGuard: pnpm --filter @dvt/adapter-temporal test
+    cypressCoverage: Not applicable - package API only
+    unitTests:
+      - pnpm --filter @dvt/adapter-temporal test
   - name: temporalDbtPluginSourceEntry
     path: packages/@dvt/adapter-temporal/vitest.config.ts
     dddOwner: Temporal adapter public API
