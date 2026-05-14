@@ -1,0 +1,21 @@
+---
+id: R-20260513-PLAN-SCHEMA-VERSION-ADMISSION
+title: Future plan schema versions could bypass admission if a new path skips the policy
+status: Open
+date: 2026-05-13
+owners:
+  - packages/@dvt/engine
+severity: Medium
+probability: Low
+description: >
+  EA-20260429-01 relies on StartRun continuing to route PlanRef admission through
+  PlanSchemaVersionPolicy before plan fetch, bootstrap, or provider dispatch. A future runtime
+  entrypoint that dispatches adapters directly could bypass this fail-closed schema-version guard.
+mitigation:
+  - PlanSchemaVersionPolicy.test.ts covers current and unsupported schema-version cases.
+  - planSchemaVersionAdmission.architecture.test.ts requires StartRunValidationPolicy to use the
+    semantic policy facade instead of inline pair admission.
+  - WorkflowEngine.test.ts proves unsupported schemas do not dispatch to adapters or persist run
+    events.
+  - ARC-2 remains required for packages/@dvt/engine/** changes.
+---

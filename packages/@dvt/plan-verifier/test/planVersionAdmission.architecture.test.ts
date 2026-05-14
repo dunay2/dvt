@@ -13,12 +13,16 @@ const COMPONENT_DOC = join(
 );
 
 describe('@dvt/plan-verifier plan-version admission architecture', () => {
-  it('keeps plan verification on explicit admission instead of legacy semver compatibility', () => {
+  it('keeps plan verification on canonical pair admission instead of local runtime version truth', () => {
     for (const path of [PLAN_VERSION_SOURCE, VERIFY_SOURCE, README]) {
       const source = readFileSync(path, 'utf8');
 
       expect(source, path).toContain('admission');
+      expect(source, path).toContain('schemaVersion');
+      expect(source, path).toContain('EXECUTION_PLAN_ADMISSION_MATRIX');
       expect(source, path).not.toContain('PLAN_RUNTIME_COMPATIBILITY_MATRIX');
+      expect(source, path).not.toContain('PLAN_RUNTIME_ADMISSION_MATRIX');
+      expect(source, path).not.toContain('admittedPlanVersions');
       expect(source, path).not.toContain('supportedMajor');
       expect(source, path).not.toContain('strictSameMinor');
       expect(source, path).not.toContain('LegacyCompatibility');
@@ -40,9 +44,12 @@ describe('@dvt/plan-verifier plan-version admission architecture', () => {
       expect(doc).toContain(section);
     }
 
-    expect(doc).toContain('PLAN_RUNTIME_ADMISSION_MATRIX');
-    expect(doc).toContain('verifyPlanVersionOrThrow');
+    expect(doc).toContain('EXECUTION_PLAN_ADMISSION_MATRIX');
+    expect(doc).toContain('verifyPlanAdmissionOrThrow');
     expect(doc).toContain('verifyPlanOrThrow');
+    expect(doc).toContain(
+      'buzon/20260514-codex-fowler-ea-20260429-02-plan-admission-matrix-analysis.md'
+    );
     expect(doc).toContain('```mermaid');
   });
 });

@@ -13,6 +13,7 @@ export * from './contracts/executionPlan.js';
 export * from './contracts/errors.js';
 export * from './contracts/engine/index.js';
 export * from './contracts/PlanAdmissionPolicy.js';
+export * from './contracts/PlanSchemaVersionPolicy.js';
 export * from './ports/IWorkflowEngine.js';
 
 export * from './core/SnapshotProjector.js';
