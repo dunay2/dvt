@@ -315,6 +315,14 @@ symbols:
     architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/enginePublicApiSurface.architecture.test.ts
     cypressCoverage: N/A - package API boundary only
     unitTests: [pnpm --filter @dvt/engine typecheck]
+  - name: assertEventTenantMatches
+    path: packages/@dvt/engine/src/state/runEventWritePolicy.ts
+    dddOwner: engine event vocabulary write policy
+    cqRails: [none - package presentation boundary]
+    fowlerSignals: [Semantic drift]
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/enginePublicApiSurface.architecture.test.ts
+    cypressCoverage: N/A - package API boundary only
+    unitTests: [pnpm --filter @dvt/engine typecheck]
   - name: assertEventsMatchRunId
     path: packages/@dvt/engine/src/state/runEventWritePolicy.ts
     dddOwner: engine event vocabulary write policy
@@ -357,6 +365,22 @@ symbols:
     unitTests: [pnpm --filter dvt-outbox-worker typecheck]
   - name: makeRunQueuedEvent
     path: apps/outbox-worker/test/canary/support/standaloneCanaryEventSupport.ts
+    dddOwner: outbox worker event vocabulary tests
+    cqRails: [none - package presentation boundary]
+    fowlerSignals: [Semantic drift]
+    architectureGuard: pnpm --filter dvt-outbox-worker typecheck
+    cypressCoverage: N/A - package API boundary only
+    unitTests: [pnpm --filter dvt-outbox-worker typecheck]
+  - name: handleSinkRequest
+    path: apps/outbox-worker/test/canary/support/standaloneCanaryHttpSink.ts
+    dddOwner: outbox worker event vocabulary tests
+    cqRails: [none - package presentation boundary]
+    fowlerSignals: [Semantic drift]
+    architectureGuard: pnpm --filter dvt-outbox-worker typecheck
+    cypressCoverage: N/A - package API boundary only
+    unitTests: [pnpm --filter dvt-outbox-worker typecheck]
+  - name: shouldSkipDuplicateEffect
+    path: apps/outbox-worker/test/canary/support/standaloneCanaryHttpSink.ts
     dddOwner: outbox worker event vocabulary tests
     cqRails: [none - package presentation boundary]
     fowlerSignals: [Semantic drift]
@@ -419,4 +443,12 @@ symbols:
     architectureGuard: pnpm --filter dvt-outbox-worker typecheck
     cypressCoverage: N/A - package API boundary only
     unitTests: [pnpm --filter dvt-outbox-worker typecheck]
+  - name: makeEvent
+    path: packages/@dvt/delivery/test/support/outboxWorkerTestSupport.ts
+    dddOwner: delivery event vocabulary tests
+    cqRails: [none - package presentation boundary]
+    fowlerSignals: [Semantic drift]
+    architectureGuard: pnpm --filter @dvt/delivery typecheck
+    cypressCoverage: N/A - package API boundary only
+    unitTests: [pnpm --filter @dvt/delivery typecheck]
 ```
