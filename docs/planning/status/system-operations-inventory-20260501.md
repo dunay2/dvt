@@ -236,9 +236,9 @@ ownership question to the package that implements them.
 **File**: `packages/@dvt/contracts/src/contracts/planner/PlanRecord.v1.ts`,
 `PlanExecutabilityRecord.v1.ts`, `PlanAdmissionLink.v1.ts` and their `.schema.json` siblings
 
-| Symbol                                 | DDD   | C&Q   | Legacy             | Notes                                                           |
-| -------------------------------------- | ----- | ----- | ------------------ | --------------------------------------------------------------- |
-| Record DTOs (no top-level scope tuple) | `N/A` | `N/A` | **`LEGACY-DRIFT`** | S08-DRIFT-01, S08-DRIFT-17, S08-DRIFT-32. Must add scope tuple. |
+| Symbol                                            | DDD   | C&Q   | Legacy | Notes                                                                                    |
+| ------------------------------------------------- | ----- | ----- | ------ | ---------------------------------------------------------------------------------------- |
+| Record DTOs with top-level `PlanStoreScope` tuple | `N/A` | `N/A` | `OK`   | S08-DRIFT-01, S08-DRIFT-17, and S08-DRIFT-32 are closed for the published record family. |
 
 **File**: `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts`,
 `ExecutableSubgraph.v1.ts`, `ExecutionSelection.v1.ts`,
@@ -272,12 +272,12 @@ ownership question to the package that implements them.
 `schemas.ts`, `workflows.ts`, `validation.ts`,
 `validation/{core,events,planner,runtime}.ts`
 
-| Symbol category                                           | DDD                                | C&Q                | Legacy                                                              | Notes                            |
-| --------------------------------------------------------- | ---------------------------------- | ------------------ | ------------------------------------------------------------------- | -------------------------------- |
-| Error classes (`InvalidEventError`, error codes)          | `INFRA` (cross-cutting vocabulary) | `N/A`              | `OK`                                                                | ADR-0012A canonical error codes. |
-| `validation/*.ts` parse helpers                           | `INFRA`                            | `QRY` (pure parse) | `OK` (planner.ts has S08-DRIFT-32 risk on unscoped record payloads) | Boundary validators.             |
-| `schema-packs/plan-records.ts`                            | `INFRA`                            | `N/A`              | **`LEGACY-DRIFT`**                                                  | S08-DRIFT-32.                    |
-| `schema-packs/{run-events,start-run,plan-preview,...}.ts` | `INFRA`                            | `N/A`              | `OK`                                                                | Boundary schema packs.           |
+| Symbol category                                           | DDD                                | C&Q                | Legacy | Notes                                                           |
+| --------------------------------------------------------- | ---------------------------------- | ------------------ | ------ | --------------------------------------------------------------- |
+| Error classes (`InvalidEventError`, error codes)          | `INFRA` (cross-cutting vocabulary) | `N/A`              | `OK`   | ADR-0012A canonical error codes.                                |
+| `validation/*.ts` parse helpers                           | `INFRA`                            | `QRY` (pure parse) | `OK`   | Boundary validators fail closed on unscoped plan-store records. |
+| `schema-packs/plan-records.ts`                            | `INFRA`                            | `N/A`              | `OK`   | Validates scoped plan-store record contracts.                   |
+| `schema-packs/{run-events,start-run,plan-preview,...}.ts` | `INFRA`                            | `N/A`              | `OK`   | Boundary schema packs.                                          |
 
 ### 1.5 Step type registry
 
@@ -300,11 +300,11 @@ ownership question to the package that implements them.
 
 **File**: `packages/@dvt/contracts/src/index.ts`
 
-| Symbol                                                                                       | DDD | C&Q | Legacy             | Notes                                                      |
-| -------------------------------------------------------------------------------------------- | --- | --- | ------------------ | ---------------------------------------------------------- |
-| Re-exports of `PlanValidationLifecycle.v1` and lifecycle types                               | n/a | n/a | **`LEGACY`**       | S08-DRIFT-12. Must be removed when scoped C&Q is in place. |
-| Re-exports of unscoped `PlanRecord.v1`, `PlanExecutabilityRecord.v1`, `PlanAdmissionLink.v1` | n/a | n/a | **`LEGACY-DRIFT`** | S08-DRIFT-01, S08-DRIFT-32.                                |
-| Re-exports of engine ports, start-run boundary, signal semantics, error codes                | n/a | n/a | `OK`               | Canonical.                                                 |
+| Symbol                                                                                     | DDD | C&Q | Legacy       | Notes                                                            |
+| ------------------------------------------------------------------------------------------ | --- | --- | ------------ | ---------------------------------------------------------------- |
+| Re-exports of `PlanValidationLifecycle.v1` and lifecycle types                             | n/a | n/a | **`LEGACY`** | S08-DRIFT-12. Must be removed when scoped C&Q is in place.       |
+| Re-exports of scoped `PlanRecord.v1`, `PlanExecutabilityRecord.v1`, `PlanAdmissionLink.v1` | n/a | n/a | `OK`         | Published record DTOs now carry the scope tuple required by S08. |
+| Re-exports of engine ports, start-run boundary, signal semantics, error codes              | n/a | n/a | `OK`         | Canonical.                                                       |
 
 ## 2. `@dvt/run-domain`
 
@@ -556,16 +556,16 @@ use-case separation in the repo. Other packages should mirror this pattern.
 
 ### 4.9 Engine security — `src/security/`
 
-| Symbol                                                           | DDD                              | C&Q               | Legacy                                                                         | Notes                                                                                |
-| ---------------------------------------------------------------- | -------------------------------- | ----------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| `AuthorizationError`                                             | `INFRA` (typed error)            | `N/A`             | `OK`                                                                           |                                                                                      |
-| `RunAccessPolicy.canAccess/assertCanAccess` (`IRunAccessPolicy`) | `DS` (tenant access)             | `QRY` (assertion) | `OK`                                                                           | ADR-0031.                                                                            |
-| `IAuthorizer` / `AllowAllAuthorizer`                             | `PORT`/`ADP`                     | `QRY`             | `OK` (dev)                                                                     |                                                                                      |
-| `HostRiskClassifier` / `DefaultHostRiskClassifier`               | `DS`                             | `QRY`             | `OK`                                                                           |                                                                                      |
-| `PlanIntegrityValidator.fetchAndValidate(...)`                   | `DS` (`IPlanIntegrityValidator`) | `FETCH`+verify    | **`LEGACY-DRIFT`**                                                             | S08-DRIFT-06/39: passes plan integrity but does not assert plan-store row ownership. |
-| `PlanRefPolicy.assertAllowed(planRef)` (+ allowlist)             | `DS` (URI policy)                | `QRY` (assertion) | `OK` (but see S08-DRIFT-39 — must not be confused with scoped store ownership) |                                                                                      |
-| `isDeniedUriScheme(scheme)`                                      | `INFRA`                          | `QRY` (pure)      | `OK`                                                                           |                                                                                      |
-| `PlanUri` parser/value object                                    | `DS` (URI value object)          | `QRY` (pure)      | `OK`                                                                           |                                                                                      |
+| Symbol                                                           | DDD                              | C&Q               | Legacy     | Notes                                                                             |
+| ---------------------------------------------------------------- | -------------------------------- | ----------------- | ---------- | --------------------------------------------------------------------------------- |
+| `AuthorizationError`                                             | `INFRA` (typed error)            | `N/A`             | `OK`       |                                                                                   |
+| `RunAccessPolicy.canAccess/assertCanAccess` (`IRunAccessPolicy`) | `DS` (tenant access)             | `QRY` (assertion) | `OK`       | ADR-0031.                                                                         |
+| `IAuthorizer` / `AllowAllAuthorizer`                             | `PORT`/`ADP`                     | `QRY`             | `OK` (dev) |                                                                                   |
+| `HostRiskClassifier` / `DefaultHostRiskClassifier`               | `DS`                             | `QRY`             | `OK`       |                                                                                   |
+| `PlanIntegrityValidator.fetchAndValidate(...)`                   | `DS` (`IPlanIntegrityValidator`) | `FETCH`+verify    | `OK`       | Consumes scoped artifact fetch through the artifacts port before engine dispatch. |
+| `PlanRefPolicy.assertAllowed(planRef)` (+ allowlist)             | `DS` (URI policy)                | `QRY` (assertion) | `OK`       | URI integrity policy remains necessary but not sufficient for store ownership.    |
+| `isDeniedUriScheme(scheme)`                                      | `INFRA`                          | `QRY` (pure)      | `OK`       |                                                                                   |
+| `PlanUri` parser/value object                                    | `DS` (URI value object)          | `QRY` (pure)      | `OK`       |                                                                                   |
 
 ### 4.10 Engine core — `src/core/`
 
@@ -799,18 +799,18 @@ Tenant isolation is enforced via `PostgresTenantIsolationPolicy` (ADR-0031).
 
 ### 7.1 PlanStore — `PostgresPlanStore.*.ts`
 
-| Symbol                                                                                                                 | DDD                              | C&Q                | Legacy             | Notes                                                                                                                                                                                                      |
-| ---------------------------------------------------------------------------------------------------------------------- | -------------------------------- | ------------------ | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PostgresPlanStore` (composite class)                                                                                  | `ADP` (composite)                | mixed              | **`LEGACY`**       | S08-DRIFT-04: monolithic facade implementing reader+writer+lifecycle+fetcher. Acceptable as implementation class, but the role boundaries must be split (composer pattern in `PostgresPlanStoreComposer`). |
-| `PostgresPlanRecordRepository` (per-method SQL by `planId`)                                                            | `INFRA` (repo) — not a DDD owner | `CMD/QRY`          | **`LEGACY-DRIFT`** | Keyed by `plan_id` only — no tenant predicates (S08 matrix Current-State).                                                                                                                                 |
-| `PostgresExecutableBlobRepository` (legacy `validation_state` queries)                                                 | `INFRA` (repo)                   | `CMD/QRY`          | **`LEGACY`**       | S08-DRIFT-20.                                                                                                                                                                                              |
-| `PostgresPlanExecutabilityRepository` ((plan_id, adapter_id))                                                          | `INFRA` (repo)                   | `CMD/QRY`          | **`LEGACY-DRIFT`** | Unscoped.                                                                                                                                                                                                  |
-| `PostgresPlanAdmissionRepository` ((plan_id, run_id, adapter_id))                                                      | `INFRA` (repo)                   | `CMD/QRY`          | **`LEGACY-DRIFT`** | Unscoped.                                                                                                                                                                                                  |
-| `PostgresPlanStore.mappers.ts`                                                                                         | `INFRA`                          | `QRY` (pure)       | **`LEGACY`**       | S08-DRIFT-20: `validation_state` typed as runtime row state.                                                                                                                                               |
-| `PostgresPlanStore.schema-manager.ts` (backfill)                                                                       | `INFRA`                          | `CMD`              | **`LEGACY-DRIFT`** | Backfills `plan_records` from `stored_plans` without ownership tuple.                                                                                                                                      |
-| `PostgresPlanStore.sql.ts` (DDL: `stored_plans`, `plan_records`, `plan_executability_records`, `plan_admission_links`) | `INFRA`                          | `N/A`              | **`LEGACY-DRIFT`** | Tables lack scope columns / RLS posture (S08 matrix).                                                                                                                                                      |
-| `PostgresPlanStore.tx.ts`                                                                                              | `INFRA`                          | `CMD` (tx wrapper) | `OK`               |                                                                                                                                                                                                            |
-| `PostgresPlanStoreComposer`                                                                                            | `INFRA` (composition)            | `QRY` (factory)    | `OK`               | Composer is the right path; the methods it composes are still legacy.                                                                                                                                      |
+| Symbol                                                                                                                 | DDD                               | C&Q                | Legacy  | Notes                                                                                                                                                                                      |
+| ---------------------------------------------------------------------------------------------------------------------- | --------------------------------- | ------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `PostgresPlanStore` (composite class)                                                                                  | `ADP` (composite)                 | mixed              | `SUPER` | Implements the three canonical scoped ports. Follow-up decomposition can split per-port adapters, but the composite no longer exposes the retired lifecycle facade as canonical authority. |
+| `PostgresPlanRecordRepository` (tenant-scoped record SQL)                                                              | `INFRA` (repo) - adapter internal | `CMD/QRY`          | `OK`    | Uses tenant, project, environment, and plan predicates for tenant-owned records.                                                                                                           |
+| `PostgresExecutableBlobRepository` (tenant-neutral artifact blob SQL)                                                  | `INFRA` (repo)                    | `CMD/QRY`          | `MIGR`  | Retains artifact bytes and validation-state DTO vocabulary; runtime authority must enter through scoped record/ref checks.                                                                 |
+| `PostgresPlanExecutabilityRepository` (tenant-scoped `(plan_id, adapter_id)` SQL)                                      | `INFRA` (repo)                    | `CMD/QRY`          | `OK`    | Executability rows include the full scope tuple plus adapter id.                                                                                                                           |
+| `PostgresPlanAdmissionRepository` (tenant-scoped `(plan_id, run_id, adapter_id)` SQL)                                  | `INFRA` (repo)                    | `CMD/QRY`          | `OK`    | Admission links include the full scope tuple plus run and adapter ids.                                                                                                                     |
+| `PostgresPlanStore.mappers.ts`                                                                                         | `INFRA`                           | `QRY` (pure)       | `OK`    | Maps scoped record rows and tenant-neutral artifact rows into canonical contract shapes.                                                                                                   |
+| `PostgresPlanStore.schema-manager.ts` (backfill)                                                                       | `INFRA`                           | `CMD`              | `OK`    | Backfills `plan_records` from stored plans using the ownership tuple carried in canonical plan metadata.                                                                                   |
+| `PostgresPlanStore.sql.ts` (DDL: `stored_plans`, `plan_records`, `plan_executability_records`, `plan_admission_links`) | `INFRA`                           | `N/A`              | `OK`    | Tables include scope columns and composite scoped keys.                                                                                                                                    |
+| `PostgresPlanStore.tx.ts`                                                                                              | `INFRA`                           | `CMD` (tx wrapper) | `OK`    |                                                                                                                                                                                            |
+| `PostgresPlanStoreComposer`                                                                                            | `INFRA` (composition)             | `QRY` (factory)    | `OK`    | Composer is the right path for keeping repository helpers internal to scoped port adapters.                                                                                                |
 
 ### 7.2 RunState / RunEvents / Snapshots / Outbox — repositories
 
