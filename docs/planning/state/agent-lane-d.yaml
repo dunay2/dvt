@@ -238,7 +238,7 @@ tasks:
     last_verified: '2026-04-16'
   - task_id: AR-D2
     priority: P2
-    status: in_progress
+    status: done
     objective: >-
       define Temporal continueAsNew threshold as a governed contract parameter with documented SLA
       for maximum workflow history size and step count per segment.
@@ -248,7 +248,7 @@ tasks:
       workflow correctly continues-as-new at the threshold boundary.
     complexity: S
     effort_points: 2
-    progress_pct: 85
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
       - docs/architecture/components/engine/adapters/temporal/temporal-adapter-spec.md
@@ -263,15 +263,12 @@ tasks:
       - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary-user-stories.md
       - docs/evidence/ed-20260430-ar-d2-temporal-planref-capacity-sla.md
       - docs/risk-register/quality/R-20260430-AR-D2-TEMPORAL-CAPACITY-SLA.yaml
+      - docs/planning/closeouts/20260514-ar-d2-temporal-planref-capacity-sla-closeout.md
     status_reason: >-
-      QA1 gives the threshold a governed non-zero default, keeps explicit zero as a documented local
-      or incident override, and has unit plus real Temporal time-skipping proof for rollover
-      behavior. The AR-D2 capacity pass adds a documented and executable standard production profile
-      for maximum workflow history size, maximum segment count, layer count per segment,
-      continue-as-new payload budget, and PlanRef retention margin. Residual work is empirical
-      tuning from production Temporal telemetry before additional tenant-specific profiles are
-      introduced.
-    last_verified: '2026-04-30'
+      Closed as an evidence-backed Temporal PlanRef capacity SLA: governed continueAsNew threshold,
+      executable production-readiness policy, component docs, Fowler analysis, semantic architecture
+      tests, ARC-2 evidence, and residual empirical tuning tracked in the risk register.
+    last_verified: '2026-05-14'
   - task_id: AR-D-PLAN-POINTER
     priority: P0
     status: in_progress
