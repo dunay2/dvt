@@ -18,7 +18,7 @@ runtime path decomposition slices.
 
 ### US-DHM-WS6-001: declare owned concern headers
 
-As an engine maintainer, I need each composition, compatibility, command, and
+As an engine maintainer, I need each composition, run-control, command, and
 signal module to declare its owned concern so review can detect misplaced
 runtime authority before reading the full implementation.
 
@@ -26,7 +26,8 @@ Acceptance criteria:
 
 - `intentReconcilerRuntime.ts` declares API-side runtime composition ownership.
 - `WorkflowEngineFactory.ts` declares API engine runtime composition ownership.
-- `WorkflowEngineCoreService.ts` declares compatibility adapter ownership.
+- `WorkflowEngineCoreService.ts` declares combined run-control delegator
+  ownership.
 - command and signal role ports declare role-interface ownership.
 
 ### US-DHM-WS6-002: keep composition roots outside engine semantics
@@ -42,10 +43,10 @@ Acceptance criteria:
   runtime.
 - `WorkflowEngineCoreService` must not import reconciler runtime assembly.
 
-### US-DHM-WS6-003: keep compatibility delegation semantic
+### US-DHM-WS6-003: keep run-control delegation semantic
 
-As a migration maintainer, I need `WorkflowEngineCoreService` to preserve old
-callers without regaining cancel or signal behavior.
+As a runtime maintainer, I need `WorkflowEngineCoreService` to expose combined
+run-control delegation without regaining cancel or signal behavior.
 
 Acceptance criteria:
 

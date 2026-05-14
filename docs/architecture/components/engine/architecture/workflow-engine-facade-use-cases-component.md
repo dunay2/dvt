@@ -9,9 +9,9 @@ last_reviewed: 2026-04-30
 
 ## Purpose
 
-This component owns the compatibility seam between the public
-`IWorkflowEngine` contract and the internal application services that perform
-execution behavior.
+This component owns the hardcut delegation seam between the public
+`IWorkflowEngine` command/query boundary and the internal application services
+that perform execution behavior.
 
 ## Public API
 
@@ -44,7 +44,7 @@ execution behavior.
   application or control service names.
 - `WorkflowStartRunUseCase` owns resolved-context construction and start-run
   tracing because those are execution-use-case concerns, not facade concerns.
-- `IWorkflowEngine` remains unchanged: commands plus canonical status read.
+- `IWorkflowEngine` is the current command plus canonical status read boundary.
 - Enrichment and health remain outside `IWorkflowEngine`.
 
 ## Transitions

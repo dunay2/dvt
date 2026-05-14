@@ -30,7 +30,7 @@ describe('WorkflowEngine runtime path decomposition', () => {
     expect(signalPort).not.toContain('cancel(');
   });
 
-  it('moves cancel command behavior out of the compatibility core service', () => {
+  it('moves cancel command behavior out of the combined run-control delegator', () => {
     const commandService = readEngineSource('services/runControl/RunCommandService.ts');
     const signalService = readEngineSource('services/runControl/RunSignalService.ts');
     const coreService = readEngineSource('core/WorkflowEngineCoreService.ts');
@@ -92,7 +92,7 @@ describe('WorkflowEngine runtime path decomposition', () => {
       'RunCommandService',
       'RunSignalService',
       'WorkflowEngineCoreService',
-      'compatibility adapter',
+      'combined run-control delegator',
       'IRunCommandService',
       'IRunSignalService',
       '```mermaid',

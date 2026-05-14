@@ -11,7 +11,7 @@ import {
 } from './engineArchitectureTestSupport.js';
 
 describe('WorkflowEngine semantic closure architecture', () => {
-  it('declares owned concerns for the composition, compatibility, and role-interface seams', () => {
+  it('declares owned concerns for the composition, run-control, and role-interface seams', () => {
     const modules = [
       {
         path: 'apps/api/src/runtime/intentReconcilerRuntime.ts',
@@ -33,7 +33,7 @@ describe('WorkflowEngine semantic closure architecture', () => {
         path: 'packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts',
         headerTokens: [
           '@ownedConcern',
-          'compatibility run-control adapter',
+          'combined run-control delegator',
           'delegates to command and signal services',
         ],
       },
