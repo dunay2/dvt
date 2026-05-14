@@ -1,3 +1,12 @@
+/**
+ * @file scripts/planning-db-operate.cjs
+ * @ownedConcern Execute DB-first local planning and governance command rails with idempotent audit.
+ * @baseline ADR-0055: Planning DB canonical operational source
+ * @decision Keep operational writes behind explicit command rails instead of direct generated-file edits.
+ * @consequence Task lifecycle, docs resolutions, and governance component definitions share
+ *   validation, idempotency, and audit semantics before projections consume them.
+ * @version 1.1.0
+ */
 const crypto = require('node:crypto');
 const { Client } = require('pg');
 
@@ -6,6 +15,34 @@ const { runMigrations, schemaName } = require('./planning-db-migrate.cjs');
 
 const allowedStatuses = new Set(['queued', 'in_progress', 'blocked', 'review', 'done']);
 const allowedDocsResolutionStatuses = new Set(['resolved', 'accepted', 'ignored', 'linked']);
+const allowedComponentStatuses = new Set([
+  'canonical',
+  'review',
+  'drift',
+  'legacy',
+  'coverage-required',
+  'superseded',
+]);
+const allowedComponentParentLevels = new Set([
+  'system',
+  'domain',
+  'workspace',
+  'module',
+  'component',
+]);
+const componentListOptionKeys = new Set([
+  'owns',
+  'excludes',
+  'responsibility',
+  'non-goal',
+  'reason-to-change',
+  'public-api',
+  'invariant',
+  'transition',
+  'consumer',
+  'governance',
+  'fowler-signal',
+]);
 
 function databaseUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
@@ -56,6 +93,44 @@ function validateDocsResolutionStatus(value) {
   return value;
 }
 
+function validateComponentStatus(value) {
+  if (!allowedComponentStatuses.has(value)) {
+    throw new Error(
+      `Invalid governance component status "${value}". Expected: ${[
+        ...allowedComponentStatuses,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateComponentId(value, optionName = 'component') {
+  const normalized = String(value || '').trim();
+  if (!/^SYS-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(normalized)) {
+    throw new Error(
+      `Invalid --${optionName} "${value}". Expected an uppercase SYS-* governance unit id.`
+    );
+  }
+
+  return normalized;
+}
+
+function validateComponentCqRails(value) {
+  const normalized = String(value || '').trim();
+  if (!normalized) {
+    throw new Error('Missing required --cq-rails');
+  }
+
+  const hasNonePrefix = /^none\b/i.test(normalized);
+  const hasNoneRationale = /^none\s*[-:]\s*\S+/i.test(normalized);
+  if (/^none$/i.test(normalized) || (hasNonePrefix && !hasNoneRationale)) {
+    throw new Error('cq-rails "none" requires a rationale, for example "none - passive docs".');
+  }
+
+  return normalized;
+}
+
 function parseIntegerOption(value, optionName) {
   if (value === undefined || value === null || value === '') {
     return null;
@@ -67,6 +142,22 @@ function parseIntegerOption(value, optionName) {
   }
 
   return parsed;
+}
+
+function parseBooleanOption(value, optionName) {
+  if (value === undefined || value === null || value === '') {
+    return null;
+  }
+
+  const normalized = String(value).trim().toLowerCase();
+  if (normalized === 'true') {
+    return true;
+  }
+  if (normalized === 'false') {
+    return false;
+  }
+
+  throw new Error(`Invalid --${optionName} "${value}". Expected true or false.`);
 }
 
 function parseNonNegativeNumberOption(value, optionName) {
@@ -111,12 +202,13 @@ function parseFlagOptions(args) {
     }
     index += 1;
 
-    if (key === 'evidence') {
-      options.evidence.push(value);
+    const camelKey = key.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
+    if (key === 'evidence' || componentListOptionKeys.has(key)) {
+      options[camelKey] = options[camelKey] || [];
+      options[camelKey].push(value);
       continue;
     }
 
-    const camelKey = key.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
     options[camelKey] = value;
   }
 
@@ -181,6 +273,31 @@ function operationPayload(command) {
     };
   }
 
+  if (command.kind === 'component_create') {
+    return {
+      componentId: command.componentId,
+      name: command.name,
+      parentComponentId: command.parentComponentId,
+      level: command.level,
+      status: command.status,
+      childrenRequired: command.childrenRequired,
+      ownedConcern: command.ownedConcern,
+      owns: command.owns || [],
+      excludes: command.excludes || [],
+      responsibilities: command.responsibilities || [],
+      nonGoals: command.nonGoals || [],
+      reasonsToChange: command.reasonsToChange || [],
+      dddOwner: command.dddOwner,
+      cqRails: command.cqRails,
+      publicApi: command.publicApi || [],
+      invariants: command.invariants || [],
+      transitions: command.transitions || [],
+      consumers: command.consumers || [],
+      governance: command.governance || [],
+      fowlerSignals: command.fowlerSignals || [],
+    };
+  }
+
   return {};
 }
 
@@ -205,6 +322,20 @@ function defaultIdempotencyKey(command) {
       crypto
         .createHash('sha256')
         .update(canonicalJson(docsResolutionIdempotencyPayload(command)))
+        .digest('hex')
+        .slice(0, 16),
+    ].join(':');
+  }
+
+  if (command.kind === 'component_create') {
+    return [
+      command.kind,
+      command.actor || 'anonymous',
+      command.componentId || 'all',
+      command.expectedRevision ?? 'latest',
+      crypto
+        .createHash('sha256')
+        .update(canonicalJson(operationPayload(command)))
         .digest('hex')
         .slice(0, 16),
     ].join(':');
@@ -323,6 +454,24 @@ function assertIdempotentReplayMatches(existingOperation, command, currentState 
         `Idempotency key "${command.idempotencyKey}" already completed at revision ${resultingRevision}, but ${command.laneId}/${command.taskId} is now at revision ${currentRevision}. Use a new idempotency key for a new planning operation.`
       );
     }
+  }
+}
+
+function assertComponentIdempotentReplayMatches(existingOperation, command) {
+  const expectedPayload = operationPayload(command);
+  const existingPayload = normalizeExistingPayload(existingOperation.payload);
+  const sameOperation =
+    existingOperation.operation_type === command.kind &&
+    existingOperation.actor === command.actor &&
+    existingOperation.component_id === command.componentId &&
+    normalizeRevision(existingOperation.expected_revision) ===
+      normalizeRevision(command.expectedRevision) &&
+    canonicalJson(existingPayload) === canonicalJson(expectedPayload);
+
+  if (!sameOperation) {
+    throw new Error(
+      `Idempotency key "${command.idempotencyKey}" already belongs to a different governance component operation.`
+    );
   }
 }
 
@@ -470,6 +619,105 @@ function parseDocsResolutionCommand(resource, action, args) {
   return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
 }
 
+function normalizeListOption(value) {
+  if (value === undefined || value === null) {
+    return [];
+  }
+
+  const values = Array.isArray(value) ? value : [value];
+  return values.map((item) => String(item).trim()).filter(Boolean);
+}
+
+function validateComponentCreateCommand(command) {
+  if (command.componentId === command.parentComponentId) {
+    throw new Error(`Governance component ${command.componentId} cannot be its own parent.`);
+  }
+
+  if (command.expectedRevision !== null && command.expectedRevision !== undefined) {
+    if (command.expectedRevision !== 0) {
+      throw new Error(
+        `CreateGovernanceComponent expects registry revision 0 for ${command.componentId}; received ${command.expectedRevision}.`
+      );
+    }
+  }
+
+  if (command.excludes.length > 0 && command.owns.length === 0) {
+    throw new Error(`Governance component ${command.componentId} declares excludes without owns.`);
+  }
+
+  if (command.owns.length === 0 && command.childrenRequired !== true) {
+    throw new Error(
+      `Governance component ${command.componentId} must declare --owns or --children-required true.`
+    );
+  }
+
+  const requiredTextFields = [
+    ['name', command.name],
+    ['owned-concern', command.ownedConcern],
+    ['ddd-owner', command.dddOwner],
+    ['cq-rails', command.cqRails],
+  ];
+  for (const [field, value] of requiredTextFields) {
+    if (!normalizeOptionalText(value)) {
+      throw new Error(`Missing required --${field}`);
+    }
+  }
+
+  if (command.status === 'canonical') {
+    const semanticFields = [
+      ['public-api', command.publicApi],
+      ['invariant', command.invariants],
+      ['transition', command.transitions],
+      ['consumer', command.consumers],
+    ];
+    for (const [field, values] of semanticFields) {
+      if (!values || values.length === 0) {
+        throw new Error(`Canonical component ${command.componentId} is missing --${field}.`);
+      }
+    }
+  }
+
+  return command;
+}
+
+function parseComponentCommand(action, args) {
+  if (action !== 'create') {
+    throw new Error(`Unknown component operation "${action}". Expected create.`);
+  }
+
+  const options = parseFlagOptions(args);
+  const actor = requireOption(options, 'actor');
+  const command = {
+    kind: 'component_create',
+    componentId: validateComponentId(requireOption(options, 'component'), 'component'),
+    name: requireOption(options, 'name'),
+    parentComponentId: validateComponentId(requireOption(options, 'parent'), 'parent'),
+    level: 'component',
+    status: validateComponentStatus(options.status || 'review'),
+    childrenRequired: parseBooleanOption(options.childrenRequired, 'children-required') ?? false,
+    ownedConcern: requireOption(options, 'ownedConcern'),
+    owns: normalizeListOption(options.owns),
+    excludes: normalizeListOption(options.excludes),
+    responsibilities: normalizeListOption(options.responsibility),
+    nonGoals: normalizeListOption(options.nonGoal),
+    reasonsToChange: normalizeListOption(options.reasonToChange),
+    dddOwner: requireOption(options, 'dddOwner'),
+    cqRails: validateComponentCqRails(options.cqRails),
+    publicApi: normalizeListOption(options.publicApi),
+    invariants: normalizeListOption(options.invariant),
+    transitions: normalizeListOption(options.transition),
+    consumers: normalizeListOption(options.consumer),
+    governance: normalizeListOption(options.governance),
+    fowlerSignals: normalizeListOption(options.fowlerSignal),
+    actor,
+    expectedRevision: parseIntegerOption(options.expectedRevision, 'expected-revision'),
+    idempotencyKey: options.idempotencyKey,
+  };
+
+  validateComponentCreateCommand(command);
+  return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+}
+
 function parseArgs(args = process.argv.slice(2)) {
   const [resource, action, ...rest] = args;
 
@@ -481,6 +729,14 @@ function parseArgs(args = process.argv.slice(2)) {
     }
 
     return parseTaskCommand(action, rest);
+  }
+
+  if (resource === 'component') {
+    if (!action) {
+      throw new Error('Missing component operation. Expected create.');
+    }
+
+    return parseComponentCommand(action, rest);
   }
 
   if (resource === 'audit') {
@@ -502,7 +758,7 @@ function parseArgs(args = process.argv.slice(2)) {
   }
 
   throw new Error(
-    'Unknown planning DB operation. Expected "task", "docs-disposition", "task-gap", or "audit".'
+    'Unknown planning DB operation. Expected "task", "component", "docs-disposition", "task-gap", or "audit".'
   );
 }
 
@@ -544,6 +800,25 @@ function buildInitialState(importedTask) {
   };
 }
 
+function rebaseLocalStateToImportedSource(state, importedTask) {
+  if (!state) {
+    return buildInitialState(importedTask);
+  }
+
+  if (
+    state.sourcePath === importedTask.sourcePath &&
+    state.baseSourceContentSha256 === importedTask.sourceContentSha256
+  ) {
+    return state;
+  }
+
+  return {
+    ...state,
+    sourcePath: importedTask.sourcePath,
+    baseSourceContentSha256: importedTask.sourceContentSha256,
+  };
+}
+
 function toIso(value) {
   return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
 }
@@ -555,7 +830,7 @@ function planTaskLocalOperation({ command, importedTask, currentState, operation
     );
   }
 
-  const previous = normalizeState(currentState) || buildInitialState(importedTask);
+  const previous = rebaseLocalStateToImportedSource(normalizeState(currentState), importedTask);
   const expectedRevision = command.expectedRevision;
   if (
     expectedRevision !== null &&
@@ -675,6 +950,156 @@ function buildDefinitionFromCreateCommand({ command, importedLane, now }) {
     createdAt: toIso(now),
     rawTask,
   };
+}
+
+function normalizeGovernanceUnit(row) {
+  if (!row) {
+    return null;
+  }
+
+  return {
+    unitId: row.unit_id ?? row.unitId ?? row.component_id ?? row.componentId,
+    name: row.name,
+    level: row.level ?? row.component_level ?? row.componentLevel,
+    parentId: row.parent_id ?? row.parentId ?? row.parent_component_id ?? row.parentComponentId,
+    rootUnit: row.root_unit ?? row.rootUnit,
+    domainUnit: row.domain_unit ?? row.domainUnit,
+    sourcePaths: row.source_paths ?? row.sourcePaths ?? [],
+    sourceContentSha256Values:
+      row.source_content_sha256_values ?? row.sourceContentSha256Values ?? [],
+  };
+}
+
+function normalizeComponentDefinition(row) {
+  if (!row) {
+    return null;
+  }
+
+  return {
+    componentId: row.component_id ?? row.componentId,
+    name: row.name,
+    status: row.status,
+    revision: Number(row.revision ?? 0),
+  };
+}
+
+function semanticArrayField(rawUnit, key, values) {
+  if (values && values.length > 0) {
+    rawUnit[key] = values;
+  }
+}
+
+function buildRawUnitFromComponentCreateCommand(command) {
+  const rawUnit = {
+    id: command.componentId,
+    name: command.name,
+    level: 'component',
+    parent: command.parentComponentId,
+    status: command.status,
+    childrenRequired: command.childrenRequired,
+    dddOwner: command.dddOwner,
+    cqRails: command.cqRails,
+    ownedConcern: command.ownedConcern,
+    owns: command.owns,
+    excludes: command.excludes,
+  };
+
+  semanticArrayField(rawUnit, 'responsibilities', command.responsibilities);
+  semanticArrayField(rawUnit, 'nonGoals', command.nonGoals);
+  semanticArrayField(rawUnit, 'reasonsToChange', command.reasonsToChange);
+  semanticArrayField(rawUnit, 'publicApi', command.publicApi);
+  semanticArrayField(rawUnit, 'invariants', command.invariants);
+  semanticArrayField(rawUnit, 'transitions', command.transitions);
+  semanticArrayField(rawUnit, 'consumers', command.consumers);
+  semanticArrayField(rawUnit, 'governance', command.governance);
+  semanticArrayField(rawUnit, 'fowlerSignals', command.fowlerSignals);
+
+  return rawUnit;
+}
+
+function componentDefinitionSourceHash(command) {
+  return crypto
+    .createHash('sha256')
+    .update(canonicalJson(operationPayload(command)))
+    .digest('hex');
+}
+
+function planComponentCreateOperation({
+  command,
+  parentUnit,
+  existingComponent,
+  operationId,
+  now,
+}) {
+  const existing = normalizeComponentDefinition(existingComponent);
+  if (existing) {
+    throw new Error(`Governance component ${command.componentId} already exists.`);
+  }
+
+  const parent = normalizeGovernanceUnit(parentUnit);
+  if (!parent) {
+    throw new Error(
+      `Parent governance unit ${command.parentComponentId} was not imported into the planning DB.`
+    );
+  }
+  if (!allowedComponentParentLevels.has(parent.level)) {
+    throw new Error(
+      `Governance component ${command.componentId} cannot use ${parent.level} parent ${parent.unitId}.`
+    );
+  }
+
+  validateComponentCreateCommand(command);
+
+  const sourcePath = 'planning_query_store.governance_component_local_definitions';
+  const sourceContentSha256 = componentDefinitionSourceHash(command);
+  const createdAt = toIso(now);
+  const rawUnit = buildRawUnitFromComponentCreateCommand(command);
+  const definition = {
+    componentId: command.componentId,
+    sourcePath,
+    sourceContentSha256,
+    revision: 0,
+    name: command.name,
+    level: 'component',
+    parentComponentId: command.parentComponentId,
+    rootUnit: parent.rootUnit || parent.unitId,
+    domainUnit: parent.domainUnit || parent.rootUnit || parent.unitId,
+    status: command.status,
+    childrenRequired: command.childrenRequired,
+    owns: command.owns,
+    excludes: command.excludes,
+    ownedConcern: command.ownedConcern,
+    responsibilities: command.responsibilities,
+    nonGoals: command.nonGoals,
+    reasonsToChange: command.reasonsToChange,
+    dddOwner: command.dddOwner,
+    cqRails: command.cqRails,
+    publicApi: command.publicApi,
+    invariants: command.invariants,
+    transitions: command.transitions,
+    consumers: command.consumers,
+    governance: command.governance,
+    fowlerSignals: command.fowlerSignals,
+    createdBy: command.actor,
+    createdAt,
+    rawUnit,
+  };
+  const audit = {
+    operationId,
+    idempotencyKey: command.idempotencyKey,
+    operationType: command.kind,
+    actor: command.actor,
+    componentId: command.componentId,
+    sourcePath,
+    sourceContentSha256,
+    expectedRevision: command.expectedRevision ?? null,
+    previousRevision: 0,
+    resultingRevision: 0,
+    payload: operationPayload(command),
+    createdAt,
+  };
+
+  return { definition, audit };
 }
 
 function normalizeTaskDefinition(row) {
@@ -1044,6 +1469,39 @@ async function readExistingDocsResolutionOperation(client, idempotencyKey) {
   return result.rows[0] || null;
 }
 
+async function readExistingComponentOperation(client, idempotencyKey) {
+  const result = await client.query(
+    `select *
+     from ${schemaName}.governance_component_local_operations
+     where idempotency_key = $1`,
+    [idempotencyKey]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function readGovernanceUnit(client, unitId) {
+  const result = await client.query(
+    `select *
+     from ${schemaName}.governance_unit_query
+     where unit_id = $1`,
+    [unitId]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function readEffectiveComponentDefinition(client, componentId) {
+  const result = await client.query(
+    `select *
+     from ${schemaName}.governance_component_definition_query
+     where component_id = $1`,
+    [componentId]
+  );
+
+  return result.rows[0] || null;
+}
+
 async function readDocsDispositionAction(client, command) {
   const result = await client.query(
     `select
@@ -1280,6 +1738,73 @@ async function writePlannedDefinitionOperation(client, planned) {
   );
 }
 
+async function writePlannedComponentCreateOperation(client, planned) {
+  await client.query(
+    `insert into ${schemaName}.governance_component_local_definitions
+      (component_id, source_path, source_content_sha256, revision, name, level, parent_id,
+       root_unit, domain_unit, status, children_required, owns, excludes, owned_concern,
+       responsibilities, non_goals, reasons_to_change, ddd_owner, cq_rails, public_api,
+       invariants, transitions, consumers, governance_refs, fowler_signals, created_by,
+       created_at, raw_unit)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13::jsonb,
+             $14, $15::jsonb, $16::jsonb, $17::jsonb, $18, $19, $20::jsonb,
+             $21::jsonb, $22::jsonb, $23::jsonb, $24::jsonb, $25::jsonb, $26,
+             $27, $28::jsonb)`,
+    [
+      planned.definition.componentId,
+      planned.definition.sourcePath,
+      planned.definition.sourceContentSha256,
+      planned.definition.revision,
+      planned.definition.name,
+      planned.definition.level,
+      planned.definition.parentComponentId,
+      planned.definition.rootUnit,
+      planned.definition.domainUnit,
+      planned.definition.status,
+      planned.definition.childrenRequired,
+      toJson(planned.definition.owns),
+      toJson(planned.definition.excludes),
+      planned.definition.ownedConcern,
+      toJson(planned.definition.responsibilities),
+      toJson(planned.definition.nonGoals),
+      toJson(planned.definition.reasonsToChange),
+      planned.definition.dddOwner,
+      planned.definition.cqRails,
+      toJson(planned.definition.publicApi),
+      toJson(planned.definition.invariants),
+      toJson(planned.definition.transitions),
+      toJson(planned.definition.consumers),
+      toJson(planned.definition.governance),
+      toJson(planned.definition.fowlerSignals),
+      planned.definition.createdBy,
+      planned.definition.createdAt,
+      toJson(planned.definition.rawUnit),
+    ]
+  );
+
+  await client.query(
+    `insert into ${schemaName}.governance_component_local_operations
+      (operation_id, idempotency_key, operation_type, actor, component_id, source_path,
+       source_content_sha256, expected_revision, previous_revision, resulting_revision,
+       payload, created_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12)`,
+    [
+      planned.audit.operationId,
+      planned.audit.idempotencyKey,
+      planned.audit.operationType,
+      planned.audit.actor,
+      planned.audit.componentId,
+      planned.audit.sourcePath,
+      planned.audit.sourceContentSha256,
+      planned.audit.expectedRevision,
+      planned.audit.previousRevision,
+      planned.audit.resultingRevision,
+      toJson(planned.audit.payload),
+      planned.audit.createdAt,
+    ]
+  );
+}
+
 async function writePlannedDocsResolutionOperation(client, planned) {
   await client.query(
     `insert into ${schemaName}.doc_resolution_overlays
@@ -1378,6 +1903,49 @@ async function applyDocsResolutionOperation(command, options = {}) {
     });
 
     await writePlannedDocsResolutionOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
+async function applyComponentCreateOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    await runMigrations({ client, silent: true });
+    await client.query('begin');
+
+    const existing = await readExistingComponentOperation(client, command.idempotencyKey);
+    if (existing) {
+      assertComponentIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+
+    const parentUnit = await readGovernanceUnit(client, command.parentComponentId);
+    const existingComponent = await readEffectiveComponentDefinition(client, command.componentId);
+    const planned = planComponentCreateOperation({
+      command,
+      parentUnit,
+      existingComponent,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+
+    await writePlannedComponentCreateOperation(client, planned);
     await client.query('commit');
     return { idempotent: false, ...planned };
   } catch (error) {
@@ -1541,6 +2109,13 @@ async function readAudit(command, options = {}) {
 
 function printOperationResult(result) {
   if (result.idempotent) {
+    if (result.audit.component_id) {
+      console.log(
+        `[planning:db:operate] idempotent operation=${result.audit.operation_id} component=${result.audit.component_id}`
+      );
+      return;
+    }
+
     if (result.audit.resolution_scope) {
       console.log(
         `[planning:db:operate] idempotent operation=${result.audit.operation_id} resolution=${result.audit.resolution_scope}/${result.audit.issue_kind}`
@@ -1557,6 +2132,13 @@ function printOperationResult(result) {
   if (result.resolution) {
     console.log(
       `[planning:db:operate] ${result.audit.operationType} ${result.resolution.resolutionScope}/${result.resolution.issueKind} status=${result.resolution.resolutionStatus}`
+    );
+    return;
+  }
+
+  if (result.definition) {
+    console.log(
+      `[planning:db:operate] ${result.audit.operationType} ${result.definition.componentId} revision=${result.audit.resultingRevision}`
     );
     return;
   }
@@ -1586,7 +2168,9 @@ async function main() {
   const result =
     command.kind === 'docs_disposition_resolve' || command.kind === 'task_gap_resolve'
       ? await applyDocsResolutionOperation(command)
-      : await applyTaskLocalOperation(command);
+      : command.kind === 'component_create'
+        ? await applyComponentCreateOperation(command)
+        : await applyTaskLocalOperation(command);
   printOperationResult(result);
 }
 
@@ -1598,8 +2182,10 @@ if (require.main === module) {
 }
 
 module.exports = {
+  applyComponentCreateOperation,
   applyDocsResolutionOperation,
   applyTaskLocalOperation,
+  assertComponentIdempotentReplayMatches,
   assertDocsResolutionIdempotentReplayMatches,
   assertIdempotentReplayMatches,
   buildAuditRows,
@@ -1607,10 +2193,12 @@ module.exports = {
   databaseUrl,
   materializeDocsResolutionCommand,
   parseArgs,
+  planComponentCreateOperation,
   planDocsResolutionOperation,
   planTaskDefinitionOperation,
   planTaskLocalOperation,
   readAudit,
   showTask,
+  validateComponentStatus,
   validateTaskStatus,
 };

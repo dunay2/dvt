@@ -6,6 +6,7 @@ const {
   buildGovernanceFileSnapshot,
   buildPlanningContentSnapshot,
   buildPrReadinessSnapshot,
+  buildRiskDebtSnapshot,
   buildRepositoryCommandSnapshot,
   clearGovernanceSnapshotTables,
   governanceImportDeleteTables,
@@ -250,6 +251,72 @@ test('governance snapshot preserves component, fingerprint, coverage, and remedi
   assert.ok(cqRailGap.expectedValidation.includes('pnpm docs:governance:remediation-queue:check'));
 });
 
+test('risk debt snapshot turns risk-register records into DB work items with ownership metadata', () => {
+  const raw = [
+    '---',
+    'id: R-20260514-EXAMPLE-DEBT',
+    'title: Example planning debt remains visible',
+    'status: Open',
+    'owners:',
+    '  - Planning',
+    'severity: High',
+    'probability: Medium',
+    '---',
+    'summary: Example debt body.',
+    '',
+  ].join('\n');
+
+  const snapshot = buildRiskDebtSnapshot({
+    riskDocuments: [
+      {
+        sourcePath: 'docs/risk-register/quality/R-20260514-EXAMPLE-DEBT.yaml',
+        raw,
+      },
+    ],
+    governanceFiles: [
+      {
+        path: 'docs/risk-register/quality/R-20260514-EXAMPLE-DEBT.yaml',
+        componentUnit: 'SYS-PLANNING-DB',
+        rootUnit: 'SYS-PLANNING',
+        domainUnit: 'SYS-PLANNING-GOVERNANCE',
+        dddOwner: 'Planning / Governance',
+        cqRails: 'QueryRiskDebt',
+      },
+    ],
+  });
+
+  assert.equal(snapshot.riskDebtItems.length, 1);
+  assert.deepEqual(snapshot.riskDebtItems[0], {
+    riskId: 'R-20260514-EXAMPLE-DEBT',
+    sourcePath: 'docs/risk-register/quality/R-20260514-EXAMPLE-DEBT.yaml',
+    title: 'Example planning debt remains visible',
+    status: 'Open',
+    owners: ['Planning'],
+    severity: 'High',
+    probability: 'Medium',
+    priority: 'P1',
+    componentUnit: 'SYS-PLANNING-DB',
+    rootUnit: 'SYS-PLANNING',
+    domainUnit: 'SYS-PLANNING-GOVERNANCE',
+    dddOwner: 'Planning / Governance',
+    cqRails: 'QueryRiskDebt',
+    sourceContentSha256: snapshot.riskDebtItems[0].sourceContentSha256,
+    rawFrontmatter: {
+      id: 'R-20260514-EXAMPLE-DEBT',
+      title: 'Example planning debt remains visible',
+      status: 'Open',
+      owners: ['Planning'],
+      severity: 'High',
+      probability: 'Medium',
+    },
+    rawDebt: {
+      sourcePath: 'docs/risk-register/quality/R-20260514-EXAMPLE-DEBT.yaml',
+      sourceBytes: Buffer.byteLength(raw, 'utf8'),
+    },
+  });
+  assert.match(snapshot.riskDebtItems[0].sourceContentSha256, /^[a-f0-9]{64}$/);
+});
+
 test('governance snapshot builds DB import sources from in-memory generator projections', () => {
   const snapshot = buildGovernanceFileSnapshot();
   const generatedSources = snapshot.sources.filter((source) =>
@@ -383,6 +450,7 @@ test('governance import clears every repopulated governance table before insert'
   );
   assert.ok(governanceImportDeleteTables.includes('governance_coverage'));
   assert.ok(governanceImportDeleteTables.includes('governance_remediation'));
+  assert.ok(governanceImportDeleteTables.includes('risk_debt_items'));
   assert.equal(governanceImportDeleteTables.at(-1), 'governance_sources');
 });
 

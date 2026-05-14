@@ -51,6 +51,7 @@ const governanceImportDeleteTables = [
   'knowledge_proposals',
   'knowledge_document_sections',
   'knowledge_documents',
+  'risk_debt_items',
   'governance_component_files',
   'governance_component_file_shards',
   'governance_fingerprints',
@@ -864,6 +865,7 @@ function buildGovernanceFileSnapshot() {
     sourceContentSha256: remediationQueueSource.contentSha256,
     rawTask: task,
   }));
+  const { riskDebtItems } = buildRiskDebtSnapshot({ governanceFiles: files });
 
   return {
     index,
@@ -881,6 +883,7 @@ function buildGovernanceFileSnapshot() {
     fingerprints,
     coverageRows,
     remediationTasks,
+    riskDebtItems,
   };
 }
 
@@ -1013,6 +1016,46 @@ function listTrackedKnowledgeDocuments() {
     });
 }
 
+function isRiskRegisterItemPath(sourcePath) {
+  return /^docs\/risk-register\/.+\/[Rr]-[^/]+\.(md|ya?ml)$/i.test(toPosix(sourcePath));
+}
+
+function listTrackedRiskDocuments() {
+  const output = execFileSync(
+    'git',
+    [
+      'ls-files',
+      '--',
+      'docs/risk-register/*.md',
+      'docs/risk-register/**/*.md',
+      'docs/risk-register/*.yaml',
+      'docs/risk-register/**/*.yaml',
+      'docs/risk-register/*.yml',
+      'docs/risk-register/**/*.yml',
+    ],
+    {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    }
+  );
+
+  return [
+    ...new Set(
+      output
+        .split('\n')
+        .map((value) => normalizeText(value).trim())
+        .filter(Boolean)
+        .map(toPosix)
+        .filter(isRiskRegisterItemPath)
+    ),
+  ]
+    .sort()
+    .map((sourcePath) => {
+      const raw = fs.readFileSync(path.join(repoRoot, sourcePath), 'utf8');
+      return { sourcePath, raw, contentSha256: sha256(raw) };
+    });
+}
+
 function parseMarkdownFrontmatter(raw) {
   const text = normalizeText(raw);
   const lines = text.split(/\r?\n/);
@@ -1040,6 +1083,92 @@ function parseMarkdownFrontmatter(raw) {
     frontmatter,
     body: lines.slice(closingIndex + 1).join('\n'),
   };
+}
+
+function riskPriorityFromSeverityProbability(severity, probability) {
+  const severityLevel = normalizeText(severity).toLowerCase();
+  const probabilityLevel = normalizeText(probability).toLowerCase();
+
+  if (severityLevel === 'high' && probabilityLevel === 'high') {
+    return 'P0';
+  }
+  if (severityLevel === 'high' || probabilityLevel === 'high') {
+    return 'P1';
+  }
+  if (severityLevel === 'medium' || probabilityLevel === 'medium') {
+    return 'P2';
+  }
+  return 'P3';
+}
+
+function governanceField(row, camelName, snakeName) {
+  return normalizeText(row?.[camelName] ?? row?.[snakeName]);
+}
+
+function buildRiskDebtSnapshot(options = {}) {
+  const riskDocuments = normalizeArray(options.riskDocuments).length
+    ? normalizeArray(options.riskDocuments)
+    : listTrackedRiskDocuments();
+  const governanceFiles = normalizeArray(options.governanceFiles);
+  const governanceFileByPath = new Map(
+    governanceFiles.map((file) => [normalizeText(file.path), file])
+  );
+  const seenRiskIds = new Set();
+  const riskDebtItems = [];
+
+  for (const sourceDocument of riskDocuments) {
+    const sourcePath = toPosix(normalizeText(sourceDocument.sourcePath));
+    if (!isRiskRegisterItemPath(sourcePath)) {
+      continue;
+    }
+
+    const raw = normalizeText(sourceDocument.raw);
+    const contentSha256 = normalizeText(sourceDocument.contentSha256) || sha256(raw);
+    const { frontmatter } = parseMarkdownFrontmatter(raw);
+    const riskId =
+      normalizeText(frontmatter.id) || path.basename(sourcePath).replace(/\.(md|ya?ml)$/i, '');
+    if (seenRiskIds.has(riskId)) {
+      throw new Error(`Duplicate risk debt id "${riskId}" while importing ${sourcePath}.`);
+    }
+    seenRiskIds.add(riskId);
+
+    const governanceFile = governanceFileByPath.get(sourcePath);
+    if (!governanceFile) {
+      throw new Error(`Risk debt source ${sourcePath} is missing from governance_files.`);
+    }
+
+    const severity = normalizeText(frontmatter.severity || 'Unknown');
+    const probability = normalizeText(frontmatter.probability || 'Unknown');
+    const priority =
+      normalizeText(frontmatter.priority) ||
+      riskPriorityFromSeverityProbability(severity, probability);
+
+    riskDebtItems.push({
+      riskId,
+      sourcePath,
+      title: normalizeText(frontmatter.title) || riskId,
+      status: normalizeText(frontmatter.status) || 'Open',
+      owners: normalizeArray(frontmatter.owners || frontmatter.owner)
+        .map(normalizeText)
+        .filter(Boolean),
+      severity,
+      probability,
+      priority,
+      componentUnit: governanceField(governanceFile, 'componentUnit', 'component_unit'),
+      rootUnit: governanceField(governanceFile, 'rootUnit', 'root_unit'),
+      domainUnit: governanceField(governanceFile, 'domainUnit', 'domain_unit'),
+      dddOwner: governanceField(governanceFile, 'dddOwner', 'ddd_owner'),
+      cqRails: governanceField(governanceFile, 'cqRails', 'cq_rails'),
+      sourceContentSha256: contentSha256,
+      rawFrontmatter: frontmatter,
+      rawDebt: {
+        sourcePath,
+        sourceBytes: Buffer.byteLength(raw, 'utf8'),
+      },
+    });
+  }
+
+  return { riskDebtItems };
 }
 
 function parseLooseFrontmatter(frontmatterText) {
@@ -2027,6 +2156,35 @@ async function insertGovernanceSnapshot(client, snapshot) {
       ]
     );
   }
+
+  for (const debt of snapshot.riskDebtItems) {
+    await client.query(
+      `insert into ${schemaName}.risk_debt_items
+        (risk_id, source_path, title, status, owners, severity, probability, priority,
+         component_unit, root_unit, domain_unit, ddd_owner, cq_rails, source_content_sha256,
+         raw_frontmatter, raw_debt)
+       values ($1, $2, $3, $4, $5::jsonb, $6, $7, $8, $9, $10, $11, $12, $13, $14,
+         $15::jsonb, $16::jsonb)`,
+      [
+        debt.riskId,
+        debt.sourcePath,
+        debt.title,
+        debt.status,
+        toJson(debt.owners),
+        debt.severity,
+        debt.probability,
+        debt.priority,
+        debt.componentUnit,
+        debt.rootUnit,
+        debt.domainUnit,
+        debt.dddOwner,
+        debt.cqRails,
+        debt.sourceContentSha256,
+        toJson(debt.rawFrontmatter),
+        toJson(debt.rawDebt),
+      ]
+    );
+  }
 }
 
 async function insertRepositoryCommandSnapshot(client, snapshot) {
@@ -2342,6 +2500,7 @@ async function importContent(options = {}) {
     governanceFingerprints: governanceSnapshot?.fingerprints.length ?? 0,
     governanceCoverageRows: governanceSnapshot?.coverageRows.length ?? 0,
     governanceRemediationTasks: governanceSnapshot?.remediationTasks.length ?? 0,
+    riskDebtItems: governanceSnapshot?.riskDebtItems.length ?? 0,
     repositoryCommands: repositoryCommandSnapshot?.commands.length ?? 0,
     prReadinessChecks: prReadinessSnapshot ? 1 : 0,
     docsDispositionDocuments: docsDispositionSnapshot?.documents.length ?? 0,
@@ -2358,6 +2517,7 @@ async function importContent(options = {}) {
       `governanceFiles=${result.governanceFiles}`,
       `governanceComponents=${result.governanceComponents}`,
       `governanceRemediationTasks=${result.governanceRemediationTasks}`,
+      `riskDebtItems=${result.riskDebtItems}`,
       `repositoryCommands=${result.repositoryCommands}`,
       `prReadinessChecks=${result.prReadinessChecks}`,
       `docsDispositionActions=${result.docsDispositionActions}`,
@@ -2468,6 +2628,19 @@ function compareGovernanceAuxiliaryState(expected, actual) {
         ],
       }
     ),
+    riskDebtItems: compareImportRows(expected.riskDebtItems, actual.riskDebtItems, {
+      keyOf: (row) => row.riskId,
+      compareFields: [
+        'sourcePath',
+        'title',
+        'status',
+        'severity',
+        'probability',
+        'priority',
+        'componentUnit',
+        'sourceContentSha256',
+      ],
+    }),
   };
   const ok = Object.values(sections).every(
     (section) =>
@@ -2487,6 +2660,7 @@ async function buildGovernanceAuxiliaryExpectedState(options = {}) {
     buildDocsDispositionSnapshot({
       planningTaskIds: planningSnapshot.tasks.map((task) => task.taskId),
     });
+  const governanceSnapshot = options.governanceSnapshot || buildGovernanceFileSnapshot();
 
   return {
     repositoryCommands: repositoryCommandSnapshot.commands.map((command) => ({
@@ -2538,6 +2712,17 @@ async function buildGovernanceAuxiliaryExpectedState(options = {}) {
       blocking: action.blocking,
       sourceContentSha256: action.sourceContentSha256,
     })),
+    riskDebtItems: governanceSnapshot.riskDebtItems.map((debt) => ({
+      riskId: debt.riskId,
+      sourcePath: debt.sourcePath,
+      title: debt.title,
+      status: debt.status,
+      severity: debt.severity,
+      probability: debt.probability,
+      priority: debt.priority,
+      componentUnit: debt.componentUnit,
+      sourceContentSha256: debt.sourceContentSha256,
+    })),
   };
 }
 
@@ -2549,6 +2734,7 @@ async function readGovernanceAuxiliaryState(client) {
     docDispositionMarkers,
     docTaskLikeReferences,
     docDispositionActions,
+    riskDebtItems,
   ] = await Promise.all([
     client.query(`
       select
@@ -2615,6 +2801,20 @@ async function readGovernanceAuxiliaryState(client) {
       from ${schemaName}.doc_disposition_actions
       order by action_id
     `),
+    client.query(`
+      select
+        risk_id as "riskId",
+        source_path as "sourcePath",
+        title,
+        status,
+        severity,
+        probability,
+        priority,
+        component_unit as "componentUnit",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.risk_debt_items
+      order by risk_id
+    `),
   ]);
 
   return {
@@ -2624,6 +2824,7 @@ async function readGovernanceAuxiliaryState(client) {
     docDispositionMarkers: docDispositionMarkers.rows,
     docTaskLikeReferences: docTaskLikeReferences.rows,
     docDispositionActions: docDispositionActions.rows,
+    riskDebtItems: riskDebtItems.rows,
   };
 }
 
@@ -2721,6 +2922,7 @@ async function runPlanningImport(options = {}, deps = {}) {
       governanceFingerprints: 0,
       governanceCoverageRows: 0,
       governanceRemediationTasks: 0,
+      riskDebtItems: 0,
       repositoryCommands: 0,
       prReadinessChecks: 0,
       docsDispositionDocuments: 0,
@@ -2767,6 +2969,7 @@ module.exports = {
   buildKnowledgeDocumentSnapshot,
   buildPlanningContentSnapshot,
   buildPrReadinessSnapshot,
+  buildRiskDebtSnapshot,
   buildRepositoryCommandSnapshot,
   checkGovernanceAuxiliaryProjections,
   clearGovernanceSnapshotTables,
