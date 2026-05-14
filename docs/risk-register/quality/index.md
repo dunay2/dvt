@@ -147,6 +147,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Temporal runtime closure helper depends on PNPM JSON output shape](R-20260410-TEMPORAL-RUNTIME-CLOSURE-PNPM-JSON-COUPLING.yaml)
 - [Temporal SDK 1.16 upgrade could hide unsupported Nexus compatibility drift](R-20260413-TEMPORAL-SDK-1-16-COMPATIBILITY.yaml)
 - [Temporal SDK patch upgrades can drift from provider integration behavior](R-20260430-TEMPORAL-SDK-1-16-1-PATCH.yaml)
+- [Temporal worker DBT canary coverage regression](R-20260514-TEMPORAL-WORKER-DBT-CANARY.yaml)
 - [Tenant-aware outbox sharding can create short mixed-policy windows during rollout](R-20260509-TENANT-AWARE-OUTBOX-SHARDING.yaml)
 - [Tenant-owned RLS tables can drift from complete tenant-mode authorization](R-20260511-TENANT-MODE-RLS-PROPERTY.yaml)
 - [TF-C2 local Postgres proof can drift from workspace and Docker CLI compatibility assumptions](R-20260413-TF-C2-LOCAL-POSTGRES-PROOF-COMPATIBILITY.yaml)

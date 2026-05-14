@@ -200,6 +200,34 @@ Canary checks when DBT mode is enabled:
 4. `dvt_temporal_worker_state{state="running"} 1`
 5. `dvt_temporal_worker_error_total` stays flat during the observation window
 
+## Local Docker canary
+
+Use the local canary before claiming DBT-enabled worker readiness. It starts the
+canonical Docker Postgres proof environment, a Temporal local test service, the
+standalone worker host, the operational HTTP server, a file-backed DBT project
+bundle, and one DBT-enabled workflow.
+
+PowerShell:
+
+```powershell
+pnpm proof:temporal:postgres:reset
+$env:DVT_PG_INTEGRATION = '1'
+$env:DVT_PG_URL = 'postgresql://dvt:dvt@localhost:5432/dvt'
+$env:DATABASE_URL = 'postgresql://dvt:dvt@localhost:5432/dvt'
+pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+pnpm proof:temporal:postgres:down
+```
+
+The canary asserts:
+
+- `/healthz` returns `200`
+- `/readyz` returns `200` with `state=running` and `dbtEnabled=true`
+- `dvt_temporal_worker_up`, `dvt_temporal_worker_ready`, and
+  `dvt_temporal_worker_dbt_enabled` are `1`
+- `dvt_temporal_worker_error_total` remains flat
+- DBT step invocations reach `s-1`, `s-2`, and `s-3`
+- Postgres run events reach `RunCompleted`
+
 ## First checks during incident triage
 
 1. Check `/healthz`

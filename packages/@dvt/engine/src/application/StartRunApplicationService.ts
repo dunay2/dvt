@@ -68,7 +68,7 @@ export class StartRunApplicationService {
   private readonly executionService: IStartRunExecutionService;
   private readonly telemetryPolicy: StartRunTelemetryPolicy;
 
-  constructor(private readonly deps: StartRunApplicationServiceDeps) {
+  constructor(deps: StartRunApplicationServiceDeps) {
     this.failurePolicy = deps.failurePolicy;
     this.executionService = deps.executionService;
     this.admissionService = new StartRunAdmissionService({
