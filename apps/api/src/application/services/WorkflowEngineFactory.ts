@@ -11,21 +11,6 @@
  */
 import type { IStoredPlanArtifactReader } from '@dvt/artifacts';
 import {
-  buildCircuitBreakingAdapterRegistry,
-  buildRunCommandService,
-  buildWorkflowEngineUseCases,
-  buildRunHealthService,
-  buildRunRecoveryService,
-  buildRunSignalService,
-  buildRunStatusQueryService,
-  buildWorkflowEngineFacade,
-  IdempotencyKeyBuilder,
-  PlanRefPolicy,
-  RunAccessPolicy,
-  RunEnrichmentService,
-  SnapshotProjector,
-  StartRunAdmissionGuard,
-  buildStartRunApplicationService,
   type EngineRunRef,
   type IAuthorizer,
   type IClock,
@@ -40,9 +25,26 @@ import {
   type IRunStateStoreWrite,
   type IStartRunIntentStore,
   type IWorkflowEngine,
+} from '@dvt/engine';
+import {
+  buildCircuitBreakingAdapterRegistry,
+  buildRunCommandService,
+  buildRunHealthService,
+  buildRunRecoveryService,
+  buildRunSignalService,
+  buildRunStatusQueryService,
+  buildStartRunApplicationService,
+  buildWorkflowEngineFacade,
+  buildWorkflowEngineUseCases,
+  IdempotencyKeyBuilder,
+  PlanRefPolicy,
+  RunAccessPolicy,
+  RunEnrichmentService,
+  SnapshotProjector,
+  StartRunAdmissionGuard,
   type WorkflowEngineBuilder,
   type WorkflowEngineDeps,
-} from '@dvt/engine';
+} from '@dvt/engine/runtime';
 import type { IObservability } from '@dvt/observability';
 
 // Subsystem config types ------------------------------------------------------

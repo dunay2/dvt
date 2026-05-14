@@ -14,10 +14,12 @@ export type { IProjector } from '../../ports/IProjector.js';
 export type { IProvider } from './IProvider.v1.js';
 
 export type {
+  EventInput,
+  EventEnvelope,
   EventType,
   RunEventInput,
-  RunEventPersisted,
   RunMetadata,
+  StepEventInput,
   WorkflowSnapshot,
   AppendResult,
 } from './RunEvents.v1.js';

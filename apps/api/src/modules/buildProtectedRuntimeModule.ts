@@ -51,7 +51,7 @@ export async function buildProtectedRuntimeModule(
     PostgresStateStoreAdapter,
     PostgresStartRunIntentStore,
   } = adapterMod;
-  const { SnapshotProjector } = await import('@dvt/engine');
+  const { SnapshotProjector } = await import('@dvt/engine/runtime');
   const storageRuntime = buildProtectedRuntimeStorage({
     PostgresPlanStore,
     PostgresStateStoreAdapter,

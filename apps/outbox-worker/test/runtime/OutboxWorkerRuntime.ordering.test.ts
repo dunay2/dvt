@@ -1,8 +1,4 @@
-import type {
-  DeadLetterRecord,
-  EventEnvelope as RunEventPersisted,
-  OutboxRecord,
-} from '@dvt/contracts';
+import type { DeadLetterRecord, EventEnvelope, OutboxRecord } from '@dvt/contracts';
 import type { IOutboxStorage, OutboxTickResult } from '@dvt/delivery';
 import { InMemoryOutboxStorage } from '@dvt/delivery/testing';
 import { describe, expect } from 'vitest';
@@ -18,7 +14,7 @@ import {
   waitForCondition,
 } from './runtimeTestSupport.js';
 
-function makeRuntimeEvent(runId: string, runSeq: number): RunEventPersisted {
+function makeRuntimeEvent(runId: string, runSeq: number): EventEnvelope {
   return {
     eventId: `evt-${runId}-${runSeq}`,
     eventType: runtimeEventFixture.eventType,
@@ -43,7 +39,7 @@ class FailFirstMarkDeliveredStorage implements IOutboxStorage {
 
   constructor(private readonly inner: InMemoryOutboxStorage) {}
 
-  async enqueueTx(runId: string, events: RunEventPersisted[]): Promise<void> {
+  async enqueueTx(runId: string, events: EventEnvelope[]): Promise<void> {
     await this.inner.enqueueTx(runId, events);
   }
 
@@ -87,10 +83,10 @@ describe('OutboxWorkerRuntime ordering', () => {
     async () => {
       const now = { value: 0 };
       const storage = new InMemoryOutboxStorage({ nowMs: () => now.value });
-      const published: RunEventPersisted[] = [];
+      const published: EventEnvelope[] = [];
       let publishCalls = 0;
       const bus = {
-        async publish(events: RunEventPersisted[]): Promise<void> {
+        async publish(events: EventEnvelope[]): Promise<void> {
           publishCalls += 1;
           if (publishCalls === 1) {
             throw createSyntheticError(runtimeFailures.fatalPublish);
@@ -142,13 +138,13 @@ describe('OutboxWorkerRuntime ordering', () => {
       const storage = new FailFirstMarkDeliveredStorage(
         new InMemoryOutboxStorage({ nowMs: () => now.value })
       );
-      const published: RunEventPersisted[] = [];
+      const published: EventEnvelope[] = [];
       const { logger } = createLoggerState();
       const observedTicks: OutboxTickResult[] = [];
       const runtime = new OutboxWorkerRuntime(
         storage,
         {
-          async publish(events: RunEventPersisted[]): Promise<void> {
+          async publish(events: EventEnvelope[]): Promise<void> {
             published.push(...events);
           },
         },

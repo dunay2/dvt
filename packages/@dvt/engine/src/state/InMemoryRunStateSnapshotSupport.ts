@@ -9,7 +9,7 @@
 import { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION } from '@dvt/contracts';
 
 import { RunNotFoundError } from '../contracts/errors.js';
-import type { RunEventPersisted, RunMetadata, WorkflowSnapshot } from '../contracts/runEvents.js';
+import type { EventEnvelope, RunMetadata, WorkflowSnapshot } from '../contracts/runEvents.js';
 import { applyRunEvent } from '../core/SnapshotProjector.js';
 
 import { cloneWorkflowSnapshot, createDefaultWorkflowSnapshot } from './runEventWritePolicy.js';
@@ -17,7 +17,7 @@ import { collectStaleSnapshotRuns, isSnapshotProjectionStale } from './snapshotS
 
 export type InMemoryRunStateSnapshotBacking = {
   metadataByRunId: Map<string, RunMetadata>;
-  eventsByRunId: Map<string, RunEventPersisted[]>;
+  eventsByRunId: Map<string, EventEnvelope[]>;
   snapshotByRunId: Map<string, WorkflowSnapshot>;
   snapshotLastRunSeqByRunId: Map<string, number>;
 };

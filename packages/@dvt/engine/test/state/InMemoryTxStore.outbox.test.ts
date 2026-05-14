@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ENGINE_ERROR_CODE } from '../../src/contracts/errors.js';
 import type { RunEventInput } from '../../src/contracts/runEvents.js';
-import type { EventEnvelope as RunEventPersisted } from '../../src/ports/IRunStateStore.js';
+import type { EventEnvelope } from '../../src/ports/IRunStateStore.js';
 import type { RunBootstrapInput } from '../../src/ports/IRunStateStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 import { resolveOutboxShardId } from '../../src/state/outboxSharding.js';
@@ -141,19 +141,19 @@ describe('InMemoryTxStore outbox semantics', () => {
         ...makeStarted(runId, 'tenant-a:queued', 'tenant-a'),
         persistedAt: '2026-03-11T00:00:00.000Z',
         runSeq: 1,
-      } satisfies RunEventPersisted,
+      } satisfies EventEnvelope,
       {
         ...makeStarted(runId, 'tenant-a:started', 'tenant-a'),
         persistedAt: '2026-03-11T00:00:00.000Z',
         runSeq: 2,
-      } satisfies RunEventPersisted,
+      } satisfies EventEnvelope,
     ]);
     await store.enqueueTx(runId, [
       {
         ...makeStarted(runId, 'tenant-b:queued', 'tenant-b'),
         persistedAt: '2026-03-11T00:00:00.000Z',
         runSeq: 1,
-      } satisfies RunEventPersisted,
+      } satisfies EventEnvelope,
     ]);
 
     const allPending = await store.listPending(10);

@@ -17,7 +17,7 @@ export type BuildProtectedRuntimeStorageDeps = {
   readonly PostgresPlanStore: typeof import('@dvt/adapter-postgres').PostgresPlanStore;
   readonly PostgresStateStoreAdapter: typeof import('@dvt/adapter-postgres').PostgresStateStoreAdapter;
   readonly PostgresStartRunIntentStore: typeof import('@dvt/adapter-postgres').PostgresStartRunIntentStore;
-  readonly SnapshotProjector: typeof import('@dvt/engine').SnapshotProjector;
+  readonly SnapshotProjector: typeof import('@dvt/engine/runtime').SnapshotProjector;
   readonly databaseUrl: string;
   readonly env: Env;
   readonly pool: RuntimePool;

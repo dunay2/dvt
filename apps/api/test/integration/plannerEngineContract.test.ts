@@ -17,27 +17,29 @@ import {
   type RunExecutionContext,
 } from '@dvt/contracts';
 import {
+  type EngineRunRef,
+  type EventInput,
+  type ExecutionPlan,
+  type IProviderAdapter,
+  type IRunExecutionContextBindingPolicy,
+  type IRunExecutionContextResolver,
+} from '@dvt/engine';
+import {
   AllowAllAuthorizer,
   buildRunCommandService,
-  buildWorkflowEngineUseCases,
-  buildWorkflowEngineFacade,
   buildRunRecoveryService,
   buildRunSignalService,
   buildRunStatusQueryService,
+  buildStartRunApplicationService,
+  buildWorkflowEngineFacade,
+  buildWorkflowEngineUseCases,
   IdempotencyKeyBuilder,
   PlanRefPolicy,
   RunAccessPolicy,
   SequenceClock,
   SnapshotProjector,
   StartRunAdmissionGuard,
-  buildStartRunApplicationService,
-  type EngineRunRef,
-  type ExecutionPlan,
-  type IProviderAdapter,
-  type IRunExecutionContextBindingPolicy,
-  type IRunExecutionContextResolver,
-  type RunEventInput,
-} from '@dvt/engine';
+} from '@dvt/engine/runtime';
 import {
   InMemoryProviderAdapter,
   InMemoryStartRunIntentStore,
@@ -293,7 +295,7 @@ function makeRunEvent(
   clock: SequenceClock,
   meta: { runId: string; planId: string; planVersion: string },
   eventType: 'RunStarted' | 'RunCompleted' | 'RunFailed'
-): RunEventInput {
+): EventInput {
   return {
     eventId: idempotency.eventId(),
     eventType,
@@ -323,7 +325,7 @@ function makeStepEvent(
   meta: { runId: string; planId: string; planVersion: string },
   stepId: string,
   eventType: 'StepStarted' | 'StepCompleted' | 'StepFailed'
-): RunEventInput {
+): EventInput {
   return {
     eventId: idempotency.eventId(),
     eventType,

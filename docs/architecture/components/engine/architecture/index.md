@@ -41,6 +41,8 @@ Use it when the question is:
 - [Workflow engine semantic closure user stories](./workflow-engine-semantic-closure-user-stories.md)
 - [Workflow engine boundary fitness component](./workflow-engine-boundary-fitness-component.md)
 - [Workflow engine boundary fitness user stories](./workflow-engine-boundary-fitness-user-stories.md)
+- [Engine public API surface component](./engine-public-api-surface-component.md)
+- [Engine public API surface user stories](./engine-public-api-surface-user-stories.md)
 
 ## Related pages
 

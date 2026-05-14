@@ -1,7 +1,4 @@
-import {
-  asIsoUtcString,
-  type EventEnvelope as RunEventPersisted,
-} from '@dvt/contracts';
+import { asIsoUtcString, type EventEnvelope } from '@dvt/contracts';
 import type { OutboxRecord, OutboxTickResult } from '@dvt/delivery';
 
 import { OutboxWorkerMonitor } from '../../src/ops/OutboxWorkerMonitor.js';
@@ -72,7 +69,7 @@ export function makeTick(overrides: Partial<OutboxTickResult> = {}): OutboxTickR
   };
 }
 
-export function makeEvent(id: string): RunEventPersisted {
+export function makeEvent(id: string): EventEnvelope {
   return {
     eventId: `evt-${id}`,
     eventType: 'RunQueued',

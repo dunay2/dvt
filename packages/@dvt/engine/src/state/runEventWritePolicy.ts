@@ -7,7 +7,7 @@ import {
 import type { IsoUtcString, RunEventWriteSchemaT } from '@dvt/contracts';
 
 import { InvalidRunEventInputError, RunSequenceOverflowError } from '../contracts/errors.js';
-import type { RunEventInput, RunEventPersisted, WorkflowSnapshot } from '../contracts/runEvents.js';
+import type { EventEnvelope, EventInput, WorkflowSnapshot } from '../contracts/runEvents.js';
 
 export const IN_MEMORY_PERSISTED_AT_EPOCH_ISO = asIsoUtcString('1970-01-01T00:00:00.000Z');
 
@@ -27,7 +27,7 @@ export function cloneWorkflowSnapshot(snapshot: WorkflowSnapshot): WorkflowSnaps
   return globalThis.structuredClone(snapshot);
 }
 
-export function assertRunEventInput(event: RunEventInput, index: number): void {
+export function assertRunEventInput(event: EventInput, index: number): void {
   const validated = parseRunEventEnvelope(event, index);
 
   const record = event as unknown as Record<string, unknown>;
@@ -48,17 +48,17 @@ export function assertRunEventInput(event: RunEventInput, index: number): void {
 }
 
 export function buildPersistedRunEventRecord(
-  event: RunEventInput,
+  event: EventInput,
   runSeq: number,
   persistedAt: IsoUtcString,
   index: number
-): RunEventPersisted {
+): EventEnvelope {
   try {
     return parseRunEventRecord({
       ...event,
       runSeq,
       persistedAt,
-    }) as RunEventPersisted;
+    }) as EventEnvelope;
   } catch {
     throw new InvalidRunEventInputError({
       reason: 'persisted_record_validation_failed',
@@ -68,7 +68,7 @@ export function buildPersistedRunEventRecord(
   }
 }
 
-function parseRunEventEnvelope(event: RunEventInput, index: number): RunEventWriteSchemaT {
+function parseRunEventEnvelope(event: EventInput, index: number): RunEventWriteSchemaT {
   try {
     return parseRunEventWrite(event);
   } catch {
@@ -80,7 +80,7 @@ function parseRunEventEnvelope(event: RunEventInput, index: number): RunEventWri
   }
 }
 
-export function assertEventRunIdMatches(runId: string, event: RunEventInput, index: number): void {
+export function assertEventRunIdMatches(runId: string, event: EventInput, index: number): void {
   if (event.runId !== runId) {
     throw new InvalidRunEventInputError({
       reason: 'run_id_mismatch',
@@ -90,11 +90,7 @@ export function assertEventRunIdMatches(runId: string, event: RunEventInput, ind
   }
 }
 
-export function assertEventTenantMatches(
-  tenantId: string,
-  event: RunEventInput,
-  index: number
-): void {
+export function assertEventTenantMatches(tenantId: string, event: EventInput, index: number): void {
   if (event.tenantId !== tenantId) {
     throw new InvalidRunEventInputError({
       reason: 'tenant_id_mismatch',
@@ -104,7 +100,7 @@ export function assertEventTenantMatches(
   }
 }
 
-export function assertEventsMatchRunId(runId: string, events: RunEventInput[]): void {
+export function assertEventsMatchRunId(runId: string, events: EventInput[]): void {
   for (const [index, event] of events.entries()) {
     assertRunEventInput(event, index);
     assertEventRunIdMatches(runId, event, index);
@@ -114,7 +110,7 @@ export function assertEventsMatchRunId(runId: string, events: RunEventInput[]): 
 export function assertEventsMatchRunIdAndTenant(
   runId: string,
   tenantId: string,
-  events: RunEventInput[]
+  events: EventInput[]
 ): void {
   for (const [index, event] of events.entries()) {
     assertRunEventInput(event, index);

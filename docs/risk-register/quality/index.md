@@ -51,6 +51,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Engine artifact dependency path mapping can drift from workspace dependencies](R-20260510-ENGINE-ARTIFACTS-PATHS.yaml)
 - [Engine fixture boundary fitness can drift from runtime ownership rules](R-20260512-WE-HX-6-BOUNDARY-FITNESS.yaml)
 - [Engine plan-integrity ports can lose ADR traceability metadata](R-20260510-PLAN-INTEGRITY-TRACEABILITY.yaml)
+- [Engine runtime imports can drift back into the root package surface](R-20260514-EA-20260429-05-ENGINE-PUBLIC-API-SURFACE.yaml)
 - [Engine-owned plan verification increases adapter payload size and replay pressure](R-20260407-ENGINE-ENTRYPOINT-PLAN-PAYLOAD.yaml)
 - [Envelope boundary gating can drift if payloadVersion checks stay implicit](R-20260402-S05-ENVELOPE-BOUNDARY-GATING.yaml)
 - [Execution policy sidecar can drift from canonical stored plan identity](R-20260407-PLAN-POLICY-BOUNDARY-DRIFT.yaml)

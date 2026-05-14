@@ -1,6 +1,6 @@
 import { setTimeout as sleep } from 'node:timers/promises';
 
-import { asIsoUtcString, type EventEnvelope as RunEventPersisted } from '@dvt/contracts';
+import { asIsoUtcString, type EventEnvelope } from '@dvt/contracts';
 
 import { closePgPool } from '../../src/db/pool.js';
 import { loadEnv, type ActiveEnv, isActiveEnv } from '../../src/plugins/env.js';
@@ -24,7 +24,7 @@ export function makeLogger(): OutboxWorkerRuntimeLogger {
   };
 }
 
-export function makePendingEvent(): RunEventPersisted {
+export function makePendingEvent(): EventEnvelope {
   return {
     eventId: 'evt-1',
     eventType: 'RunQueued' as const,
