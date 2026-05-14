@@ -69,7 +69,7 @@ module.exports = {
       severity: 'error',
       from: { path: '^apps/' },
       to: {
-        path: '^packages/@dvt/[^/]+/src/(?!index\\.ts$|testing\\.ts$|contracts/planner/)',
+        path: '^packages/@dvt/[^/]+/src/(?!index\\.ts$|runtime\\.ts$|testing\\.ts$|contracts/planner/)',
       },
     },
     ...(require('node:fs').existsSync('packages/@dvt')
@@ -81,7 +81,7 @@ module.exports = {
             severity: 'error',
             from: { path: `^packages/@dvt/${entry.name}/src/` },
             to: {
-              path: `^packages/@dvt/(?!${entry.name}(?:/|$))[^/]+/src/(?!index\\.ts$|testing\\.ts$|contracts/planner/)`,
+              path: `^packages/@dvt/(?!${entry.name}(?:/|$))[^/]+/src/(?!index\\.ts$|runtime\\.ts$|testing\\.ts$|contracts/planner/)`,
             },
           }))
       : []),

@@ -145,6 +145,8 @@ function writeTsConfig(root) {
       compilerOptions: {
         baseUrl: '.',
         paths: {
+          '@dvt/engine': ['packages/@dvt/engine/src/index.ts'],
+          '@dvt/engine/*': ['packages/@dvt/engine/src/*'],
           '@dvt/*': ['packages/@dvt/*'],
           '@dvt/*/*': ['packages/@dvt/*/*'],
         },
@@ -224,6 +226,18 @@ test('dependency-cruiser boundary rules fail for representative negative imports
       `expected ${fixture.ruleName} to fail; got ${violations.join(', ')}`
     );
   }
+});
+
+test('dependency-cruiser boundary rules allow governed package entrypoints', () => {
+  const violations = collectDependencyViolations({
+    'apps/api/src/index.ts':
+      "import runtime from '@dvt/engine/runtime'; import testing from '@dvt/engine/testing'; import engine from '@dvt/engine'; export default { runtime, testing, engine };\n",
+    'packages/@dvt/engine/src/index.ts': 'export default 1;\n',
+    'packages/@dvt/engine/src/runtime.ts': 'export default 2;\n',
+    'packages/@dvt/engine/src/testing.ts': 'export default 3;\n',
+  });
+
+  assert.equal(violations.includes('no-cross-package-deep-imports'), false);
 });
 
 test('semantic architecture guard rejects adapter-owned canonical contract definitions', () => {
