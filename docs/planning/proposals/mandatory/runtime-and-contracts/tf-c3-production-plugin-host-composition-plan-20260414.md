@@ -96,6 +96,8 @@ allowedImplementationSurfaces:
   - docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
   - docs/runbooks/temporal-worker-scaling-operations.md
   - docs/architecture/components/engine/adapters/temporal/temporal-worker-scaling-strategy.md
+  - apps/temporal-worker/package.json
+  - apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
   - docs/planning/state/agent-lane-c.yaml
   - docs/planning/state/agent-lane-c.md
   - docs/planning/state/execution-workboard.md
@@ -103,7 +105,11 @@ allowedImplementationSurfaces:
   - docs/.manifest.json
   - docs/planning/status/**
 forbiddenImplementationSurfaces:
-  - apps/**
+  - apps/api/**
+  - apps/lineage-worker/**
+  - apps/outbox-worker/**
+  - apps/projector-worker/**
+  - apps/web/**
   - packages/**
   - specs/**
   - .github/**
@@ -147,6 +153,19 @@ redGreenCycles:
       - docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
       - docs/planning/state/agent-lane-c.yaml
     greenTest: pnpm docs:feature-mechanization:implementation
+  - id: tf-c3-e-docker-canary
+    redTest: pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+    expectedFailure: >
+      A DBT-enabled Temporal worker can report healthy while the real workflow
+      path is not proven against Postgres, Temporal test service, plan-store
+      artifacts, run metadata, readiness, metrics, and DBT invocation evidence.
+    patchSurfaces:
+      - apps/temporal-worker/package.json
+      - apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+      - docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
+    greenTest: >
+      DVT_PG_INTEGRATION=1 pnpm --filter dvt-temporal-worker test --
+      test/host/runTemporalWorkerHost.test.ts
 symbols:
   - name: TfC3ProductionPluginHostCompositionPlan
     path: docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md
@@ -185,6 +204,127 @@ symbols:
     unitTests:
       - pnpm docs:workboard:check
       - pnpm verify:prepush
+  - name: describeIfPg
+    path: apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+    dddOwner: TemporalWorkerOperationalReadModel
+    cqRails:
+      - DescribeTemporalWorkerOperationalReadiness
+    fowlerSignals:
+      - Test-only confidence prevention
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - worker canary test
+    unitTests:
+      - pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+  - name: waitForAsync
+    path: apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+    dddOwner: TemporalWorkerOperationalReadModel
+    cqRails:
+      - DescribeTemporalWorkerOperationalReadiness
+    fowlerSignals:
+      - Test-only confidence prevention
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - worker canary test
+    unitTests:
+      - pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+  - name: createDbtProjectBundle
+    path: apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+    dddOwner: TemporalWorkerOperationalReadModel
+    cqRails:
+      - DescribeTemporalWorkerOperationalReadiness
+    fowlerSignals:
+      - Test-only confidence prevention
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - worker canary test
+    unitTests:
+      - pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+  - name: storeValidPlanArtifact
+    path: apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+    dddOwner: TemporalWorkerOperationalReadModel
+    cqRails:
+      - DescribeTemporalWorkerOperationalReadiness
+    fowlerSignals:
+      - Test-only confidence prevention
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - worker canary test
+    unitTests:
+      - pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+  - name: createDbtExecutionPlan
+    path: apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+    dddOwner: TemporalWorkerOperationalReadModel
+    cqRails:
+      - DescribeTemporalWorkerOperationalReadiness
+    fowlerSignals:
+      - Test-only confidence prevention
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - worker canary test
+    unitTests:
+      - pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+  - name: bootstrapRunMetadata
+    path: apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+    dddOwner: TemporalWorkerOperationalReadModel
+    cqRails:
+      - DescribeTemporalWorkerOperationalReadiness
+    fowlerSignals:
+      - Test-only confidence prevention
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - worker canary test
+    unitTests:
+      - pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+  - name: waitForRunCompleted
+    path: apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+    dddOwner: TemporalWorkerOperationalReadModel
+    cqRails:
+      - DescribeTemporalWorkerOperationalReadiness
+    fowlerSignals:
+      - Test-only confidence prevention
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - worker canary test
+    unitTests:
+      - pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+  - name: getOperationalJson
+    path: apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+    dddOwner: TemporalWorkerOperationalReadModel
+    cqRails:
+      - DescribeTemporalWorkerOperationalReadiness
+    fowlerSignals:
+      - Test-only confidence prevention
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - worker canary test
+    unitTests:
+      - pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+  - name: getOperationalText
+    path: apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+    dddOwner: TemporalWorkerOperationalReadModel
+    cqRails:
+      - DescribeTemporalWorkerOperationalReadiness
+    fowlerSignals:
+      - Test-only confidence prevention
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - worker canary test
+    unitTests:
+      - pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+  - name: metricValue
+    path: apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+    dddOwner: TemporalWorkerOperationalReadModel
+    cqRails:
+      - DescribeTemporalWorkerOperationalReadiness
+    fowlerSignals:
+      - Test-only confidence prevention
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - worker canary test
+    unitTests:
+      - pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+  - name: sha256Hex
+    path: apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+    dddOwner: TemporalWorkerOperationalReadModel
+    cqRails:
+      - DescribeTemporalWorkerOperationalReadiness
+    fowlerSignals:
+      - Test-only confidence prevention
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - worker canary test
+    unitTests:
+      - pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
 ```
 
 ## Governing sources
