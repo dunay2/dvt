@@ -13,7 +13,7 @@ import {
   type TemporalPlanArtifactReader,
 } from '@dvt/adapter-temporal';
 import { asIsoUtcString } from '@dvt/contracts';
-import { IdempotencyKeyBuilder, PlanIntegrityValidator } from '@dvt/engine';
+import { IdempotencyKeyBuilder, PlanIntegrityValidator } from '@dvt/engine/runtime';
 
 import type { Env } from '../plugins/env.js';
 

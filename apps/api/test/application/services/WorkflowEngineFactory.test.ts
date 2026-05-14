@@ -1,12 +1,11 @@
 import { CURRENT_SIGNAL_SEMANTICS_VERSION, asIsoUtcString, asNonBlankString } from '@dvt/contracts';
 import {
-  AllowAllAuthorizer,
   type IProviderAdapter,
   type ProviderRunStatusView,
   type ResolvedRunContext,
   type SignalRequest,
-  type WorkflowEngineDeps,
 } from '@dvt/engine';
+import { AllowAllAuthorizer, type WorkflowEngineDeps } from '@dvt/engine/runtime';
 import { createNoopObservability } from '@dvt/observability';
 import { describe, it, expect } from 'vitest';
 

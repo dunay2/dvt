@@ -1,0 +1,18 @@
+---
+id: R-20260514-EA-20260429-05-ENGINE-PUBLIC-API-SURFACE
+title: Engine runtime imports can drift back into the root package surface
+status: Open
+date: 2026-05-14
+owners:
+  - packages/@dvt/engine
+severity: Low
+probability: Low
+---
+summary: >
+  The engine package surface is now split into public, runtime, and testing entrypoints. Future
+  runtime work could accidentally re-export implementation services from the root barrel unless the
+  architecture guard remains active.
+mitigation: >
+  Keep packages/@dvt/engine/test/architecture/enginePublicApiSurface.architecture.test.ts in the
+  package test baseline and require component docs to change before expanding any public root export
+  family.
