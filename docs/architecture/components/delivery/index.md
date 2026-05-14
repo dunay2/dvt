@@ -16,6 +16,8 @@ that behavior back into the engine or API layers.
 ## Current Responsibilities
 
 - host the outbox worker runtime;
+- own reusable in-memory outbox claim, retry, dead-letter, replay, shard, and
+  tenant/run ordering semantics for local and test adapters;
 - host projector and lineage runtimes;
 - provide delivery-side helpers such as the admission guard and lineage
   observer;
@@ -27,6 +29,7 @@ that behavior back into the engine or API layers.
 flowchart LR
   RuntimeFacts["Run events / outbox / stale snapshots"] --> Delivery["@dvt/delivery"]
   Delivery --> Admission["StartRunAdmissionGuard"]
+  Delivery --> InMemory["InMemoryOutboxStorageCore"]
   Delivery --> Outbox["OutboxWorkerRuntime"]
   Delivery --> Projector["ProjectorWorkerRuntime"]
   Delivery --> Lineage["LineageWorkerRuntime"]
@@ -40,6 +43,7 @@ flowchart LR
 
 - [index.ts](../../../../packages/@dvt/delivery/src/index.ts)
 - [OutboxWorkerRuntime.ts](../../../../packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts)
+- [InMemoryOutboxStorageCore.ts](../../../../packages/@dvt/delivery/src/testing/InMemoryOutboxStorageCore.ts)
 - [ProjectorWorkerRuntime.ts](../../../../packages/@dvt/delivery/src/application/ProjectorWorkerRuntime.ts)
 - [LineageWorkerRuntime.ts](../../../../packages/@dvt/delivery/src/application/LineageWorkerRuntime.ts)
 - [StartRunAdmissionGuard.ts](../../../../packages/@dvt/delivery/src/backpressure/StartRunAdmissionGuard.ts)
@@ -56,6 +60,11 @@ handling. It is no longer just a placeholder around worker apps.
 - keep retention and purge coordination explicit as delivery policy evolves.
 - keep worker runtimes reusable without hiding operational ownership in the
   library surface.
+
+## Component Guides
+
+- [In-Memory Outbox Storage Component](./in-memory-outbox-storage-component.md)
+- [In-Memory Outbox Storage User Stories](./in-memory-outbox-storage-user-stories.md)
 
 ## Historical Deep Dives
 
