@@ -542,6 +542,307 @@ The closure guard is:
 No compatibility alias or rollback seam remains in `@dvt/contracts` for the
 retired engine-owned behavior ports.
 
+```feature-mechanization
+version: 1
+featureId: RC-G1-CONTRACT-OWNERSHIP-CLOSURE
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
+componentGuides:
+  - docs/contracts/engine/index.md
+  - docs/contracts/shared/index.md
+userStories:
+  - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/adr/ADR-0018_Shared_Kernel_Ownership_Governance.md
+  - docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md
+allowedImplementationSurfaces:
+  - docs/.manifest.json
+  - docs/adr/ADR-0032-compiledcoderef-ownership.md
+  - docs/architecture/architecture-surface-inventory-20260402.md
+  - docs/architecture/atlas/README.md
+  - docs/architecture/atlas/architecture/architecture-atlas.md
+  - docs/architecture/atlas/engineering/engineering-playbook.md
+  - docs/architecture/atlas/index.md
+  - docs/architecture/atlas/status/code-completion-assessment-2026-03-06.md
+  - docs/architecture/component-map.md
+  - docs/architecture/domain-execution.md
+  - docs/architecture/domain-map.md
+  - docs/architecture/domain-shared.md
+  - docs/contracts/engine/index.md
+  - docs/contracts/shared/CompiledCodeRef.v1.schema.json
+  - docs/contracts/shared/index.md
+  - docs/evidence/ed-20260514-rc-g1-contract-ownership-closure.md
+  - docs/evidence/index.md
+  - docs/guides/ai-work-protocol.md
+  - docs/planning/closeouts/20260514-rc-g1-contract-ownership-closure-closeout.md
+  - docs/planning/gaps/runtime-architecture-gap-register-20260331.md
+  - docs/planning/proposals/contract-mapper-event-boundary-study-20260409.md
+  - docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a6-snapshot-rebuild-concurrency-contract-plan-20260513.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+  - docs/planning/reviews/architecture-and-governance/20260307-architecture-doc-consolidation-matrix-review.md
+  - docs/planning/status/canonical-doc-code-matrix.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/planning/status/system-operations-inventory-20260501.md
+  - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
+  - packages/@dvt/contracts/index.js
+  - packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts
+  - packages/@dvt/contracts/src/contracts/engine/ExecutionSemantics.v1.ts
+  - packages/@dvt/contracts/src/contracts/engine/IOutboxStorage.v1.ts
+  - packages/@dvt/contracts/src/contracts/engine/IProjector.v1.ts
+  - packages/@dvt/contracts/src/contracts/engine/RunEvents.v1.ts
+  - packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts
+  - packages/@dvt/contracts/src/contracts/engine/SignalSemantics.v1.ts
+  - packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts
+  - packages/@dvt/contracts/src/index.ts
+  - packages/@dvt/contracts/test/planner.contract.test.ts
+  - packages/@dvt/contracts/test/provider-adapter.architecture.test.ts
+  - packages/@dvt/contracts/test/run-state-store-maintenance-concurrency.architecture.test.ts
+  - scripts/sync-docs.cjs
+forbiddenImplementationSurfaces:
+  - apps/**
+  - packages/@dvt/engine/**
+  - packages/@dvt/planner/**
+  - packages/@dvt/adapter-*/**
+commandQueryRails:
+  - name: SharedKernelContractPublicationQuery
+    type: query
+    dddOwner: Contracts shared kernel
+domainObjects:
+  - name: RunStateVocabulary
+    type: shared DTO vocabulary
+    owner: Contracts shared kernel
+fowlerSignals:
+  - Shared kernel overreach
+  - Boundary drift
+  - Semantic encapsulation
+architectureGuards:
+  - pnpm --filter @dvt/contracts test -- test/provider-adapter.architecture.test.ts
+  - pnpm --filter @dvt/contracts test -- test/run-state-store-maintenance-concurrency.architecture.test.ts
+  - pnpm docs:feature-mechanization:implementation
+cypressFlows:
+  - Not applicable - package boundary and architecture guard only
+completionGate:
+  - pnpm docs:feature-mechanization -- --feature RC-G1-CONTRACT-OWNERSHIP-CLOSURE
+  - pnpm --filter @dvt/contracts test
+  - pnpm --filter @dvt/contracts build
+  - pnpm --filter @dvt/contracts typecheck
+  - pnpm --filter @dvt/engine build
+  - pnpm docs:sync
+  - pnpm governance:refresh
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: provider-adapter-contract-hardcut
+    redTest: pnpm --filter @dvt/contracts test -- test/provider-adapter.architecture.test.ts
+    expectedFailure: Residual IProviderAdapter behavior-port export still exists in @dvt/contracts.
+    patchSurfaces:
+      - packages/@dvt/contracts/test/provider-adapter.architecture.test.ts
+      - packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts
+      - packages/@dvt/contracts/src/index.ts
+    greenTest: pnpm --filter @dvt/contracts test -- test/provider-adapter.architecture.test.ts
+  - id: run-state-store-vocabulary-hardcut
+    redTest: pnpm --filter @dvt/contracts test -- test/run-state-store-maintenance-concurrency.architecture.test.ts
+    expectedFailure: Shared contracts still expose engine-owned run-state behavior ports.
+    patchSurfaces:
+      - packages/@dvt/contracts/test/run-state-store-maintenance-concurrency.architecture.test.ts
+      - packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts
+      - packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts
+    greenTest: pnpm --filter @dvt/contracts test -- test/run-state-store-maintenance-concurrency.architecture.test.ts
+symbols:
+  - name: AppendResult
+    path: packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts
+    dddOwner: RunStateVocabulary
+    cqRails: [SharedKernelContractPublicationQuery]
+    fowlerSignals: [Shared kernel overreach]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - package boundary and architecture guard only
+    unitTests: [pnpm --filter @dvt/contracts test]
+  - name: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION
+    path: packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts
+    dddOwner: RunStateVocabulary
+    cqRails: [SharedKernelContractPublicationQuery]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - package boundary and architecture guard only
+    unitTests: [pnpm --filter @dvt/contracts test]
+  - name: CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION
+    path: packages/@dvt/contracts/src/index.ts
+    dddOwner: RunStateVocabulary
+    cqRails: [SharedKernelContractPublicationQuery]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - package boundary and architecture guard only
+    unitTests: [pnpm --filter @dvt/contracts test]
+  - name: CompiledCodeRef
+    path: packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts
+    dddOwner: RunStateVocabulary
+    cqRails: [SharedKernelContractPublicationQuery]
+    fowlerSignals: [Shared kernel overreach]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - package boundary and architecture guard only
+    unitTests: [pnpm --filter @dvt/contracts test]
+  - name: EventEnvelope
+    path: packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts
+    dddOwner: RunStateVocabulary
+    cqRails: [SharedKernelContractPublicationQuery]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - package boundary and architecture guard only
+    unitTests: [pnpm --filter @dvt/contracts test]
+  - name: EventIdempotencyInput
+    path: packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts
+    dddOwner: RunStateVocabulary
+    cqRails: [SharedKernelContractPublicationQuery]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - package boundary and architecture guard only
+    unitTests: [pnpm --filter @dvt/contracts test]
+  - name: EventInput
+    path: packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts
+    dddOwner: RunStateVocabulary
+    cqRails: [SharedKernelContractPublicationQuery]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - package boundary and architecture guard only
+    unitTests: [pnpm --filter @dvt/contracts test]
+  - name: EventType
+    path: packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts
+    dddOwner: RunStateVocabulary
+    cqRails: [SharedKernelContractPublicationQuery]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - package boundary and architecture guard only
+    unitTests: [pnpm --filter @dvt/contracts test]
+  - name: ExecutionPlan
+    path: packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts
+    dddOwner: RunStateVocabulary
+    cqRails: [SharedKernelContractPublicationQuery]
+    fowlerSignals: [Shared kernel overreach]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - package boundary and architecture guard only
+    unitTests: [pnpm --filter @dvt/contracts test]
+  - name: ListEventsOptions
+    path: packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts
+    dddOwner: RunStateVocabulary
+    cqRails: [SharedKernelContractPublicationQuery]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - package boundary and architecture guard only
+    unitTests: [pnpm --filter @dvt/contracts test]
+  - name: ListRunsOptions
+    path: packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts
+    dddOwner: RunStateVocabulary
+    cqRails: [SharedKernelContractPublicationQuery]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - package boundary and architecture guard only
+    unitTests: [pnpm --filter @dvt/contracts test]
+  - name: ProviderRefUpdate
+    path: packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts
+    dddOwner: RunStateVocabulary
+    cqRails: [SharedKernelContractPublicationQuery]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - package boundary and architecture guard only
+    unitTests: [pnpm --filter @dvt/contracts test]
+  - name: RetryAttemptReservation
+    path: packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts
+    dddOwner: RunStateVocabulary
+    cqRails: [SharedKernelContractPublicationQuery]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - package boundary and architecture guard only
+    unitTests: [pnpm --filter @dvt/contracts test]
+  - name: RunBootstrapInput
+    path: packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts
+    dddOwner: RunStateVocabulary
+    cqRails: [SharedKernelContractPublicationQuery]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - package boundary and architecture guard only
+    unitTests: [pnpm --filter @dvt/contracts test]
+  - name: RunEventInput
+    path: packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts
+    dddOwner: RunStateVocabulary
+    cqRails: [SharedKernelContractPublicationQuery]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - package boundary and architecture guard only
+    unitTests: [pnpm --filter @dvt/contracts test]
+  - name: RunEventInputBase
+    path: packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts
+    dddOwner: RunStateVocabulary
+    cqRails: [SharedKernelContractPublicationQuery]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - package boundary and architecture guard only
+    unitTests: [pnpm --filter @dvt/contracts test]
+  - name: RunMetadata
+    path: packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts
+    dddOwner: RunStateVocabulary
+    cqRails: [SharedKernelContractPublicationQuery]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - package boundary and architecture guard only
+    unitTests: [pnpm --filter @dvt/contracts test]
+  - name: StartRunIntentIdempotencyInput
+    path: packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts
+    dddOwner: RunStateVocabulary
+    cqRails: [SharedKernelContractPublicationQuery]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - package boundary and architecture guard only
+    unitTests: [pnpm --filter @dvt/contracts test]
+  - name: StepArtifactRef
+    path: packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts
+    dddOwner: RunStateVocabulary
+    cqRails: [SharedKernelContractPublicationQuery]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - package boundary and architecture guard only
+    unitTests: [pnpm --filter @dvt/contracts test]
+  - name: StepEventInput
+    path: packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts
+    dddOwner: RunStateVocabulary
+    cqRails: [SharedKernelContractPublicationQuery]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - package boundary and architecture guard only
+    unitTests: [pnpm --filter @dvt/contracts test]
+  - name: WorkflowSnapshot
+    path: packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts
+    dddOwner: RunStateVocabulary
+    cqRails: [SharedKernelContractPublicationQuery]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: Not applicable - package boundary and architecture guard only
+    unitTests: [pnpm --filter @dvt/contracts test]
+  - name: ENGINE_ROOT
+    path: packages/@dvt/contracts/test/provider-adapter.architecture.test.ts
+    dddOwner: Contracts architecture guard
+    cqRails: [SharedKernelContractPublicationQuery]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm --filter @dvt/contracts test -- test/provider-adapter.architecture.test.ts
+    cypressCoverage: Not applicable - package boundary and architecture guard only
+    unitTests: [pnpm --filter @dvt/contracts test -- test/provider-adapter.architecture.test.ts]
+  - name: REPO_ROOT
+    path: packages/@dvt/contracts/test/provider-adapter.architecture.test.ts
+    dddOwner: Contracts architecture guard
+    cqRails: [SharedKernelContractPublicationQuery]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm --filter @dvt/contracts test -- test/provider-adapter.architecture.test.ts
+    cypressCoverage: Not applicable - package boundary and architecture guard only
+    unitTests: [pnpm --filter @dvt/contracts test -- test/provider-adapter.architecture.test.ts]
+```
+
 ## References
 
 - `docs/adr/ADR-0018_Shared_Kernel_Ownership_Governance.md`
