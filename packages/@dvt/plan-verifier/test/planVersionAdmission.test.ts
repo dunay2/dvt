@@ -1,34 +1,46 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  PLAN_RUNTIME_ADMISSION_MATRIX,
-  getSupportedPlanVersionsForRuntime,
-  verifyPlanVersionOrThrow,
+  EXECUTION_PLAN_ADMISSION_MATRIX,
+  getSupportedPlanAdmissionPairsForRuntime,
+  verifyPlanAdmissionOrThrow,
 } from '../src/index.js';
 
 describe('@dvt/plan-verifier runtime admission matrix', () => {
-  it('expone una matriz de admision runtime por consumidor', () => {
-    expect(PLAN_RUNTIME_ADMISSION_MATRIX.planner).toBeDefined();
-    expect(getSupportedPlanVersionsForRuntime('planner')).toEqual(
-      PLAN_RUNTIME_ADMISSION_MATRIX.planner.admittedPlanVersions
-    );
+  it('expone la matriz canonica de admision por pares al consumidor runtime', () => {
+    expect(EXECUTION_PLAN_ADMISSION_MATRIX['1.0']).toContain('v1.2');
+    expect(getSupportedPlanAdmissionPairsForRuntime('planner')).toEqual([
+      { planVersion: '1.0', schemaVersion: 'v1.2' },
+    ]);
   });
 
-  it('acepta una version declarada para el runtime', () => {
+  it('acepta solo un par planVersion/schemaVersion declarado para el runtime', () => {
     expect(() =>
-      verifyPlanVersionOrThrow({
+      verifyPlanAdmissionOrThrow({
         planVersion: '1.0',
+        schemaVersion: 'v1.2',
         runtime: 'planner',
       })
     ).not.toThrow();
   });
 
-  it('rechaza una version no declarada para el runtime aunque sea semver-like', () => {
+  it('rechaza schemaVersion no declarada aunque planVersion este admitida', () => {
     expect(() =>
-      verifyPlanVersionOrThrow({
-        planVersion: '1.0-unsupported',
+      verifyPlanAdmissionOrThrow({
+        planVersion: '1.0',
+        schemaVersion: 'v1.future',
         runtime: 'planner',
       })
-    ).toThrow(/planner/);
+    ).toThrow(/schemaVersion/);
+  });
+
+  it('rechaza planVersion no declarada aunque schemaVersion este admitida', () => {
+    expect(() =>
+      verifyPlanAdmissionOrThrow({
+        planVersion: '1.0-unsupported',
+        schemaVersion: 'v1.2',
+        runtime: 'planner',
+      })
+    ).toThrow(/planVersion/);
   });
 });

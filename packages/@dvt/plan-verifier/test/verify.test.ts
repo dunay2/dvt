@@ -61,12 +61,27 @@ describe('@dvt/plan-verifier', () => {
         canonicalPlanCoreJson: canonical,
         planId,
         planVersion: '1.0-unsupported',
+        schemaVersion: CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
         runtime: 'planner',
       })
     ).rejects.toThrow(/Unsupported planVersion/);
   });
 
-  it('passes on admitted planVersion', async () => {
+  it('fails when schemaVersion is not admitted for an otherwise admitted planVersion', async () => {
+    const canonical = '{"a":1}';
+    const planId = await sha256Hex(utf8Encode(canonical));
+    await expect(
+      verifyPlanOrThrow({
+        canonicalPlanCoreJson: canonical,
+        planId,
+        planVersion: CURRENT_EXECUTION_PLAN_VERSION,
+        schemaVersion: 'v1.future',
+        runtime: 'planner',
+      })
+    ).rejects.toThrow(/schemaVersion/);
+  });
+
+  it('passes on admitted planVersion/schemaVersion pair', async () => {
     const canonical = '{"a":1}';
     const planId = await sha256Hex(utf8Encode(canonical));
     await expect(
@@ -74,6 +89,7 @@ describe('@dvt/plan-verifier', () => {
         canonicalPlanCoreJson: canonical,
         planId,
         planVersion: '1.0',
+        schemaVersion: CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
         runtime: 'planner',
       })
     ).resolves.toBeUndefined();
