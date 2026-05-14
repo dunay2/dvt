@@ -106,6 +106,24 @@ jobs:
           'true'
         run: pnpm docs:sync:check
 
+      - name: Prepare planning DB for workboard validation
+        if: github.event_name == 'pull_request' && steps.scope.outputs.lane_yaml_changed == 'true'
+        run: |
+          export DVT_PLANNING_DB_DATA_DIR="${RUNNER_TEMP}/dvt-planning-db/postgres-data"
+          pnpm planning:db:up
+          for attempt in {1..30}; do
+            if pnpm planning:db:health; then
+              break
+            fi
+            if [[ "$attempt" == "30" ]]; then
+              echo "planning DB did not become healthy in time" >&2
+              exit 1
+            fi
+            sleep 2
+          done
+          pnpm planning:db:migrate
+          pnpm planning:db:import -- --if-stale --planning-only
+
       - name: Validate planning workboard outputs
         if: github.event_name == 'pull_request' && steps.scope.outputs.lane_yaml_changed == 'true'
         run: pnpm docs:workboard:generate --source yaml

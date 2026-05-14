@@ -33,6 +33,8 @@ route beyond the already planned child slices.
 - `docs/planning/reviews/architecture-and-governance/20260504-internal-alpha-evolution-route.md`
 - `docs/planning/reviews/architecture-and-governance/20260505-internal-alpha-architecture-view-review.md`
 - `docs/planning/reviews/architecture-and-governance/20260505-alpha-evolution-route-v3-critique.md`
+- `docs/planning/reviews/architecture-and-governance/20260514-internal-alpha-route-acceptance-matrix.md`
+- `docs/architecture/components/web/internal-alpha-route-gate-component.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/code-workbench-workspace-files-query-rail-plan-20260504.md`
 
 ## Scope
@@ -123,6 +125,15 @@ reuse existing rails or update the catalog before code.
 6. Close alpha full only after route smoke, child proofs, negative paths,
    `traceability:adr0`, and `pnpm verify:prepush` pass.
 
+## Route Acceptance Matrix
+
+The route-level fixture and acceptance surface is now
+`docs/planning/reviews/architecture-and-governance/20260514-internal-alpha-route-acceptance-matrix.md`.
+It owns the stage-by-stage acceptance table for F-27 and keeps alpha-full
+blocked while any route stage lacks happy-path proof, fail-closed proof,
+cadence, or risk triage. Child slices may close their own behavior, but they
+cannot declare alpha full.
+
 ## Feature Mechanization Scope
 
 This manifest mechanizes only the planning-authority correction. It does not
@@ -137,8 +148,11 @@ implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/internal-a
 componentGuides:
   - docs/planning/reviews/architecture-and-governance/20260504-internal-alpha-evolution-route.md
   - docs/planning/reviews/architecture-and-governance/20260505-internal-alpha-architecture-view-review.md
+  - docs/architecture/components/web/internal-alpha-route-gate-component.md
+  - docs/planning/reviews/architecture-and-governance/20260514-internal-alpha-route-acceptance-matrix.md
 userStories:
   - docs/planning/proposals/mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md
+  - docs/architecture/components/web/internal-alpha-route-gate-user-stories.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -155,14 +169,19 @@ allowedImplementationSurfaces:
   - docs/planning/reviews/architecture-and-governance/20260504-internal-alpha-evolution-route.md
   - docs/planning/reviews/architecture-and-governance/20260505-internal-alpha-architecture-view-review.md
   - docs/planning/reviews/architecture-and-governance/20260505-alpha-evolution-route-v3-critique.md
+  - docs/planning/reviews/architecture-and-governance/20260514-internal-alpha-route-acceptance-matrix.md
   - docs/planning/reviews/review-status-board.md
   - docs/planning/roadmap/index.md
   - docs/planning/roadmap/roadmap-by-domain.md
+  - docs/architecture/components/web/internal-alpha-route-gate-component.md
+  - docs/architecture/components/web/internal-alpha-route-gate-user-stories.md
+  - docs/planning/closeouts/20260514-f27-alpha-route-acceptance-matrix-closeout.md
+  - buzon/20260514-codex-fowler-f27-alpha-route-gate-analysis.md
+  - apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts
   - docs/planning/state/agent-lane-c.yaml
   - docs/planning/state/agent-lane-e.yaml
   - docs/planning/status/**
 forbiddenImplementationSurfaces:
-  - apps/**
   - packages/**
   - scripts/**
   - specs/**
@@ -312,11 +331,59 @@ symbols:
     cypressCoverage: N/A - critique intake only.
     unitTests:
       - pnpm docs:feature-mechanization:implementation
+  - name: REPO_ROOT
+    path: apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts
+    dddOwner: InternalAlphaRouteGate architecture guard
+    cqRails:
+      - ObserveAppBootstrapRouteReadiness
+      - ObserveWorkspaceContext
+      - ObservePlanRunReadiness
+      - MapRouteRecoveryState
+    fowlerSignals:
+      - Test-only confidence
+      - Documentation drift
+    architectureGuard: pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+    cypressCoverage: N/A - architecture guard only.
+    unitTests:
+      - pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+  - name: readRepoFile
+    path: apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts
+    dddOwner: InternalAlphaRouteGate architecture guard
+    cqRails:
+      - ObserveAppBootstrapRouteReadiness
+      - ObserveWorkspaceContext
+      - ObservePlanRunReadiness
+      - MapRouteRecoveryState
+    fowlerSignals:
+      - Test-only confidence
+      - Documentation drift
+    architectureGuard: pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+    cypressCoverage: N/A - architecture guard only.
+    unitTests:
+      - pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+  - name: routeStages
+    path: apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts
+    dddOwner: InternalAlphaRouteGate architecture guard
+    cqRails:
+      - ObserveAppBootstrapRouteReadiness
+      - ObserveWorkspaceContext
+      - ObservePlanRunReadiness
+      - MapRouteRecoveryState
+    fowlerSignals:
+      - Test-only confidence
+      - Documentation drift
+    architectureGuard: pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+    cypressCoverage: N/A - architecture guard only.
+    unitTests:
+      - pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
 ```
 
 ## Completion Criteria
 
 - `F-27` exists in Lane E and names the route-level plan.
+- The route acceptance matrix names every stage, rail or owner, happy-path
+  fixture, fail-closed fixture, evidence source, risk decision, and alpha exit
+  impact.
 - Lane C notes name the runtime safety dependencies consumed by alpha.
 - The review status board and roadmap surfaces route readers to this plan.
 - The architecture view records route, rail, state, evidence, and risk

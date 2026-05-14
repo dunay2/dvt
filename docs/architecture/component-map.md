@@ -2,7 +2,7 @@
 title: Component Map
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-09
+last_reviewed: 2026-05-14
 ---
 
 # DVT Component Map
@@ -125,8 +125,8 @@ flowchart TB
   Code anchors: [PlannerFacade.ts](../../packages/@dvt/planner/src/application/PlannerFacade.ts),
   [derivePlannerGraphSourceFromManifest.ts](../../packages/@dvt/planner/src/application/derivePlannerGraphSourceFromManifest.ts).
   Planned delta: formalize the plan-record and plan-store model without widening
-  shared-kernel drift; active work centers on `S08` and ownership cleanup under
-  `RC-G1-D`.
+  shared-kernel drift; active work centers on `S08` now that `RC-G1-D` closed
+  planner-private port ownership.
 - `@dvt/planner-contracts`: thin contract-export package used to publish
   planner contract entrypoints for consumers.
   Code anchors: [index.ts](../../packages/@dvt/planner-contracts/index.ts),
@@ -155,8 +155,7 @@ flowchart TB
   [StartRunApplicationService.ts](../../packages/@dvt/engine/src/application/StartRunApplicationService.ts),
   [RunAccessPolicy.ts](../../packages/@dvt/engine/src/security/RunAccessPolicy.ts).
   Planned delta: continue hardening and modularization without moving authority
-  out of the engine; active work includes `S02`, `S03`, `S04`, `DHM`, and
-  `RC-G1`.
+  out of the engine; active work includes `S02`, `S03`, `S04`, and `DHM`.
 - `@dvt/run-domain`: pure run-event transition and illegal-state policy library
   consumed below the engine boundary.
   Code anchors: [applyRunEvent.ts](../../packages/@dvt/run-domain/src/applyRunEvent.ts),
@@ -217,8 +216,8 @@ flowchart TB
   [observability index](../../packages/@dvt/observability/src/index.ts),
   [traceability service](../../packages/@dvt/traceability-service/src/service.ts),
   [crypto index](../../packages/@dvt/canonical/src/index.ts).
-  Planned delta: keep shared-kernel scope tight and explicit; related deltas
-  include `RC-G1` ownership cleanup and production OTel validation.
+  Planned delta: keep shared-kernel scope tight and explicit after `RC-G1`
+  ownership closure; related deltas include production OTel validation.
 
 ## Relationship Rules
 

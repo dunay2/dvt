@@ -400,6 +400,7 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md
   - docs/planning/proposals/nice-to-have/frontend-and-ux/dvt-ui-workbench-architecture-proposal-20260404.md
   - docs/planning/proposals/mandatory/frontend-and-ux/assets/canvas-workbench-stage-1-mockup-20260505.png
+  - docs/planning/closeouts/20260514-f28-canvas-workbench-sequence-closeout.md
   - docs/planning/state/agent-lane-e.yaml
   - docs/planning/status/**
 forbiddenImplementationSurfaces:

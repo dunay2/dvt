@@ -184,7 +184,6 @@
         "Run-state writes are exposed via command port bridge, avoiding direct adapter/runtime coupling to concrete persistence callers.",
         "Runtime bootstrap may require both core state-store and start-run intent schema migrations",
         "Section 1 â€” Enforce explicit Temporal runtime configuration preconditions",
-        "Section 2 — Provider adapter lifecycle/status/signal operations are formalized as a stable contract",
         "Section 2 — Worker lifecycle ownership is centralized in a single host",
         "Section 2.1 - Append-only event persistence with monotonic sequence semantics",
         "Section 2.2 - Read model snapshot projection derived from persisted event stream",
@@ -269,7 +268,6 @@
         "packages/@dvt/adapter-temporal/test/runPlanWorkflow.layers.order.test.ts",
         "packages/@dvt/adapter-temporal/test/workflow-execution-segment.test.ts",
         "packages/@dvt/adapter-temporal/test/workflowMapper.typecheck.ts",
-        "packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts",
         "packages/@dvt/engine/src/adapters/CircuitBreakingProviderAdapter.ts",
         "packages/@dvt/engine/src/adapters/IProviderAdapter.ts",
         "packages/@dvt/engine/src/adapters/inMemory/InMemoryProviderAdapter.ts",
@@ -410,14 +408,12 @@
         "Section 2 — Canonical core contract primitives (tenant/run/provider/status) are versioned in a single type module",
         "Section 2 — Canonical workflow names and signal identifiers are centralized as contract constants",
         "Section 2 — Contract validation functions are centralized at runtime boundaries",
-        "Section 2 — Provider adapter lifecycle/status/signal operations are formalized as a stable contract",
         "Section 3 - Provider/run/artifact envelopes use deterministic schema boundaries",
         "Section 3 — Validation errors are normalized into deterministic API-safe payloads",
         "Shared-kernel contract errors expose stable code/messageKey/messageParams metadata",
         "Signal-to-event derivation semantics are versioned as a contract shared by engine and adapters"
       ],
       "implemented_by": [
-        "packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts",
         "packages/@dvt/contracts/src/contracts/engine/SignalSemantics.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/PlanCompileStepTypeConfigs.v1.ts",
         "packages/@dvt/contracts/src/errorContract.ts",
@@ -646,10 +642,12 @@
       "number": "ADR-0018",
       "decisions": [
         "Contract-level error types are centralized for deterministic cross-module semantics",
+        "Publish only serializable run-state DTO vocabulary from the shared",
         "Shared-kernel contract errors expose stable code/messageKey/messageParams metadata",
         "The workflow engine behavior port lives in the engine-owned ports surface"
       ],
       "implemented_by": [
+        "packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts",
         "packages/@dvt/contracts/src/errorContract.ts",
         "packages/@dvt/contracts/src/errors.ts",
         "packages/@dvt/engine/src/ports/IWorkflowEngine.ts"
@@ -837,9 +835,13 @@
     },
     {
       "number": "ADR-0034",
-      "decisions": ["Define local write/read repository ports for run events"],
+      "decisions": [
+        "Define local write/read repository ports for run events",
+        "Publish only serializable run-state DTO vocabulary from the shared"
+      ],
       "implemented_by": [
-        "packages/@dvt/adapter-postgres/src/RunEventWriteRepository.ts"
+        "packages/@dvt/adapter-postgres/src/RunEventWriteRepository.ts",
+        "packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts"
       ],
       "title": "ADR-0034 - Bounded Context Boundaries And Communication Rules"
     },

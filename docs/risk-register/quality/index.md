@@ -40,6 +40,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [CI rebuild dedupe or job consolidation could hide missing explicit build prerequisites](R-20260409-CI-REBUILD-DEDUPE-AND-ADAPTER-POSTGRES-CONSOLIDATION.yaml)
 - [Consumers may expect DVT lifecycle statuses (PAUSED, CANCELLING) in ProviderRunStatusView](R-20260409-PROVIDER-STATUS-SEMANTIC-DRIFT.yaml)
 - [Contract mapper boundary type aliases can drift from schema-level non-blank semantics](R-20260410-CONTRACT-MAPPER-BOUNDARY-TYPE-SEMANTICS.yaml)
+- [Delivery-owned in-memory outbox core can mask durable adapter parity gaps](R-20260514-AR-A7-IN-MEMORY-OUTBOX-OWNERSHIP.yaml)
 - [Documentary misalignment risk for snapshot ownership and fallback polling traceability](R-20260402-SNAPSHOT-RETRY-FALLBACK-CADENCE.yaml)
 - [Downstream consumers may still depend on retired status helper exports or mixed status semantics](R-20260413-AR-A12-B-STATUS-MODEL-CONSUMER-DRIFT.yaml)
 - [DVT authoring nodes can drift behind dbt-owned renderer and inspector behavior](R-20260416-WEB-DVT-RENDERER-OWNERSHIP-DRIFT.yaml)

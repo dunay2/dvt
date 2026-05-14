@@ -1,4 +1,4 @@
-﻿---
+---
 title: AI Work Protocol
 status: Active
 owner: docs
@@ -15,7 +15,7 @@ procedure. Both must be respected - they are not alternatives.
 
 - [AGENTS.md](../../AGENTS.md)
 - [PR Preflight And CI Triage](./pr-preflight-and-ci-triage.md)
-- [Engineering Playbook](../architecture/atlas/engineering/engineering_playbook.md)
+- [Engineering Playbook](../architecture/atlas/engineering/engineering-playbook.md)
 - [ADR-0000: Code Generation With Enforced Normative Traceability](../adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md)
 - [ADR-0004: Event Sourcing Strategy](../adr/ADR-0004-event-sourcing-strategy.md)
 - [ADR-0005: Contract Formalization Tooling](../adr/ADR-0005-contract-formalization-tooling.md)

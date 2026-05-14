@@ -125,13 +125,12 @@ Pending in this pass:
 ## 1. `@dvt/contracts`
 
 `@dvt/contracts` is the shared kernel (ADR-0018). It must contain only
-versioned contracts (interfaces, DTOs, schemas, error vocabulary). Operations
-declared here are **port shapes**, not implementations; they delegate the DDD
-ownership question to the package that implements them.
+versioned serializable vocabulary, DTOs, schemas, refs, envelopes, parsers, and
+error vocabulary. Behavior ports are inventoried by their owner packages.
 
 ### 1.1 Engine contracts
 
-**File**: `packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts`
+**File**: `packages/@dvt/engine/src/ports/IRunStateStore.ts`
 
 | Symbol / operation                                                  | DDD                                            | C&Q          | Legacy      | Notes                                                                                                                                                                                             |
 | ------------------------------------------------------------------- | ---------------------------------------------- | ------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -173,7 +172,7 @@ ownership question to the package that implements them.
 | ---------------------------------------- | ----- | ----- | ------ | -------------------------------- |
 | `OutboxRecord`, `DeadLetterRecord` (DTO) | `N/A` | `N/A` | `OK`   | Outbox storage shape (ADR-0033). |
 
-**File**: `packages/@dvt/contracts/src/contracts/engine/IProjector.v1.ts`
+**File**: `packages/@dvt/engine/src/ports/IProjector.ts`
 
 | Symbol                              | DDD                 | C&Q          | Legacy | Notes            |
 | ----------------------------------- | ------------------- | ------------ | ------ | ---------------- |
@@ -255,7 +254,7 @@ ownership question to the package that implements them.
 
 ### 1.3 Adapter contracts
 
-**File**: `packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts`
+**File**: `packages/@dvt/engine/src/adapters/IProviderAdapter.ts`
 
 | Symbol                                           | DDD                       | C&Q          | Legacy | Notes                                 |
 | ------------------------------------------------ | ------------------------- | ------------ | ------ | ------------------------------------- |
