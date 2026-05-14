@@ -1,0 +1,22 @@
+id: R-20260514-EA-20260429-07-START-RUN-PROVIDER-REF
+title: start-run providerRef compensation proof could regress to boolean-only coverage
+status: Open
+date: 2026-05-14
+owners:
+  - '@dvt/engine'
+severity: Low
+probability: Low
+context: >
+  The start-run no-estimate path performs an external provider side effect before local bootstrap.
+  Compensation must target the exact provider reference returned by the adapter, not just call a
+  cancellation hook.
+risk: >
+  Future refactors could keep cancellation boolean coverage green while accidentally cancelling,
+  persisting, or resolving intents against a different provider reference shape.
+mitigations:
+  - WorkflowEngine.intentLog.test.ts now asserts exact providerRef persistence on the no-estimate
+    bootstrap path.
+  - WorkflowEngine.intentLog.test.ts now asserts exact providerRef cancellation, no metadata
+    residue, and resolved intent state on bootstrap failure.
+  - EA-20260429-07 keeps the command rail on WorkflowEngine.startRun and avoids parallel
+    compatibility paths.
