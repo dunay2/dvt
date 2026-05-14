@@ -1880,7 +1880,7 @@ tasks:
     last_verified: '2026-05-05'
   - task_id: F-28
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       define and execute the next Canvas workbench sequence: simplified shell chrome first, then
       automatic save-state proof, then project export and import proof.
@@ -1892,19 +1892,18 @@ tasks:
       behavior, or backend contracts.
     complexity: M
     effort_points: 5
-    progress_pct: 65
+    progress_pct: 100
     evidence_refs:
+      - docs/planning/closeouts/20260514-f28-canvas-workbench-sequence-closeout.md
+      - docs/planning/closeouts/20260511-f28c-project-snapshot-roundtrip-closeout.md
       - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md
       - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-1-chrome-simplification-implementation-plan-20260506.md
       - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-2-autosave-e2e-proof-plan-20260508.md
-      - docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
-      - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
-      - docs/architecture/components/api/protected-runtime-command-query-rail-design.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-3-project-snapshot-roundtrip-plan-20260511.md
     status_reason: >-
-      Product direction is recorded after the Canvas workbench review. Stage 1 chrome/tab proof and
-      Stage 2 automatic save-state proof are merged; save remains automatic and no manual Save
-      command is allowed. The remaining executable product work is the Stage 3 project export/import
-      round-trip proof, tracked by `F-28-C`, plus separately tracked residual Canvas i18n debt.
+      Closed parent Canvas workbench shell/save/export sequence after F-28-A, F-28-B, and F-28-C
+      reached done with accepted evidence; residual i18n or visual-system work remains separately
+      tracked.
     definition_of_done:
       - Stage 1 implementation plan is approved before code changes
       - Canvas workbench tabs render as readable text-only tabs
@@ -1921,8 +1920,8 @@ tasks:
         Stage 1
       - Stage 2 proves automatic save status and failed-save posture without adding a manual save
         command
-      - Stage 3 export/import rails remain documented follow-up work
-    last_verified: '2026-05-06'
+      - Stage 3 export/import rails are closed by accepted round-trip evidence
+    last_verified: '2026-05-14'
   - task_id: F-28-B
     parent_task: F-28
     priority: P0
@@ -1964,7 +1963,7 @@ tasks:
   - task_id: F-28-C
     parent_task: F-28
     priority: P0
-    status: queued
+    status: done
     objective: >-
       design and prove the Canvas workbench Stage 3 project export/import round trip without
       treating the snapshot format as stable before validation, versioning, and rejection semantics
@@ -1977,20 +1976,15 @@ tasks:
       edges, layout, project metadata, and Canvas identity.
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md
-      - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-2-autosave-e2e-proof-plan-20260508.md
-      - docs/architecture/command-query-rail-governance.md
-      - docs/architecture/fowler-opportunity-planning-governance.md
-      - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
-      - docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md
-      - docs/architecture/components/web/graph/canvas-draft-session-component.md
+      - buzon/20260511-codex-fowler-canvas-project-snapshot-analysis-and-remediation.md
+      - docs/architecture/components/web/graph/canvas-project-snapshot-component.md
+      - docs/architecture/components/web/graph/canvas-project-snapshot-user-stories.md
+      - apps/web/src/app/views/canvas/canvasProjectSnapshot.architecture.test.ts
     status_reason: >-
-      Stage 1 chrome proof and Stage 2 automatic-save proof are the accepted prerequisites. The next
-      product gap is not another manual save affordance; it is a governed project snapshot round
-      trip. This task starts as queued because the rails, snapshot value object, validation policy,
-      import rejection vocabulary, and Cypress proof must be planned before code changes.
+      Added Fowler semantic review, component guide, user stories, namespaced snapshot API,
+      architecture RED/GREEN proof, and final prepush validation.
     definition_of_done:
       - Stage 3 implementation plan exists before any app, package, adapter, or contract changes
       - export, import, and validate project snapshot rails have named DDD owners, ports, adapter
@@ -2004,7 +1998,7 @@ tasks:
         path
       - docs sync, workboard generation, feature mechanization, focused web tests, Cypress,
         typecheck, markdown changed lint, and prepush validation pass
-    last_verified: '2026-05-08'
+    last_verified: '2026-05-11'
   - task_id: F-28-A
     parent_task: F-28
     priority: P0
@@ -3303,11 +3297,10 @@ dependency_notes:
     architecture view that separates route, rail, state, evidence, and risk boundaries. Future alpha
     expansion must update `F-27` rather than widening child-slice manifests.
   - >-
-    `F-28` records the next Canvas workbench product sequence: first simplify shell chrome and move
-    scope selectors out of the main top bar, then prove automatic save posture without a manual Save
-    command, then design project export/import as a complete round-trip proof. Stage 1 must remain a
-    visual and presentation slice and must not smuggle in multi-canvas persistence or backend
-    project asset behavior.
+    `F-28` is closed as the Canvas workbench shell/save/export sequence: Stage 1 simplified shell
+    chrome, Stage 2 proved automatic save posture without a manual Save command, and Stage 3 closed
+    project snapshot export/import as a validated round-trip proof. Residual Canvas i18n or visual
+    system work stays in separately tracked tasks instead of reopening this parent sequence.
   - >-
     `F-28-A` is the strict Stage 1 planning gate for `F-28`: it binds the first implementation round
     to Fowler presentation-model cleanup, command/query rails, semantic fitness functions, Cypress
@@ -3336,23 +3329,24 @@ verification_summary:
     parent dependencies remain outside accepted done posture. `F-27` now captures the internal alpha
     route gate separately from workspace-files child-slice authority, with explicit Lane C
     dependencies for protected runtime route governance and graph-draft persistence. `F-28` now
-    records the Canvas workbench shell/save/export sequence as a separate product-planning slice so
-    it does not collide with the internal alpha route gate, and `F-28-A` now adds the strict Stage 1
-    execution plan with command/query, Fowler, Cypress, and frontend folder-ownership gates before
-    app code starts. `TF-E2` is now the active production-authoring follow-up that freezes canonical
-    node, edge, property, and reload expectations before implementation. The 2026-04-23 update first
-    added `TF-E2-E-A..D` to isolate the remaining selected-closure UX proof gaps and then added
-    `TF-E2-K` to freeze the missing host prerequisite above those proofs: workspace playground,
-    multi-canvas tabs, typed canvas kinds, and a real create-canvas/create-first-node route before
-    browser end-to-end claims are treated as credible. The full `TF-E2-K` host family is now closed
-    through `TF-E2-K-I`: typed host cycles, preview/run continuation, blocked/read-only posture, and
-    authoritative first-canvas lifecycle proof now have accepted closeouts. `TF-E2-POL` is also
-    closed as the accepted runtime-policy boundary route: command posture, admission, execution
-    availability, Inspector editability, and plugin projections now consume one policy boundary. The
-    2026-04-29 browser review added `TF-E2-M` as the live Canvas operability backlog that converts
-    accepted front stories into visible UI proof, starting with the protected-runtime dev-auth
-    freshness blocker and the fifth bootstrap-step diagnostics. The next active prerequisite before
-    browser proof work can credibly resume is the selected-closure UX/browser lane under `TF-E2-E`,
-    after `TF-E2-M-A` restores authenticated local Canvas operation. The summary values were
-    recomputed from the current task registry on 2026-05-06 to realign the YAML with the actual lane
-    contents.
+    records the closed Canvas workbench shell/save/export sequence as a separate product-planning
+    slice so it does not collide with the internal alpha route gate, and `F-28-A` now adds the
+    strict Stage 1 execution plan with command/query, Fowler, Cypress, and frontend folder-ownership
+    gates before app code starts. `F-28-B` and `F-28-C` are closed by accepted automatic-save and
+    project-snapshot evidence. `TF-E2` is now the active production-authoring follow-up that freezes
+    canonical node, edge, property, and reload expectations before implementation. The 2026-04-23
+    update first added `TF-E2-E-A..D` to isolate the remaining selected-closure UX proof gaps and
+    then added `TF-E2-K` to freeze the missing host prerequisite above those proofs: workspace
+    playground, multi-canvas tabs, typed canvas kinds, and a real create-canvas/create-first-node
+    route before browser end-to-end claims are treated as credible. The full `TF-E2-K` host family
+    is now closed through `TF-E2-K-I`: typed host cycles, preview/run continuation,
+    blocked/read-only posture, and authoritative first-canvas lifecycle proof now have accepted
+    closeouts. `TF-E2-POL` is also closed as the accepted runtime-policy boundary route: command
+    posture, admission, execution availability, Inspector editability, and plugin projections now
+    consume one policy boundary. The 2026-04-29 browser review added `TF-E2-M` as the live Canvas
+    operability backlog that converts accepted front stories into visible UI proof, starting with
+    the protected-runtime dev-auth freshness blocker and the fifth bootstrap-step diagnostics. The
+    next active prerequisite before browser proof work can credibly resume is the selected-closure
+    UX/browser lane under `TF-E2-E`, after `TF-E2-M-A` restores authenticated local Canvas
+    operation. The summary values were recomputed from the current task registry on 2026-05-06 to
+    realign the YAML with the actual lane contents.
