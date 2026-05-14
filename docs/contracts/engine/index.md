@@ -54,6 +54,7 @@ Execution lifecycle, command, and event contracts for the workflow engine.
 - [plan-schema-version-admission-user-stories.md](../../architecture/components/engine/contracts/plan-schema-version-admission-user-stories.md)
 - [plan-store-records-component.md](../../architecture/components/engine/contracts/plan-store-records-component.md)
 - [plan-store-records-user-stories.md](../../architecture/components/engine/contracts/plan-store-records-user-stories.md)
+- [plan-verifier-admission-user-stories.md](../../architecture/components/engine/contracts/plan-verifier-admission-user-stories.md)
 - [plan-verifier-admission.md](../../architecture/components/engine/contracts/plan-verifier-admission.md)
 - [README.md](../../architecture/components/engine/contracts/README.md)
 - [index.md](../../architecture/components/engine/contracts/schemas/index.md)
