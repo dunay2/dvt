@@ -1776,6 +1776,29 @@ symbols:
     cypressCoverage: N/A - engine architecture test support
     unitTests:
       - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+  - name: getClassConstructorParameterPropertyTypes
+    path: packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+    dddOwner: Engine architecture fitness read model
+    cqRails:
+      - WorkflowEngineBoundaryFitness
+    fowlerSignals:
+      - Replaces source-string facade structure checks with TypeScript AST semantics.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineFacadeUseCases.architecture.test.ts
+    cypressCoverage: N/A - engine architecture test support
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/engineArchitectureTestSupport.test.ts
+      - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineFacadeUseCases.architecture.test.ts
+  - name: isParameterProperty
+    path: packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+    dddOwner: Engine architecture fitness read model
+    cqRails:
+      - WorkflowEngineBoundaryFitness
+    fowlerSignals:
+      - Encapsulates TypeScript parameter-property detection for semantic architecture guards.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/engineArchitectureTestSupport.test.ts
+    cypressCoverage: N/A - engine architecture test support
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/engineArchitectureTestSupport.test.ts
 ```
 
 ## Lane mapping

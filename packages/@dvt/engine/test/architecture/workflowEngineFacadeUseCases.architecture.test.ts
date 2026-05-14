@@ -4,6 +4,8 @@ import { URL, fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
+import { getClassConstructorParameterPropertyTypes } from './engineArchitectureTestSupport.js';
+
 const TEST_ROOT = fileURLToPath(new URL('.', import.meta.url));
 const ENGINE_ROOT = join(TEST_ROOT, '../../src');
 const REPO_ROOT = join(TEST_ROOT, '../../../../..');
@@ -29,15 +31,9 @@ describe('WorkflowEngine facade use-case architecture', () => {
   it('keeps WorkflowEngine as a normalization-and-delegation facade', () => {
     const source = readEngineSource('core/WorkflowEngine.ts');
 
-    for (const expectedUseCase of [
-      'startRunUseCase: IWorkflowStartRunUseCase;',
-      'recoverRunUseCase: IWorkflowRecoverRunUseCase;',
-      'cancelRunUseCase: IWorkflowCancelRunUseCase;',
-      'runStatusUseCase: IWorkflowRunStatusUseCase;',
-      'signalRunUseCase: IWorkflowSignalRunUseCase;',
-    ]) {
-      expect(source).toContain(expectedUseCase);
-    }
+    expect(getClassConstructorParameterPropertyTypes(source, 'WorkflowEngine')).toEqual({
+      deps: 'WorkflowEngineDeps',
+    });
 
     for (const forbidden of [
       'IStartRunApplicationService',
