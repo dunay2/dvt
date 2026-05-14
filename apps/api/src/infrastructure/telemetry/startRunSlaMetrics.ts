@@ -1,4 +1,7 @@
+/**
+ * Owned concern: current-version AR-C2 Prometheus API latency metric names.
+ */
 export const START_RUN_SLA_METRICS = Object.freeze({
-  runStartLatencyMs: 'dvt.api.run_start.latency_ms',
-  planCompileLatencyMs: 'dvt.api.plan_compile.latency_ms',
+  runStartLatencySeconds: 'dvt_api_run_start_latency_seconds',
+  planCompileLatencySeconds: 'dvt_api_plan_compile_latency_seconds',
 } as const);

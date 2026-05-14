@@ -1,0 +1,15 @@
+---
+id: R-20260514-AR-C2-PROM-SLA-HARDCUT
+title: AR-C2 Prometheus metric hardcut may require dashboard and alert query updates
+status: Open
+date: 2026-05-14
+owners:
+  - dvt-api
+  - dvt-outbox-worker
+  - '@dvt/engine'
+severity: Medium
+probability: Medium
+---
+The AR-C2 Prometheus latency metrics are intentionally hard-cut to `_seconds` names without legacy
+aliases. Any dashboard, alert, or evidence snapshot still querying `_ms` names must be updated
+before AR-C2 operational closure.

@@ -40,13 +40,13 @@ Canonical signal-to-threshold mapping source for AR-C2 wiring:
 
 | Status                         | Logical signal                           | Exported metric(s)                                             | Threshold (SLO)                         | Alert policy                                            |
 | ------------------------------ | ---------------------------------------- | -------------------------------------------------------------- | --------------------------------------- | ------------------------------------------------------- |
-| `implemented`                  | Start-run latency p50/p99                | `dvt.api.run_start.latency_ms`                                 | p50 <= 500ms, p99 <= 2500ms (15m)       | warning p99 > 2000ms (10m), critical p99 > 2500ms (15m) |
-| `implemented`                  | Plan compile latency p50/p99             | `dvt.api.plan_compile.latency_ms`                              | p50 <= 1200ms, p99 <= 6000ms (15m)      | warning p99 > 5000ms (10m), critical p99 > 6000ms (15m) |
+| `implemented`                  | Start-run latency p50/p99                | `dvt_api_run_start_latency_seconds`                            | p50 <= 500ms, p99 <= 2500ms (15m)       | warning p99 > 2000ms (10m), critical p99 > 2500ms (15m) |
+| `implemented`                  | Plan compile latency p50/p99             | `dvt_api_plan_compile_latency_seconds`                         | p50 <= 1200ms, p99 <= 6000ms (15m)      | warning p99 > 5000ms (10m), critical p99 > 6000ms (15m) |
 | `implemented`                  | Snapshot staleness classification counts | `dvt.api.run_status.snapshot_staleness_result_total`           | source for stale/unknown ratios         | source metric only                                      |
 | `implemented`                  | Snapshot unknown fallback counts         | `dvt.api.run_status.snapshot_staleness_fallback_unknown_total` | source for unknown fallback diagnostics | source metric only                                      |
 | `implemented`                  | Outbox claimed-lag gauge                 | `dvt_outbox_oldest_claimed_lag_seconds`                        | observational baseline only             | no canonical threshold yet                              |
 | `implemented`                  | Outbox drain lag gauge (canonical alias) | `dvt_delivery_outbox_drain_lag_seconds`                        | p95 <= 30s (15m)                        | warning p95 > 25s (10m), critical p95 > 30s (15m)       |
-| `implemented`                  | Event delivery latency p95/p99           | `dvt_delivery_event_delivery_latency_ms`                       | p95 <= 1500ms, p99 <= 5000ms (15m)      | warning p99 > 4000ms (10m), critical p99 > 5000ms (15m) |
+| `implemented`                  | Event delivery latency p95/p99           | `dvt_delivery_event_delivery_latency_seconds`                  | p95 <= 1500ms, p99 <= 5000ms (15m)      | warning p99 > 4000ms (10m), critical p99 > 5000ms (15m) |
 | `derived from existing metric` | Stale ratio for `GET /runs/:runId`       | derived from `snapshot_staleness_result_total`                 | stale <= 5% (15m)                       | warning > 2% (10m), critical > 5% (15m)                 |
 | `derived from existing metric` | Unknown freshness ratio                  | derived from `snapshot_staleness_result_total`                 | unknown <= 0.1% (24h)                   | critical > 0.1% (24h)                                   |
 
@@ -68,7 +68,7 @@ Start-run p99 (15m):
 ```promql
 histogram_quantile(
   0.99,
-  sum(rate(dvt_api_run_start_latency_ms_bucket[15m])) by (le)
+  sum(rate(dvt_api_run_start_latency_seconds_bucket[15m])) by (le)
 )
 ```
 
@@ -77,7 +77,7 @@ Plan-compile p99 (15m):
 ```promql
 histogram_quantile(
   0.99,
-  sum(rate(dvt_api_plan_compile_latency_ms_bucket[15m])) by (le)
+  sum(rate(dvt_api_plan_compile_latency_seconds_bucket[15m])) by (le)
 )
 ```
 
@@ -92,7 +92,7 @@ Event-delivery latency p99 (15m):
 ```promql
 histogram_quantile(
   0.99,
-  sum(rate(dvt_delivery_event_delivery_latency_ms_bucket[15m])) by (le)
+  sum(rate(dvt_delivery_event_delivery_latency_seconds_bucket[15m])) by (le)
 )
 ```
 

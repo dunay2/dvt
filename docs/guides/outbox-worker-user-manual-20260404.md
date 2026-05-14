@@ -42,7 +42,7 @@ This manual explains how operators and service owners should operate and interpr
 - `dvt_outbox_runtime_state{state=*}`
 - `dvt_outbox_oldest_claimed_lag_seconds`
 - `dvt_outbox_runtime_errors_total`
-- `dvt_delivery_event_delivery_latency_ms_bucket`
+- `dvt_delivery_event_delivery_latency_seconds_bucket`
 
 ## Incident triage quick path
 

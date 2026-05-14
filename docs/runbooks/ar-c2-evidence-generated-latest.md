@@ -1,4 +1,4 @@
----
+﻿---
 title: AR-C2 generated operational evidence
 status: Active
 owner: Runtime / SRE / Docs
@@ -17,13 +17,13 @@ Source mapping:
 
 | Signal key                                                     | Target panel key                  | Status          |
 | -------------------------------------------------------------- | --------------------------------- | --------------- |
-| `dvt.api.run_start.latency_ms`                                 | `ar-c2.start-run-latency`         | `missing_panel` |
-| `dvt.api.plan_compile.latency_ms`                              | `ar-c2.plan-compile-latency`      | `missing_panel` |
+| `dvt_api_run_start_latency_seconds`                            | `ar-c2.start-run-latency`         | `missing_panel` |
+| `dvt_api_plan_compile_latency_seconds`                         | `ar-c2.plan-compile-latency`      | `missing_panel` |
 | `dvt.api.run_status.snapshot_staleness_result_total`           | `ar-c2.snapshot-staleness-counts` | `missing_panel` |
 | `dvt.api.run_status.snapshot_staleness_fallback_unknown_total` | `ar-c2.snapshot-unknown-fallback` | `missing_panel` |
 | `dvt_outbox_oldest_claimed_lag_seconds`                        | `ar-c2.outbox-claimed-lag`        | `missing_panel` |
 | `dvt_delivery_outbox_drain_lag_seconds`                        | `ar-c2.outbox-drain-lag`          | `missing_panel` |
-| `dvt_delivery_event_delivery_latency_ms`                       | `ar-c2.event-delivery-latency`    | `missing_panel` |
+| `dvt_delivery_event_delivery_latency_seconds`                  | `ar-c2.event-delivery-latency`    | `missing_panel` |
 | `derived from staleness counts`                                | `ar-c2.run-status-stale-ratio`    | `missing_panel` |
 | `derived from staleness counts`                                | `ar-c2.run-status-unknown-ratio`  | `missing_panel` |
 
@@ -47,13 +47,13 @@ Source mapping:
 
 | Signal key                                                     | Window    | Observed  | Expected                             | Status                     |
 | -------------------------------------------------------------- | --------- | --------- | ------------------------------------ | -------------------------- |
-| `dvt.api.run_start.latency_ms`                                 | `pending` | `pending` | `p50 <= 500ms, p99 <= 2500ms (15m)`  | `insufficient_window_data` |
-| `dvt.api.plan_compile.latency_ms`                              | `pending` | `pending` | `p50 <= 1200ms, p99 <= 6000ms (15m)` | `insufficient_window_data` |
+| `dvt_api_run_start_latency_seconds`                            | `pending` | `pending` | `p50 <= 500ms, p99 <= 2500ms (15m)`  | `insufficient_window_data` |
+| `dvt_api_plan_compile_latency_seconds`                         | `pending` | `pending` | `p50 <= 1200ms, p99 <= 6000ms (15m)` | `insufficient_window_data` |
 | `dvt.api.run_status.snapshot_staleness_result_total`           | `pending` | `pending` | `source for stale/unknown ratios`    | `insufficient_window_data` |
 | `dvt.api.run_status.snapshot_staleness_fallback_unknown_total` | `pending` | `pending` | `source for unknown diagnostics`     | `insufficient_window_data` |
 | `dvt_outbox_oldest_claimed_lag_seconds`                        | `pending` | `pending` | `observational baseline only`        | `insufficient_window_data` |
 | `dvt_delivery_outbox_drain_lag_seconds`                        | `pending` | `pending` | `p95 <= 30s (15m)`                   | `insufficient_window_data` |
-| `dvt_delivery_event_delivery_latency_ms`                       | `pending` | `pending` | `p95 <= 1500ms, p99 <= 5000ms (15m)` | `insufficient_window_data` |
+| `dvt_delivery_event_delivery_latency_seconds`                  | `pending` | `pending` | `p95 <= 1500ms, p99 <= 5000ms (15m)` | `insufficient_window_data` |
 | `derived from staleness counts`                                | `pending` | `pending` | `stale <= 5% (15m)`                  | `insufficient_window_data` |
 | `derived from staleness counts`                                | `pending` | `pending` | `unknown <= 0.1% (24h)`              | `insufficient_window_data` |
 

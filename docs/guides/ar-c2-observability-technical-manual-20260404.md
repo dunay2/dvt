@@ -75,13 +75,13 @@ The active mapped signals are:
 
 | Logical signal                     | Logical metric ID                                              | Dashboard panel key               |
 | ---------------------------------- | -------------------------------------------------------------- | --------------------------------- |
-| Start-run latency p50/p99          | `dvt.api.run_start.latency_ms`                                 | `ar-c2.start-run-latency`         |
-| Plan compile latency p50/p99       | `dvt.api.plan_compile.latency_ms`                              | `ar-c2.plan-compile-latency`      |
+| Start-run latency p50/p99          | `dvt_api_run_start_latency_seconds`                            | `ar-c2.start-run-latency`         |
+| Plan compile latency p50/p99       | `dvt_api_plan_compile_latency_seconds`                         | `ar-c2.plan-compile-latency`      |
 | Snapshot staleness counts          | `dvt.api.run_status.snapshot_staleness_result_total`           | `ar-c2.snapshot-staleness-counts` |
 | Snapshot unknown fallback counts   | `dvt.api.run_status.snapshot_staleness_fallback_unknown_total` | `ar-c2.snapshot-unknown-fallback` |
 | Outbox claimed-lag gauge           | `dvt_outbox_oldest_claimed_lag_seconds`                        | `ar-c2.outbox-claimed-lag`        |
 | Outbox drain lag p95               | `dvt_delivery_outbox_drain_lag_seconds`                        | `ar-c2.outbox-drain-lag`          |
-| Event delivery latency p95/p99     | `dvt_delivery_event_delivery_latency_ms`                       | `ar-c2.event-delivery-latency`    |
+| Event delivery latency p95/p99     | `dvt_delivery_event_delivery_latency_seconds`                  | `ar-c2.event-delivery-latency`    |
 | Stale ratio for `GET /runs/:runId` | derived from staleness counts                                  | `ar-c2.run-status-stale-ratio`    |
 | Unknown freshness ratio            | derived from staleness counts                                  | `ar-c2.run-status-unknown-ratio`  |
 

@@ -25,6 +25,7 @@ import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunU
 import { ResolveAuthorizedExecutableSubgraphService } from './resolveAuthorizedExecutableSubgraph.js';
 import type { ExecutableSubgraphSelectionRejection } from './resolveAuthorizedExecutableSubgraph.js';
 import { resolveCanonicalPlannerInputEnvelope } from './resolveCanonicalPlannerInputEnvelope.js';
+import { elapsedSlaSecondsSince } from './slaTiming.js';
 
 type PlanValidationResult = Awaited<ReturnType<IPlanExecutabilityValidator['validatePlan']>>;
 
@@ -141,7 +142,7 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
     } finally {
       (
         this.deps.compileTelemetry ?? PlannerBackedStartRunUseCase.NOOP_TELEMETRY
-      ).recordPlanCompileLatency(Date.now() - compileStartMs, compileOutcome);
+      ).recordPlanCompileLatency(elapsedSlaSecondsSince(compileStartMs), compileOutcome);
     }
   }
 

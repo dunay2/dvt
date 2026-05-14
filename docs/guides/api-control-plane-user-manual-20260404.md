@@ -91,13 +91,13 @@ Runtime expectations and thresholds are governed in:
 
 Observable now:
 
-- `dvt.api.run_start.latency_ms`
-- `dvt.api.plan_compile.latency_ms`
+- `dvt_api_run_start_latency_seconds`
+- `dvt_api_plan_compile_latency_seconds`
 - `dvt.api.run_status.snapshot_staleness_result_total`
 - `dvt.api.run_status.snapshot_staleness_fallback_unknown_total`
 - `dvt_outbox_oldest_claimed_lag_seconds`
 - `dvt_delivery_outbox_drain_lag_seconds`
-- `dvt_delivery_event_delivery_latency_ms`
+- `dvt_delivery_event_delivery_latency_seconds`
 
 Target-state only (not emitted yet as active metrics):
 
