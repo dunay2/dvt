@@ -1,6 +1,6 @@
 ---
 title: F-05 Store Domain Ownership Closure Plan
-status: Proposed
+status: Accepted
 date: 2026-05-03
 owners:
   - web
@@ -13,6 +13,7 @@ governing_sources:
   - docs/architecture/components/web/web-store-domain-ownership-component.md
   - docs/planning/state/agent-lane-e.yaml
   - docs/architecture/components/web/f04-frontend-data-boundary-technical-manual-20260404.md
+last_reviewed: 2026-05-14
 ---
 
 # F-05 Store Domain Ownership Closure Plan
