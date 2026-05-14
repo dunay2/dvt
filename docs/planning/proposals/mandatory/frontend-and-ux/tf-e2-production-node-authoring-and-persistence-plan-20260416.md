@@ -1,8 +1,8 @@
 ---
 title: TF-E2 Production Node Authoring And Persistence Plan 2026-04-16
-status: Draft
+status: Implemented
 owner: Product / Frontend / Architecture / API
-last_reviewed: 2026-04-23
+last_reviewed: 2026-05-14
 planning_type: proposal
 lane: E
 task_id: TF-E2
@@ -25,6 +25,20 @@ new planning slice is required.
 The active implementation posture is also explicit after the 2026-04-20 sync:
 no retrocompatibility path will be preserved on the active Canvas authoring
 route once the typed draft-authoring port is adopted.
+
+## 2026-05-14 Parent Closure
+
+`TF-E2` is closed as a parent implementation slice. The child delivery slices
+have moved the active Canvas authoring path to
+`IWorkspaceGraphDraftAuthoringPort`, made React Flow projection-only for
+semantic authoring, preserved protected-runtime failure posture, and guarded
+live proof lanes from Cypress draft-boundary shortcuts.
+
+The remaining long-horizon work is no longer hidden inside the `TF-E2` parent:
+future persisted-version compatibility or additional browser proof expansion
+must be tracked as explicit follow-up tasks with their own rail, evidence, and
+validation. The parent scope is therefore implemented, not a source of new
+compatibility work.
 
 ## Related execution companion
 
@@ -113,7 +127,7 @@ must be planned explicitly in the relevant backend lane instead of letting the
 frontend pretend that `localStorage` is the product source of truth.
 
 For the active Canvas authoring path, this proposal also rejects a long-lived
-compatibility phase. `TF-E2-A` must hard-cut from
+compatibility phase. `TF-E2-A` hard-cut from
 `IWorkspacePort.getGraphDraft/saveGraphDraft` to
 `IWorkspaceGraphDraftAuthoringPort` once the route and composition seams are
 ready.

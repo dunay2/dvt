@@ -2188,7 +2188,7 @@ tasks:
     last_verified: '2026-04-13'
   - task_id: TF-E2
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       productize Canvas node authoring so node lifecycle, edge lifecycle, property editing, and
       hard-reload behavior all run through one canonical persistence model instead of visual-only or
@@ -2207,7 +2207,7 @@ tasks:
       across governed persisted draft schema versions.
     complexity: L
     effort_points: 8
-    progress_pct: 80
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-production-node-authoring-and-persistence-plan-20260416.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md
@@ -2230,22 +2230,15 @@ tasks:
       - docs/planning/closeouts/20260417-graph-architecture-doc-pack-split-closeout.md
       - docs/planning/closeouts/20260418-tf-e2-canvas-interaction-command-seam-closeout.md
       - docs/planning/closeouts/20260420-tf-e2-canvas-typed-authoring-port-hard-cut-closeout.md
+      - docs/planning/closeouts/20260514-tf-e2-parent-closeout.md
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-a-authoring-draft-hard-cut-implementation-plan-20260503.md
       - docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md
       - buzon/20260503-tf-e2-a-authoring-draft-hard-cut-fowler-review.md
       - docs/runbooks/index.md
     status_reason: >-
-      The productization route remains active, but the core Canvas authoring path has materially
-      advanced. `TF-E2-A` is near closure on the shared protected authoring-draft boundary,
-      `TF-E2-D` closed the route-owned Inspector, `TF-E2-E` closed the selected-closure proof
-      matrix, `TF-E2-K` closed the typed host and first-canvas cycle, `TF-E2-B/C` now close
-      duplicate-node and reconnect-edge semantics without inflating passive adapters or the draft
-      aggregate component, and `TF-E2-L` now closes the 2026-04-25 Fowler hard QA graph-strategy
-      ownership drift. `TF-E2-M` is now closed as the startup and browser-operability backlog. The
-      next productizing cut is `TF-E2-A`: remove the remaining web-local projected
-      `WorkspaceGraphDraft` DTO from the active save path so Canvas consumes
-      `WorkspaceGraphAuthoringDraft` directly.
-    last_verified: '2026-05-03'
+      Closed TF-E2 parent after child slices completed; added closeout, removed stale open-parent
+      drift, and guarded docs/runtime alignment with architecture test.
+    last_verified: '2026-05-14'
   - task_id: TF-E2-A
     parent_task: TF-E2
     priority: P0

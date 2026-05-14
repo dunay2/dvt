@@ -2,7 +2,7 @@
 title: Graph Canvas Runtime Model
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-25
+last_reviewed: 2026-05-14
 ---
 
 # Graph Canvas Runtime Model
@@ -86,10 +86,10 @@ classDiagram
 - duplicate-node and reconnect-edge now route through adjacent command seams
   that preserve the draft aggregate as semantic truth instead of pushing policy
   down into passive React Flow adapters.
-- parent TF-E2 still remains open only for the residual operability and
-  long-horizon compatibility proof around governed persisted draft versions.
+- TF-E2 parent closure is complete. Residual persisted-version compatibility
+  expansion is a future explicit follow-up, not hidden parent scope.
 
 ## Future Evolution
 
-- complete end-to-end deterministic reload coverage across supported draft
-  versions.
+- expand end-to-end deterministic reload coverage across additional supported
+  draft versions through separate governed follow-up tasks.
