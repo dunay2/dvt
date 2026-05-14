@@ -52,7 +52,7 @@ describe('internal alpha route gate architecture', () => {
     );
 
     for (const stage of routeStages) {
-      expect(acceptanceMatrix).toContain(`| ${stage} |`);
+      expect(acceptanceMatrix).toMatch(new RegExp(`\\|\\s*${stage}\\s*\\|`));
     }
 
     for (const requiredColumn of [
