@@ -79,6 +79,7 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/web-ddd.md
   - docs/architecture/components/web/web-functional.md
   - docs/architecture/components/web/web-sequence.md
+  - docs/architecture/components/web/graph/graph-canvas-runtime-model.md
   - docs/architecture/components/web/runs/component-runs.md
   - docs/architecture/components/web/runs/user-stories-runs.md
   - docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md

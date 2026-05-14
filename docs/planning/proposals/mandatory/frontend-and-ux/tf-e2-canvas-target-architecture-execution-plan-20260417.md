@@ -1,8 +1,8 @@
 ---
 title: TF-E2 Canvas Target Architecture Execution Plan 2026-04-17
-status: Draft
+status: Implemented
 owner: Product / Frontend / Architecture
-last_reviewed: 2026-04-23
+last_reviewed: 2026-05-14
 planning_type: proposal
 lane: E
 task_id: TF-E2
@@ -23,6 +23,19 @@ The working assumption is explicit: do not rewrite the current runtime in one
 pass. The target architecture must be reached by seam extraction, ownership
 clarification, small reviewable slices, and one hard cut on the active
 authoring path once the typed port is ready.
+
+## 2026-05-14 Parent Closure
+
+`TF-E2` is closed as a parent architecture execution plan. Its child slices
+landed the seam-first hard cut, protected draft-authoring port adoption,
+route-owned Inspector lifecycle, selected-closure proof, first-authoring live
+proof, startup readiness, denied-posture handling, and architecture guardrails
+that keep the active Canvas path off the legacy projected DTO.
+
+This document remains the historical target architecture and traceability map.
+New work must not reopen `TF-E2` implicitly; persisted-version compatibility,
+additional live-runtime matrices, or broader Canvas UX follow-ups require their
+own planning DB task and governing evidence.
 
 ## Governing sources
 
@@ -86,7 +99,7 @@ authoring path once the typed port is ready.
   web Vitest suites are route and consumer truth, and browser-level back/front
   proof belongs to one live-runtime Cypress lane without `cy.intercept` on the
   authoring contract.
-- Therefore the next TF-E2 closure work is not another compatibility layer
+- Therefore the follow-up closure work was not another compatibility layer
   around the projected DTO. It is the authoring-draft contract reset across
   `TF-A2`, `TF-C4`, and `TF-E2-A`, followed by graph-first empty-state entry,
   route-owned Inspector editing, and execution handoff proof.
