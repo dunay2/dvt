@@ -86,13 +86,13 @@ flowchart TB
 ## Observability Truth Model
 
 - Implemented now:
-  - `dvt.api.run_start.latency_ms`
-  - `dvt.api.plan_compile.latency_ms`
+  - `dvt_api_run_start_latency_seconds`
+  - `dvt_api_plan_compile_latency_seconds`
   - `dvt.api.run_status.snapshot_staleness_result_total`
   - `dvt.api.run_status.snapshot_staleness_fallback_unknown_total`
   - `dvt_outbox_oldest_claimed_lag_seconds`
   - `dvt_delivery_outbox_drain_lag_seconds`
-  - `dvt_delivery_event_delivery_latency_ms`
+  - `dvt_delivery_event_delivery_latency_seconds`
 - Planned instrumentation:
   - none; AR-C2 remains open for dashboard/alert evidence, not metric emission
 - Rule: no review should treat planned metrics as active alert sources.

@@ -1,4 +1,4 @@
-﻿---
+---
 title: Engine Incident Response Runbook
 status: Active
 owner: Architecture / Engine / SRE
