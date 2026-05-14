@@ -5,6 +5,7 @@ date: 2026-05-14
 owners:
   - packages/@dvt/engine
   - packages/@dvt/adapter-postgres
+  - packages/@dvt/adapter-temporal
   - apps/api
   - apps/temporal-worker
   - apps/outbox-worker
@@ -18,6 +19,7 @@ code_refs:
   - packages/@dvt/engine/src/contracts/runEvents.ts
   - packages/@dvt/engine/src/state/runEventWritePolicy.ts
   - packages/@dvt/engine/test/architecture/enginePublicApiSurface.architecture.test.ts
+  - packages/@dvt/adapter-temporal/test/activities.test.ts
 evidence:
   tests:
     - pnpm --filter @dvt/engine test -- test/architecture/enginePublicApiSurface.architecture.test.ts
@@ -26,6 +28,7 @@ evidence:
     - pnpm --filter dvt-temporal-worker typecheck
     - pnpm --filter @dvt/adapter-postgres typecheck
     - pnpm --filter @dvt/adapter-temporal typecheck
+    - pnpm test:adapter-temporal
     - pnpm --filter @dvt/state-store typecheck
     - pnpm --filter dvt-outbox-worker typecheck
     - pnpm --filter @dvt/delivery typecheck

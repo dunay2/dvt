@@ -133,6 +133,7 @@ allowedImplementationSurfaces:
   - apps/temporal-worker/src/**
   - packages/@dvt/adapter-postgres/src/**
   - packages/@dvt/adapter-temporal/src/**
+  - packages/@dvt/adapter-temporal/test/**
   - packages/@dvt/delivery/test/**
   - packages/@dvt/state-store/src/**
   - docs/evidence/**

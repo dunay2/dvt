@@ -1,12 +1,8 @@
 import type { IRunExecutionContextReader } from '@dvt/artifacts';
 import { type PlanRef, type ResolvedRunContext, type RunExecutionContext } from '@dvt/contracts';
 import { sha256Hex } from '@dvt/crypto';
-import {
-  PlanIntegrityValidator,
-  RunExecutionContextRejectedError,
-  SequenceClock,
-  type RunStateCommandPort,
-} from '@dvt/engine';
+import { RunExecutionContextRejectedError, type RunStateCommandPort } from '@dvt/engine';
+import { PlanIntegrityValidator, SequenceClock } from '@dvt/engine/runtime';
 import { describe, expect, it } from 'vitest';
 
 import {

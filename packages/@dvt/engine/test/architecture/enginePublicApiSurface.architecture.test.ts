@@ -181,6 +181,18 @@ describe('@dvt/engine public API surface architecture', () => {
     expect(runEventsSource).toContain('StepEventInput');
   });
 
+  it('keeps runtime constructor consumers on the runtime entrypoint', () => {
+    const temporalActivitiesTest = readRepoSource(
+      'packages/@dvt/adapter-temporal/test/activities.test.ts'
+    );
+
+    expect(temporalActivitiesTest).toContain(
+      "import { PlanIntegrityValidator, SequenceClock } from '@dvt/engine/runtime';"
+    );
+    expect(temporalActivitiesTest).not.toContain('PlanIntegrityValidator,\n');
+    expect(temporalActivitiesTest).not.toContain('SequenceClock,\n');
+  });
+
   it('keeps runtime composition explicit and free of in-memory test doubles', () => {
     const runtimeSource = readEngineSource('runtime.ts');
     const runtimeExports = exportedModuleSpecifiers(runtimeSource);

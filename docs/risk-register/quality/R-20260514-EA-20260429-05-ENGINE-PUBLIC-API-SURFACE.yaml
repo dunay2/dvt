@@ -5,6 +5,7 @@ status: Open
 date: 2026-05-14
 owners:
   - packages/@dvt/engine
+  - packages/@dvt/adapter-temporal
   - apps/outbox-worker
   - packages/@dvt/delivery
 severity: Low
@@ -12,11 +13,12 @@ probability: Low
 ---
 summary: >
   The engine package surface is now split into public, runtime, and testing entrypoints, and event
-  vocabulary now hard-cuts engine-local compatibility aliases. Future runtime or outbox work could
-  accidentally re-export implementation services from the root barrel or reintroduce alias names
-  around canonical @dvt/contracts events unless the architecture guard remains active.
+  vocabulary now hard-cuts engine-local compatibility aliases. Future runtime, adapter, or outbox
+  work could accidentally re-export implementation services from the root barrel, consume runtime
+  constructors from the root package, or reintroduce alias names around canonical @dvt/contracts
+  events unless the architecture guard remains active.
 mitigation: >
   Keep packages/@dvt/engine/test/architecture/enginePublicApiSurface.architecture.test.ts in the
   package test baseline, require component docs to change before expanding any public root export
-  family, and fail the guard if event aliases such as persisted/run-level/step-level legacy names
-  reappear.
+  family, keep adapter runtime constructors on @dvt/engine/runtime, and fail the guard if event
+  aliases such as persisted/run-level/step-level legacy names reappear.
