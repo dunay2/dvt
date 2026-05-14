@@ -28,6 +28,8 @@
     "ci:code": "pnpm arch:deps && pnpm type-check && pnpm test && pnpm lint:determinism",
     "ci:full": "pnpm ci:docs && pnpm ci:code && pnpm test:coverage:engine",
     "preflight:affected": "pnpm ci:affected:typecheck && pnpm ci:affected:test",
+    "docs:ai-efficiency:check": "node scripts/check-ai-efficiency-adoption.cjs --require-ready",
+    "test:ai-efficiency:adoption": "node --test scripts/check-ai-efficiency-adoption.test.cjs",
     "verify:changed": "node scripts/verify-changed.cjs",
     "closeout:changed": "node scripts/closeout-changed.cjs",
     "test:closeout-changed": "node --test scripts/closeout-changed.test.cjs",

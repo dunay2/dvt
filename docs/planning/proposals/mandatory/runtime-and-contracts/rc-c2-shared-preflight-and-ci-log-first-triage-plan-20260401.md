@@ -110,6 +110,7 @@ Out of scope:
 - [x] YAML adoption log and readable status companion published
 - [x] `RC-C2` lane state updated to reflect shipped tooling but open adoption
 - [x] docs indexes and planning views regenerated
+- [x] mechanical adoption closure check added as `pnpm docs:ai-efficiency:check`
 - [ ] 3 consecutive Lane C PR cycles logged
 - [ ] > =20% round reduction demonstrated
 - [ ] task marked `done`
@@ -122,6 +123,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -BaseBranch main
 powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -BaseBranch main -Preflight
 powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -BaseBranch main -Preflight -SliceCommand "pnpm pr:validate-title \"Fix(api): Example\""
 pnpm test:ci-tools
+pnpm test:ai-efficiency:adoption
+pnpm docs:ai-efficiency:check
 pnpm docs:sync
 pnpm docs:planning:lanes:generate
 pnpm docs:workboard:generate
@@ -135,6 +138,7 @@ pnpm verify:prepush
 | 2026-03-28 | Lane C | Review basis  | Efficiency review established the baseline, savings model, and rules. |
 | 2026-04-01 | Lane C | Implemented   | Shared tooling, guide, and structured tracking were added.            |
 | 2026-04-01 | Lane C | Adoption open | Task remains open until 3 qualifying Lane C cycles are logged.        |
+| 2026-05-15 | Lane C | Gate hardened | `docs:ai-efficiency:check` now prevents narrative-only closure.       |
 
 ## Risks And Coordination
 

@@ -33,6 +33,7 @@ function readWorkflowScopePolicy() {
     'workspace_outbox_worker',
     'workspace_projector_worker',
     'workspace_temporal_worker',
+    'workspace_temporal_dbt_plugin',
     'workspace_web',
     'workspace_artifacts',
     'workspace_crypto',
@@ -116,6 +117,12 @@ export const WORKSPACE_ENTRIES = [
     name: 'temporal-worker',
     pkg: 'dvt-temporal-worker',
     patterns: WORKFLOW_SCOPE_POLICY.workspace_temporal_worker,
+  },
+  {
+    key: 'temporal_dbt_plugin',
+    name: 'temporal-dbt-plugin',
+    pkg: '@dvt/temporal-dbt-plugin',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_temporal_dbt_plugin,
   },
   { key: 'web', name: 'web', pkg: '@dvt/web', patterns: WORKFLOW_SCOPE_POLICY.workspace_web },
   {
@@ -315,6 +322,7 @@ export const TEST_SCOPE_PATTERNS = {
   outbox_worker: ['apps/outbox-worker/**'],
   projector_worker: ['apps/projector-worker/**'],
   temporal_worker: ['apps/temporal-worker/**'],
+  temporal_dbt_plugin: ['packages/@dvt/temporal-dbt-plugin/**'],
   web: ['apps/web/**'],
   artifacts: ['packages/@dvt/artifacts/**'],
   crypto: ['packages/@dvt/canonical/**'],
