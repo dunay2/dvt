@@ -327,9 +327,11 @@ describe('Scoped plan-store records architecture', () => {
       'schema-packs/plan-records.ts`                            | `INFRA`                            | `N/A`              | `OK`',
       'Re-exports of scoped `PlanRecord.v1`, `PlanExecutabilityRecord.v1`, `PlanAdmissionLink.v1`',
       'PostgresPlanRecordRepository` (tenant-scoped record SQL)',
+      'PostgresExecutableBlobRepository` (tenant-neutral artifact blob SQL)',
       'PostgresPlanExecutabilityRepository` (tenant-scoped `(plan_id, adapter_id)` SQL)',
       'PostgresPlanAdmissionRepository` (tenant-scoped `(plan_id, run_id, adapter_id)` SQL)',
-      'Tables include scope columns and composite scoped keys',
+      '`stored_plans` remains tenant-neutral with `plan_id` primary key',
+      'Scoped tables include tenant/project/environment columns and composite scoped keys',
     ]) {
       expect(inventory).toContain(currentClaim);
     }

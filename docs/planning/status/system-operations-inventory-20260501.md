@@ -799,18 +799,19 @@ Tenant isolation is enforced via `PostgresTenantIsolationPolicy` (ADR-0031).
 
 ### 7.1 PlanStore — `PostgresPlanStore.*.ts`
 
-| Symbol                                                                                                                 | DDD                               | C&Q                | Legacy  | Notes                                                                                                                                                                                      |
-| ---------------------------------------------------------------------------------------------------------------------- | --------------------------------- | ------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `PostgresPlanStore` (composite class)                                                                                  | `ADP` (composite)                 | mixed              | `SUPER` | Implements the three canonical scoped ports. Follow-up decomposition can split per-port adapters, but the composite no longer exposes the retired lifecycle facade as canonical authority. |
-| `PostgresPlanRecordRepository` (tenant-scoped record SQL)                                                              | `INFRA` (repo) - adapter internal | `CMD/QRY`          | `OK`    | Uses tenant, project, environment, and plan predicates for tenant-owned records.                                                                                                           |
-| `PostgresExecutableBlobRepository` (tenant-neutral artifact blob SQL)                                                  | `INFRA` (repo)                    | `CMD/QRY`          | `MIGR`  | Retains artifact bytes and validation-state DTO vocabulary; runtime authority must enter through scoped record/ref checks.                                                                 |
-| `PostgresPlanExecutabilityRepository` (tenant-scoped `(plan_id, adapter_id)` SQL)                                      | `INFRA` (repo)                    | `CMD/QRY`          | `OK`    | Executability rows include the full scope tuple plus adapter id.                                                                                                                           |
-| `PostgresPlanAdmissionRepository` (tenant-scoped `(plan_id, run_id, adapter_id)` SQL)                                  | `INFRA` (repo)                    | `CMD/QRY`          | `OK`    | Admission links include the full scope tuple plus run and adapter ids.                                                                                                                     |
-| `PostgresPlanStore.mappers.ts`                                                                                         | `INFRA`                           | `QRY` (pure)       | `OK`    | Maps scoped record rows and tenant-neutral artifact rows into canonical contract shapes.                                                                                                   |
-| `PostgresPlanStore.schema-manager.ts` (backfill)                                                                       | `INFRA`                           | `CMD`              | `OK`    | Backfills `plan_records` from stored plans using the ownership tuple carried in canonical plan metadata.                                                                                   |
-| `PostgresPlanStore.sql.ts` (DDL: `stored_plans`, `plan_records`, `plan_executability_records`, `plan_admission_links`) | `INFRA`                           | `N/A`              | `OK`    | Tables include scope columns and composite scoped keys.                                                                                                                                    |
-| `PostgresPlanStore.tx.ts`                                                                                              | `INFRA`                           | `CMD` (tx wrapper) | `OK`    |                                                                                                                                                                                            |
-| `PostgresPlanStoreComposer`                                                                                            | `INFRA` (composition)             | `QRY` (factory)    | `OK`    | Composer is the right path for keeping repository helpers internal to scoped port adapters.                                                                                                |
+| Symbol                                                                                                 | DDD                               | C&Q                | Legacy  | Notes                                                                                                                                                                                      |
+| ------------------------------------------------------------------------------------------------------ | --------------------------------- | ------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `PostgresPlanStore` (composite class)                                                                  | `ADP` (composite)                 | mixed              | `SUPER` | Implements the three canonical scoped ports. Follow-up decomposition can split per-port adapters, but the composite no longer exposes the retired lifecycle facade as canonical authority. |
+| `PostgresPlanRecordRepository` (tenant-scoped record SQL)                                              | `INFRA` (repo) - adapter internal | `CMD/QRY`          | `OK`    | Uses tenant, project, environment, and plan predicates for tenant-owned records.                                                                                                           |
+| `PostgresExecutableBlobRepository` (tenant-neutral artifact blob SQL)                                  | `INFRA` (repo)                    | `CMD/QRY`          | `MIGR`  | Retains artifact bytes and validation-state DTO vocabulary; runtime authority must enter through scoped record/ref checks.                                                                 |
+| `PostgresPlanExecutabilityRepository` (tenant-scoped `(plan_id, adapter_id)` SQL)                      | `INFRA` (repo)                    | `CMD/QRY`          | `OK`    | Executability rows include the full scope tuple plus adapter id.                                                                                                                           |
+| `PostgresPlanAdmissionRepository` (tenant-scoped `(plan_id, run_id, adapter_id)` SQL)                  | `INFRA` (repo)                    | `CMD/QRY`          | `OK`    | Admission links include the full scope tuple plus run and adapter ids.                                                                                                                     |
+| `PostgresPlanStore.mappers.ts`                                                                         | `INFRA`                           | `QRY` (pure)       | `OK`    | Maps scoped record rows and tenant-neutral artifact rows into canonical contract shapes.                                                                                                   |
+| `PostgresPlanStore.schema-manager.ts` (backfill)                                                       | `INFRA`                           | `CMD`              | `OK`    | Backfills `plan_records` from stored plans using the ownership tuple carried in canonical plan metadata.                                                                                   |
+| `PostgresPlanStore.sql.ts` (DDL: `stored_plans`)                                                       | `INFRA`                           | `N/A`              | `MIGR`  | `stored_plans` remains tenant-neutral with `plan_id` primary key; scoped record/ref checks own tenant authorization before artifact reads.                                                 |
+| `PostgresPlanStore.sql.ts` (DDL: `plan_records`, `plan_executability_records`, `plan_admission_links`) | `INFRA`                           | `N/A`              | `OK`    | Scoped tables include tenant/project/environment columns and composite scoped keys.                                                                                                        |
+| `PostgresPlanStore.tx.ts`                                                                              | `INFRA`                           | `CMD` (tx wrapper) | `OK`    |                                                                                                                                                                                            |
+| `PostgresPlanStoreComposer`                                                                            | `INFRA` (composition)             | `QRY` (factory)    | `OK`    | Composer is the right path for keeping repository helpers internal to scoped port adapters.                                                                                                |
 
 ### 7.2 RunState / RunEvents / Snapshots / Outbox — repositories
 
@@ -1240,7 +1241,7 @@ flowchart LR
     A1[HTTP startRun route] -->|planRef + ctx| A2[StartRunUseCase]
     A2 -->|ScopedPlanRef| A3[StoredExecutablePlanResolver]
     A3 -->|fetch scoped artifact| A4[IStoredPlanArtifactReader]
-    A4 -->|SQL by scope + plan_id| A5[(stored_plans)]
+    A4 -->|ref resolved by scoped record first| A5[(stored_plans<br/>tenant-neutral blob)]
     A6[PlanRefPolicy] -.URI allowlist.- A2
     A7[StartRunAdmissionGuard] -.tenant access.- A2
   end
@@ -1253,7 +1254,8 @@ flowchart LR
   subgraph Target[Target — scoped C&Q]
     B1[HTTP startRun route] -->|StartRunCommand with scope| B2[StartRunApplicationService]
     B2 -->|ScopedPlanRef| B3[IStoredPlanArtifactReader<br/>PS-Q08]
-    B3 -->|tenant+project+env predicate| B4[(stored_plans + scope cols + RLS)]
+    B3 -->|tenant+project+env predicate| B4[(plan_records + scoped link tables)]
+    B4 -->|authorized plan_id| B8[(stored_plans<br/>tenant-neutral blob)]
     B2 -->|markAdmitted(scope, link) PS-C04| B5[ScopedPlanStoreWriter]
     B6[PlanRefPolicy] -.integrity gate only.- B2
     B7[StartRunAdmissionGuard] -.necessary but insufficient.- B2
@@ -1273,9 +1275,13 @@ StartRunApplicationService  ---->  PlanRefPolicy (URI allowlist, integrity)
 IStoredPlanArtifactReader.fetchStoredPlanArtifact(ScopedPlanRef) <- PS-Q08
    |
    v
-SQL: stored_plans WHERE tenant_id = $1 AND project_id = $2
-                       AND environment_id = $3 AND plan_id = $4
-(RLS policy enforced server-side)
+SQL:
+  plan_records WHERE tenant_id = $1 AND project_id = $2
+                 AND environment_id = $3 AND plan_id = $4
+  stored_plans WHERE plan_id = $4
+
+Tenant authorization is proven by the scoped record lookup before the
+tenant-neutral artifact blob read.
 ```
 
 ### 18.2 Artifact validation transitions through scoped C&Q (closed S08-DRIFT-04/09/12)
