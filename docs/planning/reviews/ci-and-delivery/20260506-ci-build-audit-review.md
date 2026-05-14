@@ -49,8 +49,8 @@ Status update 2026-05-14:
 
 - `CI-04` is closed. `PR Quality Gate` is the single remote workflow owner for
   `pnpm traceability:adr0`; `CI - Code Quality` no longer invokes that command.
-- `tools/ci/workflow-pattern-parity.test.mjs` now guards both the workflow
-  ownership invariant and this review against stale duplicate-owner wording.
+- `tools/ci/workflow-pattern-parity.test.mjs` now guards the executable
+  workflow ownership invariant.
 
 | Finding | Route                                                           |
 | ------- | --------------------------------------------------------------- |
