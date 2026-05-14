@@ -11,8 +11,7 @@ planning_type: proposal
 ## Summary
 
 This proposal defines the canonical replacement plan for mapping and deriving
-the full `WorkflowEngine` subsystem to a narrower hexagonal model without a
-parallel or unmanaged API break.
+the full `WorkflowEngine` subsystem to a hardcut, narrower hexagonal model.
 
 This is a **reconcile-and-replace** plan, not an additive docs layer.
 
@@ -40,7 +39,7 @@ What is already strong:
 
 What is still drifting:
 
-- `WorkflowEngine` remains a wide compatibility center
+- `WorkflowEngine` remains a wide command/query boundary
 - admission/coordinator/core services still mix concerns
 - provider-resolution and telemetry logic are repeated
 - docs are fragmented and partially stale for current subsystem reality
@@ -49,9 +48,9 @@ What is still drifting:
 
 ## Target model
 
-Compatibility-first target:
+Hardcut target:
 
-- keep `IWorkflowEngine` as public compatibility facade
+- keep `IWorkflowEngine` as the public command/query facade
 - move behavior behind narrow use-case services
 - enforce explicit engine-owned outbound ports
 - keep artifacts behavior ownership in `@dvt/artifacts`
@@ -248,9 +247,139 @@ symbols:
 ### `WE-HX-0` Canonical map and doc replacement
 
 - depends on `DOC-ARCH-01`
-- deliver new subsystem context, target architecture spec, user manual,
+- deliver the hardcut subsystem context, target architecture spec, user manual,
   and navigation replacement
-- close stale-engine-doc ambiguity
+- close stale-engine-doc ambiguity without keeping retrocompatibility posture as
+  current architecture truth
+
+```feature-mechanization
+version: 1
+featureId: WE-HX-0-HARDCUT-CANONICAL-MAP
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+componentGuides:
+  - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
+  - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
+userStories:
+  - docs/guides/workflow-engine-user-manual.v1.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/adr/ADR-0003-execution-model.md
+  - docs/adr/ADR-0004-event-sourcing-strategy.md
+  - docs/adr/ADR-0012-plan-integrity-ownership.md
+  - docs/adr/ADR-0015-query-read-model-separation.md
+  - docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md
+allowedImplementationSurfaces:
+  - buzon/20260514-codex-fowler-we-hx-0-hardcut-map-analysis.md
+  - docs/.manifest.json
+  - docs/architecture/components/engine/architecture/index.md
+  - docs/architecture/components/engine/architecture/workflow-engine-facade-use-cases-component.md
+  - docs/architecture/components/engine/architecture/workflow-engine-runtime-path-decomposition-component.md
+  - docs/architecture/components/engine/architecture/workflow-engine-runtime-path-decomposition-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
+  - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-start-run-decomposition-component.md
+  - docs/architecture/components/engine/architecture/workflow-engine-start-run-decomposition-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
+  - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
+  - docs/evidence/ed-20260514-we-hx-0-hardcut-canonical-map.md
+  - docs/evidence/index.md
+  - docs/guides/workflow-engine-user-manual.v1.md
+  - docs/planning/closeouts/20260514-we-hx-0-hardcut-canonical-map-closeout.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+  - docs/planning/status/**
+  - docs/risk-register/quality/R-20260514-WE-HX-0-HARDCUT-CANONICAL-MAP.yaml
+  - docs/risk-register/quality/index.md
+  - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
+  - packages/@dvt/engine/src/services/runControl/RunCommandService.ts
+  - packages/@dvt/engine/src/services/runControl/RunSignalService.ts
+  - packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts
+  - packages/@dvt/engine/test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+  - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+forbiddenImplementationSurfaces:
+  - packages/@dvt/contracts/**
+  - packages/@dvt/adapter-*/**
+  - packages/@dvt/planner/**
+  - apps/web/**
+  - apps/api/**
+  - specs/**
+commandQueryRails:
+  - name: IWorkflowEngine.startRun
+    type: command
+    dddOwner: WorkflowEngine public boundary
+  - name: IWorkflowEngine.recoverRun
+    type: command
+    dddOwner: WorkflowEngine public boundary
+  - name: IWorkflowEngine.cancelRun
+    type: command
+    dddOwner: WorkflowEngine public boundary
+  - name: IWorkflowEngine.getRunStatus
+    type: query
+    dddOwner: WorkflowEngine public boundary
+  - name: IWorkflowEngine.signal
+    type: command
+    dddOwner: WorkflowEngine public boundary
+domainObjects:
+  - name: WorkflowEngineCanonicalMap
+    type: architecture map
+    owner: Engine architecture
+  - name: WorkflowEngineCoreService
+    type: combined run-control delegator
+    owner: Engine run-control boundary
+fowlerSignals:
+  - Documentation drift
+  - Duplicate semantics
+  - Test-only confidence
+architectureGuards:
+  - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts test/architecture/workflowEngineSemanticClosure.architecture.test.ts test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+  - pnpm docs:feature-mechanization:implementation
+cypressFlows:
+  - Not applicable - engine architecture documentation and semantic guard only
+completionGate:
+  - pnpm docs:feature-mechanization --feature WE-HX-0-HARDCUT-CANONICAL-MAP
+  - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts test/architecture/workflowEngineSemanticClosure.architecture.test.ts test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+  - pnpm --filter @dvt/engine typecheck
+  - pnpm docs:sync
+  - pnpm governance:refresh
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: we-hx-0-hardcut-canonical-map-guard
+    redTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts
+    expectedFailure: active WE-HX-0 docs and run-control headers still contain migration-safety posture instead of hardcut command/query ownership.
+    patchSurfaces:
+      - packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts
+      - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
+      - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
+      - docs/guides/workflow-engine-user-manual.v1.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+      - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
+      - packages/@dvt/engine/src/services/runControl/RunCommandService.ts
+      - packages/@dvt/engine/src/services/runControl/RunSignalService.ts
+    greenTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts
+symbols:
+  - name: WorkflowEngineCanonicalMapHardcutGuard
+    path: packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts
+    dddOwner: Engine architecture map
+    cqRails:
+      - IWorkflowEngine.startRun
+      - IWorkflowEngine.recoverRun
+      - IWorkflowEngine.cancelRun
+      - IWorkflowEngine.getRunStatus
+      - IWorkflowEngine.signal
+    fowlerSignals:
+      - Documentation drift
+      - Duplicate semantics
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts
+    cypressCoverage: Not applicable - architecture documentation guard
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts
+```
 
 ### `WE-HX-1` Boundary ownership closure
 
@@ -258,10 +387,10 @@ symbols:
 - lock ownership mapping for `PlanRef`, `runExecutionContextRef`, engine
   resolver seam, and artifacts reader seam
 
-### `WE-HX-2` Compatibility facade narrowing
+### `WE-HX-2` Facade use-case narrowing
 
 - depends on `WE-HX-1`
-- document `WorkflowEngine` as thin compatibility adapter over use-case
+- document `WorkflowEngine` as a hardcut delegation facade over use-case
   services
 
 ### `WE-HX-3` Start-run application decomposition
@@ -600,7 +729,7 @@ domainObjects:
     type: domain service
     owner: Engine runtime
   - name: WorkflowEngineCoreService
-    type: compatibility assembler
+    type: combined run-control assembler
     owner: Engine runtime
 fowlerSignals:
   - Boundary drift
@@ -667,7 +796,7 @@ symbols:
       - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
   - name: IRunControlService
     path: packages/@dvt/engine/src/domain/IRunControlService.ts
-    dddOwner: Engine runtime compatibility control service
+    dddOwner: Engine runtime run-control service
     cqRails:
       - RuntimeRunCommandDecomposition
       - RuntimeRunSignalDecomposition
@@ -845,7 +974,7 @@ symbols:
 mechanizing semantic encapsulation. The slice does not add runtime behavior. It
 adds the component engineering record, owned-concern module headers, user
 stories, and an architecture guard that proves API composition, engine
-compatibility, command, signal, and documentation ownership stay aligned.
+run-control, command, signal, and documentation ownership stay aligned.
 
 ```feature-mechanization
 version: 1
@@ -903,7 +1032,7 @@ domainObjects:
     type: architecture fitness function
     owner: Architecture / Engine
   - name: WorkflowEngineCoreService
-    type: compatibility adapter
+    type: combined run-control delegator
     owner: Engine runtime
 fowlerSignals:
   - Documentation drift
@@ -930,7 +1059,7 @@ completionGate:
 redGreenCycles:
   - id: dhm-ws6-semantic-closure-architecture-guard
     redTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
-    expectedFailure: composition and compatibility modules lack owned concern headers and the DHM-WS6 component guide does not exist.
+    expectedFailure: composition and run-control modules lack owned concern headers and the DHM-WS6 component guide does not exist.
     patchSurfaces:
       - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
       - apps/api/src/runtime/intentReconcilerRuntime.ts
@@ -967,13 +1096,13 @@ symbols:
       - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
   - name: WorkflowEngineCoreService
     path: packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
-    dddOwner: Engine runtime compatibility control service
+    dddOwner: Engine runtime run-control service
     cqRails:
       - WorkflowEngineSemanticClosure
     fowlerSignals:
       - Hidden authority
     architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
-    cypressCoverage: Not applicable - internal engine compatibility adapter
+    cypressCoverage: Not applicable - internal engine run-control delegator
     unitTests:
       - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
   - name: IntentReconcilerRuntimeComposition
@@ -1665,7 +1794,7 @@ Lane A execution mapping:
 
 Key tradeoffs:
 
-- keeping compatibility facade reduces rollout risk but slows internal cleanup
+- keeping backward-compatible facade posture would slow internal cleanup
 - strict ownership seams increase clarity but require composition-root adapter
   discipline
 - replacing stale docs now has short-term churn but removes long-term drift

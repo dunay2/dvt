@@ -43,20 +43,19 @@ Acceptance criteria:
 - `RunSignalService` preserves the existing fail-closed `RETRY_RUN` and invalid
   transition behavior.
 
-### US-DHM-WS4-003: keep compatibility without keeping mixed ownership
+### US-DHM-WS4-003: keep combined run-control without keeping mixed ownership
 
-As a composition-root maintainer, I want `buildRunControlService` to keep
-working as a compatibility assembler, so existing factory call sites can migrate
-incrementally while new wiring can use dedicated command and signal services.
+As a composition-root maintainer, I want `buildRunControlService` to expose one
+combined delegator while new wiring uses dedicated command and signal services.
 
 Acceptance criteria:
 
 - `buildRunControlService` returns an `IRunControlService`.
-- `WorkflowEngineCoreService` is a compatibility adapter over command and signal
+- `WorkflowEngineCoreService` is a combined delegator over command and signal
   services.
 - Production factory wiring gives facade use cases separate command and signal
   services.
-- The public `IWorkflowEngine` contract is unchanged.
+- `IWorkflowEngine` remains the current command/query boundary.
 
 ## Negative Scenarios
 

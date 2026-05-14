@@ -1,0 +1,22 @@
+---
+id: R-20260514-WE-HX-0-HARDCUT-CANONICAL-MAP
+title: WorkflowEngine canonical docs can drift back to retrocompatibility posture
+status: Open
+date: 2026-05-14
+owners:
+  - '@dvt/engine'
+severity: Medium
+probability: Low
+---
+summary: >
+  Active WorkflowEngine architecture documentation can regress to migration or retrocompatibility
+  language after the hardcut, creating two active truths for the same engine boundary.
+
+mitigation: >
+  The WE-HX-0 architecture guard rejects compatibility-first, compatibility facade, and
+  compatibility adapter posture in the canonical WorkflowEngine architecture docs and run-control
+  headers.
+
+validation:
+  - pnpm --filter @dvt/engine test --
+    test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts

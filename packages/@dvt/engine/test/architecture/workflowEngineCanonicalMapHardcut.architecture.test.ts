@@ -1,0 +1,95 @@
+import { describe, expect, it } from 'vitest';
+
+import {
+  engineArchitectureDocPath,
+  expectFileExists,
+  readEngineArchitectureDoc,
+  readEngineSource,
+  readRepoSource,
+  repoPath,
+} from './engineArchitectureTestSupport.js';
+
+const WorkflowEngineCanonicalMapHardcutGuard = {
+  canonicalDocs: [
+    'workflow-engine-subsystem-context.md',
+    'workflow-engine-target-architecture.v1.md',
+    'workflow-engine-facade-use-cases-component.md',
+    'workflow-engine-runtime-path-decomposition-component.md',
+    'workflow-engine-runtime-path-decomposition-user-stories.md',
+    'workflow-engine-semantic-closure-component.md',
+    'workflow-engine-semantic-closure-user-stories.md',
+  ],
+  forbiddenPostureTokens: [
+    'compatibility-first',
+    'public compatibility facade',
+    'compatibility facade',
+    'compatibility adapter',
+    'compatibility assembler',
+    'compatibility run-control',
+    'older combined',
+    'old callers',
+    'existing factory call sites can migrate',
+    'public `IWorkflowEngine` contract is unchanged',
+    'keeping compatibility facade',
+  ],
+} as const;
+
+describe('WorkflowEngine canonical map hardcut architecture', () => {
+  it('removes retrocompatibility posture from active WorkflowEngine canonical docs', () => {
+    for (const fileName of WorkflowEngineCanonicalMapHardcutGuard.canonicalDocs) {
+      expectFileExists(engineArchitectureDocPath(fileName));
+      const markdown = readEngineArchitectureDoc(fileName);
+
+      for (const forbidden of WorkflowEngineCanonicalMapHardcutGuard.forbiddenPostureTokens) {
+        expect(markdown, `${fileName} must not keep ${forbidden}`).not.toContain(forbidden);
+      }
+    }
+
+    const proposal = readRepoSource(
+      'docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md'
+    );
+    for (const forbidden of [
+      'compatibility-first',
+      'public compatibility facade',
+      'Compatibility facade narrowing',
+      'thin compatibility adapter',
+      'keeping compatibility facade',
+    ]) {
+      expect(proposal, `proposal must not keep ${forbidden}`).not.toContain(forbidden);
+    }
+
+    expect(proposal).toContain('WE-HX-0-HARDCUT-CANONICAL-MAP');
+    expect(proposal).toContain('hardcut subsystem context');
+    expect(proposal).toContain('without keeping retrocompatibility posture');
+  });
+
+  it('keeps run-control source ownership semantic without compatibility wording', () => {
+    const coreService = readEngineSource('core/WorkflowEngineCoreService.ts');
+    const commandService = readEngineSource('services/runControl/RunCommandService.ts');
+    const signalService = readEngineSource('services/runControl/RunSignalService.ts');
+
+    expect(coreService.slice(0, 700)).toContain('combined run-control delegator');
+    expect(commandService.slice(0, 700)).toContain('runtime cancel command service');
+    expect(signalService.slice(0, 700)).toContain('runtime signal command service');
+
+    for (const source of [coreService, commandService, signalService]) {
+      const header = source.slice(0, 700);
+      expect(header).not.toContain('compatibility');
+      expect(header).not.toContain('legacy');
+    }
+  });
+
+  it('points user-facing WorkflowEngine guidance at the current component path', () => {
+    const guidePath = repoPath('docs/guides/workflow-engine-user-manual.v1.md');
+    expectFileExists(guidePath);
+
+    const guide = readRepoSource('docs/guides/workflow-engine-user-manual.v1.md');
+    expect(guide).toContain(
+      'docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md'
+    );
+    expect(guide).toContain(
+      'docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md'
+    );
+    expect(guide).not.toContain('docs/architecture/engine/');
+  });
+});

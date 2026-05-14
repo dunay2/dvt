@@ -1,8 +1,8 @@
 /**
- * @ownedConcern Execute runtime signal commands behind the signal role interface.
+ * @ownedConcern Execute runtime signal commands through the runtime signal command service behind the signal role interface.
  * @baseline ADR-0003: Execution Model Sovereignty
  * @baseline ADR-0039: Hexagonal Port Hardening and SOLID Remediation
- * @decision Isolate signal transition checks and dispatch from the compatibility wrapper.
+ * @decision Isolate signal transition checks and dispatch from the combined run-control delegator.
  * @version 1.0.0
  */
 import type { EngineRunRef, EventType, SignalRequest } from '@dvt/contracts';

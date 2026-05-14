@@ -1,8 +1,8 @@
 /**
- * @ownedConcern Preserve the compatibility run-control adapter that delegates to command and signal services.
+ * @ownedConcern Provide the combined run-control delegator that delegates to command and signal services.
  * @baseline ADR-0003: Execution Model Sovereignty
  * @baseline ADR-0039: Hexagonal Port Hardening and SOLID Remediation
- * @decision Keep the legacy combined control surface without owning cancel or signal semantics.
+ * @decision Keep combined run-control delegation without owning cancel or signal semantics.
  * @consequence Runtime command and signal behavior stay in role-specific services.
  * @version 1.0.0
  */

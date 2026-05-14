@@ -146,8 +146,8 @@ Main components in the subsystem:
 - `IRunHealthService` / `RunHealthService` (runtime liveness probe path)
 - `RunCommandService` (cancel command runtime path)
 - `RunSignalService` (runtime signal path)
-- `WorkflowEngineCoreService` (compatibility adapter over command and signal
-  services)
+- `WorkflowEngineCoreService` (combined run-control delegator over command and
+  signal services)
 - `RunEnrichmentService` (engine-owned implementation of enrichment)
 - `IRunEnrichmentService` (explicit provider-backed enrichment boundary)
 - `SnapshotProjector` (event-to-status read model projection)
@@ -267,7 +267,7 @@ sequenceDiagram
 ```mermaid
 flowchart LR
   Guard["StartRunAdmissionGuard"] -->|mixed concerns| W2["Admission + capability + adapter + rate-limit"]
-  Core["WorkflowEngineCoreService"] -->|closed by DHM-WS4| W3["Compatibility adapter only"]
+  Core["WorkflowEngineCoreService"] -->|closed by DHM-WS4| W3["Combined delegator only"]
   Command["RunCommandService"] -->|closed by DHM-WS4| W5["Cancel command path"]
   Signal["RunSignalService"] -->|closed by DHM-WS4| W6["Runtime signal path"]
   StartRun["StartRunApplicationService"] -->|closed by DHM-WS3| W4["Execution/failure collaborators injected"]

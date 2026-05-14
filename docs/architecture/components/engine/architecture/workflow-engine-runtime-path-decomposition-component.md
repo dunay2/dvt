@@ -10,9 +10,9 @@ last_reviewed: 2026-05-12
 ## Purpose
 
 This component owns the internal runtime-control split for the engine facade.
-It keeps the public `IWorkflowEngine` surface stable while separating cancel
-commands, runtime signals, canonical status queries, and provider-backed
-enrichment into dedicated paths.
+It treats the public `IWorkflowEngine` surface as the current command/query
+boundary while separating cancel commands, runtime signals, canonical status
+queries, and provider-backed enrichment into dedicated paths.
 
 ## Public API
 
@@ -22,8 +22,8 @@ enrichment into dedicated paths.
 | `IRunSignalService`         | `@dvt/engine` | Runs canonical runtime signal behavior and signal-derived events.    |
 | `RunCommandService`         | `@dvt/engine` | Authorizes, resolves metadata, dispatches cancel, and records spans. |
 | `RunSignalService`          | `@dvt/engine` | Authorizes, validates transition, dispatches signal, emits events.   |
-| `WorkflowEngineCoreService` | `@dvt/engine` | Compatibility adapter over command and signal services.              |
-| `buildRunControlService`    | `@dvt/engine` | Compatibility assembler for callers that still need one control API. |
+| `WorkflowEngineCoreService` | `@dvt/engine` | Combined run-control delegator over command and signal services.     |
+| `buildRunControlService`    | `@dvt/engine` | Assembly helper for the combined run-control delegator.              |
 | `buildRunCommandService`    | `@dvt/engine` | Composition helper for cancel-command wiring.                        |
 | `buildRunSignalService`     | `@dvt/engine` | Composition helper for runtime-signal wiring.                        |
 | `RunStatusQueryService`     | `@dvt/engine` | Canonical run-status query path.                                     |
@@ -34,13 +34,13 @@ enrichment into dedicated paths.
 - `RunCommandService` must not own signal transition rules or emit
   signal-derived lifecycle events.
 - `RunSignalService` must not own cancel-command dispatch.
-- `WorkflowEngineCoreService` is a compatibility adapter only; it delegates to
-  command and signal services and does not own adapter dispatch or transition
-  mapping.
+- `WorkflowEngineCoreService` is a combined run-control delegator only; it
+  delegates to command and signal services and does not own adapter dispatch or
+  transition mapping.
 - Facade-facing cancel and signal use cases depend on separate command and
   signal ports.
-- Query and enrichment paths remain outside the runtime-control compatibility
-  adapter.
+- Query and enrichment paths remain outside the combined runtime-control
+  delegator.
 
 ## Transitions
 
@@ -76,8 +76,8 @@ flowchart LR
   SignalUseCase --> Signal["IRunSignalService<br/>RunSignalService"]
   StatusUseCase --> Status["IRunStatusQueryService<br/>RunStatusQueryService"]
 
-  Compat["WorkflowEngineCoreService<br/>compatibility adapter"] --> Command
-  Compat --> Signal
+  Control["WorkflowEngineCoreService<br/>combined delegator"] --> Command
+  Control --> Signal
 
   Command --> AdapterCancel["IProviderAdapter.cancelRun"]
   Signal --> AdapterSignal["IProviderAdapter.signal"]

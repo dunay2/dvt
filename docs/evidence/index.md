@@ -133,6 +133,7 @@ Evidence documents that justify or validate relevant changes.
 - [Summary](ed-20260514-s08-plan-store-inventory-drift.md)
 - [Temporal SDK 1.16.1 Patch Upgrade](ed-20260430-temporal-sdk-1-16-1-patch-upgrade.md)
 - [Temporal Step Plugin Semantics Hardening](ed-20260429-temporal-step-plugin-semantics.md)
+- [WE-HX-0 Hardcut Canonical WorkflowEngine Map](ed-20260514-we-hx-0-hardcut-canonical-map.md)
 - [WE-HX-1 Boundary Ownership Evidence](ed-20260429-we-hx-1-boundary-ownership.md)
 - [WE-HX-2 Facade Use-Case Narrowing](ed-20260430-we-hx-2-facade-use-cases.md)
 - [WE-HX-3 Start-Run Application Decomposition Evidence](ed-20260512-we-hx-3-start-run-decomposition.md)

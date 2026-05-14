@@ -14,7 +14,7 @@ This component record closes the DHM modularization stream for the current
 `WorkflowEngine` runtime architecture. It does not add a public product API.
 It explains the owned concerns that now exist across API composition, engine
 facade use cases, start-run phases, runtime command/signal services, and the
-remaining compatibility adapter.
+remaining combined run-control delegator.
 
 The record exists so a maintainer can answer why each seam exists, which public
 or local contract it satisfies, which transitions it owns, which consumers use
@@ -33,7 +33,7 @@ it, and which tests prove the shape has not drifted.
 | `IWorkflowEngine.getRunStatus`                                      | `@dvt/engine` | Public facade query for canonical status reads.                        |
 | `IRunCommandService.cancel`                                         | `@dvt/engine` | Internal role-interface command for cancel dispatch.                   |
 | `IRunSignalService.signal`                                          | `@dvt/engine` | Internal role-interface command for signal dispatch and derived facts. |
-| `buildRunControlService`                                            | `@dvt/engine` | Compatibility assembler for the legacy combined run-control surface.   |
+| `buildRunControlService`                                            | `@dvt/engine` | Assembly helper for the combined run-control delegator.                |
 
 ## Invariants
 
@@ -41,7 +41,7 @@ it, and which tests prove the shape has not drifted.
   adapters, background worker lifecycle, and engine graph assembly.
 - `@dvt/engine` owns runtime semantics through ports and application/domain
   services, not through environment parsing or direct infrastructure creation.
-- `WorkflowEngineCoreService` is a compatibility adapter only.
+- `WorkflowEngineCoreService` is a combined run-control delegator only.
 - Cancel behavior stays in `RunCommandService`.
 - Signal transition validation, adapter dispatch, idempotency, and
   signal-derived lifecycle facts stay in `RunSignalService`.
@@ -51,16 +51,16 @@ it, and which tests prove the shape has not drifted.
 
 ## Transitions
 
-| Transition                | From                         | To                                   | Rule                                                                                                      |
-| ------------------------- | ---------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------- |
-| runtime construction      | API bootstrap                | `buildWorkflowEngine`                | API composition binds concrete stores, policies, services, and facade use cases.                          |
-| reconciler startup        | API bootstrap                | `IntentReconcilerRuntimeComposition` | Resolve config, create stores, migrate stores, resolve adapters, create maintenance, then publish handle. |
-| start-run command         | `WorkflowStartRunUseCase`    | `StartRunApplicationService`         | Facade normalizes context and tracing, then delegates the application command.                            |
-| start-run phase           | `StartRunApplicationService` | start-run phase services             | Admission precedes intent, intent precedes provider dispatch, failure policy handles errors.              |
-| cancel command            | `WorkflowCancelRunUseCase`   | `IRunCommandService`                 | Use case delegates cancel semantics to the command role interface.                                        |
-| signal command            | `WorkflowSignalRunUseCase`   | `IRunSignalService`                  | Use case delegates signal semantics to the signal role interface.                                         |
-| compatibility run-control | `WorkflowEngineCoreService`  | command/signal services              | Combined callers are preserved but behavior is delegated.                                                 |
-| status query              | `WorkflowRunStatusUseCase`   | `IRunStatusQueryService`             | Read path stays separate from command lifecycle mutation.                                                 |
+| Transition           | From                         | To                                   | Rule                                                                                                      |
+| -------------------- | ---------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| runtime construction | API bootstrap                | `buildWorkflowEngine`                | API composition binds concrete stores, policies, services, and facade use cases.                          |
+| reconciler startup   | API bootstrap                | `IntentReconcilerRuntimeComposition` | Resolve config, create stores, migrate stores, resolve adapters, create maintenance, then publish handle. |
+| start-run command    | `WorkflowStartRunUseCase`    | `StartRunApplicationService`         | Facade normalizes context and tracing, then delegates the application command.                            |
+| start-run phase      | `StartRunApplicationService` | start-run phase services             | Admission precedes intent, intent precedes provider dispatch, failure policy handles errors.              |
+| cancel command       | `WorkflowCancelRunUseCase`   | `IRunCommandService`                 | Use case delegates cancel semantics to the command role interface.                                        |
+| signal command       | `WorkflowSignalRunUseCase`   | `IRunSignalService`                  | Use case delegates signal semantics to the signal role interface.                                         |
+| combined run-control | `WorkflowEngineCoreService`  | command/signal services              | The combined delegator preserves one control entry while behavior is delegated.                           |
+| status query         | `WorkflowRunStatusUseCase`   | `IRunStatusQueryService`             | Read path stays separate from command lifecycle mutation.                                                 |
 
 ## Consumers
 
@@ -83,7 +83,7 @@ it, and which tests prove the shape has not drifted.
 | Facade adaptation        | Translate public facade calls into use-case ports         | `workflow-engine-use-cases/*`                                                          |
 | Start-run command phases | Admission, deterministic intent, dispatch, failure policy | `services/startRun/*`                                                                  |
 | Runtime control commands | Cancel and signal role-interface implementations          | `services/runControl/*`, `domain/IRunCommandService.ts`, `domain/IRunSignalService.ts` |
-| Compatibility            | Retained combined control adapter                         | `WorkflowEngineCoreService.ts`, `buildRunControlService`                               |
+| Run-control delegation   | Combined cancel/signal delegation                         | `WorkflowEngineCoreService.ts`, `buildRunControlService`                               |
 | Governance guard         | Semantic ownership and documentation drift detection      | `workflowEngineSemanticClosure.architecture.test.ts`                                   |
 
 ## Current-State Diagram
@@ -106,8 +106,8 @@ flowchart LR
 
   Cancel --> Command["IRunCommandService / RunCommandService"]
   Signal --> SignalSvc["IRunSignalService / RunSignalService"]
-  Compat["WorkflowEngineCoreService compatibility adapter"] --> Command
-  Compat --> SignalSvc
+  Control["WorkflowEngineCoreService combined delegator"] --> Command
+  Control --> SignalSvc
   Status --> StatusQuery["IRunStatusQueryService"]
 ```
 
@@ -148,7 +148,7 @@ sequenceDiagram
 ## Drift Guards
 
 - `workflowEngineSemanticClosure.architecture.test.ts` checks owned concern
-  headers on the API composition, compatibility, command, signal, and facade
+  headers on the API composition, run-control, command, signal, and facade
   composition seams.
 - The same guard checks that runtime semantics have not moved back into
   `WorkflowEngineCoreService`.

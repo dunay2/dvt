@@ -16,8 +16,8 @@ boundary.
 
 ## Target shape
 
-The target keeps `IWorkflowEngine` as the command plus canonical-read facade
-and moves actual behavior into narrow application services.
+The target treats `IWorkflowEngine` as the hardcut command plus canonical-read
+facade and moves actual behavior into narrow application services.
 
 Target inbound use-case services:
 
@@ -149,14 +149,13 @@ under already accepted principles from `ADR-0003` and `ADR-0014`.
 3. Move method internals to dedicated use-case services.
 4. Keep current tests green with facade delegation checks and service-level
    query coverage.
-5. Deprecate internal wide services only after functional parity and
-   architecture fitness checks pass.
+5. Remove internal wide-service authority from the active architecture narrative
+   once fitness checks prove command/query delegation.
 
 Current DHM-WS4 state: cancel and signal behavior now run through dedicated
 `RunCommandService` and `RunSignalService` implementations behind
 `IRunCommandService` and `IRunSignalService`. `WorkflowEngineCoreService`
-remains only as a compatibility adapter for callers that still need the older
-combined run-control shape.
+remains only as the combined run-control delegator over those role services.
 
 ## Class responsibility rules (target)
 
@@ -350,7 +349,7 @@ Target model note:
 ```mermaid
 flowchart LR
   A["WE-HX-0 docs replacement"] --> B["WE-HX-1 boundary ownership"]
-  B --> C["WE-HX-2 compatibility facade narrowing"]
+  B --> C["WE-HX-2 facade use-case narrowing"]
   C --> D["WE-HX-3 startRun decomposition"]
   C --> E["WE-HX-4 query/command decomposition"]
   E --> E2["DHM-WS4 runtime path residual closure"]
