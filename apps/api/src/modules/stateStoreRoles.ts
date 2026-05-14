@@ -1,3 +1,6 @@
+/**
+ * @ownedConcern Own API state-store role binding so runtime roots expose explicit read/write/maintenance faces.
+ */
 import type {
   IRunSnapshotStalenessQuery,
   IRunStateStoreMaintenance,
