@@ -1,5 +1,5 @@
 /**
- * @file packages/@dvt/adapter-temporal/src/plugins/dbt/DbtStepActivity.ts
+ * @file packages/@dvt/temporal-dbt-plugin/src/DbtStepActivity.ts
  * @ownedConcern DBT step activity profile composed explicitly by Temporal worker runtime
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0046: Execution Plan Definition And Run Execution Policy Separation
@@ -7,6 +7,14 @@
  * @consequence DBT execution can be enabled, replaced, or omitted without changing workflow orchestration
  * @version 1.0.0
  */
+import { ActivityErrorCode, createPermanentStepFailure } from '@dvt/adapter-temporal';
+import type {
+  StepActivity,
+  StepActivityRegistry,
+  StepDefinition,
+  StepExecutionContext,
+  StepResult,
+} from '@dvt/adapter-temporal';
 import {
   parseDbtPluginContext,
   type DbtPluginContext,
@@ -14,18 +22,6 @@ import {
   type RunExecutionContextRef,
 } from '@dvt/contracts';
 import { RunExecutionContextRejectedError } from '@dvt/engine';
-
-import {
-  ActivityErrorCode,
-  createPermanentStepFailure,
-} from '../../activities/activityFailures.js';
-import type {
-  StepActivity,
-  StepActivityRegistry,
-  StepDefinition,
-  StepExecutionContext,
-  StepResult,
-} from '../../activities/activityTypes.js';
 
 import { TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS } from './dbtPluginManifest.js';
 import type { DbtStepActivityDeps } from './dbtPluginTypes.js';

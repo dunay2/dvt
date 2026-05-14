@@ -134,14 +134,12 @@ direction.
   plugin profile when enabled; the generic step-plugin profile seam also proves
   SQL-shaped plugins can compose without core dispatch edits. Workflow artifact
   emission is now `compiledCodeRef`-driven and plugin-agnostic instead of
-  DBT-kind gated. The adapter package now exposes a generic
-  `TemporalStepPluginRunner` execution port and keeps the concrete DBT CLI
-  runner split into plugin-local argument, process, materialization, failure,
-  and helper-contract modules. The adapter package still keeps DBT-specific
-  plugin/CLI exports (`DbtStepActivity`, `createDbtStepActivityRegistry`,
-  `DbtCliPluginRunner`), so package-level plugin extraction is not yet
-  complete; that residual truth is tracked in
-  [R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING](../risk-register/quality/R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING.yaml).
+  DBT-kind gated. The adapter package exposes generic
+  `TemporalStepPluginRunner` and `TemporalStepPluginProfile` ports only; the
+  concrete DBT manifest, step activity registry, and CLI runner now live in
+  `@dvt/temporal-dbt-plugin`. The remaining DBT risk is sandbox and
+  dependency-isolation maturity, not package-level ownership inside the generic
+  Temporal adapter.
 
 - `Postgres adapter` — packages: `@dvt/adapter-postgres` — status:
   `Closed for Phase 1`

@@ -154,6 +154,9 @@ importers:
       '@dvt/planner':
         specifier: workspace:*
         version: link:../../packages/@dvt/planner
+      '@dvt/temporal-dbt-plugin':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/temporal-dbt-plugin
       '@fastify/cors':
         specifier: ^11.2.0
         version: 11.2.0
@@ -320,6 +323,9 @@ importers:
       '@dvt/engine':
         specifier: workspace:*
         version: link:../../packages/@dvt/engine
+      '@dvt/temporal-dbt-plugin':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/temporal-dbt-plugin
       '@temporalio/worker':
         specifier: 1.16.1
         version: 1.16.1(tslib@2.8.1)
@@ -662,9 +668,6 @@ importers:
       '@temporalio/workflow':
         specifier: 1.16.1
         version: 1.16.1
-      tar:
-        specifier: ^7.5.2
-        version: 7.5.13
     devDependencies:
       '@dvt/adapter-postgres':
         specifier: workspace:*
@@ -884,6 +887,31 @@ importers:
       '@dvt/engine':
         specifier: workspace:*
         version: link:../engine
+    devDependencies:
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: 3.2.4
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@25.6.0)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@29.1.0)(lightningcss@1.32.0)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/@dvt/temporal-dbt-plugin:
+    dependencies:
+      '@dvt/adapter-temporal':
+        specifier: workspace:*
+        version: link:../adapter-temporal
+      '@dvt/artifacts':
+        specifier: workspace:*
+        version: link:../artifacts
+      '@dvt/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@dvt/engine':
+        specifier: workspace:*
+        version: link:../engine
+      tar:
+        specifier: ^7.5.2
+        version: 7.5.13
     devDependencies:
       typescript:
         specifier: 5.9.3

@@ -1,5 +1,5 @@
 /**
- * @file packages/@dvt/adapter-temporal/src/plugins/dbt/dbtCliProcess.ts
+ * @file packages/@dvt/temporal-dbt-plugin/src/dbtCliProcess.ts
  * @ownedConcern Execute DBT CLI subprocess commands and availability probes
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0014: Run-Driven Adapter Model

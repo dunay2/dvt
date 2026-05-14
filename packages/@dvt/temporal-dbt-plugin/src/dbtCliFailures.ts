@@ -1,5 +1,5 @@
 /**
- * @file packages/@dvt/adapter-temporal/src/plugins/dbt/dbtCliFailures.ts
+ * @file packages/@dvt/temporal-dbt-plugin/src/dbtCliFailures.ts
  * @ownedConcern Classify DBT CLI and bundle failures into stable step results
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0014: Run-Driven Adapter Model
@@ -7,7 +7,7 @@
  * @consequence The DBT runner can remain a thin coordinator while preserving stable failure codes
  * @version 1.0.0
  */
-import type { StepResult } from '../../activities/activityTypes.js';
+import type { StepResult } from '@dvt/adapter-temporal';
 
 interface DbtCliProcessError extends Error {
   readonly code?: unknown;

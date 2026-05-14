@@ -9,8 +9,8 @@ import { asIsoUtcString, asNonBlankString, type DbtProjectBundleRef } from '@dvt
 import { c as createTarball } from 'tar';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { createDbtProjectMaterializer } from '../src/plugins/dbt/dbtCliProjectMaterializer.js';
-import type { DbtPluginExecutionInput } from '../src/plugins/dbt/dbtPluginTypes.js';
+import { createDbtProjectMaterializer } from '../src/dbtCliProjectMaterializer.js';
+import type { DbtPluginExecutionInput } from '../src/dbtPluginTypes.js';
 
 const tempRoots: string[] = [];
 const DBT_PROJECT_MATERIALIZER_TEST_TIMEOUT_MS = 15_000;

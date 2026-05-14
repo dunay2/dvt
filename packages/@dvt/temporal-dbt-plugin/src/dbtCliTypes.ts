@@ -1,5 +1,5 @@
 /**
- * @file packages/@dvt/adapter-temporal/src/plugins/dbt/dbtCliTypes.ts
+ * @file packages/@dvt/temporal-dbt-plugin/src/dbtCliTypes.ts
  * @ownedConcern Share DBT CLI runner helper contracts inside the DBT plugin boundary
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0014: Run-Driven Adapter Model

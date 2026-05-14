@@ -1,0 +1,29 @@
+{
+  "extends": "../../../tsconfig.package-bundler.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "paths": {
+      "@dvt/adapter-temporal": [
+        "../../../packages/@dvt/adapter-temporal/dist/index.d.ts"
+      ],
+      "@dvt/adapter-temporal/*": [
+        "../../../packages/@dvt/adapter-temporal/dist/*"
+      ],
+      "@dvt/artifacts": ["../../../packages/@dvt/artifacts/dist/index.d.ts"],
+      "@dvt/artifacts/*": ["../../../packages/@dvt/artifacts/dist/*"],
+      "@dvt/contracts": ["../../../packages/@dvt/contracts/dist/index.d.ts"],
+      "@dvt/contracts/*": ["../../../packages/@dvt/contracts/dist/*"],
+      "@dvt/engine": ["../../../packages/@dvt/engine/dist/index.d.ts"],
+      "@dvt/engine/*": ["../../../packages/@dvt/engine/dist/*"]
+    },
+    "exactOptionalPropertyTypes": false,
+    "noPropertyAccessFromIndexSignature": false
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "test"]
+}
