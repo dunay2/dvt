@@ -2,7 +2,7 @@
 title: web component
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-29
+last_reviewed: 2026-05-14
 ---
 
 # web component
@@ -101,6 +101,28 @@ This component is real product code. The remaining work is around tightening
 service boundaries, removing mock-heavy paths, and aligning route-level flows
 with the protected backend contracts. Historical `apps/web/*.md` design and
 planning packs have been archived so this page stays the canonical entry point.
+
+## Current Reconciliation Evidence
+
+The active documentation set for `web` is rooted under
+`docs/architecture/components/web/**`. Historical `docs/architecture/frontend/**`
+references remain archive and closeout context only; they are not the current
+component home.
+
+The route inventory above is grounded in `apps/web/src/app/routes.ts`. Core
+routes are registered through the shell router, plugin routes are contributed
+through the plugin registry, and `/login` remains the public bootstrap route.
+
+Runtime run behavior is described through the presentation port in
+`apps/web/src/app/ports/runs.ts`, the API adapter in
+`apps/web/src/app/services/runs/runsService.api.ts`, and the protected runtime
+rail vocabulary in
+`apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts`.
+
+The current roadmap reference for frontend and UX work is
+`docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md`.
+The former `docs/planning/proposals/frontend-roadmap-20260219.md` location is no
+longer an active path.
 
 ## Related Pages
 
