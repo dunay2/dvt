@@ -1,3 +1,6 @@
+/**
+ * Owned concern: record AR-C2 API SLA latency observations in Prometheus seconds.
+ */
 import type { IObservability } from '@dvt/observability';
 
 import type {
@@ -22,24 +25,27 @@ export class ObservabilityStartRunSlaTelemetry
     }
   ) {
     this.runStartLatencyHistogram = deps.observability.metrics.histogram(
-      START_RUN_SLA_METRICS.runStartLatencyMs
+      START_RUN_SLA_METRICS.runStartLatencySeconds
     );
     this.planCompileLatencyHistogram = deps.observability.metrics.histogram(
-      START_RUN_SLA_METRICS.planCompileLatencyMs
+      START_RUN_SLA_METRICS.planCompileLatencySeconds
     );
   }
 
-  public recordStartRunLatency(durationMs: number, outcome: StartRunLatencyOutcome): void {
+  public recordStartRunLatency(durationSeconds: number, outcome: StartRunLatencyOutcome): void {
     try {
-      this.runStartLatencyHistogram.record(durationMs, { outcome });
+      this.runStartLatencyHistogram.record(durationSeconds, { outcome });
     } catch (err) {
       safeWarn(this.deps.observability.logs, 'start_run.sla_telemetry_drop', err);
     }
   }
 
-  public recordPlanCompileLatency(durationMs: number, outcome: PlanCompileLatencyOutcome): void {
+  public recordPlanCompileLatency(
+    durationSeconds: number,
+    outcome: PlanCompileLatencyOutcome
+  ): void {
     try {
-      this.planCompileLatencyHistogram.record(durationMs, { outcome });
+      this.planCompileLatencyHistogram.record(durationSeconds, { outcome });
     } catch (err) {
       safeWarn(this.deps.observability.logs, 'start_run.sla_telemetry_drop', err);
     }

@@ -1,3 +1,6 @@
+/**
+ * Owned concern: compose outbox runtime, delivery, and retention telemetry for scraping.
+ */
 import type { OutboxRecord } from '@dvt/contracts';
 import type {
   OutboxFailureDisposition,

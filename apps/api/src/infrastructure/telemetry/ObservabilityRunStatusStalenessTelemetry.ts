@@ -1,3 +1,6 @@
+/**
+ * Owned concern: emit bounded AR-C2 run-status freshness counters and logs.
+ */
 import type { Attributes, IObservability } from '@dvt/observability';
 
 import type {

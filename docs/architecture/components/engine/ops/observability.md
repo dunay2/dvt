@@ -1,4 +1,4 @@
----
+﻿---
 title: Engine Observability Guide
 status: Active
 owner: Architecture / Engine / SRE
@@ -62,13 +62,13 @@ flowchart LR
 
 | Signal family                       | Logical signal                                                                     | Current source                                                                                            | Code anchor                                                                                            |
 | ----------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| API admission/runtime latency       | `dvt.api.run_start.latency_ms`                                                     | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)                   | `apps/api/src/infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.ts`                           |
-| Planner/API compile latency         | `dvt.api.plan_compile.latency_ms`                                                  | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)                   | `apps/api/src/infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.ts`                           |
+| API admission/runtime latency       | `dvt_api_run_start_latency_seconds`                                                | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)                   | `apps/api/src/infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.ts`                           |
+| Planner/API compile latency         | `dvt_api_plan_compile_latency_seconds`                                             | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)                   | `apps/api/src/infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.ts`                           |
 | Run-status freshness classification | `dvt.api.run_status.snapshot_staleness_result_total`                               | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)                   | `apps/api/src/infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.ts`                    |
 | Unknown freshness fallback reasons  | `dvt.api.run_status.snapshot_staleness_fallback_unknown_total`                     | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)                   | `apps/api/src/infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.ts`                    |
 | Outbox claimed-lag                  | `dvt_outbox_oldest_claimed_lag_seconds`                                            | [AR-C2 SLA Signal Threshold Mapping](../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md) | `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`                                                    |
 | Outbox drain lag                    | `dvt_delivery_outbox_drain_lag_seconds`                                            | [AR-C2 SLA Signal Threshold Mapping](../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md) | `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`                                                    |
-| Event delivery latency              | `dvt_delivery_event_delivery_latency_ms`                                           | [AR-C2 SLA Signal Threshold Mapping](../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md) | `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`                                                    |
+| Event delivery latency              | `dvt_delivery_event_delivery_latency_seconds`                                      | [AR-C2 SLA Signal Threshold Mapping](../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md) | `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`                                                    |
 | Worker readiness and ownership      | `dvt_outbox_runtime_ready`, `dvt_outbox_runtime_owner`, `dvt_outbox_runtime_state` | [Outbox Worker Runbook](../../../../runbooks/outbox-worker-g5.md)                                         | `apps/outbox-worker/src/ops/OperationalServer.ts`, `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts` |
 
 ## Operator surfaces

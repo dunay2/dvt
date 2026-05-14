@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  createMonitorHarness,
-  makeRecord,
-  makeTick,
-} from './outboxWorkerMonitorTestSupport.js';
+import { createMonitorHarness, makeRecord, makeTick } from './outboxWorkerMonitorTestSupport.js';
 
 describe('OutboxWorkerMonitor', () => {
   it('tracks runtime state, metrics, and delivery transitions', () => {
@@ -45,7 +41,7 @@ describe('OutboxWorkerMonitor', () => {
     expect(metrics).toMatch(/dvt_outbox_retried_records_total 1/);
     expect(metrics).toMatch(/dvt_outbox_oldest_claimed_lag_seconds 2.5/);
     expect(metrics).toMatch(/dvt_delivery_outbox_drain_lag_seconds 2.5/);
-    expect(metrics).toMatch(/dvt_delivery_event_delivery_latency_ms_count 2/);
+    expect(metrics).toMatch(/dvt_delivery_event_delivery_latency_seconds_count 2/);
     expect(metrics).toMatch(/dvt_outbox_runtime_state\{state="stopped"\} 1/);
 
     expect(entries.some((entry) => entry.msg === 'outbox records claimed')).toBe(true);
@@ -277,11 +273,11 @@ describe('OutboxWorkerMonitor', () => {
     monitor.onRecordFailed(makeRecord('2'), 'downstream timeout', 'retry');
 
     const metrics = monitor.renderMetrics();
-    expect(metrics).toMatch(/dvt_delivery_event_delivery_latency_ms_bucket\{le="100"\} 0/);
-    expect(metrics).toMatch(/dvt_delivery_event_delivery_latency_ms_bucket\{le="250"\} 1/);
-    expect(metrics).toMatch(/dvt_delivery_event_delivery_latency_ms_bucket\{le="500"\} 2/);
-    expect(metrics).toMatch(/dvt_delivery_event_delivery_latency_ms_bucket\{le="\+Inf"\} 2/);
-    expect(metrics).toMatch(/dvt_delivery_event_delivery_latency_ms_sum 620/);
-    expect(metrics).toMatch(/dvt_delivery_event_delivery_latency_ms_count 2/);
+    expect(metrics).toMatch(/dvt_delivery_event_delivery_latency_seconds_bucket\{le="0.1"\} 0/);
+    expect(metrics).toMatch(/dvt_delivery_event_delivery_latency_seconds_bucket\{le="0.25"\} 1/);
+    expect(metrics).toMatch(/dvt_delivery_event_delivery_latency_seconds_bucket\{le="0.5"\} 2/);
+    expect(metrics).toMatch(/dvt_delivery_event_delivery_latency_seconds_bucket\{le="\+Inf"\} 2/);
+    expect(metrics).toMatch(/dvt_delivery_event_delivery_latency_seconds_sum 0.62/);
+    expect(metrics).toMatch(/dvt_delivery_event_delivery_latency_seconds_count 2/);
   });
 });

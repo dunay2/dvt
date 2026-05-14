@@ -1,4 +1,4 @@
----
+﻿---
 title: Engine Incident Response Runbook
 status: Active
 owner: Architecture / Engine / SRE
@@ -97,8 +97,8 @@ Use:
 
 Check:
 
-- `dvt_api_run_start_latency_ms_bucket`
-- `dvt_api_plan_compile_latency_ms_bucket`
+- `dvt_api_run_start_latency_seconds_bucket`
+- `dvt_api_plan_compile_latency_seconds_bucket`
 
 Do not substitute old `run completion` or `pause latency` dashboards for the
 current Lane C signal set.
@@ -131,7 +131,7 @@ Check:
 - worker `/metrics`
 - `dvt_outbox_runtime_owner`
 - `dvt_delivery_outbox_drain_lag_seconds`
-- `dvt_delivery_event_delivery_latency_ms`
+- `dvt_delivery_event_delivery_latency_seconds`
 
 If ownership is false or readiness is red, treat the issue as runtime-ownership
 or delivery-runtime posture before assuming downstream event-bus failure.

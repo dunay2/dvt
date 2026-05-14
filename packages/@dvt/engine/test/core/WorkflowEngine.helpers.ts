@@ -4,7 +4,16 @@
  * Builds facade inputs, fake provider adapters, observability collectors,
  * clocks, and run event records for engine tests.
  */
-import type { EngineRunRef, PlanRef, RunContext, RunEventInput, EventType } from '@dvt/contracts';
+import {
+  asIsoUtcString,
+  asNonBlankString,
+  type EngineRunRef,
+  type EventType,
+  type IsoUtcString,
+  type PlanRef,
+  type RunContext,
+  type RunEventInput,
+} from '@dvt/contracts';
 import { createNoopObservability } from '@dvt/observability';
 import type { IObservability } from '@dvt/observability';
 
@@ -29,10 +38,10 @@ export function makePlanRef(): PlanRef {
 
 export function makeContext(runId = 'r1'): RunContext {
   return {
-    tenantId: 't',
-    projectId: 'p',
-    environmentId: 'dev',
-    runId,
+    tenantId: asNonBlankString('t'),
+    projectId: asNonBlankString('p'),
+    environmentId: asNonBlankString('dev'),
+    runId: asNonBlankString(runId),
     targetAdapter: 'temporal',
   };
 }
@@ -106,7 +115,7 @@ function warnCapture(e: Record<string, unknown>, warns: string[]): void {
   if (msg) warns.push(msg);
 }
 
-export function createEngine(input?: {
+type CreateEngineInput = {
   adapters?: Map<EngineRunRef['provider'], IProviderAdapter>;
   requiredProviders?: EngineRunRef['provider'][];
   observability?: IObservability;
@@ -118,35 +127,41 @@ export function createEngine(input?: {
   clock?: IClock;
   runExecutionContextResolver?: IRunExecutionContextResolver;
   runExecutionContextBindingPolicy?: IRunExecutionContextBindingPolicy;
-}): {
+};
+
+function makeDefaultEngineClock(): IClock {
+  return new SequenceClock(asIsoUtcString('2026-02-12T00:00:00.000Z'));
+}
+
+function makeWorkflowEngineFixtureInput(
+  input: CreateEngineInput = {}
+): Parameters<typeof createWorkflowEngineFixture>[0] {
+  const {
+    observability = createNoopObservability(),
+    clock = makeDefaultEngineClock(),
+    ...fixtureInput
+  } = input;
+
+  return { ...fixtureInput, observability, clock };
+}
+
+export function createEngine(input?: CreateEngineInput): {
   engine: ReturnType<typeof createWorkflowEngineFixture>['engine'];
   store: InMemoryTxStore;
   intentStore: InMemoryStartRunIntentStore;
 } {
-  const fixture = createWorkflowEngineFixture({
-    adapters: input?.adapters,
-    requiredProviders: input?.requiredProviders,
-    observability: input?.observability ?? createNoopObservability(),
-    stateStore: input?.stateStore,
-    stateStoreRead: input?.stateStoreRead,
-    stateStoreWrite: input?.stateStoreWrite,
-    intentStore: input?.intentStore,
-    observabilityFallbackThrottleMs: input?.observabilityFallbackThrottleMs,
-    clock: input?.clock ?? new SequenceClock('2026-02-12T00:00:00.000Z'),
-    runExecutionContextResolver: input?.runExecutionContextResolver,
-    runExecutionContextBindingPolicy: input?.runExecutionContextBindingPolicy,
-  });
+  const fixture = createWorkflowEngineFixture(makeWorkflowEngineFixtureInput(input));
 
   return { engine: fixture.engine, store: fixture.store, intentStore: fixture.intentStore };
 }
 
-export function makeScriptedClock(values: string[]): IClock {
+export function makeScriptedClock(values: readonly string[]): IClock {
   let index = 0;
   return {
-    nowIsoUtc(): string {
+    nowIsoUtc(): IsoUtcString {
       const value = values.at(index) ?? values.at(-1) ?? '2026-02-12T00:00:00.000Z';
       index += 1;
-      return value;
+      return asIsoUtcString(value);
     },
   };
 }
@@ -158,20 +173,22 @@ export function makeRunEventInput(input: {
   idempotencyKey?: string;
   payload?: unknown;
 }): RunEventInput {
-  const now = new SequenceClock('2026-02-12T00:00:00.000Z').nowIsoUtc();
+  const now = new SequenceClock(asIsoUtcString('2026-02-12T00:00:00.000Z')).nowIsoUtc();
+  const planRef = makePlanRef();
   const out: RunEventInput = {
-    eventId: input.eventId,
+    eventId: asNonBlankString(input.eventId),
     eventType: (input.eventType ?? 'RunStarted') as EventType,
-    runId: input.runId,
+    runId: asNonBlankString(input.runId),
     emittedAt: now,
-    tenantId: 't',
-    projectId: 'p',
-    environmentId: 'dev',
-    planId: makePlanRef().planId,
-    planVersion: makePlanRef().planVersion,
+    tenantId: asNonBlankString('t'),
+    projectId: asNonBlankString('p'),
+    environmentId: asNonBlankString('dev'),
+    planId: planRef.planId,
+    planVersion: planRef.planVersion,
     engineAttemptId: 1,
     logicalAttemptId: 1,
-    idempotencyKey: input.idempotencyKey ?? `idemp-${input.eventId}`,
+    idempotencyKey: asNonBlankString(input.idempotencyKey ?? `idemp-${input.eventId}`),
+    payloadVersion: 1,
     payload: (input.payload as Record<string, unknown>) ?? {},
   };
 

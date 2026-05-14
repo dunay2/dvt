@@ -1,5 +1,8 @@
+/**
+ * Owned concern: render current-version outbox Prometheus text exposition.
+ */
 import {
-  DELIVERY_EVENT_LATENCY_BUCKETS_MS,
+  DELIVERY_EVENT_LATENCY_BUCKETS_SECONDS,
   RUNTIME_STATES,
   type OutboxDeliveryMetricsSnapshot,
   type OutboxRetentionMetricsSnapshot,
@@ -174,14 +177,14 @@ function renderRetentionMetrics(retention: OutboxRetentionMetricsSnapshot): stri
 
 function renderEventDeliveryLatencyMetrics(delivery: OutboxDeliveryMetricsSnapshot): string[] {
   return [
-    '# HELP dvt_delivery_event_delivery_latency_ms End-to-end delivery attempt latency from claim to delivered/failed observer callback.',
-    '# TYPE dvt_delivery_event_delivery_latency_ms histogram',
-    ...DELIVERY_EVENT_LATENCY_BUCKETS_MS.map(
+    '# HELP dvt_delivery_event_delivery_latency_seconds End-to-end delivery attempt latency from claim to delivered/failed observer callback.',
+    '# TYPE dvt_delivery_event_delivery_latency_seconds histogram',
+    ...DELIVERY_EVENT_LATENCY_BUCKETS_SECONDS.map(
       (le, index) =>
-        `dvt_delivery_event_delivery_latency_ms_bucket{le="${le}"} ${delivery.eventDeliveryLatencyBucketCounts[index] ?? 0}`
+        `dvt_delivery_event_delivery_latency_seconds_bucket{le="${le}"} ${delivery.eventDeliveryLatencyBucketCounts[index] ?? 0}`
     ),
-    `dvt_delivery_event_delivery_latency_ms_bucket{le="+Inf"} ${delivery.eventDeliveryLatencyCount}`,
-    `dvt_delivery_event_delivery_latency_ms_sum ${roundToMillis(delivery.eventDeliveryLatencySumMs)}`,
-    `dvt_delivery_event_delivery_latency_ms_count ${delivery.eventDeliveryLatencyCount}`,
+    `dvt_delivery_event_delivery_latency_seconds_bucket{le="+Inf"} ${delivery.eventDeliveryLatencyCount}`,
+    `dvt_delivery_event_delivery_latency_seconds_sum ${roundToMillis(delivery.eventDeliveryLatencySumSeconds)}`,
+    `dvt_delivery_event_delivery_latency_seconds_count ${delivery.eventDeliveryLatencyCount}`,
   ];
 }

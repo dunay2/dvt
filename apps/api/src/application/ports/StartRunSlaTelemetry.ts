@@ -1,3 +1,6 @@
+/**
+ * Owned concern: AR-C2 API SLA latency port semantics and bounded outcome labels.
+ */
 export type StartRunLatencyOutcome =
   | 'unauthenticated'
   | 'unauthorized'
@@ -11,11 +14,11 @@ export type StartRunLatencyOutcome =
   | 'exception';
 
 export interface IStartRunLatencyTelemetry {
-  recordStartRunLatency(durationMs: number, outcome: StartRunLatencyOutcome): void;
+  recordStartRunLatency(durationSeconds: number, outcome: StartRunLatencyOutcome): void;
 }
 
 export type PlanCompileLatencyOutcome = 'built' | 'manifest_resolution_error' | 'error';
 
 export interface IPlanCompileLatencyTelemetry {
-  recordPlanCompileLatency(durationMs: number, outcome: PlanCompileLatencyOutcome): void;
+  recordPlanCompileLatency(durationSeconds: number, outcome: PlanCompileLatencyOutcome): void;
 }
