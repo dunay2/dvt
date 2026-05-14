@@ -878,3 +878,24 @@ test('tracked migrations derive component quality from effective file ownership 
   assert.match(effectiveQualityMigration.sql, /component_engineering_file_ownership_query/);
   assert.match(effectiveQualityMigration.sql, /component_engineering\.component_quality_query/);
 });
+
+test('tracked migrations keep claimed or stale work out of next tasks after W40', () => {
+  const migrations = readMigrationFiles();
+  const nextTaskClaimMigration = migrations.find(
+    (migration) => migration.fileName === '040_planning_next_task_claim_boundary.sql'
+  );
+
+  assert.ok(nextTaskClaimMigration);
+  assert.match(
+    nextTaskClaimMigration.sql,
+    /create or replace view planning_query_store\.planning_next_tasks/
+  );
+  assert.match(nextTaskClaimMigration.sql, /candidate\.claimed_by is null/);
+  assert.match(nextTaskClaimMigration.sql, /candidate\.claim_expires_at is null/);
+  assert.match(
+    nextTaskClaimMigration.sql,
+    /create or replace view planning_query_store\.planning_claim_recovery_tasks/
+  );
+  assert.match(nextTaskClaimMigration.sql, /in_progress_claim_missing/);
+  assert.match(nextTaskClaimMigration.sql, /claim_expired/);
+});
