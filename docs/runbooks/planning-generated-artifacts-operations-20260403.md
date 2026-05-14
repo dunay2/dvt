@@ -46,8 +46,10 @@ For isolated local preview that must not touch tracked docs files:
 ## CI expectations
 
 - `PR Quality Gate` runs `pnpm docs:sync:check` for tracked generated docs.
-- `PR Quality Gate` runs `pnpm docs:workboard:check` for planning-generated
-  artifact integrity and determinism.
+- When lane YAML changes, `PR Quality Gate` starts an ephemeral planning DB,
+  runs migrations, imports planning state with `pnpm planning:db:import --
+--if-stale --planning-only`, and then runs `pnpm docs:workboard:check` for
+  planning-generated artifact integrity and determinism.
 - planning-generated pages must not be tracked in git.
 
 ## Failure triage
