@@ -11,7 +11,7 @@ import { registerAdminRoutes } from '../../src/entrypoints/http/adminRoutes.js';
 import {
   type RebuildSnapshot,
   type WorkflowSnapshotResult,
-  makeWorkflowSnapshot,
+  makeAdminRebuildWorkflowSnapshot,
 } from '../fixtures/workflowSnapshotFixture.js';
 
 type AdminRebuildSnapshotAccessContract = {
@@ -267,7 +267,9 @@ describe('AdminRebuildSnapshot access contract', () => {
   });
 
   it('exposes the documented success envelope', async () => {
-    const app = createApp(async (_tenantId, runId) => makeWorkflowSnapshot(runId, 'RUNNING'));
+    const app = createApp(async (_tenantId, runId) =>
+      makeAdminRebuildWorkflowSnapshot(runId, 'RUNNING')
+    );
 
     try {
       const response = await app.inject({
@@ -287,7 +289,7 @@ describe('AdminRebuildSnapshot access contract', () => {
   });
 
   it('exposes bad_request envelope when tenantId is missing', async () => {
-    const app = createApp(async (_tenantId, runId) => makeWorkflowSnapshot(runId));
+    const app = createApp(async (_tenantId, runId) => makeAdminRebuildWorkflowSnapshot(runId));
 
     try {
       const response = await app.inject({
@@ -310,7 +312,7 @@ describe('AdminRebuildSnapshot access contract', () => {
   });
 
   it('exposes forbidden envelope for non-admin authorization', async () => {
-    const app = createApp(async (_tenantId, runId) => makeWorkflowSnapshot(runId), {
+    const app = createApp(async (_tenantId, runId) => makeAdminRebuildWorkflowSnapshot(runId), {
       authorize: async () => ({ ok: false, reason: 'ACTION_NOT_GRANTED' }),
     });
 

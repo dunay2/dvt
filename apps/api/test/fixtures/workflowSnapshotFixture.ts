@@ -1,10 +1,14 @@
+/**
+ * Owned concern: canonical API-test construction for admin rebuild workflow
+ * snapshots.
+ */
 import { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION } from '@dvt/contracts';
 import type { IRunStateStoreMaintenance } from '@dvt/engine';
 
 export type RebuildSnapshot = IRunStateStoreMaintenance['rebuildSnapshot'];
 export type WorkflowSnapshotResult = Awaited<ReturnType<RebuildSnapshot>>;
 
-export function makeWorkflowSnapshot(
+export function makeAdminRebuildWorkflowSnapshot(
   runId: string,
   status: WorkflowSnapshotResult['status'] = 'PENDING'
 ): WorkflowSnapshotResult {
