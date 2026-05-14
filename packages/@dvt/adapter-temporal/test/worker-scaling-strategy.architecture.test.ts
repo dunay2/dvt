@@ -1,5 +1,7 @@
 /**
  * @ownedConcern Guard the Temporal worker scaling strategy against unsupported topology claims.
+ * @baseline ADR-0001: Temporal Integration Test Policy
+ * @baseline ADR-0003: Execution Model
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
