@@ -132,6 +132,22 @@ pending evidence explicit.
   - corrective action in this slice: aligned the collector sustained-window
     architecture test with the canonical `_seconds` metric IDs so test evidence
     no longer carries legacy `_ms` aliases.
+- `TODO-AR-C2-06` execution attempt (2026-05-14):
+  - command:
+    `pnpm ops:ar-c2:evidence -- --require-dashboard-alert-evidence`
+  - result: failed closed with `AR-C2_IMMUTABLE_EVIDENCE_MISSING`.
+  - alert blockers: 11 canonical threshold keys are missing alert-rule
+    evidence.
+  - alert incomplete: none; the issue is absent immutable alert metadata, not
+    partially populated rows.
+  - Fowler outcome: this is a hidden-authority guard. SLA threshold text and
+    PromQL starter queries are not alert wiring evidence until an immutable
+    alert snapshot or monitor configuration source proves rule id, expression,
+    duration, severity, routing target, config source, capture timestamp, and
+    reviewer.
+  - corrective action in this slice: record the fail-closed evidence and keep
+    `AR-C2-T3` out of completion posture until the immutable alert snapshot is
+    attached. The tracked lane bootstrap snapshot is not changed by this PR.
 - `TODO-AR-C2-08` execution attempts (2026-04-04):
   - command: `pnpm qa:artifact:check`
   - sandbox result: `No changed files detected. Skipping.`
@@ -169,6 +185,9 @@ pending evidence explicit.
 - severity and routing target
 - source of monitor config truth (file path or immutable external reference)
 - capture timestamp and reviewer
+- current status (2026-05-14): blocked. The collector reports 11 missing alert
+  rules because no `AR_C2_ALERT_SNAPSHOT_FILE` or immutable monitor
+  configuration reference is available in this workspace.
 
 ### `AR-C2-T4` sustained validation evidence
 

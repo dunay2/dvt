@@ -56,6 +56,9 @@ Fowler posture:
   target truth while execution evidence remains explicitly missing;
 - `AR-C2-T2` must stay blocked until a real `AR_C2_DASHBOARD_SNAPSHOT_FILE`
   supplies complete `panels[]` metadata for every mapped signal.
+- `AR-C2-T3` must stay blocked until a real `AR_C2_ALERT_SNAPSHOT_FILE` or
+  immutable monitor configuration reference supplies complete `rules[]`
+  metadata for every threshold-backed mapping row.
 
 ## Completion evidence required
 
@@ -154,8 +157,8 @@ Populate one row per threshold with immutable evidence when available.
 ## AR-C2 status implication
 
 - `AR-C2-T1`: done
-- `AR-C2-T2`: pending evidence capture
-- `AR-C2-T3`: pending evidence capture
+- `AR-C2-T2`: blocked on immutable dashboard snapshot
+- `AR-C2-T3`: blocked on immutable alert/routing snapshot
 - `AR-C2-T4`: blocked on `T2/T3` evidence and sustained validation windows
 
 ## Mermaid diagram
