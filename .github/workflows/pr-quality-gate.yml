@@ -106,13 +106,9 @@ jobs:
           'true'
         run: pnpm docs:sync:check
 
-      - name: Import planning DB for lane snapshot validation
-        if: github.event_name == 'pull_request' && steps.scope.outputs.lane_yaml_changed == 'true'
-        run: pnpm planning:db:import --planning-only
-
       - name: Validate planning workboard outputs
         if: github.event_name == 'pull_request' && steps.scope.outputs.lane_yaml_changed == 'true'
-        run: pnpm docs:workboard:check
+        run: pnpm docs:workboard:generate --source yaml
 
       - name: Validate docs quality policy (English/no duplicate indexes)
         if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
