@@ -121,6 +121,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Runtime provider vocabulary can drift back to synthetic or non-implemented providers](R-20260424-HARD-CUT-RUNTIME-PROVIDER-VOCABULARY.yaml)
 - [Runtime root ownership can drift back into a broad component bucket](R-20260513-RUNTIME-ROOT-SUBDIVISION.yaml)
 - [Runtime step-kind routing can regress to catch-all execution in adapter-temporal](R-20260408-MW-C1-STEP-KIND-DISPATCH-DRIFT.yaml)
+- [S08 operations inventory can drift from scoped plan-store implementation truth](R-20260514-S08-PLAN-STORE-INVENTORY-DRIFT.yaml)
 - [Shared-kernel consumers can regress to parsing contracts error text instead of structured metadata](R-20260403-CONTRACT-ERROR-SEMANTIC-DRIFT.yaml)
 - [Signal idempotency drift when snapshots lag pause or resume events](R-20260408-SIGNAL-GUARD-STALE-SNAPSHOT-IDEMPOTENCY.yaml)
 - [Snapshot work queue claim semantics can introduce duplicate rebuild churn under heavy write bursts](R-20260330-S19F1-SNAPSHOT-WORK-QUEUE-CLAIM-SEMANTICS.yaml)
