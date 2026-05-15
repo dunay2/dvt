@@ -109,6 +109,7 @@ Evidence documents that justify or validate relevant changes.
 - [MW-D2 Temporal Worker Routing By Capability](ed-20260513-mw-d2-temporal-worker-routing.md)
 - [Plugin Admission Architecture Hardening](ed-20260429-plugin-admission-architecture.md)
 - [Restore ADR-0000 Traceability Gate On Main](ed-20260423-adr0-traceability-gate.md)
+- [Retire S08 Lifecycle Contract Vocabulary](ed-20260515-s08-lifecycle-contract-retirement.md)
 - [Run Execution Context Admission Test SRP Hardening](ed-20260429-run-execution-context-admission-test-srp.md)
 - [Runtime Root Subdivision Evidence](ed-20260513-runtime-root-subdivision.md)
 - [StartRunApplicationService QA Closeout](ED-20260405-start-run-application-service-qa.md)
