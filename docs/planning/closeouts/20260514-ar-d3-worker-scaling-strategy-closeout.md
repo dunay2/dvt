@@ -189,7 +189,7 @@ Fowler opportunity matrix:
   passed after the strategy/runbook update.
 - `pnpm --filter @dvt/adapter-temporal typecheck` passed.
 - `pnpm lint:md:changed` passed.
-- `pnpm docs:feature-mechanization -- --feature AR-D3-WORKER-SCALING-STRATEGY`
+- `pnpm docs:feature-mechanization --feature AR-D3-WORKER-SCALING-STRATEGY`
   passed after the mandatory plan declared allowed surfaces and test symbols.
 - `pnpm docs:feature-mechanization:implementation` passed.
 - `pnpm governance:refresh` passed after regenerating docs and governance DB

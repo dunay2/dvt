@@ -77,7 +77,7 @@ architectureGuards:
 cypressFlows:
   - N/A - operator documentation and architecture guard only
 completionGate:
-  - pnpm docs:feature-mechanization -- --feature AR-D3-WORKER-SCALING-STRATEGY
+  - pnpm docs:feature-mechanization --feature AR-D3-WORKER-SCALING-STRATEGY
   - pnpm --filter @dvt/adapter-temporal test -- test/worker-scaling-strategy.architecture.test.ts
   - pnpm --filter @dvt/adapter-temporal typecheck
   - pnpm docs:sync
