@@ -739,6 +739,31 @@ function openTaskSelect() {
 
 function nextTaskSelect() {
   return `
+    with next_candidates as (
+      select
+        lane_id,
+        task_id,
+        priority,
+        status,
+        progress_pct,
+        claimed_by,
+        dependency,
+        objective,
+        target
+      from ${schemaName}.planning_next_tasks
+      union
+      select
+        lane_id,
+        task_id,
+        priority,
+        status,
+        progress_pct,
+        claimed_by,
+        dependency,
+        objective,
+        target
+      from ${schemaName}.planning_claim_recovery_tasks
+    )
     select
       lane_id,
       task_id,
@@ -749,7 +774,7 @@ function nextTaskSelect() {
       dependency,
       objective,
       target
-    from ${schemaName}.planning_next_tasks`;
+    from next_candidates`;
 }
 
 function planningDependencySelect() {
