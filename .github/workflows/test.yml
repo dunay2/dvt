@@ -239,6 +239,14 @@ jobs:
         env:
           DVT_CI: '1'
 
+      - name: Run temporal-dbt-plugin tests (affected package)
+        if:
+          github.event_name == 'pull_request' && (steps.scope.outputs.temporal_dbt_plugin == 'true'
+          || steps.scope.outputs.root_build_sensitive == 'true')
+        run: pnpm --filter @dvt/temporal-dbt-plugin test
+        env:
+          DVT_CI: '1'
+
   detect-pg-scope:
     name: Detect adapter-postgres scope
     runs-on: ubuntu-latest
