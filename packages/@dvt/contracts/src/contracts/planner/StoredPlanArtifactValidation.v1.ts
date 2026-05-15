@@ -1,6 +1,12 @@
 /**
  * Owned concern: publish stored-plan artifact validation-state vocabulary.
  *
+ * @baseline ADR-0043: PlanRecord, Plan Store, And Artifacts Ownership
+ * @baseline ADR-0054: Plan Store Scoped Record Identity
+ * @decision Publish stored-plan artifact validation as artifact state, not as a plan lifecycle facade.
+ * @consequence Consumers depend on artifact validity vocabulary while behavior stays in artifact ports.
+ * @version 1.0.0
+ *
  * Behavior ports live in `@dvt/artifacts` as `IStoredPlanArtifactStore`.
  * This contract only publishes serializable validation-state records shared by
  * artifacts, adapters, API, and audit/read paths.
