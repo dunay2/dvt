@@ -36,6 +36,7 @@ jobs:
       contracts_relevant: ${{ steps.scope.outputs.contracts_relevant }}
       determinism_relevant: ${{ steps.scope.outputs.determinism_relevant }}
       golden_relevant: ${{ steps.scope.outputs.golden_relevant }}
+      hash_compare_relevant: ${{ steps.scope.outputs.hash_compare_relevant }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -201,24 +202,11 @@ jobs:
           DATABASE_URL: postgresql://dvt_test:${{ github.run_id }}@localhost:5432/dvt_test
         timeout-minutes: 5
 
-      - name: Detect hash-compare scope (PR only)
-        id: hash_scope
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          set -euo pipefail
-          changed_files="$(git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}")"
-          if echo "$changed_files" | grep -Eq '^(packages/@dvt/engine/test/contracts/|docs/architecture/engine/contracts/|\.golden/|scripts/compare-hashes\.cjs|scripts/db-migrate\.cjs)'; then
-            echo "run_hash_compare=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "run_hash_compare=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Compare snapshot hashes (blocking)
         if: >-
           ${{
             github.event_name != 'pull_request' ||
-            steps.hash_scope.outputs.run_hash_compare == 'true'
+            needs.detect-changes.outputs.hash_compare_relevant == 'true'
           }}
         run: |
           set -euo pipefail

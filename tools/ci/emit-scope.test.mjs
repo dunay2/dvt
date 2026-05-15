@@ -55,6 +55,7 @@ test('emit-scope contracts mode keeps scripts-only package json out of contract 
   assert.equal(scope.contracts_relevant, false);
   assert.equal(scope.determinism_relevant, false);
   assert.equal(scope.golden_relevant, false);
+  assert.equal(scope.hash_compare_relevant, false);
   assert.equal(scope.contract_capability_changed, false);
 });
 
@@ -86,6 +87,15 @@ test('emit-scope contracts mode routes lint:determinism script changes to determ
 
   assert.equal(scope.contracts_relevant, false);
   assert.equal(scope.determinism_relevant, true);
+  assert.equal(scope.hash_compare_relevant, false);
+});
+
+test('emit-scope contracts mode marks hash-compare scope from golden/contract files', () => {
+  const scope = computeWorkflowModeScopeOutputs('contracts', [
+    'packages/@dvt/engine/test/contracts/fixtures/basic.plan.json',
+  ]);
+
+  assert.equal(scope.hash_compare_relevant, true);
 });
 
 test('emit-scope test mode keeps scripts-only package json out of runtime capability lanes', () => {
