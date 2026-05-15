@@ -1,26 +1,26 @@
 /**
- * Owned concern: publish stored-plan artifact validation record vocabulary.
+ * Owned concern: publish stored-plan artifact validation-state vocabulary.
  *
- * The behavior port lives in `@dvt/artifacts` as `IStoredPlanArtifactStore`.
- * This contract file only publishes serializable validation-state vocabulary
- * shared by artifacts, adapters, API, and audit/read paths.
+ * Behavior ports live in `@dvt/artifacts` as `IStoredPlanArtifactStore`.
+ * This contract only publishes serializable validation-state records shared by
+ * artifacts, adapters, API, and audit/read paths.
  */
 
 import type { ExecutabilityValidationResult } from './PlanExecutabilityValidation.v1.js';
 
 /**
- * Lifecycle state of a persisted canonical plan artifact.
+ * Validation state of a tenant-neutral stored-plan artifact.
  *
- * `startRun` is permitted only when the state is `'VALID'`.
+ * Runtime materialization is permitted only when the state is `'VALID'`.
  */
-export type PlanValidationState = 'PENDING_VALIDATION' | 'VALID' | 'INVALID';
+export type StoredPlanArtifactValidationState = 'PENDING_VALIDATION' | 'VALID' | 'INVALID';
 
 /**
  * Persisted validation record for a canonical stored-plan artifact.
  */
-export interface PlanValidationRecord {
+export interface StoredPlanArtifactValidationRecord {
   readonly planId: string;
-  readonly state: PlanValidationState;
+  readonly state: StoredPlanArtifactValidationState;
   /** ISO 8601 timestamp when `storePlanArtifact` was called. */
   readonly storedAtIso: string;
   /** ISO 8601 timestamp of the last state transition. */

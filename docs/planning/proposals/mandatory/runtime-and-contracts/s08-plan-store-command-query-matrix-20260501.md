@@ -901,6 +901,7 @@ governingSources:
 allowedImplementationSurfaces:
   - apps/api/**
   - buzon/20260509-codex-fowler-plan-store-scoped-records-analysis-and-remediation.md
+  - buzon/20260515-codex-fowler-s08-lifecycle-contract-retirement-analysis.md
   - docs/.manifest.json
   - docs/adr/**
   - docs/architecture/components/api/protected-runtime-and-plan-compile-component.md
@@ -1416,6 +1417,22 @@ symbols:
     path: packages/@dvt/contracts/src/contracts/planner/PlanRecord.v1.ts
     dddOwner: Plan record contract
     cqRails: [CreatePlanRecord]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - backend contract
+    unitTests: [contracts plan-store record tests]
+  - name: StoredPlanArtifactValidationState
+    path: packages/@dvt/contracts/src/contracts/planner/StoredPlanArtifactValidation.v1.ts
+    dddOwner: Stored-plan artifact validation DTO vocabulary
+    cqRails: [FetchPlanForValidation]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - backend contract
+    unitTests: [contracts plan-store record tests]
+  - name: StoredPlanArtifactValidationRecord
+    path: packages/@dvt/contracts/src/contracts/planner/StoredPlanArtifactValidation.v1.ts
+    dddOwner: Stored-plan artifact validation DTO vocabulary
+    cqRails: [FetchPlanForValidation]
     fowlerSignals: [Boundary drift]
     architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
     cypressCoverage: N/A - backend contract

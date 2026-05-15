@@ -91,7 +91,7 @@ pnpm --filter @dvt/adapter-postgres test
 stateDiagram-v2
   [*] --> ACTIVE
   ACTIVE --> SUPERSEDED: markSuperseded(old, new)
-  ACTIVE --> ARCHIVED: archivePlan(planId, archivedAtIso)
+  ACTIVE --> ARCHIVED: archivePlan(ScopedPlanId, archivedAtIso)
   SUPERSEDED --> [*]
   ARCHIVED --> [*]
 ```

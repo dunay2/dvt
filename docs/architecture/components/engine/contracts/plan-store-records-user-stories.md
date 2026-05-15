@@ -88,3 +88,7 @@ tenant records.
 As an architecture reviewer, I want a semantic architecture test to reject
 naked `planId` record APIs, missing docs, missing owned-concern docblocks, and
 unscoped SQL keys.
+
+Given the retired lifecycle contract source reappears, the architecture test
+fails because S08 publishes artifact validation vocabulary through
+`StoredPlanArtifactValidationRecord`, not `PlanValidationLifecycle.v1`.

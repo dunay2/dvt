@@ -20,13 +20,13 @@ import {
   type PlanRecord,
   type ScopedPlanId,
   type ScopedPlanRef,
-  type PlanValidationRecord,
   parsePlanAdmissionLink,
   parsePlanExecutabilityRecord,
   parsePlanRecord,
   parsePlanRef,
   type PlannerBuildResultV1,
   type RunExecutionPolicy,
+  type StoredPlanArtifactValidationRecord,
 } from '@dvt/contracts';
 import { Pool, type PoolClient } from 'pg';
 
@@ -246,7 +246,7 @@ export class PostgresPlanStore
 
   public async getStoredPlanValidationRecord(
     input: ScopedPlanId
-  ): Promise<PlanValidationRecord | undefined> {
+  ): Promise<StoredPlanArtifactValidationRecord | undefined> {
     const row = await this.withClient(async (client) => {
       const record = await this.planRecordRepository.get(client, input);
       if (!record) {

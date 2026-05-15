@@ -44,7 +44,7 @@ describe('planner-private behavior ownership', () => {
     expect(rootBarrel).toContain('EXECUTABILITY_REJECTION_CODES');
     expect(rootBarrel).toContain('ExecutabilityValidationResult');
     expect(rootBarrel).toContain('ExecutionBindingVerificationResult');
-    expect(rootBarrel).toContain('PlanValidationRecord');
+    expect(rootBarrel).toContain('StoredPlanArtifactValidationRecord');
     expect(rootBarrel).toContain('CustomPolicyNamespaceEntry');
   });
 });
