@@ -1,8 +1,8 @@
 ---
 title: MVP-E1 and F-03 frontend backend contract and health state plan 2026-04-04
-status: Review
+status: Accepted
 owner: Product / Frontend / Architecture
-last_reviewed: 2026-04-04
+last_reviewed: 2026-05-15
 planning_type: proposal
 ---
 
@@ -289,6 +289,31 @@ flowchart LR
 - [x] `F-03-A` Define canonical shell health-state semantic model
 - [x] `F-03-B` Define deterministic retry and backoff policy contract
 - [x] `F-03-C` Enforce single health presenter seam in shell architecture
-- [ ] `F-03-D` Add negative-path and resilience test matrix
-- [ ] `F-03-E` Align user manual and UX copy with real health behavior
-- [ ] `F-03-F` Run closure checks and complete quality-gate validation
+- [x] `F-03-D` Add negative-path and resilience test matrix
+- [x] `F-03-E` Align user manual and UX copy with real health behavior
+- [x] `F-03-F` Run closure checks and complete quality-gate validation
+
+## Closure Disposition 2026-05-15
+
+`F-03` is accepted as closed by the current shell implementation and
+documentation set.
+
+Evidence:
+
+- `apps/web/src/capabilities/platform-health/presentation/platformHealthStatus.ts`
+  owns health projection, initial pending behavior, and retry cadence.
+- `apps/web/src/capabilities/platform-health/presentation/platformHealthStatus.test.ts`
+  covers the first unsettled probe, failed initial probe, degraded/offline
+  projection, and capped exponential backoff.
+- `apps/web/src/capabilities/platform-health/presentation/usePlatformHealthSnapshotQuery.test.ts`
+  covers query-option wiring and error-state backoff.
+- `apps/web/src/app/Root.tsx`, `TopAppBar.tsx`, and `ShellHealthBanner.tsx`
+  consume the single shell-health presentation seam.
+- `docs/architecture/components/web/frontend-runtime-modes-user-manual.md`,
+  `docs/architecture/components/web/app-bootstrap-screen-component.md`, and
+  `docs/guides/top-app-bar-user-manual-20260404.md` describe the implemented
+  checking, degraded, offline, retry, and startup behavior.
+
+The remaining work item was not implementation. It was planning-state drift:
+the code and docs had moved past the proposal checklist, while the proposal and
+planning DB still showed `review`.
