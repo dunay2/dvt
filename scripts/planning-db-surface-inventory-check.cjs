@@ -85,10 +85,16 @@ const requiredSurfaces = [
       'Read/query rail': [
         'architecture.design_query',
         'architecture.component_query',
+        'planning:db:query architecture-components',
         'architecture.implementation_violation_query',
       ],
       Projection: ['DB authority rows'],
-      Validation: ['planning-db-operate.test.cjs', 'planning:db:migrate', 'test:planning:db'],
+      Validation: [
+        'planning-db-query.test.cjs',
+        'planning-db-operate.test.cjs',
+        'planning:db:migrate',
+        'test:planning:db',
+      ],
       'Migration state': ['DB-first'],
     },
   },
