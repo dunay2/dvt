@@ -246,6 +246,116 @@ redGreenCycles:
       - apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts
     greenTest: pnpm --filter @dvt/adapter-temporal exec vitest run test/dbt-package-extraction.architecture.test.ts
 symbols:
+  - name: CAPACITY_POLICY_PATH
+    path: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    dddOwner: Temporal adapter architecture fitness
+    cqRails:
+      - none - architecture test support only
+    fowlerSignals:
+      - Documentation Drift
+    architectureGuard: pnpm --filter @dvt/adapter-temporal exec vitest run test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: Not applicable - package API only
+    unitTests:
+      - pnpm --filter @dvt/adapter-temporal exec vitest run test/workflow-component-semantics.architecture.test.ts
+  - name: TEMPORAL_SRC_ROOT
+    path: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    dddOwner: Temporal adapter architecture fitness
+    cqRails:
+      - none - architecture test support only
+    fowlerSignals:
+      - Documentation Drift
+    architectureGuard: pnpm --filter @dvt/adapter-temporal exec vitest run test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: Not applicable - package API only
+    unitTests:
+      - pnpm --filter @dvt/adapter-temporal exec vitest run test/workflow-component-semantics.architecture.test.ts
+  - name: WORKFLOW_ROOT
+    path: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    dddOwner: Temporal adapter architecture fitness
+    cqRails:
+      - none - architecture test support only
+    fowlerSignals:
+      - Documentation Drift
+    architectureGuard: pnpm --filter @dvt/adapter-temporal exec vitest run test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: Not applicable - package API only
+    unitTests:
+      - pnpm --filter @dvt/adapter-temporal exec vitest run test/workflow-component-semantics.architecture.test.ts
+  - name: extractComponentMapRows
+    path: packages/@dvt/adapter-temporal/test/helpers/workflowComponentGuideSupport.ts
+    dddOwner: Temporal adapter public API
+    cqRails:
+      - none - package API governance only
+    fowlerSignals:
+      - Documentation Drift
+    architectureGuard: pnpm --filter @dvt/adapter-temporal exec vitest run test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: Not applicable - package API only
+    unitTests:
+      - pnpm --filter @dvt/adapter-temporal exec vitest run test/workflow-component-semantics.architecture.test.ts
+  - name: extractStoryCoverageIds
+    path: packages/@dvt/adapter-temporal/test/helpers/workflowComponentGuideSupport.ts
+    dddOwner: Temporal adapter public API
+    cqRails:
+      - none - package API governance only
+    fowlerSignals:
+      - Documentation Drift
+    architectureGuard: pnpm --filter @dvt/adapter-temporal exec vitest run test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: Not applicable - package API only
+    unitTests:
+      - pnpm --filter @dvt/adapter-temporal exec vitest run test/workflow-component-semantics.architecture.test.ts
+  - name: extractSection
+    path: packages/@dvt/adapter-temporal/test/helpers/workflowComponentGuideSupport.ts
+    dddOwner: Temporal adapter public API
+    cqRails:
+      - none - package API governance only
+    fowlerSignals:
+      - Documentation Drift
+    architectureGuard: pnpm --filter @dvt/adapter-temporal exec vitest run test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: Not applicable - package API only
+    unitTests:
+      - pnpm --filter @dvt/adapter-temporal exec vitest run test/workflow-component-semantics.architecture.test.ts
+  - name: listExpectedComponentModuleNames
+    path: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    dddOwner: Temporal adapter architecture fitness
+    cqRails:
+      - none - architecture test support only
+    fowlerSignals:
+      - Documentation Drift
+    architectureGuard: pnpm --filter @dvt/adapter-temporal exec vitest run test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: Not applicable - package API only
+    unitTests:
+      - pnpm --filter @dvt/adapter-temporal exec vitest run test/workflow-component-semantics.architecture.test.ts
+  - name: listWorkflowModuleNames
+    path: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    dddOwner: Temporal adapter architecture fitness
+    cqRails:
+      - none - architecture test support only
+    fowlerSignals:
+      - Documentation Drift
+    architectureGuard: pnpm --filter @dvt/adapter-temporal exec vitest run test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: Not applicable - package API only
+    unitTests:
+      - pnpm --filter @dvt/adapter-temporal exec vitest run test/workflow-component-semantics.architecture.test.ts
+  - name: readComponentModuleSource
+    path: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    dddOwner: Temporal adapter architecture fitness
+    cqRails:
+      - none - architecture test support only
+    fowlerSignals:
+      - Documentation Drift
+    architectureGuard: pnpm --filter @dvt/adapter-temporal exec vitest run test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: Not applicable - package API only
+    unitTests:
+      - pnpm --filter @dvt/adapter-temporal exec vitest run test/workflow-component-semantics.architecture.test.ts
+  - name: resolveComponentModulePath
+    path: packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts
+    dddOwner: Temporal adapter architecture fitness
+    cqRails:
+      - none - architecture test support only
+    fowlerSignals:
+      - Documentation Drift
+    architectureGuard: pnpm --filter @dvt/adapter-temporal exec vitest run test/workflow-component-semantics.architecture.test.ts
+    cypressCoverage: Not applicable - package API only
+    unitTests:
+      - pnpm --filter @dvt/adapter-temporal exec vitest run test/workflow-component-semantics.architecture.test.ts
   - name: TemporalDbtPluginPackage
     path: packages/@dvt/temporal-dbt-plugin/src/index.ts
     dddOwner: TemporalDbtPluginPackage

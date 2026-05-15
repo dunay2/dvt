@@ -1015,11 +1015,13 @@
       "number": "ADR-0052",
       "decisions": [
         "Evaluate continue-as-new, history, segment, payload, and retention budgets as explicit readiness evidence.",
+        "Keep architecture tests coupled to semantic guide structure instead of duplicated string fixtures",
         "Translate runtime error evidence into DVT RunFailed reasons at the workflow boundary"
       ],
       "implemented_by": [
         "packages/@dvt/adapter-temporal/src/temporalPlanRefCapacitySlaPolicy.ts",
         "packages/@dvt/adapter-temporal/src/workflows/workflowFailureReasonPolicy.ts",
+        "packages/@dvt/adapter-temporal/test/helpers/workflowComponentGuideSupport.ts",
         "packages/@dvt/adapter-temporal/test/temporalPlanRefCapacitySlaPolicy.test.ts",
         "packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts"
       ],

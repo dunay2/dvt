@@ -4,12 +4,18 @@
  *
  * @baseline ADR-0052: PlanRef Continuation Safety
  */
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-const WORKFLOW_ROOT = join(import.meta.dirname, '../src/workflows');
+import {
+  extractComponentMapRows,
+  extractStoryCoverageIds,
+} from './helpers/workflowComponentGuideSupport.js';
+
+const TEMPORAL_SRC_ROOT = join(import.meta.dirname, '../src');
+const WORKFLOW_ROOT = join(TEMPORAL_SRC_ROOT, 'workflows');
 const REPO_ROOT = join(import.meta.dirname, '../../../..');
 const COMPONENT_GUIDE_PATH = join(
   REPO_ROOT,
@@ -23,10 +29,7 @@ const CAPACITY_SLA_PATH = join(
   REPO_ROOT,
   'docs/architecture/components/engine/adapters/temporal/temporal-planref-capacity-sla.md'
 );
-const CAPACITY_POLICY_PATH = join(
-  import.meta.dirname,
-  '../src/temporalPlanRefCapacitySlaPolicy.ts'
-);
+const CAPACITY_POLICY_PATH = join(TEMPORAL_SRC_ROOT, 'temporalPlanRefCapacitySlaPolicy.ts');
 const CAPACITY_MAILBOX_REVIEW_PATH = join(
   REPO_ROOT,
   'buzon/20260430-codex-fowler-ar-d2-temporal-capacity-sla-analysis-and-remediation.md'
@@ -36,40 +39,26 @@ const MAILBOX_REVIEW_PATH = join(
   'buzon/20260430-codex-fowler-ar-d-continuation-safety-analysis-and-remediation.md'
 );
 
-const WORKFLOW_COMPONENT_CONCERNS = {
-  'RunPlanWorkflow.ts': 'Temporal PlanRef workflow orchestration entrypoint',
-  'executionSegmentResolver.ts': 'PlanRef execution-segment projection from canonical plans',
-  'runPlanWorkflow.activities.ts': 'Temporal activity proxy binding for workflow ports',
-  'runPlanWorkflow.cancellation.ts': 'Runtime-owned cancellation lifecycle settlement',
-  'runPlanWorkflow.layerHelpers.ts': 'Layer selection and continue-as-new decision helpers',
-  'runPlanWorkflow.layerResults.ts': 'Layer result application and gateway fact retention',
-  'runPlanWorkflow.layers.ts': 'Deterministic workflow layer-loop orchestration',
-  'runPlanWorkflow.lifecycle.ts': 'Workflow bootstrap, terminal, failure, and rollover outcomes',
-  'runPlanWorkflow.signals.ts': 'Runtime control-signal registration and dedupe state',
-  'runPlanWorkflow.state.ts': 'Workflow control input parsing and cursor hydration',
-  'runPlanWorkflow.stepExecution.ts': 'Per-layer step activity execution orchestration',
-  'runPlanWorkflow.types.ts': 'Workflow public API contracts and runtime state model',
-  'workflowArtifactHelpers.ts': 'Execution artifact payload interpretation',
-  'workflowControlSignalRetentionPolicy.ts':
-    'Bounded retention policy for control-signal dedupe ids across workflow continuation',
-  'workflowCursorHelpers.ts': 'Compact continue-as-new cursor construction and payload guard',
-  'workflowErrorHelpers.ts': 'Workflow-safe error-message normalization',
-  'workflowFailureReasonPolicy.ts':
-    'Governed workflow failure reason classification from runtime error evidence',
-  'workflowGatewayHelpers.ts': 'Gateway dependency validation and fact lookup',
-  'workflowInputParsingHelpers.ts': 'Deterministic workflow input primitive parsing',
-  'workflowRuntimePayloadHelpers.ts': 'Runtime event payload shaping',
-} as const;
-
 describe('Temporal PlanRef workflow component semantics', () => {
-  it('states the exact owned concern at the top of every workflow boundary module', () => {
-    for (const [fileName, concern] of Object.entries(WORKFLOW_COMPONENT_CONCERNS)) {
-      const source = readWorkflowSource(fileName);
+  it('states the exact owned concern at the top of every documented component module', () => {
+    const guide = readFileSync(COMPONENT_GUIDE_PATH, 'utf8');
+    const concernsByModule = extractComponentMapRows(guide);
+
+    for (const [fileName, concern] of concernsByModule.entries()) {
+      const source = readComponentModuleSource(fileName);
 
       expect(source).toMatch(
         new RegExp(String.raw`^/\*\*[\s\S]*\* @ownedConcern ${escapeRegExp(concern)}[\s\S]*\*/`)
       );
     }
+  });
+
+  it('keeps component-map ownership in sync with the real component module set', () => {
+    const guide = readFileSync(COMPONENT_GUIDE_PATH, 'utf8');
+    const concernsByModule = extractComponentMapRows(guide);
+    const documentedModules = [...concernsByModule.keys()].sort();
+
+    expect(documentedModules).toEqual(listExpectedComponentModuleNames());
   });
 
   it('publishes the component API, invariants, transitions, consumers, and diagrams', () => {
@@ -145,7 +134,21 @@ describe('Temporal PlanRef workflow component semantics', () => {
       /^\/\*\*[\s\S]*\* @ownedConcern Evaluate Temporal PlanRef workflow budgets against governed production capacity SLAs[\s\S]*\*\//
     );
     expect(stories).toContain('US-TPW-006');
+    expect(stories).toContain('US-TPW-007');
     expect(stories).toContain('temporal-planref-capacity-sla.md');
+  });
+
+  it('covers the governed user-story IDs as a complete semantic matrix', () => {
+    const stories = readFileSync(USER_STORIES_PATH, 'utf8');
+    expect(extractStoryCoverageIds(stories)).toEqual([
+      'US-TPW-001',
+      'US-TPW-002',
+      'US-TPW-003',
+      'US-TPW-004',
+      'US-TPW-005',
+      'US-TPW-006',
+      'US-TPW-007',
+    ]);
   });
 
   it('keeps Fowler AR-D2 capacity analysis in the mailbox with mature-system comparison', () => {
@@ -215,6 +218,28 @@ describe('Temporal PlanRef workflow component semantics', () => {
 
 function readWorkflowSource(fileName: string): string {
   return readFileSync(join(WORKFLOW_ROOT, fileName), 'utf8');
+}
+
+function readComponentModuleSource(fileName: string): string {
+  return readFileSync(resolveComponentModulePath(fileName), 'utf8');
+}
+
+function resolveComponentModulePath(fileName: string): string {
+  if (fileName === 'temporalPlanRefCapacitySlaPolicy.ts') {
+    return CAPACITY_POLICY_PATH;
+  }
+
+  return join(WORKFLOW_ROOT, fileName);
+}
+
+function listExpectedComponentModuleNames(): string[] {
+  return [...listWorkflowModuleNames(), 'temporalPlanRefCapacitySlaPolicy.ts'].sort();
+}
+
+function listWorkflowModuleNames(): string[] {
+  return readdirSync(WORKFLOW_ROOT)
+    .filter((fileName) => fileName.endsWith('.ts'))
+    .sort();
 }
 
 function extractInterface(source: string, interfaceName: string): string {
