@@ -352,17 +352,23 @@ findings.
 | DVT engine package audit review                     | active, 0%       | `S16`, `S09`, `AR-A8`, `AR-A12`, `AR-D6`, `EA-*` | Needs finding-to-task disposition before engine audit cleanup.                                 |
 | Contract pack and read boundary reset Fowler review | in_progress, 35% | `AR-A12`, `AR-A12-A`, `AR-A12-B`, `AR-A12-C`     | Partially executed; remaining findings must reconcile with current AR-A12 task/evidence state. |
 
-## Tasks Currently In Review
+## Review And Blocked Task State
 
-As of the 2026-05-15 review reconciliation pass, no planning DB task remains
-in `review`.
+As of the 2026-05-15 hard review correction, no planning DB task remains in
+`review`, but two first-pass closures were rejected and reopened as blocked.
 
-Closure evidence:
+Closure and correction evidence:
 
 - `F-03`, `F-04`, `F-04-A..E`, and `F-26`:
   `docs/planning/closeouts/20260515-lane-e-p0-review-reconciliation-closeout.md`
-- `ADP-LINT-ORDER-01`, `F-17-A`, and `F-20`:
+- `ADP-LINT-ORDER-01`:
   `docs/planning/closeouts/20260515-remaining-review-reconciliation-closeout.md`
+- `F-17-A`:
+  blocked by active Code/Monaco drift against the Diff/Artifacts/Templates-only
+  target; see `docs/planning/closeouts/20260515-remaining-review-reconciliation-closeout.md`.
+- `F-20`:
+  blocked by the still-open `F-15` dependency and state-coverage
+  reconciliation; see `docs/planning/closeouts/20260515-remaining-review-reconciliation-closeout.md`.
 
 ## Proposal Disposition State
 
