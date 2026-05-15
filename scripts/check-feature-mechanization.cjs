@@ -8,11 +8,12 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
-const yaml = require('js-yaml');
+const {
+  extractFeatureMechanizationManifests,
+} = require('./lib/feature-mechanization-manifest.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const defaultScanRoot = path.join(repoRoot, 'docs', 'planning', 'proposals', 'mandatory');
-const manifestFencePattern = /```feature-mechanization\s*\r?\n([\s\S]*?)\r?\n```/g;
 const allowedMechanizationStatuses = new Set(['closed', 'implemented']);
 const allowedRailTypes = new Set(['command', 'query']);
 
@@ -87,7 +88,17 @@ class FeatureImplementationGuard {
 
     for (const filePath of this.changedFiles) {
       const addedLines = this.addedLinesByPath.get(filePath) || [];
+      const currentSymbols = new Set(
+        this.extractAddedCodeSymbols(
+          filePath,
+          (this.fileContentsByPath.get(filePath) || '').split(/\r?\n/)
+        )
+      );
       for (const symbolName of this.extractAddedCodeSymbols(filePath, addedLines)) {
+        if (!currentSymbols.has(symbolName)) {
+          continue;
+        }
+
         if (declaredSymbols.has(`${filePath}#${symbolName}`)) {
           continue;
         }
@@ -446,29 +457,6 @@ function readFeatureMechanizationDocs(scanRoot = defaultScanRoot) {
     path: toPosix(path.relative(repoRoot, filePath)),
     content: fs.readFileSync(filePath, 'utf8'),
   }));
-}
-
-function extractFeatureMechanizationManifests(markdown, sourcePath) {
-  const manifests = [];
-  let match;
-
-  while ((match = manifestFencePattern.exec(markdown)) !== null) {
-    const raw = match[1];
-    try {
-      manifests.push({
-        sourcePath,
-        manifest: yaml.load(raw),
-      });
-    } catch (error) {
-      manifests.push({
-        sourcePath,
-        manifest: null,
-        parseError: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }
-
-  return manifests;
 }
 
 function pushMissingObjectField(errors, owner, field, value) {

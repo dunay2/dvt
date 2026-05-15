@@ -9,6 +9,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { URL, fileURLToPath } from 'node:url';
 
+import yaml from 'js-yaml';
 import ts from 'typescript';
 import { expect } from 'vitest';
 
@@ -54,6 +55,39 @@ export function expectMarkdownSections(markdown: string, headings: readonly stri
   for (const heading of headings) {
     expect(markdown, `markdown should contain ${heading}`).toContain(heading);
   }
+}
+
+export type ComponentDocContract = {
+  commandRails?: string[];
+  componentId?: string;
+  diagramPack?: string;
+  publicApi?: string[];
+  requiredSemantics?: string[];
+};
+
+export function extractComponentDocContract(markdown: string): ComponentDocContract {
+  const match = /```component-doc-contract\s*\r?\n([\s\S]*?)\r?\n```/.exec(markdown);
+  expect(match, 'component guide should declare component-doc-contract').not.toBeNull();
+  return yaml.load(match?.[1] ?? '') as ComponentDocContract;
+}
+
+export function expectComponentDocContract(
+  contract: ComponentDocContract,
+  expected: {
+    commandRails: readonly string[];
+    componentId: string;
+    diagramPack: string;
+    publicApi: readonly string[];
+    requiredSemantics: readonly string[];
+  }
+): void {
+  expect(contract.componentId).toBe(expected.componentId);
+  expect(contract.diagramPack).toBe(expected.diagramPack);
+  expect(contract.commandRails).toEqual(expect.arrayContaining([...expected.commandRails]));
+  expect(contract.publicApi).toEqual(expect.arrayContaining([...expected.publicApi]));
+  expect(contract.requiredSemantics).toEqual(
+    expect.arrayContaining([...expected.requiredSemantics])
+  );
 }
 
 export function expectOwnedConcernHeader(

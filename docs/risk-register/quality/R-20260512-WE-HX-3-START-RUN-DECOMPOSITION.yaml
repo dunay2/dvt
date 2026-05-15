@@ -17,4 +17,9 @@ mitigation: >
   Keep public contracts unchanged, reuse the existing StartRunApplicationService behavior tests, add
   direct phase-service tests, and add a semantic architecture guard that prevents provider
   resolution, scoped plan integrity, or intent creation from moving back into the application
-  coordinator.
+  coordinator. The 2026-05-15 hardcut also removes the older DHM-named active artifacts and requires
+  a single structured WE-HX-3 feature identity for start-run decomposition. The QA hardening
+  follow-up splits runtime semantic checks from documentation-pack checks, validates the component
+  guide through a structured component-document contract, and moves feature-mechanization parsing
+  behind a tested parser module so architecture guards no longer depend on CLI internals or exact
+  prose headings.

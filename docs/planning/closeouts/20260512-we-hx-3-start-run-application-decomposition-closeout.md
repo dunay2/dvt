@@ -55,6 +55,19 @@ service name, or public DTO is introduced.
 - Corrected the start-run protocol documentation so the adapter boundary matches
   the implemented `IProviderAdapter.startRun(planRef, context)` contract and
   runtime plan-material fetches revalidate `PlanRef.sha256`.
+- Hardcut the duplicate DHM-named start-run decomposition artifacts so WE-HX-3
+  remains the only active feature identity for this command path.
+- Strengthened the architecture guard to parse structured
+  `feature-mechanization` data instead of relying on proposal prose.
+- Implemented the QA hardening plan in
+  `buzon/20260515-codex-we-hx-3-qa-hardening-tasks.md`: extracted
+  feature-mechanization parsing from the CLI script, split semantic architecture
+  checks from documentation-pack checks, added a structured
+  `component-doc-contract`, and removed stale manifest entries for the retired
+  broad document assertions.
+- Corrected the feature-mechanization implementation checker so symbols added
+  and then removed inside the same branch diff do not require stale manifest
+  entries in the final tree.
 
 ## Validation Evidence
 
@@ -85,6 +98,28 @@ service name, or public DTO is introduced.
   `pnpm exec markdownlint-cli2 "docs/architecture/components/engine/contracts/engine/StartRunProtocol.v1.md"`,
   `pnpm docs:feature-mechanization:implementation`, and `git diff --check`
   passed after correcting the adapter-input wording.
+- Hardcut guard:
+  `pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts`
+  failed red while both the previous DHM-named slice and the current WE-HX-3
+  slice claimed start-run decomposition, then passed after removing the
+  DHM-named active artifacts.
+- QA hardening red/green:
+  `node --test scripts/feature-mechanization-manifest.test.cjs` failed red when
+  the parser module did not exist, then passed after adding the stable parser
+  module and parser tests.
+- QA documentation-pack red/green:
+  `pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts`
+  failed red while the component guide lacked the structured
+  `component-doc-contract`, then passed after adding the contract and doc-pack
+  guard.
+- QA combined guards:
+  `pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts`
+  passed with semantic and documentation-pack responsibilities split.
+- Feature-mechanization parser and manifest:
+  `pnpm docs:feature-mechanization -- --feature WE-HX-3-START-RUN-DECOMPOSITION`
+  and `pnpm docs:feature-mechanization:implementation` passed after the plan
+  declared the new parser, documentation-pack guard, and stable doc contract
+  symbols.
 
 ## ADR Decision
 
@@ -96,6 +131,7 @@ logging.
 ## No-Debt And No-Stub Evidence
 
 - No public `IWorkflowEngine` or `StartRunBoundary` contract was changed.
+- No compatibility alias or historic DHM restoration was added.
 - No placeholder adapter, fake success path, or temporary bypass was added.
 - No lint, type, test, docs, ARC, or hook rule was relaxed.
 - No TODO/FIXME marker was added.

@@ -283,8 +283,8 @@ allowedImplementationSurfaces:
   - docs/architecture/components/engine/architecture/workflow-engine-runtime-path-decomposition-user-stories.md
   - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
   - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-user-stories.md
-  - docs/architecture/components/engine/architecture/workflow-engine-start-run-decomposition-component.md
-  - docs/architecture/components/engine/architecture/workflow-engine-start-run-decomposition-user-stories.md
+  - docs/architecture/components/engine/architecture/start-run-application-decomposition-component.md
+  - docs/architecture/components/engine/architecture/start-run-application-decomposition-user-stories.md
   - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
   - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
   - docs/evidence/ed-20260514-we-hx-0-hardcut-canonical-map.md
@@ -398,260 +398,8 @@ symbols:
 - depends on `WE-HX-2`
 - split admission, provider/capability resolution, intent creation, execution
   dispatch, and failure policy
-
-```feature-mechanization
-version: 1
-featureId: DHM-WS3-START-RUN-DECOMPOSITION
-mechanizationStatus: implemented
-noHumanDecisionsRemaining: true
-implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
-componentGuides:
-  - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
-  - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
-  - docs/architecture/components/engine/architecture/workflow-engine-start-run-decomposition-component.md
-userStories:
-  - docs/architecture/components/engine/architecture/workflow-engine-start-run-decomposition-user-stories.md
-governingSources:
-  - AGENTS.md
-  - docs/planning/status/governance-document-rule-inventory.md
-  - docs/guides/ai-work-protocol.md
-  - docs/architecture/command-query-rail-governance.md
-  - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md
-  - docs/adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md
-allowedImplementationSurfaces:
-  - apps/api/src/application/services/WorkflowEngineFactory.ts
-  - apps/api/test/integration/plannerEngineContract.test.ts
-  - docs/.manifest.json
-  - docs/architecture/components/engine/architecture/workflow-engine-start-run-decomposition-component.md
-  - docs/architecture/components/engine/architecture/workflow-engine-start-run-decomposition-user-stories.md
-  - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
-  - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
-  - docs/evidence/ed-20260512-dhm-ws3-start-run-decomposition.md
-  - docs/evidence/index.md
-  - docs/planning/closeouts/20260512-dhm-ws3-start-run-application-decomposition-closeout.md
-  - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
-  - docs/planning/status/**
-  - docs/risk-register/quality/R-20260512-DHM-WS3-START-RUN-DECOMPOSITION.yaml
-  - docs/risk-register/quality/index.md
-  - packages/@dvt/engine/src/application/StartRunApplicationService.ts
-  - packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts
-  - packages/@dvt/engine/src/services/startRun/StartRunFailurePolicy.ts
-  - packages/@dvt/engine/src/services/startRun/StartRunTypes.ts
-  - packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
-  - packages/@dvt/engine/test/helpers/workflowEngine.fixture.ts
-  - packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
-forbiddenImplementationSurfaces:
-  - packages/@dvt/contracts/**
-  - packages/@dvt/adapter-*/**
-  - apps/web/**
-  - specs/contracts/**
-commandQueryRails:
-  - name: StartRunApplicationDecomposition
-    type: command
-    dddOwner: Workflow run application service
-domainObjects:
-  - name: StartRunApplicationService
-    type: application service
-    owner: Engine runtime
-  - name: StartRunExecutionService
-    type: execution port implementation
-    owner: Engine runtime
-  - name: StartRunFailurePolicy
-    type: failure policy
-    owner: Engine runtime
-fowlerSignals:
-  - Boundary drift
-  - Divergent change
-  - Shotgun surgery risk
-architectureGuards:
-  - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts test/services/StartRunApplicationService.test.ts
-  - pnpm docs:feature-mechanization:implementation
-cypressFlows:
-  - Not applicable - engine start-run application-service decomposition only
-completionGate:
-  - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts test/services/StartRunApplicationService.test.ts
-  - pnpm --filter @dvt/engine typecheck
-  - pnpm --filter dvt-api typecheck
-  - pnpm --filter @dvt/engine test
-  - pnpm --filter dvt-api test -- test/integration/plannerEngineContract.test.ts
-  - pnpm docs:status:generate
-  - pnpm docs:sync
-  - pnpm governance:refresh
-  - pnpm docs:feature-mechanization -- --feature DHM-WS3-START-RUN-DECOMPOSITION
-  - pnpm docs:feature-mechanization:implementation
-  - pnpm verify:prepush
-redGreenCycles:
-  - id: dhm-ws3-start-run-decomposition-architecture-guard
-    redTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts test/services/StartRunApplicationService.test.ts
-    expectedFailure: StartRunApplicationService still constructs execution, failure, event, and plan-integrity collaborators internally instead of accepting injected application seams.
-    patchSurfaces:
-      - packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
-      - packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
-      - packages/@dvt/engine/src/application/StartRunApplicationService.ts
-      - packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts
-      - packages/@dvt/engine/src/services/startRun/StartRunFailurePolicy.ts
-      - packages/@dvt/engine/src/services/startRun/StartRunTypes.ts
-      - packages/@dvt/engine/test/helpers/workflowEngine.fixture.ts
-      - apps/api/src/application/services/WorkflowEngineFactory.ts
-      - apps/api/test/integration/plannerEngineContract.test.ts
-    greenTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts test/services/StartRunApplicationService.test.ts
-symbols:
-  - name: BuildStartRunApplicationServiceDeps
-    path: packages/@dvt/engine/src/application/StartRunApplicationService.ts
-    dddOwner: Workflow run application service
-    cqRails:
-      - StartRunApplicationDecomposition
-    fowlerSignals:
-      - Boundary drift
-    architectureGuard: pnpm docs:feature-mechanization:implementation
-    cypressCoverage: Not applicable - engine application-service composition
-    unitTests:
-      - packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
-  - name: buildStartRunApplicationService
-    path: packages/@dvt/engine/src/application/StartRunApplicationService.ts
-    dddOwner: Workflow run application service
-    cqRails:
-      - StartRunApplicationDecomposition
-    fowlerSignals:
-      - Boundary drift
-    architectureGuard: pnpm docs:feature-mechanization:implementation
-    cypressCoverage: Not applicable - engine application-service composition
-    unitTests:
-      - packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
-  - name: StartRunExecutionService
-    path: packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts
-    dddOwner: Workflow run execution dispatch
-    cqRails:
-      - StartRunApplicationDecomposition
-    fowlerSignals:
-      - Divergent change
-    architectureGuard: pnpm docs:feature-mechanization:implementation
-    cypressCoverage: Not applicable - engine application-service composition
-    unitTests:
-      - packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
-  - name: StartRunFailurePolicy
-    path: packages/@dvt/engine/src/services/startRun/StartRunFailurePolicy.ts
-    dddOwner: Workflow run failure policy
-    cqRails:
-      - StartRunApplicationDecomposition
-    fowlerSignals:
-      - Divergent change
-    architectureGuard: pnpm docs:feature-mechanization:implementation
-    cypressCoverage: Not applicable - engine application-service composition
-    unitTests:
-      - packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
-  - name: StartRunExecutionInput
-    path: packages/@dvt/engine/src/services/startRun/StartRunTypes.ts
-    dddOwner: Workflow run execution dispatch
-    cqRails:
-      - StartRunApplicationDecomposition
-    fowlerSignals:
-      - Boundary drift
-    architectureGuard: pnpm docs:feature-mechanization:implementation
-    cypressCoverage: Not applicable - engine application-service composition
-    unitTests:
-      - packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
-  - name: IStartRunExecutionService
-    path: packages/@dvt/engine/src/services/startRun/StartRunTypes.ts
-    dddOwner: Workflow run execution dispatch
-    cqRails:
-      - StartRunApplicationDecomposition
-    fowlerSignals:
-      - Boundary drift
-    architectureGuard: pnpm docs:feature-mechanization:implementation
-    cypressCoverage: Not applicable - engine application-service composition
-    unitTests:
-      - packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
-  - name: IStartRunFailurePolicy
-    path: packages/@dvt/engine/src/services/startRun/StartRunTypes.ts
-    dddOwner: Workflow run failure policy
-    cqRails:
-      - StartRunApplicationDecomposition
-    fowlerSignals:
-      - Boundary drift
-    architectureGuard: pnpm docs:feature-mechanization:implementation
-    cypressCoverage: Not applicable - engine application-service composition
-    unitTests:
-      - packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
-  - name: DHM_WS3_CLOSEOUT
-    path: packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
-    dddOwner: Workflow run application service architecture guard
-    cqRails:
-      - StartRunApplicationDecomposition
-    fowlerSignals:
-      - Shotgun surgery risk
-    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
-    cypressCoverage: Not applicable - engine architecture guard
-    unitTests:
-      - packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
-  - name: ENGINE_ROOT
-    path: packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
-    dddOwner: Workflow run application service architecture guard
-    cqRails:
-      - StartRunApplicationDecomposition
-    fowlerSignals:
-      - Shotgun surgery risk
-    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
-    cypressCoverage: Not applicable - engine architecture guard
-    unitTests:
-      - packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
-  - name: REPO_ROOT
-    path: packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
-    dddOwner: Workflow run application service architecture guard
-    cqRails:
-      - StartRunApplicationDecomposition
-    fowlerSignals:
-      - Shotgun surgery risk
-    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
-    cypressCoverage: Not applicable - engine architecture guard
-    unitTests:
-      - packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
-  - name: START_RUN_COMPONENT_GUIDE
-    path: packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
-    dddOwner: Workflow run application service architecture guard
-    cqRails:
-      - StartRunApplicationDecomposition
-    fowlerSignals:
-      - Shotgun surgery risk
-    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
-    cypressCoverage: Not applicable - engine architecture guard
-    unitTests:
-      - packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
-  - name: START_RUN_USER_STORIES
-    path: packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
-    dddOwner: Workflow run application service architecture guard
-    cqRails:
-      - StartRunApplicationDecomposition
-    fowlerSignals:
-      - Shotgun surgery risk
-    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
-    cypressCoverage: Not applicable - engine architecture guard
-    unitTests:
-      - packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
-  - name: TEST_ROOT
-    path: packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
-    dddOwner: Workflow run application service architecture guard
-    cqRails:
-      - StartRunApplicationDecomposition
-    fowlerSignals:
-      - Shotgun surgery risk
-    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
-    cypressCoverage: Not applicable - engine architecture guard
-    unitTests:
-      - packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
-  - name: readEngineSource
-    path: packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
-    dddOwner: Workflow run application service architecture guard
-    cqRails:
-      - StartRunApplicationDecomposition
-    fowlerSignals:
-      - Shotgun surgery risk
-    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
-    cypressCoverage: Not applicable - engine architecture guard
-    unitTests:
-      - packages/@dvt/engine/test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
-```
+- canonical implementation manifest: `WE-HX-3-START-RUN-DECOMPOSITION`
+  in [WE-HX-3 feature mechanization](#we-hx-3-feature-mechanization)
 
 ### `WE-HX-4` Runtime query/command decomposition
 
@@ -1046,7 +794,7 @@ cypressFlows:
   - Not applicable - architecture semantic closure only
 completionGate:
   - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
-  - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts test/architecture/startRunApplicationDecomposition.architecture.test.ts
+  - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts test/architecture/startRunApplicationDecomposition.architecture.test.ts
   - pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
   - pnpm --filter @dvt/engine typecheck
   - pnpm --filter dvt-api typecheck
@@ -1866,6 +1614,7 @@ noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
 componentGuides:
   - docs/architecture/components/engine/architecture/start-run-application-decomposition-component.md
+  - docs/architecture/components/engine/architecture/start-run-application-decomposition-diagrams.md
   - docs/architecture/components/engine/contracts/engine/StartRunProtocol.v1.md
   - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
 userStories:
@@ -1886,19 +1635,29 @@ governingSources:
   - docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md
 allowedImplementationSurfaces:
   - buzon/20260512-codex-fowler-we-hx-3-start-run-decomposition-analysis-and-remediation.md
+  - buzon/20260515-codex-fowler-we-hx-3-hardcut-analysis.md
+  - buzon/20260515-codex-we-hx-3-qa-hardening-tasks.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+  - docs/planning/closeouts/**
   - docs/planning/closeouts/20260512-we-hx-3-start-run-application-decomposition-closeout.md
   - docs/planning/status/generated-code-state.md
   - docs/planning/status/system-operations-inventory-20260501.md
+  - docs/architecture/components/engine/architecture/**
   - docs/architecture/components/engine/architecture/index.md
   - docs/architecture/components/engine/architecture/start-run-application-decomposition-component.md
+  - docs/architecture/components/engine/architecture/start-run-application-decomposition-diagrams.md
   - docs/architecture/components/engine/architecture/start-run-application-decomposition-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
   - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
   - docs/architecture/components/engine/contracts/engine/StartRunProtocol.v1.md
+  - docs/evidence/**
   - docs/evidence/ed-20260512-we-hx-3-start-run-decomposition.md
   - docs/evidence/index.md
+  - docs/risk-register/quality/**
   - docs/risk-register/quality/R-20260512-WE-HX-3-START-RUN-DECOMPOSITION.yaml
   - docs/risk-register/quality/index.md
+  - scripts/lib/feature-mechanization-manifest.cjs
+  - scripts/feature-mechanization-manifest.test.cjs
   - traceability.manifest.json
   - packages/@dvt/engine/src/application/StartRunApplicationService.ts
   - packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts
@@ -1909,7 +1668,10 @@ allowedImplementationSurfaces:
   - packages/@dvt/engine/src/services/startRun/StartRunIntentService.ts
   - packages/@dvt/engine/src/services/startRun/StartRunTypes.ts
   - packages/@dvt/engine/src/services/startRun/StartRunValidationPolicy.ts
+  - packages/@dvt/engine/test/architecture/**
+  - packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
   - packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
+  - packages/@dvt/engine/test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
   - packages/@dvt/engine/test/services/StartRunApplicationDecomposition.test.ts
 forbiddenImplementationSurfaces:
   - packages/@dvt/contracts/**
@@ -1937,13 +1699,18 @@ fowlerSignals:
   - Deterministic intent creation moved behind an intention-revealing service.
   - Scoped plan integrity conversion moved to the admission phase owner.
   - Architecture guard validates semantic phase ownership.
+  - Hardcut removes duplicate DHM-named active start-run decomposition identity.
+  - QA hardening separates semantic architecture guards from documentation-pack guards.
 architectureGuards:
   - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+  - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
 cypressFlows:
   - N/A - internal engine start-run decomposition
 completionGate:
   - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
   - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+  - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+  - node --test scripts/feature-mechanization-manifest.test.cjs
   - pnpm --filter @dvt/engine typecheck
   - pnpm --filter @dvt/engine test
   - pnpm docs:feature-mechanization:implementation
@@ -1960,13 +1727,32 @@ redGreenCycles:
     greenTest: pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
   - id: start-run-semantic-architecture-guard
     redTest: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
-    expectedFailure: StartRunApplicationService still owns scoped plan integrity and private intent creation, and WE-HX-3 docs do not exist.
+    expectedFailure: StartRunApplicationService still owns scoped plan integrity and private intent creation, WE-HX-3 docs do not exist, or the active plan declares more than one start-run decomposition feature identity.
     patchSurfaces:
       - packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
       - docs/architecture/components/engine/architecture/start-run-application-decomposition-component.md
       - docs/architecture/components/engine/architecture/start-run-application-decomposition-user-stories.md
       - buzon/20260512-codex-fowler-we-hx-3-start-run-decomposition-analysis-and-remediation.md
+      - buzon/20260515-codex-fowler-we-hx-3-hardcut-analysis.md
     greenTest: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+  - id: start-run-qa-hardening-parser-api
+    redTest: node --test scripts/feature-mechanization-manifest.test.cjs
+    expectedFailure: Feature mechanization extraction still lives inside the CLI script instead of a stable parser module.
+    patchSurfaces:
+      - scripts/lib/feature-mechanization-manifest.cjs
+      - scripts/feature-mechanization-manifest.test.cjs
+      - scripts/check-feature-mechanization.cjs
+    greenTest: node --test scripts/feature-mechanization-manifest.test.cjs
+  - id: start-run-qa-hardening-doc-pack-guard
+    redTest: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+    expectedFailure: WE-HX-3 component documentation lacks a structured componentDocContract and the docs guard still depends on human heading text.
+    patchSurfaces:
+      - packages/@dvt/engine/test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+      - packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+      - packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
+      - docs/architecture/components/engine/architecture/start-run-application-decomposition-component.md
+      - docs/architecture/components/engine/architecture/start-run-application-decomposition-diagrams.md
+    greenTest: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
 symbols:
   - name: StartRunAdmissionGuardPort
     path: packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts
@@ -2078,28 +1864,6 @@ symbols:
     cypressCoverage: N/A - engine-internal phase deps
     unitTests:
       - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
-  - name: CLOSEOUT
-    path: packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
-    dddOwner: StartRunArchitectureGuard
-    cqRails:
-      - IWorkflowEngine.startRun
-    fowlerSignals:
-      - Keeps closeout evidence tied to semantic architecture guard.
-    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
-    cypressCoverage: N/A - architecture test constant
-    unitTests:
-      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
-  - name: COMPONENT_GUIDE
-    path: packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
-    dddOwner: StartRunArchitectureGuard
-    cqRails:
-      - IWorkflowEngine.startRun
-    fowlerSignals:
-      - Requires local component documentation.
-    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
-    cypressCoverage: N/A - architecture test constant
-    unitTests:
-      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
   - name: ENGINE_ROOT
     path: packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
     dddOwner: StartRunArchitectureGuard
@@ -2107,17 +1871,6 @@ symbols:
       - IWorkflowEngine.startRun
     fowlerSignals:
       - Locates package sources for semantic inspection.
-    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
-    cypressCoverage: N/A - architecture test constant
-    unitTests:
-      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
-  - name: FOWLER_MAILBOX
-    path: packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
-    dddOwner: StartRunArchitectureGuard
-    cqRails:
-      - IWorkflowEngine.startRun
-    fowlerSignals:
-      - Requires Fowler analysis evidence.
     architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
     cypressCoverage: N/A - architecture test constant
     unitTests:
@@ -2155,17 +1908,6 @@ symbols:
     cypressCoverage: N/A - architecture test constant
     unitTests:
       - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
-  - name: USER_STORIES
-    path: packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
-    dddOwner: StartRunArchitectureGuard
-    cqRails:
-      - IWorkflowEngine.startRun
-    fowlerSignals:
-      - Requires local story coverage.
-    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
-    cypressCoverage: N/A - architecture test constant
-    unitTests:
-      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
   - name: readEngineSource
     path: packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
     dddOwner: StartRunArchitectureGuard
@@ -2188,6 +1930,182 @@ symbols:
     cypressCoverage: N/A - architecture test helper
     unitTests:
       - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+  - name: require
+    path: packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    dddOwner: StartRunArchitectureGuard
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Imports the stable feature-mechanization parser module instead of the CLI script.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    cypressCoverage: N/A - architecture test helper
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+  - name: ComponentDocContract
+    path: packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+    dddOwner: StartRunDocumentationPackGuard
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Names the structured component-document contract for QA hardening.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+    cypressCoverage: N/A - architecture test support type
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+  - name: extractComponentDocContract
+    path: packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+    dddOwner: StartRunDocumentationPackGuard
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Reads structured component-document semantics instead of prose headings.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+    cypressCoverage: N/A - architecture test support helper
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+  - name: expectComponentDocContract
+    path: packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
+    dddOwner: StartRunDocumentationPackGuard
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Validates stable component semantics without requiring exact heading text.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+    cypressCoverage: N/A - architecture test support helper
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+  - name: CLOSEOUT_PATH
+    path: packages/@dvt/engine/test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+    dddOwner: StartRunDocumentationPackGuard
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Requires closeout evidence in the documentation pack.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+  - name: COMPONENT_GUIDE_PATH
+    path: packages/@dvt/engine/test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+    dddOwner: StartRunDocumentationPackGuard
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Requires the component guide in the documentation pack.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+  - name: COMPONENT_DIAGRAMS_PATH
+    path: packages/@dvt/engine/test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+    dddOwner: StartRunDocumentationPackGuard
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Requires the component diagram pack in the documentation pack.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+  - name: EVIDENCE_PATH
+    path: packages/@dvt/engine/test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+    dddOwner: StartRunDocumentationPackGuard
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Requires ARC-2 evidence in the documentation pack.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+  - name: PLAN_PATH
+    path: packages/@dvt/engine/test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+    dddOwner: StartRunDocumentationPackGuard
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Locates the WE-HX-3 mechanization manifest for doc-pack declaration checks.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+  - name: RISK_PATH
+    path: packages/@dvt/engine/test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+    dddOwner: StartRunDocumentationPackGuard
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Requires ARC-2 risk coverage in the documentation pack.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+  - name: USER_STORIES_PATH
+    path: packages/@dvt/engine/test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+    dddOwner: StartRunDocumentationPackGuard
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Requires user-story coverage in the documentation pack.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+    cypressCoverage: N/A - architecture test constant
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
+  - name: extractFeatureMechanizationManifests
+    path: scripts/lib/feature-mechanization-manifest.cjs
+    dddOwner: FeatureMechanizationParser
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Provides a stable parser API shared by CLI validation and architecture guards.
+    architectureGuard: node --test scripts/feature-mechanization-manifest.test.cjs
+    cypressCoverage: N/A - repository parser helper
+    unitTests:
+      - node --test scripts/feature-mechanization-manifest.test.cjs
+  - name: manifestFencePattern
+    path: scripts/lib/feature-mechanization-manifest.cjs
+    dddOwner: FeatureMechanizationParser
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Defines the stable feature-mechanization fenced-block grammar.
+    architectureGuard: node --test scripts/feature-mechanization-manifest.test.cjs
+    cypressCoverage: N/A - repository parser helper
+    unitTests:
+      - node --test scripts/feature-mechanization-manifest.test.cjs
+  - name: yaml
+    path: scripts/lib/feature-mechanization-manifest.cjs
+    dddOwner: FeatureMechanizationParser
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Parses feature-mechanization YAML through the shared parser API.
+    architectureGuard: node --test scripts/feature-mechanization-manifest.test.cjs
+    cypressCoverage: N/A - repository parser helper
+    unitTests:
+      - node --test scripts/feature-mechanization-manifest.test.cjs
+  - name: assert
+    path: scripts/feature-mechanization-manifest.test.cjs
+    dddOwner: FeatureMechanizationParserTest
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Verifies parser behavior with direct Node assertions.
+    architectureGuard: node --test scripts/feature-mechanization-manifest.test.cjs
+    cypressCoverage: N/A - repository parser test
+    unitTests:
+      - node --test scripts/feature-mechanization-manifest.test.cjs
+  - name: test
+    path: scripts/feature-mechanization-manifest.test.cjs
+    dddOwner: FeatureMechanizationParserTest
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Defines parser red/green fixture cases.
+    architectureGuard: node --test scripts/feature-mechanization-manifest.test.cjs
+    cypressCoverage: N/A - repository parser test
+    unitTests:
+      - node --test scripts/feature-mechanization-manifest.test.cjs
   - name: makeResolvedContext
     path: packages/@dvt/engine/test/services/StartRunApplicationDecomposition.test.ts
     dddOwner: StartRunPhaseBehaviorTest
