@@ -19,9 +19,11 @@ coverage for real runtime, contract, root-build, and governance changes.
 **2026-05-10 implementation note:** The contracts, adapter-postgres,
 determinism, and coverage workflow consumers now read semantic outputs from
 `tools/ci/emit-scope.mjs` instead of retaining local `dorny/paths-filter`
-package-root rules. The slice closes the CI scope portion of
-`CI-AUDIT-CONTRACTS-SCOPE` and `CI-AUDIT-ENGINE-COVERAGE`; local hook
-convergence remains separately governed by `CDG-W1-3`.
+package-root rules. The slice closed the shared-consumer migration for
+`CI-AUDIT-CONTRACTS-SCOPE`; `CI-AUDIT-ENGINE-COVERAGE` still required the
+follow-up engine package canary documented in
+`ci-audit-engine-coverage-plan-20260515.md`. Local hook convergence remains
+separately governed by `CDG-W1-3`.
 
 **Architecture:** Keep `tools/ci/scope-config.mjs` as the workflow scope API and
 orchestrator, but move package-script and script-path semantics into the
@@ -1294,9 +1296,11 @@ coverage_relevant: ${{ steps.scope.outputs.coverage_relevant }}
 ```
 
 For pull requests, a root `package.json` scripts-only governance/planning alias
-must leave both outputs false. Engine, contracts, lockfile, `vitest.config.ts`,
-coverage source/test paths, and workflow changes that affect those lanes must
-still leave the relevant output true.
+must leave both outputs false. Engine workspace changes, contracts, lockfile,
+`vitest.config.ts`, and workflow changes that affect those lanes must still
+leave the relevant output true. The engine coverage scope is closed by
+`CI-AUDIT-ENGINE-COVERAGE-20260515`, which makes coverage follow the governed
+`packages/@dvt/engine/**` package boundary instead of a source/test-only subset.
 
 - [ ] **Step 8: Add parity assertions**
 
