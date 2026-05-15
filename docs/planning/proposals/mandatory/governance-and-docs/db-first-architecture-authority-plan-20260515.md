@@ -1046,6 +1046,9 @@ Command invariants:
 - `--rail-ref` is required and cannot use `none`, `n/a`, or
   `not-applicable`; design authority must point at an explicit command or
   query rail.
+- Schema hardening must fail closed when old implicit `rail_ref` rows exist;
+  migration code must not delete architecture design authority as a hidden
+  repair.
 - Scope values must use the existing `architecture.design_scope` subject and
   scope taxonomies.
 - Replays with the same idempotency key must match the same source hash and

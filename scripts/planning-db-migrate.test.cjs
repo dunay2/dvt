@@ -1102,5 +1102,7 @@ test('tracked migrations require explicit architecture design rail references', 
   assert.ok(explicitRailMigration);
   assert.match(explicitRailMigration.sql, /alter column rail_ref drop default/);
   assert.match(explicitRailMigration.sql, /architecture_design_explicit_rail_ref_check/);
+  assert.match(explicitRailMigration.sql, /raise exception/);
   assert.match(explicitRailMigration.sql, /none - architecture-authority-only/);
+  assert.doesNotMatch(explicitRailMigration.sql, /delete from architecture\.design\b/);
 });

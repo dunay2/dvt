@@ -1,12 +1,20 @@
-delete from architecture.design_operations
-where design_id in (
-  select design_id
-  from architecture.design
-  where lower(btrim(rail_ref)) in ('none', 'n/a', 'not-applicable', 'none - architecture-authority-only')
-);
-
-delete from architecture.design
-where lower(btrim(rail_ref)) in ('none', 'n/a', 'not-applicable', 'none - architecture-authority-only');
+do $$
+begin
+  if exists (
+    select 1
+    from architecture.design
+    where lower(btrim(rail_ref)) in (
+      'none',
+      'n/a',
+      'not-applicable',
+      'none - architecture-authority-only'
+    )
+  ) then
+    raise exception
+      'architecture.design contains implicit rail_ref rows; repair them with an explicit governing rail before applying migration 045.'
+      using errcode = '23514';
+  end if;
+end $$;
 
 alter table architecture.design
   alter column rail_ref drop default;
