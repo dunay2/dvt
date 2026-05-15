@@ -352,23 +352,25 @@ findings.
 | DVT engine package audit review                     | active, 0%       | `S16`, `S09`, `AR-A8`, `AR-A12`, `AR-D6`, `EA-*` | Needs finding-to-task disposition before engine audit cleanup.                                 |
 | Contract pack and read boundary reset Fowler review | in_progress, 35% | `AR-A12`, `AR-A12-A`, `AR-A12-B`, `AR-A12-C`     | Partially executed; remaining findings must reconcile with current AR-A12 task/evidence state. |
 
-## Tasks Currently In Review
+## Review And Blocked Task State
 
-These are the planning DB items whose work is not fully closed even if linked
-documents exist.
+As of the 2026-05-15 hard review correction, the reconciled Lane E P0 review
+set (`F-03`, `F-04`, `F-04-A..E`, `F-26`, `ADP-LINT-ORDER-01`) no longer
+remains in `review`. Repository-wide planning still reports review-state tasks
+in the current-state table above and should be treated as the canonical total.
 
-| Lane | Task                | Priority | Progress | Disposition focus                                             |
-| ---- | ------------------- | -------- | -------- | ------------------------------------------------------------- |
-| B    | `ADP-LINT-ORDER-01` | P2       | 80%      | Adapter-postgres lint/import-order tooling cleanup.           |
-| E    | `F-03`              | P0       | 98%      | Backend health state and startup route gate closure.          |
-| E    | `F-04-A`            | P0       | 90%      | Frontend data-boundary coupling inventory closure.            |
-| E    | `F-04-B`            | P0       | 85%      | Frontend data-boundary architecture document closure.         |
-| E    | `F-04-C`            | P0       | 80%      | Runtime-modes manual closure.                                 |
-| E    | `F-04-D`            | P0       | 85%      | Frontend ports and adapter boundary closure.                  |
-| E    | `F-04-E`            | P0       | 95%      | Frontend composition-root wiring closure.                     |
-| E    | `F-17-A`            | P1       | 90%      | Monaco positioning alignment closure.                         |
-| E    | `F-20`              | P1       | 80%      | Per-screen manuals and user stories closure.                  |
-| E    | `F-26`              | P0       | 100%     | Web auth/project onboarding CQRS-DDD baseline review closure. |
+Closure and correction evidence:
+
+- `F-03`, `F-04`, `F-04-A..E`, and `F-26`:
+  `docs/planning/closeouts/20260515-lane-e-p0-review-reconciliation-closeout.md`
+- `ADP-LINT-ORDER-01`:
+  `docs/planning/closeouts/20260515-remaining-review-reconciliation-closeout.md`
+- `F-17-A`:
+  blocked by active Code/Monaco drift against the Diff/Artifacts/Templates-only
+  target; see `docs/planning/closeouts/20260515-remaining-review-reconciliation-closeout.md`.
+- `F-20`:
+  blocked by the still-open `F-15` dependency and state-coverage
+  reconciliation; see `docs/planning/closeouts/20260515-remaining-review-reconciliation-closeout.md`.
 
 ## Proposal Disposition State
 

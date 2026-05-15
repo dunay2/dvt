@@ -2,7 +2,7 @@
 title: F-05 Store Domain Ownership Closeout
 status: Accepted
 owner: Web / Architecture / Planning
-last_reviewed: 2026-05-14
+last_reviewed: 2026-05-15
 planning_type: closeout
 ---
 
@@ -16,6 +16,22 @@ state, and authorization capability display is not runtime evidence.
 
 No new production code was required in this closeout slice. The code hard cuts
 already exist and are covered by the F-05 architecture and store tests.
+
+## 2026-05-15 Hard Review Addendum
+
+The 2026-05-15 hard review rechecked the accepted closeout against current
+branch truth and found no remaining F-05 implementation drift. The only live
+drift was planning-state drift: the planning DB still reported `F-05` as
+`in_progress 70%` after the code, docs, component guide, user stories, and
+semantic architecture tests already matched the accepted closeout.
+
+The hard review is recorded in
+`buzon/20260515-codex-fowler-f05-store-domain-ownership-hard-review.md`.
+
+No production code was added in the hard review. TDD red/green cycles remain the
+cycles declared in the accepted F-05 feature mechanization manifest; this
+addendum only verifies the resulting green gates and closes the canonical
+planning state.
 
 ## Governing Sources
 
@@ -80,11 +96,20 @@ read/write concerns even when a route needs to display them together.
 
 ## Validation Evidence
 
-| Command                                                                                                                                                                                                                                      | Result                                                                                                                                                                                                                      |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm --filter @dvt/web test -- authorizationStore.test.ts platformConnectionStore.test.ts uiLayoutStore.test.ts webStoreDomainOwnership.architecture.test.ts`                                                                               | PASS                                                                                                                                                                                                                        |
-| `pnpm docs:feature-mechanization --feature F05-STORE-DOMAIN-OWNERSHIP`                                                                                                                                                                       | PASS                                                                                                                                                                                                                        |
-| `rg -n "appStore\|userPermissions\|connectionStatus" apps/web/src/app docs/architecture/components/web docs/planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md -g "*.ts" -g "*.tsx" -g "*.md"` | PASS: active hits are owned docs, tests, authorization store, platform connection store, or route-level user-permission view models; no `executionStore.userPermissions` or `uiLayoutStore.connectionStatus` owner remains. |
+- `pnpm --filter @dvt/web test -- authorizationStore.test.ts
+platformConnectionStore.test.ts uiLayoutStore.test.ts
+webStoreDomainOwnership.architecture.test.ts`: PASS.
+- `pnpm --filter @dvt/web test -- canvasStartupAndDraftRecovery.architecture.test.ts
+queryKeyPolicy.architecture.test.ts`: PASS.
+- `pnpm docs:feature-mechanization --feature F05-STORE-DOMAIN-OWNERSHIP`:
+  PASS.
+- `rg -n "appStore|userPermissions|connectionStatus" apps/web/src/app
+docs/architecture/components/web
+docs/planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md
+-g "*.ts" -g "*.tsx" -g "*.md"`: PASS. Active hits are owned docs, tests,
+  authorization store, platform connection store, or route-level
+  user-permission view models; no `executionStore.userPermissions` or
+  `uiLayoutStore.connectionStatus` owner remains.
 
 ## Debt And Stub Evidence
 
