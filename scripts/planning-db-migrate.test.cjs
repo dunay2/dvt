@@ -969,3 +969,109 @@ test('tracked migrations route unowned review tasks through claim recovery', () 
   assert.match(nextTaskClaimMigration.sql, /planning_work_intake_query/);
   assert.match(nextTaskClaimMigration.sql, /planning_claim_recovery_tasks/);
 });
+
+test('tracked migrations create the DB-first architecture authority schema', () => {
+  const migrations = readMigrationFiles();
+  const authorityMigration = migrations.find(
+    (migration) => migration.fileName === '042_db_first_architecture_authority_schema.sql'
+  );
+
+  assert.ok(authorityMigration);
+  assert.match(authorityMigration.sql, /create schema if not exists architecture/);
+
+  for (const tableName of [
+    'design',
+    'design_scope',
+    'component',
+    'component_responsibility',
+    'component_metric',
+    'contract',
+    'component_relation',
+    'component_port',
+    'decision',
+    'component_flow',
+    'component_transformation',
+    'component_flow_step',
+    'component_event_io',
+    'component_storage_io',
+    'component_test',
+    'component_observability',
+    'risk',
+    'evidence',
+    'component_health_check',
+  ]) {
+    assert.match(
+      authorityMigration.sql,
+      new RegExp(`create table if not exists architecture\\.${tableName}\\b`)
+    );
+  }
+
+  assert.match(authorityMigration.sql, /architecture_design_status_check/);
+  assert.match(authorityMigration.sql, /architecture_component_kind_check/);
+  assert.match(authorityMigration.sql, /architecture_component_layer_check/);
+  assert.match(authorityMigration.sql, /architecture_component_relation_type_check/);
+  assert.match(authorityMigration.sql, /architecture_component_health_check_status_check/);
+  assert.match(authorityMigration.sql, /references architecture\.component\(component_id\)/);
+  assert.match(authorityMigration.sql, /references architecture\.contract\(contract_id\)/);
+  assert.match(authorityMigration.sql, /source_component_id <> target_component_id/);
+  assert.match(
+    authorityMigration.sql,
+    /create index if not exists architecture_component_owner_idx/
+  );
+  assert.match(
+    authorityMigration.sql,
+    /create index if not exists architecture_relation_source_idx/
+  );
+  assert.match(
+    authorityMigration.sql,
+    /create index if not exists architecture_evidence_subject_idx/
+  );
+});
+
+test('tracked migrations expose DB-first architecture authority query surfaces', () => {
+  const migrations = readMigrationFiles();
+  const authorityQueryMigration = migrations.find(
+    (migration) => migration.fileName === '043_db_first_architecture_authority_queries.sql'
+  );
+
+  assert.ok(authorityQueryMigration);
+
+  for (const viewName of [
+    'design_query',
+    'design_scope_query',
+    'component_query',
+    'component_relation_query',
+    'component_responsibility_query',
+    'component_io_query',
+    'component_flow_query',
+    'component_flow_step_query',
+    'component_contract_query',
+    'component_maturity_query',
+    'component_drift_query',
+    'implementation_authorization_query',
+    'implementation_violation_query',
+    'evidence_query',
+  ]) {
+    assert.match(
+      authorityQueryMigration.sql,
+      new RegExp(`create or replace view architecture\\.${viewName}\\b`)
+    );
+  }
+
+  assert.match(authorityQueryMigration.sql, /from architecture\.design_scope scope/);
+  assert.match(
+    authorityQueryMigration.sql,
+    /status in \('approved', 'implementing', 'implemented'\)/
+  );
+  assert.match(
+    authorityQueryMigration.sql,
+    /union all[\s\S]*from architecture\.component_event_io/
+  );
+  assert.match(
+    authorityQueryMigration.sql,
+    /union all[\s\S]*from architecture\.component_storage_io/
+  );
+  assert.match(authorityQueryMigration.sql, /missing_reasons/);
+  assert.match(authorityQueryMigration.sql, /required_evidence_missing/);
+  assert.match(authorityQueryMigration.sql, /health_check_failed/);
+});

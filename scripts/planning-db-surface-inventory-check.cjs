@@ -74,6 +74,25 @@ const requiredSurfaces = [
     },
   },
   {
+    surface: 'Architecture design authority',
+    includes: {
+      'Canonical source': [
+        'architecture.design',
+        'architecture.component',
+        'architecture.component_relation',
+      ],
+      'Write rail': ['Migration bootstrap only', 'CreateArchitectureDesign'],
+      'Read/query rail': [
+        'architecture.design_query',
+        'architecture.component_query',
+        'architecture.implementation_violation_query',
+      ],
+      Projection: ['DB authority rows'],
+      Validation: ['planning:db:migrate', 'test:planning:db'],
+      'Migration state': ['DB-first'],
+    },
+  },
+  {
     surface: 'Governance remediation queue',
     includes: {
       'Canonical source': ['Governance DB', 'coverage', 'fingerprint'],
