@@ -903,7 +903,7 @@ tasks:
   - task_id: CI-AUDIT-RELEASE-FLOW
     parent_task: RC-C2
     priority: P3
-    status: queued
+    status: done
     objective: >-
       confirm whether the release-please workflow intentionally avoids repository checkout and the
       shared Node/pnpm setup action, or whether release automation needs repo-tooling parity.
@@ -913,15 +913,15 @@ tasks:
       or the workflow adopts the repository setup path with a focused validation note.
     complexity: S
     effort_points: 1
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/reviews/ci-and-delivery/20260506-ci-build-audit-review.md
-      - .github/workflows/release.yml
-      - .github/actions/setup-node-pnpm/action.yml
+      - docs/planning/status/release-please-continuous.md
+      - tools/ci/workflow-pattern-parity.test.mjs
+      - docs/planning/closeouts/20260515-ci-audit-release-flow-closeout.md
     status_reason: >-
-      The audit found release workflow setup drift, but the correct action is a policy decision:
-      release-please may not need local repo tooling unless release generation depends on it.
-    last_verified: '2026-05-09'
+      Release workflow is intentionally action-only while it only delegates to release-please;
+      checkout/setup is required only when repository-local tooling is introduced.
+    last_verified: '2026-05-15'
   - task_id: RC-E1
     priority: P1
     status: done
@@ -1625,10 +1625,10 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-05-09'
+  verified_on: '2026-05-15'
   total_tasks: 58
   total_effort_points: 209
-  completed_weighted_points: 188.1
+  completed_weighted_points: 189.1
   lane_progress_pct: 90
   notes: >-
     Weighted progress uses effort_points across the current 58 task entries. The 2026-05-06 Lane C
@@ -1644,4 +1644,7 @@ verification_summary:
     Temporal worker. `F-27` now consumes closed Lane C `AR-C10` and `TF-C4` rail, authorization,
     freshness, and degraded-mode vocabulary as Lane E route-execution inputs rather than as new Lane
     C UI tasks. The 2026-05-09 review-board hygiene pass routed the CI build config audit into five
-    explicit queued Lane C follow-ups without changing CI behavior in the same slice.
+    explicit Lane C follow-ups without changing CI behavior in the same slice.
+    `CI-AUDIT-RELEASE-FLOW` is closed with an action-only release-please decision and a CI-tools
+    guard that requires checkout plus shared Node/pnpm setup only when release automation starts
+    running repository-local tooling.
