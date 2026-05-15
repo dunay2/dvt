@@ -38,6 +38,18 @@ No post-rollout Lane C PR cycles have been logged yet.
 The task is not closed until the YAML log records 3 consecutive Lane C cycles
 that satisfy the adoption and round-reduction rules.
 
+The mechanical closure check is:
+
+```bash
+pnpm docs:ai-efficiency:check
+```
+
+Current result on 2026-05-15:
+
+```text
+0/3 qualifying consecutive cycles; RC-C2 must remain open.
+```
+
 ## Recording Rule
 
 Each qualifying cycle must record:
@@ -46,9 +58,11 @@ Each qualifying cycle must record:
 - whether `hygiene.ps1` preflight was used
 - whether `pnpm verify:prepush` ran before push
 - whether first-red CI triage started with failed-job log extraction
+- whether any push-time format/lint surprise occurred
 - round/tool/rerun counts and computed reduction result
 
 ## Status
 
-`RC-C2` is in review: tooling and process are shipped, but measured adoption is
-still open.
+`RC-C2` remains open: tooling and process are shipped, and the adoption closure
+gate is now executable, but measured adoption still has `0/3` qualifying
+cycles.

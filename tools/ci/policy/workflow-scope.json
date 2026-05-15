@@ -99,6 +99,7 @@
   "workspace_outbox_worker": ["apps/outbox-worker/**"],
   "workspace_projector_worker": ["apps/projector-worker/**"],
   "workspace_temporal_worker": ["apps/temporal-worker/**"],
+  "workspace_temporal_dbt_plugin": ["packages/@dvt/temporal-dbt-plugin/**"],
   "workspace_web": ["apps/web/**"],
   "workspace_artifacts": ["packages/@dvt/artifacts/**"],
   "workspace_crypto": ["packages/@dvt/canonical/**"],

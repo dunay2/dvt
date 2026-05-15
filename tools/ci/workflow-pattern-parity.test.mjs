@@ -215,6 +215,8 @@ test('contracts and test workflows consume semantic scope outputs instead of inl
   assertWorkflowContains(testWorkflow, 'steps.scope.outputs.determinism_relevant');
   assertWorkflowContains(testWorkflow, 'steps.scope.outputs.coverage_relevant');
   assertWorkflowContains(testWorkflow, 'steps.scope.outputs.root_build_sensitive');
+  assertWorkflowContains(testWorkflow, 'steps.scope.outputs.temporal_dbt_plugin');
+  assertWorkflowContains(testWorkflow, 'pnpm --filter @dvt/temporal-dbt-plugin test');
 
   assert.doesNotMatch(contractsWorkflow, /dorny\/paths-filter/u);
   assert.doesNotMatch(testWorkflow, /dorny\/paths-filter/u);

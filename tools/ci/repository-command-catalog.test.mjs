@@ -101,6 +101,10 @@ test('classifies current command file paths without broad script-directory assum
     classifyScriptFilePath('scripts/generate-governance-document-unit-map.cjs').domain,
     'docs-governance'
   );
+  assert.equal(
+    classifyScriptFilePath('scripts/check-ai-efficiency-adoption.cjs').domain,
+    'docs-governance'
+  );
   assert.equal(classifyScriptFilePath('tools/ci/emit-scope.mjs').domain, 'ci-tooling');
   assert.equal(classifyScriptFilePath('tools/docs/check-filenames.ts').domain, 'docs-governance');
   assert.equal(

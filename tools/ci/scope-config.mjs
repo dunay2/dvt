@@ -33,6 +33,7 @@ function readWorkflowScopePolicy() {
     'workspace_outbox_worker',
     'workspace_projector_worker',
     'workspace_temporal_worker',
+    'workspace_temporal_dbt_plugin',
     'workspace_web',
     'workspace_artifacts',
     'workspace_crypto',
@@ -51,7 +52,6 @@ function readWorkflowScopePolicy() {
     'workspace_traceability_service',
     'workspace_adapter_postgres',
     'workspace_adapter_temporal',
-    'workspace_temporal_dbt_plugin',
     'workspace_cli',
   ];
 
@@ -116,6 +116,12 @@ export const WORKSPACE_ENTRIES = [
     name: 'temporal-worker',
     pkg: 'dvt-temporal-worker',
     patterns: WORKFLOW_SCOPE_POLICY.workspace_temporal_worker,
+  },
+  {
+    key: 'temporal_dbt_plugin',
+    name: 'temporal-dbt-plugin',
+    pkg: '@dvt/temporal-dbt-plugin',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_temporal_dbt_plugin,
   },
   { key: 'web', name: 'web', pkg: '@dvt/web', patterns: WORKFLOW_SCOPE_POLICY.workspace_web },
   {
@@ -216,12 +222,11 @@ export const WORKSPACE_ENTRIES = [
     patterns: WORKFLOW_SCOPE_POLICY.workspace_adapter_temporal,
   },
   {
-    key: 'temporal_dbt_plugin',
-    name: 'temporal-dbt-plugin',
-    pkg: '@dvt/temporal-dbt-plugin',
-    patterns: WORKFLOW_SCOPE_POLICY.workspace_temporal_dbt_plugin,
+    key: 'cli',
+    name: 'cli',
+    pkg: '@dvt/cli',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_cli,
   },
-  { key: 'cli', name: 'cli', pkg: '@dvt/cli', patterns: WORKFLOW_SCOPE_POLICY.workspace_cli },
 ];
 
 export const CI_GLOBAL_PATTERNS = WORKFLOW_SCOPE_POLICY.workspace_global;
@@ -315,6 +320,7 @@ export const TEST_SCOPE_PATTERNS = {
   outbox_worker: ['apps/outbox-worker/**'],
   projector_worker: ['apps/projector-worker/**'],
   temporal_worker: ['apps/temporal-worker/**'],
+  temporal_dbt_plugin: ['packages/@dvt/temporal-dbt-plugin/**'],
   web: ['apps/web/**'],
   artifacts: ['packages/@dvt/artifacts/**'],
   crypto: ['packages/@dvt/canonical/**'],
@@ -328,7 +334,6 @@ export const TEST_SCOPE_PATTERNS = {
   run_domain: ['packages/@dvt/run-domain/**'],
   state_store: ['packages/@dvt/state-store/**'],
   traceability_service: ['packages/@dvt/traceability-service/**'],
-  temporal_dbt_plugin: ['packages/@dvt/temporal-dbt-plugin/**'],
   root_config: TEST_ROOT_BUILD_PATTERNS,
   root_build_sensitive: TEST_ROOT_BUILD_PATTERNS,
   postgres_capability_changed: ADAPTER_POSTGRES_RELEVANT_PATTERNS,

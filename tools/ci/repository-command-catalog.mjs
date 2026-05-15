@@ -133,7 +133,7 @@ const SCRIPT_FILE_RULES = [
   [/^scripts\/governance-refresh(\.test)?\.cjs$/u, 'planning-db'],
   [/^scripts\/generate-workboard(\.test)?\.cjs$/u, 'planning-db'],
   [
-    /^scripts\/(align-markdown-tables|backfill-planning-last-reviewed|docs-[\w-]+|sync-docs|generate-(capability-coverage|code-status|governance-[\w-]+|planning-lanes|spec-traceability-report)|generated-doc-date|gen-ai-index|check-(feature-mechanization|generated-docs-policy|governance-[\w-]+|markdown-locations)|validate-arc-evidence-frontmatter|qa-artifact-check|lint-markdown-changed)(\.test)?\.(cjs|js)$/u,
+    /^scripts\/(align-markdown-tables|backfill-planning-last-reviewed|docs-[\w-]+|sync-docs|generate-(capability-coverage|code-status|governance-[\w-]+|planning-lanes|spec-traceability-report)|generated-doc-date|gen-ai-index|check-(ai-efficiency-adoption|feature-mechanization|generated-docs-policy|governance-[\w-]+|markdown-locations)|validate-arc-evidence-frontmatter|qa-artifact-check|lint-markdown-changed)(\.test)?\.(cjs|js)$/u,
     'docs-governance',
   ],
   [/^tools\/docs\/.+\.ts$/u, 'docs-governance'],
