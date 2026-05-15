@@ -45,6 +45,7 @@ Executed on 2026-05-15:
 - `pnpm --filter @dvt/web test -- queryKeyPolicy.architecture.test.ts useRunWorkspace.test.tsx useArtifactsViewModel.test.tsx AdminView.test.tsx`
 - `pnpm --filter @dvt/web typecheck`
 - `pnpm --filter @dvt/web test`
+- `pnpm verify:prepush`
 
 All commands passed.
 
