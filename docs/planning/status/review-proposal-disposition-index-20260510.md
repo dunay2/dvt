@@ -354,21 +354,15 @@ findings.
 
 ## Tasks Currently In Review
 
-These are the planning DB items whose work is not fully closed even if linked
-documents exist.
+As of the 2026-05-15 review reconciliation pass, no planning DB task remains
+in `review`.
 
-| Lane | Task                | Priority | Progress | Disposition focus                                             |
-| ---- | ------------------- | -------- | -------- | ------------------------------------------------------------- |
-| B    | `ADP-LINT-ORDER-01` | P2       | 80%      | Adapter-postgres lint/import-order tooling cleanup.           |
-| E    | `F-03`              | P0       | 98%      | Backend health state and startup route gate closure.          |
-| E    | `F-04-A`            | P0       | 90%      | Frontend data-boundary coupling inventory closure.            |
-| E    | `F-04-B`            | P0       | 85%      | Frontend data-boundary architecture document closure.         |
-| E    | `F-04-C`            | P0       | 80%      | Runtime-modes manual closure.                                 |
-| E    | `F-04-D`            | P0       | 85%      | Frontend ports and adapter boundary closure.                  |
-| E    | `F-04-E`            | P0       | 95%      | Frontend composition-root wiring closure.                     |
-| E    | `F-17-A`            | P1       | 90%      | Monaco positioning alignment closure.                         |
-| E    | `F-20`              | P1       | 80%      | Per-screen manuals and user stories closure.                  |
-| E    | `F-26`              | P0       | 100%     | Web auth/project onboarding CQRS-DDD baseline review closure. |
+Closure evidence:
+
+- `F-03`, `F-04`, `F-04-A..E`, and `F-26`:
+  `docs/planning/closeouts/20260515-lane-e-p0-review-reconciliation-closeout.md`
+- `ADP-LINT-ORDER-01`, `F-17-A`, and `F-20`:
+  `docs/planning/closeouts/20260515-remaining-review-reconciliation-closeout.md`
 
 ## Proposal Disposition State
 
