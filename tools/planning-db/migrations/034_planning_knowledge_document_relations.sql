@@ -97,7 +97,8 @@ select
       order by link.target_type, link.target_id
     ) filter (where link.action_id is not null),
     '[]'::jsonb
-  ) as links
+  ) as links,
+  document.source_content_sha256
 from planning_query_store.knowledge_action_items action
 join planning_query_store.knowledge_documents document
   on document.document_id = action.source_document_id
@@ -111,7 +112,45 @@ group by
   action.summary,
   action.status,
   action.required,
-  action.line_number;
+  action.line_number,
+  document.source_content_sha256;
+
+create or replace view planning_query_store.knowledge_action_work_intake_query as
+select
+  case
+    when action.mandatory = true then 115
+    else 220
+  end as rank_score,
+  case
+    when action.mandatory = true then 'P1'
+    else 'P2'
+  end::text as priority,
+  'knowledge_action'::text as intake_kind,
+  'knowledge_action:' || action.action_id as item_id,
+  null::text as lane_id,
+  null::text as task_id,
+  action.document_path,
+  action.document_path as source_path,
+  action.summary as title,
+  'Required knowledge action has no registered planning task link.'::text as reason,
+  'pnpm planning:db:query knowledge-actions --status ' || quote_literal(action.status)
+    || ' --path ' || quote_literal(action.document_path) || ' --limit 30' as suggested_query,
+  'knowledge_action_query'::text as source_view,
+  action.source_content_sha256
+from planning_query_store.knowledge_action_query action
+where action.required = true
+  and lower(coalesce(action.status, '')) not in (
+    'deferred',
+    'done',
+    'rejected',
+    'resolved',
+    'superseded'
+  )
+  and not exists (
+    select 1
+    from jsonb_array_elements(action.links) as link
+    where link ->> 'targetType' = 'task'
+  );
 
 create or replace view planning_query_store.knowledge_mandatory_proposal_binding_gap as
 select

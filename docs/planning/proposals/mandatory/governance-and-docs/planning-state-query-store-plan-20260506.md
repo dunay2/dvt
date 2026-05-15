@@ -1396,7 +1396,9 @@ Target state:
 ```mermaid
 flowchart LR
   Next["planning_next_tasks"] --> Intake["planning_work_intake_query"]
+  Claims["planning_claim_recovery_tasks"] --> Intake
   Gaps["planning_task_gap_query"] --> Intake
+  Knowledge["knowledge_action_work_intake_query"] --> Intake
   Docs["doc_disposition_action_query"] --> Intake
   Remediation["governance_remediation_query"] --> Intake
   Readiness["pr_readiness_query"] --> Intake
@@ -1408,7 +1410,8 @@ flowchart LR
 
 - `rank_score`: stable numeric ordering across sources;
 - `priority`: planning priority label normalized from the source row;
-- `intake_kind`: one of `next_task`, `task_gap`, `docs_disposition`,
+- `intake_kind`: one of `next_task`, `claim_recovery`, `task_gap`,
+  `knowledge_action`, `docs_disposition`, `risk_debt`,
   `governance_remediation`, or `pr_readiness`;
 - `item_id`: stable source-row identifier for deduplication and review;
 - `lane_id` and `task_id` when the row is task-scoped;
@@ -1428,6 +1431,20 @@ W20 does not create tasks, resolve docs disposition actions, change ARC
 readiness, or infer task closure. It accelerates intake by making the first
 question DB-answerable: what deserves attention next, and which canonical query
 explains it?
+
+W42/W43 harden the same query rail after operator feedback:
+
+- `planning_next_tasks` remains narrow: only dependency-satisfied `queued`
+  work without any active or stale claim. It is not the catch-all continuation
+  queue.
+- `planning_claim_recovery_tasks` feeds `focus` for `in_progress`, `review`,
+  and claimed/stale queued work that needs an owner before anyone can continue
+  or close it.
+- `knowledge_action_work_intake_query` feeds `focus` for required, not-closed
+  knowledge actions that have no registered planning task link. This makes
+  extracted document work visible in the DB instead of leaving operators to
+  inspect `knowledge_document_query` and guess whether the action was converted
+  into executable planning work.
 
 ## W21 Docs Resolution Overlay Design
 

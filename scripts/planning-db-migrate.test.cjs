@@ -879,7 +879,7 @@ test('tracked migrations derive component quality from effective file ownership 
   assert.match(effectiveQualityMigration.sql, /component_engineering\.component_quality_query/);
 });
 
-test('tracked migrations keep claimed or stale work out of next tasks after W40', () => {
+test('tracked migrations route claimed active work and clean queued work into next tasks', () => {
   const migrations = readMigrationFiles();
   const nextTaskClaimMigration = migrations.find(
     (migration) => migration.fileName === '040_planning_next_task_claim_boundary.sql'
@@ -894,8 +894,18 @@ test('tracked migrations keep claimed or stale work out of next tasks after W40'
     nextTaskClaimMigration.sql,
     /create or replace view planning_query_store\.planning_next_tasks/
   );
+  assert.match(
+    nextTaskClaimMigration.sql,
+    /lower\(candidate\.status\) in \('in_progress', 'review'\)/
+  );
+  assert.match(nextTaskClaimMigration.sql, /candidate\.claimed_by is not null/);
+  assert.match(nextTaskClaimMigration.sql, /candidate\.claim_expires_at > now\(\)/);
+  assert.match(nextTaskClaimMigration.sql, /lower\(candidate\.status\) = 'queued'/);
   assert.match(nextTaskClaimMigration.sql, /candidate\.claimed_by is null/);
-  assert.match(nextTaskClaimMigration.sql, /candidate\.claim_expires_at is null/);
+  assert.match(
+    nextTaskClaimMigration.sql,
+    /Dependency-satisfied active planning task with a live claim by/
+  );
   assert.match(
     nextTaskClaimMigration.sql,
     /create or replace view planning_query_store\.planning_claim_recovery_tasks/
@@ -911,4 +921,51 @@ test('tracked migrations keep claimed or stale work out of next tasks after W40'
     activeClaimBoundaryMigration.sql,
     /lower\(task\.status\) = 'queued'\s+and\s+\(\s+task\.claimed_by is not null\s+or task\.claim_expires_at is not null/s
   );
+});
+
+test('tracked migrations expose required knowledge actions as planning intake', () => {
+  const migrations = readMigrationFiles();
+  const knowledgeRelationMigration = migrations.find(
+    (migration) => migration.fileName === '034_planning_knowledge_document_relations.sql'
+  );
+  const nextTaskClaimMigration = migrations.find(
+    (migration) => migration.fileName === '040_planning_next_task_claim_boundary.sql'
+  );
+
+  assert.ok(knowledgeRelationMigration);
+  assert.ok(nextTaskClaimMigration);
+  assert.match(
+    knowledgeRelationMigration.sql,
+    /create or replace view planning_query_store\.knowledge_action_work_intake_query/
+  );
+  assert.match(knowledgeRelationMigration.sql, /'knowledge_action'::text as intake_kind/);
+  assert.match(knowledgeRelationMigration.sql, /jsonb_array_elements\(action\.links\)/);
+  assert.match(knowledgeRelationMigration.sql, /targetType/);
+  assert.match(nextTaskClaimMigration.sql, /planning_work_intake_query/);
+  assert.match(nextTaskClaimMigration.sql, /knowledge_action_work_intake_query/);
+});
+
+test('tracked migrations route unowned review tasks through claim recovery', () => {
+  const migrations = readMigrationFiles();
+  const reviewClaimRecoveryMigration = migrations.find(
+    (migration) => migration.fileName === '041_planning_claim_recovery_active_claim_boundary.sql'
+  );
+  const nextTaskClaimMigration = migrations.find(
+    (migration) => migration.fileName === '040_planning_next_task_claim_boundary.sql'
+  );
+
+  assert.ok(reviewClaimRecoveryMigration);
+  assert.ok(nextTaskClaimMigration);
+  assert.match(
+    reviewClaimRecoveryMigration.sql,
+    /create or replace view planning_query_store\.planning_claim_recovery_tasks/
+  );
+  assert.match(reviewClaimRecoveryMigration.sql, /review_claim_missing/);
+  assert.match(reviewClaimRecoveryMigration.sql, /review_claim_expired/);
+  assert.match(
+    reviewClaimRecoveryMigration.sql,
+    /lower\(task\.status\) in \('in_progress', 'review'\)/
+  );
+  assert.match(nextTaskClaimMigration.sql, /planning_work_intake_query/);
+  assert.match(nextTaskClaimMigration.sql, /planning_claim_recovery_tasks/);
 });

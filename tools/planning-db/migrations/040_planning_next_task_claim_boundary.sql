@@ -13,9 +13,19 @@ with missing_dependencies as (
 )
 select candidate.*
 from planning_query_store.planning_open_tasks candidate
-where lower(candidate.status) = 'queued'
-  and candidate.claimed_by is null
-  and candidate.claim_expires_at is null
+where (
+  (
+    lower(candidate.status) in ('in_progress', 'review')
+    and candidate.claimed_by is not null
+    and candidate.claim_expires_at is not null
+    and candidate.claim_expires_at > now()
+  )
+  or (
+    lower(candidate.status) = 'queued'
+    and candidate.claimed_by is null
+    and candidate.claim_expires_at is null
+  )
+)
   and not exists (
     select 1
     from missing_dependencies missing
@@ -78,7 +88,11 @@ select
   null::text as document_path,
   task.source_path,
   task.objective as title,
-  'Dependency-satisfied queued planning task with no active or stale claim.'::text as reason,
+  case
+    when lower(task.status) in ('in_progress', 'review')
+      then 'Dependency-satisfied active planning task with a live claim by ' || task.claimed_by || '.'
+    else 'Dependency-satisfied queued planning task with no active or stale claim.'
+  end as reason,
   'pnpm planning:db:query task-trace --task ' || quote_literal(task.task_id)
     || ' --limit 30' as suggested_query,
   'planning_next_tasks'::text as source_view,
@@ -139,6 +153,22 @@ select
   gap.source_content_sha256
 from planning_query_store.planning_task_gap_query gap
 where gap.resolution_status = 'pending'
+union all
+select
+  rank_score,
+  priority,
+  intake_kind,
+  item_id,
+  lane_id,
+  task_id,
+  document_path,
+  source_path,
+  title,
+  reason,
+  suggested_query,
+  source_view,
+  source_content_sha256
+from planning_query_store.knowledge_action_work_intake_query
 union all
 select
   (

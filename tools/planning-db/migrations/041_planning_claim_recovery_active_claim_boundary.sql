@@ -9,6 +9,13 @@ select
       and task.claim_expires_at is not null
       and task.claim_expires_at <= now()
       then 'in_progress_claim_expired'
+    when lower(task.status) = 'review'
+      and task.claimed_by is null
+      then 'review_claim_missing'
+    when lower(task.status) = 'review'
+      and task.claim_expires_at is not null
+      and task.claim_expires_at <= now()
+      then 'review_claim_expired'
     when lower(task.status) = 'queued'
       and task.claimed_by is not null
       and task.claim_expires_at is not null
@@ -26,7 +33,7 @@ select
   end as recovery_reason
 from planning_query_store.planning_open_tasks task
 where (
-    lower(task.status) = 'in_progress'
+    lower(task.status) in ('in_progress', 'review')
     and (
       task.claimed_by is null
       or task.claim_expires_at is null
