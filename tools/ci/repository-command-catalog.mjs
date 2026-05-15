@@ -136,6 +136,7 @@ const SCRIPT_FILE_RULES = [
     /^scripts\/(align-markdown-tables|backfill-planning-last-reviewed|docs-[\w-]+|sync-docs|generate-(capability-coverage|code-status|governance-[\w-]+|planning-lanes|spec-traceability-report)|generated-doc-date|gen-ai-index|check-(ai-efficiency-adoption|feature-mechanization|generated-docs-policy|governance-[\w-]+|markdown-locations)|validate-arc-evidence-frontmatter|qa-artifact-check|lint-markdown-changed)(\.test)?\.(cjs|js)$/u,
     'docs-governance',
   ],
+  [/^scripts\/lib\/feature-mechanization-manifest\.cjs$/u, 'docs-governance'],
   [/^tools\/docs\/.+\.ts$/u, 'docs-governance'],
   [
     /^scripts\/(closeout-changed|commit|fix-changed|format-markdown-changed|git-local-changes|pr-closeout|run-determinism-precommit|setup-git-hooks|validate-pr-title|verify-changed|verify-prepush)\.cjs$/u,
