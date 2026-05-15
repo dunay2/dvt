@@ -1,6 +1,6 @@
 {
   "name": "dvt",
-  "version": "5.24.0",
+  "version": "5.25.0",
   "type": "module",
   "description": "DVT - Workflow Engine Documentation and Code",
   "packageManager": "pnpm@10.28.0",

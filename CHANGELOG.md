@@ -1,5 +1,25 @@
 # Changelog
 
+## [5.25.0](https://github.com/dunay2/dvt/compare/v5.24.0...v5.25.0) (2026-05-15)
+
+
+### Features
+
+* **api:** Hard-cut AR-C2 Prometheus SLA metrics ([#1214](https://github.com/dunay2/dvt/issues/1214)) ([692dbe9](https://github.com/dunay2/dvt/commit/692dbe9f2d3416cb443a772946cbde11845c35eb))
+* **contracts:** Unify plan verifier admission matrix ([fc8f341](https://github.com/dunay2/dvt/commit/fc8f34126974028cd2026b0c0f6e33e756be8942))
+* **docs:** Add component engineering schema boundary ([18709a6](https://github.com/dunay2/dvt/commit/18709a6330164f5040b1f2ee8a75a6d49f446660))
+* **engine:** Add plan schema-version admission policy ([#1212](https://github.com/dunay2/dvt/issues/1212)) ([d157740](https://github.com/dunay2/dvt/commit/d15774022bd6e6081473d7e0cae57881c034bbd5))
+* **planner:** Add governance component command rail ([#1216](https://github.com/dunay2/dvt/issues/1216)) ([e759281](https://github.com/dunay2/dvt/commit/e7592813a36bbe45e8ecc8d2079fd49a2b145b24))
+
+
+### Bug Fixes
+
+* **api:** Lock state-store role bundle boundary ([#1211](https://github.com/dunay2/dvt/issues/1211)) ([5a332c1](https://github.com/dunay2/dvt/commit/5a332c17c7b2ab13c4eceacfcb8c1b8d7b2894fb))
+* **ci:** Align engine coverage scope with engine workspace policy ([#1245](https://github.com/dunay2/dvt/issues/1245)) ([7793e84](https://github.com/dunay2/dvt/commit/7793e84af0f8724a272f695a12f0f15721bcb1a1))
+* **contracts:** Close RC-G1 contract ownership drift ([#1225](https://github.com/dunay2/dvt/issues/1225)) ([f96b55f](https://github.com/dunay2/dvt/commit/f96b55fb16cf3806cd689d48361d7ccb97f715f0))
+* **docs:** Keep stale claims out of next tasks ([cf9e962](https://github.com/dunay2/dvt/commit/cf9e9624e6c4c406967105653d1403a54eafec65))
+* **planner:** Route active planning claims through next tasks ([dbe8fe6](https://github.com/dunay2/dvt/commit/dbe8fe6f962af25074837c4091e9c5e446cb059c))
+
 ## [5.24.0](https://github.com/dunay2/dvt/compare/v5.23.0...v5.24.0) (2026-05-13)
 
 
