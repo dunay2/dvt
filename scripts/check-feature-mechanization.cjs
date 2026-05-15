@@ -88,14 +88,13 @@ class FeatureImplementationGuard {
 
     for (const filePath of this.changedFiles) {
       const addedLines = this.addedLinesByPath.get(filePath) || [];
-      const currentSymbols = new Set(
-        this.extractAddedCodeSymbols(
-          filePath,
-          (this.fileContentsByPath.get(filePath) || '').split(/\r?\n/)
-        )
-      );
+      const fileContent = this.fileContentsByPath.get(filePath);
+      const currentSymbols =
+        typeof fileContent === 'string'
+          ? new Set(this.extractAddedCodeSymbols(filePath, fileContent.split(/\r?\n/)))
+          : null;
       for (const symbolName of this.extractAddedCodeSymbols(filePath, addedLines)) {
-        if (!currentSymbols.has(symbolName)) {
+        if (currentSymbols && !currentSymbols.has(symbolName)) {
           continue;
         }
 
