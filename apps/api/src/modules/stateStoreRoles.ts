@@ -36,20 +36,21 @@ const REQUIRED_METHODS = [
   'isSnapshotStale',
 ] as const;
 
-function isStateStoreRoleSource(value: unknown): value is StateStoreRoleSource {
+function findMissingStateStoreRoleFunction(
+  value: unknown
+): (typeof REQUIRED_METHODS)[number] | null {
   if (value === null || typeof value !== 'object') {
-    return false;
+    return REQUIRED_METHODS[0];
   }
 
   const candidate = value as Record<string, unknown>;
-  return REQUIRED_METHODS.every((method) => typeof candidate[method] === 'function');
+  return REQUIRED_METHODS.find((method) => typeof candidate[method] !== 'function') ?? null;
 }
 
 export function bindStateStoreRoles(stateStore: StateStoreRoleSource): StateStoreRoleBindings {
-  if (!isStateStoreRoleSource(stateStore)) {
-    throw new Error(
-      'STATE_STORE_ROLE_SOURCE_INVALID: explicit read/write/maintenance roles are required'
-    );
+  const missingMethod = findMissingStateStoreRoleFunction(stateStore);
+  if (missingMethod !== null) {
+    throw new Error(`STATE_STORE_ROLE_SOURCE_INVALID: missing function ${missingMethod}`);
   }
 
   const bindings: StateStoreRoleBindings = {

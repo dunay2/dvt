@@ -24,10 +24,25 @@ The governing rail is `StateStoreRoleBoundaryQuery`: composition code asks the
 root-owned factory for named role faces. It does not create a new command or
 query endpoint, and it does not change state-store persistence behavior.
 
+## Export Semantics
+
+`bindStateStoreRoles` is the only runtime export from
+`apps/api/src/modules/stateStoreRoles.ts`. The role source and binding shapes
+are type-only exports for compile-time narrowing, so callers can name the
+contract without receiving a second construction path at runtime.
+
+The brand symbol, required-method list, and source validator remain module
+private. Consumers cannot import them to forge a bundle, bypass the factory, or
+couple to validation internals. Invalid role sources fail at the boundary with
+`STATE_STORE_ROLE_SOURCE_INVALID: missing function <method>`, which identifies
+the first missing or non-function capability.
+
 ## Invariants
 
 - `StateStoreRoleBindings` is a branded, frozen value produced only by
   `bindStateStoreRoles`.
+- The runtime export surface is exactly `bindStateStoreRoles`; role shapes are
+  type-only and validator internals are private.
 - Production consumers depend on the narrowed role they need:
   `IRunStateStoreRead`, `IRunStateStoreWrite`, `IRunStateStoreMaintenance`, or
   `IRunSnapshotStalenessQuery`.
@@ -45,7 +60,7 @@ query endpoint, and it does not change state-store persistence behavior.
 | ---------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | Concrete adapter exists                        | `buildProtectedRuntimeStorage` calls `bindStateStoreRoles` | Protected runtime receives explicit role bindings.                                   |
 | Reconciler runtime store exists                | `createRuntimeStores` calls `bindStateStoreRoles`          | Reconciler composition passes read/write roles to provider and maintenance services. |
-| Caller passes a partial source                 | `bindStateStoreRoles` validates required methods           | Factory throws `STATE_STORE_ROLE_SOURCE_INVALID`.                                    |
+| Caller passes a partial source                 | `bindStateStoreRoles` validates required methods           | Factory throws `STATE_STORE_ROLE_SOURCE_INVALID` naming the missing function.        |
 | Future code tries ad hoc bundle reconstruction | Architecture guard parses API source                       | Test fails before the drift becomes accepted composition style.                      |
 
 ## Consumers
@@ -66,7 +81,11 @@ It validates:
 
 - this component guide exists with API, invariants, transitions, consumers, and
   diagrams;
+- the guide documents export semantics for runtime export and type-only role
+  shapes;
 - `stateStoreRoles.ts` declares its owned concern at the module boundary;
+- `stateStoreRoles.test.ts` proves the runtime export surface, immutable role
+  bundle shape, and negative paths for missing or non-function role members;
 - only `buildProtectedRuntimeStorage.ts` and `intentReconcilerRuntime.ts`
   import `bindStateStoreRoles`;
 - API source does not rebuild the state-store aggregate by role intersection;
