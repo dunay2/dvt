@@ -1,9 +1,10 @@
 ---
 title: Web Auth, Project Onboarding, And Actionable Product Gaps
-status: Proposed
+status: Accepted
 date: 2026-05-01
 owner: Web / Product
 planning_type: proposal
+last_reviewed: 2026-05-15
 ---
 
 # Web Auth, Project Onboarding, And Actionable Product Gaps
