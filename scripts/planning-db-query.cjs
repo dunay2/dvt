@@ -1458,7 +1458,7 @@ function architectureFlowSelect() {
       step_count,
       created_at,
       updated_at
-    from ${architectureSchemaName}.component_flow_query`;
+    from ${architectureSchemaName}.component_flow_query flow`;
 }
 
 function architectureFlowStepSelect() {
@@ -2435,7 +2435,12 @@ async function readArchitectureFlowRows(client, filters = {}) {
   if (filters.component !== undefined && filters.component !== null && filters.component !== '') {
     params.push(filters.component);
     predicates.push(
-      `(entry_component_id = $${params.length} or exit_component_id = $${params.length})`
+      `(flow.entry_component_id = $${params.length} or flow.exit_component_id = $${params.length} or exists (
+        select 1
+        from ${architectureSchemaName}.component_flow_step_query step
+        where step.flow_id = flow.flow_id
+          and step.component_id = $${params.length}
+      ))`
     );
   }
 

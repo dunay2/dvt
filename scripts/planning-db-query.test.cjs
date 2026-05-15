@@ -11,6 +11,7 @@ const {
   buildArchitectureComponentRows,
   buildArchitectureDesignRows,
   buildArchitectureRelationRows,
+  readArchitectureFlowRows,
   buildComponentEngineeringComponentTreeRows,
   buildComponentEngineeringQualityRows,
   buildGovernanceComponentRows,
@@ -1682,6 +1683,32 @@ test('readArchitectureRelationRows queries the DB architecture relation graph vi
   assert.match(captured.sql, /status = \$3/);
   assert.match(captured.sql, /limit \$4/);
   assert.deepEqual(captured.params, ['SYS-RUNTIME-ENGINE-APPLICATION', 'calls', 'declared', 5]);
+});
+
+test('readArchitectureFlowRows filters component participation through entry, exit, and flow steps', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readArchitectureFlowRows(client, {
+    component: 'SYS-RUNTIME-ENGINE-STATE-STORE',
+    kind: 'command',
+    status: 'declared',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from architecture\.component_flow_query flow/);
+  assert.match(captured.sql, /flow\.entry_component_id = \$3/);
+  assert.match(captured.sql, /flow\.exit_component_id = \$3/);
+  assert.match(captured.sql, /from architecture\.component_flow_step_query step/);
+  assert.match(captured.sql, /step\.flow_id = flow\.flow_id/);
+  assert.match(captured.sql, /step\.component_id = \$3/);
+  assert.deepEqual(captured.params, ['command', 'declared', 'SYS-RUNTIME-ENGINE-STATE-STORE', 5]);
 });
 
 test('buildArchitecture rows expose Fowler-relevant authority columns', () => {
