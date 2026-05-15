@@ -1,0 +1,85 @@
+{
+  "panels": [
+    {
+      "panelKey": "ar-c2.start-run-latency",
+      "dashboardSystem": "grafana",
+      "environment": "prod",
+      "immutableDashboardReference": "grafana://uid/<uid>?panelId=<id>&version=<version>",
+      "queryExpression": "histogram_quantile(0.99, sum(rate(dvt_api_run_start_latency_seconds_bucket[5m])) by (le))",
+      "capturedAt": "2026-05-15T00:00:00Z",
+      "reviewer": "oncall@example.com"
+    },
+    {
+      "panelKey": "ar-c2.plan-compile-latency",
+      "dashboardSystem": "grafana",
+      "environment": "prod",
+      "immutableDashboardReference": "grafana://uid/<uid>?panelId=<id>&version=<version>",
+      "queryExpression": "histogram_quantile(0.99, sum(rate(dvt_api_plan_compile_latency_seconds_bucket[5m])) by (le))",
+      "capturedAt": "2026-05-15T00:00:00Z",
+      "reviewer": "oncall@example.com"
+    },
+    {
+      "panelKey": "ar-c2.snapshot-staleness-counts",
+      "dashboardSystem": "grafana",
+      "environment": "prod",
+      "immutableDashboardReference": "grafana://uid/<uid>?panelId=<id>&version=<version>",
+      "queryExpression": "sum by (result) (rate(dvt_api_run_status_snapshot_staleness_result_total[5m]))",
+      "capturedAt": "2026-05-15T00:00:00Z",
+      "reviewer": "oncall@example.com"
+    },
+    {
+      "panelKey": "ar-c2.snapshot-unknown-fallback",
+      "dashboardSystem": "grafana",
+      "environment": "prod",
+      "immutableDashboardReference": "grafana://uid/<uid>?panelId=<id>&version=<version>",
+      "queryExpression": "sum(rate(dvt_api_run_status_snapshot_staleness_fallback_unknown_total[5m]))",
+      "capturedAt": "2026-05-15T00:00:00Z",
+      "reviewer": "oncall@example.com"
+    },
+    {
+      "panelKey": "ar-c2.outbox-claimed-lag",
+      "dashboardSystem": "grafana",
+      "environment": "prod",
+      "immutableDashboardReference": "grafana://uid/<uid>?panelId=<id>&version=<version>",
+      "queryExpression": "max(dvt_outbox_oldest_claimed_lag_seconds)",
+      "capturedAt": "2026-05-15T00:00:00Z",
+      "reviewer": "oncall@example.com"
+    },
+    {
+      "panelKey": "ar-c2.outbox-drain-lag",
+      "dashboardSystem": "grafana",
+      "environment": "prod",
+      "immutableDashboardReference": "grafana://uid/<uid>?panelId=<id>&version=<version>",
+      "queryExpression": "histogram_quantile(0.95, sum(rate(dvt_delivery_outbox_drain_lag_seconds_bucket[5m])) by (le))",
+      "capturedAt": "2026-05-15T00:00:00Z",
+      "reviewer": "oncall@example.com"
+    },
+    {
+      "panelKey": "ar-c2.event-delivery-latency",
+      "dashboardSystem": "grafana",
+      "environment": "prod",
+      "immutableDashboardReference": "grafana://uid/<uid>?panelId=<id>&version=<version>",
+      "queryExpression": "histogram_quantile(0.95, sum(rate(dvt_delivery_event_delivery_latency_seconds_bucket[5m])) by (le))",
+      "capturedAt": "2026-05-15T00:00:00Z",
+      "reviewer": "oncall@example.com"
+    },
+    {
+      "panelKey": "ar-c2.run-status-stale-ratio",
+      "dashboardSystem": "grafana",
+      "environment": "prod",
+      "immutableDashboardReference": "grafana://uid/<uid>?panelId=<id>&version=<version>",
+      "queryExpression": "sum(rate(dvt_api_run_status_snapshot_staleness_result_total{result=\"stale\"}[15m])) / sum(rate(dvt_api_run_status_snapshot_staleness_result_total[15m]))",
+      "capturedAt": "2026-05-15T00:00:00Z",
+      "reviewer": "oncall@example.com"
+    },
+    {
+      "panelKey": "ar-c2.run-status-unknown-ratio",
+      "dashboardSystem": "grafana",
+      "environment": "prod",
+      "immutableDashboardReference": "grafana://uid/<uid>?panelId=<id>&version=<version>",
+      "queryExpression": "sum(rate(dvt_api_run_status_snapshot_staleness_result_total{result=\"unknown\"}[24h])) / sum(rate(dvt_api_run_status_snapshot_staleness_result_total[24h]))",
+      "capturedAt": "2026-05-15T00:00:00Z",
+      "reviewer": "oncall@example.com"
+    }
+  ]
+}

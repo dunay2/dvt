@@ -84,6 +84,23 @@ For `AR-C2-INV-1`, closure reviewers must run the collector in assertion mode:
 pnpm ops:ar-c2:evidence -- --require-dashboard-alert-evidence
 ```
 
+Recommended capture rail for immutable evidence (T2/T3):
+
+```bash
+$env:AR_C2_DASHBOARD_SNAPSHOT_FILE="docs/runbooks/ar-c2-dashboard-snapshot.template.json"
+$env:AR_C2_ALERT_SNAPSHOT_FILE="docs/runbooks/ar-c2-alert-snapshot.template.json"
+pnpm ops:ar-c2:evidence -- --require-dashboard-alert-evidence
+```
+
+Template inputs live in:
+
+- `docs/runbooks/ar-c2-dashboard-snapshot.template.json`
+- `docs/runbooks/ar-c2-alert-snapshot.template.json`
+
+The templates are bootstrap scaffolds only. Assertion mode rejects placeholder
+tokens (`pending`, `unknown`, `<uid>`, `example.com`, `template`) as
+incomplete immutable evidence.
+
 The command must exit zero before dashboard and alert evidence can be treated as
 complete. A non-zero result with `AR-C2_IMMUTABLE_EVIDENCE_MISSING` means AR-C2
 stays open even though the generated artifact remains useful review evidence.

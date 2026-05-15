@@ -374,6 +374,14 @@ export const CONTRACT_SCOPE_PATTERNS = {
     'package.json',
     'pnpm-lock.yaml',
   ],
+  hash_compare_relevant: [
+    'packages/@dvt/engine/test/contracts/**',
+    'docs/architecture/engine/contracts/**',
+    '.golden/**',
+    'scripts/compare-hashes.cjs',
+    'scripts/db-migrate.cjs',
+    '.github/workflows/contracts.yml',
+  ],
 };
 
 export const PR_QUALITY_SCOPE_PATTERNS = {
@@ -620,6 +628,7 @@ export function computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext
         scope.golden_relevant ||
         packageJsonChange?.contractCapabilitySensitive
       ),
+      hash_compare_relevant: Boolean(scope.hash_compare_relevant),
     };
   }
 
