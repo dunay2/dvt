@@ -38,7 +38,6 @@ introduce product behavior.
 ## Evidence Chain
 
 - `docs/planning/proposals/nice-to-have/frontend-and-ux/mvp-e1-f03-frontend-backend-contract-and-health-plan-20260404.md`
-- `docs/guides/top-app-bar-user-manual-20260404.md`
 - `docs/architecture/components/web/frontend-runtime-modes-user-manual.md`
 - `docs/architecture/components/web/app-bootstrap-screen-component.md`
 - `docs/planning/closeouts/20260514-f04-parent-acceptance-closeout.md`

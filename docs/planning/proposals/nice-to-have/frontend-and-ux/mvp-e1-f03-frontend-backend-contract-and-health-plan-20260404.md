@@ -310,9 +310,9 @@ Evidence:
 - `apps/web/src/app/Root.tsx`, `TopAppBar.tsx`, and `ShellHealthBanner.tsx`
   consume the single shell-health presentation seam.
 - `docs/architecture/components/web/frontend-runtime-modes-user-manual.md`,
-  `docs/architecture/components/web/app-bootstrap-screen-component.md`, and
-  `docs/guides/top-app-bar-user-manual-20260404.md` describe the implemented
-  checking, degraded, offline, retry, and startup behavior.
+  and `docs/architecture/components/web/app-bootstrap-screen-component.md`
+  describe the implemented checking, degraded, offline, retry, and startup
+  behavior.
 
 The remaining work item was not implementation. It was planning-state drift:
 the code and docs had moved past the proposal checklist, while the proposal and
