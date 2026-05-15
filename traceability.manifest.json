@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-05-14",
+  "generated": "2026-05-15",
   "repo": {
     "sha": "local"
   },
@@ -103,6 +103,7 @@
         "packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts",
         "packages/@dvt/adapter-temporal/test/integration.transformation.time-skipping.test.ts",
         "packages/@dvt/adapter-temporal/test/runPlanWorkflow.layers.order.test.ts",
+        "packages/@dvt/adapter-temporal/test/worker-scaling-strategy.architecture.test.ts",
         "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts",
         "packages/@dvt/adapter-temporal/test/workflowMapper.typecheck.ts"
       ],
@@ -251,6 +252,7 @@
         "packages/@dvt/adapter-temporal/test/dbt-package-extraction.architecture.test.ts",
         "packages/@dvt/adapter-temporal/test/helpers/contractFixtures.ts",
         "packages/@dvt/adapter-temporal/test/runPlanWorkflow.layers.order.test.ts",
+        "packages/@dvt/adapter-temporal/test/worker-scaling-strategy.architecture.test.ts",
         "packages/@dvt/adapter-temporal/test/workflow-execution-segment.test.ts",
         "packages/@dvt/adapter-temporal/test/workflowMapper.typecheck.ts",
         "packages/@dvt/engine/src/adapters/CircuitBreakingProviderAdapter.ts",

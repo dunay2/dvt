@@ -162,6 +162,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Turbo affected-task routing could diverge from required repository gates](R-20260423-RC-C2-TURBO-CI-GOVERNANCE.yaml)
 - [Turbo build cache or orchestration drift could hide missing dependency rebuilds](R-20260418-TURBO-BUILD-ORCHESTRATION-CACHE-DRIFT.yaml)
 - [Web workspace file-missing handling depends on a future backend canonical reason](R-20260411-WEB-WORKSPACE-FILE-NOT-FOUND-CONTRACT-GAP.yaml)
+- [Worker scaling docs can be mistaken for automated 1000+ tenant provisioning](R-20260514-AR-D3-WORKER-SCALING.yaml)
 - [WorkflowEngine canonical docs can drift back to retrocompatibility posture](R-20260514-WE-HX-0-HARDCUT-CANONICAL-MAP.yaml)
 - [WorkflowEngine external seam ownership can drift back into broad ports](R-20260429-WE-HX-1-BOUNDARY-OWNERSHIP.yaml)
 - [WorkflowEngine facade use-case drift can reintroduce orchestration into the facade](R-20260430-WE-HX-2-FACADE-USE-CASES.yaml)

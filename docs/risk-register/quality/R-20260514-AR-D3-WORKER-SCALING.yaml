@@ -1,0 +1,18 @@
+---
+id: R-20260514-AR-D3-WORKER-SCALING
+title: Worker scaling docs can be mistaken for automated 1000+ tenant provisioning
+status: Open
+date: 2026-05-14
+owners:
+  - '@dvt/adapter-temporal'
+severity: Low
+probability: Medium
+---
+summary: >
+  AR-D3 closes the worker scaling strategy and operator contract, but it does not implement
+  tenant-to-queue assignment automation, KEDA manifests, or production load evidence for 1000+ live
+  tenant queues.
+mitigation: >
+  The strategy and runbook explicitly state that the global shared pool is not implemented and that
+  automated 1000+ tenant provisioning is future work. The architecture test guards those semantics.
+next_review: 2026-06-14

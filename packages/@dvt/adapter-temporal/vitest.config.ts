@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
 const repoPackageRoot = path.dirname(fileURLToPath(import.meta.url));
+const adapterTemporalSourceEntry = path.resolve(repoPackageRoot, 'src/index.ts');
 const adapterPostgresDistEntry = path.resolve(repoPackageRoot, '../adapter-postgres/dist/index.js');
 const cryptoDistEntry = path.resolve(repoPackageRoot, '../canonical/dist/index.js');
 const temporalDbtPluginSourceEntry = path.resolve(
@@ -21,6 +22,9 @@ export default defineConfig({
       // DBT fixture tests must exercise the public crypto package boundary rather than
       // reaching into sibling package sources.
       '@dvt/crypto': cryptoDistEntry,
+      // DBT plugin tests load the extracted plugin from source; resolve the plugin's
+      // adapter public-boundary import to the same source graph under test.
+      '@dvt/adapter-temporal': adapterTemporalSourceEntry,
       '@dvt/temporal-dbt-plugin': temporalDbtPluginSourceEntry,
     },
   },

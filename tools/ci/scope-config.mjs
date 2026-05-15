@@ -51,6 +51,7 @@ function readWorkflowScopePolicy() {
     'workspace_traceability_service',
     'workspace_adapter_postgres',
     'workspace_adapter_temporal',
+    'workspace_temporal_dbt_plugin',
     'workspace_cli',
   ];
 
@@ -214,6 +215,12 @@ export const WORKSPACE_ENTRIES = [
     pkg: '@dvt/adapter-temporal',
     patterns: WORKFLOW_SCOPE_POLICY.workspace_adapter_temporal,
   },
+  {
+    key: 'temporal_dbt_plugin',
+    name: 'temporal-dbt-plugin',
+    pkg: '@dvt/temporal-dbt-plugin',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_temporal_dbt_plugin,
+  },
   { key: 'cli', name: 'cli', pkg: '@dvt/cli', patterns: WORKFLOW_SCOPE_POLICY.workspace_cli },
 ];
 
@@ -321,6 +328,7 @@ export const TEST_SCOPE_PATTERNS = {
   run_domain: ['packages/@dvt/run-domain/**'],
   state_store: ['packages/@dvt/state-store/**'],
   traceability_service: ['packages/@dvt/traceability-service/**'],
+  temporal_dbt_plugin: ['packages/@dvt/temporal-dbt-plugin/**'],
   root_config: TEST_ROOT_BUILD_PATTERNS,
   root_build_sensitive: TEST_ROOT_BUILD_PATTERNS,
   postgres_capability_changed: ADAPTER_POSTGRES_RELEVANT_PATTERNS,
