@@ -238,6 +238,15 @@ test('PR quality gate is the single remote owner for ADR-0000 traceability', () 
   assert.equal(countWorkflowCommand(ciWorkflow, 'pnpm traceability:adr0'), 0);
 });
 
+test('release workflow stays action-only until it needs repository tooling', () => {
+  const releaseWorkflow = readFileSync('.github/workflows/release.yml', 'utf8');
+
+  assertWorkflowContains(releaseWorkflow, 'googleapis/release-please-action@');
+  assert.doesNotMatch(releaseWorkflow, /actions\/checkout/u);
+  assert.doesNotMatch(releaseWorkflow, /\.\/\.github\/actions\/setup-node-pnpm/u);
+  assert.doesNotMatch(releaseWorkflow, /\bpnpm\s+/u);
+});
+
 test('security and nightly workflows stay wired to pinned actions and failure notification', () => {
   const dependencyReview = readFileSync('.github/workflows/dependency-review.yml', 'utf8');
   const codeql = readFileSync('.github/workflows/codeql.yml', 'utf8');
