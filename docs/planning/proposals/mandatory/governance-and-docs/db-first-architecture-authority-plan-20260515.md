@@ -1087,6 +1087,189 @@ Command invariants:
 - Existing `design_id` values are rejected unless the operation is an exact
   idempotent replay.
 
+### Phase 3A: Component Graph Command Rails
+
+Before the engine pilot can seed rows, architecture components and graph edges
+need their own command rails. Direct SQL inserts, Markdown-only component
+tables, and one-off migration seed scripts are not acceptable because they
+would recreate the hidden-authority drift this plan is removing.
+
+This phase adds two write rails:
+
+- `RecordArchitectureComponent`
+- `RecordArchitectureRelation`
+
+Both rails write through the existing planning DB operator adapter and the
+existing `architecture.design_operations` ledger. The ledger is design-scoped,
+so it should be widened with new operation types instead of creating a second
+audit table.
+
+```mermaid
+flowchart LR
+  Design["architecture.design<br/>review/proposed authority"]
+  Scope["architecture.design_scope<br/>authorized subjects"]
+  ComponentCommand["RecordArchitectureComponent"]
+  RelationCommand["RecordArchitectureRelation"]
+  Component["architecture.component"]
+  Responsibility["architecture.component_responsibility"]
+  Relation["architecture.component_relation"]
+  Query["architecture.component_*_query"]
+  EnginePilot["Engine pilot"]
+
+  Design --> Scope
+  Scope --> ComponentCommand
+  Scope --> RelationCommand
+  ComponentCommand --> Component
+  ComponentCommand --> Responsibility
+  RelationCommand --> Relation
+  Component --> Query
+  Responsibility --> Query
+  Relation --> Query
+  Query --> EnginePilot
+```
+
+The mature-system posture is a property graph plus typed metadata:
+
+- hierarchy is represented by `parent_component_id` and by explicit
+  `contains` relations where the relation itself matters;
+- collaboration is represented by `component_relation`;
+- IO, ports, tests, observability, contracts, risks, and decisions remain typed
+  subjects instead of being hidden inside a component metadata blob;
+- command input is source-hash guarded so a stale design document cannot keep
+  mutating architecture rows.
+
+#### `RecordArchitectureComponent`
+
+Public API:
+
+```text
+pnpm planning:db:operate architecture-component record \
+  --design <DESIGN-ID> \
+  --component <COMPONENT-ID> \
+  --name <component name> \
+  --kind <package|module|port|adapter|service|ui-view|workflow|dbt-model|api> \
+  --layer <domain|application|adapter|ui|infra|contracts> \
+  --owner <owner> \
+  --repo-path <path-or-prefix> \
+  --public-contract <summary> \
+  --runtime <runtime-or-none> \
+  --criticality <low|medium|high|critical> \
+  --status <proposed|review> \
+  --parent <optional parent component id> \
+  --responsibility <responsibility_id|responsibility|reason_to_change|ddd_owner> \
+  --source-ref <governing source> \
+  --source-content-sha256 <64 hex chars> \
+  --actor <actor>
+```
+
+Command invariants:
+
+- `--design` must reference an existing `architecture.design` row.
+- The design must be `proposed` or `review`; this command records intent, not
+  implementation completion.
+- The design must authorize
+  `component:<COMPONENT-ID>:may_create` or
+  `component:<COMPONENT-ID>:may_update`.
+- Direct `approved`, `implemented`, `deprecated`, or `drift` component status is
+  rejected by this command until approval/evidence rails exist.
+- `kind`, `layer`, `criticality`, and `status` must use the existing
+  architecture table taxonomies.
+- `repo_path`, `owner`, and `public_contract` are required because a component
+  without ownership, location, or API is an anemic inventory row.
+- At least one responsibility is required. A component with no reason to change
+  cannot be reviewed from a Fowler/SOLID perspective.
+- `parent_component_id` must reference an existing component when supplied and
+  cannot equal the component being recorded.
+- Replays with the same idempotency key must match the same source hash and
+  payload.
+
+#### `RecordArchitectureRelation`
+
+Public API:
+
+```text
+pnpm planning:db:operate architecture-relation record \
+  --design <DESIGN-ID> \
+  --relation <RELATION-ID> \
+  --source <SOURCE-COMPONENT-ID> \
+  --target <TARGET-COMPONENT-ID> \
+  --type <contains|depends_on|calls|publishes|consumes|reads|writes|implements_port|exposes_api|transforms|guards> \
+  --direction <outbound|inbound|bidirectional> \
+  --sync-async <sync|async|batch|build_time> \
+  --failure-mode <failure mode> \
+  --authorization-scope <scope or none> \
+  --contract <optional contract id> \
+  --source-ref <governing source> \
+  --source-content-sha256 <64 hex chars> \
+  --actor <actor>
+```
+
+Command invariants:
+
+- `--design` must reference an existing `architecture.design` row.
+- The design must authorize `relation:<RELATION-ID>:may_create` or
+  `relation:<RELATION-ID>:may_update`.
+- The design must also authorize both endpoint components with
+  `component:<COMPONENT-ID>:may_reference`, unless the same design is creating
+  that endpoint component.
+- Source and target components must already exist before a relation is written.
+- Self-relations are rejected; composition is represented by parent ids or
+  explicit `contains` edges between different components.
+- `failure_mode` and `authorization_scope` cannot be empty. Mature relation
+  reviews need to know how the edge fails and what permission boundary it
+  crosses.
+- `contract_id`, when supplied, must reference an existing architecture
+  contract.
+- Replays with the same idempotency key must match the same source hash and
+  payload.
+
+#### Failure Codes
+
+The implementation should expose stable error messages that can later be
+promoted to enforcement violation codes:
+
+- `ARCH-COMPONENT-DESIGN-MISSING`: no design row exists for the command.
+- `ARCH-COMPONENT-DESIGN-SCOPE-MISSING`: design scope does not authorize the
+  component or relation.
+- `ARCH-COMPONENT-SEMANTICS-MISSING`: required owner, path, public contract, or
+  responsibility is empty.
+- `ARCH-COMPONENT-TAXONOMY-INVALID`: kind, layer, status, or criticality is
+  outside the accepted taxonomy.
+- `ARCH-RELATION-ENDPOINT-MISSING`: source or target component does not exist.
+- `ARCH-RELATION-ENDPOINT-SCOPE-MISSING`: design does not authorize endpoint
+  participation.
+- `ARCH-RELATION-SEMANTICS-MISSING`: failure mode or authorization scope is
+  empty.
+- `ARCH-OPERATION-IDEMPOTENCY-MISMATCH`: same key replayed with different
+  payload or source hash.
+
+#### Red/Green Plan
+
+- `architecture-component-command-parser`:
+  - red: `planning:db:operate architecture-component record` is rejected as an
+    unknown resource.
+  - green: parser returns a `architecture_component_record` command with typed
+    fields and normalized responsibilities.
+- `architecture-relation-command-parser`:
+  - red: `planning:db:operate architecture-relation record` is rejected as an
+    unknown resource.
+  - green: parser returns a `architecture_relation_record` command with typed
+    endpoints and relation semantics.
+- `architecture-component-operation-ledger`:
+  - red: migration tests prove `architecture.design_operations.operation_type`
+    does not admit component/relation operations.
+  - green: migration widens the check constraint without deleting or rewriting
+    existing operation rows.
+- `architecture-component-design-scope-guard`:
+  - red: planner accepts a component not covered by `architecture.design_scope`.
+  - green: planner rejects missing design, wrong lifecycle, missing scope, stale
+    source hash, and duplicate mismatched idempotency.
+- `architecture-relation-endpoint-guard`:
+  - red: planner accepts a relation whose endpoint components are absent or not
+    referenced by the design.
+  - green: planner rejects absent endpoints, self-relations, missing endpoint
+    scope, and missing relation semantics.
+
 ### Phase 4: Engine Pilot
 
 Seed only the minimum `engine` design rows needed to prove the model:
