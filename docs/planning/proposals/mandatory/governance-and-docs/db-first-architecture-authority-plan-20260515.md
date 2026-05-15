@@ -248,7 +248,7 @@ The design table is the aggregate root for a governed architecture slice.
 | `status`        | enum        | `proposed`, `review`, `approved`, `implementing`, `implemented`, `drift` |
 | `rationale`     | text        | Why this design exists                                                   |
 | `fowler_signal` | enum        | Primary Fowler opportunity type                                          |
-| `rail_ref`      | text        | Command/query rail or `none - architecture-authority-only`               |
+| `rail_ref`      | text        | Explicit command/query rail that governs the design                      |
 | `approved_at`   | timestamptz | Approval timestamp, null until approved                                  |
 | `supersedes_id` | text FK     | Previous design, when replacing a stale design                           |
 
@@ -269,6 +269,26 @@ Design scope links an approved design to authorized subjects and file surfaces.
 
 This table is what lets CI answer: "is this changed file or relation inside the
 approved design?".
+
+### `architecture.design_operations`
+
+The design operation ledger records command execution. It is not the aggregate;
+it is the audit and idempotency boundary for writes that change the aggregate.
+
+| Column                  | Type    | Meaning                                                       |
+| ----------------------- | ------- | ------------------------------------------------------------- |
+| `operation_id`          | text PK | Durable command execution identity                            |
+| `idempotency_key`       | text    | Unique replay key for one logical command                     |
+| `operation_type`        | enum    | `architecture_design_create` in the first command slice       |
+| `actor`                 | text    | Maintainer or automation identity that executed the command   |
+| `design_id`             | text FK | Design aggregate affected by the command                      |
+| `source_ref`            | text    | Governing doc, proposal, ADR, PR, or DB source behind command |
+| `source_content_sha256` | text    | Source hash used to reject stale idempotent replays           |
+| `payload`               | jsonb   | Canonical command payload for replay comparison               |
+
+Operation rows make the Fowler correction explicit: design authority is a
+behavioral lifecycle, not a raw table edit. A repeated idempotency key is valid
+only when the actor, design id, source ref, source hash, and payload all match.
 
 ### `architecture.component`
 
@@ -998,6 +1018,40 @@ Add command rails for creating and approving design authority:
 - `ReconcileArchitectureDrift`
 
 Commands must be idempotent, audited, and source-hash guarded.
+
+`CreateArchitectureDesign` lands first. It creates only a proposed or review
+design with explicit scope rows. It does not approve implementation, because
+approval is a separate lifecycle transition with its own command rail.
+
+Public API:
+
+```text
+pnpm planning:db:operate architecture-design create \
+  --design <DESIGN-ID> \
+  --work-item <TASK-OR-PROPOSAL-ID> \
+  --title <short title> \
+  --owner <owner> \
+  --rationale <why this design exists> \
+  --rail-ref <governing command/query rail> \
+  --scope <subject_kind:subject_id:scope_kind[:required|optional]> \
+  --source-ref <governing source> \
+  --source-content-sha256 <64 hex chars> \
+  --actor <actor>
+```
+
+Command invariants:
+
+- Status is limited to `proposed` or `review`; direct approval is rejected.
+- At least one `--scope` is required.
+- `--rail-ref` is required and cannot use `none`, `n/a`, or
+  `not-applicable`; design authority must point at an explicit command or
+  query rail.
+- Scope values must use the existing `architecture.design_scope` subject and
+  scope taxonomies.
+- Replays with the same idempotency key must match the same source hash and
+  payload.
+- Existing `design_id` values are rejected unless the operation is an exact
+  idempotent replay.
 
 ### Phase 4: Engine Pilot
 

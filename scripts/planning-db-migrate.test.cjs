@@ -1075,3 +1075,32 @@ test('tracked migrations expose DB-first architecture authority query surfaces',
   assert.match(authorityQueryMigration.sql, /required_evidence_missing/);
   assert.match(authorityQueryMigration.sql, /health_check_failed/);
 });
+
+test('tracked migrations include architecture design command audit rail', () => {
+  const migrations = readMigrationFiles();
+  const designCommandMigration = migrations.find(
+    (migration) => migration.fileName === '044_architecture_design_command_rail.sql'
+  );
+
+  assert.ok(designCommandMigration);
+  assert.match(
+    designCommandMigration.sql,
+    /create table if not exists architecture\.design_operations/
+  );
+  assert.match(designCommandMigration.sql, /operation_type in \('architecture_design_create'\)/);
+  assert.match(designCommandMigration.sql, /idempotency_key text not null unique/);
+  assert.match(designCommandMigration.sql, /source_content_sha256/);
+  assert.match(designCommandMigration.sql, /references architecture\.design\(design_id\)/);
+});
+
+test('tracked migrations require explicit architecture design rail references', () => {
+  const migrations = readMigrationFiles();
+  const explicitRailMigration = migrations.find(
+    (migration) => migration.fileName === '045_architecture_design_explicit_rail_ref.sql'
+  );
+
+  assert.ok(explicitRailMigration);
+  assert.match(explicitRailMigration.sql, /alter column rail_ref drop default/);
+  assert.match(explicitRailMigration.sql, /architecture_design_explicit_rail_ref_check/);
+  assert.match(explicitRailMigration.sql, /none - architecture-authority-only/);
+});

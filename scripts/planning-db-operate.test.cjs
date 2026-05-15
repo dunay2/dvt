@@ -2,16 +2,19 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
+  assertArchitectureDesignIdempotentReplayMatches,
   assertDocsResolutionIdempotentReplayMatches,
   assertIdempotentReplayMatches,
   buildAuditRows,
   buildDocsResolutionAuditRows,
   materializeDocsResolutionCommand,
   parseArgs,
+  planArchitectureDesignCreateOperation,
   planComponentCreateOperation,
   planDocsResolutionOperation,
   planTaskDefinitionOperation,
   planTaskLocalOperation,
+  validateArchitectureDesignStatus,
   validateComponentStatus,
   validateTaskStatus,
 } = require('./planning-db-operate.cjs');
@@ -415,6 +418,294 @@ test('validateComponentStatus accepts governance unit statuses only', () => {
   assert.throws(
     () => validateComponentStatus('in_progress'),
     /Invalid governance component status "in_progress"/
+  );
+});
+
+test('parseArgs builds an architecture design create command with scoped authority', () => {
+  const command = parseArgs([
+    'architecture-design',
+    'create',
+    '--design',
+    'ENGINE-ARCHITECTURE-AUTHORITY-PILOT',
+    '--work-item',
+    'EA-20260429-05',
+    '--title',
+    'Engine public API architecture authority',
+    '--owner',
+    'Architecture',
+    '--status',
+    'review',
+    '--rationale',
+    'Make the engine public API design explicit before implementation.',
+    '--fowler-signal',
+    'published_language',
+    '--rail-ref',
+    'CreateArchitectureDesign',
+    '--scope',
+    'component:SYS-RUNTIME-ENGINE-CORE:may_update:required',
+    '--scope',
+    'path:packages/@dvt/engine/**:may_update:required',
+    '--source-ref',
+    'docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+    '--idempotency-key',
+    'codex-create-engine-authority',
+  ]);
+
+  assert.equal(command.kind, 'architecture_design_create');
+  assert.equal(command.designId, 'ENGINE-ARCHITECTURE-AUTHORITY-PILOT');
+  assert.equal(command.status, 'review');
+  assert.equal(command.sourceContentSha256, 'e'.repeat(64));
+  assert.deepEqual(command.scopes, [
+    {
+      subjectKind: 'component',
+      subjectId: 'SYS-RUNTIME-ENGINE-CORE',
+      scopeKind: 'may_update',
+      required: true,
+    },
+    {
+      subjectKind: 'path',
+      subjectId: 'packages/@dvt/engine/**',
+      scopeKind: 'may_update',
+      required: true,
+    },
+  ]);
+});
+
+test('planArchitectureDesignCreateOperation emits design scope and audit rows', () => {
+  const now = new Date('2026-05-15T10:00:00.000Z');
+  const command = parseArgs([
+    'architecture-design',
+    'create',
+    '--design',
+    'ENGINE-ARCHITECTURE-AUTHORITY-PILOT',
+    '--work-item',
+    'EA-20260429-05',
+    '--title',
+    'Engine public API architecture authority',
+    '--owner',
+    'Architecture',
+    '--rationale',
+    'Make the engine public API design explicit before implementation.',
+    '--fowler-signal',
+    'published_language',
+    '--rail-ref',
+    'CreateArchitectureDesign',
+    '--scope',
+    'component:SYS-RUNTIME-ENGINE-CORE:may_update:required',
+    '--source-ref',
+    'docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  const planned = planArchitectureDesignCreateOperation({
+    command,
+    existingDesign: null,
+    operationId: 'op-architecture-design-create',
+    now,
+  });
+
+  assert.equal(planned.design.designId, 'ENGINE-ARCHITECTURE-AUTHORITY-PILOT');
+  assert.equal(planned.design.status, 'proposed');
+  assert.equal(planned.design.approvedAt, null);
+  assert.equal(planned.scopes.length, 1);
+  assert.equal(planned.scopes[0].subjectKind, 'component');
+  assert.equal(planned.audit.operationType, 'architecture_design_create');
+  assert.equal(planned.audit.designId, 'ENGINE-ARCHITECTURE-AUTHORITY-PILOT');
+  assert.equal(planned.audit.sourceContentSha256, 'e'.repeat(64));
+  assert.deepEqual(planned.audit.payload.scopes, command.scopes);
+});
+
+test('architecture design create rejects duplicates, weak scope, and approval bypass', () => {
+  assert.throws(
+    () =>
+      parseArgs([
+        'architecture-design',
+        'create',
+        '--design',
+        'ENGINE-ARCHITECTURE-AUTHORITY-PILOT',
+        '--work-item',
+        'EA-20260429-05',
+        '--title',
+        'Engine public API architecture authority',
+        '--owner',
+        'Architecture',
+        '--status',
+        'approved',
+        '--rationale',
+        'Invalid direct approval.',
+        '--rail-ref',
+        'CreateArchitectureDesign',
+        '--scope',
+        'component:SYS-RUNTIME-ENGINE-CORE:may_update:required',
+        '--source-ref',
+        'docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md',
+        '--source-content-sha256',
+        'e'.repeat(64),
+        '--actor',
+        'codex',
+      ]),
+    /CreateArchitectureDesign starts in proposed or review/
+  );
+
+  assert.throws(
+    () =>
+      parseArgs([
+        'architecture-design',
+        'create',
+        '--design',
+        'ENGINE-ARCHITECTURE-AUTHORITY-PILOT',
+        '--work-item',
+        'EA-20260429-05',
+        '--title',
+        'Engine public API architecture authority',
+        '--owner',
+        'Architecture',
+        '--rationale',
+        'Missing scope.',
+        '--rail-ref',
+        'CreateArchitectureDesign',
+        '--source-ref',
+        'docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md',
+        '--source-content-sha256',
+        'e'.repeat(64),
+        '--actor',
+        'codex',
+      ]),
+    /CreateArchitectureDesign requires at least one --scope/
+  );
+
+  assert.throws(
+    () =>
+      parseArgs([
+        'architecture-design',
+        'create',
+        '--design',
+        'ENGINE-ARCHITECTURE-AUTHORITY-PILOT',
+        '--work-item',
+        'EA-20260429-05',
+        '--title',
+        'Engine public API architecture authority',
+        '--owner',
+        'Architecture',
+        '--rationale',
+        'Implicit rail authority.',
+        '--rail-ref',
+        'none',
+        '--scope',
+        'component:SYS-RUNTIME-ENGINE-CORE:may_update:required',
+        '--source-ref',
+        'docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md',
+        '--source-content-sha256',
+        'e'.repeat(64),
+        '--actor',
+        'codex',
+      ]),
+    /requires an explicit governing command or query rail reference/
+  );
+
+  assert.throws(
+    () =>
+      planArchitectureDesignCreateOperation({
+        command: parseArgs([
+          'architecture-design',
+          'create',
+          '--design',
+          'ENGINE-ARCHITECTURE-AUTHORITY-PILOT',
+          '--work-item',
+          'EA-20260429-05',
+          '--title',
+          'Engine public API architecture authority',
+          '--owner',
+          'Architecture',
+          '--rationale',
+          'Make the engine public API design explicit before implementation.',
+          '--rail-ref',
+          'CreateArchitectureDesign',
+          '--scope',
+          'component:SYS-RUNTIME-ENGINE-CORE:may_update:required',
+          '--source-ref',
+          'docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md',
+          '--source-content-sha256',
+          'e'.repeat(64),
+          '--actor',
+          'codex',
+        ]),
+        existingDesign: { design_id: 'ENGINE-ARCHITECTURE-AUTHORITY-PILOT' },
+        operationId: 'op-duplicate-design',
+        now: new Date('2026-05-15T10:00:00.000Z'),
+      }),
+    /Architecture design ENGINE-ARCHITECTURE-AUTHORITY-PILOT already exists/
+  );
+});
+
+test('architecture design idempotency rejects stale source-hash replays', () => {
+  const command = parseArgs([
+    'architecture-design',
+    'create',
+    '--design',
+    'ENGINE-ARCHITECTURE-AUTHORITY-PILOT',
+    '--work-item',
+    'EA-20260429-05',
+    '--title',
+    'Engine public API architecture authority',
+    '--owner',
+    'Architecture',
+    '--rationale',
+    'Make the engine public API design explicit before implementation.',
+    '--rail-ref',
+    'CreateArchitectureDesign',
+    '--scope',
+    'component:SYS-RUNTIME-ENGINE-CORE:may_update:required',
+    '--source-ref',
+    'docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+    '--idempotency-key',
+    'create-design',
+  ]);
+
+  assert.throws(
+    () =>
+      assertArchitectureDesignIdempotentReplayMatches(
+        {
+          operation_type: 'architecture_design_create',
+          actor: 'codex',
+          design_id: 'ENGINE-ARCHITECTURE-AUTHORITY-PILOT',
+          source_ref:
+            'docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md',
+          source_content_sha256: 'f'.repeat(64),
+          payload: {
+            designId: 'ENGINE-ARCHITECTURE-AUTHORITY-PILOT',
+            workItemId: 'EA-20260429-05',
+            title: 'Engine public API architecture authority',
+            owner: 'Architecture',
+            status: 'proposed',
+            rationale: 'Make the engine public API design explicit before implementation.',
+            fowlerSignal: 'none',
+            railRef: 'CreateArchitectureDesign',
+            scopes: command.scopes,
+          },
+        },
+        command
+      ),
+    /already completed for source hash/
+  );
+});
+
+test('validateArchitectureDesignStatus accepts design lifecycle statuses only', () => {
+  assert.equal(validateArchitectureDesignStatus('review'), 'review');
+  assert.throws(
+    () => validateArchitectureDesignStatus('queued'),
+    /Invalid architecture design status "queued"/
   );
 });
 

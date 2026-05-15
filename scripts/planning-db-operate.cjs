@@ -15,6 +15,47 @@ const { runMigrations, schemaName } = require('./planning-db-migrate.cjs');
 
 const allowedStatuses = new Set(['queued', 'in_progress', 'blocked', 'review', 'done']);
 const allowedDocsResolutionStatuses = new Set(['resolved', 'accepted', 'ignored', 'linked']);
+const allowedArchitectureDesignStatuses = new Set([
+  'proposed',
+  'review',
+  'approved',
+  'implementing',
+  'implemented',
+  'drift',
+  'superseded',
+]);
+const allowedArchitectureDesignCreateStatuses = new Set(['proposed', 'review']);
+const allowedArchitectureFowlerSignals = new Set([
+  'anemic_domain',
+  'boundary_drift',
+  'feature_envy',
+  'hidden_authority',
+  'primitive_obsession',
+  'published_language',
+  'responsibility_overload',
+  'evolutionary_architecture',
+  'none',
+]);
+const allowedArchitectureScopeSubjectKinds = new Set([
+  'component',
+  'relation',
+  'contract',
+  'flow',
+  'check',
+  'path',
+  'query',
+  'decision',
+  'evidence',
+  'risk',
+  'test',
+]);
+const allowedArchitectureScopeKinds = new Set([
+  'may_create',
+  'may_update',
+  'may_delete',
+  'may_reference',
+  'must_prove',
+]);
 const allowedComponentStatuses = new Set([
   'canonical',
   'review',
@@ -42,6 +83,7 @@ const componentListOptionKeys = new Set([
   'consumer',
   'governance',
   'fowler-signal',
+  'scope',
 ]);
 
 function databaseUrl() {
@@ -93,6 +135,59 @@ function validateDocsResolutionStatus(value) {
   return value;
 }
 
+function validateArchitectureDesignStatus(value) {
+  if (!allowedArchitectureDesignStatuses.has(value)) {
+    throw new Error(
+      `Invalid architecture design status "${value}". Expected: ${[
+        ...allowedArchitectureDesignStatuses,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateArchitectureDesignCreateStatus(value) {
+  const status = validateArchitectureDesignStatus(value);
+  if (!allowedArchitectureDesignCreateStatuses.has(status)) {
+    throw new Error('CreateArchitectureDesign starts in proposed or review status.');
+  }
+
+  return status;
+}
+
+function validateArchitectureFowlerSignal(value) {
+  if (!allowedArchitectureFowlerSignals.has(value)) {
+    throw new Error(
+      `Invalid architecture Fowler signal "${value}". Expected: ${[
+        ...allowedArchitectureFowlerSignals,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateArchitectureRailRef(value) {
+  const normalized = normalizeOptionalText(value);
+  if (!normalized || /^(none|n\/a|not-applicable)$/i.test(normalized)) {
+    throw new Error(
+      'CreateArchitectureDesign requires an explicit governing command or query rail reference.'
+    );
+  }
+
+  return normalized;
+}
+
+function validateSha256(value, optionName) {
+  const normalized = String(value || '').trim();
+  if (!/^[a-f0-9]{64}$/.test(normalized)) {
+    throw new Error(`Invalid --${optionName} "${value}". Expected 64 lowercase hex characters.`);
+  }
+
+  return normalized;
+}
+
 function validateComponentStatus(value) {
   if (!allowedComponentStatuses.has(value)) {
     throw new Error(
@@ -111,6 +206,15 @@ function validateComponentId(value, optionName = 'component') {
     throw new Error(
       `Invalid --${optionName} "${value}". Expected an uppercase SYS-* governance unit id.`
     );
+  }
+
+  return normalized;
+}
+
+function validateArchitectureDesignId(value) {
+  const normalized = String(value || '').trim();
+  if (!/^[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(normalized)) {
+    throw new Error(`Invalid --design "${value}". Expected an uppercase architecture design id.`);
   }
 
   return normalized;
@@ -273,6 +377,23 @@ function operationPayload(command) {
     };
   }
 
+  if (command.kind === 'architecture_design_create') {
+    return {
+      designId: command.designId,
+      workItemId: command.workItemId,
+      title: command.title,
+      owner: command.owner,
+      status: command.status,
+      rationale: command.rationale,
+      fowlerSignal: command.fowlerSignal,
+      railRef: command.railRef,
+      supersedesId: normalizeOptionalText(command.supersedesId),
+      sourceRef: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
+      scopes: command.scopes || [],
+    };
+  }
+
   if (command.kind === 'component_create') {
     return {
       componentId: command.componentId,
@@ -333,6 +454,19 @@ function defaultIdempotencyKey(command) {
       command.actor || 'anonymous',
       command.componentId || 'all',
       command.expectedRevision ?? 'latest',
+      crypto
+        .createHash('sha256')
+        .update(canonicalJson(operationPayload(command)))
+        .digest('hex')
+        .slice(0, 16),
+    ].join(':');
+  }
+
+  if (command.kind === 'architecture_design_create') {
+    return [
+      command.kind,
+      command.actor || 'anonymous',
+      command.designId || 'all',
       crypto
         .createHash('sha256')
         .update(canonicalJson(operationPayload(command)))
@@ -471,6 +605,34 @@ function assertComponentIdempotentReplayMatches(existingOperation, command) {
   if (!sameOperation) {
     throw new Error(
       `Idempotency key "${command.idempotencyKey}" already belongs to a different governance component operation.`
+    );
+  }
+}
+
+function assertArchitectureDesignIdempotentReplayMatches(existingOperation, command) {
+  const expectedPayload = operationPayload(command);
+  const existingPayload = normalizeExistingPayload(existingOperation.payload);
+  const existingSourceContentSha256 = normalizeOptionalText(
+    existingOperation.source_content_sha256 ?? existingOperation.sourceContentSha256
+  );
+  const sameOperation =
+    existingOperation.operation_type === command.kind &&
+    existingOperation.actor === command.actor &&
+    existingOperation.design_id === command.designId &&
+    existingOperation.source_ref === command.sourceRef &&
+    canonicalJson(existingPayload) === canonicalJson(expectedPayload);
+
+  if (existingSourceContentSha256 !== command.sourceContentSha256) {
+    throw new Error(
+      `Idempotency key "${command.idempotencyKey}" already completed for source hash ${
+        existingSourceContentSha256 ?? 'unknown'
+      }, but current source hash is ${command.sourceContentSha256}. Use a new idempotency key for a new architecture design operation.`
+    );
+  }
+
+  if (!sameOperation) {
+    throw new Error(
+      `Idempotency key "${command.idempotencyKey}" already belongs to a different architecture design operation.`
     );
   }
 }
@@ -628,6 +790,112 @@ function normalizeListOption(value) {
   return values.map((item) => String(item).trim()).filter(Boolean);
 }
 
+function parseArchitectureDesignScope(value) {
+  const parts = String(value || '').split(':');
+  if (parts.length < 3 || parts.length > 4) {
+    throw new Error(
+      `Invalid --scope "${value}". Expected subject_kind:subject_id:scope_kind[:required|optional].`
+    );
+  }
+
+  const [subjectKind, subjectId, scopeKind, requiredFlag = 'required'] = parts.map((part) =>
+    part.trim()
+  );
+
+  if (!allowedArchitectureScopeSubjectKinds.has(subjectKind)) {
+    throw new Error(
+      `Invalid architecture design scope subject kind "${subjectKind}". Expected: ${[
+        ...allowedArchitectureScopeSubjectKinds,
+      ].join(', ')}.`
+    );
+  }
+
+  if (!subjectId) {
+    throw new Error(`Invalid --scope "${value}". Scope subject id is required.`);
+  }
+
+  if (!allowedArchitectureScopeKinds.has(scopeKind)) {
+    throw new Error(
+      `Invalid architecture design scope kind "${scopeKind}". Expected: ${[
+        ...allowedArchitectureScopeKinds,
+      ].join(', ')}.`
+    );
+  }
+
+  const normalizedRequiredFlag = requiredFlag.toLowerCase();
+  if (!['required', 'optional', 'true', 'false'].includes(normalizedRequiredFlag)) {
+    throw new Error(
+      `Invalid --scope "${value}". Scope required flag must be required, optional, true, or false.`
+    );
+  }
+
+  return {
+    subjectKind,
+    subjectId,
+    scopeKind,
+    required: normalizedRequiredFlag === 'required' || normalizedRequiredFlag === 'true',
+  };
+}
+
+function parseArchitectureDesignScopes(value) {
+  return normalizeListOption(value).map(parseArchitectureDesignScope);
+}
+
+function validateArchitectureDesignCreateCommand(command) {
+  if (command.scopes.length === 0) {
+    throw new Error('CreateArchitectureDesign requires at least one --scope.');
+  }
+
+  const requiredTextFields = [
+    ['work-item', command.workItemId],
+    ['title', command.title],
+    ['owner', command.owner],
+    ['rationale', command.rationale],
+    ['source-ref', command.sourceRef],
+  ];
+  for (const [field, value] of requiredTextFields) {
+    if (!normalizeOptionalText(value)) {
+      throw new Error(`Missing required --${field}`);
+    }
+  }
+
+  return command;
+}
+
+function parseArchitectureDesignCommand(action, args) {
+  if (action !== 'create') {
+    throw new Error(`Unknown architecture-design operation "${action}". Expected create.`);
+  }
+
+  const options = parseFlagOptions(args);
+  const fowlerSignalOption = Array.isArray(options.fowlerSignal)
+    ? options.fowlerSignal[0]
+    : options.fowlerSignal;
+  const command = {
+    kind: 'architecture_design_create',
+    designId: validateArchitectureDesignId(requireOption(options, 'design')),
+    workItemId: requireOption(options, 'workItem'),
+    title: requireOption(options, 'title'),
+    owner: requireOption(options, 'owner'),
+    status: validateArchitectureDesignCreateStatus(options.status || 'proposed'),
+    rationale: requireOption(options, 'rationale'),
+    fowlerSignal: validateArchitectureFowlerSignal(fowlerSignalOption || 'none'),
+    railRef: validateArchitectureRailRef(requireOption(options, 'railRef')),
+    supersedesId: options.supersedes ? validateArchitectureDesignId(options.supersedes) : null,
+    scopes: parseArchitectureDesignScopes(options.scope),
+    sourceRef: requireOption(options, 'sourceRef'),
+    sourceContentSha256: validateSha256(
+      requireOption(options, 'sourceContentSha256'),
+      'source-content-sha256'
+    ),
+    actor: requireOption(options, 'actor'),
+    idempotencyKey: options.idempotencyKey,
+  };
+
+  validateArchitectureDesignCreateCommand(command);
+  return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+}
+
 function validateComponentCreateCommand(command) {
   if (command.componentId === command.parentComponentId) {
     throw new Error(`Governance component ${command.componentId} cannot be its own parent.`);
@@ -739,6 +1007,14 @@ function parseArgs(args = process.argv.slice(2)) {
     return parseComponentCommand(action, rest);
   }
 
+  if (resource === 'architecture-design') {
+    if (!action) {
+      throw new Error('Missing architecture-design operation. Expected create.');
+    }
+
+    return parseArchitectureDesignCommand(action, rest);
+  }
+
   if (resource === 'audit') {
     const options = parseFlagOptions([action, ...rest].filter(Boolean));
     return {
@@ -758,7 +1034,7 @@ function parseArgs(args = process.argv.slice(2)) {
   }
 
   throw new Error(
-    'Unknown planning DB operation. Expected "task", "component", "docs-disposition", "task-gap", or "audit".'
+    'Unknown planning DB operation. Expected "task", "component", "architecture-design", "docs-disposition", "task-gap", or "audit".'
   );
 }
 
@@ -983,6 +1259,17 @@ function normalizeComponentDefinition(row) {
   };
 }
 
+function normalizeArchitectureDesign(row) {
+  if (!row) {
+    return null;
+  }
+
+  return {
+    designId: row.design_id ?? row.designId,
+    status: row.status,
+  };
+}
+
 function semanticArrayField(rawUnit, key, values) {
   if (values && values.length > 0) {
     rawUnit[key] = values;
@@ -1022,6 +1309,52 @@ function componentDefinitionSourceHash(command) {
     .createHash('sha256')
     .update(canonicalJson(operationPayload(command)))
     .digest('hex');
+}
+
+function planArchitectureDesignCreateOperation({ command, existingDesign, operationId, now }) {
+  const existing = normalizeArchitectureDesign(existingDesign);
+  if (existing) {
+    throw new Error(`Architecture design ${command.designId} already exists.`);
+  }
+
+  validateArchitectureDesignCreateCommand(command);
+
+  const createdAt = toIso(now);
+  const design = {
+    designId: command.designId,
+    workItemId: command.workItemId,
+    title: command.title,
+    owner: command.owner,
+    status: command.status,
+    rationale: command.rationale,
+    fowlerSignal: command.fowlerSignal,
+    railRef: command.railRef,
+    approvedAt: null,
+    supersedesId: command.supersedesId,
+    createdAt,
+    updatedAt: createdAt,
+  };
+  const scopes = command.scopes.map((scope) => ({
+    designId: command.designId,
+    ...scope,
+    createdAt,
+  }));
+  const audit = {
+    operationId,
+    idempotencyKey: command.idempotencyKey,
+    operationType: command.kind,
+    actor: command.actor,
+    designId: command.designId,
+    sourceRef: command.sourceRef,
+    sourceContentSha256: command.sourceContentSha256,
+    expectedRevision: null,
+    previousRevision: 0,
+    resultingRevision: 0,
+    payload: operationPayload(command),
+    createdAt,
+  };
+
+  return { design, scopes, audit };
 }
 
 function planComponentCreateOperation({
@@ -1480,6 +1813,28 @@ async function readExistingComponentOperation(client, idempotencyKey) {
   return result.rows[0] || null;
 }
 
+async function readExistingArchitectureDesignOperation(client, idempotencyKey) {
+  const result = await client.query(
+    `select *
+     from architecture.design_operations
+     where idempotency_key = $1`,
+    [idempotencyKey]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function readArchitectureDesign(client, designId) {
+  const result = await client.query(
+    `select *
+     from architecture.design
+     where design_id = $1`,
+    [designId]
+  );
+
+  return result.rows[0] || null;
+}
+
 async function readGovernanceUnit(client, unitId) {
   const result = await client.query(
     `select *
@@ -1738,6 +2093,67 @@ async function writePlannedDefinitionOperation(client, planned) {
   );
 }
 
+async function writePlannedArchitectureDesignCreateOperation(client, planned) {
+  await client.query(
+    `insert into architecture.design
+      (design_id, work_item_id, title, owner, status, rationale, fowler_signal,
+       rail_ref, approved_at, supersedes_id, created_at, updated_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+    [
+      planned.design.designId,
+      planned.design.workItemId,
+      planned.design.title,
+      planned.design.owner,
+      planned.design.status,
+      planned.design.rationale,
+      planned.design.fowlerSignal,
+      planned.design.railRef,
+      planned.design.approvedAt,
+      planned.design.supersedesId,
+      planned.design.createdAt,
+      planned.design.updatedAt,
+    ]
+  );
+
+  for (const scope of planned.scopes) {
+    await client.query(
+      `insert into architecture.design_scope
+        (design_id, subject_kind, subject_id, scope_kind, required, created_at)
+       values ($1, $2, $3, $4, $5, $6)`,
+      [
+        scope.designId,
+        scope.subjectKind,
+        scope.subjectId,
+        scope.scopeKind,
+        scope.required,
+        scope.createdAt,
+      ]
+    );
+  }
+
+  await client.query(
+    `insert into architecture.design_operations
+      (operation_id, idempotency_key, operation_type, actor, design_id,
+       source_ref, source_content_sha256, expected_revision, previous_revision,
+       resulting_revision, payload, created_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12)`,
+    [
+      planned.audit.operationId,
+      planned.audit.idempotencyKey,
+      planned.audit.operationType,
+      planned.audit.actor,
+      planned.audit.designId,
+      planned.audit.sourceRef,
+      planned.audit.sourceContentSha256,
+      planned.audit.expectedRevision,
+      planned.audit.previousRevision,
+      planned.audit.resultingRevision,
+      toJson(planned.audit.payload),
+      planned.audit.createdAt,
+    ]
+  );
+}
+
 async function writePlannedComponentCreateOperation(client, planned) {
   await client.query(
     `insert into ${schemaName}.governance_component_local_definitions
@@ -1903,6 +2319,47 @@ async function applyDocsResolutionOperation(command, options = {}) {
     });
 
     await writePlannedDocsResolutionOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
+async function applyArchitectureDesignCreateOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    await runMigrations({ client, silent: true });
+    await client.query('begin');
+
+    const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
+    if (existing) {
+      assertArchitectureDesignIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+
+    const existingDesign = await readArchitectureDesign(client, command.designId);
+    const planned = planArchitectureDesignCreateOperation({
+      command,
+      existingDesign,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+
+    await writePlannedArchitectureDesignCreateOperation(client, planned);
     await client.query('commit');
     return { idempotent: false, ...planned };
   } catch (error) {
@@ -2123,6 +2580,13 @@ function printOperationResult(result) {
       return;
     }
 
+    if (result.audit.design_id) {
+      console.log(
+        `[planning:db:operate] idempotent operation=${result.audit.operation_id} design=${result.audit.design_id}`
+      );
+      return;
+    }
+
     console.log(
       `[planning:db:operate] idempotent operation=${result.audit.operation_id} resultingRevision=${result.audit.resulting_revision}`
     );
@@ -2132,6 +2596,13 @@ function printOperationResult(result) {
   if (result.resolution) {
     console.log(
       `[planning:db:operate] ${result.audit.operationType} ${result.resolution.resolutionScope}/${result.resolution.issueKind} status=${result.resolution.resolutionStatus}`
+    );
+    return;
+  }
+
+  if (result.design) {
+    console.log(
+      `[planning:db:operate] ${result.audit.operationType} ${result.design.designId} status=${result.design.status} scopes=${result.scopes.length}`
     );
     return;
   }
@@ -2168,9 +2639,11 @@ async function main() {
   const result =
     command.kind === 'docs_disposition_resolve' || command.kind === 'task_gap_resolve'
       ? await applyDocsResolutionOperation(command)
-      : command.kind === 'component_create'
-        ? await applyComponentCreateOperation(command)
-        : await applyTaskLocalOperation(command);
+      : command.kind === 'architecture_design_create'
+        ? await applyArchitectureDesignCreateOperation(command)
+        : command.kind === 'component_create'
+          ? await applyComponentCreateOperation(command)
+          : await applyTaskLocalOperation(command);
   printOperationResult(result);
 }
 
@@ -2182,9 +2655,11 @@ if (require.main === module) {
 }
 
 module.exports = {
+  applyArchitectureDesignCreateOperation,
   applyComponentCreateOperation,
   applyDocsResolutionOperation,
   applyTaskLocalOperation,
+  assertArchitectureDesignIdempotentReplayMatches,
   assertComponentIdempotentReplayMatches,
   assertDocsResolutionIdempotentReplayMatches,
   assertIdempotentReplayMatches,
@@ -2193,12 +2668,14 @@ module.exports = {
   databaseUrl,
   materializeDocsResolutionCommand,
   parseArgs,
+  planArchitectureDesignCreateOperation,
   planComponentCreateOperation,
   planDocsResolutionOperation,
   planTaskDefinitionOperation,
   planTaskLocalOperation,
   readAudit,
   showTask,
+  validateArchitectureDesignStatus,
   validateComponentStatus,
   validateTaskStatus,
 };
