@@ -8,6 +8,9 @@ const {
   buildFocusRows,
   buildComponentEngineeringComponentDriftRows,
   buildComponentEngineeringComponentMetadataRows,
+  buildArchitectureComponentRows,
+  buildArchitectureDesignRows,
+  buildArchitectureRelationRows,
   buildComponentEngineeringComponentTreeRows,
   buildComponentEngineeringQualityRows,
   buildGovernanceComponentRows,
@@ -44,6 +47,9 @@ const {
   readFeatureWorkRows,
   readComponentEngineeringComponentDriftRows,
   readComponentEngineeringComponentMetadataRows,
+  readArchitectureComponentRows,
+  readArchitectureDesignRows,
+  readArchitectureRelationRows,
   readComponentEngineeringComponentTreeRows,
   readComponentEngineeringQualityRows,
   readComponentEngineeringRecordRows,
@@ -100,6 +106,13 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('component-rules'), 'component-rules');
   assert.equal(resolveQueryName('component-rule-evaluations'), 'component-rule-evaluations');
   assert.equal(resolveQueryName('component-quality'), 'component-quality');
+  assert.equal(resolveQueryName('architecture-designs'), 'architecture-designs');
+  assert.equal(resolveQueryName('architecture-components'), 'architecture-components');
+  assert.equal(resolveQueryName('architecture-relations'), 'architecture-relations');
+  assert.equal(resolveQueryName('architecture-flows'), 'architecture-flows');
+  assert.equal(resolveQueryName('architecture-drift'), 'architecture-drift');
+  assert.equal(resolveQueryName('architecture-enforcement'), 'architecture-enforcement');
+  assert.equal(resolveQueryName('architecture-evidence'), 'architecture-evidence');
   assert.throws(() => resolveQueryName('unknown'), /Unknown planning DB query "unknown"/);
 });
 
@@ -451,6 +464,51 @@ test('parseArgs parses component engineering rule filters', () => {
       filters: {
         component: 'SYS-RUNTIME-ENGINE-CORE',
         governanceState: 'coverage-required',
+      },
+    }
+  );
+});
+
+test('parseArgs parses architecture authority query filters', () => {
+  assert.deepEqual(
+    parseArgs([
+      'architecture-designs',
+      '--design',
+      'ENGINE-ARCHITECTURE-AUTHORITY-PILOT',
+      '--status',
+      'review',
+      '--owner',
+      'Architecture',
+      '--limit',
+      '5',
+    ]),
+    {
+      queryName: 'architecture-designs',
+      filters: {
+        design: 'ENGINE-ARCHITECTURE-AUTHORITY-PILOT',
+        status: 'review',
+        owner: 'Architecture',
+        limit: 5,
+      },
+    }
+  );
+
+  assert.deepEqual(
+    parseArgs([
+      'architecture-components',
+      '--component',
+      'SYS-RUNTIME-ENGINE-CORE',
+      '--kind',
+      'module',
+      '--layer',
+      'application',
+    ]),
+    {
+      queryName: 'architecture-components',
+      filters: {
+        component: 'SYS-RUNTIME-ENGINE-CORE',
+        kind: 'module',
+        layer: 'application',
       },
     }
   );
@@ -1544,6 +1602,151 @@ test('readComponentEngineeringQualityRows queries DB-backed component quality ro
   assert.match(captured.sql, /component_id = \$1/);
   assert.match(captured.sql, /limit \$2/);
   assert.deepEqual(captured.params, ['SYS-RUNTIME-ENGINE-CORE', 5]);
+});
+
+test('readArchitectureDesignRows queries the DB architecture design authority view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readArchitectureDesignRows(client, {
+    design: 'ENGINE-ARCHITECTURE-AUTHORITY-PILOT',
+    status: 'review',
+    owner: 'Architecture',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from architecture\.design_query/);
+  assert.match(captured.sql, /design_id = \$1/);
+  assert.match(captured.sql, /status = \$2/);
+  assert.match(captured.sql, /owner = \$3/);
+  assert.match(captured.sql, /limit \$4/);
+  assert.deepEqual(captured.params, [
+    'ENGINE-ARCHITECTURE-AUTHORITY-PILOT',
+    'review',
+    'Architecture',
+    5,
+  ]);
+});
+
+test('readArchitectureComponentRows queries the DB architecture component view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readArchitectureComponentRows(client, {
+    component: 'SYS-RUNTIME-ENGINE-CORE',
+    kind: 'module',
+    layer: 'application',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from architecture\.component_query/);
+  assert.match(captured.sql, /component_id = \$1/);
+  assert.match(captured.sql, /kind = \$2/);
+  assert.match(captured.sql, /layer = \$3/);
+  assert.match(captured.sql, /limit \$4/);
+  assert.deepEqual(captured.params, ['SYS-RUNTIME-ENGINE-CORE', 'module', 'application', 5]);
+});
+
+test('readArchitectureRelationRows queries the DB architecture relation graph view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readArchitectureRelationRows(client, {
+    component: 'SYS-RUNTIME-ENGINE-APPLICATION',
+    kind: 'calls',
+    status: 'declared',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from architecture\.component_relation_query/);
+  assert.match(captured.sql, /\(source_component_id = \$1 or target_component_id = \$1\)/);
+  assert.match(captured.sql, /relation_type = \$2/);
+  assert.match(captured.sql, /status = \$3/);
+  assert.match(captured.sql, /limit \$4/);
+  assert.deepEqual(captured.params, ['SYS-RUNTIME-ENGINE-APPLICATION', 'calls', 'declared', 5]);
+});
+
+test('buildArchitecture rows expose Fowler-relevant authority columns', () => {
+  assert.deepEqual(
+    buildArchitectureDesignRows([
+      {
+        design_id: 'ENGINE-ARCHITECTURE-AUTHORITY-PILOT',
+        work_item_id: 'DB-FIRST',
+        status: 'review',
+        owner: 'Architecture',
+        rail_ref: 'CreateArchitectureDesign',
+        fowler_signal: 'Hidden authority',
+      },
+    ]),
+    [
+      [
+        'ENGINE-ARCHITECTURE-AUTHORITY-PILOT',
+        'DB-FIRST',
+        'review',
+        'Architecture',
+        'CreateArchitectureDesign',
+        'Hidden authority',
+      ],
+    ]
+  );
+
+  assert.deepEqual(
+    buildArchitectureComponentRows([
+      {
+        component_id: 'SYS-RUNTIME-ENGINE-CORE',
+        name: 'Runtime engine core',
+        kind: 'module',
+        layer: 'application',
+        owner: 'Architecture',
+        status: 'declared',
+        maturity_score: 75,
+      },
+    ]),
+    [
+      [
+        'SYS-RUNTIME-ENGINE-CORE',
+        'Runtime engine core',
+        'module',
+        'application',
+        'Architecture',
+        'declared',
+        75,
+      ],
+    ]
+  );
+
+  assert.deepEqual(
+    buildArchitectureRelationRows([
+      {
+        relation_id: 'REL-1',
+        source_component_id: 'A',
+        target_component_id: 'B',
+        relation_type: 'calls',
+        direction: 'outbound',
+        sync_async: 'sync',
+        status: 'declared',
+      },
+    ]),
+    [['REL-1', 'A', 'B', 'calls', 'outbound', 'sync', 'declared']]
+  );
 });
 
 test('readGovernanceCoverageRows queries the DB governance coverage view', async () => {

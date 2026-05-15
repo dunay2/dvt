@@ -1006,6 +1006,37 @@ Add operator query surfaces:
 Expose them through the planning DB query command or a dedicated architecture
 query command, after the rail catalog is updated.
 
+Initial public API:
+
+```text
+pnpm planning:db:query architecture-designs --design <DESIGN-ID>
+pnpm planning:db:query architecture-scopes --design <DESIGN-ID>
+pnpm planning:db:query architecture-components --component <COMPONENT-ID>
+pnpm planning:db:query architecture-relations --component <COMPONENT-ID>
+pnpm planning:db:query architecture-responsibilities --component <COMPONENT-ID>
+pnpm planning:db:query architecture-io --component <COMPONENT-ID>
+pnpm planning:db:query architecture-flows --component <COMPONENT-ID>
+pnpm planning:db:query architecture-flow-steps --flow <FLOW-ID>
+pnpm planning:db:query architecture-contracts --component <COMPONENT-ID>
+pnpm planning:db:query architecture-maturity --component <COMPONENT-ID>
+pnpm planning:db:query architecture-drift --subject-kind <KIND> --subject <ID>
+pnpm planning:db:query architecture-enforcement --design <DESIGN-ID>
+pnpm planning:db:query architecture-evidence --subject-kind <KIND> --subject <ID>
+```
+
+Query invariants:
+
+- Query rails read only the `architecture.*_query` views; they do not infer or
+  mutate architecture authority.
+- Component relation reads treat `--component` as graph participation, matching
+  source or target edges instead of only parent hierarchy.
+- Enforcement reads expose authorization and violation rows through one
+  operator rail so mature-system review can compare allowed scope and blocking
+  drift without switching data models.
+- Fowler-relevant columns must remain visible in compact output: design owner,
+  rail reference, Fowler signal, component kind/layer/owner/status/maturity, and
+  relation direction/sync semantics.
+
 ### Phase 3: Command Rails
 
 Add command rails for creating and approving design authority:
@@ -1307,4 +1338,214 @@ symbols:
   - <<: *architectureDesignCreateCommandSymbol
     name: writePlannedArchitectureDesignCreateOperation
     dddOwner: ArchitectureDesignOperation
+```
+
+```feature-mechanization
+version: 1
+featureId: DB-FIRST-ARCHITECTURE-QUERY-RAILS-20260515
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md
+componentGuides:
+  - docs/planning/status/db-surface-inventory.md
+userStories:
+  - docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/planning/status/db-surface-inventory.md
+allowedImplementationSurfaces:
+  - docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md
+  - docs/planning/status/db-surface-inventory.md
+  - scripts/planning-db-query.cjs
+  - scripts/planning-db-query.test.cjs
+  - scripts/planning-db-surface-inventory-check.cjs
+forbiddenImplementationSurfaces:
+  - apps/**
+  - packages/**
+  - specs/**
+  - .github/workflows/**
+commandQueryRails:
+  - name: ReadArchitectureDesignAuthority
+    type: query
+    dddOwner: ArchitectureDesignAuthority
+  - name: InventoryDbGovernanceSurface
+    type: query
+    dddOwner: DbGovernanceSurfaceInventory
+domainObjects:
+  - name: ArchitectureDesignAuthority
+    type: read model
+    owner: Architecture governance
+  - name: ArchitectureComponentGraph
+    type: read model
+    owner: Architecture governance
+  - name: ArchitectureEnforcementReadModel
+    type: read model
+    owner: Architecture governance
+fowlerSignals:
+  - Hidden authority
+  - Boundary drift
+  - Primitive obsession
+  - Responsibility overload
+architectureGuards:
+  - node --test scripts/planning-db-query.test.cjs
+  - node --test scripts/planning-db-surface-inventory-check.test.cjs
+  - pnpm test:planning:db
+  - pnpm governance:refresh
+cypressFlows:
+  - N/A - architecture authority query rails have no browser workflow.
+completionGate:
+  - node --test scripts/planning-db-query.test.cjs
+  - node --test scripts/planning-db-surface-inventory-check.test.cjs
+  - pnpm test:planning:db
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: architecture-query-name-parser
+    redTest: node --test scripts/planning-db-query.test.cjs
+    expectedFailure: architecture-* query names are rejected before the rail is exposed.
+    patchSurfaces:
+      - scripts/planning-db-query.cjs
+      - scripts/planning-db-query.test.cjs
+    greenTest: node --test scripts/planning-db-query.test.cjs
+  - id: architecture-query-view-readers
+    redTest: node --test scripts/planning-db-query.test.cjs
+    expectedFailure: architecture authority row reader and compact builders are absent before the query rail implementation.
+    patchSurfaces:
+      - scripts/planning-db-query.cjs
+      - scripts/planning-db-query.test.cjs
+    greenTest: node --test scripts/planning-db-query.test.cjs
+symbols:
+  - &architectureQueryRailSymbol
+    name: readArchitectureDesignRows
+    path: scripts/planning-db-query.cjs
+    dddOwner: ArchitectureDesignAuthority
+    cqRails:
+      - ReadArchitectureDesignAuthority
+      - InventoryDbGovernanceSurface
+    fowlerSignals:
+      - Hidden authority
+      - Boundary drift
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A - architecture authority query rails have no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
+      - pnpm test:planning:db
+  - <<: *architectureQueryRailSymbol
+    name: readArchitectureDesignScopeRows
+  - <<: *architectureQueryRailSymbol
+    name: readArchitectureComponentRows
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: readArchitectureRelationRows
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: readArchitectureResponsibilityRows
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: readArchitectureIoRows
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: readArchitectureFlowRows
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: readArchitectureFlowStepRows
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: readArchitectureContractRows
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: readArchitectureMaturityRows
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: readArchitectureDriftRows
+    dddOwner: ArchitectureEnforcementReadModel
+  - <<: *architectureQueryRailSymbol
+    name: readArchitectureEnforcementRows
+    dddOwner: ArchitectureEnforcementReadModel
+  - <<: *architectureQueryRailSymbol
+    name: readArchitectureEvidenceRows
+    dddOwner: ArchitectureEnforcementReadModel
+  - <<: *architectureQueryRailSymbol
+    name: buildArchitectureDesignRows
+  - <<: *architectureQueryRailSymbol
+    name: buildArchitectureComponentRows
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: buildArchitectureRelationRows
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: architectureSchemaName
+  - <<: *architectureQueryRailSymbol
+    name: appendComponentEndpointFilter
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: architectureDesignSelect
+  - <<: *architectureQueryRailSymbol
+    name: architectureDesignScopeSelect
+  - <<: *architectureQueryRailSymbol
+    name: architectureComponentSelect
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: architectureRelationSelect
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: architectureResponsibilitySelect
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: architectureIoSelect
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: architectureFlowSelect
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: architectureFlowStepSelect
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: architectureContractSelect
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: architectureMaturitySelect
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: architectureDriftSelect
+    dddOwner: ArchitectureEnforcementReadModel
+  - <<: *architectureQueryRailSymbol
+    name: architectureEnforcementSelect
+    dddOwner: ArchitectureEnforcementReadModel
+  - <<: *architectureQueryRailSymbol
+    name: architectureEvidenceSelect
+    dddOwner: ArchitectureEnforcementReadModel
+  - <<: *architectureQueryRailSymbol
+    name: buildArchitectureDesignScopeRows
+  - <<: *architectureQueryRailSymbol
+    name: buildArchitectureContractRows
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: buildArchitectureResponsibilityRows
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: buildArchitectureIoRows
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: buildArchitectureFlowRows
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: buildArchitectureFlowStepRows
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: buildArchitectureMaturityRows
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureQueryRailSymbol
+    name: buildArchitectureDriftRows
+    dddOwner: ArchitectureEnforcementReadModel
+  - <<: *architectureQueryRailSymbol
+    name: buildArchitectureEnforcementRows
+    dddOwner: ArchitectureEnforcementReadModel
+  - <<: *architectureQueryRailSymbol
+    name: buildArchitectureEvidenceRows
+    dddOwner: ArchitectureEnforcementReadModel
 ```

@@ -13,6 +13,7 @@ const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { schemaName } = require('./planning-db-migrate.cjs');
 const { runPlanningImport } = require('./planning-db-import.cjs');
 
+const architectureSchemaName = 'architecture';
 const componentEngineeringSchemaName = 'component_engineering';
 
 const knownQueries = new Set([
@@ -50,6 +51,19 @@ const knownQueries = new Set([
   'component-rules',
   'component-rule-evaluations',
   'component-quality',
+  'architecture-designs',
+  'architecture-scopes',
+  'architecture-components',
+  'architecture-relations',
+  'architecture-responsibilities',
+  'architecture-io',
+  'architecture-flows',
+  'architecture-flow-steps',
+  'architecture-contracts',
+  'architecture-maturity',
+  'architecture-drift',
+  'architecture-enforcement',
+  'architecture-evidence',
 ]);
 const governanceProjectionQueryNames = new Set([
   'files',
@@ -206,6 +220,38 @@ function parseArgs(args = process.argv.slice(2)) {
     }
     if (arg === '--component') {
       filters.component = value;
+      continue;
+    }
+    if (arg === '--design') {
+      filters.design = value;
+      continue;
+    }
+    if (arg === '--relation') {
+      filters.relation = value;
+      continue;
+    }
+    if (arg === '--flow') {
+      filters.flow = value;
+      continue;
+    }
+    if (arg === '--contract') {
+      filters.contract = value;
+      continue;
+    }
+    if (arg === '--subject') {
+      filters.subject = value;
+      continue;
+    }
+    if (arg === '--subject-kind') {
+      filters.subjectKind = value;
+      continue;
+    }
+    if (arg === '--owner') {
+      filters.owner = value;
+      continue;
+    }
+    if (arg === '--layer') {
+      filters.layer = value;
       continue;
     }
     if (arg === '--schema-version') {
@@ -605,6 +651,154 @@ function buildComponentEngineeringQualityRows(rows) {
     row.test_file_count ?? row.testFileCount ?? 0,
     row.failing_rule_count ?? row.failingRuleCount ?? 0,
     joinJsonArray(row.drift_codes ?? row.driftCodes),
+  ]);
+}
+
+function buildArchitectureDesignRows(rows) {
+  return rows.map((row) => [
+    row.design_id ?? row.designId,
+    row.work_item_id ?? row.workItemId ?? '-',
+    row.status ?? '-',
+    row.owner ?? '-',
+    row.rail_ref ?? row.railRef ?? '-',
+    row.fowler_signal ?? row.fowlerSignal ?? '-',
+  ]);
+}
+
+function buildArchitectureDesignScopeRows(rows) {
+  return rows.map((row) => [
+    row.design_id ?? row.designId,
+    row.subject_kind ?? row.subjectKind,
+    row.subject_id ?? row.subjectId,
+    row.scope_kind ?? row.scopeKind,
+    String(row.required ?? true),
+    row.design_status ?? row.designStatus ?? '-',
+  ]);
+}
+
+function buildArchitectureComponentRows(rows) {
+  return rows.map((row) => [
+    row.component_id ?? row.componentId,
+    compactText(row.name),
+    row.kind ?? '-',
+    row.layer ?? '-',
+    row.owner ?? '-',
+    row.status ?? '-',
+    row.maturity_score ?? row.maturityScore ?? '-',
+  ]);
+}
+
+function buildArchitectureRelationRows(rows) {
+  return rows.map((row) => [
+    row.relation_id ?? row.relationId,
+    row.source_component_id ?? row.sourceComponentId,
+    row.target_component_id ?? row.targetComponentId,
+    row.relation_type ?? row.relationType,
+    row.direction ?? '-',
+    row.sync_async ?? row.syncAsync ?? '-',
+    row.status ?? '-',
+  ]);
+}
+
+function buildArchitectureResponsibilityRows(rows) {
+  return rows.map((row) => [
+    row.responsibility_id ?? row.responsibilityId,
+    row.component_id ?? row.componentId,
+    compactText(row.responsibility),
+    compactText(row.reason_to_change ?? row.reasonToChange),
+    row.ddd_owner ?? row.dddOwner ?? '-',
+    row.status ?? '-',
+  ]);
+}
+
+function buildArchitectureIoRows(rows) {
+  return rows.map((row) => [
+    row.component_id ?? row.componentId,
+    row.io_id ?? row.ioId,
+    row.io_kind ?? row.ioKind,
+    row.io_name ?? row.ioName,
+    row.direction ?? '-',
+    row.contract_id ?? row.contractId ?? '-',
+    row.runtime ?? '-',
+  ]);
+}
+
+function buildArchitectureFlowRows(rows) {
+  return rows.map((row) => [
+    row.flow_id ?? row.flowId,
+    compactText(row.name),
+    row.entry_component_id ?? row.entryComponentId,
+    row.exit_component_id ?? row.exitComponentId,
+    row.flow_kind ?? row.flowKind,
+    row.status ?? '-',
+    row.step_count ?? row.stepCount ?? 0,
+  ]);
+}
+
+function buildArchitectureFlowStepRows(rows) {
+  return rows.map((row) => [
+    row.flow_id ?? row.flowId,
+    row.step_order ?? row.stepOrder,
+    row.component_id ?? row.componentId,
+    row.relation_id ?? row.relationId ?? '-',
+    row.input_contract_id ?? row.inputContractId ?? '-',
+    row.output_contract_id ?? row.outputContractId ?? '-',
+    row.transformation_id ?? row.transformationId ?? '-',
+  ]);
+}
+
+function buildArchitectureContractRows(rows) {
+  return rows.map((row) => [
+    row.contract_id ?? row.contractId,
+    row.contract_kind ?? row.contractKind,
+    row.component_id ?? row.componentId,
+    row.contract_ref ?? row.contractRef,
+    row.compatibility ?? '-',
+    row.status ?? '-',
+    row.validation_command ?? row.validationCommand ?? '-',
+  ]);
+}
+
+function buildArchitectureMaturityRows(rows) {
+  return rows.map((row) => [
+    row.component_id ?? row.componentId,
+    compactText(row.name),
+    row.maturity_score ?? row.maturityScore ?? 0,
+    joinJsonArray(row.missing_reasons ?? row.missingReasons),
+    compactJson(row.metrics),
+  ]);
+}
+
+function buildArchitectureDriftRows(rows) {
+  return rows.map((row) => [
+    row.subject_kind ?? row.subjectKind,
+    row.subject_id ?? row.subjectId,
+    row.drift_code ?? row.driftCode,
+    row.severity ?? '-',
+    compactJson(row.metadata),
+  ]);
+}
+
+function buildArchitectureEnforcementRows(rows) {
+  return rows.map((row) => [
+    row.enforcement_kind ?? row.enforcementKind,
+    row.design_id ?? row.designId ?? '-',
+    row.subject_kind ?? row.subjectKind,
+    row.subject_id ?? row.subjectId,
+    row.state_or_violation ?? row.stateOrViolation,
+    row.severity ?? '-',
+  ]);
+}
+
+function buildArchitectureEvidenceRows(rows) {
+  return rows.map((row) => [
+    row.evidence_id ?? row.evidenceId,
+    row.subject_kind ?? row.subjectKind,
+    row.subject_id ?? row.subjectId,
+    row.evidence_kind ?? row.evidenceKind,
+    row.result_state ?? row.resultState,
+    row.freshness_state ?? row.freshnessState ?? '-',
+    row.source_ref ?? row.sourceRef ?? '-',
   ]);
 }
 
@@ -1144,6 +1338,220 @@ function componentEngineeringQualitySelect() {
       warning_count,
       drift_codes
     from ${componentEngineeringSchemaName}.component_quality_query`;
+}
+
+function architectureDesignSelect() {
+  return `
+    select
+      design_id,
+      work_item_id,
+      title,
+      owner,
+      status,
+      rationale,
+      fowler_signal,
+      rail_ref,
+      approved_at,
+      supersedes_id,
+      created_at,
+      updated_at
+    from ${architectureSchemaName}.design_query`;
+}
+
+function architectureDesignScopeSelect() {
+  return `
+    select
+      design_id,
+      work_item_id,
+      design_title,
+      design_status,
+      subject_kind,
+      subject_id,
+      scope_kind,
+      required,
+      created_at
+    from ${architectureSchemaName}.design_scope_query`;
+}
+
+function architectureComponentSelect() {
+  return `
+    select
+      component_id,
+      name,
+      kind,
+      layer,
+      owner,
+      repo_path,
+      public_contract,
+      runtime,
+      criticality,
+      status,
+      maturity_score,
+      parent_component_id,
+      created_at,
+      updated_at
+    from ${architectureSchemaName}.component_query`;
+}
+
+function architectureRelationSelect() {
+  return `
+    select
+      relation_id,
+      source_component_id,
+      source_component_name,
+      target_component_id,
+      target_component_name,
+      relation_type,
+      direction,
+      sync_async,
+      contract_id,
+      contract_ref,
+      failure_mode,
+      authorization_scope,
+      source_refs,
+      status,
+      created_at,
+      updated_at
+    from ${architectureSchemaName}.component_relation_query`;
+}
+
+function architectureResponsibilitySelect() {
+  return `
+    select
+      responsibility_id,
+      component_id,
+      component_name,
+      responsibility,
+      reason_to_change,
+      ddd_owner,
+      status,
+      created_at
+    from ${architectureSchemaName}.component_responsibility_query`;
+}
+
+function architectureIoSelect() {
+  return `
+    select
+      component_id,
+      io_id,
+      io_kind,
+      io_name,
+      direction,
+      contract_id,
+      runtime,
+      metadata
+    from ${architectureSchemaName}.component_io_query`;
+}
+
+function architectureFlowSelect() {
+  return `
+    select
+      flow_id,
+      name,
+      entry_component_id,
+      entry_component_name,
+      exit_component_id,
+      exit_component_name,
+      flow_kind,
+      status,
+      criticality,
+      step_count,
+      created_at,
+      updated_at
+    from ${architectureSchemaName}.component_flow_query`;
+}
+
+function architectureFlowStepSelect() {
+  return `
+    select
+      flow_id,
+      step_order,
+      component_id,
+      component_name,
+      relation_id,
+      relation_type,
+      input_contract_id,
+      input_contract_ref,
+      output_contract_id,
+      output_contract_ref,
+      transformation_id,
+      transformation_kind,
+      created_at
+    from ${architectureSchemaName}.component_flow_step_query`;
+}
+
+function architectureContractSelect() {
+  return `
+    select
+      contract_id,
+      contract_kind,
+      component_id,
+      component_name,
+      contract_ref,
+      compatibility,
+      status,
+      validation_command,
+      created_at,
+      updated_at
+    from ${architectureSchemaName}.component_contract_query`;
+}
+
+function architectureMaturitySelect() {
+  return `
+    select
+      component_id,
+      name,
+      maturity_score,
+      metrics,
+      missing_reasons
+    from ${architectureSchemaName}.component_maturity_query`;
+}
+
+function architectureDriftSelect() {
+  return `
+    select
+      subject_kind,
+      subject_id,
+      drift_code,
+      severity,
+      metadata
+    from ${architectureSchemaName}.component_drift_query`;
+}
+
+function architectureEnforcementSelect() {
+  return `
+    select
+      'authorization'::text as enforcement_kind,
+      design_id,
+      subject_kind,
+      subject_id,
+      authorization_state as state_or_violation,
+      'info'::text as severity
+    from ${architectureSchemaName}.implementation_authorization_query
+    union all
+    select
+      'violation'::text as enforcement_kind,
+      design_id,
+      subject_kind,
+      subject_id,
+      violation_kind as state_or_violation,
+      severity
+    from ${architectureSchemaName}.implementation_violation_query`;
+}
+
+function architectureEvidenceSelect() {
+  return `
+    select
+      evidence_id,
+      subject_kind,
+      subject_id,
+      evidence_kind,
+      source_ref,
+      result_state,
+      recorded_at,
+      source_content_sha256,
+      freshness_state
+    from ${architectureSchemaName}.evidence_query`;
 }
 
 function governanceCoverageSelect() {
@@ -1876,6 +2284,304 @@ async function readComponentEngineeringQualityRows(client, filters = {}) {
   return result.rows;
 }
 
+function appendComponentEndpointFilter(predicates, params, value) {
+  if (value === undefined || value === null || value === '') {
+    return;
+  }
+
+  params.push(value);
+  predicates.push(
+    `(source_component_id = $${params.length} or target_component_id = $${params.length})`
+  );
+}
+
+async function readArchitectureDesignRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'design_id', filters.design);
+  appendFilter(predicates, params, 'work_item_id', filters.taskId);
+  appendFilter(predicates, params, 'status', filters.status);
+  appendFilter(predicates, params, 'owner', filters.owner);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureDesignSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by updated_at desc, design_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureDesignScopeRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'design_id', filters.design);
+  appendFilter(predicates, params, 'subject_kind', filters.subjectKind);
+  appendFilter(predicates, params, 'subject_id', filters.subject || filters.component);
+  appendFilter(predicates, params, 'scope_kind', filters.kind);
+  appendFilter(predicates, params, 'design_status', filters.status);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureDesignScopeSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by design_id, subject_kind, subject_id, scope_kind
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureComponentRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'component_id', filters.component);
+  appendFilter(predicates, params, 'kind', filters.kind);
+  appendFilter(predicates, params, 'layer', filters.layer);
+  appendFilter(predicates, params, 'owner', filters.owner);
+  appendFilter(predicates, params, 'status', filters.status);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureComponentSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by layer, kind, component_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureRelationRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'relation_id', filters.relation);
+  appendComponentEndpointFilter(predicates, params, filters.component);
+  appendFilter(predicates, params, 'relation_type', filters.kind);
+  appendFilter(predicates, params, 'status', filters.status);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureRelationSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by source_component_id, target_component_id, relation_type
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureResponsibilityRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'component_id', filters.component);
+  appendFilter(predicates, params, 'ddd_owner', filters.owner);
+  appendFilter(predicates, params, 'status', filters.status);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureResponsibilitySelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by component_id, responsibility_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureIoRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'component_id', filters.component);
+  appendFilter(predicates, params, 'io_kind', filters.kind);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureIoSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by component_id, io_kind, io_name
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureFlowRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'flow_id', filters.flow);
+  appendFilter(predicates, params, 'flow_kind', filters.kind);
+  appendFilter(predicates, params, 'status', filters.status);
+  if (filters.component !== undefined && filters.component !== null && filters.component !== '') {
+    params.push(filters.component);
+    predicates.push(
+      `(entry_component_id = $${params.length} or exit_component_id = $${params.length})`
+    );
+  }
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureFlowSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by flow_kind, flow_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureFlowStepRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'flow_id', filters.flow);
+  appendFilter(predicates, params, 'component_id', filters.component);
+  appendFilter(predicates, params, 'relation_id', filters.relation);
+
+  const limit = parseLimit(filters.limit, 100);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureFlowStepSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by flow_id, step_order
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureContractRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'contract_id', filters.contract);
+  appendFilter(predicates, params, 'component_id', filters.component);
+  appendFilter(predicates, params, 'contract_kind', filters.kind);
+  appendFilter(predicates, params, 'status', filters.status);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureContractSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by component_id, contract_kind, contract_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureMaturityRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'component_id', filters.component);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureMaturitySelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by maturity_score, component_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureDriftRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'subject_kind', filters.subjectKind);
+  appendFilter(predicates, params, 'subject_id', filters.subject || filters.component);
+  appendFilter(predicates, params, 'drift_code', filters.kind);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureDriftSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by severity desc, subject_kind, subject_id, drift_code
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureEnforcementRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'design_id', filters.design);
+  appendFilter(predicates, params, 'subject_kind', filters.subjectKind);
+  appendFilter(predicates, params, 'subject_id', filters.subject || filters.component);
+  appendFilter(predicates, params, 'enforcement_kind', filters.kind);
+  appendFilter(predicates, params, 'state_or_violation', filters.status);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `select *
+     from (${architectureEnforcementSelect()}) architecture_enforcement
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by enforcement_kind desc, severity desc, design_id, subject_kind, subject_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureEvidenceRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'subject_kind', filters.subjectKind);
+  appendFilter(predicates, params, 'subject_id', filters.subject || filters.component);
+  appendFilter(predicates, params, 'evidence_kind', filters.kind);
+  appendFilter(predicates, params, 'result_state', filters.status);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureEvidenceSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by recorded_at desc, subject_kind, subject_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
 async function readGovernanceCoverageRows(client, filters = {}) {
   const params = [];
   const predicates = [];
@@ -2359,6 +3065,123 @@ async function runQuery(options = {}) {
       return qualityRows;
     }
 
+    if (queryName === 'architecture-designs') {
+      const rows = await readArchitectureDesignRows(client, options.filters || {});
+      const designRows = buildArchitectureDesignRows(rows);
+      if (options.print !== false) {
+        printTaskRows(designRows);
+      }
+      return designRows;
+    }
+
+    if (queryName === 'architecture-scopes') {
+      const rows = await readArchitectureDesignScopeRows(client, options.filters || {});
+      const scopeRows = buildArchitectureDesignScopeRows(rows);
+      if (options.print !== false) {
+        printTaskRows(scopeRows);
+      }
+      return scopeRows;
+    }
+
+    if (queryName === 'architecture-components') {
+      const rows = await readArchitectureComponentRows(client, options.filters || {});
+      const componentRows = buildArchitectureComponentRows(rows);
+      if (options.print !== false) {
+        printTaskRows(componentRows);
+      }
+      return componentRows;
+    }
+
+    if (queryName === 'architecture-relations') {
+      const rows = await readArchitectureRelationRows(client, options.filters || {});
+      const relationRows = buildArchitectureRelationRows(rows);
+      if (options.print !== false) {
+        printTaskRows(relationRows);
+      }
+      return relationRows;
+    }
+
+    if (queryName === 'architecture-responsibilities') {
+      const rows = await readArchitectureResponsibilityRows(client, options.filters || {});
+      const responsibilityRows = buildArchitectureResponsibilityRows(rows);
+      if (options.print !== false) {
+        printTaskRows(responsibilityRows);
+      }
+      return responsibilityRows;
+    }
+
+    if (queryName === 'architecture-io') {
+      const rows = await readArchitectureIoRows(client, options.filters || {});
+      const ioRows = buildArchitectureIoRows(rows);
+      if (options.print !== false) {
+        printTaskRows(ioRows);
+      }
+      return ioRows;
+    }
+
+    if (queryName === 'architecture-flows') {
+      const rows = await readArchitectureFlowRows(client, options.filters || {});
+      const flowRows = buildArchitectureFlowRows(rows);
+      if (options.print !== false) {
+        printTaskRows(flowRows);
+      }
+      return flowRows;
+    }
+
+    if (queryName === 'architecture-flow-steps') {
+      const rows = await readArchitectureFlowStepRows(client, options.filters || {});
+      const stepRows = buildArchitectureFlowStepRows(rows);
+      if (options.print !== false) {
+        printTaskRows(stepRows);
+      }
+      return stepRows;
+    }
+
+    if (queryName === 'architecture-contracts') {
+      const rows = await readArchitectureContractRows(client, options.filters || {});
+      const contractRows = buildArchitectureContractRows(rows);
+      if (options.print !== false) {
+        printTaskRows(contractRows);
+      }
+      return contractRows;
+    }
+
+    if (queryName === 'architecture-maturity') {
+      const rows = await readArchitectureMaturityRows(client, options.filters || {});
+      const maturityRows = buildArchitectureMaturityRows(rows);
+      if (options.print !== false) {
+        printTaskRows(maturityRows);
+      }
+      return maturityRows;
+    }
+
+    if (queryName === 'architecture-drift') {
+      const rows = await readArchitectureDriftRows(client, options.filters || {});
+      const driftRows = buildArchitectureDriftRows(rows);
+      if (options.print !== false) {
+        printTaskRows(driftRows);
+      }
+      return driftRows;
+    }
+
+    if (queryName === 'architecture-enforcement') {
+      const rows = await readArchitectureEnforcementRows(client, options.filters || {});
+      const enforcementRows = buildArchitectureEnforcementRows(rows);
+      if (options.print !== false) {
+        printTaskRows(enforcementRows);
+      }
+      return enforcementRows;
+    }
+
+    if (queryName === 'architecture-evidence') {
+      const rows = await readArchitectureEvidenceRows(client, options.filters || {});
+      const evidenceRows = buildArchitectureEvidenceRows(rows);
+      if (options.print !== false) {
+        printTaskRows(evidenceRows);
+      }
+      return evidenceRows;
+    }
+
     if (queryName === 'coverage') {
       const rows = await readGovernanceCoverageRows(client, options.filters || {});
       const coverageRows = buildGovernanceCoverageRows(rows);
@@ -2483,6 +3306,19 @@ module.exports = {
   buildGovernanceUnitRows,
   buildGovernanceRemediationRows,
   buildRiskDebtRows,
+  buildArchitectureComponentRows,
+  buildArchitectureContractRows,
+  buildArchitectureDesignRows,
+  buildArchitectureDesignScopeRows,
+  buildArchitectureDriftRows,
+  buildArchitectureEnforcementRows,
+  buildArchitectureEvidenceRows,
+  buildArchitectureFlowRows,
+  buildArchitectureFlowStepRows,
+  buildArchitectureIoRows,
+  buildArchitectureMaturityRows,
+  buildArchitectureRelationRows,
+  buildArchitectureResponsibilityRows,
   buildHashDriftRows,
   buildComponentEngineeringComponentMetadataRows,
   buildKnowledgeActionRows,
@@ -2510,6 +3346,19 @@ module.exports = {
   readComponentEngineeringComponentMetadataRows,
   readComponentEngineeringComponentTreeRows,
   readComponentEngineeringQualityRows,
+  readArchitectureComponentRows,
+  readArchitectureContractRows,
+  readArchitectureDesignRows,
+  readArchitectureDesignScopeRows,
+  readArchitectureDriftRows,
+  readArchitectureEnforcementRows,
+  readArchitectureEvidenceRows,
+  readArchitectureFlowRows,
+  readArchitectureFlowStepRows,
+  readArchitectureIoRows,
+  readArchitectureMaturityRows,
+  readArchitectureRelationRows,
+  readArchitectureResponsibilityRows,
   readFocusRows,
   readGovernanceComponentRows,
   readGovernanceCoverageRows,
