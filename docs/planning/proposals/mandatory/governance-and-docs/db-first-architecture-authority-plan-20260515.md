@@ -248,7 +248,7 @@ The design table is the aggregate root for a governed architecture slice.
 | `status`        | enum        | `proposed`, `review`, `approved`, `implementing`, `implemented`, `drift` |
 | `rationale`     | text        | Why this design exists                                                   |
 | `fowler_signal` | enum        | Primary Fowler opportunity type                                          |
-| `rail_ref`      | text        | Command/query rail or `none - architecture-authority-only`               |
+| `rail_ref`      | text        | Explicit command/query rail that governs the design                      |
 | `approved_at`   | timestamptz | Approval timestamp, null until approved                                  |
 | `supersedes_id` | text FK     | Previous design, when replacing a stale design                           |
 
@@ -269,6 +269,26 @@ Design scope links an approved design to authorized subjects and file surfaces.
 
 This table is what lets CI answer: "is this changed file or relation inside the
 approved design?".
+
+### `architecture.design_operations`
+
+The design operation ledger records command execution. It is not the aggregate;
+it is the audit and idempotency boundary for writes that change the aggregate.
+
+| Column                  | Type    | Meaning                                                       |
+| ----------------------- | ------- | ------------------------------------------------------------- |
+| `operation_id`          | text PK | Durable command execution identity                            |
+| `idempotency_key`       | text    | Unique replay key for one logical command                     |
+| `operation_type`        | enum    | `architecture_design_create` in the first command slice       |
+| `actor`                 | text    | Maintainer or automation identity that executed the command   |
+| `design_id`             | text FK | Design aggregate affected by the command                      |
+| `source_ref`            | text    | Governing doc, proposal, ADR, PR, or DB source behind command |
+| `source_content_sha256` | text    | Source hash used to reject stale idempotent replays           |
+| `payload`               | jsonb   | Canonical command payload for replay comparison               |
+
+Operation rows make the Fowler correction explicit: design authority is a
+behavioral lifecycle, not a raw table edit. A repeated idempotency key is valid
+only when the actor, design id, source ref, source hash, and payload all match.
 
 ### `architecture.component`
 
@@ -999,6 +1019,43 @@ Add command rails for creating and approving design authority:
 
 Commands must be idempotent, audited, and source-hash guarded.
 
+`CreateArchitectureDesign` lands first. It creates only a proposed or review
+design with explicit scope rows. It does not approve implementation, because
+approval is a separate lifecycle transition with its own command rail.
+
+Public API:
+
+```text
+pnpm planning:db:operate architecture-design create \
+  --design <DESIGN-ID> \
+  --work-item <TASK-OR-PROPOSAL-ID> \
+  --title <short title> \
+  --owner <owner> \
+  --rationale <why this design exists> \
+  --rail-ref <governing command/query rail> \
+  --scope <subject_kind:subject_id:scope_kind[:required|optional]> \
+  --source-ref <governing source> \
+  --source-content-sha256 <64 hex chars> \
+  --actor <actor>
+```
+
+Command invariants:
+
+- Status is limited to `proposed` or `review`; direct approval is rejected.
+- At least one `--scope` is required.
+- `--rail-ref` is required and cannot use `none`, `n/a`, or
+  `not-applicable`; design authority must point at an explicit command or
+  query rail.
+- Schema hardening must fail closed when old implicit `rail_ref` rows exist;
+  migration code must not delete architecture design authority as a hidden
+  repair.
+- Scope values must use the existing `architecture.design_scope` subject and
+  scope taxonomies.
+- Replays with the same idempotency key must match the same source hash and
+  payload.
+- Existing `design_id` values are rejected unless the operation is an exact
+  idempotent replay.
+
 ### Phase 4: Engine Pilot
 
 Seed only the minimum `engine` design rows needed to prove the model:
@@ -1061,3 +1118,193 @@ Future implementation work for this model must cite this plan as a governing
 source and must add or update the command/query rail catalog before code changes.
 The first implementation PR must include tests proving that design rows can
 authorize or reject changed files.
+
+## Feature Mechanization
+
+```feature-mechanization
+version: 1
+featureId: DB-FIRST-ARCHITECTURE-CREATE-DESIGN-COMMAND-20260515
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md
+componentGuides:
+  - docs/planning/status/db-surface-inventory.md
+userStories:
+  - docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/planning/status/db-surface-inventory.md
+allowedImplementationSurfaces:
+  - docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md
+  - docs/planning/status/db-surface-inventory.md
+  - scripts/planning-db-operate.cjs
+  - scripts/planning-db-operate.test.cjs
+  - scripts/planning-db-migrate.test.cjs
+  - scripts/planning-db-surface-inventory-check.cjs
+  - tools/planning-db/migrations/044_architecture_design_command_rail.sql
+  - tools/planning-db/migrations/045_architecture_design_explicit_rail_ref.sql
+forbiddenImplementationSurfaces:
+  - apps/**
+  - packages/**
+  - specs/**
+  - .github/workflows/**
+commandQueryRails:
+  - name: CreateArchitectureDesign
+    type: command
+    dddOwner: ArchitectureDesign
+  - name: MigratePlanningQueryStoreSchema
+    type: command
+    dddOwner: PlanningQueryStoreSchema
+  - name: InventoryDbGovernanceSurface
+    type: query
+    dddOwner: DbGovernanceSurfaceInventory
+domainObjects:
+  - name: ArchitectureDesign
+    type: aggregate
+    owner: Architecture governance
+  - name: ArchitectureDesignScope
+    type: child entity
+    owner: Architecture governance
+  - name: ArchitectureDesignOperation
+    type: command audit
+    owner: Architecture governance
+  - name: ArchitectureDesignCommandAdapter
+    type: command adapter
+    owner: Architecture governance
+  - name: PlanningQueryStoreSchema
+    type: local schema
+    owner: Product / Architecture / Delivery / Docs
+  - name: DbGovernanceSurfaceInventory
+    type: read model
+    owner: Product / Architecture / Delivery / Docs
+fowlerSignals:
+  - Hidden authority
+  - Published language
+  - Primitive obsession
+  - Metadata edit workflow
+architectureGuards:
+  - node --test scripts/planning-db-operate.test.cjs
+  - node --test scripts/planning-db-migrate.test.cjs
+  - node --test scripts/planning-db-surface-inventory-check.test.cjs
+  - pnpm planning:db:migrate
+  - pnpm test:planning:db
+  - pnpm governance:refresh
+cypressFlows:
+  - N/A - architecture design command rail has no browser workflow.
+completionGate:
+  - node --test scripts/planning-db-operate.test.cjs
+  - node --test scripts/planning-db-migrate.test.cjs
+  - pnpm planning:db:migrate
+  - pnpm test:planning:db
+  - pnpm governance:refresh
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: architecture-design-command-parser-and-planner
+    redTest: node --test scripts/planning-db-operate.test.cjs
+    expectedFailure: architecture-design is rejected as an unknown planning DB operation before the command rail exists.
+    patchSurfaces:
+      - scripts/planning-db-operate.cjs
+      - scripts/planning-db-operate.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md
+    greenTest: node --test scripts/planning-db-operate.test.cjs
+  - id: architecture-design-command-ledger
+    redTest: node --test scripts/planning-db-migrate.test.cjs
+    expectedFailure: architecture.design_operations is absent before migration 044.
+    patchSurfaces:
+      - tools/planning-db/migrations/044_architecture_design_command_rail.sql
+      - scripts/planning-db-migrate.test.cjs
+    greenTest: node --test scripts/planning-db-migrate.test.cjs
+  - id: architecture-design-explicit-rail-ref
+    redTest: node --test scripts/planning-db-migrate.test.cjs
+    expectedFailure: architecture.design still permits implicit rail_ref defaults before migration 045.
+    patchSurfaces:
+      - tools/planning-db/migrations/045_architecture_design_explicit_rail_ref.sql
+      - scripts/planning-db-migrate.test.cjs
+    greenTest: node --test scripts/planning-db-migrate.test.cjs
+symbols:
+  - &architectureDesignCreateCommandSymbol
+    name: planArchitectureDesignCreateOperation
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureDesign
+    cqRails:
+      - CreateArchitectureDesign
+      - MigratePlanningQueryStoreSchema
+      - InventoryDbGovernanceSurface
+    fowlerSignals:
+      - Hidden authority
+      - Published language
+      - Metadata edit workflow
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A - architecture design command rail has no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-operate.test.cjs
+      - pnpm test:planning:db
+  - <<: *architectureDesignCreateCommandSymbol
+    name: allowedArchitectureDesignCreateStatuses
+    dddOwner: ArchitectureDesign
+  - <<: *architectureDesignCreateCommandSymbol
+    name: allowedArchitectureDesignStatuses
+    dddOwner: ArchitectureDesign
+  - <<: *architectureDesignCreateCommandSymbol
+    name: allowedArchitectureFowlerSignals
+    dddOwner: ArchitectureDesign
+  - <<: *architectureDesignCreateCommandSymbol
+    name: allowedArchitectureScopeKinds
+    dddOwner: ArchitectureDesignScope
+  - <<: *architectureDesignCreateCommandSymbol
+    name: allowedArchitectureScopeSubjectKinds
+    dddOwner: ArchitectureDesignScope
+  - <<: *architectureDesignCreateCommandSymbol
+    name: applyArchitectureDesignCreateOperation
+    dddOwner: ArchitectureDesignOperation
+  - <<: *architectureDesignCreateCommandSymbol
+    name: assertArchitectureDesignIdempotentReplayMatches
+    dddOwner: ArchitectureDesignOperation
+  - <<: *architectureDesignCreateCommandSymbol
+    name: normalizeArchitectureDesign
+    dddOwner: ArchitectureDesign
+  - <<: *architectureDesignCreateCommandSymbol
+    name: parseArchitectureDesignCommand
+    dddOwner: ArchitectureDesignCommandAdapter
+  - <<: *architectureDesignCreateCommandSymbol
+    name: parseArchitectureDesignScope
+    dddOwner: ArchitectureDesignScope
+  - <<: *architectureDesignCreateCommandSymbol
+    name: parseArchitectureDesignScopes
+    dddOwner: ArchitectureDesignScope
+  - <<: *architectureDesignCreateCommandSymbol
+    name: readArchitectureDesign
+    dddOwner: ArchitectureDesign
+  - <<: *architectureDesignCreateCommandSymbol
+    name: readExistingArchitectureDesignOperation
+    dddOwner: ArchitectureDesignOperation
+  - <<: *architectureDesignCreateCommandSymbol
+    name: validateArchitectureDesignCreateCommand
+    dddOwner: ArchitectureDesign
+  - <<: *architectureDesignCreateCommandSymbol
+    name: validateArchitectureDesignCreateStatus
+    dddOwner: ArchitectureDesign
+  - <<: *architectureDesignCreateCommandSymbol
+    name: validateArchitectureDesignId
+    dddOwner: ArchitectureDesign
+  - <<: *architectureDesignCreateCommandSymbol
+    name: validateArchitectureDesignStatus
+    dddOwner: ArchitectureDesign
+  - <<: *architectureDesignCreateCommandSymbol
+    name: validateArchitectureFowlerSignal
+    dddOwner: ArchitectureDesign
+  - <<: *architectureDesignCreateCommandSymbol
+    name: validateArchitectureRailRef
+    dddOwner: ArchitectureDesign
+  - <<: *architectureDesignCreateCommandSymbol
+    name: validateSha256
+    dddOwner: ArchitectureDesignOperation
+  - <<: *architectureDesignCreateCommandSymbol
+    name: writePlannedArchitectureDesignCreateOperation
+    dddOwner: ArchitectureDesignOperation
+```
