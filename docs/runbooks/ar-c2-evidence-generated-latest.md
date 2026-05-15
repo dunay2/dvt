@@ -2,12 +2,12 @@
 title: AR-C2 generated operational evidence
 status: Active
 owner: Runtime / SRE / Docs
-last_reviewed: 2026-05-14
+last_reviewed: 2026-05-15
 ---
 
 # AR-C2 generated operational evidence
 
-Generated at (UTC): `2026-05-14T12:55:33.040Z`
+Generated at (UTC): `2026-05-15T12:18:50.553Z`
 
 Source mapping:
 
@@ -29,19 +29,19 @@ Source mapping:
 
 ## Alert wiring evidence (T3)
 
-| Threshold key                             | Source reference                                                                     | Alert rule id | Expression | Window    | Routing target | Status          |
-| ----------------------------------------- | ------------------------------------------------------------------------------------ | ------------- | ---------- | --------- | -------------- | --------------- |
-| `ar-c2.start-run-latency.warning`         | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
-| `ar-c2.start-run-latency.critical`        | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
-| `ar-c2.plan-compile-latency.warning`      | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
-| `ar-c2.plan-compile-latency.critical`     | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
-| `ar-c2.outbox-drain-lag.warning`          | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
-| `ar-c2.outbox-drain-lag.critical`         | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
-| `ar-c2.event-delivery-latency.warning`    | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
-| `ar-c2.event-delivery-latency.critical`   | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
-| `ar-c2.run-status-stale-ratio.warning`    | `docs/runbooks/read-your-writes-freshness-slo-20260330.md#contract`                  | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
-| `ar-c2.run-status-stale-ratio.critical`   | `docs/runbooks/read-your-writes-freshness-slo-20260330.md#contract`                  | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
-| `ar-c2.run-status-unknown-ratio.critical` | `docs/runbooks/read-your-writes-freshness-slo-20260330.md#contract`                  | `pending`     | `pending`  | `pending` | `pending`      | `missing_alert` |
+| Threshold key                             | Source reference                                                                     | Alert rule id                             | Expression                                                                                                                                                          | Window | Routing target          | Status          |
+| ----------------------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----------------------- | --------------- |
+| `ar-c2.start-run-latency.warning`         | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | `ar-c2-start-run-latency-warning`         | `histogram_quantile(0.50, sum(rate(dvt_api_run_start_latency_seconds_bucket[15m])) by (le)) > 0.5`                                                                  | `15m`  | `api-oncall`            | `missing_alert` |
+| `ar-c2.start-run-latency.critical`        | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | `ar-c2-start-run-latency-critical`        | `histogram_quantile(0.99, sum(rate(dvt_api_run_start_latency_seconds_bucket[15m])) by (le)) > 2.5`                                                                  | `15m`  | `api-oncall-pager`      | `missing_alert` |
+| `ar-c2.plan-compile-latency.warning`      | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | `ar-c2-plan-compile-latency-warning`      | `histogram_quantile(0.50, sum(rate(dvt_api_plan_compile_latency_seconds_bucket[15m])) by (le)) > 1.2`                                                               | `15m`  | `api-oncall`            | `missing_alert` |
+| `ar-c2.plan-compile-latency.critical`     | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | `ar-c2-plan-compile-latency-critical`     | `histogram_quantile(0.99, sum(rate(dvt_api_plan_compile_latency_seconds_bucket[15m])) by (le)) > 6`                                                                 | `15m`  | `api-oncall-pager`      | `missing_alert` |
+| `ar-c2.outbox-drain-lag.warning`          | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | `ar-c2-outbox-drain-lag-warning`          | `histogram_quantile(0.95, sum(rate(dvt_delivery_outbox_drain_lag_seconds_bucket[15m])) by (le)) > 30`                                                               | `15m`  | `delivery-oncall`       | `missing_alert` |
+| `ar-c2.outbox-drain-lag.critical`         | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | `ar-c2-outbox-drain-lag-critical`         | `histogram_quantile(0.95, sum(rate(dvt_delivery_outbox_drain_lag_seconds_bucket[15m])) by (le)) > 60`                                                               | `15m`  | `delivery-oncall-pager` | `missing_alert` |
+| `ar-c2.event-delivery-latency.warning`    | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | `ar-c2-event-delivery-latency-warning`    | `histogram_quantile(0.95, sum(rate(dvt_delivery_event_delivery_latency_seconds_bucket[15m])) by (le)) > 1.5`                                                        | `15m`  | `delivery-oncall`       | `missing_alert` |
+| `ar-c2.event-delivery-latency.critical`   | `docs/runbooks/api-runtime-sla-canonical-20260404.md#current-observability-baseline` | `ar-c2-event-delivery-latency-critical`   | `histogram_quantile(0.99, sum(rate(dvt_delivery_event_delivery_latency_seconds_bucket[15m])) by (le)) > 5`                                                          | `15m`  | `delivery-oncall-pager` | `missing_alert` |
+| `ar-c2.run-status-stale-ratio.warning`    | `docs/runbooks/read-your-writes-freshness-slo-20260330.md#contract`                  | `ar-c2-run-status-stale-ratio-warning`    | `sum(rate(dvt_api_run_status_snapshot_staleness_result_total{result="stale"}[15m])) / sum(rate(dvt_api_run_status_snapshot_staleness_result_total[15m])) > 0.05`    | `15m`  | `api-oncall`            | `missing_alert` |
+| `ar-c2.run-status-stale-ratio.critical`   | `docs/runbooks/read-your-writes-freshness-slo-20260330.md#contract`                  | `ar-c2-run-status-stale-ratio-critical`   | `sum(rate(dvt_api_run_status_snapshot_staleness_result_total{result="stale"}[15m])) / sum(rate(dvt_api_run_status_snapshot_staleness_result_total[15m])) > 0.2`     | `15m`  | `api-oncall-pager`      | `missing_alert` |
+| `ar-c2.run-status-unknown-ratio.critical` | `docs/runbooks/read-your-writes-freshness-slo-20260330.md#contract`                  | `ar-c2-run-status-unknown-ratio-critical` | `sum(rate(dvt_api_run_status_snapshot_staleness_result_total{result="unknown"}[24h])) / sum(rate(dvt_api_run_status_snapshot_staleness_result_total[24h])) > 0.001` | `24h`  | `api-oncall-pager`      | `missing_alert` |
 
 ## Sustained validation windows (T4)
 

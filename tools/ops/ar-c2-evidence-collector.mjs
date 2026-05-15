@@ -98,6 +98,21 @@ function parseThresholdKeyList(value) {
     .filter(Boolean);
 }
 
+function hasPlaceholderToken(value) {
+  const normalized = String(value ?? '')
+    .trim()
+    .toLowerCase();
+  if (!normalized) return true;
+  return (
+    normalized.includes('<') ||
+    normalized.includes('>') ||
+    normalized === 'pending' ||
+    normalized === 'unknown' ||
+    normalized.includes('example.com') ||
+    normalized.includes('template')
+  );
+}
+
 function assertThresholdTraceability(mappingRows) {
   const missingKeys = [];
   const missingSources = [];
@@ -209,7 +224,7 @@ function normalizeDashboardSnapshot(snapshot) {
       queryExpression: String(panel.queryExpression ?? 'unknown'),
       capturedAt: String(panel.capturedAt ?? 'unknown'),
       reviewer: String(panel.reviewer ?? 'unknown'),
-      complete: requiredFields.every((field) => String(panel[field] ?? '').trim() !== ''),
+      complete: requiredFields.every((field) => !hasPlaceholderToken(panel[field])),
     });
   }
   return panelsByKey;
@@ -240,7 +255,7 @@ function normalizeAlertSnapshot(snapshot) {
         'configSource',
         'capturedAt',
         'reviewer',
-      ].every((field) => String(rule[field] ?? '').trim() !== ''),
+      ].every((field) => !hasPlaceholderToken(rule[field])),
     });
   }
   return byKey;

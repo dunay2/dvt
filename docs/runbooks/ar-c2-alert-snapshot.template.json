@@ -1,0 +1,125 @@
+{
+  "rules": [
+    {
+      "thresholdKey": "ar-c2.start-run-latency.warning",
+      "alertRuleId": "ar-c2-start-run-latency-warning",
+      "expression": "histogram_quantile(0.50, sum(rate(dvt_api_run_start_latency_seconds_bucket[15m])) by (le)) > 0.5",
+      "window": "15m",
+      "severity": "warning",
+      "routingTarget": "api-oncall",
+      "configSource": "grafana://alerting/rule/<uid>?version=<version>",
+      "capturedAt": "2026-05-15T00:00:00Z",
+      "reviewer": "oncall@example.com"
+    },
+    {
+      "thresholdKey": "ar-c2.start-run-latency.critical",
+      "alertRuleId": "ar-c2-start-run-latency-critical",
+      "expression": "histogram_quantile(0.99, sum(rate(dvt_api_run_start_latency_seconds_bucket[15m])) by (le)) > 2.5",
+      "window": "15m",
+      "severity": "critical",
+      "routingTarget": "api-oncall-pager",
+      "configSource": "grafana://alerting/rule/<uid>?version=<version>",
+      "capturedAt": "2026-05-15T00:00:00Z",
+      "reviewer": "oncall@example.com"
+    },
+    {
+      "thresholdKey": "ar-c2.plan-compile-latency.warning",
+      "alertRuleId": "ar-c2-plan-compile-latency-warning",
+      "expression": "histogram_quantile(0.50, sum(rate(dvt_api_plan_compile_latency_seconds_bucket[15m])) by (le)) > 1.2",
+      "window": "15m",
+      "severity": "warning",
+      "routingTarget": "api-oncall",
+      "configSource": "grafana://alerting/rule/<uid>?version=<version>",
+      "capturedAt": "2026-05-15T00:00:00Z",
+      "reviewer": "oncall@example.com"
+    },
+    {
+      "thresholdKey": "ar-c2.plan-compile-latency.critical",
+      "alertRuleId": "ar-c2-plan-compile-latency-critical",
+      "expression": "histogram_quantile(0.99, sum(rate(dvt_api_plan_compile_latency_seconds_bucket[15m])) by (le)) > 6",
+      "window": "15m",
+      "severity": "critical",
+      "routingTarget": "api-oncall-pager",
+      "configSource": "grafana://alerting/rule/<uid>?version=<version>",
+      "capturedAt": "2026-05-15T00:00:00Z",
+      "reviewer": "oncall@example.com"
+    },
+    {
+      "thresholdKey": "ar-c2.outbox-drain-lag.warning",
+      "alertRuleId": "ar-c2-outbox-drain-lag-warning",
+      "expression": "histogram_quantile(0.95, sum(rate(dvt_delivery_outbox_drain_lag_seconds_bucket[15m])) by (le)) > 30",
+      "window": "15m",
+      "severity": "warning",
+      "routingTarget": "delivery-oncall",
+      "configSource": "grafana://alerting/rule/<uid>?version=<version>",
+      "capturedAt": "2026-05-15T00:00:00Z",
+      "reviewer": "oncall@example.com"
+    },
+    {
+      "thresholdKey": "ar-c2.outbox-drain-lag.critical",
+      "alertRuleId": "ar-c2-outbox-drain-lag-critical",
+      "expression": "histogram_quantile(0.95, sum(rate(dvt_delivery_outbox_drain_lag_seconds_bucket[15m])) by (le)) > 60",
+      "window": "15m",
+      "severity": "critical",
+      "routingTarget": "delivery-oncall-pager",
+      "configSource": "grafana://alerting/rule/<uid>?version=<version>",
+      "capturedAt": "2026-05-15T00:00:00Z",
+      "reviewer": "oncall@example.com"
+    },
+    {
+      "thresholdKey": "ar-c2.event-delivery-latency.warning",
+      "alertRuleId": "ar-c2-event-delivery-latency-warning",
+      "expression": "histogram_quantile(0.95, sum(rate(dvt_delivery_event_delivery_latency_seconds_bucket[15m])) by (le)) > 1.5",
+      "window": "15m",
+      "severity": "warning",
+      "routingTarget": "delivery-oncall",
+      "configSource": "grafana://alerting/rule/<uid>?version=<version>",
+      "capturedAt": "2026-05-15T00:00:00Z",
+      "reviewer": "oncall@example.com"
+    },
+    {
+      "thresholdKey": "ar-c2.event-delivery-latency.critical",
+      "alertRuleId": "ar-c2-event-delivery-latency-critical",
+      "expression": "histogram_quantile(0.99, sum(rate(dvt_delivery_event_delivery_latency_seconds_bucket[15m])) by (le)) > 5",
+      "window": "15m",
+      "severity": "critical",
+      "routingTarget": "delivery-oncall-pager",
+      "configSource": "grafana://alerting/rule/<uid>?version=<version>",
+      "capturedAt": "2026-05-15T00:00:00Z",
+      "reviewer": "oncall@example.com"
+    },
+    {
+      "thresholdKey": "ar-c2.run-status-stale-ratio.warning",
+      "alertRuleId": "ar-c2-run-status-stale-ratio-warning",
+      "expression": "sum(rate(dvt_api_run_status_snapshot_staleness_result_total{result=\"stale\"}[15m])) / sum(rate(dvt_api_run_status_snapshot_staleness_result_total[15m])) > 0.05",
+      "window": "15m",
+      "severity": "warning",
+      "routingTarget": "api-oncall",
+      "configSource": "grafana://alerting/rule/<uid>?version=<version>",
+      "capturedAt": "2026-05-15T00:00:00Z",
+      "reviewer": "oncall@example.com"
+    },
+    {
+      "thresholdKey": "ar-c2.run-status-stale-ratio.critical",
+      "alertRuleId": "ar-c2-run-status-stale-ratio-critical",
+      "expression": "sum(rate(dvt_api_run_status_snapshot_staleness_result_total{result=\"stale\"}[15m])) / sum(rate(dvt_api_run_status_snapshot_staleness_result_total[15m])) > 0.2",
+      "window": "15m",
+      "severity": "critical",
+      "routingTarget": "api-oncall-pager",
+      "configSource": "grafana://alerting/rule/<uid>?version=<version>",
+      "capturedAt": "2026-05-15T00:00:00Z",
+      "reviewer": "oncall@example.com"
+    },
+    {
+      "thresholdKey": "ar-c2.run-status-unknown-ratio.critical",
+      "alertRuleId": "ar-c2-run-status-unknown-ratio-critical",
+      "expression": "sum(rate(dvt_api_run_status_snapshot_staleness_result_total{result=\"unknown\"}[24h])) / sum(rate(dvt_api_run_status_snapshot_staleness_result_total[24h])) > 0.001",
+      "window": "24h",
+      "severity": "critical",
+      "routingTarget": "api-oncall-pager",
+      "configSource": "grafana://alerting/rule/<uid>?version=<version>",
+      "capturedAt": "2026-05-15T00:00:00Z",
+      "reviewer": "oncall@example.com"
+    }
+  ]
+}
