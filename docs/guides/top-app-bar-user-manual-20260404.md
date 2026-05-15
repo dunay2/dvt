@@ -1,10 +1,9 @@
 ---
 title: Top App Bar User Manual
-status: Active
+status: Draft
 date: 2026-04-04
 owner: Web
 planning_type: guide
-last_reviewed: 2026-05-15
 ---
 
 # Top App Bar User Manual
@@ -30,22 +29,12 @@ The app bar shows current branch and short SHA from bootstrap config.
 
 ## Connection Indicator States
 
-- `Checking`: the first platform-health probe is still in-flight and the shell
-  must not show an optimistic healthy state yet.
-- `Healthy`: REST health is available and the platform snapshot is not
-  degraded.
-- `Offline`: the backend health snapshot is unreachable or the health query
-  failed.
-- `Degraded`: backend responds but reports degraded readiness or partial probe
-  failure.
+- `Checking`: health probe is still in-flight.
+- `Healthy`: REST endpoint is available.
+- `Offline`: backend is unreachable.
+- `Degraded`: backend responds but reports degraded status.
 
 Tooltips show additional detail when available.
-
-When the state is `Offline` or `Degraded`, the global shell banner appears
-below the top bar. It shows the same single health projection as the top bar,
-offers `Retry now`, and displays the next automatic refresh window. Stable
-healthy polling uses the normal platform-health interval. Repeated offline
-failures use capped exponential backoff.
 
 ## Shell Menu Actions
 
@@ -66,17 +55,12 @@ These controls update UI layout state only.
 
 - If selectors appear empty, verify workspace bootstrap options are configured.
 - If status is always `Offline`, verify `/healthz` reachability from web app.
-- If the banner stays in `Auto-refresh is waiting for the first completed
-health check`, verify that the first `/healthz` query can settle instead of
-  remaining pending.
 - If toggles do not persist, inspect `uiLayoutStore` persistence settings.
 
 ## Definition Of Done
 
-- [x] Scope context is visible through the project identity badge and workspace
-      context menu.
-- [x] Connection state indicator transitions through checking, healthy,
-      degraded, and offline.
-- [x] Shell toggles update panels and focus mode.
-- [x] Spanish labels render under `es` browser locale.
-- [x] English labels render for non-`es` locale.
+- [ ] Scope selectors are visible and selectable.
+- [ ] Connection state indicator transitions correctly.
+- [ ] Shell toggles update panels and focus mode.
+- [ ] Spanish labels render under `es` browser locale.
+- [ ] English labels render for non-`es` locale.
