@@ -1,8 +1,8 @@
 ---
 title: Monaco Embedded Review Surfaces Rationale And Tradeoffs
-status: Proposed
+status: Accepted
 owner: Frontend / Architecture
-last_reviewed: 2026-04-03
+last_reviewed: 2026-05-15
 planning_type: proposal
 ---
 
