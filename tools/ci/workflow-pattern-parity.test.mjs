@@ -1,3 +1,6 @@
+/**
+ * @ownedConcern Guard GitHub workflow wiring against drift from shared CI scope policies.
+ */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
@@ -222,6 +225,26 @@ test('contracts and test workflows consume semantic scope outputs instead of inl
   assert.doesNotMatch(testWorkflow, /dorny\/paths-filter/u);
   assert.doesNotMatch(testWorkflow, /steps\.det_changes\.outputs/u);
   assert.doesNotMatch(testWorkflow, /steps\.cov_changes\.outputs/u);
+});
+
+test('engine coverage scope is a semantic superset of engine workspace policy', () => {
+  for (const pattern of workflowScopePolicy.workspace_engine) {
+    assert.ok(
+      TEST_SCOPE_PATTERNS.coverage_relevant.includes(pattern),
+      `coverage_relevant must include engine workspace policy pattern: ${pattern}`
+    );
+  }
+
+  const engineCoverageCanaries = [
+    'packages/@dvt/engine/vitest.config.ts',
+    'packages/@dvt/engine/src/WorkflowEngine.ts',
+    'packages/@dvt/engine/test/contracts/RunLifecycle.contract.test.ts',
+  ];
+
+  for (const path of engineCoverageCanaries) {
+    assert.ok(matchesAnyPattern(path, workflowScopePolicy.workspace_engine));
+    assert.ok(matchesAnyPattern(path, TEST_SCOPE_PATTERNS.coverage_relevant));
+  }
 });
 
 test('PR quality gate keeps merge-blocking governance commands wired', () => {

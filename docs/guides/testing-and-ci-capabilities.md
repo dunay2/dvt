@@ -329,6 +329,15 @@ These files are the canonical source of truth for:
 - adapter-postgres, contracts, determinism, and coverage scope detection
 - Temporal integration scope detection
 
+The engine coverage scope is documented as the
+[Engine Coverage Scope Gate Component](../architecture/components/ci-governance/engine-coverage-scope-gate-component.md).
+For pull requests, `coverage_relevant` is true for the governed engine
+workspace scope, including package-level configuration such as
+`packages/@dvt/engine/vitest.config.ts`. It also remains true for contracts,
+root test configuration, lockfiles, and Test Suite workflow changes that can
+affect threshold enforcement. Unrelated docs-only changes can keep the coverage
+job closed.
+
 Current workflow consumers:
 
 - [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) uses the shared policy plus
@@ -348,7 +357,10 @@ Current workflow consumers:
   orchestration helpers, so PRs that change the Turbo graph or its
   orchestration helper cannot skip `Test Suite`. Adapter-postgres integration,
   determinism/replay, and engine coverage also consume `emit-scope --mode test`
-  outputs instead of local `dorny/paths-filter` package-root rules.
+  outputs instead of local `dorny/paths-filter` package-root rules. Engine
+  coverage uses the same governed `packages/@dvt/engine/**` package boundary as
+  engine package test routing, so engine Vitest config changes cannot bypass
+  threshold enforcement.
 - [`.github/workflows/contracts.yml`](../../.github/workflows/contracts.yml) uses
   `emit-scope --mode contracts` for contract, determinism, and golden routing.
   The workflow no longer owns parallel inline `package.json` filters for those

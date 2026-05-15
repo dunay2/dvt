@@ -1,3 +1,6 @@
+/**
+ * @ownedConcern Protect semantic GitHub Actions test-scope outputs for CI workflow consumers.
+ */
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
@@ -126,6 +129,13 @@ test('emit-scope test mode marks engine changes coverage relevant', () => {
   const scope = computeWorkflowModeScopeOutputs('test', [
     'packages/@dvt/engine/src/WorkflowEngine.ts',
   ]);
+
+  assert.equal(scope.engine, true);
+  assert.equal(scope.coverage_relevant, true);
+});
+
+test('emit-scope test mode marks engine package config coverage relevant', () => {
+  const scope = computeWorkflowModeScopeOutputs('test', ['packages/@dvt/engine/vitest.config.ts']);
 
   assert.equal(scope.engine, true);
   assert.equal(scope.coverage_relevant, true);

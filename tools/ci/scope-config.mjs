@@ -1,3 +1,6 @@
+/**
+ * @ownedConcern Compute repository CI scope read models from governed path policies and command semantics.
+ */
 import { execFile } from 'node:child_process';
 import { appendFileSync, readFileSync } from 'node:fs';
 import { promisify } from 'node:util';
@@ -79,6 +82,7 @@ function readAdapterPostgresPolicy() {
 
 const WORKFLOW_SCOPE_POLICY = readWorkflowScopePolicy();
 const ADAPTER_POSTGRES_POLICY = readAdapterPostgresPolicy();
+const ENGINE_WORKSPACE_PATTERNS = WORKFLOW_SCOPE_POLICY.workspace_engine;
 export const ADAPTER_POSTGRES_RELEVANT_PATTERNS = ADAPTER_POSTGRES_POLICY.adapter_postgres_relevant;
 
 export const WORKFLOW_SCOPE_PATTERNS = {
@@ -153,7 +157,7 @@ export const WORKSPACE_ENTRIES = [
     key: 'engine',
     name: 'engine',
     pkg: '@dvt/engine',
-    patterns: WORKFLOW_SCOPE_POLICY.workspace_engine,
+    patterns: ENGINE_WORKSPACE_PATTERNS,
   },
   {
     key: 'observability',
@@ -245,7 +249,7 @@ const TEST_ROOT_BUILD_PATTERNS = [
 ];
 
 const TEST_DETERMINISM_PATTERNS = [
-  'packages/@dvt/engine/**',
+  ...ENGINE_WORKSPACE_PATTERNS,
   'packages/@dvt/contracts/**',
   'package.json',
   'pnpm-lock.yaml',
@@ -254,8 +258,7 @@ const TEST_DETERMINISM_PATTERNS = [
 ];
 
 const TEST_COVERAGE_PATTERNS = [
-  'packages/@dvt/engine/src/**',
-  'packages/@dvt/engine/test/**',
+  ...ENGINE_WORKSPACE_PATTERNS,
   'packages/@dvt/contracts/**',
   'package.json',
   'pnpm-lock.yaml',
@@ -311,7 +314,7 @@ export const TEST_SCOPE_PATTERNS = {
     'vitest.config.ts',
     'tsconfig*.json',
   ],
-  engine: ['packages/@dvt/engine/**'],
+  engine: ENGINE_WORKSPACE_PATTERNS,
   contracts: ['packages/@dvt/contracts/**'],
   adapter_temporal: ['packages/@dvt/adapter-temporal/**'],
   cli: ['packages/@dvt/cli/**'],
