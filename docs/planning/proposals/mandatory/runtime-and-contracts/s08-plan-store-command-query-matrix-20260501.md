@@ -1,8 +1,8 @@
 ---
 title: S08 plan-store command and query matrix
-status: Review
+status: Active
 owner: Architecture / Planner / Artifacts / API / Storage
-last_reviewed: 2026-05-01
+last_reviewed: 2026-05-15
 planning_type: proposal
 ---
 
@@ -19,9 +19,12 @@ matrix is drift until this document is updated and reviewed.
 
 ## Review Gate
 
-This matrix is ready for architecture review, not implementation execution.
-Implementation remains blocked until this document is accepted or explicitly
-amended after review.
+Architecture review and implementation execution are complete for the S08
+scoped-port closure recorded in this matrix and its linked mechanization
+manifests.
+
+Future changes to S08 plan-store behavior remain blocked unless they are
+expressed as explicit matrix amendments and reviewed before implementation.
 
 Minimum review decisions:
 
