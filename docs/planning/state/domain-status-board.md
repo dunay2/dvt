@@ -21,19 +21,16 @@ bootstrap/export snapshots.
 
 - Current objective: keep the shipped PostgreSQL-backed transformation runtime
   vertical stable while finishing `WE-HX` hardening, the remaining runtime
-  observability follow-through, and the first workflow-payload scale hardening
-  cut.
-- Active task IDs: `WE-HX`, `WE-HX-0`, `AR-C2-T2`, `AR-C2-T3`, `RC-C2`, `AR-D-PLAN-POINTER`
+  observability follow-through, and the remaining runtime-boundary hardening
+  cuts after the PlanRef payload line closed.
+- Active task IDs: `WE-HX`, `WE-HX-0`, `AR-C2-T2`, `AR-C2-T3`, `RC-C2`
 - Roadmap lane affected: [Execution Runtime lane](../roadmap/roadmap-by-domain.md)
 - Primary blockers: the first PostgreSQL runtime vertical is now accepted, but
   dashboard and alert evidence for runtime SLAs still remain under
   `AR-C2-T2/T3`, broader boundary hardening continues under `WE-HX`, and Lane D
-  now owns the pointer-based workflow input hardening plus the post-vertical
-  retention follow-through rather than only proof repeatability. The branch
-  review also made explicit that DBT remains partially embedded in the default
-  `@dvt/adapter-temporal` package surface even though it is no longer part of
-  engine-kernel semantics, so that coupling now remains visible as runtime
-  hardening debt instead of hidden cleanup.
+  has closed the pointer-based workflow input hardening line. Post-vertical
+  retention follow-through and worker-scale posture now remain the active Lane D
+  work rather than hidden leftovers under `AR-D-PLAN-POINTER`.
 
 ### `API and Admission`
 

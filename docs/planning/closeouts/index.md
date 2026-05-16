@@ -22,6 +22,9 @@ navigation. The folder contains additional historical entries.
 
 ## Representative Recent Closeouts
 
+- [20260515 AR-D PlanRef Workflow Payload Hardening Final Closeout](./20260515-ar-d-plan-pointer-final-closeout.md)
+- [20260514 AR-D PlanRef DBT Plugin Package Extraction Closeout](./20260514-ar-d-plan-pointer-dbt-package-extraction-closeout.md)
+- [20260514 AR-D2 Temporal PlanRef Capacity SLA Closeout](./20260514-ar-d2-temporal-planref-capacity-sla-closeout.md)
 - [20260503 TF-E2-M-D Startup Route Readiness Closeout](./20260503-tf-e2-m-d-startup-route-readiness-closeout.md)
 - [20260503 TF-E2-M-B Canvas Draft Access Posture Closeout](./20260503-tf-e2-m-b-canvas-draft-access-posture-closeout.md)
 - [20260502 TF-E2-M-C First Authoring Live Proof Closeout](./20260502-tf-e2-m-c-first-authoring-live-proof-closeout.md)

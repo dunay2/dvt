@@ -1,8 +1,8 @@
 ---
 title: Closeout - AR-D plan-pointer follow-up hardening
-status: Review
+status: Accepted
 owner: Temporal / Engine / Docs
-last_reviewed: 2026-04-20
+last_reviewed: 2026-05-15
 planning_type: closeout
 slice: AR-D-plan-pointer-follow-up-hardening
 ---
@@ -239,3 +239,10 @@ flowchart TD
   state.
 - The workflow still uses a single active `runPlanWorkflow` line; no legacy
   compatibility branch was reintroduced.
+
+## Closure Reconciliation - 2026-05-15
+
+This follow-up closeout is accepted as a completed hardening slice of
+`AR-D-PLAN-POINTER`. Later AR-D2 capacity SLA, continuation-safety, DBT package
+extraction, and semantic-fitness passes closed the residual items that kept the
+parent task open after this slice.
