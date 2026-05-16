@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { HexColorInput, HexColorPicker } from 'react-colorful';
+import { CanvasViewMenuControls } from '../../views/canvas/CanvasViewMenuControls';
 import { topAppBarClasses } from './chrome';
 import type { ShellTopBarCopy } from './copy';
 import {
@@ -185,6 +186,7 @@ export function ShellMenu({
         <DropdownMenuSeparator />
         <DropdownMenuLabel>{copy.viewOptions}</DropdownMenuLabel>
         <DropdownMenuItem onClick={() => setGridSize(20)}>{copy.resetGrid}</DropdownMenuItem>
+        <CanvasViewMenuControls />
       </DropdownMenuContent>
     </DropdownMenu>
   );

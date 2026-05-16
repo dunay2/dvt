@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { Separator } from '../../components/ui/separator';
 import { CanvasToolbarDraftStatus } from './CanvasToolbarDraftStatus';
 import { CanvasToolbarPrimaryControls } from './CanvasToolbarPrimaryControls';
+import { CanvasViewMenuContributionRegistrar } from './CanvasViewMenuControls';
 import type { CanvasGraphAuthoringMode } from '../../plugins/nodeTypeContracts';
 import type { CanvasPaletteId } from './canvasPalette';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
@@ -55,7 +56,15 @@ export default function CanvasToolbar(props: CanvasToolbarProps) {
 
   const content = (
     <div className="flex min-w-0 items-center gap-2">
-      <CanvasToolbarPrimaryControls
+      <CanvasViewMenuContributionRegistrar
+        canEditEdges={props.canEditEdges}
+        canUseCostOverlay={props.canUseCostOverlay}
+        exclusiveOverlayMode={props.exclusiveOverlayMode}
+        impactOverlayEnabled={props.impactOverlayEnabled}
+        columnLevelLineageEnabled={props.columnLevelLineageEnabled}
+        canvasGridVisible={props.canvasGridVisible}
+        canvasGridColor={props.canvasGridColor}
+        canvasSnapToGrid={props.canvasSnapToGrid}
         onAutoLayout={props.onAutoLayout}
         onToggleCostOverlay={props.onToggleCostOverlay}
         onToggleImpact={props.onToggleImpact}
@@ -63,23 +72,17 @@ export default function CanvasToolbar(props: CanvasToolbarProps) {
         onToggleGridVisible={props.onToggleGridVisible}
         onGridColorChange={props.onGridColorChange}
         onToggleSnapToGrid={props.onToggleSnapToGrid}
+      />
+      <CanvasToolbarPrimaryControls
         onExportProjectSnapshot={props.onExportProjectSnapshot}
         onImportProjectSnapshotFile={props.onImportProjectSnapshotFile}
         onPlan={props.onPlan}
         onRun={props.onRun}
         canPlan={props.canPlan}
         canRun={props.canRun}
-        canEditEdges={props.canEditEdges}
         canExportProjectSnapshot={props.canExportProjectSnapshot}
         canImportProjectSnapshot={props.canImportProjectSnapshot}
         canStartRun={props.canStartRun}
-        exclusiveOverlayMode={props.exclusiveOverlayMode}
-        canUseCostOverlay={props.canUseCostOverlay}
-        impactOverlayEnabled={props.impactOverlayEnabled}
-        columnLevelLineageEnabled={props.columnLevelLineageEnabled}
-        canvasGridVisible={props.canvasGridVisible}
-        canvasGridColor={props.canvasGridColor}
-        canvasSnapToGrid={props.canvasSnapToGrid}
         workflowStatusLabel={viewModel.workflowStatusLabel}
         workflowStatusClass={viewModel.workflowStatusClass}
         workflowStatusTitle={viewModel.workflowStatusTitle}

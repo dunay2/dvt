@@ -42,6 +42,20 @@ lacks a route-stage risk decision. Child slices cannot declare alpha full.
 - `accepted`: every stage has accepted proof, risk triage, cadence, ADR-0000
   traceability, and `pnpm verify:prepush` evidence.
 
+## Route-Level Combined Fixture/Proof
+
+The matrix is not complete with isolated child fixtures only. F-27 requires one
+combined route-level fixture that traverses:
+
+1. startup gate,
+2. workspace context admission,
+3. Canvas or Code route entry,
+4. plan/run readiness projection,
+5. recovery vocabulary rendering under fail-closed posture.
+
+This combined proof is the acceptance guard that prevents child-slice closure
+from being misread as route-level alpha readiness.
+
 ## Route Diagram
 
 ```mermaid

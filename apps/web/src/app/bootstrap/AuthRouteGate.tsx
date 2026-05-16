@@ -10,7 +10,11 @@ type AuthGateState =
   | { kind: 'allowed' }
   | { kind: 'denied'; reason: AuthGateDeniedReason };
 
-type AuthGateDeniedReason = 'unauthenticated' | 'workspace_context_not_granted' | 'transport_error';
+type AuthGateDeniedReason =
+  | 'unauthenticated'
+  | 'workspace_context_not_granted'
+  | 'runtime_unavailable'
+  | 'transport_error';
 
 const sessionApiClient = createApiClient();
 
@@ -26,6 +30,10 @@ function hasWorkspaceContextNotGrantedBody(apiError: Pick<ApiError, 'responseBod
 
 export function classifyProtectedRouteSessionError(error: unknown): AuthGateDeniedReason {
   const apiError = error as Partial<ApiError>;
+  if (apiError?.statusCode === 404 && apiError.endpoint === '/session') {
+    return 'runtime_unavailable';
+  }
+
   if (
     apiError?.statusCode === 403 &&
     apiError.endpoint === '/workspace/context' &&

@@ -109,6 +109,37 @@ function stubAuthenticatedSessionFetch(): ReturnType<typeof vi.fn> {
   return fetchMock;
 }
 
+function stubMissingSessionRouteFetch(): ReturnType<typeof vi.fn> {
+  const jsonHeaders = {
+    'content-type': 'application/json',
+  };
+  const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.endsWith('/session')) {
+      return new Response(
+        JSON.stringify({
+          error: {
+            type: 'not_found',
+            reason: 'route_not_registered',
+          },
+        }),
+        {
+          status: 404,
+          headers: jsonHeaders,
+        }
+      );
+    }
+
+    return new Response(JSON.stringify({}), {
+      status: 200,
+      headers: jsonHeaders,
+    });
+  });
+
+  vi.stubGlobal('fetch', fetchMock);
+  return fetchMock;
+}
+
 describe('app routes', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -160,6 +191,34 @@ describe('app routes', () => {
     await waitForReactQuery(() => container.textContent?.includes('Login required') === true, {
       description: 'login gate fallback',
     });
+
+    expect(container.textContent).toContain('Login required');
+  });
+
+  it('shows protected runtime unavailable guidance when session route is not mounted', async () => {
+    stubMissingSessionRouteFetch();
+    const router = createMemoryRouter(createAppRoutes(), {
+      initialEntries: ['/canvas'],
+    });
+    const queryClient = createTestQueryClient();
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} />
+        </QueryClientProvider>
+      );
+    });
+
+    await waitForReactQuery(
+      () =>
+        container.textContent?.includes(
+          'Protected runtime session route is unavailable. Verify OIDC/API runtime posture.'
+        ) === true,
+      {
+        description: 'runtime unavailable login guidance',
+      }
+    );
 
     expect(container.textContent).toContain('Login required');
   });

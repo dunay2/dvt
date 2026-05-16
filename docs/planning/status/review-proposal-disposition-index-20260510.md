@@ -358,6 +358,7 @@ As of the 2026-05-15 hard review correction, the reconciled Lane E P0 review
 set (`F-03`, `F-04`, `F-04-A..E`, `F-26`, `ADP-LINT-ORDER-01`) no longer
 remains in `review`. Repository-wide planning still reports review-state tasks
 in the current-state table above and should be treated as the canonical total.
+Two first-pass closures were rejected and reopened as blocked.
 
 Closure and correction evidence:
 

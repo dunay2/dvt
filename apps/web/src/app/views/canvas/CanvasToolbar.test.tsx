@@ -8,6 +8,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CanvasToolbar from './CanvasToolbar';
 import { canvasViewCopy } from './copy';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
+import { useCanvasViewMenuContributionStore } from './canvasViewMenuContributionStore';
+import type { CanvasViewMenuContribution } from './canvasViewMenuContributionStore';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 
 function buildToolbarProps(
@@ -73,6 +75,29 @@ function buildValidationResult(
   };
 }
 
+function buildCanvasViewMenuContribution(
+  overrides?: Partial<CanvasViewMenuContribution>
+): CanvasViewMenuContribution {
+  return {
+    canEditEdges: true,
+    canUseCostOverlay: true,
+    exclusiveOverlayMode: 'runtime',
+    impactOverlayEnabled: false,
+    columnLevelLineageEnabled: false,
+    canvasGridVisible: true,
+    canvasGridColor: '#94a3b8',
+    canvasSnapToGrid: false,
+    onAutoLayout: vi.fn(),
+    onToggleCostOverlay: vi.fn(),
+    onToggleImpact: vi.fn(),
+    onToggleColumns: vi.fn(),
+    onToggleGridVisible: vi.fn(),
+    onGridColorChange: vi.fn(),
+    onToggleSnapToGrid: vi.fn(),
+    ...overrides,
+  };
+}
+
 describe('CanvasToolbar', () => {
   let container: HTMLDivElement;
   let portalHost: HTMLDivElement;
@@ -99,6 +124,7 @@ describe('CanvasToolbar', () => {
     act(() => {
       root.unmount();
     });
+    useCanvasViewMenuContributionStore.setState({ contribution: null });
     portalHost.remove();
     container.remove();
   });
@@ -116,18 +142,18 @@ describe('CanvasToolbar', () => {
 
     expect(portalHost.querySelectorAll('[data-slot="canvas-workflow-status"]')).toHaveLength(1);
     expect(portalHost.textContent).toContain(canvasViewCopy.toolbarWorkflowPlanRequiredLabel);
-    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarLayoutLabel);
-    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarImpactLabel);
-    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarColumnsLabel);
-    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarCostLabel);
-    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarGridLabel);
-    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarSnapToGridLabel);
+    expect(portalHost.textContent).not.toContain(canvasViewCopy.toolbarLayoutLabel);
+    expect(portalHost.textContent).not.toContain(canvasViewCopy.toolbarImpactLabel);
+    expect(portalHost.textContent).not.toContain(canvasViewCopy.toolbarColumnsLabel);
+    expect(portalHost.textContent).not.toContain(canvasViewCopy.toolbarCostLabel);
+    expect(portalHost.textContent).not.toContain(canvasViewCopy.toolbarGridLabel);
+    expect(portalHost.textContent).not.toContain(canvasViewCopy.toolbarSnapToGridLabel);
     expect(portalHost.textContent).toContain(canvasViewCopy.toolbarPlanLabel);
     expect(portalHost.textContent).toContain(canvasViewCopy.toolbarRunLabel);
     expect(portalHost.textContent).toContain(canvasViewCopy.draftSyncedLabel);
   });
 
-  it('applies canvas grid preference commands from the toolbar', async () => {
+  it('registers canvas view preference commands for the View menu', async () => {
     const onToggleGridVisible = vi.fn();
     const onGridColorChange = vi.fn();
     const onToggleSnapToGrid = vi.fn();
@@ -147,32 +173,43 @@ describe('CanvasToolbar', () => {
       );
     });
 
-    const gridButton = Array.from(portalHost.querySelectorAll('button')).find(
-      (button) => button.ariaLabel === canvasViewCopy.toolbarGridLabel
-    );
-    const snapButton = Array.from(portalHost.querySelectorAll('button')).find(
-      (button) => button.ariaLabel === canvasViewCopy.toolbarSnapToGridLabel
-    );
-    const colorInput = portalHost.querySelector(
-      `input[aria-label="${canvasViewCopy.toolbarGridColorLabel}"]`
-    ) as HTMLInputElement | null;
+    const { useCanvasViewMenuContributionStore } =
+      await import('./canvasViewMenuContributionStore');
+    const contribution = useCanvasViewMenuContributionStore.getState().contribution;
 
-    expect(gridButton).not.toBeNull();
-    expect(snapButton).not.toBeNull();
-    expect(colorInput?.value).toBe('#f97316');
+    expect(contribution?.canvasGridVisible).toBe(false);
+    expect(contribution?.canvasGridColor).toBe('#f97316');
+    expect(contribution?.canvasSnapToGrid).toBe(true);
 
-    await act(async () => {
-      gridButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      snapButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      if (colorInput != null) {
-        colorInput.value = '#22c55e';
-      }
-      colorInput?.dispatchEvent(new Event('input', { bubbles: true }));
-    });
+    contribution?.onToggleGridVisible();
+    contribution?.onToggleSnapToGrid();
+    contribution?.onGridColorChange('#22c55e');
 
     expect(onToggleGridVisible).toHaveBeenCalledTimes(1);
     expect(onToggleSnapToGrid).toHaveBeenCalledTimes(1);
     expect(onGridColorChange).toHaveBeenCalledWith('#22c55e');
+  });
+
+  it('does not let a stale View menu cleanup clear an active replacement contribution', () => {
+    const staleContribution = buildCanvasViewMenuContribution({
+      canvasGridVisible: false,
+    });
+    const activeContribution = buildCanvasViewMenuContribution({
+      canvasGridVisible: true,
+    });
+
+    const { registerCanvasViewMenuContribution, clearCanvasViewMenuContribution } =
+      useCanvasViewMenuContributionStore.getState();
+
+    registerCanvasViewMenuContribution(staleContribution);
+    registerCanvasViewMenuContribution(activeContribution);
+    clearCanvasViewMenuContribution(staleContribution);
+
+    expect(useCanvasViewMenuContributionStore.getState().contribution).toBe(activeContribution);
+
+    clearCanvasViewMenuContribution(activeContribution);
+
+    expect(useCanvasViewMenuContributionStore.getState().contribution).toBeNull();
   });
 
   it('exposes project snapshot export and import commands without adding manual Save', async () => {
@@ -272,9 +309,6 @@ describe('CanvasToolbar', () => {
     });
 
     const buttons = Array.from(portalHost.querySelectorAll('button'));
-    const layoutButton = buttons.find((button) =>
-      button.textContent?.includes(canvasViewCopy.toolbarLayoutLabel)
-    );
     const planButton = buttons.find((button) =>
       button.textContent?.includes(canvasViewCopy.toolbarPlanLabel)
     );
@@ -283,7 +317,6 @@ describe('CanvasToolbar', () => {
     );
 
     expect(portalHost.textContent).toContain(canvasViewCopy.toolbarWorkflowReadOnlyLabel);
-    expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
     expect(runButton?.getAttribute('disabled')).not.toBeNull();
   });

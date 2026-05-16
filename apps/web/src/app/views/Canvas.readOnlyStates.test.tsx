@@ -7,6 +7,7 @@ import {
   renderCanvasRouteWithController,
 } from './Canvas.test.support';
 import { deriveCanvasDraftAccessPosture } from './canvas/canvasDraftAccessPostureModel';
+import { useCanvasViewMenuContributionStore } from './canvas/canvasViewMenuContributionStore';
 
 describe('Canvas route access states', () => {
   let harness: ReturnType<typeof createCanvasRouteHarness>;
@@ -38,12 +39,14 @@ describe('Canvas route access states', () => {
       canEditGraph: false,
     });
     expect(currentCanvasRouteState().explorerProps?.onOpenDataRegistry).toBeUndefined();
-    expect(layoutButton).toBeDefined();
+    expect(layoutButton).toBeUndefined();
     expect(planButton).toBeDefined();
     expect(runButton).toBeDefined();
-    expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
     expect(runButton?.getAttribute('disabled')).not.toBeNull();
+    expect(useCanvasViewMenuContributionStore.getState().contribution).toMatchObject({
+      canEditEdges: false,
+    });
   });
 
   it('keeps the viewport visible and shows limited access when the draft boundary is read_only', async () => {
@@ -74,12 +77,14 @@ describe('Canvas route access states', () => {
     expect(harness.container.querySelector('[data-slot="canvas-readonly-state"]')).not.toBeNull();
     expect(harness.container.textContent).toContain('Read-only canvas');
     expect(harness.container.textContent).toContain('graph edits');
-    expect(layoutButton).toBeDefined();
+    expect(layoutButton).toBeUndefined();
     expect(planButton).toBeDefined();
     expect(runButton).toBeDefined();
-    expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
     expect(runButton?.getAttribute('disabled')).not.toBeNull();
+    expect(useCanvasViewMenuContributionStore.getState().contribution).toMatchObject({
+      canEditEdges: false,
+    });
     expect(harness.container.textContent).toContain('Draft is read-only');
   });
 

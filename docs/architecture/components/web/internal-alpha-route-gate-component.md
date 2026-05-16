@@ -87,6 +87,20 @@ stateDiagram-v2
 | `ObservePlanRunReadiness`           | query   | Plan/run readiness |
 | `MapRouteRecoveryState`             | query   | Recovery states    |
 
+## Cadence Contract
+
+`AlphaCadenceDecision` is valid only when these fields are present and owned:
+
+| Field           | Meaning                                           | Owner                  |
+| --------------- | ------------------------------------------------- | ---------------------- |
+| `audience`      | internal tester scope allowed for the route stage | Product                |
+| `entryDate`     | date when stage enters alpha candidate posture    | Product + Frontend     |
+| `duration`      | expected evaluation window before exit/review     | Product                |
+| `exitOwner`     | accountable owner for alpha exit decision         | Product / Architecture |
+| `extensionRule` | explicit condition that allows extending cadence  | Product / Architecture |
+
+Cadence without `exitOwner` or `extensionRule` is automatically `blocked`.
+
 ## Architecture Diagram
 
 ```mermaid
