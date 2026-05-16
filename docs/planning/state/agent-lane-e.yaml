@@ -1326,6 +1326,26 @@ tasks:
       map, and implementation guide, but the shell still does not enforce all panel and recovery
       rules in code.
     last_verified: '2026-04-03'
+  - task_id: F-15-D
+    parent_task: F-15
+    priority: P1
+    status: queued
+    objective: >-
+      Resolve the workbench left-navigation rail disposition so the Canvas workbench follows the
+      accepted no-permanent-left-rail shell specification without clipping footer navigation or
+      hiding global routes.
+    dependency: F-15
+    target: Workbench shell / Canvas route navigation disposition
+    complexity: M
+    effort_points: 3
+    progress_pct: 0
+    evidence_refs:
+      - buzon/20260516-codex-fowler-element-workbench-navigation-rail-disposition.md
+    status_reason: >-
+      The current Canvas screenshot shows a permanent left navigation rail even though the newer
+      workbench UX specification says no permanent left rail in the workbench, and the footer is
+      visibly clipped.
+    last_verified: '2026-05-16'
   - task_id: F-16
     priority: P1
     status: queued
