@@ -126,6 +126,14 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasToolbar.architecture.test.tsx
     cypressCoverage: N/A - route-menu contribution is covered by unit and architecture tests.
     unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasToolbar.test.tsx]
+  - name: buildCanvasViewMenuContribution
+    path: apps/web/src/app/views/canvas/CanvasToolbar.test.tsx
+    dddOwner: CanvasViewMenuContribution
+    cqRails: [CanvasViewMenuContribution]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasToolbar.architecture.test.tsx
+    cypressCoverage: N/A - route-menu contribution is covered by unit and architecture tests.
+    unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasToolbar.test.tsx]
   - name: CanvasViewMenuContributionRegistrarProps
     path: apps/web/src/app/views/canvas/CanvasViewMenuControls.tsx
     dddOwner: CanvasViewMenuContribution

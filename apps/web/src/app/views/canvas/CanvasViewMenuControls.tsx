@@ -28,7 +28,7 @@ export function CanvasViewMenuContributionRegistrar(
   useEffect(() => {
     registerCanvasViewMenuContribution(contribution);
     return () => {
-      clearCanvasViewMenuContribution();
+      clearCanvasViewMenuContribution(contribution);
     };
   }, [clearCanvasViewMenuContribution, contribution, registerCanvasViewMenuContribution]);
 

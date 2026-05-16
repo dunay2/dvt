@@ -24,13 +24,14 @@ export type CanvasViewMenuContribution = Readonly<{
 type CanvasViewMenuContributionState = {
   contribution: CanvasViewMenuContribution | null;
   registerCanvasViewMenuContribution: (contribution: CanvasViewMenuContribution) => void;
-  clearCanvasViewMenuContribution: () => void;
+  clearCanvasViewMenuContribution: (contribution: CanvasViewMenuContribution) => void;
 };
 
 export const useCanvasViewMenuContributionStore = create<CanvasViewMenuContributionState>(
   (set) => ({
     contribution: null,
     registerCanvasViewMenuContribution: (contribution) => set({ contribution }),
-    clearCanvasViewMenuContribution: () => set({ contribution: null }),
+    clearCanvasViewMenuContribution: (contribution) =>
+      set((state) => (state.contribution === contribution ? { contribution: null } : state)),
   })
 );

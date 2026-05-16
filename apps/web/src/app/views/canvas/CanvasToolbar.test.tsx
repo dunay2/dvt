@@ -8,6 +8,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CanvasToolbar from './CanvasToolbar';
 import { canvasViewCopy } from './copy';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
+import { useCanvasViewMenuContributionStore } from './canvasViewMenuContributionStore';
+import type { CanvasViewMenuContribution } from './canvasViewMenuContributionStore';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 
 function buildToolbarProps(
@@ -73,6 +75,29 @@ function buildValidationResult(
   };
 }
 
+function buildCanvasViewMenuContribution(
+  overrides?: Partial<CanvasViewMenuContribution>
+): CanvasViewMenuContribution {
+  return {
+    canEditEdges: true,
+    canUseCostOverlay: true,
+    exclusiveOverlayMode: 'runtime',
+    impactOverlayEnabled: false,
+    columnLevelLineageEnabled: false,
+    canvasGridVisible: true,
+    canvasGridColor: '#94a3b8',
+    canvasSnapToGrid: false,
+    onAutoLayout: vi.fn(),
+    onToggleCostOverlay: vi.fn(),
+    onToggleImpact: vi.fn(),
+    onToggleColumns: vi.fn(),
+    onToggleGridVisible: vi.fn(),
+    onGridColorChange: vi.fn(),
+    onToggleSnapToGrid: vi.fn(),
+    ...overrides,
+  };
+}
+
 describe('CanvasToolbar', () => {
   let container: HTMLDivElement;
   let portalHost: HTMLDivElement;
@@ -99,6 +124,7 @@ describe('CanvasToolbar', () => {
     act(() => {
       root.unmount();
     });
+    useCanvasViewMenuContributionStore.setState({ contribution: null });
     portalHost.remove();
     container.remove();
   });
@@ -162,6 +188,28 @@ describe('CanvasToolbar', () => {
     expect(onToggleGridVisible).toHaveBeenCalledTimes(1);
     expect(onToggleSnapToGrid).toHaveBeenCalledTimes(1);
     expect(onGridColorChange).toHaveBeenCalledWith('#22c55e');
+  });
+
+  it('does not let a stale View menu cleanup clear an active replacement contribution', () => {
+    const staleContribution = buildCanvasViewMenuContribution({
+      canvasGridVisible: false,
+    });
+    const activeContribution = buildCanvasViewMenuContribution({
+      canvasGridVisible: true,
+    });
+
+    const { registerCanvasViewMenuContribution, clearCanvasViewMenuContribution } =
+      useCanvasViewMenuContributionStore.getState();
+
+    registerCanvasViewMenuContribution(staleContribution);
+    registerCanvasViewMenuContribution(activeContribution);
+    clearCanvasViewMenuContribution(staleContribution);
+
+    expect(useCanvasViewMenuContributionStore.getState().contribution).toBe(activeContribution);
+
+    clearCanvasViewMenuContribution(activeContribution);
+
+    expect(useCanvasViewMenuContributionStore.getState().contribution).toBeNull();
   });
 
   it('exposes project snapshot export and import commands without adding manual Save', async () => {

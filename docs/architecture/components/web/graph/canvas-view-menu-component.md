@@ -31,7 +31,7 @@ The local public API is:
 - `CanvasViewMenuContribution`
 - `useCanvasViewMenuContributionStore`
 - `registerCanvasViewMenuContribution(...)`
-- `clearCanvasViewMenuContribution(...)`
+- `clearCanvasViewMenuContribution(contribution)`
 
 `CanvasToolbar` is the active Canvas-route consumer. It registers one
 `CanvasViewMenuContribution` while mounted. `ShellMenu` reads the current
@@ -47,6 +47,8 @@ contribution and renders it inside `View`.
   internals.
 - The contribution is transient; unmounting the Canvas route removes the Canvas
   View-menu controls.
+- Cleanup is identity-guarded: a stale route cleanup must not clear a newer
+  contribution registered by a rerender.
 - View-menu commands may change local presentation state or request layout, but
   they must not start runs, plan execution, mutate persisted graph structure, or
   fabricate export data.
@@ -60,7 +62,8 @@ stateDiagram-v2
   [*] --> NoCanvasContribution
   NoCanvasContribution --> CanvasContributionActive: CanvasToolbar mounts
   CanvasContributionActive --> CanvasContributionActive: Canvas state or handlers update
-  CanvasContributionActive --> NoCanvasContribution: CanvasToolbar unmounts
+  CanvasContributionActive --> CanvasContributionActive: stale cleanup ignored
+  CanvasContributionActive --> NoCanvasContribution: active contribution unmounts
 ```
 
 ## Component Flow
