@@ -1087,6 +1087,189 @@ Command invariants:
 - Existing `design_id` values are rejected unless the operation is an exact
   idempotent replay.
 
+### Phase 3A: Component Graph Command Rails
+
+Before the engine pilot can seed rows, architecture components and graph edges
+need their own command rails. Direct SQL inserts, Markdown-only component
+tables, and one-off migration seed scripts are not acceptable because they
+would recreate the hidden-authority drift this plan is removing.
+
+This phase adds two write rails:
+
+- `RecordArchitectureComponent`
+- `RecordArchitectureRelation`
+
+Both rails write through the existing planning DB operator adapter and the
+existing `architecture.design_operations` ledger. The ledger is design-scoped,
+so it should be widened with new operation types instead of creating a second
+audit table.
+
+```mermaid
+flowchart LR
+  Design["architecture.design<br/>review/proposed authority"]
+  Scope["architecture.design_scope<br/>authorized subjects"]
+  ComponentCommand["RecordArchitectureComponent"]
+  RelationCommand["RecordArchitectureRelation"]
+  Component["architecture.component"]
+  Responsibility["architecture.component_responsibility"]
+  Relation["architecture.component_relation"]
+  Query["architecture.component_*_query"]
+  EnginePilot["Engine pilot"]
+
+  Design --> Scope
+  Scope --> ComponentCommand
+  Scope --> RelationCommand
+  ComponentCommand --> Component
+  ComponentCommand --> Responsibility
+  RelationCommand --> Relation
+  Component --> Query
+  Responsibility --> Query
+  Relation --> Query
+  Query --> EnginePilot
+```
+
+The mature-system posture is a property graph plus typed metadata:
+
+- hierarchy is represented by `parent_component_id` and by explicit
+  `contains` relations where the relation itself matters;
+- collaboration is represented by `component_relation`;
+- IO, ports, tests, observability, contracts, risks, and decisions remain typed
+  subjects instead of being hidden inside a component metadata blob;
+- command input is source-hash guarded so a stale design document cannot keep
+  mutating architecture rows.
+
+#### `RecordArchitectureComponent`
+
+Public API:
+
+```text
+pnpm planning:db:operate architecture-component record \
+  --design <DESIGN-ID> \
+  --component <COMPONENT-ID> \
+  --name <component name> \
+  --kind <package|module|port|adapter|service|ui-view|workflow|dbt-model|api> \
+  --layer <domain|application|adapter|ui|infra|contracts> \
+  --owner <owner> \
+  --repo-path <path-or-prefix> \
+  --public-contract <summary> \
+  --runtime <runtime-or-none> \
+  --criticality <low|medium|high|critical> \
+  --status <proposed|review> \
+  --parent <optional parent component id> \
+  --responsibility <responsibility_id|responsibility|reason_to_change|ddd_owner> \
+  --source-ref <governing source> \
+  --source-content-sha256 <64 hex chars> \
+  --actor <actor>
+```
+
+Command invariants:
+
+- `--design` must reference an existing `architecture.design` row.
+- The design must be `proposed` or `review`; this command records intent, not
+  implementation completion.
+- The design must authorize
+  `component:<COMPONENT-ID>:may_create` or
+  `component:<COMPONENT-ID>:may_update`.
+- Direct `approved`, `implemented`, `deprecated`, or `drift` component status is
+  rejected by this command until approval/evidence rails exist.
+- `kind`, `layer`, `criticality`, and `status` must use the existing
+  architecture table taxonomies.
+- `repo_path`, `owner`, and `public_contract` are required because a component
+  without ownership, location, or API is an anemic inventory row.
+- At least one responsibility is required. A component with no reason to change
+  cannot be reviewed from a Fowler/SOLID perspective.
+- `parent_component_id` must reference an existing component when supplied and
+  cannot equal the component being recorded.
+- Replays with the same idempotency key must match the same source hash and
+  payload.
+
+#### `RecordArchitectureRelation`
+
+Public API:
+
+```text
+pnpm planning:db:operate architecture-relation record \
+  --design <DESIGN-ID> \
+  --relation <RELATION-ID> \
+  --source <SOURCE-COMPONENT-ID> \
+  --target <TARGET-COMPONENT-ID> \
+  --type <contains|depends_on|calls|publishes|consumes|reads|writes|implements_port|exposes_api|transforms|guards> \
+  --direction <outbound|inbound|bidirectional> \
+  --sync-async <sync|async|batch|build_time> \
+  --failure-mode <failure mode> \
+  --authorization-scope <scope or none> \
+  --contract <optional contract id> \
+  --source-ref <governing source> \
+  --source-content-sha256 <64 hex chars> \
+  --actor <actor>
+```
+
+Command invariants:
+
+- `--design` must reference an existing `architecture.design` row.
+- The design must authorize `relation:<RELATION-ID>:may_create` or
+  `relation:<RELATION-ID>:may_update`.
+- The design must also authorize both endpoint components with
+  `component:<COMPONENT-ID>:may_reference`, unless the same design is creating
+  that endpoint component.
+- Source and target components must already exist before a relation is written.
+- Self-relations are rejected; composition is represented by parent ids or
+  explicit `contains` edges between different components.
+- `failure_mode` and `authorization_scope` cannot be empty. Mature relation
+  reviews need to know how the edge fails and what permission boundary it
+  crosses.
+- `contract_id`, when supplied, must reference an existing architecture
+  contract.
+- Replays with the same idempotency key must match the same source hash and
+  payload.
+
+#### Failure Codes
+
+The implementation should expose stable error messages that can later be
+promoted to enforcement violation codes:
+
+- `ARCH-COMPONENT-DESIGN-MISSING`: no design row exists for the command.
+- `ARCH-COMPONENT-DESIGN-SCOPE-MISSING`: design scope does not authorize the
+  component or relation.
+- `ARCH-COMPONENT-SEMANTICS-MISSING`: required owner, path, public contract, or
+  responsibility is empty.
+- `ARCH-COMPONENT-TAXONOMY-INVALID`: kind, layer, status, or criticality is
+  outside the accepted taxonomy.
+- `ARCH-RELATION-ENDPOINT-MISSING`: source or target component does not exist.
+- `ARCH-RELATION-ENDPOINT-SCOPE-MISSING`: design does not authorize endpoint
+  participation.
+- `ARCH-RELATION-SEMANTICS-MISSING`: failure mode or authorization scope is
+  empty.
+- `ARCH-OPERATION-IDEMPOTENCY-MISMATCH`: same key replayed with different
+  payload or source hash.
+
+#### Red/Green Plan
+
+- `architecture-component-command-parser`:
+  - red: `planning:db:operate architecture-component record` is rejected as an
+    unknown resource.
+  - green: parser returns a `architecture_component_record` command with typed
+    fields and normalized responsibilities.
+- `architecture-relation-command-parser`:
+  - red: `planning:db:operate architecture-relation record` is rejected as an
+    unknown resource.
+  - green: parser returns a `architecture_relation_record` command with typed
+    endpoints and relation semantics.
+- `architecture-component-operation-ledger`:
+  - red: migration tests prove `architecture.design_operations.operation_type`
+    does not admit component/relation operations.
+  - green: migration widens the check constraint without deleting or rewriting
+    existing operation rows.
+- `architecture-component-design-scope-guard`:
+  - red: planner accepts a component not covered by `architecture.design_scope`.
+  - green: planner rejects missing design, wrong lifecycle, missing scope, stale
+    source hash, and duplicate mismatched idempotency.
+- `architecture-relation-endpoint-guard`:
+  - red: planner accepts a relation whose endpoint components are absent or not
+    referenced by the design.
+  - green: planner rejects absent endpoints, self-relations, missing endpoint
+    scope, and missing relation semantics.
+
 ### Phase 4: Engine Pilot
 
 Seed only the minimum `engine` design rows needed to prove the model:
@@ -1548,4 +1731,269 @@ symbols:
   - <<: *architectureQueryRailSymbol
     name: buildArchitectureEvidenceRows
     dddOwner: ArchitectureEnforcementReadModel
+```
+
+```feature-mechanization
+version: 1
+featureId: DB-FIRST-ARCHITECTURE-COMPONENT-GRAPH-COMMAND-20260515
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md
+componentGuides:
+  - docs/planning/status/db-surface-inventory.md
+userStories:
+  - docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/planning/status/db-surface-inventory.md
+allowedImplementationSurfaces:
+  - docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md
+  - docs/planning/status/db-surface-inventory.md
+  - scripts/planning-db-operate.cjs
+  - scripts/planning-db-operate.test.cjs
+  - scripts/planning-db-migrate.test.cjs
+  - tools/planning-db/migrations/046_architecture_component_graph_command_rail.sql
+forbiddenImplementationSurfaces:
+  - apps/**
+  - packages/**
+  - specs/**
+  - .github/workflows/**
+commandQueryRails:
+  - name: RecordArchitectureComponent
+    type: command
+    dddOwner: ArchitectureComponentGraph
+  - name: RecordArchitectureRelation
+    type: command
+    dddOwner: ArchitectureComponentGraph
+  - name: CreateArchitectureDesign
+    type: command
+    dddOwner: ArchitectureDesign
+  - name: MigratePlanningQueryStoreSchema
+    type: command
+    dddOwner: PlanningQueryStoreSchema
+domainObjects:
+  - name: ArchitectureComponentGraph
+    type: aggregate
+    owner: Architecture governance
+  - name: ArchitectureComponent
+    type: entity
+    owner: Architecture governance
+  - name: ArchitectureComponentResponsibility
+    type: child entity
+    owner: Architecture governance
+  - name: ArchitectureComponentRelation
+    type: entity
+    owner: Architecture governance
+  - name: ArchitectureDesignScope
+    type: authorization policy
+    owner: Architecture governance
+  - name: ArchitectureDesignOperation
+    type: command audit
+    owner: Architecture governance
+fowlerSignals:
+  - Hidden authority
+  - Boundary drift
+  - Primitive obsession
+  - Anemic domain
+  - Published language
+architectureGuards:
+  - node --test scripts/planning-db-operate.test.cjs
+  - node --test scripts/planning-db-migrate.test.cjs
+  - pnpm planning:db:migrate
+  - pnpm test:planning:db
+  - pnpm governance:refresh
+cypressFlows:
+  - N/A - architecture component graph command rails have no browser workflow.
+completionGate:
+  - node --test scripts/planning-db-operate.test.cjs
+  - node --test scripts/planning-db-migrate.test.cjs
+  - pnpm planning:db:migrate
+  - pnpm test:planning:db
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: architecture-component-command-parser
+    redTest: node --test scripts/planning-db-operate.test.cjs
+    expectedFailure: architecture-component is rejected as an unknown planning DB operation before the command rail exists.
+    patchSurfaces:
+      - scripts/planning-db-operate.cjs
+      - scripts/planning-db-operate.test.cjs
+    greenTest: node --test scripts/planning-db-operate.test.cjs
+  - id: architecture-relation-command-parser
+    redTest: node --test scripts/planning-db-operate.test.cjs
+    expectedFailure: architecture-relation is rejected as an unknown planning DB operation before the command rail exists.
+    patchSurfaces:
+      - scripts/planning-db-operate.cjs
+      - scripts/planning-db-operate.test.cjs
+    greenTest: node --test scripts/planning-db-operate.test.cjs
+  - id: architecture-component-operation-ledger
+    redTest: node --test scripts/planning-db-migrate.test.cjs
+    expectedFailure: architecture.design_operations.operation_type rejects component and relation record operations before migration 046.
+    patchSurfaces:
+      - tools/planning-db/migrations/046_architecture_component_graph_command_rail.sql
+      - scripts/planning-db-migrate.test.cjs
+    greenTest: node --test scripts/planning-db-migrate.test.cjs
+  - id: architecture-component-design-scope-guard
+    redTest: node --test scripts/planning-db-operate.test.cjs
+    expectedFailure: the component planner accepts missing design scope and stale idempotency before scope guards exist.
+    patchSurfaces:
+      - scripts/planning-db-operate.cjs
+      - scripts/planning-db-operate.test.cjs
+    greenTest: node --test scripts/planning-db-operate.test.cjs
+  - id: architecture-relation-endpoint-guard
+    redTest: node --test scripts/planning-db-operate.test.cjs
+    expectedFailure: the relation planner accepts absent endpoints or missing endpoint authorization before endpoint guards exist.
+    patchSurfaces:
+      - scripts/planning-db-operate.cjs
+      - scripts/planning-db-operate.test.cjs
+    greenTest: node --test scripts/planning-db-operate.test.cjs
+symbols:
+  - &architectureComponentGraphCommandSymbol
+    name: planArchitectureComponentRecordOperation
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureComponentGraph
+    cqRails:
+      - RecordArchitectureComponent
+      - RecordArchitectureRelation
+      - CreateArchitectureDesign
+      - MigratePlanningQueryStoreSchema
+    fowlerSignals:
+      - Hidden authority
+      - Boundary drift
+      - Primitive obsession
+      - Anemic domain
+      - Published language
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A - architecture component graph command rails have no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-operate.test.cjs
+      - node --test scripts/planning-db-migrate.test.cjs
+      - pnpm test:planning:db
+  - <<: *architectureComponentGraphCommandSymbol
+    name: allowedArchitectureComponentCriticalities
+    dddOwner: ArchitectureComponent
+  - <<: *architectureComponentGraphCommandSymbol
+    name: allowedArchitectureComponentKinds
+    dddOwner: ArchitectureComponent
+  - <<: *architectureComponentGraphCommandSymbol
+    name: allowedArchitectureComponentLayers
+    dddOwner: ArchitectureComponent
+  - <<: *architectureComponentGraphCommandSymbol
+    name: allowedArchitectureRecordStatuses
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureComponentGraphCommandSymbol
+    name: allowedArchitectureRelationDirections
+    dddOwner: ArchitectureComponentRelation
+  - <<: *architectureComponentGraphCommandSymbol
+    name: allowedArchitectureRelationRecordStatuses
+    dddOwner: ArchitectureComponentRelation
+  - <<: *architectureComponentGraphCommandSymbol
+    name: allowedArchitectureRelationSyncModes
+    dddOwner: ArchitectureComponentRelation
+  - <<: *architectureComponentGraphCommandSymbol
+    name: allowedArchitectureRelationTypes
+    dddOwner: ArchitectureComponentRelation
+  - <<: *architectureComponentGraphCommandSymbol
+    name: applyArchitectureComponentRecordOperation
+    dddOwner: ArchitectureDesignOperation
+  - <<: *architectureComponentGraphCommandSymbol
+    name: applyArchitectureRelationRecordOperation
+    dddOwner: ArchitectureDesignOperation
+  - <<: *architectureComponentGraphCommandSymbol
+    name: architectureScopedAudit
+    dddOwner: ArchitectureDesignOperation
+  - <<: *architectureComponentGraphCommandSymbol
+    name: assertArchitectureDesignMayRecord
+    dddOwner: ArchitectureDesignScope
+  - <<: *architectureComponentGraphCommandSymbol
+    name: assertArchitectureDesignScope
+    dddOwner: ArchitectureDesignScope
+  - <<: *architectureComponentGraphCommandSymbol
+    name: assertArchitectureScopedOperationIdempotentReplayMatches
+    dddOwner: ArchitectureDesignOperation
+  - <<: *architectureComponentGraphCommandSymbol
+    name: hasArchitectureDesignScope
+    dddOwner: ArchitectureDesignScope
+  - <<: *architectureComponentGraphCommandSymbol
+    name: normalizeArchitectureComponent
+    dddOwner: ArchitectureComponent
+  - <<: *architectureComponentGraphCommandSymbol
+    name: normalizeArchitectureDesignScope
+    dddOwner: ArchitectureDesignScope
+  - <<: *architectureComponentGraphCommandSymbol
+    name: normalizeArchitectureRelation
+    dddOwner: ArchitectureComponentRelation
+  - <<: *architectureComponentGraphCommandSymbol
+    name: parseArchitectureComponentCommand
+    dddOwner: ArchitectureComponent
+  - <<: *architectureComponentGraphCommandSymbol
+    name: parseArchitectureComponentResponsibilities
+    dddOwner: ArchitectureComponentResponsibility
+  - <<: *architectureComponentGraphCommandSymbol
+    name: parseArchitectureComponentResponsibility
+    dddOwner: ArchitectureComponentResponsibility
+  - <<: *architectureComponentGraphCommandSymbol
+    name: parseArchitectureRelationCommand
+    dddOwner: ArchitectureComponentRelation
+  - <<: *architectureComponentGraphCommandSymbol
+    name: planArchitectureRelationRecordOperation
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureComponentGraphCommandSymbol
+    name: readArchitectureComponent
+    dddOwner: ArchitectureComponent
+  - <<: *architectureComponentGraphCommandSymbol
+    name: readArchitectureDesignScopes
+    dddOwner: ArchitectureDesignScope
+  - <<: *architectureComponentGraphCommandSymbol
+    name: readArchitectureRelation
+    dddOwner: ArchitectureComponentRelation
+  - <<: *architectureComponentGraphCommandSymbol
+    name: validateArchitectureComponentCriticality
+    dddOwner: ArchitectureComponent
+  - <<: *architectureComponentGraphCommandSymbol
+    name: validateArchitectureComponentId
+    dddOwner: ArchitectureComponent
+  - <<: *architectureComponentGraphCommandSymbol
+    name: validateArchitectureComponentKind
+    dddOwner: ArchitectureComponent
+  - <<: *architectureComponentGraphCommandSymbol
+    name: validateArchitectureComponentLayer
+    dddOwner: ArchitectureComponent
+  - <<: *architectureComponentGraphCommandSymbol
+    name: validateArchitectureComponentRecordCommand
+    dddOwner: ArchitectureComponent
+  - <<: *architectureComponentGraphCommandSymbol
+    name: validateArchitectureRecordStatus
+    dddOwner: ArchitectureComponentGraph
+  - <<: *architectureComponentGraphCommandSymbol
+    name: validateArchitectureRelationDirection
+    dddOwner: ArchitectureComponentRelation
+  - <<: *architectureComponentGraphCommandSymbol
+    name: validateArchitectureRelationId
+    dddOwner: ArchitectureComponentRelation
+  - <<: *architectureComponentGraphCommandSymbol
+    name: validateArchitectureRelationRecordCommand
+    dddOwner: ArchitectureComponentRelation
+  - <<: *architectureComponentGraphCommandSymbol
+    name: validateArchitectureRelationRecordStatus
+    dddOwner: ArchitectureComponentRelation
+  - <<: *architectureComponentGraphCommandSymbol
+    name: validateArchitectureRelationSyncMode
+    dddOwner: ArchitectureComponentRelation
+  - <<: *architectureComponentGraphCommandSymbol
+    name: validateArchitectureRelationType
+    dddOwner: ArchitectureComponentRelation
+  - <<: *architectureComponentGraphCommandSymbol
+    name: writeArchitectureScopedAudit
+    dddOwner: ArchitectureDesignOperation
+  - <<: *architectureComponentGraphCommandSymbol
+    name: writePlannedArchitectureComponentRecordOperation
+    dddOwner: ArchitectureDesignOperation
+  - <<: *architectureComponentGraphCommandSymbol
+    name: writePlannedArchitectureRelationRecordOperation
+    dddOwner: ArchitectureDesignOperation
 ```

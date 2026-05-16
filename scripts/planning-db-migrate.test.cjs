@@ -1106,3 +1106,19 @@ test('tracked migrations require explicit architecture design rail references', 
   assert.match(explicitRailMigration.sql, /none - architecture-authority-only/);
   assert.doesNotMatch(explicitRailMigration.sql, /delete from architecture\.design\b/);
 });
+
+test('tracked migrations widen architecture design operations for component graph commands', () => {
+  const migrations = readMigrationFiles();
+  const componentGraphCommandMigration = migrations.find(
+    (migration) => migration.fileName === '046_architecture_component_graph_command_rail.sql'
+  );
+
+  assert.ok(componentGraphCommandMigration);
+  assert.match(componentGraphCommandMigration.sql, /architecture_component_record/);
+  assert.match(componentGraphCommandMigration.sql, /architecture_relation_record/);
+  assert.match(componentGraphCommandMigration.sql, /architecture_design_operations_type_check/);
+  assert.doesNotMatch(
+    componentGraphCommandMigration.sql,
+    /delete from architecture\.design_operations\b/
+  );
+});
