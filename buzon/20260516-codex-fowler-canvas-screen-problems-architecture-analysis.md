@@ -16,7 +16,8 @@ Canvas screen problems after the merged local alpha/session-gate and Canvas
 View-menu contribution work. It does not apply product code changes or promote
 these findings into accepted component docs. At user request, the left
 navigation rail finding has been assigned to planning DB task `E/F-15-D` under
-`F-15`; the other findings remain proposals.
+`F-15` and persisted in the Lane E bootstrap/export snapshot; the other
+findings remain proposals.
 
 The analyzed work includes:
 
@@ -169,10 +170,13 @@ sequenceDiagram
 ## Planning Assignment Result
 
 The left-navigation rail issue is now tracked as `E/F-15-D Workbench
-navigation rail disposition`, a queued child task of `F-15`. The task owns the
-decision and eventual implementation path for removing, collapsing, or
-otherwise governing the permanent left rail so the workbench follows the newer
-no-permanent-left-rail specification without clipping footer navigation.
+navigation rail disposition`, a queued child task of `F-15`. It was created
+through `pnpm planning:db:operate task create` and persisted in
+`docs/planning/state/agent-lane-e.yaml` so fresh checkouts can discover the
+task before importing the planning DB. The task owns the decision and eventual
+implementation path for removing, collapsing, or otherwise governing the
+permanent left rail so the workbench follows the newer no-permanent-left-rail
+specification without clipping footer navigation.
 
 ## Repetitions
 

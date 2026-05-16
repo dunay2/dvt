@@ -68,7 +68,9 @@ flowchart LR
 ## Task Assignment
 
 Created planning DB task `E/F-15-D Workbench navigation rail disposition` as a
-queued child task of `F-15`.
+queued child task of `F-15`. The same task is persisted in the Lane E
+bootstrap/export snapshot at `docs/planning/state/agent-lane-e.yaml` so a fresh
+checkout can discover it before planning DB import.
 
 Objective: resolve the workbench left-navigation rail disposition so the Canvas
 workbench follows the accepted no-permanent-left-rail shell specification
