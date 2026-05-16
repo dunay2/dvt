@@ -21,6 +21,11 @@ export default function LoginView(): JSX.Element {
             Session check failed due to transport error. Verify API availability.
           </p>
         ) : null}
+        {reason === 'runtime_unavailable' ? (
+          <p className="mt-3 text-xs text-amber-300">
+            Protected runtime session route is unavailable. Verify OIDC/API runtime posture.
+          </p>
+        ) : null}
         <div className="mt-4">
           <Link
             to={returnTo}

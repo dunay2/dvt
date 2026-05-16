@@ -64,6 +64,7 @@ describe('internal alpha route gate architecture', () => {
     ]) {
       expect(acceptanceMatrix).toContain(requiredColumn);
     }
+    expect(acceptanceMatrix).toContain('## Route-Level Combined Fixture/Proof');
 
     expect(acceptanceMatrix).toContain('Alpha full is blocked while any stage is `Gap`');
     expect(acceptanceMatrix).toContain('Child slices cannot declare alpha full');
@@ -93,5 +94,21 @@ describe('internal alpha route gate architecture', () => {
 
     expect(routePlan).toContain('20260514-internal-alpha-route-acceptance-matrix.md');
     expect(userStories).toContain('US-F27-');
+  });
+
+  it('keeps cadence contract fields explicit in the route-level component guide', () => {
+    const componentGuide = readRepoFile(
+      'docs/architecture/components/web/internal-alpha-route-gate-component.md'
+    );
+
+    for (const requiredCadenceField of [
+      'audience',
+      'entryDate',
+      'duration',
+      'exitOwner',
+      'extensionRule',
+    ]) {
+      expect(componentGuide).toContain(requiredCadenceField);
+    }
   });
 });

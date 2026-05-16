@@ -5,6 +5,7 @@ import { DBT_NODE_KINDS } from '../plugins/nodeTypeCatalog.dbt';
 import type { NodeKindRegistration } from '../plugins/nodeTypeContracts';
 import type { CanonicalNode } from '../types/canonical';
 import { canvasViewCopy } from './canvas/copy';
+import { useCanvasViewMenuContributionStore } from './canvas/canvasViewMenuContributionStore';
 import {
   buildController,
   createCanvasRouteHarness,
@@ -26,12 +27,14 @@ function expectCanvasRegistryClosed(): void {
 function expectPrimaryCanvasActionsBlocked(container: ParentNode): void {
   const { layoutButton, planButton, runButton } = getPrimaryCanvasButtons(container);
 
-  expect(layoutButton).toBeDefined();
+  expect(layoutButton).toBeUndefined();
   expect(planButton).toBeDefined();
   expect(runButton).toBeDefined();
-  expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
   expect(planButton?.getAttribute('disabled')).not.toBeNull();
   expect(runButton?.getAttribute('disabled')).not.toBeNull();
+  expect(useCanvasViewMenuContributionStore.getState().contribution).toMatchObject({
+    canEditEdges: false,
+  });
 }
 
 function expectActiveCanvasTab(args: {

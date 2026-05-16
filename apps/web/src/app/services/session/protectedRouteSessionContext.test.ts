@@ -185,4 +185,19 @@ describe('resolveProtectedRouteSessionContext', () => {
       })
     ).toBe('unauthenticated');
   });
+
+  it('classifies missing protected runtime session route as runtime unavailable', () => {
+    expect(
+      classifyProtectedRouteSessionError({
+        endpoint: '/session',
+        statusCode: 404,
+        responseBody: {
+          error: {
+            type: 'not_found',
+            reason: 'route_not_registered',
+          },
+        },
+      })
+    ).toBe('runtime_unavailable');
+  });
 });

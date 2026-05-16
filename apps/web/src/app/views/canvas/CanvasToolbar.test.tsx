@@ -116,18 +116,18 @@ describe('CanvasToolbar', () => {
 
     expect(portalHost.querySelectorAll('[data-slot="canvas-workflow-status"]')).toHaveLength(1);
     expect(portalHost.textContent).toContain(canvasViewCopy.toolbarWorkflowPlanRequiredLabel);
-    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarLayoutLabel);
-    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarImpactLabel);
-    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarColumnsLabel);
-    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarCostLabel);
-    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarGridLabel);
-    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarSnapToGridLabel);
+    expect(portalHost.textContent).not.toContain(canvasViewCopy.toolbarLayoutLabel);
+    expect(portalHost.textContent).not.toContain(canvasViewCopy.toolbarImpactLabel);
+    expect(portalHost.textContent).not.toContain(canvasViewCopy.toolbarColumnsLabel);
+    expect(portalHost.textContent).not.toContain(canvasViewCopy.toolbarCostLabel);
+    expect(portalHost.textContent).not.toContain(canvasViewCopy.toolbarGridLabel);
+    expect(portalHost.textContent).not.toContain(canvasViewCopy.toolbarSnapToGridLabel);
     expect(portalHost.textContent).toContain(canvasViewCopy.toolbarPlanLabel);
     expect(portalHost.textContent).toContain(canvasViewCopy.toolbarRunLabel);
     expect(portalHost.textContent).toContain(canvasViewCopy.draftSyncedLabel);
   });
 
-  it('applies canvas grid preference commands from the toolbar', async () => {
+  it('registers canvas view preference commands for the View menu', async () => {
     const onToggleGridVisible = vi.fn();
     const onGridColorChange = vi.fn();
     const onToggleSnapToGrid = vi.fn();
@@ -147,28 +147,17 @@ describe('CanvasToolbar', () => {
       );
     });
 
-    const gridButton = Array.from(portalHost.querySelectorAll('button')).find(
-      (button) => button.ariaLabel === canvasViewCopy.toolbarGridLabel
-    );
-    const snapButton = Array.from(portalHost.querySelectorAll('button')).find(
-      (button) => button.ariaLabel === canvasViewCopy.toolbarSnapToGridLabel
-    );
-    const colorInput = portalHost.querySelector(
-      `input[aria-label="${canvasViewCopy.toolbarGridColorLabel}"]`
-    ) as HTMLInputElement | null;
+    const { useCanvasViewMenuContributionStore } =
+      await import('./canvasViewMenuContributionStore');
+    const contribution = useCanvasViewMenuContributionStore.getState().contribution;
 
-    expect(gridButton).not.toBeNull();
-    expect(snapButton).not.toBeNull();
-    expect(colorInput?.value).toBe('#f97316');
+    expect(contribution?.canvasGridVisible).toBe(false);
+    expect(contribution?.canvasGridColor).toBe('#f97316');
+    expect(contribution?.canvasSnapToGrid).toBe(true);
 
-    await act(async () => {
-      gridButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      snapButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      if (colorInput != null) {
-        colorInput.value = '#22c55e';
-      }
-      colorInput?.dispatchEvent(new Event('input', { bubbles: true }));
-    });
+    contribution?.onToggleGridVisible();
+    contribution?.onToggleSnapToGrid();
+    contribution?.onGridColorChange('#22c55e');
 
     expect(onToggleGridVisible).toHaveBeenCalledTimes(1);
     expect(onToggleSnapToGrid).toHaveBeenCalledTimes(1);
@@ -272,9 +261,6 @@ describe('CanvasToolbar', () => {
     });
 
     const buttons = Array.from(portalHost.querySelectorAll('button'));
-    const layoutButton = buttons.find((button) =>
-      button.textContent?.includes(canvasViewCopy.toolbarLayoutLabel)
-    );
     const planButton = buttons.find((button) =>
       button.textContent?.includes(canvasViewCopy.toolbarPlanLabel)
     );
@@ -283,7 +269,6 @@ describe('CanvasToolbar', () => {
     );
 
     expect(portalHost.textContent).toContain(canvasViewCopy.toolbarWorkflowReadOnlyLabel);
-    expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
     expect(runButton?.getAttribute('disabled')).not.toBeNull();
   });

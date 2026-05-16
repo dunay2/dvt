@@ -149,10 +149,12 @@ componentGuides:
   - docs/planning/reviews/architecture-and-governance/20260504-internal-alpha-evolution-route.md
   - docs/planning/reviews/architecture-and-governance/20260505-internal-alpha-architecture-view-review.md
   - docs/architecture/components/web/internal-alpha-route-gate-component.md
+  - docs/architecture/components/web/appshell/protected-route-session-gate-component.md
   - docs/planning/reviews/architecture-and-governance/20260514-internal-alpha-route-acceptance-matrix.md
 userStories:
   - docs/planning/proposals/mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md
   - docs/architecture/components/web/internal-alpha-route-gate-user-stories.md
+  - docs/architecture/components/web/appshell/protected-route-session-gate-user-stories.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -175,8 +177,12 @@ allowedImplementationSurfaces:
   - docs/planning/roadmap/roadmap-by-domain.md
   - docs/architecture/components/web/internal-alpha-route-gate-component.md
   - docs/architecture/components/web/internal-alpha-route-gate-user-stories.md
+  - docs/architecture/components/web/appshell/protected-route-session-gate-component.md
+  - docs/architecture/components/web/appshell/protected-route-session-gate-user-stories.md
   - docs/planning/closeouts/20260514-f27-alpha-route-acceptance-matrix-closeout.md
   - buzon/20260514-codex-fowler-f27-alpha-route-gate-analysis.md
+  - buzon/20260515-codex-fowler-f27-session-gate-runtime-unavailable-analysis.md
+  - apps/web/src/app/routes.test.tsx
   - apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts
   - docs/planning/state/agent-lane-c.yaml
   - docs/planning/state/agent-lane-e.yaml
@@ -376,6 +382,20 @@ symbols:
     cypressCoverage: N/A - architecture guard only.
     unitTests:
       - pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+  - name: stubMissingSessionRouteFetch
+    path: apps/web/src/app/routes.test.tsx
+    dddOwner: InternalAlphaRouteGate protected-session negative fixture
+    cqRails:
+      - ObserveAppBootstrapRouteReadiness
+      - ObserveWorkspaceContext
+      - MapRouteRecoveryState
+    fowlerSignals:
+      - Test-only confidence
+      - Documentation drift
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/routes.test.tsx
+    cypressCoverage: N/A - route negative fixture covered by unit route tests.
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/routes.test.tsx
 ```
 
 ## Completion Criteria
