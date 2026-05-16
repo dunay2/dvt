@@ -246,7 +246,7 @@ stateDiagram-v2
 - `apps/web/src/app/views/canvas/useCanvasDraftReloadHydration.ts`
 - `apps/web/src/app/views/canvas/useCanvasExecutionActions.ts`
 - `apps/web/src/app/views/canvas/previewDesignGraphArtifact.ts`
-- `apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts`
+- `apps/web/src/app/views/canvas/canvasDraftRecoveryBoundary.architecture.test.ts`
 
 ## Architecture Guard Requirements
 

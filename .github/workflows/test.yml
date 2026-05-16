@@ -70,7 +70,7 @@ jobs:
         if:
           github.event_name == 'pull_request' && (steps.scope.outputs.web == 'true' ||
           steps.scope.outputs.root_build_sensitive == 'true')
-        run: pnpm test:web
+        run: pnpm test:web:ci
         env:
           DVT_CI: '1'
 

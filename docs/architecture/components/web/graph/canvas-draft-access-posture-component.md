@@ -385,7 +385,7 @@ Testing impact:
 | Route composition tests      | `pnpm --filter @dvt/web test -- canvasRouteViewState.test.ts`                                           |
 | Toolbar and banner tests     | `pnpm --filter @dvt/web test -- canvasToolbarViewModel.test.ts canvasRecoveryBannerModel.test.ts`       |
 | Recovery template tests      | `pnpm --filter @dvt/web test -- CanvasRecoveryBanner.test.tsx`                                          |
-| Architecture guard           | `pnpm --filter @dvt/web test -- canvasStartupAndDraftRecovery.architecture.test.ts`                     |
+| Architecture guard           | `pnpm --filter @dvt/web test -- canvasRoutePosturePriority.architecture.test.ts`                        |
 | Cypress user flow            | `pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-draft-access-posture.cy.ts` |
 | Web typecheck                | `pnpm --filter @dvt/web typecheck`                                                                      |
 | Repo closeout                | `pnpm verify:prepush`                                                                                   |

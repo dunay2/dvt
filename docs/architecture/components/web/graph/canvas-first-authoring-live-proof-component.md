@@ -223,7 +223,7 @@ sequenceDiagram
   drag affordance.
 - `useCanvasLayoutPersistence.ts` persists route-local coordinates after
   automatic store hydration.
-- `canvasStartupAndDraftRecovery.architecture.test.ts` guards semantic
+- `canvasStartupBootstrapPublication.architecture.test.ts` guards semantic
   ownership and prevents seeded startup nodes.
 - `canvas-first-authoring-live.cy.ts` proves the user-visible live journey.
 - `scripts/run-canvas-first-authoring-live-proof.cjs` executes the mandatory
@@ -263,7 +263,7 @@ sequenceDiagram
   `canvasFirstAuthoringLiveProof.test.ts`.
 - First canvas command:
   `CreateCanvas`, `SaveWorkspaceGraphDraft`, Canvas controller command seams,
-  `canvasStartupAndDraftRecovery.architecture.test.ts`.
+  `canvasStartupBootstrapPublication.architecture.test.ts`.
 - First-node defaults:
   `CreateCanvasNode`, `resolveExpectedFirstNode()`,
   `matchesExpectedFirstNode()`, `canvasFirstAuthoringLiveProof.test.ts`.
@@ -276,7 +276,7 @@ sequenceDiagram
   `canvasFirstAuthoringLiveProof.test.ts`.
 - Protected-runtime proof boundary:
   `RunCanvasFirstAuthoringLiveProof`, Cypress support helpers, live proof
-  runner, and `canvasStartupAndDraftRecovery.architecture.test.ts`.
+  runner, and `canvasStartupBootstrapPublication.architecture.test.ts`.
 - No seeded draft shortcuts:
   `SaveWorkspaceGraphDraft`, UI-owned command path only,
   `check-feature-mechanization.test.cjs`, and Cypress guard checks.

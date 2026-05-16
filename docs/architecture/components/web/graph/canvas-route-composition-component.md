@@ -147,7 +147,10 @@ The canonical fitness checks for this component are:
 - `CanvasModalHost.architecture.test.tsx`
 - `canvasShellBuilder.types.architecture.test.ts`
 - `canvasShellPropsBuilder.architecture.test.ts`
-- `Canvas.routeStates.test.tsx`
+- `Canvas.routeStates.smoke.test.tsx`
+- `Canvas.routeStates.first-canvas-policy.test.tsx`
+- `Canvas.routeStates.host-cycle-persistence.test.tsx`
+- `Canvas.routeStates.backend-recovery-priority.test.tsx`
 - `Canvas.readOnlyStates.test.tsx`
 - `@dvt/web` typecheck
 

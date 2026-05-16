@@ -17,6 +17,11 @@
     "test:e2e:open": "node ../../tools/ci/run-web-cypress-native.mjs open",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --config vitest.config.ts",
+    "test:unit": "vitest run --config vitest.unit.config.ts",
+    "test:presentation": "vitest run --config vitest.presentation.config.ts",
+    "test:architecture": "vitest run --config vitest.architecture.config.ts",
+    "test:canvas": "vitest run --config vitest.canvas.config.ts",
+    "test:ci": "pnpm run test:unit && pnpm run test:presentation && pnpm run test:architecture",
     "test:watch": "vitest --config vitest.config.ts"
   },
   "dependencies": {
