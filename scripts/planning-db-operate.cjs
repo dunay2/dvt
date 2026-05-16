@@ -92,6 +92,7 @@ const allowedArchitectureRelationTypes = new Set([
 ]);
 const allowedArchitectureRelationDirections = new Set(['outbound', 'inbound', 'bidirectional']);
 const allowedArchitectureRelationSyncModes = new Set(['sync', 'async', 'batch', 'build_time']);
+const allowedArchitectureRelationRecordStatuses = new Set(['proposed']);
 const allowedComponentStatuses = new Set([
   'canonical',
   'review',
@@ -311,6 +312,18 @@ function validateArchitectureRecordStatus(value) {
   if (!allowedArchitectureRecordStatuses.has(value)) {
     throw new Error(
       `ARCH-COMPONENT-TAXONOMY-INVALID: RecordArchitectureComponent and RecordArchitectureRelation start in proposed or review status.`
+    );
+  }
+
+  return value;
+}
+
+function validateArchitectureRelationRecordStatus(value) {
+  if (!allowedArchitectureRelationRecordStatuses.has(value)) {
+    throw new Error(
+      `ARCH-COMPONENT-TAXONOMY-INVALID: RecordArchitectureRelation stores statuses accepted by architecture.component_relation: ${[
+        ...allowedArchitectureRelationRecordStatuses,
+      ].join(', ')}.`
     );
   }
 
@@ -1325,7 +1338,7 @@ function parseArchitectureRelationCommand(action, args) {
       'source-content-sha256'
     ),
     actor: requireOption(options, 'actor'),
-    status: validateArchitectureRecordStatus(options.status || 'proposed'),
+    status: validateArchitectureRelationRecordStatus(options.status || 'proposed'),
     idempotencyKey: options.idempotencyKey,
   };
 

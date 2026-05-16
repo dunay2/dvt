@@ -564,6 +564,43 @@ test('parseArgs builds architecture component and relation record commands', () 
   assert.equal(relationCommand.targetComponentId, 'SYS-RUNTIME-STATE-STORE-PORT');
 });
 
+test('parseArgs rejects relation record statuses that the relation table cannot store', () => {
+  assert.throws(
+    () =>
+      parseArgs([
+        'architecture-relation',
+        'record',
+        '--design',
+        'DB-FIRST-ARCHITECTURE-COMPONENT-GRAPH-COMMAND-20260515',
+        '--relation',
+        'REL-ENGINE-USES-STATE-STORE',
+        '--source',
+        'SYS-RUNTIME-ENGINE-CORE',
+        '--target',
+        'SYS-RUNTIME-STATE-STORE-PORT',
+        '--type',
+        'depends_on',
+        '--direction',
+        'outbound',
+        '--sync-async',
+        'sync',
+        '--failure-mode',
+        'Run start fails closed when state-store is unavailable.',
+        '--authorization-scope',
+        'repo-local architecture operation',
+        '--status',
+        'review',
+        '--source-ref',
+        'docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md',
+        '--source-content-sha256',
+        'e'.repeat(64),
+        '--actor',
+        'codex',
+      ]),
+    /ARCH-COMPONENT-TAXONOMY-INVALID/
+  );
+});
+
 test('planArchitectureDesignCreateOperation emits design scope and audit rows', () => {
   const now = new Date('2026-05-15T10:00:00.000Z');
   const command = parseArgs([

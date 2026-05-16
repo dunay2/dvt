@@ -1889,6 +1889,9 @@ symbols:
     name: allowedArchitectureRelationDirections
     dddOwner: ArchitectureComponentRelation
   - <<: *architectureComponentGraphCommandSymbol
+    name: allowedArchitectureRelationRecordStatuses
+    dddOwner: ArchitectureComponentRelation
+  - <<: *architectureComponentGraphCommandSymbol
     name: allowedArchitectureRelationSyncModes
     dddOwner: ArchitectureComponentRelation
   - <<: *architectureComponentGraphCommandSymbol
@@ -1974,6 +1977,9 @@ symbols:
     dddOwner: ArchitectureComponentRelation
   - <<: *architectureComponentGraphCommandSymbol
     name: validateArchitectureRelationRecordCommand
+    dddOwner: ArchitectureComponentRelation
+  - <<: *architectureComponentGraphCommandSymbol
+    name: validateArchitectureRelationRecordStatus
     dddOwner: ArchitectureComponentRelation
   - <<: *architectureComponentGraphCommandSymbol
     name: validateArchitectureRelationSyncMode
