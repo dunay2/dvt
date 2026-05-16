@@ -1,4 +1,5 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { URL, fileURLToPath } from 'node:url';
 
@@ -8,22 +9,25 @@ const TEST_ROOT = fileURLToPath(new URL('.', import.meta.url));
 const ENGINE_ROOT = join(TEST_ROOT, '../../src');
 const REPO_ROOT = join(TEST_ROOT, '../../../../..');
 const START_RUN_SOURCE = join(ENGINE_ROOT, 'services/startRun');
-const COMPONENT_GUIDE = join(
-  REPO_ROOT,
-  'docs/architecture/components/engine/architecture/start-run-application-decomposition-component.md'
-);
-const USER_STORIES = join(
-  REPO_ROOT,
-  'docs/architecture/components/engine/architecture/start-run-application-decomposition-user-stories.md'
-);
-const FOWLER_MAILBOX = join(
-  REPO_ROOT,
-  'buzon/20260512-codex-fowler-we-hx-3-start-run-decomposition-analysis-and-remediation.md'
-);
-const CLOSEOUT = join(
-  REPO_ROOT,
-  'docs/planning/closeouts/20260512-we-hx-3-start-run-application-decomposition-closeout.md'
-);
+const require = createRequire(import.meta.url);
+const { extractFeatureMechanizationManifests } = require(
+  join(REPO_ROOT, 'scripts/lib/feature-mechanization-manifest.cjs')
+) as {
+  extractFeatureMechanizationManifests: (
+    markdown: string,
+    sourcePath: string
+  ) => Array<{
+    manifest?: {
+      componentGuides?: readonly string[];
+      commandQueryRails?: Array<{
+        dddOwner?: string;
+        name?: string;
+        type?: string;
+      }>;
+      featureId?: string;
+    } | null;
+  }>;
+};
 
 describe('StartRun application decomposition architecture', () => {
   it('keeps StartRunApplicationService as phase orchestration rather than phase implementation', () => {
@@ -84,54 +88,36 @@ describe('StartRun application decomposition architecture', () => {
     }
   });
 
-  it('documents WE-HX-3 with API, invariants, transitions, consumers, stories, analysis, and diagrams', () => {
-    for (const path of [COMPONENT_GUIDE, USER_STORIES, FOWLER_MAILBOX, CLOSEOUT]) {
-      expect(existsSync(path)).toBe(true);
-    }
+  it('keeps WE-HX-3 as the single active structured start-run decomposition feature', () => {
+    const planPath =
+      'docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md';
+    const manifests = extractFeatureMechanizationManifests(
+      readFileSync(join(REPO_ROOT, planPath), 'utf8'),
+      planPath
+    );
+    const startRunDecompositionFeatureIds = manifests
+      .map((entry) => entry.manifest?.featureId)
+      .filter((featureId): featureId is string =>
+        Boolean(featureId?.endsWith('START-RUN-DECOMPOSITION'))
+      );
+    const weHx3Manifest = manifests.find(
+      (entry) => entry.manifest?.featureId === 'WE-HX-3-START-RUN-DECOMPOSITION'
+    )?.manifest;
 
-    const guide = readFileSync(COMPONENT_GUIDE, 'utf8');
-    for (const heading of [
-      '## Public API',
-      '## Invariants',
-      '## Transitions',
-      '## Consumers',
-      '## User Stories',
-      '## Diagrams',
-      '## Drift Guards',
-    ]) {
-      expect(guide).toContain(heading);
-    }
-    expect(guide).toContain('StartRunAdmissionService');
-    expect(guide).toContain('StartRunIntentService');
-    expect(guide).toContain('StartRunExecutionService');
-    expect(guide).toContain('StartRunFailurePolicy');
-    expect(guide).toContain('```mermaid');
-
-    const stories = readFileSync(USER_STORIES, 'utf8');
-    for (const storyId of [
-      'US-WE-HX-3-001',
-      'US-WE-HX-3-002',
-      'US-WE-HX-3-003',
-      'US-WE-HX-3-004',
-      'US-WE-HX-3-005',
-    ]) {
-      expect(stories).toContain(storyId);
-    }
-    expect(stories).toContain('## Negative Scenarios');
-    expect(stories).toContain('## Scenario Coverage Matrix');
-
-    const mailbox = readFileSync(FOWLER_MAILBOX, 'utf8');
-    for (const section of [
-      '## Fowler Architecture Analysis',
-      '## Mature-System Comparison',
-      '## Improved Patterns',
-      '## Antipatterns Detected',
-      '## Repetitions Fixed',
-      '## Drift Fixed',
-      '## Future Lessons',
-    ]) {
-      expect(mailbox).toContain(section);
-    }
+    expect(startRunDecompositionFeatureIds).toEqual(['WE-HX-3-START-RUN-DECOMPOSITION']);
+    expect(weHx3Manifest?.commandQueryRails).toContainEqual(
+      expect.objectContaining({
+        dddOwner: 'StartRunApplicationFlow',
+        name: 'IWorkflowEngine.startRun',
+        type: 'command',
+      })
+    );
+    expect(weHx3Manifest?.componentGuides).toEqual(
+      expect.arrayContaining([
+        'docs/architecture/components/engine/architecture/start-run-application-decomposition-component.md',
+        'docs/architecture/components/engine/architecture/start-run-application-decomposition-diagrams.md',
+      ])
+    );
   });
 });
 

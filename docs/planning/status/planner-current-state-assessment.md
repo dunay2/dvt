@@ -185,12 +185,12 @@ flowchart LR
     Request["start-run request without planRef"] --> Policy["planRoutePlanSourcePolicy"]
     Policy --> UseCase["PlannerBackedStartRunUseCase"]
     UseCase --> Planner["IPlanner.buildPlan()"]
-    Planner --> Store["IPlanValidationLifecycleStore.storePlan()"]
-    Store --> Ref["PlanRef"]
+    Planner --> ArtifactStore["IStoredPlanArtifactWriter.storePlanArtifact()"]
+    ArtifactStore --> Ref["PlanRef"]
     Ref --> Validate["StoredPlanExecutabilityValidator.validatePlan()"]
     Validate --> Decision{"OK?"}
-    Decision -- no --> Invalid["markInvalid(planRef)"]
-    Decision -- yes --> Valid["markValid(planRef)"]
+    Decision -- no --> Invalid["markStoredPlanArtifactInvalid(ScopedPlanRef)"]
+    Decision -- yes --> Valid["markStoredPlanArtifactValid(ScopedPlanRef)"]
     Valid --> Delegate["delegate.execute(command + planRef)"]
 ```
 

@@ -58,11 +58,11 @@ flowchart LR
   lineage-runtime decomposition follow-up (`AR-B5`) keeps worker parity moving
   without blurring ownership, and Conductor cleanup stays scoped as truthfulness
   debt (`AR-A8`) rather than a second-provider phase, while the first explicit
-  scale hardening cut on workflow payload shape now routes through
-  `AR-D-PLAN-POINTER` instead of remaining an unowned review recommendation,
-  and the remaining DBT built-in coupling inside `@dvt/adapter-temporal` stays
-  tracked as explicit runtime hardening debt rather than being mistaken for an
-  already-finished plugin extraction.
+  scale hardening cut on workflow payload shape is now closed through
+  `AR-D-PLAN-POINTER` with PlanRef capacity, continuation safety, DBT package
+  extraction, and semantic-fitness evidence. Remaining runtime scale work now
+  routes through retention, worker-scaling, and broader open scale tasks instead
+  of being hidden under the PlanRef payload line.
 - `API and Admission`
   Current sources: [API and Admission domain view](../domains/api-and-admission.md),
   [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md),

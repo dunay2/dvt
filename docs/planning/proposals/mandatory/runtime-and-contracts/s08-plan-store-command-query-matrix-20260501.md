@@ -1,8 +1,8 @@
 ---
 title: S08 plan-store command and query matrix
-status: Review
+status: Active
 owner: Architecture / Planner / Artifacts / API / Storage
-last_reviewed: 2026-05-01
+last_reviewed: 2026-05-15
 planning_type: proposal
 ---
 
@@ -19,9 +19,12 @@ matrix is drift until this document is updated and reviewed.
 
 ## Review Gate
 
-This matrix is ready for architecture review, not implementation execution.
-Implementation remains blocked until this document is accepted or explicitly
-amended after review.
+Architecture review and implementation execution are complete for the S08
+scoped-port closure recorded in this matrix and its linked mechanization
+manifests.
+
+Future changes to S08 plan-store behavior remain blocked unless they are
+expressed as explicit matrix amendments and reviewed before implementation.
 
 Minimum review decisions:
 
@@ -901,6 +904,7 @@ governingSources:
 allowedImplementationSurfaces:
   - apps/api/**
   - buzon/20260509-codex-fowler-plan-store-scoped-records-analysis-and-remediation.md
+  - buzon/20260515-codex-fowler-s08-lifecycle-contract-retirement-analysis.md
   - docs/.manifest.json
   - docs/adr/**
   - docs/architecture/components/api/protected-runtime-and-plan-compile-component.md
@@ -1416,6 +1420,22 @@ symbols:
     path: packages/@dvt/contracts/src/contracts/planner/PlanRecord.v1.ts
     dddOwner: Plan record contract
     cqRails: [CreatePlanRecord]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - backend contract
+    unitTests: [contracts plan-store record tests]
+  - name: StoredPlanArtifactValidationState
+    path: packages/@dvt/contracts/src/contracts/planner/StoredPlanArtifactValidation.v1.ts
+    dddOwner: Stored-plan artifact validation DTO vocabulary
+    cqRails: [FetchPlanForValidation]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
+    cypressCoverage: N/A - backend contract
+    unitTests: [contracts plan-store record tests]
+  - name: StoredPlanArtifactValidationRecord
+    path: packages/@dvt/contracts/src/contracts/planner/StoredPlanArtifactValidation.v1.ts
+    dddOwner: Stored-plan artifact validation DTO vocabulary
+    cqRails: [FetchPlanForValidation]
     fowlerSignals: [Boundary drift]
     architectureGuard: packages/@dvt/contracts/test/plan-store-records.architecture.test.ts
     cypressCoverage: N/A - backend contract

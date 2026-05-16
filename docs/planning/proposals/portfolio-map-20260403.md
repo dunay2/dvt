@@ -25,6 +25,8 @@ planning_type: proposal
   2026-05-13](./mandatory/governance-and-docs/planning-knowledge-rail-db-first-plan-20260513.md)
 - [Component Engineering Composite Hierarchy Plan
   2026-05-13](./mandatory/governance-and-docs/component-engineering-composite-hierarchy-plan-20260513.md)
+- [DB-First Architecture Authority Plan
+  2026-05-15](./mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md)
 - [Governance file index sharding plan
   2026-05-03](./mandatory/governance-and-docs/governance-file-index-sharding-plan-20260503.md)
 - [Runtime And Contracts](./mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)

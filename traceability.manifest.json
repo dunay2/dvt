@@ -923,11 +923,13 @@
       "number": "ADR-0043",
       "decisions": [
         "Fetch engine dispatch artifacts through the artifacts-owned reader before segment projection.",
-        "Keep scoped plan artifact integrity validation as an engine-owned dispatch port."
+        "Keep scoped plan artifact integrity validation as an engine-owned dispatch port.",
+        "Publish stored-plan artifact validation as artifact state, not as a plan lifecycle facade."
       ],
       "implemented_by": [
         "packages/@dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts",
         "packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts",
+        "packages/@dvt/contracts/src/contracts/planner/StoredPlanArtifactValidation.v1.ts",
         "packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts"
       ],
       "title": "ADR-0043 - Plan record, plan store, and artifacts ownership"
@@ -1013,11 +1015,13 @@
       "number": "ADR-0052",
       "decisions": [
         "Evaluate continue-as-new, history, segment, payload, and retention budgets as explicit readiness evidence.",
+        "Keep architecture tests coupled to semantic guide structure instead of duplicated string fixtures",
         "Translate runtime error evidence into DVT RunFailed reasons at the workflow boundary"
       ],
       "implemented_by": [
         "packages/@dvt/adapter-temporal/src/temporalPlanRefCapacitySlaPolicy.ts",
         "packages/@dvt/adapter-temporal/src/workflows/workflowFailureReasonPolicy.ts",
+        "packages/@dvt/adapter-temporal/test/helpers/workflowComponentGuideSupport.ts",
         "packages/@dvt/adapter-temporal/test/temporalPlanRefCapacitySlaPolicy.test.ts",
         "packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts"
       ],
@@ -1026,9 +1030,11 @@
     {
       "number": "ADR-0054",
       "decisions": [
-        "Keep scoped plan artifact integrity validation as an engine-owned dispatch port."
+        "Keep scoped plan artifact integrity validation as an engine-owned dispatch port.",
+        "Publish stored-plan artifact validation as artifact state, not as a plan lifecycle facade."
       ],
       "implemented_by": [
+        "packages/@dvt/contracts/src/contracts/planner/StoredPlanArtifactValidation.v1.ts",
         "packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts"
       ],
       "title": "ADR-0054: Plan Store Scoped Record Identity"

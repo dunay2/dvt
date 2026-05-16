@@ -275,9 +275,9 @@ export type {
 } from './contracts/planner/PlanExecutabilityRecord.v1.js';
 export type { PlanAdmissionLink } from './contracts/planner/PlanAdmissionLink.v1.js';
 export type {
-  PlanValidationRecord,
-  PlanValidationState,
-} from './contracts/planner/PlanValidationLifecycle.v1.js';
+  StoredPlanArtifactValidationRecord,
+  StoredPlanArtifactValidationState,
+} from './contracts/planner/StoredPlanArtifactValidation.v1.js';
 export type {
   CustomPolicyMap,
   CustomPolicyNamespaceEntry,

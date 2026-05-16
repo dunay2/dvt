@@ -271,7 +271,7 @@ tasks:
     last_verified: '2026-05-14'
   - task_id: AR-D-PLAN-POINTER
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       replace the full Temporal workflow plan payload with a plan-pointer execution seam and compact
       continue-as-new handoff so large DAG runs stop scaling with durable workflow input size.
@@ -282,7 +282,7 @@ tasks:
       in-flight workflows is explicit and replay-safe.
     complexity: L
     effort_points: 8
-    progress_pct: 98
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260414-principal-architect-review-dvtplus.md
       - docs/planning/reviews/architecture-and-governance/20260420-dvt-plus-system-architecture-review.md
@@ -308,30 +308,22 @@ tasks:
       - docs/risk-register/quality/r-20260430-ar-d-continuation-safety.yaml
       - buzon/20260430-codex-fowler-ar-d-continuation-safety-analysis-and-remediation.md
       - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary-user-stories.md
+      - docs/planning/closeouts/20260514-ar-d2-temporal-planref-capacity-sla-closeout.md
+      - docs/evidence/ed-20260430-ar-d2-temporal-planref-capacity-sla.md
+      - docs/risk-register/quality/R-20260430-AR-D2-TEMPORAL-CAPACITY-SLA.yaml
+      - docs/planning/closeouts/20260514-ar-d-plan-pointer-dbt-package-extraction-closeout.md
+      - docs/evidence/ed-20260514-ar-d-plan-pointer-dbt-package-extraction.md
+      - docs/evidence/ed-20260515-ar-d-plan-pointer-semantic-fitness.md
+      - docs/risk-register/quality/R-20260515-AR-D-PLAN-POINTER-SEMANTIC-FITNESS.yaml
+      - docs/planning/closeouts/20260515-ar-d-plan-pointer-final-closeout.md
     status_reason: >-
-      Current QA confirms the active Temporal code path now starts workflows with `planRef` plus
-      cursor-only runtime control input, bounded segment resolution, canonical `CANCEL` signal-id
-      transport, an explicit continue-as-new payload guard, pre-layer lifecycle gating ahead of
-      skipped-step side effects, centralized runtime payload helper shaping inside the workflow
-      modules, API/worker propagation for `TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES`, strict
-      fail-fast parsing for governed Temporal numeric env overrides, and an updated Temporal adapter
-      spec aligned to the PlanRef-plus-cursor contract. Follow-up QA1 now adds real Temporal
-      time-skipping continue-as-new coverage, fail-closed gateway dependency fact handling, a
-      governed non-zero continue-as-new default, an explicit drained-deploy cutover runbook, and
-      deep-plan segment boundedness regression coverage. QA3 adds semantic module ownership
-      docblocks, a local PlanRef workflow boundary guide, diagrams, and an architecture fitness test
-      that validates API, invariants, transitions, and consumers. The DBT-core decoupling pass moves
-      DBT step-kind ownership out of the Temporal core activity registry and into explicit worker
-      profile composition. The continuation safety pass adds governed RunFailed reasons for cursor
-      overflow, expired PlanRef, and unavailable PlanRef artifacts; rejects expired PlanRef values
-      before fetching plan bytes; and bounds processed control-signal id retention in rollover
-      cursor state. The Fowler follow-up isolates continuation failure classification in a workflow
-      policy module, adds local user stories, and guards the component guide, mailbox, stories, and
-      owned-concern map with an architecture test. The task remains open because full SLA threshold
-      posture under AR-D2 is not finished, segment-scale maturity is still first-cut, and
-      package-level DBT plugin extraction remains explicit as open risk instead of being treated as
-      already closed.
-    last_verified: '2026-04-30'
+      Closed after the PlanRef-plus-cursor workflow boundary, bounded segment resolution,
+      continue-as-new payload guard, drained cutover runbook, continuation-safety ADR/evidence,
+      AR-D2 capacity SLA, DBT plugin package extraction hardcut, and semantic component-fitness
+      guards all landed with accepted evidence. Remaining tenant-specific capacity tuning, DBT CLI
+      sandboxing, and broader worker scaling are tracked as separate risks or tasks rather than
+      blockers for the PlanRef payload replacement objective.
+    last_verified: '2026-05-15'
   - task_id: AR-D3
     priority: P2
     status: in_progress
@@ -613,10 +605,9 @@ dependency_notes:
     `first enterprise pilot` moved from blocked to queued because its runtime prerequisites are now
     closed. Billing, compliance, and acquisition collateral remain blocked behind pilot execution.
   - >-
-    `AR-D2` through `AR-D6` remain the original open scale backlog from the 2026-04-02 deep
-    architectural review; `AR-D-PLAN-POINTER` now adds the workflow-payload hardening cut required
-    by the 2026-04-14 and 2026-04-20 architecture reviews, while `AR-D1` is already closed with
-    incremental snapshot projection and fallback replay evidence.
+    `AR-D1`, `AR-D2`, and `AR-D-PLAN-POINTER` are now closed with evidence-backed runtime scale
+    hardening. `AR-D3` through `AR-D6` remain the original open scale backlog from the 2026-04-02
+    deep architectural review.
   - >-
     The 2026-04-02 principal deep architectural review adds `AR-D7` (tenant-aware outbox sharding)
     and `AR-D8` (default retention policy plus retention health alerting) as scale hardening tasks.
@@ -624,20 +615,20 @@ dependency_notes:
     `MW-D1` and `MW-D2` are multi-workflow scale tasks: external plan SDK/API (P1, depends on MW-A2)
     and worker routing model by step kind (P2, depends on MW-C1).
   - >-
-    `TF-D1` is now closed: the transformation proof environment has a canonical reset, cleanup, and
-    rerun lifecycle, so remaining Lane D work now splits between workflow payload hardening
-    (`AR-D-PLAN-POINTER`), default retention hardening (`AR-D8`), and the broader scale backlog.
+    `TF-D1` and `AR-D-PLAN-POINTER` are now closed: the transformation proof environment has a
+    canonical reset, cleanup, and rerun lifecycle, and the Temporal PlanRef workflow payload
+    hardening line has accepted evidence. Remaining Lane D work now splits between default retention
+    hardening (`AR-D8`) and the broader scale backlog.
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-05-09'
+  verified_on: '2026-05-15'
   total_tasks: 27
   total_effort_points: 143
-  completed_weighted_points: 63.54
-  lane_progress_pct: 44
+  completed_weighted_points: 71.54
+  lane_progress_pct: 50
   notes: >-
-    Weighted progress uses effort_points. The 2026-05-09 AR-D7 closeout adds tenant-aware outbox
-    shard assignment with delivery, engine, adapter-postgres, and outbox-worker evidence. `MW-D1` is
-    closed with the compile-only route/use-case split, catalog-first composition, and non-dbt
-    acceptance vector; remaining Lane D near-term work is workflow payload hardening, retention
-    enforcement, and the open scale backlog.
+    Weighted progress uses effort_points. The 2026-05-15 AR-D-PLAN-POINTER final closeout closes the
+    Temporal PlanRef workflow payload hardening line with capacity SLA, continuation safety, DBT
+    package extraction, and semantic component-fitness evidence. Remaining Lane D near-term work is
+    retention enforcement and the open scale backlog.

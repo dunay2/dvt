@@ -7,6 +7,25 @@ last_reviewed: 2026-05-12
 
 # Start-Run Application Decomposition Component
 
+```component-doc-contract
+componentId: WE-HX-3-START-RUN-DECOMPOSITION
+commandRails:
+  - IWorkflowEngine.startRun
+publicApi:
+  - StartRunApplicationService
+  - StartRunAdmissionService
+  - StartRunIntentService
+  - StartRunExecutionService
+  - StartRunFailurePolicy
+requiredSemantics:
+  - public-api
+  - invariants
+  - transitions
+  - consumers
+  - diagrams
+diagramPack: docs/architecture/components/engine/architecture/start-run-application-decomposition-diagrams.md
+```
+
 ## Purpose
 
 This component owns the internal `@dvt/engine` start-run application flow after

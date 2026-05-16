@@ -1,0 +1,24 @@
+---
+id: R-20260515-S08-LIFECYCLE-CONTRACT-RETIREMENT
+title: S08 lifecycle contract retirement can strand stale imports or docs
+status: Open
+date: 2026-05-15
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/artifacts
+  - packages/@dvt/adapter-postgres
+severity: Medium
+probability: Low
+context: >
+  S08 removes PlanValidationLifecycle.v1.ts as an active contract source and renames the remaining
+  serializable validation DTO to StoredPlanArtifactValidationRecord.
+risk: >
+  External consumers or stale active documentation may still refer to PlanValidationRecord,
+  PlanValidationState, or PlanValidationLifecycle.v1 as current contract names.
+mitigations:
+  - 'Architecture tests reject the retired contract source and root-barrel export.'
+  - 'Type-checking fails any workspace import of the removed names.'
+  - 'Active component and inventory docs name the artifact-validation DTO instead of the lifecycle
+    contract.'
+review_after: 2026-06-30
+---

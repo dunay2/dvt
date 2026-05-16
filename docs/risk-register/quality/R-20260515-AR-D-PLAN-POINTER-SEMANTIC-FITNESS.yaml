@@ -1,0 +1,22 @@
+---
+id: R-20260515-AR-D-PLAN-POINTER-SEMANTIC-FITNESS
+title: PlanRef workflow semantic drift can hide integrity and ownership gaps
+status: Open
+date: 2026-05-15
+owners:
+  - packages/@dvt/adapter-temporal
+severity: Low
+probability: Low
+---
+summary: >
+  AR-D PlanRef workflow documentation, module ownership docblocks, and runtime tests can drift
+  independently unless architecture fitness checks validate the semantic relationships instead of
+  duplicated literals.
+mitigation: >
+  The component semantics test now parses the component guide, validates exact @ownedConcern
+  declarations, checks module-set parity, rejects duplicate component-map rows, and requires the
+  governed user-story coverage matrix.
+validation:
+  - pnpm --filter @dvt/adapter-temporal exec vitest run
+    test/workflow-component-semantics.architecture.test.ts
+  - pnpm --filter @dvt/adapter-temporal exec vitest run test/runPlanWorkflow.layers.order.test.ts

@@ -69,7 +69,7 @@ classDiagram
     PlanRefSchemaT
     ExecutabilityValidationResult
     ExecutionBindingVerificationResult
-    PlanValidationRecord
+    StoredPlanArtifactValidationRecord
     CustomPolicyNamespaceEntry
   }
 

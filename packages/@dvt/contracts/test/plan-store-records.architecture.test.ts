@@ -232,10 +232,14 @@ describe('Scoped plan-store records architecture', () => {
 
   it('keeps stored-plan artifact ports canonical in @dvt/artifacts instead of planner, API, or engine duplicates', () => {
     expect(existsSync(STORED_PLAN_ARTIFACT_PORT)).toBe(true);
+    expect(
+      existsSync(join(CONTRACTS_SRC_ROOT, 'contracts/planner/PlanValidationLifecycle.v1.ts'))
+    ).toBe(false);
 
     const artifactPort = readFileSync(STORED_PLAN_ARTIFACT_PORT, 'utf8');
     for (const term of [
       'Owned concern: expose stored-plan artifact lifecycle and materialization ports',
+      'StoredPlanArtifactValidationRecord',
       'StoredPlanArtifact',
       'IStoredPlanArtifactWriter',
       'IStoredPlanArtifactReader',
@@ -247,6 +251,10 @@ describe('Scoped plan-store records architecture', () => {
     ]) {
       expect(artifactPort).toContain(term);
     }
+    expect(artifactPort).not.toMatch(/\bPlanValidationRecord\b/u);
+    expect(readFileSync(join(CONTRACTS_SRC_ROOT, 'index.ts'), 'utf8')).not.toContain(
+      'PlanValidationLifecycle.v1'
+    );
 
     expect(existsSync(PLANNER_LIFECYCLE_PORT)).toBe(false);
     expect(existsSync(API_STORED_PLAN_PORT)).toBe(false);
