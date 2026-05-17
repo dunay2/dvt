@@ -2,7 +2,11 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { WEB_VITEST_PRIMARY_SUITE_NAMES, classifyWebVitestFile } from '../../vitest.suites';
+import {
+  WEB_VITEST_FOCUS_SUITE_NAMES,
+  WEB_VITEST_PRIMARY_SUITE_NAMES,
+  classifyWebVitestFile,
+} from '../../vitest.suites';
 
 const webRoot = process.cwd();
 const sourceRoot = resolve(webRoot, 'src');
@@ -78,6 +82,50 @@ describe('web Vitest suite partition', () => {
     );
   });
 
+  it('keeps suite commands, config files, and CI wired to the suite catalog', () => {
+    const packageJson = JSON.parse(readFileSync(resolve(webRoot, 'package.json'), 'utf8')) as {
+      scripts: Record<string, string>;
+    };
+    const rootPackageJson = JSON.parse(
+      readFileSync(resolve(webRoot, '..', '..', 'package.json'), 'utf8')
+    ) as {
+      scripts: Record<string, string>;
+    };
+    const workflow = readFileSync(
+      resolve(webRoot, '..', '..', '.github/workflows/test.yml'),
+      'utf8'
+    );
+
+    expect(packageJson.scripts.test).toBe('vitest run --config vitest.config.ts');
+    expect(packageJson.scripts['test:ci']).toBe(
+      WEB_VITEST_PRIMARY_SUITE_NAMES.map((suiteName) => `pnpm run test:${suiteName}`).join(' && ')
+    );
+    expect(rootPackageJson.scripts['test:web:ci']).toBe('pnpm --filter @dvt/web test:ci');
+    expect(workflow).toContain('pnpm test:web:ci');
+
+    for (const suiteName of WEB_VITEST_PRIMARY_SUITE_NAMES) {
+      expect(packageJson.scripts[`test:${suiteName}`]).toBe(
+        `vitest run --config vitest.${suiteName}.config.ts`
+      );
+      expect(readFileSync(resolve(webRoot, `vitest.${suiteName}.config.ts`), 'utf8')).toContain(
+        `createWebVitestConfig('${suiteName}')`
+      );
+    }
+
+    for (const suiteName of WEB_VITEST_FOCUS_SUITE_NAMES) {
+      expect(packageJson.scripts[`test:${suiteName}`]).toBe(
+        `vitest run --config vitest.${suiteName}.config.ts`
+      );
+      expect(readFileSync(resolve(webRoot, `vitest.${suiteName}.config.ts`), 'utf8')).toContain(
+        `createWebVitestConfig('${suiteName}')`
+      );
+    }
+
+    expect(readFileSync(resolve(webRoot, 'vitest.config.ts'), 'utf8')).toContain(
+      "createWebVitestConfig('all')"
+    );
+  });
+
   it('prevents Canvas route-state coverage from collapsing back into a god test', () => {
     const files = listWebVitestFiles();
     const splitRouteStateFiles = files.filter((filePath) =>
@@ -88,6 +136,19 @@ describe('web Vitest suite partition', () => {
     expect(splitRouteStateFiles.length).toBeGreaterThanOrEqual(4);
 
     for (const filePath of splitRouteStateFiles) {
+      expect(countTestCases(filePath), filePath).toBeLessThanOrEqual(8);
+      expect(countLines(filePath), filePath).toBeLessThanOrEqual(350);
+    }
+  });
+
+  it('keeps Canvas route-level presentation tests small enough for local review', () => {
+    const routeLevelPresentationFiles = listWebVitestFiles().filter((filePath) =>
+      /^src\/app\/views\/Canvas\.(?!architecture\.).*\.test\.tsx$/.test(filePath)
+    );
+
+    expect(routeLevelPresentationFiles.length).toBeGreaterThan(0);
+
+    for (const filePath of routeLevelPresentationFiles) {
       expect(countTestCases(filePath), filePath).toBeLessThanOrEqual(8);
       expect(countLines(filePath), filePath).toBeLessThanOrEqual(350);
     }

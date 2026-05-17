@@ -369,7 +369,9 @@ Current workflow consumers:
   threshold enforcement. For web PRs, the affected-package step runs
   `pnpm test:web:ci`, which expands to `@dvt/web` `test:unit`,
   `test:presentation`, and `test:architecture` while leaving
-  `pnpm test:web` as the full compatibility suite.
+  `pnpm test:web` as the full compatibility suite. The web architecture suite
+  checks that these package scripts, Vitest config delegates, and workflow
+  command stay aligned with `apps/web/vitest.suites.ts`.
 - [`.github/workflows/contracts.yml`](../../.github/workflows/contracts.yml) uses
   `emit-scope --mode contracts` for contract, determinism, and golden routing.
   The workflow no longer owns parallel inline `package.json` filters for those

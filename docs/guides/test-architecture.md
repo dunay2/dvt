@@ -151,11 +151,14 @@ Every web Vitest file must belong to exactly one primary suite: `unit`,
 overlap with a primary suite, but they do not define ownership. The semantic
 guard is
 [`apps/web/src/testing/vitestSuites.architecture.test.ts`](../../apps/web/src/testing/vitestSuites.architecture.test.ts).
+That guard also verifies that package scripts, suite config files, and the Test
+Suite workflow stay wired to the catalog instead of carrying parallel suite
+definitions.
 
 Canvas route-level presentation tests must stay partitioned by responsibility.
-New `Canvas.routeStates.*.test.tsx` files have a target maximum of eight cases
-and 350 lines. Shared route helpers belong in `Canvas.test.support.tsx` only
-after they have at least two real consumers.
+Route-level `Canvas.*.test.tsx` presentation files have a target maximum of
+eight cases and 350 lines. Shared route helpers belong in
+`Canvas.test.support.tsx` only after they have at least two real consumers.
 
 Canvas startup and draft-recovery architecture tests are split by semantics:
 
