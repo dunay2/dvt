@@ -4,7 +4,8 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "pretest": "node ../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"@dvt/web^...\" build",
+    "pretest": "pnpm run test:deps",
+    "test:deps": "node ../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"@dvt/web^...\" build",
     "build": "vite build",
     "build:e2e": "vite build --mode e2e",
     "dev": "vite",
@@ -17,6 +18,15 @@
     "test:e2e:open": "node ../../tools/ci/run-web-cypress-native.mjs open",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --config vitest.config.ts",
+    "test:unit": "pnpm run test:deps && pnpm run test:unit:run",
+    "test:unit:run": "vitest run --config vitest.unit.config.ts",
+    "test:presentation": "pnpm run test:deps && pnpm run test:presentation:run",
+    "test:presentation:run": "vitest run --config vitest.presentation.config.ts",
+    "test:architecture": "pnpm run test:deps && pnpm run test:architecture:run",
+    "test:architecture:run": "vitest run --config vitest.architecture.config.ts",
+    "test:canvas": "pnpm run test:deps && pnpm run test:canvas:run",
+    "test:canvas:run": "vitest run --config vitest.canvas.config.ts",
+    "test:ci": "pnpm run test:deps && pnpm run test:unit:run && pnpm run test:presentation:run && pnpm run test:architecture:run",
     "test:watch": "vitest --config vitest.config.ts"
   },
   "dependencies": {

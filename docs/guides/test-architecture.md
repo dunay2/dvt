@@ -2,7 +2,7 @@
 title: Test Architecture
 status: Active
 owner: engineering
-last_reviewed: 2026-03-31
+last_reviewed: 2026-05-17
 ---
 
 # Test Architecture
@@ -131,6 +131,49 @@ Shared frontend support must also follow two stability rules:
 
 Do not place capability-specific DTO or snapshot builders in shared frontend
 support.
+
+## @dvt/web Vitest suite partition
+
+`apps/web` owns a single Vitest suite catalog in
+[`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts). The package
+keeps `pnpm --filter @dvt/web test` as the full compatibility suite and adds
+smaller lanes for development and CI:
+
+- `test:unit`: `*.test.ts`, excluding architecture tests
+- `test:presentation`: `*.test.tsx`, excluding architecture tests
+- `test:architecture`: `*.architecture.test.{ts,tsx}`
+- `test:canvas`: overlapping Canvas focus lane for `Canvas*.test.tsx` and
+  `views/canvas/**`
+- `test:ci`: unit, presentation, then architecture
+
+Each public web suite command runs `test:deps` before its raw Vitest delegate.
+That keeps the split commands aligned with the historical `pretest` dependency
+build instead of relying on package-manager lifecycle hooks for custom script
+names. `test:ci` runs `test:deps` once, then calls the internal `*:run`
+delegates in catalog order.
+
+Every web Vitest file must belong to exactly one primary suite: `unit`,
+`presentation`, or `architecture`. Focus lanes such as `test:canvas` may
+overlap with a primary suite, but they do not define ownership. The semantic
+guard is
+[`apps/web/src/testing/vitestSuites.architecture.test.ts`](../../apps/web/src/testing/vitestSuites.architecture.test.ts).
+That guard also verifies that package scripts, suite config files, and the Test
+Suite workflow stay wired to the catalog instead of carrying parallel suite
+definitions.
+
+Canvas route-level presentation tests must stay partitioned by responsibility.
+Route-level `Canvas.*.test.tsx` presentation files have a target maximum of
+eight cases and 350 lines. Shared route helpers belong in
+`Canvas.test.support.tsx` only after they have at least two real consumers.
+
+Canvas startup and draft-recovery architecture tests are split by semantics:
+
+- `canvasStartupBootstrapPublication.architecture.test.ts`
+- `canvasDraftRecoveryBoundary.architecture.test.ts`
+- `canvasRoutePosturePriority.architecture.test.ts`
+
+Do not recreate `Canvas.routeStates.test.tsx` or
+`canvasStartupAndDraftRecovery.architecture.test.ts` as catch-all files.
 
 ## Backend and worker guidance
 

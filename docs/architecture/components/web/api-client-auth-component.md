@@ -114,7 +114,7 @@ Primary tests:
 
 - `apps/web/src/app/services/api/createApiClient.test.ts`
 - `scripts/run-dev-stack.auth.test.cjs`
-- `apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts`
+- `apps/web/src/app/views/canvas/canvasDraftRecoveryBoundary.architecture.test.ts`
 
 The guard verifies that auth refresh remains in the API client component and
 does not drift into Canvas route code.

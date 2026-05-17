@@ -307,7 +307,9 @@ flowchart LR
 
 The local architecture guard is:
 
-- `apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts`
+- `apps/web/src/app/views/canvas/canvasStartupBootstrapPublication.architecture.test.ts`
+- `apps/web/src/app/views/canvas/canvasDraftRecoveryBoundary.architecture.test.ts`
+- `apps/web/src/app/views/canvas/canvasRoutePosturePriority.architecture.test.ts`
 - `apps/web/src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts`
 
 It validates semantics, not only barrel thinness:

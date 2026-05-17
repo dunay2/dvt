@@ -174,7 +174,10 @@ The canonical fitness checks for this component are:
 - `CanvasRecoveryBanner.architecture.test.tsx`
 - `CanvasCenterSurface.architecture.test.ts`
 - `CanvasToolbar.test.tsx`
-- `Canvas.routeStates.test.tsx`
+- `Canvas.routeStates.smoke.test.tsx`
+- `Canvas.routeStates.first-canvas-policy.test.tsx`
+- `Canvas.routeStates.host-cycle-persistence.test.tsx`
+- `Canvas.routeStates.backend-recovery-priority.test.tsx`
 - `Canvas.draftRecovery.test.tsx`
 
 ## Drift to watch

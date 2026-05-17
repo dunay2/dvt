@@ -5,6 +5,10 @@ import { createRoot, type Root } from 'react-dom/client';
 import { RouterProvider, createMemoryRouter } from 'react-router';
 import { expect, vi } from 'vitest';
 
+import { DVT_AUTHORING_NODE_KINDS } from '../plugins/dvt/dvtNodeTypeCatalog';
+import { DBT_NODE_KINDS } from '../plugins/nodeTypeCatalog.dbt';
+import type { NodeKindRegistration } from '../plugins/nodeTypeContracts';
+import type { CanonicalNode } from '../types/canonical';
 import {
   getPublishedRouteBootstrapPresentation,
   resetRouteBootstrapPresentation,
@@ -16,6 +20,7 @@ import {
   getCanvasDraftPresentationState,
   resetCanvasDraftPresentationState,
 } from './canvas/canvasDraftPresentationStore';
+import { useCanvasViewMenuContributionStore } from './canvas/canvasViewMenuContributionStore';
 import { useCanvasController } from './canvas/useCanvasController';
 import { buildController, type CanvasController } from './Canvas.test.controller';
 export { buildController } from './Canvas.test.controller';
@@ -132,8 +137,10 @@ export function createCanvasRouteHarness() {
   };
 }
 
+export type CanvasRouteHarness = ReturnType<typeof createCanvasRouteHarness>;
+
 export async function renderCanvasRouteWithController(
-  harness: ReturnType<typeof createCanvasRouteHarness>,
+  harness: CanvasRouteHarness,
   overrides?: Partial<CanvasController>
 ) {
   mockedUseCanvasController.mockReturnValue(buildController(overrides));
@@ -180,7 +187,7 @@ export function publishedCanvasRouteBootstrapPresentation() {
 }
 
 export function expectCanvasSurfaceState(args: {
-  harness: ReturnType<typeof createCanvasRouteHarness>;
+  harness: CanvasRouteHarness;
   text: string;
   slot: string;
   viewportVisible: boolean;
@@ -217,4 +224,90 @@ export function expectCanvasBootstrapState(args: {
     detail: bootstrapDetail,
     canComplete: canCompleteBootstrap,
   });
+}
+
+export function expectCanvasRegistryClosed(): void {
+  expect(currentCanvasRouteState().explorerProps?.onOpenDataRegistry).toBeUndefined();
+}
+
+export function expectPrimaryCanvasActionsBlocked(container: ParentNode): void {
+  const { layoutButton, planButton, runButton } = getPrimaryCanvasButtons(container);
+
+  expect(layoutButton).toBeUndefined();
+  expect(planButton).toBeDefined();
+  expect(runButton).toBeDefined();
+  expect(planButton?.getAttribute('disabled')).not.toBeNull();
+  expect(runButton?.getAttribute('disabled')).not.toBeNull();
+  expect(useCanvasViewMenuContributionStore.getState().contribution).toMatchObject({
+    canEditEdges: false,
+  });
+}
+
+export function expectActiveCanvasTab(args: {
+  container: ParentNode;
+  title: string;
+  kindLabel: string;
+}): void {
+  const { container, title, kindLabel } = args;
+  const tabStrip = container.querySelector('[data-slot="canvas-playground-tab-strip"]');
+
+  expect(tabStrip).not.toBeNull();
+  expect(tabStrip?.textContent).toContain(title);
+  expect(tabStrip?.textContent).toContain(kindLabel);
+}
+
+export function requireAuthoringNodeKind(kind: string): NodeKindRegistration {
+  const registration = [...DVT_AUTHORING_NODE_KINDS, ...DBT_NODE_KINDS].find(
+    (candidate) => candidate.kind === kind
+  );
+  if (registration == null) {
+    throw new Error(`Missing authoring node kind fixture: ${kind}`);
+  }
+  return registration;
+}
+
+export function buildInspectorFixtureNode(): CanonicalNode {
+  return {
+    id: 'node.source',
+    name: 'Source',
+    pluginId: 'dvt',
+    kind: 'dvt:source',
+    role: 'input',
+    status: 'idle',
+    tags: [],
+  };
+}
+
+export function expectBlockedCanvasRouteState(args: {
+  harness: CanvasRouteHarness;
+  text: string;
+  detail: string;
+  routeState: 'blocked_backend';
+  bootstrapStatus?: 'blocked' | 'complete';
+  canCompleteBootstrap?: boolean;
+}): void {
+  const {
+    harness,
+    text,
+    detail,
+    routeState,
+    bootstrapStatus = 'blocked',
+    canCompleteBootstrap = false,
+  } = args;
+
+  expectCanvasSurfaceState({
+    harness,
+    text,
+    extraText: detail,
+    slot: 'canvas-blocked-state',
+    viewportVisible: false,
+  });
+  expectPrimaryCanvasActionsBlocked(harness.container);
+  expectCanvasBootstrapState({
+    routeState,
+    bootstrapStatus,
+    bootstrapDetail: detail,
+    canCompleteBootstrap,
+  });
+  expectCanvasRegistryClosed();
 }
