@@ -96,15 +96,25 @@ describe('web Vitest suite partition', () => {
       'utf8'
     );
 
+    expect(packageJson.scripts.pretest).toBe('pnpm run test:deps');
+    expect(packageJson.scripts['test:deps']).toBe(
+      'node ../../scripts/skip-pretest-if-ci.cjs || pnpm --filter "@dvt/web^..." build'
+    );
     expect(packageJson.scripts.test).toBe('vitest run --config vitest.config.ts');
     expect(packageJson.scripts['test:ci']).toBe(
-      WEB_VITEST_PRIMARY_SUITE_NAMES.map((suiteName) => `pnpm run test:${suiteName}`).join(' && ')
+      [
+        'pnpm run test:deps',
+        ...WEB_VITEST_PRIMARY_SUITE_NAMES.map((suiteName) => `pnpm run test:${suiteName}:run`),
+      ].join(' && ')
     );
     expect(rootPackageJson.scripts['test:web:ci']).toBe('pnpm --filter @dvt/web test:ci');
     expect(workflow).toContain('pnpm test:web:ci');
 
     for (const suiteName of WEB_VITEST_PRIMARY_SUITE_NAMES) {
       expect(packageJson.scripts[`test:${suiteName}`]).toBe(
+        `pnpm run test:deps && pnpm run test:${suiteName}:run`
+      );
+      expect(packageJson.scripts[`test:${suiteName}:run`]).toBe(
         `vitest run --config vitest.${suiteName}.config.ts`
       );
       expect(readFileSync(resolve(webRoot, `vitest.${suiteName}.config.ts`), 'utf8')).toContain(
@@ -114,6 +124,9 @@ describe('web Vitest suite partition', () => {
 
     for (const suiteName of WEB_VITEST_FOCUS_SUITE_NAMES) {
       expect(packageJson.scripts[`test:${suiteName}`]).toBe(
+        `pnpm run test:deps && pnpm run test:${suiteName}:run`
+      );
+      expect(packageJson.scripts[`test:${suiteName}:run`]).toBe(
         `vitest run --config vitest.${suiteName}.config.ts`
       );
       expect(readFileSync(resolve(webRoot, `vitest.${suiteName}.config.ts`), 'utf8')).toContain(

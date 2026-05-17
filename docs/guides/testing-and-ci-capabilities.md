@@ -367,11 +367,14 @@ Current workflow consumers:
   coverage uses the same governed `packages/@dvt/engine/**` package boundary as
   engine package test routing, so engine Vitest config changes cannot bypass
   threshold enforcement. For web PRs, the affected-package step runs
-  `pnpm test:web:ci`, which expands to `@dvt/web` `test:unit`,
-  `test:presentation`, and `test:architecture` while leaving
-  `pnpm test:web` as the full compatibility suite. The web architecture suite
-  checks that these package scripts, Vitest config delegates, and workflow
-  command stay aligned with `apps/web/vitest.suites.ts`.
+  `pnpm test:web:ci`, which expands to `@dvt/web` `test:deps` followed by the
+  unit, presentation, and architecture Vitest delegates while leaving
+  `pnpm test:web` as the full compatibility suite. Public web suite commands
+  also run `test:deps` before their raw `*:run` delegates so local split-suite
+  execution preserves the dependency-build behavior of the historical
+  `pretest` hook. The web architecture suite checks that these package scripts,
+  Vitest config delegates, and workflow command stay aligned with
+  `apps/web/vitest.suites.ts`.
 - [`.github/workflows/contracts.yml`](../../.github/workflows/contracts.yml) uses
   `emit-scope --mode contracts` for contract, determinism, and golden routing.
   The workflow no longer owns parallel inline `package.json` filters for those

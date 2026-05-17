@@ -146,6 +146,12 @@ smaller lanes for development and CI:
   `views/canvas/**`
 - `test:ci`: unit, presentation, then architecture
 
+Each public web suite command runs `test:deps` before its raw Vitest delegate.
+That keeps the split commands aligned with the historical `pretest` dependency
+build instead of relying on package-manager lifecycle hooks for custom script
+names. `test:ci` runs `test:deps` once, then calls the internal `*:run`
+delegates in catalog order.
+
 Every web Vitest file must belong to exactly one primary suite: `unit`,
 `presentation`, or `architecture`. Focus lanes such as `test:canvas` may
 overlap with a primary suite, but they do not define ownership. The semantic
