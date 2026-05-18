@@ -133,9 +133,10 @@ traverses:
 This combined proof is the acceptance guard that prevents child-slice closure
 from being misread as route-level alpha readiness.
 
-The fixture evaluates to `review` only when every required stage, owned rail,
-traceable and resolvable evidence reference, happy-path proof, and fail-closed
-proof is present. Removing the Canvas
+The fixture evaluates to `review` when every required stage, owned rail,
+traceable and resolvable evidence reference, planned evidence state,
+happy-path proof, and fail-closed proof is present. It evaluates to `accepted`
+only when every stage evidence state is `accepted`. Removing the Canvas
 fail-closed proof returns the route decision to `blocked` and reports
 `Canvas workbench` by name; removing the Code stage or `SaveWorkspaceGraphDraft`
 rail also returns `blocked`.

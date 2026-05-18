@@ -45,6 +45,8 @@ command/query rail catalog before UI, adapter, or route-handler work starts.
 - Every stage in the combined route fixture must carry at least one traceable
   and resolvable `evidenceRefs` entry pointing at the governing doc or
   executable proof.
+- Every combined fixture stage must name whether its evidence is `planned` or
+  `accepted`.
 - The combined route fixture must traverse startup, workspace context, Canvas,
   Code, plan/run readiness, and recovery in that order.
 - Canvas and Code fixture stages must preserve all owned rails instead of
@@ -67,7 +69,8 @@ command/query rail catalog before UI, adapter, or route-handler work starts.
   recovery vocabulary or the route omits a required recovery state.
 - `blocked` moves to `review` when all stages have owners and planned proofs.
 - `review` returns to `blocked` when stage evidence or risk triage regresses.
-- `review` moves to `accepted` only when every stage has accepted evidence.
+- `review` moves to `accepted` only when every combined fixture stage has
+  accepted evidence.
 - `accepted` returns to `review` when route order, rail, risk, or child proof
   changes.
 

@@ -194,6 +194,7 @@ describe('internal alpha route gate architecture', () => {
     for (const stage of internalAlphaCombinedRouteFixture.stages) {
       expect(stage.rails.length).toBeGreaterThanOrEqual(1);
       expect(stage.evidenceRefs.length).toBeGreaterThanOrEqual(1);
+      expect(stage.evidenceAcceptance).toMatch(/^(planned|accepted)$/);
       for (const rail of stage.rails) {
         expect(rail).toMatch(
           /^(ObserveAppBootstrapRouteReadiness|ObserveWorkspaceContext|GetWorkspaceGraphDraft|SaveWorkspaceGraphDraft|ListWorkspaceFiles|GetWorkspaceFileContent|ObservePlanRunReadiness|MapRouteRecoveryState)$/
@@ -224,6 +225,7 @@ describe('internal alpha route gate architecture', () => {
     ]);
 
     expect(evaluateInternalAlphaCombinedRouteFixture(internalAlphaCombinedRouteFixture)).toEqual({
+      missingEvidenceAcceptance: [],
       missingFailClosedProof: [],
       missingHappyPathProof: [],
       missingEvidenceRefs: [],
@@ -244,6 +246,33 @@ describe('internal alpha route gate architecture', () => {
       })
     ).toMatchObject({
       missingFailClosedProof: ['Canvas workbench'],
+      routeDecision: 'blocked',
+    });
+  });
+
+  it('accepts the combined route fixture only when all stage evidence is accepted', () => {
+    expect(
+      evaluateInternalAlphaCombinedRouteFixture({
+        ...internalAlphaCombinedRouteFixture,
+        stages: internalAlphaCombinedRouteFixture.stages.map((stage) => ({
+          ...stage,
+          evidenceAcceptance: 'accepted',
+        })),
+      })
+    ).toMatchObject({
+      missingEvidenceAcceptance: [],
+      routeDecision: 'accepted',
+    });
+
+    expect(
+      evaluateInternalAlphaCombinedRouteFixture({
+        ...internalAlphaCombinedRouteFixture,
+        stages: internalAlphaCombinedRouteFixture.stages.map((stage) =>
+          stage.stage === 'Plan/run readiness' ? { ...stage, evidenceAcceptance: undefined } : stage
+        ),
+      })
+    ).toMatchObject({
+      missingEvidenceAcceptance: ['Plan/run readiness'],
       routeDecision: 'blocked',
     });
   });

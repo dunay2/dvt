@@ -28,10 +28,13 @@ export type InternalAlphaRecoveryState =
   | 'stale'
   | 'not-found';
 
+export type InternalAlphaEvidenceAcceptance = 'planned' | 'accepted';
+
 export interface InternalAlphaCombinedRouteStageProof {
   readonly stage: InternalAlphaRouteStage;
   readonly rails: readonly InternalAlphaRouteRail[];
   readonly evidenceRefs: readonly string[];
+  readonly evidenceAcceptance?: InternalAlphaEvidenceAcceptance;
   readonly happyPathProof: string;
   readonly failClosedProof: string;
   readonly recoveryState: InternalAlphaRecoveryState;
@@ -45,6 +48,7 @@ export interface InternalAlphaCombinedRouteFixture {
 }
 
 export interface InternalAlphaCombinedRouteEvaluation {
+  readonly missingEvidenceAcceptance: readonly InternalAlphaRouteStage[];
   readonly missingEvidenceRefs: readonly InternalAlphaRouteStage[];
   readonly missingFailClosedProof: readonly InternalAlphaRouteStage[];
   readonly missingHappyPathProof: readonly InternalAlphaRouteStage[];
@@ -52,7 +56,7 @@ export interface InternalAlphaCombinedRouteEvaluation {
   readonly missingRecoveryStates: readonly InternalAlphaRecoveryState[];
   readonly missingStages: readonly InternalAlphaRouteStage[];
   readonly routeAuthority: 'F-27';
-  readonly routeDecision: 'blocked' | 'review';
+  readonly routeDecision: 'blocked' | 'review' | 'accepted';
   readonly stagesWithoutRecoveryVocabulary: readonly InternalAlphaRouteStage[];
 }
 
@@ -87,6 +91,7 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
   routeAuthority: 'F-27',
   stages: [
     {
+      evidenceAcceptance: 'planned',
       evidenceRefs: [
         'docs/architecture/components/web/appshell/protected-route-session-gate-component.md',
         'docs/planning/reviews/architecture-and-governance/20260514-internal-alpha-route-acceptance-matrix.md',
@@ -99,6 +104,7 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       stage: 'Startup gate',
     },
     {
+      evidenceAcceptance: 'planned',
       evidenceRefs: [
         'docs/architecture/components/web/appshell/protected-route-session-gate-component.md',
         'docs/architecture/components/api/protected-runtime-command-query-rail-design.md',
@@ -111,6 +117,7 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       stage: 'Workspace context',
     },
     {
+      evidenceAcceptance: 'planned',
       evidenceRefs: [
         'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md',
         'docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-component.md',
@@ -124,6 +131,7 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       stage: 'Canvas workbench',
     },
     {
+      evidenceAcceptance: 'planned',
       evidenceRefs: [
         'docs/planning/proposals/mandatory/frontend-and-ux/code-workbench-workspace-files-query-rail-plan-20260504.md',
         'apps/web/src/app/views/CodeView.test.tsx',
@@ -137,6 +145,7 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       stage: 'Code workbench',
     },
     {
+      evidenceAcceptance: 'planned',
       evidenceRefs: [
         'docs/architecture/components/api/protected-runtime-command-query-rail-design.md',
         'docs/planning/proposals/mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md',
@@ -150,6 +159,7 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       stage: 'Plan/run readiness',
     },
     {
+      evidenceAcceptance: 'planned',
       evidenceRefs: [
         'docs/architecture/components/web/internal-alpha-route-gate-component.md',
         'apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts',
@@ -190,6 +200,11 @@ export function evaluateInternalAlphaCombinedRouteFixture(
         stage.evidenceRefs.some((evidenceRef) => !isResolvableEvidenceRef(evidenceRef))
     )
     .map((stage) => stage.stage);
+  const missingEvidenceAcceptance = fixture.stages
+    .filter(
+      (stage) => stage.evidenceAcceptance !== 'planned' && stage.evidenceAcceptance !== 'accepted'
+    )
+    .map((stage) => stage.stage);
   const stagesWithoutRecoveryVocabulary = fixture.stages
     .filter((stage) => !stage.recoveryStates.some((recoveryState) => recoveryState !== 'ready'))
     .map((stage) => stage.stage);
@@ -201,6 +216,7 @@ export function evaluateInternalAlphaCombinedRouteFixture(
     .map((stage) => stage.stage);
 
   return {
+    missingEvidenceAcceptance,
     missingEvidenceRefs,
     missingFailClosedProof,
     missingHappyPathProof,
@@ -210,6 +226,7 @@ export function evaluateInternalAlphaCombinedRouteFixture(
     routeAuthority: fixture.routeAuthority,
     routeDecision:
       missingFailClosedProof.length > 0 ||
+      missingEvidenceAcceptance.length > 0 ||
       missingEvidenceRefs.length > 0 ||
       missingHappyPathProof.length > 0 ||
       missingRails.length > 0 ||
@@ -217,7 +234,9 @@ export function evaluateInternalAlphaCombinedRouteFixture(
       missingStages.length > 0 ||
       stagesWithoutRecoveryVocabulary.length > 0
         ? 'blocked'
-        : 'review',
+        : fixture.stages.every((stage) => stage.evidenceAcceptance === 'accepted')
+          ? 'accepted'
+          : 'review',
     stagesWithoutRecoveryVocabulary,
   };
 }
