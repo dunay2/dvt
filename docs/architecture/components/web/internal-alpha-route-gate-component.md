@@ -128,8 +128,9 @@ from `planned` to `accepted` only when all of these are true:
   `planned`.
 
 For the current route gate, `Startup gate` is accepted through
-`ObserveAppBootstrapRouteReadiness`, and `Workspace context` is accepted through
-`GetEffectiveWorkspaceContext`. `Canvas workbench`, `Code workbench`,
+`ObserveAppBootstrapRouteReadiness`, `Workspace context` is accepted through
+`GetEffectiveWorkspaceContext`, and `Canvas workbench` is accepted through
+`GetWorkspaceGraphDraft` plus `SaveWorkspaceGraphDraft`. `Code workbench`,
 `Plan/run readiness`, and `Recovery states` remain planned.
 
 ## Cadence Contract

@@ -294,6 +294,44 @@ describe('internal alpha route gate architecture', () => {
     );
   });
 
+  it('accepts Canvas workbench evidence only with draft read, draft save, and browser fail-closed proof', () => {
+    const canvasStage = internalAlphaCombinedRouteFixture.stages.find(
+      (stage) => stage.stage === 'Canvas workbench'
+    );
+    const readyNodeAuthoringCypress = readRepoFile(
+      'apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts'
+    );
+    const draftAccessPostureCypress = readRepoFile(
+      'apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts'
+    );
+
+    expect(canvasStage?.evidenceAcceptance).toBe('accepted');
+    expect(canvasStage?.rails).toEqual(['GetWorkspaceGraphDraft', 'SaveWorkspaceGraphDraft']);
+    expect(canvasStage?.evidenceRefs).toEqual(
+      expect.arrayContaining([
+        'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md',
+        'apps/web/src/app/views/canvas/canvasStartupBootstrapPublication.architecture.test.ts',
+        'apps/web/src/app/views/canvas/canvasDraftRecoveryBoundary.architecture.test.ts',
+        'apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts',
+        'apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts',
+      ])
+    );
+    expect(readyNodeAuthoringCypress).toContain(
+      'Owned concern: prove governed Canvas draft reads, saves, and reload posture in browser'
+    );
+    expect(draftAccessPostureCypress).toContain(
+      'Owned concern: prove Canvas draft access fail-closed posture in browser'
+    );
+    expect(canvasStage?.happyPathProof).toMatch(/draft loads|save|visible|reload/);
+    expect(canvasStage?.failClosedProof).toMatch(/denial|stale|retry|failed|read-only/);
+    expect(evaluateInternalAlphaCombinedRouteFixture(internalAlphaCombinedRouteFixture)).toEqual(
+      expect.objectContaining({
+        missingEvidenceAcceptance: [],
+        routeDecision: 'review',
+      })
+    );
+  });
+
   it('keeps accepted evidence semantically encapsulated instead of relying on path shape', () => {
     const componentGuide = readRepoFile(
       'docs/architecture/components/web/internal-alpha-route-gate-component.md'
@@ -312,6 +350,7 @@ describe('internal alpha route gate architecture', () => {
     expect(acceptedStages.map((stage) => stage.stage)).toEqual([
       'Startup gate',
       'Workspace context',
+      'Canvas workbench',
     ]);
     for (const stage of acceptedStages) {
       expect(stage.evidenceRefs).toEqual(
