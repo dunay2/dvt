@@ -52,11 +52,14 @@ Out of scope:
 - Changed-file-to-suite routing. That belongs to F-14-A.
 - Cypress browser-lane refactoring.
 - Product behavior changes.
+- Changed-suite selection inside `@dvt/web`; this slice only routes governed
+  web test governance docs to the existing web frontend test lane.
 
 Validation plan:
 
 - `pnpm --filter @dvt/web test -- src/testing/vitestSuites.architecture.test.ts`
 - `pnpm test:ci-tools`
+- `node --test tools/ci/emit-scope.test.mjs`
 - `pnpm --filter @dvt/web test:architecture`
 - `pnpm lint:md:changed`
 - `pnpm docs:feature-mechanization:implementation`
@@ -96,6 +99,8 @@ allowedImplementationSurfaces:
   - .github/workflows/test.yml
   - apps/web/vitest*.ts
   - apps/web/src/testing/vitestSuites.architecture.test.ts
+  - tools/ci/scope-config.mjs
+  - tools/ci/emit-scope.test.mjs
   - buzon/20260518-f14-fowler-frontend-test-governance-analysis.md
   - docs/architecture/components/web/index.md
   - docs/architecture/components/web/frontend-test-governance-component.md
@@ -147,6 +152,13 @@ redGreenCycles:
       - docs/architecture/components/web/frontend-test-governance-user-stories.md
       - buzon/20260518-f14-fowler-frontend-test-governance-analysis.md
     greenTest: pnpm --filter @dvt/web test -- src/testing/vitestSuites.architecture.test.ts
+  - id: f14-web-doc-scope
+    redTest: node --test tools/ci/emit-scope.test.mjs
+    expectedFailure: governed web test docs do not set any_test or web scope.
+    patchSurfaces:
+      - tools/ci/scope-config.mjs
+      - tools/ci/emit-scope.test.mjs
+    greenTest: node --test tools/ci/emit-scope.test.mjs
 symbols:
   - name: WebFrontendTestLane
     path: .github/workflows/test.yml
@@ -164,4 +176,12 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web test -- src/testing/vitestSuites.architecture.test.ts
     cypressCoverage: N/A - architecture guard helper only.
     unitTests: [pnpm --filter @dvt/web test -- src/testing/vitestSuites.architecture.test.ts]
+  - name: WEB_FRONTEND_TEST_GOVERNANCE_PATTERNS
+    path: tools/ci/scope-config.mjs
+    dddOwner: Frontend test governance
+    cqRails: [WebVitestSuitePartition]
+    fowlerSignals: [Documentation drift, Boundary drift]
+    architectureGuard: node --test tools/ci/emit-scope.test.mjs
+    cypressCoverage: N/A - CI scope routing only.
+    unitTests: [node --test tools/ci/emit-scope.test.mjs, pnpm test:ci-tools]
 ```
