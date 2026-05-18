@@ -16,6 +16,8 @@ aligned with:
 
 - `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
 - `docs/architecture/components/web/graph/canvas-workbench-tabs-component.md`
+- `docs/architecture/components/web/graph/canvas-legacy-retirement-component.md`
+- `docs/architecture/components/web/graph/canvas-legacy-retirement-user-stories.md`
 - `buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md`
 - `buzon/20260506-codex-fowler-canvas-workbench-stage-1-text-only-tabs-review.md`
 

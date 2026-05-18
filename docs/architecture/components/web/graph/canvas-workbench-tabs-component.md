@@ -27,6 +27,7 @@ that does not make the route a global shell destination.
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
 - `docs/architecture/components/web/graph/canvas-workbench-tab-strip-component.md`
+- `docs/architecture/components/web/graph/canvas-legacy-retirement-component.md`
 - `docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md`
 - `buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md`
 - `buzon/20260506-codex-fowler-canvas-workbench-stage-1-text-only-tabs-review.md`
@@ -70,6 +71,7 @@ The component does not own:
 | `CanvasWorkbenchRouteState`                       | `canvasWorkbenchRouteState.ts` | Parsed `/canvas/:workbenchTab?` route state.                           |
 | `parseCanvasWorkbenchRouteState(value)`           | `canvasWorkbenchRouteState.ts` | Fails closed for unknown tab route segments.                           |
 | `resolveCanvasWorkbenchTabSelectionCommand(args)` | `canvasWorkbenchRouteState.ts` | Command result for tab selection navigation.                           |
+| `createCanvasGraphWorkbenchTab`                   | `canvasWorkbenchTabs.ts`       | Creates the canonical Graph tab without retired `GraphCanvas` naming.  |
 | `CanvasWorkbenchTabsReadModel`                    | `canvasWorkbenchTabs.ts`       | Text-only render-ready tab model for the Canvas route.                 |
 | `buildCanvasWorkbenchTabsReadModel(args)`         | `canvasWorkbenchTabs.ts`       | Projects Graph plus enabled plugin tabs with active/unavailable state. |
 | `CanvasWorkbenchTabStrip`                         | `CanvasWorkbenchTabStrip.tsx`  | Passive text-only tab-list renderer; see local component guide.        |
@@ -118,6 +120,9 @@ Canonical local catalog:
   icons, compress labels into truncated shell-rail captions, or use shell
   navigation visual semantics.
 - `/canvas` resolves to Graph.
+- the built-in Graph tab factory is `createCanvasGraphWorkbenchTab`; active
+  Canvas workbench code must not use the retired `createGraphCanvasWorkbenchTab`
+  vocabulary.
 - `/canvas/:workbenchTab` resolves only known Canvas tab IDs.
 - Unknown tab route segments render unavailable state with a Graph recovery
   command.
@@ -185,6 +190,8 @@ sequenceDiagram
   placement query results.
 - `canvas-workbench-tabs.cy.ts` proves the user-visible route and shell
   placement behavior.
+- `canvas-legacy-retirement-component.md` records the F-12 GraphCanvas
+  retirement boundary.
 
 ## User Stories
 

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildCanvasWorkbenchTabsReadModel,
-  createGraphCanvasWorkbenchTab,
+  createCanvasGraphWorkbenchTab,
 } from './canvasWorkbenchTabs';
 import { resolveCanvasViewCopy } from './copy';
 
@@ -177,7 +177,7 @@ describe('buildCanvasWorkbenchTabsReadModel', () => {
   });
 
   it('does not enable scoped tabs before Canvas context is ready', () => {
-    const graphTab = createGraphCanvasWorkbenchTab();
+    const graphTab = createCanvasGraphWorkbenchTab();
     const model = buildCanvasWorkbenchTabsReadModel({
       placements: [
         {
