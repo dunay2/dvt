@@ -268,6 +268,12 @@ const TEST_COVERAGE_PATTERNS = [
   '.github/workflows/test.yml',
 ];
 
+const WEB_FRONTEND_TEST_GOVERNANCE_PATTERNS = [
+  'docs/architecture/components/web/frontend-test-governance-*.md',
+  'docs/architecture/components/web/index.md',
+  'buzon/20260518-f14-fowler-frontend-test-governance-analysis.md',
+];
+
 const PR_QUALITY_ROOT_BUILD_PATTERNS = [
   ...ROOT_CONFIG_PATTERNS,
   'vitest.config.ts',
@@ -310,6 +316,7 @@ export const TEST_SCOPE_PATTERNS = {
     'scripts/skip-pretest-if-ci.cjs',
     'scripts/skip-prebuild-if-orchestrated.cjs',
     'scripts/build-workspace-runtime-deps.cjs',
+    ...WEB_FRONTEND_TEST_GOVERNANCE_PATTERNS,
     ...ROOT_CONFIG_PATTERNS,
     'vitest.config.ts',
     'tsconfig*.json',
@@ -324,7 +331,7 @@ export const TEST_SCOPE_PATTERNS = {
   projector_worker: ['apps/projector-worker/**'],
   temporal_worker: ['apps/temporal-worker/**'],
   temporal_dbt_plugin: ['packages/@dvt/temporal-dbt-plugin/**'],
-  web: ['apps/web/**'],
+  web: ['apps/web/**', ...WEB_FRONTEND_TEST_GOVERNANCE_PATTERNS],
   artifacts: ['packages/@dvt/artifacts/**'],
   crypto: ['packages/@dvt/canonical/**'],
   delivery: ['packages/@dvt/delivery/**'],
