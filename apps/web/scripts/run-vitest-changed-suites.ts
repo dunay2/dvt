@@ -86,11 +86,11 @@ function main(): void {
   const plan = resolveWebVitestChangedSuitePlan(changedFiles);
 
   if (plan.commands.length === 0) {
-    console.log('[web:test:changed] no web Vitest suite selected.');
+    process.stdout.write('[web:test:changed] no web Vitest suite selected.\n');
     return;
   }
 
-  console.log(`[web:test:changed] suites=${plan.suites.join(',')}`);
+  process.stdout.write(`[web:test:changed] suites=${plan.suites.join(',')}\n`);
   runCommand('pnpm run test:deps', webRoot);
   for (const command of plan.commands) {
     runCommand(command, webRoot);
