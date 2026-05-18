@@ -45,6 +45,7 @@
     "test": "pnpm -r test",
     "test:web": "pnpm --filter @dvt/web test",
     "test:web:ci": "pnpm --filter @dvt/web test:ci",
+    "test:web:changed": "pnpm --filter @dvt/web test:changed",
     "test:web:e2e": "pnpm --filter @dvt/web test:e2e",
     "test:web:e2e:first-authoring:live": "pnpm --filter @dvt/web test:e2e:first-authoring:live",
     "ci:affected:build": "node scripts/run-turbo-workspace-task.cjs build",
