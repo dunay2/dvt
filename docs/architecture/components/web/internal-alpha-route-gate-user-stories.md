@@ -66,7 +66,7 @@ own implementation details and tests.
 | ------------------ | ---------------- | ----------------- | ------------------ |
 | Startup gate       | `US-F27-001`     | `US-F27-N-002`    | accepted           |
 | Workspace context  | `US-F27-002`     | `US-F27-N-007`    | accepted           |
-| Canvas workbench   | `US-F27-003`     | `US-F27-N-001`    | planned            |
+| Canvas workbench   | `US-F27-003`     | `US-F27-N-001`    | accepted           |
 | Code workbench     | `US-F27-004`     | `US-F27-N-001`    | planned            |
 | Plan/run readiness | `US-F27-005`     | `US-F27-N-002`    | planned            |
 | Recovery states    | `US-F27-006`     | `US-F27-N-003`    | planned            |

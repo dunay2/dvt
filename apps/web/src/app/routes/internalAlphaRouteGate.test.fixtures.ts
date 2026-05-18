@@ -123,14 +123,20 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       stage: 'Workspace context',
     },
     {
-      evidenceAcceptance: 'planned',
+      evidenceAcceptance: 'accepted',
       evidenceRefs: [
         'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md',
         'docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-component.md',
+        'apps/web/src/app/views/canvas/canvasStartupBootstrapPublication.architecture.test.ts',
+        'apps/web/src/app/views/canvas/canvasDraftRecoveryBoundary.architecture.test.ts',
+        'apps/web/src/app/views/canvas/canvasRoutePosturePriority.architecture.test.ts',
+        'apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts',
+        'apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts',
       ],
       failClosedProof:
-        'draft load failure, save denial, stale draft, or retry exhaustion is explicit',
-      happyPathProof: 'authoritative draft loads and governed drag/save feedback is visible',
+        'draft read denial, failed save, stale draft, retry exhaustion, and read-only posture are explicit',
+      happyPathProof:
+        'authoritative draft loads, save feedback is visible, and reload restores persisted graph state',
       rails: ['GetWorkspaceGraphDraft', 'SaveWorkspaceGraphDraft'],
       recoveryState: 'ready',
       recoveryStates: ['ready', 'unavailable', 'stale', 'blocked'],

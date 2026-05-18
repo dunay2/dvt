@@ -26,7 +26,7 @@ lacks a route-stage risk decision. Child slices cannot declare alpha full.
 | ------------------ | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | Startup gate       | `ObserveAppBootstrapRouteReadiness`; Web Shell / App Bootstrap              | User sees route-ready startup after platform readiness settles.                   | Platform unavailable, bootstrap timeout, and route-ready/runtime-not-ready fail closed.                                       | Accepted startup route-readiness proof.                                               | Included: startup ambiguity can block first-use trust. Excluded: public login bootstrap because it is outside protected alpha.                    | Accepted for route-gate evidence; alpha full still waits on remaining stages.                    |
 | Workspace context  | `GetEffectiveWorkspaceContext`; protected runtime workspace context         | Tenant, project, and environment are visible for the active workspace.            | Missing, detached, unauthorized, or assertion-conflicted context fails closed.                                                | Accepted effective workspace context proof.                                           | Included: implicit tenant/project/env state can leak product authority. Excluded: admin provisioning depth.                                       | Accepted for route-gate evidence; alpha full still waits on remaining stages.                    |
-| Canvas workbench   | `GetWorkspaceGraphDraft`; `SaveWorkspaceGraphDraft`; Canvas graph component | Authoritative draft loads, nodes are visible, and drag/save feedback is governed. | Draft load failure, save denial, stale draft, and retry exhaustion are explicit.                                              | Canvas component docs, graph-draft rail proof, and Canvas browser proof.              | Included: local graph state can become product authority. Excluded: advanced authoring workflows beyond alpha read/inspect posture.               | Blocks alpha full until Canvas has route-level happy and fail-closed fixtures.                   |
+| Canvas workbench   | `GetWorkspaceGraphDraft`; `SaveWorkspaceGraphDraft`; Canvas graph component | Authoritative draft loads, nodes are visible, and drag/save feedback is governed. | Draft load failure, save denial, stale draft, retry exhaustion, and read-only posture are explicit.                           | Accepted Canvas draft read/save and draft-access browser proof.                       | Included: local graph state can become product authority. Excluded: advanced authoring workflows beyond alpha read/inspect posture.               | Accepted for route-gate evidence; alpha full still waits on remaining stages.                    |
 | Code workbench     | `ListWorkspaceFiles`; `GetWorkspaceFileContent`; workspace-files child plan | Authorized tree and first-file preview load read-only.                            | Empty workspace, backend unavailable, unauthorized, not-found, traversal, oversize, binary, and freshness cases are explicit. | Workspace-files query rail plan, API tests, UI proof, and filesystem safety evidence. | Included: file reads can bypass authorization or filesystem policy. Excluded: file-write behavior, which requires a separate command rail.        | Child slice may be closed, but route remains blocked until combined route fixture includes Code. |
 | Plan/run readiness | `ObservePlanRunReadiness`; Runtime admission and plan readiness             | Controls explain ready-to-run posture with stable source-owned reasons.           | Plan integrity, backpressure, capability mismatch, adapter degraded, and authorization denied are distinct.                   | Runtime admission, plan integrity, and readiness child proof.                         | Included: generic disabled copy hides platform risk. Excluded: executing real production runs during alpha gate proof.                            | Blocks alpha full until readiness copy is mapped to stable causes.                               |
 | Recovery states    | `MapRouteRecoveryState`; Route recovery vocabulary                          | Equivalent failures use one route-owned recovery vocabulary across stages.        | Unknown, unavailable, unauthorized, stale, and not-found states stay distinguishable.                                         | Recovery vocabulary guide and architecture guard.                                     | Included: duplicated recovery copy creates stage drift. Excluded: cosmetic copy iteration after source-owned keys exist.                          | Blocks alpha full until vocabulary is source-owned and stage coverage is proven.                 |
@@ -156,8 +156,14 @@ server-owned `GetEffectiveWorkspaceContext` rail through protected-route
 resolution, fail-closed workspace denial classification, and browser proof that
 the shell renders scoped context as read-only after route admission.
 
-This does not accept alpha full: Canvas, Code, plan/run readiness, and recovery
-stage evidence remain planned until their browser/runtime proof is accepted.
+Canvas workbench evidence is accepted for F-27 because it reuses
+`GetWorkspaceGraphDraft` and `SaveWorkspaceGraphDraft` through protected draft
+component guards, browser proof for governed draft reads, saves, and reload
+posture, and browser proof that denied, forbidden-scope, and read-only draft
+access fail closed without unsafe mutations.
+
+This does not accept alpha full: Code, plan/run readiness, and recovery stage
+evidence remain planned until their browser/runtime proof is accepted.
 
 ## Route Diagram
 
@@ -184,6 +190,8 @@ flowchart LR
 
 ## Current Result
 
-The route remains `blocked`. The matrix closes the route-level acceptance
-definition, but it does not claim alpha full. The next executable slices must
-fill the stage evidence rows without moving route authority out of F-27.
+The route remains in `review`, not `accepted`, because startup, workspace
+context, and Canvas now have accepted stage evidence while Code, plan/run
+readiness, and recovery stage evidence remain planned. The next executable
+slices must fill the remaining stage evidence rows without moving route
+authority out of F-27.
