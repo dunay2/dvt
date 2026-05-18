@@ -27,6 +27,7 @@ See also:
 | Full workspace build           | `pnpm build`                     | [`package.json`](../../package.json)                                                                 |
 | Full recursive test run        | `pnpm test`                      | [`package.json`](../../package.json)                                                                 |
 | Web PR CI test partition       | `pnpm test:web:ci`               | [`package.json`](../../package.json), [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts) |
+| Web changed-file test routing  | `pnpm test:web:changed`          | [`package.json`](../../package.json), [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts) |
 | Web E2E test run               | `pnpm test:web:e2e`              | [`package.json`](../../package.json)                                                                 |
 | Full type-check gate           | `pnpm type-check`                | [`package.json`](../../package.json)                                                                 |
 | Fast pre-push changed gate     | `pnpm verify:changed`            | [`package.json`](../../package.json)                                                                 |
@@ -81,32 +82,36 @@ Warm-build note:
 
 ## Package Test Commands
 
-| Capability                         | Command                                                                    | Scope                                | Source                                                                                   |
-| ---------------------------------- | -------------------------------------------------------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------- |
-| Web app tests                      | `pnpm test:web` or `pnpm --filter @dvt/web test`                           | `apps/web` full Vitest suite         | [`apps/web/package.json`](../../apps/web/package.json)                                   |
-| Web app CI partition               | `pnpm test:web:ci` or `pnpm --filter @dvt/web test:ci`                     | `apps/web` primary Vitest suites     | [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts)                           |
-| Web app unit tests                 | `pnpm --filter @dvt/web test:unit`                                         | `*.test.ts`, excluding architecture  | [`apps/web/vitest.unit.config.ts`](../../apps/web/vitest.unit.config.ts)                 |
-| Web app presentation tests         | `pnpm --filter @dvt/web test:presentation`                                 | `*.test.tsx`, excluding architecture | [`apps/web/vitest.presentation.config.ts`](../../apps/web/vitest.presentation.config.ts) |
-| Web app architecture tests         | `pnpm --filter @dvt/web test:architecture`                                 | `*.architecture.test.{ts,tsx}`       | [`apps/web/vitest.architecture.config.ts`](../../apps/web/vitest.architecture.config.ts) |
-| Web app Canvas focus tests         | `pnpm --filter @dvt/web test:canvas`                                       | Canvas route and `views/canvas/**`   | [`apps/web/vitest.canvas.config.ts`](../../apps/web/vitest.canvas.config.ts)             |
-| Web app E2E (Cypress)              | `pnpm --filter @dvt/web test:e2e`                                          | `apps/web` browser runtime contract  | [`apps/web/package.json`](../../apps/web/package.json)                                   |
-| Web app E2E native (Cypress)       | `pnpm --filter @dvt/web test:e2e:native -- --spec <path>`                  | `apps/web` local browser proof       | [`tools/ci/run-web-cypress-native.mjs`](../../tools/ci/run-web-cypress-native.mjs)       |
-| Engine package tests               | `pnpm test:engine`                                                         | `@dvt/engine`                        | [`package.json`](../../package.json)                                                     |
-| Contracts package tests            | `pnpm test:contracts`                                                      | `@dvt/contracts`                     | [`package.json`](../../package.json)                                                     |
-| Contracts compile gate             | `pnpm test:contracts:compile`                                              | `@dvt/contracts`                     | [`package.json`](../../package.json)                                                     |
-| API package tests                  | `pnpm --filter dvt-api test`                                               | `apps/api`                           | [`apps/api/package.json`](../../apps/api/package.json)                                   |
-| API protected runtime integration  | `pnpm --filter dvt-api test:integration`                                   | `apps/api` OIDC + PostgreSQL runtime | [`apps/api/package.json`](../../apps/api/package.json)                                   |
-| PostgreSQL adapter tests           | `pnpm test:adapter-postgres`                                               | `@dvt/adapter-postgres`              | [`package.json`](../../package.json)                                                     |
-| Temporal adapter unit tests        | `pnpm test:adapter-temporal`                                               | `@dvt/adapter-temporal`              | [`package.json`](../../package.json)                                                     |
-| Temporal adapter runtime closure   | `pnpm test:adapter-temporal` then `pnpm test:adapter-temporal:integration` | `@dvt/adapter-temporal`              | [`package.json`](../../package.json)                                                     |
-| Temporal transformation tests      | `pnpm test:adapter-temporal:integration:transformation`                    | Transformation runtime path          | [`package.json`](../../package.json)                                                     |
-| Temporal Postgres integration      | `pnpm test:adapter-temporal:integration:postgres`                          | Capability-specific PG path          | [`package.json`](../../package.json)                                                     |
-| Temporal Postgres Docker proof     | `pnpm test:adapter-temporal:integration:postgres:docker`                   | Canonical local Docker PG proof      | [`package.json`](../../package.json)                                                     |
-| CLI package tests                  | `pnpm test:cli`                                                            | `@dvt/cli`                           | [`package.json`](../../package.json)                                                     |
-| Delivery package tests             | `pnpm --filter @dvt/delivery test`                                         | `@dvt/delivery`                      | [`packages/@dvt/delivery/package.json`](../../packages/@dvt/delivery/package.json)       |
-| Outbox worker arch test            | `pnpm --filter dvt-outbox-worker test:arch`                                | `apps/outbox-worker`                 | [`apps/outbox-worker/package.json`](../../apps/outbox-worker/package.json)               |
-| Temporal time-skipping integration | `pnpm test:adapter-temporal:integration`                                   | Temporal worker/workflow integration | [`package.json`](../../package.json)                                                     |
-| Coverage run                       | `pnpm test:coverage`                                                       | Recursive workspace coverage         | [`package.json`](../../package.json)                                                     |
+| Capability                         | Command                                                                    | Scope                                | Source                                                                                                 |
+| ---------------------------------- | -------------------------------------------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| Web app tests                      | `pnpm test:web` or `pnpm --filter @dvt/web test`                           | `apps/web` full Vitest suite         | [`apps/web/package.json`](../../apps/web/package.json)                                                 |
+| Web app CI partition               | `pnpm test:web:ci` or `pnpm --filter @dvt/web test:ci`                     | `apps/web` primary Vitest suites     | [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts)                                         |
+| Web app changed-file test routing  | `pnpm test:web:changed` or `pnpm --filter @dvt/web test:changed`           | `apps/web` routed local Vitest suite | [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts)                                         |
+| Web app unit tests                 | `pnpm --filter @dvt/web test:unit`                                         | `*.test.ts`, excluding architecture  | [`apps/web/vitest.unit.config.ts`](../../apps/web/vitest.unit.config.ts)                               |
+| Web app presentation tests         | `pnpm --filter @dvt/web test:presentation`                                 | `*.test.tsx`, excluding architecture | [`apps/web/vitest.presentation.config.ts`](../../apps/web/vitest.presentation.config.ts)               |
+| Web app architecture tests         | `pnpm --filter @dvt/web test:architecture`                                 | `*.architecture.test.{ts,tsx}`       | [`apps/web/vitest.architecture.config.ts`](../../apps/web/vitest.architecture.config.ts)               |
+| Web app Canvas focus tests         | `pnpm --filter @dvt/web test:canvas`                                       | Canvas route and `views/canvas/**`   | [`apps/web/vitest.canvas.config.ts`](../../apps/web/vitest.canvas.config.ts)                           |
+| Web app Canvas unit focus tests    | `pnpm --filter @dvt/web test:canvas-unit`                                  | Canvas non-architecture `.ts` tests  | [`apps/web/vitest.canvas-unit.config.ts`](../../apps/web/vitest.canvas-unit.config.ts)                 |
+| Web app Canvas UI focus tests      | `pnpm --filter @dvt/web test:canvas-presentation`                          | Canvas non-architecture `.tsx` tests | [`apps/web/vitest.canvas-presentation.config.ts`](../../apps/web/vitest.canvas-presentation.config.ts) |
+| Web app Canvas architecture focus  | `pnpm --filter @dvt/web test:canvas-architecture`                          | Canvas architecture tests            | [`apps/web/vitest.canvas-architecture.config.ts`](../../apps/web/vitest.canvas-architecture.config.ts) |
+| Web app E2E (Cypress)              | `pnpm --filter @dvt/web test:e2e`                                          | `apps/web` browser runtime contract  | [`apps/web/package.json`](../../apps/web/package.json)                                                 |
+| Web app E2E native (Cypress)       | `pnpm --filter @dvt/web test:e2e:native -- --spec <path>`                  | `apps/web` local browser proof       | [`tools/ci/run-web-cypress-native.mjs`](../../tools/ci/run-web-cypress-native.mjs)                     |
+| Engine package tests               | `pnpm test:engine`                                                         | `@dvt/engine`                        | [`package.json`](../../package.json)                                                                   |
+| Contracts package tests            | `pnpm test:contracts`                                                      | `@dvt/contracts`                     | [`package.json`](../../package.json)                                                                   |
+| Contracts compile gate             | `pnpm test:contracts:compile`                                              | `@dvt/contracts`                     | [`package.json`](../../package.json)                                                                   |
+| API package tests                  | `pnpm --filter dvt-api test`                                               | `apps/api`                           | [`apps/api/package.json`](../../apps/api/package.json)                                                 |
+| API protected runtime integration  | `pnpm --filter dvt-api test:integration`                                   | `apps/api` OIDC + PostgreSQL runtime | [`apps/api/package.json`](../../apps/api/package.json)                                                 |
+| PostgreSQL adapter tests           | `pnpm test:adapter-postgres`                                               | `@dvt/adapter-postgres`              | [`package.json`](../../package.json)                                                                   |
+| Temporal adapter unit tests        | `pnpm test:adapter-temporal`                                               | `@dvt/adapter-temporal`              | [`package.json`](../../package.json)                                                                   |
+| Temporal adapter runtime closure   | `pnpm test:adapter-temporal` then `pnpm test:adapter-temporal:integration` | `@dvt/adapter-temporal`              | [`package.json`](../../package.json)                                                                   |
+| Temporal transformation tests      | `pnpm test:adapter-temporal:integration:transformation`                    | Transformation runtime path          | [`package.json`](../../package.json)                                                                   |
+| Temporal Postgres integration      | `pnpm test:adapter-temporal:integration:postgres`                          | Capability-specific PG path          | [`package.json`](../../package.json)                                                                   |
+| Temporal Postgres Docker proof     | `pnpm test:adapter-temporal:integration:postgres:docker`                   | Canonical local Docker PG proof      | [`package.json`](../../package.json)                                                                   |
+| CLI package tests                  | `pnpm test:cli`                                                            | `@dvt/cli`                           | [`package.json`](../../package.json)                                                                   |
+| Delivery package tests             | `pnpm --filter @dvt/delivery test`                                         | `@dvt/delivery`                      | [`packages/@dvt/delivery/package.json`](../../packages/@dvt/delivery/package.json)                     |
+| Outbox worker arch test            | `pnpm --filter dvt-outbox-worker test:arch`                                | `apps/outbox-worker`                 | [`apps/outbox-worker/package.json`](../../apps/outbox-worker/package.json)                             |
+| Temporal time-skipping integration | `pnpm test:adapter-temporal:integration`                                   | Temporal worker/workflow integration | [`package.json`](../../package.json)                                                                   |
+| Coverage run                       | `pnpm test:coverage`                                                       | Recursive workspace coverage         | [`package.json`](../../package.json)                                                                   |
 
 ## Determinism and Replay
 
@@ -320,6 +325,16 @@ contracts, determinism, golden, and coverage lanes closed, while
 active. Dependency, lifecycle, unknown, and runtime-capability script changes
 remain fail-closed and root-build sensitive.
 
+- `pnpm test:web:changed` is the local web changed-file router. It reads
+  changed files or explicit `--files` arguments, runs `@dvt/web` dependency
+  preparation once, and delegates to the routed Vitest suite command from the
+  web suite catalog. It is not the GitHub merge gate; CI keeps using
+  `pnpm test:web:ci`.
+- Canvas has narrower local focus lanes for changed-file routing:
+  `test:canvas-unit`, `test:canvas-presentation`, and
+  `test:canvas-architecture`. The broad `test:canvas` command remains available
+  for full Canvas focus validation.
+
 ## Shared CI Scope Logic
 
 The repository centralizes workflow scope detection in:
@@ -368,12 +383,11 @@ Current workflow consumers:
   engine package test routing, so engine Vitest config changes cannot bypass
   threshold enforcement. For web PRs, the affected-package step runs
   `pnpm test:web:ci`, which expands to `@dvt/web` `test:deps` followed by the
-  unit, presentation, and architecture Vitest delegates while leaving
-  `pnpm test:web` as the full compatibility suite. Public web suite commands
-  also run `test:deps` before their raw `*:run` delegates so local split-suite
-  execution preserves the dependency-build behavior of the historical
-  `pretest` hook. The web architecture suite checks that these package scripts,
-  Vitest config delegates, and workflow command stay aligned with
+  unit, presentation, and architecture Vitest delegates while `pnpm test:web`
+  remains the full web suite. Public web suite commands also run `test:deps`
+  before their raw `*:run` delegates so local split-suite execution preserves
+  the package dependency-build contract. The web architecture suite checks that
+  these package scripts, Vitest config delegates, and workflow command stay aligned with
   `apps/web/vitest.suites.ts`.
 - [`.github/workflows/contracts.yml`](../../.github/workflows/contracts.yml) uses
   `emit-scope --mode contracts` for contract, determinism, and golden routing.

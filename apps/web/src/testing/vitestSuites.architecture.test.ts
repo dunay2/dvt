@@ -1,11 +1,17 @@
+/**
+ * @ownedConcern Validate that web Vitest suite partition semantics, changed-file
+ * routing, and local command wiring stay aligned with the governed test model.
+ */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
+  WEB_VITEST_CHANGED_SUITE_COMMANDS,
   WEB_VITEST_FOCUS_SUITE_NAMES,
   WEB_VITEST_PRIMARY_SUITE_NAMES,
   classifyWebVitestFile,
+  resolveWebVitestChangedSuitePlan,
 } from '../../vitest.suites';
 
 const webRoot = process.cwd();
@@ -69,18 +75,18 @@ describe('web Vitest suite partition', () => {
 
   it('allows Canvas focus coverage to overlap with primary suite ownership', () => {
     expect(classifyWebVitestFile('src/app/views/Canvas.routeStates.smoke.test.tsx')).toEqual({
-      focusSuites: ['canvas'],
+      focusSuites: ['canvas', 'canvas-presentation'],
       primarySuites: ['presentation'],
     });
     expect(classifyWebVitestFile('src/app/views/canvas/canvasWorkbenchStateModel.test.ts')).toEqual(
       {
-        focusSuites: ['canvas'],
+        focusSuites: ['canvas', 'canvas-unit'],
         primarySuites: ['unit'],
       }
     );
     expect(classifyWebVitestFile('src/app/views/canvas/CanvasShell.architecture.test.tsx')).toEqual(
       {
-        focusSuites: ['canvas'],
+        focusSuites: ['canvas', 'canvas-architecture'],
         primarySuites: ['architecture'],
       }
     );
@@ -111,6 +117,10 @@ describe('web Vitest suite partition', () => {
         ...WEB_VITEST_PRIMARY_SUITE_NAMES.map((suiteName) => `pnpm run test:${suiteName}:run`),
       ].join(' && ')
     );
+    expect(packageJson.scripts['test:changed']).toBe(
+      'pnpm exec tsx scripts/run-vitest-changed-suites.ts'
+    );
+    expect(rootPackageJson.scripts['test:web:changed']).toBe('pnpm --filter @dvt/web test:changed');
     expect(rootPackageJson.scripts['test:web:ci']).toBe('pnpm --filter @dvt/web test:ci');
     expect(workflow).toContain("pnpm -r --workspace-concurrency=4 --filter '!@dvt/web' test");
     expect(workflow).toContain('pnpm test:web:ci');
@@ -144,6 +154,70 @@ describe('web Vitest suite partition', () => {
     expect(readFileSync(resolve(webRoot, 'vitest.config.ts'), 'utf8')).toContain(
       "createWebVitestConfig('all')"
     );
+  });
+
+  it('routes changed web files to the smallest governed local suite command', () => {
+    expect(
+      resolveWebVitestChangedSuitePlan(['apps/web/src/app/views/canvas/CanvasToolbar.tsx'])
+    ).toEqual({
+      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-presentation']],
+      suites: ['canvas-presentation'],
+    });
+
+    expect(
+      resolveWebVitestChangedSuitePlan(['apps/web/src/app/views/canvas/canvasDraftScope.test.ts'])
+    ).toEqual({
+      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-unit']],
+      suites: ['canvas-unit'],
+    });
+
+    expect(
+      resolveWebVitestChangedSuitePlan([
+        'apps/web/src/app/views/canvas/canvasDraftRepository.architecture.test.ts',
+      ])
+    ).toEqual({
+      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-architecture']],
+      suites: ['canvas-architecture'],
+    });
+
+    expect(resolveWebVitestChangedSuitePlan(['apps/web/src/app/Root.tsx'])).toEqual({
+      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.presentation],
+      suites: ['presentation'],
+    });
+
+    expect(
+      resolveWebVitestChangedSuitePlan(['apps/web/src/app/services/runs/runsService.ts'])
+    ).toEqual({
+      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.unit],
+      suites: ['unit'],
+    });
+
+    expect(resolveWebVitestChangedSuitePlan(['apps/web/vitest.suites.ts'])).toEqual({
+      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture],
+      suites: ['architecture'],
+    });
+    expect(resolveWebVitestChangedSuitePlan(['apps/web/vitest.canvas-unit.config.ts'])).toEqual({
+      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture],
+      suites: ['architecture'],
+    });
+    expect(
+      resolveWebVitestChangedSuitePlan(['apps/web/vitest.canvas-presentation.config.ts'])
+    ).toEqual({
+      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture],
+      suites: ['architecture'],
+    });
+    expect(
+      resolveWebVitestChangedSuitePlan(['apps/web/vitest.canvas-architecture.config.ts'])
+    ).toEqual({
+      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture],
+      suites: ['architecture'],
+    });
+    expect(WEB_VITEST_CHANGED_SUITE_COMMANDS).not.toHaveProperty('canvas');
+
+    expect(resolveWebVitestChangedSuitePlan(['apps/api/src/server.ts'])).toEqual({
+      commands: [],
+      suites: [],
+    });
   });
 
   it('prevents Canvas route-state coverage from collapsing back into a god test', () => {
@@ -208,6 +282,7 @@ describe('web Vitest suite partition', () => {
     expect(componentGuide).toContain('Transitions');
     expect(componentGuide).toContain('Consumers');
     expect(componentGuide).toContain('WebVitestSuiteCatalog');
+    expect(webIndex).toContain('Web Vitest changed suite router component');
     expect(userStories).toContain('F-14');
     expect(mailboxAnalysis).toContain('Fowler Analysis');
     expect(webIndex).toContain('Frontend test governance component');

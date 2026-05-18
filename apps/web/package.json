@@ -26,6 +26,13 @@
     "test:architecture:run": "vitest run --config vitest.architecture.config.ts",
     "test:canvas": "pnpm run test:deps && pnpm run test:canvas:run",
     "test:canvas:run": "vitest run --config vitest.canvas.config.ts",
+    "test:canvas-unit": "pnpm run test:deps && pnpm run test:canvas-unit:run",
+    "test:canvas-unit:run": "vitest run --config vitest.canvas-unit.config.ts",
+    "test:canvas-presentation": "pnpm run test:deps && pnpm run test:canvas-presentation:run",
+    "test:canvas-presentation:run": "vitest run --config vitest.canvas-presentation.config.ts",
+    "test:canvas-architecture": "pnpm run test:deps && pnpm run test:canvas-architecture:run",
+    "test:canvas-architecture:run": "vitest run --config vitest.canvas-architecture.config.ts",
+    "test:changed": "pnpm exec tsx scripts/run-vitest-changed-suites.ts",
     "test:ci": "pnpm run test:deps && pnpm run test:unit:run && pnpm run test:presentation:run && pnpm run test:architecture:run",
     "test:watch": "vitest --config vitest.config.ts"
   },
