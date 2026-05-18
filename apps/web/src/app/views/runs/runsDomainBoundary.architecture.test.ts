@@ -60,10 +60,62 @@ describe('Runs domain boundary', () => {
       'isRunEventStreamLiveStatus',
       'normalizeRunEventTimelinePage',
       'mergeRunEventTimelinePage',
-      'RunTimelineEventCard',
+      'RunEventTimelineTable',
       '```mermaid',
     ]) {
       expect(eventTimelineGuide).toContain(section);
+    }
+
+    const denseTableGuide = readRepoFile(
+      'docs/architecture/components/web/runs/dense-operational-tables-component.md'
+    );
+    const denseTableStories = readRepoFile(
+      'docs/architecture/components/web/runs/dense-operational-tables-user-stories.md'
+    );
+
+    for (const section of [
+      '## Public API',
+      '## Invariants',
+      '## State Transitions',
+      '## Consumer Diagram',
+      '## Consumers',
+      'buildRunOperationalRows',
+      'filterRunOperationalRows',
+      'sortRunOperationalRows',
+      'buildRunEventTableRows',
+      'RunOperationalTable',
+      'RunEventTimelineTable',
+      'TanStack Table',
+      '```mermaid',
+    ]) {
+      expect(denseTableGuide).toContain(section);
+    }
+
+    for (const storyId of [
+      'US-F16-01',
+      'US-F16-02',
+      'US-F16-03',
+      'US-F16-04',
+      'US-F16-05',
+      'US-F16-06',
+      'US-F16-07',
+    ]) {
+      expect(denseTableStories).toContain(storyId);
+    }
+
+    for (const legacyPhrase of [
+      'RunTimelineEventCard',
+      'timeline cards',
+      'event cards',
+      'structured cards',
+      'card shows',
+      'card-owned',
+    ]) {
+      expect(eventTimelineGuide).not.toContain(legacyPhrase);
+      expect(eventTimelineStories).not.toContain(legacyPhrase);
+      expect(denseTableGuide).not.toContain(legacyPhrase);
+      expect(denseTableStories).not.toContain(legacyPhrase);
+      expect(userStories).not.toContain(legacyPhrase);
     }
 
     for (const storyId of [
@@ -131,10 +183,13 @@ describe('Runs domain boundary', () => {
       'views/runs/useRunWorkspace.ts',
       'views/runs/CanvasRunsTabView.tsx',
       'views/runs/RunListStateView.tsx',
+      'views/runs/RunOperationalTable.tsx',
+      'views/runs/RunEventTimelineTable.tsx',
+      'views/runs/runOperationalTableModel.ts',
+      'views/runs/runEventTableModel.ts',
       'views/runs/RunDetailStateViews.tsx',
       'views/runs/RunStates.tsx',
       'views/runs/RunWorkspaceStateView.tsx',
-      'views/runs/RunTimelineEventCard.tsx',
     ]) {
       const source = readAppSource(modulePath);
       expect(
@@ -237,7 +292,8 @@ describe('Runs domain boundary', () => {
     const facadeSource = readAppSource('services/runs/runWorkspaceFacade.ts');
     const consoleHookSource = readAppSource('components/console/useConsoleLogStream.ts');
     const workspaceSource = readAppSource('views/runs/RunWorkspaceStateView.tsx');
-    const timelineCardSource = readAppSource('views/runs/RunTimelineEventCard.tsx');
+    const timelineTableSource = readAppSource('views/runs/RunEventTimelineTable.tsx');
+    const timelineTableModelSource = readAppSource('views/runs/runEventTableModel.ts');
 
     expect(timelineModelSource).toContain('normalizeRunEventTimelinePage');
     expect(timelineModelSource).toContain('mergeRunEventTimelinePage');
@@ -249,10 +305,33 @@ describe('Runs domain boundary', () => {
     expect(consoleHookSource).toContain('isRunEventStreamLiveStatus');
     expect(consoleHookSource).toContain('RUN_EVENT_LIVE_POLL_INTERVAL_MS');
 
-    expect(workspaceSource).toContain('RunTimelineEventCard');
-    expect(timelineCardSource).toContain('buildRunEventPresentationModel');
-    expect(timelineCardSource).toContain('resolveRunEventHeadline');
-    expect(timelineCardSource).not.toContain('listRunEvents');
-    expect(timelineCardSource).not.toContain('getRunSnapshot');
+    expect(workspaceSource).toContain('RunEventTimelineTable');
+    expect(workspaceSource).not.toContain('RunTimelineEventCard');
+    expect(timelineTableSource).toContain('useReactTable');
+    expect(timelineTableSource).toContain('buildRunEventTableRows');
+    expect(timelineTableSource).toContain('getRowId: (row) => row.eventId');
+    expect(timelineTableModelSource).toContain('buildRunEventPresentationModel');
+    expect(timelineTableModelSource).toContain('resolveRunEventHeadline');
+    expect(timelineTableModelSource).not.toContain('listRunEvents');
+    expect(timelineTableModelSource).not.toContain('getRunSnapshot');
+  });
+
+  it('guards dense operational table semantics instead of only table component presence', () => {
+    const packageJson = readRepoFile('apps/web/package.json');
+    const listViewSource = readAppSource('views/runs/RunListStateView.tsx');
+    const runTableSource = readAppSource('views/runs/RunOperationalTable.tsx');
+    const runTableModelSource = readAppSource('views/runs/runOperationalTableModel.ts');
+
+    expect(packageJson).toContain('@tanstack/react-table');
+    expect(listViewSource).toContain('parseRunOperationalTableSearchParams');
+    expect(listViewSource).toContain('serializeRunOperationalTableSearchParams');
+    expect(listViewSource).toContain('RunOperationalTable');
+    expect(listViewSource).not.toContain('Card');
+    expect(runTableSource).toContain('useReactTable');
+    expect(runTableSource).toContain('data-slot="run-operational-table"');
+    expect(runTableSource).toContain('getRowId: (row) => row.runId');
+    expect(runTableModelSource).toContain('filterRunOperationalRows');
+    expect(runTableModelSource).toContain('sortRunOperationalRows');
+    expect(runTableModelSource).toContain('isKnownRunField');
   });
 });

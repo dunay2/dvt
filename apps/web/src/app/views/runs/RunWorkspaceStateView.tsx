@@ -8,7 +8,7 @@ import { WorkbenchStateFrame } from '../../components/workbench/state/WorkbenchS
 import type { MaterializationEvidence, RunExecutor } from '../../ports/runs';
 import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceFacade';
 import { RunDegradedStateView } from './RunDetailStateViews';
-import { RunTimelineEventCard } from './RunTimelineEventCard';
+import { RunEventTimelineTable } from './RunEventTimelineTable';
 import { runStatesCopy as copy } from './runStatesCopy';
 import { getDetailStateBadge, isKnownRunField } from './runStatesModel';
 
@@ -482,11 +482,7 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
           ) : null}
 
           {timeline.state === 'available' ? (
-            <div className="space-y-2">
-              {timeline.events.map((event) => (
-                <RunTimelineEventCard key={event.eventId} event={event} />
-              ))}
-            </div>
+            <RunEventTimelineTable events={timeline.events} />
           ) : null}
         </Card>
       </div>

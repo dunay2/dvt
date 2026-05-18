@@ -54,7 +54,7 @@ Canonical local paths:
 - [RunDetailStateViews.tsx](../../../../../apps/web/src/app/views/runs/RunDetailStateViews.tsx)
 - [RunStates.tsx](../../../../../apps/web/src/app/views/runs/RunStates.tsx)
 - [RunWorkspaceStateView.tsx](../../../../../apps/web/src/app/views/runs/RunWorkspaceStateView.tsx)
-- [RunTimelineEventCard.tsx](../../../../../apps/web/src/app/views/runs/RunTimelineEventCard.tsx)
+- [RunEventTimelineTable.tsx](../../../../../apps/web/src/app/views/runs/RunEventTimelineTable.tsx)
 
 ## Tests
 
@@ -164,7 +164,7 @@ stateDiagram-v2
 | `useRunWorkspace`                    | [useRunWorkspace.ts](../../../../../apps/web/src/app/views/runs/useRunWorkspace.ts)                                           | Subscribes to scope and reloads run workspace               |
 | `RunsView` (via `CanvasRunsTabView`) | [CanvasRunsTabView.tsx](../../../../../apps/web/src/app/views/runs/CanvasRunsTabView.tsx)                                     | Entry point for Canvas-scoped Runs tab                      |
 | `RunWorkspaceStateView`              | [RunWorkspaceStateView.tsx](../../../../../apps/web/src/app/views/runs/RunWorkspaceStateView.tsx)                             | Renders full workspace (detail + timeline) from view model  |
-| `RunTimelineEventCard`               | [RunTimelineEventCard.tsx](../../../../../apps/web/src/app/views/runs/RunTimelineEventCard.tsx)                               | Renders one structured timeline event from shared semantics |
+| `RunEventTimelineTable`              | [RunEventTimelineTable.tsx](../../../../../apps/web/src/app/views/runs/RunEventTimelineTable.tsx)                             | Renders dense timeline rows from shared event semantics     |
 | `RunListStateView`                   | [RunListStateView.tsx](../../../../../apps/web/src/app/views/runs/RunListStateView.tsx)                                       | Renders runs summary list with status badges and navigation |
 | `RunDetailStateViews`                | [RunDetailStateViews.tsx](../../../../../apps/web/src/app/views/runs/RunDetailStateViews.tsx)                                 | Owns empty, error, degraded, loading, missing state views   |
 | `RunStates`                          | [RunStates.tsx](../../../../../apps/web/src/app/views/runs/RunStates.tsx)                                                     | Barrel re-export of named state views for route renderer    |

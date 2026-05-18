@@ -25,7 +25,7 @@ or artifact authority. Those remain snapshot and workspace concerns.
 | `buildRunEventPresentationModel`  | presentation model | Run event presentation model  | Maps a raw event into level, headline key, detail, and step identity   |
 | `resolveRunEventHeadline`         | copy resolver      | Run event presentation copy   | Resolves human-readable event headline copy                            |
 | `formatRunEventAsLogLine`         | terminal renderer  | Shell console event rendering | Formats shared event semantics as one terminal-style line              |
-| `RunTimelineEventCard`            | structured view    | Runs workspace timeline       | Renders shared event semantics as a durable structured timeline card   |
+| `RunEventTimelineTable`           | structured view    | Runs workspace timeline       | Renders shared event semantics as durable dense timeline rows          |
 
 ## Invariants
 
@@ -35,7 +35,7 @@ or artifact authority. Those remain snapshot and workspace concerns.
 4. `nextAfterSeq` is preserved when supplied by the adapter.
 5. Active event streams poll only while the run status is `pending` or
    `running`.
-6. Console lines and Runs timeline cards share event severity and headline
+6. Console lines and Runs timeline rows share event severity and headline
    semantics.
 7. Timeline events must not infer snapshot status, materialization evidence,
    failed step diagnostics, or authoring provenance.
@@ -64,25 +64,25 @@ flowchart TB
   Model --> Facade["RunWorkspaceFacade"]
 
   Presentation["runEventPresentationModel"] --> ConsoleFormat["formatRunEventAsLogLine"]
-  Presentation --> Card["RunTimelineEventCard"]
+  Presentation --> Table["RunEventTimelineTable"]
   Copy["runEventPresentationCopy"] --> ConsoleFormat
-  Copy --> Card
+  Copy --> Table
 
   ConsoleHook --> Drawer["BottomConsoleDrawer"]
   Facade --> Workspace["RunWorkspaceStateView"]
-  Card --> Workspace
+  Table --> Workspace
 ```
 
 ## Consumers
 
-| Consumer                | File                                                                                                                          | Responsibility                                             |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `RunWorkspaceFacade`    | [runWorkspaceFacade.ts](../../../../../apps/web/src/app/services/runs/runWorkspaceFacade.ts)                                  | Builds durable snapshot-plus-timeline workspace state      |
-| `useConsoleLogStream`   | [useConsoleLogStream.ts](../../../../../apps/web/src/app/components/console/useConsoleLogStream.ts)                           | Mirrors active run events into the shell console           |
-| `RunTimelineEventCard`  | [RunTimelineEventCard.tsx](../../../../../apps/web/src/app/views/runs/RunTimelineEventCard.tsx)                               | Renders structured event card from shared event semantics  |
-| `BottomConsoleDrawer`   | [Console.tsx](../../../../../apps/web/src/app/components/Console.tsx)                                                         | Renders terminal companion state                           |
-| `RunWorkspaceStateView` | [RunWorkspaceStateView.tsx](../../../../../apps/web/src/app/views/runs/RunWorkspaceStateView.tsx)                             | Renders durable run workspace using structured event cards |
-| Architecture guard      | [runsDomainBoundary.architecture.test.ts](../../../../../apps/web/src/app/views/runs/runsDomainBoundary.architecture.test.ts) | Validates semantic convergence, docs, and owned concerns   |
+| Consumer                | File                                                                                                                          | Responsibility                                           |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `RunWorkspaceFacade`    | [runWorkspaceFacade.ts](../../../../../apps/web/src/app/services/runs/runWorkspaceFacade.ts)                                  | Builds durable snapshot-plus-timeline workspace state    |
+| `useConsoleLogStream`   | [useConsoleLogStream.ts](../../../../../apps/web/src/app/components/console/useConsoleLogStream.ts)                           | Mirrors active run events into the shell console         |
+| `RunEventTimelineTable` | [RunEventTimelineTable.tsx](../../../../../apps/web/src/app/views/runs/RunEventTimelineTable.tsx)                             | Renders dense event rows from shared event semantics     |
+| `BottomConsoleDrawer`   | [Console.tsx](../../../../../apps/web/src/app/components/Console.tsx)                                                         | Renders terminal companion state                         |
+| `RunWorkspaceStateView` | [RunWorkspaceStateView.tsx](../../../../../apps/web/src/app/views/runs/RunWorkspaceStateView.tsx)                             | Renders durable run workspace using dense event rows     |
+| Architecture guard      | [runsDomainBoundary.architecture.test.ts](../../../../../apps/web/src/app/views/runs/runsDomainBoundary.architecture.test.ts) | Validates semantic convergence, docs, and owned concerns |
 
 ## Mature-System Comparison
 
