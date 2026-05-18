@@ -50,12 +50,29 @@ combined delegator while new wiring uses dedicated command and signal services.
 
 Acceptance criteria:
 
-- `buildRunControlService` returns an `IRunControlService`.
-- `WorkflowEngineCoreService` is a combined delegator over command and signal
-  services.
+- `buildRunControlService` returns an `IRunControlService` from already-composed
+  role services.
+- `WorkflowEngineCoreService` is a pure combined delegator over command and
+  signal services.
 - Production factory wiring gives facade use cases separate command and signal
   services.
 - `IWorkflowEngine` remains the current command/query boundary.
+
+### US-DHM-WS4-004: prevent hidden construction in the compatibility wrapper
+
+As an engine architecture reviewer, I want the runtime-control compatibility
+wrapper to reject concrete collaborator construction, so the wrapper cannot
+become a second composition root.
+
+Acceptance criteria:
+
+- `WorkflowEngineCoreService` imports only command/signal role interfaces for
+  runtime-control delegation.
+- `WorkflowEngineCoreService` does not instantiate `RunCommandService` or
+  `RunSignalService`.
+- `WorkflowEngineCoreService` constructor inputs are semantic role services,
+  not state stores, adapter maps, policies, clocks, or observability bags.
+- The architecture guard fails if concrete construction returns to the wrapper.
 
 ## Negative Scenarios
 
@@ -68,6 +85,8 @@ Acceptance criteria:
   single `IRunControlService` dependency fails the architecture guard.
 - A future change that removes this component guide or story file fails the
   architecture guard.
+- A future change that imports or constructs concrete runtime services from
+  `WorkflowEngineCoreService` fails the architecture guard.
 
 ## Scenario Coverage Matrix
 
@@ -76,3 +95,4 @@ Acceptance criteria:
 | `US-DHM-WS4-001` | `RunCommandService.ts`, `WorkflowCancelRunUseCase.ts`                      | `workflowEngineRuntimePathDecomposition.architecture.test.ts` |
 | `US-DHM-WS4-002` | `RunSignalService.ts`, `WorkflowSignalRunUseCase.ts`, core service tests   | `WorkflowEngineCoreService.test.ts`                           |
 | `US-DHM-WS4-003` | `WorkflowEngineCoreService.ts`, `WorkflowEngineFactory.ts`, engine fixture | `workflowEngineRuntimePathDecomposition.architecture.test.ts` |
+| `US-DHM-WS4-004` | `WorkflowEngineCoreService.ts`, engine fixture                             | `workflowEngineRuntimePathDecomposition.architecture.test.ts` |

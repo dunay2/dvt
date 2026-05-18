@@ -328,8 +328,15 @@ export function createWorkflowEngineCoreFixture(input?: {
     planRefPolicy: new PlanRefPolicy({ allowedSchemes: input?.allowedSchemes ?? ['https'] }),
   });
   const observability = input?.observability ?? createNoopObservability();
-
-  const core = new WorkflowEngineCoreService({
+  const runCommandService = buildRunCommandService({
+    stateStoreRead,
+    policy,
+    adapters,
+    observability,
+    clock,
+    ...(input?.timeouts ? { timeouts: input.timeouts } : {}),
+  });
+  const runSignalService = buildRunSignalService({
     stateStoreRead,
     stateStoreWrite,
     idempotency,
@@ -338,6 +345,11 @@ export function createWorkflowEngineCoreFixture(input?: {
     observability,
     clock,
     ...(input?.timeouts ? { timeouts: input.timeouts } : {}),
+  });
+
+  const core = new WorkflowEngineCoreService({
+    runCommandService,
+    runSignalService,
   });
   const runStatusQueryService = new RunStatusQueryService({
     stateStoreRead,

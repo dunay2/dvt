@@ -148,6 +148,12 @@ facade use-case construction receives command and signal services separately.
   evidence, risk-register entry, and feature-mechanization manifest coverage.
 - Regenerated documentation indexes, generated code status, docs manifest, and
   governance projections through the repository refresh rail.
+- Performed a second Fowler hardening pass on 2026-05-18 and removed the
+  remaining hidden construction legacy from `WorkflowEngineCoreService`.
+- Added a semantic architecture guard proving the combined run-control wrapper
+  cannot import or instantiate concrete runtime command/signal services.
+- Updated the runtime path component guide and user stories to document the
+  pure-delegator constructor invariant.
 
 ## Validation Evidence
 
@@ -172,6 +178,20 @@ facade use-case construction receives command and signal services separately.
   after two passes.
 - `pnpm docs:feature-mechanization:implementation` passed after governance
   refresh.
+- `pnpm --filter @dvt/engine test -- test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts`
+  failed first on 2026-05-18 because `WorkflowEngineCoreService` still imported
+  and constructed `RunCommandService` and `RunSignalService`.
+- `pnpm --filter @dvt/engine test -- test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts`
+  passed after the wrapper accepted only role services.
+- `pnpm --filter @dvt/engine test -- test/core/WorkflowEngineCoreService.test.ts test/application/workflowEngineUseCases.factory.test.ts`
+  passed after the fixture moved composition outside the wrapper.
+- `pnpm --filter @dvt/engine typecheck` passed after the constructor contract
+  was narrowed.
+- `pnpm --filter @dvt/engine test` passed on 2026-05-18 with 64 files and 452
+  tests.
+- `pnpm arch:deps` passed.
+- `pnpm governance:refresh` passed with governance coverage
+  `files=4762 governed=4762 ungoverned=0 drift=0 legacy=0`.
 
 ## Debt And Stub Evidence
 
@@ -184,3 +204,5 @@ facade use-case construction receives command and signal services separately.
   markers were added.
 - The compatibility wrapper is explicit retained surface, not an unfinished
   fallback: cancel and signal runtime logic now live in the dedicated services.
+- The compatibility wrapper no longer constructs concrete runtime services; it
+  accepts role services and delegates only.

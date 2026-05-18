@@ -7,17 +7,19 @@ owners:
 arc_level: ARC-2
 breaking: false
 code_refs:
+  - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
   - packages/@dvt/engine/src/domain/IRunCommandService.ts
   - packages/@dvt/engine/src/domain/IRunSignalService.ts
   - packages/@dvt/engine/src/services/runControl/RunCommandService.ts
   - packages/@dvt/engine/src/services/runControl/RunSignalService.ts
-  - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
 evidence:
   tests:
     - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts test/core/WorkflowEngineCoreService.test.ts
     - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts test/core/WorkflowEngineCoreService.test.ts test/application/workflowEngineUseCases.factory.test.ts
     - pnpm --filter @dvt/engine typecheck
     - pnpm --filter dvt-api typecheck
+    - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+    - pnpm --filter @dvt/engine test
 ---
 
 # DHM-WS4 Runtime Path Decomposition
@@ -33,6 +35,11 @@ and signal-derived event emission.
 dedicated services so existing `buildRunControlService` callers are not broken.
 The public `IWorkflowEngine` contract and API route behavior are unchanged.
 
+The 2026-05-18 hardening pass removed the remaining hidden construction legacy:
+`WorkflowEngineCoreService` no longer imports or instantiates the concrete
+runtime services. It receives only `IRunCommandService` and `IRunSignalService`
+and delegates.
+
 ## Validation Evidence
 
 - `pnpm --filter @dvt/engine test -- test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts test/core/WorkflowEngineCoreService.test.ts`
@@ -47,10 +54,16 @@ The public `IWorkflowEngine` contract and API route behavior are unchanged.
     compatibility adapter.
 - `pnpm --filter dvt-api typecheck`
   - Passed.
+- `pnpm --filter @dvt/engine test -- test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts`
+  - RED first on 2026-05-18: failed because `WorkflowEngineCoreService` still
+    imported and constructed concrete runtime services.
+  - GREEN after hardening: passed, 5 tests.
+- `pnpm --filter @dvt/engine test`
+  - Passed on 2026-05-18 with 64 files and 452 tests.
 
 ## No-Debt Evidence
 
 No public engine contract, API route behavior, provider adapter behavior, or
 signal semantics changed. No compatibility fallback hides mixed ownership:
 the retained `WorkflowEngineCoreService` delegates to explicit command and
-signal services.
+signal services and does not construct them.

@@ -100,14 +100,16 @@ describe('WorkflowEngine semantic closure architecture', () => {
       'emitSignalDerivedRunEvent',
       'migratePostgresRuntimeStores',
       'createTemporalProviderAdapterFactory',
+      'new RunCommandService(',
+      'new RunSignalService(',
     ]) {
       expect(coreService, `core service must not own ${forbiddenCoreOwnership}`).not.toContain(
         forbiddenCoreOwnership
       );
     }
 
-    expect(coreService).toContain('this.runCommandService.cancel(ref)');
-    expect(coreService).toContain('this.runSignalService.signal(ref, req)');
+    expect(coreService).toContain('this.deps.runCommandService.cancel(ref)');
+    expect(coreService).toContain('this.deps.runSignalService.signal(ref, req)');
   });
 
   it('requires local semantic closure docs, Fowler analysis, and complete story coverage', () => {

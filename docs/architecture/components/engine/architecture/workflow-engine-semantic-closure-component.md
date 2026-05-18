@@ -33,7 +33,7 @@ it, and which tests prove the shape has not drifted.
 | `IWorkflowEngine.getRunStatus`                                      | `@dvt/engine` | Public facade query for canonical status reads.                        |
 | `IRunCommandService.cancel`                                         | `@dvt/engine` | Internal role-interface command for cancel dispatch.                   |
 | `IRunSignalService.signal`                                          | `@dvt/engine` | Internal role-interface command for signal dispatch and derived facts. |
-| `buildRunControlService`                                            | `@dvt/engine` | Assembly helper for the combined run-control delegator.                |
+| `buildRunControlService`                                            | `@dvt/engine` | Compatibility helper for an already-composed run-control delegator.    |
 
 ## Invariants
 
@@ -42,6 +42,8 @@ it, and which tests prove the shape has not drifted.
 - `@dvt/engine` owns runtime semantics through ports and application/domain
   services, not through environment parsing or direct infrastructure creation.
 - `WorkflowEngineCoreService` is a combined run-control delegator only.
+- `WorkflowEngineCoreService` accepts command and signal role services only; it
+  does not construct concrete runtime services.
 - Cancel behavior stays in `RunCommandService`.
 - Signal transition validation, adapter dispatch, idempotency, and
   signal-derived lifecycle facts stay in `RunSignalService`.
