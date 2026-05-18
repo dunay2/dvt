@@ -10,12 +10,15 @@ probability: Low
 ---
 summary: >
   Future edits could reintroduce config, store, adapter, maintenance, worker, or handle assembly
-  directly into createIntentReconcilerRuntime instead of keeping that sequence inside the named
-  IntentReconcilerRuntimeComposition command rail.
+  directly into createIntentReconcilerRuntime instead of keeping that sequence inside the dedicated
+  intentReconcilerRuntimeComposition module and named IntentReconcilerRuntimeComposition command
+  rail.
 mitigation: >
-  intentReconcilerRuntimeComposition.architecture.test.ts fails if the exported factory directly
-  assembles stores, migrations, adapters, maintenance, workers, or runtime handles, or if the
-  ordered composition calls are removed.
+  intentReconcilerRuntimeComposition.architecture.test.ts fails if the exported facade imports
+  concrete adapter or engine-runtime assembly, if the dedicated composition module is removed, if
+  the factory directly assembles stores, migrations, adapters, maintenance, workers, or runtime
+  handles, or if the ordered composition calls are removed.
 evidence:
   - docs/evidence/ed-20260512-dhm-ws2-runtime-composition-root.md
   - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+  - apps/api/src/runtime/intentReconcilerRuntimeComposition.ts

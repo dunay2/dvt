@@ -150,6 +150,12 @@ sequence without changing the public runtime handle. The slice also adds the
 architecture guard, component guide, user stories, evidence file, and risk
 register entry named in the feature mechanization block.
 
+The 2026-05-18 hardening pass removed the remaining facade/composition collapse:
+`intentReconcilerRuntime.ts` now owns only the public runtime factory and handle
+types, while `apps/api/src/runtime/intentReconcilerRuntimeComposition.ts` owns
+config parsing, store binding, migration, provider adapter resolution,
+maintenance creation, worker creation, and handle assembly.
+
 Validation evidence:
 
 - `pnpm docs:feature-mechanization -- --feature DHM-WS2-RUNTIME-COMPOSITION-ROOT`
@@ -158,6 +164,9 @@ Validation evidence:
 - `pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts`
   - RED first: failed because no `IntentReconcilerRuntimeComposition` class
     existed and the ordered calls were absent.
+  - RED again during the 2026-05-18 hardening pass: failed because the public
+    facade still imported concrete assembly and the dedicated composition module
+    was absent.
   - GREEN after implementation: passed, 3 tests.
 - `pnpm --filter dvt-api test -- test/server.test.ts`
   - Passed, 18 tests.
@@ -167,6 +176,8 @@ Validation evidence:
 No-debt evidence:
 No lint, type, test, hook, or quality rule was disabled or relaxed. No public
 API, contract, adapter package, or engine package was changed for this slice.
+The hardening pass added one API runtime source module and updates generated
+source status instead of hiding the structural change.
 
 No-stub evidence:
 No stub, placeholder, fake adapter, fake success path, TODO, FIXME, or

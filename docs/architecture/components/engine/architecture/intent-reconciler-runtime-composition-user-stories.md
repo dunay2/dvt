@@ -2,7 +2,7 @@
 title: Intent reconciler runtime composition user stories
 status: Draft
 owner: API / Engine / Architecture
-last_reviewed: 2026-05-12
+last_reviewed: 2026-05-18
 planning_type: architecture
 ---
 
@@ -40,11 +40,24 @@ disabled runtime and missing database URL return `null`, unsupported provider
 names throw, and an empty adapter map throws
 `INTENT_RECONCILER_NO_PROVIDER_ADAPTERS`.
 
+## US-DHM-WS2-004: Keep the public runtime facade thin
+
+As an API maintainer, I need the exported runtime factory to remain a stable
+facade so caller contracts are not coupled to concrete Postgres, provider,
+maintenance, or worker assembly.
+
+Acceptance criteria:
+`intentReconcilerRuntime.ts` exports the runtime handle contract and delegates
+to `intentReconcilerRuntimeComposition.ts`; the facade does not import
+adapter-postgres, engine runtime services, database pool helpers, provider
+factories, or state-store role binding.
+
 ## Negative Scenarios
 
 - No background worker starts when the runtime is disabled.
 - No runtime handle is published before adapters and maintenance service exist.
 - No provider-specific runtime behavior is moved into `@dvt/engine`.
+- No concrete startup assembly is reintroduced into the public facade.
 
 ## Scenario Coverage Matrix
 
@@ -53,3 +66,4 @@ names throw, and an empty adapter map throws
 | `US-DHM-WS2-001` | `IntentReconcilerRuntimeComposition`                         | `intentReconcilerRuntimeComposition.architecture.test.ts`                      |
 | `US-DHM-WS2-002` | `intentReconcilerRuntime.ts`                                 | `intentReconcilerRuntimeComposition.architecture.test.ts`, `dvt-api` typecheck |
 | `US-DHM-WS2-003` | `createIntentReconcilerRuntime` and existing bootstrap tests | `server.test.ts`, `intentReconcilerRuntimeComposition.architecture.test.ts`    |
+| `US-DHM-WS2-004` | `intentReconcilerRuntime.ts` facade                          | `intentReconcilerRuntimeComposition.architecture.test.ts`                      |

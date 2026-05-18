@@ -90,8 +90,10 @@ governingSources:
   - docs/adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md
 allowedImplementationSurfaces:
   - apps/api/src/runtime/intentReconcilerRuntime.ts
+  - apps/api/src/runtime/intentReconcilerRuntimeComposition.ts
   - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
   - apps/api/test/server.test.ts
+  - buzon/20260518-dhm-ws2-fowler-runtime-composition-hardening-analysis.md
   - docs/.manifest.json
   - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-component.md
   - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-user-stories.md
@@ -148,12 +150,24 @@ redGreenCycles:
     patchSurfaces:
       - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
       - apps/api/src/runtime/intentReconcilerRuntime.ts
+      - apps/api/src/runtime/intentReconcilerRuntimeComposition.ts
       - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-component.md
       - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-user-stories.md
     greenTest: pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
 symbols:
-  - name: IntentReconcilerRuntimeComposition
+  - name: createIntentReconcilerRuntime
     path: apps/api/src/runtime/intentReconcilerRuntime.ts
+    dddOwner: API runtime facade
+    cqRails:
+      - IntentReconcilerRuntimeComposition
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+    cypressCoverage: Not applicable - background runtime composition
+    unitTests:
+      - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+  - name: IntentReconcilerRuntimeComposition
+    path: apps/api/src/runtime/intentReconcilerRuntimeComposition.ts
     dddOwner: API runtime composition root
     cqRails:
       - IntentReconcilerRuntimeComposition
@@ -163,8 +177,52 @@ symbols:
     cypressCoverage: Not applicable - background runtime composition
     unitTests:
       - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+  - name: IntentReconcilerRuntimeCompositionHandle
+    path: apps/api/src/runtime/intentReconcilerRuntimeComposition.ts
+    dddOwner: API runtime composition root
+    cqRails:
+      - IntentReconcilerRuntimeComposition
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+    cypressCoverage: Not applicable - background runtime composition
+    unitTests:
+      - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+  - name: ReconcilerRuntimeConfig
+    path: apps/api/src/runtime/intentReconcilerRuntimeComposition.ts
+    dddOwner: API runtime composition root
+    cqRails:
+      - IntentReconcilerRuntimeComposition
+    fowlerSignals:
+      - Responsibility overload
+    architectureGuard: pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+    cypressCoverage: Not applicable - background runtime composition
+    unitTests:
+      - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+  - name: RuntimeStores
+    path: apps/api/src/runtime/intentReconcilerRuntimeComposition.ts
+    dddOwner: API runtime composition root
+    cqRails:
+      - IntentReconcilerRuntimeComposition
+    fowlerSignals:
+      - Responsibility overload
+    architectureGuard: pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+    cypressCoverage: Not applicable - background runtime composition
+    unitTests:
+      - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+  - name: SYSTEM_CLOCK
+    path: apps/api/src/runtime/intentReconcilerRuntimeComposition.ts
+    dddOwner: API runtime composition root
+    cqRails:
+      - IntentReconcilerRuntimeComposition
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+    cypressCoverage: Not applicable - background runtime composition
+    unitTests:
+      - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
   - name: createIntentReconcilerRuntimeComposition
-    path: apps/api/src/runtime/intentReconcilerRuntime.ts
+    path: apps/api/src/runtime/intentReconcilerRuntimeComposition.ts
     dddOwner: API runtime composition root
     cqRails:
       - IntentReconcilerRuntimeComposition
@@ -175,6 +233,28 @@ symbols:
     unitTests:
       - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
   - name: TEST_ROOT
+    path: apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+    dddOwner: API runtime composition root
+    cqRails:
+      - IntentReconcilerRuntimeComposition
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+    cypressCoverage: Not applicable - background runtime composition
+    unitTests:
+      - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+  - name: RUNTIME_FACADE
+    path: apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+    dddOwner: API runtime composition root
+    cqRails:
+      - IntentReconcilerRuntimeComposition
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+    cypressCoverage: Not applicable - background runtime composition
+    unitTests:
+      - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
+  - name: RUNTIME_COMPOSITION
     path: apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
     dddOwner: API runtime composition root
     cqRails:
