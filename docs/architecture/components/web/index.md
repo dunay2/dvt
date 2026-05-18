@@ -46,6 +46,7 @@ out of the active tree.
   [UX implementation guide](./ux-implementation-guide.md),
   [Frontend query boundary component](./frontend-query-boundary-component.md),
   [Frontend test governance component](./frontend-test-governance-component.md),
+  [Web Vitest changed suite router component](./web-vitest-changed-suite-router-component.md),
   [Web store domain ownership component](./web-store-domain-ownership-component.md),
   [Workbench UI contract and component inventory](./workbench-ui-contract-and-component-inventory.md),
   [Library and open-source reference stack](./library-and-open-source-reference-stack.md),
@@ -72,6 +73,8 @@ out of the active tree.
 - frontend test governance:
   [Frontend test governance component](./frontend-test-governance-component.md),
   [Frontend test governance user stories](./frontend-test-governance-user-stories.md),
+  [Web Vitest changed suite router component](./web-vitest-changed-suite-router-component.md),
+  [Web Vitest changed suite router user stories](./web-vitest-changed-suite-router-user-stories.md),
   [`vitest.suites.ts`](../../../../apps/web/vitest.suites.ts),
   [`test.yml`](../../../../.github/workflows/test.yml)
 
