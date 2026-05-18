@@ -28,7 +28,7 @@ lacks a route-stage risk decision. Child slices cannot declare alpha full.
 | Workspace context  | `GetEffectiveWorkspaceContext`; protected runtime workspace context         | Tenant, project, and environment are visible for the active workspace.            | Missing, detached, unauthorized, or assertion-conflicted context fails closed.                                                               | Accepted effective workspace context proof.                                                                   | Included: implicit tenant/project/env state can leak product authority. Excluded: admin provisioning depth.                                       | Accepted for route-gate evidence; alpha full still waits on remaining stages. |
 | Canvas workbench   | `GetWorkspaceGraphDraft`; `SaveWorkspaceGraphDraft`; Canvas graph component | Authoritative draft loads, nodes are visible, and drag/save feedback is governed. | Draft load failure, save denial, stale draft, retry exhaustion, and read-only posture are explicit.                                          | Accepted Canvas draft read/save and draft-access browser proof.                                               | Included: local graph state can become product authority. Excluded: advanced authoring workflows beyond alpha read/inspect posture.               | Accepted for route-gate evidence; alpha full still waits on remaining stages. |
 | Code workbench     | `ListWorkspaceFiles`; `GetWorkspaceFileContent`; workspace-files child plan | Authorized tree and first-file preview load read-only with freshness metadata.    | Empty workspace, backend unavailable, unauthorized, not-found, traversal, oversize, unsupported file type, and freshness cases are explicit. | Accepted workspace-files query rail plan, API tests, UI proof, browser proof, and filesystem safety evidence. | Included: file reads can bypass authorization or filesystem policy. Excluded: file-write behavior, which requires a separate command rail.        | Accepted for route-gate evidence; alpha full still waits on remaining stages. |
-| Plan/run readiness | `ObservePlanRunReadiness`; Runtime admission and plan readiness             | Controls explain ready-to-run posture with stable source-owned reasons.           | Plan integrity, backpressure, capability mismatch, adapter degraded, and authorization denied are distinct.                                  | Runtime admission, plan integrity, and readiness child proof.                                                 | Included: generic disabled copy hides platform risk. Excluded: executing real production runs during alpha gate proof.                            | Blocks alpha full until readiness copy is mapped to stable causes.            |
+| Plan/run readiness | `ObservePlanRunReadiness`; Runtime admission and plan readiness             | Controls explain ready-to-run posture with stable source-owned reasons.           | Plan integrity, backpressure, capability mismatch, adapter degraded, and authorization denied are distinct.                                  | Accepted `PlanRunReadinessReadModel`, unit, run-start, architecture, and browser proof.                       | Included: generic disabled copy hides platform risk. Excluded: executing real production runs during alpha gate proof.                            | Accepted for route-gate evidence; alpha full still waits on cadence and risk. |
 | Recovery states    | `MapRouteRecoveryState`; Route recovery vocabulary                          | Equivalent failures use one route-owned recovery vocabulary across stages.        | Unknown, unavailable, unauthorized, stale, and not-found states stay distinguishable.                                                        | Accepted recovery vocabulary guide, architecture guard, and browser fail-closed stage evidence.               | Included: duplicated recovery copy creates stage drift. Excluded: cosmetic copy iteration after source-owned keys exist.                          | Accepted for route-gate evidence; alpha full still waits on remaining stages. |
 | Alpha cadence      | F-27 route plan; Product / Architecture                                     | Audience, entry date, duration, exit owner, and extension rule are named.         | Missing exit owner, missing duration, or indefinite extension keeps route blocked.                                                           | Cadence decision section in F-27 closeout or route plan update.                                               | Included: alpha can become an undefined status. Excluded: launch/GTM cadence beyond internal alpha.                                               | Blocks alpha full until cadence is decidable.                                 |
 | Risk triage        | `docs/risk-register/**`; F-27 route risk review                             | Included and excluded risks are listed per route stage.                           | Untriaged high-impact route risks keep the route blocked.                                                                                    | Risk register entries plus F-27 closeout evidence.                                                            | Included: route-stage safety, authorization, readiness, and data freshness risks. Excluded: unrelated roadmap or historical risks with rationale. | Blocks alpha full until inclusion and exclusion rationale exist.              |
@@ -173,8 +173,8 @@ Recovery states evidence is accepted for F-27 because it reuses
 architecture guard coverage for every required recovery state, and browser
 fail-closed evidence across startup, Canvas, and Code route stages.
 
-This does not accept alpha full: plan/run readiness evidence remains planned
-until its browser/runtime proof is accepted.
+This does not accept alpha full: cadence and risk triage remain open until
+their proof is accepted.
 
 ## Route Diagram
 
@@ -202,15 +202,14 @@ flowchart LR
 ## Current Result
 
 The route remains in `review`, not `accepted`, because startup, workspace
-context, Canvas, Code, and recovery now have accepted stage evidence while the
-following remaining alpha-full blockers stay open:
+context, Canvas, Code, plan/run readiness, and recovery now have accepted stage
+evidence while the following remaining alpha-full blockers stay open:
 
-- `Plan/run readiness`: remains planned; this is the next executable slice.
 - `Alpha cadence`: remains blocked until every route-stage proof is accepted and
   cadence can start.
 - `Risk triage`: remains blocked until the final route evidence set proves the
   included risks can close for alpha full.
 
-The next executable slice must fill the `Plan/run readiness` evidence row
-without moving route authority out of F-27. Filling that row does not by itself
-accept alpha full until cadence and risk-triage proof are also closed.
+The next executable slice must close cadence without moving route authority out
+of F-27. Filling that row does not by itself accept alpha full until
+risk-triage proof is also closed.

@@ -75,10 +75,10 @@ command/query rail catalog before UI, adapter, or route-handler work starts.
   changes.
 
 As of the current F-27 route-gate evidence slice, `Startup gate`,
-`Workspace context`, `Canvas workbench`, `Code workbench`, and
-`Recovery states` are accepted inside the combined fixture. The full route
-decision stays `review` until every remaining stage evidence state is also
-accepted.
+`Workspace context`, `Canvas workbench`, `Code workbench`,
+`Plan/run readiness`, and `Recovery states` are accepted inside the combined
+fixture. The full route decision stays `review` until cadence and risk triage
+are also closed.
 
 ```mermaid
 stateDiagram-v2
@@ -134,10 +134,14 @@ For the current route gate, `Startup gate` is accepted through
 `GetWorkspaceGraphDraft` plus `SaveWorkspaceGraphDraft`. `Code workbench` is
 accepted through `ListWorkspaceFiles` plus `GetWorkspaceFileContent`, including
 scoped API tests, read-only UI proof, browser proof, and filesystem safety
-negative coverage. `Recovery states` are accepted through
+negative coverage. `Plan/run readiness` is accepted through
+`ObservePlanRunReadiness`, the `PlanRunReadinessReadModel`, unit proof for
+`plan_integrity`, `backpressure`, `capability_mismatch`, `adapter_degraded`,
+and `authorization_denied`, run-start fail-closed proof, and persisted preview
+browser proof. `Recovery states` are accepted through
 `MapRouteRecoveryState`, the route-owned vocabulary guide, stage coverage in
 the architecture guard, and browser fail-closed evidence across startup, Canvas,
-and Code. `Plan/run readiness` remains planned.
+and Code.
 
 ## Cadence Contract
 

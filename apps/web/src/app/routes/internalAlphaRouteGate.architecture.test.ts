@@ -157,9 +157,10 @@ describe('internal alpha route gate architecture', () => {
 
     expect(acceptanceMatrix).toContain('Excluded');
     expect(acceptanceMatrix).toContain('remaining alpha-full blockers');
-    for (const remainingBlocker of ['Plan/run readiness', 'Alpha cadence', 'Risk triage']) {
+    for (const remainingBlocker of ['Alpha cadence', 'Risk triage']) {
       expect(acceptanceMatrix).toMatch(new RegExp(`${remainingBlocker}[^\\n]+(remain|block)`, 'i'));
     }
+    expect(acceptanceMatrix).not.toMatch(/Plan\/run readiness`: remains planned/i);
     expect(acceptanceMatrix).not.toMatch(/only remaining evidence row/i);
     expect(acceptanceMatrix).toMatch(/alpha-full stays\s+blocked/);
   });
@@ -237,6 +238,7 @@ describe('internal alpha route gate architecture', () => {
       missingRails: [],
       missingRecoveryStates: [],
       missingStages: [],
+      remainingAlphaFullBlockers: ['Alpha cadence', 'Risk triage'],
       routeAuthority: 'F-27',
       routeDecision: 'review',
       stagesWithoutRecoveryVocabulary: [],
@@ -450,6 +452,7 @@ describe('internal alpha route gate architecture', () => {
       'Workspace context',
       'Canvas workbench',
       'Code workbench',
+      'Plan/run readiness',
       'Recovery states',
     ]);
     for (const stage of acceptedStages) {
@@ -469,10 +472,48 @@ describe('internal alpha route gate architecture', () => {
     }
   });
 
+  it('accepts Plan/run readiness evidence without accepting the full alpha route', () => {
+    const planRunStage = internalAlphaCombinedRouteFixture.stages.find(
+      (stage) => stage.stage === 'Plan/run readiness'
+    );
+    const componentGuide = readRepoFile(
+      'docs/architecture/components/web/graph/canvas-plan-run-readiness-component.md'
+    );
+    const readinessModel = readRepoFile('apps/web/src/app/views/canvas/canvasPlanReadiness.ts');
+
+    expect(planRunStage?.evidenceAcceptance).toBe('accepted');
+    expect(planRunStage?.rails).toEqual(['ObservePlanRunReadiness']);
+    expect(planRunStage?.evidenceRefs).toEqual(
+      expect.arrayContaining([
+        'docs/architecture/components/web/graph/canvas-plan-run-readiness-component.md',
+        'apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts',
+        'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStart.test.tsx',
+        'apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts',
+      ])
+    );
+    for (const blocker of [
+      'plan_integrity',
+      'backpressure',
+      'capability_mismatch',
+      'adapter_degraded',
+      'authorization_denied',
+    ]) {
+      expect(componentGuide).toContain(blocker);
+      expect(readinessModel).toContain(blocker);
+    }
+    expect(evaluateInternalAlphaCombinedRouteFixture(internalAlphaCombinedRouteFixture)).toEqual(
+      expect.objectContaining({
+        remainingAlphaFullBlockers: ['Alpha cadence', 'Risk triage'],
+        routeDecision: 'review',
+      })
+    );
+  });
+
   it('accepts the combined route fixture only when all stage evidence is accepted', () => {
     expect(
       evaluateInternalAlphaCombinedRouteFixture({
         ...internalAlphaCombinedRouteFixture,
+        alphaFullBlockers: [],
         stages: internalAlphaCombinedRouteFixture.stages.map((stage) => ({
           ...stage,
           evidenceAcceptance: 'accepted',
@@ -480,6 +521,7 @@ describe('internal alpha route gate architecture', () => {
       })
     ).toMatchObject({
       missingEvidenceAcceptance: [],
+      remainingAlphaFullBlockers: [],
       routeDecision: 'accepted',
     });
 
