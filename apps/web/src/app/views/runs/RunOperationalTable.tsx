@@ -17,6 +17,7 @@ import {
   TableRow,
 } from '../../components/ui/table';
 import { cn } from '../../components/ui/utils';
+import { routeWorkbenchDenseTableClasses } from '../../components/workbench/routeWorkbenchTableTokens';
 import { routeWorkbenchMutedTextClassName } from '../../components/workbench/RouteWorkbenchFrame';
 import { getRunStatusTone } from './runStatesModel';
 import {
@@ -135,7 +136,7 @@ export function RunOperationalTable({
             value={filters.query}
             onChange={(event) => onFiltersChange({ ...filters, query: event.target.value })}
             placeholder={copy.runTableSearchPlaceholder}
-            className="h-9 w-full rounded border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100"
+            className={cn(routeWorkbenchDenseTableClasses.field, 'w-full')}
           />
         </label>
         <select
@@ -147,7 +148,7 @@ export function RunOperationalTable({
               status: event.target.value as RunOperationalTableFilters['status'],
             })
           }
-          className="h-9 rounded border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100"
+          className={routeWorkbenchDenseTableClasses.field}
         >
           <option value="all">{copy.runTableAllStatuses}</option>
           <option value="pending">pending</option>
@@ -202,7 +203,10 @@ export function RunOperationalTable({
             ))
           ) : !isLoading ? (
             <TableRow>
-              <TableCell colSpan={columns.length} className="text-slate-400">
+              <TableCell
+                colSpan={columns.length}
+                className={routeWorkbenchDenseTableClasses.emptyCell}
+              >
                 {copy.runTableEmptyFiltered}
               </TableCell>
             </TableRow>
