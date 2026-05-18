@@ -46,10 +46,17 @@ describe('workspaceFilesRoutes', () => {
   });
 
   function buildApp(
-    options: { readonly authenticated?: boolean; readonly authorized?: boolean } = {}
+    options: {
+      readonly authenticated?: boolean;
+      readonly authorized?: boolean;
+      readonly maxFileBytes?: number;
+    } = {}
   ): { readonly app: FastifyInstance; readonly authorize: ReturnType<typeof vi.fn> } {
     const app = Fastify({ logger: false });
-    const repository = new LocalWorkspaceFileRepository({ root });
+    const repository = new LocalWorkspaceFileRepository({
+      root,
+      ...(options.maxFileBytes === undefined ? {} : { maxFileBytes: options.maxFileBytes }),
+    });
     const authorize = vi.fn().mockResolvedValue(
       options.authorized === false
         ? { ok: false, reason: 'ACTION_NOT_GRANTED' }
@@ -125,7 +132,20 @@ describe('workspaceFilesRoutes', () => {
       name: 'stg_orders.sql',
       language: 'sql',
       content: 'select * from orders',
+      lastModified: expect.any(String),
     });
+  });
+
+  it('returns last-modified freshness metadata with workspace file content', async () => {
+    const { app } = buildApp();
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/workspace/files/models%2Fstaging%2Fstg_orders.sql?${SCOPE_QUERY}`,
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(Date.parse(response.json().lastModified)).not.toBeNaN();
   });
 
   it('returns canonical not-found envelope for a missing workspace file', async () => {
@@ -151,6 +171,43 @@ describe('workspaceFilesRoutes', () => {
     const response = await app.inject({
       method: 'GET',
       url: `/workspace/files/..%2Fpackage.json?${SCOPE_QUERY}`,
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      error: {
+        type: 'bad_request',
+        reason: 'invalid_workspace_path',
+        target: 'path',
+      },
+    });
+  });
+
+  it('rejects unsupported workspace file types before reading content', async () => {
+    const { app } = buildApp();
+    await writeFile(path.join(root, 'image.png'), 'not a text source file', 'utf8');
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/workspace/files/image.png?${SCOPE_QUERY}`,
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      error: {
+        type: 'bad_request',
+        reason: 'invalid_workspace_path',
+        target: 'path',
+      },
+    });
+  });
+
+  it('rejects oversized workspace files before returning content', async () => {
+    const { app } = buildApp({ maxFileBytes: 10 });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/workspace/files/models%2Fstaging%2Fstg_orders.sql?${SCOPE_QUERY}`,
     });
 
     expect(response.statusCode).toBe(400);

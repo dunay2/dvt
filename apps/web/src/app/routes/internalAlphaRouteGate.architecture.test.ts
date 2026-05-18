@@ -201,7 +201,7 @@ describe('internal alpha route gate architecture', () => {
         );
       }
       for (const evidenceRef of stage.evidenceRefs) {
-        expect(evidenceRef).toMatch(/^(docs|apps\/web)\//);
+        expect(evidenceRef).toMatch(/^(docs|apps\/api|apps\/web)\//);
         expect(existsSync(path.join(REPO_ROOT, evidenceRef))).toBe(true);
       }
       expect(stage.happyPathProof).toBeTruthy();
@@ -332,6 +332,53 @@ describe('internal alpha route gate architecture', () => {
     );
   });
 
+  it('accepts Code workbench evidence only with scoped file queries and filesystem safety proof', () => {
+    const codeStage = internalAlphaCombinedRouteFixture.stages.find(
+      (stage) => stage.stage === 'Code workbench'
+    );
+    const codeWorkbenchCypress = readRepoFile(
+      'apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts'
+    );
+    const workspaceFilesRoutesTest = readRepoFile(
+      'apps/api/test/entrypoints/http/workspaceFilesRoutes.test.ts'
+    );
+
+    expect(codeStage?.evidenceAcceptance).toBe('accepted');
+    expect(codeStage?.rails).toEqual(['ListWorkspaceFiles', 'GetWorkspaceFileContent']);
+    expect(codeStage?.evidenceRefs).toEqual(
+      expect.arrayContaining([
+        'docs/architecture/components/web/code-workbench-workspace-files-component.md',
+        'apps/api/test/architecture/workspaceFilesQueryRail.architecture.test.ts',
+        'apps/api/test/entrypoints/http/workspaceFilesRoutes.test.ts',
+        'apps/web/src/app/services/workspace/workspacePorts.files.test.ts',
+        'apps/web/src/app/views/CodeView.test.tsx',
+        'apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts',
+      ])
+    );
+    expect(codeWorkbenchCypress).toContain(
+      'Owned concern: prove Code workbench reads workspace files through scoped browser query rails'
+    );
+    for (const proof of [
+      'rejects path traversal before reading from the repository',
+      'rejects unsupported workspace file types before reading content',
+      'rejects oversized workspace files before returning content',
+      'returns last-modified freshness metadata with workspace file content',
+      'fails closed when the workspace file action is denied',
+    ]) {
+      expect(workspaceFilesRoutesTest).toContain(proof);
+    }
+    expect(codeStage?.happyPathProof).toMatch(/scoped|tree|preview|read-only|freshness/);
+    expect(codeStage?.failClosedProof).toMatch(
+      /unauthorized|traversal|oversize|unsupported|not-found|unavailable/
+    );
+    expect(evaluateInternalAlphaCombinedRouteFixture(internalAlphaCombinedRouteFixture)).toEqual(
+      expect.objectContaining({
+        missingEvidenceAcceptance: [],
+        routeDecision: 'review',
+      })
+    );
+  });
+
   it('keeps accepted evidence semantically encapsulated instead of relying on path shape', () => {
     const componentGuide = readRepoFile(
       'docs/architecture/components/web/internal-alpha-route-gate-component.md'
@@ -351,6 +398,7 @@ describe('internal alpha route gate architecture', () => {
       'Startup gate',
       'Workspace context',
       'Canvas workbench',
+      'Code workbench',
     ]);
     for (const stage of acceptedStages) {
       expect(stage.evidenceRefs).toEqual(

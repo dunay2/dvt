@@ -83,7 +83,10 @@ const requiredRouteRails: readonly InternalAlphaRouteRail[] = [
 const repoRoot = path.resolve(import.meta.dirname, '../../../../..');
 
 function isResolvableEvidenceRef(evidenceRef: string): boolean {
-  return /^(docs|apps\/web)\//.test(evidenceRef) && existsSync(path.join(repoRoot, evidenceRef));
+  return (
+    /^(docs|apps\/api|apps\/web)\//.test(evidenceRef) &&
+    existsSync(path.join(repoRoot, evidenceRef))
+  );
 }
 
 export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixture = {
@@ -143,14 +146,20 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       stage: 'Canvas workbench',
     },
     {
-      evidenceAcceptance: 'planned',
+      evidenceAcceptance: 'accepted',
       evidenceRefs: [
+        'docs/architecture/components/web/code-workbench-workspace-files-component.md',
         'docs/planning/proposals/mandatory/frontend-and-ux/code-workbench-workspace-files-query-rail-plan-20260504.md',
+        'apps/api/test/architecture/workspaceFilesQueryRail.architecture.test.ts',
+        'apps/api/test/entrypoints/http/workspaceFilesRoutes.test.ts',
+        'apps/web/src/app/services/workspace/workspacePorts.files.test.ts',
         'apps/web/src/app/views/CodeView.test.tsx',
+        'apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts',
       ],
       failClosedProof:
-        'empty, unavailable, unauthorized, not-found, traversal, oversize, binary, and freshness cases are explicit',
-      happyPathProof: 'authorized tree and first-file preview load read-only',
+        'empty, unavailable, unauthorized, not-found, traversal, oversize, and unsupported binary-like file types are explicit',
+      happyPathProof:
+        'scoped authorized tree and first-file preview are visible read-only with freshness metadata',
       rails: ['ListWorkspaceFiles', 'GetWorkspaceFileContent'],
       recoveryState: 'ready',
       recoveryStates: ['ready', 'unauthorized', 'unavailable', 'not-found', 'stale'],
