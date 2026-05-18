@@ -70,15 +70,15 @@ command/query rail catalog before UI, adapter, or route-handler work starts.
 - `blocked` moves to `review` when all stages have owners and planned proofs.
 - `review` returns to `blocked` when stage evidence or risk triage regresses.
 - `review` moves to `accepted` only when every combined fixture stage has
-  accepted evidence.
+  accepted evidence and cadence/risk closure has resolvable evidence.
 - `accepted` returns to `review` when route order, rail, risk, or child proof
   changes.
 
 As of the current F-27 route-gate evidence slice, `Startup gate`,
-`Workspace context`, `Canvas workbench`, `Code workbench`, and
-`Recovery states` are accepted inside the combined fixture. The full route
-decision stays `review` until every remaining stage evidence state is also
-accepted.
+`Workspace context`, `Canvas workbench`, `Code workbench`,
+`Plan/run readiness`, `Recovery states`, `Alpha cadence`, and `Risk triage`
+are accepted. The full route decision is `accepted` only while the combined
+fixture also carries resolvable alpha-full closure evidence.
 
 ```mermaid
 stateDiagram-v2
@@ -134,10 +134,16 @@ For the current route gate, `Startup gate` is accepted through
 `GetWorkspaceGraphDraft` plus `SaveWorkspaceGraphDraft`. `Code workbench` is
 accepted through `ListWorkspaceFiles` plus `GetWorkspaceFileContent`, including
 scoped API tests, read-only UI proof, browser proof, and filesystem safety
-negative coverage. `Recovery states` are accepted through
+negative coverage. `Plan/run readiness` is accepted through
+`ObservePlanRunReadiness`, the `PlanRunReadinessReadModel`, unit proof for
+`plan_integrity`, `backpressure`, `capability_mismatch`, `adapter_degraded`,
+and `authorization_denied`, run-start fail-closed proof, and persisted preview
+browser proof. `Recovery states` are accepted through
 `MapRouteRecoveryState`, the route-owned vocabulary guide, stage coverage in
 the architecture guard, and browser fail-closed evidence across startup, Canvas,
-and Code. `Plan/run readiness` remains planned.
+and Code. `Alpha cadence` and `Risk triage` are accepted through the F-27 route
+acceptance matrix and closeout evidence. The combined fixture blocks alpha-full
+if those closure evidence references are removed.
 
 ## Cadence Contract
 
@@ -152,6 +158,25 @@ and Code. `Plan/run readiness` remains planned.
 | `extensionRule` | explicit condition that allows extending cadence  | Product / Architecture |
 
 Cadence without `exitOwner` or `extensionRule` is automatically `blocked`.
+
+For accepted F-27, the cadence contract is:
+
+- `audience`: Internal product, architecture, frontend, and runtime-safety
+  testers.
+- `entryDate`: First business day after all route-stage proofs in the matrix
+  are accepted.
+- `duration`: 10 business days.
+- `exitOwner`: Product / Architecture.
+- `extensionRule`: Product / Architecture may approve one extension of up to 5
+  business days for named blockers.
+
+## Risk Triage Contract
+
+Route risk triage is accepted only when every route stage has an included risk,
+an exclusion rationale for adjacent risks, and executable evidence for the
+included risk class. Triage without exclusion rationale is automatically
+`blocked` because it hides route boundary decisions inside an open-ended risk
+list.
 
 ## Architecture Diagram
 

@@ -10,6 +10,8 @@ export type InternalAlphaRouteStage =
   | 'Plan/run readiness'
   | 'Recovery states';
 
+export type InternalAlphaFullBlocker = 'Alpha cadence' | 'Risk triage';
+
 export type InternalAlphaRouteRail =
   | 'ObserveAppBootstrapRouteReadiness'
   | 'GetEffectiveWorkspaceContext'
@@ -45,9 +47,12 @@ export interface InternalAlphaCombinedRouteFixture {
   readonly routeAuthority: 'F-27';
   readonly claim: 'alpha-full-candidate';
   readonly stages: readonly InternalAlphaCombinedRouteStageProof[];
+  readonly alphaFullClosureEvidenceRefs: readonly string[];
+  readonly alphaFullBlockers: readonly InternalAlphaFullBlocker[];
 }
 
 export interface InternalAlphaCombinedRouteEvaluation {
+  readonly missingAlphaFullClosureEvidenceRefs: readonly ['alpha-full'] | [];
   readonly missingEvidenceAcceptance: readonly InternalAlphaRouteStage[];
   readonly missingEvidenceRefs: readonly InternalAlphaRouteStage[];
   readonly missingFailClosedProof: readonly InternalAlphaRouteStage[];
@@ -55,6 +60,7 @@ export interface InternalAlphaCombinedRouteEvaluation {
   readonly missingRails: readonly InternalAlphaRouteRail[];
   readonly missingRecoveryStates: readonly InternalAlphaRecoveryState[];
   readonly missingStages: readonly InternalAlphaRouteStage[];
+  readonly remainingAlphaFullBlockers: readonly InternalAlphaFullBlocker[];
   readonly routeAuthority: 'F-27';
   readonly routeDecision: 'blocked' | 'review' | 'accepted';
   readonly stagesWithoutRecoveryVocabulary: readonly InternalAlphaRouteStage[];
@@ -90,6 +96,13 @@ function isResolvableEvidenceRef(evidenceRef: string): boolean {
 }
 
 export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixture = {
+  alphaFullBlockers: [],
+  alphaFullClosureEvidenceRefs: [
+    'docs/planning/closeouts/20260514-f27-alpha-route-acceptance-matrix-closeout.md',
+    'docs/planning/reviews/architecture-and-governance/20260514-internal-alpha-route-acceptance-matrix.md',
+    'docs/architecture/components/web/internal-alpha-route-gate-component.md',
+    'docs/architecture/components/web/internal-alpha-route-gate-user-stories.md',
+  ],
   claim: 'alpha-full-candidate',
   routeAuthority: 'F-27',
   stages: [
@@ -166,10 +179,17 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       stage: 'Code workbench',
     },
     {
-      evidenceAcceptance: 'planned',
+      evidenceAcceptance: 'accepted',
       evidenceRefs: [
+        'docs/architecture/components/web/graph/canvas-plan-run-readiness-component.md',
+        'docs/architecture/components/web/graph/canvas-plan-run-readiness-user-stories.md',
         'docs/architecture/components/api/protected-runtime-command-query-rail-design.md',
         'docs/planning/proposals/mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md',
+        'apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts',
+        'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStart.test.tsx',
+        'apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx',
+        'apps/web/src/app/views/canvas/canvasPlanRunReadiness.architecture.test.ts',
+        'apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts',
       ],
       failClosedProof:
         'plan integrity, backpressure, capability mismatch, degraded adapter, and authorization denial stay distinct',
@@ -240,8 +260,17 @@ export function evaluateInternalAlphaCombinedRouteFixture(
   const missingHappyPathProof = fixture.stages
     .filter((stage) => stage.happyPathProof.trim().length === 0)
     .map((stage) => stage.stage);
+  const missingAlphaFullClosureEvidenceRefs: readonly ['alpha-full'] | [] =
+    fixture.alphaFullBlockers.length === 0 &&
+    (fixture.alphaFullClosureEvidenceRefs.length === 0 ||
+      fixture.alphaFullClosureEvidenceRefs.some(
+        (evidenceRef) => !isResolvableEvidenceRef(evidenceRef)
+      ))
+      ? ['alpha-full']
+      : [];
 
   return {
+    missingAlphaFullClosureEvidenceRefs,
     missingEvidenceAcceptance,
     missingEvidenceRefs,
     missingFailClosedProof,
@@ -249,9 +278,11 @@ export function evaluateInternalAlphaCombinedRouteFixture(
     missingRails,
     missingRecoveryStates,
     missingStages,
+    remainingAlphaFullBlockers: fixture.alphaFullBlockers,
     routeAuthority: fixture.routeAuthority,
     routeDecision:
       missingFailClosedProof.length > 0 ||
+      missingAlphaFullClosureEvidenceRefs.length > 0 ||
       missingEvidenceAcceptance.length > 0 ||
       missingEvidenceRefs.length > 0 ||
       missingHappyPathProof.length > 0 ||
@@ -260,9 +291,11 @@ export function evaluateInternalAlphaCombinedRouteFixture(
       missingStages.length > 0 ||
       stagesWithoutRecoveryVocabulary.length > 0
         ? 'blocked'
-        : fixture.stages.every((stage) => stage.evidenceAcceptance === 'accepted')
-          ? 'accepted'
-          : 'review',
+        : fixture.alphaFullBlockers.length > 0
+          ? 'review'
+          : fixture.stages.every((stage) => stage.evidenceAcceptance === 'accepted')
+            ? 'accepted'
+            : 'review',
     stagesWithoutRecoveryVocabulary,
   };
 }

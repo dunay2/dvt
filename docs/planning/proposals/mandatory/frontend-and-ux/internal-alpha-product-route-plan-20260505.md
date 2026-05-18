@@ -17,9 +17,9 @@ This plan gives the internal alpha route its own planning authority. It fixes
 the prior coupling where the Code workbench workspace-files child slice carried
 route-level alpha context inside a closed child-slice manifest.
 
-This plan does not declare alpha complete. It governs the planning, routing,
-and proof model that future implementation slices must use before expanding the
-route beyond the already planned child slices.
+This plan governs the planning, routing, and proof model for internal alpha.
+The route-level gate is accepted only through F-27; child slices remain
+stage-specific authorities and cannot declare alpha full by implication.
 
 ## Governing Sources
 
@@ -54,7 +54,7 @@ Out of scope:
 
 - implementing new startup, Canvas, Code, or plan/run UI behavior;
 - adding new API routes, contracts, adapters, or packages;
-- declaring internal alpha full complete;
+- declaring launch, beta, public availability, or GTM cadence;
 - changing the already closed workspace-files child-slice evidence.
 
 ## Route Authority Model
@@ -137,8 +137,8 @@ cannot declare alpha full.
 ## Feature Mechanization Scope
 
 This manifest mechanizes the planning-authority correction and the test-only
-combined route proof fixture. It does not implement product route behavior and
-does not close the alpha full gate.
+combined route proof fixture. It does not implement product route behavior; it
+does own the route-level alpha-full gate decision.
 
 ```feature-mechanization
 version: 1
@@ -178,14 +178,21 @@ allowedImplementationSurfaces:
   - docs/planning/roadmap/roadmap-by-domain.md
   - docs/architecture/components/web/internal-alpha-route-gate-component.md
   - docs/architecture/components/web/internal-alpha-route-gate-user-stories.md
+  - docs/architecture/components/web/graph/canvas-plan-run-readiness-component.md
+  - docs/architecture/components/web/graph/canvas-plan-run-readiness-user-stories.md
   - docs/architecture/components/web/appshell/protected-route-session-gate-component.md
   - docs/architecture/components/web/appshell/protected-route-session-gate-user-stories.md
   - docs/planning/closeouts/20260514-f27-alpha-route-acceptance-matrix-closeout.md
+  - buzon/20260518-codex-fowler-f27-plan-run-readiness-analysis.md
   - buzon/20260514-codex-fowler-f27-alpha-route-gate-analysis.md
   - buzon/20260515-codex-fowler-f27-session-gate-runtime-unavailable-analysis.md
   - apps/web/src/app/routes.test.tsx
   - apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts
   - apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts
+  - apps/web/src/app/views/canvas/canvasExecutionState.ts
+  - apps/web/src/app/views/canvas/canvasPlanReadiness.ts
+  - apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts
+  - apps/web/src/app/views/canvas/canvasPlanRunReadiness.architecture.test.ts
   - docs/planning/state/agent-lane-c.yaml
   - docs/planning/state/agent-lane-e.yaml
   - docs/planning/status/**
@@ -437,6 +444,19 @@ symbols:
     cypressCoverage: N/A - test-only route proof fixture.
     unitTests:
       - pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+  - name: InternalAlphaFullBlocker
+    path: apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts
+    dddOwner: InternalAlphaRouteGate alpha-full blocker model
+    cqRails:
+      - ObservePlanRunReadiness
+      - MapRouteRecoveryState
+    fowlerSignals:
+      - Test-only confidence
+      - Documentation drift
+    architectureGuard: pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+    cypressCoverage: N/A - test-only route proof fixture.
+    unitTests:
+      - pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
   - name: InternalAlphaEvidenceAcceptance
     path: apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts
     dddOwner: InternalAlphaRouteGate combined route proof fixture
@@ -627,6 +647,77 @@ symbols:
     cypressCoverage: N/A - test-only route proof fixture.
     unitTests:
       - pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+  - name: PlanRunReadinessBlocker
+    path: apps/web/src/app/views/canvas/canvasPlanReadiness.ts
+    dddOwner: PlanRunReadinessReadModel
+    cqRails:
+      - ObservePlanRunReadiness
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- canvasPlanReadiness.test.ts
+  - name: PlanRunReadinessReadModel
+    path: apps/web/src/app/views/canvas/canvasPlanReadiness.ts
+    dddOwner: Runtime admission and plan readiness read model
+    cqRails:
+      - ObservePlanRunReadiness
+    fowlerSignals:
+      - Boundary drift
+      - Primitive obsession
+    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- canvasPlanReadiness.test.ts
+  - name: observePlanRunReadiness
+    path: apps/web/src/app/views/canvas/canvasPlanReadiness.ts
+    dddOwner: PlanRunReadinessReadModel
+    cqRails:
+      - ObservePlanRunReadiness
+    fowlerSignals:
+      - Boundary drift
+      - Duplicate semantics
+    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- canvasPlanReadiness.test.ts
+  - name: buildPlanRunReadinessSummary
+    path: apps/web/src/app/views/canvas/canvasPlanReadiness.ts
+    dddOwner: PlanRunReadinessReadModel
+    cqRails:
+      - ObservePlanRunReadiness
+    fowlerSignals:
+      - Duplicate semantics
+    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- canvasPlanReadiness.test.ts
+  - name: REPO_ROOT
+    path: apps/web/src/app/views/canvas/canvasPlanRunReadiness.architecture.test.ts
+    dddOwner: Canvas plan/run readiness architecture guard
+    cqRails:
+      - ObservePlanRunReadiness
+    fowlerSignals:
+      - Test-only confidence
+      - Documentation drift
+    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
+    cypressCoverage: N/A - architecture guard only.
+    unitTests:
+      - pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
+  - name: readRepoFile
+    path: apps/web/src/app/views/canvas/canvasPlanRunReadiness.architecture.test.ts
+    dddOwner: Canvas plan/run readiness architecture guard
+    cqRails:
+      - ObservePlanRunReadiness
+    fowlerSignals:
+      - Test-only confidence
+      - Documentation drift
+    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
+    cypressCoverage: N/A - architecture guard only.
+    unitTests:
+      - pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
   - name: stubMissingSessionRouteFetch
     path: apps/web/src/app/routes.test.tsx
     dddOwner: InternalAlphaRouteGate protected-session negative fixture
