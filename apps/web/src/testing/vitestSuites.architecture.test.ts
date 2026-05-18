@@ -40,6 +40,10 @@ function countLines(relativePath: string): number {
   return content.split(/\r?\n/).length;
 }
 
+function readRepoFile(relativePath: string): string {
+  return readFileSync(resolve(webRoot, '..', '..', relativePath), 'utf8');
+}
+
 describe('web Vitest suite partition', () => {
   it('assigns every web Vitest file to exactly one primary suite', () => {
     for (const filePath of listWebVitestFiles()) {
@@ -108,7 +112,10 @@ describe('web Vitest suite partition', () => {
       ].join(' && ')
     );
     expect(rootPackageJson.scripts['test:web:ci']).toBe('pnpm --filter @dvt/web test:ci');
+    expect(workflow).toContain("pnpm -r --workspace-concurrency=4 --filter '!@dvt/web' test");
     expect(workflow).toContain('pnpm test:web:ci');
+    expect(workflow).toContain('web-frontend-tests:');
+    expect(workflow).toContain('name: Web Frontend Tests');
 
     for (const suiteName of WEB_VITEST_PRIMARY_SUITE_NAMES) {
       expect(packageJson.scripts[`test:${suiteName}`]).toBe(
@@ -180,5 +187,29 @@ describe('web Vitest suite partition', () => {
         'src/app/views/canvas/canvasRoutePosturePriority.architecture.test.ts',
       ])
     );
+  });
+
+  it('documents the governed web test boundary as a semantic component', () => {
+    const suiteCatalog = readFileSync(resolve(webRoot, 'vitest.suites.ts'), 'utf8');
+    const componentGuide = readRepoFile(
+      'docs/architecture/components/web/frontend-test-governance-component.md'
+    );
+    const userStories = readRepoFile(
+      'docs/architecture/components/web/frontend-test-governance-user-stories.md'
+    );
+    const mailboxAnalysis = readRepoFile(
+      'buzon/20260518-f14-fowler-frontend-test-governance-analysis.md'
+    );
+    const webIndex = readRepoFile('docs/architecture/components/web/index.md');
+
+    expect(suiteCatalog).toMatch(/^\/\*\*\s*\n \* @ownedConcern Own the web Vitest suite catalog/);
+    expect(componentGuide).toContain('Public API');
+    expect(componentGuide).toContain('Invariants');
+    expect(componentGuide).toContain('Transitions');
+    expect(componentGuide).toContain('Consumers');
+    expect(componentGuide).toContain('WebVitestSuiteCatalog');
+    expect(userStories).toContain('F-14');
+    expect(mailboxAnalysis).toContain('Fowler Analysis');
+    expect(webIndex).toContain('Frontend test governance component');
   });
 });

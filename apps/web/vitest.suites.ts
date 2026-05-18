@@ -1,3 +1,7 @@
+/**
+ * @ownedConcern Own the web Vitest suite catalog, including primary suite
+ * ownership, focus-suite overlap, and CI-facing config construction.
+ */
 import type { UserConfig } from 'vitest/config';
 
 export const WEB_VITEST_PRIMARY_SUITE_NAMES = ['unit', 'presentation', 'architecture'] as const;

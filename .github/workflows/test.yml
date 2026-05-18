@@ -47,9 +47,9 @@ jobs:
         if: github.event_name != 'pull_request'
         run: pnpm build
 
-      - name: Run tests (push/workflow_dispatch full suite)
+      - name: Run non-web tests (push/workflow_dispatch full suite)
         if: github.event_name != 'pull_request'
-        run: pnpm -r --workspace-concurrency=4 test
+        run: pnpm -r --workspace-concurrency=4 --filter '!@dvt/web' test
         env:
           DVT_CI: '1'
 
@@ -65,14 +65,6 @@ jobs:
           fi
 
           node scripts/run-turbo-workspace-task.cjs build --filter=...[origin/${{ github.base_ref }}]
-
-      - name: Run web tests (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.scope.outputs.web == 'true' ||
-          steps.scope.outputs.root_build_sensitive == 'true')
-        run: pnpm test:web:ci
-        env:
-          DVT_CI: '1'
 
       - name: Run engine tests (affected package)
         if:
@@ -246,6 +238,55 @@ jobs:
         run: pnpm --filter @dvt/temporal-dbt-plugin test
         env:
           DVT_CI: '1'
+
+  web-frontend-tests:
+    name: Web Frontend Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
+
+      - name: Validate workflow scope policy JSON
+        run: node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json
+
+      - name: Emit web test scope outputs
+        id: scope
+        run: node tools/ci/emit-scope.mjs --mode test
+        env:
+          GIT_BASE: origin/${{ github.base_ref }}
+          GIT_HEAD: ${{ github.sha }}
+
+      - name: Setup pnpm, cache and dependencies
+        if:
+          github.event_name != 'pull_request' || steps.scope.outputs.web == 'true' ||
+          steps.scope.outputs.root_build_sensitive == 'true'
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 22.x
+
+      - name: Build web dependency graph
+        if:
+          github.event_name != 'pull_request' || steps.scope.outputs.web == 'true' ||
+          steps.scope.outputs.root_build_sensitive == 'true'
+        run: pnpm --filter "@dvt/web^..." --workspace-concurrency=4 build
+
+      - name: Run governed web Vitest suites
+        if:
+          github.event_name != 'pull_request' || steps.scope.outputs.web == 'true' ||
+          steps.scope.outputs.root_build_sensitive == 'true'
+        run: pnpm test:web:ci
+        env:
+          DVT_CI: '1'
+
+      - name: Report web test scope skip
+        if:
+          github.event_name == 'pull_request' && steps.scope.outputs.web != 'true' &&
+          steps.scope.outputs.root_build_sensitive != 'true'
+        run: echo "No web test scope detected; skipping governed web Vitest suites."
 
   detect-pg-scope:
     name: Detect adapter-postgres scope
