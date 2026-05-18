@@ -6,8 +6,11 @@ import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { buildShellNavigationModel } from '../shell/shellNavigationModel';
 import { useSessionStore } from '../stores/sessionStore';
 import ShellTopBar from './TopAppBar';
+
+const TEST_NAVIGATION_MODEL = buildShellNavigationModel([]);
 
 describe('ShellTopBar workspace context', () => {
   let container: HTMLDivElement;
@@ -38,7 +41,7 @@ describe('ShellTopBar workspace context', () => {
     await act(async () => {
       root.render(
         <MemoryRouter initialEntries={['/canvas']}>
-          <ShellTopBar />
+          <ShellTopBar navigationModel={TEST_NAVIGATION_MODEL} />
         </MemoryRouter>
       );
     });

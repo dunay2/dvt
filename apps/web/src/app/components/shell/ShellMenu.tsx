@@ -1,3 +1,4 @@
+/** Owned concern: render global shell navigation and view controls inside the top-bar menu. */
 import {
   Grid2X2,
   Maximize2,
@@ -7,6 +8,7 @@ import {
   SlidersHorizontal,
   TerminalSquare,
 } from 'lucide-react';
+import { NavLink } from 'react-router';
 import { Button } from '../ui/button';
 import {
   DropdownMenu,
@@ -29,6 +31,7 @@ import {
   normalizeCanvasPaletteId,
   type CanvasPaletteId,
 } from '../../views/canvas/canvasPalette';
+import type { ShellNavigationModel } from '../../shell/shellNavigationModel';
 
 const GRID_OPTIONS = [
   { value: 10, label: '10px (Dense)' },
@@ -45,6 +48,7 @@ type ShellMenuProps = {
   readonly focusMode: boolean;
   readonly gridSize: number;
   readonly canvasPalette: CanvasPaletteId;
+  readonly navigationModel: ShellNavigationModel;
   readonly toggleExplorerPanel: () => void;
   readonly toggleInspectorPanel: () => void;
   readonly toggleConsolePanel: () => void;
@@ -61,6 +65,7 @@ export function ShellMenu({
   focusMode,
   gridSize,
   canvasPalette,
+  navigationModel,
   toggleExplorerPanel,
   toggleInspectorPanel,
   toggleConsolePanel,
@@ -89,6 +94,19 @@ export function ShellMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>{copy.globalNavigation}</DropdownMenuLabel>
+        {[...navigationModel.primaryItems, ...navigationModel.footerItems].map((item) => {
+          const Icon = item.icon;
+          return (
+            <DropdownMenuItem key={item.to} asChild>
+              <NavLink data-slot="shell-menu-navigation-link" to={item.to}>
+                <Icon className="mr-2 size-4" />
+                {item.label}
+              </NavLink>
+            </DropdownMenuItem>
+          );
+        })}
+        <DropdownMenuSeparator />
         <DropdownMenuLabel>{copy.workspacePanels}</DropdownMenuLabel>
         <DropdownMenuCheckboxItem
           checked={explorerPanelVisible}

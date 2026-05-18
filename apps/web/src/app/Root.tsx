@@ -1,6 +1,6 @@
 /** Owned concern: compose the Raven shell frame and publish root bootstrap posture. */
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { Outlet } from 'react-router';
+import { Outlet, useLocation } from 'react-router';
 import {
   buildShellHealthPresentationModel,
   type PlatformHealthCapabilityApi,
@@ -35,6 +35,8 @@ import {
 } from './bootstrap/routeBootstrapStartupReadiness';
 import { useActiveRouteBootstrapRegistration } from './bootstrap/useActiveRouteBootstrapRegistration';
 import { useCapabilitiesQuery } from './queries/useCapabilitiesQuery';
+import { resolveShellNavigationDisposition } from './shell/shellNavigationDisposition';
+import { buildShellRuntimeState } from './shell/shellRuntimeModel';
 import { usePlatformConnectionStore } from './stores/platformConnectionStore';
 import { useUiLayoutStore } from './stores/uiLayoutStore';
 import '@xyflow/react/dist/style.css';
@@ -44,6 +46,7 @@ type RootShellProps = {
 };
 
 export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
+  const location = useLocation();
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const consolePanelHeight = useUiLayoutStore((state) => state.consolePanelHeight);
   const consolePanelVisible = useUiLayoutStore((state) => state.consolePanelVisible);
@@ -90,6 +93,14 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     createInitialRouteBootstrapStartupReadinessState()
   );
   const [routeBootstrapCanComplete, setRouteBootstrapCanComplete] = useState(false);
+  const navigationDisposition = useMemo(
+    () => resolveShellNavigationDisposition(location.pathname),
+    [location.pathname]
+  );
+  const navigationModel = useMemo(
+    () => buildShellRuntimeState(capabilitiesQuery.data).navigationModel,
+    [capabilitiesQuery.data]
+  );
 
   useEffect(() => {
     if (shellHealth.connectionState === null) {
@@ -228,12 +239,14 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
         />
       }
       leftNavigation={<LeftNavigation />}
+      navigationDisposition={navigationDisposition}
       showBottomDrawer={consolePanelVisible && consolePanelHeight > 0}
       topBar={
         <TopAppBar
           connectionDetail={shellHealth.connectionDetail}
           connectionStateOverride={shellHealth.connectionState}
           isConnectionChecking={shellHealth.isInitialHealthCheckPending}
+          navigationModel={navigationModel}
         />
       }
     >

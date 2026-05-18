@@ -23,6 +23,7 @@ export function ShellTopBar({
   connectionDetail,
   connectionStateOverride,
   isConnectionChecking = false,
+  navigationModel,
 }: ShellTopBarProps) {
   const location = useLocation();
   const selectedTenant = useSessionStore((state) => state.tenantId);
@@ -88,6 +89,7 @@ export function ShellTopBar({
           focusMode={focusMode}
           gridSize={gridSize}
           canvasPalette={canvasPalette}
+          navigationModel={navigationModel}
           toggleExplorerPanel={toggleExplorerPanel}
           toggleInspectorPanel={toggleInspectorPanel}
           toggleConsolePanel={toggleConsolePanel}

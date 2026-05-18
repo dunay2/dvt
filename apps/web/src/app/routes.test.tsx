@@ -282,8 +282,7 @@ describe('app routes', () => {
     expect(container.querySelector('[data-slot="app-route-error-boundary"]')).toBeNull();
     expect(container.textContent).not.toContain('Unexpected Application Error!');
     expect(container.querySelector('[data-slot="shell-active-surface"]')).toBeNull();
-    const leftNavigationCaptions = readLeftNavigationCaptions(container);
-    expect(leftNavigationCaptions).toContain('Canvas');
+    expect(readLeftNavigationCaptions(container)).toEqual([]);
     expect(capabilitiesPort.loadCapabilities).toHaveBeenCalledTimes(1);
   });
 
