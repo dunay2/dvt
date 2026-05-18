@@ -2,7 +2,7 @@
 title: Internal Alpha Route Acceptance Matrix
 status: Review
 owner: Product / Architecture / Frontend / Runtime Safety
-last_reviewed: 2026-05-14
+last_reviewed: 2026-05-18
 planning_type: review
 task_ids:
   - F-27
@@ -41,6 +41,81 @@ lacks a route-stage risk decision. Child slices cannot declare alpha full.
   proof is not accepted.
 - `accepted`: every stage has accepted proof, risk triage, cadence, ADR-0000
   traceability, and `pnpm verify:prepush` evidence.
+
+## Alpha Cadence Decision
+
+The internal alpha cadence is now decidable, but it is not active until the
+stage proofs below are accepted. Internal alpha remains a gated evaluation
+window, not a launch status.
+
+- `audience`: Internal product, architecture, frontend, and runtime-safety
+  testers.
+- `entryDate`: First business day after all route-stage proofs in this matrix
+  are accepted.
+- `duration`: 10 business days.
+- `exitOwner`: Product / Architecture.
+- `extensionRule`: Product / Architecture may approve one extension of up to 5
+  business days for named blockers.
+
+Cadence is blocked when any field above is removed, when a route stage lacks
+accepted happy-path or fail-closed proof, or when a blocker is extended without
+an owner and a dated re-review.
+
+## Route Risk Triage
+
+This triage covers route-stage risk for internal alpha. It intentionally keeps
+alpha-full blocked until the included risks have stage evidence and until
+excluded risks remain outside the route boundary with rationale.
+
+- `Startup gate`: Included
+  [R-20260322-api-health-reconciler-runtime-degradation-visibility](../../../risk-register/quality/R-20260322-api-health-reconciler-runtime-degradation-visibility.md)
+  because degraded readiness can make the first route appear trustworthy.
+  Excluded
+  [R-20260427-DEV-STACK-TEMPORAL-BOOTSTRAP](../../../risk-register/quality/R-20260427-DEV-STACK-TEMPORAL-BOOTSTRAP.yaml)
+  because local Temporal startup is operator setup, not alpha route proof.
+- `Workspace context`: Included
+  [R-20260308-api-auth-runtime-integration-coverage](../../../risk-register/quality/R-20260308-api-auth-runtime-integration-coverage.md)
+  because protected route auth can regress without full runtime proof. Excluded
+  admin provisioning depth because F-27 only consumes already-scoped tenant,
+  project, and environment context.
+- `Workspace context`: Included
+  [R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE](../../../risk-register/quality/R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE.yaml)
+  because missing tenant isolation can leak product authority across contexts.
+  Excluded historical gap IDs because active context truth must route through
+  protected runtime rails and Lane C evidence.
+- `Canvas workbench`: Included
+  [R-20260423-CANVAS-HOST-DRAFT-BOUNDARY](../../../risk-register/quality/R-20260423-CANVAS-HOST-DRAFT-BOUNDARY.yaml)
+  because host UX can overclaim persistence beyond the authoritative draft
+  boundary. Excluded advanced multi-canvas persistence until a later
+  command/query rail owns it.
+- `Code workbench`: Included
+  [R-20260411-WEB-WORKSPACE-FILE-NOT-FOUND-CONTRACT-GAP](../../../risk-register/quality/R-20260411-WEB-WORKSPACE-FILE-NOT-FOUND-CONTRACT-GAP.yaml)
+  because missing-file copy can drift from backend reason vocabulary. Excluded
+  file-write behavior because F-27 has no workspace-file command rail.
+- `Plan/run readiness`: Included
+  [R-20260424-TEMPORAL-PLAN-REF-CONTRACT](../../../risk-register/quality/R-20260424-TEMPORAL-PLAN-REF-CONTRACT.yaml)
+  because runtime execution can regress to unchecked `PlanRef` behavior.
+  Excluded
+  [R-20260514-AR-D3-WORKER-SCALING](../../../risk-register/quality/R-20260514-AR-D3-WORKER-SCALING.yaml)
+  because worker scale automation is outside internal alpha route proof; the
+  route only needs readiness copy for blockers.
+- `Recovery states`: Included
+  [R-20260330-snapshot-staleness-caller-view](../../../risk-register/quality/R-20260330-snapshot-staleness-caller-view.yaml)
+  because stale read models can be misread as read-your-writes guarantees.
+  Excluded cosmetic copy iteration once source-owned recovery keys exist and
+  stage coverage is proven.
+- `Alpha cadence`: Included undefined cadence because it can turn alpha into an
+  unbounded status; this matrix owns the cadence field contract and blocks
+  missing `exitOwner`, `duration`, or `extensionRule`. Excluded launch/GTM
+  cadence because F-27 governs internal alpha only.
+- `Risk triage`: Included untriaged route-stage risk because it can hide
+  authorization, readiness, data freshness, or local-authority regressions.
+  Excluded risks unrelated to startup, context, Canvas, Code, plan/run
+  readiness, recovery, cadence, or route evidence because they have no alpha
+  exit impact.
+
+Because included risks still require executable stage evidence, alpha-full stays
+blocked after this triage update.
 
 ## Route-Level Combined Fixture/Proof
 

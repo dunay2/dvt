@@ -52,7 +52,7 @@ describe('internal alpha route gate architecture', () => {
     );
 
     for (const stage of routeStages) {
-      expect(acceptanceMatrix).toMatch(new RegExp(`\\|\\s*${stage}\\s*\\|`));
+      expect(acceptanceMatrix).toContain(`\`${stage}\``);
     }
 
     for (const requiredColumn of [
@@ -110,5 +110,45 @@ describe('internal alpha route gate architecture', () => {
     ]) {
       expect(componentGuide).toContain(requiredCadenceField);
     }
+  });
+
+  it('keeps cadence and risk triage concrete before alpha-full can be claimed', () => {
+    const acceptanceMatrix = readRepoFile(
+      'docs/planning/reviews/architecture-and-governance/20260514-internal-alpha-route-acceptance-matrix.md'
+    );
+
+    for (const section of [
+      '## Alpha Cadence Decision',
+      '## Route Risk Triage',
+      '10 business days',
+      'Product / Architecture',
+    ]) {
+      expect(acceptanceMatrix).toContain(section);
+    }
+
+    for (const phrase of [
+      /Internal product, architecture, frontend, and runtime-safety\s+testers/,
+      /one extension of up to 5\s+business days/,
+    ]) {
+      expect(acceptanceMatrix).toMatch(phrase);
+    }
+
+    for (const stage of routeStages) {
+      expect(acceptanceMatrix).toMatch(new RegExp(`\\|\\s*${stage}\\s*\\|`));
+    }
+
+    for (const riskReference of [
+      'R-20260308-api-auth-runtime-integration-coverage',
+      'R-20260411-WEB-WORKSPACE-FILE-NOT-FOUND-CONTRACT-GAP',
+      'R-20260423-CANVAS-HOST-DRAFT-BOUNDARY',
+      'R-20260424-TEMPORAL-PLAN-REF-CONTRACT',
+      'R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE',
+      'R-20260514-AR-D3-WORKER-SCALING',
+    ]) {
+      expect(acceptanceMatrix).toContain(riskReference);
+    }
+
+    expect(acceptanceMatrix).toContain('Excluded');
+    expect(acceptanceMatrix).toMatch(/alpha-full stays\s+blocked/);
   });
 });
