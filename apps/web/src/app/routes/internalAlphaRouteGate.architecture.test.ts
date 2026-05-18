@@ -87,7 +87,7 @@ describe('internal alpha route gate architecture', () => {
 
     for (const rail of [
       'ObserveAppBootstrapRouteReadiness',
-      'ObserveWorkspaceContext',
+      'GetEffectiveWorkspaceContext',
       'GetWorkspaceGraphDraft',
       'SaveWorkspaceGraphDraft',
       'ListWorkspaceFiles',
@@ -197,7 +197,7 @@ describe('internal alpha route gate architecture', () => {
       expect(stage.evidenceAcceptance).toMatch(/^(planned|accepted)$/);
       for (const rail of stage.rails) {
         expect(rail).toMatch(
-          /^(ObserveAppBootstrapRouteReadiness|ObserveWorkspaceContext|GetWorkspaceGraphDraft|SaveWorkspaceGraphDraft|ListWorkspaceFiles|GetWorkspaceFileContent|ObservePlanRunReadiness|MapRouteRecoveryState)$/
+          /^(ObserveAppBootstrapRouteReadiness|GetEffectiveWorkspaceContext|GetWorkspaceGraphDraft|SaveWorkspaceGraphDraft|ListWorkspaceFiles|GetWorkspaceFileContent|ObservePlanRunReadiness|MapRouteRecoveryState)$/
         );
       }
       for (const evidenceRef of stage.evidenceRefs) {
@@ -215,7 +215,7 @@ describe('internal alpha route gate architecture', () => {
 
     expect(internalAlphaCombinedRouteFixture.stages.flatMap((stage) => stage.rails)).toEqual([
       'ObserveAppBootstrapRouteReadiness',
-      'ObserveWorkspaceContext',
+      'GetEffectiveWorkspaceContext',
       'GetWorkspaceGraphDraft',
       'SaveWorkspaceGraphDraft',
       'ListWorkspaceFiles',
@@ -261,6 +261,29 @@ describe('internal alpha route gate architecture', () => {
         'apps/web/src/app/Root.bootstrapFlow.test.tsx',
         'apps/web/src/app/bootstrap/routeBootstrapStartupReadiness.test.ts',
         'apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts',
+      ])
+    );
+    expect(evaluateInternalAlphaCombinedRouteFixture(internalAlphaCombinedRouteFixture)).toEqual(
+      expect.objectContaining({
+        missingEvidenceAcceptance: [],
+        routeDecision: 'review',
+      })
+    );
+  });
+
+  it('accepts workspace context evidence without accepting the full alpha route', () => {
+    const workspaceContextStage = internalAlphaCombinedRouteFixture.stages.find(
+      (stage) => stage.stage === 'Workspace context'
+    );
+
+    expect(workspaceContextStage?.evidenceAcceptance).toBe('accepted');
+    expect(workspaceContextStage?.rails).toEqual(['GetEffectiveWorkspaceContext']);
+    expect(workspaceContextStage?.evidenceRefs).toEqual(
+      expect.arrayContaining([
+        'apps/web/src/app/services/session/protectedRouteSessionContext.test.ts',
+        'apps/web/src/app/services/session/protectedRouteSessionContext.architecture.test.ts',
+        'apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts',
+        'docs/architecture/components/web/appshell/effective-workspace-context-component.md',
       ])
     );
     expect(evaluateInternalAlphaCombinedRouteFixture(internalAlphaCombinedRouteFixture)).toEqual(

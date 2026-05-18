@@ -74,18 +74,18 @@ Out of scope:
 No route stage may implement externally observable behavior without a governing
 command or query rail.
 
-| Rail                                | Type    | Owning bounded context               | DDD owner                             | Route stage        |
-| ----------------------------------- | ------- | ------------------------------------ | ------------------------------------- | ------------------ |
-| `ObserveAppBootstrapRouteReadiness` | query   | Web Shell / App Bootstrap            | `RouteBootstrapStartupReadinessState` | Startup gate       |
-| `ObserveWorkspaceContext`           | query   | Workspace context                    | `WorkspaceContextReadModel`           | Context selection  |
-| `GetWorkspaceGraphDraft`            | query   | Workspace graph drafting             | `WorkspaceGraphDraft` read boundary   | Canvas             |
-| `SaveWorkspaceGraphDraft`           | command | Workspace graph drafting             | `WorkspaceGraphDraft` aggregate       | Canvas             |
-| `ListWorkspaceFiles`                | query   | Operational evidence read models     | `WorkspaceFileTree`                   | Code tab           |
-| `GetWorkspaceFileContent`           | query   | Operational evidence read models     | `WorkspaceFileContent`                | Code tab           |
-| `ObservePlanRunReadiness`           | query   | Runtime admission and plan readiness | `PlanRunReadinessReadModel`           | Plan/run readiness |
-| `MapRouteRecoveryState`             | query   | Web route presentation               | `RouteRecoveryState` read model       | Recovery states    |
+| Rail                                | Type    | Owning bounded context               | DDD owner                              | Route stage        |
+| ----------------------------------- | ------- | ------------------------------------ | -------------------------------------- | ------------------ |
+| `ObserveAppBootstrapRouteReadiness` | query   | Web Shell / App Bootstrap            | `RouteBootstrapStartupReadinessState`  | Startup gate       |
+| `GetEffectiveWorkspaceContext`      | query   | Workspace context                    | `EffectiveWorkspaceContext read model` | Context selection  |
+| `GetWorkspaceGraphDraft`            | query   | Workspace graph drafting             | `WorkspaceGraphDraft` read boundary    | Canvas             |
+| `SaveWorkspaceGraphDraft`           | command | Workspace graph drafting             | `WorkspaceGraphDraft` aggregate        | Canvas             |
+| `ListWorkspaceFiles`                | query   | Operational evidence read models     | `WorkspaceFileTree`                    | Code tab           |
+| `GetWorkspaceFileContent`           | query   | Operational evidence read models     | `WorkspaceFileContent`                 | Code tab           |
+| `ObservePlanRunReadiness`           | query   | Runtime admission and plan readiness | `PlanRunReadinessReadModel`            | Plan/run readiness |
+| `MapRouteRecoveryState`             | query   | Web route presentation               | `RouteRecoveryState` read model        | Recovery states    |
 
-`ObserveWorkspaceContext`, `ObservePlanRunReadiness`, and
+`GetEffectiveWorkspaceContext`, `ObservePlanRunReadiness`, and
 `MapRouteRecoveryState` are route-level planning rails until their owning child
 slices bind them to exact code ports and tests. Implementation must either
 reuse existing rails or update the catalog before code.
@@ -197,9 +197,9 @@ commandQueryRails:
   - name: ObserveAppBootstrapRouteReadiness
     type: query
     dddOwner: RouteBootstrapStartupReadinessState read model
-  - name: ObserveWorkspaceContext
+  - name: GetEffectiveWorkspaceContext
     type: query
-    dddOwner: WorkspaceContextReadModel
+    dddOwner: EffectiveWorkspaceContext read model
   - name: GetWorkspaceGraphDraft
     type: query
     dddOwner: WorkspaceGraphDraft read boundary
@@ -276,7 +276,7 @@ symbols:
     dddOwner: InternalAlphaRouteGate planning authority
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - ObserveWorkspaceContext
+      - GetEffectiveWorkspaceContext
       - GetWorkspaceGraphDraft
       - SaveWorkspaceGraphDraft
       - ListWorkspaceFiles
@@ -296,7 +296,7 @@ symbols:
     dddOwner: InternalAlphaRouteGate review model
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - ObserveWorkspaceContext
+      - GetEffectiveWorkspaceContext
       - ObservePlanRunReadiness
       - MapRouteRecoveryState
     fowlerSignals:
@@ -311,7 +311,7 @@ symbols:
     dddOwner: InternalAlphaRouteGate architecture boundary lens
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - ObserveWorkspaceContext
+      - GetEffectiveWorkspaceContext
       - GetWorkspaceGraphDraft
       - SaveWorkspaceGraphDraft
       - ListWorkspaceFiles
@@ -332,7 +332,7 @@ symbols:
     dddOwner: InternalAlphaRouteGate accepted intake history
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - ObserveWorkspaceContext
+      - GetEffectiveWorkspaceContext
       - ObservePlanRunReadiness
       - MapRouteRecoveryState
     fowlerSignals:
@@ -347,7 +347,7 @@ symbols:
     dddOwner: InternalAlphaRouteGate architecture guard
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - ObserveWorkspaceContext
+      - GetEffectiveWorkspaceContext
       - ObservePlanRunReadiness
       - MapRouteRecoveryState
     fowlerSignals:
@@ -362,7 +362,7 @@ symbols:
     dddOwner: InternalAlphaRouteGate architecture guard
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - ObserveWorkspaceContext
+      - GetEffectiveWorkspaceContext
       - ObservePlanRunReadiness
       - MapRouteRecoveryState
     fowlerSignals:
@@ -377,7 +377,7 @@ symbols:
     dddOwner: InternalAlphaRouteGate architecture guard
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - ObserveWorkspaceContext
+      - GetEffectiveWorkspaceContext
       - ObservePlanRunReadiness
       - MapRouteRecoveryState
     fowlerSignals:
@@ -392,7 +392,7 @@ symbols:
     dddOwner: InternalAlphaRouteGate combined route proof fixture
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - ObserveWorkspaceContext
+      - GetEffectiveWorkspaceContext
       - GetWorkspaceGraphDraft
       - SaveWorkspaceGraphDraft
       - ListWorkspaceFiles
@@ -411,7 +411,7 @@ symbols:
     dddOwner: InternalAlphaRouteGate combined route proof fixture
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - ObserveWorkspaceContext
+      - GetEffectiveWorkspaceContext
       - GetWorkspaceGraphDraft
       - SaveWorkspaceGraphDraft
       - ListWorkspaceFiles
@@ -442,7 +442,7 @@ symbols:
     dddOwner: InternalAlphaRouteGate combined route proof fixture
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - ObserveWorkspaceContext
+      - GetEffectiveWorkspaceContext
       - GetWorkspaceGraphDraft
       - SaveWorkspaceGraphDraft
       - ListWorkspaceFiles
@@ -461,7 +461,7 @@ symbols:
     dddOwner: InternalAlphaRouteGate combined route proof fixture
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - ObserveWorkspaceContext
+      - GetEffectiveWorkspaceContext
       - GetWorkspaceGraphDraft
       - SaveWorkspaceGraphDraft
       - ListWorkspaceFiles
@@ -480,7 +480,7 @@ symbols:
     dddOwner: InternalAlphaRouteGate combined route proof fixture
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - ObserveWorkspaceContext
+      - GetEffectiveWorkspaceContext
       - GetWorkspaceGraphDraft
       - SaveWorkspaceGraphDraft
       - ListWorkspaceFiles
@@ -499,7 +499,7 @@ symbols:
     dddOwner: InternalAlphaRouteGate combined route proof fixture
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - ObserveWorkspaceContext
+      - GetEffectiveWorkspaceContext
       - GetWorkspaceGraphDraft
       - SaveWorkspaceGraphDraft
       - ListWorkspaceFiles
@@ -518,7 +518,7 @@ symbols:
     dddOwner: InternalAlphaRouteGate combined route proof fixture
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - ObserveWorkspaceContext
+      - GetEffectiveWorkspaceContext
       - GetWorkspaceGraphDraft
       - SaveWorkspaceGraphDraft
       - ListWorkspaceFiles
@@ -537,7 +537,7 @@ symbols:
     dddOwner: InternalAlphaRouteGate combined route proof fixture
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - ObserveWorkspaceContext
+      - GetEffectiveWorkspaceContext
       - GetWorkspaceGraphDraft
       - SaveWorkspaceGraphDraft
       - ListWorkspaceFiles
@@ -556,7 +556,7 @@ symbols:
     dddOwner: InternalAlphaRouteGate combined route proof fixture
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - ObserveWorkspaceContext
+      - GetEffectiveWorkspaceContext
       - GetWorkspaceGraphDraft
       - SaveWorkspaceGraphDraft
       - ListWorkspaceFiles
@@ -575,7 +575,7 @@ symbols:
     dddOwner: InternalAlphaRouteGate combined route proof fixture
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - ObserveWorkspaceContext
+      - GetEffectiveWorkspaceContext
       - GetWorkspaceGraphDraft
       - SaveWorkspaceGraphDraft
       - ListWorkspaceFiles
@@ -594,7 +594,7 @@ symbols:
     dddOwner: InternalAlphaRouteGate combined route proof fixture
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - ObserveWorkspaceContext
+      - GetEffectiveWorkspaceContext
       - GetWorkspaceGraphDraft
       - SaveWorkspaceGraphDraft
       - ListWorkspaceFiles
@@ -613,7 +613,7 @@ symbols:
     dddOwner: InternalAlphaRouteGate combined route proof fixture
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - ObserveWorkspaceContext
+      - GetEffectiveWorkspaceContext
       - GetWorkspaceGraphDraft
       - SaveWorkspaceGraphDraft
       - ListWorkspaceFiles
@@ -632,7 +632,7 @@ symbols:
     dddOwner: InternalAlphaRouteGate protected-session negative fixture
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - ObserveWorkspaceContext
+      - GetEffectiveWorkspaceContext
       - MapRouteRecoveryState
     fowlerSignals:
       - Test-only confidence

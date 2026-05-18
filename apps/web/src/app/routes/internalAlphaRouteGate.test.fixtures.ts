@@ -12,7 +12,7 @@ export type InternalAlphaRouteStage =
 
 export type InternalAlphaRouteRail =
   | 'ObserveAppBootstrapRouteReadiness'
-  | 'ObserveWorkspaceContext'
+  | 'GetEffectiveWorkspaceContext'
   | 'GetWorkspaceGraphDraft'
   | 'SaveWorkspaceGraphDraft'
   | 'ListWorkspaceFiles'
@@ -71,7 +71,7 @@ const requiredRouteStages: readonly InternalAlphaRouteStage[] = [
 
 const requiredRouteRails: readonly InternalAlphaRouteRail[] = [
   'ObserveAppBootstrapRouteReadiness',
-  'ObserveWorkspaceContext',
+  'GetEffectiveWorkspaceContext',
   'GetWorkspaceGraphDraft',
   'SaveWorkspaceGraphDraft',
   'ListWorkspaceFiles',
@@ -107,14 +107,17 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       stage: 'Startup gate',
     },
     {
-      evidenceAcceptance: 'planned',
+      evidenceAcceptance: 'accepted',
       evidenceRefs: [
-        'docs/architecture/components/web/appshell/protected-route-session-gate-component.md',
-        'docs/architecture/components/api/protected-runtime-command-query-rail-design.md',
+        'docs/architecture/components/web/appshell/effective-workspace-context-component.md',
+        'docs/architecture/components/web/appshell/effective-workspace-context-user-stories.md',
+        'apps/web/src/app/services/session/protectedRouteSessionContext.test.ts',
+        'apps/web/src/app/services/session/protectedRouteSessionContext.architecture.test.ts',
+        'apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts',
       ],
       failClosedProof: 'missing, detached, unauthorized, or conflicted context stays blocked',
       happyPathProof: 'tenant, project, and environment context are visible',
-      rails: ['ObserveWorkspaceContext'],
+      rails: ['GetEffectiveWorkspaceContext'],
       recoveryState: 'ready',
       recoveryStates: ['ready', 'unauthorized', 'blocked'],
       stage: 'Workspace context',

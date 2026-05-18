@@ -18,7 +18,7 @@ own implementation details and tests.
 - `US-F27-001`: as an internal tester, I need startup posture through
   `ObserveAppBootstrapRouteReadiness` with happy and fail-closed evidence.
 - `US-F27-002`: as an internal tester, I need tenant, project, and environment
-  context through `ObserveWorkspaceContext`.
+  context through `GetEffectiveWorkspaceContext`.
 - `US-F27-003`: as an internal tester, I need Canvas graph truth through
   `GetWorkspaceGraphDraft` and `SaveWorkspaceGraphDraft`.
 - `US-F27-004`: as an internal tester, I need read-only Code inspection through

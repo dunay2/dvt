@@ -74,9 +74,10 @@ command/query rail catalog before UI, adapter, or route-handler work starts.
 - `accepted` returns to `review` when route order, rail, risk, or child proof
   changes.
 
-As of the current F-27 route-gate evidence slice, only `Startup gate` is accepted
-inside the combined fixture. The full route decision stays `review` until every
-remaining stage evidence state is also accepted.
+As of the current F-27 route-gate evidence slice, `Startup gate` and
+`Workspace context` are accepted inside the combined fixture. The full route
+decision stays `review` until every remaining stage evidence state is also
+accepted.
 
 ```mermaid
 stateDiagram-v2
@@ -103,7 +104,7 @@ stateDiagram-v2
 | Rail                                | Type    | Route stage        |
 | ----------------------------------- | ------- | ------------------ |
 | `ObserveAppBootstrapRouteReadiness` | query   | Startup gate       |
-| `ObserveWorkspaceContext`           | query   | Workspace context  |
+| `GetEffectiveWorkspaceContext`      | query   | Workspace context  |
 | `GetWorkspaceGraphDraft`            | query   | Canvas workbench   |
 | `SaveWorkspaceGraphDraft`           | command | Canvas workbench   |
 | `ListWorkspaceFiles`                | query   | Code workbench     |
