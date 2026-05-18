@@ -56,21 +56,21 @@ the first missing or non-function capability.
 
 ## Transitions
 
-| State                                          | Trigger                                                    | Result                                                                               |
-| ---------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Concrete adapter exists                        | `buildProtectedRuntimeStorage` calls `bindStateStoreRoles` | Protected runtime receives explicit role bindings.                                   |
-| Reconciler runtime store exists                | `createRuntimeStores` calls `bindStateStoreRoles`          | Reconciler composition passes read/write roles to provider and maintenance services. |
-| Caller passes a partial source                 | `bindStateStoreRoles` validates required methods           | Factory throws `STATE_STORE_ROLE_SOURCE_INVALID` naming the missing function.        |
-| Future code tries ad hoc bundle reconstruction | Architecture guard parses API source                       | Test fails before the drift becomes accepted composition style.                      |
+| State                                          | Trigger                                                          | Result                                                                               |
+| ---------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Concrete adapter exists                        | `buildProtectedRuntimeStorage` calls `bindStateStoreRoles`       | Protected runtime receives explicit role bindings.                                   |
+| Reconciler runtime store exists                | `intentReconcilerRuntimeComposition` calls `bindStateStoreRoles` | Reconciler composition passes read/write roles to provider and maintenance services. |
+| Caller passes a partial source                 | `bindStateStoreRoles` validates required methods                 | Factory throws `STATE_STORE_ROLE_SOURCE_INVALID` naming the missing function.        |
+| Future code tries ad hoc bundle reconstruction | Architecture guard parses API source                             | Test fails before the drift becomes accepted composition style.                      |
 
 ## Consumers
 
-| Consumer                            | Consumed role               | Reason                                                         |
-| ----------------------------------- | --------------------------- | -------------------------------------------------------------- |
-| `buildProtectedExecutionRuntime`    | `read`, `write`             | Engine and provider runtime assembly.                          |
-| `protectedRuntimeRouteDependencies` | `read`, `snapshotStaleness` | Query routes and staleness-aware status reads.                 |
-| `protectedRuntimeAdminRouteGroup`   | `maintenance`               | Admin snapshot rebuild route.                                  |
-| `intentReconcilerRuntime`           | `read`, `write`             | Background reconciliation and maintenance service composition. |
+| Consumer                             | Consumed role               | Reason                                                         |
+| ------------------------------------ | --------------------------- | -------------------------------------------------------------- |
+| `buildProtectedExecutionRuntime`     | `read`, `write`             | Engine and provider runtime assembly.                          |
+| `protectedRuntimeRouteDependencies`  | `read`, `snapshotStaleness` | Query routes and staleness-aware status reads.                 |
+| `protectedRuntimeAdminRouteGroup`    | `maintenance`               | Admin snapshot rebuild route.                                  |
+| `intentReconcilerRuntimeComposition` | `read`, `write`             | Background reconciliation and maintenance service composition. |
 
 ## Drift Guards
 
@@ -86,8 +86,8 @@ It validates:
 - `stateStoreRoles.ts` declares its owned concern at the module boundary;
 - `stateStoreRoles.test.ts` proves the runtime export surface, immutable role
   bundle shape, and negative paths for missing or non-function role members;
-- only `buildProtectedRuntimeStorage.ts` and `intentReconcilerRuntime.ts`
-  import `bindStateStoreRoles`;
+- only `buildProtectedRuntimeStorage.ts` and
+  `intentReconcilerRuntimeComposition.ts` import `bindStateStoreRoles`;
 - API source does not rebuild the state-store aggregate by role intersection;
 - API source does not hand-build the role bundle with a lookalike object
   literal.
