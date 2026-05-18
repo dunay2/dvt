@@ -164,7 +164,6 @@ function createStack(
     }),
   };
   const startRunApplicationService = buildStartRunApplicationService({
-    policy,
     guard: new StartRunAdmissionGuard({
       policy,
       stateStoreRead: store,

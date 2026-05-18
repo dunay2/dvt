@@ -45,6 +45,7 @@ describe('WorkflowEngine start-run decomposition architecture', () => {
     ]) {
       expect(source).toContain(expected);
     }
+    expect(source).not.toContain('policy: IRunAccessPolicy;');
 
     const builderBody = source.slice(
       source.indexOf('export function buildStartRunApplicationService')
@@ -62,6 +63,7 @@ describe('WorkflowEngine start-run decomposition architecture', () => {
     expect(types).toContain('export interface IStartRunAdmissionService');
     expect(types).toContain('export interface StartRunAdmissionRequest');
     expect(types).toContain('export interface StartRunAdmissionResult');
+    expect(types).toContain('export interface StartRunExecutionPolicyAdmission');
     expect(types).toContain('export interface IStartRunExecutionService');
     expect(types).toContain('export interface IStartRunFailurePolicy');
     expect(types).toContain('export interface StartRunExecutionInput');

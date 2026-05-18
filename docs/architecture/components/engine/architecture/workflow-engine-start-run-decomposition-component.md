@@ -16,11 +16,12 @@ start-run command through injected seams:
 - `IStartRunAdmissionService`
 - `IStartRunExecutionService`
 - `IStartRunFailurePolicy`
-- `IPlanIntegrityValidator`
 - `buildStartRunApplicationService`
 
 `buildStartRunApplicationService` is the engine-owned composition helper for
-the default service graph.
+the default service graph. It receives the already configured
+`StartRunAdmissionGuard`; access-policy authority does not pass through the
+start-run application-service builder separately.
 
 ## Invariants
 
@@ -32,8 +33,14 @@ the default service graph.
   or `PlanIntegrityValidator` inside its class body.
 - `StartRunApplicationService` owns command orchestration, not collaborator
   selection.
+- `buildStartRunApplicationService` does not accept a separate
+  `IRunAccessPolicy`; the guard is the semantic owner of access-policy
+  admission.
 - `StartRunAdmissionService` owns plan integrity fetching, provider adapter
   resolution, capability checks, and run-execution-context admission.
+- Start-run admission DTOs and guard ports are declared once in
+  `StartRunTypes`; `StartRunAdmissionGuard` consumes those contracts instead
+  of redeclaring them.
 - `StartRunExecutionService` owns adapter dispatch, intent dispatch marking,
   bootstrap persistence, and provider-ref reconciliation.
 - `StartRunFailurePolicy` owns failed-start reporting, pending-intent checks,

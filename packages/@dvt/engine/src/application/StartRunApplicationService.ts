@@ -11,7 +11,6 @@ import type { IPlanIntegrityValidator } from '../ports/IPlanIntegrityValidator.j
 import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunStateStore.js';
 import type { IStartRunIntentStore } from '../ports/IStartRunIntentStore.js';
 import { PlanIntegrityValidator } from '../security/planIntegrity.js';
-import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
 import { StartRunAdmissionService } from '../services/startRun/StartRunAdmissionService.js';
 import { StartRunEventFactory } from '../services/startRun/StartRunEventFactory.js';
 import { StartRunExecutionService } from '../services/startRun/StartRunExecutionService.js';
@@ -39,7 +38,6 @@ export interface StartRunApplicationServiceDeps {
 }
 
 export interface BuildStartRunApplicationServiceDeps {
-  policy: IRunAccessPolicy;
   guard: StartRunAdmissionGuard;
   stateStoreRead: IRunStateStoreRead;
   stateStoreWrite: IRunStateStoreWrite;

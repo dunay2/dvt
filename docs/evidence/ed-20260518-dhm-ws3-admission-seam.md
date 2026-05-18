@@ -8,11 +8,17 @@ arc_level: ARC-2
 breaking: false
 code_refs:
   - packages/@dvt/engine/src/application/StartRunApplicationService.ts
+  - packages/@dvt/engine/src/application/StartRunAdmissionGuard.ts
   - packages/@dvt/engine/src/services/startRun/StartRunTypes.ts
   - packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts
+  - apps/api/src/application/services/WorkflowEngineFactory.ts
 evidence:
   tests:
-    - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts test/services/StartRunApplicationService.test.ts
+    - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts test/services/StartRunApplicationService.test.ts
+    - pnpm --filter @dvt/engine test
+    - pnpm --filter @dvt/engine typecheck
+    - pnpm --filter dvt-api typecheck
+    - pnpm --filter dvt-api test -- test/integration/plannerEngineContract.test.ts
 ---
 
 # DHM-WS3 Start-Run Admission Seam Injection
@@ -28,13 +34,27 @@ The public `IWorkflowEngine.startRun` command surface remains unchanged. Runtime
 behavior is preserved while the start-run coordinator now treats admission,
 intent, execution, and failure as symmetric phase seams.
 
+The Fowler QA pass also removed the residual `policy` dependency from
+`BuildStartRunApplicationServiceDeps`. Access policy authority now enters the
+start-run graph only through `StartRunAdmissionGuard`. The duplicate
+`StartRunExecutionPolicyAdmission` declaration was removed from the guard and
+the shared DTO lives only in `StartRunTypes`.
+
 ## Validation Evidence
 
-- `pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts test/services/StartRunApplicationService.test.ts`
+- `pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts test/services/StartRunApplicationService.test.ts`
   - RED first: failed because `IStartRunAdmissionService` did not exist,
     `StartRunApplicationService` still constructed `StartRunAdmissionService`,
     and the injected admission seam was not invoked.
-  - GREEN after implementation: passed, 2 files / 10 tests.
+  - GREEN after implementation and QA hardening: passed, 3 files / 13 tests.
+- `pnpm --filter @dvt/engine typecheck`
+  - Passed.
+- `pnpm --filter dvt-api typecheck`
+  - Passed.
+- `pnpm --filter @dvt/engine test`
+  - Passed, 64 files / 451 tests.
+- `pnpm --filter dvt-api test -- test/integration/plannerEngineContract.test.ts`
+  - Passed, 1 file / 7 tests.
 
 ## No-Debt Evidence
 

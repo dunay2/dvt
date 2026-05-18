@@ -132,7 +132,6 @@ export function createWorkflowEngineFixture(
     planRefPolicy: new PlanRefPolicy({ allowedSchemes: input?.allowedSchemes ?? ['https'] }),
   });
   const startRunApplicationService = buildStartRunApplicationService({
-    policy,
     guard: new StartRunAdmissionGuard({
       policy,
       stateStoreRead,

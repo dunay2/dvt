@@ -34,6 +34,12 @@ first-class injected phase seam.
 - Updated `StartRunApplicationService` to receive the admission seam instead
   of constructing `StartRunAdmissionService`.
 - Moved default admission construction into `buildStartRunApplicationService`.
+- Removed the unused `policy` pass-through from
+  `BuildStartRunApplicationServiceDeps`; the guard remains the single access
+  policy owner for start-run admission.
+- Removed the duplicate `StartRunExecutionPolicyAdmission` declaration from
+  `StartRunAdmissionGuard` so the phase DTO is declared only in
+  `StartRunTypes`.
 - Updated component guide, user stories, feature mechanization, ARC evidence,
   and risk register material.
 
@@ -56,6 +62,18 @@ pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposi
 ```
 
 Passed: 2 files / 10 tests.
+
+QA hardening:
+
+```bash
+pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts test/services/StartRunApplicationService.test.ts
+pnpm --filter @dvt/engine typecheck
+pnpm --filter dvt-api typecheck
+pnpm --filter @dvt/engine test
+pnpm --filter dvt-api test -- test/integration/plannerEngineContract.test.ts
+```
+
+Passed after removing the builder policy drift and duplicate admission DTO.
 
 ## No Debt
 

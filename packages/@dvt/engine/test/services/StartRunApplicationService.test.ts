@@ -162,7 +162,6 @@ describe('StartRunApplicationService', () => {
     };
 
     const service = buildStartRunApplicationService({
-      policy,
       guard: new StartRunAdmissionGuard({
         policy,
         stateStoreRead: new InMemoryTxStore(),
@@ -193,11 +192,6 @@ describe('StartRunApplicationService', () => {
     const plan = makeDefaultExecutionPlan();
     const planRef = makePlanRefForPlan(plan);
     const service = buildStartRunApplicationService({
-      policy: {
-        async assertTenantAccess() {},
-        validatePlanRef() {},
-        checkRateLimit() {},
-      },
       guard: new StartRunAdmissionGuard({
         policy: {
           async assertTenantAccess() {},
@@ -262,7 +256,6 @@ describe('StartRunApplicationService', () => {
       checkRateLimit() {},
     };
     const service = buildStartRunApplicationService({
-      policy,
       guard: new StartRunAdmissionGuard({
         policy,
         stateStoreRead: new InMemoryTxStore(),
@@ -311,7 +304,6 @@ describe('StartRunApplicationService', () => {
       checkRateLimit() {},
     };
     const service = buildStartRunApplicationService({
-      policy,
       guard: new StartRunAdmissionGuard({
         policy,
         stateStoreRead: new InMemoryTxStore(),
@@ -370,7 +362,6 @@ describe('StartRunApplicationService', () => {
       checkRateLimit() {},
     };
     const service = buildStartRunApplicationService({
-      policy,
       guard: new StartRunAdmissionGuard({
         policy,
         stateStoreRead: new InMemoryTxStore(),

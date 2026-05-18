@@ -58,6 +58,7 @@ describe('StartRun application decomposition architecture', () => {
       'guard.resolveAdapter',
       'guard.assertExecutionPolicyAllowed',
       'new StartRunAdmissionService',
+      'policy: IRunAccessPolicy;',
       'planFetcher: deps.planFetcher',
       'planIntegrityValidator: deps.planIntegrityValidator',
     ]) {
@@ -101,6 +102,7 @@ describe('StartRun application decomposition architecture', () => {
     for (const expected of [
       'export class StartRunAdmissionService',
       'export interface StartRunAdmissionResult',
+      'export interface StartRunExecutionPolicyAdmission',
       'export interface IStartRunAdmissionService',
       'export class StartRunIntentService',
       'export interface StartRunIntentServiceDeps',
@@ -109,6 +111,10 @@ describe('StartRun application decomposition architecture', () => {
     ]) {
       expect(phaseSources).toContain(expected);
     }
+
+    expect(readEngineSource('application/StartRunAdmissionGuard.ts')).not.toContain(
+      'export interface StartRunExecutionPolicyAdmission'
+    );
   });
 
   it('keeps WE-HX-3 as the single active structured start-run decomposition feature', () => {

@@ -64,6 +64,12 @@ in the admission component.
   the application coordinator even though they belong to admission.
 - **Semantic asymmetry**: execution and failure have interfaces in
   `StartRunTypes`; admission does not.
+- **Duplicate admission DTO**: `StartRunExecutionPolicyAdmission` existed in
+  both the guard and the shared start-run phase types during QA, creating a
+  future naming drift risk.
+- **Legacy builder dependency**: `BuildStartRunApplicationServiceDeps` still
+  accepted `policy` even though the actual access-policy owner is
+  `StartRunAdmissionGuard`.
 - **Documentation drift**: `DHM-WS3` is marked queued in planning state even
   though earlier evidence exists; the residual slice must clarify that this is
   a continuation, not a duplicate implementation.
@@ -103,12 +109,17 @@ construction graph.
   injection and do not describe admission injection.
 - Planning drift: `DHM-WS3` effective task state needed local reconciliation
   before this continuation.
+- QA drift: the builder still exposed an unused access-policy dependency, and
+  the admission DTO was declared twice.
 
 ## Opportunities
 
 - Add `IStartRunAdmissionService` to the start-run phase type surface.
 - Make `StartRunApplicationService` receive `IStartRunAdmissionService`.
 - Move admission construction to `buildStartRunApplicationService`.
+- Keep `IRunAccessPolicy` behind `StartRunAdmissionGuard` instead of passing it
+  through the start-run application-service builder.
+- Declare admission DTOs once in `StartRunTypes`.
 - Add architecture tests that validate semantic phase ownership, not only
   imports or barrel thinness.
 - Update component docs with the public API, invariants, transitions, and
