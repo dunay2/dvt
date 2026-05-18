@@ -69,7 +69,7 @@ export function resolveCanvasWorkbenchTabLabel(
   return copy[CANVAS_WORKBENCH_TAB_LABEL_KEYS[tabId]];
 }
 
-export function createGraphCanvasWorkbenchTab(
+export function createCanvasGraphWorkbenchTab(
   copy: CanvasWorkbenchTabsCopy = canvasViewCopy
 ): CanvasWorkbenchTabReadModel {
   return {
@@ -115,7 +115,7 @@ export function buildCanvasWorkbenchTabsReadModel(args: {
 }): CanvasWorkbenchTabsReadModel {
   const routeState = args.routeState;
   const copy = args.copy ?? canvasViewCopy;
-  const graphTab = createGraphCanvasWorkbenchTab(copy);
+  const graphTab = createCanvasGraphWorkbenchTab(copy);
   const pluginTabs =
     args.context.kind === 'ready'
       ? args.placements

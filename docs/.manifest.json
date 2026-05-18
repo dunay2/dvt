@@ -2,9 +2,9 @@
   "summary": {
     "adrs": 54,
     "evidenceDocs": 115,
-    "normativeDocs": 435,
+    "normativeDocs": 437,
     "statusDocs": 66,
-    "total": 670
+    "total": 672
   },
   "catalogs": [
     {
@@ -19,8 +19,8 @@
     },
     {
       "name": "normativeDocs",
-      "count": 435,
-      "contentSha256": "03e5f2ddcf8e797a21dddf33d74d557d73a0bf732acdc20de485a8a47c3c3930"
+      "count": 437,
+      "contentSha256": "80c12d474091b114de8acc9523b9b5a68ee222ae9bbcada2fbb195b6f82e24b4"
     },
     {
       "name": "statusDocs",

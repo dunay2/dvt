@@ -536,6 +536,8 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/lineage/lineageRouteBootstrap.ts
   - apps/web/src/app/views/runs/CanvasRunsTabView.tsx
   - docs/architecture/components/web/appshell/app-shell.md
+  - docs/architecture/components/web/graph/canvas-legacy-retirement-component.md
+  - docs/architecture/components/web/graph/canvas-legacy-retirement-user-stories.md
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
   - docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md
@@ -544,8 +546,12 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md
   - docs/planning/proposals/dvt-canvas-workbench-proposal-v2-repo-validated.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-tabs-placement-design-plan-20260503.md
+  - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
+  - docs/planning/execution-model/dvt-system-map-god-diagram.md
+  - docs/planning/execution-model/dvt-dependency-risk-map.md
   - docs/planning/proposals/portfolio-map-20260403.md
   - buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md
+  - buzon/20260518-f12-fowler-canvas-legacy-retirement-analysis.md
   - docs/planning/status/generated-code-state.md
   - docs/planning/status/governance-files/**
   - docs/planning/status/system-governance-file-fingerprint-baseline.yaml
@@ -878,7 +884,7 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
     cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.test.ts]
-  - name: createGraphCanvasWorkbenchTab
+  - name: createCanvasGraphWorkbenchTab
     path: apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts
     dddOwner: CanvasWorkbenchTabsReadModel
     cqRails: [ListCanvasWorkbenchTabs]

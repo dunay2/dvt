@@ -43,7 +43,8 @@ What is still drifting:
 - `appStore` still mixes shell, canvas, run, and permission state;
 - active route consumers still need broader read-model convergence beyond the
   new `F-07` snapshot/timeline baseline;
-- `GraphCanvas.tsx` still exists as a dead legacy path;
+- the retired `GraphCanvas.tsx` source path is gone; F-12 now closes remaining
+  naming and documentation drift around the active Canvas stack;
 - detailed frontend docs still contain target-state-only wording, stale route
   claims, and encoding drift;
 - local frontend test files exist, but there is still no governed `test`
@@ -108,7 +109,8 @@ Canonical `MVP-E1` contract artifact:
   stop leaking through `appStore`.
 - `F-06`: standardize TanStack Query keys, mutation ownership, and invalidation
   rules across existing views.
-- `F-12`: remove the legacy `GraphCanvas` path so the graph stack is singular.
+- `F-12`: keep the retired `GraphCanvas` path absent and align naming and docs
+  on the singular `Canvas.tsx` + `CanvasShell` + `useCanvasController` stack.
 
 ### Phase 2 - Core runtime flow
 

@@ -12,6 +12,11 @@ Date: 2026-03-06
 Last updated: 2026-03-05 — full codebase audit including apps/web, apps/api, @dvt/planner
 Status: Architecture master overview
 
+F-12 note, 2026-05-18: the active web Canvas stack is now `Canvas.tsx`,
+`CanvasShell`, `useCanvasController`, and plugin graph strategy registration.
+Any `GraphCanvas` labels in this older draft are historical drift and must not
+be read as an active source file or route owner.
+
 This diagram shows the **entire DVT+ system in one view**:
 
 - domain modules
