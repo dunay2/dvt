@@ -92,7 +92,9 @@ stateDiagram-v2
 
 ## Consumers
 
-- `StartRunApplicationService` uses the guard before starting a run.
+- `StartRunApplicationService` consumes `IStartRunAdmissionService` before
+  creating the start-run intent.
+- `StartRunAdmissionService` uses the guard before provider dispatch.
 - `RecoverRunApplicationService` uses the same admission vocabulary for
   recovery posture where applicable.
 - API composition supplies configured adapters and optional
@@ -105,7 +107,10 @@ stateDiagram-v2
 
 ```mermaid
 flowchart LR
-  Api["API / application use case"] --> Guard["StartRunAdmissionGuard"]
+  Api["API / application use case"] --> Admission["IStartRunAdmissionService"]
+  Admission --> Guard["StartRunAdmissionGuard"]
+  Admission --> Integrity["IPlanIntegrityValidator"]
+  Admission --> PlanReader["IStoredPlanArtifactReader"]
   Guard --> Access["IRunAccessPolicy"]
   Guard --> State["IRunStateStoreRead"]
   Guard --> Adapters["Map<provider, IProviderAdapter>"]
@@ -121,6 +126,8 @@ sequenceDiagram
   participant UseCase as StartRunApplicationService
   participant Admission as IStartRunAdmissionService
   participant Guard as StartRunAdmissionGuard
+  participant Integrity as IPlanIntegrityValidator
+  participant PlanReader as IStoredPlanArtifactReader
   participant Capabilities as StartRunValidationPolicy
   participant Context as RunExecutionContextAdmissionPolicy
   participant Resolver as IRunExecutionContextResolver
@@ -130,6 +137,9 @@ sequenceDiagram
   Admission->>Guard: assertStartRunAllowed(planRef, context)
   Admission->>Guard: resolveAdapter(context)
   Guard-->>Admission: adapter
+  Admission->>Integrity: fetchAndValidate(scopedPlanRef, planReader)
+  Integrity->>PlanReader: fetchStoredPlanArtifactForValidation(...)
+  Integrity-->>Admission: verified plan + execution policy
   Admission->>Guard: assertExecutionPolicyAllowed(admission)
   Guard->>Capabilities: validateCapabilitiesOrThrow(policy, adapter)
   Guard->>Context: assertAllowed({ plan, planRef, executionPolicy, context })

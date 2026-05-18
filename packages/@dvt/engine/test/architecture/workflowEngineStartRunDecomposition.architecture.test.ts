@@ -15,6 +15,10 @@ const START_RUN_USER_STORIES = join(
   REPO_ROOT,
   'docs/architecture/components/engine/architecture/workflow-engine-start-run-decomposition-user-stories.md'
 );
+const START_RUN_ADMISSION_COMPONENT_GUIDE = join(
+  REPO_ROOT,
+  'docs/architecture/components/engine/architecture/start-run-admission-component.md'
+);
 const DHM_WS3_CLOSEOUT = join(
   REPO_ROOT,
   'docs/planning/closeouts/20260512-dhm-ws3-start-run-application-decomposition-closeout.md'
@@ -103,6 +107,15 @@ describe('WorkflowEngine start-run decomposition architecture', () => {
     ]) {
       expect(stories).toContain(expectedStory);
     }
+
+    const admissionGuide = readFileSync(START_RUN_ADMISSION_COMPONENT_GUIDE, 'utf8');
+    expect(admissionGuide).toContain(
+      '`StartRunApplicationService` consumes `IStartRunAdmissionService`'
+    );
+    expect(admissionGuide).toContain('`StartRunAdmissionService` uses the guard');
+    expect(admissionGuide).not.toContain('`StartRunApplicationService` uses the guard');
+    expect(admissionGuide).toContain('IPlanIntegrityValidator');
+    expect(admissionGuide).toContain('IStoredPlanArtifactReader');
   });
 });
 

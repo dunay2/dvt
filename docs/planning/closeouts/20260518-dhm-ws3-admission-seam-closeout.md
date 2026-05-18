@@ -42,6 +42,9 @@ first-class injected phase seam.
   `StartRunTypes`.
 - Updated component guide, user stories, feature mechanization, ARC evidence,
   and risk register material.
+- Second QA pass corrected admission-component consumer and diagram drift:
+  `StartRunApplicationService` consumes `IStartRunAdmissionService`, while
+  `StartRunAdmissionService` owns the guard and plan-integrity handoff.
 
 ## Red / Green
 
@@ -71,9 +74,12 @@ pnpm --filter @dvt/engine typecheck
 pnpm --filter dvt-api typecheck
 pnpm --filter @dvt/engine test
 pnpm --filter dvt-api test -- test/integration/plannerEngineContract.test.ts
+pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts
 ```
 
 Passed after removing the builder policy drift and duplicate admission DTO.
+The second QA pass also passed after guarding the admission-component consumer
+diagram against stale direct-guard wording.
 
 ## No Debt
 

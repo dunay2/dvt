@@ -40,6 +40,11 @@ start-run graph only through `StartRunAdmissionGuard`. The duplicate
 `StartRunExecutionPolicyAdmission` declaration was removed from the guard and
 the shared DTO lives only in `StartRunTypes`.
 
+A second QA pass corrected the admission-component guide so the documented
+consumer flow matches the code: `StartRunApplicationService` consumes
+`IStartRunAdmissionService`; `StartRunAdmissionService` then coordinates guard
+admission and plan integrity.
+
 ## Validation Evidence
 
 - `pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts test/services/StartRunApplicationService.test.ts`
@@ -55,6 +60,8 @@ the shared DTO lives only in `StartRunTypes`.
   - Passed, 64 files / 451 tests.
 - `pnpm --filter dvt-api test -- test/integration/plannerEngineContract.test.ts`
   - Passed, 1 file / 7 tests.
+- `pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts`
+  - Passed, 1 file / 3 tests.
 
 ## No-Debt Evidence
 
