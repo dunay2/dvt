@@ -11,11 +11,13 @@ probability: Low
 summary: >
   Future edits could reintroduce cancel adapter dispatch, signal adapter dispatch, signal transition
   mapping, or signal-derived event emission into WorkflowEngineCoreService instead of keeping those
-  responsibilities in RunCommandService and RunSignalService.
+  responsibilities in RunCommandService and RunSignalService. A later hardening pass found the
+  wrapper also still owned hidden concrete service construction, which is now removed.
 mitigation: >
   workflowEngineRuntimePathDecomposition.architecture.test.ts fails if WorkflowEngineCoreService
   regains adapter dispatch, signal transition guard ownership, signal-derived event emission, or a
-  single facade run-control dependency.
+  single facade run-control dependency. The same guard now fails if the wrapper imports or
+  instantiates concrete runtime command/signal services.
 evidence:
   - docs/evidence/ed-20260512-dhm-ws4-runtime-path-decomposition.md
   - packages/@dvt/engine/test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts

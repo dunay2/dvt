@@ -16,18 +16,19 @@ queries, and provider-backed enrichment into dedicated paths.
 
 ## Public API
 
-| Surface                     | Owner         | Role                                                                 |
-| --------------------------- | ------------- | -------------------------------------------------------------------- |
-| `IRunCommandService`        | `@dvt/engine` | Runs cancel-command behavior for a validated `EngineRunRef`.         |
-| `IRunSignalService`         | `@dvt/engine` | Runs canonical runtime signal behavior and signal-derived events.    |
-| `RunCommandService`         | `@dvt/engine` | Authorizes, resolves metadata, dispatches cancel, and records spans. |
-| `RunSignalService`          | `@dvt/engine` | Authorizes, validates transition, dispatches signal, emits events.   |
-| `WorkflowEngineCoreService` | `@dvt/engine` | Combined run-control delegator over command and signal services.     |
-| `buildRunControlService`    | `@dvt/engine` | Assembly helper for the combined run-control delegator.              |
-| `buildRunCommandService`    | `@dvt/engine` | Composition helper for cancel-command wiring.                        |
-| `buildRunSignalService`     | `@dvt/engine` | Composition helper for runtime-signal wiring.                        |
-| `RunStatusQueryService`     | `@dvt/engine` | Canonical run-status query path.                                     |
-| `IRunEnrichmentService`     | `@dvt/engine` | Provider-backed enrichment path outside `IWorkflowEngine`.           |
+| Surface                     | Owner         | Role                                                             |
+| --------------------------- | ------------- | ---------------------------------------------------------------- |
+| `IRunCommandService`        | `@dvt/engine` | Cancel-command role port.                                        |
+| `IRunSignalService`         | `@dvt/engine` | Runtime-signal role port.                                        |
+| `RunCommandService`         | `@dvt/engine` | Authorizes, resolves metadata, dispatches cancel, records spans. |
+| `RunSignalService`          | `@dvt/engine` | Validates transition, dispatches signal, emits events.           |
+| `WorkflowEngineCoreService` | `@dvt/engine` | Pure combined run-control delegator.                             |
+| `WorkflowEngineCoreDeps`    | `@dvt/engine` | Command and signal role-service constructor contract.            |
+| `buildRunControlService`    | `@dvt/engine` | Compatibility helper for an already-composed delegator.          |
+| `buildRunCommandService`    | `@dvt/engine` | Composition helper for cancel-command wiring.                    |
+| `buildRunSignalService`     | `@dvt/engine` | Composition helper for runtime-signal wiring.                    |
+| `RunStatusQueryService`     | `@dvt/engine` | Canonical run-status query path.                                 |
+| `IRunEnrichmentService`     | `@dvt/engine` | Provider-backed enrichment outside `IWorkflowEngine`.            |
 
 ## Invariants
 
@@ -35,8 +36,11 @@ queries, and provider-backed enrichment into dedicated paths.
   signal-derived lifecycle events.
 - `RunSignalService` must not own cancel-command dispatch.
 - `WorkflowEngineCoreService` is a combined run-control delegator only; it
-  delegates to command and signal services and does not own adapter dispatch or
-  transition mapping.
+  delegates to command and signal services and does not own adapter dispatch,
+  transition mapping, dependency-bag translation, or concrete service
+  construction.
+- `WorkflowEngineCoreService` constructor inputs must stay semantic: only
+  `IRunCommandService` and `IRunSignalService` cross the wrapper boundary.
 - Facade-facing cancel and signal use cases depend on separate command and
   signal ports.
 - Query and enrichment paths remain outside the combined runtime-control
@@ -104,6 +108,7 @@ sequenceDiagram
 
 - `workflowEngineRuntimePathDecomposition.architecture.test.ts` fails if
   `WorkflowEngineCoreService` regrows adapter dispatch, signal transition
-  mapping, or signal-derived event emission.
+  mapping, signal-derived event emission, concrete runtime-service imports, or
+  concrete runtime-service construction.
 - `WorkflowEngineCoreService.test.ts` keeps cancel and signal runtime behavior
   green while the implementation moves behind dedicated services.

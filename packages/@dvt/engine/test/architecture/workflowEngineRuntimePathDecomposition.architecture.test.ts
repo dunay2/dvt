@@ -59,8 +59,24 @@ describe('WorkflowEngine runtime path decomposition', () => {
       expect(coreService).not.toContain(forbiddenCoreBehavior);
     }
 
-    expect(coreService).toContain('this.runCommandService.cancel(ref)');
-    expect(coreService).toContain('this.runSignalService.signal(ref, req)');
+    expect(coreService).toContain('this.deps.runCommandService.cancel(ref)');
+    expect(coreService).toContain('this.deps.runSignalService.signal(ref, req)');
+  });
+
+  it('keeps the combined run-control delegator free of concrete runtime service construction', () => {
+    const coreService = readEngineSource('core/WorkflowEngineCoreService.ts');
+
+    for (const forbiddenConcreteDependency of [
+      '../services/runControl/RunCommandService.js',
+      '../services/runControl/RunSignalService.js',
+      'new RunCommandService(',
+      'new RunSignalService(',
+      'stateStoreRead:',
+      'stateStoreWrite:',
+      'adapters:',
+    ]) {
+      expect(coreService).not.toContain(forbiddenConcreteDependency);
+    }
   });
 
   it('wires facade use cases through separate command and signal dependencies', () => {
