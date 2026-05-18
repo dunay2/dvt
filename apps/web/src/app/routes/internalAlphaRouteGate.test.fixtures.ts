@@ -32,6 +32,7 @@ export interface InternalAlphaCombinedRouteStageProof {
   readonly happyPathProof: string;
   readonly failClosedProof: string;
   readonly recoveryState: InternalAlphaRecoveryState;
+  readonly recoveryStates: readonly InternalAlphaRecoveryState[];
 }
 
 export interface InternalAlphaCombinedRouteFixture {
@@ -44,9 +45,11 @@ export interface InternalAlphaCombinedRouteEvaluation {
   readonly missingFailClosedProof: readonly InternalAlphaRouteStage[];
   readonly missingHappyPathProof: readonly InternalAlphaRouteStage[];
   readonly missingRails: readonly InternalAlphaRouteRail[];
+  readonly missingRecoveryStates: readonly InternalAlphaRecoveryState[];
   readonly missingStages: readonly InternalAlphaRouteStage[];
   readonly routeAuthority: 'F-27';
   readonly routeDecision: 'blocked' | 'review';
+  readonly stagesWithoutRecoveryVocabulary: readonly InternalAlphaRouteStage[];
 }
 
 const requiredRouteStages: readonly InternalAlphaRouteStage[] = [
@@ -78,6 +81,7 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       happyPathProof: 'route-ready startup after platform readiness settles',
       rails: ['ObserveAppBootstrapRouteReadiness'],
       recoveryState: 'ready',
+      recoveryStates: ['ready', 'unavailable', 'blocked'],
       stage: 'Startup gate',
     },
     {
@@ -85,6 +89,7 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       happyPathProof: 'tenant, project, and environment context are visible',
       rails: ['ObserveWorkspaceContext'],
       recoveryState: 'ready',
+      recoveryStates: ['ready', 'unauthorized', 'blocked'],
       stage: 'Workspace context',
     },
     {
@@ -93,6 +98,7 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       happyPathProof: 'authoritative draft loads and governed drag/save feedback is visible',
       rails: ['GetWorkspaceGraphDraft', 'SaveWorkspaceGraphDraft'],
       recoveryState: 'ready',
+      recoveryStates: ['ready', 'unavailable', 'stale', 'blocked'],
       stage: 'Canvas workbench',
     },
     {
@@ -101,6 +107,7 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       happyPathProof: 'authorized tree and first-file preview load read-only',
       rails: ['ListWorkspaceFiles', 'GetWorkspaceFileContent'],
       recoveryState: 'ready',
+      recoveryStates: ['ready', 'unauthorized', 'unavailable', 'not-found', 'stale'],
       stage: 'Code workbench',
     },
     {
@@ -109,6 +116,7 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       happyPathProof: 'plan/run controls explain ready-to-run posture with source-owned reasons',
       rails: ['ObservePlanRunReadiness'],
       recoveryState: 'ready',
+      recoveryStates: ['ready', 'unauthorized', 'unavailable', 'blocked'],
       stage: 'Plan/run readiness',
     },
     {
@@ -117,6 +125,7 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       happyPathProof: 'equivalent failures use one route-owned recovery vocabulary',
       rails: ['MapRouteRecoveryState'],
       recoveryState: 'ready',
+      recoveryStates: ['ready', 'blocked', 'unauthorized', 'unavailable', 'stale', 'not-found'],
       stage: 'Recovery states',
     },
   ],
@@ -127,8 +136,22 @@ export function evaluateInternalAlphaCombinedRouteFixture(
 ): InternalAlphaCombinedRouteEvaluation {
   const fixtureStages = new Set(fixture.stages.map((stage) => stage.stage));
   const fixtureRails = new Set(fixture.stages.flatMap((stage) => stage.rails));
+  const fixtureRecoveryStates = new Set(fixture.stages.flatMap((stage) => stage.recoveryStates));
+  const requiredRecoveryStates: readonly InternalAlphaRecoveryState[] = [
+    'blocked',
+    'unauthorized',
+    'unavailable',
+    'stale',
+    'not-found',
+  ];
   const missingStages = requiredRouteStages.filter((stage) => !fixtureStages.has(stage));
   const missingRails = requiredRouteRails.filter((rail) => !fixtureRails.has(rail));
+  const missingRecoveryStates = requiredRecoveryStates.filter(
+    (recoveryState) => !fixtureRecoveryStates.has(recoveryState)
+  );
+  const stagesWithoutRecoveryVocabulary = fixture.stages
+    .filter((stage) => !stage.recoveryStates.some((recoveryState) => recoveryState !== 'ready'))
+    .map((stage) => stage.stage);
   const missingFailClosedProof = fixture.stages
     .filter((stage) => stage.failClosedProof.trim().length === 0)
     .map((stage) => stage.stage);
@@ -140,14 +163,18 @@ export function evaluateInternalAlphaCombinedRouteFixture(
     missingFailClosedProof,
     missingHappyPathProof,
     missingRails,
+    missingRecoveryStates,
     missingStages,
     routeAuthority: fixture.routeAuthority,
     routeDecision:
       missingFailClosedProof.length > 0 ||
       missingHappyPathProof.length > 0 ||
       missingRails.length > 0 ||
-      missingStages.length > 0
+      missingRecoveryStates.length > 0 ||
+      missingStages.length > 0 ||
+      stagesWithoutRecoveryVocabulary.length > 0
         ? 'blocked'
         : 'review',
+    stagesWithoutRecoveryVocabulary,
   };
 }

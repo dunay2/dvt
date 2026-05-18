@@ -56,6 +56,9 @@ own implementation details and tests.
 - `US-F27-N-007`: the combined route fixture omits a route stage or an owned
   command/query rail. Alpha full remains blocked and the missing stage or rail
   is reported by name.
+- `US-F27-N-008`: the combined route fixture keeps a stage at `ready` only or
+  omits `blocked`, `unauthorized`, `unavailable`, `stale`, or `not-found`.
+  Alpha full remains blocked and the missing vocabulary is reported by name.
 
 ## Traceability
 

@@ -139,6 +139,12 @@ fail-closed proof returns the route decision to `blocked` and reports
 `Canvas workbench` by name; removing the Code stage or `SaveWorkspaceGraphDraft`
 rail also returns `blocked`.
 
+Recovery vocabulary is part of the combined proof. Every stage must include at
+least one non-ready recovery state, and the route-level vocabulary must include
+`blocked`, `unauthorized`, `unavailable`, `stale`, and `not-found`. Omitting a
+stage vocabulary or one of those recovery states returns the route decision to
+`blocked`.
+
 ## Route Diagram
 
 ```mermaid

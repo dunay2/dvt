@@ -29,7 +29,7 @@ whether the full route is accepted.
 | `RouteStageProof`                   | record       | Captures one stage rail, owner, happy proof, fail-closed proof, and risk.                                  |
 | `AlphaFullDecision`                 | decision     | Returns `blocked`, `review`, or `accepted` from the full proof set.                                        |
 | `AlphaCadenceDecision`              | decision     | Names tester audience, entry date, duration, exit owner, and extension rule.                               |
-| `RouteRecoveryVocabulary`           | model        | Maps equivalent failures to source-owned recovery states.                                                  |
+| `RouteRecoveryVocabulary`           | model        | Maps failures to source-owned recovery states and blocks incomplete vocabulary.                            |
 | `RouteAcceptanceMatrix`             | review       | Records the current stage acceptance table and alpha exit impact.                                          |
 | `InternalAlphaCombinedRouteFixture` | test fixture | Exercises one ordered route proof across startup, context, Canvas, Code, plan/run readiness, and recovery. |
 
@@ -47,6 +47,9 @@ command/query rail catalog before UI, adapter, or route-handler work starts.
 - Canvas and Code fixture stages must preserve all owned rails instead of
   collapsing command/query authority into one local flag.
 - Recovery and readiness copy must be source-owned, not duplicated free text.
+- Every combined fixture stage must name at least one non-ready recovery state.
+- The combined route fixture must include `blocked`, `unauthorized`,
+  `unavailable`, `stale`, and `not-found` recovery states before review.
 - Risk triage and cadence are product inputs, not after-the-fact closeout notes.
 - Local fixture state, localStorage, and mock-only flows are not product truth.
 
@@ -55,6 +58,8 @@ command/query rail catalog before UI, adapter, or route-handler work starts.
 - `blocked` stays `blocked` when a stage lacks owner, rail, or negative proof.
 - `blocked` stays `blocked` when the combined route fixture omits a required
   route stage or owned rail.
+- `blocked` stays `blocked` when any combined fixture stage lacks negative
+  recovery vocabulary or the route omits a required recovery state.
 - `blocked` moves to `review` when all stages have owners and planned proofs.
 - `review` returns to `blocked` when stage evidence or risk triage regresses.
 - `review` moves to `accepted` only when every stage has accepted evidence.

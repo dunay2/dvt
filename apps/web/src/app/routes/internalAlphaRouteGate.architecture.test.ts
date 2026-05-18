@@ -202,6 +202,8 @@ describe('internal alpha route gate architecture', () => {
       expect(stage.recoveryState).toMatch(
         /^(ready|blocked|unauthorized|unavailable|stale|not-found)$/
       );
+      expect(stage.recoveryStates).toContain(stage.recoveryState);
+      expect(stage.recoveryStates.some((recoveryState) => recoveryState !== 'ready')).toBe(true);
     }
 
     expect(internalAlphaCombinedRouteFixture.stages.flatMap((stage) => stage.rails)).toEqual([
@@ -219,9 +221,11 @@ describe('internal alpha route gate architecture', () => {
       missingFailClosedProof: [],
       missingHappyPathProof: [],
       missingRails: [],
+      missingRecoveryStates: [],
       missingStages: [],
       routeAuthority: 'F-27',
       routeDecision: 'review',
+      stagesWithoutRecoveryVocabulary: [],
     });
 
     expect(
@@ -261,6 +265,33 @@ describe('internal alpha route gate architecture', () => {
       })
     ).toMatchObject({
       missingRails: ['SaveWorkspaceGraphDraft'],
+      routeDecision: 'blocked',
+    });
+  });
+
+  it('blocks the combined route fixture when recovery vocabulary is incomplete', () => {
+    expect(
+      evaluateInternalAlphaCombinedRouteFixture({
+        ...internalAlphaCombinedRouteFixture,
+        stages: internalAlphaCombinedRouteFixture.stages.map((stage) =>
+          stage.stage === 'Plan/run readiness' ? { ...stage, recoveryStates: ['ready'] } : stage
+        ),
+      })
+    ).toMatchObject({
+      routeDecision: 'blocked',
+      stagesWithoutRecoveryVocabulary: ['Plan/run readiness'],
+    });
+
+    expect(
+      evaluateInternalAlphaCombinedRouteFixture({
+        ...internalAlphaCombinedRouteFixture,
+        stages: internalAlphaCombinedRouteFixture.stages.map((stage) => ({
+          ...stage,
+          recoveryStates: stage.recoveryStates.filter((recoveryState) => recoveryState !== 'stale'),
+        })),
+      })
+    ).toMatchObject({
+      missingRecoveryStates: ['stale'],
       routeDecision: 'blocked',
     });
   });
