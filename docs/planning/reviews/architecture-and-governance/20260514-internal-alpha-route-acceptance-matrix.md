@@ -162,7 +162,6 @@ component guards, browser proof for governed draft reads, saves, and reload
 posture, and browser proof that denied, forbidden-scope, and read-only draft
 access fail closed without unsafe mutations.
 
-This does not accept alpha full: Canvas, Code, plan/run readiness, and recovery
 This does not accept alpha full: Code, plan/run readiness, and recovery stage
 evidence remain planned until their browser/runtime proof is accepted.
 
