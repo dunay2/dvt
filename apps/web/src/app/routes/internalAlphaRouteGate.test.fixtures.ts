@@ -43,9 +43,31 @@ export interface InternalAlphaCombinedRouteFixture {
 export interface InternalAlphaCombinedRouteEvaluation {
   readonly missingFailClosedProof: readonly InternalAlphaRouteStage[];
   readonly missingHappyPathProof: readonly InternalAlphaRouteStage[];
+  readonly missingRails: readonly InternalAlphaRouteRail[];
+  readonly missingStages: readonly InternalAlphaRouteStage[];
   readonly routeAuthority: 'F-27';
   readonly routeDecision: 'blocked' | 'review';
 }
+
+const requiredRouteStages: readonly InternalAlphaRouteStage[] = [
+  'Startup gate',
+  'Workspace context',
+  'Canvas workbench',
+  'Code workbench',
+  'Plan/run readiness',
+  'Recovery states',
+];
+
+const requiredRouteRails: readonly InternalAlphaRouteRail[] = [
+  'ObserveAppBootstrapRouteReadiness',
+  'ObserveWorkspaceContext',
+  'GetWorkspaceGraphDraft',
+  'SaveWorkspaceGraphDraft',
+  'ListWorkspaceFiles',
+  'GetWorkspaceFileContent',
+  'ObservePlanRunReadiness',
+  'MapRouteRecoveryState',
+];
 
 export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixture = {
   claim: 'alpha-full-candidate',
@@ -103,6 +125,10 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
 export function evaluateInternalAlphaCombinedRouteFixture(
   fixture: InternalAlphaCombinedRouteFixture
 ): InternalAlphaCombinedRouteEvaluation {
+  const fixtureStages = new Set(fixture.stages.map((stage) => stage.stage));
+  const fixtureRails = new Set(fixture.stages.flatMap((stage) => stage.rails));
+  const missingStages = requiredRouteStages.filter((stage) => !fixtureStages.has(stage));
+  const missingRails = requiredRouteRails.filter((rail) => !fixtureRails.has(rail));
   const missingFailClosedProof = fixture.stages
     .filter((stage) => stage.failClosedProof.trim().length === 0)
     .map((stage) => stage.stage);
@@ -113,8 +139,15 @@ export function evaluateInternalAlphaCombinedRouteFixture(
   return {
     missingFailClosedProof,
     missingHappyPathProof,
+    missingRails,
+    missingStages,
     routeAuthority: fixture.routeAuthority,
     routeDecision:
-      missingFailClosedProof.length > 0 || missingHappyPathProof.length > 0 ? 'blocked' : 'review',
+      missingFailClosedProof.length > 0 ||
+      missingHappyPathProof.length > 0 ||
+      missingRails.length > 0 ||
+      missingStages.length > 0
+        ? 'blocked'
+        : 'review',
   };
 }

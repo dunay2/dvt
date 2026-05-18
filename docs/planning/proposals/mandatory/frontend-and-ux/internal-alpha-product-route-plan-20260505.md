@@ -494,6 +494,44 @@ symbols:
     cypressCoverage: N/A - test-only route proof fixture.
     unitTests:
       - pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+  - name: requiredRouteStages
+    path: apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts
+    dddOwner: InternalAlphaRouteGate combined route proof fixture
+    cqRails:
+      - ObserveAppBootstrapRouteReadiness
+      - ObserveWorkspaceContext
+      - GetWorkspaceGraphDraft
+      - SaveWorkspaceGraphDraft
+      - ListWorkspaceFiles
+      - GetWorkspaceFileContent
+      - ObservePlanRunReadiness
+      - MapRouteRecoveryState
+    fowlerSignals:
+      - Test-only confidence
+      - Boundary drift
+    architectureGuard: pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+    cypressCoverage: N/A - test-only route proof fixture.
+    unitTests:
+      - pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+  - name: requiredRouteRails
+    path: apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts
+    dddOwner: InternalAlphaRouteGate combined route proof fixture
+    cqRails:
+      - ObserveAppBootstrapRouteReadiness
+      - ObserveWorkspaceContext
+      - GetWorkspaceGraphDraft
+      - SaveWorkspaceGraphDraft
+      - ListWorkspaceFiles
+      - GetWorkspaceFileContent
+      - ObservePlanRunReadiness
+      - MapRouteRecoveryState
+    fowlerSignals:
+      - Test-only confidence
+      - Boundary drift
+    architectureGuard: pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+    cypressCoverage: N/A - test-only route proof fixture.
+    unitTests:
+      - pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
   - name: internalAlphaCombinedRouteFixture
     path: apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts
     dddOwner: InternalAlphaRouteGate combined route proof fixture

@@ -53,6 +53,8 @@ command/query rail catalog before UI, adapter, or route-handler work starts.
 ## State Transitions
 
 - `blocked` stays `blocked` when a stage lacks owner, rail, or negative proof.
+- `blocked` stays `blocked` when the combined route fixture omits a required
+  route stage or owned rail.
 - `blocked` moves to `review` when all stages have owners and planned proofs.
 - `review` returns to `blocked` when stage evidence or risk triage regresses.
 - `review` moves to `accepted` only when every stage has accepted evidence.

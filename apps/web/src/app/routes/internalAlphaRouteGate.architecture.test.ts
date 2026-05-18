@@ -218,6 +218,8 @@ describe('internal alpha route gate architecture', () => {
     expect(evaluateInternalAlphaCombinedRouteFixture(internalAlphaCombinedRouteFixture)).toEqual({
       missingFailClosedProof: [],
       missingHappyPathProof: [],
+      missingRails: [],
+      missingStages: [],
       routeAuthority: 'F-27',
       routeDecision: 'review',
     });
@@ -231,6 +233,34 @@ describe('internal alpha route gate architecture', () => {
       })
     ).toMatchObject({
       missingFailClosedProof: ['Canvas workbench'],
+      routeDecision: 'blocked',
+    });
+  });
+
+  it('blocks the combined route fixture when a stage or owned rail is missing', () => {
+    expect(
+      evaluateInternalAlphaCombinedRouteFixture({
+        ...internalAlphaCombinedRouteFixture,
+        stages: internalAlphaCombinedRouteFixture.stages.filter(
+          (stage) => stage.stage !== 'Code workbench'
+        ),
+      })
+    ).toMatchObject({
+      missingStages: ['Code workbench'],
+      routeDecision: 'blocked',
+    });
+
+    expect(
+      evaluateInternalAlphaCombinedRouteFixture({
+        ...internalAlphaCombinedRouteFixture,
+        stages: internalAlphaCombinedRouteFixture.stages.map((stage) =>
+          stage.stage === 'Canvas workbench'
+            ? { ...stage, rails: ['GetWorkspaceGraphDraft'] }
+            : stage
+        ),
+      })
+    ).toMatchObject({
+      missingRails: ['SaveWorkspaceGraphDraft'],
       routeDecision: 'blocked',
     });
   });

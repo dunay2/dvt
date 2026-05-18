@@ -53,6 +53,9 @@ own implementation details and tests.
   blocked until exclusion rationale exists.
 - `US-F27-N-006`: the combined route fixture omits a stage fail-closed proof.
   Alpha full remains blocked and the missing stage is reported by name.
+- `US-F27-N-007`: the combined route fixture omits a route stage or an owned
+  command/query rail. Alpha full remains blocked and the missing stage or rail
+  is reported by name.
 
 ## Traceability
 
