@@ -17,4 +17,5 @@ mitigation: >
   mailbox analysis, and closeout evidence.
 evidence:
   - docs/evidence/ed-20260512-dhm-ws6-semantic-closure.md
+  - buzon/20260518-codex-fowler-dhm-ws6-semantic-closure-hardening-analysis.md
   - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts

@@ -24,7 +24,9 @@ runtime authority before reading the full implementation.
 
 Acceptance criteria:
 
-- `intentReconcilerRuntime.ts` declares API-side runtime composition ownership.
+- `intentReconcilerRuntime.ts` declares API-side runtime facade ownership.
+- `intentReconcilerRuntimeComposition.ts` declares concrete API-side runtime
+  composition ownership.
 - `WorkflowEngineFactory.ts` declares API engine runtime composition ownership.
 - `WorkflowEngineCoreService.ts` declares combined run-control delegator
   ownership.
@@ -39,6 +41,9 @@ Acceptance criteria:
 
 - API runtime composition may create Postgres stores, provider adapters,
   maintenance services, and workers.
+- The public reconciler runtime facade delegates to
+  `intentReconcilerRuntimeComposition.ts` and does not import concrete stores,
+  providers, maintenance services, or workers.
 - `@dvt/engine` modules must not read API env values for the reconciler
   runtime.
 - `WorkflowEngineCoreService` must not import reconciler runtime assembly.
@@ -80,6 +85,22 @@ Acceptance criteria:
 - The guard checks local component docs, user stories, mailbox analysis, and
   closeout evidence.
 
+### US-DHM-WS6-006: keep runtime facade and composition split aligned
+
+As an API runtime maintainer, I need the DHM semantic closure guard to model
+the current facade/composition split so a future refactor cannot satisfy the
+old guard by putting concrete runtime assembly back into the facade.
+
+Acceptance criteria:
+
+- `intentReconcilerRuntime.ts` only exposes the public factory and handle
+  contract.
+- `intentReconcilerRuntimeComposition.ts` owns Postgres store creation,
+  migrations, provider resolution, maintenance service creation, and worker
+  creation.
+- Component docs and stories name both surfaces instead of collapsing them into
+  one composition module.
+
 ## Negative Scenarios
 
 - A future edit removes owned concern headers from composition or runtime
@@ -88,6 +109,8 @@ Acceptance criteria:
   `WorkflowEngineCoreService`.
 - A future edit puts API-side reconciler store/provider assembly into engine
   core code.
+- A future edit puts concrete reconciler assembly back into
+  `intentReconcilerRuntime.ts`.
 - A future edit updates code without updating the semantic closure guide or
   story coverage.
 - A future edit only proves barrel thinness and misses semantic authority.
@@ -101,3 +124,4 @@ Acceptance criteria:
 | `US-DHM-WS6-003` | `RunCommandService`, `RunSignalService`, `WorkflowEngineCoreService` | `workflowEngineRuntimePathDecomposition.architecture.test.ts`, `workflowEngineSemanticClosure.architecture.test.ts` |
 | `US-DHM-WS6-004` | semantic closure component guide                                     | `workflowEngineSemanticClosure.architecture.test.ts`, docs governance gates                                         |
 | `US-DHM-WS6-005` | semantic closure architecture guard                                  | `workflowEngineSemanticClosure.architecture.test.ts`                                                                |
+| `US-DHM-WS6-006` | reconciler runtime facade and composition split                      | `workflowEngineSemanticClosure.architecture.test.ts`, `intentReconcilerRuntimeComposition.architecture.test.ts`     |

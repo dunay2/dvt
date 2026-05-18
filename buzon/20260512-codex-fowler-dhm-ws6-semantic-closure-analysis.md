@@ -123,3 +123,12 @@ so the code and documentation describe one current system.
   signal, and documentation.
 - Updated the WorkflowEngine hexagonal derivation plan with a DHM-WS6
   feature-mechanization block.
+
+## 2026-05-18 Hardening Addendum
+
+The WS2 follow-up split `intentReconcilerRuntime.ts` into a public facade and
+`intentReconcilerRuntimeComposition.ts` as the concrete API runtime composition
+root. The DHM-WS6 semantic guard and local component guide were updated to
+model that current shape instead of the earlier single-file composition shape.
+See
+`buzon/20260518-codex-fowler-dhm-ws6-semantic-closure-hardening-analysis.md`.

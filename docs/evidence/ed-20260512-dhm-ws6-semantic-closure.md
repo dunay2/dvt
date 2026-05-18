@@ -8,6 +8,8 @@ arc_level: ARC-2
 breaking: false
 code_refs:
   - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+  - apps/api/src/runtime/intentReconcilerRuntime.ts
+  - apps/api/src/runtime/intentReconcilerRuntimeComposition.ts
   - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
   - packages/@dvt/engine/src/domain/IRunCommandService.ts
   - packages/@dvt/engine/src/domain/IRunSignalService.ts
@@ -36,3 +38,7 @@ changed.
   `@ownedConcern` and the DHM-WS6 component guide did not exist.
 - The guard passes after adding the owned concern headers and local component
   documentation.
+- The 2026-05-18 hardening pass proves the current facade/composition split:
+  `intentReconcilerRuntime.ts` delegates without concrete infrastructure
+  authority, while `intentReconcilerRuntimeComposition.ts` owns Postgres,
+  provider, maintenance, and worker assembly.

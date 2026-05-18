@@ -17,8 +17,16 @@ describe('WorkflowEngine semantic closure architecture', () => {
         path: 'apps/api/src/runtime/intentReconcilerRuntime.ts',
         headerTokens: [
           '@ownedConcern',
-          'API-side intent reconciler runtime composition',
-          'not an engine domain service',
+          'API-side intent reconciler runtime factory and handle contract',
+          'public runtime facade',
+        ],
+      },
+      {
+        path: 'apps/api/src/runtime/intentReconcilerRuntimeComposition.ts',
+        headerTokens: [
+          '@ownedConcern',
+          'concrete API-side intent reconciler assembly',
+          'Postgres, provider adapter, maintenance, worker, and handle assembly',
         ],
       },
       {
@@ -70,7 +78,10 @@ describe('WorkflowEngine semantic closure architecture', () => {
 
   it('preserves semantic runtime ownership rather than only proving barrel thinness', () => {
     const factory = readRepoSource('apps/api/src/application/services/WorkflowEngineFactory.ts');
-    const apiRuntime = readRepoSource('apps/api/src/runtime/intentReconcilerRuntime.ts');
+    const apiRuntimeFacade = readRepoSource('apps/api/src/runtime/intentReconcilerRuntime.ts');
+    const apiRuntimeComposition = readRepoSource(
+      'apps/api/src/runtime/intentReconcilerRuntimeComposition.ts'
+    );
     const coreService = readEngineSource('core/WorkflowEngineCoreService.ts');
     const commandService = readEngineSource('services/runControl/RunCommandService.ts');
     const signalService = readEngineSource('services/runControl/RunSignalService.ts');
@@ -79,8 +90,15 @@ describe('WorkflowEngine semantic closure architecture', () => {
     expect(factory).toContain('buildRunSignalService');
     expect(factory).toContain('buildWorkflowEngineUseCases');
 
-    expect(apiRuntime).toContain('class IntentReconcilerRuntimeComposition');
-    expect(apiRuntime).toContain('migratePostgresRuntimeStores');
+    expect(apiRuntimeFacade).toContain('createIntentReconcilerRuntimeComposition(');
+    expect(apiRuntimeFacade).not.toContain('migratePostgresRuntimeStores');
+    expect(apiRuntimeFacade).not.toContain('PostgresStateStoreAdapter');
+    expect(apiRuntimeFacade).not.toContain('IntentReconcilerWorker');
+
+    expect(apiRuntimeComposition).toContain('class IntentReconcilerRuntimeComposition');
+    expect(apiRuntimeComposition).toContain('migratePostgresRuntimeStores');
+    expect(apiRuntimeComposition).toContain('PostgresStateStoreAdapter');
+    expect(apiRuntimeComposition).toContain('IntentReconcilerWorker');
     expect(coreService).not.toContain('migratePostgresRuntimeStores');
     expect(coreService).not.toContain('createTemporalProviderAdapterFactory');
 
@@ -117,6 +135,7 @@ describe('WorkflowEngine semantic closure architecture', () => {
       engineArchitectureDocPath('workflow-engine-semantic-closure-component.md'),
       engineArchitectureDocPath('workflow-engine-semantic-closure-user-stories.md'),
       repoPath('buzon/20260512-codex-fowler-dhm-ws6-semantic-closure-analysis.md'),
+      repoPath('buzon/20260518-codex-fowler-dhm-ws6-semantic-closure-hardening-analysis.md'),
       repoPath('docs/planning/closeouts/20260512-dhm-ws6-semantic-closure-closeout.md'),
     ]) {
       expectFileExists(path);
@@ -137,7 +156,7 @@ describe('WorkflowEngine semantic closure architecture', () => {
     expect(guide).toContain('```mermaid');
 
     const mailbox = readRepoSource(
-      'buzon/20260512-codex-fowler-dhm-ws6-semantic-closure-analysis.md'
+      'buzon/20260518-codex-fowler-dhm-ws6-semantic-closure-hardening-analysis.md'
     );
     expectMarkdownSections(mailbox, [
       '## Mature-System Comparison',
@@ -158,6 +177,7 @@ describe('WorkflowEngine semantic closure architecture', () => {
       'US-DHM-WS6-003',
       'US-DHM-WS6-004',
       'US-DHM-WS6-005',
+      'US-DHM-WS6-006',
       '## Negative Scenarios',
       '## Scenario Coverage Matrix',
     ]) {

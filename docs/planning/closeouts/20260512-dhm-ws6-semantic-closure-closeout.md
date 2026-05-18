@@ -1,6 +1,6 @@
 ---
 title: DHM-WS6 semantic closure closeout
-status: Draft
+status: Accepted
 owner: Architecture / Engine
 last_reviewed: 2026-05-12
 planning_type: closeout
@@ -107,3 +107,23 @@ documents and guards the existing rails:
 
 No planned debt, placeholders, fake adapters, fake success paths, TODO markers,
 or rule downgrades are part of this slice.
+
+## 2026-05-18 Hardening Addendum
+
+After `DHM-WS2` was integrated, the reconciler runtime split became stricter:
+`intentReconcilerRuntime.ts` is now only the public facade and
+`intentReconcilerRuntimeComposition.ts` owns concrete API-side assembly. The
+first DHM-WS6 guard failed because it still expected concrete assembly in the
+facade. This closeout is accepted with the hardening pass that updated the
+guard, component guide, user stories, evidence, risk register, and mailbox
+analysis to match the current system.
+
+Additional validation evidence for the addendum:
+
+- RED:
+  `pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts`
+  failed because the guard still expected composition ownership in
+  `intentReconcilerRuntime.ts`.
+- GREEN:
+  `pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts`
+  passed after the guard and docs modeled the facade/composition split.
