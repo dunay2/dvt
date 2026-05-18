@@ -27,7 +27,7 @@ Companion manuals:
 - `docs/runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md`
 - `docs/runbooks/api-runtime-sla-canonical-20260404.md`
 
-## Current verification snapshot (2026-05-14)
+## Current verification snapshot (2026-05-18)
 
 Repository-level search for versioned dashboard/alert config artifacts in this
 workspace did not find a governed source of truth for runtime monitor wiring.
@@ -45,8 +45,12 @@ Result:
   alerts
 - `pnpm ops:ar-c2:evidence -- --require-dashboard-alert-evidence` generated
   the latest evidence artifact and failed closed with
-  `AR-C2_IMMUTABLE_EVIDENCE_MISSING`: 9 dashboard panels and 11 alert rules are
-  still missing immutable metadata.
+  `AR-C2_IMMUTABLE_EVIDENCE_MISSING`: 9 dashboard rows and 11 alert rows are
+  still incomplete when evaluated from the checked-in template snapshots.
+- `pnpm ops:ar-c2:evidence -- --require-sustained-validation-windows` generated
+  the latest evidence artifact and failed closed with
+  `AR-C2_SUSTAINED_VALIDATION_WINDOWS_MISSING`: all 9 mapped AR-C2 signals still
+  lack passing sustained-window rows.
 
 Fowler posture:
 
