@@ -193,10 +193,14 @@ describe('internal alpha route gate architecture', () => {
 
     for (const stage of internalAlphaCombinedRouteFixture.stages) {
       expect(stage.rails.length).toBeGreaterThanOrEqual(1);
+      expect(stage.evidenceRefs.length).toBeGreaterThanOrEqual(1);
       for (const rail of stage.rails) {
         expect(rail).toMatch(
           /^(ObserveAppBootstrapRouteReadiness|ObserveWorkspaceContext|GetWorkspaceGraphDraft|SaveWorkspaceGraphDraft|ListWorkspaceFiles|GetWorkspaceFileContent|ObservePlanRunReadiness|MapRouteRecoveryState)$/
         );
+      }
+      for (const evidenceRef of stage.evidenceRefs) {
+        expect(evidenceRef).toMatch(/^(docs|apps\/web)\//);
       }
       expect(stage.happyPathProof).toBeTruthy();
       expect(stage.failClosedProof).toBeTruthy();
@@ -221,6 +225,7 @@ describe('internal alpha route gate architecture', () => {
     expect(evaluateInternalAlphaCombinedRouteFixture(internalAlphaCombinedRouteFixture)).toEqual({
       missingFailClosedProof: [],
       missingHappyPathProof: [],
+      missingEvidenceRefs: [],
       missingRails: [],
       missingRecoveryStates: [],
       missingStages: [],
@@ -238,6 +243,20 @@ describe('internal alpha route gate architecture', () => {
       })
     ).toMatchObject({
       missingFailClosedProof: ['Canvas workbench'],
+      routeDecision: 'blocked',
+    });
+  });
+
+  it('blocks the combined route fixture when a route stage lacks traceable evidence refs', () => {
+    expect(
+      evaluateInternalAlphaCombinedRouteFixture({
+        ...internalAlphaCombinedRouteFixture,
+        stages: internalAlphaCombinedRouteFixture.stages.map((stage) =>
+          stage.stage === 'Startup gate' ? { ...stage, evidenceRefs: [] } : stage
+        ),
+      })
+    ).toMatchObject({
+      missingEvidenceRefs: ['Startup gate'],
       routeDecision: 'blocked',
     });
   });

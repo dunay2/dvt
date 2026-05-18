@@ -29,6 +29,7 @@ export type InternalAlphaRecoveryState =
 export interface InternalAlphaCombinedRouteStageProof {
   readonly stage: InternalAlphaRouteStage;
   readonly rails: readonly InternalAlphaRouteRail[];
+  readonly evidenceRefs: readonly string[];
   readonly happyPathProof: string;
   readonly failClosedProof: string;
   readonly recoveryState: InternalAlphaRecoveryState;
@@ -42,6 +43,7 @@ export interface InternalAlphaCombinedRouteFixture {
 }
 
 export interface InternalAlphaCombinedRouteEvaluation {
+  readonly missingEvidenceRefs: readonly InternalAlphaRouteStage[];
   readonly missingFailClosedProof: readonly InternalAlphaRouteStage[];
   readonly missingHappyPathProof: readonly InternalAlphaRouteStage[];
   readonly missingRails: readonly InternalAlphaRouteRail[];
@@ -77,6 +79,10 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
   routeAuthority: 'F-27',
   stages: [
     {
+      evidenceRefs: [
+        'docs/architecture/components/web/appshell/protected-route-session-gate-component.md',
+        'docs/planning/reviews/architecture-and-governance/20260514-internal-alpha-route-acceptance-matrix.md',
+      ],
       failClosedProof: 'startup unavailable, timeout, or runtime-not-ready stays blocked',
       happyPathProof: 'route-ready startup after platform readiness settles',
       rails: ['ObserveAppBootstrapRouteReadiness'],
@@ -85,6 +91,10 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       stage: 'Startup gate',
     },
     {
+      evidenceRefs: [
+        'docs/architecture/components/web/appshell/protected-route-session-gate-component.md',
+        'docs/architecture/components/api/protected-runtime-command-query-rail-design.md',
+      ],
       failClosedProof: 'missing, detached, unauthorized, or conflicted context stays blocked',
       happyPathProof: 'tenant, project, and environment context are visible',
       rails: ['ObserveWorkspaceContext'],
@@ -93,6 +103,10 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       stage: 'Workspace context',
     },
     {
+      evidenceRefs: [
+        'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md',
+        'docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-component.md',
+      ],
       failClosedProof:
         'draft load failure, save denial, stale draft, or retry exhaustion is explicit',
       happyPathProof: 'authoritative draft loads and governed drag/save feedback is visible',
@@ -102,6 +116,10 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       stage: 'Canvas workbench',
     },
     {
+      evidenceRefs: [
+        'docs/planning/proposals/mandatory/frontend-and-ux/code-workbench-workspace-files-query-rail-plan-20260504.md',
+        'apps/web/src/app/views/CodeView.test.tsx',
+      ],
       failClosedProof:
         'empty, unavailable, unauthorized, not-found, traversal, oversize, binary, and freshness cases are explicit',
       happyPathProof: 'authorized tree and first-file preview load read-only',
@@ -111,6 +129,10 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       stage: 'Code workbench',
     },
     {
+      evidenceRefs: [
+        'docs/architecture/components/api/protected-runtime-command-query-rail-design.md',
+        'docs/planning/proposals/mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md',
+      ],
       failClosedProof:
         'plan integrity, backpressure, capability mismatch, degraded adapter, and authorization denial stay distinct',
       happyPathProof: 'plan/run controls explain ready-to-run posture with source-owned reasons',
@@ -120,6 +142,10 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       stage: 'Plan/run readiness',
     },
     {
+      evidenceRefs: [
+        'docs/architecture/components/web/internal-alpha-route-gate-component.md',
+        'apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts',
+      ],
       failClosedProof:
         'unknown, unavailable, unauthorized, stale, and not-found states remain distinguishable',
       happyPathProof: 'equivalent failures use one route-owned recovery vocabulary',
@@ -149,6 +175,9 @@ export function evaluateInternalAlphaCombinedRouteFixture(
   const missingRecoveryStates = requiredRecoveryStates.filter(
     (recoveryState) => !fixtureRecoveryStates.has(recoveryState)
   );
+  const missingEvidenceRefs = fixture.stages
+    .filter((stage) => stage.evidenceRefs.length === 0)
+    .map((stage) => stage.stage);
   const stagesWithoutRecoveryVocabulary = fixture.stages
     .filter((stage) => !stage.recoveryStates.some((recoveryState) => recoveryState !== 'ready'))
     .map((stage) => stage.stage);
@@ -160,6 +189,7 @@ export function evaluateInternalAlphaCombinedRouteFixture(
     .map((stage) => stage.stage);
 
   return {
+    missingEvidenceRefs,
     missingFailClosedProof,
     missingHappyPathProof,
     missingRails,
@@ -168,6 +198,7 @@ export function evaluateInternalAlphaCombinedRouteFixture(
     routeAuthority: fixture.routeAuthority,
     routeDecision:
       missingFailClosedProof.length > 0 ||
+      missingEvidenceRefs.length > 0 ||
       missingHappyPathProof.length > 0 ||
       missingRails.length > 0 ||
       missingRecoveryStates.length > 0 ||
