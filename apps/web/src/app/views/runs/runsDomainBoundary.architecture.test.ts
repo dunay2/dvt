@@ -294,6 +294,7 @@ describe('Runs domain boundary', () => {
     expect(workspaceSource).not.toContain('RunTimelineEventCard');
     expect(timelineTableSource).toContain('useReactTable');
     expect(timelineTableSource).toContain('buildRunEventTableRows');
+    expect(timelineTableSource).toContain('getRowId: (row) => row.eventId');
     expect(timelineTableModelSource).toContain('buildRunEventPresentationModel');
     expect(timelineTableModelSource).toContain('resolveRunEventHeadline');
     expect(timelineTableModelSource).not.toContain('listRunEvents');
@@ -313,6 +314,7 @@ describe('Runs domain boundary', () => {
     expect(listViewSource).not.toContain('Card');
     expect(runTableSource).toContain('useReactTable');
     expect(runTableSource).toContain('data-slot="run-operational-table"');
+    expect(runTableSource).toContain('getRowId: (row) => row.runId');
     expect(runTableModelSource).toContain('filterRunOperationalRows');
     expect(runTableModelSource).toContain('sortRunOperationalRows');
     expect(runTableModelSource).toContain('isKnownRunField');

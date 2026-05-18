@@ -110,7 +110,12 @@ export function RunOperationalTable({
     ],
     [onOpenRun]
   );
-  const table = useReactTable({ data: rows, columns, getCoreRowModel: getCoreRowModel() });
+  const table = useReactTable({
+    data: rows,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getRowId: (row) => row.runId,
+  });
   const sortableHeaders: Partial<Record<string, RunOperationalSortColumn>> = {
     runId: 'runId',
     status: 'status',
@@ -195,13 +200,13 @@ export function RunOperationalTable({
                 ))}
               </TableRow>
             ))
-          ) : (
+          ) : !isLoading ? (
             <TableRow>
               <TableCell colSpan={columns.length} className="text-slate-400">
                 {copy.runTableEmptyFiltered}
               </TableCell>
             </TableRow>
-          )}
+          ) : null}
         </TableBody>
       </Table>
     </div>

@@ -85,7 +85,12 @@ export function RunEventTimelineTable({ events }: RunEventTimelineTableProps) {
     ],
     []
   );
-  const table = useReactTable({ data: rows, columns, getCoreRowModel: getCoreRowModel() });
+  const table = useReactTable({
+    data: rows,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getRowId: (row) => row.eventId,
+  });
 
   return (
     <div data-slot="run-event-timeline-table">

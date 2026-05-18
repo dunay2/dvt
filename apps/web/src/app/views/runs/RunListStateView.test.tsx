@@ -87,4 +87,17 @@ describe('RunListStateView', () => {
       (container.querySelector('input[name="run-query-filter"]') as HTMLInputElement).value
     ).toBe('prod');
   });
+
+  it('keeps initial loading distinct from an empty filtered result', async () => {
+    await act(async () => {
+      root.render(
+        <MemoryRouter initialEntries={['/runs']}>
+          <RunListStateView runs={[]} isLoading />
+        </MemoryRouter>
+      );
+    });
+
+    expect(container.textContent).toContain('Loading runs...');
+    expect(container.textContent).not.toContain('No runs match the current filters.');
+  });
 });
