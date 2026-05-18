@@ -126,7 +126,7 @@ traverses:
 
 1. startup gate,
 2. workspace context admission,
-3. Canvas or Code route entry,
+3. Canvas and Code route entry,
 4. plan/run readiness projection,
 5. recovery vocabulary rendering under fail-closed posture.
 

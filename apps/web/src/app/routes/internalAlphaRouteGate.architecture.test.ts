@@ -71,6 +71,7 @@ describe('internal alpha route gate architecture', () => {
       expect(acceptanceMatrix).toContain(requiredColumn);
     }
     expect(acceptanceMatrix).toContain('## Route-Level Combined Fixture/Proof');
+    expect(acceptanceMatrix).toContain('Canvas and Code route entry');
 
     expect(acceptanceMatrix).toContain('Alpha full is blocked while any stage is `Gap`');
     expect(acceptanceMatrix).toContain('Child slices cannot declare alpha full');
