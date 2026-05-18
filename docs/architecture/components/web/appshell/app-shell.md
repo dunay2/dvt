@@ -158,7 +158,9 @@ Shared event presentation seam:
 
 ```mermaid
 flowchart LR
-  Events["RunEvent"] --> SharedModel["buildRunEventPresentationModel(event)"]
+  Query["GET /runs/:runId/events"] --> TimelineModel["runEventTimelineModel"]
+  TimelineModel --> Events["RunEvent"]
+  Events --> SharedModel["buildRunEventPresentationModel(event)"]
   SharedModel --> SharedCopy["resolveRunEventHeadline(...)"]
   SharedCopy --> DrawerRender["formatRunEventAsLogLine(...)"]
   SharedCopy --> RunsRender["RunWorkspaceStateView timeline cards"]
@@ -166,6 +168,8 @@ flowchart LR
 
 Rules for the shared seam:
 
+- the timeline model owns event ordering, dedupe, cursor, and active-status
+  polling decisions;
 - the shared model owns event level, headline key, optional detail, and step identity;
 - the shared copy resolver owns human-readable event headline text for shared event surfaces;
 - the shell drawer may render terminal-style lines from that shared semantics plus shared copy;
@@ -288,6 +292,8 @@ flowchart LR
 - shared event presentation semantics now align on level, headline key, shared
   headline copy, detail, and step identity, but typed live-log states and the
   final structured-versus-terminal presentation choice remain future work.
+  F-10 closes the shared chronology model for ordering, dedupe, cursor, and
+  active-status polling.
 
 ## Current-To-Target Mapping
 

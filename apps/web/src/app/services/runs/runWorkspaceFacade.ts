@@ -5,6 +5,7 @@
 import type { IRunsPort, RunSnapshot } from '../../ports/runs';
 import type { RunEvent } from '../../types/engine';
 import { classifyHttpError, extractHttpStatusCode } from '../api/classifyHttpError';
+import { normalizeRunEventTimelinePage } from './runEventTimelineModel';
 
 export type RunWorkspaceTimeline =
   | {
@@ -115,7 +116,7 @@ export function createRunWorkspaceFacade(runsService: IRunsPort): RunWorkspaceFa
       }
 
       try {
-        const timelinePage = await runsService.listRunEvents(runId);
+        const timelinePage = normalizeRunEventTimelinePage(await runsService.listRunEvents(runId));
         const hasEvents = timelinePage.events.length > 0;
         return {
           runId: snapshot.runId,

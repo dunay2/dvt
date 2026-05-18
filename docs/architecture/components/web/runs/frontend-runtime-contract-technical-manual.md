@@ -207,6 +207,18 @@ The shared model owns:
 - optional detail copied from runtime event payload message when present;
 - step identity when the event belongs to one step.
 
+F-10 adds a shared event timeline model before presentation:
+
+```mermaid
+flowchart LR
+  Query["listRunEvents(runId, afterSeq)"] --> Timeline["normalize/merge timeline"]
+  Timeline --> Console["terminal line stream"]
+  Timeline --> Workspace["structured timeline cards"]
+```
+
+The timeline model owns ordering, duplicate collapse, cursor preservation, and
+active-status polling decisions. It does not own snapshot truth.
+
 The shared copy resolver owns:
 
 - the governed human-readable headline text used by both drawer and timeline
