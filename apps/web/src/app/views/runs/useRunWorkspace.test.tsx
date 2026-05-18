@@ -8,6 +8,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { IRunsPort, RunSummaryItem, RunSnapshot } from '../../ports/runs';
 import type { SessionContextPort, WorkspaceScope } from '../../ports/sessionContext';
+import {
+  getRunStatusRefreshInterval,
+  RUNS_STATUS_REFRESH_INTERVAL_MS,
+} from '../../queries/runsQueries';
 import { AppServicesProvider } from '../../services/AppServicesContext';
 import { makeRunContext } from '../../testing/contractTestUtils';
 import { useRunWorkspace } from './useRunWorkspace';
@@ -201,5 +205,13 @@ describe('useRunWorkspace', () => {
 
     expect(runsService.listRunSummaries).toHaveBeenCalledTimes(2);
     expect(runsService.getRunSnapshot).toHaveBeenCalledTimes(2);
+  });
+
+  it('refreshes active run status and stops refreshing terminal status', () => {
+    expect(getRunStatusRefreshInterval('pending')).toBe(RUNS_STATUS_REFRESH_INTERVAL_MS);
+    expect(getRunStatusRefreshInterval('running')).toBe(RUNS_STATUS_REFRESH_INTERVAL_MS);
+    expect(getRunStatusRefreshInterval('completed')).toBe(false);
+    expect(getRunStatusRefreshInterval('failed')).toBe(false);
+    expect(getRunStatusRefreshInterval('cancelled')).toBe(false);
   });
 });
