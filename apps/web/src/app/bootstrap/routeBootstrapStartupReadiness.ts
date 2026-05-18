@@ -7,6 +7,7 @@ import type { RouteBootstrapPresentation, RouteBootstrapStatus } from './routeBo
 
 export type RouteBootstrapStartupReadinessState = Readonly<{
   activeRouteId: string | null;
+  capabilitiesSuppressedPresentation: RouteBootstrapPresentation | null;
   stablePresentation: RouteBootstrapPresentation | null;
 }>;
 
@@ -27,6 +28,7 @@ export type RouteBootstrapStartupReadinessResolution = Readonly<{
 export function createInitialRouteBootstrapStartupReadinessState(): RouteBootstrapStartupReadinessState {
   return {
     activeRouteId: null,
+    capabilitiesSuppressedPresentation: null,
     stablePresentation: null,
   };
 }
@@ -38,7 +40,20 @@ export function resolveRouteBootstrapStartupReadiness(
     args.previousState.activeRouteId === args.activeRouteId
       ? args.previousState.stablePresentation
       : null;
-  const effectivePresentation = resolveEffectiveRoutePresentation(args, previousStablePresentation);
+  const previousCapabilitiesSuppressedPresentation =
+    args.previousState.activeRouteId === args.activeRouteId
+      ? args.previousState.capabilitiesSuppressedPresentation
+      : null;
+  const effectivePresentation = resolveEffectiveRoutePresentation(
+    args,
+    previousStablePresentation,
+    previousCapabilitiesSuppressedPresentation
+  );
+  const capabilitiesSuppressedPresentation = resolveCapabilitiesSuppressedPresentation(
+    args,
+    effectivePresentation,
+    previousCapabilitiesSuppressedPresentation
+  );
   const stablePresentation = isStableRouteBootstrapStatus(effectivePresentation.status)
     ? effectivePresentation
     : previousStablePresentation;
@@ -48,6 +63,7 @@ export function resolveRouteBootstrapStartupReadiness(
     canComplete: effectivePresentation.canComplete,
     nextState: {
       activeRouteId: args.activeRouteId,
+      capabilitiesSuppressedPresentation,
       stablePresentation,
     },
   };
@@ -55,7 +71,8 @@ export function resolveRouteBootstrapStartupReadiness(
 
 function resolveEffectiveRoutePresentation(
   args: RouteBootstrapStartupReadinessArgs,
-  previousStablePresentation: RouteBootstrapPresentation | null
+  previousStablePresentation: RouteBootstrapPresentation | null,
+  previousCapabilitiesSuppressedPresentation: RouteBootstrapPresentation | null
 ): RouteBootstrapPresentation {
   if (args.capabilitiesColdStartPending && args.presentation.status === 'complete') {
     return {
@@ -65,11 +82,39 @@ function resolveEffectiveRoutePresentation(
     };
   }
 
+  if (
+    args.capabilitiesColdStartPending &&
+    args.presentation.status === 'pending' &&
+    previousCapabilitiesSuppressedPresentation
+  ) {
+    return previousCapabilitiesSuppressedPresentation;
+  }
+
   if (args.presentation.status === 'pending' && previousStablePresentation) {
     return previousStablePresentation;
   }
 
   return args.presentation;
+}
+
+function resolveCapabilitiesSuppressedPresentation(
+  args: RouteBootstrapStartupReadinessArgs,
+  effectivePresentation: RouteBootstrapPresentation,
+  previousCapabilitiesSuppressedPresentation: RouteBootstrapPresentation | null
+): RouteBootstrapPresentation | null {
+  if (!args.capabilitiesColdStartPending) {
+    return null;
+  }
+
+  if (args.presentation.status === 'complete') {
+    return effectivePresentation;
+  }
+
+  if (args.presentation.status === 'pending' && previousCapabilitiesSuppressedPresentation) {
+    return previousCapabilitiesSuppressedPresentation;
+  }
+
+  return null;
 }
 
 function isStableRouteBootstrapStatus(status: RouteBootstrapStatus): boolean {

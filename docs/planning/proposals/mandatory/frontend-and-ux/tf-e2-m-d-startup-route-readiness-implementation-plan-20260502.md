@@ -338,6 +338,20 @@ symbols:
     cypressCoverage: startup-route-readiness.cy.ts
     unitTests:
       - routeBootstrapStartupReadiness.test.ts
+  - name: resolveCapabilitiesSuppressedPresentation
+    path: apps/web/src/app/bootstrap/routeBootstrapStartupReadiness.ts
+    dddOwner: RouteBootstrapStartupReadinessState internal policy helper
+    cqRails:
+      - ObserveAppBootstrapRouteReadiness
+      - PublishAppBootstrapStepStatus
+      - CompleteAppBootstrapScreen
+    fowlerSignals:
+      - Boundary drift
+      - Temporal coupling
+    architectureGuard: routeBootstrapStartupReadiness.architecture.test.ts
+    cypressCoverage: startup-route-readiness.cy.ts
+    unitTests:
+      - routeBootstrapStartupReadiness.test.ts
   - name: isStableRouteBootstrapStatus
     path: apps/web/src/app/bootstrap/routeBootstrapStartupReadiness.ts
     dddOwner: RouteBootstrapStartupReadinessState internal policy helper

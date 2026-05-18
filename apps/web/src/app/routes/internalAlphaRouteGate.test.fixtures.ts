@@ -91,10 +91,13 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
   routeAuthority: 'F-27',
   stages: [
     {
-      evidenceAcceptance: 'planned',
+      evidenceAcceptance: 'accepted',
       evidenceRefs: [
         'docs/architecture/components/web/appshell/protected-route-session-gate-component.md',
         'docs/planning/reviews/architecture-and-governance/20260514-internal-alpha-route-acceptance-matrix.md',
+        'apps/web/src/app/Root.bootstrapFlow.test.tsx',
+        'apps/web/src/app/bootstrap/routeBootstrapStartupReadiness.test.ts',
+        'apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts',
       ],
       failClosedProof: 'startup unavailable, timeout, or runtime-not-ready stays blocked',
       happyPathProof: 'route-ready startup after platform readiness settles',

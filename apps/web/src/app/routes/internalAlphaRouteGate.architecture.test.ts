@@ -250,6 +250,27 @@ describe('internal alpha route gate architecture', () => {
     });
   });
 
+  it('accepts startup gate evidence without accepting the full alpha route', () => {
+    const startupStage = internalAlphaCombinedRouteFixture.stages.find(
+      (stage) => stage.stage === 'Startup gate'
+    );
+
+    expect(startupStage?.evidenceAcceptance).toBe('accepted');
+    expect(startupStage?.evidenceRefs).toEqual(
+      expect.arrayContaining([
+        'apps/web/src/app/Root.bootstrapFlow.test.tsx',
+        'apps/web/src/app/bootstrap/routeBootstrapStartupReadiness.test.ts',
+        'apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts',
+      ])
+    );
+    expect(evaluateInternalAlphaCombinedRouteFixture(internalAlphaCombinedRouteFixture)).toEqual(
+      expect.objectContaining({
+        missingEvidenceAcceptance: [],
+        routeDecision: 'review',
+      })
+    );
+  });
+
   it('accepts the combined route fixture only when all stage evidence is accepted', () => {
     expect(
       evaluateInternalAlphaCombinedRouteFixture({
