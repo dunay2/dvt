@@ -47,8 +47,8 @@ What is still drifting:
   naming and documentation drift around the active Canvas stack;
 - detailed frontend docs still contain target-state-only wording, stale route
   claims, and encoding drift;
-- local frontend test files exist, but there is still no governed `test`
-  script or dedicated CI lane for `@dvt/web`.
+- local frontend test files are governed by the F-14 suite catalog and
+  dedicated `Web Frontend Tests` CI lane.
 
 State: partially operational, architecturally inconsistent. The main problem is
 not visual completeness anymore. It is convergence on one truthful runtime,
@@ -124,7 +124,9 @@ Canonical `MVP-E1` contract artifact:
 - `F-11`: activate Artifacts, Diff, and Level-C surfaces progressively behind
   real contracts and feature flags.
 - `F-13`: keep frontend docs aligned with the real code and route posture.
-- `F-14`: add a governed frontend test command and CI lane.
+- `F-14`: add a governed frontend test command and CI lane. This is now closed
+  by the `WebVitestSuiteCatalog`, the `Web Frontend Tests` CI job, and the
+  [Frontend test governance component](../../../../architecture/components/web/frontend-test-governance-component.md).
 - `F-15`: formalize the workbench UX contract so the product converges on a
   stable VS Code-like shell grammar.
 - `F-16`: move dense operational views to TanStack Table where card layouts stop

@@ -45,6 +45,7 @@ out of the active tree.
 - cross-cutting UX:
   [UX implementation guide](./ux-implementation-guide.md),
   [Frontend query boundary component](./frontend-query-boundary-component.md),
+  [Frontend test governance component](./frontend-test-governance-component.md),
   [Web store domain ownership component](./web-store-domain-ownership-component.md),
   [Workbench UI contract and component inventory](./workbench-ui-contract-and-component-inventory.md),
   [Library and open-source reference stack](./library-and-open-source-reference-stack.md),
@@ -68,6 +69,11 @@ out of the active tree.
 - plugin and contribution boundary:
   [Plugin Contributions Developer Guide](./plugin-contributions-developer-guide.md),
   [registry.ts](../../../../apps/web/src/app/plugins/registry.ts)
+- frontend test governance:
+  [Frontend test governance component](./frontend-test-governance-component.md),
+  [Frontend test governance user stories](./frontend-test-governance-user-stories.md),
+  [`vitest.suites.ts`](../../../../apps/web/vitest.suites.ts),
+  [`test.yml`](../../../../.github/workflows/test.yml)
 
 ## Component Topology
 
