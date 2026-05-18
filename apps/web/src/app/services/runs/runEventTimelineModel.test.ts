@@ -69,13 +69,25 @@ describe('runEventTimelineModel', () => {
     expect(merged.events.map((event) => event.eventId)).toEqual(['evt_1', 'evt_2', 'evt_3']);
   });
 
-  it('falls back to the highest visible sequence when the adapter omits nextAfterSeq', () => {
+  it('advances the fallback cursor to the highest merged sequence when the adapter omits nextAfterSeq', () => {
     const merged = mergeRunEventTimelinePage(
-      { events: [makeEvent({ eventId: 'evt_1', runSeq: 1 })] },
-      { events: [makeEvent({ eventId: 'evt_2', runSeq: 2 })] }
+      {
+        nextAfterSeq: 2,
+        events: [
+          makeEvent({ eventId: 'evt_1', runSeq: 1 }),
+          makeEvent({ eventId: 'evt_2', runSeq: 2 }),
+        ],
+      },
+      {
+        events: [
+          makeEvent({ eventId: 'evt_2', runSeq: 2 }),
+          makeEvent({ eventId: 'evt_3', runSeq: 3 }),
+        ],
+      }
     );
 
-    expect(merged.nextAfterSeq).toBe(2);
+    expect(merged.nextAfterSeq).toBe(3);
+    expect(merged.events.map((event) => event.eventId)).toEqual(['evt_1', 'evt_2', 'evt_3']);
   });
 
   it('identifies active statuses for live event polling', () => {

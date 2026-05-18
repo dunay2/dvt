@@ -78,6 +78,6 @@ export function mergeRunEventTimelinePage(
 
   return {
     events: nextEvents,
-    nextAfterSeq: deriveNextAfterSeq(nextEvents, page.nextAfterSeq ?? current.nextAfterSeq),
+    nextAfterSeq: deriveNextAfterSeq(nextEvents, page.nextAfterSeq),
   };
 }
