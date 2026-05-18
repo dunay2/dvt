@@ -37,7 +37,7 @@ Current composition:
 - list state when no `runId` is selected;
 - workspace detail state when a run is selected;
 - snapshot card is always present;
-- timeline card is available, empty, or degraded based on runtime events.
+- timeline table is available, empty, or degraded based on runtime events.
 
 ## Runs Workbench State Contract
 
@@ -70,7 +70,7 @@ flowchart TD
   WorkspaceLoad --> RunMissing["RunMissingState"]
   WorkspaceLoad --> RunWorkspace["RunWorkspaceState"]
   RunWorkspace --> TimelineState{"timeline state"}
-  TimelineState --> TimelineAvailable["timeline cards"]
+  TimelineState --> TimelineAvailable["timeline rows"]
   TimelineState --> TimelineEmpty["empty timeline note"]
   TimelineState --> TimelineDegraded["RunDegradedState notice"]
 ```
@@ -172,7 +172,7 @@ flowchart LR
   TimelineModel --> Facade["RunWorkspaceFacade"]
   Console --> Terminal["BottomConsoleDrawer terminal lines"]
   Facade --> Workspace["RunWorkspaceStateView"]
-  Workspace --> Card["RunTimelineEventCard"]
+  Workspace --> Table["RunEventTimelineTable"]
 ```
 
 Rules:

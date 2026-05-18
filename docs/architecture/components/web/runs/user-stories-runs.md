@@ -386,7 +386,7 @@ model,
 
 - Given a run event page is returned
 - When the console renders terminal lines
-- And the Runs workspace renders timeline cards
+- And the Runs workspace renders timeline rows
 - Then both surfaces use the same ordering, dedupe, severity, headline, detail,
   and step identity semantics
 

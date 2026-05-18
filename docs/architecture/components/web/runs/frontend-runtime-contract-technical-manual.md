@@ -213,7 +213,7 @@ F-10 adds a shared event timeline model before presentation:
 flowchart LR
   Query["listRunEvents(runId, afterSeq)"] --> Timeline["normalize/merge timeline"]
   Timeline --> Console["terminal line stream"]
-  Timeline --> Workspace["structured timeline cards"]
+  Timeline --> Workspace["structured timeline rows"]
 ```
 
 The timeline model owns ordering, duplicate collapse, cursor preservation, and

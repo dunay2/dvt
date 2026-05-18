@@ -152,14 +152,16 @@ describe('RunStates', () => {
     });
 
     expect(container.textContent).toContain('Runs');
-    expect(container.textContent).toContain('Run run_123');
-    expect(container.textContent).toContain('Run run_456');
+    expect(container.textContent).toContain('Run ID');
+    expect(container.textContent).toContain('run_123');
+    expect(container.textContent).toContain('run_456');
     expect(container.textContent).toContain('running');
     expect(container.textContent).toContain('failed');
     expect(container.textContent).toContain('abc123def');
     expect(container.textContent).toContain('zzz999yyy');
-    expect(container.textContent).toContain('Environment: dev');
-    expect(container.textContent).toContain('Environment: prod');
+    expect(container.textContent).toContain('Environment');
+    expect(container.textContent).toContain('dev');
+    expect(container.textContent).toContain('prod');
     expect(container.textContent).toContain('View Details');
   });
 
@@ -219,7 +221,7 @@ describe('RunStates', () => {
     expect(container.textContent).toContain('StepStarted');
     expect(container.textContent).toContain('INFO');
     expect(container.textContent).toContain('Step started');
-    expect(container.textContent).toContain('Step: step-1');
+    expect(container.textContent).toContain('step-1');
     expect(container.textContent).not.toContain('Console');
     expect(container.textContent).not.toContain('Materialization evidence');
     expect(container.textContent).not.toContain(
@@ -616,7 +618,7 @@ describe('RunStates', () => {
     expect(container.textContent).not.toContain('Failure diagnostics');
     expect(container.textContent).not.toContain('SINK_WRITE_FAILED');
     expect(container.textContent).toContain('Event timeline');
-    expect(container.textContent).toContain('Step: step-load');
+    expect(container.textContent).toContain('step-load');
   });
 
   it('does not derive failure diagnostics from timeline attempts when snapshot omits them', async () => {
@@ -680,7 +682,7 @@ describe('RunStates', () => {
     expect(container.textContent).not.toContain('CURRENT_ATTEMPT_FAILURE');
     expect(container.textContent).not.toContain('OLD_ATTEMPT_FAILURE');
     expect(container.textContent).toContain('Event timeline');
-    expect(container.textContent).toContain('Step: step-current');
+    expect(container.textContent).toContain('step-current');
   });
 
   it('renders error and missing states', async () => {

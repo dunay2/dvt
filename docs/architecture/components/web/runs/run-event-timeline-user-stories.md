@@ -7,7 +7,7 @@ code_refs:
   - apps/web/src/app/services/runs/runEventTimelineModel.ts
   - apps/web/src/app/services/runs/runWorkspaceFacade.ts
   - apps/web/src/app/components/console/useConsoleLogStream.ts
-  - apps/web/src/app/views/runs/RunTimelineEventCard.tsx
+  - apps/web/src/app/views/runs/RunEventTimelineTable.tsx
 ---
 
 # Run Event Timeline User Stories
@@ -75,7 +75,7 @@ Acceptance:
 ### US-F10-05: Shared Event Semantics
 
 **As** a maintainer,
-**I want** console lines and timeline cards to share severity and headline
+**I want** console lines and timeline rows to share severity and headline
 semantics,
 **So that** the two surfaces do not drift in meaning.
 
@@ -83,7 +83,7 @@ Acceptance:
 
 - Given a `StepFailed` event
 - When the console formats it
-- And when the Runs timeline card renders it
+- And when the Runs timeline table renders it
 - Then both surfaces use `ERROR` severity and the same headline copy
 
 ### US-F10-06: Structured Timeline Cards
@@ -152,15 +152,15 @@ Acceptance:
 
 ## Coverage Matrix
 
-| Story  | Primary surface           | Test surface                                    |
-| ------ | ------------------------- | ----------------------------------------------- |
-| F10-01 | `runEventTimelineModel`   | `runEventTimelineModel.test.ts`                 |
-| F10-02 | `runEventTimelineModel`   | `runEventTimelineModel.test.ts`                 |
-| F10-03 | `runEventTimelineModel`   | `runEventTimelineModel.test.ts`                 |
-| F10-04 | `runEventTimelineModel`   | `runEventTimelineModel.test.ts`                 |
-| F10-05 | shared presentation model | `formatLogLine.test.ts`, `RunStates.test.tsx`   |
-| F10-06 | `RunTimelineEventCard`    | `RunStates.test.tsx`                            |
-| F10-07 | `useConsoleLogStream`     | `formatLogLine.test.ts`, existing console tests |
-| F10-08 | `RunWorkspaceStateView`   | `RunStates.test.tsx`                            |
-| F10-09 | `RunWorkspaceFacade`      | `runWorkspaceFacade.test.ts`                    |
-| F10-10 | architecture guard        | `runsDomainBoundary.architecture.test.ts`       |
+| Story  | Primary surface           | Test surface                                      |
+| ------ | ------------------------- | ------------------------------------------------- |
+| F10-01 | `runEventTimelineModel`   | `runEventTimelineModel.test.ts`                   |
+| F10-02 | `runEventTimelineModel`   | `runEventTimelineModel.test.ts`                   |
+| F10-03 | `runEventTimelineModel`   | `runEventTimelineModel.test.ts`                   |
+| F10-04 | `runEventTimelineModel`   | `runEventTimelineModel.test.ts`                   |
+| F10-05 | shared presentation model | `formatLogLine.test.ts`, `RunStates.test.tsx`     |
+| F10-06 | `RunEventTimelineTable`   | `RunsView.test.tsx`, `runEventTableModel.test.ts` |
+| F10-07 | `useConsoleLogStream`     | `formatLogLine.test.ts`, existing console tests   |
+| F10-08 | `RunWorkspaceStateView`   | `RunStates.test.tsx`                              |
+| F10-09 | `RunWorkspaceFacade`      | `runWorkspaceFacade.test.ts`                      |
+| F10-10 | architecture guard        | `runsDomainBoundary.architecture.test.ts`         |
