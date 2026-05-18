@@ -27,7 +27,7 @@ persistence, or plugin contribution registration.
 - [Canvas Shell Component](./canvas-shell-component.md)
 - [Canvas Workbench Tabs Component](./canvas-workbench-tabs-component.md)
 - [Canvas Workbench Command Query Catalog](./canvas-workbench-command-query-catalog.md)
-- [F-12 Fowler mailbox analysis](../../../../buzon/20260518-f12-fowler-canvas-legacy-retirement-analysis.md)
+- [F-12 Fowler mailbox analysis](../../../../../buzon/20260518-f12-fowler-canvas-legacy-retirement-analysis.md)
 
 ## Public API
 
