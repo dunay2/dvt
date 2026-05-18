@@ -1,3 +1,4 @@
+/** Owned concern: prove Code workbench reads workspace files through scoped browser query rails. */
 import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
 import { getLastE2eApiCall, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {

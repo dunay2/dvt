@@ -1,8 +1,8 @@
 ---
 title: Code Workbench Workspace Files Component
-status: Proposed
+status: Accepted
 owner: Web / API Architecture
-last_reviewed: 2026-05-04
+last_reviewed: 2026-05-18
 planning_type: architecture
 ---
 

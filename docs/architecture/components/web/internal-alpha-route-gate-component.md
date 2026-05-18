@@ -74,10 +74,10 @@ command/query rail catalog before UI, adapter, or route-handler work starts.
 - `accepted` returns to `review` when route order, rail, risk, or child proof
   changes.
 
-As of the current F-27 route-gate evidence slice, `Startup gate` and
-`Workspace context` are accepted inside the combined fixture. The full route
-decision stays `review` until every remaining stage evidence state is also
-accepted.
+As of the current F-27 route-gate evidence slice, `Startup gate`,
+`Workspace context`, `Canvas workbench`, and `Code workbench` are accepted
+inside the combined fixture. The full route decision stays `review` until every
+remaining stage evidence state is also accepted.
 
 ```mermaid
 stateDiagram-v2
@@ -130,8 +130,10 @@ from `planned` to `accepted` only when all of these are true:
 For the current route gate, `Startup gate` is accepted through
 `ObserveAppBootstrapRouteReadiness`, `Workspace context` is accepted through
 `GetEffectiveWorkspaceContext`, and `Canvas workbench` is accepted through
-`GetWorkspaceGraphDraft` plus `SaveWorkspaceGraphDraft`. `Code workbench`,
-`Plan/run readiness`, and `Recovery states` remain planned.
+`GetWorkspaceGraphDraft` plus `SaveWorkspaceGraphDraft`. `Code workbench` is
+accepted through `ListWorkspaceFiles` plus `GetWorkspaceFileContent`, including
+scoped API tests, read-only UI proof, browser proof, and filesystem safety
+negative coverage. `Plan/run readiness` and `Recovery states` remain planned.
 
 ## Cadence Contract
 
