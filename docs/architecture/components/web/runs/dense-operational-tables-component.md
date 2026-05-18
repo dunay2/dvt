@@ -76,7 +76,7 @@ flowchart TB
 | Event table model   | `apps/web/src/app/views/runs/runEventTableModel.ts`                   | Owns event row mapping from shared timeline presentation |
 | Run table view      | `apps/web/src/app/views/runs/RunOperationalTable.tsx`                 | Renders dense rows via TanStack Table                    |
 | Timeline table view | `apps/web/src/app/views/runs/RunEventTimelineTable.tsx`               | Renders event rows from shared event presentation        |
-| Architecture guard  | `apps/web/src/app/views/runs/runsDomainBoundary.architecture.test.ts` | Prevents regression to card-owned dense semantics        |
+| Architecture guard  | `apps/web/src/app/views/runs/runsDomainBoundary.architecture.test.ts` | Prevents non-table dense timeline regressions            |
 
 ## Mature-System Comparison
 

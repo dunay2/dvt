@@ -378,7 +378,8 @@ timeline output.
 **As** a maintainer,
 **I want** the shell console and Runs workspace to consume the same timeline
 model,
-**So that** terminal lines and structured cards do not drift in event meaning.
+**So that** terminal lines and structured timeline rows do not drift in event
+meaning.
 
 **C&Q rail:** Query - `listRunEvents`
 

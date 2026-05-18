@@ -86,10 +86,10 @@ Acceptance:
 - And when the Runs timeline table renders it
 - Then both surfaces use `ERROR` severity and the same headline copy
 
-### US-F10-06: Structured Timeline Cards
+### US-F10-06: Structured Timeline Rows
 
 **As** an operator,
-**I want** the Runs route to render event cards with timestamp, severity,
+**I want** the Runs route to render event rows with timestamp, severity,
 headline, detail, and step ID,
 **So that** durable timeline review is more scannable than terminal text.
 
@@ -97,7 +97,7 @@ Acceptance:
 
 - Given an event has `emittedAt`, `eventType`, `payload.message`, and `stepId`
 - When the Runs workspace renders the timeline
-- Then the card shows timestamp, severity, headline, detail, and step ID
+- Then the timeline row shows timestamp, severity, headline, detail, and step ID
 
 ### US-F10-07: Terminal Companion Lines
 

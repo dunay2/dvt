@@ -103,6 +103,21 @@ describe('Runs domain boundary', () => {
       expect(denseTableStories).toContain(storyId);
     }
 
+    for (const legacyPhrase of [
+      'RunTimelineEventCard',
+      'timeline cards',
+      'event cards',
+      'structured cards',
+      'card shows',
+      'card-owned',
+    ]) {
+      expect(eventTimelineGuide).not.toContain(legacyPhrase);
+      expect(eventTimelineStories).not.toContain(legacyPhrase);
+      expect(denseTableGuide).not.toContain(legacyPhrase);
+      expect(denseTableStories).not.toContain(legacyPhrase);
+      expect(userStories).not.toContain(legacyPhrase);
+    }
+
     for (const storyId of [
       'US-F10-01',
       'US-F10-02',
