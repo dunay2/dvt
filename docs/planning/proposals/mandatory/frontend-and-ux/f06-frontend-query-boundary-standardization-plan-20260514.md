@@ -199,22 +199,88 @@ symbols:
     cypressCoverage: none
     unitTests:
       - RunsView.test.tsx
-  - name: useRunWorkspaceQuery
-    path: apps/web/src/app/queries/runsQueries.ts
-    dddOwner: Web runtime query boundary
-    cqRails:
-      - Run query read models
+- name: useRunWorkspaceQuery
+  path: apps/web/src/app/queries/runsQueries.ts
+  dddOwner: Web runtime query boundary
+  cqRails:
+    - Run query read models
     fowlerSignals:
       - Hidden cache policy
     architectureGuard: queryKeyPolicy.architecture.test.ts
-    cypressCoverage: none
-    unitTests:
-      - useRunWorkspace.test.tsx
-  - name: WorkspaceArtifactRecord
-    path: apps/web/src/app/queries/workspaceQueries.ts
-    dddOwner: Web workspace query boundary
-    cqRails:
-      - Workspace query read models
+  cypressCoverage: none
+  unitTests:
+    - useRunWorkspace.test.tsx
+- name: RUNS_STATUS_REFRESH_INTERVAL_MS
+  path: apps/web/src/app/queries/runsQueries.ts
+  dddOwner: Web runtime query boundary
+  cqRails:
+    - Run query read models
+  fowlerSignals:
+    - Hidden cache policy
+  architectureGuard: queryKeyPolicy.architecture.test.ts
+  cypressCoverage: none
+  unitTests:
+    - useRunWorkspace.test.tsx
+- name: QueryStateReader
+  path: apps/web/src/app/queries/runsQueries.ts
+  dddOwner: Web runtime query boundary
+  cqRails:
+    - Run query read models
+  fowlerSignals:
+    - Hidden cache policy
+  architectureGuard: queryKeyPolicy.architecture.test.ts
+  cypressCoverage: none
+  unitTests:
+    - useRunWorkspace.test.tsx
+- name: getRunStatusRefreshInterval
+  path: apps/web/src/app/queries/runsQueries.ts
+  dddOwner: Web runtime query boundary
+  cqRails:
+    - Run query read models
+  fowlerSignals:
+    - Hidden cache policy
+  architectureGuard: queryKeyPolicy.architecture.test.ts
+  cypressCoverage: none
+  unitTests:
+    - useRunWorkspace.test.tsx
+- name: getRunSummariesRefreshInterval
+  path: apps/web/src/app/queries/runsQueries.ts
+  dddOwner: Web runtime query boundary
+  cqRails:
+    - Run query read models
+  fowlerSignals:
+    - Hidden cache policy
+  architectureGuard: queryKeyPolicy.architecture.test.ts
+  cypressCoverage: none
+  unitTests:
+    - useRunWorkspace.test.tsx
+- name: getRunSnapshotRefreshInterval
+  path: apps/web/src/app/queries/runsQueries.ts
+  dddOwner: Web runtime query boundary
+  cqRails:
+    - Run query read models
+  fowlerSignals:
+    - Hidden cache policy
+  architectureGuard: queryKeyPolicy.architecture.test.ts
+  cypressCoverage: none
+  unitTests:
+    - useRunWorkspace.test.tsx
+- name: getRunWorkspaceRefreshInterval
+  path: apps/web/src/app/queries/runsQueries.ts
+  dddOwner: Web runtime query boundary
+  cqRails:
+    - Run query read models
+  fowlerSignals:
+    - Hidden cache policy
+  architectureGuard: queryKeyPolicy.architecture.test.ts
+  cypressCoverage: none
+  unitTests:
+    - useRunWorkspace.test.tsx
+- name: WorkspaceArtifactRecord
+  path: apps/web/src/app/queries/workspaceQueries.ts
+  dddOwner: Web workspace query boundary
+  cqRails:
+    - Workspace query read models
     fowlerSignals:
       - Boundary drift
     architectureGuard: queryKeyPolicy.architecture.test.ts
