@@ -1,6 +1,8 @@
+/** Owned concern: verify protected route startup waits for runtime capability and context readiness in browser. */
 import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
-import { stubE2eApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import { stubE2eApi, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
+  E2E_WORKSPACE_SESSION,
   stubShellBootstrapApis,
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
@@ -39,15 +41,20 @@ describe('Startup route readiness', () => {
           };
         })
     );
+    stubE2eJsonApi('GET', '/workspace/context', {
+      effectiveWorkspace: E2E_WORKSPACE_SESSION,
+      availableWorkspaces: [E2E_WORKSPACE_SESSION],
+    });
     stubCanvasDraftRead();
 
     visitWithE2eWorkspaceSession('/canvas');
-    waitForE2eApiCall('/workspace/graph/draft', 'GET');
 
+    cy.get('#app-loading-screen').should('be.visible');
+    cy.get('#app-loading-screen').should('not.have.attr', 'data-state', 'complete');
     cy.contains('Preparing initial route').should('be.visible');
-    cy.contains(
-      /Waiting for runtime capabilities before route readiness\.|Esperando las capacidades de runtime antes de resolver la ruta\./
-    ).should('be.visible');
+    cy.contains(/2\/5 startup checks settled|2\/5 comprobaciones de arranque resueltas/).should(
+      'be.visible'
+    );
     cy.contains(/5\/5 startup checks settled|5\/5 comprobaciones de arranque resueltas/).should(
       'not.exist'
     );
@@ -56,9 +63,9 @@ describe('Startup route readiness', () => {
       releaseCapabilities();
     });
 
+    waitForE2eApiCall('/workspace/graph/draft', 'GET');
     cy.contains('Sales canvas').should('be.visible');
-    cy.contains(
-      /Waiting for runtime capabilities before route readiness\.|Esperando las capacidades de runtime antes de resolver la ruta\./
-    ).should('not.exist');
+    cy.get('#app-loading-screen').should('have.attr', 'data-state', 'complete');
+    cy.get('#app-loading-screen').should('not.be.visible');
   });
 });

@@ -30,6 +30,31 @@ describe('route bootstrap startup readiness', () => {
     expect(result.nextState.stablePresentation).toBeNull();
   });
 
+  it('keeps capability-waiting route copy after a same-route pending republication', () => {
+    const suppressed = resolveRouteBootstrapStartupReadiness({
+      activeRouteId: 'dbt.canvas',
+      capabilitiesColdStartPending: true,
+      capabilitiesPendingDetail: 'Waiting for runtime capabilities before route readiness.',
+      presentation: createCompleteRouteBootstrapPresentation('Canvas route is ready'),
+      previousState: createInitialRouteBootstrapStartupReadinessState(),
+    });
+
+    const pending = resolveRouteBootstrapStartupReadiness({
+      activeRouteId: 'dbt.canvas',
+      capabilitiesColdStartPending: true,
+      capabilitiesPendingDetail: 'Waiting for runtime capabilities before route readiness.',
+      presentation: createPendingRouteBootstrapPresentation('Preparing canvas route'),
+      previousState: suppressed.nextState,
+    });
+
+    expect(pending.command).toEqual({
+      step: 'route',
+      status: 'pending',
+      detail: 'Waiting for runtime capabilities before route readiness.',
+    });
+    expect(pending.canComplete).toBe(false);
+  });
+
   it('does not demote a same-route failed posture back to pending', () => {
     const failed = resolveRouteBootstrapStartupReadiness({
       activeRouteId: 'dbt.canvas',

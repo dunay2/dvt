@@ -3,6 +3,7 @@ import { resolveCanvasViewCopy, type CanvasViewCopy } from '../../../src/app/vie
 import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
 import { stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
+  E2E_WORKSPACE_SESSION,
   stubShellBootstrapApis,
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
@@ -35,6 +36,10 @@ function stubRuntimeCapabilities(): void {
 function visitCanvasWorkbench(path = '/canvas'): void {
   stubShellBootstrapApis();
   stubRuntimeCapabilities();
+  stubE2eJsonApi('GET', '/workspace/context', {
+    effectiveWorkspace: E2E_WORKSPACE_SESSION,
+    availableWorkspaces: [E2E_WORKSPACE_SESSION],
+  });
   stubCanvasDraftRead();
 
   visitWithE2eWorkspaceSession(path);

@@ -2,7 +2,7 @@
 title: Internal Alpha Route Gate Component
 status: Review
 owner: Product / Architecture / Frontend
-last_reviewed: 2026-05-14
+last_reviewed: 2026-05-18
 planning_type: component
 task_ids:
   - F-27
@@ -23,14 +23,15 @@ whether the full route is accepted.
 
 ## Public API
 
-| API                       | Kind     | Owned concern                                                                 |
-| ------------------------- | -------- | ----------------------------------------------------------------------------- |
-| `InternalAlphaRouteGate`  | route    | Owns alpha route sequencing, gate posture, and alpha-full decision semantics. |
-| `RouteStageProof`         | record   | Captures one stage rail, owner, happy proof, fail-closed proof, and risk.     |
-| `AlphaFullDecision`       | decision | Returns `blocked`, `review`, or `accepted` from the full proof set.           |
-| `AlphaCadenceDecision`    | decision | Names tester audience, entry date, duration, exit owner, and extension rule.  |
-| `RouteRecoveryVocabulary` | model    | Maps equivalent failures to source-owned recovery states.                     |
-| `RouteAcceptanceMatrix`   | review   | Records the current stage acceptance table and alpha exit impact.             |
+| API                                 | Kind         | Owned concern                                                                                              |
+| ----------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------- |
+| `InternalAlphaRouteGate`            | route        | Owns alpha route sequencing, gate posture, and alpha-full decision semantics.                              |
+| `RouteStageProof`                   | record       | Captures one stage rail, owner, happy proof, fail-closed proof, and risk.                                  |
+| `AlphaFullDecision`                 | decision     | Returns `blocked`, `review`, or `accepted` from the full proof set.                                        |
+| `AlphaCadenceDecision`              | decision     | Names tester audience, entry date, duration, exit owner, and extension rule.                               |
+| `RouteRecoveryVocabulary`           | model        | Maps failures to source-owned recovery states and blocks incomplete vocabulary.                            |
+| `RouteAcceptanceMatrix`             | review       | Records the current stage acceptance table and alpha exit impact.                                          |
+| `InternalAlphaCombinedRouteFixture` | test fixture | Exercises one ordered route proof across startup, context, Canvas, Code, plan/run readiness, and recovery. |
 
 The API is documentary today. Executable child behavior must bind to the
 command/query rail catalog before UI, adapter, or route-handler work starts.
@@ -41,18 +42,42 @@ command/query rail catalog before UI, adapter, or route-handler work starts.
 - Child slices cannot declare alpha full.
 - Every user-visible stage must name a command/query rail or component owner.
 - Every stage must have both happy-path and fail-closed proof before alpha full.
+- Every stage in the combined route fixture must carry at least one traceable
+  and resolvable `evidenceRefs` entry pointing at the governing doc or
+  executable proof.
+- Every combined fixture stage must name whether its evidence is `planned` or
+  `accepted`.
+- The combined route fixture must traverse startup, workspace context, Canvas,
+  Code, plan/run readiness, and recovery in that order.
+- Canvas and Code fixture stages must preserve all owned rails instead of
+  collapsing command/query authority into one local flag.
 - Recovery and readiness copy must be source-owned, not duplicated free text.
+- Every combined fixture stage must name at least one non-ready recovery state.
+- The combined route fixture must include `blocked`, `unauthorized`,
+  `unavailable`, `stale`, and `not-found` recovery states before review.
 - Risk triage and cadence are product inputs, not after-the-fact closeout notes.
 - Local fixture state, localStorage, and mock-only flows are not product truth.
 
 ## State Transitions
 
 - `blocked` stays `blocked` when a stage lacks owner, rail, or negative proof.
+- `blocked` stays `blocked` when a combined fixture stage lacks traceable and
+  resolvable evidence references.
+- `blocked` stays `blocked` when the combined route fixture omits a required
+  route stage or owned rail.
+- `blocked` stays `blocked` when any combined fixture stage lacks negative
+  recovery vocabulary or the route omits a required recovery state.
 - `blocked` moves to `review` when all stages have owners and planned proofs.
 - `review` returns to `blocked` when stage evidence or risk triage regresses.
-- `review` moves to `accepted` only when every stage has accepted evidence.
+- `review` moves to `accepted` only when every combined fixture stage has
+  accepted evidence.
 - `accepted` returns to `review` when route order, rail, risk, or child proof
   changes.
+
+As of the current F-27 route-gate evidence slice, `Startup gate` and
+`Workspace context` are accepted inside the combined fixture. The full route
+decision stays `review` until every remaining stage evidence state is also
+accepted.
 
 ```mermaid
 stateDiagram-v2
@@ -79,13 +104,33 @@ stateDiagram-v2
 | Rail                                | Type    | Route stage        |
 | ----------------------------------- | ------- | ------------------ |
 | `ObserveAppBootstrapRouteReadiness` | query   | Startup gate       |
-| `ObserveWorkspaceContext`           | query   | Workspace context  |
+| `GetEffectiveWorkspaceContext`      | query   | Workspace context  |
 | `GetWorkspaceGraphDraft`            | query   | Canvas workbench   |
 | `SaveWorkspaceGraphDraft`           | command | Canvas workbench   |
 | `ListWorkspaceFiles`                | query   | Code workbench     |
 | `GetWorkspaceFileContent`           | query   | Code workbench     |
 | `ObservePlanRunReadiness`           | query   | Plan/run readiness |
 | `MapRouteRecoveryState`             | query   | Recovery states    |
+
+## Accepted Evidence Semantics
+
+Accepted stage evidence is semantic, not a path allowlist. A stage can move
+from `planned` to `accepted` only when all of these are true:
+
+- the stage uses the real command/query rail for product behavior, not a
+  planning-only or legacy rail name;
+- the stage has at least one local component or governing documentation
+  reference that names API, invariants, transitions, and consumers;
+- the stage has executable web evidence for happy path and fail-closed posture;
+- browser evidence exercises the same protected runtime route posture that
+  users see, not a reduced local-only fixture;
+- accepting the stage does not accept `alpha-full` while any other stage remains
+  `planned`.
+
+For the current route gate, `Startup gate` is accepted through
+`ObserveAppBootstrapRouteReadiness`, and `Workspace context` is accepted through
+`GetEffectiveWorkspaceContext`. `Canvas workbench`, `Code workbench`,
+`Plan/run readiness`, and `Recovery states` remain planned.
 
 ## Cadence Contract
 
@@ -134,3 +179,8 @@ The guard lives in
 `apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts`. It proves
 that the component guide, user stories, route plan, and route acceptance matrix
 stay aligned around F-27 authority and rail-backed stage proof.
+
+The combined fixture lives in
+`apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts`. It is
+test-only route proof: it does not create product authority, does not persist
+route state, and must stay behind the F-27 gate.

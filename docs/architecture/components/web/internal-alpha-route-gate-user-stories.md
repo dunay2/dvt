@@ -2,7 +2,7 @@
 title: Internal Alpha Route Gate User Stories
 status: Review
 owner: Product / Architecture / Frontend
-last_reviewed: 2026-05-14
+last_reviewed: 2026-05-18
 planning_type: user-stories
 task_ids:
   - F-27
@@ -18,7 +18,7 @@ own implementation details and tests.
 - `US-F27-001`: as an internal tester, I need startup posture through
   `ObserveAppBootstrapRouteReadiness` with happy and fail-closed evidence.
 - `US-F27-002`: as an internal tester, I need tenant, project, and environment
-  context through `ObserveWorkspaceContext`.
+  context through `GetEffectiveWorkspaceContext`.
 - `US-F27-003`: as an internal tester, I need Canvas graph truth through
   `GetWorkspaceGraphDraft` and `SaveWorkspaceGraphDraft`.
 - `US-F27-004`: as an internal tester, I need read-only Code inspection through
@@ -35,6 +35,9 @@ own implementation details and tests.
   alpha-full claims.
 - `US-F27-010`: as a lane owner, I need `F-27` to remain route authority while
   child proposals remain stage authorities.
+- `US-F27-011`: as a reviewer, I need one combined route fixture to traverse
+  startup, workspace context, Canvas, Code, plan/run readiness, and recovery
+  before any alpha-full candidate can move past review.
 
 ## Negative Stories
 
@@ -48,6 +51,28 @@ own implementation details and tests.
   blocked.
 - `US-F27-N-005`: risk triage lists included risks only. Alpha full remains
   blocked until exclusion rationale exists.
+- `US-F27-N-006`: the combined route fixture omits a stage fail-closed proof.
+  Alpha full remains blocked and the missing stage is reported by name.
+- `US-F27-N-007`: the combined route fixture omits a route stage or an owned
+  command/query rail. Alpha full remains blocked and the missing stage or rail
+  is reported by name.
+- `US-F27-N-008`: the combined route fixture keeps a stage at `ready` only or
+  omits `blocked`, `unauthorized`, `unavailable`, `stale`, or `not-found`.
+  Alpha full remains blocked and the missing vocabulary is reported by name.
+
+## Scenario Coverage Matrix
+
+| Stage              | Happy-path story | Fail-closed story | Current acceptance |
+| ------------------ | ---------------- | ----------------- | ------------------ |
+| Startup gate       | `US-F27-001`     | `US-F27-N-002`    | accepted           |
+| Workspace context  | `US-F27-002`     | `US-F27-N-007`    | accepted           |
+| Canvas workbench   | `US-F27-003`     | `US-F27-N-001`    | planned            |
+| Code workbench     | `US-F27-004`     | `US-F27-N-001`    | planned            |
+| Plan/run readiness | `US-F27-005`     | `US-F27-N-002`    | planned            |
+| Recovery states    | `US-F27-006`     | `US-F27-N-003`    | planned            |
+| Alpha cadence      | `US-F27-007`     | `US-F27-N-004`    | planned            |
+| Risk triage        | `US-F27-008`     | `US-F27-N-005`    | planned            |
+| Route authority    | `US-F27-010`     | `US-F27-N-006`    | active             |
 
 ## Traceability
 
@@ -58,3 +83,5 @@ own implementation details and tests.
   `docs/planning/reviews/architecture-and-governance/20260514-internal-alpha-route-acceptance-matrix.md`.
 - Architecture guard:
   `apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts`.
+- Combined fixture:
+  `apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts`.
