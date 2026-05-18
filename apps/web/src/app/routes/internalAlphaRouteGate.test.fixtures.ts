@@ -47,10 +47,12 @@ export interface InternalAlphaCombinedRouteFixture {
   readonly routeAuthority: 'F-27';
   readonly claim: 'alpha-full-candidate';
   readonly stages: readonly InternalAlphaCombinedRouteStageProof[];
+  readonly alphaFullClosureEvidenceRefs: readonly string[];
   readonly alphaFullBlockers: readonly InternalAlphaFullBlocker[];
 }
 
 export interface InternalAlphaCombinedRouteEvaluation {
+  readonly missingAlphaFullClosureEvidenceRefs: readonly ['alpha-full'] | [];
   readonly missingEvidenceAcceptance: readonly InternalAlphaRouteStage[];
   readonly missingEvidenceRefs: readonly InternalAlphaRouteStage[];
   readonly missingFailClosedProof: readonly InternalAlphaRouteStage[];
@@ -94,7 +96,13 @@ function isResolvableEvidenceRef(evidenceRef: string): boolean {
 }
 
 export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixture = {
-  alphaFullBlockers: ['Alpha cadence', 'Risk triage'],
+  alphaFullBlockers: [],
+  alphaFullClosureEvidenceRefs: [
+    'docs/planning/closeouts/20260514-f27-alpha-route-acceptance-matrix-closeout.md',
+    'docs/planning/reviews/architecture-and-governance/20260514-internal-alpha-route-acceptance-matrix.md',
+    'docs/architecture/components/web/internal-alpha-route-gate-component.md',
+    'docs/architecture/components/web/internal-alpha-route-gate-user-stories.md',
+  ],
   claim: 'alpha-full-candidate',
   routeAuthority: 'F-27',
   stages: [
@@ -252,8 +260,17 @@ export function evaluateInternalAlphaCombinedRouteFixture(
   const missingHappyPathProof = fixture.stages
     .filter((stage) => stage.happyPathProof.trim().length === 0)
     .map((stage) => stage.stage);
+  const missingAlphaFullClosureEvidenceRefs: readonly ['alpha-full'] | [] =
+    fixture.alphaFullBlockers.length === 0 &&
+    (fixture.alphaFullClosureEvidenceRefs.length === 0 ||
+      fixture.alphaFullClosureEvidenceRefs.some(
+        (evidenceRef) => !isResolvableEvidenceRef(evidenceRef)
+      ))
+      ? ['alpha-full']
+      : [];
 
   return {
+    missingAlphaFullClosureEvidenceRefs,
     missingEvidenceAcceptance,
     missingEvidenceRefs,
     missingFailClosedProof,
@@ -265,6 +282,7 @@ export function evaluateInternalAlphaCombinedRouteFixture(
     routeAuthority: fixture.routeAuthority,
     routeDecision:
       missingFailClosedProof.length > 0 ||
+      missingAlphaFullClosureEvidenceRefs.length > 0 ||
       missingEvidenceAcceptance.length > 0 ||
       missingEvidenceRefs.length > 0 ||
       missingHappyPathProof.length > 0 ||

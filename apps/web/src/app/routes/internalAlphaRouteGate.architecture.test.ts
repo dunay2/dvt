@@ -156,13 +156,15 @@ describe('internal alpha route gate architecture', () => {
     }
 
     expect(acceptanceMatrix).toContain('Excluded');
-    expect(acceptanceMatrix).toContain('remaining alpha-full blockers');
-    for (const remainingBlocker of ['Alpha cadence', 'Risk triage']) {
-      expect(acceptanceMatrix).toMatch(new RegExp(`${remainingBlocker}[^\\n]+(remain|block)`, 'i'));
+    expect(acceptanceMatrix).toContain('no remaining alpha-full blockers');
+    for (const acceptedBlocker of ['Alpha cadence', 'Risk triage']) {
+      expect(acceptanceMatrix).toMatch(
+        new RegExp(`${acceptedBlocker}[^\\n]+(accepted|closed)`, 'i')
+      );
     }
     expect(acceptanceMatrix).not.toMatch(/Plan\/run readiness`: remains planned/i);
     expect(acceptanceMatrix).not.toMatch(/only remaining evidence row/i);
-    expect(acceptanceMatrix).toMatch(/alpha-full stays\s+blocked/);
+    expect(acceptanceMatrix).toMatch(/alpha-full is accepted/);
   });
 
   it('executes one combined route fixture across ordered happy and fail-closed stage proof', () => {
@@ -235,12 +237,13 @@ describe('internal alpha route gate architecture', () => {
       missingFailClosedProof: [],
       missingHappyPathProof: [],
       missingEvidenceRefs: [],
+      missingAlphaFullClosureEvidenceRefs: [],
       missingRails: [],
       missingRecoveryStates: [],
       missingStages: [],
-      remainingAlphaFullBlockers: ['Alpha cadence', 'Risk triage'],
+      remainingAlphaFullBlockers: [],
       routeAuthority: 'F-27',
-      routeDecision: 'review',
+      routeDecision: 'accepted',
       stagesWithoutRecoveryVocabulary: [],
     });
 
@@ -257,7 +260,7 @@ describe('internal alpha route gate architecture', () => {
     });
   });
 
-  it('accepts startup gate evidence without accepting the full alpha route', () => {
+  it('keeps startup gate evidence accepted inside the full alpha route proof', () => {
     const startupStage = internalAlphaCombinedRouteFixture.stages.find(
       (stage) => stage.stage === 'Startup gate'
     );
@@ -273,12 +276,12 @@ describe('internal alpha route gate architecture', () => {
     expect(evaluateInternalAlphaCombinedRouteFixture(internalAlphaCombinedRouteFixture)).toEqual(
       expect.objectContaining({
         missingEvidenceAcceptance: [],
-        routeDecision: 'review',
+        routeDecision: 'accepted',
       })
     );
   });
 
-  it('accepts workspace context evidence without accepting the full alpha route', () => {
+  it('keeps workspace context evidence accepted inside the full alpha route proof', () => {
     const workspaceContextStage = internalAlphaCombinedRouteFixture.stages.find(
       (stage) => stage.stage === 'Workspace context'
     );
@@ -296,7 +299,7 @@ describe('internal alpha route gate architecture', () => {
     expect(evaluateInternalAlphaCombinedRouteFixture(internalAlphaCombinedRouteFixture)).toEqual(
       expect.objectContaining({
         missingEvidenceAcceptance: [],
-        routeDecision: 'review',
+        routeDecision: 'accepted',
       })
     );
   });
@@ -334,7 +337,7 @@ describe('internal alpha route gate architecture', () => {
     expect(evaluateInternalAlphaCombinedRouteFixture(internalAlphaCombinedRouteFixture)).toEqual(
       expect.objectContaining({
         missingEvidenceAcceptance: [],
-        routeDecision: 'review',
+        routeDecision: 'accepted',
       })
     );
   });
@@ -381,7 +384,7 @@ describe('internal alpha route gate architecture', () => {
     expect(evaluateInternalAlphaCombinedRouteFixture(internalAlphaCombinedRouteFixture)).toEqual(
       expect.objectContaining({
         missingEvidenceAcceptance: [],
-        routeDecision: 'review',
+        routeDecision: 'accepted',
       })
     );
   });
@@ -427,7 +430,7 @@ describe('internal alpha route gate architecture', () => {
       expect.objectContaining({
         missingRecoveryStates: [],
         stagesWithoutRecoveryVocabulary: [],
-        routeDecision: 'review',
+        routeDecision: 'accepted',
       })
     );
   });
@@ -472,7 +475,7 @@ describe('internal alpha route gate architecture', () => {
     }
   });
 
-  it('accepts Plan/run readiness evidence without accepting the full alpha route', () => {
+  it('keeps Plan/run readiness evidence accepted inside the full alpha route proof', () => {
     const planRunStage = internalAlphaCombinedRouteFixture.stages.find(
       (stage) => stage.stage === 'Plan/run readiness'
     );
@@ -503,8 +506,8 @@ describe('internal alpha route gate architecture', () => {
     }
     expect(evaluateInternalAlphaCombinedRouteFixture(internalAlphaCombinedRouteFixture)).toEqual(
       expect.objectContaining({
-        remainingAlphaFullBlockers: ['Alpha cadence', 'Risk triage'],
-        routeDecision: 'review',
+        remainingAlphaFullBlockers: [],
+        routeDecision: 'accepted',
       })
     );
   });
@@ -513,6 +516,7 @@ describe('internal alpha route gate architecture', () => {
     expect(
       evaluateInternalAlphaCombinedRouteFixture({
         ...internalAlphaCombinedRouteFixture,
+        alphaFullClosureEvidenceRefs: [],
         alphaFullBlockers: [],
         stages: internalAlphaCombinedRouteFixture.stages.map((stage) => ({
           ...stage,
@@ -520,9 +524,8 @@ describe('internal alpha route gate architecture', () => {
         })),
       })
     ).toMatchObject({
-      missingEvidenceAcceptance: [],
-      remainingAlphaFullBlockers: [],
-      routeDecision: 'accepted',
+      missingAlphaFullClosureEvidenceRefs: ['alpha-full'],
+      routeDecision: 'blocked',
     });
 
     expect(

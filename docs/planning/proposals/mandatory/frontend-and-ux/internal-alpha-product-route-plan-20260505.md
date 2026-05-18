@@ -17,9 +17,9 @@ This plan gives the internal alpha route its own planning authority. It fixes
 the prior coupling where the Code workbench workspace-files child slice carried
 route-level alpha context inside a closed child-slice manifest.
 
-This plan does not declare alpha complete. It governs the planning, routing,
-and proof model that future implementation slices must use before expanding the
-route beyond the already planned child slices.
+This plan governs the planning, routing, and proof model for internal alpha.
+The route-level gate is accepted only through F-27; child slices remain
+stage-specific authorities and cannot declare alpha full by implication.
 
 ## Governing Sources
 
@@ -54,7 +54,7 @@ Out of scope:
 
 - implementing new startup, Canvas, Code, or plan/run UI behavior;
 - adding new API routes, contracts, adapters, or packages;
-- declaring internal alpha full complete;
+- declaring launch, beta, public availability, or GTM cadence;
 - changing the already closed workspace-files child-slice evidence.
 
 ## Route Authority Model
@@ -137,8 +137,8 @@ cannot declare alpha full.
 ## Feature Mechanization Scope
 
 This manifest mechanizes the planning-authority correction and the test-only
-combined route proof fixture. It does not implement product route behavior and
-does not close the alpha full gate.
+combined route proof fixture. It does not implement product route behavior; it
+does own the route-level alpha-full gate decision.
 
 ```feature-mechanization
 version: 1

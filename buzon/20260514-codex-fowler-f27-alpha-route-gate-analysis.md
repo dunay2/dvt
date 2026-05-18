@@ -1,6 +1,7 @@
 # Fowler Analysis - F-27 Internal Alpha Route Gate
 
 Date: 2026-05-14
+Updated: 2026-05-18
 
 ## Governing Sources
 
@@ -63,12 +64,37 @@ The slice applies a route-gate acceptance matrix:
 
 ## Remaining F-27 Work
 
-This slice does not declare F-27 done. The next F-27 cuts are executable stage
-proofs:
+The 2026-05-18 continuation closes the remaining F-27 route-gate work. The
+previous remaining cuts now have accepted evidence:
 
-- startup/context proof;
-- Canvas proof;
-- plan/run readiness mapping;
-- source-owned recovery vocabulary;
-- route-stage risk triage;
-- cadence decision.
+- startup/context proof is accepted through route bootstrap and effective
+  workspace-context evidence;
+- Canvas proof is accepted through governed draft read/save and fail-closed
+  browser evidence;
+- plan/run readiness mapping is accepted through `ObservePlanRunReadiness` and
+  `PlanRunReadinessReadModel`;
+- source-owned recovery vocabulary is accepted through `MapRouteRecoveryState`;
+- route-stage risk triage is accepted with included and excluded risk rationale;
+- cadence decision is accepted with audience, entry date, duration, exit owner,
+  and extension rule.
+
+## 2026-05-18 Fowler Closeout
+
+The final opportunity was **hidden authority**: an empty blocker list could have
+accepted alpha full without proving where cadence and risk closure evidence
+lived. The fix adds alpha-full closure evidence to the combined fixture and
+keeps `Alpha cadence` and `Risk triage` as accepted route-gate semantics instead
+of loose closeout text.
+
+Mature-system comparison:
+
+- Mature release gates require release-window and risk sign-off evidence as
+  first-class inputs, not as prose after the decision.
+- DVT now mirrors that posture: stage proof, cadence, risk triage, and
+  closeout evidence are all consumed by one semantic architecture guard.
+
+Residual opportunity:
+
+- Future Lane E tasks should keep alpha-full accepted by regression, but should
+  not add new route stages to F-27 unless a new command/query rail and route
+  stage owner are declared first.
