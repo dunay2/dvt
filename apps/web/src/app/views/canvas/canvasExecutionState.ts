@@ -5,6 +5,7 @@ import {
   buildPlanStatusSummary,
   hasPersistedPreviewProof,
   hasPersistedPreviewIdentityMismatch,
+  observePlanRunReadiness,
 } from './canvasPlanReadiness';
 import { canvasViewCopy } from './copy';
 import {
@@ -63,7 +64,14 @@ export function deriveCanvasExecutionState({
     !isCurrentPlanStale;
   const planStatusSummary =
     executionStrategy == null || executionStrategy.kind === 'not_executable'
-      ? canvasViewCopy.canvasExecutionUnavailableMessage
+      ? observePlanRunReadiness({
+          canRun,
+          currentPlan,
+          isCurrentPlanStale,
+          persistedPreviewIdentityMismatch,
+          hasPersistedPlanForRun,
+          capabilityMismatch: true,
+        }).summary
       : buildPlanStatusSummary({
           canRun,
           currentPlan,
