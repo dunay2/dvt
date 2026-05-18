@@ -23,17 +23,25 @@ export const canvasViewRouteCopyByKey = {
   },
   routeNeedsCanvasTitle: {
     key: 'canvas.route.needsCanvasTitle',
-    fallback: 'Create canvas',
+    fallback: 'Create canvas in this workspace',
   },
   routeNeedsCanvasMessage: {
     key: 'canvas.route.needsCanvasMessage',
     fallback:
-      'This workspace playground does not have a persisted canvas document yet. Choose a governed canvas kind to start authoring.',
+      'This active workspace does not have a persisted canvas document yet. Choose a canvas template to start authoring.',
   },
   routeNeedsCanvasHelper: {
     key: 'canvas.route.needsCanvasHelper',
     fallback:
-      'The first canvas is persisted through the protected workspace graph draft boundary before any nodes are added.',
+      'The selected canvas template is persisted through the protected workspace graph draft boundary before any nodes are added.',
+  },
+  routeNeedsCanvasWorkspaceLabel: {
+    key: 'canvas.route.needsCanvasWorkspaceLabel',
+    fallback: 'Active workspace',
+  },
+  routeNeedsCanvasTemplateLabel: {
+    key: 'canvas.route.needsCanvasTemplateLabel',
+    fallback: 'Choose a canvas template',
   },
   routeEmptyTitle: {
     key: 'canvas.route.emptyTitle',

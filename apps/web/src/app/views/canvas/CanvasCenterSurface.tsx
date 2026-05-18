@@ -11,6 +11,7 @@ export function renderCanvasCenterSurface(args: RenderCanvasCenterSurfaceArgs) {
 
   return renderCanvasWorkbenchSurface({
     presentationState: args.presentationState,
+    workspaceScope: args.workspaceScope,
     startupBlockState: args.startupBlockState,
     workbenchErrorMessage: args.workbenchErrorMessage,
     canvasDocument: args.canvasDocument,

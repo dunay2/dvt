@@ -3,6 +3,7 @@ import { vi } from 'vitest';
 
 import { DVT_AUTHORING_NODE_KINDS } from '../plugins/dvt/dvtNodeTypeCatalog';
 import { DBT_NODE_KINDS } from '../plugins/nodeTypeCatalog.dbt';
+import type { WorkspaceScope } from '../ports/sessionContext';
 import { DEFAULT_CANVAS_GRID_COLOR, DEFAULT_CANVAS_PALETTE_ID } from './canvas/canvasPalette';
 import { deriveCanvasDraftAccessPosture } from './canvas/canvasDraftAccessPostureModel';
 import type { CanvasDraftAuthTransportPosture } from './canvas/canvasDraftAuthTransportPosture';
@@ -11,6 +12,7 @@ import type { CanvasController } from './Canvas.test.controller';
 
 type CanvasWorkbenchDefaultsDto = {
   dataSourceMode: CanvasController['dataSourceMode'];
+  workspaceScope: WorkspaceScope;
   isBackendCheckPending: CanvasController['isBackendCheckPending'];
   backendReady: CanvasController['backendReady'];
   backendBlockMessage: CanvasController['backendBlockMessage'];
@@ -122,6 +124,12 @@ function buildDefaultTransformationValidation(): CanvasControllerStateDefaults['
 function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
   return {
     dataSourceMode: 'api',
+    workspaceScope: {
+      tenantId: 'tenant-a',
+      projectId: 'project-orders',
+      environmentId: 'dev',
+      targetAdapter: 'temporal',
+    },
     isBackendCheckPending: false,
     backendReady: true,
     backendBlockMessage: null,

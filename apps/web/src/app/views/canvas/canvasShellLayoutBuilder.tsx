@@ -80,6 +80,7 @@ export function buildCanvasShellLayout({
     hostTabStrip: renderCanvasShellHostTabStrip(authoringCommands, routePresentation),
     centerSurface: renderCanvasCenterSurface({
       presentationState: routePresentation.presentationState,
+      workspaceScope: routePresentation.workspaceScope,
       startupBlockState: routePresentation.startupBlockState,
       draftTransportError: routePresentation.draftTransportError,
       workbenchErrorMessage: routePresentation.workbenchErrorMessage,
