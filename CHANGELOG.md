@@ -1,5 +1,26 @@
 # Changelog
 
+## [5.26.0](https://github.com/dunay2/dvt/compare/v5.25.0...v5.26.0) (2026-05-18)
+
+
+### Features
+
+* **planner:** Add architecture authority query rails ([#1257](https://github.com/dunay2/dvt/issues/1257)) ([6072b37](https://github.com/dunay2/dvt/commit/6072b37032319e33b47bf00248f7ae7d31d11e3a))
+* **planner:** Add architecture component graph command rails ([#1258](https://github.com/dunay2/dvt/issues/1258)) ([705dbd1](https://github.com/dunay2/dvt/commit/705dbd1902196fdec2bc13eb9db5db5a88e02744))
+* **planner:** Add architecture design create command ([#1254](https://github.com/dunay2/dvt/issues/1254)) ([485fcce](https://github.com/dunay2/dvt/commit/485fcce60ab1f5df2a1224d28e9df3ee9bd1e762))
+* **planner:** Add DB-first architecture authority schema ([5ccfa81](https://github.com/dunay2/dvt/commit/5ccfa81fdea5917f43f2c44afe4e9070ec686dff))
+* **web:** Add dense operational run tables ([#1276](https://github.com/dunay2/dvt/issues/1276)) ([dc3b47d](https://github.com/dunay2/dvt/commit/dc3b47df61baf45fe574ea80f49809ce0e416212))
+* **web:** Add Runs status refresh policy ([16be8bc](https://github.com/dunay2/dvt/commit/16be8bc4e1c4d1233936abb18807cf39c9bf1cb9))
+* **web:** Converge Runs event timeline semantics ([9dfedea](https://github.com/dunay2/dvt/commit/9dfedea3057f6ec21de2a9c58457ee8aca79ac94))
+* **web:** Route web Vitest changed suites ([c83b87d](https://github.com/dunay2/dvt/commit/c83b87db4e4851bf84ab57a9ee230da7dfa3a1dd))
+
+
+### Bug Fixes
+
+* **ci:** Harden AR-C2 evidence scope and fail-closed placeholders ([#1248](https://github.com/dunay2/dvt/issues/1248)) ([d187e31](https://github.com/dunay2/dvt/commit/d187e319cf02576387188e761faa48a29693cc19))
+* **planner:** Show active claim recovery in next planning tasks ([#1246](https://github.com/dunay2/dvt/issues/1246)) ([4919acc](https://github.com/dunay2/dvt/commit/4919acc52264d60a3f73f7e4e17a3fc4d5ad258a))
+* **web:** Integrate local alpha and canvas view work ([2ad8941](https://github.com/dunay2/dvt/commit/2ad8941739959b7fa7021952fce04e98c6455621))
+
 ## [5.25.0](https://github.com/dunay2/dvt/compare/v5.24.0...v5.25.0) (2026-05-15)
 
 
