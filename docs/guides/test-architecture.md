@@ -136,8 +136,8 @@ support.
 
 `apps/web` owns a single Vitest suite catalog in
 [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts). The package
-keeps `pnpm --filter @dvt/web test` as the full compatibility suite and adds
-smaller lanes for development and CI:
+keeps `pnpm --filter @dvt/web test` as the full suite and adds smaller lanes
+for development and CI:
 
 - `test:unit`: `*.test.ts`, excluding architecture tests
 - `test:presentation`: `*.test.tsx`, excluding architecture tests
@@ -152,8 +152,8 @@ smaller lanes for development and CI:
 - `test:ci`: unit, presentation, then architecture
 
 Each public web suite command runs `test:deps` before its raw Vitest delegate.
-That keeps the split commands aligned with the historical `pretest` dependency
-build instead of relying on package-manager lifecycle hooks for custom script
+That keeps the split commands aligned with the package dependency-build
+contract instead of relying on package-manager lifecycle hooks for custom script
 names. `test:ci` runs `test:deps` once, then calls the internal `*:run`
 delegates in catalog order.
 
