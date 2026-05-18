@@ -2,13 +2,7 @@
  * @ownedConcern Coordinate start-run admission orchestration across access,
  * adapter, capability, and run-execution-context policies.
  */
-import type {
-  EngineRunRef,
-  ExecutionPlan,
-  PlanRef,
-  ResolvedRunContext,
-  RunExecutionPolicy,
-} from '@dvt/contracts';
+import type { EngineRunRef, PlanRef, ResolvedRunContext } from '@dvt/contracts';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
 import type { IRunExecutionContextBindingPolicy } from '../ports/IRunExecutionContextBindingPolicy.js';
@@ -16,6 +10,7 @@ import type { IRunExecutionContextResolver } from '../ports/IRunExecutionContext
 import type { IRunStateStoreRead } from '../ports/IRunStateStore.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
 import { RunExecutionContextAdmissionPolicy } from '../services/startRun/RunExecutionContextAdmissionPolicy.js';
+import type { StartRunExecutionPolicyAdmission } from '../services/startRun/StartRunTypes.js';
 import { StartRunValidationPolicy } from '../services/startRun/StartRunValidationPolicy.js';
 
 import {
@@ -30,14 +25,6 @@ export interface StartRunAdmissionGuardDeps {
   providerResolver?: IEngineProviderResolver;
   runExecutionContextResolver?: IRunExecutionContextResolver;
   runExecutionContextBindingPolicy?: IRunExecutionContextBindingPolicy;
-}
-
-export interface StartRunExecutionPolicyAdmission {
-  plan: ExecutionPlan;
-  planRef: PlanRef;
-  executionPolicy: RunExecutionPolicy;
-  context: ResolvedRunContext;
-  adapter: IProviderAdapter;
 }
 
 export class StartRunAdmissionGuard {

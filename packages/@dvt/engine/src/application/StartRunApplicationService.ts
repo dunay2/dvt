@@ -11,7 +11,6 @@ import type { IPlanIntegrityValidator } from '../ports/IPlanIntegrityValidator.j
 import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunStateStore.js';
 import type { IStartRunIntentStore } from '../ports/IStartRunIntentStore.js';
 import { PlanIntegrityValidator } from '../security/planIntegrity.js';
-import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
 import { StartRunAdmissionService } from '../services/startRun/StartRunAdmissionService.js';
 import { StartRunEventFactory } from '../services/startRun/StartRunEventFactory.js';
 import { StartRunExecutionService } from '../services/startRun/StartRunExecutionService.js';
@@ -19,6 +18,7 @@ import { StartRunFailurePolicy } from '../services/startRun/StartRunFailurePolic
 import { StartRunIntentService } from '../services/startRun/StartRunIntentService.js';
 import { StartRunTelemetryPolicy } from '../services/startRun/StartRunTelemetryPolicy.js';
 import type {
+  IStartRunAdmissionService,
   IStartRunExecutionService,
   IStartRunFailurePolicy,
   StartRunErrorContext,
@@ -28,19 +28,16 @@ import type { IClock } from '../utils/clock.js';
 import { StartRunAdmissionGuard } from './StartRunAdmissionGuard.js';
 
 export interface StartRunApplicationServiceDeps {
-  guard: StartRunAdmissionGuard;
+  admissionService: IStartRunAdmissionService;
   idempotency: IdempotencyKeyBuilder;
   clock: IClock;
   intentStore: IStartRunIntentStore;
   observability: IObservability;
-  planFetcher: IStoredPlanArtifactReader;
-  planIntegrityValidator: IPlanIntegrityValidator;
   executionService: IStartRunExecutionService;
   failurePolicy: IStartRunFailurePolicy;
 }
 
 export interface BuildStartRunApplicationServiceDeps {
-  policy: IRunAccessPolicy;
   guard: StartRunAdmissionGuard;
   stateStoreRead: IRunStateStoreRead;
   stateStoreWrite: IRunStateStoreWrite;
@@ -62,20 +59,16 @@ export interface BuildStartRunApplicationServiceDeps {
  * Sequences admission, intent creation, dispatch, metrics, and failure policy.
  */
 export class StartRunApplicationService {
-  private readonly admissionService: StartRunAdmissionService;
+  private readonly admissionService: IStartRunAdmissionService;
   private readonly failurePolicy: IStartRunFailurePolicy;
   private readonly intentService: StartRunIntentService;
   private readonly executionService: IStartRunExecutionService;
   private readonly telemetryPolicy: StartRunTelemetryPolicy;
 
   constructor(deps: StartRunApplicationServiceDeps) {
+    this.admissionService = deps.admissionService;
     this.failurePolicy = deps.failurePolicy;
     this.executionService = deps.executionService;
-    this.admissionService = new StartRunAdmissionService({
-      guard: deps.guard,
-      planFetcher: deps.planFetcher,
-      planIntegrityValidator: deps.planIntegrityValidator,
-    });
     this.intentService = new StartRunIntentService({
       idempotency: deps.idempotency,
       intentStore: deps.intentStore,
@@ -170,16 +163,19 @@ export function buildStartRunApplicationService(
     clock: deps.clock,
     ...(deps.timeouts ? { timeouts: deps.timeouts } : {}),
   });
+  const admissionService = new StartRunAdmissionService({
+    guard: deps.guard,
+    planFetcher: deps.planFetcher,
+    planIntegrityValidator:
+      deps.planIntegrityValidator ?? new PlanIntegrityValidator({ clock: deps.clock }),
+  });
 
   return new StartRunApplicationService({
-    guard: deps.guard,
+    admissionService,
     idempotency: deps.idempotency,
     clock: deps.clock,
     intentStore: deps.intentStore,
     observability: deps.observability,
-    planFetcher: deps.planFetcher,
-    planIntegrityValidator:
-      deps.planIntegrityValidator ?? new PlanIntegrityValidator({ clock: deps.clock }),
     executionService,
     failurePolicy,
   });

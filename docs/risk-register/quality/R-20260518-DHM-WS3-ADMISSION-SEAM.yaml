@@ -1,0 +1,22 @@
+---
+id: R-20260518-DHM-WS3-ADMISSION-SEAM
+title: Start-run admission phase can drift back into coordinator construction
+status: Open
+date: 2026-05-18
+owners:
+  - '@dvt/engine'
+severity: Low
+probability: Low
+---
+summary: >
+  Future edits could reintroduce direct StartRunAdmissionService construction or plan-integrity
+  dependencies inside StartRunApplicationService instead of using the injected
+  IStartRunAdmissionService seam.
+mitigation: >
+  startRunApplicationDecomposition.architecture.test.ts now fails if the coordinator constructs the
+  admission phase, and StartRunApplicationService.test.ts proves the injected admission seam is
+  invoked before intent creation and provider execution.
+evidence:
+  - docs/evidence/ed-20260518-dhm-ws3-admission-seam.md
+  - packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
+  - packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
