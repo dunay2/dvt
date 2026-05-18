@@ -14,6 +14,11 @@ import {
   TableHeader,
   TableRow,
 } from '../../components/ui/table';
+import { cn } from '../../components/ui/utils';
+import {
+  getRouteWorkbenchStatusToneClassName,
+  routeWorkbenchDenseTableClasses,
+} from '../../components/workbench/routeWorkbenchTableTokens';
 import type { RunEvent } from '../../types/engine';
 import { buildRunEventTableRows, type RunEventTableRow } from './runEventTableModel';
 
@@ -23,15 +28,15 @@ type RunEventTimelineTableProps = {
 
 function levelTone(level: string): string {
   if (level === 'ERROR') {
-    return 'bg-red-600';
+    return getRouteWorkbenchStatusToneClassName('danger');
   }
   if (level === 'WARN') {
-    return 'bg-yellow-600 text-slate-950';
+    return getRouteWorkbenchStatusToneClassName('warning');
   }
   if (level === 'SUCCESS') {
-    return 'bg-green-600';
+    return getRouteWorkbenchStatusToneClassName('success');
   }
-  return 'bg-blue-600';
+  return getRouteWorkbenchStatusToneClassName('info');
 }
 
 export function RunEventTimelineTable({ events }: RunEventTimelineTableProps) {
@@ -62,7 +67,9 @@ export function RunEventTimelineTable({ events }: RunEventTimelineTableProps) {
           <div className="min-w-[16rem]">
             <div>{row.original.headline}</div>
             {row.original.detail ? (
-              <div className="mt-1 text-xs text-slate-400">{row.original.detail}</div>
+              <div className={cn('mt-1 text-xs', routeWorkbenchDenseTableClasses.mutedText)}>
+                {row.original.detail}
+              </div>
             ) : null}
           </div>
         ),
@@ -74,7 +81,7 @@ export function RunEventTimelineTable({ events }: RunEventTimelineTableProps) {
           row.original.stepId ? (
             <span className="font-mono text-xs">{row.original.stepId}</span>
           ) : (
-            <span className="text-slate-500">-</span>
+            <span className={routeWorkbenchDenseTableClasses.subtleText}>-</span>
           ),
       },
       {

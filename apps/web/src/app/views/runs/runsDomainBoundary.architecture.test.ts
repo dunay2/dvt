@@ -334,4 +334,60 @@ describe('Runs domain boundary', () => {
     expect(runTableModelSource).toContain('sortRunOperationalRows');
     expect(runTableModelSource).toContain('isKnownRunField');
   });
+
+  it('keeps dense table visual styling behind the route workbench token component', () => {
+    const tokenSource = readAppSource('components/workbench/routeWorkbenchTableTokens.ts');
+    const runStatusSource = readAppSource('views/runs/runStatesModel.ts');
+    const runTableSource = readAppSource('views/runs/RunOperationalTable.tsx');
+    const eventTableSource = readAppSource('views/runs/RunEventTimelineTable.tsx');
+    const denseTableGuide = readRepoFile(
+      'docs/architecture/components/web/runs/dense-operational-tables-component.md'
+    );
+    const visualTokenGuide = readRepoFile(
+      'docs/architecture/components/web/runs/runs-dense-table-visual-tokens-component.md'
+    );
+    const visualTokenStories = readRepoFile(
+      'docs/architecture/components/web/runs/runs-dense-table-visual-tokens-user-stories.md'
+    );
+
+    expect(hasOwnedConcernDocblock(tokenSource)).toBe(true);
+    expect(tokenSource).toContain('routeWorkbenchDenseTableClasses');
+    expect(tokenSource).toContain('routeWorkbenchStatusToneClasses');
+    expect(tokenSource).toContain('getRouteWorkbenchStatusToneClassName');
+
+    expect(runStatusSource).toContain('getRouteWorkbenchStatusToneClassName');
+    expect(runTableSource).toContain('routeWorkbenchDenseTableClasses');
+    expect(eventTableSource).toContain('routeWorkbenchDenseTableClasses');
+    expect(eventTableSource).toContain('getRouteWorkbenchStatusToneClassName');
+
+    for (const source of [runStatusSource, runTableSource, eventTableSource]) {
+      expect(source).not.toMatch(/\b(?:slate|gray|zinc)-(?:\d{2,3}|950)\b/);
+      expect(source).not.toMatch(/\bbg-(?:red|yellow|green|blue)-\d{3}\b/);
+      expect(source).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
+    }
+
+    for (const section of [
+      '## Public API',
+      '## Invariants',
+      '## Transitions',
+      '## Consumer Diagram',
+      '## Consumers',
+      'routeWorkbenchDenseTableClasses',
+      'routeWorkbenchStatusToneClasses',
+      'getRouteWorkbenchStatusToneClassName',
+      '```mermaid',
+    ]) {
+      expect(visualTokenGuide).toContain(section);
+    }
+
+    for (const storyId of [
+      'US-F24-RUNS-TOKEN-01',
+      'US-F24-RUNS-TOKEN-02',
+      'US-F24-RUNS-TOKEN-03',
+    ]) {
+      expect(visualTokenStories).toContain(storyId);
+    }
+
+    expect(denseTableGuide).toContain('Runs Dense Table Visual Tokens Component');
+  });
 });
