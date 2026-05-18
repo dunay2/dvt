@@ -60,6 +60,20 @@ own implementation details and tests.
   omits `blocked`, `unauthorized`, `unavailable`, `stale`, or `not-found`.
   Alpha full remains blocked and the missing vocabulary is reported by name.
 
+## Scenario Coverage Matrix
+
+| Stage              | Happy-path story | Fail-closed story | Current acceptance |
+| ------------------ | ---------------- | ----------------- | ------------------ |
+| Startup gate       | `US-F27-001`     | `US-F27-N-002`    | accepted           |
+| Workspace context  | `US-F27-002`     | `US-F27-N-007`    | accepted           |
+| Canvas workbench   | `US-F27-003`     | `US-F27-N-001`    | planned            |
+| Code workbench     | `US-F27-004`     | `US-F27-N-001`    | planned            |
+| Plan/run readiness | `US-F27-005`     | `US-F27-N-002`    | planned            |
+| Recovery states    | `US-F27-006`     | `US-F27-N-003`    | planned            |
+| Alpha cadence      | `US-F27-007`     | `US-F27-N-004`    | planned            |
+| Risk triage        | `US-F27-008`     | `US-F27-N-005`    | planned            |
+| Route authority    | `US-F27-010`     | `US-F27-N-006`    | active             |
+
 ## Traceability
 
 - Route authority: `F-27`.

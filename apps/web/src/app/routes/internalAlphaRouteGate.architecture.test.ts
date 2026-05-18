@@ -294,6 +294,42 @@ describe('internal alpha route gate architecture', () => {
     );
   });
 
+  it('keeps accepted evidence semantically encapsulated instead of relying on path shape', () => {
+    const componentGuide = readRepoFile(
+      'docs/architecture/components/web/internal-alpha-route-gate-component.md'
+    );
+    const startupRouteReadinessCypress = readRepoFile(
+      'apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts'
+    );
+    const acceptedStages = internalAlphaCombinedRouteFixture.stages.filter(
+      (stage) => stage.evidenceAcceptance === 'accepted'
+    );
+
+    expect(componentGuide).toContain('## Accepted Evidence Semantics');
+    expect(startupRouteReadinessCypress).toContain(
+      'Owned concern: verify protected route startup waits for runtime capability and context readiness in browser'
+    );
+    expect(acceptedStages.map((stage) => stage.stage)).toEqual([
+      'Startup gate',
+      'Workspace context',
+    ]);
+    for (const stage of acceptedStages) {
+      expect(stage.evidenceRefs).toEqual(
+        expect.arrayContaining([expect.stringMatching(/^docs\//)])
+      );
+      expect(stage.evidenceRefs).toEqual(
+        expect.arrayContaining([expect.stringMatching(/^apps\/web\/src\//)])
+      );
+      expect(stage.evidenceRefs).toEqual(
+        expect.arrayContaining([expect.stringMatching(/^apps\/web\/cypress\//)])
+      );
+      expect(stage.failClosedProof).toMatch(
+        /blocked|denial|fails closed|not-ready|unauthorized|conflicted|unavailable/
+      );
+      expect(stage.happyPathProof).toMatch(/visible|route-ready|context|readiness|ready/);
+    }
+  });
+
   it('accepts the combined route fixture only when all stage evidence is accepted', () => {
     expect(
       evaluateInternalAlphaCombinedRouteFixture({

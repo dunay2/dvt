@@ -112,6 +112,26 @@ stateDiagram-v2
 | `ObservePlanRunReadiness`           | query   | Plan/run readiness |
 | `MapRouteRecoveryState`             | query   | Recovery states    |
 
+## Accepted Evidence Semantics
+
+Accepted stage evidence is semantic, not a path allowlist. A stage can move
+from `planned` to `accepted` only when all of these are true:
+
+- the stage uses the real command/query rail for product behavior, not a
+  planning-only or legacy rail name;
+- the stage has at least one local component or governing documentation
+  reference that names API, invariants, transitions, and consumers;
+- the stage has executable web evidence for happy path and fail-closed posture;
+- browser evidence exercises the same protected runtime route posture that
+  users see, not a reduced local-only fixture;
+- accepting the stage does not accept `alpha-full` while any other stage remains
+  `planned`.
+
+For the current route gate, `Startup gate` is accepted through
+`ObserveAppBootstrapRouteReadiness`, and `Workspace context` is accepted through
+`GetEffectiveWorkspaceContext`. `Canvas workbench`, `Code workbench`,
+`Plan/run readiness`, and `Recovery states` remain planned.
+
 ## Cadence Contract
 
 `AlphaCadenceDecision` is valid only when these fields are present and owned:

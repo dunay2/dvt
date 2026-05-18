@@ -1,3 +1,4 @@
+/** Owned concern: verify protected route startup waits for runtime capability and context readiness in browser. */
 import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
 import { stubE2eApi, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
