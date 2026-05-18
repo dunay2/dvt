@@ -137,6 +137,57 @@ describe('resolveProtectedRouteSessionContext', () => {
     });
   });
 
+  it('keeps a preselected workspace when the backend lists it as available', async () => {
+    useSessionStore.setState({
+      tenantId: 'tenant-a',
+      projectId: 'project-dbt',
+      environmentId: 'prod',
+      targetAdapter: 'temporal',
+    });
+
+    const getJson = vi.fn(async (endpoint: string) => {
+      if (endpoint === '/session') {
+        return {
+          grants: {
+            scopes: ['workspace:graph-draft:save'],
+          },
+        };
+      }
+
+      if (endpoint === '/workspace/context') {
+        return {
+          effectiveWorkspace: {
+            tenantId: 'tenant-a',
+            projectId: 'project-transformation',
+            environmentId: 'prod',
+          },
+          availableWorkspaces: [
+            {
+              tenantId: 'tenant-a',
+              projectId: 'project-transformation',
+              environmentId: 'prod',
+            },
+            {
+              tenantId: 'tenant-a',
+              projectId: 'project-dbt',
+              environmentId: 'prod',
+            },
+          ],
+        };
+      }
+
+      throw new Error(`Unexpected endpoint ${endpoint}`);
+    });
+
+    await resolveProtectedRouteSessionContext({ getJson } as never);
+
+    expect(useSessionStore.getState()).toMatchObject({
+      tenantId: 'tenant-a',
+      projectId: 'project-dbt',
+      environmentId: 'prod',
+    });
+  });
+
   it('does not apply local or partial context when workspace context resolution fails', async () => {
     const getJson = vi.fn(async (endpoint: string) => {
       if (endpoint === '/session') {

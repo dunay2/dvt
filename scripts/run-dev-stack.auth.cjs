@@ -64,6 +64,16 @@ function resolveDevWorkspaceScope(env = process.env) {
   };
 }
 
+function resolveAssertedProjectIds(workspaceScope, additionalProjectIds = []) {
+  return Array.from(
+    new Set(
+      [workspaceScope.projectId, ...additionalProjectIds]
+        .map((projectId) => readNonEmptyEnv(projectId))
+        .filter((projectId) => projectId !== undefined)
+    )
+  );
+}
+
 function hasCompleteProtectedRuntimeOidcEnv(env = process.env) {
   return Boolean(
     readNonEmptyEnv(env.OIDC_JWKS_URI) &&
@@ -151,6 +161,8 @@ async function startLocalProtectedRuntimeAuth(options = {}) {
   const env = options.env ?? process.env;
   const host = readNonEmptyEnv(options.host) ?? DEFAULT_HOST;
   const scope = resolveDevWorkspaceScope(env);
+  const assertedProjectIds = resolveAssertedProjectIds(scope, options.additionalProjectIds);
+  const tokenScopes = ['dvt:runtime', ...LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS].join(' ');
   const principalId = readNonEmptyEnv(env.DVT_DEV_PRINCIPAL_ID) ?? DEFAULT_DEV_PRINCIPAL_ID;
   const issuer = readNonEmptyEnv(env.DVT_DEV_PROTECTED_RUNTIME_ISSUER) ?? DEFAULT_DEV_ISSUER;
   const audience = readNonEmptyEnv(env.DVT_DEV_PROTECTED_RUNTIME_AUDIENCE) ?? DEFAULT_DEV_AUDIENCE;
@@ -173,9 +185,9 @@ async function startLocalProtectedRuntimeAuth(options = {}) {
     const nowSeconds = Math.floor(Date.now() / 1000);
     const expiresAtSeconds = nowSeconds + bearerTokenTtlSeconds;
     const bearerToken = await new SignJWT({
-      scope: 'dvt:runtime',
+      scope: tokenScopes,
       tenant_ids: [scope.tenantId],
-      project_ids: [scope.projectId],
+      project_ids: assertedProjectIds,
     })
       .setProtectedHeader({ alg: 'RS256', kid: DEFAULT_JWK_KID })
       .setSubject(principalId)

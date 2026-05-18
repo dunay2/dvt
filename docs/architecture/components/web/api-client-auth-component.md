@@ -2,7 +2,7 @@
 title: API Client Auth Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-29
+last_reviewed: 2026-05-18
 planning_type: architecture
 ---
 
@@ -45,6 +45,11 @@ The component is intentionally narrow:
   login flow and must not be documented as one.
 - Session headers remain attached by `createApiClient()` when requested; token
   refresh must not bypass tenant/project scoping.
+- Local protected-runtime tokens publish the same tenant action vocabulary that
+  the dev-stack grant seed applies. The backend still authorizes against grants,
+  while `/session` exposes scopes for frontend command admission.
+- First-authoring live proof tokens may assert run-unique additional projects,
+  but only when the proof runner also seeds matching backend grants.
 
 ## Transitions
 
@@ -92,6 +97,7 @@ Direct consumers:
 - API-mode workspace, plans, runs, capabilities, and plugin services
 - `scripts/run-dev-stack.auth.cjs`
 - `scripts/run-selected-closure-live-proof.cjs`
+- `scripts/run-canvas-first-authoring-live-proof.cjs`
 
 Indirect consumers:
 
@@ -126,3 +132,7 @@ does not drift into Canvas route code.
 - Do not retry non-replayable request bodies after `401`.
 - Do not let a stale token produce a "draft denied" UI when a dev-stack refresh
   endpoint can issue a fresh token.
+- Do not let local token project assertions and seeded backend grants diverge;
+  the UI can pass route startup while the API later denies draft commands.
+- Do not remove action scopes from local dev-stack tokens without replacing the
+  `/session` permission projection consumed by Canvas command admission.

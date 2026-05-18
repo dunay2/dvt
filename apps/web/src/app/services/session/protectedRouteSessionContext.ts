@@ -27,6 +27,25 @@ type EffectiveWorkspaceContextResponse = {
   readonly availableWorkspaces: readonly EffectiveWorkspaceContext[];
 };
 
+function sameWorkspaceContext(left: EffectiveWorkspaceContext, right: EffectiveWorkspaceContext) {
+  return (
+    left.tenantId === right.tenantId &&
+    left.projectId === right.projectId &&
+    left.environmentId === right.environmentId
+  );
+}
+
+function resolveRouteWorkspaceContext(
+  currentContext: EffectiveWorkspaceContext,
+  workspaceContext: EffectiveWorkspaceContextResponse
+): EffectiveWorkspaceContext {
+  return (
+    workspaceContext.availableWorkspaces.find((workspace) =>
+      sameWorkspaceContext(workspace, currentContext)
+    ) ?? workspaceContext.effectiveWorkspace
+  );
+}
+
 function readServerPermission(
   permissions: Partial<UserPermissions> | undefined,
   key: keyof UserPermissions
@@ -72,12 +91,17 @@ export async function resolveProtectedRouteSessionContext(apiClient: Pick<ApiCli
     }
   );
 
+  const selectedWorkspaceContext = resolveRouteWorkspaceContext(
+    useSessionStore.getState(),
+    workspaceContext
+  );
+
   useAuthorizationStore
     .getState()
     .setUserPermissions({ ...DEFAULT_USER_PERMISSIONS, ...projectPermissionsFromSession(session) });
   useSessionStore.getState().setSessionContext({
-    tenantId: asNonBlankString(workspaceContext.effectiveWorkspace.tenantId),
-    projectId: asNonBlankString(workspaceContext.effectiveWorkspace.projectId),
-    environmentId: asNonBlankString(workspaceContext.effectiveWorkspace.environmentId),
+    tenantId: asNonBlankString(selectedWorkspaceContext.tenantId),
+    projectId: asNonBlankString(selectedWorkspaceContext.projectId),
+    environmentId: asNonBlankString(selectedWorkspaceContext.environmentId),
   });
 }
