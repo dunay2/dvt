@@ -156,6 +156,11 @@ describe('internal alpha route gate architecture', () => {
     }
 
     expect(acceptanceMatrix).toContain('Excluded');
+    expect(acceptanceMatrix).toContain('remaining alpha-full blockers');
+    for (const remainingBlocker of ['Plan/run readiness', 'Alpha cadence', 'Risk triage']) {
+      expect(acceptanceMatrix).toMatch(new RegExp(`${remainingBlocker}[^\\n]+(remain|block)`, 'i'));
+    }
+    expect(acceptanceMatrix).not.toMatch(/only remaining evidence row/i);
     expect(acceptanceMatrix).toMatch(/alpha-full stays\s+blocked/);
   });
 

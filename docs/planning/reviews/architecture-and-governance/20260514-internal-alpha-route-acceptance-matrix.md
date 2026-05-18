@@ -202,7 +202,15 @@ flowchart LR
 ## Current Result
 
 The route remains in `review`, not `accepted`, because startup, workspace
-context, Canvas, Code, and recovery now have accepted stage evidence while
-plan/run readiness evidence remains planned. The next executable slice must
-fill that remaining stage evidence row without moving route authority out of
-F-27.
+context, Canvas, Code, and recovery now have accepted stage evidence while the
+following remaining alpha-full blockers stay open:
+
+- `Plan/run readiness`: remains planned; this is the next executable slice.
+- `Alpha cadence`: remains blocked until every route-stage proof is accepted and
+  cadence can start.
+- `Risk triage`: remains blocked until the final route evidence set proves the
+  included risks can close for alpha full.
+
+The next executable slice must fill the `Plan/run readiness` evidence row
+without moving route authority out of F-27. Filling that row does not by itself
+accept alpha full until cadence and risk-triage proof are also closed.
