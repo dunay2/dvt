@@ -1,3 +1,7 @@
+/**
+ * @ownedConcern Validate that web Vitest suite partition semantics, changed-file
+ * routing, and local command wiring stay aligned with the governed test model.
+ */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -192,6 +196,23 @@ describe('web Vitest suite partition', () => {
       commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture],
       suites: ['architecture'],
     });
+    expect(resolveWebVitestChangedSuitePlan(['apps/web/vitest.canvas-unit.config.ts'])).toEqual({
+      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture],
+      suites: ['architecture'],
+    });
+    expect(
+      resolveWebVitestChangedSuitePlan(['apps/web/vitest.canvas-presentation.config.ts'])
+    ).toEqual({
+      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture],
+      suites: ['architecture'],
+    });
+    expect(
+      resolveWebVitestChangedSuitePlan(['apps/web/vitest.canvas-architecture.config.ts'])
+    ).toEqual({
+      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture],
+      suites: ['architecture'],
+    });
+    expect(WEB_VITEST_CHANGED_SUITE_COMMANDS).not.toHaveProperty('canvas');
 
     expect(resolveWebVitestChangedSuitePlan(['apps/api/src/server.ts'])).toEqual({
       commands: [],

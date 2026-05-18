@@ -16,7 +16,9 @@ export const WEB_VITEST_FOCUS_SUITE_NAMES = [
 export type WebVitestPrimarySuiteName = (typeof WEB_VITEST_PRIMARY_SUITE_NAMES)[number];
 export type WebVitestFocusSuiteName = (typeof WEB_VITEST_FOCUS_SUITE_NAMES)[number];
 export type WebVitestSuiteName = 'all' | WebVitestPrimarySuiteName | WebVitestFocusSuiteName;
-export type WebVitestChangedSuiteName = WebVitestPrimarySuiteName | WebVitestFocusSuiteName;
+export type WebVitestChangedSuiteName =
+  | WebVitestPrimarySuiteName
+  | Exclude<WebVitestFocusSuiteName, 'canvas'>;
 
 type WebVitestSuiteDefinition = Readonly<{
   include: readonly string[];
@@ -74,7 +76,6 @@ export const WEB_VITEST_CHANGED_SUITE_COMMANDS: Record<WebVitestChangedSuiteName
   unit: 'pnpm run test:unit:run',
   presentation: 'pnpm run test:presentation:run',
   architecture: 'pnpm run test:architecture:run',
-  canvas: 'pnpm run test:canvas:run',
   'canvas-unit': 'pnpm run test:canvas-unit:run',
   'canvas-presentation': 'pnpm run test:canvas-presentation:run',
   'canvas-architecture': 'pnpm run test:canvas-architecture:run',
@@ -124,9 +125,7 @@ export function classifyWebVitestFile(filePath: string): {
   if (isCanvasFocusPath(normalizedPath)) {
     focusSuites.push('canvas');
     const canvasChangedSuite = resolveCanvasChangedSuite(normalizedPath);
-    if (canvasChangedSuite !== 'canvas') {
-      focusSuites.push(canvasChangedSuite);
-    }
+    focusSuites.push(canvasChangedSuite);
   }
 
   return {
@@ -201,7 +200,7 @@ function normalizeWebVitestChangedPath(filePath: string): string | null {
     return normalizedPath;
   }
 
-  if (/^vitest(?:\.[a-z]+)?\.config\.ts$/.test(normalizedPath)) {
+  if (/^vitest(?:\.[a-z-]+)?\.config\.ts$/.test(normalizedPath)) {
     return normalizedPath;
   }
 
@@ -223,7 +222,7 @@ function isCanvasFocusPath(filePath: string): boolean {
   );
 }
 
-function resolveCanvasChangedSuite(filePath: string): WebVitestFocusSuiteName {
+function resolveCanvasChangedSuite(filePath: string): Exclude<WebVitestFocusSuiteName, 'canvas'> {
   if (isArchitectureTestPath(filePath)) {
     return 'canvas-architecture';
   }
@@ -239,8 +238,8 @@ function isWebVitestGovernancePath(filePath: string): boolean {
   const normalizedPath = normalizeWebVitestPath(filePath);
 
   return (
-    /^apps\/web\/vitest(?:\.suites|(?:\.[a-z]+)?\.config)\.ts$/.test(normalizedPath) ||
-    /^vitest(?:\.suites|(?:\.[a-z]+)?\.config)\.ts$/.test(normalizedPath) ||
+    /^apps\/web\/vitest(?:\.suites|(?:\.[a-z-]+)?\.config)\.ts$/.test(normalizedPath) ||
+    /^vitest(?:\.suites|(?:\.[a-z-]+)?\.config)\.ts$/.test(normalizedPath) ||
     normalizedPath === 'apps/web/package.json' ||
     normalizedPath === 'package.json' ||
     normalizedPath === '.github/workflows/test.yml' ||
