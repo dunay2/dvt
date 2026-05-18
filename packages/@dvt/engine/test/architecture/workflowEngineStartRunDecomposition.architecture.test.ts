@@ -38,23 +38,34 @@ describe('WorkflowEngine start-run decomposition architecture', () => {
     }
 
     for (const expected of [
+      'admissionService: IStartRunAdmissionService;',
       'executionService: IStartRunExecutionService;',
       'failurePolicy: IStartRunFailurePolicy;',
-      'planIntegrityValidator: IPlanIntegrityValidator;',
       'export function buildStartRunApplicationService',
     ]) {
       expect(source).toContain(expected);
     }
+
+    const builderBody = source.slice(
+      source.indexOf('export function buildStartRunApplicationService')
+    );
+    expect(builderBody).toContain('new StartRunAdmissionService');
+    expect(builderBody).toContain('planIntegrityValidator:');
   });
 
-  it('declares start-run execution and failure seams separately from concrete services', () => {
+  it('declares start-run admission, execution, and failure seams separately from concrete services', () => {
     const types = readEngineSource('services/startRun/StartRunTypes.ts');
+    const admissionService = readEngineSource('services/startRun/StartRunAdmissionService.ts');
     const executionService = readEngineSource('services/startRun/StartRunExecutionService.ts');
     const failurePolicy = readEngineSource('services/startRun/StartRunFailurePolicy.ts');
 
+    expect(types).toContain('export interface IStartRunAdmissionService');
+    expect(types).toContain('export interface StartRunAdmissionRequest');
+    expect(types).toContain('export interface StartRunAdmissionResult');
     expect(types).toContain('export interface IStartRunExecutionService');
     expect(types).toContain('export interface IStartRunFailurePolicy');
     expect(types).toContain('export interface StartRunExecutionInput');
+    expect(admissionService).toContain('implements IStartRunAdmissionService');
     expect(executionService).toContain('implements IStartRunExecutionService');
     expect(failurePolicy).toContain('implements IStartRunFailurePolicy');
   });

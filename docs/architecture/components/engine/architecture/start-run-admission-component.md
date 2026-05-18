@@ -23,6 +23,10 @@ Scenario coverage is tracked in
 
 ## Public API
 
+- `IStartRunAdmissionService`
+  Internal start-run phase seam consumed by `StartRunApplicationService`.
+  Exposes `admit(request)` and returns the provider adapter plus verified plan
+  artifact before intent creation and provider dispatch.
 - `StartRunAdmissionGuard`
   Application guard used by start-run and recovery flows before provider
   handoff.
@@ -50,6 +54,10 @@ Scenario coverage is tracked in
 ## Invariants
 
 - Start-run admission is pre-dispatch. It must run before provider handoff.
+- `StartRunApplicationService` depends on `IStartRunAdmissionService`, not on
+  the concrete admission construction graph.
+- `StartRunAdmissionService` owns scoped plan-ref conversion and plan integrity
+  validation for the start-run command.
 - The guard coordinates admission policies; it must not execute provider work.
 - State-store precondition reads go through `IRunStateStoreRead`.
 - Adapter resolution must fail closed with `AdapterNotRegisteredError`.
@@ -111,21 +119,23 @@ flowchart LR
 ```mermaid
 sequenceDiagram
   participant UseCase as StartRunApplicationService
+  participant Admission as IStartRunAdmissionService
   participant Guard as StartRunAdmissionGuard
   participant Capabilities as StartRunValidationPolicy
   participant Context as RunExecutionContextAdmissionPolicy
   participant Resolver as IRunExecutionContextResolver
   participant Adapter as IProviderAdapter
 
-  UseCase->>Guard: assertStartRunAllowed(planRef, context)
-  UseCase->>Guard: resolveAdapter(context)
-  Guard-->>UseCase: adapter
-  UseCase->>Guard: assertExecutionPolicyAllowed(admission)
+  UseCase->>Admission: admit({ planRef, resolvedContext })
+  Admission->>Guard: assertStartRunAllowed(planRef, context)
+  Admission->>Guard: resolveAdapter(context)
+  Guard-->>Admission: adapter
+  Admission->>Guard: assertExecutionPolicyAllowed(admission)
   Guard->>Capabilities: validateCapabilitiesOrThrow(policy, adapter)
   Guard->>Context: assertAllowed({ plan, planRef, executionPolicy, context })
   Context->>Resolver: resolve(runExecutionContextRef)
   Context-->>Guard: admitted or rejected
-  Guard-->>UseCase: admitted
+  Admission-->>UseCase: adapter + verified artifact
   UseCase->>Adapter: provider handoff
 ```
 

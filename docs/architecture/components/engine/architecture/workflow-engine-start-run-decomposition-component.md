@@ -13,6 +13,7 @@ The component keeps the existing `IWorkflowEngine.startRun` public command
 surface unchanged. Internally, `StartRunApplicationService` coordinates the
 start-run command through injected seams:
 
+- `IStartRunAdmissionService`
 - `IStartRunExecutionService`
 - `IStartRunFailurePolicy`
 - `IPlanIntegrityValidator`
@@ -23,11 +24,16 @@ the default service graph.
 
 ## Invariants
 
+- `StartRunApplicationService` receives its admission phase through
+  `IStartRunAdmissionService`; it does not construct
+  `StartRunAdmissionService` inside the coordinator.
 - `StartRunApplicationService` does not construct
   `StartRunExecutionService`, `StartRunFailurePolicy`, `StartRunEventFactory`,
   or `PlanIntegrityValidator` inside its class body.
 - `StartRunApplicationService` owns command orchestration, not collaborator
   selection.
+- `StartRunAdmissionService` owns plan integrity fetching, provider adapter
+  resolution, capability checks, and run-execution-context admission.
 - `StartRunExecutionService` owns adapter dispatch, intent dispatch marking,
   bootstrap persistence, and provider-ref reconciliation.
 - `StartRunFailurePolicy` owns failed-start reporting, pending-intent checks,
@@ -36,12 +42,13 @@ the default service graph.
 
 ## Transitions
 
-Before this component, the application service constructed its concrete
-execution and failure collaborators in the constructor.
+Before the first DHM-WS3 cut, the application service constructed its concrete
+execution and failure collaborators in the constructor. Before the residual
+admission-semantics cut, it still constructed its admission phase internally.
 
-After this component, the class receives the execution and failure seams through
-constructor injection, while `buildStartRunApplicationService` creates the
-default collaborators for production and integration test composition.
+After this component, the class receives admission, execution, and failure seams
+through constructor injection, while `buildStartRunApplicationService` creates
+the default collaborators for production and integration test composition.
 
 ## Consumers
 
@@ -61,13 +68,18 @@ Detailed stories are maintained in
 ```mermaid
 flowchart LR
   Builder["buildStartRunApplicationService"] --> App["StartRunApplicationService"]
+  Builder --> Admission["StartRunAdmissionService"]
   Builder --> Exec["StartRunExecutionService"]
   Builder --> Fail["StartRunFailurePolicy"]
   Builder --> Events["StartRunEventFactory"]
   Builder --> Integrity["PlanIntegrityValidator"]
+  App --> AdmissionPort["IStartRunAdmissionService"]
   App --> ExecPort["IStartRunExecutionService"]
   App --> FailPort["IStartRunFailurePolicy"]
-  App --> IntegrityPort["IPlanIntegrityValidator"]
+  AdmissionPort --> Admission
+  Admission --> IntegrityPort["IPlanIntegrityValidator"]
+  Admission --> PlanReader["IStoredPlanArtifactReader"]
+  Admission --> Guard["StartRunAdmissionGuardPort"]
   ExecPort --> Adapter["IProviderAdapter"]
   ExecPort --> StateWrite["IRunStateStoreWrite"]
   FailPort --> StateRead["IRunStateStoreRead"]
@@ -77,6 +89,7 @@ flowchart LR
 ## Drift Guards
 
 - `workflowEngineStartRunDecomposition.architecture.test.ts` prevents concrete
-  collaborator construction from returning to `StartRunApplicationService`.
+  collaborator construction from returning to `StartRunApplicationService` and
+  requires semantic admission injection.
 - `StartRunApplicationService.test.ts` proves adapter dispatch goes through the
-  injected execution seam.
+  injected admission and execution seams.

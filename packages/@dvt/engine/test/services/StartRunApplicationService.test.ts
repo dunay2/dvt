@@ -75,6 +75,7 @@ describe('StartRunApplicationService', () => {
     const traceContext = makeTraceContext(runId, planRef.planId);
     const adapter = makeTemporalAdapter();
     const executionCalls: Array<{ intentId: string; adapterProvider: string }> = [];
+    const admissionCalls: Array<{ planId: string; runId: string }> = [];
     const failureCalls: unknown[] = [];
     const expectedRunRef: EngineRunRef = {
       provider: 'temporal',
@@ -85,23 +86,25 @@ describe('StartRunApplicationService', () => {
     };
 
     const service = new StartRunApplicationService({
-      guard: {
-        async assertStartRunAllowed() {},
-        resolveAdapter() {
-          return adapter;
+      admissionService: {
+        async admit(request) {
+          admissionCalls.push({
+            planId: request.planRef.planId,
+            runId: request.resolvedContext.runId,
+          });
+          return {
+            adapter,
+            verifiedArtifact: {
+              plan,
+              executionPolicy: {},
+            },
+          };
         },
-        async assertExecutionPolicyAllowed() {},
       },
       idempotency: new IdempotencyKeyBuilder(),
       clock: new SequenceClock('2026-03-26T00:00:00.000Z'),
       intentStore: new InMemoryStartRunIntentStore(),
       observability: createNoopObservability(),
-      planFetcher: makePlanFetcherForPlan(plan),
-      planIntegrityValidator: {
-        async fetchAndValidate() {
-          return { plan, executionPolicy: {} };
-        },
-      },
       executionService: {
         async executeStartRun(input) {
           executionCalls.push({
@@ -124,6 +127,12 @@ describe('StartRunApplicationService', () => {
       expectedRunRef
     );
 
+    expect(admissionCalls).toEqual([
+      {
+        planId: planRef.planId,
+        runId,
+      },
+    ]);
     expect(executionCalls).toEqual([
       {
         intentId: expect.any(String),

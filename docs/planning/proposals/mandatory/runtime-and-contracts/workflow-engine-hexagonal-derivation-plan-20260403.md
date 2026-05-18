@@ -1634,6 +1634,7 @@ governingSources:
   - docs/adr/ADR-0030-pre-dispatch-intent-log.md
   - docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md
 allowedImplementationSurfaces:
+  - buzon/20260518-dhm-ws3-fowler-admission-semantics-analysis.md
   - buzon/20260512-codex-fowler-we-hx-3-start-run-decomposition-analysis-and-remediation.md
   - buzon/20260515-codex-fowler-we-hx-3-hardcut-analysis.md
   - buzon/20260515-codex-we-hx-3-qa-hardening-tasks.md
@@ -1716,6 +1717,16 @@ completionGate:
   - pnpm docs:feature-mechanization:implementation
   - pnpm verify:prepush
 redGreenCycles:
+  - id: start-run-admission-seam-injection
+    redTest: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts test/services/StartRunApplicationService.test.ts
+    expectedFailure: StartRunApplicationService still constructs StartRunAdmissionService internally instead of depending on IStartRunAdmissionService.
+    patchSurfaces:
+      - packages/@dvt/engine/src/application/StartRunApplicationService.ts
+      - packages/@dvt/engine/src/services/startRun/StartRunTypes.ts
+      - packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts
+      - packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
+      - packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
+    greenTest: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts test/services/StartRunApplicationService.test.ts
   - id: start-run-phase-service-behavior
     redTest: pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
     expectedFailure: StartRunAdmissionService and StartRunIntentService are missing, so admission and intent creation cannot be tested as independent phases.
@@ -1754,8 +1765,19 @@ redGreenCycles:
       - docs/architecture/components/engine/architecture/start-run-application-decomposition-diagrams.md
     greenTest: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
 symbols:
+  - name: IStartRunAdmissionService
+    path: packages/@dvt/engine/src/services/startRun/StartRunTypes.ts
+    dddOwner: StartRunAdmissionPhase
+    cqRails:
+      - IWorkflowEngine.startRun
+    fowlerSignals:
+      - Makes the admission phase a first-class injected semantic seam.
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
+    cypressCoverage: N/A - engine-internal phase port
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationService.test.ts
   - name: StartRunAdmissionGuardPort
-    path: packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts
+    path: packages/@dvt/engine/src/services/startRun/StartRunTypes.ts
     dddOwner: StartRunAdmissionPhase
     cqRails:
       - IWorkflowEngine.startRun
@@ -1766,7 +1788,7 @@ symbols:
     unitTests:
       - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
   - name: StartRunAdmissionRequest
-    path: packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts
+    path: packages/@dvt/engine/src/services/startRun/StartRunTypes.ts
     dddOwner: StartRunAdmissionPhase
     cqRails:
       - IWorkflowEngine.startRun
@@ -1777,7 +1799,7 @@ symbols:
     unitTests:
       - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
   - name: StartRunAdmissionResult
-    path: packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts
+    path: packages/@dvt/engine/src/services/startRun/StartRunTypes.ts
     dddOwner: StartRunAdmissionPhase
     cqRails:
       - IWorkflowEngine.startRun
@@ -1810,7 +1832,7 @@ symbols:
     unitTests:
       - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
   - name: StartRunExecutionPolicyAdmission
-    path: packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts
+    path: packages/@dvt/engine/src/services/startRun/StartRunTypes.ts
     dddOwner: StartRunAdmissionPhase
     cqRails:
       - IWorkflowEngine.startRun
@@ -1821,7 +1843,7 @@ symbols:
     unitTests:
       - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
   - name: StartRunVerifiedArtifact
-    path: packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts
+    path: packages/@dvt/engine/src/services/startRun/StartRunTypes.ts
     dddOwner: StartRunAdmissionPhase
     cqRails:
       - IWorkflowEngine.startRun

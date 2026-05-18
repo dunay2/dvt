@@ -32,9 +32,14 @@ const { extractFeatureMechanizationManifests } = require(
 describe('StartRun application decomposition architecture', () => {
   it('keeps StartRunApplicationService as phase orchestration rather than phase implementation', () => {
     const source = readEngineSource('application/StartRunApplicationService.ts');
+    const classSource = source.slice(
+      source.indexOf('export class StartRunApplicationService'),
+      source.indexOf('export function buildStartRunApplicationService')
+    );
 
     for (const expected of [
       'StartRunAdmissionService',
+      'IStartRunAdmissionService',
       'StartRunIntentService',
       'admissionService.admit',
       'intentService.createIntent',
@@ -52,11 +57,28 @@ describe('StartRun application decomposition architecture', () => {
       'idempotency.startRunIntentId',
       'guard.resolveAdapter',
       'guard.assertExecutionPolicyAllowed',
+      'new StartRunAdmissionService',
+      'planFetcher: deps.planFetcher',
+      'planIntegrityValidator: deps.planIntegrityValidator',
     ]) {
-      expect(source).not.toContain(forbidden);
+      expect(classSource).not.toContain(forbidden);
     }
 
     expect(source.slice(0, 260)).toContain('@ownedConcern');
+  });
+
+  it('keeps admission construction in the builder instead of the coordinator', () => {
+    const source = readEngineSource('application/StartRunApplicationService.ts');
+    const builderSource = source.slice(
+      source.indexOf('export function buildStartRunApplicationService')
+    );
+
+    expect(source).toContain('admissionService: IStartRunAdmissionService;');
+    expect(source).toContain('this.admissionService = deps.admissionService;');
+    expect(builderSource).toContain('new StartRunAdmissionService');
+    expect(builderSource).toContain('guard: deps.guard');
+    expect(builderSource).toContain('planFetcher: deps.planFetcher');
+    expect(builderSource).toContain('planIntegrityValidator');
   });
 
   it('hosts each start-run phase in a module with an owned concern', () => {
@@ -79,6 +101,7 @@ describe('StartRun application decomposition architecture', () => {
     for (const expected of [
       'export class StartRunAdmissionService',
       'export interface StartRunAdmissionResult',
+      'export interface IStartRunAdmissionService',
       'export class StartRunIntentService',
       'export interface StartRunIntentServiceDeps',
       'export class StartRunExecutionService',
@@ -127,6 +150,7 @@ function readEngineSource(relativePath: string): string {
 
 function readStartRunPhaseSources(): string {
   return [
+    'StartRunTypes.ts',
     'StartRunAdmissionService.ts',
     'StartRunIntentService.ts',
     'StartRunExecutionService.ts',

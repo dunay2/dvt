@@ -45,13 +45,43 @@ Acceptance criteria:
 - API and engine test fixtures use the builder;
 - the public `IWorkflowEngine.startRun` command remains unchanged.
 
+### US-DHM-WS3-004
+
+As an engine maintainer, I want `StartRunApplicationService` to depend on an
+admission seam so plan integrity, provider resolution, capability checks, and
+run-execution-context admission cannot grow back into the coordinator.
+
+Acceptance criteria:
+
+- the application service receives `IStartRunAdmissionService`;
+- admission goes through `admissionService.admit`;
+- the application service does not construct `StartRunAdmissionService`;
+- existing start-run success and rejection behavior remains unchanged.
+
+### US-DHM-WS3-005
+
+As an architecture reviewer, I want start-run phase ownership checked
+semantically so future cleanup cannot satisfy a thin barrel/import rule while
+reintroducing hidden phase construction.
+
+Acceptance criteria:
+
+- the architecture test fails if `StartRunApplicationService` imports or
+  constructs `StartRunAdmissionService`;
+- the architecture test requires `IStartRunAdmissionService` in the start-run
+  phase type surface;
+- component documentation lists admission as a public phase seam with
+  invariants, transitions, consumers, and diagrams.
+
 ## Negative Scenarios
 
+- If `StartRunApplicationService` constructs `StartRunAdmissionService`
+  directly, the architecture guard fails.
 - If `StartRunApplicationService` constructs `StartRunExecutionService`
   directly, the architecture guard fails.
 - If `StartRunApplicationService` constructs `StartRunFailurePolicy` directly,
   the architecture guard fails.
-- If the start-run execution and failure interfaces are removed, the
+- If the start-run admission, execution, or failure interfaces are removed, the
   architecture guard fails.
 
 ## Scenario Coverage Matrix
@@ -61,3 +91,5 @@ Acceptance criteria:
 | `US-DHM-WS3-001` | `workflowEngineStartRunDecomposition.architecture.test.ts` | `StartRunApplicationService.test.ts` |
 | `US-DHM-WS3-002` | `workflowEngineStartRunDecomposition.architecture.test.ts` | existing start-run failure tests     |
 | `US-DHM-WS3-003` | `workflowEngineStartRunDecomposition.architecture.test.ts` | engine/API composition typechecks    |
+| `US-DHM-WS3-004` | `startRunApplicationDecomposition.architecture.test.ts`    | `StartRunApplicationService.test.ts` |
+| `US-DHM-WS3-005` | `startRunApplicationDecomposition.architecture.test.ts`    | architecture test red/green cycle    |

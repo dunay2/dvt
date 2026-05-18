@@ -10,45 +10,16 @@
  * @version 1.0.0
  */
 import type { IStoredPlanArtifactReader } from '@dvt/artifacts';
-import type {
-  ExecutionPlan,
-  PlanRef,
-  ResolvedRunContext,
-  RunExecutionPolicy,
-  ScopedPlanRef,
-} from '@dvt/contracts';
+import type { PlanRef, ResolvedRunContext, ScopedPlanRef } from '@dvt/contracts';
 
-import type { IProviderAdapter } from '../../adapters/IProviderAdapter.js';
 import type { IPlanIntegrityValidator } from '../../ports/IPlanIntegrityValidator.js';
 
-export interface StartRunExecutionPolicyAdmission {
-  plan: ExecutionPlan;
-  planRef: PlanRef;
-  executionPolicy: RunExecutionPolicy;
-  context: ResolvedRunContext;
-  adapter: IProviderAdapter;
-}
-
-export interface StartRunVerifiedArtifact {
-  plan: ExecutionPlan;
-  executionPolicy: RunExecutionPolicy;
-}
-
-export interface StartRunAdmissionResult {
-  adapter: IProviderAdapter;
-  verifiedArtifact: StartRunVerifiedArtifact;
-}
-
-export interface StartRunAdmissionRequest {
-  planRef: PlanRef;
-  resolvedContext: ResolvedRunContext;
-}
-
-export interface StartRunAdmissionGuardPort {
-  assertStartRunAllowed(planRef: PlanRef, context: ResolvedRunContext): Promise<void>;
-  resolveAdapter(context: ResolvedRunContext): IProviderAdapter;
-  assertExecutionPolicyAllowed(admission: StartRunExecutionPolicyAdmission): Promise<void>;
-}
+import type {
+  IStartRunAdmissionService,
+  StartRunAdmissionGuardPort,
+  StartRunAdmissionRequest,
+  StartRunAdmissionResult,
+} from './StartRunTypes.js';
 
 export interface StartRunAdmissionServiceDeps {
   guard: StartRunAdmissionGuardPort;
@@ -56,7 +27,7 @@ export interface StartRunAdmissionServiceDeps {
   planIntegrityValidator: IPlanIntegrityValidator;
 }
 
-export class StartRunAdmissionService {
+export class StartRunAdmissionService implements IStartRunAdmissionService {
   constructor(private readonly deps: StartRunAdmissionServiceDeps) {}
 
   async admit(request: StartRunAdmissionRequest): Promise<StartRunAdmissionResult> {
