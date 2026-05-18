@@ -1,8 +1,10 @@
+/** Owned concern: resolve copy for global shell chrome without owning route behavior. */
 import { resolveString, type LocalizableString } from '../../plugins/contracts/PluginManifest';
 
 export type ShellTopBarCopy = {
   readonly shell: string;
   readonly workspacePanels: string;
+  readonly globalNavigation: string;
   readonly viewOptions: string;
   readonly explorerPanel: string;
   readonly inspectorPanel: string;
@@ -23,6 +25,7 @@ export type ShellTopBarCopy = {
 const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
   shell: { key: 'shell.view', fallback: 'View' },
   workspacePanels: { key: 'shell.workspacePanels', fallback: 'Panels' },
+  globalNavigation: { key: 'shell.globalNavigation', fallback: 'Navigation' },
   viewOptions: { key: 'shell.viewOptions', fallback: 'View options' },
   explorerPanel: { key: 'shell.explorerPanel', fallback: 'Explorer Panel' },
   inspectorPanel: { key: 'shell.inspectorPanel', fallback: 'Inspector Panel' },
@@ -53,6 +56,7 @@ export function resolveShellTopBarCopy(locale?: string): ShellTopBarCopy {
   return {
     shell: resolveString(COPY_BY_KEY.shell, locale),
     workspacePanels: resolveString(COPY_BY_KEY.workspacePanels, locale),
+    globalNavigation: resolveString(COPY_BY_KEY.globalNavigation, locale),
     viewOptions: resolveString(COPY_BY_KEY.viewOptions, locale),
     explorerPanel: resolveString(COPY_BY_KEY.explorerPanel, locale),
     inspectorPanel: resolveString(COPY_BY_KEY.inspectorPanel, locale),

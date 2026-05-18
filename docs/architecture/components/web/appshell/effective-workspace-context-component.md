@@ -2,7 +2,7 @@
 title: Effective Workspace Context Component
 status: Active
 owner: Web / API / Architecture
-last_reviewed: 2026-05-10
+last_reviewed: 2026-05-18
 planning_type: architecture
 ---
 
@@ -45,6 +45,11 @@ workspace-file content.
 - API mode protected route rendering waits for both session and workspace
   context.
 - `sessionStore` is a projection of backend-granted context in API mode.
+- When `availableWorkspaces` contains the route-preselected local session
+  scope, the resolver preserves that scope instead of blindly replacing it with
+  the first backend effective workspace.
+- When the preselected scope is absent from `availableWorkspaces`, the resolver
+  falls back to `effectiveWorkspace` and still fails closed on context denial.
 - `createApiClient` may send session headers only after the protected route
   gate has applied server-owned context.
 - Mock mode may keep local demo scope, but must not be documented as product
@@ -78,8 +83,8 @@ sequenceDiagram
   Session-->>Api: principal profile
   Gate->>Api: getJson('/workspace/context', no session headers)
   Api->>Context: resolve grants to workspace context
-  Context-->>Api: effective workspace context
-  Gate->>Store: setSessionContext(effectiveWorkspace)
+  Context-->>Api: effective workspace context plus available workspaces
+  Gate->>Store: setSessionContext(preselected available workspace or effectiveWorkspace)
   Gate->>Route: render protected route
 ```
 
@@ -104,6 +109,8 @@ validates:
 - `AuthRouteGate` delegates route startup semantics to the resolver;
 - the resolver calls `/session` before `/workspace/context`;
 - `/workspace/context` is applied to `sessionStore`;
+- an already selected scope is preserved only when it appears in
+  `availableWorkspaces`;
 - `/session` does not import or mention workspace context.
 
 ## Drift Guard
@@ -115,3 +122,5 @@ Update this guide and the user stories when a change alters:
 - when protected routes are allowed to render;
 - how granted workspace options are represented;
 - whether local storage may influence API-mode scope.
+- whether multiple available workspaces are collapsed or selectable during
+  protected route startup.

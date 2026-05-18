@@ -452,6 +452,28 @@ symbols:
     cypressCoverage: N/A
     unitTests:
       - apps/web/src/app/services/session/protectedRouteSessionContext.test.ts
+  - name: sameWorkspaceContext
+    path: apps/web/src/app/services/session/protectedRouteSessionContext.ts
+    dddOwner: Web protected route startup
+    cqRails:
+      - GetEffectiveWorkspaceContext
+    fowlerSignals:
+      - Preserve preselected workspace only when backend grants it
+    architectureGuard: pnpm --filter @dvt/web exec vitest run src/app/services/session/protectedRouteSessionContext.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/services/session/protectedRouteSessionContext.test.ts
+  - name: resolveRouteWorkspaceContext
+    path: apps/web/src/app/services/session/protectedRouteSessionContext.ts
+    dddOwner: Web protected route startup
+    cqRails:
+      - GetEffectiveWorkspaceContext
+    fowlerSignals:
+      - Avoid collapsing multiple granted workspaces into the first effective scope
+    architectureGuard: pnpm --filter @dvt/web exec vitest run src/app/services/session/protectedRouteSessionContext.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - apps/web/src/app/services/session/protectedRouteSessionContext.test.ts
   - name: resolveProtectedRouteSessionContext
     path: apps/web/src/app/services/session/protectedRouteSessionContext.ts
     dddOwner: Web protected route startup

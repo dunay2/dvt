@@ -98,6 +98,42 @@ test('startLocalProtectedRuntimeAuth issues a bounded local dev bearer token by 
   }
 });
 
+test('startLocalProtectedRuntimeAuth publishes tenant actions for frontend permissions', async () => {
+  const bootstrap = await startLocalProtectedRuntimeAuth();
+
+  try {
+    const payload = decodeJwtPayload(bootstrap.webEnv.VITE_API_BEARER_TOKEN);
+    const scopes = typeof payload.scope === 'string' ? payload.scope.split(' ') : [];
+
+    assert.ok(scopes.includes('dvt:runtime'));
+    assert.ok(scopes.includes('run:start'));
+    assert.ok(scopes.includes('workspace:graph-draft:view'));
+    assert.ok(scopes.includes('workspace:graph-draft:save'));
+  } finally {
+    await bootstrap.close();
+  }
+});
+
+test('startLocalProtectedRuntimeAuth can assert additional live-proof project ids', async () => {
+  const bootstrap = await startLocalProtectedRuntimeAuth({
+    env: {
+      VITE_DEFAULT_PROJECT_ID: 'project-dev-test',
+    },
+    additionalProjectIds: ['project-dev-test-dynamic-a', 'project-dev-test-dynamic-b'],
+  });
+
+  try {
+    const payload = decodeJwtPayload(bootstrap.webEnv.VITE_API_BEARER_TOKEN);
+    assert.deepEqual(payload.project_ids, [
+      'project-dev-test',
+      'project-dev-test-dynamic-a',
+      'project-dev-test-dynamic-b',
+    ]);
+  } finally {
+    await bootstrap.close();
+  }
+});
+
 test('startLocalProtectedRuntimeAuth exposes a local token refresh endpoint', async () => {
   const bootstrap = await startLocalProtectedRuntimeAuth();
 

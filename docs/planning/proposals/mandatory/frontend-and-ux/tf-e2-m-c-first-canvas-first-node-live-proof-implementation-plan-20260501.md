@@ -437,6 +437,7 @@ allowedImplementationSurfaces:
   - docs/planning/status/system-governance-file-index.files.yaml
   - package.json
   - scripts/run-canvas-first-authoring-live-proof.cjs
+  - scripts/run-dev-stack.auth.cjs
   - scripts/check-feature-mechanization.cjs
   - scripts/check-feature-mechanization.test.cjs
   - buzon/20260428-codex-fowler-web-graph-startup-and-draft-recovery-analysis.md
@@ -1740,6 +1741,19 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
     unitTests:
       - apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
+  - name: resolveAssertedProjectIds
+    path: scripts/run-dev-stack.auth.cjs
+    dddOwner: Local protected-runtime auth bootstrap
+    cqRails:
+      - RunCanvasFirstAuthoringLiveProof
+      - GetEffectiveWorkspaceContext
+    fowlerSignals:
+      - local bearer project assertions align with seeded backend grants
+      - no dynamic workspace grant without token assertion
+    architectureGuard: scripts/run-dev-stack.auth.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.auth.test.cjs
   - name: http
     path: scripts/run-canvas-first-authoring-live-proof.cjs
     dddOwner: Repository protected-runtime browser proof runner

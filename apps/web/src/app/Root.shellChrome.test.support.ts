@@ -112,6 +112,21 @@ export function expectRootShellFrameChrome(
   expectRootShellHeaderChrome(container);
 }
 
+export function expectRootShellWorkbenchFrameChrome(
+  container: ParentNode,
+  expectedOutletText: string
+): void {
+  const appShellFrame = requireElement<HTMLElement>(container, '[data-slot="app-shell-frame"]');
+  const appShellMain = requireElement<HTMLElement>(container, '[data-slot="app-shell-main"]');
+  const appShellOutlet = requireElement<HTMLElement>(container, '[data-slot="app-shell-outlet"]');
+
+  expect(appShellFrame).toBeTruthy();
+  expect(container.querySelector('[data-slot="app-shell-left-navigation"]')).toBeNull();
+  expect(appShellOutlet.closest('[data-slot="app-shell-main"]')).toBe(appShellMain);
+  expect(appShellOutlet.textContent).toContain(expectedOutletText);
+  expectRootShellHeaderChrome(container);
+}
+
 export function expectRootShellNavigationChrome(container: ParentNode, activeHref: string): void {
   const leftNavigationRail = requireElement<HTMLElement>(
     container,

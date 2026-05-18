@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 
+import { fireEvent, waitFor } from '@testing-library/dom';
+import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { withTestQueryClient } from '../testing/reactQueryHarness';
@@ -18,6 +20,7 @@ import {
   expectActiveRootShellNavigationLink,
   expectRootShellFrameChrome,
   expectRootShellNavigationChrome,
+  expectRootShellWorkbenchFrameChrome,
   waitForHealthyShellChrome,
 } from './Root.shellChrome.test.support';
 import { resetRouteBootstrapPresentation } from './bootstrap/routeBootstrapRegistry';
@@ -34,15 +37,42 @@ describe('RootShell chrome', () => {
     vi.useRealTimers();
   });
 
-  it('renders shell top bar and left navigation with governed shell chrome', async () => {
+  it('renders Canvas workbench chrome without the permanent left navigation rail', async () => {
     const mounted = await withTestQueryClient(
       createRootShellNode(createHealthyPlatformCapability(), ['/canvas'])
     );
 
     try {
       await waitForHealthyShellChrome(mounted);
-      expectRootShellFrameChrome(mounted.container, 'Canvas route');
-      expectRootShellNavigationChrome(mounted.container, '/canvas');
+      expectRootShellWorkbenchFrameChrome(mounted.container, 'Canvas route');
+      expect(mounted.container.querySelector('[data-slot="left-navigation-rail"]')).toBeNull();
+      await act(async () => {
+        fireEvent.pointerDown(mounted.container.querySelector('[data-slot="shell-menu-trigger"]')!);
+      });
+
+      await waitFor(() => {
+        expect(
+          [
+            ...document.body.querySelectorAll<HTMLAnchorElement>(
+              '[data-slot="shell-menu-navigation-link"]'
+            ),
+          ].map((link) => link.getAttribute('href'))
+        ).toEqual(['/canvas', '/runs', '/plugins', '/admin']);
+      });
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('keeps the global rail visible on non-workbench routes', async () => {
+    const mounted = await withTestQueryClient(
+      createRootShellNode(createHealthyPlatformCapability(), ['/runs'])
+    );
+
+    try {
+      await waitForHealthyShellChrome(mounted);
+      expectRootShellFrameChrome(mounted.container, 'Runs route');
+      expectRootShellNavigationChrome(mounted.container, '/runs');
     } finally {
       await mounted.cleanup();
     }

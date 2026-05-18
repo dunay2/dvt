@@ -2,7 +2,7 @@
 title: Canvas First Authoring Live Proof Component
 status: Accepted
 owner: Frontend / Architecture
-last_reviewed: 2026-05-02
+last_reviewed: 2026-05-18
 planning_type: architecture
 task_id: TF-E2-M-C
 ---
@@ -130,6 +130,12 @@ implementation plan and repo command-query catalog are updated first.
   entrypoint and no seeded project nodes.
 - Live Cypress proof scopes must be unique per Cypress run and stable inside a
   spec so reruns do not fail because a previous run already saved a draft.
+- The live proof runner must assert every run-unique first-authoring project in
+  the local protected-runtime bearer and must seed matching backend grants
+  before Cypress starts.
+- Route startup must preserve the variant-specific preselected workspace when
+  `/workspace/context` lists it in `availableWorkspaces`; otherwise later
+  variants can inherit an earlier variant's saved draft.
 - `CreateCanvas` is valid only from `needs_canvas` with writable draft posture.
 - `CreateCanvasNode` is valid only after the first-canvas draft save settles.
 - `SaveWorkspaceGraphDraft` remains the only graph-authoritative write.
@@ -228,6 +234,9 @@ sequenceDiagram
 - `canvas-first-authoring-live.cy.ts` proves the user-visible live journey.
 - `scripts/run-canvas-first-authoring-live-proof.cjs` executes the mandatory
   protected-runtime proof lane.
+- `resolveProtectedRouteSessionContext()` preserves the variant workspace from
+  local session storage when the backend grants it, so one Cypress spec can
+  prove multiple first-authoring workspaces without scope bleed.
 
 ## User Stories
 
@@ -332,6 +341,10 @@ The implementation proves these failures:
 - Cypress fixtures must not intercept the authoritative draft endpoints.
 - Cypress setup must not write the authoritative draft before the first UI
   create command.
+- Cypress live proof setup must not grant dynamic workspaces without also
+  asserting those project ids in the local bearer token.
+- The workspace context gate must not collapse all proof variants to the first
+  effective workspace when the backend lists multiple available workspaces.
 - Cypress layout assertions must not poll `draft.nodePositions` for drag
   movement. The protected draft proves graph authority only; route-local layout
   proof belongs to `dvt-web-canvas-interaction`.
