@@ -379,6 +379,52 @@ describe('internal alpha route gate architecture', () => {
     );
   });
 
+  it('accepts Recovery states evidence only with source-owned vocabulary and stage coverage', () => {
+    const recoveryStage = internalAlphaCombinedRouteFixture.stages.find(
+      (stage) => stage.stage === 'Recovery states'
+    );
+    const componentGuide = readRepoFile(
+      'docs/architecture/components/web/internal-alpha-route-gate-component.md'
+    );
+    const userStories = readRepoFile(
+      'docs/architecture/components/web/internal-alpha-route-gate-user-stories.md'
+    );
+
+    expect(recoveryStage?.evidenceAcceptance).toBe('accepted');
+    expect(recoveryStage?.rails).toEqual(['MapRouteRecoveryState']);
+    expect(recoveryStage?.evidenceRefs).toEqual(
+      expect.arrayContaining([
+        'docs/architecture/components/web/internal-alpha-route-gate-component.md',
+        'docs/architecture/components/web/internal-alpha-route-gate-user-stories.md',
+        'apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts',
+        'apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts',
+        'apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts',
+        'apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts',
+      ])
+    );
+    expect(componentGuide).toContain('RouteRecoveryVocabulary');
+    expect(userStories).toContain('US-F27-N-008');
+    expect(recoveryStage?.recoveryStates).toEqual([
+      'ready',
+      'blocked',
+      'unauthorized',
+      'unavailable',
+      'stale',
+      'not-found',
+    ]);
+    expect(recoveryStage?.happyPathProof).toMatch(/source-owned|vocabulary|stage/);
+    expect(recoveryStage?.failClosedProof).toMatch(
+      /unknown|unavailable|unauthorized|stale|not-found/
+    );
+    expect(evaluateInternalAlphaCombinedRouteFixture(internalAlphaCombinedRouteFixture)).toEqual(
+      expect.objectContaining({
+        missingRecoveryStates: [],
+        stagesWithoutRecoveryVocabulary: [],
+        routeDecision: 'review',
+      })
+    );
+  });
+
   it('keeps accepted evidence semantically encapsulated instead of relying on path shape', () => {
     const componentGuide = readRepoFile(
       'docs/architecture/components/web/internal-alpha-route-gate-component.md'
@@ -399,6 +445,7 @@ describe('internal alpha route gate architecture', () => {
       'Workspace context',
       'Canvas workbench',
       'Code workbench',
+      'Recovery states',
     ]);
     for (const stage of acceptedStages) {
       expect(stage.evidenceRefs).toEqual(

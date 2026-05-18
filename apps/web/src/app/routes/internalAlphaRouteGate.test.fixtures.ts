@@ -180,14 +180,19 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       stage: 'Plan/run readiness',
     },
     {
-      evidenceAcceptance: 'planned',
+      evidenceAcceptance: 'accepted',
       evidenceRefs: [
         'docs/architecture/components/web/internal-alpha-route-gate-component.md',
+        'docs/architecture/components/web/internal-alpha-route-gate-user-stories.md',
         'apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts',
+        'apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts',
+        'apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts',
+        'apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts',
       ],
       failClosedProof:
         'unknown, unavailable, unauthorized, stale, and not-found states remain distinguishable',
-      happyPathProof: 'equivalent failures use one route-owned recovery vocabulary',
+      happyPathProof:
+        'ready and fail-closed stages use one source-owned recovery vocabulary across stage coverage',
       rails: ['MapRouteRecoveryState'],
       recoveryState: 'ready',
       recoveryStates: ['ready', 'blocked', 'unauthorized', 'unavailable', 'stale', 'not-found'],

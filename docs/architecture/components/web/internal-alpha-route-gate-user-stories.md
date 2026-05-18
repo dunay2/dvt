@@ -69,7 +69,7 @@ own implementation details and tests.
 | Canvas workbench   | `US-F27-003`     | `US-F27-N-001`    | accepted           |
 | Code workbench     | `US-F27-004`     | `US-F27-N-001`    | accepted           |
 | Plan/run readiness | `US-F27-005`     | `US-F27-N-002`    | planned            |
-| Recovery states    | `US-F27-006`     | `US-F27-N-003`    | planned            |
+| Recovery states    | `US-F27-006`     | `US-F27-N-003`    | accepted           |
 | Alpha cadence      | `US-F27-007`     | `US-F27-N-004`    | planned            |
 | Risk triage        | `US-F27-008`     | `US-F27-N-005`    | planned            |
 | Route authority    | `US-F27-010`     | `US-F27-N-006`    | active             |
