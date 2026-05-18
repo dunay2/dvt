@@ -59,6 +59,8 @@ allowedImplementationSurfaces:
   - apps/web/src/app/services/api/classifyHttpError.test.ts
   - apps/web/src/app/services/runs/runEventPresentationCopy.ts
   - apps/web/src/app/services/runs/runEventPresentationModel.ts
+  - apps/web/src/app/services/runs/runEventTimelineModel.ts
+  - apps/web/src/app/services/runs/runEventTimelineModel.test.ts
   - apps/web/src/app/services/runs/runWorkspaceFacade.ts
   - apps/web/src/app/services/runs/runsApiDecoders.ts
   - apps/web/src/app/services/runs/runsApiPayloads.ts
@@ -68,6 +70,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/runs/RunDetailStateViews.tsx
   - apps/web/src/app/views/runs/RunListStateView.tsx
   - apps/web/src/app/views/runs/RunStates.tsx
+  - apps/web/src/app/views/runs/RunTimelineEventCard.tsx
   - apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
   - apps/web/src/app/views/runs/runsDomainBoundary.architecture.test.ts
   - apps/web/src/app/views/runs/runStatesCopy.ts
@@ -77,6 +80,8 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/runs/useRunWorkspace.ts
   - docs/architecture/components/web/runs/component-runs.md
   - docs/architecture/components/web/runs/dvt-runs-frontend-architecture.md
+  - docs/architecture/components/web/runs/run-event-timeline-component.md
+  - docs/architecture/components/web/runs/run-event-timeline-user-stories.md
   - docs/architecture/components/web/runs/user-stories-runs.md
   - docs/planning/proposals/mandatory/frontend-and-ux/runs-domain-semantic-encapsulation-plan-20260508.md
   - docs/planning/status/generated-code-state.md
@@ -334,6 +339,127 @@ symbols:
     cypressCoverage: N/A - architecture test helper
     unitTests:
       - pnpm --filter @dvt/web test -- src/app/views/runs/runsDomainBoundary.architecture.test.ts
+  - name: RUN_EVENT_LIVE_POLL_INTERVAL_MS
+    path: apps/web/src/app/services/runs/runEventTimelineModel.ts
+    dddOwner: RunEventTimelineModel
+    cqRails:
+      - ListRunEvents
+    fowlerSignals:
+      - Shared event stream cadence
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/runs/runsDomainBoundary.architecture.test.ts
+    cypressCoverage: N/A - pure model
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/services/runs/runEventTimelineModel.test.ts
+  - name: RunEventTimelineModel
+    path: apps/web/src/app/services/runs/runEventTimelineModel.ts
+    dddOwner: RunEventTimelineModel
+    cqRails:
+      - ListRunEvents
+    fowlerSignals:
+      - Shared event stream state
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/runs/runsDomainBoundary.architecture.test.ts
+    cypressCoverage: N/A - pure model
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/services/runs/runEventTimelineModel.test.ts
+  - name: compareRunEvents
+    path: apps/web/src/app/services/runs/runEventTimelineModel.ts
+    dddOwner: RunEventTimelineModel
+    cqRails:
+      - ListRunEvents
+    fowlerSignals:
+      - Shared event chronology ordering
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/runs/runsDomainBoundary.architecture.test.ts
+    cypressCoverage: N/A - pure model helper
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/services/runs/runEventTimelineModel.test.ts
+  - name: dedupeAndSortRunEvents
+    path: apps/web/src/app/services/runs/runEventTimelineModel.ts
+    dddOwner: RunEventTimelineModel
+    cqRails:
+      - ListRunEvents
+    fowlerSignals:
+      - Shared event chronology dedupe
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/runs/runsDomainBoundary.architecture.test.ts
+    cypressCoverage: N/A - pure model helper
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/services/runs/runEventTimelineModel.test.ts
+  - name: deriveNextAfterSeq
+    path: apps/web/src/app/services/runs/runEventTimelineModel.ts
+    dddOwner: RunEventTimelineModel
+    cqRails:
+      - ListRunEvents
+    fowlerSignals:
+      - Shared event cursor preservation
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/runs/runsDomainBoundary.architecture.test.ts
+    cypressCoverage: N/A - pure model helper
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/services/runs/runEventTimelineModel.test.ts
+  - name: isRunEventStreamLiveStatus
+    path: apps/web/src/app/services/runs/runEventTimelineModel.ts
+    dddOwner: RunEventTimelineModel
+    cqRails:
+      - ListRunEvents
+    fowlerSignals:
+      - Shared active-status polling policy
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/runs/runsDomainBoundary.architecture.test.ts
+    cypressCoverage: N/A - pure model
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/services/runs/runEventTimelineModel.test.ts
+  - name: normalizeRunEventTimelinePage
+    path: apps/web/src/app/services/runs/runEventTimelineModel.ts
+    dddOwner: RunEventTimelineModel
+    cqRails:
+      - ListRunEvents
+    fowlerSignals:
+      - Shared event page normalization
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/runs/runsDomainBoundary.architecture.test.ts
+    cypressCoverage: N/A - pure model
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/services/runs/runEventTimelineModel.test.ts
+  - name: mergeRunEventTimelinePage
+    path: apps/web/src/app/services/runs/runEventTimelineModel.ts
+    dddOwner: RunEventTimelineModel
+    cqRails:
+      - ListRunEvents
+    fowlerSignals:
+      - Shared event page merge
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/runs/runsDomainBoundary.architecture.test.ts
+    cypressCoverage: N/A - pure model
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/services/runs/runEventTimelineModel.test.ts
+  - name: RunTimelineEventCardProps
+    path: apps/web/src/app/views/runs/RunTimelineEventCard.tsx
+    dddOwner: RunTimelineEventCard
+    cqRails:
+      - ListRunEvents
+    fowlerSignals:
+      - Structured timeline rendering boundary
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/runs/runsDomainBoundary.architecture.test.ts
+    cypressCoverage: N/A - structured event card
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/views/runs/RunStates.test.tsx
+  - name: RunTimelineEventCard
+    path: apps/web/src/app/views/runs/RunTimelineEventCard.tsx
+    dddOwner: RunTimelineEventCard
+    cqRails:
+      - ListRunEvents
+    fowlerSignals:
+      - Structured timeline rendering boundary
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/runs/runsDomainBoundary.architecture.test.ts
+    cypressCoverage: N/A - structured event card
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/views/runs/RunStates.test.tsx
+  - name: makeEvent
+    path: apps/web/src/app/services/runs/runEventTimelineModel.test.ts
+    dddOwner: RunEventTimelineModelTest
+    cqRails:
+      - ListRunEvents
+    fowlerSignals:
+      - Event timeline test fixture
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/services/runs/runEventTimelineModel.test.ts
+    cypressCoverage: N/A - unit test helper
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/app/services/runs/runEventTimelineModel.test.ts
 ```
 
 ## Validation Plan

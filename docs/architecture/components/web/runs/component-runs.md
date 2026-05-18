@@ -36,6 +36,7 @@ Canonical local paths:
 - [runWorkspaceFacade.ts](../../../../../apps/web/src/app/services/runs/runWorkspaceFacade.ts)
 - [runEventPresentationModel.ts](../../../../../apps/web/src/app/services/runs/runEventPresentationModel.ts)
 - [runEventPresentationCopy.ts](../../../../../apps/web/src/app/services/runs/runEventPresentationCopy.ts)
+- [runEventTimelineModel.ts](../../../../../apps/web/src/app/services/runs/runEventTimelineModel.ts)
 
 ## Shared Utilities
 
@@ -53,6 +54,7 @@ Canonical local paths:
 - [RunDetailStateViews.tsx](../../../../../apps/web/src/app/views/runs/RunDetailStateViews.tsx)
 - [RunStates.tsx](../../../../../apps/web/src/app/views/runs/RunStates.tsx)
 - [RunWorkspaceStateView.tsx](../../../../../apps/web/src/app/views/runs/RunWorkspaceStateView.tsx)
+- [RunTimelineEventCard.tsx](../../../../../apps/web/src/app/views/runs/RunTimelineEventCard.tsx)
 
 ## Tests
 
@@ -61,6 +63,7 @@ Canonical local paths:
 - [runWorkspaceFacade.test.ts](../../../../../apps/web/src/app/services/runs/runWorkspaceFacade.test.ts)
 - [runEventPresentationModel.test.ts](../../../../../apps/web/src/app/services/runs/runEventPresentationModel.test.ts)
 - [runEventPresentationCopy.test.ts](../../../../../apps/web/src/app/services/runs/runEventPresentationCopy.test.ts)
+- [runEventTimelineModel.test.ts](../../../../../apps/web/src/app/services/runs/runEventTimelineModel.test.ts)
 - [runWorkbenchStateModel.test.ts](../../../../../apps/web/src/app/views/runs/runWorkbenchStateModel.test.ts)
 - [runStatesModel.test.ts](../../../../../apps/web/src/app/views/runs/runStatesModel.test.ts)
 - [useRunWorkspace.test.tsx](../../../../../apps/web/src/app/views/runs/useRunWorkspace.test.tsx)
@@ -124,6 +127,9 @@ wire contracts and are not re-exported from `@dvt/contracts`.
    [`runsDomainBoundary.architecture.test.ts`](../../../../../apps/web/src/app/views/runs/runsDomainBoundary.architecture.test.ts)
    validate docblock presence, port boundary isolation, CQRS rail separation,
    discriminated-union state modelling, and adapter security properties.
+8. Event chronology is normalized through the local
+   [Run Event Timeline Component](./run-event-timeline-component.md) before
+   either the shell console or the Runs workspace renders it.
 
 ## State Transitions
 
@@ -145,6 +151,8 @@ stateDiagram-v2
   LoadingEvents --> TimelineReady : events returned
   LoadingEvents --> TimelineEmpty : no events
   LoadingEvents --> TimelineDegraded : event query failure
+  TimelineReady --> TimelineReady : overlapping page deduped
+  TimelineReady --> TimelineReady : active run polls nextAfterSeq
   SnapshotReady --> [*] : deselect or navigate away
 ```
 
@@ -156,6 +164,7 @@ stateDiagram-v2
 | `useRunWorkspace`                    | [useRunWorkspace.ts](../../../../../apps/web/src/app/views/runs/useRunWorkspace.ts)                                           | Subscribes to scope and reloads run workspace               |
 | `RunsView` (via `CanvasRunsTabView`) | [CanvasRunsTabView.tsx](../../../../../apps/web/src/app/views/runs/CanvasRunsTabView.tsx)                                     | Entry point for Canvas-scoped Runs tab                      |
 | `RunWorkspaceStateView`              | [RunWorkspaceStateView.tsx](../../../../../apps/web/src/app/views/runs/RunWorkspaceStateView.tsx)                             | Renders full workspace (detail + timeline) from view model  |
+| `RunTimelineEventCard`               | [RunTimelineEventCard.tsx](../../../../../apps/web/src/app/views/runs/RunTimelineEventCard.tsx)                               | Renders one structured timeline event from shared semantics |
 | `RunListStateView`                   | [RunListStateView.tsx](../../../../../apps/web/src/app/views/runs/RunListStateView.tsx)                                       | Renders runs summary list with status badges and navigation |
 | `RunDetailStateViews`                | [RunDetailStateViews.tsx](../../../../../apps/web/src/app/views/runs/RunDetailStateViews.tsx)                                 | Owns empty, error, degraded, loading, missing state views   |
 | `RunStates`                          | [RunStates.tsx](../../../../../apps/web/src/app/views/runs/RunStates.tsx)                                                     | Barrel re-export of named state views for route renderer    |
@@ -188,6 +197,7 @@ flowchart TB
 
   subgraph Facades["Facades (services/runs/)"]
     Facade["runWorkspaceFacade.ts"]
+    TimelineModel["runEventTimelineModel.ts"]
     EventsModel["runEventPresentationModel.ts"]
     EventsCopy["runEventPresentationCopy.ts"]
   end
@@ -214,8 +224,10 @@ flowchart TB
 
   CanvasTab --> Hook
   Hook --> Facade
+  Hook --> TimelineModel
   Hook ---> ClassifyHttp
   Facade --> IRunsPort
+  Facade --> TimelineModel
   Facade --> EventsModel
   Facade --> EventsCopy
   Facade ---> ClassifyHttp
@@ -261,6 +273,8 @@ module.
 - [Frontend Runtime Contract User Manual](./frontend-runtime-contract-user-manual.md)
 - [Start Run Client Identity Boundary](./start-run-client-identity-boundary.md)
 - [Runs User Stories](./user-stories-runs.md)
+- [Run Event Timeline Component](./run-event-timeline-component.md)
+- [Run Event Timeline User Stories](./run-event-timeline-user-stories.md)
 - [Runs Domain Architecture Test](../../../../../apps/web/src/app/views/runs/runsDomainBoundary.architecture.test.ts)
 - [Web DDD Structure](../web-ddd.md)
 - [Web Functionalities](../web-functional.md)

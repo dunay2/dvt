@@ -1,17 +1,21 @@
-import { useCallback, useRef, useState } from 'react';
+/**
+ * Owned concern: subscribe the shell console to the active run event stream
+ * without owning snapshot truth or durable run-detail rendering.
+ */
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import { useRunsService } from '../../services/AppServicesContext';
 import { useExecutionStore } from '../../stores/executionStore';
 import { queryKeys } from '../../queries/queryKeys';
 import { formatRunEventAsLogLine } from './formatLogLine';
+import {
+  isRunEventStreamLiveStatus,
+  mergeRunEventTimelinePage,
+  RUN_EVENT_LIVE_POLL_INTERVAL_MS,
+} from '../../services/runs/runEventTimelineModel';
+import type { RunEvent } from '../../types/engine';
 
-const LIVE_POLL_INTERVAL_MS = 2_000;
-
-/**
- * Fetches run events for the active run, formats them as log lines,
- * and supports incremental polling for live runs.
- */
 export function useConsoleLogStream(): {
   lines: string[];
   isLoading: boolean;
@@ -21,9 +25,9 @@ export function useConsoleLogStream(): {
   const currentRun = useExecutionStore((state) => state.currentRun);
   const runId = currentRun?.runId;
 
-  const isLive = currentRun?.status === 'running' || currentRun?.status === 'pending';
+  const isLive = isRunEventStreamLiveStatus(currentRun?.status);
 
-  const [lines, setLines] = useState<string[]>([]);
+  const [events, setEvents] = useState<RunEvent[]>([]);
   const afterSeqRef = useRef<number | undefined>(undefined);
   const lastRunIdRef = useRef<string | undefined>(undefined);
 
@@ -31,7 +35,7 @@ export function useConsoleLogStream(): {
     if (currentRunId !== lastRunIdRef.current) {
       lastRunIdRef.current = currentRunId;
       afterSeqRef.current = undefined;
-      setLines([]);
+      setEvents([]);
     }
   }, []);
 
@@ -44,23 +48,24 @@ export function useConsoleLogStream(): {
 
       const page = await runsService.listRunEvents(runId, afterSeqRef.current);
 
-      if (page.events.length > 0) {
-        const newLines = page.events.map(formatRunEventAsLogLine);
-        setLines((prev) => [...prev, ...newLines]);
-      }
-
-      if (page.nextAfterSeq !== undefined) {
-        afterSeqRef.current = page.nextAfterSeq;
-      }
+      setEvents((previousEvents) => {
+        const merged = mergeRunEventTimelinePage(
+          { events: previousEvents, nextAfterSeq: afterSeqRef.current },
+          page
+        );
+        afterSeqRef.current = merged.nextAfterSeq;
+        return [...merged.events];
+      });
 
       return page;
     },
     enabled: Boolean(runId),
-    refetchInterval: isLive ? LIVE_POLL_INTERVAL_MS : false,
+    refetchInterval: isLive ? RUN_EVENT_LIVE_POLL_INTERVAL_MS : false,
     refetchOnWindowFocus: false,
   });
 
-  const isLoading = Boolean(runId) && lines.length === 0;
+  const lines = useMemo(() => events.map(formatRunEventAsLogLine), [events]);
+  const isLoading = Boolean(runId) && events.length === 0;
 
   return { lines, isLoading, runId };
 }

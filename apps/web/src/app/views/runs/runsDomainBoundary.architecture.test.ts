@@ -38,8 +38,47 @@ describe('Runs domain boundary', () => {
       'RunSummaryItem',
       'RunSnapshot',
       'RunEventTimelinePage',
+      'Run Event Timeline Component',
     ]) {
       expect(componentGuide).toContain(section);
+    }
+
+    const eventTimelineGuide = readRepoFile(
+      'docs/architecture/components/web/runs/run-event-timeline-component.md'
+    );
+    const eventTimelineStories = readRepoFile(
+      'docs/architecture/components/web/runs/run-event-timeline-user-stories.md'
+    );
+
+    for (const section of [
+      '## Public API',
+      '## Invariants',
+      '## Transitions',
+      '## Consumer Diagram',
+      '## Consumers',
+      'RUN_EVENT_LIVE_POLL_INTERVAL_MS',
+      'isRunEventStreamLiveStatus',
+      'normalizeRunEventTimelinePage',
+      'mergeRunEventTimelinePage',
+      'RunTimelineEventCard',
+      '```mermaid',
+    ]) {
+      expect(eventTimelineGuide).toContain(section);
+    }
+
+    for (const storyId of [
+      'US-F10-01',
+      'US-F10-02',
+      'US-F10-03',
+      'US-F10-04',
+      'US-F10-05',
+      'US-F10-06',
+      'US-F10-07',
+      'US-F10-08',
+      'US-F10-09',
+      'US-F10-10',
+    ]) {
+      expect(eventTimelineStories).toContain(storyId);
     }
 
     for (const storyId of [
@@ -75,6 +114,7 @@ describe('Runs domain boundary', () => {
       'services/runs/runWorkspaceFacade.ts',
       'services/runs/runEventPresentationModel.ts',
       'services/runs/runEventPresentationCopy.ts',
+      'services/runs/runEventTimelineModel.ts',
     ]) {
       const source = readAppSource(modulePath);
       expect(
@@ -94,6 +134,7 @@ describe('Runs domain boundary', () => {
       'views/runs/RunDetailStateViews.tsx',
       'views/runs/RunStates.tsx',
       'views/runs/RunWorkspaceStateView.tsx',
+      'views/runs/RunTimelineEventCard.tsx',
     ]) {
       const source = readAppSource(modulePath);
       expect(
@@ -189,5 +230,29 @@ describe('Runs domain boundary', () => {
     expect(facadeSource).toContain('RunWorkspaceLoadErrorKind');
     expect(facadeSource).toContain('classifyHttpError');
     expect(useWorkspaceSource).toContain('classifyHttpError');
+  });
+
+  it('converges console and Runs timeline consumers on one semantic event timeline model', () => {
+    const timelineModelSource = readAppSource('services/runs/runEventTimelineModel.ts');
+    const facadeSource = readAppSource('services/runs/runWorkspaceFacade.ts');
+    const consoleHookSource = readAppSource('components/console/useConsoleLogStream.ts');
+    const workspaceSource = readAppSource('views/runs/RunWorkspaceStateView.tsx');
+    const timelineCardSource = readAppSource('views/runs/RunTimelineEventCard.tsx');
+
+    expect(timelineModelSource).toContain('normalizeRunEventTimelinePage');
+    expect(timelineModelSource).toContain('mergeRunEventTimelinePage');
+    expect(timelineModelSource).toContain('isRunEventStreamLiveStatus');
+    expect(timelineModelSource).toContain('RUN_EVENT_LIVE_POLL_INTERVAL_MS');
+
+    expect(facadeSource).toContain('normalizeRunEventTimelinePage');
+    expect(consoleHookSource).toContain('mergeRunEventTimelinePage');
+    expect(consoleHookSource).toContain('isRunEventStreamLiveStatus');
+    expect(consoleHookSource).toContain('RUN_EVENT_LIVE_POLL_INTERVAL_MS');
+
+    expect(workspaceSource).toContain('RunTimelineEventCard');
+    expect(timelineCardSource).toContain('buildRunEventPresentationModel');
+    expect(timelineCardSource).toContain('resolveRunEventHeadline');
+    expect(timelineCardSource).not.toContain('listRunEvents');
+    expect(timelineCardSource).not.toContain('getRunSnapshot');
   });
 });

@@ -21,6 +21,7 @@ code_refs:
 - [IRunsPort](../../../../../apps/web/src/app/ports/runs.ts)
 - [Runs Frontend Architecture](./dvt-runs-frontend-architecture.md)
 - [Command Query Rail Governance](../../../command-query-rail-governance.md)
+- [Run Event Timeline User Stories](./run-event-timeline-user-stories.md)
 
 These stories describe current `apps/web` behavior. They do not claim extra
 client-side validation, synthetic run identity, or fields that are not present
@@ -349,6 +350,62 @@ query fails.
 - `runsService.api.ts` sends workspace scope in `startRun`.
 - `runsService.test.ts` covers list, snapshot, events, and start request scope.
 
+## 7. Event Timeline Convergence
+
+Detailed event stream scenarios live in
+[Run Event Timeline User Stories](./run-event-timeline-user-stories.md). The
+summary scenarios below keep the Runs domain index complete.
+
+### US-15: Event Timeline - Ordered And Deduped
+
+**As** a workspace user,
+**I want** event pages ordered and deduplicated before display,
+**So that** overlapping polling and reconnects do not create confusing
+timeline output.
+
+**C&Q rail:** Query - `listRunEvents`
+
+**Scenario:**
+
+- Given event pages contain duplicate `eventId` values or out-of-order
+  `runSeq` values
+- When the frontend normalizes the timeline
+- Then each event appears once
+- And visible chronology follows `runSeq`, then `emittedAt`, then `eventId`
+
+### US-16: Event Timeline - Shared Console And Runs Semantics
+
+**As** a maintainer,
+**I want** the shell console and Runs workspace to consume the same timeline
+model,
+**So that** terminal lines and structured cards do not drift in event meaning.
+
+**C&Q rail:** Query - `listRunEvents`
+
+**Scenario:**
+
+- Given a run event page is returned
+- When the console renders terminal lines
+- And the Runs workspace renders timeline cards
+- Then both surfaces use the same ordering, dedupe, severity, headline, detail,
+  and step identity semantics
+
+### US-17: Event Timeline - Active Polling Stops At Terminal Status
+
+**As** a workspace user,
+**I want** live event polling to stop when a run reaches a terminal state,
+**So that** completed, failed, and cancelled runs do not keep background polling
+alive.
+
+**C&Q rail:** Query - `listRunEvents`
+
+**Scenario:**
+
+- Given the active run status is `pending` or `running`
+- Then live event polling is enabled
+- Given the active run status is `completed`, `failed`, or `cancelled`
+- Then live event polling is disabled
+
 ## Coverage Matrix
 
 | Story | IRunsPort method   | Rail type | Current evidence surface          |
@@ -367,6 +424,9 @@ query fails.
 | US-12 | `listRunEvents`    | Query     | Facade degraded timeline posture  |
 | US-13 | factory/adapters   | N/A       | One `IRunsPort` for API and mock  |
 | US-14 | all methods        | Scope     | Session-derived workspace scoping |
+| US-15 | `listRunEvents`    | Query     | Event ordering and dedupe model   |
+| US-16 | `listRunEvents`    | Query     | Shared Console/Runs event model   |
+| US-17 | `listRunEvents`    | Query     | Active-status polling policy      |
 
 ## Related
 
@@ -375,4 +435,6 @@ query fails.
 - [Frontend Runtime Contract Technical Manual](./frontend-runtime-contract-technical-manual.md)
 - [Start Run Client Identity Boundary](./start-run-client-identity-boundary.md)
 - [Runs Domain Architecture Test](../../../../../apps/web/src/app/views/runs/runsDomainBoundary.architecture.test.ts)
+- [Run Event Timeline Component](./run-event-timeline-component.md)
+- [Run Event Timeline User Stories](./run-event-timeline-user-stories.md)
 - [Command Query Rail Governance](../../../command-query-rail-governance.md)
