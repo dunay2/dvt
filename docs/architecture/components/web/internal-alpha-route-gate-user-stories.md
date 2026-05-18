@@ -2,7 +2,7 @@
 title: Internal Alpha Route Gate User Stories
 status: Review
 owner: Product / Architecture / Frontend
-last_reviewed: 2026-05-14
+last_reviewed: 2026-05-18
 planning_type: user-stories
 task_ids:
   - F-27
@@ -35,6 +35,9 @@ own implementation details and tests.
   alpha-full claims.
 - `US-F27-010`: as a lane owner, I need `F-27` to remain route authority while
   child proposals remain stage authorities.
+- `US-F27-011`: as a reviewer, I need one combined route fixture to traverse
+  startup, workspace context, Canvas, Code, plan/run readiness, and recovery
+  before any alpha-full candidate can move past review.
 
 ## Negative Stories
 
@@ -48,6 +51,8 @@ own implementation details and tests.
   blocked.
 - `US-F27-N-005`: risk triage lists included risks only. Alpha full remains
   blocked until exclusion rationale exists.
+- `US-F27-N-006`: the combined route fixture omits a stage fail-closed proof.
+  Alpha full remains blocked and the missing stage is reported by name.
 
 ## Traceability
 
@@ -58,3 +63,5 @@ own implementation details and tests.
   `docs/planning/reviews/architecture-and-governance/20260514-internal-alpha-route-acceptance-matrix.md`.
 - Architecture guard:
   `apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts`.
+- Combined fixture:
+  `apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts`.

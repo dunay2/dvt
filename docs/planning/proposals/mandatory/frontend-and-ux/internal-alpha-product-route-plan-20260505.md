@@ -136,8 +136,9 @@ cannot declare alpha full.
 
 ## Feature Mechanization Scope
 
-This manifest mechanizes only the planning-authority correction. It does not
-implement alpha route behavior and does not close the alpha full gate.
+This manifest mechanizes the planning-authority correction and the test-only
+combined route proof fixture. It does not implement product route behavior and
+does not close the alpha full gate.
 
 ```feature-mechanization
 version: 1
@@ -184,6 +185,7 @@ allowedImplementationSurfaces:
   - buzon/20260515-codex-fowler-f27-session-gate-runtime-unavailable-analysis.md
   - apps/web/src/app/routes.test.tsx
   - apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts
+  - apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts
   - docs/planning/state/agent-lane-c.yaml
   - docs/planning/state/agent-lane-e.yaml
   - docs/planning/status/**
@@ -232,6 +234,9 @@ domainObjects:
   - name: AlphaCadenceDecision
     type: planning decision
     owner: Product / Architecture
+  - name: InternalAlphaCombinedRouteFixture
+    type: test fixture
+    owner: InternalAlphaRouteGate architecture guard
 fowlerSignals:
   - Boundary drift
   - Duplicate semantics
@@ -380,6 +385,151 @@ symbols:
       - Documentation drift
     architectureGuard: pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
     cypressCoverage: N/A - architecture guard only.
+    unitTests:
+      - pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+  - name: InternalAlphaRouteStage
+    path: apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts
+    dddOwner: InternalAlphaRouteGate combined route proof fixture
+    cqRails:
+      - ObserveAppBootstrapRouteReadiness
+      - ObserveWorkspaceContext
+      - GetWorkspaceGraphDraft
+      - SaveWorkspaceGraphDraft
+      - ListWorkspaceFiles
+      - GetWorkspaceFileContent
+      - ObservePlanRunReadiness
+      - MapRouteRecoveryState
+    fowlerSignals:
+      - Test-only confidence
+      - Boundary drift
+    architectureGuard: pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+    cypressCoverage: N/A - test-only route proof fixture.
+    unitTests:
+      - pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+  - name: InternalAlphaRouteRail
+    path: apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts
+    dddOwner: InternalAlphaRouteGate combined route proof fixture
+    cqRails:
+      - ObserveAppBootstrapRouteReadiness
+      - ObserveWorkspaceContext
+      - GetWorkspaceGraphDraft
+      - SaveWorkspaceGraphDraft
+      - ListWorkspaceFiles
+      - GetWorkspaceFileContent
+      - ObservePlanRunReadiness
+      - MapRouteRecoveryState
+    fowlerSignals:
+      - Test-only confidence
+      - Boundary drift
+    architectureGuard: pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+    cypressCoverage: N/A - test-only route proof fixture.
+    unitTests:
+      - pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+  - name: InternalAlphaRecoveryState
+    path: apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts
+    dddOwner: InternalAlphaRouteGate combined route proof fixture
+    cqRails:
+      - MapRouteRecoveryState
+    fowlerSignals:
+      - Test-only confidence
+      - Duplicate semantics
+    architectureGuard: pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+    cypressCoverage: N/A - test-only route proof fixture.
+    unitTests:
+      - pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+  - name: InternalAlphaCombinedRouteStageProof
+    path: apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts
+    dddOwner: InternalAlphaRouteGate combined route proof fixture
+    cqRails:
+      - ObserveAppBootstrapRouteReadiness
+      - ObserveWorkspaceContext
+      - GetWorkspaceGraphDraft
+      - SaveWorkspaceGraphDraft
+      - ListWorkspaceFiles
+      - GetWorkspaceFileContent
+      - ObservePlanRunReadiness
+      - MapRouteRecoveryState
+    fowlerSignals:
+      - Test-only confidence
+      - Boundary drift
+    architectureGuard: pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+    cypressCoverage: N/A - test-only route proof fixture.
+    unitTests:
+      - pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+  - name: InternalAlphaCombinedRouteFixture
+    path: apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts
+    dddOwner: InternalAlphaRouteGate combined route proof fixture
+    cqRails:
+      - ObserveAppBootstrapRouteReadiness
+      - ObserveWorkspaceContext
+      - GetWorkspaceGraphDraft
+      - SaveWorkspaceGraphDraft
+      - ListWorkspaceFiles
+      - GetWorkspaceFileContent
+      - ObservePlanRunReadiness
+      - MapRouteRecoveryState
+    fowlerSignals:
+      - Test-only confidence
+      - Boundary drift
+    architectureGuard: pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+    cypressCoverage: N/A - test-only route proof fixture.
+    unitTests:
+      - pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+  - name: InternalAlphaCombinedRouteEvaluation
+    path: apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts
+    dddOwner: InternalAlphaRouteGate combined route proof fixture
+    cqRails:
+      - ObserveAppBootstrapRouteReadiness
+      - ObserveWorkspaceContext
+      - GetWorkspaceGraphDraft
+      - SaveWorkspaceGraphDraft
+      - ListWorkspaceFiles
+      - GetWorkspaceFileContent
+      - ObservePlanRunReadiness
+      - MapRouteRecoveryState
+    fowlerSignals:
+      - Test-only confidence
+      - Boundary drift
+    architectureGuard: pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+    cypressCoverage: N/A - test-only route proof fixture.
+    unitTests:
+      - pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+  - name: internalAlphaCombinedRouteFixture
+    path: apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts
+    dddOwner: InternalAlphaRouteGate combined route proof fixture
+    cqRails:
+      - ObserveAppBootstrapRouteReadiness
+      - ObserveWorkspaceContext
+      - GetWorkspaceGraphDraft
+      - SaveWorkspaceGraphDraft
+      - ListWorkspaceFiles
+      - GetWorkspaceFileContent
+      - ObservePlanRunReadiness
+      - MapRouteRecoveryState
+    fowlerSignals:
+      - Test-only confidence
+      - Boundary drift
+    architectureGuard: pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+    cypressCoverage: N/A - test-only route proof fixture.
+    unitTests:
+      - pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+  - name: evaluateInternalAlphaCombinedRouteFixture
+    path: apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts
+    dddOwner: InternalAlphaRouteGate combined route proof fixture
+    cqRails:
+      - ObserveAppBootstrapRouteReadiness
+      - ObserveWorkspaceContext
+      - GetWorkspaceGraphDraft
+      - SaveWorkspaceGraphDraft
+      - ListWorkspaceFiles
+      - GetWorkspaceFileContent
+      - ObservePlanRunReadiness
+      - MapRouteRecoveryState
+    fowlerSignals:
+      - Test-only confidence
+      - Boundary drift
+    architectureGuard: pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
+    cypressCoverage: N/A - test-only route proof fixture.
     unitTests:
       - pnpm --filter @dvt/web test -- internalAlphaRouteGate.architecture.test.ts
   - name: stubMissingSessionRouteFetch

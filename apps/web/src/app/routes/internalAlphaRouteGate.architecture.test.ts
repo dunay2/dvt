@@ -8,6 +8,11 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+import {
+  evaluateInternalAlphaCombinedRouteFixture,
+  internalAlphaCombinedRouteFixture,
+} from './internalAlphaRouteGate.test.fixtures';
+
 const REPO_ROOT = path.resolve(import.meta.dirname, '../../../../..');
 
 function readRepoFile(...segments: string[]): string {
@@ -39,6 +44,7 @@ describe('internal alpha route gate architecture', () => {
       '## Architecture Diagram',
       '```mermaid',
       'InternalAlphaRouteGate',
+      'InternalAlphaCombinedRouteFixture',
       'RouteStageProof',
       'AlphaFullDecision',
     ]) {
@@ -150,5 +156,82 @@ describe('internal alpha route gate architecture', () => {
 
     expect(acceptanceMatrix).toContain('Excluded');
     expect(acceptanceMatrix).toMatch(/alpha-full stays\s+blocked/);
+  });
+
+  it('executes one combined route fixture across ordered happy and fail-closed stage proof', () => {
+    const fixtureSource = readRepoFile(
+      'apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts'
+    );
+    const componentGuide = readRepoFile(
+      'docs/architecture/components/web/internal-alpha-route-gate-component.md'
+    );
+    const userStories = readRepoFile(
+      'docs/architecture/components/web/internal-alpha-route-gate-user-stories.md'
+    );
+    const acceptanceMatrix = readRepoFile(
+      'docs/planning/reviews/architecture-and-governance/20260514-internal-alpha-route-acceptance-matrix.md'
+    );
+
+    expect(fixtureSource).toContain(
+      'Owned concern: build the F-27 combined internal-alpha route proof fixture'
+    );
+    for (const document of [componentGuide, userStories, acceptanceMatrix]) {
+      expect(document).toContain('internalAlphaRouteGate.test.fixtures.ts');
+    }
+
+    expect(internalAlphaCombinedRouteFixture.routeAuthority).toBe('F-27');
+    expect(internalAlphaCombinedRouteFixture.claim).toBe('alpha-full-candidate');
+    expect(internalAlphaCombinedRouteFixture.stages.map((stage) => stage.stage)).toEqual([
+      'Startup gate',
+      'Workspace context',
+      'Canvas workbench',
+      'Code workbench',
+      'Plan/run readiness',
+      'Recovery states',
+    ]);
+
+    for (const stage of internalAlphaCombinedRouteFixture.stages) {
+      expect(stage.rails.length).toBeGreaterThanOrEqual(1);
+      for (const rail of stage.rails) {
+        expect(rail).toMatch(
+          /^(ObserveAppBootstrapRouteReadiness|ObserveWorkspaceContext|GetWorkspaceGraphDraft|SaveWorkspaceGraphDraft|ListWorkspaceFiles|GetWorkspaceFileContent|ObservePlanRunReadiness|MapRouteRecoveryState)$/
+        );
+      }
+      expect(stage.happyPathProof).toBeTruthy();
+      expect(stage.failClosedProof).toBeTruthy();
+      expect(stage.recoveryState).toMatch(
+        /^(ready|blocked|unauthorized|unavailable|stale|not-found)$/
+      );
+    }
+
+    expect(internalAlphaCombinedRouteFixture.stages.flatMap((stage) => stage.rails)).toEqual([
+      'ObserveAppBootstrapRouteReadiness',
+      'ObserveWorkspaceContext',
+      'GetWorkspaceGraphDraft',
+      'SaveWorkspaceGraphDraft',
+      'ListWorkspaceFiles',
+      'GetWorkspaceFileContent',
+      'ObservePlanRunReadiness',
+      'MapRouteRecoveryState',
+    ]);
+
+    expect(evaluateInternalAlphaCombinedRouteFixture(internalAlphaCombinedRouteFixture)).toEqual({
+      missingFailClosedProof: [],
+      missingHappyPathProof: [],
+      routeAuthority: 'F-27',
+      routeDecision: 'review',
+    });
+
+    expect(
+      evaluateInternalAlphaCombinedRouteFixture({
+        ...internalAlphaCombinedRouteFixture,
+        stages: internalAlphaCombinedRouteFixture.stages.map((stage) =>
+          stage.stage === 'Canvas workbench' ? { ...stage, failClosedProof: '' } : stage
+        ),
+      })
+    ).toMatchObject({
+      missingFailClosedProof: ['Canvas workbench'],
+      routeDecision: 'blocked',
+    });
   });
 });

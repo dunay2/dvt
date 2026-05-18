@@ -119,8 +119,10 @@ blocked after this triage update.
 
 ## Route-Level Combined Fixture/Proof
 
-The matrix is not complete with isolated child fixtures only. F-27 requires one
-combined route-level fixture that traverses:
+The matrix is not complete with isolated child fixtures only. F-27 now has one
+combined route-level fixture,
+`apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts`, that
+traverses:
 
 1. startup gate,
 2. workspace context admission,
@@ -130,6 +132,10 @@ combined route-level fixture that traverses:
 
 This combined proof is the acceptance guard that prevents child-slice closure
 from being misread as route-level alpha readiness.
+
+The fixture evaluates to `review` only when every stage has both happy-path and
+fail-closed proof. Removing the Canvas fail-closed proof returns the route
+decision to `blocked` and reports `Canvas workbench` by name.
 
 ## Route Diagram
 
