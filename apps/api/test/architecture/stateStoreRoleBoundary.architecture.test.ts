@@ -15,7 +15,7 @@ const COMPONENT_GUIDE = join(
 const ROLE_BINDING_MODULE = 'modules/stateStoreRoles.ts';
 const BINDING_ROOTS = new Set([
   'modules/protectedRuntime/buildProtectedRuntimeStorage.ts',
-  'runtime/intentReconcilerRuntime.ts',
+  'runtime/intentReconcilerRuntimeComposition.ts',
 ]);
 const ROLE_INTERFACE_NAMES = new Set([
   'IRunStateStoreRead',
