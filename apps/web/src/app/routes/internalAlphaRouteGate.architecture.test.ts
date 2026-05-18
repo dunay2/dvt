@@ -3,7 +3,7 @@
  * authority, stage-specific acceptance semantics, and no child-slice shortcut
  * to alpha-full completion.
  */
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -201,6 +201,7 @@ describe('internal alpha route gate architecture', () => {
       }
       for (const evidenceRef of stage.evidenceRefs) {
         expect(evidenceRef).toMatch(/^(docs|apps\/web)\//);
+        expect(existsSync(path.join(REPO_ROOT, evidenceRef))).toBe(true);
       }
       expect(stage.happyPathProof).toBeTruthy();
       expect(stage.failClosedProof).toBeTruthy();
@@ -247,12 +248,26 @@ describe('internal alpha route gate architecture', () => {
     });
   });
 
-  it('blocks the combined route fixture when a route stage lacks traceable evidence refs', () => {
+  it('blocks the combined route fixture when a route stage lacks resolvable evidence refs', () => {
     expect(
       evaluateInternalAlphaCombinedRouteFixture({
         ...internalAlphaCombinedRouteFixture,
         stages: internalAlphaCombinedRouteFixture.stages.map((stage) =>
           stage.stage === 'Startup gate' ? { ...stage, evidenceRefs: [] } : stage
+        ),
+      })
+    ).toMatchObject({
+      missingEvidenceRefs: ['Startup gate'],
+      routeDecision: 'blocked',
+    });
+
+    expect(
+      evaluateInternalAlphaCombinedRouteFixture({
+        ...internalAlphaCombinedRouteFixture,
+        stages: internalAlphaCombinedRouteFixture.stages.map((stage) =>
+          stage.stage === 'Startup gate'
+            ? { ...stage, evidenceRefs: ['docs/missing-alpha-route-proof.md'] }
+            : stage
         ),
       })
     ).toMatchObject({

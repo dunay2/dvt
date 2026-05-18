@@ -43,7 +43,8 @@ command/query rail catalog before UI, adapter, or route-handler work starts.
 - Every user-visible stage must name a command/query rail or component owner.
 - Every stage must have both happy-path and fail-closed proof before alpha full.
 - Every stage in the combined route fixture must carry at least one traceable
-  `evidenceRefs` entry pointing at the governing doc or executable proof.
+  and resolvable `evidenceRefs` entry pointing at the governing doc or
+  executable proof.
 - The combined route fixture must traverse startup, workspace context, Canvas,
   Code, plan/run readiness, and recovery in that order.
 - Canvas and Code fixture stages must preserve all owned rails instead of
@@ -58,8 +59,8 @@ command/query rail catalog before UI, adapter, or route-handler work starts.
 ## State Transitions
 
 - `blocked` stays `blocked` when a stage lacks owner, rail, or negative proof.
-- `blocked` stays `blocked` when a combined fixture stage lacks traceable
-  evidence references.
+- `blocked` stays `blocked` when a combined fixture stage lacks traceable and
+  resolvable evidence references.
 - `blocked` stays `blocked` when the combined route fixture omits a required
   route stage or owned rail.
 - `blocked` stays `blocked` when any combined fixture stage lacks negative

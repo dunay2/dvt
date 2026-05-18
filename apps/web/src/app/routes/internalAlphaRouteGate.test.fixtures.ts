@@ -1,4 +1,6 @@
 /** Owned concern: build the F-27 combined internal-alpha route proof fixture. */
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 
 export type InternalAlphaRouteStage =
   | 'Startup gate'
@@ -73,6 +75,12 @@ const requiredRouteRails: readonly InternalAlphaRouteRail[] = [
   'ObservePlanRunReadiness',
   'MapRouteRecoveryState',
 ];
+
+const repoRoot = path.resolve(import.meta.dirname, '../../../../..');
+
+function isResolvableEvidenceRef(evidenceRef: string): boolean {
+  return /^(docs|apps\/web)\//.test(evidenceRef) && existsSync(path.join(repoRoot, evidenceRef));
+}
 
 export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixture = {
   claim: 'alpha-full-candidate',
@@ -176,7 +184,11 @@ export function evaluateInternalAlphaCombinedRouteFixture(
     (recoveryState) => !fixtureRecoveryStates.has(recoveryState)
   );
   const missingEvidenceRefs = fixture.stages
-    .filter((stage) => stage.evidenceRefs.length === 0)
+    .filter(
+      (stage) =>
+        stage.evidenceRefs.length === 0 ||
+        stage.evidenceRefs.some((evidenceRef) => !isResolvableEvidenceRef(evidenceRef))
+    )
     .map((stage) => stage.stage);
   const stagesWithoutRecoveryVocabulary = fixture.stages
     .filter((stage) => !stage.recoveryStates.some((recoveryState) => recoveryState !== 'ready'))
