@@ -68,6 +68,7 @@ it, and which tests prove the shape has not drifted.
 
 - `apps/api/src/server.ts`
 - `apps/api/src/runtime/intentReconcilerRuntime.ts`
+- `apps/api/src/runtime/intentReconcilerRuntimeComposition.ts`
 - `apps/api/src/application/services/WorkflowEngineFactory.ts`
 - `apps/api/test/integration/plannerEngineContract.test.ts`
 - `packages/@dvt/engine/src/application/workflow-engine-use-cases/*`
@@ -81,7 +82,8 @@ it, and which tests prove the shape has not drifted.
 
 | Component group          | Owned concern                                             | Main files                                                                             |
 | ------------------------ | --------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| API runtime composition  | Concrete runtime graph assembly                           | `WorkflowEngineFactory.ts`, `intentReconcilerRuntime.ts`                               |
+| API runtime composition  | Concrete runtime graph assembly                           | `WorkflowEngineFactory.ts`, `intentReconcilerRuntimeComposition.ts`                    |
+| API runtime facade       | Stable reconciler factory and handle contract             | `intentReconcilerRuntime.ts`                                                           |
 | Facade adaptation        | Translate public facade calls into use-case ports         | `workflow-engine-use-cases/*`                                                          |
 | Start-run command phases | Admission, deterministic intent, dispatch, failure policy | `services/startRun/*`                                                                  |
 | Runtime control commands | Cancel and signal role-interface implementations          | `services/runControl/*`, `domain/IRunCommandService.ts`, `domain/IRunSignalService.ts` |
@@ -93,7 +95,8 @@ it, and which tests prove the shape has not drifted.
 ```mermaid
 flowchart LR
   Api["apps/api composition root"] --> Factory["buildWorkflowEngine"]
-  Api --> Reconciler["IntentReconcilerRuntimeComposition"]
+  Api --> RuntimeFacade["intentReconcilerRuntime.ts facade"]
+  RuntimeFacade --> Reconciler["IntentReconcilerRuntimeComposition"]
   Factory --> Facade["WorkflowEngine facade"]
   Facade --> Start["WorkflowStartRunUseCase"]
   Facade --> Cancel["WorkflowCancelRunUseCase"]
@@ -150,10 +153,13 @@ sequenceDiagram
 ## Drift Guards
 
 - `workflowEngineSemanticClosure.architecture.test.ts` checks owned concern
-  headers on the API composition, run-control, command, signal, and facade
-  composition seams.
+  headers on the API composition, API runtime facade, reconciler composition,
+  run-control, command, signal, and facade composition seams.
 - The same guard checks that runtime semantics have not moved back into
   `WorkflowEngineCoreService`.
+- The guard checks that `intentReconcilerRuntime.ts` remains a facade and that
+  Postgres/provider/worker assembly stays in
+  `intentReconcilerRuntimeComposition.ts`.
 - The guard checks this component guide, the DHM-WS6 user stories, the Fowler
   mailbox analysis, and the closeout record.
 - Existing WS2, WS3, and WS4 architecture tests remain the focused guards for

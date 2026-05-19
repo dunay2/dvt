@@ -826,7 +826,9 @@ governingSources:
 allowedImplementationSurfaces:
   - apps/api/src/application/services/WorkflowEngineFactory.ts
   - apps/api/src/runtime/intentReconcilerRuntime.ts
+  - apps/api/src/runtime/intentReconcilerRuntimeComposition.ts
   - buzon/20260512-codex-fowler-dhm-ws6-semantic-closure-analysis.md
+  - buzon/20260518-codex-fowler-dhm-ws6-semantic-closure-hardening-analysis.md
   - docs/.manifest.json
   - docs/architecture/components/engine/architecture/index.md
   - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
@@ -891,6 +893,7 @@ redGreenCycles:
     patchSurfaces:
       - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
       - apps/api/src/runtime/intentReconcilerRuntime.ts
+      - apps/api/src/runtime/intentReconcilerRuntimeComposition.ts
       - apps/api/src/application/services/WorkflowEngineFactory.ts
       - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
       - packages/@dvt/engine/src/domain/IRunCommandService.ts
@@ -898,6 +901,7 @@ redGreenCycles:
       - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
       - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-user-stories.md
       - buzon/20260512-codex-fowler-dhm-ws6-semantic-closure-analysis.md
+      - buzon/20260518-codex-fowler-dhm-ws6-semantic-closure-hardening-analysis.md
     greenTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
 symbols:
   - name: WorkflowEngineSemanticClosureComponent
@@ -934,7 +938,7 @@ symbols:
     unitTests:
       - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
   - name: IntentReconcilerRuntimeComposition
-    path: apps/api/src/runtime/intentReconcilerRuntime.ts
+    path: apps/api/src/runtime/intentReconcilerRuntimeComposition.ts
     dddOwner: API runtime composition root
     cqRails:
       - WorkflowEngineSemanticClosure
@@ -942,6 +946,17 @@ symbols:
       - Boundary drift
     architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
     cypressCoverage: Not applicable - API background runtime composition
+    unitTests:
+      - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+  - name: IntentReconcilerRuntimeFacade
+    path: apps/api/src/runtime/intentReconcilerRuntime.ts
+    dddOwner: API runtime composition root
+    cqRails:
+      - WorkflowEngineSemanticClosure
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
+    cypressCoverage: Not applicable - API background runtime facade
     unitTests:
       - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
   - name: CLOSEOUT
