@@ -1,3 +1,4 @@
+/** Owned concern: render Diff review tabs without owning query authority or Monaco runtime setup. */
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import {
   routeWorkbenchTabListClassName,

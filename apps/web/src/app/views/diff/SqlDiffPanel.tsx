@@ -1,3 +1,4 @@
+/** Owned concern: present selected-node SQL changes through the read-only Monaco diff primitive. */
 import { Code } from 'lucide-react';
 
 import { MonacoDiffViewer } from '../../components/monaco/MonacoDiffViewer';

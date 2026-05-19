@@ -1,3 +1,4 @@
+/** Owned concern: compose the Diff review route from governed query state and route workbench presentation. */
 import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
 import { RouteWorkbenchFrame } from '../components/workbench/RouteWorkbenchFrame';
 import { DiffHeader } from './diff/DiffHeader';

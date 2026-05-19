@@ -1,3 +1,4 @@
+/** Owned concern: bind @monaco-editor/react DiffEditor with DVT read-only diff invariants. */
 import { DiffEditor } from '@monaco-editor/react';
 
 import { DEFAULT_MONACO_CONTAINER_CLASS_NAME } from './MonacoViewerFallback';
