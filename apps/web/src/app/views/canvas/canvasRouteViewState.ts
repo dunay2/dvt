@@ -25,6 +25,7 @@ export type CanvasRouteViewState = {
   startupBlockState: CanvasRouteInteractionState['startupBlockState'];
   workbenchErrorMessage: CanvasRouteInteractionState['workbenchErrorMessage'];
   canvasDocument: CanvasRouteInteractionState['canvasDocument'];
+  canCreateCanvasDocument: CanvasController['canCreateCanvasDocument'];
   draftSaveStatus: CanvasController['draftSaveStatus'];
   availableCanvasKinds: CanvasRouteInteractionState['availableCanvasKinds'];
   canvasTabState: CanvasRouteInteractionState['canvasTabState'];
@@ -51,6 +52,7 @@ export function deriveCanvasRouteViewState(controller: CanvasController): Canvas
     startupBlockState: interactionState.startupBlockState,
     workbenchErrorMessage: interactionState.workbenchErrorMessage,
     canvasDocument: interactionState.canvasDocument,
+    canCreateCanvasDocument: controller.canCreateCanvasDocument,
     draftSaveStatus: controller.draftSaveStatus,
     availableCanvasKinds: interactionState.availableCanvasKinds,
     canvasTabState: interactionState.canvasTabState,

@@ -48,6 +48,7 @@ function buildCanvasShellLayoutArgs({
       draftTransportError: routeViewState.draftTransportError,
       workbenchErrorMessage: routeViewState.workbenchErrorMessage,
       canvasDocument: routeViewState.canvasDocument,
+      canCreateCanvasDocument: routeViewState.canCreateCanvasDocument,
       draftSaveStatus: routeViewState.draftSaveStatus,
       availableCanvasKinds: routeViewState.availableCanvasKinds,
       canvasTabState: routeViewState.canvasTabState,

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
   buildRemoteDraftRecord,
+  createRenderedHarness,
   createHarnessWithDraft,
   setHarnessRemoteDraftRecord,
 } from './useCanvasController.draftLifecycle.test.support';
@@ -170,6 +171,24 @@ describe('useCanvasController core', () => {
       expect.objectContaining({
         canPlan: false,
         canRun: false,
+      })
+    );
+  });
+
+  it('keeps first-canvas creation available while graph mutation waits for a typed document', async () => {
+    harness.cleanup();
+    harness = await createRenderedHarness();
+
+    expect(harness.getLatestResult()?.canvasDocument).toBeNull();
+    expect(harness.getLatestResult()?.canCreateCanvasDocument).toBe(true);
+    expect(harness.getLatestResult()?.userPermissions).toEqual(
+      expect.objectContaining({
+        canEditEdges: false,
+      })
+    );
+    expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        canEditEdges: false,
       })
     );
   });

@@ -44,6 +44,9 @@ Canvas document through the protected workspace graph draft boundary.
   `label` remains an internal catalog label or secondary metadata.
 - The first canvas persists through `/workspace/graph/draft`; no parallel
   startup command or fake local success path is allowed.
+- First-canvas creation is a canvas-document transition. Its availability must
+  follow draft persistence eligibility and must not reuse `canEditEdges`, which
+  belongs to graph/node/edge mutation after a typed document exists.
 - The component does not introduce a workspace/project selector.
 
 ## Transitions

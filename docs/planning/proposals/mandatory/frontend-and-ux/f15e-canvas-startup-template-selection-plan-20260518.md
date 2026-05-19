@@ -33,8 +33,9 @@ semantic architecture coverage, and focused TDD tests.
 - DDD object: Canvas document inside workspace graph draft
 - Application port: `IWorkspaceGraphDraftAuthoringPort`
 - Adapter surface: `/workspace/graph/draft`
-- Scope and authorization: active `WorkspaceScope`; graph edit permission must
-  remain writable before first-canvas creation is offered.
+- Scope and authorization: active `WorkspaceScope`; first-canvas creation must
+  be offered only when the protected draft can persist a missing canvas
+  document. Graph edit permission remains a later node/edge mutation concern.
 - Negative tests: no template command construction, no project selector, no
   project-type copy, no alternate create-canvas rail.
 
@@ -69,6 +70,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasCopy.types.ts
   - apps/web/src/app/views/canvas/canvasCopyCatalog.route.ts
   - apps/web/src/app/views/canvas/canvasCopyCatalog.route.es.ts
+  - apps/web/src/app/views/canvas/canvasHostCycleState.ts
   - apps/web/src/app/views/canvas/canvasHostCycleState.test.ts
   - apps/web/src/app/views/canvas/CanvasEmptyAuthoringEntrypoint.architecture.test.ts
   - apps/web/src/app/views/canvas/canvasRouteViewState.ts
@@ -162,6 +164,22 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasPlaygroundHost.architecture.test.tsx
     unitTests: [pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasPlaygroundHost.architecture.test.tsx]
     cypressCoverage: N/A - architecture source reader symbol.
+  - name: HOST_CYCLE_SOURCE
+    path: apps/web/src/app/views/canvas/CanvasPlaygroundHost.architecture.test.tsx
+    dddOwner: CanvasDocument
+    cqRails: [CreateCanvasDocumentCommand]
+    fowlerSignals: [Semantic encapsulation, Documentation drift]
+    architectureGuard: pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasPlaygroundHost.architecture.test.tsx
+    unitTests: [pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasPlaygroundHost.architecture.test.tsx]
+    cypressCoverage: N/A - architecture source reader symbol guarding first-canvas capability semantics.
+  - name: canCreateFirstCanvasDocument
+    path: apps/web/src/app/views/canvas/canvasHostCycleState.ts
+    dddOwner: CanvasDocument
+    cqRails: [CreateCanvasDocumentCommand]
+    fowlerSignals: [Semantic encapsulation, Boundary drift]
+    architectureGuard: pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasPlaygroundHost.architecture.test.tsx
+    unitTests: [pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasHostCycleState.test.ts]
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts proves the template button remains enabled before graph mutation opens.
   - name: workspaceScope
     path: apps/web/src/app/views/canvas/CanvasPlaygroundHost.test.tsx
     dddOwner: CanvasDocument

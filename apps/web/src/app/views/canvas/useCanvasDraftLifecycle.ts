@@ -118,6 +118,11 @@ export function useCanvasDraftLifecycle({
     !graphDraftQuery.isError &&
     draftSaveStatus !== 'saving' &&
     draftSaveStatus !== 'failed';
+  const canCreateCanvasDocument =
+    canPersistGraphDraft &&
+    graphDraftQuery.data?.record == null &&
+    !graphDraftQuery.isPending &&
+    !graphDraftQuery.isError;
   const canImportProjectSnapshot =
     canPersistGraphDraft && !graphDraftQuery.isPending && !graphDraftQuery.isError;
   const handleExportProjectSnapshot = useCallback<
@@ -179,6 +184,7 @@ export function useCanvasDraftLifecycle({
     draftSaveStatus,
     reloadLatestDraft,
     handleCreateCanvasDocument,
+    canCreateCanvasDocument,
     canExportProjectSnapshot,
     canImportProjectSnapshot,
     handleExportProjectSnapshot,

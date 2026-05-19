@@ -27,6 +27,7 @@ describe('Canvas route first-canvas policy', () => {
     await renderCanvasRouteWithController(harness, {
       explorerNodes: [],
       canvasDocument: null,
+      canCreateCanvasDocument: true,
       handleCreateCanvasDocument,
     });
 

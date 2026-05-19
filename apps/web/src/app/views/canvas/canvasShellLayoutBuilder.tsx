@@ -87,6 +87,7 @@ export function buildCanvasShellLayout({
       canvasDocument: routePresentation.canvasDocument,
       draftSaveStatus: routePresentation.draftSaveStatus,
       availableCanvasKinds: routePresentation.availableCanvasKinds,
+      canCreateCanvasDocument: routePresentation.canCreateCanvasDocument,
       canEditEdges: routePresentation.effectiveUserPermissions.canEditEdges,
       canOpenSourceImport: layoutState.canOpenSourceImport,
       onCreateCanvasDocument: (command) => {
