@@ -22,6 +22,7 @@ export type CanvasPlaygroundHostTemplateProps = Readonly<{
   copy: CanvasPlaygroundHostTemplateCopy;
   workspaceScope: WorkspaceScope;
   templates: readonly CanvasTemplatePresentation[];
+  unavailableMessage?: string | null;
   onCreateCanvasTemplate?: (template: CanvasTemplatePresentation) => void;
 }>;
 
@@ -33,8 +34,11 @@ export function CanvasPlaygroundHostTemplate({
   copy,
   workspaceScope,
   templates,
+  unavailableMessage,
   onCreateCanvasTemplate,
 }: CanvasPlaygroundHostTemplateProps): JSX.Element {
+  const canCreateCanvasTemplate = onCreateCanvasTemplate != null;
+
   return (
     <div
       data-slot="canvas-playground-empty-state-frame"
@@ -60,6 +64,14 @@ export function CanvasPlaygroundHostTemplate({
         <h2 className="mb-2 text-base font-semibold text-(--text-default)">{copy.title}</h2>
         <p className={cn('text-sm', routeWorkbenchMutedTextClassName)}>{copy.message}</p>
         <p className={cn('mt-2 text-xs', routeWorkbenchMutedTextClassName)}>{copy.helper}</p>
+        {unavailableMessage ? (
+          <p
+            data-slot="canvas-playground-template-unavailable"
+            className="mt-3 text-sm font-medium text-[var(--status-warning)]"
+          >
+            {unavailableMessage}
+          </p>
+        ) : null}
         <h3
           data-slot="canvas-playground-template-label"
           className="mt-5 text-sm font-semibold text-(--text-default)"
@@ -73,6 +85,8 @@ export function CanvasPlaygroundHostTemplate({
               data-slot="canvas-playground-template-choice"
               type="button"
               variant="outline"
+              disabled={!canCreateCanvasTemplate}
+              aria-disabled={!canCreateCanvasTemplate}
               className="h-auto flex-col items-start gap-1 py-4 text-left"
               onClick={() => onCreateCanvasTemplate?.(template)}
             >

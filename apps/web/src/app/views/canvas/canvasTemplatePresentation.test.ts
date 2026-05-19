@@ -46,11 +46,11 @@ describe('resolveCanvasTemplatePresentation', () => {
 
     expect(transformation).toMatchObject({
       title: 'Canvas de transformacion',
-      description: 'Canvas de flujo para el draft protegido de authoring.',
+      description: 'Canvas de flujo para el borrador protegido de autoria.',
     });
     expect(dbt).toMatchObject({
       title: 'Canvas dbt',
-      description: 'Canvas model-first para recursos y dependencias dbt.',
+      description: 'Canvas basado en modelo para recursos y dependencias dbt.',
     });
   });
 });

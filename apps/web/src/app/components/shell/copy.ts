@@ -3,6 +3,7 @@ import { resolveString, type LocalizableString } from '../../plugins/contracts/P
 
 export type ShellTopBarCopy = {
   readonly shell: string;
+  readonly workspaceMenu: string;
   readonly workspacePanels: string;
   readonly globalNavigation: string;
   readonly workspaceContext: string;
@@ -32,6 +33,7 @@ export type ShellTopBarCopy = {
 
 const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
   shell: { key: 'shell.view', fallback: 'View' },
+  workspaceMenu: { key: 'shell.workspaceMenu', fallback: 'Workspace' },
   workspacePanels: { key: 'shell.workspacePanels', fallback: 'Panels' },
   globalNavigation: { key: 'shell.globalNavigation', fallback: 'Navigation' },
   workspaceContext: { key: 'shell.workspaceContext', fallback: 'Workspace context' },
@@ -73,6 +75,7 @@ const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
 
 const COPY_ES: ShellTopBarCopy = {
   shell: 'Vista',
+  workspaceMenu: 'Workspace',
   workspacePanels: 'Paneles',
   globalNavigation: 'Navegacion',
   workspaceContext: 'Contexto del workspace',
@@ -128,6 +131,7 @@ export function resolveShellTopBarCopy(locale?: string): ShellTopBarCopy {
 
   return {
     shell: resolveString(COPY_BY_KEY.shell, locale),
+    workspaceMenu: resolveString(COPY_BY_KEY.workspaceMenu, locale),
     workspacePanels: resolveString(COPY_BY_KEY.workspacePanels, locale),
     globalNavigation: resolveString(COPY_BY_KEY.globalNavigation, locale),
     workspaceContext: resolveString(COPY_BY_KEY.workspaceContext, locale),

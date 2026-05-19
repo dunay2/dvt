@@ -131,6 +131,7 @@ describe('Canvas empty authoring entrypoint architecture', () => {
       'transformation',
     ]);
     expect(cycleState.onCreateCanvasDocument).toEqual(expect.any(Function));
+    expect(cycleState.unavailableMessage).toBeNull();
   });
 
   it('derives first-node copy and catalog from the active canvas kind', () => {

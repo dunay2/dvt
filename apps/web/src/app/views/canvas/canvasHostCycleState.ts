@@ -15,7 +15,8 @@ export type CanvasHostCycleState =
   | {
       kind: 'needs_canvas';
       availableCanvasKinds: readonly CanvasKindRegistration[];
-      onCreateCanvasDocument: CreateCanvasDocumentCommand;
+      onCreateCanvasDocument: CreateCanvasDocumentCommand | undefined;
+      unavailableMessage: string | null;
     }
   | {
       kind: 'typed_empty';
@@ -97,10 +98,17 @@ export function deriveCanvasHostCycleState(
   } = args;
 
   if (routeState === 'needs_canvas') {
+    const canCreateCanvasDocument = canEditEdges && args.draftSaveStatus !== 'saving';
+
     return {
       kind: 'needs_canvas',
       availableCanvasKinds,
-      onCreateCanvasDocument,
+      onCreateCanvasDocument: canCreateCanvasDocument ? onCreateCanvasDocument : undefined,
+      unavailableMessage: canCreateCanvasDocument
+        ? null
+        : canEditEdges
+          ? canvasViewCopy.mutationUnavailableMessage
+          : canvasViewCopy.routeNeedsCanvasReadOnlyMessage,
     };
   }
 

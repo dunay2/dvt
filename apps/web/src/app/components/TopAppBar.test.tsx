@@ -61,7 +61,7 @@ describe('ShellTopBar workspace context', () => {
     expect(topBar?.querySelectorAll('[role="combobox"]')).toHaveLength(0);
   });
 
-  it('keeps Canvas top bar low-noise and moves navigation plus context into the shell menu', async () => {
+  it('keeps Canvas top bar low-noise while separating workspace navigation from View controls', async () => {
     await act(async () => {
       root.render(
         <MemoryRouter initialEntries={['/canvas']}>
@@ -76,9 +76,25 @@ describe('ShellTopBar workspace context', () => {
     expect(topBar?.querySelector('[data-slot="shell-workspace-context-trigger"]')).toBeNull();
     expect(topBar?.querySelector('[data-slot="shell-git-ref"]')).toBeNull();
     expect(topBar?.querySelector('[data-slot="shell-top-bar-canvas-controls"]')).toBeNull();
+    expect(topBar?.querySelector('[data-slot="shell-workspace-menu-trigger"]')).not.toBeNull();
+    expect(topBar?.querySelector('[data-slot="shell-menu-trigger"]')).not.toBeNull();
 
     await act(async () => {
       fireEvent.pointerDown(container.querySelector('[data-slot="shell-menu-trigger"]')!);
+    });
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('View options');
+      expect(document.body.textContent).toContain('Panels');
+      expect(
+        document.body.querySelectorAll('[data-slot="shell-menu-navigation-link"]')
+      ).toHaveLength(0);
+      expect(document.body.textContent).not.toContain('Workspace context');
+    });
+
+    await act(async () => {
+      fireEvent.keyDown(document, { key: 'Escape' });
+      fireEvent.pointerDown(container.querySelector('[data-slot="shell-workspace-menu-trigger"]')!);
     });
 
     await waitFor(() => {
@@ -98,6 +114,7 @@ describe('ShellTopBar workspace context', () => {
   it('resolves Spanish shell copy for the menu and workspace context labels', () => {
     expect(resolveShellTopBarCopy('es-ES')).toMatchObject({
       shell: 'Vista',
+      workspaceMenu: 'Workspace',
       globalNavigation: 'Navegacion',
       workspaceContext: 'Contexto del workspace',
       projectScope: 'Proyecto',

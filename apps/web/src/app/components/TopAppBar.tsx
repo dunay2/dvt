@@ -80,7 +80,30 @@ export function ShellTopBar({
           connectionDetail={connectionDetail}
           copy={copy}
         />
+        {isWorkbenchShell && (
+          <ShellMenu
+            kind="workspace"
+            explorerPanelVisible={explorerPanelVisible}
+            inspectorPanelVisible={inspectorPanelVisible}
+            consolePanelVisible={consolePanelVisible}
+            focusMode={focusMode}
+            gridSize={gridSize}
+            canvasPalette={canvasPalette}
+            navigationModel={navigationModel}
+            projectIdentityBadge={projectIdentityBadge}
+            gitBranch={workspaceBootstrap.gitBranch}
+            gitSha={workspaceBootstrap.gitSha}
+            toggleExplorerPanel={toggleExplorerPanel}
+            toggleInspectorPanel={toggleInspectorPanel}
+            toggleConsolePanel={toggleConsolePanel}
+            toggleFocusMode={toggleFocusMode}
+            setGridSize={setGridSize}
+            setCanvasPalette={setCanvasPalette}
+            copy={copy}
+          />
+        )}
         <ShellMenu
+          kind="view"
           explorerPanelVisible={explorerPanelVisible}
           inspectorPanelVisible={inspectorPanelVisible}
           consolePanelVisible={consolePanelVisible}

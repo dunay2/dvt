@@ -47,7 +47,9 @@ describe('RootShell chrome', () => {
       expectRootShellWorkbenchFrameChrome(mounted.container, 'Canvas route');
       expect(mounted.container.querySelector('[data-slot="left-navigation-rail"]')).toBeNull();
       await act(async () => {
-        fireEvent.pointerDown(mounted.container.querySelector('[data-slot="shell-menu-trigger"]')!);
+        fireEvent.pointerDown(
+          mounted.container.querySelector('[data-slot="shell-workspace-menu-trigger"]')!
+        );
       });
 
       await waitFor(() => {

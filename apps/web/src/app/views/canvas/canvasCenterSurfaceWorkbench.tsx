@@ -85,6 +85,7 @@ function renderCanvasHostCycleWorkbenchSurface(
         workspaceScope={args.workspaceScope}
         canvasKinds={cycleState.availableCanvasKinds}
         onCreateCanvasDocument={cycleState.onCreateCanvasDocument}
+        unavailableMessage={cycleState.unavailableMessage}
       />
     );
   }

@@ -47,6 +47,11 @@ export const canvasViewRouteCopyByKey = {
     key: 'canvas.route.needsCanvasTemplateLabel',
     fallback: 'Choose a canvas template',
   },
+  routeNeedsCanvasReadOnlyMessage: {
+    key: 'canvas.route.needsCanvasReadOnlyMessage',
+    fallback:
+      'Canvas template creation is disabled because graph edits are unavailable for this workspace scope.',
+  },
   routeEmptyTitle: {
     key: 'canvas.route.emptyTitle',
     fallback: 'No graph content loaded',

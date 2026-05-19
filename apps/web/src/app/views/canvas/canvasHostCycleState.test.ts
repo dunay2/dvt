@@ -99,6 +99,22 @@ describe('canvasHostCycleState', () => {
       kind: 'needs_canvas',
       availableCanvasKinds: buildCanvasKinds(),
       onCreateCanvasDocument: expect.any(Function),
+      unavailableMessage: null,
+    });
+  });
+
+  it('keeps read-only needs-canvas posture explicit and non-mutating', () => {
+    const cycle = deriveCanvasHostCycleState(
+      buildArgs({
+        canEditEdges: false,
+      })
+    );
+
+    expect(cycle).toEqual({
+      kind: 'needs_canvas',
+      availableCanvasKinds: buildCanvasKinds(),
+      onCreateCanvasDocument: undefined,
+      unavailableMessage: canvasViewCopy.routeNeedsCanvasReadOnlyMessage,
     });
   });
 
