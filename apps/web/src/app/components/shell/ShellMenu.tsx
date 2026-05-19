@@ -26,12 +26,14 @@ import { HexColorInput, HexColorPicker } from 'react-colorful';
 import { CanvasViewMenuControls } from '../../views/canvas/CanvasViewMenuControls';
 import { topAppBarClasses } from './chrome';
 import type { ShellTopBarCopy } from './copy';
+import { ShellWorkspaceContextDetails } from './ShellWorkspaceContextDetails';
 import {
   createCanvasPreviewStyle,
   normalizeCanvasPaletteId,
   type CanvasPaletteId,
 } from '../../views/canvas/canvasPalette';
 import type { ShellNavigationModel } from '../../shell/shellNavigationModel';
+import type { ProjectIdentityBadge } from '../../shell/projectIdentityBadge';
 
 const GRID_OPTIONS = [
   { value: 10, label: '10px (Dense)' },
@@ -49,6 +51,9 @@ type ShellMenuProps = {
   readonly gridSize: number;
   readonly canvasPalette: CanvasPaletteId;
   readonly navigationModel: ShellNavigationModel;
+  readonly projectIdentityBadge: ProjectIdentityBadge;
+  readonly gitBranch: string;
+  readonly gitSha: string;
   readonly toggleExplorerPanel: () => void;
   readonly toggleInspectorPanel: () => void;
   readonly toggleConsolePanel: () => void;
@@ -66,6 +71,9 @@ export function ShellMenu({
   gridSize,
   canvasPalette,
   navigationModel,
+  projectIdentityBadge,
+  gitBranch,
+  gitSha,
   toggleExplorerPanel,
   toggleInspectorPanel,
   toggleConsolePanel,
@@ -93,7 +101,7 @@ export function ShellMenu({
           {copy.shell}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="end" className="w-72">
         <DropdownMenuLabel>{copy.globalNavigation}</DropdownMenuLabel>
         {[...navigationModel.primaryItems, ...navigationModel.footerItems].map((item) => {
           const Icon = item.icon;
@@ -106,6 +114,20 @@ export function ShellMenu({
             </DropdownMenuItem>
           );
         })}
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel>{copy.workspaceContext}</DropdownMenuLabel>
+        <div data-slot="shell-menu-workspace-context" className="px-2 py-1.5">
+          <ShellWorkspaceContextDetails badge={projectIdentityBadge} copy={copy} />
+        </div>
+        <DropdownMenuLabel>{copy.gitContext}</DropdownMenuLabel>
+        <div
+          data-slot="shell-menu-git-context"
+          className="px-2 pb-2 text-xs text-[var(--text-subtle)]"
+        >
+          <span>{gitBranch}</span>
+          <span className="px-1">@</span>
+          <code className="text-[var(--text-default)]">{gitSha}</code>
+        </div>
         <DropdownMenuSeparator />
         <DropdownMenuLabel>{copy.workspacePanels}</DropdownMenuLabel>
         <DropdownMenuCheckboxItem

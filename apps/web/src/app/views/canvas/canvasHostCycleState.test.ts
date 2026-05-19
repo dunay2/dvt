@@ -72,6 +72,12 @@ function buildArgs(
       bootstrapDetail: 'ready',
       canCompleteBootstrap: true,
     },
+    workspaceScope: {
+      tenantId: 'tenant-a',
+      projectId: 'project-orders',
+      environmentId: 'dev',
+      targetAdapter: 'temporal',
+    },
     startupBlockState: null,
     workbenchErrorMessage: null,
     canvasDocument: null,

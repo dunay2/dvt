@@ -19,6 +19,7 @@ import type { useCanvasController } from './useCanvasController';
 type CanvasController = ReturnType<typeof useCanvasController>;
 
 export type CanvasRouteViewState = {
+  workspaceScope: CanvasController['workspaceScope'];
   draftAccessPosture: CanvasController['draftAccessPosture'];
   draftTransportError: CanvasDraftTransportErrorState | null;
   startupBlockState: CanvasRouteInteractionState['startupBlockState'];
@@ -44,6 +45,7 @@ export function deriveCanvasRouteViewState(controller: CanvasController): Canvas
   });
 
   return {
+    workspaceScope: controller.workspaceScope,
     draftAccessPosture: controller.draftAccessPosture,
     draftTransportError,
     startupBlockState: interactionState.startupBlockState,

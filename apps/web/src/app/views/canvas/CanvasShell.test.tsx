@@ -262,6 +262,22 @@ describe('CanvasShell', () => {
     expect(container.querySelector('[data-testid="canvas-host-tab-strip"]')).not.toBeNull();
   });
 
+  it('keeps Canvas route commands hidden while the first canvas document is not created', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasShell
+          {...buildProps({
+            toolbar: {
+              routeState: 'needs_canvas',
+            },
+          })}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-testid="canvas-toolbar"]')).toBeNull();
+  });
+
   it('keeps explorer import affordances wired when graph edits are allowed', async () => {
     await act(async () => {
       root.render(<CanvasShell {...buildProps()} />);

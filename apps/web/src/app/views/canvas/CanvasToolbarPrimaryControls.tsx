@@ -58,6 +58,7 @@ export function CanvasToolbarPrimaryControls({
 
       <Button
         type="button"
+        data-slot="canvas-toolbar-export-command"
         variant="ghost"
         size="sm"
         onClick={onExportProjectSnapshot}
@@ -69,6 +70,7 @@ export function CanvasToolbarPrimaryControls({
       </Button>
       <Button
         type="button"
+        data-slot="canvas-toolbar-import-command"
         variant="ghost"
         size="sm"
         onClick={() => importInputRef.current?.click()}
@@ -96,6 +98,7 @@ export function CanvasToolbarPrimaryControls({
       <Separator orientation="vertical" className="h-5 bg-slate-700" />
       <Button
         type="button"
+        data-slot="canvas-toolbar-plan-command"
         variant="outline"
         size="sm"
         onClick={onPlan}
@@ -107,6 +110,7 @@ export function CanvasToolbarPrimaryControls({
       </Button>
       <Button
         type="button"
+        data-slot="canvas-toolbar-run-command"
         variant="default"
         size="sm"
         onClick={onRun}

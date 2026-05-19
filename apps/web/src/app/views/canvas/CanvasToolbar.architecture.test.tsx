@@ -29,8 +29,10 @@ describe('CanvasToolbar architecture', () => {
     expect(TOOLBAR_SOURCE).toContain("'./CanvasToolbarPrimaryControls'");
     expect(TOOLBAR_SOURCE).toContain("'./CanvasToolbarDraftStatus'");
     expect(TOOLBAR_SOURCE).toContain("'./canvasToolbarViewModel'");
-    expect(TOOLBAR_SOURCE).toContain("'./useCanvasToolbarPortalTarget'");
     expect(TOOLBAR_SOURCE).toContain("'./CanvasViewMenuControls'");
+    expect(TOOLBAR_SOURCE).not.toContain('createPortal');
+    expect(TOOLBAR_SOURCE).not.toContain('useCanvasToolbarPortalTarget');
+    expect(TOOLBAR_SOURCE).not.toContain("placement?: 'inline' | 'top-bar'");
     expect(TOOLBAR_SOURCE).not.toContain('resolveWorkflowStatusLabel');
     expect(TOOLBAR_SOURCE).not.toContain('resolveWorkflowStatusClass');
   });

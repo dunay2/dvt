@@ -57,6 +57,12 @@ function buildWorkbenchArgs(
 ): CanvasWorkbenchSurfaceArgs {
   return {
     presentationState: buildPresentationState('empty'),
+    workspaceScope: {
+      tenantId: 'tenant-a',
+      projectId: 'project-orders',
+      environmentId: 'dev',
+      targetAdapter: 'temporal',
+    },
     startupBlockState: null,
     workbenchErrorMessage: null,
     canvasDocument: {

@@ -1,0 +1,127 @@
+// @vitest-environment jsdom
+
+import React, { act } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { CanvasPlaygroundHost } from './CanvasPlaygroundHost';
+import type { WorkspaceScope } from '../../ports/sessionContext';
+import type { CanvasKindRegistration } from '../../plugins/nodeTypeContracts';
+
+const workspaceScope: WorkspaceScope = {
+  tenantId: 'tenant-a',
+  projectId: 'project-orders',
+  environmentId: 'dev',
+  targetAdapter: 'temporal',
+};
+
+const canvasKinds: readonly CanvasKindRegistration[] = [
+  {
+    kind: 'dbt',
+    pluginId: 'dbt',
+    label: 'dbt',
+    description: 'Model-first canvas for dbt resources and dependencies.',
+    createTitle: 'dbt canvas',
+    emptyState: {
+      title: 'Start dbt canvas',
+      editableMessage: 'Start dbt modeling',
+      firstNodeLabel: 'Add first dbt node',
+      firstNodeHelper: 'Choose a dbt resource.',
+    },
+    nodeKinds: [],
+  },
+  {
+    kind: 'transformation',
+    pluginId: 'dvt',
+    label: 'Transformation',
+    description: 'Flow-based transformation canvas for the protected authoring draft.',
+    createTitle: 'Transformation canvas',
+    emptyState: {
+      title: 'Start transformation canvas',
+      editableMessage: 'Start transformation authoring',
+      firstNodeLabel: 'Add first transformation node',
+      firstNodeHelper: 'Choose a transformation node.',
+    },
+    nodeKinds: [],
+  },
+];
+
+function renderHost(): {
+  container: HTMLDivElement;
+  onCreateCanvasDocument: ReturnType<typeof vi.fn>;
+  root: Root;
+} {
+  const container = document.createElement('div');
+  document.body.appendChild(container);
+  const root = createRoot(container);
+  const onCreateCanvasDocument = vi.fn();
+
+  act(() => {
+    root.render(
+      <CanvasPlaygroundHost
+        workspaceScope={workspaceScope}
+        canvasKinds={canvasKinds}
+        onCreateCanvasDocument={onCreateCanvasDocument}
+      />
+    );
+  });
+
+  return {
+    container,
+    onCreateCanvasDocument,
+    root,
+  };
+}
+
+describe('CanvasPlaygroundHost', () => {
+  beforeEach(() => {
+    (
+      globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
+    ).IS_REACT_ACT_ENVIRONMENT = true;
+  });
+
+  afterEach(() => {
+    document.body.replaceChildren();
+    vi.clearAllMocks();
+  });
+
+  it('presents canvas templates inside the active workspace context', () => {
+    const { container, root } = renderHost();
+
+    expect(container.textContent).toContain('Create canvas in this workspace');
+    expect(container.textContent).toContain('Active workspace');
+    expect(container.textContent).toContain('tenant-a / project-orders / dev');
+    expect(container.textContent).toContain('Adapter: temporal');
+    expect(container.textContent).toContain('Choose a canvas template');
+    expect(container.textContent).toContain('dbt canvas');
+    expect(container.textContent).toContain('Transformation canvas');
+    expect(container.textContent).not.toContain('governed canvas kind');
+
+    act(() => {
+      root.unmount();
+    });
+  });
+
+  it('dispatches the selected template through the host-owned create command', async () => {
+    const { container, onCreateCanvasDocument, root } = renderHost();
+    const transformationButton = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Transformation canvas')
+    );
+
+    expect(transformationButton).not.toBeUndefined();
+
+    await act(async () => {
+      transformationButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(onCreateCanvasDocument).toHaveBeenCalledTimes(1);
+    expect(onCreateCanvasDocument).toHaveBeenCalledWith({
+      kind: 'transformation',
+      title: 'Transformation canvas',
+    });
+
+    act(() => {
+      root.unmount();
+    });
+  });
+});

@@ -64,6 +64,7 @@ function renderCanvasHostCycleWorkbenchSurface(
   args: Pick<
     CanvasWorkbenchSurfaceArgs,
     | 'presentationState'
+    | 'workspaceScope'
     | 'canvasDocument'
     | 'draftSaveStatus'
     | 'availableCanvasKinds'
@@ -81,6 +82,7 @@ function renderCanvasHostCycleWorkbenchSurface(
   if (cycleState.kind === 'needs_canvas') {
     return (
       <CanvasPlaygroundHost
+        workspaceScope={args.workspaceScope}
         canvasKinds={cycleState.availableCanvasKinds}
         onCreateCanvasDocument={cycleState.onCreateCanvasDocument}
       />

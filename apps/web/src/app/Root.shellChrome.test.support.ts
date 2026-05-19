@@ -25,20 +25,13 @@ function requireElement<T extends Element>(container: ParentNode, selector: stri
   return element;
 }
 
-function expectRootShellHeaderChrome(container: ParentNode): void {
+type RootShellHeaderChromeMode = 'global' | 'workbench';
+
+function expectRootShellHeaderChrome(container: ParentNode, mode: RootShellHeaderChromeMode): void {
   const shellTopBar = requireElement<HTMLElement>(container, '[data-slot="shell-top-bar"]');
-  const shellGitRef = requireElement<HTMLElement>(container, '[data-slot="shell-git-ref"]');
   const shellConnectionStatus = requireElement<HTMLElement>(
     container,
     '[data-slot="shell-connection-status"]'
-  );
-  const shellProjectIdentityBadge = requireElement<HTMLElement>(
-    container,
-    '[data-slot="shell-project-identity-badge"]'
-  );
-  const shellWorkspaceContextTrigger = requireElement<HTMLElement>(
-    container,
-    '[data-slot="shell-workspace-context-trigger"]'
   );
   const shellMenuTrigger = requireElement<HTMLElement>(
     container,
@@ -48,13 +41,33 @@ function expectRootShellHeaderChrome(container: ParentNode): void {
   expect(shellTopBar.textContent).toContain('Raven');
   expect(shellTopBar.textContent).toContain('View');
   expect(shellTopBar.className).toContain('bg-[var(--surface-shell)]');
+  expect(shellTopBar.querySelector('[data-slot="shell-workspace-selectors"]')).toBeNull();
+  expect(shellTopBar.querySelector('[data-slot="shell-menu-trigger"]')).toBeTruthy();
+  expect(shellTopBar.querySelector('[data-slot="shell-top-bar-canvas-controls"]')).toBeNull();
+  expect(shellTopBar.querySelectorAll('[role="combobox"]')).toHaveLength(0);
+  expect(shellConnectionStatus.className).toContain('text-[var(--text-default)]');
+
+  if (mode === 'workbench') {
+    expect(shellTopBar.querySelector('[data-slot="shell-git-ref"]')).toBeNull();
+    expect(shellTopBar.querySelector('[data-slot="shell-project-identity-badge"]')).toBeNull();
+    expect(shellTopBar.querySelector('[data-slot="shell-workspace-context-trigger"]')).toBeNull();
+    expect(shellMenuTrigger.textContent).toContain('View');
+    return;
+  }
+
+  const shellGitRef = requireElement<HTMLElement>(container, '[data-slot="shell-git-ref"]');
+  const shellProjectIdentityBadge = requireElement<HTMLElement>(
+    container,
+    '[data-slot="shell-project-identity-badge"]'
+  );
+  const shellWorkspaceContextTrigger = requireElement<HTMLElement>(
+    container,
+    '[data-slot="shell-workspace-context-trigger"]'
+  );
+
   expect(shellTopBar.querySelector('[data-slot="shell-git-ref"]')).toBeTruthy();
   expect(shellTopBar.querySelector('[data-slot="shell-project-identity-badge"]')).toBeTruthy();
   expect(shellTopBar.querySelector('[data-slot="shell-workspace-context-trigger"]')).toBeTruthy();
-  expect(shellTopBar.querySelector('[data-slot="shell-workspace-selectors"]')).toBeNull();
-  expect(shellTopBar.querySelector('[data-slot="shell-menu-trigger"]')).toBeTruthy();
-  expect(shellTopBar.querySelectorAll('[role="combobox"]')).toHaveLength(0);
-  expect(shellConnectionStatus.className).toContain('text-[var(--text-default)]');
   expect(shellGitRef.className).toContain('text-[var(--text-subtle)]');
   expect(
     shellProjectIdentityBadge.querySelector('[data-slot="shell-project-identity-title"]')
@@ -63,7 +76,7 @@ function expectRootShellHeaderChrome(container: ParentNode): void {
     shellProjectIdentityBadge.querySelector('[data-slot="shell-project-identity-env"]')
   ).not.toBeNull();
   expect(shellProjectIdentityBadge.className).toContain('bg-[var(--surface-app)]');
-  expect(shellWorkspaceContextTrigger.textContent).toContain('Context');
+  expect(shellWorkspaceContextTrigger.textContent).toContain('Workspace context');
   expect(shellMenuTrigger.textContent).toContain('View');
 }
 
@@ -109,7 +122,7 @@ export function expectRootShellFrameChrome(
   expect(appShellMain.parentElement).toBe(appShellBody);
   expect(appShellOutlet.closest('[data-slot="app-shell-main"]')).toBe(appShellMain);
   expect(appShellOutlet.textContent).toContain(expectedOutletText);
-  expectRootShellHeaderChrome(container);
+  expectRootShellHeaderChrome(container, 'global');
 }
 
 export function expectRootShellWorkbenchFrameChrome(
@@ -124,7 +137,7 @@ export function expectRootShellWorkbenchFrameChrome(
   expect(container.querySelector('[data-slot="app-shell-left-navigation"]')).toBeNull();
   expect(appShellOutlet.closest('[data-slot="app-shell-main"]')).toBe(appShellMain);
   expect(appShellOutlet.textContent).toContain(expectedOutletText);
-  expectRootShellHeaderChrome(container);
+  expectRootShellHeaderChrome(container, 'workbench');
 }
 
 export function expectRootShellNavigationChrome(container: ParentNode, activeHref: string): void {

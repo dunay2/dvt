@@ -103,10 +103,6 @@ async function renderCanvasRoute(root: Root): Promise<void> {
 }
 
 export function createCanvasRouteHarness() {
-  const topBarCanvasControls = document.createElement('div');
-  topBarCanvasControls.id = 'shell-top-bar-canvas-controls';
-  document.body.appendChild(topBarCanvasControls);
-
   const container = document.createElement('div');
   document.body.appendChild(container);
   const root = createRoot(container);
@@ -131,7 +127,6 @@ export function createCanvasRouteHarness() {
       });
       resetCanvasDraftPresentationState();
       resetRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION);
-      document.getElementById('shell-top-bar-canvas-controls')?.remove();
       container.remove();
     },
   };
@@ -148,15 +143,6 @@ export async function renderCanvasRouteWithController(
 }
 
 export function findCanvasButton(container: ParentNode, label: string) {
-  const topBarControls = document.getElementById('shell-top-bar-canvas-controls');
-  const inTopBar = Array.from(topBarControls?.querySelectorAll('button') ?? []).find((button) =>
-    button.textContent?.includes(label)
-  );
-
-  if (inTopBar) {
-    return inTopBar;
-  }
-
   const inContainer = Array.from(container.querySelectorAll('button')).find((button) =>
     button.textContent?.includes(label)
   );
@@ -173,8 +159,12 @@ export function findCanvasButton(container: ParentNode, label: string) {
 export function getPrimaryCanvasButtons(container: ParentNode) {
   return {
     layoutButton: findCanvasButton(container, 'Layout'),
-    planButton: findCanvasButton(container, 'Plan'),
-    runButton: findCanvasButton(container, 'Run'),
+    planButton:
+      container.querySelector<HTMLButtonElement>('[data-slot="canvas-toolbar-plan-command"]') ??
+      undefined,
+    runButton:
+      container.querySelector<HTMLButtonElement>('[data-slot="canvas-toolbar-run-command"]') ??
+      undefined,
   };
 }
 
@@ -234,13 +224,9 @@ export function expectPrimaryCanvasActionsBlocked(container: ParentNode): void {
   const { layoutButton, planButton, runButton } = getPrimaryCanvasButtons(container);
 
   expect(layoutButton).toBeUndefined();
-  expect(planButton).toBeDefined();
-  expect(runButton).toBeDefined();
-  expect(planButton?.getAttribute('disabled')).not.toBeNull();
-  expect(runButton?.getAttribute('disabled')).not.toBeNull();
-  expect(useCanvasViewMenuContributionStore.getState().contribution).toMatchObject({
-    canEditEdges: false,
-  });
+  expect(planButton).toBeUndefined();
+  expect(runButton).toBeUndefined();
+  expect(useCanvasViewMenuContributionStore.getState().contribution).toBeNull();
 }
 
 export function expectActiveCanvasTab(args: {

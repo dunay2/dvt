@@ -3,12 +3,13 @@ import { useLocation } from 'react-router';
 
 import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
 import { buildProjectIdentityBadge } from '../shell/projectIdentityBadge';
+import { isWorkbenchRoute } from '../shell/shellNavigationDisposition';
 import { usePlatformConnectionStore } from '../stores/platformConnectionStore';
 import { useSessionStore } from '../stores/sessionStore';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
 import AppBrandMark from './AppBrandMark';
 import { topAppBarClasses } from './shell/chrome';
-import { resolveShellTopBarCopy } from './shell/copy';
+import { detectShellTopBarLocale, resolveShellTopBarCopy } from './shell/copy';
 import { ShellConnectionStatus } from './shell/ShellConnectionStatus';
 import { ShellGitRef } from './shell/ShellGitRef';
 import { ShellMenu } from './shell/ShellMenu';
@@ -43,7 +44,8 @@ export function ShellTopBar({
   const setGridSize = useUiLayoutStore((state) => state.setGridSize);
   const setCanvasPalette = useUiLayoutStore((state) => state.setCanvasPalette);
   const effectiveConnectionStatus = connectionStateOverride ?? connectionStatus;
-  const copy = resolveShellTopBarCopy();
+  const copy = resolveShellTopBarCopy(detectShellTopBarLocale());
+  const isWorkbenchShell = isWorkbenchRoute(location.pathname);
   const projectIdentityBadge = buildProjectIdentityBadge({
     workspaceBootstrap,
     selectedTenant,
@@ -59,22 +61,18 @@ export function ShellTopBar({
           <span className={topAppBarClasses.brand}>Raven</span>
         </div>
 
-        <ShellProjectIdentityBadge badge={projectIdentityBadge} />
-        <ShellWorkspaceContextMenu badge={projectIdentityBadge} />
-        <ShellGitRef
-          gitBranch={workspaceBootstrap.gitBranch}
-          gitSha={workspaceBootstrap.gitSha}
-          copy={copy}
-        />
-        {location.pathname.startsWith('/canvas') ? (
-          <div
-            id="shell-top-bar-canvas-controls"
-            data-slot="shell-top-bar-canvas-controls"
-            className="ml-1 flex min-w-0 flex-1 items-center justify-end gap-2 overflow-hidden"
-          />
-        ) : (
-          <div className="flex-1" />
+        {!isWorkbenchShell && (
+          <>
+            <ShellProjectIdentityBadge badge={projectIdentityBadge} />
+            <ShellWorkspaceContextMenu badge={projectIdentityBadge} copy={copy} />
+            <ShellGitRef
+              gitBranch={workspaceBootstrap.gitBranch}
+              gitSha={workspaceBootstrap.gitSha}
+              copy={copy}
+            />
+          </>
         )}
+        <div className="flex-1" />
 
         <ShellConnectionStatus
           isConnectionChecking={isConnectionChecking}
@@ -90,6 +88,9 @@ export function ShellTopBar({
           gridSize={gridSize}
           canvasPalette={canvasPalette}
           navigationModel={navigationModel}
+          projectIdentityBadge={projectIdentityBadge}
+          gitBranch={workspaceBootstrap.gitBranch}
+          gitSha={workspaceBootstrap.gitSha}
           toggleExplorerPanel={toggleExplorerPanel}
           toggleInspectorPanel={toggleInspectorPanel}
           toggleConsolePanel={toggleConsolePanel}

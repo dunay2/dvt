@@ -174,7 +174,7 @@ describe('Canvas route backend and recovery priority', () => {
     });
   });
 
-  it('keeps toolbar workflow posture aligned with blocked backend route even when draft reload remains available', async () => {
+  it('keeps Canvas route commands hidden on blocked backend route even when draft reload remains available', async () => {
     await renderCanvasRouteWithController(harness, {
       dataSourceMode: 'api',
       backendReady: false,
@@ -187,10 +187,7 @@ describe('Canvas route backend and recovery priority', () => {
       },
     });
 
-    const toolbarText = document.getElementById('shell-top-bar-canvas-controls')?.textContent ?? '';
-
-    expect(toolbarText).toContain('Read only');
-    expect(toolbarText).not.toContain('Recovery');
-    expect(toolbarText).toContain('Reload latest draft');
+    expectPrimaryCanvasActionsBlocked(harness.container);
+    expect(harness.container.textContent).not.toContain('Reload latest draft');
   });
 });

@@ -31,6 +31,7 @@ That means:
 - one persistent shell;
 - one active route-level work surface at a time;
 - no fixed left navigation rail inside the Canvas workbench;
+- no Canvas route command portal inside the persistent global top bar;
 - optional contextual panels, drawers, or overlays only when justified by
   active context or explicit user pinning;
 - an optional bottom drawer for dense supporting context;
@@ -102,8 +103,8 @@ Owns:
 
 - top bar;
 - health banner;
-- command/menu discovery and any remaining shell navigation compatibility
-  surface;
+- command/menu discovery, global navigation fallback, read-only workspace
+  context, and any remaining shell navigation compatibility surface;
 - route outlet;
 - bottom drawer visibility;
 - focus mode and global shell controls.
@@ -113,6 +114,7 @@ Does not own:
 - graph semantics;
 - run semantics;
 - diff semantics;
+- Canvas route command placement;
 - feature-local orchestration.
 
 ### Route-Level Workbenches
@@ -256,7 +258,9 @@ Done when:
 Done when:
 
 - explorer and inspector are optional and recoverable;
-- graph commands live in the toolbar;
+- graph commands live in the route-local toolbar and never in the persistent
+  global top bar;
+- first-canvas selection stays quiet until a canvas document exists;
 - run and plan handoff works without route confusion;
 - runtime overlays do not mutate graph truth.
 

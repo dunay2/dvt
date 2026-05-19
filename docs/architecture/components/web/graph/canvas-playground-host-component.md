@@ -30,6 +30,7 @@ spec.
 - [Canvas Route Composition Component](./canvas-route-composition-component.md)
 - [Canvas Empty Authoring Entrypoint Component](./canvas-empty-authoring-entrypoint-component.md)
 - [Canvas Shell Component](./canvas-shell-component.md)
+- [Canvas Startup Template Selection Component](./canvas-startup-template-selection-component.md)
 
 ## Fowler reading
 
@@ -80,6 +81,8 @@ before that boundary exists.
   explicitly replaced canvas identity through the draft boundary.
 - `CanvasPlaygroundHostTemplate`: first-canvas host template that renders
   resolved copy and canvas-kind options without building commands.
+- `WorkspaceScope`: active tenant, project, environment, and adapter context
+  shown before the first canvas template choice.
 
 ## Invariants
 
@@ -113,6 +116,13 @@ before that boundary exists.
   `CanvasPlaygroundHost.tsx` owns copy selection and create-canvas command
   construction.
 - Host templates must not construct `CanvasCreateCanvasDocumentCommand` DTOs.
+- First-canvas startup must show active workspace context before the template
+  choices.
+- User-facing first-canvas choices are canvas templates; route copy must not
+  describe `dbt` or `Transformation` as project types.
+- First-canvas template titles and descriptions must render through
+  `CanvasTemplatePresentation` so registry labels and raw plugin copy do not
+  leak as the primary startup taxonomy.
 
 ## Transitions
 

@@ -62,6 +62,7 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
 
   return {
     dataSourceMode,
+    workspaceScope: args.environment.sessionContext.getWorkspaceScopeSnapshot(),
     isBackendCheckPending: backendPosture.isBackendCheckPending,
     backendReady: backendPosture.backendReady,
     backendBlockMessage: backendPosture.backendBlockMessage,

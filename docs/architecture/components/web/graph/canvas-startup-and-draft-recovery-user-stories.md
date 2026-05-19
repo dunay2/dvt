@@ -342,6 +342,23 @@ Acceptance criteria:
 - No first-authoring proof state can be complete while draft posture is not
   writable.
 
+### US-CANVAS-FIRST-AUTHORING-007: choose a canvas template inside the active workspace
+
+As an operator in an empty workspace, I want Canvas to show the active
+workspace before I choose `dbt` or `Transformation`, so I understand I am
+creating a canvas document template in this workspace and not choosing a new
+project type.
+
+Acceptance criteria:
+
+- The first-canvas host shows tenant, project, environment, and adapter context.
+- The startup copy says canvas template, not governed canvas kind.
+- `dbt` and `Transformation` choices render `CanvasTemplatePresentation` titles.
+- Choosing a template still dispatches `CreateCanvasDocumentCommand` through
+  the existing protected draft command rail.
+- The passive host template does not import copy catalogs or command DTOs.
+- No new workspace or project selector is introduced in this route slice.
+
 ### US-CANVAS-LAYOUT-001: persist drag-stop payload coordinates
 
 As an operator moving a Canvas card, I want the dropped coordinate to persist,
@@ -468,6 +485,7 @@ Acceptance criteria:
 | US-CANVAS-FIRST-AUTHORING-004 | First-node card-body layout persistence         | `canvasNodeMapper.ts`, `DbtNodeComponent.tsx`, layout persistence              | layout tests, viewport drag-surface test, Cypress live first-authoring spec                                                                                     |
 | US-CANVAS-FIRST-AUTHORING-005 | Reload restores first authored canvas           | protected draft query and layout projection                                    | controller persistence test, viewport graph model test, Cypress live proof                                                                                      |
 | US-CANVAS-FIRST-AUTHORING-006 | Unsafe draft access blocks first authoring      | `CanvasDraftAccessPosture`, first-authoring proof model                        | draft access posture tests, first-authoring proof negative tests                                                                                                |
+| US-CANVAS-FIRST-AUTHORING-007 | Template choice inside active workspace         | `CanvasPlaygroundHost`, `CanvasPlaygroundHost.templates.tsx`                   | `CanvasPlaygroundHost.test.tsx`, `CanvasPlaygroundHost.architecture.test.tsx`                                                                                   |
 | US-CANVAS-LAYOUT-001          | Drag-stop payload coordinates persist           | `useCanvasLayoutPersistence.ts`                                                | `useCanvasController.persistence.test.tsx`                                                                                                                      |
 | US-CANVAS-LAYOUT-002          | Settled live drag positions persist             | `useCanvasLayoutPersistence.ts`, `useCanvasViewportGraphModel.ts`              | `useCanvasController.persistence.test.tsx`, `useCanvasViewportGraphModel.test.tsx`                                                                              |
 | US-CANVAS-LAYOUT-003          | Pending route state blocks layout writes        | `useCanvasLayoutPersistence.ts`                                                | `useCanvasController.persistence.test.tsx`                                                                                                                      |
@@ -533,6 +551,22 @@ Green case for `TF-E2-M-C` planning:
 - add the first-authoring live proof component guide;
 - add the user stories and scenario matrix rows;
 - regenerate governed docs and run the feature mechanization checks.
+
+Red case for `F-15-E` startup template selection:
+
+- the first-canvas host test expected active workspace context and template
+  titles from `CanvasTemplatePresentation`;
+- the architecture guard expected the new component guide, mailbox review,
+  user story, and semantic copy checks;
+- the route still rendered registry labels and no workspace context.
+
+Green case for `F-15-E` startup template selection:
+
+- carry `WorkspaceScope` from the controller view model to the host template;
+- render active workspace context and canvas template copy;
+- keep command construction host-owned and template HTML passive;
+- run the focused host tests, Canvas lane, docs sync, feature mechanization,
+  and pre-push validation.
 
 ## Branch-Adjacent Scenario Notes
 

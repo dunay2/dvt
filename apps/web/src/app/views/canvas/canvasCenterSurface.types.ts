@@ -1,4 +1,5 @@
 /** Owned concern: define Canvas center-surface rendering contracts. */
+import type { WorkspaceScope } from '../../ports/sessionContext';
 import type { CanvasKindRegistration, NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanvasDraftPresentationState } from './canvasDraftPresentationModel';
 import type {
@@ -11,6 +12,7 @@ import type { CanvasAuthoringCanvasDocument } from './canvasDraftReadModel';
 
 export type RenderCanvasCenterSurfaceArgs = {
   presentationState: CanvasDraftPresentationState;
+  workspaceScope: WorkspaceScope;
   startupBlockState: CanvasRouteStartupBlockState | null;
   draftTransportError: CanvasDraftTransportErrorState | null;
   workbenchErrorMessage: string | null;
@@ -26,6 +28,7 @@ export type RenderCanvasCenterSurfaceArgs = {
 export type CanvasWorkbenchSurfaceArgs = Pick<
   RenderCanvasCenterSurfaceArgs,
   | 'presentationState'
+  | 'workspaceScope'
   | 'startupBlockState'
   | 'workbenchErrorMessage'
   | 'canvasDocument'

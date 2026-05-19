@@ -18,11 +18,12 @@ other, and which UX states users should experience across the shell.
 
 The current shell is composed from:
 
-- a persistent top bar with tenant, project, environment, git context, and
-  shell controls;
+- a persistent top bar that keeps global chrome low-noise on workbench routes;
 - a health banner that reports platform-health probe state;
-- a current `LeftNavigation` implementation that is being converged away from
-  fixed Canvas workbench navigation under `F-28`;
+- a `ShellMenu` fallback that exposes global navigation and read-only
+  workspace context when the Canvas workbench hides the left rail;
+- a `LeftNavigation` implementation that remains available for non-workbench
+  global routes;
 - a central route outlet where the active product view renders;
 - an optional bottom console drawer;
 - focus mode, explorer visibility, and inspector visibility controls stored in
@@ -59,7 +60,8 @@ Current route: `/canvas`
 
 Current composition:
 
-- `CanvasToolbar`
+- route-local `CanvasToolbar` once a canvas document or graph-operable state
+  exists
 - optional `DbtExplorer` on the left
 - `CanvasViewport` in the center
 - optional `InspectorPanel` on the right
@@ -228,15 +230,17 @@ flowchart TB
 - the health banner is visible when health is being checked, degraded, or
   offline;
 - Canvas workbench must not render a fixed left navigation rail;
-- route and command discovery should converge on the top menu, command palette,
-  and route-local workbench view strip;
+- route and command discovery should converge on the shell menu, command
+  palette, and route-local workbench view strip;
 - the bottom console is optional and should never hide the current route state.
 
 ### Canvas UX
 
 - explorer and inspector can be hidden or restored from contextual reveal
   controls;
-- graph operations live in the toolbar, not in the top bar;
+- graph operations live in the route-local toolbar, not in the global top bar;
+- first-canvas selection does not show disabled Plan, Run, Export, or Import
+  controls before a canvas document exists;
 - planning and run actions belong to Canvas because they are graph-contextual;
 - Add/create behavior is command-driven and unpinned by default;
 - context labels remain reference indicators, not active workbench dropdowns;
