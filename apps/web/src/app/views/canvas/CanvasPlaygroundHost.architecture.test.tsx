@@ -76,8 +76,23 @@ describe('CanvasPlaygroundHost architecture', () => {
     const componentGuide = readRepoFile(
       'docs/architecture/components/web/graph/canvas-startup-template-selection-component.md'
     );
+    const creationCapabilityGuide = readRepoFile(
+      'docs/architecture/components/web/graph/canvas-first-canvas-creation-capability-component.md'
+    );
+    const draftLifecycleSource = readArchitectureSiblingSource(
+      import.meta.dirname,
+      'useCanvasDraftLifecycle.ts'
+    );
+    const availabilitySource = readArchitectureSiblingSource(
+      import.meta.dirname,
+      'canvasCreateCanvasDocumentAvailability.ts'
+    );
 
     expect(componentGuide).toContain('must not reuse `canEditEdges`');
+    expect(creationCapabilityGuide).toContain('## Public API');
+    expect(creationCapabilityGuide).toContain('## Invariants');
+    expect(creationCapabilityGuide).toContain('## Transitions');
+    expect(creationCapabilityGuide).toContain('## Consumers');
     expect(HOST_CYCLE_SOURCE).toContain('canCreateFirstCanvasDocument');
     expect(HOST_CYCLE_SOURCE).toMatch(
       /if \(routeState === 'needs_canvas'\) \{\s+const canCreateCanvas = canCreateFirstCanvasDocument/
@@ -85,6 +100,10 @@ describe('CanvasPlaygroundHost architecture', () => {
     expect(HOST_CYCLE_SOURCE).not.toMatch(
       /if \(routeState === 'needs_canvas'\)[\s\S]{0,500}canEditEdges &&/
     );
+    expect(availabilitySource).toContain('Owned concern: decide');
+    expect(draftLifecycleSource).toContain("from './canvasCreateCanvasDocumentAvailability'");
+    expect(draftLifecycleSource).toContain('deriveCanCreateCanvasDocument({');
+    expect(draftLifecycleSource).not.toMatch(/graphDraftQuery\.data\?\.record == null/);
   });
 
   it('keeps visible copy and template slots aligned with the template-selection meaning', () => {
