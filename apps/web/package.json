@@ -17,7 +17,7 @@
     "test:e2e:startup-route-readiness": "node ../../tools/ci/run-web-cypress-native.mjs --spec cypress/e2e/shell/startup-route-readiness.cy.ts",
     "test:e2e:open": "node ../../tools/ci/run-web-cypress-native.mjs open",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint \"src/**/*.{ts,tsx}\" \"cypress/**/*.{ts,tsx}\" \"*.config.ts\" \"*.config.mjs\" \"scripts/**/*.{mjs,js,cjs}\" --max-warnings 0",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" \"cypress/**/*.{ts,tsx}\" \"*.config.ts\" \"*.config.mjs\" \"scripts/**/*.{ts,mjs,js,cjs}\" --max-warnings 0",
     "test": "vitest run --config vitest.config.ts",
     "test:unit": "pnpm run test:deps && pnpm run test:unit:run",
     "test:unit:run": "vitest run --config vitest.unit.config.ts",

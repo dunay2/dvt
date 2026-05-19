@@ -154,7 +154,7 @@
 
     assert.equal(
       webPackageJson.scripts.lint,
-      'eslint "src/**/*.{ts,tsx}" "cypress/**/*.{ts,tsx}" "*.config.ts" "*.config.mjs" "scripts/**/*.{mjs,js,cjs}" --max-warnings 0'
+      'eslint "src/**/*.{ts,tsx}" "cypress/**/*.{ts,tsx}" "*.config.ts" "*.config.mjs" "scripts/**/*.{ts,mjs,js,cjs}" --max-warnings 0'
     );
   });
 
