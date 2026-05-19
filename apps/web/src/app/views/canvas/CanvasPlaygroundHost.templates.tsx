@@ -6,22 +6,23 @@ import {
   routeWorkbenchMutedTextClassName,
   routeWorkbenchPanelClassName,
 } from '../../components/workbench/RouteWorkbenchFrame';
-import type { CanvasKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { WorkspaceScope } from '../../ports/sessionContext';
+import type { CanvasTemplatePresentation } from './canvasTemplatePresentation';
 
 export type CanvasPlaygroundHostTemplateCopy = Readonly<{
   title: string;
   message: string;
   helper: string;
   workspaceLabel: string;
+  adapterLabel: string;
   templateLabel: string;
 }>;
 
 export type CanvasPlaygroundHostTemplateProps = Readonly<{
   copy: CanvasPlaygroundHostTemplateCopy;
   workspaceScope: WorkspaceScope;
-  canvasKinds: readonly CanvasKindRegistration[];
-  onCreateCanvasKind?: (registration: CanvasKindRegistration) => void;
+  templates: readonly CanvasTemplatePresentation[];
+  onCreateCanvasTemplate?: (template: CanvasTemplatePresentation) => void;
 }>;
 
 function formatWorkspaceScope(workspaceScope: WorkspaceScope): string {
@@ -31,8 +32,8 @@ function formatWorkspaceScope(workspaceScope: WorkspaceScope): string {
 export function CanvasPlaygroundHostTemplate({
   copy,
   workspaceScope,
-  canvasKinds,
-  onCreateCanvasKind,
+  templates,
+  onCreateCanvasTemplate,
 }: CanvasPlaygroundHostTemplateProps): JSX.Element {
   return (
     <div
@@ -52,7 +53,9 @@ export function CanvasPlaygroundHostTemplate({
         >
           <span className="font-semibold text-(--text-default)">{copy.workspaceLabel}</span>
           <span>{formatWorkspaceScope(workspaceScope)}</span>
-          <span>Adapter: {workspaceScope.targetAdapter}</span>
+          <span>
+            {copy.adapterLabel}: {workspaceScope.targetAdapter}
+          </span>
         </div>
         <h2 className="mb-2 text-base font-semibold text-(--text-default)">{copy.title}</h2>
         <p className={cn('text-sm', routeWorkbenchMutedTextClassName)}>{copy.message}</p>
@@ -64,18 +67,18 @@ export function CanvasPlaygroundHostTemplate({
           {copy.templateLabel}
         </h3>
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          {canvasKinds.map((registration) => (
+          {templates.map((template) => (
             <Button
-              key={registration.kind}
+              key={template.kind}
               data-slot="canvas-playground-template-choice"
               type="button"
               variant="outline"
               className="h-auto flex-col items-start gap-1 py-4 text-left"
-              onClick={() => onCreateCanvasKind?.(registration)}
+              onClick={() => onCreateCanvasTemplate?.(template)}
             >
-              <span className="text-sm font-semibold">{registration.createTitle}</span>
+              <span className="text-sm font-semibold">{template.title}</span>
               <span className={cn('text-xs', routeWorkbenchMutedTextClassName)}>
-                {registration.description}
+                {template.description}
               </span>
             </Button>
           ))}

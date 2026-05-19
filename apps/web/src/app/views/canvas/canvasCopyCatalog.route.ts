@@ -39,6 +39,10 @@ export const canvasViewRouteCopyByKey = {
     key: 'canvas.route.needsCanvasWorkspaceLabel',
     fallback: 'Active workspace',
   },
+  routeNeedsCanvasAdapterLabel: {
+    key: 'canvas.route.needsCanvasAdapterLabel',
+    fallback: 'Adapter',
+  },
   routeNeedsCanvasTemplateLabel: {
     key: 'canvas.route.needsCanvasTemplateLabel',
     fallback: 'Choose a canvas template',

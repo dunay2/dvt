@@ -13,6 +13,7 @@ export const canvasViewRouteCopyEs = {
   routeNeedsCanvasHelper:
     'La plantilla de canvas elegida se persiste mediante la frontera protegida del workspace graph draft antes de agregar nodos.',
   routeNeedsCanvasWorkspaceLabel: 'Workspace activo',
+  routeNeedsCanvasAdapterLabel: 'Adaptador',
   routeNeedsCanvasTemplateLabel: 'Elige una plantilla de canvas',
   routeEmptyTitle: 'No hay contenido de grafo cargado',
   routeEmptyEditableMessage:

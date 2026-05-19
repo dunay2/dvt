@@ -25,8 +25,9 @@ Canvas document through the protected workspace graph draft boundary.
   - consumes resolved copy, active workspace scope, canvas registrations, and a
     template-choice callback.
   - renders passive HTML only.
-- `CanvasKindRegistration.createTitle`
-  - visible template title for the first-start button.
+- `CanvasTemplatePresentation`
+  - locale-aware visible template title and description resolved from
+    `CanvasKindRegistration`.
 - `CreateCanvasDocumentCommand`
   - existing command rail used to persist the first canvas document.
 
@@ -39,8 +40,8 @@ Canvas document through the protected workspace graph draft boundary.
   types or route authorities.
 - The host builds `CreateCanvasDocumentCommand`; the template never imports the
   command DTO or copy catalog.
-- The template title uses `registration.createTitle`; plugin `label` remains an
-  internal catalog label or secondary metadata.
+- The template title and description use `CanvasTemplatePresentation`; plugin
+  `label` remains an internal catalog label or secondary metadata.
 - The first canvas persists through `/workspace/graph/draft`; no parallel
   startup command or fake local success path is allowed.
 - The component does not introduce a workspace/project selector.
@@ -93,7 +94,7 @@ sequenceDiagram
   Host->>Template: resolved copy, workspace summary, template options
   Operator->>Template: Choose Transformation canvas
   Template->>Host: selected CanvasKindRegistration
-  Host->>Draft: CreateCanvasDocumentCommand(kind, createTitle)
+  Host->>Draft: CreateCanvasDocumentCommand(kind, template title)
   Draft-->>Route: authoritative draft with canvas document
 ```
 

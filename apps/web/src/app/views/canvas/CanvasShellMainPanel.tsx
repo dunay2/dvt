@@ -38,6 +38,16 @@ type CanvasShellMainPanelProps = Readonly<{
   chromeCommands: CanvasShellChromeCommands;
 }>;
 
+function shouldRenderCanvasToolbar(routeState: CanvasShellToolbar['routeState']): boolean {
+  return ![
+    'loading_backend',
+    'blocked_backend',
+    'loading_graph',
+    'error_graph',
+    'needs_canvas',
+  ].includes(routeState);
+}
+
 function CanvasShellViewport({
   layout,
   panels,
@@ -139,41 +149,42 @@ export function CanvasShellMainPanel({
         {layout.workbenchTabStrip ? (
           <div className="shrink-0">{layout.workbenchTabStrip}</div>
         ) : null}
-        <CanvasToolbar
-          placement="top-bar"
-          onAutoLayout={chromeCommands.onAutoLayout}
-          onToggleCostOverlay={chromeCommands.onToggleCostOverlay}
-          onToggleImpact={chromeCommands.onToggleImpact}
-          onToggleColumns={chromeCommands.onToggleColumns}
-          onToggleGridVisible={chromeCommands.onToggleGridVisible}
-          onGridColorChange={chromeCommands.onGridColorChange}
-          onToggleSnapToGrid={chromeCommands.onToggleSnapToGrid}
-          onExportProjectSnapshot={chromeCommands.onExportProjectSnapshot}
-          onImportProjectSnapshotFile={chromeCommands.onImportProjectSnapshotFile}
-          onReloadLatestDraft={chromeCommands.onReloadLatestDraft}
-          onPlan={chromeCommands.onPlan}
-          onRun={chromeCommands.onRun}
-          routeState={toolbar.routeState}
-          draftToolbarState={toolbar.draftToolbarState}
-          canPlan={panels.userPermissions.canPlan}
-          canRun={panels.userPermissions.canRun}
-          canEditEdges={panels.userPermissions.canEditEdges}
-          canExportProjectSnapshot={toolbar.canExportProjectSnapshot}
-          canImportProjectSnapshot={toolbar.canImportProjectSnapshot}
-          canStartRun={toolbar.canStartRun}
-          planStatusSummary={toolbar.planStatusSummary}
-          canvasAuthoringMode={toolbar.canvasAuthoringMode}
-          exclusiveOverlayMode={toolbar.exclusiveOverlayMode}
-          canUseCostOverlay={toolbar.canUseCostOverlay}
-          impactOverlayEnabled={toolbar.impactOverlayEnabled}
-          columnLevelLineageEnabled={toolbar.columnLevelLineageEnabled}
-          canvasGridVisible={graph.canvasGridVisible}
-          canvasGridColor={graph.canvasGridColor}
-          canvasSnapToGrid={graph.canvasSnapToGrid}
-          transformationValidation={toolbar.transformationValidation}
-          nodeCount={graph.nodesWithImpact.length}
-          edgeCount={graph.edges.length}
-        />
+        {shouldRenderCanvasToolbar(toolbar.routeState) ? (
+          <CanvasToolbar
+            onAutoLayout={chromeCommands.onAutoLayout}
+            onToggleCostOverlay={chromeCommands.onToggleCostOverlay}
+            onToggleImpact={chromeCommands.onToggleImpact}
+            onToggleColumns={chromeCommands.onToggleColumns}
+            onToggleGridVisible={chromeCommands.onToggleGridVisible}
+            onGridColorChange={chromeCommands.onGridColorChange}
+            onToggleSnapToGrid={chromeCommands.onToggleSnapToGrid}
+            onExportProjectSnapshot={chromeCommands.onExportProjectSnapshot}
+            onImportProjectSnapshotFile={chromeCommands.onImportProjectSnapshotFile}
+            onReloadLatestDraft={chromeCommands.onReloadLatestDraft}
+            onPlan={chromeCommands.onPlan}
+            onRun={chromeCommands.onRun}
+            routeState={toolbar.routeState}
+            draftToolbarState={toolbar.draftToolbarState}
+            canPlan={panels.userPermissions.canPlan}
+            canRun={panels.userPermissions.canRun}
+            canEditEdges={panels.userPermissions.canEditEdges}
+            canExportProjectSnapshot={toolbar.canExportProjectSnapshot}
+            canImportProjectSnapshot={toolbar.canImportProjectSnapshot}
+            canStartRun={toolbar.canStartRun}
+            planStatusSummary={toolbar.planStatusSummary}
+            canvasAuthoringMode={toolbar.canvasAuthoringMode}
+            exclusiveOverlayMode={toolbar.exclusiveOverlayMode}
+            canUseCostOverlay={toolbar.canUseCostOverlay}
+            impactOverlayEnabled={toolbar.impactOverlayEnabled}
+            columnLevelLineageEnabled={toolbar.columnLevelLineageEnabled}
+            canvasGridVisible={graph.canvasGridVisible}
+            canvasGridColor={graph.canvasGridColor}
+            canvasSnapToGrid={graph.canvasSnapToGrid}
+            transformationValidation={toolbar.transformationValidation}
+            nodeCount={graph.nodesWithImpact.length}
+            edgeCount={graph.edges.length}
+          />
+        ) : null}
         {layout.readOnlyBanner ? <div className="shrink-0">{layout.readOnlyBanner}</div> : null}
         <CanvasShellMainSurface
           layout={layout}

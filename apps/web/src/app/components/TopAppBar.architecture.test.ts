@@ -73,9 +73,9 @@ describe('ShellTopBar workspace context architecture', () => {
     expect(contextDetailsSource).toContain('data-slot="shell-workspace-tenant-context"');
     expect(contextDetailsSource).toContain('data-slot="shell-workspace-project-context"');
     expect(contextDetailsSource).toContain('data-slot="shell-workspace-environment-context"');
-    expect(contextDetailsSource).toContain('Tenant scope (read only)');
-    expect(contextDetailsSource).toContain('Project scope (read only)');
-    expect(contextDetailsSource).toContain('Environment scope (read only)');
+    expect(contextDetailsSource).toContain('copy.tenantScopeAria');
+    expect(contextDetailsSource).toContain('copy.projectScopeAria');
+    expect(contextDetailsSource).toContain('copy.environmentScopeAria');
   });
 
   it('documents API, invariants, transitions, consumers, and recorded risks', () => {

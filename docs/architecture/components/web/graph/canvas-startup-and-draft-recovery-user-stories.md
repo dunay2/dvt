@@ -353,7 +353,7 @@ Acceptance criteria:
 
 - The first-canvas host shows tenant, project, environment, and adapter context.
 - The startup copy says canvas template, not governed canvas kind.
-- `dbt` and `Transformation` choices render `CanvasKindRegistration.createTitle`.
+- `dbt` and `Transformation` choices render `CanvasTemplatePresentation` titles.
 - Choosing a template still dispatches `CreateCanvasDocumentCommand` through
   the existing protected draft command rail.
 - The passive host template does not import copy catalogs or command DTOs.
@@ -555,7 +555,7 @@ Green case for `TF-E2-M-C` planning:
 Red case for `F-15-E` startup template selection:
 
 - the first-canvas host test expected active workspace context and template
-  titles from `createTitle`;
+  titles from `CanvasTemplatePresentation`;
 - the architecture guard expected the new component guide, mailbox review,
   user story, and semantic copy checks;
 - the route still rendered registry labels and no workspace context.

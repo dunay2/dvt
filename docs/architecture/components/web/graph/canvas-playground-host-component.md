@@ -120,8 +120,9 @@ before that boundary exists.
   choices.
 - User-facing first-canvas choices are canvas templates; route copy must not
   describe `dbt` or `Transformation` as project types.
-- First-canvas template titles must render `CanvasKindRegistration.createTitle`
-  so registry labels do not leak as the primary startup taxonomy.
+- First-canvas template titles and descriptions must render through
+  `CanvasTemplatePresentation` so registry labels and raw plugin copy do not
+  leak as the primary startup taxonomy.
 
 ## Transitions
 

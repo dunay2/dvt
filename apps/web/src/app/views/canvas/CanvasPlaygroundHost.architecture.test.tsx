@@ -19,7 +19,8 @@ const ROUTE_COPY_SOURCE = readArchitectureSiblingSource(
 describe('CanvasPlaygroundHost architecture', () => {
   it('keeps first-canvas host HTML in templates while the host builds commands', () => {
     expect(PLAYGROUND_HOST_SOURCE).toContain("from './CanvasPlaygroundHost.templates'");
-    expect(PLAYGROUND_HOST_SOURCE).toContain('onCreateCanvasKind');
+    expect(PLAYGROUND_HOST_SOURCE).toContain('onCreateCanvasTemplate');
+    expect(PLAYGROUND_HOST_SOURCE).toContain('resolveCanvasTemplatePresentation');
     expect(PLAYGROUND_HOST_SOURCE).not.toContain('<div');
     expect(PLAYGROUND_HOST_SOURCE).not.toContain('Button');
     expect(PLAYGROUND_HOST_SOURCE).not.toContain('Card');
@@ -70,9 +71,12 @@ describe('CanvasPlaygroundHost architecture', () => {
   it('keeps visible copy and template slots aligned with the template-selection meaning', () => {
     expect(PLAYGROUND_HOST_SOURCE).toContain('workspaceScope');
     expect(PLAYGROUND_HOST_SOURCE).toContain('routeNeedsCanvasWorkspaceLabel');
+    expect(PLAYGROUND_HOST_SOURCE).toContain('resolveCanvasTemplatePresentation');
     expect(PLAYGROUND_HOST_TEMPLATE_SOURCE).toContain('canvas-playground-workspace-context');
     expect(PLAYGROUND_HOST_TEMPLATE_SOURCE).toContain('canvas-playground-template-choice');
-    expect(PLAYGROUND_HOST_TEMPLATE_SOURCE).toContain('registration.createTitle');
+    expect(PLAYGROUND_HOST_TEMPLATE_SOURCE).toContain('template.title');
+    expect(PLAYGROUND_HOST_TEMPLATE_SOURCE).toContain('template.description');
+    expect(PLAYGROUND_HOST_TEMPLATE_SOURCE).not.toContain('registration.createTitle');
     expect(ROUTE_COPY_SOURCE).toContain('Create canvas in this workspace');
     expect(ROUTE_COPY_SOURCE).toContain('Choose a canvas template');
     expect(ROUTE_COPY_SOURCE).not.toContain('Choose a governed canvas kind to start authoring');

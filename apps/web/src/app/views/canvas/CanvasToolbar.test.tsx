@@ -16,7 +16,6 @@ function buildToolbarProps(
   overrides?: Partial<React.ComponentProps<typeof CanvasToolbar>>
 ): React.ComponentProps<typeof CanvasToolbar> {
   return {
-    placement: 'top-bar',
     onAutoLayout: vi.fn(),
     onToggleCostOverlay: vi.fn(),
     onToggleImpact: vi.fn(),
@@ -100,7 +99,6 @@ function buildCanvasViewMenuContribution(
 
 describe('CanvasToolbar', () => {
   let container: HTMLDivElement;
-  let portalHost: HTMLDivElement;
   let root: Root;
   const defaultDraftToolbarState: CanvasDraftToolbarState = {
     label: canvasViewCopy.draftSyncedLabel,
@@ -109,9 +107,6 @@ describe('CanvasToolbar', () => {
   };
 
   beforeEach(() => {
-    portalHost = document.createElement('div');
-    portalHost.id = 'shell-top-bar-canvas-controls';
-    document.body.appendChild(portalHost);
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -125,7 +120,6 @@ describe('CanvasToolbar', () => {
       root.unmount();
     });
     useCanvasViewMenuContributionStore.setState({ contribution: null });
-    portalHost.remove();
     container.remove();
   });
 
@@ -140,17 +134,17 @@ describe('CanvasToolbar', () => {
       );
     });
 
-    expect(portalHost.querySelectorAll('[data-slot="canvas-workflow-status"]')).toHaveLength(1);
-    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarWorkflowPlanRequiredLabel);
-    expect(portalHost.textContent).not.toContain(canvasViewCopy.toolbarLayoutLabel);
-    expect(portalHost.textContent).not.toContain(canvasViewCopy.toolbarImpactLabel);
-    expect(portalHost.textContent).not.toContain(canvasViewCopy.toolbarColumnsLabel);
-    expect(portalHost.textContent).not.toContain(canvasViewCopy.toolbarCostLabel);
-    expect(portalHost.textContent).not.toContain(canvasViewCopy.toolbarGridLabel);
-    expect(portalHost.textContent).not.toContain(canvasViewCopy.toolbarSnapToGridLabel);
-    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarPlanLabel);
-    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarRunLabel);
-    expect(portalHost.textContent).toContain(canvasViewCopy.draftSyncedLabel);
+    expect(container.querySelectorAll('[data-slot="canvas-workflow-status"]')).toHaveLength(1);
+    expect(container.textContent).toContain(canvasViewCopy.toolbarWorkflowPlanRequiredLabel);
+    expect(container.textContent).not.toContain(canvasViewCopy.toolbarLayoutLabel);
+    expect(container.textContent).not.toContain(canvasViewCopy.toolbarImpactLabel);
+    expect(container.textContent).not.toContain(canvasViewCopy.toolbarColumnsLabel);
+    expect(container.textContent).not.toContain(canvasViewCopy.toolbarCostLabel);
+    expect(container.textContent).not.toContain(canvasViewCopy.toolbarGridLabel);
+    expect(container.textContent).not.toContain(canvasViewCopy.toolbarSnapToGridLabel);
+    expect(container.textContent).toContain(canvasViewCopy.toolbarPlanLabel);
+    expect(container.textContent).toContain(canvasViewCopy.toolbarRunLabel);
+    expect(container.textContent).toContain(canvasViewCopy.draftSyncedLabel);
   });
 
   it('registers canvas view preference commands for the View menu', async () => {
@@ -228,7 +222,7 @@ describe('CanvasToolbar', () => {
       );
     });
 
-    const buttons = Array.from(portalHost.querySelectorAll('button'));
+    const buttons = Array.from(container.querySelectorAll('button'));
     const exportButton = buttons.find((button) =>
       button.textContent?.includes(canvasViewCopy.toolbarExportSnapshotLabel)
     );
@@ -238,7 +232,7 @@ describe('CanvasToolbar', () => {
 
     expect(exportButton).toBeDefined();
     expect(importButton).toBeDefined();
-    expect(portalHost.textContent).not.toContain('Save');
+    expect(container.textContent).not.toContain('Save');
 
     await act(async () => {
       exportButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -247,7 +241,7 @@ describe('CanvasToolbar', () => {
 
     expect(onExportProjectSnapshot).toHaveBeenCalledTimes(1);
     expect(onImportProjectSnapshotFile).not.toHaveBeenCalled();
-    expect(portalHost.querySelector('input[type="file"]')).not.toBeNull();
+    expect(container.querySelector('input[type="file"]')).not.toBeNull();
   });
 
   it('keeps plan button disabled when transformation validation is invalid', async () => {
@@ -268,11 +262,11 @@ describe('CanvasToolbar', () => {
       );
     });
 
-    const planButton = Array.from(portalHost.querySelectorAll('button')).find((button) =>
+    const planButton = Array.from(container.querySelectorAll('button')).find((button) =>
       button.textContent?.includes(canvasViewCopy.toolbarPlanLabel)
     );
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
-    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarWorkflowPlanRequiredLabel);
+    expect(container.textContent).toContain(canvasViewCopy.toolbarWorkflowPlanRequiredLabel);
   });
 
   it('shows run ready when execution can start', async () => {
@@ -289,7 +283,7 @@ describe('CanvasToolbar', () => {
       );
     });
 
-    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarWorkflowRunReadyLabel);
+    expect(container.textContent).toContain(canvasViewCopy.toolbarWorkflowRunReadyLabel);
   });
 
   it('shows read only and disables actions when plan and run are unavailable', async () => {
@@ -308,7 +302,7 @@ describe('CanvasToolbar', () => {
       );
     });
 
-    const buttons = Array.from(portalHost.querySelectorAll('button'));
+    const buttons = Array.from(container.querySelectorAll('button'));
     const planButton = buttons.find((button) =>
       button.textContent?.includes(canvasViewCopy.toolbarPlanLabel)
     );
@@ -316,7 +310,7 @@ describe('CanvasToolbar', () => {
       button.textContent?.includes(canvasViewCopy.toolbarRunLabel)
     );
 
-    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarWorkflowReadOnlyLabel);
+    expect(container.textContent).toContain(canvasViewCopy.toolbarWorkflowReadOnlyLabel);
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
     expect(runButton?.getAttribute('disabled')).not.toBeNull();
   });
@@ -345,9 +339,9 @@ describe('CanvasToolbar', () => {
       );
     });
 
-    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarWorkflowRecoveryLabel);
-    expect(portalHost.textContent).toContain(canvasViewCopy.draftMissingLabel);
-    const reloadButton = Array.from(portalHost.querySelectorAll('button')).find((button) =>
+    expect(container.textContent).toContain(canvasViewCopy.toolbarWorkflowRecoveryLabel);
+    expect(container.textContent).toContain(canvasViewCopy.draftMissingLabel);
+    const reloadButton = Array.from(container.querySelectorAll('button')).find((button) =>
       button.textContent?.includes(canvasViewCopy.reloadLatestDraftLabel)
     );
     expect(reloadButton).not.toBeNull();
@@ -380,8 +374,8 @@ describe('CanvasToolbar', () => {
       );
     });
 
-    expect(portalHost.textContent).toContain(canvasViewCopy.toolbarWorkflowReadOnlyLabel);
-    expect(portalHost.textContent).not.toContain(canvasViewCopy.toolbarWorkflowRecoveryLabel);
-    expect(portalHost.textContent).toContain(canvasViewCopy.reloadLatestDraftLabel);
+    expect(container.textContent).toContain(canvasViewCopy.toolbarWorkflowReadOnlyLabel);
+    expect(container.textContent).not.toContain(canvasViewCopy.toolbarWorkflowRecoveryLabel);
+    expect(container.textContent).toContain(canvasViewCopy.reloadLatestDraftLabel);
   });
 });
