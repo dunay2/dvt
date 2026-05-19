@@ -46,7 +46,7 @@ const canvasKinds: readonly CanvasKindRegistration[] = [
   },
 ];
 
-function renderHost(): {
+function renderHost(overrides: Partial<React.ComponentProps<typeof CanvasPlaygroundHost>> = {}): {
   container: HTMLDivElement;
   onCreateCanvasDocument: ReturnType<typeof vi.fn>;
   root: Root;
@@ -62,6 +62,7 @@ function renderHost(): {
         workspaceScope={workspaceScope}
         canvasKinds={canvasKinds}
         onCreateCanvasDocument={onCreateCanvasDocument}
+        {...overrides}
       />
     );
   });
@@ -119,6 +120,31 @@ describe('CanvasPlaygroundHost', () => {
       kind: 'transformation',
       title: 'Transformation canvas',
     });
+
+    act(() => {
+      root.unmount();
+    });
+  });
+
+  it('renders unavailable template choices as disabled instead of no-op buttons', async () => {
+    const { container, onCreateCanvasDocument, root } = renderHost({
+      onCreateCanvasDocument: undefined,
+      unavailableMessage: 'Graph edits are unavailable for this workspace scope.',
+    });
+    const templateButtons = container.querySelectorAll<HTMLButtonElement>(
+      '[data-slot="canvas-playground-template-choice"]'
+    );
+
+    expect(container.textContent).toContain(
+      'Graph edits are unavailable for this workspace scope.'
+    );
+    expect([...templateButtons].every((button) => button.disabled)).toBe(true);
+
+    await act(async () => {
+      templateButtons[0]?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(onCreateCanvasDocument).not.toHaveBeenCalled();
 
     act(() => {
       root.unmount();

@@ -56,6 +56,7 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="shell-top-bar"]').as('topBar');
     cy.get('@topBar').should('contain.text', 'Raven');
     cy.get('@topBar').should('contain.text', 'Vista');
+    cy.get('@topBar').should('contain.text', 'Workspace');
     cy.get('@topBar').find('[data-slot="shell-project-identity-badge"]').should('not.exist');
     cy.get('@topBar').find('[data-slot="shell-workspace-context-trigger"]').should('not.exist');
     cy.get('@topBar').find('[data-slot="shell-git-ref"]').should('not.exist');
@@ -74,6 +75,13 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="canvas-toolbar-run-command"]').should('not.exist');
 
     cy.get('[data-slot="shell-menu-trigger"]').click();
+    cy.get('[data-slot="shell-menu-navigation-link"]').should('not.exist');
+    cy.contains('Contexto del workspace').should('not.exist');
+    cy.contains('Contexto Git').should('not.exist');
+    cy.contains('Opciones de vista').should('be.visible');
+    cy.get('body').type('{esc}');
+
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
     cy.get('[data-slot="shell-menu-navigation-link"]').then(($links) => {
       expect([...$links].map((link) => link.getAttribute('href'))).to.deep.equal([
         '/canvas',

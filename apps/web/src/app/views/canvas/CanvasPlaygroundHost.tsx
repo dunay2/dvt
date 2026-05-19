@@ -12,10 +12,12 @@ export function CanvasPlaygroundHost({
   workspaceScope,
   canvasKinds,
   onCreateCanvasDocument,
+  unavailableMessage = null,
 }: Readonly<{
   workspaceScope: WorkspaceScope;
   canvasKinds: readonly CanvasKindRegistration[];
   onCreateCanvasDocument?: CreateCanvasDocumentCommand;
+  unavailableMessage?: string | null;
 }>) {
   const templates = canvasKinds.map((registration) =>
     resolveCanvasTemplatePresentation(registration)
@@ -33,11 +35,15 @@ export function CanvasPlaygroundHost({
       }}
       workspaceScope={workspaceScope}
       templates={templates}
-      onCreateCanvasTemplate={(template) =>
-        onCreateCanvasDocument?.({
-          kind: template.kind,
-          title: template.title,
-        })
+      unavailableMessage={unavailableMessage}
+      onCreateCanvasTemplate={
+        onCreateCanvasDocument == null
+          ? undefined
+          : (template) =>
+              onCreateCanvasDocument({
+                kind: template.kind,
+                title: template.title,
+              })
       }
     />
   );

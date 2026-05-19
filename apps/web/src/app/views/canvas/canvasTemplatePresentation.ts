@@ -17,11 +17,11 @@ type CanvasTemplateCopy = Readonly<{
 const BUILT_IN_SPANISH_TEMPLATE_COPY: Record<string, CanvasTemplateCopy> = {
   dbt: {
     title: 'Canvas dbt',
-    description: 'Canvas model-first para recursos y dependencias dbt.',
+    description: 'Canvas basado en modelo para recursos y dependencias dbt.',
   },
   transformation: {
     title: 'Canvas de transformacion',
-    description: 'Canvas de flujo para el draft protegido de authoring.',
+    description: 'Canvas de flujo para el borrador protegido de autoria.',
   },
 };
 

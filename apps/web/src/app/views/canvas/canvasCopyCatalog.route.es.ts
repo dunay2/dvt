@@ -15,6 +15,8 @@ export const canvasViewRouteCopyEs = {
   routeNeedsCanvasWorkspaceLabel: 'Workspace activo',
   routeNeedsCanvasAdapterLabel: 'Adaptador',
   routeNeedsCanvasTemplateLabel: 'Elige una plantilla de canvas',
+  routeNeedsCanvasReadOnlyMessage:
+    'La creacion de plantillas de canvas esta deshabilitada porque la edicion del grafo no esta disponible para este scope del workspace.',
   routeEmptyTitle: 'No hay contenido de grafo cargado',
   routeEmptyEditableMessage:
     'Este workspace todavia no expone nodos de grafo. Usa Add data para importar fuentes o carga contenido de grafo antes de planificar.',

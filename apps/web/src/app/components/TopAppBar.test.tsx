@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { buildShellNavigationModel } from '../shell/shellNavigationModel';
 import { useSessionStore } from '../stores/sessionStore';
+import { useUiLayoutStore } from '../stores/uiLayoutStore';
 import { resolveShellTopBarCopy } from './shell/copy';
 import ShellTopBar from './TopAppBar';
 
@@ -30,6 +31,7 @@ describe('ShellTopBar workspace context', () => {
       projectId: 'dbt-analytics',
       environmentId: 'dev',
     });
+    useUiLayoutStore.setState({ focusMode: false });
   });
 
   afterEach(() => {
@@ -61,7 +63,7 @@ describe('ShellTopBar workspace context', () => {
     expect(topBar?.querySelectorAll('[role="combobox"]')).toHaveLength(0);
   });
 
-  it('keeps Canvas top bar low-noise and moves navigation plus context into the shell menu', async () => {
+  it('keeps Canvas top bar low-noise while separating workspace navigation from View controls', async () => {
     await act(async () => {
       root.render(
         <MemoryRouter initialEntries={['/canvas']}>
@@ -76,9 +78,25 @@ describe('ShellTopBar workspace context', () => {
     expect(topBar?.querySelector('[data-slot="shell-workspace-context-trigger"]')).toBeNull();
     expect(topBar?.querySelector('[data-slot="shell-git-ref"]')).toBeNull();
     expect(topBar?.querySelector('[data-slot="shell-top-bar-canvas-controls"]')).toBeNull();
+    expect(topBar?.querySelector('[data-slot="shell-workspace-menu-trigger"]')).not.toBeNull();
+    expect(topBar?.querySelector('[data-slot="shell-menu-trigger"]')).not.toBeNull();
 
     await act(async () => {
       fireEvent.pointerDown(container.querySelector('[data-slot="shell-menu-trigger"]')!);
+    });
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('View options');
+      expect(document.body.textContent).toContain('Panels');
+      expect(
+        document.body.querySelectorAll('[data-slot="shell-menu-navigation-link"]')
+      ).toHaveLength(0);
+      expect(document.body.textContent).not.toContain('Workspace context');
+    });
+
+    await act(async () => {
+      fireEvent.keyDown(document, { key: 'Escape' });
+      fireEvent.pointerDown(container.querySelector('[data-slot="shell-workspace-menu-trigger"]')!);
     });
 
     await waitFor(() => {
@@ -95,9 +113,42 @@ describe('ShellTopBar workspace context', () => {
     });
   });
 
+  it('exposes workspace navigation when focus mode hides the global route rail', async () => {
+    useUiLayoutStore.setState({ focusMode: true });
+
+    await act(async () => {
+      root.render(
+        <MemoryRouter initialEntries={['/runs']}>
+          <ShellTopBar navigationModel={TEST_NAVIGATION_MODEL} />
+        </MemoryRouter>
+      );
+    });
+
+    const workspaceMenuTrigger = container.querySelector(
+      '[data-slot="shell-workspace-menu-trigger"]'
+    );
+
+    expect(workspaceMenuTrigger).not.toBeNull();
+
+    await act(async () => {
+      fireEvent.pointerDown(workspaceMenuTrigger!);
+    });
+
+    await waitFor(() => {
+      const menuLinks = [
+        ...document.body.querySelectorAll<HTMLAnchorElement>(
+          '[data-slot="shell-menu-navigation-link"]'
+        ),
+      ];
+
+      expect(menuLinks.map((link) => link.getAttribute('href'))).toEqual(['/plugins', '/admin']);
+    });
+  });
+
   it('resolves Spanish shell copy for the menu and workspace context labels', () => {
     expect(resolveShellTopBarCopy('es-ES')).toMatchObject({
       shell: 'Vista',
+      workspaceMenu: 'Workspace',
       globalNavigation: 'Navegacion',
       workspaceContext: 'Contexto del workspace',
       projectScope: 'Proyecto',
