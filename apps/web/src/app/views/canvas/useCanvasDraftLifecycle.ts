@@ -13,6 +13,7 @@ import { useCanvasDraftAttemptRefs } from './useCanvasDraftAttemptRefs';
 import { useCanvasDraftBootstrapSync } from './useCanvasDraftBootstrapSync';
 import { useCanvasDraftPersistence } from './useCanvasDraftPersistence';
 import { executeCreateCanvasDocumentCommand } from './canvasCreateCanvasDocumentCommand';
+import { deriveCanCreateCanvasDocument } from './canvasCreateCanvasDocumentAvailability';
 import { executeImportProjectSnapshotCommand } from './canvasProjectSnapshotImportCommand';
 import { canvasProjectSnapshot } from './canvasProjectSnapshot';
 import { canvasViewCopy } from './copy';
@@ -118,11 +119,10 @@ export function useCanvasDraftLifecycle({
     !graphDraftQuery.isError &&
     draftSaveStatus !== 'saving' &&
     draftSaveStatus !== 'failed';
-  const canCreateCanvasDocument =
-    canPersistGraphDraft &&
-    graphDraftQuery.data?.record == null &&
-    !graphDraftQuery.isPending &&
-    !graphDraftQuery.isError;
+  const canCreateCanvasDocument = deriveCanCreateCanvasDocument({
+    canPersistGraphDraft,
+    graphDraftQuery,
+  });
   const canImportProjectSnapshot =
     canPersistGraphDraft && !graphDraftQuery.isPending && !graphDraftQuery.isError;
   const handleExportProjectSnapshot = useCallback<
