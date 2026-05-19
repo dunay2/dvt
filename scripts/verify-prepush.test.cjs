@@ -147,6 +147,17 @@
     );
   });
 
+  test('web package exposes an owned lint command for local package validation', () => {
+    const webPackageJson = JSON.parse(
+      fs.readFileSync(path.resolve(__dirname, '..', 'apps', 'web', 'package.json'), 'utf8')
+    );
+
+    assert.equal(
+      webPackageJson.scripts.lint,
+      'eslint "src/**/*.{ts,tsx}" "cypress/**/*.{ts,tsx}" "*.config.ts" "*.config.mjs" "scripts/**/*.{mjs,js,cjs}" --max-warnings 0'
+    );
+  });
+
   test('generated docs policy regression tests are wired into prepush gate', () => {
     const plan = buildPrepushPlan(['docs/generated-docs-policy.json']);
     const step = plan.find((candidate) => candidate.id === 'test-generated-docs-policy');
