@@ -2,21 +2,9 @@
   "summary": {
     "adrs": 54,
     "evidenceDocs": 115,
-<<<<<<< HEAD
-<<<<<<< HEAD
-    "normativeDocs": 450,
+    "normativeDocs": 453,
     "statusDocs": 66,
-    "total": 685
-=======
-    "normativeDocs": 449,
-    "statusDocs": 66,
-    "total": 684
->>>>>>> d0597f9b... fix(web): Clarify Canvas startup template selection
-=======
-    "normativeDocs": 451,
-    "statusDocs": 66,
-    "total": 686
->>>>>>> 639ac0ea... fix(web): Consolidate Canvas workbench screen chrome
+    "total": 688
   },
   "catalogs": [
     {
@@ -31,18 +19,8 @@
     },
     {
       "name": "normativeDocs",
-<<<<<<< HEAD
-<<<<<<< HEAD
-      "count": 450,
-      "contentSha256": "3505669ed577e899c261dc9f08c1a6a0550cf27511e735fdc98fb8ef558f2d3c"
-=======
-      "count": 449,
-      "contentSha256": "e5c99749010b1b99e7d294f9c7945343fa59de88236a6290b53612992df51bd9"
->>>>>>> d0597f9b... fix(web): Clarify Canvas startup template selection
-=======
-      "count": 451,
-      "contentSha256": "19a9c712245b990f910cc4567dde6f966bd60cffb173706671c619de371a896c"
->>>>>>> 639ac0ea... fix(web): Consolidate Canvas workbench screen chrome
+      "count": 453,
+      "contentSha256": "f68a5ecc8c485768c2418ed98b1e027e689d3e8107a477e6e6a7059c80aa37d8"
     },
     {
       "name": "statusDocs",
