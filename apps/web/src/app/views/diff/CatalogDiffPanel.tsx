@@ -1,3 +1,4 @@
+/** Owned concern: present catalog structural changes through summaries and the read-only Monaco diff primitive. */
 import { Edit, Minus, Plus } from 'lucide-react';
 
 import { MonacoDiffViewer } from '../../components/monaco/MonacoDiffViewer';
