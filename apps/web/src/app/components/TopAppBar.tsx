@@ -3,7 +3,7 @@ import { useLocation } from 'react-router';
 
 import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
 import { buildProjectIdentityBadge } from '../shell/projectIdentityBadge';
-import { isWorkbenchRoute } from '../shell/shellNavigationDisposition';
+import { resolveShellNavigationDisposition } from '../shell/shellNavigationDisposition';
 import { usePlatformConnectionStore } from '../stores/platformConnectionStore';
 import { useSessionStore } from '../stores/sessionStore';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
@@ -45,7 +45,9 @@ export function ShellTopBar({
   const setCanvasPalette = useUiLayoutStore((state) => state.setCanvasPalette);
   const effectiveConnectionStatus = connectionStateOverride ?? connectionStatus;
   const copy = resolveShellTopBarCopy(detectShellTopBarLocale());
-  const isWorkbenchShell = isWorkbenchRoute(location.pathname);
+  const navigationDisposition = resolveShellNavigationDisposition(location.pathname);
+  const isWorkbenchShell = navigationDisposition.reason === 'workbench_route';
+  const exposeWorkspaceNavigationMenu = focusMode || navigationDisposition.railMode === 'hidden';
   const projectIdentityBadge = buildProjectIdentityBadge({
     workspaceBootstrap,
     selectedTenant,
@@ -80,7 +82,7 @@ export function ShellTopBar({
           connectionDetail={connectionDetail}
           copy={copy}
         />
-        {isWorkbenchShell && (
+        {exposeWorkspaceNavigationMenu && (
           <ShellMenu
             kind="workspace"
             explorerPanelVisible={explorerPanelVisible}

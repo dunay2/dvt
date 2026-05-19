@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { buildShellNavigationModel } from '../shell/shellNavigationModel';
 import { useSessionStore } from '../stores/sessionStore';
+import { useUiLayoutStore } from '../stores/uiLayoutStore';
 import { resolveShellTopBarCopy } from './shell/copy';
 import ShellTopBar from './TopAppBar';
 
@@ -30,6 +31,7 @@ describe('ShellTopBar workspace context', () => {
       projectId: 'dbt-analytics',
       environmentId: 'dev',
     });
+    useUiLayoutStore.setState({ focusMode: false });
   });
 
   afterEach(() => {
@@ -108,6 +110,38 @@ describe('ShellTopBar workspace context', () => {
       expect(document.body.textContent).toContain('Workspace context');
       expect(document.body.textContent).toContain('dbt-analytics');
       expect(document.body.textContent).toContain('dev');
+    });
+  });
+
+  it('exposes workspace navigation when focus mode hides the global route rail', async () => {
+    useUiLayoutStore.setState({ focusMode: true });
+
+    await act(async () => {
+      root.render(
+        <MemoryRouter initialEntries={['/runs']}>
+          <ShellTopBar navigationModel={TEST_NAVIGATION_MODEL} />
+        </MemoryRouter>
+      );
+    });
+
+    const workspaceMenuTrigger = container.querySelector(
+      '[data-slot="shell-workspace-menu-trigger"]'
+    );
+
+    expect(workspaceMenuTrigger).not.toBeNull();
+
+    await act(async () => {
+      fireEvent.pointerDown(workspaceMenuTrigger!);
+    });
+
+    await waitFor(() => {
+      const menuLinks = [
+        ...document.body.querySelectorAll<HTMLAnchorElement>(
+          '[data-slot="shell-menu-navigation-link"]'
+        ),
+      ];
+
+      expect(menuLinks.map((link) => link.getAttribute('href'))).toEqual(['/plugins', '/admin']);
     });
   });
 
