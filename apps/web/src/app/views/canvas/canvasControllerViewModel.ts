@@ -55,7 +55,7 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
   const {
     environment: { dataSourceMode, capabilities, store },
     graphPolicy: { canvasAuthoringMode, runtimePolicy },
-    authoringRuntime: { backendPosture, graphModel, draftReadModel },
+    authoringRuntime: { backendPosture, graphModel, draftReadModel, canCreateCanvasDocument },
     overlayModel,
     readModel: { nodesWithImpact, inspectorNode },
   } = args;
@@ -78,6 +78,7 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
     runtimeCapabilities: capabilities,
     availableCanvasKinds: getAllCanvasKinds(capabilities),
     canvasDocument: draftReadModel?.record?.draft.canvas ?? null,
+    canCreateCanvasDocument,
     userPermissions: {
       ...store.userPermissions,
       canPlan: runtimePolicy.commands.canPlan,

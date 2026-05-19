@@ -33,6 +33,7 @@ export type CanvasShellLayoutBuilderArgs = Readonly<{
     | 'draftTransportError'
     | 'workbenchErrorMessage'
     | 'canvasDocument'
+    | 'canCreateCanvasDocument'
     | 'draftSaveStatus'
     | 'availableCanvasKinds'
     | 'canvasTabState'

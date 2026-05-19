@@ -15,6 +15,10 @@ const ROUTE_COPY_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasCopyCatalog.route.ts'
 );
+const HOST_CYCLE_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasHostCycleState.ts'
+);
 
 describe('CanvasPlaygroundHost architecture', () => {
   it('keeps first-canvas host HTML in templates while the host builds commands', () => {
@@ -66,6 +70,21 @@ describe('CanvasPlaygroundHost architecture', () => {
     expect(userStories).toContain('US-CANVAS-FIRST-AUTHORING-007');
     expect(implementationPlan).toContain('F15E-CANVAS-STARTUP-TEMPLATE-SELECTION-20260518');
     expect(implementationPlan).toContain('CreateCanvasDocumentCommand');
+  });
+
+  it('keeps first-canvas availability separate from graph mutation availability', () => {
+    const componentGuide = readRepoFile(
+      'docs/architecture/components/web/graph/canvas-startup-template-selection-component.md'
+    );
+
+    expect(componentGuide).toContain('must not reuse `canEditEdges`');
+    expect(HOST_CYCLE_SOURCE).toContain('canCreateFirstCanvasDocument');
+    expect(HOST_CYCLE_SOURCE).toMatch(
+      /if \(routeState === 'needs_canvas'\) \{\s+const canCreateCanvas = canCreateFirstCanvasDocument/
+    );
+    expect(HOST_CYCLE_SOURCE).not.toMatch(
+      /if \(routeState === 'needs_canvas'\)[\s\S]{0,500}canEditEdges &&/
+    );
   });
 
   it('keeps visible copy and template slots aligned with the template-selection meaning', () => {

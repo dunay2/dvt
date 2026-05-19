@@ -19,6 +19,7 @@ export type RenderCanvasCenterSurfaceArgs = {
   canvasDocument: CanvasAuthoringCanvasDocument | null;
   draftSaveStatus: DraftSaveStatus;
   availableCanvasKinds: readonly CanvasKindRegistration[];
+  canCreateCanvasDocument: boolean;
   canEditEdges: boolean;
   canOpenSourceImport: boolean;
   onCreateCanvasDocument: (command: CanvasCreateCanvasDocumentCommand) => void;
@@ -34,6 +35,7 @@ export type CanvasWorkbenchSurfaceArgs = Pick<
   | 'canvasDocument'
   | 'draftSaveStatus'
   | 'availableCanvasKinds'
+  | 'canCreateCanvasDocument'
   | 'canEditEdges'
   | 'canOpenSourceImport'
   | 'onCreateCanvasDocument'

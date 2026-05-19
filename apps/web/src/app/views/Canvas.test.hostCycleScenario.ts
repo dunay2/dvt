@@ -120,6 +120,7 @@ export function buildCanvasHostCycleControllerState(
   if (dto.kind === 'needs_canvas') {
     return {
       canvasDocument: null,
+      canCreateCanvasDocument: true,
       availableCanvasKinds: buildCanvasKinds(),
       explorerNodes: [],
     };
@@ -132,6 +133,7 @@ export function buildCanvasHostCycleControllerState(
         title: dto.title ?? resolveCanvasHostCycleTitle(dto.canvasKind),
       },
       availableCanvasKinds: buildCanvasKinds(),
+      canCreateCanvasDocument: false,
       explorerNodes: [],
       userPermissions: {
         ...buildDefaultCanvasUserPermissions(),
@@ -148,6 +150,7 @@ export function buildCanvasHostCycleControllerState(
       title: dto.title ?? resolveCanvasHostCycleTitle(dto.canvasKind),
     },
     availableCanvasKinds: buildCanvasKinds(),
+    canCreateCanvasDocument: false,
     explorerNodes: [buildCanvasHostCycleExplorerNode(dto.canvasKind, dto.firstNodeKind)],
     canvasAuthoringMode: dto.canvasKind,
   };

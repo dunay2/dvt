@@ -1,5 +1,10 @@
 /** Owned concern: verify the governed Canvas entry screen chrome in browser e2e. */
-import { stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import {
+  WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+  WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
+} from '../../../src/app/services/workspace/workspaceGraphDraftProtocol';
+import { buildDraftSaveSavedResponse } from '../../../src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures';
+import { stubE2eApi, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
   E2E_WORKSPACE_SESSION,
   stubShellBootstrapApis,
@@ -33,6 +38,43 @@ describe('Canvas workbench screen composition', () => {
       },
       { statusCode: 404 }
     );
+    stubE2eApi('PUT', '/workspace/graph/draft', ({ body }) => {
+      const saveRequest = body as {
+        scope: typeof E2E_WORKSPACE_SESSION;
+        schemaVersion: string;
+        expectedRevision: string;
+        draft: {
+          canvas: {
+            kind: string;
+            title: string;
+          };
+          nodeIds: string[];
+          nodes: unknown[];
+          edges: unknown[];
+        };
+      };
+
+      expect(saveRequest).to.deep.include({
+        scope: E2E_WORKSPACE_SESSION,
+        schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+        expectedRevision: WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
+      });
+      expect(saveRequest.draft).to.deep.include({
+        canvas: {
+          kind: 'transformation',
+          title: 'Transformation canvas',
+        },
+        nodeIds: [],
+        nodes: [],
+        edges: [],
+      });
+
+      return {
+        body: buildDraftSaveSavedResponse(E2E_WORKSPACE_SESSION, {
+          revision: 'rev-e2e-first-canvas',
+        }),
+      };
+    });
   });
 
   it('keeps Canvas startup commands route-local and exposes global navigation in the menu', () => {
@@ -70,6 +112,7 @@ describe('Canvas workbench screen composition', () => {
     cy.contains('Crear canvas en este workspace').should('be.visible');
     cy.contains('Canvas dbt').should('be.visible');
     cy.contains('Canvas de transformacion').should('be.visible');
+    cy.contains('button', 'Canvas de transformacion').should('not.be.disabled');
     cy.contains('Flow-based transformation canvas').should('not.exist');
     cy.get('[data-slot="canvas-toolbar-plan-command"]').should('not.exist');
     cy.get('[data-slot="canvas-toolbar-run-command"]').should('not.exist');
@@ -94,5 +137,9 @@ describe('Canvas workbench screen composition', () => {
     cy.contains('[data-slot="shell-menu-navigation-link"]', 'Admin').should('be.visible');
     cy.contains('Contexto del workspace').should('be.visible');
     cy.contains('Contexto Git').should('be.visible');
+    cy.get('body').type('{esc}');
+
+    cy.contains('button', 'Canvas de transformacion').click();
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
   });
 });

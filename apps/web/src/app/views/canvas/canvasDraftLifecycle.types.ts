@@ -117,6 +117,7 @@ export type CanvasDraftLifecycle = {
   draftSaveStatus: DraftSaveStatus;
   reloadLatestDraft: () => void;
   handleCreateCanvasDocument: (command: CanvasCreateCanvasDocumentCommand) => Promise<void>;
+  canCreateCanvasDocument: boolean;
   canExportProjectSnapshot: boolean;
   canImportProjectSnapshot: boolean;
   handleExportProjectSnapshot: () => void;

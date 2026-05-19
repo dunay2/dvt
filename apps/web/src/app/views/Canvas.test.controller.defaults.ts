@@ -30,6 +30,7 @@ type CanvasWorkbenchDefaultsDto = {
   runtimeCapabilities: CanvasController['runtimeCapabilities'];
   availableCanvasKinds: CanvasController['availableCanvasKinds'];
   canvasDocument: CanvasController['canvasDocument'];
+  canCreateCanvasDocument: CanvasController['canCreateCanvasDocument'];
   userPermissions: CanvasController['userPermissions'];
   canvasAuthoringMode: CanvasController['canvasAuthoringMode'];
   nodesWithImpact: CanvasController['nodesWithImpact'];
@@ -183,6 +184,7 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
       kind: 'transformation',
       title: 'Main canvas',
     },
+    canCreateCanvasDocument: false,
     userPermissions: buildDefaultCanvasUserPermissions(),
     canvasAuthoringMode: 'transformation',
     nodesWithImpact: [],

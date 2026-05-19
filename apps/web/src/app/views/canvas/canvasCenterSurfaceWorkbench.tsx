@@ -68,6 +68,7 @@ function renderCanvasHostCycleWorkbenchSurface(
     | 'canvasDocument'
     | 'draftSaveStatus'
     | 'availableCanvasKinds'
+    | 'canCreateCanvasDocument'
     | 'canEditEdges'
     | 'canOpenSourceImport'
     | 'onCreateCanvasDocument'

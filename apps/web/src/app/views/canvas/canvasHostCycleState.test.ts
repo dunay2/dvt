@@ -83,6 +83,7 @@ function buildArgs(
     canvasDocument: null,
     draftSaveStatus: 'saved',
     availableCanvasKinds: buildCanvasKinds(),
+    canCreateCanvasDocument: true,
     canEditEdges: true,
     canOpenSourceImport: true,
     onCreateCanvasDocument: vi.fn(),
@@ -106,6 +107,7 @@ describe('canvasHostCycleState', () => {
   it('keeps read-only needs-canvas posture explicit and non-mutating', () => {
     const cycle = deriveCanvasHostCycleState(
       buildArgs({
+        canCreateCanvasDocument: false,
         canEditEdges: false,
       })
     );
@@ -115,6 +117,24 @@ describe('canvasHostCycleState', () => {
       availableCanvasKinds: buildCanvasKinds(),
       onCreateCanvasDocument: undefined,
       unavailableMessage: canvasViewCopy.routeNeedsCanvasReadOnlyMessage,
+    });
+  });
+
+  it('keeps first-canvas document creation independent from graph edge mutation', () => {
+    const onCreateCanvasDocument = vi.fn();
+    const cycle = deriveCanvasHostCycleState(
+      buildArgs({
+        canCreateCanvasDocument: true,
+        canEditEdges: false,
+        onCreateCanvasDocument,
+      })
+    );
+
+    expect(cycle).toEqual({
+      kind: 'needs_canvas',
+      availableCanvasKinds: buildCanvasKinds(),
+      onCreateCanvasDocument,
+      unavailableMessage: null,
     });
   });
 

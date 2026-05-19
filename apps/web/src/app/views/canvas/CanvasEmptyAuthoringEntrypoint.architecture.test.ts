@@ -71,6 +71,7 @@ function buildWorkbenchArgs(
     },
     draftSaveStatus: 'saved',
     availableCanvasKinds: getCanvasRuntimeRegistrations(),
+    canCreateCanvasDocument: true,
     canEditEdges: true,
     canOpenSourceImport: true,
     onCreateCanvasDocument: vi.fn(),
