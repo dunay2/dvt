@@ -4,8 +4,8 @@ set -e
 # Fast path by default to reduce local push friction.
 # Use DVT_PREPUSH_STRICT=1 when you explicitly want the full gate locally.
 if [ "$DVT_PREPUSH_STRICT" = "1" ]; then
-  echo "Running strict pre-push verifications: pnpm verify:prepush"
-  pnpm -s verify:prepush
+  echo "Running strict pre-push verifications: pnpm verify:prepush -- --full"
+  pnpm -s verify:prepush -- --full
 else
   echo "Running fast pre-push verifications: pnpm verify:changed"
   pnpm -s verify:changed

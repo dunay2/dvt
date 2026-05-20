@@ -196,7 +196,7 @@ test('root package exposes the architecture dependency guard', () => {
   assert.equal(pkg.scripts?.['verify:prepush'], 'node scripts/verify-prepush.cjs');
   assert.ok(
     verifyPrepush
-      .buildPrepushPlan(['apps/web/src/main.tsx'])
+      .buildPrepushPlan(['apps/web/src/main.tsx'], { full: true })
       .some((step) => step.id === 'arch-deps')
   );
   assert.match(pkg.scripts?.['ci:code'] ?? '', /pnpm arch:deps/);

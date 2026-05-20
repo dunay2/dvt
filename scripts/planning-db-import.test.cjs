@@ -190,6 +190,118 @@ test('planning DB import reimports governance when auxiliary projections are sta
   assert.deepEqual(result.skippedScopes, ['planning']);
 });
 
+test('planning DB import skips governance through source freshness before rebuilding auxiliary projections', async () => {
+  const calls = [];
+
+  const result = await runPlanningImport(
+    {
+      databaseUrl: 'postgres://example/planning',
+      ifStale: true,
+      includePlanning: false,
+      includeGovernance: true,
+    },
+    {
+      checkGovernanceDatabase: async () => ({ ok: true }),
+      checkGovernanceAuxiliarySourceFreshness: async () => ({ ok: true }),
+      checkGovernanceAuxiliaryProjections: async () => {
+        throw new Error('full auxiliary projection check should not run for fresh sources');
+      },
+      importContent: async (options) => {
+        calls.push(options);
+        return { governanceFiles: 3, governanceComponents: 2 };
+      },
+      logger: { log() {} },
+    }
+  );
+
+  assert.deepEqual(calls, []);
+  assert.deepEqual(result.importedScopes, []);
+  assert.deepEqual(result.skippedScopes, ['governance']);
+});
+
+test('planning DB import falls back to full auxiliary projection checks when source freshness is stale', async () => {
+  const calls = [];
+
+  const result = await runPlanningImport(
+    {
+      databaseUrl: 'postgres://example/planning',
+      ifStale: true,
+      includePlanning: false,
+      includeGovernance: true,
+    },
+    {
+      checkGovernanceDatabase: async () => ({ ok: true }),
+      checkGovernanceAuxiliarySourceFreshness: async () => ({ ok: false }),
+      checkGovernanceAuxiliaryProjections: async () => ({ ok: true }),
+      importContent: async (options) => {
+        calls.push(options);
+        return { governanceFiles: 3, governanceComponents: 2 };
+      },
+      logger: { log() {} },
+    }
+  );
+
+  assert.deepEqual(calls, []);
+  assert.deepEqual(result.importedScopes, []);
+  assert.deepEqual(result.skippedScopes, ['governance']);
+});
+
+test('planning DB import skips governance through core source freshness before full DB checks', async () => {
+  const calls = [];
+
+  const result = await runPlanningImport(
+    {
+      databaseUrl: 'postgres://example/planning',
+      ifStale: true,
+      includePlanning: false,
+      includeGovernance: true,
+    },
+    {
+      checkGovernanceSourceFreshness: async () => ({ ok: true }),
+      checkGovernanceDatabase: async () => {
+        throw new Error('full governance DB check should not run for fresh core sources');
+      },
+      checkGovernanceAuxiliarySourceFreshness: async () => ({ ok: true }),
+      importContent: async (options) => {
+        calls.push(options);
+        return { governanceFiles: 3, governanceComponents: 2 };
+      },
+      logger: { log() {} },
+    }
+  );
+
+  assert.deepEqual(calls, []);
+  assert.deepEqual(result.importedScopes, []);
+  assert.deepEqual(result.skippedScopes, ['governance']);
+});
+
+test('planning DB import falls back to full governance DB checks when core source freshness is stale', async () => {
+  const calls = [];
+
+  const result = await runPlanningImport(
+    {
+      databaseUrl: 'postgres://example/planning',
+      ifStale: true,
+      includePlanning: false,
+      includeGovernance: true,
+    },
+    {
+      checkGovernanceSourceFreshness: async () => ({ ok: false }),
+      checkGovernanceDatabase: async () => ({ ok: true }),
+      checkGovernanceAuxiliarySourceFreshness: async () => ({ ok: true }),
+      importContent: async (options) => {
+        calls.push(options);
+        return { governanceFiles: 3, governanceComponents: 2 };
+      },
+      logger: { log() {} },
+    }
+  );
+
+  assert.deepEqual(calls, []);
+  assert.deepEqual(result.importedScopes, []);
+  assert.deepEqual(result.skippedScopes, ['governance']);
+});
+
 test('planning content snapshot normalizes dependencies and evidence refs for DB reads', () => {
   const snapshot = buildPlanningContentSnapshot();
   const dependency = snapshot.dependencies.find(

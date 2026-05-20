@@ -131,7 +131,7 @@ function buildPrCloseoutPlan(options = {}) {
   pushStepOnce(steps, {
     id: 'verify-prepush',
     command: 'pnpm',
-    args: ['verify:prepush'],
+    args: ['verify:prepush', '--', '--full'],
   });
 
   if (options.push) {

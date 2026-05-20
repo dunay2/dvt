@@ -96,6 +96,13 @@ The helper does not commit, push, create a PR, bypass hooks, relax checks, or
 replace package-specific tests required by the active slice. It only removes
 manual ordering and memory from the standard closeout path.
 
+The stale-aware DB import rail keeps repeated governance safety checks from
+becoming a fixed rebuild tax. `pnpm governance:db:import -- --if-stale` first
+compares source hashes for planning lanes, repository commands, PR readiness,
+docs disposition documents, knowledge documents, and risk debt documents. Only
+when that cheap invalidation layer finds staleness does it run the full
+auxiliary projection comparison and import path.
+
 ## What `pr:closeout` Runs
 
 The PR rail reads the same local changed-file set and builds a deterministic

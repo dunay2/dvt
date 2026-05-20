@@ -51,7 +51,7 @@ test('governance refresh uses local governance reports before DB validation', ()
   );
   assert.deepEqual(
     stages.generationStages.find((stage) => stage.id === 'governance-db-import-after-reports').args,
-    undefined
+    ['--', '--if-stale']
   );
   assert.deepEqual(
     stages.databaseStages.map((stage) => stage.script),
@@ -71,9 +71,9 @@ test('governance refresh uses local governance reports before DB validation', ()
     stages.databaseStages.find((stage) => stage.id === 'planning-db-import-final').args,
     ['--', '--if-stale', '--planning-only']
   );
-  assert.equal(
+  assert.deepEqual(
     stages.databaseStages.find((stage) => stage.id === 'governance-db-import-final').args,
-    undefined
+    ['--', '--if-stale']
   );
 });
 

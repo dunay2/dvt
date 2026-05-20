@@ -119,6 +119,10 @@ test('classifies current command file paths without broad script-directory assum
     classifyScriptFilePath('.github/scripts/generate_pr_manifest.sh').domain,
     'ci-tooling'
   );
+  assert.equal(
+    classifyScriptFilePath('scripts/local-validation-plan.cjs').domain,
+    'developer-workflow'
+  );
   assert.equal(classifyScriptFilePath('scripts/pr-closeout.cjs').domain, 'developer-workflow');
   assert.equal(classifyScriptFilePath('scripts/pr-closeout.test.cjs').domain, 'test-tooling');
 });

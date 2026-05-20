@@ -180,7 +180,7 @@ function buildCloseoutPlan(changedFiles) {
   pushStepOnce(steps, {
     id: 'verify-prepush',
     command: 'pnpm',
-    args: ['verify:prepush'],
+    args: ['verify:prepush', '--', '--full'],
   });
 
   return steps;

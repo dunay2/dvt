@@ -139,7 +139,7 @@ const SCRIPT_FILE_RULES = [
   [/^scripts\/lib\/feature-mechanization-manifest\.cjs$/u, 'docs-governance'],
   [/^tools\/docs\/.+\.ts$/u, 'docs-governance'],
   [
-    /^scripts\/(closeout-changed|commit|fix-changed|format-markdown-changed|git-local-changes|pr-closeout|run-determinism-precommit|setup-git-hooks|validate-pr-title|verify-changed|verify-prepush)\.cjs$/u,
+    /^scripts\/(closeout-changed|commit|fix-changed|format-markdown-changed|git-local-changes|local-validation-plan|pr-closeout|run-determinism-precommit|setup-git-hooks|validate-pr-title|verify-changed|verify-prepush)\.cjs$/u,
     'developer-workflow',
   ],
   [

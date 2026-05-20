@@ -2,7 +2,7 @@
 title: Code Workbench Workspace Files Component
 status: Accepted
 owner: Web / API Architecture
-last_reviewed: 2026-05-18
+last_reviewed: 2026-05-20
 planning_type: architecture
 ---
 
@@ -70,6 +70,7 @@ semantics.
 | Surface              | Type                 | Responsibility                                                          |
 | -------------------- | -------------------- | ----------------------------------------------------------------------- |
 | `CodeEditableBuffer` | presentation model   | Holds unsaved editor text per selected workspace path in the browser.   |
+| `CodeFileSelection`  | read-model projector | Resolves the first selectable file from the authorized workspace tree.  |
 | `MonacoCodeEditor`   | presentation gateway | Opens the shared Monaco surface in editable mode for Code.              |
 | `MonacoCodeViewer`   | presentation gateway | Opens the shared Monaco surface in read-only mode for Artifacts/review. |
 
@@ -82,6 +83,7 @@ semantics.
 | `WorkspacePath`           | value object       | Normalized relative path; rejects absolute paths and parent traversal. |
 | `WorkspaceFileReadPolicy` | policy             | Allows only authenticated, tenant/project/environment-scoped reads.    |
 | `WorkspaceFileRepository` | outbound port      | Lists files and reads content from the configured backing store.       |
+| `CodeFileSelection`       | read model         | Keeps file-tree traversal out of route rendering components.           |
 | `CodeEditableBuffer`      | presentation model | Unsaved browser-local editor text keyed by workspace path.             |
 
 ## Invariants
@@ -95,6 +97,8 @@ semantics.
   file types, and oversized files.
 - The Code workbench may edit a browser-local buffer, but it must not persist
   file content without a separate governed command rail.
+- Code route copy resolves through `resolveCodeViewCopy(locale)`; route,
+  bootstrap, error, and Monaco surfaces must not own fixed-language strings.
 - No save, apply, patch, or write indicator may appear until
   `SaveWorkspaceFileContent` exists with authorization, path policy, and
   concurrency semantics.
@@ -124,6 +128,7 @@ stateDiagram-v2
 flowchart TB
   subgraph Web["apps/web"]
     CodeView["CodeView"]
+    Selection["CodeFileSelection"]
     Queries["workspaceQueries"]
     Editor["MonacoCodeEditor"]
     WorkspacePort["IWorkspacePort"]
@@ -141,6 +146,7 @@ flowchart TB
   end
 
   CodeView --> Queries
+  CodeView --> Selection
   CodeView --> Editor
   Queries --> WorkspacePort
   WorkspacePort --> ApiWorkspaceService
@@ -160,6 +166,9 @@ flowchart TB
 | Consumer                | Uses                                     | Rule                                                                   |
 | ----------------------- | ---------------------------------------- | ---------------------------------------------------------------------- |
 | `CodeView`              | file tree, content queries, local buffer | May render loading, empty, error, local edit, and preview states only. |
+| `useCodeEditableBuffer` | selected file content                    | Owns browser-local edit state keyed by workspace path.                 |
+| `FileTreePanel`         | localized title, selected path, entries  | Must render tree controls only; it does not own Code copy or queries.  |
+| `resolveCodeViewCopy`   | locale                                   | Supplies Code route copy; Spanish text exists only in the locale map.  |
 | `Diff` views            | selected file content                    | Must keep read-only posture and canonical error handling.              |
 | Artifact views          | workspace tree                           | Must not infer authorization from file presence.                       |
 | Cypress Code happy path | browser proof                            | Must prove real route behavior in live API mode.                       |
@@ -175,6 +184,12 @@ Add a semantic architecture test that checks:
   `GetWorkspaceFileContentUseCase`;
 - web API adapter does not call bare `/workspace/files` without scope;
 - no route component imports a concrete filesystem adapter;
+- `CodeView` delegates initial file selection to `CodeFileSelection` instead
+  of owning file-tree traversal logic;
+- `CodeView` delegates local edit storage to `CodeEditableBuffer` instead of
+  owning a path-keyed buffer map inline;
+- Code bootstrap/error tests assert resolved copy objects, not fixed-language
+  literals outside the locale catalog tests;
 - `saveFileContent` or `SaveWorkspaceFileContent` is not wired to a live API
   write route as part of this query/local-buffer component.
 

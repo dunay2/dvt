@@ -7,6 +7,7 @@ import type { IWorkspaceFilesQueryPort } from '../ports/workspace';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { WorkspaceFileLoadError } from '../services/workspace/workspaceErrors';
 import CodeView from './CodeView';
+import { resolveCodeViewCopy } from './code/codeViewCopy';
 
 vi.mock('../components/monaco/MonacoCodeEditor', () => ({
   MonacoCodeEditor: ({
@@ -58,6 +59,7 @@ function buildWorkspaceFilesQueryPort(
 }
 
 describe('CodeView', () => {
+  const copy = resolveCodeViewCopy('en-US');
   let container: HTMLDivElement | null = null;
   let root: Root | null = null;
 
@@ -90,14 +92,24 @@ describe('CodeView', () => {
     return new QueryClient({ defaultOptions: { queries: { retry: false } } });
   }
 
-  it('renders the workspace tree and previews the first file', async () => {
+  function getContainer(): HTMLDivElement {
+    if (!container) {
+      throw new Error('expected CodeView test container');
+    }
+
+    return container;
+  }
+
+  function setupContainer(): void {
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
     (
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
+  }
 
+  async function renderCodeView(): Promise<void> {
     await act(async () => {
       root?.render(
         <QueryClientProvider client={createTestQueryClient()}>
@@ -114,27 +126,34 @@ describe('CodeView', () => {
         </QueryClientProvider>
       );
     });
+  }
 
-    expect(container.textContent).toContain('Code');
+  async function waitForInitialRender(): Promise<void> {
+    const currentContainer = getContainer();
+    expect(currentContainer.textContent).toContain(copy.title);
     await waitFor(() => container?.textContent?.includes('stg_orders.sql') === true);
-    await waitFor(() => container?.textContent?.includes('Explorer') === true);
+    await waitFor(() => container?.textContent?.includes(copy.explorerTitle) === true);
     await waitFor(() => container?.querySelector('[data-testid="monaco-code-editor"]') != null);
+  }
 
-    expect(container.textContent).toContain('stg_orders.sql');
-    expect(container.querySelector('[data-slot="code-local-buffer-state"]')?.textContent).toContain(
-      'Editable local buffer'
-    );
-    expect(container.textContent).toContain(
-      'Changes are local until a governed save command exists.'
-    );
+  function verifyInitialState(): HTMLTextAreaElement | null {
+    const currentContainer = getContainer();
+    expect(currentContainer.textContent).toContain('stg_orders.sql');
+    expect(
+      currentContainer.querySelector('[data-slot="code-local-buffer-state"]')?.textContent
+    ).toContain(copy.localBufferTitle);
+    expect(currentContainer.textContent).toContain(copy.localBufferNote);
 
-    const editor = container.querySelector<HTMLTextAreaElement>(
+    const editor = currentContainer.querySelector<HTMLTextAreaElement>(
       '[data-testid="monaco-code-editor"]'
     );
     expect(editor).not.toBeNull();
     expect(editor?.getAttribute('data-path')).toBe('models/staging/stg_orders.sql');
     expect(editor?.value).toContain('select * from orders');
+    return editor;
+  }
 
+  async function editAndVerifyEditor(editor: HTMLTextAreaElement | null): Promise<void> {
     await act(async () => {
       if (!editor) {
         throw new Error('expected Monaco editor test double');
@@ -144,6 +163,14 @@ describe('CodeView', () => {
     });
 
     expect(editor?.value).toBe('select 1 as edited_value');
+  }
+
+  it('renders the workspace tree and previews the first file', async () => {
+    setupContainer();
+    await renderCodeView();
+    await waitForInitialRender();
+    const editor = verifyInitialState();
+    await editAndVerifyEditor(editor);
   });
 
   it('renders a governed route empty state when no workspace files are available', async () => {
@@ -174,13 +201,13 @@ describe('CodeView', () => {
     await waitFor(
       () =>
         container?.querySelector('[data-slot="code-route-empty-state"]') != null &&
-        container.textContent?.includes('No workspace files available') === true
+        container.textContent?.includes(copy.routeEmptyTitle) === true
     );
 
     expect(container.querySelector('[data-slot="code-route-empty-state"]')?.textContent).toContain(
-      'This workspace does not expose files to browse yet.'
+      copy.routeEmptyMessage
     );
-    expect(container.textContent).not.toContain('Explorer');
+    expect(container.textContent).not.toContain(copy.explorerTitle);
   });
 
   it('renders a governed route error state when the workspace tree cannot be loaded', async () => {
@@ -214,13 +241,13 @@ describe('CodeView', () => {
     await waitFor(
       () =>
         container?.querySelector('[data-slot="code-route-error-state"]') != null &&
-        container.textContent?.includes('Workspace files unavailable') === true
+        container.textContent?.includes(copy.routeErrorTitle) === true
     );
 
     expect(container.querySelector('[data-slot="code-route-error-state"]')?.textContent).toContain(
-      'The file explorer could not be loaded right now.'
+      copy.routeErrorMessage
     );
-    expect(container.textContent).not.toContain('Explorer');
+    expect(container.textContent).not.toContain(copy.explorerTitle);
   });
 
   it('keeps the explorer visible when the selected file preview resolves to file-not-found', async () => {
@@ -255,14 +282,14 @@ describe('CodeView', () => {
     await waitFor(
       () =>
         container?.querySelector('[data-slot="code-preview-error-state"]') != null &&
-        container.textContent?.includes('Selected file unavailable') === true
+        container.textContent?.includes(copy.previewMissingTitle) === true
     );
 
-    expect(container.textContent).toContain('Explorer');
+    expect(container.textContent).toContain(copy.explorerTitle);
     expect(container.textContent).toContain('stg_orders.sql');
     expect(
       container.querySelector('[data-slot="code-preview-error-state"]')?.textContent
-    ).toContain('The selected file is no longer available in this workspace:');
+    ).toContain(copy.previewMissingMessagePrefix);
     expect(
       container.querySelector('[data-slot="code-preview-error-state"]')?.textContent
     ).toContain('models/staging/stg_orders.sql');

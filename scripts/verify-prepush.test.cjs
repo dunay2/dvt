@@ -20,61 +20,66 @@
     assert.ok(!ids.includes(unexpectedId), `Did not expect ${unexpectedId} in ${ids.join(', ')}`);
   }
 
-  test('web source change excludes global governance maps but keeps code checks', () => {
+  test('web source change keeps default prepush on mechanical changed-file checks', () => {
     const plan = buildPrepushPlan(['apps/web/src/app/AppProviders.tsx']);
     const ids = stepIds(plan);
 
     assertIncludes(ids, 'docs-workboard-check-changed');
+    assertIncludes(ids, 'check-changed');
     assertIncludes(ids, 'docs-arc-evidence-changed');
-    assertIncludes(ids, 'test-verify-prepush');
-    assertIncludes(ids, 'test-generated-docs-policy');
-    assertIncludes(ids, 'arch-deps');
-    assertIncludes(ids, 'type-check-prepush');
+    assertExcludes(ids, 'test-closeout-changed');
+    assertExcludes(ids, 'test-verify-prepush');
+    assertExcludes(ids, 'test-generated-docs-policy');
+    assertExcludes(ids, 'test-pr-closeout');
+    assertExcludes(ids, 'arch-deps');
+    assertExcludes(ids, 'type-check-prepush');
     assertExcludes(ids, 'planning-db-inventory-check');
     assertExcludes(ids, 'docs-governance-document-unit-map');
     assertExcludes(ids, 'docs-governance-file-component-index');
     assertExcludes(ids, 'traceability-adr0');
   });
 
-  test('accepted ADR change includes governance global checks and ADR0 traceability', () => {
+  test('accepted ADR change stays on changed-file docs gates by default', () => {
     const plan = buildPrepushPlan(['docs/adr/ADR-0056-web-ui-authority-is-server-projected.md']);
     const ids = stepIds(plan);
 
-    assertIncludes(ids, 'docs-governance-document-unit-map');
-    assertIncludes(ids, 'docs-governance-file-component-index');
-    assertIncludes(ids, 'docs-governance-changed-files');
-    assertIncludes(ids, 'traceability-adr0');
+    assertIncludes(ids, 'docs-gov-filenames-changed');
+    assertIncludes(ids, 'docs-gov-frontmatter-changed');
+    assertExcludes(ids, 'docs-governance-document-unit-map');
+    assertExcludes(ids, 'docs-governance-file-component-index');
+    assertExcludes(ids, 'docs-governance-changed-files');
+    assertExcludes(ids, 'traceability-adr0');
     assertExcludes(ids, 'arch-deps');
     assertExcludes(ids, 'type-check-prepush');
   });
 
-  test('governed runtime source change includes ADR0 traceability and code checks', () => {
+  test('governed runtime source change does not run traceability or code checks by default', () => {
     const plan = buildPrepushPlan(['packages/@dvt/engine/src/WorkflowEngine.ts']);
     const ids = stepIds(plan);
 
-    assertIncludes(ids, 'traceability-adr0');
-    assertIncludes(ids, 'arch-deps');
-    assertIncludes(ids, 'type-check-prepush');
+    assertExcludes(ids, 'traceability-adr0');
+    assertExcludes(ids, 'arch-deps');
+    assertExcludes(ids, 'type-check-prepush');
     assertExcludes(ids, 'docs-governance-document-unit-map');
   });
 
-  test('planning database script change includes planning and governance checks', () => {
+  test('planning database script change includes only scoped mechanical planning checks', () => {
     const plan = buildPrepushPlan(['scripts/planning-db-query.cjs']);
     const ids = stepIds(plan);
 
     assertIncludes(ids, 'planning-db-inventory-check');
-    assertIncludes(ids, 'docs-governance-document-unit-map');
-    assertIncludes(ids, 'docs-governance-remediation-queue');
-    assertIncludes(ids, 'arch-deps');
-    assertIncludes(ids, 'type-check-prepush');
+    assertExcludes(ids, 'docs-governance-document-unit-map');
+    assertExcludes(ids, 'docs-governance-remediation-queue');
+    assertExcludes(ids, 'arch-deps');
+    assertExcludes(ids, 'type-check-prepush');
   });
 
-  test('architecture dependency config change keeps dependency architecture validation', () => {
+  test('architecture dependency config change does not run dependency validation by default', () => {
     const plan = buildPrepushPlan(['.dependency-cruiser.cjs']);
     const ids = stepIds(plan);
 
-    assertIncludes(ids, 'arch-deps');
-    assertIncludes(ids, 'type-check-prepush');
+    assertExcludes(ids, 'arch-deps');
+    assertExcludes(ids, 'type-check-prepush');
     assertExcludes(ids, 'docs-governance-document-unit-map');
     assertExcludes(ids, 'traceability-adr0');
   });
@@ -84,14 +89,20 @@
     const ids = stepIds(plan);
 
     assertIncludes(ids, 'planning-db-inventory-check');
+    assertIncludes(ids, 'test-closeout-changed');
+    assertIncludes(ids, 'test-verify-prepush');
+    assertIncludes(ids, 'test-generated-docs-policy');
+    assertIncludes(ids, 'test-pr-closeout');
     assertIncludes(ids, 'docs-governance-document-unit-map');
     assertIncludes(ids, 'traceability-adr0');
     assertIncludes(ids, 'arch-deps');
     assertIncludes(ids, 'type-check-prepush');
   });
 
-  test('changed-file lint and format gate runs before expensive validation groups', () => {
-    const plan = buildPrepushPlan(['packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts']);
+  test('full prepush runs changed-file lint and format before expensive validation groups', () => {
+    const plan = buildPrepushPlan(['packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts'], {
+      full: true,
+    });
     const ids = stepIds(plan);
     const checkChangedIndex = ids.indexOf('check-changed');
 
@@ -123,8 +134,28 @@
     });
   });
 
+  test('scope classification treats code validation as full-mode closeout work', () => {
+    assert.deepEqual(classifyPrepushScope(['apps/web/src/main.tsx']), {
+      hasChangedFiles: true,
+      needsPlanningDbInventory: false,
+      needsGovernanceGlobal: false,
+      needsFeatureMechanization: true,
+      needsTraceabilityAdr0: false,
+      needsCodeValidation: false,
+    });
+
+    assert.deepEqual(classifyPrepushScope(['apps/web/src/main.tsx'], { full: true }), {
+      hasChangedFiles: true,
+      needsPlanningDbInventory: true,
+      needsGovernanceGlobal: true,
+      needsFeatureMechanization: true,
+      needsTraceabilityAdr0: true,
+      needsCodeValidation: true,
+    });
+  });
+
   test('command labels match the package commands operators see', () => {
-    const plan = buildPrepushPlan(['traceability.config.json']);
+    const plan = buildPrepushPlan(['traceability.config.json'], { full: true });
     const traceabilityStep = plan.find((step) => step.id === 'traceability-adr0');
 
     assert.equal(commandLabel(traceabilityStep), 'pnpm traceability:adr0');
@@ -158,8 +189,8 @@
     );
   });
 
-  test('generated docs policy regression tests are wired into prepush gate', () => {
-    const plan = buildPrepushPlan(['docs/generated-docs-policy.json']);
+  test('generated docs policy regression tests are wired into full prepush gate', () => {
+    const plan = buildPrepushPlan(['docs/generated-docs-policy.json'], { full: true });
     const step = plan.find((candidate) => candidate.id === 'test-generated-docs-policy');
 
     assert.ok(step);
@@ -167,9 +198,11 @@
   });
 
   test('prepush router delegates repository path semantics to shared CI scope query', () => {
-    const source = fs.readFileSync(path.resolve(__dirname, 'verify-prepush.cjs'), 'utf8');
+    const source = fs.readFileSync(path.resolve(__dirname, 'local-validation-plan.cjs'), 'utf8');
+    const wrapperSource = fs.readFileSync(path.resolve(__dirname, 'verify-prepush.cjs'), 'utf8');
 
     assert.match(source, /repository-change-scope\.mjs/u);
+    assert.match(wrapperSource, /local-validation-plan\.cjs/u);
     assert.doesNotMatch(source, /function isPlanningDbRelevant/u);
     assert.doesNotMatch(source, /function isGovernanceGlobalRelevant/u);
     assert.doesNotMatch(source, /function isFeatureMechanizationRelevant/u);

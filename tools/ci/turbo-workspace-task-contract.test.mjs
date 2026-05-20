@@ -84,7 +84,7 @@ test('root affected commands and CI matrix build/typecheck steps use the Turbo w
   );
   assert.ok(
     testWorkflow.includes(
-      'node scripts/run-turbo-workspace-task.cjs build --filter=...[origin/${{ github.base_ref }}]'
+      'node scripts/run-turbo-workspace-task.cjs build --filter=${{ matrix.pkg }}'
     )
   );
   assert.equal(testWorkflow.includes('declare -A seen'), false);

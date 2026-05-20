@@ -166,50 +166,72 @@ jobs:
 
       - name: Validate governance unit coverage
         if:
-          github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
-          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          (steps.scope.outputs.governance_global_relevant == 'true' ||
+          steps.scope.outputs.governance_tooling_changed == 'true' ||
+          steps.scope.outputs.root_build_sensitive == 'true')) || (github.event_name ==
+          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:governance:unit-coverage
 
       - name: Validate governance document unit map
         if:
-          github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
-          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          (steps.scope.outputs.governance_global_relevant == 'true' ||
+          steps.scope.outputs.governance_tooling_changed == 'true' ||
+          steps.scope.outputs.root_build_sensitive == 'true')) || (github.event_name ==
+          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:governance:document-unit-map:check
 
       - name: Validate governance file fingerprints
         if:
-          github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
-          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          (steps.scope.outputs.governance_global_relevant == 'true' ||
+          steps.scope.outputs.governance_tooling_changed == 'true' ||
+          steps.scope.outputs.root_build_sensitive == 'true')) || (github.event_name ==
+          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:governance:file-component-index:check
 
       - name: Validate governance fingerprint baseline
         if:
-          github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
-          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          (steps.scope.outputs.governance_global_relevant == 'true' ||
+          steps.scope.outputs.governance_tooling_changed == 'true' ||
+          steps.scope.outputs.root_build_sensitive == 'true')) || (github.event_name ==
+          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:governance:file-fingerprint-baseline:check
 
       - name: Validate governance fingerprint impact report
         if:
-          github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
-          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          (steps.scope.outputs.governance_global_relevant == 'true' ||
+          steps.scope.outputs.governance_tooling_changed == 'true' ||
+          steps.scope.outputs.root_build_sensitive == 'true')) || (github.event_name ==
+          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:governance:file-fingerprint-impact:check
 
       - name: Validate governance coverage report
         if:
-          github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
-          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          (steps.scope.outputs.governance_global_relevant == 'true' ||
+          steps.scope.outputs.governance_tooling_changed == 'true' ||
+          steps.scope.outputs.root_build_sensitive == 'true')) || (github.event_name ==
+          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:governance:coverage-report:check
 
       - name: Validate governance remediation queue
         if:
-          github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
-          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          (steps.scope.outputs.governance_global_relevant == 'true' ||
+          steps.scope.outputs.governance_tooling_changed == 'true' ||
+          steps.scope.outputs.root_build_sensitive == 'true')) || (github.event_name ==
+          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:governance:remediation-queue:check
 
       - name: ADR-0000 traceability gate
         if:
-          github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
-          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          steps.scope.outputs.traceability_adr0_relevant == 'true') || (github.event_name ==
+          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm traceability:adr0
 
       - name: Validate governed changed files
@@ -221,26 +243,30 @@ jobs:
 
       - name: Validate feature mechanization manifests
         if:
-          github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
-          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          steps.scope.outputs.feature_mechanization_relevant == 'true') || (github.event_name ==
+          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:feature-mechanization
 
       - name: Validate feature implementation mechanization
         if:
-          github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
-          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          steps.scope.outputs.feature_mechanization_relevant == 'true') || (github.event_name ==
+          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:feature-mechanization:implementation
 
       - name: Validate QA artifacts
         if:
-          github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
-          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          steps.scope.outputs.docs_changed == 'true') || (github.event_name == 'workflow_dispatch'
+          && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm qa:artifact:check
 
       - name: Validate architecture dependency boundaries
         if:
-          github.event_name == 'pull_request' || github.event_name == 'push' || (github.event_name
-          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          steps.scope.outputs.code_validation_relevant == 'true') || (github.event_name ==
+          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm arch:deps
 
       - name: Check PR title follows Conventional Commits

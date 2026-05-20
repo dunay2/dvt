@@ -1,3 +1,4 @@
+/** Owned concern: materialize planning and governance query-store snapshots with stale-aware imports. */
 const crypto = require('node:crypto');
 const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
@@ -2849,6 +2850,347 @@ async function checkGovernanceAuxiliaryProjections(options = {}) {
   }
 }
 
+function uniqueSourceHashRows(rows, options = {}) {
+  const pathField = options.pathField || 'sourcePath';
+  const hashField = options.hashField || 'sourceContentSha256';
+  const normalizedRows = new Map();
+
+  for (const row of rows || []) {
+    const sourcePath = normalizeText(row[pathField]);
+    if (!sourcePath) {
+      continue;
+    }
+
+    normalizedRows.set(sourcePath, {
+      sourcePath,
+      sourceContentSha256: normalizeText(row[hashField]),
+    });
+  }
+
+  return [...normalizedRows.values()].sort((left, right) =>
+    left.sourcePath.localeCompare(right.sourcePath)
+  );
+}
+
+function documentSourceHashRows(documents) {
+  return uniqueSourceHashRows(
+    (documents || []).map((document) => {
+      const raw = normalizeText(document.raw);
+      return {
+        sourcePath: toPosix(normalizeText(document.sourcePath)),
+        sourceContentSha256: normalizeText(document.contentSha256) || sha256(raw),
+      };
+    })
+  );
+}
+
+function compareGovernanceAuxiliarySourceState(expected, actual) {
+  const sourceHashComparison = {
+    compareFields: ['sourceContentSha256'],
+    keyOf: (row) => row.sourcePath,
+  };
+  const sections = {
+    planningSources: compareImportRows(
+      expected.planningSources,
+      actual.planningSources,
+      sourceHashComparison
+    ),
+    repositoryCommandSources: compareImportRows(
+      expected.repositoryCommandSources,
+      actual.repositoryCommandSources,
+      sourceHashComparison
+    ),
+    docDispositionDocuments: compareImportRows(
+      expected.docDispositionDocuments,
+      actual.docDispositionDocuments,
+      sourceHashComparison
+    ),
+    knowledgeDocuments: compareImportRows(
+      expected.knowledgeDocuments,
+      actual.knowledgeDocuments,
+      sourceHashComparison
+    ),
+    riskDebtItems: compareImportRows(
+      expected.riskDebtItems,
+      actual.riskDebtItems,
+      sourceHashComparison
+    ),
+    prReadinessChecks: compareImportRows(expected.prReadinessChecks, actual.prReadinessChecks, {
+      keyOf: (row) => row.readinessId,
+      compareFields: ['sourcePath', 'sourceContentSha256', 'effectiveArcLevel', 'blocking'],
+    }),
+  };
+  const ok = Object.values(sections).every(
+    (section) =>
+      section.missing.length === 0 && section.unexpected.length === 0 && section.stale.length === 0
+  );
+
+  return { ok, sections };
+}
+
+function compareGovernanceSourceState(expected, actual) {
+  const sections = {
+    files: compareImportRows(expected.files, actual.files, {
+      keyOf: (row) => row.path,
+      compareFields: [
+        'contentHash',
+        'governanceHash',
+        'stateFingerprint',
+        'owningUnit',
+        'componentUnit',
+        'isDrift',
+        'isLegacy',
+      ],
+    }),
+    components: compareImportRows(expected.components, actual.components, {
+      keyOf: (row) => row.componentId,
+      compareFields: ['governanceState', 'isDrift', 'isLegacy', 'fileCount'],
+    }),
+    generatedReportSources: compareImportRows(
+      expected.generatedReportSources,
+      actual.generatedReportSources,
+      {
+        keyOf: (row) => row.sourcePath,
+        compareFields: ['sourceContentSha256'],
+      }
+    ),
+  };
+  const ok = Object.values(sections).every(
+    (section) =>
+      section.missing.length === 0 && section.unexpected.length === 0 && section.stale.length === 0
+  );
+
+  return { ok, sections };
+}
+
+function generatedReportSourceHashRows() {
+  return [governanceCoverageReportPath, governanceRemediationQueuePath]
+    .filter((filePath) => fs.existsSync(filePath))
+    .map((filePath) => {
+      const raw = fs.readFileSync(filePath, 'utf8');
+      return {
+        sourcePath: repoRelative(filePath),
+        sourceContentSha256: sha256(raw),
+      };
+    })
+    .sort((left, right) => left.sourcePath.localeCompare(right.sourcePath));
+}
+
+function buildGovernanceSourceExpectedState(options = {}) {
+  const fileComponentOutputs =
+    options.fileComponentOutputs || buildGovernanceFileComponentOutputs();
+
+  return {
+    files: fileComponentOutputs.fileEntries.map((file) => ({
+      path: file.path,
+      contentHash: file.contentHash,
+      governanceHash: file.governanceHash,
+      stateFingerprint: file.stateFingerprint,
+      owningUnit: file.owningUnit,
+      componentUnit: file.componentUnit,
+      isDrift: file.isDrift,
+      isLegacy: file.isLegacy,
+    })),
+    components: fileComponentOutputs.componentIndexManifest.components.map((component) => ({
+      componentId: component.id,
+      governanceState: component.governanceState,
+      isDrift: component.isDrift,
+      isLegacy: component.isLegacy,
+      fileCount: component.fileCount,
+    })),
+    generatedReportSources:
+      options.generatedReportSources === undefined
+        ? generatedReportSourceHashRows()
+        : options.generatedReportSources,
+  };
+}
+
+async function buildGovernanceAuxiliarySourceExpectedState(options = {}) {
+  const planningSnapshot = options.planningSnapshot || buildPlanningContentSnapshot();
+  const repositoryCommandSnapshot =
+    options.repositoryCommandSnapshot || (await buildRepositoryCommandSnapshot());
+  const prReadinessSnapshot = options.prReadinessSnapshot || buildPrReadinessSnapshot();
+
+  return {
+    planningSources: uniqueSourceHashRows(planningSnapshot.sources, {
+      hashField: 'contentSha256',
+    }),
+    repositoryCommandSources: uniqueSourceHashRows(repositoryCommandSnapshot.commands),
+    docDispositionDocuments: documentSourceHashRows(
+      options.markdownDocuments || listTrackedMarkdownDocuments()
+    ),
+    knowledgeDocuments: uniqueSourceHashRows(
+      options.knowledgeSnapshotDocuments ||
+        buildKnowledgeDocumentSnapshot({
+          documents: options.knowledgeDocuments || listTrackedKnowledgeDocuments(),
+        }).documents,
+      {
+        pathField: 'documentPath',
+      }
+    ),
+    riskDebtItems: documentSourceHashRows(options.riskDocuments || listTrackedRiskDocuments()),
+    prReadinessChecks: [
+      {
+        readinessId: prReadinessSnapshot.readiness.readinessId,
+        sourcePath: prReadinessSnapshot.readiness.sourcePath,
+        sourceContentSha256: prReadinessSnapshot.readiness.sourceContentSha256,
+        effectiveArcLevel: prReadinessSnapshot.readiness.effectiveArcLevel,
+        blocking: prReadinessSnapshot.readiness.blocking,
+      },
+    ],
+  };
+}
+
+async function readGovernanceSourceState(client) {
+  const [files, components, generatedReportSources] = await Promise.all([
+    client.query(`
+      select
+        path,
+        content_hash as "contentHash",
+        governance_hash as "governanceHash",
+        state_fingerprint as "stateFingerprint",
+        owning_unit as "owningUnit",
+        component_unit as "componentUnit",
+        is_drift as "isDrift",
+        is_legacy as "isLegacy"
+      from ${schemaName}.governance_files
+      order by path
+    `),
+    client.query(`
+      select
+        component_id as "componentId",
+        governance_state as "governanceState",
+        is_drift as "isDrift",
+        is_legacy as "isLegacy",
+        file_count::int as "fileCount"
+      from ${schemaName}.governance_components
+      order by component_id
+    `),
+    client.query(`
+      select
+        source_path as "sourcePath",
+        content_sha256 as "sourceContentSha256"
+      from ${schemaName}.governance_sources
+      where source_type in ('governance_coverage_report', 'governance_remediation_queue')
+      order by source_path
+    `),
+  ]);
+
+  return {
+    files: files.rows,
+    components: components.rows,
+    generatedReportSources: generatedReportSources.rows,
+  };
+}
+
+async function checkGovernanceSourceFreshness(options = {}) {
+  const expected = options.expected || buildGovernanceSourceExpectedState(options.expectedOptions);
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    const actual = options.actual || (await readGovernanceSourceState(client));
+    return compareGovernanceSourceState(expected, actual);
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
+async function readGovernanceAuxiliarySourceState(client) {
+  const [
+    planningSources,
+    repositoryCommandSources,
+    prReadinessChecks,
+    docDispositionDocuments,
+    knowledgeDocuments,
+    riskDebtItems,
+  ] = await Promise.all([
+    client.query(`
+      select
+        source_path as "sourcePath",
+        content_sha256 as "sourceContentSha256"
+      from ${schemaName}.planning_sources
+      order by source_path
+    `),
+    client.query(`
+      select distinct
+        source_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.repository_commands
+      order by source_path
+    `),
+    client.query(`
+      select
+        readiness_id as "readinessId",
+        source_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256",
+        effective_arc_level as "effectiveArcLevel",
+        blocking
+      from ${schemaName}.pr_readiness_checks
+      order by readiness_id
+    `),
+    client.query(`
+      select
+        document_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.doc_disposition_documents
+      order by document_path
+    `),
+    client.query(`
+      select
+        document_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.knowledge_documents
+      order by document_path
+    `),
+    client.query(`
+      select
+        source_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.risk_debt_items
+      order by source_path
+    `),
+  ]);
+
+  return {
+    planningSources: planningSources.rows,
+    repositoryCommandSources: repositoryCommandSources.rows,
+    prReadinessChecks: prReadinessChecks.rows,
+    docDispositionDocuments: docDispositionDocuments.rows,
+    knowledgeDocuments: knowledgeDocuments.rows,
+    riskDebtItems: riskDebtItems.rows,
+  };
+}
+
+async function checkGovernanceAuxiliarySourceFreshness(options = {}) {
+  const expected =
+    options.expected ||
+    (await buildGovernanceAuxiliarySourceExpectedState(options.expectedOptions));
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    const actual = options.actual || (await readGovernanceAuxiliarySourceState(client));
+    return compareGovernanceAuxiliarySourceState(expected, actual);
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
 async function isScopeFresh(scope, options, deps) {
   try {
     if (scope === 'planning') {
@@ -2859,16 +3201,51 @@ async function isScopeFresh(scope, options, deps) {
     }
 
     if (scope === 'governance') {
-      const checkGovernanceDatabase =
-        deps.checkGovernanceDatabase ||
-        require('./governance-db-check.cjs').checkGovernanceDatabase;
-      const report = await checkGovernanceDatabase({ databaseUrl: options.databaseUrl });
-      if (!report.ok) {
-        return false;
+      const hasGovernanceDatabaseOverride = typeof deps.checkGovernanceDatabase === 'function';
+      const shouldTryGovernanceSourceFreshness =
+        typeof deps.checkGovernanceSourceFreshness === 'function' || !hasGovernanceDatabaseOverride;
+      if (shouldTryGovernanceSourceFreshness) {
+        const sourceFreshness =
+          deps.checkGovernanceSourceFreshness || checkGovernanceSourceFreshness;
+        const sourceFreshnessReport = await sourceFreshness({
+          databaseUrl: options.databaseUrl,
+        });
+        if (!sourceFreshnessReport.ok) {
+          const checkGovernanceDatabase = hasGovernanceDatabaseOverride
+            ? deps.checkGovernanceDatabase
+            : require('./governance-db-check.cjs').checkGovernanceDatabase;
+          const report = await checkGovernanceDatabase({ databaseUrl: options.databaseUrl });
+          if (!report.ok) {
+            return false;
+          }
+        }
+      } else {
+        const checkGovernanceDatabase = deps.checkGovernanceDatabase;
+        const report = await checkGovernanceDatabase({ databaseUrl: options.databaseUrl });
+        if (!report.ok) {
+          return false;
+        }
       }
 
-      const checkAuxiliary =
-        deps.checkGovernanceAuxiliaryProjections || checkGovernanceAuxiliaryProjections;
+      const hasAuxiliaryProjectionOverride =
+        typeof deps.checkGovernanceAuxiliaryProjections === 'function';
+      const shouldTrySourceFreshness =
+        typeof deps.checkGovernanceAuxiliarySourceFreshness === 'function' ||
+        !hasAuxiliaryProjectionOverride;
+      if (shouldTrySourceFreshness) {
+        const checkAuxiliarySourceFreshness =
+          deps.checkGovernanceAuxiliarySourceFreshness || checkGovernanceAuxiliarySourceFreshness;
+        const sourceFreshnessReport = await checkAuxiliarySourceFreshness({
+          databaseUrl: options.databaseUrl,
+        });
+        if (sourceFreshnessReport.ok) {
+          return true;
+        }
+      }
+
+      const checkAuxiliary = hasAuxiliaryProjectionOverride
+        ? deps.checkGovernanceAuxiliaryProjections
+        : checkGovernanceAuxiliaryProjections;
       const auxiliaryReport = await checkAuxiliary({ databaseUrl: options.databaseUrl });
       return auxiliaryReport.ok;
     }
@@ -2965,15 +3342,21 @@ module.exports = {
   beginImportTransaction,
   buildDocsDispositionSnapshot,
   buildGovernanceAuxiliaryExpectedState,
+  buildGovernanceAuxiliarySourceExpectedState,
   buildGovernanceFileSnapshot,
+  buildGovernanceSourceExpectedState,
   buildKnowledgeDocumentSnapshot,
   buildPlanningContentSnapshot,
   buildPrReadinessSnapshot,
   buildRiskDebtSnapshot,
   buildRepositoryCommandSnapshot,
+  checkGovernanceAuxiliarySourceFreshness,
   checkGovernanceAuxiliaryProjections,
+  checkGovernanceSourceFreshness,
   clearGovernanceSnapshotTables,
+  compareGovernanceAuxiliarySourceState,
   compareGovernanceAuxiliaryState,
+  compareGovernanceSourceState,
   databaseUrl,
   evaluateArcPolicyReadiness,
   governanceImportDeleteTables,
@@ -2984,6 +3367,8 @@ module.exports = {
   insertRepositoryCommandSnapshot,
   normalizeText,
   parseArgs,
+  readGovernanceSourceState,
+  readGovernanceAuxiliarySourceState,
   readGovernanceAuxiliaryState,
   readYamlSource,
   runPlanningImport,

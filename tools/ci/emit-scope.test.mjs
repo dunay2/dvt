@@ -184,6 +184,45 @@ test('emit-scope pr-quality mode preserves adapter flags mixed with scripts-only
   assert.equal(scope.postgres_capability_changed, true);
 });
 
+test('emit-scope workflow mode exposes prepush-equivalent governance routing', () => {
+  const webScope = computeWorkflowModeScopeOutputs('workflow', [
+    'apps/web/src/app/AppProviders.tsx',
+  ]);
+
+  assert.equal(webScope.governance_global_relevant, false);
+  assert.equal(webScope.traceability_adr0_relevant, false);
+  assert.equal(webScope.feature_mechanization_relevant, true);
+  assert.equal(webScope.code_validation_relevant, true);
+
+  const docsScope = computeWorkflowModeScopeOutputs('workflow', [
+    'docs/guides/testing-and-ci-capabilities.md',
+  ]);
+
+  assert.equal(docsScope.governance_global_relevant, true);
+  assert.equal(docsScope.traceability_adr0_relevant, false);
+  assert.equal(docsScope.feature_mechanization_relevant, false);
+  assert.equal(docsScope.code_validation_relevant, false);
+});
+
+test('emit-scope workflow mode routes traceability only for ADRs and governed source', () => {
+  const adrScope = computeWorkflowModeScopeOutputs('workflow', [
+    'docs/adr/ADR-0056-web-ui-authority-is-server-projected.md',
+  ]);
+
+  assert.equal(adrScope.governance_global_relevant, true);
+  assert.equal(adrScope.traceability_adr0_relevant, true);
+  assert.equal(adrScope.code_validation_relevant, false);
+
+  const engineScope = computeWorkflowModeScopeOutputs('workflow', [
+    'packages/@dvt/engine/src/WorkflowEngine.ts',
+  ]);
+
+  assert.equal(engineScope.governance_global_relevant, false);
+  assert.equal(engineScope.traceability_adr0_relevant, true);
+  assert.equal(engineScope.feature_mechanization_relevant, true);
+  assert.equal(engineScope.code_validation_relevant, true);
+});
+
 test('parseScopeMode accepts known modes and rejects missing or unknown mode', () => {
   assert.equal(parseScopeMode(['--mode', 'workflow']), 'workflow');
   assert.throws(() => parseScopeMode([]), /MODE_REQUIRED/);

@@ -44,6 +44,10 @@ test('buildPrCloseoutPlan commits before the only full prepush validation and pu
   assert.ok(indexOf(ids, 'verify-prepush') < indexOf(ids, 'push'));
   assert.equal(ids.filter((id) => id === 'verify-prepush').length, 1);
   assert.equal(
+    commandLabel(plan.find((step) => step.id === 'verify-prepush')),
+    'pnpm verify:prepush -- --full'
+  );
+  assert.equal(
     commandLabel(plan.find((step) => step.id === 'commit')),
     'pnpm commit chore ci "Mechanize PR closeout"'
   );
