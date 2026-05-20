@@ -41,6 +41,7 @@ function buildDefaultCanvasUserPermissions(): CanvasController['userPermissions'
     canPlan: true,
     canRun: true,
     canEditEdges: true,
+    canPersistGraphDraft: true,
     canManagePlugins: false,
     canManageRBAC: false,
   };
@@ -138,6 +139,7 @@ export function buildCanvasHostCycleControllerState(
       userPermissions: {
         ...buildDefaultCanvasUserPermissions(),
         canEditEdges: dto.canEditEdges ?? true,
+        canPersistGraphDraft: true,
       },
       canOpenSourceImport: dto.canOpenSourceImport ?? true,
       canvasAuthoringMode: dto.canvasKind,

@@ -12,6 +12,7 @@ export type UserPermissions = {
   canPlan: boolean;
   canRun: boolean;
   canEditEdges: boolean;
+  canPersistGraphDraft: boolean;
   canManagePlugins: boolean;
   canManageRBAC: boolean;
 };
@@ -25,6 +26,7 @@ export const DEFAULT_USER_PERMISSIONS: UserPermissions = {
   canPlan: false,
   canRun: false,
   canEditEdges: false,
+  canPersistGraphDraft: false,
   canManagePlugins: false,
   canManageRBAC: false,
 };

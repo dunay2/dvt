@@ -65,6 +65,7 @@ function stubAuthenticatedSessionFetch(): ReturnType<typeof vi.fn> {
             canPlan: true,
             canRun: true,
             canEditEdges: true,
+            canPersistGraphDraft: true,
             canManagePlugins: false,
             canManageRBAC: false,
           },

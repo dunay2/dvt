@@ -45,6 +45,7 @@ describe('resolveProtectedRouteSessionContext', () => {
             canPlan: true,
             canRun: true,
             canEditEdges: true,
+            canPersistGraphDraft: true,
             canManagePlugins: false,
             canManageRBAC: false,
           },
@@ -88,6 +89,7 @@ describe('resolveProtectedRouteSessionContext', () => {
       canPlan: true,
       canRun: true,
       canEditEdges: true,
+      canPersistGraphDraft: true,
       canManagePlugins: false,
       canManageRBAC: false,
     });
@@ -132,7 +134,56 @@ describe('resolveProtectedRouteSessionContext', () => {
       canPlan: true,
       canRun: true,
       canEditEdges: true,
+      canPersistGraphDraft: true,
       canManagePlugins: true,
+      canManageRBAC: false,
+    });
+  });
+
+  it('keeps draft persistence authority when explicit graph editing is denied', async () => {
+    const getJson = vi.fn(async (endpoint: string) => {
+      if (endpoint === '/session') {
+        return {
+          principal: { principalId: 'u-1' },
+          grants: {
+            tenantIds: ['tenant-a'],
+            projectIds: ['project-a'],
+            scopes: ['workspace:graph-draft:save'],
+          },
+          permissions: {
+            canEditEdges: false,
+          },
+        };
+      }
+
+      if (endpoint === '/workspace/context') {
+        return {
+          effectiveWorkspace: {
+            tenantId: 'tenant-a',
+            projectId: 'project-a',
+            environmentId: 'prod',
+          },
+          availableWorkspaces: [
+            {
+              tenantId: 'tenant-a',
+              projectId: 'project-a',
+              environmentId: 'prod',
+            },
+          ],
+        };
+      }
+
+      throw new Error(`Unexpected endpoint ${endpoint}`);
+    });
+
+    await resolveProtectedRouteSessionContext({ getJson } as never);
+
+    expect(useAuthorizationStore.getState().userPermissions).toEqual({
+      canPlan: false,
+      canRun: false,
+      canEditEdges: false,
+      canPersistGraphDraft: true,
+      canManagePlugins: false,
       canManageRBAC: false,
     });
   });

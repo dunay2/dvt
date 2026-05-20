@@ -19,6 +19,14 @@ const HOST_CYCLE_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasHostCycleState.ts'
 );
+const CONTROLLER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasController.ts'
+);
+const RUNTIME_CONTRACT_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasAuthoringRuntime.types.ts'
+);
 
 describe('CanvasPlaygroundHost architecture', () => {
   it('keeps first-canvas host HTML in templates while the host builds commands', () => {
@@ -104,6 +112,18 @@ describe('CanvasPlaygroundHost architecture', () => {
     expect(draftLifecycleSource).toContain("from './canvasCreateCanvasDocumentAvailability'");
     expect(draftLifecycleSource).toContain('deriveCanCreateCanvasDocument({');
     expect(draftLifecycleSource).not.toMatch(/graphDraftQuery\.data\?\.record == null/);
+    expect(RUNTIME_CONTRACT_SOURCE).toContain('canPersistGraphDraftTransport: boolean');
+    expect(RUNTIME_CONTRACT_SOURCE).toContain('canMutateGraphTransport: boolean');
+    expect(RUNTIME_CONTRACT_SOURCE).not.toContain('canEditDraftTransport');
+    expect(CONTROLLER_SOURCE).toContain(
+      'canPersistGraphDraftTransport: store.userPermissions.canPersistGraphDraft'
+    );
+    expect(CONTROLLER_SOURCE).toContain(
+      'canMutateGraphTransport: store.userPermissions.canEditEdges'
+    );
+    expect(CONTROLLER_SOURCE).not.toContain(
+      'canEditDraftTransport: store.userPermissions.canEditEdges'
+    );
   });
 
   it('keeps visible copy and template slots aligned with the template-selection meaning', () => {

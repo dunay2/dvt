@@ -30,7 +30,8 @@ export type UseCanvasAuthoringRuntimeArgs = {
   persistedNodePositions: CanvasNodePositions;
   selectedNodeIds: string[];
   inspectorNodeId: string | null;
-  canEditDraftTransport: boolean;
+  canPersistGraphDraftTransport: boolean;
+  canMutateGraphTransport: boolean;
   workspaceScope: WorkspaceScope;
   previewProvenanceConfig: CanvasAuthoringRuntimePreviewProvenanceConfig;
   setCanvasNodePositions: (workspaceLayoutKey: string, positions: CanvasNodePositions) => void;

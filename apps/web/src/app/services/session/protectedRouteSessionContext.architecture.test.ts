@@ -60,6 +60,23 @@ describe('protected route session context architecture', () => {
     expect(resolver).toContain('setSessionContext');
   });
 
+  it('keeps draft persistence projection separate from graph edit projection', () => {
+    const resolver = readRepoFile(
+      'src',
+      'app',
+      'services',
+      'session',
+      'protectedRouteSessionContext.ts'
+    );
+
+    expect(resolver).toContain('canPersistGraphDraft');
+    expect(resolver).toContain("readServerPermission(session.permissions, 'canPersistGraphDraft')");
+    expect(resolver).toMatch(/canPersistGraphDraft:[\s\S]{0,160}workspace:graph-draft:save/);
+    expect(resolver).not.toContain(
+      "canPersistGraphDraft: readServerPermission(session.permissions, 'canEditEdges')"
+    );
+  });
+
   it('documents API, invariants, transitions, consumers, and diagrams for the component', () => {
     const componentGuide = readRepoFile(
       '..',

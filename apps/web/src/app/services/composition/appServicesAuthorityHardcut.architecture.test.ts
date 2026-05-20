@@ -83,6 +83,7 @@ describe('web API authority hardcut architecture', () => {
     expect(authorizationStore).toContain('canPlan: false');
     expect(authorizationStore).toContain('canRun: false');
     expect(authorizationStore).toContain('canEditEdges: false');
+    expect(authorizationStore).toContain('canPersistGraphDraft: false');
     expect(authorizationStore).toContain('canManagePlugins: false');
     expect(authorizationStore).toContain('canManageRBAC: false');
 

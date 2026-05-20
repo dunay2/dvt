@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
   buildRemoteDraftRecord,
+  createUnrenderedHarness,
   createRenderedHarness,
   createHarnessWithDraft,
   setHarnessRemoteDraftRecord,
@@ -178,6 +179,41 @@ describe('useCanvasController core', () => {
   it('keeps first-canvas creation available while graph mutation waits for a typed document', async () => {
     harness.cleanup();
     harness = await createRenderedHarness();
+
+    expect(harness.getLatestResult()?.canvasDocument).toBeNull();
+    expect(harness.getLatestResult()?.canCreateCanvasDocument).toBe(true);
+    expect(harness.getLatestResult()?.userPermissions).toEqual(
+      expect.objectContaining({
+        canEditEdges: false,
+      })
+    );
+    expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        canEditEdges: false,
+      })
+    );
+  });
+
+  it('keeps first-canvas creation available from draft persistence when graph edits are denied', async () => {
+    harness.cleanup();
+    harness = createUnrenderedHarness();
+    const storeState = harness.state.store as unknown as {
+      userPermissions: {
+        canPlan: boolean;
+        canRun: boolean;
+        canEditEdges: boolean;
+        canPersistGraphDraft: boolean;
+        canManagePlugins: boolean;
+        canManageRBAC: boolean;
+      };
+    };
+    storeState.userPermissions = {
+      ...storeState.userPermissions,
+      canEditEdges: false,
+      canPersistGraphDraft: true,
+    };
+
+    await harness.renderProbe();
 
     expect(harness.getLatestResult()?.canvasDocument).toBeNull();
     expect(harness.getLatestResult()?.canCreateCanvasDocument).toBe(true);

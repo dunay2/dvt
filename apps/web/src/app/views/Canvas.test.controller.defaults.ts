@@ -106,6 +106,7 @@ function buildDefaultCanvasUserPermissions(): CanvasControllerStateDefaults['use
     canPlan: true,
     canRun: true,
     canEditEdges: true,
+    canPersistGraphDraft: true,
     canManagePlugins: false,
     canManageRBAC: false,
   };

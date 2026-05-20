@@ -57,9 +57,7 @@ function buildDefaultCanvasHarnessQueryClient(): CanvasHarnessState['queryClient
   };
 }
 
-function buildDefaultCanvasHarnessStore(
-  currentPlan: PlanViewModel
-): CanvasHarnessState['store'] {
+function buildDefaultCanvasHarnessStore(currentPlan: PlanViewModel): CanvasHarnessState['store'] {
   return {
     _hasHydrated: true,
     focusMode: false,
@@ -83,6 +81,7 @@ function buildDefaultCanvasHarnessStore(
       canPlan: true,
       canRun: true,
       canEditEdges: true,
+      canPersistGraphDraft: true,
       canManagePlugins: false,
       canManageRBAC: false,
     },

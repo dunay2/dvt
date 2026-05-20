@@ -72,3 +72,32 @@ Acceptance:
 - Then first-canvas creation remains available
 - And architecture tests fail if lifecycle code inlines the policy or reuses
   `canEditEdges`
+
+## US-CANVAS-CREATE-CAP-006: Draft-save scope survives explicit graph edit denial
+
+As an operator whose session can save the workspace graph draft but cannot edit
+existing graph edges, I can still create the first Canvas document because that
+is a document lifecycle transition.
+
+Acceptance:
+
+- Given the session grants `workspace:graph-draft:save`
+- And explicit `canEditEdges` is false
+- And no Canvas document exists
+- When protected route session context is projected into Canvas
+- Then `canPersistGraphDraft` is true
+- And `canEditEdges` remains false
+- And first-canvas creation remains available
+
+## US-CANVAS-CREATE-CAP-007: Missing draft-save scope fails closed
+
+As an operator without draft persistence authority, I cannot create a first
+Canvas document even if the route can inspect the draft state.
+
+Acceptance:
+
+- Given the session lacks `workspace:graph-draft:save`
+- And no explicit `canPersistGraphDraft` permission is granted
+- When protected route session context is projected into Canvas
+- Then `canPersistGraphDraft` is false
+- And `CreateCanvasDocumentCommand` is not exposed
