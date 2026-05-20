@@ -203,15 +203,18 @@ allowedImplementationSurfaces:
   - tools/ci/scope-config.mjs
   - tools/ci/emit-scope.mjs
   - tools/ci/emit-workspace-matrix.mjs
+  - tools/ci/emit-test-matrix.mjs
   - tools/ci/policy/workflow-scope.json
   - tools/ci/policy/adapter-postgres-relevance.json
   - tools/ci/workflow-scope-classification.test.mjs
   - tools/ci/workflow-pattern-parity.test.mjs
+  - tools/ci/turbo-workspace-task-contract.test.mjs
   - tools/ci/test/path-matcher.test.mjs
   - tools/ci/package-json-scope-classification.test.mjs
   - tools/ci/prepush-typecheck-scope.mjs
   - tools/ci/emit-scope.test.mjs
   - tools/ci/emit-workspace-matrix.test.mjs
+  - tools/ci/emit-test-matrix.test.mjs
   - docs/guides/testing-and-ci-capabilities.md
   - docs/planning/proposals/mandatory/governance-and-docs/repository-command-catalog-normalization-plan-20260508.md
   - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
@@ -556,6 +559,94 @@ symbols:
     cypressCoverage: N/A - CI scope tooling only
     unitTests:
       - node --test tools/ci/emit-scope.test.mjs
+  - name: EXCLUDED_TEST_PACKAGE_NAMES
+    path: tools/ci/scope-config.mjs
+    dddOwner: TestPackageMatrix
+    cqRails:
+      - EmitWorkflowCapabilityScopes
+    fowlerSignals:
+      - Keep explicit runtime lanes out of package matrix duplication
+    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-test-matrix.test.mjs
+  - name: TEST_PACKAGE_ENTRIES
+    path: tools/ci/scope-config.mjs
+    dddOwner: TestPackageMatrix
+    cqRails:
+      - EmitWorkflowCapabilityScopes
+    fowlerSignals:
+      - Replace duplicated package test workflow steps with a governed matrix
+    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-test-matrix.test.mjs
+  - name: computeTestPackageMatrix
+    path: tools/ci/scope-config.mjs
+    dddOwner: TestPackageMatrix
+    cqRails:
+      - EmitWorkflowCapabilityScopes
+    fowlerSignals:
+      - Compose package test fan-out from shared scope outputs
+    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-test-matrix.test.mjs
+  - name: buildTestMatrixOutputs
+    path: tools/ci/emit-test-matrix.mjs
+    dddOwner: TestPackageMatrix
+    cqRails:
+      - EmitWorkflowCapabilityScopes
+    fowlerSignals:
+      - Keep workflow matrix emission behind a testable function
+    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-test-matrix.test.mjs
+  - name: main
+    path: tools/ci/emit-test-matrix.mjs
+    dddOwner: TestPackageMatrix
+    cqRails:
+      - EmitWorkflowCapabilityScopes
+    fowlerSignals:
+      - Emit GitHub Actions outputs from the governed CI scope model
+    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-test-matrix.test.mjs
+  - name: DEDICATED_TEST_PACKAGES
+    path: tools/ci/emit-test-matrix.test.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Guard explicit workflow lanes against duplicate matrix ownership
+    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-test-matrix.test.mjs
+  - name: collectWorkspaceTestPackages
+    path: tools/ci/emit-test-matrix.test.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Prove every workspace package test script is represented
+    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-test-matrix.test.mjs
+  - name: collectWorkspacePackagesByName
+    path: tools/ci/emit-test-matrix.test.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Prevent matrix entries for workspaces without test scripts
+    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-test-matrix.test.mjs
 ```
 
 ## File Structure

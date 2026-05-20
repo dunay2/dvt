@@ -368,4 +368,156 @@ symbols:
     architectureGuard: src/testing/vitestSuites.architecture.test.ts
     cypressCoverage: cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
     unitTests: [src/testing/vitestSuites.architecture.test.ts]
+  - name: deriveCodeRouteBootstrapPresentation
+    path: apps/web/src/app/views/code/codeRouteBootstrap.ts
+    dddOwner: CodeRouteBootstrapPresentation
+    cqRails: [ListWorkspaceFiles, GetWorkspaceFileContent]
+    fowlerSignals: [Presentation Model, Responsibility separation]
+    architectureGuard: src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [src/app/views/code/codeRouteBootstrap.test.ts]
+  - name: COPY_BY_KEY
+    path: apps/web/src/app/views/code/codeViewCopy.ts
+    dddOwner: CodeWorkbenchLocalizedCopy
+    cqRails: [none - presentation localization only]
+    fowlerSignals: [Separated Presentation, Semantic encapsulation]
+    architectureGuard: src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [src/app/views/code/codeViewCopy.test.ts]
+  - name: CodeViewCopy
+    path: apps/web/src/app/views/code/codeViewCopy.ts
+    dddOwner: CodeWorkbenchLocalizedCopy
+    cqRails: [none - presentation localization only]
+    fowlerSignals: [Separated Presentation, Semantic encapsulation]
+    architectureGuard: src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [src/app/views/code/codeViewCopy.test.ts]
+  - name: CodeViewLanguage
+    path: apps/web/src/app/views/code/codeViewCopy.ts
+    dddOwner: CodeWorkbenchLocalizedCopy
+    cqRails: [none - presentation localization only]
+    fowlerSignals: [Separated Presentation, Semantic encapsulation]
+    architectureGuard: src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [src/app/views/code/codeViewCopy.test.ts]
+  - name: LOCALIZED_COPY_BY_LANGUAGE
+    path: apps/web/src/app/views/code/codeViewCopy.ts
+    dddOwner: CodeWorkbenchLocalizedCopy
+    cqRails: [none - presentation localization only]
+    fowlerSignals: [Separated Presentation, Semantic encapsulation]
+    architectureGuard: src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [src/app/views/code/codeViewCopy.test.ts]
+  - name: SPANISH_COPY
+    path: apps/web/src/app/views/code/codeViewCopy.ts
+    dddOwner: CodeWorkbenchLocalizedCopy
+    cqRails: [none - presentation localization only]
+    fowlerSignals: [Separated Presentation, Semantic encapsulation]
+    architectureGuard: src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [src/app/views/code/codeViewCopy.test.ts]
+  - name: codeViewCopy
+    path: apps/web/src/app/views/code/codeViewCopy.ts
+    dddOwner: CodeWorkbenchLocalizedCopy
+    cqRails: [none - presentation localization only]
+    fowlerSignals: [Separated Presentation, Semantic encapsulation]
+    architectureGuard: src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [src/app/views/code/codeViewCopy.test.ts]
+  - name: detectCodeViewLocale
+    path: apps/web/src/app/views/code/codeViewCopy.ts
+    dddOwner: CodeWorkbenchLocalizedCopy
+    cqRails: [none - presentation localization only]
+    fowlerSignals: [Separated Presentation, Semantic encapsulation]
+    architectureGuard: src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [src/app/views/code/codeViewCopy.test.ts]
+  - name: resolveCodeViewLanguage
+    path: apps/web/src/app/views/code/codeViewCopy.ts
+    dddOwner: CodeWorkbenchLocalizedCopy
+    cqRails: [none - presentation localization only]
+    fowlerSignals: [Separated Presentation, Semantic encapsulation]
+    architectureGuard: src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [src/app/views/code/codeViewCopy.test.ts]
+  - name: flattenCodeWorkspaceFiles
+    path: apps/web/src/app/views/code/codeViewFileSelection.ts
+    dddOwner: CodeWorkspaceFileSelectionReadModel
+    cqRails: [ListWorkspaceFiles]
+    fowlerSignals: [Presentation Model, Responsibility separation]
+    architectureGuard: src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [src/app/views/code/codeViewFileSelection.test.ts]
+  - name: hasCodeWorkspaceFiles
+    path: apps/web/src/app/views/code/codeViewFileSelection.ts
+    dddOwner: CodeWorkspaceFileSelectionReadModel
+    cqRails: [ListWorkspaceFiles]
+    fowlerSignals: [Presentation Model, Responsibility separation]
+    architectureGuard: src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [src/app/views/code/codeViewFileSelection.test.ts]
+  - name: EditableBufferHarness
+    path: apps/web/src/app/views/code/useCodeEditableBuffer.test.tsx
+    dddOwner: CodeEditableBuffer test harness
+    cqRails: [none - route-local presentation buffer only]
+    fowlerSignals: [Presentation Model test harness]
+    architectureGuard: src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [src/app/views/code/useCodeEditableBuffer.test.tsx]
+  - name: EditableFile
+    path: apps/web/src/app/views/code/useCodeEditableBuffer.test.tsx
+    dddOwner: CodeEditableBuffer test fixture
+    cqRails: [none - route-local presentation buffer only]
+    fowlerSignals: [Presentation Model test harness]
+    architectureGuard: src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [src/app/views/code/useCodeEditableBuffer.test.tsx]
+  - name: CodeEditableBuffer
+    path: apps/web/src/app/views/code/useCodeEditableBuffer.ts
+    dddOwner: CodeEditableBuffer presentation model
+    cqRails: [none - route-local presentation buffer only]
+    fowlerSignals: [Presentation Model, Responsibility separation]
+    architectureGuard: src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [src/app/views/code/useCodeEditableBuffer.test.tsx]
+  - name: CodeEditableBufferFile
+    path: apps/web/src/app/views/code/useCodeEditableBuffer.ts
+    dddOwner: CodeEditableBuffer presentation model
+    cqRails: [none - route-local presentation buffer only]
+    fowlerSignals: [Presentation Model, Responsibility separation]
+    architectureGuard: src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [src/app/views/code/useCodeEditableBuffer.test.tsx]
+  - name: resolveSuiteForWebPath
+    path: apps/web/vitest.suites.ts
+    dddOwner: WebVitestChangedSuiteRouter
+    cqRails: [RouteChangedWebVitestSuites]
+    fowlerSignals: [Test suite partition]
+    architectureGuard: src/testing/vitestSuites.architecture.test.ts
+    cypressCoverage: N/A
+    unitTests: [src/testing/vitestSuites.architecture.test.ts]
+  - name: tryAddClassifiedSuite
+    path: apps/web/vitest.suites.ts
+    dddOwner: WebVitestChangedSuiteRouter
+    cqRails: [RouteChangedWebVitestSuites]
+    fowlerSignals: [Test suite partition]
+    architectureGuard: src/testing/vitestSuites.architecture.test.ts
+    cypressCoverage: N/A
+    unitTests: [src/testing/vitestSuites.architecture.test.ts]
+  - name: tryAddFocusSuite
+    path: apps/web/vitest.suites.ts
+    dddOwner: WebVitestChangedSuiteRouter
+    cqRails: [RouteChangedWebVitestSuites]
+    fowlerSignals: [Test suite partition]
+    architectureGuard: src/testing/vitestSuites.architecture.test.ts
+    cypressCoverage: N/A
+    unitTests: [src/testing/vitestSuites.architecture.test.ts]
+  - name: tryAddGovernanceSuite
+    path: apps/web/vitest.suites.ts
+    dddOwner: WebVitestChangedSuiteRouter
+    cqRails: [RouteChangedWebVitestSuites]
+    fowlerSignals: [Test suite partition]
+    architectureGuard: src/testing/vitestSuites.architecture.test.ts
+    cypressCoverage: N/A
+    unitTests: [src/testing/vitestSuites.architecture.test.ts]
 ```
