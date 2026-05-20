@@ -1,3 +1,4 @@
+/** Owned concern: provide the route-level workbench frame, layout tokens, and shared panel classes. */
 import type { ReactNode } from 'react';
 
 import { ScrollArea } from '../ui/scroll-area';

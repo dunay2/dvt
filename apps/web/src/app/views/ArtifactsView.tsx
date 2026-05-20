@@ -1,3 +1,4 @@
+/** Owned concern: compose the Artifacts route workbench from import and workspace artifact read models. */
 import { FileText } from 'lucide-react';
 
 import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';

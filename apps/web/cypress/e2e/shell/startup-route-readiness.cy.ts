@@ -59,6 +59,7 @@ describe('Startup route readiness', () => {
       'not.exist'
     );
 
+    waitForE2eApiCall('/capabilities', 'GET');
     cy.then(() => {
       releaseCapabilities();
     });

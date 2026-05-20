@@ -1,3 +1,4 @@
+/** Owned concern: bind Monaco Editor as a read-only code viewer with DVT route-workbench styling. */
 import Editor from '@monaco-editor/react';
 
 import { DEFAULT_MONACO_CONTAINER_CLASS_NAME } from './MonacoViewerFallback';
@@ -31,6 +32,7 @@ export default function MonacoCodeSurface({
           glyphMargin: false,
           lineNumbersMinChars: 3,
           minimap: { enabled: false },
+          domReadOnly: true,
           readOnly: true,
           renderLineHighlight: 'none',
           scrollBeyondLastLine: false,
