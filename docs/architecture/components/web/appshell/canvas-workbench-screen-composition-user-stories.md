@@ -1,8 +1,8 @@
 ---
 title: Canvas Workbench Screen Composition User Stories
-status: Review
+status: Active
 owner: Frontend / Shell / Canvas
-last_reviewed: 2026-05-19
+last_reviewed: 2026-05-20
 component_type: frontend-user-stories
 ---
 

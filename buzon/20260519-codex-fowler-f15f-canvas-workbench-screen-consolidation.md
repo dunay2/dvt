@@ -1,6 +1,6 @@
 ---
 title: F-15-F Fowler Analysis - Canvas Workbench Screen Consolidation
-status: Review
+status: Accepted
 date: 2026-05-19
 task: E/F-15-F
 owner: Frontend / Shell / Canvas

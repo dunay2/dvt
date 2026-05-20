@@ -1,8 +1,8 @@
 ---
 title: F-15-F Canvas Workbench Screen Consolidation Plan
-status: Review
+status: Accepted
 owner: Frontend / Shell / Canvas
-last_reviewed: 2026-05-19
+last_reviewed: 2026-05-20
 planning_type: mandatory
 lane: E
 task_id: F-15-F
@@ -161,6 +161,11 @@ stateDiagram-v2
 No ADR is required. This slice reconciles existing frontend shell and Canvas
 presentation ownership. It does not alter backend contracts, persistence
 authority, protected draft semantics, or cross-package architecture.
+
+## Closeout
+
+Accepted closeout:
+`docs/planning/closeouts/20260520-f15f-canvas-workbench-screen-consolidation-closeout.md`.
 
 ```feature-mechanization
 version: 1
