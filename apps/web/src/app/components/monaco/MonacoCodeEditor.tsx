@@ -9,7 +9,7 @@ type MonacoCodeEditorProps = Readonly<{
   ariaLabel: string;
   containerClassName?: string;
   language: string;
-  loadingLabel?: string;
+  loadingLabel: string;
   onChange: (value: string) => void;
   path?: string;
   value: string;
@@ -19,7 +19,7 @@ export function MonacoCodeEditor({
   ariaLabel,
   containerClassName = DEFAULT_MONACO_CONTAINER_CLASS_NAME,
   language,
-  loadingLabel = 'Loading Monaco editor...',
+  loadingLabel,
   onChange,
   path,
   value,

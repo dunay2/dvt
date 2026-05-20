@@ -7,18 +7,19 @@ import { relative, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
+  classifyWebVitestFile,
+  resolveWebVitestChangedSuitePlan,
   WEB_VITEST_CHANGED_SUITE_COMMANDS,
   WEB_VITEST_FOCUS_SUITE_NAMES,
   WEB_VITEST_PRIMARY_SUITE_NAMES,
-  classifyWebVitestFile,
-  resolveWebVitestChangedSuitePlan,
+  WEB_VITEST_SUITES,
 } from '../../vitest.suites';
 
 const webRoot = process.cwd();
 const sourceRoot = resolve(webRoot, 'src');
 
 function normalizePath(path: string): string {
-  return path.replace(/\\/g, '/');
+  return path.replaceAll('\\', '/');
 }
 
 function listFiles(dir: string): string[] {
@@ -33,7 +34,7 @@ function listWebVitestFiles(): string[] {
   return listFiles(sourceRoot)
     .filter((filePath) => /\.(test|spec)\.(ts|tsx)$/.test(filePath))
     .map((filePath) => normalizePath(relative(webRoot, filePath)))
-    .sort();
+    .sort((a, b) => a.localeCompare(b));
 }
 
 function countTestCases(relativePath: string): number {
@@ -233,6 +234,18 @@ describe('web Vitest suite partition', () => {
     expect(resolveWebVitestChangedSuitePlan(['apps/api/src/server.ts'])).toEqual({
       commands: [],
       suites: [],
+    });
+  });
+
+  it('keeps Monaco focus coverage aligned with Code workbench local models', () => {
+    expect(WEB_VITEST_SUITES.monaco.include).toContain(
+      'src/app/views/code/**/*.{test,spec}.{ts,tsx}'
+    );
+    expect(
+      resolveWebVitestChangedSuitePlan(['apps/web/src/app/views/code/useCodeEditableBuffer.ts'])
+    ).toEqual({
+      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.monaco],
+      suites: ['monaco'],
     });
   });
 

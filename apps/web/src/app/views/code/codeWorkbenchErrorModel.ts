@@ -1,4 +1,4 @@
-import { codeViewCopy as copy } from './codeViewCopy';
+import { codeViewCopy, type CodeViewCopy } from './codeViewCopy';
 import { WorkspaceFileLoadError } from '../../services/workspace/workspaceErrors';
 
 export type CodeWorkbenchErrorKind =
@@ -16,12 +16,14 @@ export type CodeWorkbenchErrorPresentation = {
 type ResolveCodeWorkbenchErrorArgs = {
   scope: 'file-tree' | 'file-preview';
   error: unknown;
+  copy?: CodeViewCopy;
   selectedPath?: string;
 };
 
 export function resolveCodeWorkbenchErrorPresentation({
   scope,
   error,
+  copy = codeViewCopy,
   selectedPath,
 }: ResolveCodeWorkbenchErrorArgs): CodeWorkbenchErrorPresentation {
   if (scope === 'file-tree') {

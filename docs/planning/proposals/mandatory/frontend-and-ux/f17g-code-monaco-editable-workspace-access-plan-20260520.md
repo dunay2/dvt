@@ -131,8 +131,17 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/CodeView.tsx
   - apps/web/src/app/views/CodeView.test.tsx
   - apps/web/src/app/views/Canvas.tsx
+  - apps/web/src/app/views/code/FileTreePanel.tsx
   - apps/web/src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+  - apps/web/src/app/views/code/codeRouteBootstrap.ts
+  - apps/web/src/app/views/code/codeRouteBootstrap.test.ts
   - apps/web/src/app/views/code/codeViewCopy.ts
+  - apps/web/src/app/views/code/codeViewCopy.test.ts
+  - apps/web/src/app/views/code/codeViewFileSelection.ts
+  - apps/web/src/app/views/code/codeViewFileSelection.test.ts
+  - apps/web/src/app/views/code/codeWorkbenchErrorModel.test.ts
+  - apps/web/src/app/views/code/useCodeEditableBuffer.ts
+  - apps/web/src/app/views/code/useCodeEditableBuffer.test.tsx
   - apps/web/src/app/views/canvas/CanvasShellMainPanel.tsx
   - apps/web/src/app/views/canvas/CanvasShell.test.tsx
   - apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts
@@ -217,6 +226,20 @@ redGreenCycles:
       - apps/web/src/app/components/monaco/MonacoCodeSurface.tsx
       - apps/web/src/app/components/monaco/MonacoCodeEditor.tsx
     greenTest: pnpm --filter @dvt/web test -- src/app/views/CodeView.test.tsx
+  - id: f17g-code-copy-and-selection-boundary
+    redTest: pnpm --filter @dvt/web test -- src/app/views/CodeView.test.tsx src/app/views/code/codeViewFileSelection.test.ts src/app/views/code/codeWorkbenchErrorModel.test.ts src/app/views/code/codeRouteBootstrap.test.ts src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    expectedFailure: Code route still exposed English UI copy and kept file-tree selection traversal inside the view component.
+    patchSurfaces:
+      - apps/web/src/app/views/CodeView.tsx
+      - apps/web/src/app/views/code/FileTreePanel.tsx
+      - apps/web/src/app/views/code/codeViewCopy.ts
+      - apps/web/src/app/views/code/codeViewCopy.test.ts
+      - apps/web/src/app/views/code/codeViewFileSelection.ts
+      - apps/web/src/app/views/code/useCodeEditableBuffer.ts
+      - apps/web/src/app/views/code/codeRouteBootstrap.ts
+      - apps/web/src/app/components/monaco/MonacoCodeEditor.tsx
+      - apps/web/src/app/components/monaco/MonacoCodeViewer.tsx
+    greenTest: pnpm --filter @dvt/web test -- src/app/views/CodeView.test.tsx src/app/views/code/codeViewFileSelection.test.ts src/app/views/code/codeWorkbenchErrorModel.test.ts src/app/views/code/codeRouteBootstrap.test.ts src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
   - id: f17g-cypress-monaco-typing
     redTest: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
     expectedFailure: Monaco cannot be opened beside Graph and typed into from first-canvas state.
@@ -241,6 +264,30 @@ symbols:
     architectureGuard: src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
     cypressCoverage: cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
     unitTests: [src/app/views/CodeView.test.tsx]
+  - name: resolveInitialCodeFilePath
+    path: apps/web/src/app/views/code/codeViewFileSelection.ts
+    dddOwner: CodeWorkspaceFileSelectionReadModel
+    cqRails: [ListWorkspaceFiles]
+    fowlerSignals: [Presentation Model, Responsibility separation]
+    architectureGuard: src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [src/app/views/code/codeViewFileSelection.test.ts]
+  - name: useCodeEditableBuffer
+    path: apps/web/src/app/views/code/useCodeEditableBuffer.ts
+    dddOwner: CodeEditableBuffer presentation model
+    cqRails: [none - route-local presentation buffer only]
+    fowlerSignals: [Presentation Model, Responsibility separation]
+    architectureGuard: src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [src/app/views/code/useCodeEditableBuffer.test.tsx]
+  - name: resolveCodeViewCopy
+    path: apps/web/src/app/views/code/codeViewCopy.ts
+    dddOwner: CodeWorkbenchLocalizedCopy
+    cqRails: [none - presentation localization only]
+    fowlerSignals: [Separated Presentation, Semantic encapsulation]
+    architectureGuard: src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [src/app/views/code/codeViewCopy.test.ts]
   - name: CanvasWorkbenchTabScope
     path: apps/web/src/app/plugins/contracts/PluginManifest.ts
     dddOwner: CanvasWorkbenchTabPlacement

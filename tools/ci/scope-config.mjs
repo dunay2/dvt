@@ -455,6 +455,22 @@ export const SCOPE_MODES = {
   workflow: WORKFLOW_SCOPE_PATTERNS,
 };
 
+const EXCLUDED_TEST_PACKAGE_NAMES = new Set([
+  '@dvt/adapter-postgres',
+  '@dvt/adapter-temporal',
+  '@dvt/planner-contracts',
+  '@dvt/web',
+]);
+
+export const TEST_PACKAGE_ENTRIES = WORKSPACE_ENTRIES.filter(
+  ({ pkg }) => !EXCLUDED_TEST_PACKAGE_NAMES.has(pkg)
+).map(({ key, name, pkg }) => ({
+  key,
+  name,
+  pkg,
+  command: `pnpm --filter ${pkg} test`,
+}));
+
 function normalizePath(path) {
   return path.replaceAll('\\', '/');
 }
@@ -593,6 +609,20 @@ function buildFilesForPathPolicy(changedFiles, scopeContext) {
     : normalizedFiles;
 }
 
+function computeRepositoryValidationScope(changedFiles, scopeContext = {}) {
+  const fileScopes = buildFilesForPathPolicy(changedFiles, scopeContext).map((path) =>
+    classifyRepositoryFileScope(path)
+  );
+
+  return {
+    planning_db_inventory_relevant: fileScopes.some((scope) => scope.planningDbInventoryRelevant),
+    governance_global_relevant: fileScopes.some((scope) => scope.governanceGlobalRelevant),
+    feature_mechanization_relevant: fileScopes.some((scope) => scope.featureMechanizationRelevant),
+    traceability_adr0_relevant: fileScopes.some((scope) => scope.traceabilityRelevant),
+    code_validation_relevant: fileScopes.some((scope) => scope.codeValidationRelevant),
+  };
+}
+
 export function computeBooleanScope(changedFiles, scopePatterns, scopeContext = {}) {
   const normalizedFiles = buildFilesForPathPolicy(changedFiles, scopeContext);
   const scope = Object.fromEntries(
@@ -618,6 +648,7 @@ export function computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext
   }
 
   const scope = computeBooleanScope(changedFiles, scopePatterns, scopeContext);
+  const repositoryValidationScope = computeRepositoryValidationScope(changedFiles, scopeContext);
   const packageJsonChange = scopeContext.packageJsonChange;
 
   if (mode === 'contracts') {
@@ -642,6 +673,7 @@ export function computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext
   if (mode === 'pr-quality') {
     return {
       ...scope,
+      ...repositoryValidationScope,
       root_build_sensitive: Boolean(
         scope.root_build_sensitive || packageJsonChange?.rootBuildSensitive
       ),
@@ -686,6 +718,7 @@ export function computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext
 
   return {
     ...scope,
+    ...repositoryValidationScope,
   };
 }
 
@@ -727,6 +760,20 @@ export function computeWorkspaceMatrix(changedFiles, options = {}) {
 
   return {
     anyChanged: include.length > 0,
+    include,
+  };
+}
+
+export function computeTestPackageMatrix(changedFiles, options = {}) {
+  const scope = computeWorkflowModeScopeOutputs('test', changedFiles, options);
+  const include = scope.root_build_sensitive
+    ? TEST_PACKAGE_ENTRIES
+    : TEST_PACKAGE_ENTRIES.filter(
+        ({ key }) => scope[key] || (key === 'planner' && scope.contracts)
+      );
+
+  return {
+    anyTests: include.length > 0,
     include,
   };
 }

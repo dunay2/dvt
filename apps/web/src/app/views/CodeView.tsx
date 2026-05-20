@@ -4,17 +4,18 @@ import { useMemo, useState } from 'react';
 
 import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
 import { ViewHeader } from '../components/domain';
-import { WorkbenchDegradedState } from '../components/workbench/state/WorkbenchStates';
+import { MonacoCodeEditor } from '../components/monaco/MonacoCodeEditor';
 import {
   RouteWorkbenchFrame,
   routeWorkbenchHeaderBandClassName,
 } from '../components/workbench/RouteWorkbenchFrame';
-import { MonacoCodeEditor } from '../components/monaco/MonacoCodeEditor';
+import { WorkbenchDegradedState } from '../components/workbench/state/WorkbenchStates';
 import {
   useWorkspaceFileContentQuery,
   useWorkspaceFileTreeQuery,
 } from '../queries/workspaceQueries';
-import type { WorkspaceFileEntry } from '../ports/workspace';
+import { CANVAS_WORKBENCH_ROUTE_ID } from './canvas/canvasDraftPresentationStore';
+import { deriveCodeRouteBootstrapPresentation } from './code/codeRouteBootstrap';
 import {
   CodePreviewEmptyStateView,
   CodePreviewErrorStateView,
@@ -22,33 +23,19 @@ import {
   CodeRouteErrorStateView,
   CodeRouteLoadingStateView,
 } from './code/CodeStateViews';
+import { resolveCodeViewCopy } from './code/codeViewCopy';
+import { hasCodeWorkspaceFiles, resolveInitialCodeFilePath } from './code/codeViewFileSelection';
 import { resolveCodeWorkbenchErrorPresentation } from './code/codeWorkbenchErrorModel';
-import { deriveCodeRouteBootstrapPresentation } from './code/codeRouteBootstrap';
-import { codeViewCopy as copy } from './code/codeViewCopy';
 import FileTreePanel from './code/FileTreePanel';
-import { CANVAS_WORKBENCH_ROUTE_ID } from './canvas/canvasDraftPresentationStore';
-
-function flattenFiles(entries: WorkspaceFileEntry[]): WorkspaceFileEntry[] {
-  return entries.flatMap((entry) =>
-    entry.kind === 'file' ? [entry] : entry.children ? flattenFiles(entry.children) : []
-  );
-}
-
-function firstFilePath(entries: WorkspaceFileEntry[]): string | undefined {
-  return flattenFiles(entries)[0]?.path;
-}
-
-function hasWorkspaceFiles(entries: WorkspaceFileEntry[]): boolean {
-  return firstFilePath(entries) !== undefined;
-}
+import { useCodeEditableBuffer } from './code/useCodeEditableBuffer';
 
 export default function CodeView() {
+  const copy = resolveCodeViewCopy();
   const fileTreeQuery = useWorkspaceFileTreeQuery();
   const [selectedPath, setSelectedPath] = useState<string | undefined>(undefined);
-  const [localBuffers, setLocalBuffers] = useState<Record<string, string>>({});
   const workspaceFileTree = fileTreeQuery.data ?? [];
   const resolvedPath = useMemo(
-    () => selectedPath ?? firstFilePath(workspaceFileTree),
+    () => selectedPath ?? resolveInitialCodeFilePath(workspaceFileTree),
     [workspaceFileTree, selectedPath]
   );
   const fileContentQuery = useWorkspaceFileContentQuery(resolvedPath);
@@ -56,25 +43,31 @@ export default function CodeView() {
     ? resolveCodeWorkbenchErrorPresentation({
         scope: 'file-tree',
         error: fileTreeQuery.error,
+        copy,
       })
     : null;
   const filePreviewErrorPresentation = fileContentQuery.isError
     ? resolveCodeWorkbenchErrorPresentation({
         scope: 'file-preview',
         error: fileContentQuery.error,
+        copy,
         selectedPath: resolvedPath,
       })
     : null;
+  const editableBuffer = useCodeEditableBuffer(fileContentQuery.data);
 
   usePublishedRouteBootstrap(
     CANVAS_WORKBENCH_ROUTE_ID,
-    deriveCodeRouteBootstrapPresentation({
-      isLoadingFileTree: fileTreeQuery.isPending,
-      fileTreeErrorMessage: fileTreeErrorPresentation?.message ?? null,
-      hasWorkspaceFiles: hasWorkspaceFiles(workspaceFileTree),
-      isLoadingFilePreview: resolvedPath !== undefined && fileContentQuery.isPending,
-      filePreviewErrorMessage: filePreviewErrorPresentation?.message ?? null,
-    })
+    deriveCodeRouteBootstrapPresentation(
+      {
+        isLoadingFileTree: fileTreeQuery.isPending,
+        fileTreeErrorMessage: fileTreeErrorPresentation?.message ?? null,
+        hasWorkspaceFiles: hasCodeWorkspaceFiles(workspaceFileTree),
+        isLoadingFilePreview: resolvedPath !== undefined && fileContentQuery.isPending,
+        filePreviewErrorMessage: filePreviewErrorPresentation?.message ?? null,
+      },
+      copy
+    )
   );
 
   if (fileTreeQuery.isPending) {
@@ -85,16 +78,12 @@ export default function CodeView() {
     return <CodeRouteErrorStateView error={fileTreeErrorPresentation!} />;
   }
 
-  if (!hasWorkspaceFiles(workspaceFileTree)) {
+  if (!hasCodeWorkspaceFiles(workspaceFileTree)) {
     return <CodeRouteEmptyStateView />;
   }
 
-  const editorValue = fileContentQuery.data
-    ? (localBuffers[fileContentQuery.data.path] ?? fileContentQuery.data.content)
-    : '';
-
   const previewPane = fileContentQuery.isPending ? (
-    <div className="flex h-full items-center justify-center text-sm text-[var(--text-muted)]">
+    <div className="flex h-full items-center justify-center text-sm text-(--text-muted)">
       {copy.previewLoadingMessage}
     </div>
   ) : fileContentQuery.isError ? (
@@ -103,16 +92,12 @@ export default function CodeView() {
     <CodePreviewEmptyStateView />
   ) : (
     <MonacoCodeEditor
-      ariaLabel={`Editing ${fileContentQuery.data.name}`}
+      ariaLabel={`${copy.editorAriaLabelPrefix} ${fileContentQuery.data.name}`}
       language={fileContentQuery.data.language}
-      onChange={(value) => {
-        setLocalBuffers((currentBuffers) => ({
-          ...currentBuffers,
-          [fileContentQuery.data.path]: value,
-        }));
-      }}
+      loadingLabel={copy.editorLoadingMessage}
+      onChange={editableBuffer.updateValue}
       path={fileContentQuery.data.path}
-      value={editorValue}
+      value={editableBuffer.value}
     />
   );
 
@@ -125,7 +110,7 @@ export default function CodeView() {
           <ViewHeader
             className="border-0 bg-transparent px-0 py-0"
             title={copy.title}
-            icon={<FileCode2 className="size-6 text-[var(--status-info)]" />}
+            icon={<FileCode2 className="size-6 text-(--status-info)" />}
             subtitle={copy.subtitle}
           />
         </div>
@@ -133,6 +118,7 @@ export default function CodeView() {
     >
       <div className="w-80 shrink-0">
         <FileTreePanel
+          title={copy.explorerTitle}
           tree={workspaceFileTree}
           selectedPath={resolvedPath}
           onSelect={(entry) => {

@@ -87,17 +87,26 @@ describe('Code Monaco editable access architecture', () => {
     expect(dbtContributions).toContain("scope: 'workspace'");
 
     expect(codeView).toContain('MonacoCodeEditor');
-    expect(codeView).toContain('localBuffers');
+    expect(codeView).toContain('resolveCodeViewCopy');
+    expect(codeView).toContain('useCodeEditableBuffer');
+    expect(codeView).not.toContain('useState<Record<string, string>>');
     expect(codeView).not.toContain('MonacoCodeViewer');
+    expect(codeView).not.toContain('function flattenFiles');
+    expect(codeView).not.toContain('function firstFilePath');
+    expect(codeView).not.toContain('Editing ');
     expect(codeView).not.toContain('SaveWorkspaceFileContent');
     expect(codeView).not.toContain('saveFileContent');
 
     expect(codeEditor).toContain("lazy(() => import('./MonacoCodeSurface'))");
     expect(codeEditor).toContain('readOnly={false}');
     expect(codeEditor).toContain('onChange');
+    expect(codeEditor).not.toContain('Cargando');
+    expect(codeEditor).not.toContain('Loading Monaco editor');
 
     expect(codeViewer).toContain('readOnly={true}');
     expect(codeViewer).not.toContain('onChange');
+    expect(codeViewer).not.toContain('Cargando');
+    expect(codeViewer).not.toContain('Loading Monaco viewer');
 
     expect(codeSurface).toContain('readOnly = true');
     expect(codeSurface).toContain('onChange');

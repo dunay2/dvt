@@ -5,6 +5,7 @@ import type { WorkspaceFileEntry } from '../../ports/workspace';
 import { cn } from '../../components/ui/utils';
 
 type FileTreePanelProps = {
+  readonly title: string;
   readonly tree: WorkspaceFileEntry[];
   readonly selectedPath?: string;
   readonly onSelect: (entry: WorkspaceFileEntry) => void;
@@ -72,11 +73,11 @@ function FileTreeNode({
   );
 }
 
-export default function FileTreePanel({ tree, selectedPath, onSelect }: FileTreePanelProps) {
+export default function FileTreePanel({ title, tree, selectedPath, onSelect }: FileTreePanelProps) {
   return (
     <div className="h-full overflow-y-auto bg-slate-900 border-r border-slate-700 py-2">
       <div className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
-        Explorer
+        {title}
       </div>
       {tree.map((entry) => (
         <FileTreeNode

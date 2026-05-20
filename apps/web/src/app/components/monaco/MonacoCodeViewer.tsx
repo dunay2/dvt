@@ -9,7 +9,7 @@ type MonacoCodeViewerProps = Readonly<{
   ariaLabel: string;
   containerClassName?: string;
   language: string;
-  loadingLabel?: string;
+  loadingLabel: string;
   path?: string;
   value: string;
 }>;
@@ -18,7 +18,7 @@ export function MonacoCodeViewer({
   ariaLabel,
   containerClassName = DEFAULT_MONACO_CONTAINER_CLASS_NAME,
   language,
-  loadingLabel = 'Loading Monaco viewer...',
+  loadingLabel,
   path,
   value,
 }: MonacoCodeViewerProps) {

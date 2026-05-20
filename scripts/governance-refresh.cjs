@@ -1,3 +1,4 @@
+/** Owned concern: refresh generated governance surfaces and validate DB-backed projections. */
 const childProcess = require('node:child_process');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
@@ -66,6 +67,7 @@ function buildRefreshStages() {
       {
         id: 'governance-db-import-after-reports',
         script: 'governance:db:import',
+        args: ['--', '--if-stale'],
       },
     ],
     databaseStages: [
@@ -97,6 +99,7 @@ function buildRefreshStages() {
       {
         id: 'governance-db-import-final',
         script: 'governance:db:import',
+        args: ['--', '--if-stale'],
       },
       {
         id: 'governance-db-check',

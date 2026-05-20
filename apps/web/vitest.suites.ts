@@ -74,7 +74,7 @@ export const WEB_VITEST_SUITES: Record<WebVitestSuiteName, WebVitestSuiteDefinit
   monaco: {
     include: [
       'src/app/views/CodeView.test.tsx',
-      'src/app/views/code/codeMonacoEditableAccess.architecture.test.ts',
+      'src/app/views/code/**/*.{test,spec}.{ts,tsx}',
       'src/app/views/artifacts/ArtifactMonacoPreviewPanel.test.tsx',
       'src/app/views/artifacts/artifactsMonacoReadonlyViewer.architecture.test.ts',
       'src/app/views/diff/diffMonacoReviewSurface.architecture.test.ts',
@@ -152,6 +152,73 @@ export function classifyWebVitestFile(filePath: string): {
   };
 }
 
+function tryAddGovernanceSuite(
+  filePath: string,
+  webPath: string,
+  selectedSuites: Set<WebVitestChangedSuiteName>
+): boolean {
+  if (isWebVitestGovernancePath(filePath) || isWebVitestGovernancePath(webPath)) {
+    selectedSuites.add('architecture');
+    return true;
+  }
+  return false;
+}
+
+function tryAddFocusSuite(
+  webPath: string,
+  selectedSuites: Set<WebVitestChangedSuiteName>
+): boolean {
+  if (isCanvasFocusPath(webPath)) {
+    selectedSuites.add(resolveCanvasChangedSuite(webPath));
+    return true;
+  }
+
+  if (isMonacoFocusPath(webPath)) {
+    selectedSuites.add('monaco');
+    return true;
+  }
+
+  return false;
+}
+
+function tryAddClassifiedSuite(
+  webPath: string,
+  selectedSuites: Set<WebVitestChangedSuiteName>
+): boolean {
+  const classification = classifyWebVitestFile(webPath);
+  const primarySuite = classification?.primarySuites[0];
+  if (primarySuite) {
+    selectedSuites.add(primarySuite);
+    return true;
+  }
+
+  if (webPath.endsWith('.tsx')) {
+    selectedSuites.add('presentation');
+    return true;
+  }
+
+  if (webPath.endsWith('.ts')) {
+    selectedSuites.add('unit');
+    return true;
+  }
+
+  return false;
+}
+
+function resolveSuiteForWebPath(
+  filePath: string,
+  webPath: string,
+  selectedSuites: Set<WebVitestChangedSuiteName>
+): void {
+  if (
+    tryAddGovernanceSuite(filePath, webPath, selectedSuites) ||
+    tryAddFocusSuite(webPath, selectedSuites) ||
+    tryAddClassifiedSuite(webPath, selectedSuites)
+  ) {
+    return;
+  }
+}
+
 export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): {
   suites: WebVitestChangedSuiteName[];
   commands: string[];
@@ -167,36 +234,7 @@ export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): 
       continue;
     }
 
-    if (isWebVitestGovernancePath(filePath) || isWebVitestGovernancePath(webPath)) {
-      selectedSuites.add('architecture');
-      continue;
-    }
-
-    if (isCanvasFocusPath(webPath)) {
-      selectedSuites.add(resolveCanvasChangedSuite(webPath));
-      continue;
-    }
-
-    if (isMonacoFocusPath(webPath)) {
-      selectedSuites.add('monaco');
-      continue;
-    }
-
-    const classification = classifyWebVitestFile(webPath);
-    const primarySuite = classification?.primarySuites[0];
-    if (primarySuite) {
-      selectedSuites.add(primarySuite);
-      continue;
-    }
-
-    if (/\.tsx$/.test(webPath)) {
-      selectedSuites.add('presentation');
-      continue;
-    }
-
-    if (/\.ts$/.test(webPath)) {
-      selectedSuites.add('unit');
-    }
+    resolveSuiteForWebPath(filePath, webPath, selectedSuites);
   }
 
   const suites = WEB_VITEST_CHANGED_SUITE_ORDER.filter((suiteName) =>
@@ -210,7 +248,7 @@ export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): 
 }
 
 function normalizeWebVitestPath(filePath: string): string {
-  return filePath.replace(/\\/g, '/').replace(/^\.?\//, '');
+  return filePath.replaceAll('\\', '/').replace(/^\.?\//, '');
 }
 
 function normalizeWebVitestChangedPath(filePath: string): string | null {
@@ -241,16 +279,16 @@ function isArchitectureTestPath(filePath: string): boolean {
 function isCanvasFocusPath(filePath: string): boolean {
   return (
     /^src\/app\/views\/Canvas.*\.(?:test|spec)\.tsx$/.test(filePath) ||
-    /^src\/app\/views\/canvas\//.test(filePath)
+    filePath.startsWith('src/app/views/canvas/')
   );
 }
 
 function isMonacoFocusPath(filePath: string): boolean {
   return (
-    /^src\/app\/components\/monaco\//.test(filePath) ||
+    filePath.startsWith('src/app/components/monaco/') ||
     filePath === 'src/app/views/CodeView.tsx' ||
     filePath === 'src/app/views/CodeView.test.tsx' ||
-    /^src\/app\/views\/code\//.test(filePath) ||
+    filePath.startsWith('src/app/views/code/') ||
     filePath === 'src/app/views/artifacts/ArtifactMonacoPreviewPanel.tsx' ||
     filePath === 'src/app/views/artifacts/ArtifactMonacoPreviewPanel.test.tsx' ||
     filePath === 'src/app/views/artifacts/artifactsMonacoReadonlyViewer.architecture.test.ts' ||
@@ -263,7 +301,7 @@ function resolveCanvasChangedSuite(filePath: string): Exclude<WebVitestFocusSuit
     return 'canvas-architecture';
   }
 
-  if (/\.tsx$/.test(filePath)) {
+  if (filePath.endsWith('.tsx')) {
     return 'canvas-presentation';
   }
 

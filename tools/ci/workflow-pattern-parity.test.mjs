@@ -215,11 +215,18 @@ test('contracts and test workflows consume semantic scope outputs instead of inl
 
   assertWorkflowContains(contractsWorkflow, 'node tools/ci/emit-scope.mjs --mode contracts');
   assertWorkflowContains(testWorkflow, 'node tools/ci/emit-scope.mjs --mode test');
+  assertWorkflowContains(testWorkflow, 'node tools/ci/emit-test-matrix.mjs');
+  assertWorkflowContains(testWorkflow, 'name: Package Tests (${{ matrix.name }})');
+  assertWorkflowContains(
+    testWorkflow,
+    'matrix: ${{ fromJSON(needs.detect_test_matrix.outputs.matrix) }}'
+  );
+  assertWorkflowContains(testWorkflow, 'run: ${{ matrix.command }}');
+  assertWorkflowContains(testWorkflow, 'name: Adapter Temporal Tests');
+  assertWorkflowContains(testWorkflow, 'steps.scope.outputs.adapter_temporal');
   assertWorkflowContains(testWorkflow, 'steps.scope.outputs.determinism_relevant');
   assertWorkflowContains(testWorkflow, 'steps.scope.outputs.coverage_relevant');
   assertWorkflowContains(testWorkflow, 'steps.scope.outputs.root_build_sensitive');
-  assertWorkflowContains(testWorkflow, 'steps.scope.outputs.temporal_dbt_plugin');
-  assertWorkflowContains(testWorkflow, 'pnpm --filter @dvt/temporal-dbt-plugin test');
 
   assert.doesNotMatch(contractsWorkflow, /dorny\/paths-filter/u);
   assert.doesNotMatch(testWorkflow, /dorny\/paths-filter/u);
@@ -253,6 +260,15 @@ test('PR quality gate keeps merge-blocking governance commands wired', () => {
   for (const command of PR_QUALITY_GOVERNANCE_COMMANDS) {
     assertWorkflowContains(prQualityGate, command);
   }
+});
+
+test('PR quality gate consumes prepush-equivalent scope outputs for expensive gates', () => {
+  const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
+
+  assertWorkflowContains(prQualityGate, 'steps.scope.outputs.governance_global_relevant');
+  assertWorkflowContains(prQualityGate, 'steps.scope.outputs.traceability_adr0_relevant');
+  assertWorkflowContains(prQualityGate, 'steps.scope.outputs.feature_mechanization_relevant');
+  assertWorkflowContains(prQualityGate, 'steps.scope.outputs.code_validation_relevant');
 });
 
 test('PR quality gate is the single remote owner for ADR-0000 traceability', () => {
