@@ -208,6 +208,8 @@ allowedImplementationSurfaces:
   - tools/ci/policy/workflow-scope.json
   - tools/ci/policy/adapter-postgres-relevance.json
   - tools/ci/workflow-scope-classification.test.mjs
+  - tools/ci/architecture-dependency-guard.test.mjs
+  - tools/ci/generated-docs-single-writer-policy.test.mjs
   - tools/ci/workflow-pattern-parity.test.mjs
   - tools/ci/turbo-workspace-task-contract.test.mjs
   - tools/ci/test/path-matcher.test.mjs

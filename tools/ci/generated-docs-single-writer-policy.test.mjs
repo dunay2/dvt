@@ -32,7 +32,7 @@ test('generated-doc policy command is wired into docs governance gates', () => {
   assert.equal(rootPackage.scripts['verify:prepush'], 'node scripts/verify-prepush.cjs');
   assert.ok(
     verifyPrepush
-      .buildPrepushPlan(['docs/generated-docs-policy.json'])
+      .buildPrepushPlan(['docs/generated-docs-policy.json'], { full: true })
       .some((step) => step.id === 'docs-gov-generated-policy')
   );
 });
