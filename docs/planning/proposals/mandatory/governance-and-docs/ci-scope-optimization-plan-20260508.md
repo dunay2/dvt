@@ -194,6 +194,7 @@ governingSources:
   - docs/planning/proposals/mandatory/governance-and-docs/repository-command-catalog-normalization-plan-20260508.md
 allowedImplementationSurfaces:
   - package.json
+  - .husky/pre-push
   - .github/workflows/ci.yml
   - .github/workflows/test.yml
   - .github/workflows/pr-quality-gate.yml
@@ -215,6 +216,7 @@ allowedImplementationSurfaces:
   - tools/ci/emit-scope.test.mjs
   - tools/ci/emit-workspace-matrix.test.mjs
   - tools/ci/emit-test-matrix.test.mjs
+  - scripts/local-validation-plan.cjs
   - docs/guides/testing-and-ci-capabilities.md
   - docs/planning/proposals/mandatory/governance-and-docs/repository-command-catalog-normalization-plan-20260508.md
   - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
@@ -647,6 +649,204 @@ symbols:
     cypressCoverage: N/A - CI scope tooling only
     unitTests:
       - node --test tools/ci/emit-test-matrix.test.mjs
+  - name: repoRoot
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Keep local validation execution rooted at the repository boundary
+    architectureGuard: node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+  - name: path
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Keep repository-root resolution explicit in the shared validation module
+    architectureGuard: node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+  - name: step
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Replace duplicated command object literals with a single step factory
+    architectureGuard: node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+  - name: MECHANICAL_PREPUSH_STEPS
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Separate mechanical local pre-push checks from full closeout validation
+    architectureGuard: node --test scripts/verify-prepush.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-prepush.test.cjs
+  - name: VERIFY_CHANGED_BASE_STEPS
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Keep fast changed-slice verification declarative
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
+  - name: PREPUSH_GROUPS
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Group expensive closeout checks behind full pre-push mode
+    architectureGuard: node --test scripts/verify-prepush.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-prepush.test.cjs
+  - name: VERIFY_CHANGED_GROUPS
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Keep scoped planning and verifier self-tests out of the base wrapper
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
+  - name: normalizeChangedFiles
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalChangedFileSet
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Avoid duplicate path normalization between local validation wrappers
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
+  - name: matchesAny
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalChangedFileSet
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Centralize local changed-path predicates
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
+  - name: hasPlanningDbChange
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalChangedFileSet
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Keep planning DB validation scoped to planning/query-store surfaces
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
+  - name: hasDeveloperWorkflowVerifierChange
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalChangedFileSet
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Run local verifier self-tests only when the verifier changes
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
+  - name: pushStepOnce
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Avoid duplicate local validation commands after grouping
+    architectureGuard: node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+  - name: pushSteps
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Compose validation groups without duplicating loop logic
+    architectureGuard: node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+  - name: classifyPrepushScope
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Make full pre-push the explicit closeout path
+    architectureGuard: node --test scripts/verify-prepush.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-prepush.test.cjs
+  - name: buildPrepushPlan
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Build mechanical and full local pre-push plans from one table
+    architectureGuard: node --test scripts/verify-prepush.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-prepush.test.cjs
+  - name: buildVerifyChangedPlan
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Keep local changed verification as a focused plan builder
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
+  - name: commandLabel
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Share operator-facing command labels across local validation wrappers
+    architectureGuard: node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+  - name: executeCommandPlan
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Remove duplicated spawn/error handling from local validation wrappers
+    architectureGuard: node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
 ```
 
 ## File Structure
