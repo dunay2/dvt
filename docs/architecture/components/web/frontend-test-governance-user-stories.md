@@ -2,7 +2,7 @@
 title: Frontend Test Governance User Stories
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-05-18
+last_reviewed: 2026-05-20
 planning_type: architecture
 ---
 
@@ -30,8 +30,9 @@ is visible without opening the generic `Run Tests` log.
 Acceptance:
 
 - `.github/workflows/test.yml` contains a `web-frontend-tests` job.
-- The job runs `pnpm test:web:ci` when web files or root-build-sensitive files
-  change.
+- The job runs `pnpm test:web:changed` for ordinary web pull requests.
+- The job runs `pnpm test:web:ci` for pushes to `main`, manual runs, and
+  root-build-sensitive pull requests.
 - The generic affected-package job no longer owns the web test step.
 
 ### Story 3 - Test support remains test-only

@@ -2,7 +2,7 @@
 title: Testing and CI Capabilities
 status: Active
 owner: engineering
-last_reviewed: 2026-05-17
+last_reviewed: 2026-05-20
 ---
 
 # Testing and CI Capabilities
@@ -86,7 +86,7 @@ Warm-build note:
 | ---------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | Web app tests                      | `pnpm test:web` or `pnpm --filter @dvt/web test`                           | `apps/web` full Vitest suite                         | [`apps/web/package.json`](../../apps/web/package.json)                                                 |
 | Web app CI partition               | `pnpm test:web:ci` or `pnpm --filter @dvt/web test:ci`                     | `apps/web` primary Vitest suites                     | [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts)                                         |
-| Web app changed-file test routing  | `pnpm test:web:changed` or `pnpm --filter @dvt/web test:changed`           | `apps/web` routed local Vitest suite                 | [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts)                                         |
+| Web app changed-file test routing  | `pnpm test:web:changed` or `pnpm --filter @dvt/web test:changed`           | Routed web Vitest suite for local and ordinary PRs   | [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts)                                         |
 | Web app lint                       | `pnpm --filter @dvt/web lint`                                              | Web `src`, Cypress, local configs, and local scripts | [`apps/web/package.json`](../../apps/web/package.json)                                                 |
 | Web app unit tests                 | `pnpm --filter @dvt/web test:unit`                                         | `*.test.ts`, excluding architecture                  | [`apps/web/vitest.unit.config.ts`](../../apps/web/vitest.unit.config.ts)                               |
 | Web app presentation tests         | `pnpm --filter @dvt/web test:presentation`                                 | `*.test.tsx`, excluding architecture                 | [`apps/web/vitest.presentation.config.ts`](../../apps/web/vitest.presentation.config.ts)               |
@@ -326,11 +326,12 @@ contracts, determinism, golden, and coverage lanes closed, while
 active. Dependency, lifecycle, unknown, and runtime-capability script changes
 remain fail-closed and root-build sensitive.
 
-- `pnpm test:web:changed` is the local web changed-file router. It reads
-  changed files or explicit `--files` arguments, runs `@dvt/web` dependency
+- `pnpm test:web:changed` is the web changed-file router. It reads changed
+  files or explicit `--files` arguments, runs `@dvt/web` dependency
   preparation once, and delegates to the routed Vitest suite command from the
-  web suite catalog. It is not the GitHub merge gate; CI keeps using
-  `pnpm test:web:ci`.
+  web suite catalog. Local users and ordinary web pull requests use this route.
+  Pushes to `main`, manual workflow runs, and root-build-sensitive pull
+  requests keep using `pnpm test:web:ci`.
 - Canvas has narrower local focus lanes for changed-file routing:
   `test:canvas-unit`, `test:canvas-presentation`, and
   `test:canvas-architecture`. The broad `test:canvas` command remains available
@@ -382,14 +383,16 @@ Current workflow consumers:
   outputs instead of local `dorny/paths-filter` package-root rules. Engine
   coverage uses the same governed `packages/@dvt/engine/**` package boundary as
   engine package test routing, so engine Vitest config changes cannot bypass
-  threshold enforcement. For web PRs, the affected-package step runs
-  `pnpm test:web:ci`, which expands to `@dvt/web` `test:deps` followed by the
-  unit, presentation, and architecture Vitest delegates while `pnpm test:web`
-  remains the full web suite. Public web suite commands also run `test:deps`
-  before their raw `*:run` delegates so local split-suite execution preserves
-  the package dependency-build contract. The web architecture suite checks that
-  these package scripts, Vitest config delegates, and workflow command stay aligned with
-  `apps/web/vitest.suites.ts`.
+  threshold enforcement. For ordinary web PRs, the web lane runs
+  `pnpm test:web:changed` with `GIT_BASE` pointing at the pull-request base ref.
+  The same lane runs `pnpm test:web:ci` for pushes to `main`, manual workflow
+  runs, and root-build-sensitive pull requests. `test:web:ci` expands to
+  `@dvt/web` `test:deps` followed by the unit, presentation, and architecture
+  Vitest delegates while `pnpm test:web` remains the full web suite. Public web
+  suite commands also run `test:deps` before their raw `*:run` delegates so
+  split-suite execution preserves the package dependency-build contract. The
+  web architecture suite checks that these package scripts, Vitest config
+  delegates, and workflow commands stay aligned with `apps/web/vitest.suites.ts`.
 - [`.github/workflows/contracts.yml`](../../.github/workflows/contracts.yml) uses
   `emit-scope --mode contracts` for contract, determinism, and golden routing.
   The workflow no longer owns parallel inline `package.json` filters for those

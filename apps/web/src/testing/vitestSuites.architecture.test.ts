@@ -124,6 +124,10 @@ describe('web Vitest suite partition', () => {
     expect(rootPackageJson.scripts['test:web:ci']).toBe('pnpm --filter @dvt/web test:ci');
     expect(workflow).toContain("pnpm -r --workspace-concurrency=4 --filter '!@dvt/web' test");
     expect(workflow).toContain('pnpm test:web:ci');
+    expect(workflow).toContain('pnpm test:web:changed');
+    expect(workflow).toContain(
+      "github.event_name == 'pull_request' && steps.scope.outputs.web == 'true'"
+    );
     expect(workflow).toContain('web-frontend-tests:');
     expect(workflow).toContain('name: Web Frontend Tests');
 

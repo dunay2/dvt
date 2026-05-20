@@ -2,7 +2,7 @@
 title: Frontend Test Governance Component
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-05-18
+last_reviewed: 2026-05-20
 planning_type: architecture
 ---
 
@@ -38,8 +38,9 @@ contract validation, or engine determinism tests.
 | `WEB_VITEST_SUITES`              | catalog  | Defines include and exclude rules for each suite.    |
 | `createWebVitestConfig`          | function | Builds Vitest config from the suite catalog.         |
 | `classifyWebVitestFile`          | function | Classifies a test file into primary and focus lanes. |
-| `pnpm test:web:ci`               | command  | Runs governed web primary suites in CI.              |
-| `Web Frontend Tests`             | CI job   | Runs `pnpm test:web:ci` as a named frontend lane.    |
+| `pnpm test:web:ci`               | command  | Runs governed web primary suites.                    |
+| `pnpm test:web:changed`          | command  | Runs the changed-file web suite route.               |
+| `Web Frontend Tests`             | CI job   | Runs changed PR routing or full primary suites.      |
 
 <!-- markdownlint-enable MD060 -->
 
@@ -50,6 +51,9 @@ contract validation, or engine determinism tests.
   listed in `WEB_VITEST_FOCUS_SUITE_NAMES`.
 - Architecture tests are excluded from unit and presentation suites.
 - The CI job name for the web Vitest lane is `Web Frontend Tests`.
+- Ordinary web pull requests route through `pnpm test:web:changed`.
+- Pushes to `main`, manual workflow runs, and root-build-sensitive PRs route
+  through `pnpm test:web:ci`.
 - Test support under `apps/web/src/testing/**` remains test-only and must not
   become a production adapter surface.
 - `vitest*.config.ts` files are adapters over the suite catalog. They do not own
@@ -64,7 +68,9 @@ stateDiagram-v2
   Classified --> PrimarySuite: unit/presentation/architecture
   Classified --> FocusSuite: optional focus overlap
   PrimarySuite --> PackageCommand: test:ci
-  PackageCommand --> CiLane: Web Frontend Tests
+  FocusSuite --> ChangedCommand: test:changed
+  PackageCommand --> CiLane: Web Frontend Tests full route
+  ChangedCommand --> CiLane: Web Frontend Tests PR route
   CiLane --> Evidence: GitHub check result
 ```
 
@@ -72,7 +78,8 @@ stateDiagram-v2
 
 - Local developers use `pnpm --filter @dvt/web test:unit`,
   `test:presentation`, `test:architecture`, and `test:canvas`.
-- GitHub Actions uses `pnpm test:web:ci` from the `Web Frontend Tests` job.
+- GitHub Actions uses `pnpm test:web:changed` for ordinary web pull requests
+  and `pnpm test:web:ci` for full web coverage routes.
 - Architecture tests use `classifyWebVitestFile` to prevent suite drift.
 - Planning and closeout evidence cite the named web test lane instead of an
   implicit generic test step.
@@ -85,7 +92,9 @@ flowchart LR
   Catalog --> Configs["vitest*.config.ts"]
   Configs --> Scripts["apps/web package scripts"]
   Scripts --> Root["pnpm test:web:ci"]
+  Scripts --> Changed["pnpm test:web:changed"]
   Root --> CI["Web Frontend Tests"]
+  Changed --> CI
   Support["apps/web/src/testing/**"] --> Tests
 ```
 

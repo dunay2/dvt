@@ -2,7 +2,7 @@
 title: Web Vitest Changed Suite Router Component
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-05-18
+last_reviewed: 2026-05-20
 planning_type: architecture
 ---
 
@@ -10,12 +10,13 @@ planning_type: architecture
 
 ## Purpose
 
-Own the local query that maps changed `@dvt/web` files to the smallest safe
-Vitest suite command.
+Own the query that maps changed `@dvt/web` files to the smallest safe Vitest
+suite command for local development and non-root-sensitive pull requests.
 
 Owned concern: `WebVitestChangedSuiteRouter` converts file paths into catalog
-owned suite commands. It is a local developer and review accelerator; it does
-not replace the `Web Frontend Tests` CI lane.
+owned suite commands. It accelerates local development and the `Web Frontend
+Tests` pull-request lane while preserving full primary-suite coverage on
+`main`, manual workflow runs, and root-build-sensitive changes.
 
 ## Public API
 
@@ -31,6 +32,7 @@ not replace the `Web Frontend Tests` CI lane.
 | `test:canvas-architecture`          | command  | Runs Canvas architecture focus tests.                       |
 | `test:web:changed`                  | command  | Root alias for the package-local changed-suite command.     |
 | `run-vitest-changed-suites.ts`      | adapter  | Reads Git change sets or explicit `--files` arguments.      |
+| `Web Frontend Tests` PR route       | CI job   | Runs changed-suite routing for ordinary web PR changes.     |
 
 <!-- markdownlint-enable MD060 -->
 
@@ -44,8 +46,10 @@ not replace the `Web Frontend Tests` CI lane.
 - Non-Canvas `.ts` paths route to `unit`.
 - If no web-relevant changed file exists, the command exits successfully
   without running a Vitest suite.
-- CI still uses `test:web:ci`; the changed-suite command is a local and review
-  command.
+- Pull-request CI may use `test:web:changed` only when the test scope is web
+  and not root-build-sensitive.
+- `main`, manual workflow runs, and root-build-sensitive PRs still use
+  `test:web:ci`.
 
 ## Transitions
 
@@ -62,12 +66,12 @@ stateDiagram-v2
   CanvasPath --> CanvasArchitectureCommand: architecture
   TsxPath --> PresentationCommand
   TsPath --> UnitCommand
-  ArchitectureCommand --> LocalEvidence
-  CanvasUnitCommand --> LocalEvidence
-  CanvasPresentationCommand --> LocalEvidence
-  CanvasArchitectureCommand --> LocalEvidence
-  PresentationCommand --> LocalEvidence
-  UnitCommand --> LocalEvidence
+  ArchitectureCommand --> Evidence
+  CanvasUnitCommand --> Evidence
+  CanvasPresentationCommand --> Evidence
+  CanvasArchitectureCommand --> Evidence
+  PresentationCommand --> Evidence
+  UnitCommand --> Evidence
 ```
 
 ## Consumers
@@ -75,6 +79,8 @@ stateDiagram-v2
 - Local frontend developers use `pnpm --filter @dvt/web test:changed`.
 - Reviewers use `pnpm test:web:changed -- --files <paths>` to validate a patch
   without running the full web suite.
+- The `Web Frontend Tests` GitHub job uses `pnpm test:web:changed` for
+  ordinary web pull requests after the dependency graph has been built.
 - Architecture tests use the router API to prevent command drift.
 - Documentation uses this component to explain local feedback-loop sizing.
 
@@ -88,11 +94,13 @@ flowchart LR
   Router --> Catalog["WebVitestSuiteCatalog"]
   Router --> Commands["WEB_VITEST_CHANGED_SUITE_COMMANDS"]
   Commands --> Vitest["Vitest suite delegates"]
+  Workflow["Web Frontend Tests PR"] --> Adapter
 ```
 
 ## Negative Rules
 
-- Do not use this command as the merge-gate replacement for `test:web:ci`.
+- Do not use this command for `main`, manual workflow runs, or
+  root-build-sensitive pull requests.
 - Do not add route-local changed-test scripts when the catalog can route them.
 - Do not duplicate include/exclude glob semantics in the command adapter.
 - Do not make source files under `apps/web/src/testing/**` production services.

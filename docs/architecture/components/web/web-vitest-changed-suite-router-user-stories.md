@@ -2,7 +2,7 @@
 title: Web Vitest Changed Suite Router User Stories
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-05-18
+last_reviewed: 2026-05-20
 planning_type: architecture
 ---
 
@@ -105,3 +105,19 @@ Acceptance:
 - Given no web-relevant changed files
 - When the command runs
 - Then it exits successfully and reports that no web suite was selected.
+
+## US-6 Pull-Request Web Change
+
+As a reviewer of an ordinary web-only pull request, I want the `Web Frontend
+Tests` job to run the changed-suite router so that a two-file change does not
+execute every web Vitest file.
+
+Acceptance:
+
+- Given a pull request with web-relevant files and no root-build-sensitive
+  changes
+- When the `Web Frontend Tests` job runs
+- Then it executes `pnpm test:web:changed` with the pull-request base ref.
+- Given a push to `main`, a manual run, or a root-build-sensitive pull request
+- When the `Web Frontend Tests` job runs
+- Then it executes `pnpm test:web:ci`.

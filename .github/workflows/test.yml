@@ -274,10 +274,19 @@ jobs:
           steps.scope.outputs.root_build_sensitive == 'true'
         run: pnpm --filter "@dvt/web^..." --workspace-concurrency=4 build
 
-      - name: Run governed web Vitest suites
+      - name: Run governed web Vitest changed suites (PR)
         if:
-          github.event_name != 'pull_request' || steps.scope.outputs.web == 'true' ||
-          steps.scope.outputs.root_build_sensitive == 'true'
+          github.event_name == 'pull_request' && steps.scope.outputs.web == 'true' &&
+          steps.scope.outputs.root_build_sensitive != 'true'
+        run: pnpm test:web:changed
+        env:
+          DVT_CI: '1'
+          GIT_BASE: origin/${{ github.base_ref }}
+          GIT_HEAD: ${{ github.sha }}
+
+      - name: Run governed web Vitest primary suites
+        if:
+          github.event_name != 'pull_request' || steps.scope.outputs.root_build_sensitive == 'true'
         run: pnpm test:web:ci
         env:
           DVT_CI: '1'
