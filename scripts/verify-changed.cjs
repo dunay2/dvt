@@ -57,11 +57,6 @@ const BASE_STEPS = Object.freeze([
     command: 'node',
     args: ['scripts/check-forbidden-tracked-files.cjs'],
   },
-  {
-    id: 'type-check-prepush',
-    command: 'node',
-    args: ['scripts/type-check-prepush.cjs'],
-  },
 ]);
 
 const PLANNING_DB_STEPS = Object.freeze([

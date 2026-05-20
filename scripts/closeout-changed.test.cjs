@@ -49,7 +49,7 @@ test('buildCloseoutPlan regenerates docs, workboard, governance hashes, and prep
     ]
   );
   assert.equal(commandLabel(plan[0]), 'pnpm docs:sync');
-  assert.equal(commandLabel(plan.at(-1)), 'pnpm verify:prepush');
+  assert.equal(commandLabel(plan.at(-1)), 'pnpm verify:prepush -- --full');
 });
 
 test('buildCloseoutPlan includes generated code status only for structural app or package changes', () => {
@@ -189,6 +189,8 @@ test('closeout helper regression tests are wired into the prepush gate', () => {
   );
   assert.equal(packageJson.scripts['verify:prepush'], 'node scripts/verify-prepush.cjs');
   assert.ok(
-    buildPrepushPlan(['apps/web/src/main.tsx']).some((step) => step.id === 'test-closeout-changed')
+    buildPrepushPlan(['apps/web/src/main.tsx'], { full: true }).some(
+      (step) => step.id === 'test-closeout-changed'
+    )
   );
 });

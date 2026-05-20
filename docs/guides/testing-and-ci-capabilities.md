@@ -219,7 +219,7 @@ Command semantics:
   consumers, and user stories are documented in
   [Local Changed Files Gate Component](../architecture/components/ci-governance/local-changed-files-gate-component.md).
 - `pnpm verify:prepush` uses `node scripts/docs-workboard-check-changed.cjs`, so workboard drift is enforced when lane YAML changed, not for every module-only commit.
-- `pnpm verify:prepush` includes `pnpm docs:gov:filenames:changed`, `pnpm docs:gov:frontmatter:changed`, and `pnpm docs:gov:generated-policy` after the changed-only Markdown location gate, keeping changed docs fail-closed for placement, naming, ADR/evidence metadata, and generated-doc ownership before the heavier code checks run.
+- `pnpm verify:prepush` is mechanical by default. It runs changed-file docs, markdown, formatting, ARC evidence, QA artifact, feature mechanization implementation, and forbidden-file checks without root type-check, architecture dependency checks, global governance maps, or verifier self-tests.
 - `pnpm verify:prepush` is routed through
   [`scripts/verify-prepush.cjs`](../../scripts/verify-prepush.cjs). The router
   gets repository path semantics from
@@ -227,10 +227,9 @@ Command semantics:
   instead of owning a parallel path taxonomy. That shared query consumes the
   repository command catalog for `scripts/**`, `tools/ci/**`, `tools/docs/**`,
   `tools/ops/**`, and `.github/scripts/**`, and it also names root CI policy
-  inputs such as `.dependency-cruiser.cjs`. The router now runs the changed-file
-  lint/format gate before self-tests, governance evidence, traceability, and
-  architecture checks so formatting failures fail before expensive validation.
-  It then conditionally runs the heavier groups:
+  inputs such as `.dependency-cruiser.cjs`. The default router keeps local
+  pre-push focused on mechanical changed-file checks. `--full` restores the
+  heavier closeout groups:
   - planning DB inventory checks only for planning/query-store surfaces;
   - global governance maps, fingerprints, coverage, and remediation checks only
     for docs/governance/planning/generated surfaces;
@@ -246,18 +245,18 @@ Command semantics:
   unrelated changes. Pushes to `main` and explicit manual full gates keep the
   historical full posture.
 - `pnpm verify:prepush -- --full` forces all conditional groups and is the
-  diagnostic equivalent of the historical full local pre-push posture.
+  diagnostic/closeout equivalent of the historical full local pre-push posture.
 - `pnpm pr:closeout` is the governed final PR rail for committed slices. It can
   run docs/status/governance preparation, caller-supplied targeted checks,
-  `pnpm commit`, one final `pnpm verify:prepush`, and optional `git push` in the
+  `pnpm commit`, one final `pnpm verify:prepush -- --full`, and optional `git push` in the
   repository order. Use `--stage-all` when the full local changed set is the
   intended PR scope; without it, the rail requires files to be staged already
   and fails before commit if preparation or checks leave unstaged outputs.
-- `pnpm verify:prepush` now keeps three outcomes for code diffs:
+- `pnpm verify:prepush -- --full` keeps three outcomes for code diffs:
   - skip when no TypeScript-affecting files changed
   - run `pnpm ci:affected:typecheck` when the diff is workspace-scoped
   - run full `pnpm type-check` when root or cross-workspace TypeScript graph inputs changed
-- `pnpm verify:prepush` also runs `pnpm arch:deps`, the root
+- `pnpm verify:prepush -- --full` also runs `pnpm arch:deps`, the root
   dependency-cruiser gate for repository architecture dependency boundaries.
 - `pnpm --filter @dvt/web test:e2e:native` uses the repository-owned native
   Cypress runner in `tools/ci/run-web-cypress-native.mjs`. The runner builds

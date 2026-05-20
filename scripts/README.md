@@ -243,13 +243,13 @@ Diff policy:
 ### `verify-changed.cjs`
 
 Runs the fast changed-slice verification plan used during local iteration. It
-keeps `verify:prepush` as the final closeout gate and only selects checks from
-the canonical changed-file set.
+keeps closeout validation separate and only selects mechanical checks from the
+canonical changed-file set.
 
 Always runs:
 
 - changed docs location, filename, frontmatter, ARC, QA, markdown, feature
-  mechanization, lint/format, forbidden-file, and type-check scope checks
+  mechanization, lint/format, and forbidden-file checks
 
 Adds scoped checks:
 

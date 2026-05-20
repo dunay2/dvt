@@ -9,7 +9,7 @@
 
   const repoRoot = path.resolve(__dirname, '..');
 
-  const UNIVERSAL_STEPS = [
+  const MECHANICAL_STEPS = [
     {
       id: 'docs-workboard-check-changed',
       command: 'node',
@@ -36,26 +36,6 @@
       args: ['docs:gov:frontmatter:changed'],
     },
     {
-      id: 'test-closeout-changed',
-      command: 'pnpm',
-      args: ['test:closeout-changed'],
-    },
-    {
-      id: 'test-verify-prepush',
-      command: 'pnpm',
-      args: ['test:verify-prepush'],
-    },
-    {
-      id: 'test-generated-docs-policy',
-      command: 'node',
-      args: ['--test', 'scripts/check-generated-docs-policy.test.cjs'],
-    },
-    {
-      id: 'test-pr-closeout',
-      command: 'pnpm',
-      args: ['test:pr-closeout'],
-    },
-    {
       id: 'docs-arc-evidence-changed',
       command: 'pnpm',
       args: ['docs:arc:evidence:check', '--', '--changed-only'],
@@ -74,6 +54,29 @@
       id: 'check-forbidden-tracked-files',
       command: 'node',
       args: ['scripts/check-forbidden-tracked-files.cjs'],
+    },
+  ];
+
+  const FULL_ONLY_STEPS = [
+    {
+      id: 'test-closeout-changed',
+      command: 'pnpm',
+      args: ['test:closeout-changed'],
+    },
+    {
+      id: 'test-verify-prepush',
+      command: 'pnpm',
+      args: ['test:verify-prepush'],
+    },
+    {
+      id: 'test-generated-docs-policy',
+      command: 'node',
+      args: ['--test', 'scripts/check-generated-docs-policy.test.cjs'],
+    },
+    {
+      id: 'test-pr-closeout',
+      command: 'pnpm',
+      args: ['test:pr-closeout'],
     },
   ];
 
@@ -133,12 +136,15 @@
     },
   ];
 
-  const FEATURE_MECHANIZATION_STEPS = [
+  const FEATURE_MECHANIZATION_FULL_STEPS = [
     {
       id: 'docs-feature-mechanization',
       command: 'pnpm',
       args: ['docs:feature-mechanization'],
     },
+  ];
+
+  const FEATURE_MECHANIZATION_CHANGED_STEPS = [
     {
       id: 'docs-feature-mechanization-implementation',
       command: 'pnpm',
@@ -176,10 +182,10 @@
     return {
       hasChangedFiles: scope.hasChangedFiles,
       needsPlanningDbInventory: full || scope.needsPlanningDbInventory,
-      needsGovernanceGlobal: full || scope.needsGovernanceGlobal,
+      needsGovernanceGlobal: full,
       needsFeatureMechanization: full || scope.needsFeatureMechanization,
-      needsTraceabilityAdr0: full || scope.needsTraceabilityAdr0,
-      needsCodeValidation: full || scope.needsCodeValidation,
+      needsTraceabilityAdr0: full,
+      needsCodeValidation: full,
     };
   }
 
@@ -195,7 +201,11 @@
     const scope = classifyPrepushScope(changedFiles, options);
     const steps = [];
 
-    pushSteps(steps, UNIVERSAL_STEPS);
+    pushSteps(steps, MECHANICAL_STEPS);
+
+    if (options.full === true) {
+      pushSteps(steps, FULL_ONLY_STEPS);
+    }
 
     if (scope.needsPlanningDbInventory) {
       pushSteps(steps, PLANNING_DB_STEPS);
@@ -204,7 +214,10 @@
       pushSteps(steps, GOVERNANCE_GLOBAL_STEPS);
     }
     if (scope.needsFeatureMechanization) {
-      pushSteps(steps, FEATURE_MECHANIZATION_STEPS);
+      if (options.full === true) {
+        pushSteps(steps, FEATURE_MECHANIZATION_FULL_STEPS);
+      }
+      pushSteps(steps, FEATURE_MECHANIZATION_CHANGED_STEPS);
     }
     if (scope.needsTraceabilityAdr0) {
       pushSteps(steps, TRACEABILITY_STEPS);

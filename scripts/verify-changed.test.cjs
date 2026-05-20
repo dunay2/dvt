@@ -27,7 +27,6 @@ test('buildVerifyChangedPlan keeps docs-only iteration on changed-file gates', (
     'pnpm docs:feature-mechanization:implementation',
     'node scripts/check-changed.cjs',
     'node scripts/check-forbidden-tracked-files.cjs',
-    'node scripts/type-check-prepush.cjs',
   ]);
 
   assert.ok(!labels.includes('pnpm docs:governance:document-unit-map:check'));
