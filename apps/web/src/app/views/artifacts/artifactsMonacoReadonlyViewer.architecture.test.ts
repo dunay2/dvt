@@ -107,6 +107,7 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
     expect(existsSync(artifactPreviewPanelPath)).toBe(true);
     const artifactPreviewPanel = readFileSync(artifactPreviewPanelPath, 'utf8');
     const monacoViewer = readAppSource('components/monaco/MonacoCodeViewer.tsx');
+    const monacoEditor = readAppSource('components/monaco/MonacoCodeEditor.tsx');
     const monacoSurface = readAppSource('components/monaco/MonacoCodeSurface.tsx');
     const monacoFallback = readAppSource('components/monaco/MonacoViewerFallback.tsx');
     const routeFrame = readAppSource('components/workbench/RouteWorkbenchFrame.tsx');
@@ -116,6 +117,7 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
       ['views/artifacts/ArtifactPreviewTabs.tsx', artifactPreviewTabs],
       ['views/artifacts/ArtifactMonacoPreviewPanel.tsx', artifactPreviewPanel],
       ['components/monaco/MonacoCodeViewer.tsx', monacoViewer],
+      ['components/monaco/MonacoCodeEditor.tsx', monacoEditor],
       ['components/monaco/MonacoCodeSurface.tsx', monacoSurface],
       ['components/monaco/MonacoViewerFallback.tsx', monacoFallback],
       ['components/workbench/RouteWorkbenchFrame.tsx', routeFrame],
@@ -139,11 +141,15 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
     expect(artifactPreviewPanel).not.toContain('viewFullFile');
 
     expect(monacoViewer).toContain("lazy(() => import('./MonacoCodeSurface'))");
+    expect(monacoViewer).toContain('readOnly={true}');
+    expect(monacoEditor).toContain("lazy(() => import('./MonacoCodeSurface'))");
+    expect(monacoEditor).toContain('readOnly={false}');
+    expect(monacoEditor).toContain('onChange');
     expect(monacoSurface).toContain('<Editor');
-    expect(monacoSurface).toContain('readOnly: true');
-    expect(monacoSurface).toContain('domReadOnly: true');
-    expect(monacoSurface).toContain('contextmenu: false');
-    expect(monacoSurface).not.toContain('onChange');
+    expect(monacoSurface).toContain('readOnly = true');
+    expect(monacoSurface).toContain('readOnly: isReadOnly');
+    expect(monacoSurface).toContain('domReadOnly: isReadOnly');
+    expect(monacoSurface).toContain('contextmenu: isReadOnly');
     expect(monacoSurface).not.toContain('onMount');
     expect(monacoSurface).not.toContain('save');
 
@@ -151,6 +157,7 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
       const source = readFileSync(canvasModule, 'utf8');
       expect(source, canvasModule).not.toContain('@monaco-editor/react');
       expect(source, canvasModule).not.toContain('MonacoCodeViewer');
+      expect(source, canvasModule).not.toContain('MonacoCodeEditor');
       expect(source, canvasModule).not.toContain('MonacoDiffViewer');
     }
   });

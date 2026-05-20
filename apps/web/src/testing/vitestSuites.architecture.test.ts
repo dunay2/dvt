@@ -184,6 +184,18 @@ describe('web Vitest suite partition', () => {
       suites: ['canvas-architecture'],
     });
 
+    expect(
+      resolveWebVitestChangedSuitePlan(['apps/web/src/app/components/monaco/MonacoCodeSurface.tsx'])
+    ).toEqual({
+      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.monaco],
+      suites: ['monaco'],
+    });
+
+    expect(resolveWebVitestChangedSuitePlan(['apps/web/src/app/views/CodeView.tsx'])).toEqual({
+      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.monaco],
+      suites: ['monaco'],
+    });
+
     expect(resolveWebVitestChangedSuitePlan(['apps/web/src/app/Root.tsx'])).toEqual({
       commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.presentation],
       suites: ['presentation'],

@@ -11,6 +11,7 @@ export const WEB_VITEST_FOCUS_SUITE_NAMES = [
   'canvas-unit',
   'canvas-presentation',
   'canvas-architecture',
+  'monaco',
 ] as const;
 
 export type WebVitestPrimarySuiteName = (typeof WEB_VITEST_PRIMARY_SUITE_NAMES)[number];
@@ -70,6 +71,17 @@ export const WEB_VITEST_SUITES: Record<WebVitestSuiteName, WebVitestSuiteDefinit
     ],
     exclude: WEB_VITEST_DEFAULT_EXCLUDE,
   },
+  monaco: {
+    include: [
+      'src/app/views/CodeView.test.tsx',
+      'src/app/views/code/codeMonacoEditableAccess.architecture.test.ts',
+      'src/app/views/artifacts/ArtifactMonacoPreviewPanel.test.tsx',
+      'src/app/views/artifacts/artifactsMonacoReadonlyViewer.architecture.test.ts',
+      'src/app/views/diff/diffMonacoReviewSurface.architecture.test.ts',
+      'src/app/components/monaco/**/*.{test,spec}.{ts,tsx}',
+    ],
+    exclude: WEB_VITEST_DEFAULT_EXCLUDE,
+  },
 };
 
 export const WEB_VITEST_CHANGED_SUITE_COMMANDS: Record<WebVitestChangedSuiteName, string> = {
@@ -79,12 +91,14 @@ export const WEB_VITEST_CHANGED_SUITE_COMMANDS: Record<WebVitestChangedSuiteName
   'canvas-unit': 'pnpm run test:canvas-unit:run',
   'canvas-presentation': 'pnpm run test:canvas-presentation:run',
   'canvas-architecture': 'pnpm run test:canvas-architecture:run',
+  monaco: 'pnpm run test:monaco:run',
 };
 
 const WEB_VITEST_CHANGED_SUITE_ORDER: readonly WebVitestChangedSuiteName[] = [
   'canvas-unit',
   'canvas-presentation',
   'canvas-architecture',
+  'monaco',
   'unit',
   'presentation',
   'architecture',
@@ -128,6 +142,10 @@ export function classifyWebVitestFile(filePath: string): {
     focusSuites.push(canvasChangedSuite);
   }
 
+  if (isMonacoFocusPath(normalizedPath)) {
+    focusSuites.push('monaco');
+  }
+
   return {
     primarySuites,
     focusSuites,
@@ -156,6 +174,11 @@ export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): 
 
     if (isCanvasFocusPath(webPath)) {
       selectedSuites.add(resolveCanvasChangedSuite(webPath));
+      continue;
+    }
+
+    if (isMonacoFocusPath(webPath)) {
+      selectedSuites.add('monaco');
       continue;
     }
 
@@ -219,6 +242,19 @@ function isCanvasFocusPath(filePath: string): boolean {
   return (
     /^src\/app\/views\/Canvas.*\.(?:test|spec)\.tsx$/.test(filePath) ||
     /^src\/app\/views\/canvas\//.test(filePath)
+  );
+}
+
+function isMonacoFocusPath(filePath: string): boolean {
+  return (
+    /^src\/app\/components\/monaco\//.test(filePath) ||
+    filePath === 'src/app/views/CodeView.tsx' ||
+    filePath === 'src/app/views/CodeView.test.tsx' ||
+    /^src\/app\/views\/code\//.test(filePath) ||
+    filePath === 'src/app/views/artifacts/ArtifactMonacoPreviewPanel.tsx' ||
+    filePath === 'src/app/views/artifacts/ArtifactMonacoPreviewPanel.test.tsx' ||
+    filePath === 'src/app/views/artifacts/artifactsMonacoReadonlyViewer.architecture.test.ts' ||
+    filePath === 'src/app/views/diff/diffMonacoReviewSurface.architecture.test.ts'
   );
 }
 

@@ -1,9 +1,9 @@
 export const codeViewCopy = {
   title: 'Code',
-  subtitle: 'Browse workspace files and preview source content read-only.',
-  readOnlyTitle: 'Read-only preview',
-  readOnlyMessage: 'Browse workspace files here and hand off revision comparison to Diff.',
-  readOnlyNote: 'Editing is not available in the Code route.',
+  subtitle: 'Browse workspace files and edit a local Monaco buffer.',
+  localBufferTitle: 'Editable local buffer',
+  localBufferMessage: 'Type in Monaco while reviewing workspace files.',
+  localBufferNote: 'Changes are local until a governed save command exists.',
   routeLoadingMessage: 'Loading workspace files...',
   routeEmptyTitle: 'No workspace files available',
   routeEmptyMessage: 'This workspace does not expose files to browse yet.',

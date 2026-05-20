@@ -95,6 +95,19 @@ Acceptance:
 - When the changed-suite plan is resolved
 - Then the selected command is `test:canvas-architecture:run`.
 
+## US-4B Monaco Surface Change
+
+As a frontend developer changing Code or shared Monaco editor/viewer surfaces, I
+want the changed-suite router to run the Monaco focus suite so a two-file editor
+change does not execute the whole presentation suite.
+
+Acceptance:
+
+- Given a changed file under `apps/web/src/app/components/monaco/**`
+- Or a changed Code route file under `apps/web/src/app/views/CodeView.tsx`
+- When the changed-suite plan is resolved
+- Then the selected command is `test:monaco:run`.
+
 ## US-5 No Relevant Web Change
 
 As a developer working outside `@dvt/web`, I want the web changed-suite command

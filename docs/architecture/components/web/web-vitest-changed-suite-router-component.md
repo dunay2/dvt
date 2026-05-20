@@ -30,6 +30,7 @@ Tests` pull-request lane while preserving full primary-suite coverage on
 | `test:canvas-unit`                  | command  | Runs Canvas unit-model focus tests.                         |
 | `test:canvas-presentation`          | command  | Runs Canvas presentation focus tests.                       |
 | `test:canvas-architecture`          | command  | Runs Canvas architecture focus tests.                       |
+| `test:monaco`                       | command  | Runs Monaco route-surface focus tests.                      |
 | `test:web:changed`                  | command  | Root alias for the package-local changed-suite command.     |
 | `run-vitest-changed-suites.ts`      | adapter  | Reads Git change sets or explicit `--files` arguments.      |
 | `Web Frontend Tests` PR route       | CI job   | Runs changed-suite routing for ordinary web PR changes.     |
@@ -42,6 +43,8 @@ Tests` pull-request lane while preserving full primary-suite coverage on
 - Architecture-governance paths route to `architecture`.
 - Canvas-scoped paths route to `canvas-unit`, `canvas-presentation`, or
   `canvas-architecture` when the file type makes that safe.
+- Monaco-scoped paths route to `monaco` when the change is local to Code,
+  Artifacts/Diff Monaco guards, or shared Monaco code surfaces.
 - Non-Canvas `.tsx` paths route to `presentation`.
 - Non-Canvas `.ts` paths route to `unit`.
 - If no web-relevant changed file exists, the command exits successfully
@@ -58,18 +61,21 @@ stateDiagram-v2
   [*] --> ChangedFiles
   ChangedFiles --> GovernedPath: suite catalog/config/docs
   ChangedFiles --> CanvasPath: Canvas route or canvas module
+  ChangedFiles --> MonacoPath: Monaco route/editor surface
   ChangedFiles --> TsxPath: non-Canvas TSX
   ChangedFiles --> TsPath: non-Canvas TS
   GovernedPath --> ArchitectureCommand
   CanvasPath --> CanvasUnitCommand: .ts
   CanvasPath --> CanvasPresentationCommand: .tsx
   CanvasPath --> CanvasArchitectureCommand: architecture
+  MonacoPath --> MonacoCommand
   TsxPath --> PresentationCommand
   TsPath --> UnitCommand
   ArchitectureCommand --> Evidence
   CanvasUnitCommand --> Evidence
   CanvasPresentationCommand --> Evidence
   CanvasArchitectureCommand --> Evidence
+  MonacoCommand --> Evidence
   PresentationCommand --> Evidence
   UnitCommand --> Evidence
 ```

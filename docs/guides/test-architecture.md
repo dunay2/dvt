@@ -147,6 +147,8 @@ for development and CI:
 - `test:canvas-unit`: Canvas non-architecture `.ts` focus lane
 - `test:canvas-presentation`: Canvas non-architecture `.tsx` focus lane
 - `test:canvas-architecture`: Canvas architecture focus lane
+- `test:monaco`: Monaco focus lane for Code editing, Artifacts read-only
+  viewing, and Diff review architecture tests
 - `test:changed`: changed-file router that selects the smallest safe suite
   command from the suite catalog for local use and ordinary web pull requests
 - `test:ci`: unit, presentation, then architecture
@@ -187,6 +189,8 @@ web pull requests. The router follows these semantic rules:
   the architecture suite;
 - Canvas-scoped source or test changes run the narrow Canvas focus suite that
   matches the file type;
+- Monaco-scoped source or test changes run the Monaco focus suite so local
+  editor/viewer work does not execute the full presentation lane;
 - non-Canvas `.tsx` changes run the presentation suite;
 - non-Canvas `.ts` changes run the unit suite;
 - non-web changes skip cleanly.

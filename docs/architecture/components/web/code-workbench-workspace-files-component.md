@@ -10,8 +10,9 @@ planning_type: architecture
 
 ## Purpose
 
-This component governs the read-only Code tab file explorer and file preview
-flow.
+This component governs the Code tab file explorer, file content query flow, and
+route-local Monaco editor buffer. It is a local editable buffer, not a file
+persistence boundary.
 
 The component exists because the web Code route already consumes workspace file
 queries, while the live API route is not yet implemented. The component closes
@@ -28,12 +29,14 @@ Use with:
 
 ## Owned Concern
 
-Owned concern: expose tenant/project-scoped workspace files as read-only
-operational evidence for the Code workbench.
+Owned concern: expose tenant/project-scoped workspace files as operational
+evidence for the Code workbench and let the browser hold a local editable
+buffer for the selected file.
 
-The component does not own editing, project creation, graph draft mutation, or
-authorization policy design. It consumes the protected runtime authorization
-boundary and returns read models.
+The component does not own file persistence, project creation, graph draft
+mutation, or authorization policy design. It consumes the protected runtime
+authorization boundary, returns read models, and keeps local text edits inside
+the route until a governed save command exists.
 
 ## Public API
 
@@ -62,15 +65,24 @@ The API adapter must build scoped endpoints from the active session store. The
 mock adapter may remain a test/demo adapter, but it must not define live API
 semantics.
 
+### Web Presentation API
+
+| Surface              | Type                 | Responsibility                                                          |
+| -------------------- | -------------------- | ----------------------------------------------------------------------- |
+| `CodeEditableBuffer` | presentation model   | Holds unsaved editor text per selected workspace path in the browser.   |
+| `MonacoCodeEditor`   | presentation gateway | Opens the shared Monaco surface in editable mode for Code.              |
+| `MonacoCodeViewer`   | presentation gateway | Opens the shared Monaco surface in read-only mode for Artifacts/review. |
+
 ## DDD Model
 
-| Object                    | Kind          | Responsibility                                                         |
-| ------------------------- | ------------- | ---------------------------------------------------------------------- |
-| `WorkspaceFileTree`       | read model    | File hierarchy under an authorized workspace root.                     |
-| `WorkspaceFileContent`    | read model    | Text content, language, path, name, and last modified metadata.        |
-| `WorkspacePath`           | value object  | Normalized relative path; rejects absolute paths and parent traversal. |
-| `WorkspaceFileReadPolicy` | policy        | Allows only authenticated, tenant/project/environment-scoped reads.    |
-| `WorkspaceFileRepository` | outbound port | Lists files and reads content from the configured backing store.       |
+| Object                    | Kind               | Responsibility                                                         |
+| ------------------------- | ------------------ | ---------------------------------------------------------------------- |
+| `WorkspaceFileTree`       | read model         | File hierarchy under an authorized workspace root.                     |
+| `WorkspaceFileContent`    | read model         | Text content, language, path, name, and last modified metadata.        |
+| `WorkspacePath`           | value object       | Normalized relative path; rejects absolute paths and parent traversal. |
+| `WorkspaceFileReadPolicy` | policy             | Allows only authenticated, tenant/project/environment-scoped reads.    |
+| `WorkspaceFileRepository` | outbound port      | Lists files and reads content from the configured backing store.       |
+| `CodeEditableBuffer`      | presentation model | Unsaved browser-local editor text keyed by workspace path.             |
 
 ## Invariants
 
@@ -81,7 +93,11 @@ semantics.
 - Invalid path maps to `invalid_workspace_path`.
 - The repository adapter rejects parent traversal, absolute paths, unsupported
   file types, and oversized files.
-- The Code workbench stays read-only even after the file route works.
+- The Code workbench may edit a browser-local buffer, but it must not persist
+  file content without a separate governed command rail.
+- No save, apply, patch, or write indicator may appear until
+  `SaveWorkspaceFileContent` exists with authorization, path policy, and
+  concurrency semantics.
 - Cypress must not seed `/workspace/files` by intercepting the route when proving
   the live happy path.
 
@@ -96,6 +112,8 @@ stateDiagram-v2
   TreeLoaded --> LoadingContent: first or selected file exists
   LoadingContent --> PreviewLoaded: GetWorkspaceFileContent succeeds
   LoadingContent --> PreviewError: file missing or invalid
+  PreviewLoaded --> DirtyLocalBuffer: user types in Monaco
+  DirtyLocalBuffer --> PreviewLoaded: user reloads or selects another file
   PreviewLoaded --> LoadingContent: user selects another file
   PreviewError --> LoadingContent: user selects another file
 ```
@@ -107,6 +125,7 @@ flowchart TB
   subgraph Web["apps/web"]
     CodeView["CodeView"]
     Queries["workspaceQueries"]
+    Editor["MonacoCodeEditor"]
     WorkspacePort["IWorkspacePort"]
     ApiWorkspaceService["workspaceService.api"]
     CodeStates["CodeStateViews"]
@@ -122,6 +141,7 @@ flowchart TB
   end
 
   CodeView --> Queries
+  CodeView --> Editor
   Queries --> WorkspacePort
   WorkspacePort --> ApiWorkspaceService
   ApiWorkspaceService --> Routes
@@ -137,12 +157,12 @@ flowchart TB
 
 ## Consumers
 
-| Consumer                | Uses                          | Rule                                                                  |
-| ----------------------- | ----------------------------- | --------------------------------------------------------------------- |
-| `CodeView`              | file tree and content queries | May render loading, empty, error, read-only, and preview states only. |
-| `Diff` views            | selected file content         | Must keep read-only posture and canonical error handling.             |
-| Artifact views          | workspace tree                | Must not infer authorization from file presence.                      |
-| Cypress Code happy path | browser proof                 | Must prove real route behavior in live API mode.                      |
+| Consumer                | Uses                                     | Rule                                                                   |
+| ----------------------- | ---------------------------------------- | ---------------------------------------------------------------------- |
+| `CodeView`              | file tree, content queries, local buffer | May render loading, empty, error, local edit, and preview states only. |
+| `Diff` views            | selected file content                    | Must keep read-only posture and canonical error handling.              |
+| Artifact views          | workspace tree                           | Must not infer authorization from file presence.                       |
+| Cypress Code happy path | browser proof                            | Must prove real route behavior in live API mode.                       |
 
 ## Architecture Test Requirement
 
@@ -155,8 +175,8 @@ Add a semantic architecture test that checks:
   `GetWorkspaceFileContentUseCase`;
 - web API adapter does not call bare `/workspace/files` without scope;
 - no route component imports a concrete filesystem adapter;
-- `saveFileContent` is not wired to a live API write route as part of this
-  read-only component.
+- `saveFileContent` or `SaveWorkspaceFileContent` is not wired to a live API
+  write route as part of this query/local-buffer component.
 
 This guard must validate semantics, not only barrel thinness.
 
@@ -181,4 +201,5 @@ Forbidden in this slice:
 - changing Canvas graph draft semantics;
 - adding fixture fallback for API mode;
 - relaxing authorization or scope requirements;
-- introducing a second workspace file query name.
+- introducing a second workspace file query name;
+- presenting local Monaco edits as persisted changes.

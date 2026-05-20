@@ -55,8 +55,18 @@ function CanvasContent(): JSX.Element {
     controller,
     routeViewState,
   });
+  const activeWorkbenchTab = canvasWorkbenchTabsState.tabs.find(
+    (tab) => tab.id === canvasWorkbenchTabsState.activeTabId
+  );
+  const shouldReplaceCenterSurfaceWithWorkbenchTab =
+    canvasWorkbenchTabsState.unavailableState == null &&
+    activeWorkbenchTab?.scope === 'workspace' &&
+    activeWorkbenchTab.id !== 'graph';
   const layout = {
     ...shellProps.layout,
+    centerSurface: shouldReplaceCenterSurfaceWithWorkbenchTab
+      ? undefined
+      : shellProps.layout.centerSurface,
     workbenchTabStrip: (
       <CanvasWorkbenchTabStrip
         tabsState={canvasWorkbenchTabsState}

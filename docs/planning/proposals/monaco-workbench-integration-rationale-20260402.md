@@ -23,6 +23,7 @@ The product decision is now explicit:
 
 The first-class Monaco routes are:
 
+- `Code` as a Canvas workbench tab for workspace file buffers
 - `Diff`
 - `Artifacts`
 - `Templates` (future execution-template and source-generation workbench)
@@ -30,6 +31,7 @@ The first-class Monaco routes are:
 Monaco v1 is intentionally narrow:
 
 - read-only viewer
+- route-local editable buffer without persistence
 - diff viewer
 - syntax-aware review surface
 
@@ -40,11 +42,13 @@ flowchart LR
   Shell["Persistent shell"] --> Canvas["Canvas"]
   Shell --> Runs["Runs"]
   Shell --> Lineage["Lineage"]
+  Shell --> CanvasCode["Canvas / Code tab"]
   Shell --> Diff["Diff"]
   Shell --> Artifacts["Artifacts"]
   Shell --> Templates["Templates"]
 
-  Monaco["Monaco surface"] --> Diff
+  Monaco["Monaco surface"] --> CanvasCode
+  Monaco --> Diff
   Monaco --> Artifacts
   Monaco --> Templates
 ```
@@ -73,12 +77,12 @@ Monaco-led super-surface to become coherent.
 
 ## Decision Model
 
-| Model | Description                                                                                                  | Decision         | Rationale                                                                                                                                                                              |
-| ----- | ------------------------------------------------------------------------------------------------------------ | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A     | Turn Canvas into a Monaco-based workbench bundle                                                             | Rejected         | It makes Monaco the center of the route that is supposed to stay graph-first, adds layout and tab-state complexity too early, and couples editor adoption to unrelated shell concerns. |
-| B     | Adopt a full IDE platform such as Theia or OpenSumi                                                          | Rejected for now | It would impose a heavier application architecture than DVT currently needs and would interfere with `F-04`, `F-05`, and `F-06` while those boundaries are still stabilizing.          |
-| C     | Keep the persistent shell and add Monaco as embedded review surfaces in `Diff`, `Artifacts`, and `Templates` | Chosen           | It matches the product topology, unlocks high-value review capabilities first, and keeps Monaco behind route-level boundaries.                                                         |
-| D     | Add a dockable inner workbench later via a layout engine such as Dockview                                    | Deferred option  | Useful only if route-level composition later proves insufficient. It is a separate layout decision, not a prerequisite for Monaco adoption.                                            |
+| Model | Description                                                                                                          | Decision         | Rationale                                                                                                                                                                              |
+| ----- | -------------------------------------------------------------------------------------------------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A     | Turn Canvas into a Monaco-based workbench bundle                                                                     | Rejected         | It makes Monaco the center of the route that is supposed to stay graph-first, adds layout and tab-state complexity too early, and couples editor adoption to unrelated shell concerns. |
+| B     | Adopt a full IDE platform such as Theia or OpenSumi                                                                  | Rejected for now | It would impose a heavier application architecture than DVT currently needs and would interfere with `F-04`, `F-05`, and `F-06` while those boundaries are still stabilizing.          |
+| C     | Keep the persistent shell and add Monaco as embedded review surfaces in `Code`, `Diff`, `Artifacts`, and `Templates` | Chosen           | It matches the product topology, unlocks high-value review capabilities first, and keeps Monaco behind route-level boundaries.                                                         |
+| D     | Add a dockable inner workbench later via a layout engine such as Dockview                                            | Deferred option  | Useful only if route-level composition later proves insufficient. It is a separate layout decision, not a prerequisite for Monaco adoption.                                            |
 
 ## Architecture: Before vs Target
 
@@ -101,10 +105,12 @@ flowchart LR
 flowchart LR
   Shell["Persistent shell"] --> Canvas["Canvas route"]
   Shell --> Runs["Runs route"]
+  Shell --> Code["Canvas / Code tab"]
   Shell --> Diff["Diff route"]
   Shell --> Artifacts["Artifacts route"]
   Shell --> Templates["Templates route"]
 
+  Code --> MonacoEditor["Monaco local editor buffer"]
   Diff --> MonacoDiff["Monaco DiffEditor"]
   Artifacts --> MonacoView["Monaco read-only viewer"]
   Templates --> MonacoPreview["Monaco preview and diff panes"]
@@ -123,6 +129,19 @@ Canvas remains:
 
 Canvas may later link to source review or generated output, but Monaco does not
 become the owning surface of the route.
+
+### Code
+
+Code is a Canvas workbench tab, not a shell-level destination.
+
+Monaco should provide:
+
+- a workspace-scoped local editor buffer;
+- file tree and file content query consumption through `ListWorkspaceFiles` and
+  `GetWorkspaceFileContent`;
+- typing before a persisted canvas document exists;
+- no save, apply, patch, or persistence command until a governed
+  `SaveWorkspaceFileContent` rail exists.
 
 ### Runs
 
@@ -168,14 +187,14 @@ the preview and diff surface.
 
 ## Tradeoff Analysis
 
-| Decision                | Option A                  | Option B                                                  | Chosen                    | Rationale                                                                                            |
-| ----------------------- | ------------------------- | --------------------------------------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Monaco scope            | Canvas takeover           | Embedded route surfaces                                   | Embedded route surfaces   | Preserves route-level workbench ownership and uses Monaco only where text-heavy review justifies it. |
-| Delivery order          | Start with Canvas         | Start with Diff and Artifacts                             | Diff and Artifacts first  | Lowest coupling, fastest operator value, and no need to redesign graph UX first.                     |
-| Monaco capability level | Full editing from day one | Read-only and diff first                                  | Read-only and diff first  | DVT needs governed review before it needs browser-side authoring or save/apply flows.                |
-| Product shell strategy  | Build new IDE shell       | Keep current shell and strengthen route-level workbenches | Keep current shell        | The shell already exists and is becoming cleaner through `F-04`, `F-05`, `F-06`, and `F-15`.         |
-| OSS reuse               | Theia/OpenSumi            | Current stack plus Monaco                                 | Current stack plus Monaco | Lighter integration and less architectural collision.                                                |
-| Future docking          | Ignore layout growth      | Evaluate Dockview later if needed                         | Evaluate later            | Keeps Monaco adoption separate from the later question of dockable inner layouts.                    |
+| Decision                | Option A                      | Option B                                                  | Chosen                    | Rationale                                                                                            |
+| ----------------------- | ----------------------------- | --------------------------------------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Monaco scope            | Canvas takeover               | Embedded route surfaces                                   | Embedded route surfaces   | Preserves route-level workbench ownership and uses Monaco only where text-heavy review justifies it. |
+| Delivery order          | Start with Canvas             | Start with Diff and Artifacts                             | Diff and Artifacts first  | Lowest coupling, fastest operator value, and no need to redesign graph UX first.                     |
+| Monaco capability level | Full persistence from day one | Read-only, diff, and local editable buffers first         | Local buffer plus review  | DVT can allow route-local typing without inventing browser-side save/apply authority.                |
+| Product shell strategy  | Build new IDE shell           | Keep current shell and strengthen route-level workbenches | Keep current shell        | The shell already exists and is becoming cleaner through `F-04`, `F-05`, `F-06`, and `F-15`.         |
+| OSS reuse               | Theia/OpenSumi                | Current stack plus Monaco                                 | Current stack plus Monaco | Lighter integration and less architectural collision.                                                |
+| Future docking          | Ignore layout growth          | Evaluate Dockview later if needed                         | Evaluate later            | Keeps Monaco adoption separate from the later question of dockable inner layouts.                    |
 
 ## Execution Order
 
@@ -185,7 +204,8 @@ flowchart LR
   F05 --> F06["F-06 query standardization"]
   F06 --> F17B["F-17-B Monaco in Diff"]
   F17B --> F17C["F-17-C Monaco in Artifacts"]
-  F17C --> F17D["F-17-D Monaco in Templates"]
+  F17C --> F17G["F-17-G editable Code buffer"]
+  F17G --> F17D["F-17-D Monaco in Templates"]
   F17D --> F17E["F-17-E lazy loading and bundle isolation"]
   F17E --> F17F["F-17-F real backend data and contracts"]
   F17F --> F21["F-21 execution-template workbench hardening"]
@@ -196,14 +216,16 @@ The implementation order is intentional:
 1. stabilize data and query boundaries through `F-04`, `F-05`, and `F-06`;
 2. adopt Monaco in `Diff`;
 3. adopt Monaco in `Artifacts`;
-4. adopt Monaco in `Templates`;
-5. enforce lazy loading and bundle guardrails;
-6. converge Monaco panes on real backend contracts and artifact truth.
+4. split Code into a local editable buffer while preserving query-only file
+   rails;
+5. adopt Monaco in `Templates`;
+6. enforce lazy loading and bundle guardrails;
+7. converge Monaco panes on real backend contracts and artifact truth.
 
 ## What This Unlocks
 
 1. Better SQL and structured payload review without redesigning the shell.
-2. A reusable editor primitive for the future execution-template route.
+2. A reusable editor primitive for Code and the future execution-template route.
 3. Cleaner separation between graph work, operational monitoring, and source
    review.
 4. A route-safe way to grow review complexity without turning the frontend into
@@ -218,6 +240,7 @@ The implementation order is intentional:
 | Teams reintroduce the "Canvas replacement" narrative in later docs | Medium   | `F-17-A` requires architecture, roadmap, and lane wording to stay aligned and explicitly reject Monaco-as-shell ownership. |
 | Monaco lands before contracts and query boundaries stabilize       | Medium   | `F-17-B` and `F-17-C` depend on `F-06`, and `F-17-F` depends on `F-07` and `F-11`.                                         |
 | Source-generation UX leaks provider semantics into the browser     | High     | Keep preview/diff in the frontend and keep generation contracts and translation logic in governed backend services.        |
+| Code local editing is mistaken for persistence                     | Medium   | Show Code as an editable local buffer and do not expose save/apply controls until a command rail exists.                   |
 | Route-level composition later needs docking                        | Low      | Revisit with a layout engine such as Dockview only after route-level workbenches prove insufficient.                       |
 
 ## Recommendation
@@ -227,8 +250,9 @@ for the shell or for Canvas.
 
 That means:
 
-- rewrite `F-17` around `Diff`, `Artifacts`, and `Templates`;
+- rewrite `F-17` around `Code`, `Diff`, `Artifacts`, and `Templates`;
 - keep Canvas and Runs non-Monaco-centric;
+- allow Code to type in a route-local buffer without persistence;
 - defer any docking-layout decision;
 - let `F-21` depend on Monaco as preview and diff infrastructure, not as the
   product shell.

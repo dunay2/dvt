@@ -1,27 +1,29 @@
-/** Owned concern: lazy-load the Monaco code surface behind a route-safe read-only viewer API. */
+/** Owned concern: lazy-load the Monaco code surface behind a route-local editable buffer API. */
 import { Suspense, lazy } from 'react';
 
 import { DEFAULT_MONACO_CONTAINER_CLASS_NAME, MonacoViewerFallback } from './MonacoViewerFallback';
 
 const MonacoCodeSurface = lazy(() => import('./MonacoCodeSurface'));
 
-type MonacoCodeViewerProps = Readonly<{
+type MonacoCodeEditorProps = Readonly<{
   ariaLabel: string;
   containerClassName?: string;
   language: string;
   loadingLabel?: string;
+  onChange: (value: string) => void;
   path?: string;
   value: string;
 }>;
 
-export function MonacoCodeViewer({
+export function MonacoCodeEditor({
   ariaLabel,
   containerClassName = DEFAULT_MONACO_CONTAINER_CLASS_NAME,
   language,
-  loadingLabel = 'Loading Monaco viewer...',
+  loadingLabel = 'Loading Monaco editor...',
+  onChange,
   path,
   value,
-}: MonacoCodeViewerProps) {
+}: MonacoCodeEditorProps) {
   return (
     <Suspense
       fallback={
@@ -32,8 +34,9 @@ export function MonacoCodeViewer({
         ariaLabel={ariaLabel}
         containerClassName={containerClassName}
         language={language}
+        onChange={onChange}
         path={path}
-        readOnly={true}
+        readOnly={false}
         value={value}
       />
     </Suspense>
