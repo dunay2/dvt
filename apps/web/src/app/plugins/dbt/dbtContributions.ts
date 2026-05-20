@@ -90,7 +90,7 @@ export const dbtContributions: PluginContributions = {
         label: 'Code',
         icon: FileCode2,
         order: 20,
-        scope: 'selection',
+        scope: 'workspace',
       },
     },
     {

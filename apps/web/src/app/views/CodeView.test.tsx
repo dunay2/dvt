@@ -8,20 +8,25 @@ import { AppServicesProvider } from '../services/AppServicesContext';
 import { WorkspaceFileLoadError } from '../services/workspace/workspaceErrors';
 import CodeView from './CodeView';
 
-vi.mock('../components/monaco/MonacoCodeViewer', () => ({
-  MonacoCodeViewer: ({
+vi.mock('../components/monaco/MonacoCodeEditor', () => ({
+  MonacoCodeEditor: ({
+    onChange,
     value,
     path,
     language,
   }: {
+    onChange: (value: string) => void;
     value: string;
     path?: string;
     language: string;
   }) => (
-    <div data-language={language} data-path={path} data-testid="monaco-code-viewer">
-      {' '}
-      {value}{' '}
-    </div>
+    <textarea
+      data-language={language}
+      data-path={path}
+      data-testid="monaco-code-editor"
+      onChange={(event) => onChange(event.currentTarget.value)}
+      value={value}
+    />
   ),
 }));
 
@@ -113,18 +118,32 @@ describe('CodeView', () => {
     expect(container.textContent).toContain('Code');
     await waitFor(() => container?.textContent?.includes('stg_orders.sql') === true);
     await waitFor(() => container?.textContent?.includes('Explorer') === true);
-    await waitFor(() => container?.querySelector('[data-testid="monaco-code-viewer"]') != null);
+    await waitFor(() => container?.querySelector('[data-testid="monaco-code-editor"]') != null);
 
     expect(container.textContent).toContain('stg_orders.sql');
-    expect(container.querySelector('[data-slot="code-readonly-state"]')?.textContent).toContain(
-      'Read-only preview'
+    expect(container.querySelector('[data-slot="code-local-buffer-state"]')?.textContent).toContain(
+      'Editable local buffer'
     );
-    expect(container.textContent).toContain('Editing is not available in the Code route.');
+    expect(container.textContent).toContain(
+      'Changes are local until a governed save command exists.'
+    );
 
-    const viewer = container.querySelector('[data-testid="monaco-code-viewer"]');
-    expect(viewer).not.toBeNull();
-    expect(viewer?.getAttribute('data-path')).toBe('models/staging/stg_orders.sql');
-    expect(viewer?.textContent).toContain('select * from orders');
+    const editor = container.querySelector<HTMLTextAreaElement>(
+      '[data-testid="monaco-code-editor"]'
+    );
+    expect(editor).not.toBeNull();
+    expect(editor?.getAttribute('data-path')).toBe('models/staging/stg_orders.sql');
+    expect(editor?.value).toContain('select * from orders');
+
+    await act(async () => {
+      if (!editor) {
+        throw new Error('expected Monaco editor test double');
+      }
+      editor.value = 'select 1 as edited_value';
+      editor.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
+    expect(editor?.value).toBe('select 1 as edited_value');
   });
 
   it('renders a governed route empty state when no workspace files are available', async () => {
@@ -247,6 +266,6 @@ describe('CodeView', () => {
     expect(
       container.querySelector('[data-slot="code-preview-error-state"]')?.textContent
     ).toContain('models/staging/stg_orders.sql');
-    expect(container.querySelector('[data-testid="monaco-code-viewer"]')).toBeNull();
+    expect(container.querySelector('[data-testid="monaco-code-editor"]')).toBeNull();
   });
 });

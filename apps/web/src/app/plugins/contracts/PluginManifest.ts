@@ -69,6 +69,8 @@ export type ShellNavigationPlacement = Readonly<{
 
 export type CanvasWorkbenchTabId = 'graph' | 'code' | 'lineage' | 'diff' | 'artifacts' | 'runs';
 
+export type CanvasWorkbenchTabScope = 'workspace' | 'canvas' | 'selection' | 'run';
+
 export type CanvasWorkbenchTabPlacement = Readonly<{
   kind: 'workbench-tab';
   workbench: 'canvas';
@@ -76,7 +78,7 @@ export type CanvasWorkbenchTabPlacement = Readonly<{
   label: LocalizableString;
   icon: LucideIcon;
   order: number;
-  scope: 'canvas' | 'selection' | 'run';
+  scope: CanvasWorkbenchTabScope;
 }>;
 
 export type ViewPlacement = ShellNavigationPlacement | CanvasWorkbenchTabPlacement;

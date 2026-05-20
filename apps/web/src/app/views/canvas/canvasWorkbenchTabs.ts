@@ -2,6 +2,7 @@
 import type {
   CanvasWorkbenchTabId,
   CanvasWorkbenchTabPlacement,
+  CanvasWorkbenchTabScope,
 } from '../../plugins/contracts/PluginManifest';
 import type { CanvasWorkbenchRouteState } from './canvasWorkbenchRouteState';
 import { buildCanvasWorkbenchTabPath } from './canvasWorkbenchRouteState';
@@ -21,7 +22,7 @@ export type CanvasWorkbenchTabReadModel = Readonly<{
   id: CanvasWorkbenchTabId;
   label: string;
   order: number;
-  scope: 'canvas' | 'selection' | 'run';
+  scope: CanvasWorkbenchTabScope;
   isEnabled: boolean;
   to: string;
 }>;
@@ -107,6 +108,13 @@ function projectPlacementToTab(
   };
 }
 
+export function isCanvasWorkbenchTabAvailableForContext(
+  placement: CanvasWorkbenchTabPlacement,
+  context: CanvasWorkbenchContext
+): boolean {
+  return context.kind === 'ready' || placement.scope === 'workspace';
+}
+
 export function buildCanvasWorkbenchTabsReadModel(args: {
   placements: readonly CanvasWorkbenchTabPlacement[];
   routeState: CanvasWorkbenchRouteState;
@@ -116,14 +124,24 @@ export function buildCanvasWorkbenchTabsReadModel(args: {
   const routeState = args.routeState;
   const copy = args.copy ?? canvasViewCopy;
   const graphTab = createCanvasGraphWorkbenchTab(copy);
-  const pluginTabs =
-    args.context.kind === 'ready'
-      ? args.placements
-          .map((placement) => projectPlacementToTab(placement, copy))
-          .sort((left, right) => left.order - right.order)
-      : [];
+  const pluginTabs = args.placements
+    .filter((placement) => isCanvasWorkbenchTabAvailableForContext(placement, args.context))
+    .map((placement) => projectPlacementToTab(placement, copy))
+    .sort((left, right) => left.order - right.order);
   const tabs = [graphTab, ...pluginTabs];
   assertUniqueCanvasWorkbenchTabs(tabs);
+
+  if (
+    args.context.kind === 'unavailable' &&
+    routeState.kind === 'selected' &&
+    tabs.some((tab) => tab.id === routeState.tabId)
+  ) {
+    return {
+      activeTabId: routeState.tabId,
+      tabs,
+      unavailableState: null,
+    };
+  }
 
   if (args.context.kind === 'unavailable') {
     return {

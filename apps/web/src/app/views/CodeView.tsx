@@ -1,14 +1,15 @@
+/** Owned concern: render workspace file queries as the Code workbench local Monaco buffer. */
 import { FileCode2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
 import { ViewHeader } from '../components/domain';
-import { WorkbenchReadOnlyState } from '../components/workbench/state/WorkbenchStates';
+import { WorkbenchDegradedState } from '../components/workbench/state/WorkbenchStates';
 import {
   RouteWorkbenchFrame,
   routeWorkbenchHeaderBandClassName,
 } from '../components/workbench/RouteWorkbenchFrame';
-import { MonacoCodeViewer } from '../components/monaco/MonacoCodeViewer';
+import { MonacoCodeEditor } from '../components/monaco/MonacoCodeEditor';
 import {
   useWorkspaceFileContentQuery,
   useWorkspaceFileTreeQuery,
@@ -44,6 +45,7 @@ function hasWorkspaceFiles(entries: WorkspaceFileEntry[]): boolean {
 export default function CodeView() {
   const fileTreeQuery = useWorkspaceFileTreeQuery();
   const [selectedPath, setSelectedPath] = useState<string | undefined>(undefined);
+  const [localBuffers, setLocalBuffers] = useState<Record<string, string>>({});
   const workspaceFileTree = fileTreeQuery.data ?? [];
   const resolvedPath = useMemo(
     () => selectedPath ?? firstFilePath(workspaceFileTree),
@@ -87,6 +89,10 @@ export default function CodeView() {
     return <CodeRouteEmptyStateView />;
   }
 
+  const editorValue = fileContentQuery.data
+    ? (localBuffers[fileContentQuery.data.path] ?? fileContentQuery.data.content)
+    : '';
+
   const previewPane = fileContentQuery.isPending ? (
     <div className="flex h-full items-center justify-center text-sm text-[var(--text-muted)]">
       {copy.previewLoadingMessage}
@@ -96,11 +102,17 @@ export default function CodeView() {
   ) : !fileContentQuery.data ? (
     <CodePreviewEmptyStateView />
   ) : (
-    <MonacoCodeViewer
-      ariaLabel={`Previewing ${fileContentQuery.data.name}`}
+    <MonacoCodeEditor
+      ariaLabel={`Editing ${fileContentQuery.data.name}`}
       language={fileContentQuery.data.language}
+      onChange={(value) => {
+        setLocalBuffers((currentBuffers) => ({
+          ...currentBuffers,
+          [fileContentQuery.data.path]: value,
+        }));
+      }}
       path={fileContentQuery.data.path}
-      value={fileContentQuery.data.content}
+      value={editorValue}
     />
   );
 
@@ -133,11 +145,11 @@ export default function CodeView() {
 
       <div className="min-w-0 flex flex-1 flex-col">
         <div className="shrink-0 p-4 pb-0">
-          <WorkbenchReadOnlyState
-            dataSlot="code-readonly-state"
-            title={copy.readOnlyTitle}
-            message={copy.readOnlyMessage}
-            note={copy.readOnlyNote}
+          <WorkbenchDegradedState
+            dataSlot="code-local-buffer-state"
+            title={copy.localBufferTitle}
+            message={copy.localBufferMessage}
+            note={copy.localBufferNote}
           />
         </div>
         <div className="min-h-0 flex-1 p-4">{previewPane}</div>

@@ -278,6 +278,28 @@ describe('CanvasShell', () => {
     expect(container.querySelector('[data-testid="canvas-toolbar"]')).toBeNull();
   });
 
+  it('renders the active workbench tab panel ahead of first-canvas center surfaces', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasShell
+          {...buildProps({
+            layout: {
+              centerSurfaceMode: 'replace',
+              centerSurface: <div data-testid="first-canvas-center-surface" />,
+              workbenchTabPanel: <div data-testid="code-workbench-panel" />,
+            },
+            toolbar: {
+              routeState: 'needs_canvas',
+            },
+          })}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-testid="code-workbench-panel"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="first-canvas-center-surface"]')).toBeNull();
+  });
+
   it('keeps explorer import affordances wired when graph edits are allowed', async () => {
     await act(async () => {
       root.render(<CanvasShell {...buildProps()} />);

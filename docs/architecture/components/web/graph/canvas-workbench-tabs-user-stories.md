@@ -36,13 +36,16 @@ Acceptance:
 
 ### US-CANVAS-WORKBENCH-002 - Code Tab
 
-As a Canvas user, I want Code to open as a Canvas workbench tab so selected
-node code context is not treated as a global application destination.
+As a Canvas user, I want Code to open as a Canvas workbench tab so workspace
+files and local Monaco editing are not treated as a global application
+destination.
 
 Acceptance:
 
 - selecting Code executes `SelectCanvasWorkbenchTab(code)`;
 - the route becomes `/canvas/code`;
+- Code appears beside Graph before the first canvas document is created;
+- Monaco accepts local typing through the Code workbench;
 - Code does not appear in the left shell navigation rail.
 
 ### US-CANVAS-WORKBENCH-003 - Lineage Tab
@@ -178,7 +181,7 @@ Acceptance:
 | Story                   | Rail                                 | DDD owner                               | Primary proof                              | Negative proof                                     |
 | ----------------------- | ------------------------------------ | --------------------------------------- | ------------------------------------------ | -------------------------------------------------- |
 | US-CANVAS-WORKBENCH-001 | `ListCanvasWorkbenchTabs`            | `CanvasWorkbenchTabsReadModel`          | `canvasWorkbenchTabs.test.ts`              | Graph default cannot select plugin tab by accident |
-| US-CANVAS-WORKBENCH-002 | `SelectCanvasWorkbenchTab`           | `CanvasWorkbenchTabSelectionCommand`    | `canvas-workbench-tabs.cy.ts`              | Code absent from fixed shell navigation            |
+| US-CANVAS-WORKBENCH-002 | `SelectCanvasWorkbenchTab`           | `CanvasWorkbenchTabSelectionCommand`    | `code-workbench-workspace-files.cy.ts`     | Code absent from fixed shell navigation            |
 | US-CANVAS-WORKBENCH-003 | `SelectCanvasWorkbenchTab`           | `CanvasWorkbenchTabSelectionCommand`    | `canvas-workbench-tabs.cy.ts`              | retired Lineage route ID absent                    |
 | US-CANVAS-WORKBENCH-004 | `SelectCanvasWorkbenchTab`           | `CanvasWorkbenchTabSelectionCommand`    | `canvasWorkbenchRouteState.test.ts`        | Diff absent from fixed shell navigation            |
 | US-CANVAS-WORKBENCH-005 | `SelectCanvasWorkbenchTab`           | `CanvasWorkbenchTabSelectionCommand`    | `canvasWorkbenchTabs.test.ts`              | Artifacts absent from fixed shell navigation       |
