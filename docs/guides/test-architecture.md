@@ -2,7 +2,7 @@
 title: Test Architecture
 status: Active
 owner: engineering
-last_reviewed: 2026-05-17
+last_reviewed: 2026-05-20
 ---
 
 # Test Architecture
@@ -147,8 +147,8 @@ for development and CI:
 - `test:canvas-unit`: Canvas non-architecture `.ts` focus lane
 - `test:canvas-presentation`: Canvas non-architecture `.tsx` focus lane
 - `test:canvas-architecture`: Canvas architecture focus lane
-- `test:changed`: local changed-file router that selects the smallest safe
-  suite command from the suite catalog
+- `test:changed`: changed-file router that selects the smallest safe suite
+  command from the suite catalog for local use and ordinary web pull requests
 - `test:ci`: unit, presentation, then architecture
 
 Each public web suite command runs `test:deps` before its raw Vitest delegate.
@@ -180,8 +180,8 @@ Canvas startup and draft-recovery architecture tests are split by semantics:
 Do not recreate `Canvas.routeStates.test.tsx` or
 `canvasStartupAndDraftRecovery.architecture.test.ts` as catch-all files.
 
-Changed-file routing is local feedback infrastructure. The router follows these
-semantic rules:
+Changed-file routing is feedback infrastructure for local loops and ordinary
+web pull requests. The router follows these semantic rules:
 
 - suite catalog, config, and frontend test-governance documentation changes run
   the architecture suite;
@@ -191,8 +191,10 @@ semantic rules:
 - non-Canvas `.ts` changes run the unit suite;
 - non-web changes skip cleanly.
 
-The changed-file router must not replace `test:ci` in CI. It reduces local
-feedback-loop size while preserving the primary-suite merge gate.
+The changed-file router must not replace `test:ci` for pushes to `main`,
+manual workflow runs, or root-build-sensitive pull requests. It reduces local
+and ordinary pull-request feedback-loop size while the full primary-suite gate
+remains available for broad CI routes.
 
 ## Backend and worker guidance
 
