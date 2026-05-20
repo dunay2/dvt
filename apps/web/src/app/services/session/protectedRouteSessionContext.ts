@@ -70,6 +70,9 @@ function projectPermissionsFromSession(session: SessionResponse): UserPermission
     canEditEdges:
       readServerPermission(session.permissions, 'canEditEdges') ??
       hasAnyScope(scopes, ['workspace:graph-draft:save']),
+    canPersistGraphDraft:
+      readServerPermission(session.permissions, 'canPersistGraphDraft') ??
+      hasAnyScope(scopes, ['workspace:graph-draft:save']),
     canManagePlugins:
       readServerPermission(session.permissions, 'canManagePlugins') ??
       hasAnyScope(scopes, ['plugin:manage', 'plugins:manage']),

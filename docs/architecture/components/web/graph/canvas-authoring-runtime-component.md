@@ -185,6 +185,12 @@ Interpretation rule:
 - `useCanvasAuthoringRuntime.ts` stays a composition seam and must not absorb
   query creation, React state creation beyond composition, or repository
   construction
+- the runtime contract receives draft persistence authority as
+  `canPersistGraphDraftTransport`; using graph editability or `canEditEdges` as
+  this transport input is drift
+- graph mutation authority remains a separate runtime input named
+  `canMutateGraphTransport`; it may depend on `canEditEdges`, but it must not
+  decide first-canvas document creation
 - `useCanvasDraftBaseline.ts` owns the query baseline and repository/cache
   wiring, not backend posture or recovery rules
 - `useCanvasAuthoringRuntimeDraftFlow.ts` owns runtime-local draft-flow
@@ -224,6 +230,7 @@ The canonical fitness checks for this component are:
 Those tests must keep proving:
 
 - the runtime contract remains explicit and local
+- draft persistence authority remains named separately from graph editability
 - draft-flow no longer learns its argument contract from the parent runtime hook
 - lifecycle and current-payload seams stay on DTO boundaries instead of
   regrowing transport-shaped parameter lists

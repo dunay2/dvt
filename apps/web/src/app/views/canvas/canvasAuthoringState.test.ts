@@ -12,7 +12,7 @@ describe('canvasAuthoringState', () => {
       selectedNodeIds: ['node_1'],
       inspectorNodeId: 'node_1',
       draftSaveStatus: 'idle',
-      canPersistDraftTransport: true,
+      canMutateGraphTransport: true,
       draftReadModel: undefined,
       authTransportPosture: 'none',
     });
@@ -40,7 +40,7 @@ describe('canvasAuthoringState', () => {
       selectedNodeIds: ['node_1'],
       inspectorNodeId: 'node_1',
       draftSaveStatus: 'idle',
-      canPersistDraftTransport: true,
+      canMutateGraphTransport: true,
       draftReadModel: undefined,
       authTransportPosture: 'none',
     });
@@ -63,7 +63,7 @@ describe('canvasAuthoringState', () => {
       selectedNodeIds: ['node_1'],
       inspectorNodeId: 'node_1',
       draftSaveStatus: 'idle',
-      canPersistDraftTransport: true,
+      canMutateGraphTransport: true,
       draftReadModel: {
         accessMode: 'read_only',
         capabilityReason: 'write_denied',
@@ -96,7 +96,7 @@ describe('canvasAuthoringState', () => {
       selectedNodeIds: ['node_1'],
       inspectorNodeId: 'node_1',
       draftSaveStatus: 'idle',
-      canPersistDraftTransport: true,
+      canMutateGraphTransport: true,
       draftReadModel: {
         accessMode: 'forbidden',
         capabilityReason: 'workspace_scope_denied',
@@ -126,7 +126,7 @@ describe('canvasAuthoringState', () => {
       selectedNodeIds: ['node_1'],
       inspectorNodeId: 'node_1',
       draftSaveStatus: 'idle',
-      canPersistDraftTransport: true,
+      canMutateGraphTransport: true,
       draftReadModel: undefined,
       authTransportPosture: 'unauthorized_final',
     });

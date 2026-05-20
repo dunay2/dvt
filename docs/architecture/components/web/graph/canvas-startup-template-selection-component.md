@@ -47,6 +47,8 @@ Canvas document through the protected workspace graph draft boundary.
 - First-canvas creation is a canvas-document transition. Its availability must
   follow draft persistence eligibility and must not reuse `canEditEdges`, which
   belongs to graph/node/edge mutation after a typed document exists.
+- Draft persistence eligibility is projected as `canPersistGraphDraft`; graph
+  editability remains `canEditEdges`.
 - The component does not introduce a workspace/project selector.
 
 ## Transitions

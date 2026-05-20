@@ -32,7 +32,7 @@ type DeriveCanvasAuthoringStateArgs = {
   selectedNodeIds: string[];
   inspectorNodeId: string | null;
   draftSaveStatus: DraftSaveStatus;
-  canPersistDraftTransport: boolean;
+  canMutateGraphTransport: boolean;
   draftReadModel: CanvasAuthoringDraftReadModel | undefined;
   authTransportPosture: CanvasDraftAuthTransportPosture;
 };
@@ -150,14 +150,14 @@ function deriveCanvasDraftRecoveryState(args: {
 }
 
 function canMutateCanvasGraph(args: {
-  canPersistDraftTransport: boolean;
+  canMutateGraphTransport: boolean;
   draftAccessPosture: CanvasDraftAccessPosture;
   draftRecoveryState: CanvasDraftRecoveryState;
 }): boolean {
-  const { canPersistDraftTransport, draftAccessPosture, draftRecoveryState } = args;
+  const { canMutateGraphTransport, draftAccessPosture, draftRecoveryState } = args;
 
   return (
-    canPersistDraftTransport &&
+    canMutateGraphTransport &&
     !draftRecoveryState.isDraftRecoveryBlocked &&
     !isCanvasDraftPostureMutationBlocked(draftAccessPosture)
   );
@@ -170,7 +170,7 @@ export function deriveCanvasAuthoringState({
   selectedNodeIds,
   inspectorNodeId,
   draftSaveStatus,
-  canPersistDraftTransport,
+  canMutateGraphTransport,
   draftReadModel,
   authTransportPosture,
 }: DeriveCanvasAuthoringStateArgs): CanvasAuthoringState {
@@ -208,7 +208,7 @@ export function deriveCanvasAuthoringState({
     draftAccessPosture,
     draftToolbarState: toCanvasDraftToolbarState(draftAccessPosture),
     canMutateGraph: canMutateCanvasGraph({
-      canPersistDraftTransport,
+      canMutateGraphTransport,
       draftAccessPosture,
       draftRecoveryState,
     }),

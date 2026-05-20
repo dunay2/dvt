@@ -26,6 +26,7 @@ describe('Canvas route access states', () => {
         canPlan: false,
         canRun: false,
         canEditEdges: false,
+        canPersistGraphDraft: false,
         canManagePlugins: false,
         canManageRBAC: false,
       },

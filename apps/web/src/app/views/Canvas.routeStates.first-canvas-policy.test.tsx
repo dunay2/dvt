@@ -58,6 +58,7 @@ describe('Canvas route first-canvas policy', () => {
         canPlan: false,
         canRun: false,
         canEditEdges: false,
+        canPersistGraphDraft: true,
         canManagePlugins: false,
         canManageRBAC: false,
       },

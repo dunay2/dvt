@@ -16,6 +16,7 @@ describe('useAuthorizationStore', () => {
       canPlan: false,
       canRun: false,
       canEditEdges: false,
+      canPersistGraphDraft: false,
       canManagePlugins: false,
       canManageRBAC: false,
     });
@@ -27,6 +28,7 @@ describe('useAuthorizationStore', () => {
       canPlan: false,
       canRun: false,
       canEditEdges: false,
+      canPersistGraphDraft: false,
       canManagePlugins: true,
       canManageRBAC: false,
     });
@@ -35,6 +37,7 @@ describe('useAuthorizationStore', () => {
       canPlan: false,
       canRun: false,
       canEditEdges: false,
+      canPersistGraphDraft: false,
       canManagePlugins: true,
       canManageRBAC: false,
     });
