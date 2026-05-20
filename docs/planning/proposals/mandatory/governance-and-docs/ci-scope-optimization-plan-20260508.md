@@ -219,6 +219,8 @@ allowedImplementationSurfaces:
   - tools/ci/emit-workspace-matrix.test.mjs
   - tools/ci/emit-test-matrix.test.mjs
   - scripts/local-validation-plan.cjs
+  - scripts/verify-changed.test.cjs
+  - scripts/README.md
   - docs/guides/testing-and-ci-capabilities.md
   - docs/planning/proposals/mandatory/governance-and-docs/repository-command-catalog-normalization-plan-20260508.md
   - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
@@ -849,6 +851,39 @@ symbols:
     cypressCoverage: N/A - local CI tooling only
     unitTests:
       - node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+  - name: PLANNING_WORKFLOW_SCRIPT_TESTS
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Route planning workflow script edits to focused adjacent tests
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
+  - name: hasPlanningDbFullSuiteChange
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Keep full planning DB tests scoped to DB implementation surfaces
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
+  - name: planningWorkflowTestSteps
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Convert changed planning workflow scripts into focused test steps
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
 ```
 
 ## File Structure

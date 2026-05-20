@@ -257,8 +257,11 @@ Always runs:
 
 Adds scoped checks:
 
-- `pnpm planning:db:inventory:check` and `pnpm test:planning:db` when planning
-  DB surfaces changed
+- `pnpm planning:db:inventory:check` when planning DB surfaces changed
+- adjacent `node --test scripts/<name>.test.cjs` checks for changed planning
+  workflow scripts that own a focused test file
+- `pnpm test:planning:db` only for planning/governance DB implementation
+  surfaces that require the full planning DB suite
 - `node --test scripts/verify-changed.test.cjs` when the verifier itself
   changed
 

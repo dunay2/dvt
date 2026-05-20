@@ -50,6 +50,17 @@ test('buildVerifyChangedPlan adds planning DB validation for planning query-stor
   );
 });
 
+test('buildVerifyChangedPlan runs adjacent planning workflow tests without the full DB suite', () => {
+  const labels = labelsFor(['scripts/governance-refresh.cjs']);
+
+  assert.equal(labels.filter((label) => label === 'pnpm planning:db:inventory:check').length, 1);
+  assert.equal(
+    labels.filter((label) => label === 'node --test scripts/governance-refresh.test.cjs').length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
 test('buildVerifyChangedPlan self-tests developer workflow verifier changes', () => {
   const labels = labelsFor(['scripts/verify-changed.cjs']);
 
