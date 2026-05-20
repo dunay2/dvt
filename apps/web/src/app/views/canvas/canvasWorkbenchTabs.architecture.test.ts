@@ -316,6 +316,8 @@ describe('Canvas workbench tabs architecture', () => {
     expect(tabsTestSource).toContain('createCanvasGraphWorkbenchTab');
     expect(tabsTestSource).not.toContain('createGraphCanvasWorkbenchTab');
     expect(routeSource).toContain('buildCanvasShellProps');
+    expect(routeSource).toContain("activeWorkbenchTab?.scope === 'workspace'");
+    expect(routeSource).toContain('shouldReplaceCenterSurfaceWithWorkbenchTab');
     expect(routeSource).toContain('<CanvasShell {...shellProps} layout={layout} />');
     expect(routePostureArchitectureSource).toContain(
       "repoFileExists('apps/web/src/app/components/GraphCanvas.tsx')"

@@ -130,8 +130,11 @@ allowedImplementationSurfaces:
   - apps/web/src/app/plugins/dbt/dbtContributions.ts
   - apps/web/src/app/views/CodeView.tsx
   - apps/web/src/app/views/CodeView.test.tsx
+  - apps/web/src/app/views/Canvas.tsx
   - apps/web/src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
   - apps/web/src/app/views/code/codeViewCopy.ts
+  - apps/web/src/app/views/canvas/CanvasShellMainPanel.tsx
+  - apps/web/src/app/views/canvas/CanvasShell.test.tsx
   - apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts
   - apps/web/src/app/views/canvas/canvasWorkbenchTabs.test.ts
   - apps/web/src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts

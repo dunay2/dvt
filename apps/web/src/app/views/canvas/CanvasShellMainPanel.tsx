@@ -112,11 +112,11 @@ function CanvasShellMainSurface({
     />
   );
 
-  if (layout.workbenchTabPanel != null) {
-    return <>{layout.workbenchTabPanel}</>;
-  }
-
   if (layout.centerSurface == null) {
+    if (layout.workbenchTabPanel != null) {
+      return <>{layout.workbenchTabPanel}</>;
+    }
+
     return viewport;
   }
 
