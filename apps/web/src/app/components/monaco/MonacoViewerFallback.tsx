@@ -1,3 +1,4 @@
+/** Owned concern: provide the shared loading shell for lazy Monaco viewer surfaces. */
 import { routeWorkbenchMonacoSurfaceClassName } from '../workbench/RouteWorkbenchFrame';
 import { cn } from '../ui/utils';
 

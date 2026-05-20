@@ -22,8 +22,23 @@ vi.mock('./artifacts/useLocalManifestImport', async () => {
 });
 
 vi.mock('../components/monaco/MonacoCodeViewer', () => ({
-  MonacoCodeViewer: ({ path, value }: { path?: string; value: string }) => (
-    <div data-path={path} data-testid="monaco-code-viewer">
+  MonacoCodeViewer: ({
+    ariaLabel,
+    language,
+    path,
+    value,
+  }: {
+    ariaLabel: string;
+    language: string;
+    path?: string;
+    value: string;
+  }) => (
+    <div
+      data-aria-label={ariaLabel}
+      data-language={language}
+      data-path={path}
+      data-testid="monaco-code-viewer"
+    >
       {value}
     </div>
   ),
@@ -118,7 +133,12 @@ describe('ArtifactsView', () => {
     expect(mounted.container.textContent).toContain('run_results.json');
     expect(mounted.container.textContent).toContain('catalog.json');
     expect(mounted.container.querySelector('[data-testid="monaco-code-viewer"]')).not.toBeNull();
-    expect(mounted.container.textContent).toContain('target/manifest.json');
+    expect(mounted.container.textContent).not.toContain('View Full File');
+    const viewer = mounted.container.querySelector('[data-testid="monaco-code-viewer"]');
+    expect(viewer?.getAttribute('data-language')).toBe('json');
+    expect(viewer?.getAttribute('data-path')).toBe('target/manifest.json');
+    expect(viewer?.getAttribute('data-aria-label')).toBe('Preview: manifest.json');
+    expect(mounted.container.textContent).toContain('workspace');
     expect(mounted.container.textContent).toContain('About dbt Artifacts');
   });
 

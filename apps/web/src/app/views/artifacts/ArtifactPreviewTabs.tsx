@@ -1,46 +1,17 @@
+/** Owned concern: render Artifacts preview tabs without owning Monaco runtime setup. */
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer';
-import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import { routeWorkbenchTabListClassName } from '../../components/workbench/RouteWorkbenchFrame';
+import { ArtifactMonacoPreviewPanel } from './ArtifactMonacoPreviewPanel';
 import { ArtifactPreviewUnavailableStateView } from './ArtifactsStateViews';
 import { artifactsViewCopy } from './copy';
 import type { ArtifactPreviewDocumentMap } from './constants';
-import { formatStructuredArtifactContent } from './structuredArtifactContent';
 
 type ArtifactPreviewTabsProps = {
   previewDocuments: ArtifactPreviewDocumentMap;
   panelClassName: string;
   tabTriggerClassName: string;
 };
-
-function PreviewPane({
-  title,
-  fileName,
-  content,
-}: {
-  title: string;
-  fileName: string;
-  content: unknown;
-}) {
-  return (
-    <>
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="font-semibold">{title}</h3>
-        <Button variant="outline" size="sm">
-          {artifactsViewCopy.viewFullFile}
-        </Button>
-      </div>
-      <MonacoCodeViewer
-        ariaLabel={title}
-        language="json"
-        loadingLabel={`Loading ${fileName}...`}
-        path={fileName}
-        value={formatStructuredArtifactContent(content)}
-      />
-    </>
-  );
-}
 
 export function ArtifactPreviewTabs({
   previewDocuments,
@@ -68,10 +39,10 @@ export function ArtifactPreviewTabs({
 
         <TabsContent value="manifest" className="mt-4">
           {manifestDocument ? (
-            <PreviewPane
+            <ArtifactMonacoPreviewPanel
               title={artifactsViewCopy.previewManifest}
               fileName="manifest.json"
-              content={manifestDocument.content}
+              document={manifestDocument}
             />
           ) : (
             <ArtifactPreviewUnavailableStateView fileName="manifest.json" />
@@ -79,10 +50,10 @@ export function ArtifactPreviewTabs({
         </TabsContent>
         <TabsContent value="run_results" className="mt-4">
           {runResultsDocument ? (
-            <PreviewPane
+            <ArtifactMonacoPreviewPanel
               title={artifactsViewCopy.previewRunResults}
               fileName="run_results.json"
-              content={runResultsDocument.content}
+              document={runResultsDocument}
             />
           ) : (
             <ArtifactPreviewUnavailableStateView fileName="run_results.json" />
@@ -90,10 +61,10 @@ export function ArtifactPreviewTabs({
         </TabsContent>
         <TabsContent value="catalog" className="mt-4">
           {catalogDocument ? (
-            <PreviewPane
+            <ArtifactMonacoPreviewPanel
               title={artifactsViewCopy.previewCatalog}
               fileName="catalog.json"
-              content={catalogDocument.content}
+              document={catalogDocument}
             />
           ) : (
             <ArtifactPreviewUnavailableStateView fileName="catalog.json" />
