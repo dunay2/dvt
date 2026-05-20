@@ -246,6 +246,10 @@ Runs the fast changed-slice verification plan used during local iteration. It
 keeps closeout validation separate and only selects mechanical checks from the
 canonical changed-file set.
 
+The shared plan definitions, path predicates, and command execution helper live
+in `local-validation-plan.cjs`; this wrapper owns CLI argument parsing, local
+changed-file discovery, and operator output.
+
 Always runs:
 
 - changed docs location, filename, frontmatter, ARC, QA, markdown, feature

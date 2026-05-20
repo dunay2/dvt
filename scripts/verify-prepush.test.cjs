@@ -198,9 +198,11 @@
   });
 
   test('prepush router delegates repository path semantics to shared CI scope query', () => {
-    const source = fs.readFileSync(path.resolve(__dirname, 'verify-prepush.cjs'), 'utf8');
+    const source = fs.readFileSync(path.resolve(__dirname, 'local-validation-plan.cjs'), 'utf8');
+    const wrapperSource = fs.readFileSync(path.resolve(__dirname, 'verify-prepush.cjs'), 'utf8');
 
     assert.match(source, /repository-change-scope\.mjs/u);
+    assert.match(wrapperSource, /local-validation-plan\.cjs/u);
     assert.doesNotMatch(source, /function isPlanningDbRelevant/u);
     assert.doesNotMatch(source, /function isGovernanceGlobalRelevant/u);
     assert.doesNotMatch(source, /function isFeatureMechanizationRelevant/u);

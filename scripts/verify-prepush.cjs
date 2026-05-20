@@ -1,237 +1,17 @@
 #!/usr/bin/env node
-/** Owned concern: build and execute the local pre-push validation command plan. */
+/** Owned concern: run the local pre-push validation command plan. */
 {
   const path = require('node:path');
-  const { spawnSync } = require('node:child_process');
 
-  const { classifyRepositoryChangedScope } = require('../tools/ci/repository-change-scope.mjs');
+  const {
+    buildPrepushPlan,
+    classifyPrepushScope,
+    commandLabel,
+    executeCommandPlan,
+  } = require('./local-validation-plan.cjs');
   const { listLocalChangedFiles } = require('./git-local-changes.cjs');
 
   const repoRoot = path.resolve(__dirname, '..');
-
-  const MECHANICAL_STEPS = [
-    {
-      id: 'docs-workboard-check-changed',
-      command: 'node',
-      args: ['scripts/docs-workboard-check-changed.cjs'],
-    },
-    {
-      id: 'check-changed',
-      command: 'node',
-      args: ['scripts/check-changed.cjs'],
-    },
-    {
-      id: 'docs-gov-locations-changed',
-      command: 'pnpm',
-      args: ['docs:gov:locations', '--', '--changed-only'],
-    },
-    {
-      id: 'docs-gov-filenames-changed',
-      command: 'pnpm',
-      args: ['docs:gov:filenames:changed'],
-    },
-    {
-      id: 'docs-gov-frontmatter-changed',
-      command: 'pnpm',
-      args: ['docs:gov:frontmatter:changed'],
-    },
-    {
-      id: 'docs-arc-evidence-changed',
-      command: 'pnpm',
-      args: ['docs:arc:evidence:check', '--', '--changed-only'],
-    },
-    {
-      id: 'qa-artifact-check',
-      command: 'pnpm',
-      args: ['qa:artifact:check'],
-    },
-    {
-      id: 'lint-md-changed',
-      command: 'pnpm',
-      args: ['lint:md:changed'],
-    },
-    {
-      id: 'check-forbidden-tracked-files',
-      command: 'node',
-      args: ['scripts/check-forbidden-tracked-files.cjs'],
-    },
-  ];
-
-  const FULL_ONLY_STEPS = [
-    {
-      id: 'test-closeout-changed',
-      command: 'pnpm',
-      args: ['test:closeout-changed'],
-    },
-    {
-      id: 'test-verify-prepush',
-      command: 'pnpm',
-      args: ['test:verify-prepush'],
-    },
-    {
-      id: 'test-generated-docs-policy',
-      command: 'node',
-      args: ['--test', 'scripts/check-generated-docs-policy.test.cjs'],
-    },
-    {
-      id: 'test-pr-closeout',
-      command: 'pnpm',
-      args: ['test:pr-closeout'],
-    },
-  ];
-
-  const PLANNING_DB_STEPS = [
-    {
-      id: 'planning-db-inventory-check',
-      command: 'pnpm',
-      args: ['planning:db:inventory:check'],
-    },
-  ];
-
-  const GOVERNANCE_GLOBAL_STEPS = [
-    {
-      id: 'docs-gov-generated-policy',
-      command: 'pnpm',
-      args: ['docs:gov:generated-policy'],
-    },
-    {
-      id: 'docs-governance-unit-coverage',
-      command: 'pnpm',
-      args: ['docs:governance:unit-coverage'],
-    },
-    {
-      id: 'docs-governance-document-unit-map',
-      command: 'pnpm',
-      args: ['docs:governance:document-unit-map:check'],
-    },
-    {
-      id: 'docs-governance-file-component-index',
-      command: 'pnpm',
-      args: ['docs:governance:file-component-index:check'],
-    },
-    {
-      id: 'docs-governance-file-fingerprint-baseline',
-      command: 'pnpm',
-      args: ['docs:governance:file-fingerprint-baseline:check'],
-    },
-    {
-      id: 'docs-governance-file-fingerprint-impact',
-      command: 'pnpm',
-      args: ['docs:governance:file-fingerprint-impact:check'],
-    },
-    {
-      id: 'docs-governance-coverage-report',
-      command: 'pnpm',
-      args: ['docs:governance:coverage-report:check'],
-    },
-    {
-      id: 'docs-governance-remediation-queue',
-      command: 'pnpm',
-      args: ['docs:governance:remediation-queue:check'],
-    },
-    {
-      id: 'docs-governance-changed-files',
-      command: 'pnpm',
-      args: ['docs:governance:changed-files:check'],
-    },
-  ];
-
-  const FEATURE_MECHANIZATION_FULL_STEPS = [
-    {
-      id: 'docs-feature-mechanization',
-      command: 'pnpm',
-      args: ['docs:feature-mechanization'],
-    },
-  ];
-
-  const FEATURE_MECHANIZATION_CHANGED_STEPS = [
-    {
-      id: 'docs-feature-mechanization-implementation',
-      command: 'pnpm',
-      args: ['docs:feature-mechanization:implementation'],
-    },
-  ];
-
-  const TRACEABILITY_STEPS = [
-    {
-      id: 'traceability-adr0',
-      command: 'pnpm',
-      args: ['traceability:adr0'],
-    },
-  ];
-
-  const CODE_VALIDATION_STEPS = [
-    {
-      id: 'arch-deps',
-      command: 'pnpm',
-      args: ['arch:deps'],
-    },
-    {
-      id: 'type-check-prepush',
-      command: 'node',
-      args: ['scripts/type-check-prepush.cjs'],
-    },
-  ];
-
-  function classifyPrepushScope(changedFiles, options = {}) {
-    const full = options.full === true;
-    const scope = classifyRepositoryChangedScope(changedFiles, {
-      repoRootPath: options.repoRootPath || repoRoot,
-    });
-
-    return {
-      hasChangedFiles: scope.hasChangedFiles,
-      needsPlanningDbInventory: full || scope.needsPlanningDbInventory,
-      needsGovernanceGlobal: full,
-      needsFeatureMechanization: full || scope.needsFeatureMechanization,
-      needsTraceabilityAdr0: full,
-      needsCodeValidation: full,
-    };
-  }
-
-  function pushSteps(steps, nextSteps) {
-    for (const step of nextSteps) {
-      if (!steps.some((candidate) => candidate.id === step.id)) {
-        steps.push(step);
-      }
-    }
-  }
-
-  function buildPrepushPlan(changedFiles, options = {}) {
-    const scope = classifyPrepushScope(changedFiles, options);
-    const steps = [];
-
-    pushSteps(steps, MECHANICAL_STEPS);
-
-    if (options.full === true) {
-      pushSteps(steps, FULL_ONLY_STEPS);
-    }
-
-    if (scope.needsPlanningDbInventory) {
-      pushSteps(steps, PLANNING_DB_STEPS);
-    }
-    if (scope.needsGovernanceGlobal) {
-      pushSteps(steps, GOVERNANCE_GLOBAL_STEPS);
-    }
-    if (scope.needsFeatureMechanization) {
-      if (options.full === true) {
-        pushSteps(steps, FEATURE_MECHANIZATION_FULL_STEPS);
-      }
-      pushSteps(steps, FEATURE_MECHANIZATION_CHANGED_STEPS);
-    }
-    if (scope.needsTraceabilityAdr0) {
-      pushSteps(steps, TRACEABILITY_STEPS);
-    }
-    if (scope.needsCodeValidation) {
-      pushSteps(steps, CODE_VALIDATION_STEPS);
-    }
-
-    return steps;
-  }
-
-  function commandLabel(step) {
-    return [step.command, ...step.args].join(' ');
-  }
 
   function listPrepushChangedFiles(options = {}) {
     return listLocalChangedFiles({
@@ -241,25 +21,12 @@
     });
   }
 
-  function runStep(step, options = {}) {
-    const result = spawnSync(step.command, step.args, {
-      cwd: options.repoRootPath || repoRoot,
-      shell: true,
-      stdio: 'inherit',
-    });
-    if (result.error) {
-      throw result.error;
-    }
-    if (result.status !== 0) {
-      throw new Error(`${commandLabel(step)} failed with exit code ${result.status || 1}`);
-    }
-  }
-
   function executePrepushPlan(plan, options = {}) {
-    for (const step of plan) {
-      console.log(`[verify:prepush] ${commandLabel(step)}`);
-      runStep(step, options);
-    }
+    executeCommandPlan(plan, {
+      ...options,
+      label: 'verify:prepush',
+      throwOnError: true,
+    });
   }
 
   function parseArgs(argv) {
@@ -269,12 +36,7 @@
     };
   }
 
-  function main(argv = process.argv.slice(2)) {
-    const args = parseArgs(argv);
-    const changedFiles = listPrepushChangedFiles({ repoRootPath: repoRoot });
-    const scope = classifyPrepushScope(changedFiles, { full: args.full });
-    const plan = buildPrepushPlan(changedFiles, { full: args.full });
-
+  function printPrepushPlan(changedFiles, scope, plan) {
     console.log('[verify:prepush] changed files:');
     if (changedFiles.length === 0) {
       console.log('- none');
@@ -293,12 +55,18 @@
     for (const step of plan) {
       console.log(`- ${step.id}: ${commandLabel(step)}`);
     }
+  }
 
-    if (args.dryRun) {
-      return;
+  function main(argv = process.argv.slice(2)) {
+    const args = parseArgs(argv);
+    const changedFiles = listPrepushChangedFiles({ repoRootPath: repoRoot });
+    const scope = classifyPrepushScope(changedFiles, { full: args.full });
+    const plan = buildPrepushPlan(changedFiles, { full: args.full });
+
+    printPrepushPlan(changedFiles, scope, plan);
+    if (!args.dryRun) {
+      executePrepushPlan(plan, { repoRootPath: repoRoot });
     }
-
-    executePrepushPlan(plan, { repoRootPath: repoRoot });
   }
 
   if (require.main === module) {
