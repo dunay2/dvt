@@ -764,6 +764,17 @@ symbols:
     cypressCoverage: N/A - local CI tooling only
     unitTests:
       - node --test scripts/verify-changed.test.cjs
+  - name: hasWebChange
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalChangedFileSet
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Run governed changed web suites for local web changes before CI
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
   - name: hasDeveloperWorkflowVerifierChange
     path: scripts/local-validation-plan.cjs
     dddOwner: LocalChangedFileSet

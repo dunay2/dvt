@@ -61,8 +61,21 @@ test('buildVerifyChangedPlan runs adjacent planning workflow tests without the f
   assert.ok(!labels.includes('pnpm test:planning:db'));
 });
 
+test('buildVerifyChangedPlan runs governed changed web suites for web changes', () => {
+  const labels = labelsFor(['apps/web/src/testing/vitestSuites.architecture.test.ts']);
+
+  assert.equal(labels.filter((label) => label === 'pnpm test:web:changed').length, 1);
+  assert.ok(
+    labels.indexOf('pnpm docs:feature-mechanization:implementation') <
+      labels.indexOf('pnpm test:web:changed')
+  );
+  assert.ok(
+    labels.indexOf('pnpm test:web:changed') < labels.indexOf('node scripts/check-changed.cjs')
+  );
+});
+
 test('buildVerifyChangedPlan self-tests developer workflow verifier changes', () => {
-  const labels = labelsFor(['scripts/verify-changed.cjs']);
+  const labels = labelsFor(['scripts/local-validation-plan.cjs']);
 
   assert.ok(labels.includes('node --test scripts/verify-changed.test.cjs'));
 });

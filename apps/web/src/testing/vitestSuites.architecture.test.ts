@@ -123,12 +123,14 @@ describe('web Vitest suite partition', () => {
     );
     expect(rootPackageJson.scripts['test:web:changed']).toBe('pnpm --filter @dvt/web test:changed');
     expect(rootPackageJson.scripts['test:web:ci']).toBe('pnpm --filter @dvt/web test:ci');
-    expect(workflow).toContain("pnpm -r --workspace-concurrency=4 --filter '!@dvt/web' test");
-    expect(workflow).toContain('pnpm test:web:ci');
-    expect(workflow).toContain('pnpm test:web:changed');
+    expect(workflow).toContain('detect_test_matrix:');
+    expect(workflow).toContain('node tools/ci/emit-test-matrix.mjs');
     expect(workflow).toContain(
-      "github.event_name == 'pull_request' && steps.scope.outputs.web == 'true'"
+      "if: github.event_name != 'pull_request' || needs.detect_test_matrix.outputs.any_tests == 'true'"
     );
+    expect(workflow).toContain('matrix: ${{ fromJSON(needs.detect_test_matrix.outputs.matrix) }}');
+    expect(workflow).toContain('run: ${{ matrix.command }}');
+    expect(workflow).toContain('pnpm test:web:ci');
     expect(workflow).toContain('web-frontend-tests:');
     expect(workflow).toContain('name: Web Frontend Tests');
 
