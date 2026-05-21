@@ -1334,13 +1334,25 @@ function classifyTaskLikeReference(
   if (featureMechanizationCycleIdSet.has(value) || featureMechanizationCycleIdSet.has(upperValue)) {
     return { classification: 'feature_mechanization_cycle', registeredPlanningTask: false };
   }
-  if (/^ADR-\d{4}$/.test(upperValue)) {
+  if (/^GPT-\d+(?:\.\d+)?$/.test(upperValue)) {
+    return { classification: 'model_reference', registeredPlanningTask: false };
+  }
+  if (/^[A-Z0-9]+-SKILL$/.test(upperValue)) {
+    return { classification: 'skill_reference', registeredPlanningTask: false };
+  }
+  if (/^ED-YYYYMMDD$/.test(upperValue)) {
+    return { classification: 'evidence_template_id', registeredPlanningTask: false };
+  }
+  if (/^ADR-XXXX$/.test(upperValue)) {
+    return { classification: 'adr_template_id', registeredPlanningTask: false };
+  }
+  if (/^ADR-(?:\d{3,4}[A-Z]?|[A-Z]\d+)$/.test(upperValue)) {
     return { classification: 'adr_id', registeredPlanningTask: false };
   }
   if (/^ARC-\d+$/.test(upperValue)) {
     return { classification: 'arc_level', registeredPlanningTask: false };
   }
-  if (/^ED-\d{8}-/.test(upperValue)) {
+  if (/^ED-\d{8}(?:-|$)/.test(upperValue)) {
     return { classification: 'evidence_id', registeredPlanningTask: false };
   }
   if (/^R-\d{8}-/.test(upperValue)) {
@@ -1349,11 +1361,76 @@ function classifyTaskLikeReference(
   if (/^US-/.test(upperValue)) {
     return { classification: 'user_story', registeredPlanningTask: false };
   }
-  if (/^(?:G\d+|F\d{2}|S\d{2})-/.test(upperValue)) {
+  if (/^(?:[A-Z0-9]+-)*[A-Z0-9]+-US\d+$/.test(upperValue)) {
+    return { classification: 'user_story', registeredPlanningTask: false };
+  }
+  if (/^(?:EWC|CODE-FILES)-\d+$/.test(upperValue)) {
+    return { classification: 'user_story', registeredPlanningTask: false };
+  }
+  if (/^TASK-\d+$/.test(upperValue)) {
+    return { classification: 'example_task_reference', registeredPlanningTask: false };
+  }
+  if (/^GOV-S\d+(?:-[A-Z0-9]+)*$/.test(upperValue) || /^CDG(?:-[A-Z0-9]+)+$/.test(upperValue)) {
+    return { classification: 'governance_workstream_reference', registeredPlanningTask: false };
+  }
+  if (/^RFC-\d+$/.test(upperValue)) {
+    return { classification: 'standards_reference', registeredPlanningTask: false };
+  }
+  if (/^AR-[A-Z]$/.test(upperValue)) {
+    return {
+      classification: 'architecture_review_stream_reference',
+      registeredPlanningTask: false,
+    };
+  }
+  if (/^(?:G\d+|F\d{2}|S\d{2}|W\d+)-/.test(upperValue)) {
     return { classification: 'historical_gap', registeredPlanningTask: false };
   }
   if (/^SHA-\d+$/.test(upperValue)) {
     return { classification: 'algorithm_reference', registeredPlanningTask: false };
+  }
+  if (/^REF-\d+$/.test(upperValue)) {
+    return { classification: 'document_reference', registeredPlanningTask: false };
+  }
+  if (/^(?:SSE-(?:KMS|S3)|AES-GCM)$/.test(upperValue)) {
+    return { classification: 'security_algorithm_reference', registeredPlanningTask: false };
+  }
+  if (/^(?:AES|RSA|ECDSA)-\d+$/.test(upperValue) || /^HMAC-SHA\d+$/.test(upperValue)) {
+    return { classification: 'security_algorithm_reference', registeredPlanningTask: false };
+  }
+  if (/^CVE-\d{4}-\d+$/.test(upperValue)) {
+    return { classification: 'security_advisory_reference', registeredPlanningTask: false };
+  }
+  if (/^(?:AC|AT|AU|CA|CM|CP|IA|IR|MA|MP|PE|PL|PS|RA|SA|SC|SI|SR)-\d+$/.test(upperValue)) {
+    return { classification: 'security_control_reference', registeredPlanningTask: false };
+  }
+  if (/^ISOL(?:-[A-Z0-9]+)*$/.test(upperValue)) {
+    return { classification: 'security_test_reference', registeredPlanningTask: false };
+  }
+  if (/^YYYY-MM-DD$/.test(upperValue)) {
+    return { classification: 'date_placeholder', registeredPlanningTask: false };
+  }
+  if (/^UTF-\d+$/.test(upperValue)) {
+    return { classification: 'encoding_reference', registeredPlanningTask: false };
+  }
+  if (
+    /^(?:USD|EUR|GBP|JPY|CAD|AUD|CHF|CNY)-(?:USD|EUR|GBP|JPY|CAD|AUD|CHF|CNY)$/.test(upperValue)
+  ) {
+    return { classification: 'currency_pair_reference', registeredPlanningTask: false };
+  }
+  if (/^Q\d+-Q\d+$/.test(upperValue)) {
+    return { classification: 'range_reference', registeredPlanningTask: false };
+  }
+  if (/^P\d+-\d+$/.test(upperValue)) {
+    return { classification: 'priority_work_item_marker', registeredPlanningTask: false };
+  }
+  if (/^DL-\d+$/.test(upperValue)) {
+    return { classification: 'diagram_reference', registeredPlanningTask: false };
+  }
+  if (/^(?:AUTO-FAIL|TEST-MODE)$/.test(upperValue)) {
+    return { classification: 'policy_state_reference', registeredPlanningTask: false };
+  }
+  if (/^(?:AV|CE|DW)-\d{3}$/.test(upperValue) || /^EA-\d{8}-\d+$/.test(upperValue)) {
+    return { classification: 'review_finding_reference', registeredPlanningTask: false };
   }
   if (/^(?:GAP|MVP|RESIDUAL|RISK|LEGACY|INV)-/.test(upperValue) || /^F-\d{2}/.test(upperValue)) {
     return { classification: 'historical_planning_reference', registeredPlanningTask: false };
@@ -1370,16 +1447,6 @@ function classifyTaskLikeReference(
   if (/^PS-[CQ]\d+/.test(upperValue)) {
     return { classification: 'plan_store_matrix_reference', registeredPlanningTask: false };
   }
-  if (/^P\d+-\d+$/i.test(value)) {
-    return { classification: 'priority_work_item_marker', registeredPlanningTask: false };
-  }
-  if (upperValue === 'YYYY-MM-DD') {
-    return { classification: 'date_placeholder', registeredPlanningTask: false };
-  }
-  if (upperValue === 'SUB-SKILL') {
-    return { classification: 'skill_reference', registeredPlanningTask: false };
-  }
-
   return { classification: 'unknown_task_like_id', registeredPlanningTask: false };
 }
 

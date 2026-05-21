@@ -669,6 +669,13 @@ test('docs disposition snapshot classifies active-doc cleanup actions and task-l
             'AR-A6 F-28 S08 WEB-123 ADR-0055 ARC-2 ED-20260510-example',
             'R-20260510-EXAMPLE US-1 F04-W4 SYS-DOCS CMD-RET PS-Q08',
             'SHA-256 GAP-1 MVP-E1-A RESIDUAL-A RISK-B LEGACY-DRIFT INV-SCOPE-03 AR-C2-INV-1',
+            'ADR-0041A ADR-G5 ADR-XXXX ADR-012 ED-20260308 W3-1 P0-13',
+            'REF-1 REF-19 SSE-KMS SSE-S3 AES-GCM CVE-2023-30547',
+            'AC-3 AU-11 CM-7 YYYY-MM-DD UTF-8 USD-EUR Q1-Q5',
+            'GPT-5 SUB-SKILL GOV-S3 GOV-S3-PLANNING-STATE-QUERY-STORE',
+            'CDG-W3-1 RFC-8785 HMAC-SHA256 RSA-3072 ECDSA-384',
+            'ISOL-DIRECT-001 AR-D7-US1 ED-YYYYMMDD AR-C AR-D TASK-1',
+            'EWC-1 CODE-FILES-1 DL-01 AUTO-FAIL TEST-MODE CE-001 EA-20260429-01',
           ].join(' '),
           'pending follow-up remains open',
           'TODO: resolve this item',
@@ -696,15 +703,60 @@ test('docs disposition snapshot classifies active-doc cleanup actions and task-l
   assert.equal(classifications.get('S08'), 'registered_planning_task');
   assert.equal(classifications.get('WEB-123'), 'unknown_task_like_id');
   assert.equal(classifications.get('ADR-0055'), 'adr_id');
+  assert.equal(classifications.get('ADR-0041A'), 'adr_id');
+  assert.equal(classifications.get('ADR-G5'), 'adr_id');
+  assert.equal(classifications.get('ADR-XXXX'), 'adr_template_id');
+  assert.equal(classifications.get('ADR-012'), 'adr_id');
   assert.equal(classifications.get('ARC-2'), 'arc_level');
   assert.equal(classifications.get('ED-20260510-example'), 'evidence_id');
+  assert.equal(classifications.get('ED-20260308'), 'evidence_id');
   assert.equal(classifications.get('R-20260510-EXAMPLE'), 'risk_id');
   assert.equal(classifications.get('US-1'), 'user_story');
   assert.equal(classifications.get('F04-W4'), 'historical_gap');
+  assert.equal(classifications.get('W3-1'), 'historical_gap');
+  assert.equal(classifications.get('P0-13'), 'priority_work_item_marker');
   assert.equal(classifications.get('SYS-DOCS'), 'governance_unit_reference');
   assert.equal(classifications.get('CMD-RET'), 'command_reference');
   assert.equal(classifications.get('PS-Q08'), 'plan_store_matrix_reference');
   assert.equal(classifications.get('SHA-256'), 'algorithm_reference');
+  assert.equal(classifications.get('REF-1'), 'document_reference');
+  assert.equal(classifications.get('REF-19'), 'document_reference');
+  assert.equal(classifications.get('SSE-KMS'), 'security_algorithm_reference');
+  assert.equal(classifications.get('SSE-S3'), 'security_algorithm_reference');
+  assert.equal(classifications.get('AES-GCM'), 'security_algorithm_reference');
+  assert.equal(classifications.get('CVE-2023-30547'), 'security_advisory_reference');
+  assert.equal(classifications.get('AC-3'), 'security_control_reference');
+  assert.equal(classifications.get('AU-11'), 'security_control_reference');
+  assert.equal(classifications.get('CM-7'), 'security_control_reference');
+  assert.equal(classifications.get('YYYY-MM-DD'), 'date_placeholder');
+  assert.equal(classifications.get('UTF-8'), 'encoding_reference');
+  assert.equal(classifications.get('USD-EUR'), 'currency_pair_reference');
+  assert.equal(classifications.get('Q1-Q5'), 'range_reference');
+  assert.equal(classifications.get('GPT-5'), 'model_reference');
+  assert.equal(classifications.get('SUB-SKILL'), 'skill_reference');
+  assert.equal(classifications.get('GOV-S3'), 'governance_workstream_reference');
+  assert.equal(
+    classifications.get('GOV-S3-PLANNING-STATE-QUERY-STORE'),
+    'governance_workstream_reference'
+  );
+  assert.equal(classifications.get('CDG-W3-1'), 'governance_workstream_reference');
+  assert.equal(classifications.get('RFC-8785'), 'standards_reference');
+  assert.equal(classifications.get('HMAC-SHA256'), 'security_algorithm_reference');
+  assert.equal(classifications.get('RSA-3072'), 'security_algorithm_reference');
+  assert.equal(classifications.get('ECDSA-384'), 'security_algorithm_reference');
+  assert.equal(classifications.get('ISOL-DIRECT-001'), 'security_test_reference');
+  assert.equal(classifications.get('AR-D7-US1'), 'user_story');
+  assert.equal(classifications.get('ED-YYYYMMDD'), 'evidence_template_id');
+  assert.equal(classifications.get('AR-C'), 'architecture_review_stream_reference');
+  assert.equal(classifications.get('AR-D'), 'architecture_review_stream_reference');
+  assert.equal(classifications.get('TASK-1'), 'example_task_reference');
+  assert.equal(classifications.get('EWC-1'), 'user_story');
+  assert.equal(classifications.get('CODE-FILES-1'), 'user_story');
+  assert.equal(classifications.get('DL-01'), 'diagram_reference');
+  assert.equal(classifications.get('AUTO-FAIL'), 'policy_state_reference');
+  assert.equal(classifications.get('TEST-MODE'), 'policy_state_reference');
+  assert.equal(classifications.get('CE-001'), 'review_finding_reference');
+  assert.equal(classifications.get('EA-20260429-01'), 'review_finding_reference');
   assert.equal(classifications.get('GAP-1'), 'historical_planning_reference');
   assert.equal(classifications.get('MVP-E1-A'), 'historical_planning_reference');
   assert.equal(classifications.get('RESIDUAL-A'), 'historical_planning_reference');
