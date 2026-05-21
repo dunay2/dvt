@@ -27,17 +27,7 @@ function step(id, command, ...args) {
   return Object.freeze({ id, command, args });
 }
 
-const MECHANICAL_PREPUSH_STEPS = Object.freeze([
-  step('docs-workboard-check-changed', 'node', 'scripts/docs-workboard-check-changed.cjs'),
-  step('check-changed', 'node', 'scripts/check-changed.cjs'),
-  step('docs-gov-locations-changed', 'pnpm', 'docs:gov:locations', '--', '--changed-only'),
-  step('docs-gov-filenames-changed', 'pnpm', 'docs:gov:filenames:changed'),
-  step('docs-gov-frontmatter-changed', 'pnpm', 'docs:gov:frontmatter:changed'),
-  step('docs-arc-evidence-changed', 'pnpm', 'docs:arc:evidence:check', '--', '--changed-only'),
-  step('qa-artifact-check', 'pnpm', 'qa:artifact:check'),
-  step('lint-md-changed', 'pnpm', 'lint:md:changed'),
-  step('check-forbidden-tracked-files', 'node', 'scripts/check-forbidden-tracked-files.cjs'),
-]);
+const MECHANICAL_PREPUSH_STEPS = Object.freeze([step('verify-changed', 'pnpm', 'verify:changed')]);
 
 const VERIFY_CHANGED_BASE_STEPS = Object.freeze([
   step('docs-workboard-check-changed', 'node', 'scripts/docs-workboard-check-changed.cjs'),
@@ -115,6 +105,7 @@ const VERIFY_CHANGED_GROUPS = Object.freeze({
   ]),
   developerWorkflowSelfTest: Object.freeze([
     step('test-verify-changed', 'node', '--test', 'scripts/verify-changed.test.cjs'),
+    step('test-verify-prepush', 'node', '--test', 'scripts/verify-prepush.test.cjs'),
   ]),
 });
 
@@ -175,6 +166,8 @@ function hasDeveloperWorkflowVerifierChange(changedFiles) {
       'scripts/local-validation-plan.cjs',
       'scripts/verify-changed.cjs',
       'scripts/verify-changed.test.cjs',
+      'scripts/verify-prepush.cjs',
+      'scripts/verify-prepush.test.cjs',
     ].includes(filePath)
   );
 }
@@ -211,21 +204,20 @@ function buildPrepushPlan(changedFiles, options = {}) {
   const scope = classifyPrepushScope(changedFiles, options);
   const plan = [];
 
-  pushSteps(plan, MECHANICAL_PREPUSH_STEPS);
+  if (scope.hasChangedFiles) {
+    pushSteps(plan, MECHANICAL_PREPUSH_STEPS);
+  }
   if (options.full === true) {
     pushSteps(plan, PREPUSH_GROUPS.fullOnly);
   }
-  if (scope.needsPlanningDbInventory) {
+  if (scope.needsPlanningDbInventory && options.full === true) {
     pushSteps(plan, PREPUSH_GROUPS.planningDb);
   }
   if (scope.needsGovernanceGlobal) {
     pushSteps(plan, PREPUSH_GROUPS.governanceGlobal);
   }
-  if (scope.needsFeatureMechanization) {
-    if (options.full === true) {
-      pushSteps(plan, PREPUSH_GROUPS.featureMechanizationFull);
-    }
-    pushSteps(plan, PREPUSH_GROUPS.featureMechanizationChanged);
+  if (scope.needsFeatureMechanization && options.full === true) {
+    pushSteps(plan, PREPUSH_GROUPS.featureMechanizationFull);
   }
   if (scope.needsTraceabilityAdr0) {
     pushSteps(plan, PREPUSH_GROUPS.traceability);

@@ -268,6 +268,17 @@ Adds scoped checks:
 Use `pnpm verify:changed -- --dry-run` to print the selected plan without
 executing it.
 
+### `verify-prepush.cjs`
+
+Runs the local pre-push closeout wrapper. By default it delegates changed-slice
+routing to `pnpm verify:changed` once, so package tests, changed docs checks,
+format/lint checks, and developer-workflow self-tests are selected by the same
+plan used during iteration.
+
+Use `pnpm verify:prepush -- --full` only when a full local closeout is required.
+Full mode adds the prepush-only regression, governance, traceability,
+architecture, and type-check groups after the changed-slice gate.
+
 ### `type-check-prepush.cjs`
 
 Chooses the strict pre-push type-check path from the changed diff.

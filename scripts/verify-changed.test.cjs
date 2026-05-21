@@ -78,6 +78,14 @@ test('buildVerifyChangedPlan self-tests developer workflow verifier changes', ()
   const labels = labelsFor(['scripts/local-validation-plan.cjs']);
 
   assert.ok(labels.includes('node --test scripts/verify-changed.test.cjs'));
+  assert.ok(labels.includes('node --test scripts/verify-prepush.test.cjs'));
+});
+
+test('buildVerifyChangedPlan self-tests prepush verifier changes', () => {
+  const labels = labelsFor(['scripts/verify-prepush.cjs']);
+
+  assert.ok(labels.includes('node --test scripts/verify-changed.test.cjs'));
+  assert.ok(labels.includes('node --test scripts/verify-prepush.test.cjs'));
 });
 
 test('executeVerifyChangedPlan stops at the first failed check', () => {
