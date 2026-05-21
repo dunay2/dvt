@@ -43,12 +43,14 @@ describe('RouteWorkbenchFrame', () => {
     const header = container.querySelector('[data-slot="route-workbench-header"]');
     const body = container.querySelector('[data-slot="route-workbench-body"]');
     const bodyContent = container.querySelector('[data-slot="route-workbench-body-content"]');
+    const primarySurface = container.querySelector('[data-slot="route-workbench-primary-surface"]');
 
     expect(header?.textContent).toContain('Shared header');
     expect(body).not.toBeNull();
     expect(bodyContent?.textContent).toContain('Route body');
     expect(bodyContent?.className).toContain('p-6');
     expect(bodyContent?.className).toContain('pb-10');
+    expect(primarySurface?.className).toContain('max-w-xl');
     expect(body?.contains(header ?? null)).toBe(false);
   });
 
