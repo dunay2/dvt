@@ -91,6 +91,9 @@ allowedImplementationSurfaces:
   - scripts/closeout-changed.test.cjs
   - scripts/pr-closeout.cjs
   - scripts/pr-closeout.test.cjs
+  - scripts/README.md
+  - tools/ci/pr-check-triage.mjs
+  - tools/ci/pr-check-triage.test.mjs
   - docs/runbooks/governed-changed-slice-closeout-20260506.md
   - docs/runbooks/index.md
   - docs/guides/testing-and-ci-capabilities.md
@@ -120,6 +123,9 @@ commandQueryRails:
   - name: RunPrCloseout
     type: command
     dddOwner: PrCloseoutGate
+  - name: EvaluatePrCheckGate
+    type: query
+    dddOwner: PrCheckGate
 domainObjects:
   - name: ChangedSliceCloseoutPlan
     type: read-model
@@ -136,6 +142,9 @@ domainObjects:
   - name: PrCloseoutGate
     type: policy
     owner: CI governance
+  - name: PrCheckGate
+    type: policy
+    owner: CI governance
 fowlerSignals:
   - Scripted Process
   - Single Source of Truth
@@ -149,6 +158,7 @@ cypressFlows:
 completionGate:
   - node --test scripts/closeout-changed.test.cjs
   - node --test scripts/pr-closeout.test.cjs
+  - node --test tools/ci/pr-check-triage.test.mjs
   - pnpm test:closeout-changed
   - pnpm test:pr-closeout
   - pnpm closeout:changed
@@ -233,6 +243,18 @@ prSymbolDefaults: &prCloseoutSymbolDefaults
   cypressCoverage: "not-applicable: CI governance helper has no browser workflow."
   unitTests:
     - node --test scripts/pr-closeout.test.cjs
+prCheckSymbolDefaults: &prCheckSymbolDefaults
+  dddOwner: PrCheckGate
+  cqRails:
+    - EvaluatePrCheckGate
+  fowlerSignals:
+    - Scripted Process
+    - Explicit Gate
+    - Fail Fast
+  architectureGuard: node --test tools/ci/pr-check-triage.test.mjs
+  cypressCoverage: "not-applicable: CI governance helper has no browser workflow."
+  unitTests:
+    - node --test tools/ci/pr-check-triage.test.mjs
 symbols:
   - <<: *closeoutSymbolDefaults
     name: fs
@@ -420,4 +442,13 @@ symbols:
   - <<: *prCloseoutSymbolDefaults
     name: commit
     path: scripts/pr-closeout.test.cjs
+  - <<: *prCheckSymbolDefaults
+    name: plural
+    path: tools/ci/pr-check-triage.mjs
+  - <<: *prCheckSymbolDefaults
+    name: evaluateCheckGate
+    path: tools/ci/pr-check-triage.mjs
+  - <<: *prCheckSymbolDefaults
+    name: __dirname
+    path: tools/ci/pr-check-triage.test.mjs
 ```

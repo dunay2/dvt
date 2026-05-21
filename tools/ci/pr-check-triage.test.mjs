@@ -1,13 +1,19 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import {
   classifyStatusChecks,
+  evaluateCheckGate,
   extractFailureSnippet,
   normalizeStatusCheck,
   parseActionsJobDetailsUrl,
   pickFirstFailingGitHubActionsCheck,
 } from './pr-check-triage.mjs';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 test('classifyStatusChecks groups GitHub Actions checks by status', () => {
   const buckets = classifyStatusChecks([
@@ -150,4 +156,69 @@ test('extractFailureSnippet prefers the first error-oriented lines and limits ou
     snippet,
     ['ERROR: expected guard to fail fast', 'stack line 1', 'stack line 2'].join('\n')
   );
+});
+
+test('evaluateCheckGate fails fast on failed checks without waiting for pending checks', () => {
+  const gate = evaluateCheckGate({
+    status: 'ok',
+    counts: {
+      failed: 1,
+      pending: 3,
+      successful: 8,
+      skipped: 1,
+      external: 0,
+    },
+  });
+
+  assert.deepEqual(gate, {
+    status: 'failed',
+    exitCode: 1,
+    message: '1 failed check, 3 pending checks.',
+  });
+});
+
+test('evaluateCheckGate reports pending checks as an immediate non-ready state', () => {
+  const gate = evaluateCheckGate({
+    status: 'ok',
+    counts: {
+      failed: 0,
+      pending: 2,
+      successful: 9,
+      skipped: 1,
+      external: 0,
+    },
+  });
+
+  assert.deepEqual(gate, {
+    status: 'pending',
+    exitCode: 2,
+    message: '2 pending checks.',
+  });
+});
+
+test('evaluateCheckGate passes only when GitHub Actions checks are settled and green', () => {
+  const gate = evaluateCheckGate({
+    status: 'ok',
+    counts: {
+      failed: 0,
+      pending: 0,
+      successful: 12,
+      skipped: 2,
+      external: 1,
+    },
+  });
+
+  assert.deepEqual(gate, {
+    status: 'passed',
+    exitCode: 0,
+    message: 'All GitHub Actions checks are settled and green.',
+  });
+});
+
+test('package scripts expose the immediate PR check gate', () => {
+  const packageJson = JSON.parse(
+    fs.readFileSync(path.resolve(__dirname, '..', '..', 'package.json'), 'utf8')
+  );
+
+  assert.equal(packageJson.scripts['pr:checks'], 'node tools/ci/pr-check-triage.mjs gate');
 });

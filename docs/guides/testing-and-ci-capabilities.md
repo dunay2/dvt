@@ -35,6 +35,7 @@ See also:
 | Changed-files auto-fix         | `pnpm fix:changed`               | [`package.json`](../../package.json)                                                                 |
 | Changed-files lint/format gate | `node scripts/check-changed.cjs` | [`scripts/check-changed.cjs`](../../scripts/check-changed.cjs)                                       |
 | PR closeout rail               | `pnpm pr:closeout`               | [`scripts/pr-closeout.cjs`](../../scripts/pr-closeout.cjs)                                           |
+| Immediate PR check gate        | `pnpm pr:checks`                 | [`tools/ci/pr-check-triage.mjs`](../../tools/ci/pr-check-triage.mjs)                                 |
 | CI tool contract suite         | `pnpm test:ci-tools`             | [`package.json`](../../package.json)                                                                 |
 | Affected workspace build       | `pnpm ci:affected:build`         | [`package.json`](../../package.json)                                                                 |
 | Affected workspace test        | `pnpm ci:affected:test`          | [`package.json`](../../package.json)                                                                 |
@@ -259,6 +260,9 @@ Command semantics:
   repository order. Use `--stage-all` when the full local changed set is the
   intended PR scope; without it, the rail requires files to be staged already
   and fails before commit if preparation or checks leave unstaged outputs.
+- `pnpm pr:checks` is the immediate PR check gate. It queries the current
+  branch PR once, returns non-zero for failed or still-pending GitHub Actions
+  checks, and does not watch or poll.
 - `pnpm verify:prepush -- --full` keeps three outcomes for code diffs:
   - skip when no TypeScript-affecting files changed
   - run `pnpm ci:affected:typecheck` when the diff is workspace-scoped

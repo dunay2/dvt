@@ -179,6 +179,45 @@ export function extractFailureSnippet(logText, options = {}) {
   return lines.slice(start, start + maxLines).join('\n');
 }
 
+function plural(count, singular, pluralValue = `${singular}s`) {
+  return count === 1 ? singular : pluralValue;
+}
+
+export function evaluateCheckGate(summary) {
+  if (summary?.status === 'no_pr') {
+    return {
+      status: 'no_pr',
+      exitCode: 3,
+      message: 'No pull request found for the selected branch.',
+    };
+  }
+
+  const failed = summary?.counts?.failed ?? 0;
+  const pending = summary?.counts?.pending ?? 0;
+
+  if (failed > 0) {
+    return {
+      status: 'failed',
+      exitCode: 1,
+      message: `${failed} failed ${plural(failed, 'check')}, ${pending} pending ${plural(pending, 'check', 'checks')}.`,
+    };
+  }
+
+  if (pending > 0) {
+    return {
+      status: 'pending',
+      exitCode: 2,
+      message: `${pending} pending ${plural(pending, 'check', 'checks')}.`,
+    };
+  }
+
+  return {
+    status: 'passed',
+    exitCode: 0,
+    message: 'All GitHub Actions checks are settled and green.',
+  };
+}
+
 async function resolvePrContext(prRef) {
   try {
     const args = ['pr', 'view'];
@@ -286,9 +325,9 @@ function parseArgs(argv) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  if (!args.command || !['summary', 'first-failure'].includes(args.command)) {
+  if (!args.command || !['summary', 'first-failure', 'gate'].includes(args.command)) {
     throw new Error(
-      'Usage: node tools/ci/pr-check-triage.mjs <summary|first-failure> [--pr <ref>]'
+      'Usage: node tools/ci/pr-check-triage.mjs <summary|first-failure|gate> [--pr <ref>]'
     );
   }
 
@@ -297,13 +336,28 @@ async function main() {
     process.stdout.write(
       `${JSON.stringify({ status: 'no_pr', message: 'No pull request found for the selected branch.' }, null, 2)}\n`
     );
+    if (args.command === 'gate') {
+      process.exitCode = 3;
+    }
     return;
   }
 
-  const payload =
-    args.command === 'summary'
-      ? buildSummaryPayload(prData)
-      : await buildFirstFailurePayload(prData);
+  const payload = await (async () => {
+    if (args.command === 'summary') {
+      return buildSummaryPayload(prData);
+    }
+    if (args.command === 'first-failure') {
+      return buildFirstFailurePayload(prData);
+    }
+
+    const summary = buildSummaryPayload(prData);
+    const gate = evaluateCheckGate(summary);
+    process.exitCode = gate.exitCode;
+    return {
+      ...summary,
+      gate,
+    };
+  })();
 
   process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
 }
