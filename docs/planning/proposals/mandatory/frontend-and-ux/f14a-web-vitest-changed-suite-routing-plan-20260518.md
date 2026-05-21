@@ -274,6 +274,14 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web test:changed -- --files apps/web/src/app/views/canvas/CanvasToolbar.tsx
     cypressCoverage: N/A - local command adapter only.
     unitTests: [pnpm --filter @dvt/web test:changed -- --files apps/web/src/app/views/canvas/CanvasToolbar.tsx]
+  - name: shouldRunTestDeps
+    path: apps/web/scripts/run-vitest-changed-suites.ts
+    dddOwner: Frontend test governance
+    cqRails: [WebVitestChangedSuiteRoute]
+    fowlerSignals: [Feedback-loop drag]
+    architectureGuard: pnpm --filter @dvt/web test:changed -- --files apps/web/src/testing/vitestSuites.architecture.test.ts
+    cypressCoverage: N/A - local dependency preflight only.
+    unitTests: [pnpm --filter @dvt/web test:changed -- --files apps/web/src/testing/vitestSuites.architecture.test.ts]
   - name: main
     path: apps/web/scripts/run-vitest-changed-suites.ts
     dddOwner: Frontend test governance

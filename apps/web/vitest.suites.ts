@@ -253,6 +253,7 @@ function createExactChangedTestCommand(
 export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): {
   suites: WebVitestChangedSuiteName[];
   commands: string[];
+  requiresDependencies: boolean;
 } {
   const selectedSuites = new Set<WebVitestChangedSuiteName>();
   const exactTestCommands = new Map<WebVitestChangedSuiteName, Set<string>>();
@@ -290,6 +291,7 @@ export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): 
         ? [WEB_VITEST_CHANGED_SUITE_COMMANDS[suiteName]]
         : [...(exactTestCommands.get(suiteName) ?? [])]
     ),
+    requiresDependencies: selectedSuites.size > 0,
   };
 }
 

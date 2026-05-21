@@ -168,6 +168,7 @@ describe('web Vitest suite partition', () => {
       resolveWebVitestChangedSuitePlan(['apps/web/src/app/views/canvas/CanvasToolbar.tsx'])
     ).toEqual({
       commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-presentation']],
+      requiresDependencies: true,
       suites: ['canvas-presentation'],
     });
 
@@ -177,6 +178,7 @@ describe('web Vitest suite partition', () => {
       commands: [
         'pnpm exec vitest run --config vitest.canvas-unit.config.ts src/app/views/canvas/canvasDraftScope.test.ts',
       ],
+      requiresDependencies: false,
       suites: ['canvas-unit'],
     });
 
@@ -188,6 +190,7 @@ describe('web Vitest suite partition', () => {
       commands: [
         'pnpm exec vitest run --config vitest.canvas-architecture.config.ts src/app/views/canvas/canvasDraftRepository.architecture.test.ts',
       ],
+      requiresDependencies: false,
       suites: ['canvas-architecture'],
     });
 
@@ -197,6 +200,7 @@ describe('web Vitest suite partition', () => {
       commands: [
         'pnpm exec vitest run --config vitest.architecture.config.ts src/testing/vitestSuites.architecture.test.ts',
       ],
+      requiresDependencies: false,
       suites: ['architecture'],
     });
 
@@ -210,6 +214,7 @@ describe('web Vitest suite partition', () => {
         WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-presentation'],
         'pnpm exec vitest run --config vitest.architecture.config.ts src/testing/vitestSuites.architecture.test.ts',
       ],
+      requiresDependencies: true,
       suites: ['canvas-presentation', 'architecture'],
     });
 
@@ -217,16 +222,19 @@ describe('web Vitest suite partition', () => {
       resolveWebVitestChangedSuitePlan(['apps/web/src/app/components/monaco/MonacoCodeSurface.tsx'])
     ).toEqual({
       commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.monaco],
+      requiresDependencies: true,
       suites: ['monaco'],
     });
 
     expect(resolveWebVitestChangedSuitePlan(['apps/web/src/app/views/CodeView.tsx'])).toEqual({
       commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.monaco],
+      requiresDependencies: true,
       suites: ['monaco'],
     });
 
     expect(resolveWebVitestChangedSuitePlan(['apps/web/src/app/Root.tsx'])).toEqual({
       commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.presentation],
+      requiresDependencies: true,
       suites: ['presentation'],
     });
 
@@ -234,33 +242,39 @@ describe('web Vitest suite partition', () => {
       resolveWebVitestChangedSuitePlan(['apps/web/src/app/services/runs/runsService.ts'])
     ).toEqual({
       commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.unit],
+      requiresDependencies: true,
       suites: ['unit'],
     });
 
     expect(resolveWebVitestChangedSuitePlan(['apps/web/vitest.suites.ts'])).toEqual({
       commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture],
+      requiresDependencies: true,
       suites: ['architecture'],
     });
     expect(resolveWebVitestChangedSuitePlan(['apps/web/vitest.canvas-unit.config.ts'])).toEqual({
       commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture],
+      requiresDependencies: true,
       suites: ['architecture'],
     });
     expect(
       resolveWebVitestChangedSuitePlan(['apps/web/vitest.canvas-presentation.config.ts'])
     ).toEqual({
       commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture],
+      requiresDependencies: true,
       suites: ['architecture'],
     });
     expect(
       resolveWebVitestChangedSuitePlan(['apps/web/vitest.canvas-architecture.config.ts'])
     ).toEqual({
       commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture],
+      requiresDependencies: true,
       suites: ['architecture'],
     });
     expect(WEB_VITEST_CHANGED_SUITE_COMMANDS).not.toHaveProperty('canvas');
 
     expect(resolveWebVitestChangedSuitePlan(['apps/api/src/server.ts'])).toEqual({
       commands: [],
+      requiresDependencies: false,
       suites: [],
     });
   });
@@ -273,6 +287,7 @@ describe('web Vitest suite partition', () => {
       resolveWebVitestChangedSuitePlan(['apps/web/src/app/views/code/useCodeEditableBuffer.ts'])
     ).toEqual({
       commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.monaco],
+      requiresDependencies: true,
       suites: ['monaco'],
     });
   });

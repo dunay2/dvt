@@ -70,6 +70,10 @@ function runCommand(command: string, cwd: string): void {
   }
 }
 
+function shouldRunTestDeps(requiresDependencies: boolean): boolean {
+  return process.env.CI === 'true' || requiresDependencies;
+}
+
 function main(): void {
   const repoRoot = gitOutput(['rev-parse', '--show-toplevel'], process.cwd())[0];
   if (!repoRoot) {
@@ -91,7 +95,9 @@ function main(): void {
   }
 
   process.stdout.write(`[web:test:changed] suites=${plan.suites.join(',')}\n`);
-  runCommand('pnpm run test:deps', webRoot);
+  if (shouldRunTestDeps(plan.requiresDependencies)) {
+    runCommand('pnpm run test:deps', webRoot);
+  }
   for (const command of plan.commands) {
     runCommand(command, webRoot);
   }
