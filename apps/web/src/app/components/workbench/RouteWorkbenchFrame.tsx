@@ -52,7 +52,13 @@ export type RouteWorkbenchFrameSlots = Readonly<{
   bottomDrawer?: ReactNode;
 }>;
 
-function RouteWorkbenchSlotLayout({ slots }: { readonly slots: RouteWorkbenchFrameSlots }) {
+function RouteWorkbenchSlotLayout({
+  slots,
+  primarySurfaceClassName,
+}: {
+  readonly slots: RouteWorkbenchFrameSlots;
+  readonly primarySurfaceClassName?: string;
+}) {
   return (
     <div data-slot="route-workbench-slot-stack" className="flex h-full min-h-0 flex-col gap-4">
       <div data-slot="route-workbench-slot-layout" className="flex min-h-0 flex-1 gap-4">
@@ -64,7 +70,10 @@ function RouteWorkbenchSlotLayout({ slots }: { readonly slots: RouteWorkbenchFra
             {slots.leftPanel}
           </aside>
         ) : null}
-        <main data-slot="route-workbench-primary-surface" className="min-w-0 flex-1">
+        <main
+          data-slot="route-workbench-primary-surface"
+          className={cn('min-w-0 flex-1', primarySurfaceClassName)}
+        >
           {slots.primarySurface}
         </main>
         {slots.rightPanel ? (
@@ -96,11 +105,8 @@ export function RouteWorkbenchFrame({
   bodyContainerClassName,
   scroll = true,
 }: RouteWorkbenchFrameProps) {
-  const routeBody = <RouteWorkbenchSlotLayout slots={slots} />;
-  const bodyContent = bodyContainerClassName ? (
-    <div className={bodyContainerClassName}>{routeBody}</div>
-  ) : (
-    routeBody
+  const bodyContent = (
+    <RouteWorkbenchSlotLayout slots={slots} primarySurfaceClassName={bodyContainerClassName} />
   );
 
   return (
