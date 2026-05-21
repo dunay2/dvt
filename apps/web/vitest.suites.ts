@@ -21,6 +21,10 @@ export type WebVitestChangedSuiteName =
   | WebVitestPrimarySuiteName
   | Exclude<WebVitestFocusSuiteName, 'canvas'>;
 
+export type WebVitestChangedCommandPlanEntry =
+  | Readonly<{ kind: 'shell'; command: string }>
+  | Readonly<{ kind: 'vitest-file'; config: string; filePath: string }>;
+
 type WebVitestSuiteDefinition = Readonly<{
   include: readonly string[];
   exclude: readonly string[];
@@ -92,6 +96,16 @@ export const WEB_VITEST_CHANGED_SUITE_COMMANDS: Record<WebVitestChangedSuiteName
   'canvas-presentation': 'pnpm run test:canvas-presentation:run',
   'canvas-architecture': 'pnpm run test:canvas-architecture:run',
   monaco: 'pnpm run test:monaco:run',
+};
+
+const WEB_VITEST_CHANGED_SUITE_CONFIGS: Record<WebVitestChangedSuiteName, string> = {
+  unit: 'vitest.unit.config.ts',
+  presentation: 'vitest.presentation.config.ts',
+  architecture: 'vitest.architecture.config.ts',
+  'canvas-unit': 'vitest.canvas-unit.config.ts',
+  'canvas-presentation': 'vitest.canvas-presentation.config.ts',
+  'canvas-architecture': 'vitest.canvas-architecture.config.ts',
+  monaco: 'vitest.monaco.config.ts',
 };
 
 const WEB_VITEST_CHANGED_SUITE_ORDER: readonly WebVitestChangedSuiteName[] = [
@@ -219,11 +233,47 @@ function resolveSuiteForWebPath(
   }
 }
 
+function resolveChangedSuiteForWebPath(
+  filePath: string,
+  webPath: string
+): WebVitestChangedSuiteName | null {
+  const selectedSuites = new Set<WebVitestChangedSuiteName>();
+  resolveSuiteForWebPath(filePath, webPath, selectedSuites);
+
+  return WEB_VITEST_CHANGED_SUITE_ORDER.find((suiteName) => selectedSuites.has(suiteName)) ?? null;
+}
+
+function isWebVitestTestPath(filePath: string): boolean {
+  return /\.(?:test|spec)\.(?:ts|tsx)$/.test(filePath);
+}
+
+function createExactChangedTestCommandPlanEntry(
+  suiteName: WebVitestChangedSuiteName,
+  webPath: string
+): WebVitestChangedCommandPlanEntry {
+  return {
+    kind: 'vitest-file',
+    config: WEB_VITEST_CHANGED_SUITE_CONFIGS[suiteName],
+    filePath: webPath,
+  };
+}
+
+function quoteShellArg(value: string): string {
+  if (/^[A-Za-z0-9_@%+=:,./-]+$/.test(value)) {
+    return value;
+  }
+
+  return `'${value.replaceAll("'", "'\\''")}'`;
+}
+
 export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): {
   suites: WebVitestChangedSuiteName[];
   commands: string[];
+  commandPlan: WebVitestChangedCommandPlanEntry[];
+  requiresDependencies: boolean;
 } {
   const selectedSuites = new Set<WebVitestChangedSuiteName>();
+  const exactTestPaths = new Map<WebVitestChangedSuiteName, Set<string>>();
 
   for (const filePath of filePaths) {
     const webPath = normalizeWebVitestChangedPath(filePath);
@@ -234,16 +284,39 @@ export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): 
       continue;
     }
 
+    if (isWebVitestTestPath(webPath) && !isWebVitestGovernancePath(filePath)) {
+      const suiteName = resolveChangedSuiteForWebPath(filePath, webPath);
+      if (suiteName) {
+        const paths = exactTestPaths.get(suiteName) ?? new Set<string>();
+        paths.add(webPath);
+        exactTestPaths.set(suiteName, paths);
+      }
+      continue;
+    }
+
     resolveSuiteForWebPath(filePath, webPath, selectedSuites);
   }
 
-  const suites = WEB_VITEST_CHANGED_SUITE_ORDER.filter((suiteName) =>
+  const suites = WEB_VITEST_CHANGED_SUITE_ORDER.filter(
+    (suiteName) => selectedSuites.has(suiteName) || exactTestPaths.has(suiteName)
+  );
+  const commandPlan = suites.flatMap((suiteName): WebVitestChangedCommandPlanEntry[] =>
     selectedSuites.has(suiteName)
+      ? [{ kind: 'shell', command: WEB_VITEST_CHANGED_SUITE_COMMANDS[suiteName] }]
+      : [...(exactTestPaths.get(suiteName) ?? [])].map((webPath) =>
+          createExactChangedTestCommandPlanEntry(suiteName, webPath)
+        )
   );
 
   return {
     suites,
-    commands: suites.map((suiteName) => WEB_VITEST_CHANGED_SUITE_COMMANDS[suiteName]),
+    commands: commandPlan.map((entry) =>
+      entry.kind === 'shell'
+        ? entry.command
+        : `pnpm exec vitest run --config ${entry.config} ${quoteShellArg(entry.filePath)}`
+    ),
+    commandPlan,
+    requiresDependencies: selectedSuites.size > 0,
   };
 }
 

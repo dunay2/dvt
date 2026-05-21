@@ -70,6 +70,50 @@ function runCommand(command: string, cwd: string): void {
   }
 }
 
+function pnpmInvocation(): { command: string; argsPrefix: string[] } {
+  if (process.platform !== 'win32') {
+    return { command: 'pnpm', argsPrefix: [] };
+  }
+
+  const pnpmHome = process.env.PNPM_HOME || resolve(process.env.APPDATA ?? '', 'npm');
+  const pnpmScript = resolve(pnpmHome, 'pnpm.ps1');
+  if (existsSync(pnpmScript)) {
+    return {
+      command: 'powershell.exe',
+      argsPrefix: ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', pnpmScript],
+    };
+  }
+
+  return { command: 'pnpm.cmd', argsPrefix: [] };
+}
+
+function runVitestFileCommand(config: string, filePath: string, cwd: string): void {
+  const pnpm = pnpmInvocation();
+  const result = spawnSync(
+    pnpm.command,
+    [...pnpm.argsPrefix, 'exec', 'vitest', 'run', '--config', config, filePath],
+    {
+      cwd,
+      shell: false,
+      stdio: 'inherit',
+      env: process.env,
+    }
+  );
+
+  if (result.error) {
+    console.error(result.error.message);
+    process.exit(1);
+  }
+
+  if (result.status !== 0) {
+    process.exit(result.status ?? 1);
+  }
+}
+
+function shouldRunTestDeps(requiresDependencies: boolean): boolean {
+  return process.env.CI === 'true' || requiresDependencies;
+}
+
 function main(): void {
   const repoRoot = gitOutput(['rev-parse', '--show-toplevel'], process.cwd())[0];
   if (!repoRoot) {
@@ -91,9 +135,15 @@ function main(): void {
   }
 
   process.stdout.write(`[web:test:changed] suites=${plan.suites.join(',')}\n`);
-  runCommand('pnpm run test:deps', webRoot);
-  for (const command of plan.commands) {
-    runCommand(command, webRoot);
+  if (shouldRunTestDeps(plan.requiresDependencies)) {
+    runCommand('pnpm run test:deps', webRoot);
+  }
+  for (const entry of plan.commandPlan) {
+    if (entry.kind === 'shell') {
+      runCommand(entry.command, webRoot);
+    } else {
+      runVitestFileCommand(entry.config, entry.filePath, webRoot);
+    }
   }
 }
 
