@@ -76,6 +76,10 @@ test('classifies runtime, capability, contract, docs, workflow, and ops commands
     'developer-workflow'
   );
   assert.equal(
+    classifyPackageScriptCommand('pr:checks:json', packageJson.scripts['pr:checks:json']).domain,
+    'developer-workflow'
+  );
+  assert.equal(
     classifyPackageScriptCommand('test:pr-closeout', packageJson.scripts['test:pr-closeout'])
       .domain,
     'test-tooling'

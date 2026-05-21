@@ -218,6 +218,46 @@ export function evaluateCheckGate(summary) {
   };
 }
 
+function checkNames(checks) {
+  return (checks ?? []).map((check) => check.name ?? 'unknown-check');
+}
+
+function appendNamedSection(lines, title, checks) {
+  const names = checkNames(checks);
+  if (names.length === 0) {
+    return;
+  }
+
+  lines.push('', title);
+  for (const name of names) {
+    lines.push(`- ${name}`);
+  }
+}
+
+export function formatCheckGateText(summary) {
+  if (summary?.status === 'no_pr') {
+    return summary.message ?? 'No pull request found for the selected branch.';
+  }
+
+  const lines = [
+    `PR #${summary.pr.number} [${summary.pr.headRefName}]`,
+    summary.pr.url,
+    [
+      `failed=${summary.counts.failed}`,
+      `pending=${summary.counts.pending}`,
+      `successful=${summary.counts.successful}`,
+      `skipped=${summary.counts.skipped}`,
+      `external=${summary.counts.external}`,
+    ].join(' '),
+  ];
+
+  appendNamedSection(lines, 'FAILED', summary.failed);
+  appendNamedSection(lines, 'PENDING', summary.pending);
+  appendNamedSection(lines, 'EXTERNAL', summary.external);
+
+  return lines.join('\n');
+}
+
 async function resolvePrContext(prRef) {
   try {
     const args = ['pr', 'view'];
@@ -303,6 +343,7 @@ function parseArgs(argv) {
   const args = {
     command: null,
     pr: null,
+    json: false,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -316,6 +357,11 @@ function parseArgs(argv) {
     if (current === '--pr') {
       args.pr = argv[index + 1] ?? null;
       index += 1;
+      continue;
+    }
+
+    if (current === '--json') {
+      args.json = true;
       continue;
     }
   }
@@ -333,8 +379,11 @@ async function main() {
 
   const prData = await resolvePrContext(args.pr);
   if (!prData) {
+    const payload = { status: 'no_pr', message: 'No pull request found for the selected branch.' };
     process.stdout.write(
-      `${JSON.stringify({ status: 'no_pr', message: 'No pull request found for the selected branch.' }, null, 2)}\n`
+      args.command === 'gate' && !args.json
+        ? `${formatCheckGateText(payload)}\n`
+        : `${JSON.stringify(payload, null, 2)}\n`
     );
     if (args.command === 'gate') {
       process.exitCode = 3;
@@ -359,7 +408,11 @@ async function main() {
     };
   })();
 
-  process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
+  process.stdout.write(
+    args.command === 'gate' && !args.json
+      ? `${formatCheckGateText(payload)}\n`
+      : `${JSON.stringify(payload, null, 2)}\n`
+  );
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

@@ -53,7 +53,8 @@ Implementation notes:
   `tools/ci/pr-check-triage.mjs`.
 - `pnpm pr:checks` uses the same helper as an immediate non-watch gate:
   exit `1` for failed Actions checks, exit `2` for pending Actions checks, and
-  exit `0` only when Actions checks are settled and green.
+  exit `0` only when Actions checks are settled and green. It prints a compact
+  text summary by default; use `pnpm pr:checks:json` for the full JSON payload.
 - destructive cleanup remains opt-in.
 
 ## Changed-file Gates and Autofix
@@ -365,6 +366,7 @@ GitHub CLI-backed helper used by `hygiene.ps1` for PR status inspection.
 Capabilities:
 
 - normalize GitHub Actions and external status checks
+- print compact PR check gate summaries for operator closeout
 - classify checks into failed, pending, successful, skipped, and external
 - pick the first failing GitHub Actions check deterministically
 - fetch failed-job logs and extract a compact failure snippet

@@ -8,6 +8,7 @@ import {
   classifyStatusChecks,
   evaluateCheckGate,
   extractFailureSnippet,
+  formatCheckGateText,
   normalizeStatusCheck,
   parseActionsJobDetailsUrl,
   pickFirstFailingGitHubActionsCheck,
@@ -215,10 +216,54 @@ test('evaluateCheckGate passes only when GitHub Actions checks are settled and g
   });
 });
 
+test('formatCheckGateText summarizes counts and only actionable check names', () => {
+  const text = formatCheckGateText({
+    pr: {
+      number: 1302,
+      url: 'https://github.com/dunay2/dvt/pull/1302',
+      headRefName: 'codex/immediate-pr-check-gate',
+    },
+    counts: {
+      failed: 1,
+      pending: 2,
+      successful: 40,
+      skipped: 6,
+      external: 1,
+    },
+    failed: [{ name: 'PR Quality Checks' }],
+    pending: [{ name: 'Web Frontend Tests' }, { name: 'Temporal adapter integration' }],
+    external: [{ name: 'CodeQL' }],
+  });
+
+  assert.equal(
+    text,
+    [
+      'PR #1302 [codex/immediate-pr-check-gate]',
+      'https://github.com/dunay2/dvt/pull/1302',
+      'failed=1 pending=2 successful=40 skipped=6 external=1',
+      '',
+      'FAILED',
+      '- PR Quality Checks',
+      '',
+      'PENDING',
+      '- Web Frontend Tests',
+      '- Temporal adapter integration',
+      '',
+      'EXTERNAL',
+      '- CodeQL',
+    ].join('\n')
+  );
+  assert.equal(text.includes('All Checks Required for Merge'), false);
+});
+
 test('package scripts expose the immediate PR check gate', () => {
   const packageJson = JSON.parse(
     fs.readFileSync(path.resolve(__dirname, '..', '..', 'package.json'), 'utf8')
   );
 
   assert.equal(packageJson.scripts['pr:checks'], 'node tools/ci/pr-check-triage.mjs gate');
+  assert.equal(
+    packageJson.scripts['pr:checks:json'],
+    'node tools/ci/pr-check-triage.mjs gate --json'
+  );
 });
