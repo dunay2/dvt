@@ -344,6 +344,9 @@ test('security and nightly workflows stay wired to pinned actions and failure no
     /DATABASE_URL:\s+postgresql:\/\/dvt_test:\$\{\{\s*github\.run_id\s*\}\}@localhost:5432\/dvt_test/
   );
 
-  assertWorkflowContains(setupNodePnpm, 'tools/*/node_modules');
+  assert.doesNotMatch(setupNodePnpm, /Cache node_modules/u);
+  assert.doesNotMatch(setupNodePnpm, /nm-cache/u);
+  assert.doesNotMatch(setupNodePnpm, /(?:^|\s)tools\/\*\/node_modules(?:\s|$)/u);
   assertWorkflowContains(setupNodePnpm, "default: '--frozen-lockfile --prefer-offline'");
+  assertWorkflowContains(setupNodePnpm, 'run: pnpm install ${{ inputs.install-args }}');
 });

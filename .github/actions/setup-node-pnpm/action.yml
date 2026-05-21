@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-action.json
-name: Setup Node + pnpm + cache + install
-description: Reusable setup for Node.js, pnpm, pnpm store cache, and dependency install
+name: Setup Node + pnpm + install
+description: Reusable setup for Node.js, pnpm, pnpm store cache, Turbo cache, and dependency install
 
 inputs:
   node-version:
@@ -36,18 +36,6 @@ runs:
         restore-keys: |
           pnpm-store-${{ runner.os }}-
 
-    - name: Cache node_modules
-      id: nm-cache
-      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
-      with:
-        path: |
-          node_modules
-          apps/*/node_modules
-          packages/*/node_modules
-          packages/@dvt/*/node_modules
-          tools/*/node_modules
-        key: nm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-
     - name: Cache Turbo
       uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
       with:
@@ -60,6 +48,5 @@ runs:
           turbo-${{ runner.os }}-
 
     - name: Install dependencies
-      if: steps.nm-cache.outputs.cache-hit != 'true'
       shell: bash
       run: pnpm install ${{ inputs.install-args }}
