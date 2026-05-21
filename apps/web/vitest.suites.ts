@@ -21,6 +21,10 @@ export type WebVitestChangedSuiteName =
   | WebVitestPrimarySuiteName
   | Exclude<WebVitestFocusSuiteName, 'canvas'>;
 
+export type WebVitestChangedCommandPlanEntry =
+  | Readonly<{ kind: 'shell'; command: string }>
+  | Readonly<{ kind: 'vitest-file'; config: string; filePath: string }>;
+
 type WebVitestSuiteDefinition = Readonly<{
   include: readonly string[];
   exclude: readonly string[];
@@ -243,20 +247,33 @@ function isWebVitestTestPath(filePath: string): boolean {
   return /\.(?:test|spec)\.(?:ts|tsx)$/.test(filePath);
 }
 
-function createExactChangedTestCommand(
+function createExactChangedTestCommandPlanEntry(
   suiteName: WebVitestChangedSuiteName,
   webPath: string
-): string {
-  return `pnpm exec vitest run --config ${WEB_VITEST_CHANGED_SUITE_CONFIGS[suiteName]} ${webPath}`;
+): WebVitestChangedCommandPlanEntry {
+  return {
+    kind: 'vitest-file',
+    config: WEB_VITEST_CHANGED_SUITE_CONFIGS[suiteName],
+    filePath: webPath,
+  };
+}
+
+function quoteShellArg(value: string): string {
+  if (/^[A-Za-z0-9_@%+=:,./-]+$/.test(value)) {
+    return value;
+  }
+
+  return `'${value.replaceAll("'", "'\\''")}'`;
 }
 
 export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): {
   suites: WebVitestChangedSuiteName[];
   commands: string[];
+  commandPlan: WebVitestChangedCommandPlanEntry[];
   requiresDependencies: boolean;
 } {
   const selectedSuites = new Set<WebVitestChangedSuiteName>();
-  const exactTestCommands = new Map<WebVitestChangedSuiteName, Set<string>>();
+  const exactTestPaths = new Map<WebVitestChangedSuiteName, Set<string>>();
 
   for (const filePath of filePaths) {
     const webPath = normalizeWebVitestChangedPath(filePath);
@@ -270,9 +287,9 @@ export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): 
     if (isWebVitestTestPath(webPath) && !isWebVitestGovernancePath(filePath)) {
       const suiteName = resolveChangedSuiteForWebPath(filePath, webPath);
       if (suiteName) {
-        const commands = exactTestCommands.get(suiteName) ?? new Set<string>();
-        commands.add(createExactChangedTestCommand(suiteName, webPath));
-        exactTestCommands.set(suiteName, commands);
+        const paths = exactTestPaths.get(suiteName) ?? new Set<string>();
+        paths.add(webPath);
+        exactTestPaths.set(suiteName, paths);
       }
       continue;
     }
@@ -281,16 +298,24 @@ export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): 
   }
 
   const suites = WEB_VITEST_CHANGED_SUITE_ORDER.filter(
-    (suiteName) => selectedSuites.has(suiteName) || exactTestCommands.has(suiteName)
+    (suiteName) => selectedSuites.has(suiteName) || exactTestPaths.has(suiteName)
+  );
+  const commandPlan = suites.flatMap((suiteName): WebVitestChangedCommandPlanEntry[] =>
+    selectedSuites.has(suiteName)
+      ? [{ kind: 'shell', command: WEB_VITEST_CHANGED_SUITE_COMMANDS[suiteName] }]
+      : [...(exactTestPaths.get(suiteName) ?? [])].map((webPath) =>
+          createExactChangedTestCommandPlanEntry(suiteName, webPath)
+        )
   );
 
   return {
     suites,
-    commands: suites.flatMap((suiteName) =>
-      selectedSuites.has(suiteName)
-        ? [WEB_VITEST_CHANGED_SUITE_COMMANDS[suiteName]]
-        : [...(exactTestCommands.get(suiteName) ?? [])]
+    commands: commandPlan.map((entry) =>
+      entry.kind === 'shell'
+        ? entry.command
+        : `pnpm exec vitest run --config ${entry.config} ${quoteShellArg(entry.filePath)}`
     ),
+    commandPlan,
     requiresDependencies: selectedSuites.size > 0,
   };
 }

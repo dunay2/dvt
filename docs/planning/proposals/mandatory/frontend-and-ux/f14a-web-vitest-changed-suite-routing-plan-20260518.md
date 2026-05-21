@@ -186,6 +186,14 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web typecheck
     cypressCoverage: N/A - type alias only.
     unitTests: [pnpm --filter @dvt/web typecheck]
+  - name: WebVitestChangedCommandPlanEntry
+    path: apps/web/vitest.suites.ts
+    dddOwner: Frontend test governance
+    cqRails: [WebVitestChangedSuiteRoute]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm --filter @dvt/web test -- src/testing/vitestSuites.architecture.test.ts
+    cypressCoverage: N/A - command plan type only.
+    unitTests: [pnpm --filter @dvt/web test -- src/testing/vitestSuites.architecture.test.ts]
   - name: normalizeWebVitestChangedPath
     path: apps/web/vitest.suites.ts
     dddOwner: Frontend test governance
@@ -218,13 +226,21 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web test -- src/testing/vitestSuites.architecture.test.ts
     cypressCoverage: N/A - local test-file routing only.
     unitTests: [pnpm --filter @dvt/web test -- src/testing/vitestSuites.architecture.test.ts]
-  - name: createExactChangedTestCommand
+  - name: createExactChangedTestCommandPlanEntry
     path: apps/web/vitest.suites.ts
     dddOwner: Frontend test governance
     cqRails: [WebVitestChangedSuiteRoute]
     fowlerSignals: [Feedback-loop drag]
     architectureGuard: pnpm --filter @dvt/web test -- src/testing/vitestSuites.architecture.test.ts
     cypressCoverage: N/A - local test-file routing only.
+    unitTests: [pnpm --filter @dvt/web test -- src/testing/vitestSuites.architecture.test.ts]
+  - name: quoteShellArg
+    path: apps/web/vitest.suites.ts
+    dddOwner: Frontend test governance
+    cqRails: [WebVitestChangedSuiteRoute]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm --filter @dvt/web test -- src/testing/vitestSuites.architecture.test.ts
+    cypressCoverage: N/A - command label escaping only.
     unitTests: [pnpm --filter @dvt/web test -- src/testing/vitestSuites.architecture.test.ts]
   - name: resolveCanvasChangedSuite
     path: apps/web/vitest.suites.ts
@@ -274,6 +290,22 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web test:changed -- --files apps/web/src/app/views/canvas/CanvasToolbar.tsx
     cypressCoverage: N/A - local command adapter only.
     unitTests: [pnpm --filter @dvt/web test:changed -- --files apps/web/src/app/views/canvas/CanvasToolbar.tsx]
+  - name: pnpmInvocation
+    path: apps/web/scripts/run-vitest-changed-suites.ts
+    dddOwner: Frontend test governance
+    cqRails: [WebVitestChangedSuiteRoute]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm --filter @dvt/web test:changed -- --files apps/web/src/testing/vitestSuites.architecture.test.ts
+    cypressCoverage: N/A - cross-platform command adapter only.
+    unitTests: [pnpm --filter @dvt/web test:changed -- --files apps/web/src/testing/vitestSuites.architecture.test.ts]
+  - name: runVitestFileCommand
+    path: apps/web/scripts/run-vitest-changed-suites.ts
+    dddOwner: Frontend test governance
+    cqRails: [WebVitestChangedSuiteRoute]
+    fowlerSignals: [Feedback-loop drag]
+    architectureGuard: pnpm --filter @dvt/web test:changed -- --files apps/web/src/testing/vitestSuites.architecture.test.ts
+    cypressCoverage: N/A - exact test command adapter only.
+    unitTests: [pnpm --filter @dvt/web test:changed -- --files apps/web/src/testing/vitestSuites.architecture.test.ts]
   - name: shouldRunTestDeps
     path: apps/web/scripts/run-vitest-changed-suites.ts
     dddOwner: Frontend test governance
