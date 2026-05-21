@@ -24,9 +24,7 @@
     const plan = buildPrepushPlan(['apps/web/src/app/AppProviders.tsx']);
     const ids = stepIds(plan);
 
-    assertIncludes(ids, 'docs-workboard-check-changed');
-    assertIncludes(ids, 'check-changed');
-    assertIncludes(ids, 'docs-arc-evidence-changed');
+    assert.deepEqual(ids, ['verify-changed']);
     assertExcludes(ids, 'test-closeout-changed');
     assertExcludes(ids, 'test-verify-prepush');
     assertExcludes(ids, 'test-generated-docs-policy');
@@ -43,8 +41,7 @@
     const plan = buildPrepushPlan(['docs/adr/ADR-0056-web-ui-authority-is-server-projected.md']);
     const ids = stepIds(plan);
 
-    assertIncludes(ids, 'docs-gov-filenames-changed');
-    assertIncludes(ids, 'docs-gov-frontmatter-changed');
+    assert.deepEqual(ids, ['verify-changed']);
     assertExcludes(ids, 'docs-governance-document-unit-map');
     assertExcludes(ids, 'docs-governance-file-component-index');
     assertExcludes(ids, 'docs-governance-changed-files');
@@ -57,6 +54,7 @@
     const plan = buildPrepushPlan(['packages/@dvt/engine/src/WorkflowEngine.ts']);
     const ids = stepIds(plan);
 
+    assert.deepEqual(ids, ['verify-changed']);
     assertExcludes(ids, 'traceability-adr0');
     assertExcludes(ids, 'arch-deps');
     assertExcludes(ids, 'type-check-prepush');
@@ -67,7 +65,7 @@
     const plan = buildPrepushPlan(['scripts/planning-db-query.cjs']);
     const ids = stepIds(plan);
 
-    assertIncludes(ids, 'planning-db-inventory-check');
+    assert.deepEqual(ids, ['verify-changed']);
     assertExcludes(ids, 'docs-governance-document-unit-map');
     assertExcludes(ids, 'docs-governance-remediation-queue');
     assertExcludes(ids, 'arch-deps');
@@ -78,6 +76,7 @@
     const plan = buildPrepushPlan(['.dependency-cruiser.cjs']);
     const ids = stepIds(plan);
 
+    assert.deepEqual(ids, ['verify-changed']);
     assertExcludes(ids, 'arch-deps');
     assertExcludes(ids, 'type-check-prepush');
     assertExcludes(ids, 'docs-governance-document-unit-map');
@@ -88,6 +87,7 @@
     const plan = buildPrepushPlan(['apps/web/src/main.tsx'], { full: true });
     const ids = stepIds(plan);
 
+    assertIncludes(ids, 'verify-changed');
     assertIncludes(ids, 'planning-db-inventory-check');
     assertIncludes(ids, 'test-closeout-changed');
     assertIncludes(ids, 'test-verify-prepush');
@@ -99,26 +99,32 @@
     assertIncludes(ids, 'type-check-prepush');
   });
 
-  test('full prepush runs changed-file lint and format before expensive validation groups', () => {
+  test('full prepush runs changed-slice verification before expensive validation groups', () => {
     const plan = buildPrepushPlan(['packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts'], {
       full: true,
     });
     const ids = stepIds(plan);
-    const checkChangedIndex = ids.indexOf('check-changed');
+    const verifyChangedIndex = ids.indexOf('verify-changed');
 
-    assert.ok(checkChangedIndex >= 0, 'Expected check-changed in prepush plan');
+    assert.ok(verifyChangedIndex >= 0, 'Expected verify-changed in prepush plan');
     assert.ok(
-      checkChangedIndex < ids.indexOf('test-verify-prepush'),
-      `Expected check-changed before test-verify-prepush in ${ids.join(', ')}`
+      verifyChangedIndex < ids.indexOf('test-verify-prepush'),
+      `Expected verify-changed before test-verify-prepush in ${ids.join(', ')}`
     );
     assert.ok(
-      checkChangedIndex < ids.indexOf('docs-arc-evidence-changed'),
-      `Expected check-changed before docs-arc-evidence-changed in ${ids.join(', ')}`
+      verifyChangedIndex < ids.indexOf('arch-deps'),
+      `Expected verify-changed before arch-deps in ${ids.join(', ')}`
     );
-    assert.ok(
-      checkChangedIndex < ids.indexOf('arch-deps'),
-      `Expected check-changed before arch-deps in ${ids.join(', ')}`
-    );
+  });
+
+  test('clean default prepush has no local changed-slice work', () => {
+    assert.deepEqual(buildPrepushPlan([]), []);
+  });
+
+  test('default prepush delegates changed-file routing to verify changed once', () => {
+    const labels = buildPrepushPlan(['apps/web/src/app/AppProviders.tsx']).map(commandLabel);
+
+    assert.deepEqual(labels, ['pnpm verify:changed']);
   });
 
   test('scope classification exposes reasons for skipped conditional groups', () => {
