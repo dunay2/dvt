@@ -10,7 +10,7 @@ inputs:
   install-args:
     description: Arguments passed to pnpm install
     required: false
-    default: '--frozen-lockfile'
+    default: '--frozen-lockfile --prefer-offline'
 
 runs:
   using: composite

@@ -199,6 +199,7 @@ allowedImplementationSurfaces:
   - .github/workflows/test.yml
   - .github/workflows/pr-quality-gate.yml
   - .github/workflows/contracts.yml
+  - .github/actions/setup-node-pnpm/action.yml
   - tools/ci/repository-command-catalog.mjs
   - tools/ci/repository-command-catalog.test.mjs
   - tools/ci/scope-config.mjs
