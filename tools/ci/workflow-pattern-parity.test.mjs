@@ -345,4 +345,5 @@ test('security and nightly workflows stay wired to pinned actions and failure no
   );
 
   assertWorkflowContains(setupNodePnpm, 'tools/*/node_modules');
+  assertWorkflowContains(setupNodePnpm, "default: '--frozen-lockfile --prefer-offline'");
 });

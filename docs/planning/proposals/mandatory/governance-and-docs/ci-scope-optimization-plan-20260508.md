@@ -199,6 +199,7 @@ allowedImplementationSurfaces:
   - .github/workflows/test.yml
   - .github/workflows/pr-quality-gate.yml
   - .github/workflows/contracts.yml
+  - .github/actions/setup-node-pnpm/action.yml
   - tools/ci/repository-command-catalog.mjs
   - tools/ci/repository-command-catalog.test.mjs
   - tools/ci/scope-config.mjs
@@ -759,6 +760,17 @@ symbols:
       - ValidateCiScopeOptimizationContract
     fowlerSignals:
       - Keep planning DB validation scoped to planning/query-store surfaces
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
+  - name: hasWebChange
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalChangedFileSet
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Run governed changed web suites for local web changes before CI
     architectureGuard: node --test scripts/verify-changed.test.cjs
     cypressCoverage: N/A - local CI tooling only
     unitTests:

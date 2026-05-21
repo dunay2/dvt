@@ -56,6 +56,9 @@ Warm-build note:
 - The shared GitHub Actions setup now restores `.turbo` in addition to the
   pnpm store and `node_modules`, so the existing root Turbo `build` path can
   reuse prior task outputs across CI runs.
+- The shared GitHub Actions setup defaults to
+  `pnpm install --frozen-lockfile --prefer-offline`, so jobs prefer the restored
+  pnpm store while keeping lockfile enforcement.
 - Turbo task contracts explicitly declare `DVT_CI` for `build`, `typecheck`,
   and `test`, so CI-only guard behavior is visible to Turborepo hashing and
   task environment handling.

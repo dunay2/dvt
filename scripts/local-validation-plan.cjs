@@ -108,6 +108,7 @@ const PREPUSH_GROUPS = Object.freeze({
 });
 
 const VERIFY_CHANGED_GROUPS = Object.freeze({
+  web: Object.freeze([step('test-web-changed', 'pnpm', 'test:web:changed')]),
   planningDb: Object.freeze([
     step('planning-db-inventory-check', 'pnpm', 'planning:db:inventory:check'),
     step('test-planning-db', 'pnpm', 'test:planning:db'),
@@ -164,9 +165,17 @@ function planningWorkflowTestSteps(changedFiles) {
     });
 }
 
+function hasWebChange(changedFiles) {
+  return changedFiles.some((filePath) => filePath.startsWith('apps/web/'));
+}
+
 function hasDeveloperWorkflowVerifierChange(changedFiles) {
   return changedFiles.some((filePath) =>
-    ['scripts/verify-changed.cjs', 'scripts/verify-changed.test.cjs'].includes(filePath)
+    [
+      'scripts/local-validation-plan.cjs',
+      'scripts/verify-changed.cjs',
+      'scripts/verify-changed.test.cjs',
+    ].includes(filePath)
   );
 }
 
@@ -240,6 +249,9 @@ function buildVerifyChangedPlan(files) {
     pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[0]);
   }
   pushSteps(plan, VERIFY_CHANGED_BASE_STEPS.slice(1, 8));
+  if (hasWebChange(changedFiles)) {
+    pushSteps(plan, VERIFY_CHANGED_GROUPS.web);
+  }
   pushSteps(plan, planningWorkflowTestSteps(changedFiles));
   if (hasPlanningDbFullSuiteChange(changedFiles)) {
     pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[1]);
@@ -290,6 +302,7 @@ module.exports = {
   commandLabel,
   executeCommandPlan,
   hasDeveloperWorkflowVerifierChange,
+  hasWebChange,
   hasPlanningDbChange,
   hasPlanningDbFullSuiteChange,
   normalizeChangedFiles,
