@@ -1,3 +1,4 @@
+/** Owned concern: render the Cost route workbench from run cost read models. */
 import { DollarSign } from 'lucide-react';
 
 import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
@@ -15,10 +16,7 @@ import { CostCoverageCard } from './cost/CostCoverageCard';
 import { CostDriverList } from './cost/CostDriverList';
 import { CostStatGrid } from './cost/CostStatGrid';
 import { resolveCostViewCopy } from './cost/copy';
-import {
-  COST_ROUTE_ID,
-  deriveCostRouteBootstrapPresentation,
-} from './cost/costRouteBootstrap';
+import { COST_ROUTE_ID, deriveCostRouteBootstrapPresentation } from './cost/costRouteBootstrap';
 import { formatCurrency } from './cost/costViewModel';
 import { useCostData } from './cost/useCostData';
 
@@ -65,45 +63,50 @@ export default function CostView() {
         </div>
       }
       bodyContainerClassName="space-y-6"
-    >
-      {isLoading ? (
-        <ViewStateOverlay
-          kind="loading"
-          title={copy.loadingTitle}
-          description={copy.loadingDescription}
-        />
-      ) : null}
+      slots={{
+        primarySurface: (
+          <>
+            {isLoading ? (
+              <ViewStateOverlay
+                kind="loading"
+                title={copy.loadingTitle}
+                description={copy.loadingDescription}
+              />
+            ) : null}
 
-      {loadError ? (
-        <ViewStateOverlay
-          kind="error"
-          title={copy.errorTitle}
-          description={copy.errorDescription}
-          detail={loadError instanceof Error ? loadError.message : undefined}
-        />
-      ) : null}
+            {loadError ? (
+              <ViewStateOverlay
+                kind="error"
+                title={copy.errorTitle}
+                description={copy.errorDescription}
+                detail={loadError instanceof Error ? loadError.message : undefined}
+              />
+            ) : null}
 
-      <CostStatGrid
-        totalCost={viewModel.totalCost}
-        runsCount={runsQuery.data?.length ?? 0}
-        averageCostPerRun={viewModel.averageCostPerRun}
-        costAlertsCount={viewModel.costAlerts.length}
-        copy={copy}
-      />
+            <CostStatGrid
+              totalCost={viewModel.totalCost}
+              runsCount={runsQuery.data?.length ?? 0}
+              averageCostPerRun={viewModel.averageCostPerRun}
+              costAlertsCount={viewModel.costAlerts.length}
+              copy={copy}
+            />
 
-      <CostCharts
-        costByRun={viewModel.costByRun}
-        durationByModel={viewModel.durationByModel}
-        copy={copy}
-      />
+            <CostCharts
+              costByRun={viewModel.costByRun}
+              durationByModel={viewModel.durationByModel}
+              copy={copy}
+            />
 
-      <CostDriverList drivers={viewModel.costByModel} copy={copy} />
-      <CostAlertsList alerts={viewModel.costAlerts} copy={copy} />
-      <CostCoverageCard
-        nodesWithCostCount={viewModel.nodesWithCostCount}
-        totalDuration={viewModel.totalDuration}
-        copy={copy}
-      />
-    </RouteWorkbenchFrame>
+            <CostDriverList drivers={viewModel.costByModel} copy={copy} />
+            <CostAlertsList alerts={viewModel.costAlerts} copy={copy} />
+            <CostCoverageCard
+              nodesWithCostCount={viewModel.nodesWithCostCount}
+              totalDuration={viewModel.totalDuration}
+              copy={copy}
+            />
+          </>
+        ),
+      }}
+    />
   );
 }

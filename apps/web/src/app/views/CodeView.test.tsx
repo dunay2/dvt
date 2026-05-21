@@ -1,3 +1,4 @@
+/** Owned concern: prove the Code workbench renders workspace files through semantic slots. */
 import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import { act } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -143,6 +144,13 @@ describe('CodeView', () => {
       currentContainer.querySelector('[data-slot="code-local-buffer-state"]')?.textContent
     ).toContain(copy.localBufferTitle);
     expect(currentContainer.textContent).toContain(copy.localBufferNote);
+    expect(
+      currentContainer.querySelector('[data-slot="route-workbench-left-panel"]')?.textContent
+    ).toContain(copy.explorerTitle);
+    expect(
+      currentContainer.querySelector('[data-slot="route-workbench-primary-surface"]')?.textContent
+    ).toContain(copy.localBufferTitle);
+    expect(currentContainer.querySelector('[data-slot="route-workbench-right-panel"]')).toBeNull();
 
     const editor = currentContainer.querySelector<HTMLTextAreaElement>(
       '[data-testid="monaco-code-editor"]'

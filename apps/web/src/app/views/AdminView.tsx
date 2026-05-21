@@ -71,53 +71,56 @@ export default function AdminView({
         </div>
       }
       bodyClassName="p-6"
-    >
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="mx-auto max-w-6xl">
-        <TabsList className={cn(routeWorkbenchPanelClassName, 'border')}>
-          <TabsTrigger value="platform">
-            <Server className="mr-2 size-4" />
-            {copy.tabs.platform}
-          </TabsTrigger>
-          <TabsTrigger value="roles">
-            <Users className="mr-2 size-4" />
-            {copy.tabs.roles}
-          </TabsTrigger>
-          <TabsTrigger value="permissions">
-            <Shield className="mr-2 size-4" />
-            {copy.tabs.permissions}
-          </TabsTrigger>
-          <TabsTrigger value="audit">
-            <FileText className="mr-2 size-4" />
-            {copy.tabs.audit}
-          </TabsTrigger>
-        </TabsList>
+      slots={{
+        primarySurface: (
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="mx-auto max-w-6xl">
+            <TabsList className={cn(routeWorkbenchPanelClassName, 'border')}>
+              <TabsTrigger value="platform">
+                <Server className="mr-2 size-4" />
+                {copy.tabs.platform}
+              </TabsTrigger>
+              <TabsTrigger value="roles">
+                <Users className="mr-2 size-4" />
+                {copy.tabs.roles}
+              </TabsTrigger>
+              <TabsTrigger value="permissions">
+                <Shield className="mr-2 size-4" />
+                {copy.tabs.permissions}
+              </TabsTrigger>
+              <TabsTrigger value="audit">
+                <FileText className="mr-2 size-4" />
+                {copy.tabs.audit}
+              </TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="platform">
-          <AdminPlatformTab
-            connectionStatus={connectionStatus}
-            platformHealthSnapshot={platformHealth.data}
-            capabilitiesData={capabilities.data}
-            capabilitiesLoading={capabilities.isLoading}
-            capabilitiesError={Boolean(capabilities.error)}
-          />
-        </TabsContent>
+            <TabsContent value="platform">
+              <AdminPlatformTab
+                connectionStatus={connectionStatus}
+                platformHealthSnapshot={platformHealth.data}
+                capabilitiesData={capabilities.data}
+                capabilitiesLoading={capabilities.isLoading}
+                capabilitiesError={Boolean(capabilities.error)}
+              />
+            </TabsContent>
 
-        <TabsContent value="roles">
-          <AdminRolesTab roles={roles} />
-        </TabsContent>
+            <TabsContent value="roles">
+              <AdminRolesTab roles={roles} />
+            </TabsContent>
 
-        <TabsContent value="permissions">
-          <AdminPermissionsTab roles={roles} />
-        </TabsContent>
+            <TabsContent value="permissions">
+              <AdminPermissionsTab roles={roles} />
+            </TabsContent>
 
-        <TabsContent value="audit">
-          <AdminAuditTab
-            searchQuery={searchQuery}
-            onSearchQueryChange={setSearchQuery}
-            entries={filteredAuditLog}
-          />
-        </TabsContent>
-      </Tabs>
-    </RouteWorkbenchFrame>
+            <TabsContent value="audit">
+              <AdminAuditTab
+                searchQuery={searchQuery}
+                onSearchQueryChange={setSearchQuery}
+                entries={filteredAuditLog}
+              />
+            </TabsContent>
+          </Tabs>
+        ),
+      }}
+    />
   );
 }

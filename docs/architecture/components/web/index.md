@@ -48,6 +48,7 @@ out of the active tree.
   [Frontend test governance component](./frontend-test-governance-component.md),
   [Web Vitest changed suite router component](./web-vitest-changed-suite-router-component.md),
   [Web store domain ownership component](./web-store-domain-ownership-component.md),
+  [Route Workbench Frame Component](./route-workbench-frame-component.md),
   [Workbench UI contract and component inventory](./workbench-ui-contract-and-component-inventory.md),
   [Library and open-source reference stack](./library-and-open-source-reference-stack.md),
   [Plugin Contributions Developer Guide](./plugin-contributions-developer-guide.md)

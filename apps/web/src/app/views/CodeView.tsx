@@ -115,31 +115,33 @@ export default function CodeView() {
           />
         </div>
       }
-    >
-      <div className="w-80 shrink-0">
-        <FileTreePanel
-          title={copy.explorerTitle}
-          tree={workspaceFileTree}
-          selectedPath={resolvedPath}
-          onSelect={(entry) => {
-            if (entry.kind === 'file') {
-              setSelectedPath(entry.path);
-            }
-          }}
-        />
-      </div>
-
-      <div className="min-w-0 flex flex-1 flex-col">
-        <div className="shrink-0 p-4 pb-0">
-          <WorkbenchDegradedState
-            dataSlot="code-local-buffer-state"
-            title={copy.localBufferTitle}
-            message={copy.localBufferMessage}
-            note={copy.localBufferNote}
+      slots={{
+        leftPanel: (
+          <FileTreePanel
+            title={copy.explorerTitle}
+            tree={workspaceFileTree}
+            selectedPath={resolvedPath}
+            onSelect={(entry) => {
+              if (entry.kind === 'file') {
+                setSelectedPath(entry.path);
+              }
+            }}
           />
-        </div>
-        <div className="min-h-0 flex-1 p-4">{previewPane}</div>
-      </div>
-    </RouteWorkbenchFrame>
+        ),
+        primarySurface: (
+          <div className="min-w-0 flex h-full flex-1 flex-col">
+            <div className="shrink-0 p-4 pb-0">
+              <WorkbenchDegradedState
+                dataSlot="code-local-buffer-state"
+                title={copy.localBufferTitle}
+                message={copy.localBufferMessage}
+                note={copy.localBufferNote}
+              />
+            </div>
+            <div className="min-h-0 flex-1 p-4">{previewPane}</div>
+          </div>
+        ),
+      }}
+    />
   );
 }

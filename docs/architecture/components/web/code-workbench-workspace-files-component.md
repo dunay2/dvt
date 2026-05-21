@@ -163,15 +163,15 @@ flowchart TB
 
 ## Consumers
 
-| Consumer                | Uses                                     | Rule                                                                   |
-| ----------------------- | ---------------------------------------- | ---------------------------------------------------------------------- |
-| `CodeView`              | file tree, content queries, local buffer | May render loading, empty, error, local edit, and preview states only. |
-| `useCodeEditableBuffer` | selected file content                    | Owns browser-local edit state keyed by workspace path.                 |
-| `FileTreePanel`         | localized title, selected path, entries  | Must render tree controls only; it does not own Code copy or queries.  |
-| `resolveCodeViewCopy`   | locale                                   | Supplies Code route copy; Spanish text exists only in the locale map.  |
-| `Diff` views            | selected file content                    | Must keep read-only posture and canonical error handling.              |
-| Artifact views          | workspace tree                           | Must not infer authorization from file presence.                       |
-| Cypress Code happy path | browser proof                            | Must prove real route behavior in live API mode.                       |
+| Consumer                | Uses                                                                 | Rule                                                                   |
+| ----------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `CodeView`              | file tree, content queries, local buffer, `RouteWorkbenchFrameSlots` | May render loading, empty, error, local edit, and preview states only. |
+| `useCodeEditableBuffer` | selected file content                                                | Owns browser-local edit state keyed by workspace path.                 |
+| `FileTreePanel`         | localized title, selected path, entries                              | Must render tree controls only; it does not own Code copy or queries.  |
+| `resolveCodeViewCopy`   | locale                                                               | Supplies Code route copy; Spanish text exists only in the locale map.  |
+| `Diff` views            | selected file content                                                | Must keep read-only posture and canonical error handling.              |
+| Artifact views          | workspace tree                                                       | Must not infer authorization from file presence.                       |
+| Cypress Code happy path | browser proof                                                        | Must prove real route behavior in live API mode.                       |
 
 ## Architecture Test Requirement
 
@@ -188,6 +188,8 @@ Add a semantic architecture test that checks:
   of owning file-tree traversal logic;
 - `CodeView` delegates local edit storage to `CodeEditableBuffer` instead of
   owning a path-keyed buffer map inline;
+- `CodeView` delegates route frame semantics to `RouteWorkbenchFrameSlots` so
+  file navigation is `leftPanel` and local-buffer preview is `primarySurface`;
 - Code bootstrap/error tests assert resolved copy objects, not fixed-language
   literals outside the locale catalog tests;
 - `saveFileContent` or `SaveWorkspaceFileContent` is not wired to a live API

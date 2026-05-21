@@ -1,6 +1,6 @@
 ---
 title: WE-HX-6 boundary fitness closeout
-status: Draft
+status: Accepted
 owner: Architecture / Engine
 last_reviewed: 2026-05-12
 planning_type: closeout
