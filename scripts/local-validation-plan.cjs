@@ -122,15 +122,8 @@ function matchesAny(filePath, patterns) {
 }
 
 function hasPlanningDbChange(changedFiles) {
-  return changedFiles.some((filePath) =>
-    matchesAny(filePath, [
-      'infra/planning-db/',
-      'tools/planning-db/',
-      'tools/governance-db/',
-      'docs/planning/status/db-surface-inventory.md',
-      /^scripts\/(?:planning-db-|governance-db-|governance-refresh|generate-workboard|generate-planning-lanes)/u,
-    ])
-  );
+  return classifyRepositoryChangedScope(changedFiles, { repoRootPath: repoRoot })
+    .needsPlanningDbInventory;
 }
 
 function hasPlanningDbFullSuiteChange(changedFiles) {
