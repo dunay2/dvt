@@ -94,6 +94,16 @@ export const WEB_VITEST_CHANGED_SUITE_COMMANDS: Record<WebVitestChangedSuiteName
   monaco: 'pnpm run test:monaco:run',
 };
 
+const WEB_VITEST_CHANGED_SUITE_CONFIGS: Record<WebVitestChangedSuiteName, string> = {
+  unit: 'vitest.unit.config.ts',
+  presentation: 'vitest.presentation.config.ts',
+  architecture: 'vitest.architecture.config.ts',
+  'canvas-unit': 'vitest.canvas-unit.config.ts',
+  'canvas-presentation': 'vitest.canvas-presentation.config.ts',
+  'canvas-architecture': 'vitest.canvas-architecture.config.ts',
+  monaco: 'vitest.monaco.config.ts',
+};
+
 const WEB_VITEST_CHANGED_SUITE_ORDER: readonly WebVitestChangedSuiteName[] = [
   'canvas-unit',
   'canvas-presentation',
@@ -219,11 +229,33 @@ function resolveSuiteForWebPath(
   }
 }
 
+function resolveChangedSuiteForWebPath(
+  filePath: string,
+  webPath: string
+): WebVitestChangedSuiteName | null {
+  const selectedSuites = new Set<WebVitestChangedSuiteName>();
+  resolveSuiteForWebPath(filePath, webPath, selectedSuites);
+
+  return WEB_VITEST_CHANGED_SUITE_ORDER.find((suiteName) => selectedSuites.has(suiteName)) ?? null;
+}
+
+function isWebVitestTestPath(filePath: string): boolean {
+  return /\.(?:test|spec)\.(?:ts|tsx)$/.test(filePath);
+}
+
+function createExactChangedTestCommand(
+  suiteName: WebVitestChangedSuiteName,
+  webPath: string
+): string {
+  return `pnpm exec vitest run --config ${WEB_VITEST_CHANGED_SUITE_CONFIGS[suiteName]} ${webPath}`;
+}
+
 export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): {
   suites: WebVitestChangedSuiteName[];
   commands: string[];
 } {
   const selectedSuites = new Set<WebVitestChangedSuiteName>();
+  const exactTestCommands = new Map<WebVitestChangedSuiteName, Set<string>>();
 
   for (const filePath of filePaths) {
     const webPath = normalizeWebVitestChangedPath(filePath);
@@ -234,16 +266,30 @@ export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): 
       continue;
     }
 
+    if (isWebVitestTestPath(webPath) && !isWebVitestGovernancePath(filePath)) {
+      const suiteName = resolveChangedSuiteForWebPath(filePath, webPath);
+      if (suiteName) {
+        const commands = exactTestCommands.get(suiteName) ?? new Set<string>();
+        commands.add(createExactChangedTestCommand(suiteName, webPath));
+        exactTestCommands.set(suiteName, commands);
+      }
+      continue;
+    }
+
     resolveSuiteForWebPath(filePath, webPath, selectedSuites);
   }
 
-  const suites = WEB_VITEST_CHANGED_SUITE_ORDER.filter((suiteName) =>
-    selectedSuites.has(suiteName)
+  const suites = WEB_VITEST_CHANGED_SUITE_ORDER.filter(
+    (suiteName) => selectedSuites.has(suiteName) || exactTestCommands.has(suiteName)
   );
 
   return {
     suites,
-    commands: suites.map((suiteName) => WEB_VITEST_CHANGED_SUITE_COMMANDS[suiteName]),
+    commands: suites.flatMap((suiteName) =>
+      selectedSuites.has(suiteName)
+        ? [WEB_VITEST_CHANGED_SUITE_COMMANDS[suiteName]]
+        : [...(exactTestCommands.get(suiteName) ?? [])]
+    ),
   };
 }
 

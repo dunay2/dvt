@@ -174,7 +174,9 @@ describe('web Vitest suite partition', () => {
     expect(
       resolveWebVitestChangedSuitePlan(['apps/web/src/app/views/canvas/canvasDraftScope.test.ts'])
     ).toEqual({
-      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-unit']],
+      commands: [
+        'pnpm exec vitest run --config vitest.canvas-unit.config.ts src/app/views/canvas/canvasDraftScope.test.ts',
+      ],
       suites: ['canvas-unit'],
     });
 
@@ -183,8 +185,32 @@ describe('web Vitest suite partition', () => {
         'apps/web/src/app/views/canvas/canvasDraftRepository.architecture.test.ts',
       ])
     ).toEqual({
-      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-architecture']],
+      commands: [
+        'pnpm exec vitest run --config vitest.canvas-architecture.config.ts src/app/views/canvas/canvasDraftRepository.architecture.test.ts',
+      ],
       suites: ['canvas-architecture'],
+    });
+
+    expect(
+      resolveWebVitestChangedSuitePlan(['apps/web/src/testing/vitestSuites.architecture.test.ts'])
+    ).toEqual({
+      commands: [
+        'pnpm exec vitest run --config vitest.architecture.config.ts src/testing/vitestSuites.architecture.test.ts',
+      ],
+      suites: ['architecture'],
+    });
+
+    expect(
+      resolveWebVitestChangedSuitePlan([
+        'apps/web/src/testing/vitestSuites.architecture.test.ts',
+        'apps/web/src/app/views/canvas/CanvasToolbar.tsx',
+      ])
+    ).toEqual({
+      commands: [
+        WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-presentation'],
+        'pnpm exec vitest run --config vitest.architecture.config.ts src/testing/vitestSuites.architecture.test.ts',
+      ],
+      suites: ['canvas-presentation', 'architecture'],
     });
 
     expect(
