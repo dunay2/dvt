@@ -261,8 +261,9 @@ Command semantics:
   intended PR scope; without it, the rail requires files to be staged already
   and fails before commit if preparation or checks leave unstaged outputs.
 - `pnpm pr:checks` is the immediate PR check gate. It queries the current
-  branch PR once, returns non-zero for failed or still-pending GitHub Actions
-  checks, and does not watch or poll.
+  branch PR once, prints a compact failed/pending summary, returns non-zero for
+  failed or still-pending GitHub Actions checks, and does not watch or poll.
+  Use `pnpm pr:checks:json` when machine-readable output is needed.
 - `pnpm verify:prepush -- --full` keeps three outcomes for code diffs:
   - skip when no TypeScript-affecting files changed
   - run `pnpm ci:affected:typecheck` when the diff is workspace-scoped

@@ -449,6 +449,15 @@ symbols:
     name: evaluateCheckGate
     path: tools/ci/pr-check-triage.mjs
   - <<: *prCheckSymbolDefaults
+    name: checkNames
+    path: tools/ci/pr-check-triage.mjs
+  - <<: *prCheckSymbolDefaults
+    name: appendNamedSection
+    path: tools/ci/pr-check-triage.mjs
+  - <<: *prCheckSymbolDefaults
+    name: formatCheckGateText
+    path: tools/ci/pr-check-triage.mjs
+  - <<: *prCheckSymbolDefaults
     name: __dirname
     path: tools/ci/pr-check-triage.test.mjs
 ```

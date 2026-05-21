@@ -40,6 +40,7 @@
     "qa:artifact:check": "node scripts/qa-artifact-check.cjs",
     "verify:prepush": "node scripts/verify-prepush.cjs",
     "pr:checks": "node tools/ci/pr-check-triage.mjs gate",
+    "pr:checks:json": "node tools/ci/pr-check-triage.mjs gate --json",
     "pr:validate-title": "node scripts/validate-pr-title.cjs",
     "build": "turbo run build",
     "build:clean": "rimraf .turbo && turbo run build --force",
