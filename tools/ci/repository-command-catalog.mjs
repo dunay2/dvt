@@ -72,6 +72,7 @@ const EXACT_PACKAGE_SCRIPT_DOMAINS = new Map([
   ['verify:prepush', 'developer-workflow'],
   ['closeout:changed', 'developer-workflow'],
   ['pr:closeout', 'developer-workflow'],
+  ['pr:checks', 'developer-workflow'],
   ['test:verify-prepush', 'test-tooling'],
   ['test:pr-closeout', 'test-tooling'],
   ['pr:validate-title', 'developer-workflow'],

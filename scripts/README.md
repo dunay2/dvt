@@ -35,6 +35,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -BaseBranch main 
 # summarize the current branch PR checks
 powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -BaseBranch main -PrCheckSummary
 
+# fail fast when the current branch PR has failed or pending Actions checks
+pnpm pr:checks
+
 # extract the first failing GitHub Actions job snippet for the current branch PR
 powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -BaseBranch main -LogFirstTriage
 
@@ -48,6 +51,9 @@ Implementation notes:
   `pnpm verify:prepush`.
 - PR check classification and failed-job selection are backed by
   `tools/ci/pr-check-triage.mjs`.
+- `pnpm pr:checks` uses the same helper as an immediate non-watch gate:
+  exit `1` for failed Actions checks, exit `2` for pending Actions checks, and
+  exit `0` only when Actions checks are settled and green.
 - destructive cleanup remains opt-in.
 
 ## Changed-file Gates and Autofix
