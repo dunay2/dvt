@@ -1,5 +1,31 @@
 # Changelog
 
+## [5.27.0](https://github.com/dunay2/dvt/compare/v5.26.0...v5.27.0) (2026-05-21)
+
+
+### Features
+
+* **web:** Add Artifacts Monaco read-only viewer ([#1293](https://github.com/dunay2/dvt/issues/1293)) ([46a90f9](https://github.com/dunay2/dvt/commit/46a90f97a01fbd21085a6982c38afe1cd4051dca))
+* **web:** Converge Runs dense table tokens ([d1d7896](https://github.com/dunay2/dvt/commit/d1d7896e17292c3edcbc0a9630981cf23a04e7be))
+* **web:** Enable editable Code Monaco buffer ([95fbfb3](https://github.com/dunay2/dvt/commit/95fbfb32bc693b5f775bab39b824026af8220d1c))
+
+
+### Bug Fixes
+
+* **ci:** Make local prepush mechanical ([#1295](https://github.com/dunay2/dvt/issues/1295)) ([4f8b330](https://github.com/dunay2/dvt/commit/4f8b330e81481a175980467ab37948c970d2ad4e))
+* **ci:** Scope planning workflow tests in changed verification ([#1296](https://github.com/dunay2/dvt/issues/1296)) ([abf294e](https://github.com/dunay2/dvt/commit/abf294e95fd17ea79ce96f5fe096b3d3ac8c6b36))
+* **docs:** Classify governed doc references in planning DB ([#1299](https://github.com/dunay2/dvt/issues/1299)) ([2b60dd2](https://github.com/dunay2/dvt/commit/2b60dd265afa6a3bab736c70a319aaa00eea62da))
+* **web:** Consolidate Canvas workbench screen chrome ([#1285](https://github.com/dunay2/dvt/issues/1285)) ([68e451f](https://github.com/dunay2/dvt/commit/68e451fd46d781894825b7ef3db60ee78e033d99))
+* **web:** Enable first Canvas template creation ([#1287](https://github.com/dunay2/dvt/issues/1287)) ([fdb61c5](https://github.com/dunay2/dvt/commit/fdb61c500d9caab08ad3c9e045442d97c2eb4325))
+* **web:** Fix Canvas workbench menu and template actions ([#1286](https://github.com/dunay2/dvt/issues/1286)) ([00dfadf](https://github.com/dunay2/dvt/commit/00dfadf750879616e5f9ce8e0d2c2eabfd47a9b2))
+* **web:** Hide workbench shell rail ([6b6bc0a](https://github.com/dunay2/dvt/commit/6b6bc0a0c3e5f47d3fb228849a0aaff5cbba2ab5))
+* **web:** Separate canvas draft persistence authority ([d9e3304](https://github.com/dunay2/dvt/commit/d9e3304fd0b3343e6a54762be82863ac7787ab6d))
+
+
+### Performance Improvements
+
+* **ci:** Run exact changed web tests ([#1298](https://github.com/dunay2/dvt/issues/1298)) ([ce12b36](https://github.com/dunay2/dvt/commit/ce12b363a58c841e71dbeb3b1105605f1dc75fbc))
+
 ## [5.26.0](https://github.com/dunay2/dvt/compare/v5.25.0...v5.26.0) (2026-05-18)
 
 
