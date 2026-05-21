@@ -1,3 +1,4 @@
+/** Owned concern: prove RouteWorkbenchFrame renders the route workbench slot contract. */
 // @vitest-environment jsdom
 
 import React, { act } from 'react';
@@ -32,9 +33,10 @@ describe('RouteWorkbenchFrame', () => {
         <RouteWorkbenchFrame
           header={<div data-testid="workbench-header">Shared header</div>}
           bodyContainerClassName="max-w-xl"
-        >
-          <div>Route body</div>
-        </RouteWorkbenchFrame>
+          slots={{
+            primarySurface: <div>Route body</div>,
+          }}
+        />
       );
     });
 
@@ -57,9 +59,10 @@ describe('RouteWorkbenchFrame', () => {
           header={<div data-testid="workbench-header">Static header</div>}
           bodyClassName="flex min-h-0 flex-1"
           scroll={false}
-        >
-          <div data-testid="workbench-body">Static route body</div>
-        </RouteWorkbenchFrame>
+          slots={{
+            primarySurface: <div data-testid="workbench-body">Static route body</div>,
+          }}
+        />
       );
     });
 
@@ -71,5 +74,38 @@ describe('RouteWorkbenchFrame', () => {
     expect(body?.className).toContain('flex');
     expect(scrollArea).toBeNull();
     expect(bodyContent).toBeNull();
+  });
+
+  it('renders semantic route workbench slots as the only route body API', async () => {
+    await act(async () => {
+      root.render(
+        <RouteWorkbenchFrame
+          header={<div data-testid="workbench-header">Slot header</div>}
+          slots={{
+            leftPanel: <aside>Explorer</aside>,
+            primarySurface: <main>Primary surface</main>,
+            rightPanel: <aside>Inspector</aside>,
+            bottomDrawer: <section>Route drawer</section>,
+          }}
+        />
+      );
+    });
+
+    const leftPanel = container.querySelector('[data-slot="route-workbench-left-panel"]');
+    const primarySurface = container.querySelector('[data-slot="route-workbench-primary-surface"]');
+    const rightPanel = container.querySelector('[data-slot="route-workbench-right-panel"]');
+    const bottomDrawer = container.querySelector('[data-slot="route-workbench-bottom-drawer"]');
+
+    expect(leftPanel?.textContent).toContain('Explorer');
+    expect(primarySurface?.textContent).toContain('Primary surface');
+    expect(rightPanel?.textContent).toContain('Inspector');
+    expect(bottomDrawer?.textContent).toContain('Route drawer');
+    expect(primarySurface?.parentElement?.getAttribute('data-slot')).toBe(
+      'route-workbench-slot-layout'
+    );
+    expect(bottomDrawer?.parentElement?.getAttribute('data-slot')).toBe(
+      'route-workbench-slot-stack'
+    );
+    expect(bottomDrawer?.closest('[data-slot="route-workbench-body-content"]')).not.toBeNull();
   });
 });

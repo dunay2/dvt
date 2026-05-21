@@ -38,25 +38,69 @@ export const routeWorkbenchMonacoSurfaceClassName =
 
 type RouteWorkbenchFrameProps = {
   readonly header?: ReactNode;
-  readonly children: ReactNode;
+  readonly slots: RouteWorkbenchFrameSlots;
   readonly className?: string;
   readonly bodyClassName?: string;
   readonly bodyContainerClassName?: string;
   readonly scroll?: boolean;
 };
 
+export type RouteWorkbenchFrameSlots = Readonly<{
+  leftPanel?: ReactNode;
+  primarySurface: ReactNode;
+  rightPanel?: ReactNode;
+  bottomDrawer?: ReactNode;
+}>;
+
+function RouteWorkbenchSlotLayout({ slots }: { readonly slots: RouteWorkbenchFrameSlots }) {
+  return (
+    <div data-slot="route-workbench-slot-stack" className="flex h-full min-h-0 flex-col gap-4">
+      <div data-slot="route-workbench-slot-layout" className="flex min-h-0 flex-1 gap-4">
+        {slots.leftPanel ? (
+          <aside
+            data-slot="route-workbench-left-panel"
+            className="min-h-0 w-72 shrink-0 overflow-hidden"
+          >
+            {slots.leftPanel}
+          </aside>
+        ) : null}
+        <main data-slot="route-workbench-primary-surface" className="min-w-0 flex-1">
+          {slots.primarySurface}
+        </main>
+        {slots.rightPanel ? (
+          <aside
+            data-slot="route-workbench-right-panel"
+            className="min-h-0 w-80 shrink-0 overflow-hidden"
+          >
+            {slots.rightPanel}
+          </aside>
+        ) : null}
+      </div>
+      {slots.bottomDrawer ? (
+        <section
+          data-slot="route-workbench-bottom-drawer"
+          className="min-h-0 shrink-0 overflow-hidden"
+        >
+          {slots.bottomDrawer}
+        </section>
+      ) : null}
+    </div>
+  );
+}
+
 export function RouteWorkbenchFrame({
   header,
-  children,
+  slots,
   className,
   bodyClassName,
   bodyContainerClassName,
   scroll = true,
 }: RouteWorkbenchFrameProps) {
+  const routeBody = <RouteWorkbenchSlotLayout slots={slots} />;
   const bodyContent = bodyContainerClassName ? (
-    <div className={bodyContainerClassName}>{children}</div>
+    <div className={bodyContainerClassName}>{routeBody}</div>
   ) : (
-    children
+    routeBody
   );
 
   return (

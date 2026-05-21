@@ -94,14 +94,19 @@ export default function DiffView() {
   }
 
   return (
-    <RouteWorkbenchFrame header={header}>
-      <DiffTabs
-        catalogDocument={catalogDocument}
-        compareContextState={compareContextState}
-        changes={filteredChanges}
-        sqlDocument={sqlDocument}
-        sqlContextState={sqlContextState}
-      />
-    </RouteWorkbenchFrame>
+    <RouteWorkbenchFrame
+      header={header}
+      slots={{
+        primarySurface: (
+          <DiffTabs
+            catalogDocument={catalogDocument}
+            compareContextState={compareContextState}
+            changes={filteredChanges}
+            sqlDocument={sqlDocument}
+            sqlContextState={sqlContextState}
+          />
+        ),
+      }}
+    />
   );
 }

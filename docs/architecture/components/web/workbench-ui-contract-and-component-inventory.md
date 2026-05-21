@@ -142,7 +142,7 @@ These are the cross-route UI building blocks that should exist once and be reuse
 | `Shell workspace context` | Read-only project identity plus on-demand read-only context details       | Current Stage 1 split               |
 | `ShellHealthBanner`       | Health and degraded-state visibility                                      | Current                             |
 | `LeftNavigationRail`      | Primary route navigation                                                  | Current, should be standardized     |
-| `RouteWorkbenchFrame`     | Shared route layout with header plus body or scroll ownership contract    | Current, v1 frame primitive         |
+| `RouteWorkbenchFrame`     | Shared route layout with semantic slots only                              | Current, no-legacy slot API seeded  |
 | `RouteToolbar`            | Standard route command bar                                                | Needed as explicit shared primitive |
 | `ContextPanel`            | Shared side-panel container with title, collapse, scroll, and actions     | Needed                              |
 | `PrimarySurfaceFrame`     | Shared main surface wrapper with route-level spacing and loading handling | Needed                              |
@@ -163,10 +163,11 @@ zero.
 
 The current problem is organization and extraction, not total absence.
 
-### `RouteWorkbenchFrame` v1 contract
+### `RouteWorkbenchFrame` contract
 
-The current shared frame is intentionally smaller than the long-term workbench
-vision.
+The current shared frame remains intentionally smaller than the long-term
+workbench vision, but it now owns the local semantic slot vocabulary for route
+workbenches.
 
 Its active contract is:
 
@@ -176,8 +177,15 @@ Its active contract is:
 - the scrollable body owns route padding for standard routes;
 - `scroll={false}` exists for routes like `Code` that own split-pane body
   geometry directly;
-- left or right contextual panels are not part of the current primitive and
-  remain future work under `ContextPanel` and route-toolbar extraction.
+- anonymous route body `children` are forbidden; direct consumers must use
+  `RouteWorkbenchFrameSlots`;
+- `RouteWorkbenchFrameSlots` provides the semantic slot API for `leftPanel`,
+  `primarySurface`, `rightPanel`, and route-local `bottomDrawer`;
+- richer panel behavior remains future work under `ContextPanel` and
+  route-toolbar extraction.
+
+Local guide:
+[Route Workbench Frame Component](./route-workbench-frame-component.md)
 
 Shell-specific current fit:
 

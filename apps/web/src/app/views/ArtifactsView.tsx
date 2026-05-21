@@ -102,18 +102,23 @@ export default function ArtifactsView() {
         </div>
       }
       bodyContainerClassName="mx-auto max-w-5xl space-y-6"
-    >
-      <ManifestImportPanel
-        state={manifestImport.state}
-        fileInputRef={manifestImport.fileInputRef}
-        onInputChange={manifestImport.handleInputChange}
-        onDrop={manifestImport.handleDrop}
-        onDragOver={manifestImport.handleDragOver}
-        onOpenFilePicker={manifestImport.openFilePicker}
-        onClear={manifestImport.clear}
-        importedStats={importedStats}
-      />
-      {renderRouteBody()}
-    </RouteWorkbenchFrame>
+      slots={{
+        primarySurface: (
+          <>
+            <ManifestImportPanel
+              state={manifestImport.state}
+              fileInputRef={manifestImport.fileInputRef}
+              onInputChange={manifestImport.handleInputChange}
+              onDrop={manifestImport.handleDrop}
+              onDragOver={manifestImport.handleDragOver}
+              onOpenFilePicker={manifestImport.openFilePicker}
+              onClear={manifestImport.clear}
+              importedStats={importedStats}
+            />
+            {renderRouteBody()}
+          </>
+        ),
+      }}
+    />
   );
 }
