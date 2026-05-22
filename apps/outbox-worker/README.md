@@ -62,6 +62,8 @@ Core env vars:
 - `DVT_OUTBOX_WORKER_RUN_MIGRATIONS`: set `true` only in environments where the worker role is allowed to run DDL
 - `DVT_OUTBOX_EVENT_BUS_MODE`: `http` or `log`
 - `DVT_OUTBOX_HTTP_TARGET_URL`: downstream HTTP sink when bus mode is `http`
+- `DVT_PURGE_ENABLED`: defaults to `true`; set `false` only for a controlled diagnostic run, and alert on `dvt_delivery_buffer_purge_disabled`
+- `DVT_RUN_EVENT_RETENTION_ENABLED`: defaults to `true`; set `false` only for a controlled diagnostic run, and alert on `dvt_run_event_retention_disabled`
 - `DVT_RUN_EVENT_RETENTION_ALLOW_FILESYSTEM_IN_PROD`: must be `true` when `NODE_ENV=production` and `DVT_RUN_EVENT_RETENTION_ENABLED=true`; this is an explicit risk-acceptance opt-in for filesystem archive storage
 
 Shard ownership rule:
@@ -84,5 +86,6 @@ Ownership observability:
 
 - `/readyz` includes `owner=true|false` so operators can distinguish an active owner from a passive or refused process
 - `/metrics` exposes `dvt_outbox_runtime_owner`
+- `/metrics` exposes retention posture gauges: `dvt_delivery_buffer_purge_configured`, `dvt_delivery_buffer_purge_disabled`, `dvt_run_event_retention_configured`, `dvt_run_event_retention_disabled`, and `dvt_run_event_retention_filesystem_archive_storage`
 
 Operator guidance lives in [`docs/runbooks/outbox-worker-g5.md`](../../docs/runbooks/outbox-worker-g5.md).

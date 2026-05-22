@@ -516,7 +516,7 @@ describe('createOutboxWorkerRuntime', () => {
     });
   });
 
-  it('starts run-event retention runtime when enabled', async () => {
+  it('starts run-event retention runtime by default', async () => {
     await withRuntimePool(async (pool, patches) => {
       let archiveCalls = 0;
       patches.patch(pool, 'end', async function end(): Promise<void> {} as typeof pool.end);
@@ -545,7 +545,6 @@ describe('createOutboxWorkerRuntime', () => {
       );
 
       const runtime = await createTestRuntime({
-        DVT_RUN_EVENT_RETENTION_ENABLED: 'true',
         DVT_RUN_EVENT_RETENTION_INITIAL_DELAY_MS: '0',
         DVT_RUN_EVENT_RETENTION_INTERVAL_MS: '60000',
       });
@@ -559,7 +558,7 @@ describe('createOutboxWorkerRuntime', () => {
     });
   });
 
-  it('does not start run-event retention runtime when disabled', async () => {
+  it('does not start run-event retention runtime when explicitly disabled', async () => {
     await withRuntimePool(async (pool, patches) => {
       let archiveCalls = 0;
       patches.patch(pool, 'end', async function end(): Promise<void> {} as typeof pool.end);

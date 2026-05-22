@@ -22,6 +22,9 @@ async function main(): Promise<void> {
     ...(isActiveEnv(env)
       ? {
           readyStaleAfterMs: resolveReadyStaleAfterMs(env),
+          purgeConfigured: env.DVT_PURGE_ENABLED,
+          retentionConfigured: env.DVT_RUN_EVENT_RETENTION_ENABLED,
+          filesystemArchiveStorageConfigured: env.DVT_RUN_EVENT_RETENTION_ENABLED,
         }
       : {}),
   });

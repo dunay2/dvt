@@ -20,7 +20,14 @@ const DEFAULT_SERVICE_NAME = 'dvt-outbox-worker';
 const DEFAULT_NOW_MS = 1_741_392_000_000;
 
 export function createMonitorHarness(
-  options: { nowMs?: number; readyStaleAfterMs?: number; serviceName?: string } = {}
+  options: {
+    nowMs?: number;
+    readyStaleAfterMs?: number;
+    serviceName?: string;
+    purgeConfigured?: boolean;
+    retentionConfigured?: boolean;
+    filesystemArchiveStorageConfigured?: boolean;
+  } = {}
 ): MonitorTestHarness {
   const clock = { nowMs: options.nowMs ?? DEFAULT_NOW_MS };
   const { logger, entries } = makeLogger();
@@ -31,6 +38,13 @@ export function createMonitorHarness(
     ...(options.readyStaleAfterMs === undefined
       ? {}
       : { readyStaleAfterMs: options.readyStaleAfterMs }),
+    ...(options.purgeConfigured === undefined ? {} : { purgeConfigured: options.purgeConfigured }),
+    ...(options.retentionConfigured === undefined
+      ? {}
+      : { retentionConfigured: options.retentionConfigured }),
+    ...(options.filesystemArchiveStorageConfigured === undefined
+      ? {}
+      : { filesystemArchiveStorageConfigured: options.filesystemArchiveStorageConfigured }),
   });
 
   return { clock, monitor, entries };
