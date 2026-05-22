@@ -107,20 +107,25 @@ composition authority.
 flowchart LR
   Shell["Persistent shell"] --> Canvas["Canvas workbench"]
   Shell --> Runs["Runs workbench"]
+  Shell --> Code["Canvas / Code tab"]
   Shell --> Diff["Diff workbench"]
   Shell --> Artifacts["Artifacts workbench"]
   Shell --> Templates["Templates workbench"]
 
+  Code --> MonacoEdit["Monaco local editable buffer"]
   Diff --> MonacoDiff["Monaco DiffEditor"]
   Artifacts --> MonacoRead["Monaco read-only viewer"]
   Templates --> MonacoPreview["Monaco preview and diff"]
+  Vite --> MonacoChunk["monaco-vendor"]
 ```
 
 Positioning rules:
 
 - Canvas stays graph-first.
 - Runs stays execution-first.
-- Monaco becomes first-class only in `Diff`, `Artifacts`, and `Templates`.
+- Monaco becomes first-class only in `Code`, `Diff`, `Artifacts`, and
+  `Templates`, and only through route-safe lazy gateways.
+- Monaco vendor dependencies stay isolated in the named `monaco-vendor` chunk.
 - `VITE_DATA_SOURCE`, adapter selection, and route composition stay owned by the
   frontend composition root, not by Monaco surfaces.
 - Future docking, if ever needed, is a later layout decision and not part of

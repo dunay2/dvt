@@ -379,7 +379,7 @@ Main screen composition:
 | `CodeWorkbench`     | Route composition root                    | Current, needs hardening |
 | `CodeToolbar`       | file-level actions and history entry      | Needed                   |
 | `FileTreePanel`     | workspace file selection                  | Current                  |
-| `CodePreviewPane`   | read-only Monaco file preview             | Current                  |
+| `CodePreviewPane`   | Monaco local editable buffer              | Current                  |
 | `FileHistoryPanel`  | recent commit history for selected file   | Planned                  |
 | `CodeEmptyState`    | no file or no workspace files available   | Current                  |
 | `CodeErrorState`    | preserve selected-file context on failure | Current                  |
@@ -403,31 +403,31 @@ Main screen composition:
 
 ### Artifacts
 
-| Component                     | Responsibility                      | Status                        |
-| ----------------------------- | ----------------------------------- | ----------------------------- |
-| `ArtifactsWorkbench`          | Route composition root              | Current, state model explicit |
-| `ArtifactsToolbar`            | import, filter, and inspect actions | Needed                        |
-| `ArtifactImportZone`          | local manifest import               | Current                       |
-| `ArtifactList`                | artifact inventory                  | Current in basic form         |
-| `ArtifactPreviewTabs`         | manifest, run results, catalog      | Current                       |
-| `ArtifactJsonViewer`          | structured read-only payload view   | Needed                        |
-| `ArtifactSearch`              | payload navigation                  | Needed                        |
-| `ArtifactsEmptyState`         | no artifact loaded                  | Current                       |
-| `ArtifactsInvalidImportState` | import rejection explanation        | Current                       |
+| Component                     | Responsibility                           | Status                        |
+| ----------------------------- | ---------------------------------------- | ----------------------------- |
+| `ArtifactsWorkbench`          | Route composition root                   | Current, state model explicit |
+| `ArtifactsToolbar`            | import, filter, and inspect actions      | Needed                        |
+| `ArtifactImportZone`          | local manifest import                    | Current                       |
+| `ArtifactList`                | artifact inventory                       | Current in basic form         |
+| `ArtifactPreviewTabs`         | manifest, run results, catalog           | Current                       |
+| `ArtifactMonacoPreviewPanel`  | structured read-only Monaco payload view | Current                       |
+| `ArtifactSearch`              | payload navigation                       | Needed                        |
+| `ArtifactsEmptyState`         | no artifact loaded                       | Current                       |
+| `ArtifactsInvalidImportState` | import rejection explanation             | Current                       |
 
 ### Templates
 
-| Component                  | Responsibility                    | Status                               |
-| -------------------------- | --------------------------------- | ------------------------------------ |
-| `TemplatesWorkbench`       | Source-generation route           | Current                              |
-| `TemplateCatalog`          | template selection                | Current                              |
-| `ProviderProfileSelector`  | target platform or profile choice | Current in catalog cards             |
-| `TemplateParameterForm`    | schema-driven input               | Current                              |
-| `GeneratedSourcePreview`   | read-only preview                 | Current; Monaco handoff remains F-17 |
-| `GeneratedSourceDiffPane`  | review before export or apply     | Planned                              |
-| `GeneratedSourceActions`   | export, copy, dispatch            | Planned after backend/provider rail  |
-| `TemplatesEmptyState`      | no template or context            | Not needed for built-in catalog v1   |
-| `TemplatesValidationState` | invalid input explanation         | Current                              |
+| Component                  | Responsibility                    | Status                              |
+| -------------------------- | --------------------------------- | ----------------------------------- |
+| `TemplatesWorkbench`       | Source-generation route           | Current                             |
+| `TemplateCatalog`          | template selection                | Current                             |
+| `ProviderProfileSelector`  | target platform or profile choice | Current in catalog cards            |
+| `TemplateParameterForm`    | schema-driven input               | Current                             |
+| `GeneratedSourcePreview`   | read-only Monaco source preview   | Current                             |
+| `GeneratedSourceDiffPane`  | review before export or apply     | Planned                             |
+| `GeneratedSourceActions`   | export, copy, dispatch            | Planned after backend/provider rail |
+| `TemplatesEmptyState`      | no template or context            | Not needed for built-in catalog v1  |
+| `TemplatesValidationState` | invalid input explanation         | Current                             |
 
 ### Plugins And Admin
 
@@ -500,11 +500,13 @@ interaction model.
 1. `DiffWorkbench`
 2. `ArtifactsWorkbench`
 3. Monaco-backed review panes
+4. Monaco bundle isolation guardrails
 
 ### Future governed workbench fourth
 
 1. `TemplatesWorkbench`
 2. source-generation preview and diff
+3. bundle isolation guardrails for heavy editor vendors
 
 ## Immediate Decisions Locked By This Document
 
