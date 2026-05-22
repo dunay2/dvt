@@ -28,6 +28,29 @@ export const graphVisualClasses = {
   inspectorCodeBlock:
     'whitespace-pre-wrap rounded border border-slate-700 bg-slate-900 p-3 font-mono text-xs text-slate-50',
   inspectorCodeText: 'whitespace-pre-wrap font-mono text-xs text-slate-50',
+  contextPanelLeftShell: 'flex h-full flex-col border-r border-slate-700 bg-slate-900',
+  contextPanelRightShell:
+    'flex h-full flex-col border-l border-slate-700 bg-slate-900 text-slate-50',
+  contextPanelHeader: 'border-b border-slate-700 px-4 py-3',
+  contextPanelHeaderRow: 'flex items-start justify-between border-b border-slate-700 px-4 py-3',
+  contextPanelTitle: 'text-sm font-semibold text-slate-50',
+  contextPanelSubtitle: 'mt-0.5 text-xs text-slate-300',
+  contextPanelHelpText: 'text-[11px] leading-5 text-slate-400',
+  contextPanelIconButton: 'size-7 text-slate-300 hover:text-white',
+  contextPanelActionButton:
+    'h-8 justify-start gap-2 border-slate-600 bg-slate-950/40 px-3 text-xs font-medium text-slate-100 hover:bg-slate-800 hover:text-white',
+  contextPanelSection: 'border-b border-slate-700 px-4 py-3',
+  contextPanelSectionTitle: 'text-xs font-semibold uppercase text-slate-300',
+  contextPanelAccordionItem: 'border-b border-slate-700',
+  contextPanelAccordionTrigger: 'px-2 py-2 text-sm hover:bg-slate-950',
+  contextPanelInteractiveRow: 'cursor-move hover:bg-slate-950',
+  contextPanelReadOnlyRow: 'cursor-default text-slate-300',
+  contextPanelSecondaryText: 'text-[10px] text-slate-400',
+  contextPanelEmptyText: 'max-w-xs text-center text-sm text-slate-400',
+  contextPanelTabsList: 'justify-start rounded-md border border-slate-700 bg-transparent p-1',
+  contextPanelTabsTrigger:
+    'text-slate-200 data-[state=active]:bg-slate-900 data-[state=active]:text-white',
+  inspectorErrorText: 'text-xs text-red-300',
 } as const;
 
 export const graphStatusRingClasses: Record<string, string> = {

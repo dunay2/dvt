@@ -9,12 +9,14 @@ planning_type: architecture
 # React Flow Visual Token Component
 
 This component owns the operator-workbench visual tokens used by Canvas React
-Flow projection and generic plugin graph node rendering.
+Flow projection, generic plugin graph node rendering, and graph-adjacent context
+panel chrome.
 
 ## Public API
 
-- `graphVisualClasses`: shared structural classes for graph node cards, fallback
-  cards, tags, metadata rows, and column chrome.
+- `graphVisualClasses`: shared structural classes for graph node cards,
+  fallback cards, tags, metadata rows, column chrome, inspector cards, and
+  graph context-panel surfaces.
 - `graphStatusDotClasses`: status dot tone classes for node execution state.
 - `graphStatusRingClasses`: selected runtime status ring classes.
 - `graphStatusBadgeClasses`: inspector badge tone classes for plugin node
@@ -29,8 +31,9 @@ Flow projection and generic plugin graph node rendering.
 
 - Canvas edge projection reads edge colors from `graphFlowPalette`.
 - Node-kind catalogs do not own hex minimap literals.
-- Generic graph renderers and plugin-owned dbt node renderer chrome do not own
-  `slate-*`, `gray-*`, `neutral-*`, or hex visual decisions.
+- Generic graph renderers, plugin-owned dbt node renderer chrome, and Canvas
+  graph context panels do not own `slate-*`, `gray-*`, `neutral-*`, or hex
+  visual decisions.
 - Plugin-specific behavior remains in plugin contracts; this component owns only
   presentation tokens.
 
@@ -45,6 +48,9 @@ flowchart LR
     Renderer["Graph node renderer"] --> Classes["graphVisualClasses"]
     DbtRenderer["dbt node renderer"] --> Classes
     DbtRenderer --> StatusBadge["graphStatusBadgeClasses"]
+    Explorer["dbt explorer"] --> Classes
+    Inspector["Canvas inspector"] --> Classes
+    Inspector --> StatusDot["graphStatusDotClasses"]
 ```
 
 ## Consumers
@@ -55,9 +61,12 @@ flowchart LR
 - `GraphNodeRenderer.tsx`
 - `FallbackNodeRenderer.tsx`
 - `DbtNodeRenderer.tsx`
+- `DbtExplorer.tsx`
+- `InspectorPanel.tsx`
+- `CanvasInspectorAuthoringSection.tsx`
 
 ## Drift Guard
 
 `graphVisualTokenConvergence.architecture.test.ts` rejects reintroduced local
 color-family or hex ownership in the graph renderer, fallback renderer, dbt
-node renderer, node-kind catalogs, and Canvas edge mapper.
+node renderer, graph context panels, node-kind catalogs, and Canvas edge mapper.
