@@ -1738,7 +1738,7 @@ tasks:
       route-level `slate-*` and hex hardcodes in the main product surfaces.
     complexity: M
     effort_points: 5
-    progress_pct: 92
+    progress_pct: 96
     evidence_refs:
       - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/README.md
       - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/04-visual-system-and-style-guide.md
@@ -1763,13 +1763,19 @@ tasks:
       - docs/architecture/components/web/lineage/lineage-panel-token-component.md
       - docs/architecture/components/web/lineage/lineage-panel-token-user-stories.md
       - docs/planning/closeouts/20260522-f24-lineage-panel-token-convergence-closeout.md
+      - apps/web/src/app/plugins/graph/graphVisualTokens.ts
+      - docs/architecture/components/web/graph/react-flow-visual-token-component.md
+      - docs/architecture/components/web/graph/react-flow-visual-token-user-stories.md
+      - docs/planning/closeouts/20260522-f24-react-flow-token-convergence-closeout.md
       - apps/web/src/styles/theme.css
     status_reason: >-
       The visual-system baseline, route frame, shell chrome, Runs dense table token component, and
       Canvas route chrome token component are implemented and guarded. Canvas toolbar, draft status,
       tab-strip chrome, and Lineage graph/impact/column panels now consume route-owned token
-      components instead of route-level color families. Remaining F-24 work is React Flow palette,
-      deeper Monaco visual-system hardening, and additional legacy or plugin surfaces.
+      components instead of route-level color families. React Flow edge palette, node-kind tones,
+      generic graph node chrome, and fallback node chrome now consume the graph visual token
+      component. Remaining F-24 work is deeper Monaco visual-system hardening and additional legacy
+      or plugin surfaces.
     definition_of_done:
       - operator-workbench tokens and density modes are documented in active frontend governance
       - route-level hardcode cleanup targets are mapped to concrete surfaces and components

@@ -8,22 +8,11 @@ import { Badge } from '../../components/ui/badge';
 import { cn } from '../../components/ui/utils';
 import { resolveNodeKindRegistration } from '../nodeTypeRegistry';
 import type { NodeRendererProps } from '../contracts/NodeRendering';
-
-const STATUS_RING: Record<string, string> = {
-  running: 'ring-2 ring-blue-400',
-  success: 'ring-2 ring-green-500',
-  failed: 'ring-2 ring-red-500',
-  skipped: 'ring-1 ring-yellow-400 opacity-60',
-};
-
-const STATUS_DOT: Record<string, string> = {
-  idle: 'bg-gray-500',
-  running: 'bg-blue-500 animate-pulse',
-  success: 'bg-green-500',
-  failed: 'bg-red-500',
-  skipped: 'bg-yellow-500',
-  warn: 'bg-orange-500',
-};
+import {
+  graphStatusDotClasses,
+  graphStatusRingClasses,
+  graphVisualClasses,
+} from './graphVisualTokens';
 
 type ColumnMeta = {
   name: string;
@@ -66,8 +55,8 @@ export function GraphNodeRenderer({
   const Icon: LucideIcon | undefined = kindMeta.icon;
   const [columnsExpanded, setColumnsExpanded] = useState(false);
 
-  const statusRing = STATUS_RING[node.status] ?? '';
-  const statusDot = STATUS_DOT[node.status] ?? STATUS_DOT.idle;
+  const statusRing = graphStatusRingClasses[node.status] ?? '';
+  const statusDot = graphStatusDotClasses[node.status] ?? graphStatusDotClasses.idle;
   const dimmed = overlayDecoration?.dimmed ?? false;
   const overlayProps = buildOverlayProps(
     overlayDecoration?.borderColor,
@@ -88,7 +77,7 @@ export function GraphNodeRenderer({
   return (
     <div
       className={cn(
-        'min-w-[140px] rounded-md border bg-neutral-900 px-3 py-2 text-xs text-neutral-100 transition-opacity',
+        graphVisualClasses.nodeCard,
         kindMeta.borderClass,
         selected && 'ring-2 ring-white/40',
         hovered && !selected && 'ring-1 ring-white/20',
@@ -116,7 +105,7 @@ export function GraphNodeRenderer({
       </div>
 
       {(node.lastDuration != null || node.lastCost != null) && (
-        <div className="mt-2 flex gap-2 text-[10px] text-slate-300">
+        <div className={graphVisualClasses.metricText}>
           {node.lastDuration != null && <span>{node.lastDuration}s</span>}
           {node.lastCost != null && <span>${node.lastCost.toFixed(2)}</span>}
         </div>
@@ -127,10 +116,7 @@ export function GraphNodeRenderer({
       {node.tags.length > 0 && (
         <div className="mt-1 flex flex-wrap gap-0.5">
           {node.tags.slice(0, 3).map((tag) => (
-            <span
-              key={tag}
-              className="rounded bg-neutral-700 px-1 py-0.5 text-[9px] text-neutral-300"
-            >
+            <span key={tag} className={graphVisualClasses.tag}>
               {tag}
             </span>
           ))}
@@ -138,11 +124,11 @@ export function GraphNodeRenderer({
       )}
 
       {showColumns && (
-        <div className="mt-2 border-t border-slate-700 pt-2">
+        <div className={graphVisualClasses.columnsShell}>
           <button
             type="button"
             onClick={() => setColumnsExpanded((value) => !value)}
-            className="flex w-full items-center justify-between text-xs text-slate-300 transition-colors hover:text-white"
+            className={graphVisualClasses.columnsToggle}
           >
             <span className="flex items-center gap-1">
               <Table className="size-3" />
@@ -158,12 +144,9 @@ export function GraphNodeRenderer({
           {columnsExpanded && (
             <div className="mt-2 max-h-32 space-y-1 overflow-y-auto">
               {columns.map((column) => (
-                <div
-                  key={`${node.id}:${column.name}`}
-                  className="flex items-center justify-between rounded bg-slate-950 px-2 py-1 text-[10px]"
-                >
-                  <span className="truncate font-mono text-white">{column.name}</span>
-                  <span className="ml-2 shrink-0 text-slate-400">{column.type}</span>
+                <div key={`${node.id}:${column.name}`} className={graphVisualClasses.columnRow}>
+                  <span className={graphVisualClasses.columnName}>{column.name}</span>
+                  <span className={graphVisualClasses.columnType}>{column.type}</span>
                 </div>
               ))}
             </div>

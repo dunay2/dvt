@@ -7,13 +7,14 @@
 // ---------------------------------------------------------------------------
 
 import type { NodeRendererProps } from './contracts/NodeRendering';
+import { graphVisualClasses } from './graph/graphVisualTokens';
 
 export function FallbackNodeRenderer({ node }: Readonly<NodeRendererProps>) {
   const kindLabel = node.kind.split(':')[1] ?? node.kind;
 
   return (
-    <div className="min-w-[140px] rounded-md border-2 border-dashed border-slate-500 bg-slate-900/60 px-3 py-2 text-xs text-slate-400">
-      <div className="truncate font-semibold text-slate-300">{node.name}</div>
+    <div className={graphVisualClasses.fallbackNodeCard}>
+      <div className={graphVisualClasses.fallbackNodeTitle}>{node.name}</div>
       <div className="mt-0.5 font-mono text-[10px] uppercase tracking-wide">{kindLabel}</div>
     </div>
   );
