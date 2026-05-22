@@ -183,19 +183,19 @@ direction.
 
 ## Phase 2 Slice Debt
 
-| Slice | Title                            | Status                       |
-| ----- | -------------------------------- | ---------------------------- |
-| S01   | Contract And Dead Code Cleanup   | Closed 2026-03-21            |
-| S06   | Migration Version Table          | Closed 2026-03-21            |
-| S10   | Typed Graph-Source Boundary      | Closed 2026-03-20            |
-| S02   | IRunStateStore Split             | Open (unblocked by S01)      |
-| S03   | StartRunCoordinator Extraction   | Open (unblocked by S01)      |
-| S05   | EventEnvelope.payloadVersion     | Closed 2026-04-04            |
-| S07   | OpenLineage Job Naming Fix       | Open                         |
-| S09   | Retry Ownership ADR              | Closed 2026-03-24            |
-| S04   | ProviderRefUpdated Event         | Retired 2026-04-09           |
-| S08   | Plan record and plan store model | Open (unblocked by ADR-0040) |
-| S11   | ILineageSink.jobFacets Tighten   | Open (blocked by S07)        |
+| Slice | Title                            | Status                  |
+| ----- | -------------------------------- | ----------------------- |
+| S01   | Contract And Dead Code Cleanup   | Closed 2026-03-21       |
+| S06   | Migration Version Table          | Closed 2026-03-21       |
+| S10   | Typed Graph-Source Boundary      | Closed 2026-03-20       |
+| S02   | IRunStateStore Split             | Open (unblocked by S01) |
+| S03   | StartRunCoordinator Extraction   | Open (unblocked by S01) |
+| S05   | EventEnvelope.payloadVersion     | Closed 2026-04-04       |
+| S07   | OpenLineage Job Naming Fix       | Open                    |
+| S09   | Retry Ownership ADR              | Closed 2026-03-24       |
+| S04   | ProviderRefUpdated Event         | Retired 2026-04-09      |
+| S08   | Plan record and plan store model | Closed 2026-05-22       |
+| S11   | ILineageSink.jobFacets Tighten   | Open (blocked by S07)   |
 
 See [Phase 2 Architectural Debt Roadmap](../planning/archive/proposals/phase2-arch-debt-roadmap-20260315.md) for full details.
 
