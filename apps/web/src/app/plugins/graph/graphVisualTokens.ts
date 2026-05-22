@@ -1,0 +1,89 @@
+/** Owned concern: own React Flow graph visual tokens for Canvas and plugin graph rendering. */
+import type { CSSProperties } from 'react';
+
+import type { PluginNodeKind } from '../../types/canonical';
+
+export const graphVisualClasses = {
+  nodeCard:
+    'min-w-[140px] rounded-md border bg-neutral-900 px-3 py-2 text-xs text-neutral-100 transition-opacity',
+  fallbackNodeCard:
+    'min-w-[140px] rounded-md border-2 border-dashed border-slate-500 bg-slate-900/60 px-3 py-2 text-xs text-slate-400',
+  fallbackNodeTitle: 'truncate font-semibold text-slate-300',
+  metricText: 'mt-2 flex gap-2 text-[10px] text-slate-300',
+  tag: 'rounded bg-neutral-700 px-1 py-0.5 text-[9px] text-neutral-300',
+  columnsShell: 'mt-2 border-t border-slate-700 pt-2',
+  columnsToggle:
+    'flex w-full items-center justify-between text-xs text-slate-300 transition-colors hover:text-white',
+  columnRow: 'flex items-center justify-between rounded bg-slate-950 px-2 py-1 text-[10px]',
+  columnName: 'truncate font-mono text-white',
+  columnType: 'ml-2 shrink-0 text-slate-400',
+} as const;
+
+export const graphStatusRingClasses: Record<string, string> = {
+  running: 'ring-2 ring-blue-400',
+  success: 'ring-2 ring-green-500',
+  failed: 'ring-2 ring-red-500',
+  skipped: 'ring-1 ring-yellow-400 opacity-60',
+};
+
+export const graphStatusDotClasses: Record<string, string> = {
+  idle: 'bg-gray-500',
+  running: 'bg-blue-500 animate-pulse',
+  success: 'bg-green-500',
+  failed: 'bg-red-500',
+  skipped: 'bg-yellow-500',
+  warn: 'bg-orange-500',
+};
+
+type GraphNodeKindTone = Readonly<{
+  borderClass: string;
+  minimapColor: string;
+}>;
+
+export const graphNodeKindToneClasses: Record<string, GraphNodeKindTone> = {
+  input: { borderClass: 'border-purple-500', minimapColor: '#a855f7' },
+  transform: { borderClass: 'border-blue-500', minimapColor: '#3b82f6' },
+  seed: { borderClass: 'border-green-500', minimapColor: '#22c55e' },
+  snapshot: { borderClass: 'border-yellow-500', minimapColor: '#eab308' },
+  check: { borderClass: 'border-red-500', minimapColor: '#ef4444' },
+  output: { borderClass: 'border-pink-500', minimapColor: '#ec4899' },
+  metric: { borderClass: 'border-orange-500', minimapColor: '#f97316' },
+  control: { borderClass: 'border-slate-500', minimapColor: '#64748b' },
+};
+
+const graphNodeKindToneByKind: Partial<Record<PluginNodeKind, GraphNodeKindTone>> = {
+  'dbt:source': graphNodeKindToneClasses.input,
+  'dbt:model': graphNodeKindToneClasses.transform,
+  'dbt:seed': graphNodeKindToneClasses.seed,
+  'dbt:snapshot': graphNodeKindToneClasses.snapshot,
+  'dbt:test': graphNodeKindToneClasses.check,
+  'dbt:exposure': graphNodeKindToneClasses.output,
+  'dbt:metric': graphNodeKindToneClasses.metric,
+  'dbt:macro': graphNodeKindToneClasses.control,
+  'dvt:source': graphNodeKindToneClasses.input,
+  'dvt:sql_transform': graphNodeKindToneClasses.transform,
+  'dvt:sink': graphNodeKindToneClasses.output,
+  'dvt:unknown': graphNodeKindToneClasses.control,
+};
+
+export const graphFlowPalette = {
+  edgeStroke: '#6b7280',
+  edgeStrokeWidth: 2,
+  edgeMarkerWidth: 20,
+  edgeMarkerHeight: 20,
+} as const;
+
+export function resolveGraphNodeKindTone(kind: PluginNodeKind): GraphNodeKindTone {
+  const fallbackTone = graphNodeKindToneClasses.control;
+  if (!fallbackTone) {
+    throw new Error('Missing graph control tone.');
+  }
+  return graphNodeKindToneByKind[kind] ?? fallbackTone;
+}
+
+export function createGraphFlowEdgeStyle(): CSSProperties {
+  return {
+    stroke: graphFlowPalette.edgeStroke,
+    strokeWidth: graphFlowPalette.edgeStrokeWidth,
+  };
+}
