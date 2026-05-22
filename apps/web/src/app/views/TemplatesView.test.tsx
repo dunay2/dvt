@@ -2,10 +2,36 @@
 
 import { fireEvent } from '@testing-library/dom';
 import React, { act } from 'react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { withTestQueryClient } from '../../testing/reactQueryHarness';
 import TemplatesView from './TemplatesView';
+
+vi.mock('../components/monaco/MonacoCodeViewer', () => ({
+  MonacoCodeViewer: ({
+    ariaLabel,
+    language,
+    loadingLabel,
+    path,
+    value,
+  }: {
+    ariaLabel: string;
+    language: string;
+    loadingLabel?: string;
+    path?: string;
+    value: string;
+  }) => (
+    <div
+      data-aria-label={ariaLabel}
+      data-language={language}
+      data-loading-label={loadingLabel}
+      data-path={path}
+      data-testid="monaco-code-viewer"
+    >
+      {value}
+    </div>
+  ),
+}));
 
 describe('TemplatesView', () => {
   let mounted: Awaited<ReturnType<typeof withTestQueryClient>> | null;
@@ -45,6 +71,7 @@ describe('TemplatesView', () => {
     expect(
       mounted.container.querySelector('[data-slot="templates-generated-source-preview"]')
     ).toBeNull();
+    expect(mounted.container.querySelector('[data-testid="monaco-code-viewer"]')).toBeNull();
   });
 
   it('updates parameter state and renders deterministic generated source preview', async () => {
@@ -74,9 +101,13 @@ describe('TemplatesView', () => {
     const preview = mounted.container.querySelector(
       '[data-slot="templates-generated-source-preview"]'
     );
+    const viewer = mounted.container.querySelector('[data-testid="monaco-code-viewer"]');
 
     expect(mounted.container.textContent).toContain('Preview ready');
     expect(mounted.container.textContent).toContain('load_orders.task.sql');
+    expect(viewer).not.toBeNull();
+    expect(viewer?.getAttribute('data-language')).toBe('sql');
+    expect(viewer?.getAttribute('data-path')).toBe('load_orders.task.sql');
     expect(preview?.textContent).toContain('create or replace task load_orders');
     expect(preview?.textContent).toContain('warehouse = transforming_wh');
     expect(preview?.textContent).toContain('call analytics.load_orders();');
