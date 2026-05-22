@@ -20,34 +20,14 @@ import type {
 } from '../../types/canonical';
 import type { InspectorPanelContribution, InspectorPanelProps } from '../contracts/PluginManifest';
 import type { NodeRendererProps } from '../contracts/NodeRendering';
+import {
+  graphStatusBadgeClasses,
+  graphStatusDotClasses,
+  graphStatusRingClasses,
+  graphVisualClasses,
+} from '../graph/graphVisualTokens';
 import { CANVAS_NODE_KINDS } from '../nodeTypeCatalog';
 
-const STATUS_RING: Record<string, string> = {
-  running: 'ring-2 ring-blue-400',
-  success: 'ring-2 ring-green-500',
-  failed: 'ring-2 ring-red-500',
-  skipped: 'ring-1 ring-yellow-400 opacity-60',
-};
-
-const STATUS_DOT: Record<string, string> = {
-  idle: 'bg-gray-500',
-  running: 'bg-blue-500 animate-pulse',
-  success: 'bg-green-500',
-  failed: 'bg-red-500',
-  skipped: 'bg-yellow-500',
-  warn: 'bg-orange-500',
-};
-
-const STATUS_BADGE: Record<string, string> = {
-  idle: 'border-gray-500/80 bg-gray-900/60 text-slate-100',
-  running: 'border-blue-500/80 bg-blue-950/60 text-blue-200',
-  success: 'border-green-500/80 bg-green-950/60 text-green-200',
-  failed: 'border-red-500/80 bg-red-950/60 text-red-200',
-  skipped: 'border-yellow-500/80 bg-yellow-950/60 text-yellow-200',
-};
-
-const cardClass = 'border-slate-700 bg-slate-950 p-3 text-slate-50';
-const titleClass = 'mb-2 text-sm font-medium text-slate-100';
 const DBT_PLUGIN_ID = 'dbt';
 
 type ColumnMeta = {
@@ -99,8 +79,8 @@ export function DbtNodeRenderer({
   const Icon: LucideIcon | undefined = kindMeta?.icon;
   const [columnsExpanded, setColumnsExpanded] = useState(false);
 
-  const statusRing = STATUS_RING[node.status] ?? '';
-  const statusDot = STATUS_DOT[node.status] ?? STATUS_DOT.idle;
+  const statusRing = graphStatusRingClasses[node.status] ?? '';
+  const statusDot = graphStatusDotClasses[node.status] ?? graphStatusDotClasses.idle;
   const dimmed = overlayDecoration?.dimmed ?? false;
   const overlayProps = buildOverlayProps(
     overlayDecoration?.borderColor,
@@ -121,8 +101,8 @@ export function DbtNodeRenderer({
   return (
     <div
       className={cn(
-        'min-w-[140px] rounded-md border bg-neutral-900 px-3 py-2 text-xs text-neutral-100 transition-opacity',
-        kindMeta?.borderClass ?? 'border-neutral-600',
+        graphVisualClasses.nodeCard,
+        kindMeta?.borderClass,
         selected && 'ring-2 ring-white/40',
         hovered && !selected && 'ring-1 ring-white/20',
         statusRing,
@@ -153,7 +133,7 @@ export function DbtNodeRenderer({
       </div>
 
       {(node.lastDuration != null || node.lastCost != null) && (
-        <div className="mt-2 flex gap-2 text-[10px] text-slate-300">
+        <div className={graphVisualClasses.metricText}>
           {node.lastDuration != null && <span>{node.lastDuration}s</span>}
           {node.lastCost != null && <span>${node.lastCost.toFixed(2)}</span>}
         </div>
@@ -164,10 +144,7 @@ export function DbtNodeRenderer({
       {node.tags.length > 0 && (
         <div className="mt-1 flex flex-wrap gap-0.5">
           {node.tags.slice(0, 3).map((tag) => (
-            <span
-              key={tag}
-              className="rounded bg-neutral-700 px-1 py-0.5 text-[9px] text-neutral-300"
-            >
+            <span key={tag} className={graphVisualClasses.tag}>
               {tag}
             </span>
           ))}
@@ -175,11 +152,11 @@ export function DbtNodeRenderer({
       )}
 
       {showColumns && (
-        <div className="mt-2 border-t border-slate-700 pt-2">
+        <div className={graphVisualClasses.columnsShell}>
           <button
             type="button"
             onClick={() => setColumnsExpanded((value) => !value)}
-            className="flex w-full items-center justify-between text-xs text-slate-300 transition-colors hover:text-white"
+            className={graphVisualClasses.columnsToggle}
           >
             <span className="flex items-center gap-1">
               <Table className="size-3" />
@@ -195,12 +172,9 @@ export function DbtNodeRenderer({
           {columnsExpanded && (
             <div className="mt-2 max-h-32 space-y-1 overflow-y-auto">
               {columns.map((column) => (
-                <div
-                  key={`${node.id}:${column.name}`}
-                  className="flex items-center justify-between rounded bg-slate-950 px-2 py-1 text-[10px]"
-                >
-                  <span className="truncate font-mono text-white">{column.name}</span>
-                  <span className="ml-2 shrink-0 text-slate-400">{column.type}</span>
+                <div key={`${node.id}:${column.name}`} className={graphVisualClasses.columnRow}>
+                  <span className={graphVisualClasses.columnName}>{column.name}</span>
+                  <span className={graphVisualClasses.columnType}>{column.type}</span>
                 </div>
               ))}
             </div>
@@ -214,39 +188,39 @@ export function DbtNodeRenderer({
 function DbtOverviewPanel({ node }: InspectorPanelProps) {
   const pkg = meta<string>(node, 'package');
   const deps = meta<string[]>(node, 'dependencies') ?? [];
-  const statusClass = STATUS_BADGE[node.status] ?? STATUS_BADGE.idle;
+  const statusClass = graphStatusBadgeClasses[node.status] ?? graphStatusBadgeClasses.idle;
 
   return (
     <div className="space-y-4">
-      <Card className={cardClass}>
+      <Card className={graphVisualClasses.inspectorCard}>
         <div className="space-y-2 text-sm">
           {pkg && (
             <div className="flex justify-between">
-              <span className="text-slate-400">Package</span>
+              <span className={graphVisualClasses.inspectorLabel}>Package</span>
               <span>{pkg}</span>
             </div>
           )}
           {node.path && (
             <div className="flex justify-between gap-4">
-              <span className="shrink-0 text-slate-400">Path</span>
+              <span className={graphVisualClasses.inspectorLabelFixed}>Path</span>
               <span className="truncate font-mono text-xs">{node.path}</span>
             </div>
           )}
           <div className="flex justify-between">
-            <span className="text-slate-400">Status</span>
+            <span className={graphVisualClasses.inspectorLabel}>Status</span>
             <Badge variant="outline" className={`capitalize ${statusClass}`}>
               {node.status}
             </Badge>
           </div>
           {node.lastDuration != null && (
             <div className="flex justify-between">
-              <span className="text-slate-400">Last duration</span>
+              <span className={graphVisualClasses.inspectorLabel}>Last duration</span>
               <span>{node.lastDuration}s</span>
             </div>
           )}
           {node.lastCost != null && (
             <div className="flex justify-between">
-              <span className="text-slate-400">Last cost</span>
+              <span className={graphVisualClasses.inspectorLabel}>Last cost</span>
               <span>${node.lastCost.toFixed(4)}</span>
             </div>
           )}
@@ -254,15 +228,15 @@ function DbtOverviewPanel({ node }: InspectorPanelProps) {
       </Card>
 
       {node.description && (
-        <Card className={cardClass}>
-          <h3 className={titleClass}>Description</h3>
-          <p className="text-xs text-slate-300">{node.description}</p>
+        <Card className={graphVisualClasses.inspectorCard}>
+          <h3 className={graphVisualClasses.inspectorTitle}>Description</h3>
+          <p className={graphVisualClasses.inspectorBody}>{node.description}</p>
         </Card>
       )}
 
       {node.tags.length > 0 && (
-        <Card className={cardClass}>
-          <h3 className={titleClass}>Tags</h3>
+        <Card className={graphVisualClasses.inspectorCard}>
+          <h3 className={graphVisualClasses.inspectorTitle}>Tags</h3>
           <div className="flex flex-wrap gap-1">
             {node.tags.map((tag) => (
               <Badge key={tag} variant="secondary" className="text-xs">
@@ -274,11 +248,11 @@ function DbtOverviewPanel({ node }: InspectorPanelProps) {
       )}
 
       {deps.length > 0 && (
-        <Card className={cardClass}>
-          <h3 className={titleClass}>Dependencies</h3>
+        <Card className={graphVisualClasses.inspectorCard}>
+          <h3 className={graphVisualClasses.inspectorTitle}>Dependencies</h3>
           <div className="space-y-0.5">
             {deps.map((dep) => (
-              <div key={dep} className="font-mono text-xs text-slate-300">
+              <div key={dep} className={`font-mono ${graphVisualClasses.inspectorBody}`}>
                 -&gt; {dep}
               </div>
             ))}
@@ -293,9 +267,9 @@ function DbtSqlPanel({ node }: InspectorPanelProps) {
   const compiledSql = meta<string>(node, 'compiledSql');
 
   return (
-    <Card className={cardClass}>
-      <h3 className={titleClass}>Compiled SQL</h3>
-      <pre className="whitespace-pre-wrap rounded border border-slate-700 bg-slate-900 p-3 font-mono text-xs text-slate-50">
+    <Card className={graphVisualClasses.inspectorCard}>
+      <h3 className={graphVisualClasses.inspectorTitle}>Compiled SQL</h3>
+      <pre className={graphVisualClasses.inspectorCodeBlock}>
         {compiledSql ?? 'No compiled SQL available'}
       </pre>
     </Card>
@@ -306,11 +280,9 @@ function DbtConfigPanel({ node }: InspectorPanelProps) {
   const config = meta<Record<string, unknown>>(node, 'config') ?? { materialized: 'table' };
 
   return (
-    <Card className={cardClass}>
-      <h3 className={titleClass}>Config</h3>
-      <pre className="whitespace-pre-wrap font-mono text-xs text-slate-50">
-        {JSON.stringify(config, null, 2)}
-      </pre>
+    <Card className={graphVisualClasses.inspectorCard}>
+      <h3 className={graphVisualClasses.inspectorTitle}>Config</h3>
+      <pre className={graphVisualClasses.inspectorCodeText}>{JSON.stringify(config, null, 2)}</pre>
     </Card>
   );
 }
@@ -319,19 +291,19 @@ function DbtColumnsPanel({ node }: InspectorPanelProps) {
   const columns = meta<ColumnMeta[]>(node, 'columns') ?? [];
 
   if (columns.length === 0) {
-    return <p className="text-sm text-slate-400">No column metadata available.</p>;
+    return <p className={graphVisualClasses.inspectorMuted}>No column metadata available.</p>;
   }
 
   return (
     <div className="space-y-2">
       {columns.map((column) => (
-        <Card key={column.name} className={cardClass}>
+        <Card key={column.name} className={graphVisualClasses.inspectorCard}>
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="font-mono text-sm">{column.name}</div>
-              <div className="mt-0.5 text-xs text-slate-400">{column.type}</div>
+              <div className={`mt-0.5 ${graphVisualClasses.inspectorBody}`}>{column.type}</div>
               {column.description && (
-                <p className="mt-1 text-xs text-slate-300">{column.description}</p>
+                <p className={`mt-1 ${graphVisualClasses.inspectorBody}`}>{column.description}</p>
               )}
             </div>
             {column.nullable != null && (
@@ -368,7 +340,7 @@ function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
 
   if (isLoading || isLoadingList) {
     return (
-      <div className="flex items-center gap-2 text-sm text-slate-400">
+      <div className={`flex items-center gap-2 ${graphVisualClasses.inspectorMuted}`}>
         <Loader2 className="size-4 animate-spin" />
         Loading run data...
       </div>
@@ -377,9 +349,9 @@ function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
 
   if (hasRuntimeSnapshotData) {
     return (
-      <div className="space-y-2 text-sm text-slate-400">
+      <div className={graphVisualClasses.inspectorMutedBlock}>
         <p>Detailed node history is unavailable from the current runtime contract baseline.</p>
-        <p className="text-slate-500">
+        <p className={graphVisualClasses.inspectorSubtle}>
           This panel needs event-backed and step-backed run detail. `F-07` provides snapshot and
           timeline truth, but node-level execution detail remains follow-on work.
         </p>
@@ -389,17 +361,17 @@ function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
 
   if (activeRunId && runSnapshot == null) {
     return (
-      <div className="space-y-2 text-sm text-slate-400">
+      <div className={graphVisualClasses.inspectorMutedBlock}>
         <p>No runtime snapshot exists for this run.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-2 text-sm text-slate-400">
+    <div className={graphVisualClasses.inspectorMutedBlock}>
       <p>No run history for this node.</p>
       {node.lastDuration != null && (
-        <p className="text-slate-300">
+        <p className={graphVisualClasses.inspectorBody}>
           Last recorded duration: <span className="font-mono">{node.lastDuration}s</span>
         </p>
       )}
