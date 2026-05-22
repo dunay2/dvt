@@ -56,8 +56,14 @@ Targeted green:
 - `pnpm exec vitest run packages/@dvt/delivery/test/OutboxInMemoryStorageOwnership.architecture.test.ts packages/@dvt/delivery/test/OutboxWorker.retry.test.ts packages/@dvt/delivery/test/OutboxWorker.deadLetter.test.ts packages/@dvt/engine/test/state/InMemoryTxStore.outbox.test.ts`
 - `pnpm docs:feature-mechanization -- --feature AR-A7-DELIVERY-DOMAIN-RUNTIME-SPLIT`
 
-Final validation commands are recorded in the PR/evidence closeout after the
-full pre-push baseline runs.
+Final state reconciliation validation passed on 2026-05-22:
+
+- `pnpm docs:feature-mechanization -- --feature AR-A7-DELIVERY-DOMAIN-RUNTIME-SPLIT`
+- `pnpm exec vitest run packages/@dvt/delivery/test/OutboxInMemoryStorageOwnership.architecture.test.ts packages/@dvt/delivery/test/OutboxWorker.retry.test.ts packages/@dvt/delivery/test/OutboxWorker.deadLetter.test.ts packages/@dvt/engine/test/state/InMemoryTxStore.outbox.test.ts`
+- `pnpm --filter @dvt/delivery typecheck`
+- `pnpm --filter @dvt/engine typecheck`
+- `pnpm --filter @dvt/delivery test`
+- `$env:GIT_BASE='origin/main'; $env:GIT_HEAD='HEAD'; node tools/ci/arc-check.mjs`
 
 ## No-Debt And No-Stub Evidence
 
