@@ -2,6 +2,7 @@
 import Editor from '@monaco-editor/react';
 
 import { DEFAULT_MONACO_CONTAINER_CLASS_NAME } from './MonacoViewerFallback';
+import { createMonacoCodeOptions, monacoTheme } from './monacoVisualTokens';
 
 type MonacoCodeSurfaceProps = Readonly<{
   ariaLabel: string;
@@ -39,24 +40,9 @@ export default function MonacoCodeSurface({
                 onChange?.(nextValue ?? '');
               }
         }
-        options={{
-          ariaLabel,
-          automaticLayout: true,
-          codeLens: false,
-          contextmenu: isReadOnly ? false : true,
-          folding: true,
-          glyphMargin: false,
-          lineNumbersMinChars: 3,
-          minimap: { enabled: false },
-          domReadOnly: isReadOnly ? true : false,
-          readOnly: isReadOnly ? true : false,
-          renderLineHighlight: isReadOnly ? 'none' : 'line',
-          scrollBeyondLastLine: false,
-          smoothScrolling: true,
-          wordWrap: 'on',
-        }}
+        options={createMonacoCodeOptions({ ariaLabel, readOnly: isReadOnly })}
         path={path}
-        theme="vs-dark"
+        theme={monacoTheme}
         value={value}
       />
     </div>

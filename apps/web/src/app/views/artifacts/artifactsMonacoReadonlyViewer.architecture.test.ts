@@ -110,6 +110,7 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
     const monacoEditor = readAppSource('components/monaco/MonacoCodeEditor.tsx');
     const monacoSurface = readAppSource('components/monaco/MonacoCodeSurface.tsx');
     const monacoFallback = readAppSource('components/monaco/MonacoViewerFallback.tsx');
+    const monacoVisualTokens = readAppSource('components/monaco/monacoVisualTokens.ts');
     const routeFrame = readAppSource('components/workbench/RouteWorkbenchFrame.tsx');
 
     for (const [modulePath, source] of [
@@ -147,9 +148,10 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
     expect(monacoEditor).toContain('onChange');
     expect(monacoSurface).toContain('<Editor');
     expect(monacoSurface).toContain('readOnly = true');
-    expect(monacoSurface).toContain('readOnly: isReadOnly');
-    expect(monacoSurface).toContain('domReadOnly: isReadOnly');
-    expect(monacoSurface).toContain('contextmenu: isReadOnly');
+    expect(monacoSurface).toContain('createMonacoCodeOptions({ ariaLabel, readOnly: isReadOnly })');
+    expect(monacoVisualTokens).toContain('readOnly,');
+    expect(monacoVisualTokens).toContain('domReadOnly: readOnly');
+    expect(monacoVisualTokens).toContain('contextmenu: !readOnly');
     expect(monacoSurface).not.toContain('onMount');
     expect(monacoSurface).not.toContain('save');
 

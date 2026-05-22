@@ -33,9 +33,6 @@ export const routeWorkbenchTabListClassName =
 export const routeWorkbenchTabTriggerClassName =
   'text-[var(--text-muted)] data-[state=active]:bg-[var(--surface-elevated)] data-[state=active]:text-[var(--text-strong)]';
 
-export const routeWorkbenchMonacoSurfaceClassName =
-  'h-[420px] overflow-hidden rounded border border-[color:var(--border-default)] bg-[var(--surface-app)]';
-
 type RouteWorkbenchFrameProps = {
   readonly header?: ReactNode;
   readonly slots: RouteWorkbenchFrameSlots;

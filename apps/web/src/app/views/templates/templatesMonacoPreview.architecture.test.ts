@@ -100,6 +100,7 @@ describe('Templates Monaco preview architecture', () => {
     const previewPanel = readFileSync(previewPanelPath, 'utf8');
     const monacoViewer = readAppSource('components/monaco/MonacoCodeViewer.tsx');
     const monacoSurface = readAppSource('components/monaco/MonacoCodeSurface.tsx');
+    const monacoVisualTokens = readAppSource('components/monaco/monacoVisualTokens.ts');
 
     for (const [modulePath, source] of [
       ['views/TemplatesView.tsx', templatesView],
@@ -130,8 +131,9 @@ describe('Templates Monaco preview architecture', () => {
     expect(monacoViewer).toContain("lazy(() => import('./MonacoCodeSurface'))");
     expect(monacoViewer).toContain('readOnly={true}');
     expect(monacoSurface).toContain('<Editor');
-    expect(monacoSurface).toContain('readOnly: isReadOnly');
-    expect(monacoSurface).toContain('domReadOnly: isReadOnly');
+    expect(monacoSurface).toContain('createMonacoCodeOptions({ ariaLabel, readOnly: isReadOnly })');
+    expect(monacoVisualTokens).toContain('readOnly,');
+    expect(monacoVisualTokens).toContain('domReadOnly: readOnly');
 
     for (const canvasModule of collectProductionSourceFiles(path.join(APP_ROOT, 'views/canvas'))) {
       const source = readFileSync(canvasModule, 'utf8');
