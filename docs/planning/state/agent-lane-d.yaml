@@ -159,17 +159,32 @@ tasks:
     last_verified: '2026-05-06'
   - task_id: run_events partitioning
     priority: P2
-    status: queued
+    status: done
     objective: reduce storage and write-path pressure.
     dependency: none
     target: Partitioned event log storage.
     complexity: L
     effort_points: 8
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/roadmap/strategic-product-roadmap.md
-    status_reason: Partitioning remains planned scale work with no implementation evidence.
-    last_verified: '2026-03-31'
+      - docs/planning/proposals/mandatory/runtime-and-contracts/run-events-hash-partitioning-plan-20260513.md
+      - docs/planning/closeouts/20260513-run-events-hash-partitioning-closeout.md
+      - docs/architecture/components/engine/adapters/state-store/postgres/run-events-partitioning-component.md
+      - docs/architecture/components/engine/adapters/state-store/postgres/run-events-partitioning-user-stories.md
+      - docs/evidence/ed-20260513-run-events-hash-partitioning.md
+      - docs/risk-register/quality/R-20260513-RUN-EVENTS-HASH-PARTITIONING.yaml
+      - packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts
+      - packages/@dvt/adapter-postgres/src/PostgresTenantIsolationPolicy.ts
+      - packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts
+      - packages/@dvt/adapter-postgres/test/PostgresSchemaManager.rollback.test.ts
+      - packages/@dvt/adapter-postgres/test/PostgresTenantIsolationPolicy.test.ts
+    status_reason: >-
+      Run events hash partitioning is implemented as core_021 in adapter-postgres. Fresh schemas
+      create run_events as a HASH(run_id) partitioned parent with 16 children, legacy heaps convert
+      through a reversible migration, canonical run ordering and idempotency constraints are
+      preserved, and tenant RLS catalog coverage includes the parent and physical partitions.
+    last_verified: '2026-05-22'
   - task_id: read replica query path
     priority: P2
     status: blocked
