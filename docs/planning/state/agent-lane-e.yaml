@@ -1405,7 +1405,7 @@ tasks:
       Monaco belongs to Diff, Artifacts, and Templates as read-only or diff infrastructure.
     complexity: S
     effort_points: 2
-    progress_pct: 92
+    progress_pct: 90
     evidence_refs:
       - docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/f-23-git-file-history-review-plan-20260407.md
@@ -1735,7 +1735,7 @@ tasks:
       route-level `slate-*` and hex hardcodes in the main product surfaces.
     complexity: M
     effort_points: 5
-    progress_pct: 90
+    progress_pct: 92
     evidence_refs:
       - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/README.md
       - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/04-visual-system-and-style-guide.md
