@@ -1372,7 +1372,7 @@ tasks:
     last_verified: '2026-05-22'
   - task_id: AR-A7
     priority: P2
-    status: in_progress
+    status: done
     objective: >-
       split @dvt/delivery into domain rules (backpressure policy, admission guard) and runtime
       orchestration (worker runtime, polling loop) to maintain hexagonal architecture purity.
@@ -1382,19 +1382,18 @@ tasks:
       depends on domain rules, not vice versa.
     complexity: M
     effort_points: 5
-    progress_pct: 35
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
-      - docs/planning/reviews/architecture-and-governance/20260419-post-rc-g1-c-architecture-review.md
-      - packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts
-      - packages/@dvt/delivery/src/application/OutboxWorkerRuntimeLoopController.ts
+      - packages/@dvt/delivery/src/testing/InMemoryOutboxStorageCore.ts
+      - packages/@dvt/delivery/test/OutboxInMemoryStorageOwnership.architecture.test.ts
       - packages/@dvt/engine/src/state/InMemoryOutboxState.ts
-      - packages/@dvt/delivery/src/testing/InMemoryOutboxStorage.ts
+      - docs/planning/closeouts/20260514-ar-a7-delivery-domain-runtime-split-closeout.md
+      - docs/evidence/ed-20260514-ar-a7-delivery-in-memory-outbox-ownership.md
+      - docs/risk-register/quality/R-20260514-AR-A7-IN-MEMORY-OUTBOX-OWNERSHIP.yaml
     status_reason: >-
-      RC-G1-C partially closed this concern: delivery runtime orchestration is now thinner and the
-      worker monitor delegates health and telemetry seams, but the reusable runtime-shell decision
-      and the duplicated in-memory outbox semantics across engine and delivery remain open.
-    last_verified: '2026-04-19'
+      Validated as already implemented: Delivery-owned InMemoryOutboxStorageCore, engine facade,
+      architecture guard, ARC-2 evidence, and package validation gates passed on 2026-05-22.
+    last_verified: '2026-05-22'
   - task_id: AR-A8
     priority: P1
     status: done
