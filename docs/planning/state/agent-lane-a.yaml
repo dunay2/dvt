@@ -1831,8 +1831,8 @@ tasks:
     priority: P1
     status: in_progress
     objective: >-
-      derive the full WorkflowEngine subsystem to a compatibility-first hexagonal architecture with
-      canonical docs and executable lane sequencing.
+      derive the full WorkflowEngine subsystem to a hardcut hexagonal architecture with canonical
+      docs and executable lane sequencing.
     dependency: DOC-ARCH-01
     target: >-
       Canonical subsystem context and target architecture are published, stale engine navigation is
@@ -1852,10 +1852,10 @@ tasks:
   - task_id: WE-HX-0
     parent_task: WE-HX
     priority: P1
-    status: in_progress
+    status: done
     complexity: M
     effort_points: 3
-    progress_pct: 70
+    progress_pct: 100
     objective: deliver canonical map and doc replacement for WorkflowEngine subsystem.
     dependency: DOC-ARCH-01
     target: >-
@@ -1868,8 +1868,14 @@ tasks:
       - docs/architecture/components/engine/index.md
       - docs/architecture/components/engine/index.md
       - docs/planning/status/canonical-doc-code-matrix.md
-    status_reason: Primary docs are drafted and replacement routing is in progress.
-    last_verified: '2026-04-03'
+      - docs/planning/closeouts/20260514-we-hx-0-hardcut-canonical-map-closeout.md
+      - docs/evidence/ed-20260514-we-hx-0-hardcut-canonical-map.md
+      - docs/risk-register/quality/R-20260514-WE-HX-0-HARDCUT-CANONICAL-MAP.yaml
+      - docs/architecture/components/engine/roadmap/engine-phases.md
+    status_reason: >-
+      WE-HX-0 hardcut canonical map is closed with accepted closeout, roadmap alignment, semantic
+      architecture guard, evidence, and risk updates.
+    last_verified: '2026-05-22'
   - task_id: WE-HX-1
     parent_task: WE-HX
     priority: P1
@@ -1904,7 +1910,7 @@ tasks:
     complexity: M
     effort_points: 3
     progress_pct: 100
-    objective: narrow WorkflowEngine to a compatibility facade over dedicated use-case services.
+    objective: narrow WorkflowEngine to a facade over dedicated use-case services.
     dependency: WE-HX-1
     target: >-
       WorkflowEngine responsibilities are reduced to contract normalization and delegation, with
@@ -1934,7 +1940,7 @@ tasks:
       policy are isolated and independently testable.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
-    status_reason: Queued after compatibility facade narrowing.
+    status_reason: Queued after facade use-case narrowing.
     last_verified: '2026-04-03'
   - task_id: WE-HX-4
     parent_task: WE-HX

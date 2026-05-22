@@ -9,10 +9,16 @@ breaking: false
 code_refs:
   - packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts
   - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
+  - docs/architecture/components/engine/roadmap/engine-phases.md
 evidence:
   tests:
     - pnpm docs:feature-mechanization --feature WE-HX-0-HARDCUT-CANONICAL-MAP
     - pnpm --filter @dvt/engine test -- test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts test/architecture/workflowEngineSemanticClosure.architecture.test.ts test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts
+    - pnpm --filter @dvt/engine typecheck
+    - pnpm docs:sync
+    - pnpm governance:refresh
+    - pnpm docs:feature-mechanization:implementation
+    - pnpm verify:prepush
 ---
 
 # WE-HX-0 Hardcut Canonical WorkflowEngine Map
@@ -24,3 +30,7 @@ run-control owned-concern wording to current command/query delegation truth.
 
 The slice intentionally does not change plugin compatibility fingerprint
 semantics, provider runtime behavior, or public serialized contracts.
+
+The 2026-05-22 closeout pass also aligns the active engine roadmap with this
+hardcut posture by marking `WE-HX-0` completed and renaming the next facade work
+to use-case narrowing instead of compatibility narrowing.

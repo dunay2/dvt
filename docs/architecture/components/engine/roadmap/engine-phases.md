@@ -2,7 +2,7 @@
 title: Engine Roadmap
 status: Active
 owner: Architecture / Engine / Delivery
-last_reviewed: 2026-04-10
+last_reviewed: 2026-05-22
 ---
 
 # Engine Roadmap
@@ -46,6 +46,8 @@ What is true now:
   Temporal is the only implemented provider runtime.
 - The active engine architecture program is `WE-HX`, not a quarterly phase
   ladder.
+- The active `WE-HX` posture is a hardcut canonical map and use-case
+  decomposition path over current engine use cases.
 - The active value path after the recent signal-boundary cleanup is the first
   execution-first transformation runtime vertical on top of landed `MW-C1`
   (`TF-C2-A`, `TF-C2-B`).
@@ -66,9 +68,9 @@ flowchart LR
 
 | Track                                             | Governing tasks      | Status      | What it changes                                                                                  | What it unblocks                                                   |
 | ------------------------------------------------- | -------------------- | ----------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
-| Canonical engine narrative replacement            | `WE-HX-0`            | In progress | Replaces stale engine navigation with canonical subsystem docs and current routing               | Makes the rest of the engine pack readable and governable          |
+| Canonical engine narrative replacement            | `WE-HX-0`            | Completed   | Replaces stale engine navigation with canonical subsystem docs and current routing               | Makes the rest of the engine pack readable and governable          |
 | Boundary ownership mapping                        | `WE-HX-1`            | Queued      | Locks ownership for `PlanRef`, execution-context, artifact, and resolver seams                   | Enables facade narrowing without ownership drift                   |
-| Compatibility-facade narrowing                    | `WE-HX-2`            | Queued      | Shrinks `WorkflowEngine` toward delegation over narrow use-case services                         | Enables real decomposition and cleanup of portability claims       |
+| Facade use-case narrowing                         | `WE-HX-2`            | Queued      | Shrinks `WorkflowEngine` toward delegation over narrow use-case services                         | Enables real decomposition and cleanup of portability claims       |
 | Start-run decomposition                           | `WE-HX-3`            | Queued      | Narrows admission, dispatch, failure, and bootstrap concerns into smaller collaborators          | Makes engine orchestration easier to change safely                 |
 | Query and signal split hardening                  | `WE-HX-4`            | Completed   | Closed signal ownership, canonical signal narrowing, provider mapping, and read/enrichment split | Removed a major source of semantic drift                           |
 | Provider, telemetry, and boundary fitness         | `WE-HX-5`, `WE-HX-6` | In progress | Consolidates provider resolution, telemetry seams, test doubles, and semantic fitness checks     | Reduces orchestration duplication and hidden boundary drift        |
@@ -81,7 +83,7 @@ flowchart LR
 ```mermaid
 flowchart LR
   HX0["WE-HX-0 docs replacement"] --> HX1["WE-HX-1 ownership mapping"]
-  HX1 --> HX2["WE-HX-2 compatibility facade narrowing"]
+  HX1 --> HX2["WE-HX-2 facade use-case narrowing"]
   HX2 --> HX3["WE-HX-3 startRun decomposition"]
   HX2 --> A8["AR-A8 provider-vocabulary hard cut"]
   HX3 --> HX5["WE-HX-5 provider and telemetry seams"]

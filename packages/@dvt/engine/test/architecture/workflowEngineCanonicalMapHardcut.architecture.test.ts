@@ -92,4 +92,55 @@ describe('WorkflowEngine canonical map hardcut architecture', () => {
     );
     expect(guide).not.toContain('docs/architecture/engine/');
   });
+
+  it('keeps the active engine roadmap aligned with the hardcut posture', () => {
+    const roadmap = readRepoSource('docs/architecture/components/engine/roadmap/engine-phases.md');
+
+    expect(roadmap).toContain('Canonical engine narrative replacement');
+    expect(roadmap).toContain('Facade use-case narrowing');
+
+    for (const forbidden of [
+      'Compatibility-facade narrowing',
+      'compatibility facade narrowing',
+      'compatibility-first',
+      'compatibility facade',
+    ]) {
+      expect(roadmap, `engine roadmap must not keep ${forbidden}`).not.toContain(forbidden);
+    }
+  });
+
+  it('keeps Lane A WE-HX planning language aligned with the hardcut posture', () => {
+    const lane = readRepoSource('docs/planning/state/agent-lane-a.yaml');
+    const weHxBlock = lane.slice(
+      lane.indexOf('  - task_id: WE-HX\n'),
+      lane.indexOf('  - task_id: WE-HX-0\n')
+    );
+    const weHx2Block = lane.slice(
+      lane.indexOf('  - task_id: WE-HX-2\n'),
+      lane.indexOf('  - task_id: WE-HX-3\n')
+    );
+    const weHx3Block = lane.slice(
+      lane.indexOf('  - task_id: WE-HX-3\n'),
+      lane.indexOf('  - task_id: WE-HX-4\n')
+    );
+    const weHxPlanningText = [weHxBlock, weHx2Block, weHx3Block].join('\n');
+
+    expect(weHxBlock).toContain(
+      'derive the full WorkflowEngine subsystem to a hardcut hexagonal architecture'
+    );
+    expect(weHx2Block).toContain(
+      'narrow WorkflowEngine to a facade over dedicated use-case services'
+    );
+    expect(weHx3Block).toContain('Queued after facade use-case narrowing.');
+
+    for (const forbidden of [
+      'compatibility-first',
+      'compatibility facade',
+      'Compatibility-facade',
+    ]) {
+      expect(weHxPlanningText, `Lane A WE-HX blocks must not keep ${forbidden}`).not.toContain(
+        forbidden
+      );
+    }
+  });
 });
