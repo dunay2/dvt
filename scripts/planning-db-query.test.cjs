@@ -865,7 +865,7 @@ test('readOpenTaskRows queries the DB open-task view without duplicating status 
   assert.deepEqual(captured.params, ['C', 'P1', 10]);
 });
 
-test('readNextTaskRows queries the DB next-task view without duplicating dependency logic', async () => {
+test('readNextTaskRows labels DB next-task rows and claim-recovery rows', async () => {
   const captured = { sql: '', params: null };
   const client = {
     async query(sql, params) {
@@ -883,6 +883,19 @@ test('readNextTaskRows queries the DB next-task view without duplicating depende
             dependency: 'DONE-A',
             objective: 'Ready task.',
             target: 'Start now.',
+            route_source: 'next',
+          },
+          {
+            lane_id: 'E',
+            task_id: 'RECOVER-E',
+            priority: 'P1',
+            status: 'in_progress',
+            progress_pct: 15,
+            claimed_by: null,
+            dependency: 'DONE-B',
+            objective: 'Recover stale claim.',
+            target: 'Continue now.',
+            route_source: 'claim_recovery',
           },
         ],
       };
@@ -892,14 +905,15 @@ test('readNextTaskRows queries the DB next-task view without duplicating depende
   const rows = await readNextTaskRows(client, { laneId: 'C', limit: 5 });
 
   assert.match(captured.sql, /from planning_query_store\.planning_next_tasks/);
+  assert.match(captured.sql, /from planning_query_store\.planning_claim_recovery_tasks/);
   assert.doesNotMatch(captured.sql, /from planning_query_store\.planning_effective_tasks/);
   assert.doesNotMatch(captured.sql, /regexp_split_to_table/);
   assert.match(captured.sql, /lane_id = \$1/);
   assert.match(captured.sql, /limit \$2/);
   assert.deepEqual(captured.params, ['C', 5]);
   assert.deepEqual(
-    rows.map((row) => `${row[0]}/${row[1]}`),
-    ['C/READY-C']
+    rows.map((row) => `${row[0]}:${row[1]}/${row[2]}`),
+    ['next:C/READY-C', 'claim_recovery:E/RECOVER-E']
   );
 });
 

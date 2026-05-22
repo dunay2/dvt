@@ -384,6 +384,21 @@ function buildTaskRows(rows) {
   ]);
 }
 
+function buildNextTaskRows(rows) {
+  return rows.map((row) => [
+    row.route_source ?? row.routeSource ?? 'next',
+    row.lane_id ?? row.laneId,
+    row.task_id ?? row.taskId,
+    row.priority ?? '-',
+    row.status,
+    normalizeProgress(row.progress_pct ?? row.progressPct),
+    row.claimed_by ?? row.claimedBy ?? '-',
+    String(row.objective ?? '')
+      .replace(/\s+/g, ' ')
+      .trim(),
+  ]);
+}
+
 function buildPlanningDependencyRows(rows) {
   return rows.map((row) => [
     row.lane_id ?? row.laneId,
@@ -935,6 +950,7 @@ function nextTaskSelect() {
   return `
     with next_candidates as (
       select
+        'next' as route_source,
         lane_id,
         task_id,
         priority,
@@ -947,6 +963,7 @@ function nextTaskSelect() {
       from ${schemaName}.planning_next_tasks
       union
       select
+        'claim_recovery' as route_source,
         lane_id,
         task_id,
         priority,
@@ -959,6 +976,7 @@ function nextTaskSelect() {
       from ${schemaName}.planning_claim_recovery_tasks
     )
     select
+      route_source,
       lane_id,
       task_id,
       priority,
@@ -1772,7 +1790,7 @@ async function readNextTaskRows(client, filters = {}) {
     params
   );
 
-  return buildTaskRows(result.rows);
+  return buildNextTaskRows(result.rows);
 }
 
 async function readPlanningDependencyRows(client, filters = {}) {
@@ -3335,6 +3353,7 @@ module.exports = {
   buildPlanningStatusEventRows,
   buildPrReadinessRows,
   buildRepositoryCommandRows,
+  buildNextTaskRows,
   buildSummaryRows,
   buildTaskGapRows,
   buildTaskRows,
