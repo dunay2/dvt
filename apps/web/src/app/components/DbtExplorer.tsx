@@ -2,6 +2,7 @@
 import { PanelLeftClose, Upload } from 'lucide-react';
 import { useMemo } from 'react';
 
+import { graphStatusDotClasses, graphVisualClasses } from '../plugins/graph/graphVisualTokens';
 import type { NodeKindRegistration } from '../plugins/nodeTypeContracts';
 import { resolveNodeKindRegistration } from '../plugins/nodeTypeRegistry';
 import type { CanonicalNode } from '../types/canonical';
@@ -22,15 +23,6 @@ interface DbtExplorerProps {
   onHide?: () => void;
   onOpenDataRegistry?: () => void;
 }
-
-const statusColors: Record<CanonicalNode['status'], string> = {
-  idle: 'bg-gray-600',
-  running: 'bg-blue-500',
-  success: 'bg-green-500',
-  failed: 'bg-red-500',
-  skipped: 'bg-yellow-500',
-  warn: 'bg-orange-500',
-};
 
 function resolveNodeBadgeText(node: CanonicalNode): string {
   const packageName = typeof node.metadata?.package === 'string' ? node.metadata.package : null;
@@ -80,12 +72,12 @@ export default function DbtExplorer({
   };
 
   return (
-    <div className="flex h-full flex-col border-r border-slate-700 bg-slate-900">
-      <div className="border-b border-slate-700 px-4 py-3">
+    <div className={graphVisualClasses.contextPanelLeftShell}>
+      <div className={graphVisualClasses.contextPanelHeader}>
         <div className="flex items-start justify-between gap-2">
           <div>
-            <h2 className="font-semibold text-sm">Project Nodes</h2>
-            <p className="mt-0.5 text-xs text-slate-300">
+            <h2 className={graphVisualClasses.contextPanelTitle}>Project Nodes</h2>
+            <p className={graphVisualClasses.contextPanelSubtitle}>
               {canEditGraph
                 ? 'Drag resources into the graph'
                 : 'Inspect available project resources'}
@@ -96,7 +88,7 @@ export default function DbtExplorer({
               type="button"
               variant="ghost"
               size="icon"
-              className="size-7 text-slate-300 hover:text-white"
+              className={graphVisualClasses.contextPanelIconButton}
               onClick={onHide}
               aria-label="Hide explorer panel"
             >
@@ -107,7 +99,7 @@ export default function DbtExplorer({
 
         {onOpenDataRegistry && (
           <div className="mt-2 space-y-2">
-            <p className="text-[11px] leading-5 text-slate-400">
+            <p className={graphVisualClasses.contextPanelHelpText}>
               Explore project nodes, discover dependencies, and add new objects to this workspace.
             </p>
             <Button
@@ -116,7 +108,7 @@ export default function DbtExplorer({
               size="sm"
               onClick={onOpenDataRegistry}
               disabled={!canEditGraph}
-              className="h-8 w-full justify-start gap-1.5 border-slate-600 bg-slate-950/40 px-3 text-xs font-medium text-slate-100 hover:bg-slate-800 hover:text-white"
+              className={cn('w-full gap-1.5', graphVisualClasses.contextPanelActionButton)}
             >
               <Upload className="size-3.5" />
               Add data
@@ -126,8 +118,8 @@ export default function DbtExplorer({
       </div>
 
       {canCreateAuthoringNode ? (
-        <div className="border-b border-slate-700 px-4 py-3">
-          <h3 className="text-xs font-semibold uppercase text-slate-300">Add node</h3>
+        <div className={graphVisualClasses.contextPanelSection}>
+          <h3 className={graphVisualClasses.contextPanelSectionTitle}>Add node</h3>
           <div className="mt-2 grid gap-2">
             {nodeKinds.map((registration) => {
               const Icon = registration.icon;
@@ -137,7 +129,7 @@ export default function DbtExplorer({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-8 justify-start gap-2 border-slate-600 bg-slate-950/40 px-3 text-xs font-medium text-slate-100 hover:bg-slate-800 hover:text-white"
+                  className={graphVisualClasses.contextPanelActionButton}
                   onClick={() => onCreateAuthoringNode(registration)}
                 >
                   <Icon className="size-3.5" />
@@ -159,8 +151,12 @@ export default function DbtExplorer({
             const config = resolveNodeKindRegistration(kind);
 
             return (
-              <AccordionItem key={kind} value={kind} className="border-b border-slate-700">
-                <AccordionTrigger className="px-2 py-2 text-sm hover:bg-slate-950">
+              <AccordionItem
+                key={kind}
+                value={kind}
+                className={graphVisualClasses.contextPanelAccordionItem}
+              >
+                <AccordionTrigger className={graphVisualClasses.contextPanelAccordionTrigger}>
                   <div className="flex items-center gap-2">
                     <config.icon className="size-4" style={{ color: config.minimapColor }} />
                     <span>{config.label}</span>
@@ -179,15 +175,17 @@ export default function DbtExplorer({
                         className={cn(
                           'group flex items-center gap-2 rounded px-3 py-2 text-sm',
                           canEditGraph
-                            ? 'cursor-move hover:bg-slate-950'
-                            : 'cursor-default text-slate-300'
+                            ? graphVisualClasses.contextPanelInteractiveRow
+                            : graphVisualClasses.contextPanelReadOnlyRow
                         )}
                       >
-                        <div className={cn('size-2 rounded-full', statusColors[node.status])} />
+                        <div
+                          className={cn('size-2 rounded-full', graphStatusDotClasses[node.status])}
+                        />
                         <div className="min-w-0 flex-1">
                           <div className="truncate font-mono text-xs">{node.name}</div>
                           {node.lastDuration != null && (
-                            <div className="text-[10px] text-slate-400">
+                            <div className={graphVisualClasses.contextPanelSecondaryText}>
                               {node.lastDuration}s
                               {node.lastCost != null && ` - $${node.lastCost.toFixed(2)}`}
                             </div>

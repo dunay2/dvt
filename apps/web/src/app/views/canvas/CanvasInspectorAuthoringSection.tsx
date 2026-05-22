@@ -6,6 +6,7 @@ import { Card } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
+import { graphVisualClasses } from '../../plugins/graph/graphVisualTokens';
 import type { CanonicalNode } from '../../types/canonical';
 import {
   createCanvasInspectorNodeDraft,
@@ -30,21 +31,15 @@ export function CanvasInspectorAuthoringSection({
   }, [node.description, node.id, node.name]);
 
   const errors = useMemo(() => validateCanvasInspectorNodeDraft(draft), [draft]);
-  const isDirty = useMemo(
-    () => hasCanvasInspectorNodeDraftChanges(node, draft),
-    [draft, node]
-  );
-  const canApply =
-    authoring.canEditNode && isDirty && Object.keys(errors).length === 0;
+  const isDirty = useMemo(() => hasCanvasInspectorNodeDraftChanges(node, draft), [draft, node]);
+  const canApply = authoring.canEditNode && isDirty && Object.keys(errors).length === 0;
 
   return (
-    <Card className="border-slate-700 bg-slate-950 p-3">
+    <Card className={graphVisualClasses.inspectorCard}>
       <div className="space-y-3">
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-300">
-            Node details
-          </h3>
-          <p className="mt-1 text-xs text-slate-400">
+          <h3 className={graphVisualClasses.contextPanelSectionTitle}>Node details</h3>
+          <p className={graphVisualClasses.inspectorBody}>
             Name and description saved with this canvas.
           </p>
         </div>
@@ -65,7 +60,7 @@ export function CanvasInspectorAuthoringSection({
             }
           />
           {errors.name ? (
-            <p className="text-xs text-red-300">{errors.name}</p>
+            <p className={graphVisualClasses.inspectorErrorText}>{errors.name}</p>
           ) : null}
         </div>
 
@@ -86,7 +81,7 @@ export function CanvasInspectorAuthoringSection({
         </div>
 
         {!authoring.canEditNode ? (
-          <p className="text-xs text-slate-400">
+          <p className={graphVisualClasses.inspectorBody}>
             Node details are read-only for this workspace state.
           </p>
         ) : null}
