@@ -131,7 +131,9 @@ describe('WorkflowEngine canonical map hardcut architecture', () => {
     expect(weHx2Block).toContain(
       'narrow WorkflowEngine to a facade over dedicated use-case services'
     );
-    expect(weHx3Block).toContain('Queued after facade use-case narrowing.');
+    expect(weHx3Block).toContain(
+      'Start-run application flow is decomposed into admission, intent, execution, and failure-policy'
+    );
 
     for (const forbidden of [
       'compatibility-first',

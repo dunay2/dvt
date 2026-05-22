@@ -1852,7 +1852,7 @@ tasks:
     last_verified: '2026-04-07'
   - task_id: WE-HX
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
       derive the full WorkflowEngine subsystem to a hardcut hexagonal architecture with canonical
       docs and executable lane sequencing.
@@ -1862,16 +1862,19 @@ tasks:
       replaced, and execution-ready waves `WE-HX-0..6` are tracked in Lane A.
     complexity: L
     effort_points: 5
-    progress_pct: 20
+    progress_pct: 100
     evidence_refs:
       - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
       - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
       - docs/guides/workflow-engine-user-manual.v1.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+      - docs/planning/closeouts/20260522-we-hx-parent-hardcut-closeout.md
     status_reason: >-
-      Canonical documentation and plan artifacts are being introduced as the active replacement
-      architecture narrative for WorkflowEngine.
-    last_verified: '2026-04-03'
+      WE-HX parent closure is accepted: WE-HX-0..6 plus DHM-WS2/DHM-WS4/DHM-WS6 are implemented with
+      component guides, user stories, architecture guards, ARC evidence where package paths changed,
+      and accepted closeouts. Remaining engine work must now be tracked as separate tasks instead of
+      keeping this umbrella open.
+    last_verified: '2026-05-22'
   - task_id: WE-HX-0
     parent_task: WE-HX
     priority: P1
