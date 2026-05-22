@@ -45,6 +45,7 @@ allowedImplementationSurfaces:
   - docs/runbooks/temporal-worker-scaling-operations.md
   - docs/evidence/ed-20260514-ar-d3-worker-scaling-strategy.md
   - docs/evidence/index.md
+  - docs/planning/state/agent-lane-d.yaml
   - docs/risk-register/quality/R-20260514-AR-D3-WORKER-SCALING.yaml
   - docs/risk-register/quality/index.md
   - packages/@dvt/adapter-temporal/vitest.config.ts

@@ -326,7 +326,7 @@ tasks:
     last_verified: '2026-05-15'
   - task_id: AR-D3
     priority: P2
-    status: in_progress
+    status: done
     objective: >-
       document worker scaling strategy for 1000+ tenants — per-tenant workers vs shared pool, task
       queue density model, cold-start latency targets, and worker auto-scaling policy.
@@ -336,20 +336,22 @@ tasks:
       covers worker provisioning, scaling triggers, and tenant-to-queue assignment policy.
     complexity: S
     effort_points: 3
-    progress_pct: 60
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
       - docs/architecture/components/engine/adapters/temporal/temporal-worker-scaling-strategy.md
       - docs/runbooks/temporal-worker-scaling-operations.md
+      - docs/planning/closeouts/20260514-ar-d3-worker-scaling-strategy-closeout.md
+      - docs/evidence/ed-20260514-ar-d3-worker-scaling-strategy.md
+      - docs/risk-register/quality/R-20260514-AR-D3-WORKER-SCALING.yaml
+      - packages/@dvt/adapter-temporal/test/worker-scaling-strategy.architecture.test.ts
     status_reason: >-
-      Architecture document (temporal-worker-scaling-strategy.md) and operator runbook
-      (temporal-worker-scaling-operations.md) now align to the executable Temporal adapter/worker
-      model: tenant-scoped queues are derived as <baseQueue>-<tenantId>, each worker process polls
-      exactly one TEMPORAL_TASK_QUEUE, and capacity is added by scaling queue-local worker pools.
-      The docs preserve the useful multi-worker strategy while explicitly marking a global shared
-      pool across all tenant queues, tenant-to-queue automation, and 1000+ tenant production
-      evidence as open work rather than completed capability.
-    last_verified: '2026-05-07'
+      AR-D3 is closed by the accepted 2026-05-14 strategy closeout: the architecture document,
+      operations runbook, ARC evidence, residual risk entry, and semantic architecture test align
+      around queue-local worker pools, deterministic tenant queue assignment, cold-start targets,
+      autoscaling signals, and explicit residual work for provisioning automation rather than
+      claiming a global shared worker pool.
+    last_verified: '2026-05-22'
   - task_id: AR-D4
     priority: P2
     status: queued
