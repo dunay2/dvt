@@ -354,7 +354,7 @@ tasks:
     last_verified: '2026-05-22'
   - task_id: AR-D4
     priority: P2
-    status: queued
+    status: done
     objective: >-
       design and implement zero-downtime schema rollback strategy to eliminate the maintenance-mode
       requirement for state-store schema changes in a multi-tenant SaaS environment.
@@ -365,13 +365,25 @@ tasks:
       during rollback.
     complexity: L
     effort_points: 8
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-d4-zero-downtime-schema-rollback-plan-20260513.md
+      - docs/planning/closeouts/20260513-ar-d4-zero-downtime-schema-rollback-closeout.md
+      - docs/architecture/components/engine/adapters/state-store/postgres/schema-rollback-zero-downtime-component.md
+      - docs/architecture/components/engine/adapters/state-store/postgres/schema-rollback-zero-downtime-user-stories.md
+      - docs/evidence/ed-20260513-ar-d4-zero-downtime-schema-rollback.md
+      - docs/risk-register/quality/R-20260513-AR-D4-ZERO-DOWNTIME-SCHEMA-ROLLBACK.yaml
+      - packages/@dvt/adapter-postgres/test/PostgresSchemaRollbackZeroDowntime.architecture.test.ts
+      - packages/@dvt/adapter-postgres/test/PostgresSchemaManager.rollback.test.ts
+      - packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts
     status_reason: >-
-      Current rollback requires maintenance mode (no active clients) which is costly for
-      multi-tenant SaaS with always-on availability expectations.
-    last_verified: '2026-04-02'
+      AR-D4 is closed by the accepted 2026-05-13 zero-downtime schema rollback work:
+      PostgresStateStoreAdminAdapter plans rollback first, rejects offline-only steps through
+      PostgresSchemaRollbackCompatibilityPolicy, and executes online-compatible rollback without
+      maintenance mode or hasActiveClients=false. Component docs, user stories, ARC evidence, risk,
+      and semantic architecture tests guard the policy.
+    last_verified: '2026-05-22'
   - task_id: AR-D5
     priority: P2
     status: queued
