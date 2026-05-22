@@ -1738,7 +1738,7 @@ tasks:
       route-level `slate-*` and hex hardcodes in the main product surfaces.
     complexity: M
     effort_points: 5
-    progress_pct: 75
+    progress_pct: 90
     evidence_refs:
       - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/README.md
       - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/04-visual-system-and-style-guide.md
@@ -1755,25 +1755,17 @@ tasks:
       - apps/web/src/app/views/CodeView.tsx
       - apps/web/src/app/views/DiffView.tsx
       - apps/web/src/app/views/LineageView.tsx
+      - apps/web/src/app/views/canvas/canvasChromeTokens.ts
+      - docs/architecture/components/web/graph/canvas-route-chrome-token-component.md
+      - docs/architecture/components/web/graph/canvas-route-chrome-token-user-stories.md
+      - docs/planning/closeouts/20260522-f24-canvas-route-chrome-token-convergence-closeout.md
       - apps/web/src/styles/theme.css
     status_reason: >-
-      The bundle is normalized in English and now governs an explicit `RouteWorkbenchFrame` v1
-      contract instead of an over-broad future shape: header and summary bands stay outside the
-      scroll-owned body, `scroll={false}` remains available for split-pane routes, and contextual
-      side panels remain future primitives. The implementation restores `Diff` summary ownership to
-      the header stack, fixes the shared field token so it works on neutral elements like compare
-      pills, applies shared tab and Monaco tokens across the first `Diff` and `Artifacts` cleanup
-      slice, now moves the shell top bar plus left navigation rail away from route-level `slate-*`
-      chrome into governed shell tokens, extracts the shared shell controls under
-      `components/shell/*`, and routes left-rail navigation through an explicit shell navigation
-      model so the rail no longer knows plugin view internals or fixed footer item ownership. The
-      shell layout itself now lives in an explicit `AppShellFrame` instead of remaining embedded in
-      `Root.tsx`, while preserving focus-mode rail hiding and bottom-console drawer ownership.
-      Root-shell characterization now covers top-bar presence, navigation order, focus-mode rail
-      hiding, stable shell-control seams, frame-owned console rendering, and a shell-owned bottom
-      drawer state model for `idle`, `loading`, and `streaming` console states. Remaining work is
-      broader panel, table, Canvas, and deeper Monaco convergence across the rest of the operator
-      path.
+      The visual-system baseline, route frame, shell chrome, Runs dense table token component, and
+      Canvas route chrome token component are implemented and guarded. Canvas toolbar, draft status,
+      and tab-strip chrome now consume `canvasChromeTokens` instead of route-level color families.
+      Remaining F-24 work is broader panel, legacy component, React Flow palette, and deeper Monaco
+      convergence across the rest of the operator path.
     definition_of_done:
       - operator-workbench tokens and density modes are documented in active frontend governance
       - route-level hardcode cleanup targets are mapped to concrete surfaces and components
@@ -1788,7 +1780,7 @@ tasks:
       - shared field or tab tokens work on both primitives and neutral elements used in route chrome
       - tests cover the frame scroll contract and at least one route-level header or body ownership
         assertion
-    last_verified: '2026-04-09'
+    last_verified: '2026-05-22'
   - task_id: F-25
     priority: P1
     status: in_progress

@@ -9,6 +9,7 @@ import type { CanvasRouteState } from './canvasDraftPresentationModel';
 import { deriveCanvasToolbarViewModel } from './canvasToolbarViewModel';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
+import { canvasChromeClasses } from './canvasChromeTokens';
 
 export type CanvasToolbarProps = {
   readonly onAutoLayout: () => void;
@@ -49,7 +50,7 @@ export default function CanvasToolbar(props: CanvasToolbarProps) {
   const viewModel = deriveCanvasToolbarViewModel(props);
 
   return (
-    <div className="flex h-10 shrink-0 items-center justify-end gap-3 border-b border-slate-700 bg-slate-900 px-3">
+    <div className={canvasChromeClasses.toolbar}>
       <div className="flex min-w-0 items-center gap-2">
         <CanvasViewMenuContributionRegistrar
           canEditEdges={props.canEditEdges}
@@ -83,7 +84,7 @@ export default function CanvasToolbar(props: CanvasToolbarProps) {
           workflowStatusTitle={viewModel.workflowStatusTitle}
           canPlanTransformation={viewModel.canPlanTransformation}
         />
-        <Separator orientation="vertical" className="h-5 bg-slate-700" />
+        <Separator orientation="vertical" className={canvasChromeClasses.separator} />
         <CanvasToolbarDraftStatus
           draftToolbarState={props.draftToolbarState}
           onReloadLatestDraft={props.onReloadLatestDraft}

@@ -18,6 +18,7 @@ import {
   routeWorkbenchTabListClassName,
   routeWorkbenchTabTriggerClassName,
 } from '../../components/workbench/RouteWorkbenchFrame';
+import { canvasChromeClasses } from './canvasChromeTokens';
 import type { CanvasPlaygroundTabState } from './canvasPlaygroundTabState';
 import type { CanvasReplacementActionViewState } from './canvasPlaygroundTabStripModel';
 
@@ -89,9 +90,7 @@ function CanvasPlaygroundTabsTemplate({
           >
             <Layers2 className="size-4 shrink-0" />
             <span className="min-w-0 truncate text-sm font-medium">{tab.title}</span>
-            <span className="rounded-sm border border-[color:var(--border-default)] px-1.5 py-0.5 text-[10px] leading-none text-[var(--text-subtle)]">
-              {tab.kindLabel}
-            </span>
+            <span className={canvasChromeClasses.tabKindBadge}>{tab.kindLabel}</span>
           </TabsTrigger>
         ))}
       </TabsList>
@@ -115,16 +114,16 @@ function CanvasReplacementActionTemplate({
         size="sm"
         disabled={!action.canReplaceCanvas}
         title={action.buttonTitle}
-        className="h-8 shrink-0 gap-1.5 border-slate-700 bg-slate-950/60 px-2.5 text-xs text-slate-200 hover:bg-slate-800 hover:text-white"
+        className={canvasChromeClasses.replacementButton}
         onClick={onRequestReplacement}
       >
         <Plus className="size-4" />
         {action.buttonLabel}
       </Button>
-      <AlertDialogContent className="border-slate-700 bg-slate-950 text-slate-50">
+      <AlertDialogContent className={canvasChromeClasses.replacementDialog}>
         <AlertDialogHeader>
           <AlertDialogTitle>{action.dialogTitle}</AlertDialogTitle>
-          <AlertDialogDescription className="text-slate-300">
+          <AlertDialogDescription className={canvasChromeClasses.replacementDescription}>
             {action.dialogDescription}
           </AlertDialogDescription>
         </AlertDialogHeader>

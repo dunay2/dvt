@@ -45,7 +45,7 @@ describe('canvas route posture priority architecture', () => {
     expect(tabStripTemplateSource).toContain('CanvasReplacementActionViewState');
     expect(tabStripTemplateSource).toContain('border-[color:var(--border-default)]');
     expect(tabStripTemplateSource).toContain('bg-[var(--surface-panel)]');
-    expect(tabStripTemplateSource).toContain('text-[var(--text-subtle)]');
+    expect(tabStripTemplateSource).toContain('canvasChromeClasses.tabKindBadge');
     expect(tabStripTemplateSource).not.toContain('border-(--border-default)');
     expect(tabStripTemplateSource).not.toContain('bg-(--surface-panel)');
     expect(tabStripTemplateSource).not.toContain('text-(--text-subtle)');
@@ -53,6 +53,57 @@ describe('canvas route posture priority architecture', () => {
     expect(tabStripTemplateSource).not.toContain("from './copy'");
     expect(tabStripTemplateSource).not.toContain("mode: 'replace_current'");
     expect(tabStripSource).not.toContain('canEditEdges && activeReplacementCanvasKind');
+  });
+
+  it('keeps Canvas route chrome visual classes behind the Canvas chrome token component', () => {
+    const tokenSource = readAppSource('canvasChromeTokens.ts');
+    const toolbarSource = readAppSource('CanvasToolbar.tsx');
+    const primaryControlsSource = readAppSource('CanvasToolbarPrimaryControls.tsx');
+    const draftStatusSource = readAppSource('CanvasToolbarDraftStatus.tsx');
+    const tabStripTemplateSource = readAppSource('CanvasPlaygroundTabStrip.templates.tsx');
+    const componentGuide = readRepoFile(
+      'docs/architecture/components/web/graph/canvas-route-chrome-token-component.md'
+    );
+    const userStories = readRepoFile(
+      'docs/architecture/components/web/graph/canvas-route-chrome-token-user-stories.md'
+    );
+
+    expect(tokenSource).toContain('Owned concern: own Canvas route chrome visual tokens');
+    expect(tokenSource).toContain('canvasChromeClasses');
+    expect(tokenSource).toContain('canvasDraftStatusToneClasses');
+    expect(tokenSource).toContain('resolveCanvasDraftStatusClassName');
+    expect(tokenSource).toContain('resolveCanvasWorkflowStatusClassName');
+
+    for (const source of [
+      toolbarSource,
+      primaryControlsSource,
+      draftStatusSource,
+      tabStripTemplateSource,
+    ]) {
+      expect(source).toContain("from './canvasChromeTokens'");
+      expect(source).not.toMatch(/\b(?:slate|gray|zinc)-\d{2,3}\b/);
+      expect(source).not.toMatch(/\b(?:rose|amber|emerald)-\d{2,3}\b/);
+    }
+
+    for (const expected of [
+      '## Public API',
+      '## Invariants',
+      '## Transitions',
+      '## Consumers',
+      '```mermaid',
+      'canvasChromeClasses',
+      'resolveCanvasDraftStatusClassName',
+    ]) {
+      expect(componentGuide).toContain(expected);
+    }
+
+    for (const storyId of [
+      'US-F24-CANVAS-CHROME-01',
+      'US-F24-CANVAS-CHROME-02',
+      'US-F24-CANVAS-CHROME-03',
+    ]) {
+      expect(userStories).toContain(storyId);
+    }
   });
 
   it('keeps Canvas draft access posture as the route-visible admission policy', () => {
