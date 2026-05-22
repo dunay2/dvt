@@ -48,9 +48,10 @@ describe('Templates workbench', () => {
 
     cy.contains('Preview ready').should('be.visible');
     cy.contains('load_orders.task.sql').should('be.visible');
-    cy.get('[data-slot="templates-generated-source-preview"]')
-      .should('be.visible')
-      .and('contain', 'create or replace task load_orders')
+    cy.get('[data-slot="templates-generated-source-preview"]').should('be.visible');
+    cy.get('[data-testid="monaco-code-viewer"]').should('be.visible');
+    cy.get('[data-slot="templates-generated-source-readable-preview"]')
+      .should('contain', 'create or replace task load_orders')
       .and('contain', 'warehouse = transforming_wh')
       .and('contain', 'call analytics.load_orders();');
   });

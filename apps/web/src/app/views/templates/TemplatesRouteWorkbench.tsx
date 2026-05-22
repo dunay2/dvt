@@ -26,6 +26,7 @@ import {
   type ExecutionTemplatePreview,
   resolveExecutionTemplatePreview,
 } from './templatesViewModel';
+import { TemplateMonacoPreviewPanel } from './TemplateMonacoPreviewPanel';
 
 type TemplatesRouteWorkbenchProps = Readonly<{
   selectedTemplate: ExecutionTemplateDefinition;
@@ -210,6 +211,17 @@ function GeneratedSourcePanel({
   selectedTemplate: ExecutionTemplateDefinition;
   preview: ExecutionTemplatePreview;
 }>) {
+  if (preview.kind === 'ready') {
+    return (
+      <TemplateMonacoPreviewPanel
+        exportFileName={preview.exportFileName}
+        language={selectedTemplate.exportFileName.endsWith('.yaml') ? 'yaml' : 'sql'}
+        provider={selectedTemplate.provider}
+        source={preview.source}
+      />
+    );
+  }
+
   return (
     <Card data-slot="templates-preview-panel" className={cn(routeWorkbenchPanelClassName, 'p-4')}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -224,29 +236,20 @@ function GeneratedSourcePanel({
         </Badge>
       </div>
 
-      {preview.kind === 'ready' ? (
-        <pre
-          data-slot="templates-generated-source-preview"
-          className="mt-4 max-h-[30rem] overflow-auto rounded border border-[color:var(--border-default)] bg-[var(--surface-app)] p-4 font-mono text-xs leading-5 text-[var(--text-default)]"
-        >
-          <code>{preview.source}</code>
-        </pre>
-      ) : (
-        <div
-          data-slot="templates-validation-state"
-          className={cn(routeWorkbenchFieldClassName, 'mt-4 rounded-md p-4')}
-        >
-          <div className="flex items-start gap-3">
-            <FileCode2 className="mt-0.5 size-4 text-[var(--status-warning)]" />
-            <div>
-              <p className="font-medium text-[var(--text-strong)]">Preview blocked</p>
-              <p className={cn('mt-1 text-sm', routeWorkbenchMutedTextClassName)}>
-                Complete the required parameters before generated source is shown.
-              </p>
-            </div>
+      <div
+        data-slot="templates-validation-state"
+        className={cn(routeWorkbenchFieldClassName, 'mt-4 rounded-md p-4')}
+      >
+        <div className="flex items-start gap-3">
+          <FileCode2 className="mt-0.5 size-4 text-[var(--status-warning)]" />
+          <div>
+            <p className="font-medium text-[var(--text-strong)]">Preview blocked</p>
+            <p className={cn('mt-1 text-sm', routeWorkbenchMutedTextClassName)}>
+              Complete the required parameters before generated source is shown.
+            </p>
           </div>
         </div>
-      )}
+      </div>
     </Card>
   );
 }

@@ -21,14 +21,15 @@ contracts, or Monaco infrastructure. Those remain separate governed surfaces.
 
 ## Public API
 
-| API                                       | Surface                                                        | Responsibility                                      |
-| ----------------------------------------- | -------------------------------------------------------------- | --------------------------------------------------- |
-| `EXECUTION_TEMPLATE_CATALOG`              | `apps/web/src/app/views/templates/templatesViewModel.ts`       | Built-in read model for available template profiles |
-| `resolveExecutionTemplateSelection`       | `apps/web/src/app/views/templates/templatesViewModel.ts`       | Route-local template selection state                |
-| `resolveExecutionTemplatePreview`         | `apps/web/src/app/views/templates/templatesViewModel.ts`       | Validation and deterministic preview projection     |
-| `TemplatesView`                           | `apps/web/src/app/views/TemplatesView.tsx`                     | Route controller and route-local command handlers   |
-| `TemplatesRouteWorkbench`                 | `apps/web/src/app/views/templates/TemplatesRouteWorkbench.tsx` | Workbench slot renderer                             |
-| DVT plugin `/templates` view contribution | `apps/web/src/app/plugins/dvt/dvtContributions.ts`             | Shell route registration                            |
+| API                                       | Surface                                                           | Responsibility                                      |
+| ----------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------- |
+| `EXECUTION_TEMPLATE_CATALOG`              | `apps/web/src/app/views/templates/templatesViewModel.ts`          | Built-in read model for available template profiles |
+| `resolveExecutionTemplateSelection`       | `apps/web/src/app/views/templates/templatesViewModel.ts`          | Route-local template selection state                |
+| `resolveExecutionTemplatePreview`         | `apps/web/src/app/views/templates/templatesViewModel.ts`          | Validation and deterministic preview projection     |
+| `TemplatesView`                           | `apps/web/src/app/views/TemplatesView.tsx`                        | Route controller and route-local command handlers   |
+| `TemplatesRouteWorkbench`                 | `apps/web/src/app/views/templates/TemplatesRouteWorkbench.tsx`    | Workbench slot renderer                             |
+| `TemplateMonacoPreviewPanel`              | `apps/web/src/app/views/templates/TemplateMonacoPreviewPanel.tsx` | Ready generated-source preview adapter              |
+| DVT plugin `/templates` view contribution | `apps/web/src/app/plugins/dvt/dvtContributions.ts`                | Shell route registration                            |
 
 ## Command And Query Rails
 
@@ -48,6 +49,8 @@ contracts, or Monaco infrastructure. Those remain separate governed surfaces.
   unowned semantics.
 - Generated source is read-only route output; the route does not dispatch,
   persist, or apply generated artifacts.
+- Ready generated source is inspected through `TemplateMonacoPreviewPanel` and
+  the shared read-only `MonacoCodeViewer` gateway.
 - Provider semantics are descriptive profile metadata until backend contracts
   accept provider-owned generation behavior.
 - The route uses `RouteWorkbenchFrame` slots and does not create a parallel
@@ -74,18 +77,19 @@ flowchart LR
   View --> Workbench["TemplatesRouteWorkbench"]
   Workbench --> Catalog["ListExecutionTemplateProfiles"]
   Workbench --> Preview["GenerateExecutionTemplatePreview"]
-  Preview --> Source["Read-only generated source"]
+  Preview --> Monaco["TemplateMonacoPreviewPanel"]
+  Monaco --> Source["Read-only generated source"]
   Preview --> Export["Export metadata"]
 ```
 
 ## Consumers
 
-| Consumer              | Relationship                                                                    |
-| --------------------- | ------------------------------------------------------------------------------- |
-| Shell navigation      | Shows Templates as an extended DVT route.                                       |
-| Future Canvas handoff | May pass workflow context into the route after a governed rail exists.          |
-| Future Diff handoff   | May review generated source deltas after F-17 preview work lands.               |
-| F-17 Monaco work      | May replace the basic preview surface with Monaco-owned preview infrastructure. |
+| Consumer              | Relationship                                                              |
+| --------------------- | ------------------------------------------------------------------------- |
+| Shell navigation      | Shows Templates as an extended DVT route.                                 |
+| Future Canvas handoff | May pass workflow context into the route after a governed rail exists.    |
+| Future Diff handoff   | May review generated source deltas after F-17 preview work lands.         |
+| F-17 Monaco work      | Provides the read-only Monaco preview adapter for ready generated source. |
 
 ## Non-Goals
 
@@ -93,4 +97,4 @@ flowchart LR
 - No backend persistence.
 - No generic template engine.
 - No credentials, tenant-specific catalog, or provider API calls.
-- No Monaco dependency in the first route vertical.
+- No Monaco editing, save, apply, or export command.
