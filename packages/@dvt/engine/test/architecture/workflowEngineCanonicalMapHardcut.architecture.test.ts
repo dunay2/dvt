@@ -92,4 +92,38 @@ describe('WorkflowEngine canonical map hardcut architecture', () => {
     );
     expect(guide).not.toContain('docs/architecture/engine/');
   });
+
+  it('keeps the active engine roadmap aligned with the hardcut posture', () => {
+    const roadmap = readRepoSource('docs/architecture/components/engine/roadmap/engine-phases.md');
+
+    expect(roadmap).toContain('Canonical engine narrative replacement');
+    expect(roadmap).toContain('Facade use-case narrowing');
+
+    for (const forbidden of [
+      'Compatibility-facade narrowing',
+      'compatibility facade narrowing',
+      'compatibility-first',
+      'compatibility facade',
+    ]) {
+      expect(roadmap, `engine roadmap must not keep ${forbidden}`).not.toContain(forbidden);
+    }
+  });
+
+  it('keeps Lane A WE-HX planning language aligned with the hardcut posture', () => {
+    const lane = readRepoSource('docs/planning/state/agent-lane-a.yaml');
+
+    expect(lane).toContain(
+      'derive the full WorkflowEngine subsystem to a hardcut hexagonal architecture'
+    );
+    expect(lane).toContain('narrow WorkflowEngine to a facade over dedicated use-case services');
+    expect(lane).toContain('Queued after facade use-case narrowing.');
+
+    for (const forbidden of [
+      'compatibility-first',
+      'compatibility facade',
+      'Compatibility-facade',
+    ]) {
+      expect(lane, `Lane A must not keep ${forbidden}`).not.toContain(forbidden);
+    }
+  });
 });

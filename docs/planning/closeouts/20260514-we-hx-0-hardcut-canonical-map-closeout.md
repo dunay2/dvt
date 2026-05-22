@@ -1,7 +1,7 @@
 ---
 title: WE-HX-0 hardcut canonical map closeout
-status: Draft
-date: 2026-05-14
+status: Accepted
+date: 2026-05-22
 owner: codex
 ---
 
@@ -148,3 +148,14 @@ Verified baseline before implementation:
   `docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md`,
   `docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md`,
   `docs/guides/workflow-engine-user-manual.v1.md`.
+- Roadmap status:
+  `docs/architecture/components/engine/roadmap/engine-phases.md`.
+
+## Closeout Evidence
+
+- `WE-HX-0` is closed as a hardcut canonical-map slice, not a compatibility
+  migration.
+- The active engine roadmap marks `WE-HX-0` completed and names `WE-HX-2` as
+  facade use-case narrowing.
+- The semantic architecture guard now covers the roadmap posture in addition to
+  canonical component docs and run-control owned-concern headers.
