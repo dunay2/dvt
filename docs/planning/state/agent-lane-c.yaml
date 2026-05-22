@@ -704,7 +704,7 @@ tasks:
     last_verified: '2026-05-06'
   - task_id: AR-C5
     priority: P1
-    status: queued
+    status: done
     objective: >-
       implement adapter-call circuit breaking for Temporal-facing engine operations so adapter
       outages fail fast instead of exhausting timeout-only protection.
@@ -714,14 +714,21 @@ tasks:
       calls, emits breaker state metrics, and exposes breaker posture through health-check output.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c5-adapter-circuit-breaker-plan-20260512.md
+      - docs/planning/closeouts/20260512-ar-c5-adapter-circuit-breaker-closeout.md
+      - docs/evidence/ed-20260512-ar-c5-adapter-circuit-breaker.md
+      - docs/risk-register/quality/R-20260512-AR-C5-ADAPTER-CIRCUIT-BREAKER.yaml
+      - packages/@dvt/engine/src/adapters/CircuitBreakingProviderAdapter.ts
+      - packages/@dvt/engine/test/adapters/CircuitBreakingProviderAdapter.test.ts
+      - packages/@dvt/engine/test/architecture/adapterCircuitBreaker.architecture.test.ts
     status_reason: >-
-      Temporal activity state-store writes now flow through a circuit-breaker-wrapped command
-      port`r`n      with timeout protection and retryable fast-fail semantics; worker ops surfaces
-      expose breaker`r`n      posture and counters so degradation is explicit.`r`n    last_verified:
-      '2026-04-15'
+      Validated as already implemented: AR-C5 decorator, protected registry composition, health
+      posture, telemetry, architecture guard, evidence, risk entry, and closeout exist. Focused
+      engine tests and typecheck pass on 2026-05-22.
+    last_verified: '2026-05-22'
   - task_id: MW-C1
     priority: P0
     status: done
