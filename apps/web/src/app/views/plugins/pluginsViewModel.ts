@@ -55,6 +55,18 @@ export const pluginsViewCopy = {
   nodeKindsTitle: 'Node kinds',
   noCapabilities: 'No explicit capability declarations.',
   noNodeKinds: 'No node-kind registrations.',
+  searchPlaceholder: 'Search plugins, capabilities, node kinds',
+  backendFilterAll: 'All backend states',
+  backendFilterAvailable: 'Backend available',
+  backendFilterBlocked: 'Backend blocked',
+  backendFilterDegraded: 'Backend degraded',
+  backendFilterPending: 'Backend pending',
+  backendFilterNotRequired: 'Backend not required',
+  pluginColumn: 'Plugin',
+  backendColumn: 'Backend',
+  executableColumn: 'Executable',
+  routesColumn: 'Routes',
+  noPluginMatches: 'No plugin contributions match the current filters.',
 } as const;
 
 function formatEnvFlagValue(value: string | boolean | undefined): string {

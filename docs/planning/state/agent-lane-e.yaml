@@ -1815,7 +1815,7 @@ tasks:
       command-palette contributions, and plugin readiness semantics for frontend surfaces.
     complexity: S
     effort_points: 3
-    progress_pct: 50
+    progress_pct: 70
     evidence_refs:
       - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/README.md
       - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/03-target-product-grammar-and-flows.md
@@ -1827,13 +1827,19 @@ tasks:
       - apps/web/src/app/plugins/registry.ts
       - apps/web/src/app/views/PluginsView.tsx
       - apps/web/src/app/views/PluginsView.test.tsx
+      - apps/web/src/app/views/plugins/PluginCapabilityTable.tsx
+      - docs/architecture/components/web/plugins/plugin-capability-table-component.md
+      - docs/architecture/components/web/plugins/plugin-capability-table-user-stories.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/f25-plugin-capability-table-plan-20260522.md
+      - docs/planning/closeouts/20260522-f25-plugin-capability-table-closeout.md
     status_reason: >-
       The repo has strong technical plugin seams, and the professionalization bundle is now
       normalized in English across shell grammar, plugin docking, rollout, and wireframe docs.
       `PluginsView` now adopts the shared route frame and exposes route-level probe plus
       declared/frontend/backend/executable readiness states inside governed cards, so the contract
-      has a first live surface adoption. Remaining work is broader dock integration and denser
-      shared plugin capability surfaces.
+      has a first live surface adoption. The Plugins route now exposes a dense capability table with
+      search, backend-state filtering, selected detail, and a component guide. Remaining work is
+      broader dock integration, command-palette contribution grammar, and bottom diagnostics.
     definition_of_done:
       - allowed and forbidden plugin docks are documented against the stable shell grammar
       - proposed frontend contract extensions are named and scoped in active docs

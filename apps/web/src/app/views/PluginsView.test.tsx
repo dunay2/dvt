@@ -1,12 +1,14 @@
 // @vitest-environment jsdom
 
+import { fireEvent } from '@testing-library/dom';
 import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
-import React from 'react';
+import React, { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { RuntimeCapabilitiesDto } from '../../capabilities/runtime-capabilities/contracts/runtimeCapabilitiesDtos';
 import type { CapabilitiesPort } from '../ports/capabilities';
 import { AppServicesProvider } from '../services/AppServicesContext';
+import { resolveString } from '../plugins/contracts/PluginManifest';
 import { PLUGIN_REGISTRY } from '../plugins/registry';
 import { waitForReactQuery, withTestQueryClient } from '../../testing/reactQueryHarness';
 import PluginsView from './PluginsView';
@@ -85,7 +87,7 @@ describe('PluginsView', () => {
     const routeFrame = mounted.container.querySelector('[data-slot="route-workbench-frame"]');
     const headerBand = mounted.container.querySelector('[data-slot="plugins-view-header-band"]');
     const probeCard = mounted.container.querySelector('[data-slot="plugins-capability-probe"]');
-    const pluginCards = mounted.container.querySelectorAll('[data-slot="plugin-card"]');
+    const pluginCards = mounted.container.querySelectorAll('[data-slot="plugin-capability-row"]');
     const backendPlugin = PLUGIN_REGISTRY.find((plugin) => plugin.backendPluginId);
 
     expect(mounted.container.textContent).toContain('Plugins');
@@ -106,7 +108,7 @@ describe('PluginsView', () => {
 
     if (backendPlugin) {
       const card = mounted.container.querySelector(
-        `[data-slot="plugin-card"][data-plugin-id="${backendPlugin.id}"]`
+        `[data-slot="plugin-capability-row"][data-plugin-id="${backendPlugin.id}"]`
       );
 
       expect(card?.textContent).toContain('Available');
@@ -133,7 +135,7 @@ describe('PluginsView', () => {
 
     if (backendPlugin) {
       const card = mounted.container.querySelector(
-        `[data-slot="plugin-card"][data-plugin-id="${backendPlugin.id}"]`
+        `[data-slot="plugin-capability-row"][data-plugin-id="${backendPlugin.id}"]`
       );
 
       expect(card?.textContent).toContain('Pending');
@@ -165,13 +167,15 @@ describe('PluginsView', () => {
     await waitForReactQuery(
       () =>
         mounted?.container
-          .querySelector(`[data-slot="plugin-card"][data-plugin-id="${backendPlugin.id}"]`)
+          .querySelector(
+            `[data-slot="plugin-capability-row"][data-plugin-id="${backendPlugin.id}"]`
+          )
           ?.textContent?.includes('Unknown') === true,
       { description: 'plugin missing backend capability render' }
     );
 
     const card = mounted.container.querySelector(
-      `[data-slot="plugin-card"][data-plugin-id="${backendPlugin.id}"]`
+      `[data-slot="plugin-capability-row"][data-plugin-id="${backendPlugin.id}"]`
     );
 
     expect(card?.textContent).toContain('Unknown');
@@ -207,17 +211,29 @@ describe('PluginsView', () => {
     await waitForReactQuery(
       () =>
         mounted?.container
-          .querySelector(`[data-slot="plugin-card"][data-plugin-id="${backendPlugin.id}"]`)
+          .querySelector(
+            `[data-slot="plugin-capability-row"][data-plugin-id="${backendPlugin.id}"]`
+          )
           ?.textContent?.includes('Blocked') === true,
       { description: 'plugin blocked backend capability render' }
     );
 
     const card = mounted.container.querySelector(
-      `[data-slot="plugin-card"][data-plugin-id="${backendPlugin.id}"]`
+      `[data-slot="plugin-capability-row"][data-plugin-id="${backendPlugin.id}"]`
     );
 
     expect(card?.textContent).toContain('Blocked');
-    expect(card?.textContent).toContain('disabled in backend');
+    await act(async () => {
+      fireEvent.click(card!);
+    });
+
+    await waitForReactQuery(
+      () =>
+        mounted?.container
+          .querySelector('[data-slot="plugin-capability-detail"]')
+          ?.textContent?.includes('disabled in backend') === true,
+      { description: 'plugin blocked backend detail render' }
+    );
   });
 
   it('renders degraded readiness when the capability probe fails', async () => {
@@ -244,11 +260,107 @@ describe('PluginsView', () => {
 
     if (backendPlugin) {
       const card = mounted.container.querySelector(
-        `[data-slot="plugin-card"][data-plugin-id="${backendPlugin.id}"]`
+        `[data-slot="plugin-capability-row"][data-plugin-id="${backendPlugin.id}"]`
       );
 
       expect(card?.textContent).toContain('Probe unavailable');
       expect(card?.textContent).toContain('Degraded');
     }
+  });
+
+  it('filters the plugin capability table by search text', async () => {
+    const [firstPlugin, secondPlugin] = PLUGIN_REGISTRY;
+
+    if (!firstPlugin || !secondPlugin) {
+      return;
+    }
+
+    const capabilitiesPort: CapabilitiesPort = {
+      loadCapabilities: vi.fn().mockResolvedValue(buildCapabilitiesPayload()),
+    };
+
+    mounted = await withTestQueryClient(
+      <AppServicesProvider overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
+        <PluginsView />
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(
+      () =>
+        mounted?.container
+          .querySelector('[data-slot="plugins-capability-probe"]')
+          ?.textContent?.includes('Available') === true,
+      { description: 'plugin capability probe success render' }
+    );
+
+    const searchInput = mounted.container.querySelector<HTMLInputElement>(
+      '[data-slot="plugin-catalog-search"]'
+    );
+
+    expect(searchInput).not.toBeNull();
+
+    await act(async () => {
+      fireEvent.input(searchInput!, {
+        target: { value: resolveString(secondPlugin.displayName).toLowerCase() },
+      });
+    });
+
+    const table = mounted.container.querySelector('[data-slot="plugin-capability-table"]');
+
+    expect(table?.textContent).toContain(resolveString(secondPlugin.displayName));
+    expect(table?.textContent).not.toContain(resolveString(firstPlugin.displayName));
+  });
+
+  it('filters the plugin capability table by backend blocked state and keeps detail aligned', async () => {
+    const backendPlugin = PLUGIN_REGISTRY.find((plugin) => plugin.backendPluginId);
+
+    if (!backendPlugin?.backendPluginId) {
+      return;
+    }
+
+    const capabilitiesPort: CapabilitiesPort = {
+      loadCapabilities: vi.fn().mockResolvedValue(
+        buildCapabilitiesPayload({
+          overrides: {
+            [backendPlugin.backendPluginId]: {
+              available: false,
+              reason: 'disabled in backend',
+            },
+          },
+        })
+      ),
+    };
+
+    mounted = await withTestQueryClient(
+      <AppServicesProvider overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
+        <PluginsView />
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(
+      () =>
+        mounted?.container
+          .querySelector('[data-slot="plugin-capability-table"]')
+          ?.textContent?.includes('Blocked') === true,
+      { description: 'plugin capability table blocked render' }
+    );
+
+    const backendFilter = mounted.container.querySelector<HTMLSelectElement>(
+      '[data-slot="plugin-backend-state-filter"]'
+    );
+
+    expect(backendFilter).not.toBeNull();
+
+    await act(async () => {
+      fireEvent.change(backendFilter!, { target: { value: 'blocked' } });
+    });
+
+    const rows = mounted.container.querySelectorAll('[data-slot="plugin-capability-row"]');
+    const detail = mounted.container.querySelector('[data-slot="plugin-capability-detail"]');
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.textContent).toContain(resolveString(backendPlugin.displayName));
+    expect(detail?.textContent).toContain(resolveString(backendPlugin.displayName));
+    expect(detail?.textContent).toContain('disabled in backend');
   });
 });

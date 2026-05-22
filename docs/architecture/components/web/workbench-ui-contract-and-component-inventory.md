@@ -437,7 +437,7 @@ Main screen composition:
 | Component               | Responsibility                | Status  |
 | ----------------------- | ----------------------------- | ------- |
 | `PluginsWorkbench`      | Installed plugin inspection   | Current |
-| `PluginCapabilityTable` | plugin availability and state | Needed  |
+| `PluginCapabilityTable` | plugin availability and state | Current |
 | `AdminWorkbench`        | administrative route shell    | Current |
 | `AdminSectionLayout`    | shared admin section layout   | Needed  |
 
