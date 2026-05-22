@@ -171,6 +171,7 @@ allowedImplementationSurfaces:
   - docs/architecture/components/engine/adapters/state-store/postgres/run-events-partitioning-user-stories.md
   - docs/evidence/ed-20260513-run-events-hash-partitioning.md
   - docs/risk-register/quality/R-20260513-RUN-EVENTS-HASH-PARTITIONING.yaml
+  - docs/planning/state/agent-lane-d.yaml
   - docs/**/index.md
   - docs/.manifest.json
   - docs/planning/status/generated-code-state.md
