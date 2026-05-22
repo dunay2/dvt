@@ -414,7 +414,7 @@ tasks:
   - task_id: CFG-TS-T1
     parent_task: AR-C1
     priority: P2
-    status: in_progress
+    status: done
     objective: >-
       produce a staged migration plan for TypeScript `baseUrl` deprecation covering inventory,
       compatibility risks, rollout waves, and rollback points before any config change lands.
@@ -424,15 +424,16 @@ tasks:
       validation baseline (`typecheck`, tests, `verify:prepush`) for each wave.
     complexity: M
     effort_points: 5
-    progress_pct: 65
+    progress_pct: 100
     evidence_refs:
-      - tsconfig.node-runtime.base.json
-      - tsconfig.package-bundler.base.json
-      - apps/web/tsconfig.json
+      - docs/planning/proposals/mandatory/runtime-and-contracts/cfg-ts-t1-baseurl-deprecation-migration-plan-20260522.md
+      - docs/planning/closeouts/20260522-cfg-ts-t1-baseurl-deprecation-plan-closeout.md
+      - docs/architecture/typescript-package-classification.md
     status_reason: >-
-      `baseUrl` deprecation warnings are visible in editor/runtime configs; implementation should be
-      gated behind an explicit migration plan to avoid module-resolution regressions.
-    last_verified: '2026-04-03'
+      Canonical baseUrl deprecation migration plan added; active tsconfig inventory has no
+      compilerOptions.baseUrl and remaining paths risk is routed into staged
+      package-boundary/runtime/web validation work.
+    last_verified: '2026-05-22'
   - task_id: AR-C2
     priority: P0
     status: blocked
