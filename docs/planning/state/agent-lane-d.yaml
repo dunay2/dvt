@@ -455,7 +455,7 @@ tasks:
     last_verified: '2026-04-02'
   - task_id: AR-D6
     priority: P2
-    status: queued
+    status: done
     objective: >-
       assess triple versioning (planVersion + schemaVersion + contractVersion) governance burden
       after 6 months — if still only planVersion '1.0', evaluate whether the overhead is justified
@@ -466,13 +466,19 @@ tasks:
       simplify, or defer is recorded as an ADR addendum.
     complexity: S
     effort_points: 1
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/planning/proposals/mandatory/governance-and-docs/ar-d6-triple-versioning-governance-review-plan-20260513.md
+      - docs/planning/reviews/architecture-and-governance/20260513-ar-d6-triple-versioning-governance-review.md
+      - docs/adr/ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md
     status_reason: >-
-      Triple versioning is justified as pre-investment but should be re-evaluated if only one
-      version exists after 6 months.
-    last_verified: '2026-04-02'
+      AR-D6 is closed by the accepted 2026-05-13 governance review and ADR-0036 addendum: retain
+      separate planVersion, schemaVersion, and contractVersion governance for now, because
+      schemaVersion is part of executable admission, contractVersion records the shared-kernel
+      contract line, and only planVersion 1.0 being active is intentional rather than drift.
+      Simplification is deferred to a later checkpoint or real version-line change.
+    last_verified: '2026-05-22'
   - task_id: AR-D7
     priority: P1
     status: done
