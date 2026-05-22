@@ -34,21 +34,17 @@ bootstrap/export snapshots.
 
 ### `API and Admission`
 
-- Current objective: keep the shipped preview-persist boundary truthful and use
-  it as the fixed ingress while `TF-C3` closes the remaining rollout and
-  acceptance prerequisites for the now-landed plugin-backed dbt runtime path,
-  without allowing compile-time and admission-time adapter truth to drift apart
-  again.
-- Active task IDs: `TF-C3`, `TF-C3-E`
+- Current objective: keep the shipped preview-persist boundary truthful now that
+  `TF-C3` has closed the plugin-backed dbt runtime path, without allowing
+  compile-time and admission-time adapter truth to drift apart again.
+- Active task IDs: none
 - Roadmap lane affected: [API and Admission lane](../roadmap/roadmap-by-domain.md)
-- Primary blockers: the SQL-first preview-persist boundary is now closed in
-  code and planning. `TF-C3` now includes shared artifact-backed reader
-  convergence, a standalone `apps/temporal-worker` composition root, and an
-  adapter-owned DBT CLI host behind `DbtPluginRunner`, so the remaining
-  blockers are rollout/runbook acceptance and environment proof for that worker
-  path plus the broader runtime-boundary hardening tracked in `WE-HX`. The
-  plan-compile seam now reuses the canonical `startRun` adapter set, but
-  broader shared provider vocabulary still needs repo-level cleanup.
+- Primary blockers: the SQL-first preview-persist boundary and plugin-backed
+  dbt runtime path are now closed in code and planning. `TF-C3` includes shared
+  artifact-backed reader convergence, a standalone `apps/temporal-worker`
+  composition root, an adapter-owned DBT CLI host behind `DbtPluginRunner`, and
+  accepted DBT-enabled worker canary evidence. Remaining runtime-boundary
+  hardening is tracked outside this domain row.
 
 ### `Planner and Contracts`
 

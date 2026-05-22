@@ -96,6 +96,10 @@ allowedImplementationSurfaces:
   - docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
   - docs/runbooks/temporal-worker-scaling-operations.md
   - docs/architecture/components/engine/adapters/temporal/temporal-worker-scaling-strategy.md
+  - docs/planning/closeouts/**
+  - docs/planning/roadmap/strategic-product-roadmap.md
+  - docs/planning/roadmap/roadmap-by-domain.md
+  - docs/planning/state/domain-status-board.md
   - apps/temporal-worker/package.json
   - apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
   - docs/planning/state/agent-lane-c.yaml
