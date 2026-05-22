@@ -82,6 +82,7 @@ export const WEB_VITEST_SUITES: Record<WebVitestSuiteName, WebVitestSuiteDefinit
       'src/app/views/artifacts/ArtifactMonacoPreviewPanel.test.tsx',
       'src/app/views/artifacts/artifactsMonacoReadonlyViewer.architecture.test.ts',
       'src/app/views/diff/diffMonacoReviewSurface.architecture.test.ts',
+      'src/app/components/monaco/monacoBundleIsolation.architecture.test.ts',
       'src/app/components/monaco/**/*.{test,spec}.{ts,tsx}',
     ],
     exclude: WEB_VITEST_DEFAULT_EXCLUDE,
@@ -365,7 +366,10 @@ function isMonacoFocusPath(filePath: string): boolean {
     filePath === 'src/app/views/artifacts/ArtifactMonacoPreviewPanel.tsx' ||
     filePath === 'src/app/views/artifacts/ArtifactMonacoPreviewPanel.test.tsx' ||
     filePath === 'src/app/views/artifacts/artifactsMonacoReadonlyViewer.architecture.test.ts' ||
-    filePath === 'src/app/views/diff/diffMonacoReviewSurface.architecture.test.ts'
+    filePath === 'src/app/views/diff/diffMonacoReviewSurface.architecture.test.ts' ||
+    filePath === 'src/app/components/monaco/monacoBundleIsolation.architecture.test.ts' ||
+    filePath === 'vite.manualChunks.ts' ||
+    filePath === 'vite.config.ts'
   );
 }
 
