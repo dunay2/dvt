@@ -20,13 +20,16 @@ import type {
   NodeRendererRegistration,
 } from './contracts/NodeRendering';
 import type {
+  BottomDiagnosticsContribution,
   CanvasWorkbenchTabPlacement,
+  CommandPaletteContribution,
   InspectorContext,
   InspectorPanelContribution,
   LocalizableString,
   PluginCapabilityId,
   PluginConnectionRule,
   PluginDataPort,
+  RouteHeaderContribution,
   ShellNavigationPlacement,
   ViewContribution,
 } from './contracts/PluginManifest';
@@ -54,6 +57,9 @@ export type PluginContributions = {
   capabilities?: PluginCapabilityId[];
 
   views?: ViewContribution[];
+  routeHeaderContributions?: RouteHeaderContribution[];
+  commandPaletteContributions?: CommandPaletteContribution[];
+  bottomDiagnosticsContributions?: BottomDiagnosticsContribution[];
   overlays?: CanvasOverlayContribution[];
   inspectorPanels?: InspectorPanelContribution[];
   nodeBadges?: NodeBadgeContribution[];
@@ -161,6 +167,10 @@ export function getAllViews(capabilities?: RuntimeCapabilities): ViewContributio
   return getRuntimePlugins(capabilities).flatMap((p) => p.views ?? []);
 }
 
+function compareByOrder<T extends { order: number }>(a: T, b: T): number {
+  return a.order - b.order;
+}
+
 export type RouteViewContribution = ViewContribution & {
   path: string;
   handle: AppRouteHandle;
@@ -202,6 +212,30 @@ export function getCanvasWorkbenchTabViews(
         view.placement?.kind === 'workbench-tab' && view.placement.workbench === 'canvas'
     )
     .sort((a, b) => a.placement.order - b.placement.order);
+}
+
+export function getRouteHeaderContributions(
+  capabilities?: RuntimeCapabilities
+): RouteHeaderContribution[] {
+  return getRuntimePlugins(capabilities)
+    .flatMap((plugin) => plugin.routeHeaderContributions ?? [])
+    .sort(compareByOrder);
+}
+
+export function getCommandPaletteContributions(
+  capabilities?: RuntimeCapabilities
+): CommandPaletteContribution[] {
+  return getRuntimePlugins(capabilities)
+    .flatMap((plugin) => plugin.commandPaletteContributions ?? [])
+    .sort(compareByOrder);
+}
+
+export function getBottomDiagnosticsContributions(
+  capabilities?: RuntimeCapabilities
+): BottomDiagnosticsContribution[] {
+  return getRuntimePlugins(capabilities)
+    .flatMap((plugin) => plugin.bottomDiagnosticsContributions ?? [])
+    .sort(compareByOrder);
 }
 
 export function getDefaultCoreViewPath(capabilities?: RuntimeCapabilities): string {

@@ -1800,7 +1800,7 @@ tasks:
     last_verified: '2026-05-22'
   - task_id: F-25
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
       formalize the plugin UX integration contract and governed docks so plugin contributions extend
       the shell predictably instead of deforming route chrome or inventing local integration rules.
@@ -1811,7 +1811,7 @@ tasks:
       command-palette contributions, and plugin readiness semantics for frontend surfaces.
     complexity: S
     effort_points: 3
-    progress_pct: 70
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/README.md
       - docs/planning/proposals/dvt-product-ux-professionalization-bundle-20260409/docs/03-target-product-grammar-and-flows.md
@@ -1828,20 +1828,22 @@ tasks:
       - docs/architecture/components/web/plugins/plugin-capability-table-user-stories.md
       - docs/planning/proposals/mandatory/frontend-and-ux/f25-plugin-capability-table-plan-20260522.md
       - docs/planning/closeouts/20260522-f25-plugin-capability-table-closeout.md
+      - docs/architecture/components/web/plugins/plugin-ux-integration-contract.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/f25-plugin-ux-contract-docks-plan-20260522.md
+      - docs/planning/closeouts/20260522-f25-plugin-ux-contract-closeout.md
     status_reason: >-
-      The repo has strong technical plugin seams, and the professionalization bundle is now
-      normalized in English across shell grammar, plugin docking, rollout, and wireframe docs.
-      `PluginsView` now adopts the shared route frame and exposes route-level probe plus
-      declared/frontend/backend/executable readiness states inside governed cards, so the contract
-      has a first live surface adoption. The Plugins route now exposes a dense capability table with
-      search, backend-state filtering, selected detail, and a component guide. Remaining work is
-      broader dock integration, command-palette contribution grammar, and bottom diagnostics.
+      F-25 parent closure is accepted: the Plugins route now exposes a dense capability table, and
+      plugin route-header, command-palette, and bottom-diagnostics contribution docks are explicit
+      manifest types with runtime-filtered registry query rails, Monitoring seed contributions,
+      component documentation, architecture guards, closeouts, and validation evidence. Future
+      visible renderers for command palette or diagnostics must consume these rails instead of
+      reopening the parent contract.
     definition_of_done:
       - allowed and forbidden plugin docks are documented against the stable shell grammar
       - proposed frontend contract extensions are named and scoped in active docs
       - plugin readiness and availability states are tied to user-facing surfaces
       - downstream plugin workbench slices reference this contract instead of inventing local chrome
-    last_verified: '2026-04-10'
+    last_verified: '2026-05-22'
   - task_id: F-26
     priority: P0
     status: done

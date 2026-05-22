@@ -82,6 +82,41 @@ export const monitoringContributions: PluginContributions = {
     },
   ],
 
+  routeHeaderContributions: [
+    {
+      id: 'monitoring.runs.status',
+      pluginId: MONITORING_PLUGIN_ID,
+      routeId: 'runs',
+      label: 'Runtime status',
+      icon: Activity,
+      order: 20,
+      slot: 'status',
+    },
+  ],
+
+  commandPaletteContributions: [
+    {
+      id: 'monitoring.open-runs',
+      pluginId: MONITORING_PLUGIN_ID,
+      title: 'Open runs',
+      keywords: ['runtime', 'execution', 'monitoring'],
+      order: 20,
+      routeId: 'runs',
+      onSelect: () => undefined,
+    },
+  ],
+
+  bottomDiagnosticsContributions: [
+    {
+      id: 'monitoring.run-events',
+      pluginId: MONITORING_PLUGIN_ID,
+      label: 'Run events',
+      order: 20,
+      kind: 'events',
+      routeId: 'runs',
+    },
+  ],
+
   // ---- Overlays ------------------------------------------------------------
 
   overlays: [

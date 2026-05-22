@@ -2,11 +2,14 @@ import { describe, expect, it } from 'vitest';
 
 import type { BadgeContext } from './contracts/NodeRendering';
 import {
+  getBottomDiagnosticsContributions,
+  getCommandPaletteContributions,
   getAllOverlays,
   getNodeBadges,
   getRuntimePlugins,
   PLUGIN_REGISTRY,
   getPluginPortMap,
+  getRouteHeaderContributions,
   type RuntimeCapabilities,
 } from './registry';
 import type { CanonicalNode } from '../types/canonical';
@@ -85,5 +88,23 @@ describe('plugin runtime projection', () => {
     );
 
     expect(badges).toEqual([]);
+  });
+
+  it('projects governed UX dock contributions through dedicated runtime rails', () => {
+    const capabilities = buildRuntimeCapabilities('monitoring');
+
+    expect(getRouteHeaderContributions().map((contribution) => contribution.id)).toContain(
+      'monitoring.runs.status'
+    );
+    expect(getCommandPaletteContributions().map((contribution) => contribution.id)).toContain(
+      'monitoring.open-runs'
+    );
+    expect(getBottomDiagnosticsContributions().map((contribution) => contribution.id)).toContain(
+      'monitoring.run-events'
+    );
+
+    expect(getRouteHeaderContributions(capabilities)).toEqual([]);
+    expect(getCommandPaletteContributions(capabilities)).toEqual([]);
+    expect(getBottomDiagnosticsContributions(capabilities)).toEqual([]);
   });
 });
