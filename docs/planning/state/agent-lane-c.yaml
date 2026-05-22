@@ -388,7 +388,7 @@ tasks:
   - task_id: AR-C1-T4
     parent_task: AR-C1
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
       extract a shared API-test snapshot fixture helper so admin/runtime tests stop embedding local
       WorkflowSnapshot builders.
@@ -398,13 +398,19 @@ tasks:
       construction in admin route coverage.
     complexity: S
     effort_points: 2
-    progress_pct: 20
+    progress_pct: 100
     evidence_refs:
+      - apps/api/test/fixtures/workflowSnapshotFixture.ts
+      - apps/api/test/architecture/workflowSnapshotFixtureSemantics.architecture.test.ts
       - apps/api/test/entrypoints/http/adminRoutes.test.ts
-      - apps/api/test/integration/protectedRuntime.integration.test.ts
+      - apps/api/test/contracts/adminRebuildSnapshotAccessContract.test.ts
+      - buzon/20260514-codex-fowler-ar-c1-t4-snapshot-fixture-analysis.md
+      - docs/planning/closeouts/20260522-ar-c1-t4-api-snapshot-fixture-closeout.md
     status_reason: >-
-      Snapshot fixture duplication is small but recurring and creates avoidable maintenance drift.
-    last_verified: '2026-04-03'
+      Validated as already implemented: canonical admin rebuild workflow snapshot fixture exists,
+      admin route and contract tests use it, semantic architecture guard passes, and API validation
+      gates passed on 2026-05-22.
+    last_verified: '2026-05-22'
   - task_id: CFG-TS-T1
     parent_task: AR-C1
     priority: P2
