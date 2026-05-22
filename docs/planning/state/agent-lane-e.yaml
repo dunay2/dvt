@@ -715,7 +715,7 @@ tasks:
     last_verified: '2026-04-13'
   - task_id: F-05
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       close store domain ownership after the former appStore surface was removed, reconciling active
       docs, Lane E tracking, and the remaining mixed store fields in session, Canvas, execution,
@@ -728,24 +728,17 @@ tasks:
       either removed or captured as a governed follow-up.
     complexity: M
     effort_points: 5
-    progress_pct: 70
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/proposals/frontend-roadmap-20260219.md
-      - docs/planning/state/lane-e-shell-baseline-target-guide.md
-      - docs/architecture/components/web/graph/canvas-controller-current-to-target-architecture.md
-      - docs/planning/proposals/nice-to-have/frontend-and-ux/canvas-controller-document-first-hard-gate-20260404.md
-      - docs/planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md
-      - apps/web/src/app/stores/sessionStore.ts
-      - apps/web/src/app/stores/canvasInteractionStore.ts
-      - apps/web/src/app/stores/executionStore.ts
-      - apps/web/src/app/stores/uiLayoutStore.ts
+      - docs/planning/closeouts/20260514-f05-store-domain-ownership-closeout.md
+      - buzon/20260515-codex-fowler-f05-store-domain-ownership-hard-review.md
+      - docs/architecture/components/web/web-store-domain-ownership-component.md
+      - apps/web/src/app/stores/webStoreDomainOwnership.architecture.test.ts
     status_reason: >-
-      `appStore.ts` is no longer present in active `apps/web` code and architecture tests guard
-      against its return. The live F-05 gap is now truth reconciliation plus the remaining mixed
-      store fields: `uiLayoutStore.connectionStatus` carries platform status under shell layout, and
-      `executionStore` still combines current run/plan evidence with permission projection. The
-      2026-05-03 closure plan defines the governed sequence before implementation changes.
-    last_verified: '2026-05-03'
+      Reconciled frontend route after accepted closeout and hard-review evidence: F-05 store-domain
+      ownership is closed, the former appStore surface remains absent, and the remaining ownership
+      rules are guarded by the web store domain architecture test.
+    last_verified: '2026-05-22'
   - task_id: F-05-CANVAS-CTRL-DOC
     parent_task: F-05
     priority: P0
@@ -860,7 +853,7 @@ tasks:
     last_verified: '2026-04-08'
   - task_id: F-06
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       standardize TanStack Query query and mutation boundaries for health, workspace, run, and
       operator-facing views.
@@ -870,18 +863,17 @@ tasks:
       defining ad-hoc data orchestration where capability or service wrappers should exist.
     complexity: M
     effort_points: 5
-    progress_pct: 25
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/proposals/frontend-roadmap-20260219.md
-      - docs/planning/state/lane-e-shell-baseline-target-guide.md
-      - apps/web/src/app/Root.tsx
-      - apps/web/src/capabilities/platform-health/presentation/usePlatformHealthSnapshotQuery.ts
-      - apps/web/src/app/views/RunsView.tsx
-      - apps/web/src/app/views/canvas/useCanvasController.ts
+      - docs/planning/proposals/mandatory/frontend-and-ux/f06-frontend-query-boundary-standardization-plan-20260514.md
+      - docs/architecture/components/web/frontend-query-boundary-component.md
+      - docs/planning/closeouts/20260515-f06-frontend-query-boundary-standardization-closeout.md
+      - buzon/20260514-codex-fowler-f06-query-boundary-analysis.md
     status_reason: >-
-      TanStack Query is already installed and used across health, canvas, runs, diff, lineage, and
-      admin, but query keys, mutation boundaries, and invalidation rules are still inconsistent.
-    last_verified: '2026-04-03'
+      Reconciled frontend route after accepted query-boundary evidence: F-06 query key, mutation
+      ownership, and invalidation standardization is closed by the mandatory plan, component guide,
+      closeout, and Fowler analysis.
+    last_verified: '2026-05-22'
   - task_id: F-06-A
     parent_task: F-06
     priority: P0
@@ -1148,7 +1140,7 @@ tasks:
     last_verified: '2026-04-03'
   - task_id: F-09
     priority: P1
-    status: in_progress
+    status: done
     objective:
       wire RunsView to real GET /runs and GET /runs/:id data - list, detail, and status polling.
     dependency: F-06, F-07
@@ -1157,25 +1149,21 @@ tasks:
       when available. Empty states, loading, and error states are implemented.
     complexity: M
     effort_points: 5
-    progress_pct: 80
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/proposals/frontend-roadmap-20260219.md
       - apps/web/src/app/views/RunsView.tsx
       - apps/web/src/app/views/runs/useRunWorkspace.ts
-      - apps/web/src/app/components/workbench/state/WorkbenchStates.tsx
       - apps/web/src/app/queries/runsQueries.ts
-      - apps/web/src/app/services/runs/runWorkspaceFacade.ts
+      - apps/web/src/app/views/runs/useRunWorkspace.test.tsx
+      - docs/planning/proposals/mandatory/frontend-and-ux/f06-frontend-query-boundary-standardization-plan-20260514.md
     status_reason: >-
-      RunsView now consumes real run list and run-detail surfaces via scoped summaries query plus
-      `RunWorkspaceFacade` over governed runtime reads, the route chooses explicit workbench states
-      for list-error, empty, loading, missing, focused-run error, and workspace treatment, and those
-      route states now seed shared workbench state primitives instead of remaining fully route-local
-      chrome. Remaining closure is status-refresh policy, broader primitive adoption, and final
-      acceptance of polling/SSE behavior rather than missing runtime wiring.
-    last_verified: '2026-04-13'
+      Runs list/detail already use governed runtime reads; status-refresh policy is implemented for
+      pending and running runs and stops on terminal statuses, with route tests and query-boundary
+      evidence proving the behavior.
+    last_verified: '2026-05-22'
   - task_id: F-10
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
       implement a run event timeline using GET /runs/:id/events (polling or SSE) and unify the
       Console with real log output.
@@ -1185,20 +1173,15 @@ tasks:
       across reconnects. Log entries have timestamp, step, and severity.
     complexity: M
     effort_points: 5
-    progress_pct: 70
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/proposals/frontend-roadmap-20260219.md
-      - docs/architecture/components/web/appshell/app-shell.md
-      - docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md
-      - apps/web/src/app/components/console/useConsoleLogStream.ts
-      - apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
-      - apps/web/src/app/services/runs/runEventPresentationModel.ts
+      - PR #1266
+      - merge commit 9dfedea3
+      - commit 8d5f0f21
     status_reason: >-
-      Console and Runs timeline now consume real `GET /runs/:runId/events` surfaces, and log lines
-      already carry timestamp, severity, and step identity for the active run. Remaining closure is
-      durable reconnect or live-refresh guarantees across both surfaces, typed live-log behavior,
-      and final convergence UX rather than runtime contract availability.
-    last_verified: '2026-04-13'
+      Merged PR #1266 with merge commit 9dfedea3 after resolving review cursor feedback; the Runs
+      timeline and Console consume the governed run-event surface with ordered event presentation.
+    last_verified: '2026-05-22'
   - task_id: F-11
     priority: P2
     status: blocked
@@ -1221,7 +1204,7 @@ tasks:
     last_verified: '2026-04-03'
   - task_id: F-12
     priority: P1
-    status: queued
+    status: done
     objective: >-
       retire the legacy GraphCanvas path and converge graph rendering on CanvasShell,
       useCanvasController, and the plugin graph strategy boundary.
@@ -1231,15 +1214,17 @@ tasks:
       path is singular and the documentation references only the active graph stack.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
-      - apps/web/src/app/components/GraphCanvas.tsx
-      - apps/web/src/app/views/Canvas.tsx
-      - apps/web/src/app/views/canvas/useCanvasController.ts
+      - PR #1269
+      - merge commit 1fff700e
+      - fix commit dadda1e4
+      - resolved review thread PRRT_kwDORMXeM86C52zr
     status_reason: >-
-      The current canvas route already uses CanvasShell and useCanvasController, but a dead legacy
-      GraphCanvas implementation is still present and keeps the architecture ambiguous.
-    last_verified: '2026-04-03'
+      Merged PR #1269 after resolving the blocking mailbox-link review thread; the legacy
+      GraphCanvas path is retired from the active Canvas route and the singular canvas stack is
+      governed by CanvasShell and useCanvasController.
+    last_verified: '2026-05-22'
   - task_id: F-13
     priority: P1
     status: done
@@ -1276,7 +1261,7 @@ tasks:
     last_verified: '2026-05-14'
   - task_id: F-14
     priority: P1
-    status: queued
+    status: done
     objective: >-
       add a governed frontend test command and CI lane for the existing @dvt/web test files, and
       make frontend test-only infrastructure visible as test support rather than production source.
@@ -1288,22 +1273,18 @@ tasks:
       infrastructure.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
-      - apps/web/package.json
-      - apps/web/vitest.config.ts
-      - apps/web/src/testing/reactQueryHarness.test.tsx
-      - docs/architecture/components/web/index.md
-      - docs/planning/status/generated-code-state.md
+      - https://github.com/dunay2/dvt/pull/1273
+      - https://github.com/dunay2/dvt/actions/runs/26052077955
+      - https://github.com/dunay2/dvt/actions/runs/26052074208
     status_reason: >-
-      Local frontend test files exist, but no declared workspace test command or dedicated CI lane
-      currently proves them, and test-support files such as harnesses still risk inflating source
-      inventory because the workspace does not yet enforce one governed placement or classification
-      convention for frontend test infrastructure.
-    last_verified: '2026-04-19'
+      Merged PR #1273 on 2026-05-18; Web Frontend Tests, PR Quality Checks, Run Tests, CodeQL,
+      Dependency Review, and CI checks passed on head 0f63b44b/f2e7d939.
+    last_verified: '2026-05-22'
   - task_id: F-15
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
       define and implement the workbench UX contract so the frontend converges on a VS Code-like
       shell grammar without cloning an IDE.
@@ -1314,19 +1295,24 @@ tasks:
       composition behave consistently across Canvas, Runs, Lineage, Diff, and Artifacts.
     complexity: M
     effort_points: 5
-    progress_pct: 30
+    progress_pct: 100
     evidence_refs:
-      - docs/architecture/components/web/main-workspace-views-and-ux.md
-      - docs/architecture/components/web/ux-implementation-guide.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/f15-route-workbench-frame-semantic-slots-plan-20260521.md
+      - docs/architecture/components/web/route-workbench-frame-component.md
+      - docs/architecture/components/web/route-workbench-frame-user-stories.md
+      - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
+      - apps/web/src/app/components/workbench/RouteWorkbenchFrame.tsx
+      - apps/web/src/app/components/workbench/RouteWorkbenchFrame.architecture.test.tsx
     status_reason: >-
-      The workbench UX contract is now documented across the frontend entrypoint, workspace-view
-      map, and implementation guide, but the shell still does not enforce all panel and recovery
-      rules in code.
-    last_verified: '2026-04-03'
+      RouteWorkbenchFrame now exposes the no-legacy semantic slot API, direct route consumers are
+      migrated to slots, and the component guide, user stories, feature mechanization, architecture
+      guard, route tests, typecheck, and governance refresh evidence close the workbench UX
+      contract.
+    last_verified: '2026-05-22'
   - task_id: F-15-D
     parent_task: F-15
     priority: P1
-    status: queued
+    status: done
     objective: >-
       Resolve the workbench left-navigation rail disposition so the Canvas workbench follows the
       accepted no-permanent-left-rail shell specification without clipping footer navigation or
@@ -1335,17 +1321,18 @@ tasks:
     target: Workbench shell / Canvas route navigation disposition
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
-      - buzon/20260516-codex-fowler-element-workbench-navigation-rail-disposition.md
+      - commit c225e142
+      - commit 41c5a7d8
+      - pnpm verify:prepush
     status_reason: >-
-      The current Canvas screenshot shows a permanent left navigation rail even though the newer
-      workbench UX specification says no permanent left rail in the workbench, and the footer is
-      visibly clipped.
-    last_verified: '2026-05-16'
+      Implemented shell navigation disposition, documented mechanization, and passed prepush on
+      codex/f15d-workbench-rail-disposition.
+    last_verified: '2026-05-22'
   - task_id: F-16
     priority: P1
-    status: queued
+    status: done
     objective: >-
       introduce dense operational tables where card layouts stop scaling, starting with Runs and
       event-heavy operational views.
@@ -1355,14 +1342,15 @@ tasks:
       with sortable columns, empty/loading/error states, and URL-stable filters.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
-      - docs/architecture/components/web/ux-implementation-guide.md
-      - docs/architecture/components/web/runs/dvt-runs-frontend-architecture.md
+      - https://github.com/dunay2/dvt/pull/1276
+      - docs/planning/closeouts/20260518-f16-dense-operational-tables-closeout.md
+      - buzon/20260518-f16-fowler-dense-operational-tables-analysis.md
     status_reason: >-
-      The current card-based runs UX is acceptable for early slices but will not scale to denser
-      operator workflows, and no delivery slice exists yet for the table upgrade.
-    last_verified: '2026-04-03'
+      Merged PR #1276 on 2026-05-18; dense operational run tables landed on main at dc3b47df with CI
+      green.
+    last_verified: '2026-05-22'
   - task_id: F-17
     priority: P1
     status: in_progress
@@ -1428,7 +1416,7 @@ tasks:
   - task_id: F-17-B
     parent_task: F-17
     priority: P1
-    status: queued
+    status: done
     objective: >-
       integrate Monaco into Diff so SQL and structured-text comparison use a read-only Monaco
       DiffEditor surface.
@@ -1438,23 +1426,26 @@ tasks:
       without introducing editing semantics, and without leaking route ownership to Monaco.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
-      - apps/web/src/app/views/DiffView.tsx
+      - buzon/20260519-f17b-fowler-monaco-diff-review-surface-analysis.md
+      - docs/architecture/components/web/diff/diff-monaco-review-surface-component.md
+      - docs/architecture/components/web/diff/diff-monaco-review-surface-user-stories.md
+      - docs/planning/closeouts/20260519-f17b-monaco-diff-review-surface-closeout.md
+      - https://github.com/dunay2/dvt/pull/1284
     status_reason: >-
-      Waiting for F-06 query-boundary standardization so Diff can consume governed data surfaces
-      instead of ad-hoc route logic.
+      F-17-B Monaco Diff semantic closure merged to main via PR #1284 after green local and GitHub
+      validation.
     definition_of_done:
       - Diff uses Monaco in read-only and diff mode only
       - route-level shell topology and navigation remain unchanged
       - no task or implementation path treats Canvas as the Monaco host
       - docs, code, and UX expectations for Diff stay aligned
-    last_verified: '2026-04-03'
+    last_verified: '2026-05-22'
   - task_id: F-17-C
     parent_task: F-17
     priority: P1
-    status: queued
+    status: done
     objective: >-
       integrate Monaco into Artifacts so manifest, run_results, and catalog inspection use a
       read-only structured viewer.
@@ -1464,19 +1455,24 @@ tasks:
       and structured formatting without introducing editing semantics.
     complexity: S
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
-      - apps/web/src/app/views/ArtifactsView.tsx
+      - buzon/20260520-f17c-fowler-artifacts-monaco-readonly-viewer-analysis.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/f17c-artifacts-monaco-readonly-viewer-plan-20260520.md
+      - docs/architecture/components/web/artifacts/artifacts-monaco-readonly-viewer-component.md
+      - docs/architecture/components/web/artifacts/artifacts-monaco-readonly-viewer-user-stories.md
+      - apps/web/src/app/views/artifacts/artifactsMonacoReadonlyViewer.architecture.test.ts
+      - apps/web/src/app/views/artifacts/ArtifactMonacoPreviewPanel.test.tsx
+      - apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts
     status_reason: >-
-      Waiting for F-06 query-boundary standardization so Artifacts can converge on governed data
-      ownership before Monaco is introduced.
+      Closed F-17-C with Artifacts Monaco read-only viewer ownership, docs, semantic architecture
+      tests, and Cypress startup readiness QA.
     definition_of_done:
       - Artifacts uses Monaco in read-only mode only
       - route-level shell topology and navigation remain unchanged
       - no task or implementation path treats Canvas as the Monaco host
       - docs, code, and UX expectations for Artifacts stay aligned
-    last_verified: '2026-04-03'
+    last_verified: '2026-05-22'
   - task_id: F-17-D
     parent_task: F-17
     priority: P2
@@ -1612,7 +1608,7 @@ tasks:
     last_verified: '2026-04-03'
   - task_id: F-20
     priority: P1
-    status: review
+    status: blocked
     objective: >-
       write and maintain per-screen user manuals and user stories so each route-level workbench has
       explicit expected behavior, states, and acceptance posture.
@@ -1623,17 +1619,19 @@ tasks:
       degraded states. Lane-E work can trace UX acceptance back to those stories.
     complexity: S
     effort_points: 3
-    progress_pct: 80
+    progress_pct: 90
     evidence_refs:
+      - docs/planning/closeouts/20260515-remaining-review-reconciliation-closeout.md
       - docs/architecture/components/web/screen-manuals-and-user-stories.md
       - docs/architecture/components/web/ux-implementation-guide.md
     status_reason: >-
-      A maintained screen-manual and user-story document now covers the main workbenches and ties UX
-      acceptance to Lane E, but future route changes still need to keep those stories in sync.
-    last_verified: '2026-04-03'
+      Hard review reopened the closure: the manual baseline exists, but the F-20 target remains
+      blocked until the F-15 acceptance dependency and state coverage reconciliation are explicitly
+      accepted in the current planning route.
+    last_verified: '2026-05-22'
   - task_id: F-21
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
       add a governed execution-template and source-generation workbench for provider-facing
       execution scaffolds.
@@ -1645,18 +1643,17 @@ tasks:
       workbench owner and provider semantics stay in governed backend services and contracts.
     complexity: M
     effort_points: 5
-    progress_pct: 20
+    progress_pct: 100
     evidence_refs:
-      - docs/architecture/components/web/main-workspace-views-and-ux.md
-      - docs/architecture/components/web/screen-manuals-and-user-stories.md
-      - docs/architecture/components/web/ux-implementation-guide.md
-      - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/f21-execution-template-source-generation-workbench-plan-20260522.md
+      - docs/architecture/components/web/templates/execution-template-source-generation-component.md
+      - docs/architecture/components/web/templates/execution-template-source-generation-user-stories.md
+      - docs/planning/closeouts/20260522-f21-execution-template-source-generation-workbench-closeout.md
     status_reason: >-
-      The frontend architecture and roadmap now name execution-template and source-generation UX as
-      a governed workbench slice, but no route, template catalog, or service contract exists yet.
-      Monaco is now explicitly treated as future preview and diff infrastructure, not as the owner
-      of the route.
-    last_verified: '2026-04-03'
+      Templates route, template catalog, preview model, component docs, architecture guard, and
+      Cypress UX proof are implemented; provider execution and Monaco handoff remain separate
+      governed follow-ups outside F-21 closure.
+    last_verified: '2026-05-22'
   - task_id: F-22
     priority: P1
     status: done
@@ -1693,7 +1690,7 @@ tasks:
     last_verified: '2026-04-13'
   - task_id: F-23
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
       add governed Git file-history review inside the existing Code and Diff workbenches without
       introducing a VS Code-style Git explorer or a second shell model.
@@ -1704,23 +1701,21 @@ tasks:
       Diff rather than switching to a separate embedded Git client.
     complexity: S
     effort_points: 3
-    progress_pct: 15
+    progress_pct: 100
     evidence_refs:
-      - docs/architecture/components/web/git/git-mode-architecture.md
-      - docs/architecture/components/web/main-workspace-views-and-ux.md
-      - docs/planning/proposals/nice-to-have/frontend-and-ux/f-23-git-file-history-review-plan-20260407.md
+      - docs/planning/closeouts/20260522-f23-git-file-history-review-closeout.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/f23-git-file-history-review-plan-20260522.md
+      - docs/architecture/components/web/git/git-file-history-review-user-stories.md
     status_reason: >-
-      The docs-first baseline now freezes `Code` as the file-history entry surface and `Diff` as the
-      revision comparison surface. Implementation remains blocked on `F-06` query convergence and
-      `F-17-B` Monaco in Diff, but the slice is now active with a governed proposal instead of a
-      broken legacy reference.
+      F-23 is closed with the protected GetWorkspaceFileHistory rail, Code file-history panel, and
+      governed Diff handoff; active docs retain Code and Diff as the owning workbench surfaces.
     definition_of_done:
       - file-history review is presented inside governed Code or Diff workbenches
       - no task or implementation path introduces a left-nav Git explorer as the primary Git mode
       - revision comparison reuses the existing Diff route or its governed primitives
       - docs, route ownership, and runtime expectations remain aligned with the Git-mode
         architecture
-    last_verified: '2026-04-07'
+    last_verified: '2026-05-22'
   - task_id: F-24
     priority: P1
     status: in_progress
@@ -1852,7 +1847,7 @@ tasks:
     last_verified: '2026-05-22'
   - task_id: F-27
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       govern the internal alpha product route as a route-level gate instead of letting closed child
       slices define alpha completion by implication.
@@ -1863,19 +1858,17 @@ tasks:
       and Lane C/E routing before any alpha-full claim.
     complexity: M
     effort_points: 5
-    progress_pct: 15
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/proposals/mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md
-      - docs/planning/reviews/architecture-and-governance/20260504-internal-alpha-evolution-route.md
-      - docs/planning/reviews/architecture-and-governance/20260505-internal-alpha-architecture-view-review.md
-      - docs/planning/reviews/architecture-and-governance/20260505-alpha-evolution-route-v3-critique.md
-      - docs/planning/proposals/mandatory/frontend-and-ux/code-workbench-workspace-files-query-rail-plan-20260504.md
+      - docs/planning/closeouts/20260514-f27-alpha-route-acceptance-matrix-closeout.md
+      - docs/planning/reviews/architecture-and-governance/20260514-internal-alpha-route-acceptance-matrix.md
+      - docs/architecture/components/web/internal-alpha-route-gate-component.md
+      - apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts
+      - apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts
     status_reason: >-
-      The route-level planning authority is now explicit and separated from the workspace-files
-      child slice. The architecture view now records the route, rail, state, evidence, and risk
-      boundaries without creating a parallel work queue. Remaining alpha closure work is real
-      execution work: route fixture matrix, full risk triage, cadence decision, recovery vocabulary,
-      startup/context closure, Canvas proof, and plan/run readiness rail mapping.
+      Internal alpha route gate is accepted: startup, workspace context, Canvas, Code, plan/run
+      readiness, recovery, cadence, and risk triage all have accepted evidence, and alpha-full
+      closure evidence is resolvable in the combined fixture.
     definition_of_done:
       - internal alpha route plan remains the route-level authority
       - workspace-files manifest does not own route-level alpha critique or gate posture
@@ -1885,7 +1878,7 @@ tasks:
       - cadence names tester audience, duration, entry date, exit owner, and extension rules
       - alpha full is not declared until route smoke, child proofs, negative paths,
         traceability:adr0, and prepush validation pass
-    last_verified: '2026-05-05'
+    last_verified: '2026-05-22'
   - task_id: F-28
     priority: P0
     status: done
