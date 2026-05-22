@@ -434,12 +434,13 @@ Main screen composition:
 
 ### Plugins And Admin
 
-| Component               | Responsibility                | Status  |
-| ----------------------- | ----------------------------- | ------- |
-| `PluginsWorkbench`      | Installed plugin inspection   | Current |
-| `PluginCapabilityTable` | plugin availability and state | Current |
-| `AdminWorkbench`        | administrative route shell    | Current |
-| `AdminSectionLayout`    | shared admin section layout   | Needed  |
+| Component                     | Responsibility                          | Status  |
+| ----------------------------- | --------------------------------------- | ------- |
+| `PluginsWorkbench`            | Installed plugin inspection             | Current |
+| `PluginCapabilityTable`       | plugin availability and state           | Current |
+| `PluginUxIntegrationContract` | governed plugin docks and runtime rails | Current |
+| `AdminWorkbench`              | administrative route shell              | Current |
+| `AdminSectionLayout`          | shared admin section layout             | Needed  |
 
 ## Common State Inventory
 
