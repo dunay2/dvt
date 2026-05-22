@@ -2,6 +2,7 @@
 import { DiffEditor } from '@monaco-editor/react';
 
 import { DEFAULT_MONACO_CONTAINER_CLASS_NAME } from './MonacoViewerFallback';
+import { createMonacoDiffOptions, monacoTheme } from './monacoVisualTokens';
 
 type MonacoDiffSurfaceProps = Readonly<{
   ariaLabel: string;
@@ -24,23 +25,9 @@ export default function MonacoDiffSurface({
         height="100%"
         language={language}
         modified={modified}
-        options={{
-          ariaLabel,
-          automaticLayout: true,
-          codeLens: false,
-          contextmenu: false,
-          diffCodeLens: false,
-          glyphMargin: false,
-          minimap: { enabled: false },
-          originalEditable: false,
-          readOnly: true,
-          renderSideBySide: true,
-          scrollBeyondLastLine: false,
-          smoothScrolling: true,
-          wordWrap: 'on',
-        }}
+        options={createMonacoDiffOptions({ ariaLabel })}
         original={original}
-        theme="vs-dark"
+        theme={monacoTheme}
       />
     </div>
   );

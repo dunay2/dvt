@@ -1,8 +1,8 @@
 /** Owned concern: provide the shared loading shell for lazy Monaco viewer surfaces. */
-import { routeWorkbenchMonacoSurfaceClassName } from '../workbench/RouteWorkbenchFrame';
 import { cn } from '../ui/utils';
+import { monacoVisualClasses } from './monacoVisualTokens';
 
-export const DEFAULT_MONACO_CONTAINER_CLASS_NAME = routeWorkbenchMonacoSurfaceClassName;
+export const DEFAULT_MONACO_CONTAINER_CLASS_NAME = monacoVisualClasses.surface;
 
 type MonacoViewerFallbackProps = Readonly<{
   label: string;
@@ -14,13 +14,7 @@ export function MonacoViewerFallback({
   containerClassName = DEFAULT_MONACO_CONTAINER_CLASS_NAME,
 }: MonacoViewerFallbackProps) {
   return (
-    <div
-      className={cn(
-        containerClassName,
-        'flex items-center justify-center text-sm text-[var(--text-muted)]'
-      )}
-      role="status"
-    >
+    <div className={cn(containerClassName, monacoVisualClasses.fallback)} role="status">
       {label}
     </div>
   );

@@ -88,6 +88,7 @@ describe('Diff Monaco review surface architecture', () => {
     const catalogPanel = readAppSource('views/diff/CatalogDiffPanel.tsx');
     const monacoViewer = readAppSource('components/monaco/MonacoDiffViewer.tsx');
     const monacoSurface = readAppSource('components/monaco/MonacoDiffSurface.tsx');
+    const monacoVisualTokens = readAppSource('components/monaco/monacoVisualTokens.ts');
 
     for (const [modulePath, source] of [
       ['views/DiffView.tsx', diffView],
@@ -113,9 +114,10 @@ describe('Diff Monaco review surface architecture', () => {
     expect(catalogPanel).toContain('MonacoDiffViewer');
     expect(monacoViewer).toContain("lazy(() => import('./MonacoDiffSurface'))");
     expect(monacoSurface).toContain('DiffEditor');
-    expect(monacoSurface).toContain('readOnly: true');
-    expect(monacoSurface).toContain('originalEditable: false');
-    expect(monacoSurface).toContain('contextmenu: false');
+    expect(monacoSurface).toContain('createMonacoDiffOptions({ ariaLabel })');
+    expect(monacoVisualTokens).toContain('readOnly: true');
+    expect(monacoVisualTokens).toContain('originalEditable: false');
+    expect(monacoVisualTokens).toContain('contextmenu: false');
     expect(monacoSurface).not.toContain('import { Editor }');
     expect(monacoSurface).not.toContain('<Editor');
     expect(monacoSurface).not.toContain('onChange');
