@@ -1565,7 +1565,7 @@ tasks:
     last_verified: '2026-05-22'
   - task_id: F-18
     priority: P2
-    status: in_progress
+    status: done
     objective: >-
       converge the shell console and run-log experience into a real live-log surface, using xterm.js
       only if the product needs terminal-grade streaming instead of static panels.
@@ -1575,22 +1575,26 @@ tasks:
       and implementation choice between structured log panels and xterm.js-backed streaming view.
     complexity: S
     effort_points: 3
-    progress_pct: 55
+    progress_pct: 100
     evidence_refs:
+      - docs/planning/closeouts/20260522-f18-live-log-console-closeout.md
       - docs/architecture/components/web/ux-implementation-guide.md
       - docs/architecture/components/web/observability/front-observability-architecture-dvt.md
       - docs/architecture/components/web/appshell/app-shell.md
+      - docs/architecture/components/web/runs/run-event-timeline-component.md
       - docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md
       - apps/web/src/app/services/runs/runEventPresentationModel.ts
+      - apps/web/src/app/services/runs/runEventTimelineModel.ts
+      - apps/web/src/app/components/console/useConsoleLogStream.ts
+      - apps/web/src/app/components/console/XtermConsole.tsx
+      - apps/web/src/app/components/shell/bottomConsoleDrawerModel.ts
+      - apps/web/src/app/views/runs/runsDomainBoundary.architecture.test.ts
     status_reason: >-
-      This is no longer a purely queued item: the shell already has a console drawer and the current
-      frontend includes an xterm-backed implementation. The authority split between shell
-      live-stream companionship and Runs workspace snapshot-plus-timeline monitoring is documented,
-      and shared event presentation semantics now align level, headline key, shared headline copy,
-      detail, and step identity across drawer and timeline surfaces. Typed live-log behavior, richer
-      run-log UX states, and the final structured-versus-terminal presentation choice remain open in
-      the F-10/F-18 convergence chain.
-    last_verified: '2026-05-06'
+      Closed: the shell console now consumes the governed run-event timeline through
+      `useConsoleLogStream`, renders terminal-grade live companion lines through `XtermConsole`, and
+      shares ordering, dedupe, cursor, polling, headline, detail, level, and step identity semantics
+      with the Runs workspace timeline. The stale non-live API-mode copy was removed.
+    last_verified: '2026-05-22'
   - task_id: F-19
     priority: P2
     status: in_progress

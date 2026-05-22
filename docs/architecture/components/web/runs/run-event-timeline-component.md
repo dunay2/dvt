@@ -25,6 +25,7 @@ or artifact authority. Those remain snapshot and workspace concerns.
 | `buildRunEventPresentationModel`  | presentation model | Run event presentation model  | Maps a raw event into level, headline key, detail, and step identity   |
 | `resolveRunEventHeadline`         | copy resolver      | Run event presentation copy   | Resolves human-readable event headline copy                            |
 | `formatRunEventAsLogLine`         | terminal renderer  | Shell console event rendering | Formats shared event semantics as one terminal-style line              |
+| `XtermConsole`                    | terminal view      | Shell console event rendering | Renders formatted event lines as the xterm-backed shell companion      |
 | `RunEventTimelineTable`           | structured view    | Runs workspace timeline       | Renders shared event semantics as durable dense timeline rows          |
 
 ## Invariants
@@ -68,7 +69,9 @@ flowchart TB
   Copy["runEventPresentationCopy"] --> ConsoleFormat
   Copy --> Table
 
+  ConsoleFormat --> Terminal["xterm-backed shell companion"]
   ConsoleHook --> Drawer["BottomConsoleDrawer"]
+  Drawer --> Terminal
   Facade --> Workspace["RunWorkspaceStateView"]
   Table --> Workspace
 ```
@@ -79,6 +82,7 @@ flowchart TB
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
 | `RunWorkspaceFacade`    | [runWorkspaceFacade.ts](../../../../../apps/web/src/app/services/runs/runWorkspaceFacade.ts)                                  | Builds durable snapshot-plus-timeline workspace state    |
 | `useConsoleLogStream`   | [useConsoleLogStream.ts](../../../../../apps/web/src/app/components/console/useConsoleLogStream.ts)                           | Mirrors active run events into the shell console         |
+| `XtermConsole`          | [XtermConsole.tsx](../../../../../apps/web/src/app/components/console/XtermConsole.tsx)                                       | Renders terminal-grade live companion lines              |
 | `RunEventTimelineTable` | [RunEventTimelineTable.tsx](../../../../../apps/web/src/app/views/runs/RunEventTimelineTable.tsx)                             | Renders dense event rows from shared event semantics     |
 | `BottomConsoleDrawer`   | [Console.tsx](../../../../../apps/web/src/app/components/Console.tsx)                                                         | Renders terminal companion state                         |
 | `RunWorkspaceStateView` | [RunWorkspaceStateView.tsx](../../../../../apps/web/src/app/views/runs/RunWorkspaceStateView.tsx)                             | Renders durable run workspace using dense event rows     |

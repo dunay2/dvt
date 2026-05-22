@@ -133,7 +133,7 @@ flowchart LR
   Inputs["dataSourceMode + runId + isLoading + lines"] --> Model["buildBottomConsoleDrawerModel(...)"]
   Model --> Idle["idle: empty-state guidance"]
   Model --> Loading["loading: run badge + loading copy"]
-  Model --> Streaming["streaming: run badge + xterm surface"]
+  Model --> Streaming["streaming: run badge + xterm-backed live companion"]
 ```
 
 Authority split with the Runs route:
@@ -149,7 +149,8 @@ flowchart LR
 
 Boundary rules for these two surfaces:
 
-- `BottomConsoleDrawer` mirrors the currently active run as a shell-level live companion;
+- `BottomConsoleDrawer` mirrors the currently active run as a shell-level
+  xterm-backed live companion;
 - `BottomConsoleDrawer` does not claim snapshot authority, failure-diagnostics authority, or full run-detail ownership;
 - `Runs` owns durable run monitoring through snapshot plus timeline composition;
 - `Runs` is the place where degraded timeline state, runtime snapshot truth, result evidence, and failure diagnostics are explained.
@@ -172,7 +173,8 @@ Rules for the shared seam:
   polling decisions;
 - the shared model owns event level, headline key, optional detail, and step identity;
 - the shared copy resolver owns human-readable event headline text for shared event surfaces;
-- the shell drawer may render terminal-style lines from that shared semantics plus shared copy;
+- the shell drawer renders terminal-style lines through `XtermConsole` from
+  that shared semantics plus shared copy;
 - the Runs route may render structured timeline cards from the same shared semantics plus shared copy;
 - the shared model must not collapse snapshot authority or failure-diagnostics authority back into the drawer.
 
@@ -287,13 +289,11 @@ flowchart LR
 
 - some shell quick actions are placeholders and not yet connected to governed
   behavior;
-- the console drawer now has an explicit shell-owned content model, but richer
-  live-stream semantics and typed log states remain future work;
-- shared event presentation semantics now align on level, headline key, shared
-  headline copy, detail, and step identity, but typed live-log states and the
-  final structured-versus-terminal presentation choice remain future work.
-  F-10 closes the shared chronology model for ordering, dedupe, cursor, and
-  active-status polling.
+- the console drawer now has an explicit shell-owned content model, xterm-backed
+  live companion rendering, and typed idle, loading, and streaming states;
+- shared event presentation semantics align on ordering, dedupe, cursor,
+  active-status polling, level, headline key, shared headline copy, detail, and
+  step identity across drawer and Runs workspace surfaces.
 
 ## Current-To-Target Mapping
 
