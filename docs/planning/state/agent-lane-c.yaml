@@ -1328,7 +1328,7 @@ tasks:
     last_verified: '2026-05-05'
   - task_id: TF-C3
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
       add phase-2 dbt plugin-backed execution behind the same preview-persist-run contract so dbt
       stays out of engine-kernel semantics instead of becoming a second product path.
@@ -1339,7 +1339,7 @@ tasks:
       outer product loop or push dbt semantics into the engine kernel.
     complexity: M
     effort_points: 3
-    progress_pct: 85
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md
@@ -1348,14 +1348,18 @@ tasks:
       - docs/planning/closeouts/20260414-tf-c3-run-execution-context-resolver-closeout.md
       - docs/planning/closeouts/20260414-tf-c3-dbt-plugin-runtime-projection-closeout.md
       - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
+      - docs/evidence/ed-20260514-temporal-worker-dbt-canary.md
+      - docs/planning/closeouts/20260522-tf-c3-e-temporal-worker-dbt-canary-closeout.md
+      - docs/planning/closeouts/20260522-tf-c3-plugin-backed-dbt-parent-closeout.md
     status_reason: >-
-      Phase 2 now spans four concrete slices. Protected runtime already wires the governed
+      TF-C3 parent closure is accepted: protected runtime wires the governed
       `runExecutionContextRef` boundary through shared artifact-backed readers, the standalone
-      `apps/temporal-worker` composition root now owns `TemporalWorkerHost` lifecycle and ops
-      endpoints, and the adapter now runs DBT through an adapter-owned CLI host without pushing
-      semantics into the engine kernel. Remaining work is rollout acceptance and environment proof,
-      not missing in-repo host topology or a second outer product path.
-    last_verified: '2026-04-14'
+      `apps/temporal-worker` composition root owns `TemporalWorkerHost` lifecycle and ops endpoints,
+      the adapter runs DBT through an adapter-owned CLI host without pushing semantics into the
+      engine kernel, and TF-C3-E is closed by the accepted DBT-enabled Docker canary and runbook
+      evidence. Environment rollout checks remain operational release gates, not missing repo
+      closure.
+    last_verified: '2026-05-22'
   - task_id: TF-C3-A
     priority: P1
     status: done
@@ -1466,7 +1470,7 @@ tasks:
   - task_id: TF-C3-E
     parent_task: TF-C3
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
       close rollout, runbook, and acceptance truth for the standalone Temporal worker so the repo
       not only contains the host topology but also tells operators how to validate and deploy it.
@@ -1476,22 +1480,21 @@ tasks:
       limited to environment rollout or canary evidence rather than missing code topology.
     complexity: S
     effort_points: 3
-    progress_pct: 70
+    progress_pct: 100
     evidence_refs:
       - docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
       - docs/evidence/ed-20260414-tf-c3-production-temporal-worker-dbt-host.md
+      - docs/evidence/ed-20260514-temporal-worker-dbt-canary.md
       - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
+      - docs/planning/closeouts/20260522-tf-c3-e-temporal-worker-dbt-canary-closeout.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md
     status_reason: >-
-      Runbook-to-code verification is complete. All 19 runbook claims verified accurate against
-      actual worker code across server.ts, runTemporalWorkerHost.ts, OperationalServer.ts,
-      TemporalWorkerMonitor.ts, temporalWorkerLifecycle.ts, temporalWorkerDbtProfile.ts,
-      temporalWorkerRuntimeResources.ts, createTemporalWorkerRuntime.ts, and env.ts. Closure is
-      blocked by missing environment-level canary evidence. Smallest next validation: deploy worker
-      to staging, verify /healthz (200 with state running), /readyz (200 with dbt), /metrics (scrape
-      target registers dvt_temporal_worker_up 1), run one DBT-enabled plan end-to-end, then confirm
-      dvt_temporal_worker_error_total remains flat during the observation window.
-    last_verified: '2026-05-07'
+      TF-C3-E closure is accepted: the runbook is aligned to the worker code and
+      `ed-20260514-temporal-worker-dbt-canary.md` records the DBT-enabled local Docker canary across
+      Postgres, Temporal, plan-store artifacts, run metadata, readiness endpoints, metrics,
+      file-backed DBT bundle execution, DBT invocation evidence, and `RunCompleted`. Production
+      environment rollout checks remain per-environment release gates.
+    last_verified: '2026-05-22'
   - task_id: TF-C4
     priority: P0
     status: done
