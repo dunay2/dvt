@@ -429,7 +429,7 @@ tasks:
     last_verified: '2026-04-03'
   - task_id: AR-C2
     priority: P0
-    status: in_progress
+    status: blocked
     objective: >-
       define and document formal SLA targets for event delivery latency, snapshot freshness, plan
       compilation time, run start latency, and outbox drain rate with measurable thresholds and
@@ -446,8 +446,11 @@ tasks:
       - docs/planning/reviews/architecture-and-governance/20260404-ar-c2-fowler-hard-qa-review.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md
       - docs/planning/closeouts/20260404-ar-c2-sla-operational-closure-closeout.md
+      - docs/planning/closeouts/20260522-ar-c2-operational-evidence-drift-closeout.md
       - docs/runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md
       - docs/runbooks/api-runtime-sla-canonical-20260404.md
+      - docs/runbooks/ar-c2-dashboard-alert-wiring-evidence-20260404.md
+      - docs/runbooks/ar-c2-evidence-generated-latest.md
       - docs/guides/api-control-plane-user-manual-20260404.md
       - docs/guides/api-control-plane-technical-manual-20260404.md
       - docs/runbooks/backend-mvp-control-plane-runbook-20260329.md
@@ -457,13 +460,11 @@ tasks:
       - apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts
       - apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts
     status_reason: >-
-      Canonical SLA/manuals are delivered and all AR-C2 metrics are now emitted in code (API
-      start-run/plan-compile plus outbox drain/event-delivery in outbox-worker); remaining closure
-      is dashboard/alert wiring and sustained threshold validation evidence; decomposition now
-      tracked as `AR-C2-T1..T4` in the AR-C2 operational closure plan and reviewed in the AR-C2
-      Fowler hard QA artifact, with a single closeout checklist artifact for pending evidence
-      tracking.
-    last_verified: '2026-04-04'
+      Canonical SLA/manuals and metric emission exist, but AR-C2 is blocked by immutable operational
+      evidence: the collector reports 9 missing dashboard panels, 11 missing alert rules, and 9
+      missing sustained validation windows. Do not mark the parent done until `AR-C2-T2`,
+      `AR-C2-T3`, and `AR-C2-T4` pass their assertion-mode evidence gates.
+    last_verified: '2026-05-22'
   - task_id: AR-C2-T1
     parent_task: AR-C2
     priority: P0
@@ -489,7 +490,7 @@ tasks:
   - task_id: AR-C2-T2
     parent_task: AR-C2
     priority: P0
-    status: in_progress
+    status: blocked
     objective: >-
       complete dashboard wiring evidence for all mapped AR-C2 signals.
     dependency: AR-C2-T1
@@ -502,15 +503,16 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md
       - docs/runbooks/ar-c2-dashboard-alert-wiring-evidence-20260404.md
+      - docs/runbooks/ar-c2-evidence-generated-latest.md
+      - docs/planning/closeouts/20260522-ar-c2-operational-evidence-drift-closeout.md
     status_reason: >-
-      Signal-to-panel mapping is frozen, and governed evidence capture baseline now exists; final
-      dashboard wiring proof is still pending because monitor configuration evidence has not yet
-      been attached, but the dashboard evidence matrix is now preloaded for row-by-row execution.
-    last_verified: '2026-04-04'
+      Blocked until an immutable dashboard snapshot supplies complete panel metadata for all 9 AR-C2
+      mapped signals; assertion mode currently fails closed with `AR-C2_IMMUTABLE_EVIDENCE_MISSING`.
+    last_verified: '2026-05-22'
   - task_id: AR-C2-T3
     parent_task: AR-C2
     priority: P0
-    status: in_progress
+    status: blocked
     objective: >-
       complete alert wiring evidence for AR-C2 SLA thresholds and routing posture.
     dependency: AR-C2-T1
@@ -523,15 +525,17 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md
       - docs/runbooks/api-runtime-sla-canonical-20260404.md
       - docs/runbooks/ar-c2-dashboard-alert-wiring-evidence-20260404.md
+      - docs/runbooks/ar-c2-evidence-generated-latest.md
+      - docs/planning/closeouts/20260522-ar-c2-operational-evidence-drift-closeout.md
     status_reason: >-
-      Alert routing expectations are defined and evidence-capture requirements are now explicit;
-      final rule-level wiring proof remains pending, but the alert evidence matrix is now preloaded
-      for row-by-row execution.
-    last_verified: '2026-04-04'
+      Blocked until an immutable alert/routing snapshot supplies complete rule metadata for all 11
+      AR-C2 threshold keys; assertion mode currently fails closed with
+      `AR-C2_IMMUTABLE_EVIDENCE_MISSING`.
+    last_verified: '2026-05-22'
   - task_id: AR-C2-T4
     parent_task: AR-C2
     priority: P0
-    status: done
+    status: blocked
     objective: >-
       capture sustained threshold-validation evidence and update AR-C2 lane posture for closure.
     dependency: AR-C2-T2, AR-C2-T3
@@ -540,15 +544,18 @@ tasks:
       done when closure criteria are met.
     complexity: S
     effort_points: 2
-    progress_pct: 100
+    progress_pct: 35
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md
       - docs/planning/state/agent-lane-c.yaml
       - docs/planning/closeouts/20260404-ar-c2-sla-operational-closure-closeout.md
+      - docs/runbooks/ar-c2-dashboard-alert-wiring-evidence-20260404.md
+      - docs/runbooks/ar-c2-evidence-generated-latest.md
+      - docs/planning/closeouts/20260522-ar-c2-operational-evidence-drift-closeout.md
     status_reason: >-
-      AR-C2 requires sustained operational proof, not one-shot checks; this subtask owns final
-      validation evidence and closure posture.
-    last_verified: '2026-04-04'
+      Corrected stale done status: sustained validation cannot close until T2/T3 evidence exists and
+      `AR_C2_METRICS_SNAPSHOT_FILE` supplies passing windows for all 9 mapped signals.
+    last_verified: '2026-05-22'
   - task_id: AR-C3
     priority: P1
     status: done
