@@ -1,7 +1,6 @@
 import type { DataSourceMode } from '../../services/config/dataSource';
 
-const API_IDLE_MESSAGE =
-  'Start a run to see run events here. Live log streaming is not available in API mode yet.';
+const API_IDLE_MESSAGE = 'Start a run to see live run events here.';
 const LOADING_MESSAGE = 'Loading run events...';
 
 type BottomConsoleDrawerModelBase = {

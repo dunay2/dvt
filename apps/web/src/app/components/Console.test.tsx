@@ -62,7 +62,7 @@ describe('BottomConsoleDrawer', () => {
     container.remove();
   });
 
-  it('shows API-mode non-live guidance without internal roadmap wording', async () => {
+  it('shows live-log idle guidance without internal roadmap wording', async () => {
     await act(async () => {
       root.render(
         <AppServicesProvider>
@@ -73,12 +73,11 @@ describe('BottomConsoleDrawer', () => {
 
     expect(
       document.body.querySelector('[data-slot="bottom-console-drawer-idle"]')?.textContent
-    ).toContain(
-      'Start a run to see run events here. Live log streaming is not available in API mode yet.'
-    );
+    ).toContain('Start a run to see live run events here.');
     expect(
       document.body.querySelector('[data-slot="bottom-console-drawer-mode-badge"]')
     ).toBeNull();
+    expect(document.body.textContent).not.toContain('not available');
     expect(document.body.textContent).not.toContain('Runtime snapshot');
     expect(document.body.textContent).not.toContain('Event timeline');
   });

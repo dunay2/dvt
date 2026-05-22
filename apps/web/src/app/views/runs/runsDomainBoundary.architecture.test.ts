@@ -291,9 +291,16 @@ describe('Runs domain boundary', () => {
     const timelineModelSource = readAppSource('services/runs/runEventTimelineModel.ts');
     const facadeSource = readAppSource('services/runs/runWorkspaceFacade.ts');
     const consoleHookSource = readAppSource('components/console/useConsoleLogStream.ts');
+    const consoleDrawerModelSource = readAppSource('components/shell/bottomConsoleDrawerModel.ts');
+    const consoleDrawerSource = readAppSource('components/Console.tsx');
+    const xtermConsoleSource = readAppSource('components/console/XtermConsole.tsx');
     const workspaceSource = readAppSource('views/runs/RunWorkspaceStateView.tsx');
     const timelineTableSource = readAppSource('views/runs/RunEventTimelineTable.tsx');
     const timelineTableModelSource = readAppSource('views/runs/runEventTableModel.ts');
+    const shellGuide = readRepoFile('docs/architecture/components/web/appshell/app-shell.md');
+    const timelineGuide = readRepoFile(
+      'docs/architecture/components/web/runs/run-event-timeline-component.md'
+    );
 
     expect(timelineModelSource).toContain('normalizeRunEventTimelinePage');
     expect(timelineModelSource).toContain('mergeRunEventTimelinePage');
@@ -304,6 +311,12 @@ describe('Runs domain boundary', () => {
     expect(consoleHookSource).toContain('mergeRunEventTimelinePage');
     expect(consoleHookSource).toContain('isRunEventStreamLiveStatus');
     expect(consoleHookSource).toContain('RUN_EVENT_LIVE_POLL_INTERVAL_MS');
+    expect(consoleDrawerModelSource).toContain('Start a run to see live run events here.');
+    expect(consoleDrawerModelSource).not.toContain('not available');
+    expect(consoleDrawerSource).toContain('lazy(() => import');
+    expect(consoleDrawerSource).toContain('./console/XtermConsole');
+    expect(xtermConsoleSource).toContain('@xterm/xterm');
+    expect(xtermConsoleSource).toContain('disableStdin: true');
 
     expect(workspaceSource).toContain('RunEventTimelineTable');
     expect(workspaceSource).not.toContain('RunTimelineEventCard');
@@ -314,6 +327,12 @@ describe('Runs domain boundary', () => {
     expect(timelineTableModelSource).toContain('resolveRunEventHeadline');
     expect(timelineTableModelSource).not.toContain('listRunEvents');
     expect(timelineTableModelSource).not.toContain('getRunSnapshot');
+
+    expect(shellGuide).toContain('xterm-backed live companion');
+    expect(shellGuide).not.toContain(
+      'final structured-versus-terminal presentation choice remain future'
+    );
+    expect(timelineGuide).toContain('xterm-backed shell companion');
   });
 
   it('guards dense operational table semantics instead of only table component presence', () => {
