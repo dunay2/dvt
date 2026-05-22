@@ -27,6 +27,9 @@ interface OutboxWorkerMonitorOptions {
   logger: OutboxWorkerRuntimeLogger;
   nowMs?: () => number;
   readyStaleAfterMs?: number;
+  purgeConfigured?: boolean;
+  retentionConfigured?: boolean;
+  filesystemArchiveStorageConfigured?: boolean;
 }
 
 export class OutboxWorkerMonitor
@@ -50,7 +53,20 @@ export class OutboxWorkerMonitor
       logger: options.logger,
       nowMs,
     });
-    this.retentionTelemetry = new RunEventRetentionTelemetry({ nowMs });
+    this.retentionTelemetry = new RunEventRetentionTelemetry({
+      nowMs,
+      ...(options.purgeConfigured === undefined
+        ? {}
+        : { purgeConfigured: options.purgeConfigured }),
+      ...(options.retentionConfigured === undefined
+        ? {}
+        : { retentionConfigured: options.retentionConfigured }),
+      ...(options.filesystemArchiveStorageConfigured === undefined
+        ? {}
+        : {
+            filesystemArchiveStorageConfigured: options.filesystemArchiveStorageConfigured,
+          }),
+    });
   }
 
   onStarted(): void {

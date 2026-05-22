@@ -238,9 +238,18 @@ describe('OutboxWorkerMonitor', () => {
   });
 
   it('renders retention runtime cycle metrics and timestamps', () => {
-    const { clock, monitor } = createMonitorHarness();
+    const { clock, monitor } = createMonitorHarness({
+      purgeConfigured: true,
+      retentionConfigured: true,
+      filesystemArchiveStorageConfigured: true,
+    });
 
     let metrics = monitor.renderMetrics();
+    expect(metrics).toMatch(/dvt_delivery_buffer_purge_configured 1/);
+    expect(metrics).toMatch(/dvt_delivery_buffer_purge_disabled 0/);
+    expect(metrics).toMatch(/dvt_run_event_retention_configured 1/);
+    expect(metrics).toMatch(/dvt_run_event_retention_disabled 0/);
+    expect(metrics).toMatch(/dvt_run_event_retention_filesystem_archive_storage 1/);
     expect(metrics).toMatch(/dvt_run_event_retention_cycles_total 0/);
     expect(metrics).toMatch(/dvt_run_event_retention_cycle_failures_total 0/);
     expect(metrics).toMatch(/dvt_run_event_retention_last_success_timestamp_seconds 0/);
@@ -261,6 +270,19 @@ describe('OutboxWorkerMonitor', () => {
     expect(metrics).toMatch(/dvt_run_event_retention_last_cycle_duration_ms 9/);
     expect(metrics).toMatch(/dvt_run_event_retention_last_success_timestamp_seconds 1741392000/);
     expect(metrics).toMatch(/dvt_run_event_retention_last_failure_timestamp_seconds 1741392005/);
+  });
+
+  it('renders retention posture alerts when purge or archive runtime is disabled', () => {
+    const { monitor } = createMonitorHarness({
+      purgeConfigured: false,
+      retentionConfigured: false,
+    });
+
+    const metrics = monitor.renderMetrics();
+    expect(metrics).toMatch(/dvt_delivery_buffer_purge_configured 0/);
+    expect(metrics).toMatch(/dvt_delivery_buffer_purge_disabled 1/);
+    expect(metrics).toMatch(/dvt_run_event_retention_configured 0/);
+    expect(metrics).toMatch(/dvt_run_event_retention_disabled 1/);
   });
 
   it('renders event-delivery latency histogram from claim to terminal delivery outcome', () => {

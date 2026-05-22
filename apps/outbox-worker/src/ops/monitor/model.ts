@@ -52,6 +52,9 @@ export interface OutboxDeliveryMetricsSnapshot {
 }
 
 export interface OutboxRetentionMetricsSnapshot {
+  purgeConfigured: boolean;
+  retentionConfigured: boolean;
+  filesystemArchiveStorageConfigured: boolean;
   retentionCyclesTotal: number;
   retentionCycleFailuresTotal: number;
   retentionArchivedUnitsTotal: number;

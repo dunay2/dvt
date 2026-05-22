@@ -35,7 +35,8 @@ describe('loadEnv', () => {
     }
     expect(env.DVT_OUTBOX_HTTP_TARGET_URL).toBe('http://localhost:8080/outbox/events');
     expect(env.DVT_OUTBOX_HTTP_TIMEOUT_MS).toBe(10000);
-    expect(env.DVT_RUN_EVENT_RETENTION_ENABLED).toBe(false);
+    expect(env.DVT_PURGE_ENABLED).toBe(true);
+    expect(env.DVT_RUN_EVENT_RETENTION_ENABLED).toBe(true);
     expect(env.DVT_RUN_EVENT_RETENTION_INITIAL_DELAY_MS).toBe(30_000);
     expect(env.DVT_RUN_EVENT_RETENTION_INTERVAL_MS).toBe(3_600_000);
     expect(env.DVT_RUN_EVENT_RETENTION_HOT_RETENTION_DAYS).toBe(90);
@@ -367,6 +368,17 @@ describe('loadEnv', () => {
     ).toThrow(/DVT_OUTBOX_OWNED_SHARD_IDS/);
   });
 
+  it('fails in production by default because retention requires explicit filesystem opt-in', () => {
+    expect(() =>
+      loadEnv({
+        NODE_ENV: 'production',
+        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+      })
+    ).toThrow(/DVT_RUN_EVENT_RETENTION_ALLOW_FILESYSTEM_IN_PROD/);
+  });
+
   it('fails in production when retention is enabled without explicit filesystem opt-in', () => {
     expect(() =>
       loadEnv({
@@ -448,10 +460,12 @@ describe('loadEnv', () => {
       DVT_OUTBOX_OWNERSHIP_MODE: 'active',
       DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
       DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+      DVT_PURGE_ENABLED: 'false',
       DVT_RUN_EVENT_RETENTION_ENABLED: 'false',
     });
 
     assertActiveEnv(env);
+    expect(env.DVT_PURGE_ENABLED).toBe(false);
     expect(env.DVT_RUN_EVENT_RETENTION_ENABLED).toBe(false);
     expect(warningSpy).not.toHaveBeenCalled();
     warningSpy.mockRestore();

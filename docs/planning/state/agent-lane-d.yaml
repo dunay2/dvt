@@ -488,7 +488,7 @@ tasks:
     last_verified: '2026-05-09'
   - task_id: AR-D8
     priority: P1
-    status: queued
+    status: done
     objective: >-
       enforce default retention policy wiring (archive and purge) as a mandatory runtime baseline
       with explicit health alerts when retention jobs are not active.
@@ -498,13 +498,24 @@ tasks:
       health checks alert on stale terminal-run backlog beyond policy thresholds.
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-d8-default-retention-runtime-baseline-plan-20260522.md
+      - docs/planning/closeouts/20260522-ar-d8-default-retention-runtime-baseline-closeout.md
+      - apps/outbox-worker/src/plugins/env.ts
+      - apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts
+      - apps/outbox-worker/src/ops/monitor/RunEventRetentionTelemetry.ts
+      - apps/outbox-worker/src/ops/monitor/renderOutboxWorkerMetrics.ts
+      - apps/outbox-worker/test/plugins/env.test.ts
+      - apps/outbox-worker/test/runtime/createOutboxWorkerRuntime.test.ts
+      - apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts
     status_reason: >-
-      Review evidence shows retention tooling exists but remains optional in operations, leaving
-      unbounded growth risk when operators omit scheduling.
-    last_verified: '2026-04-04'
+      Active outbox workers now default delivery-buffer purge and run-event retention archive
+      scheduling to enabled, while retaining explicit diagnostic opt-outs. `/metrics` exposes
+      configured and disabled posture gauges for both retention paths so missing scheduling is
+      alertable instead of silent.
+    last_verified: '2026-05-22'
   - task_id: TF-D1
     priority: P1
     status: done
