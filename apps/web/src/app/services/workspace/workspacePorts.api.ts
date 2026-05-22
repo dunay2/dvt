@@ -7,6 +7,7 @@ import type {
   IWorkspaceAdminReadPort,
   IWorkspaceDiffQueryPort,
   IWorkspaceFileContentCommandPort,
+  IWorkspaceFileHistoryQueryPort,
   IWorkspaceFilesQueryPort,
   IWorkspaceGraphSnapshotQueryPort,
   IWorkspacePluginCatalogQueryPort,
@@ -32,6 +33,7 @@ import {
   readWorkspaceFilesScope,
   WORKSPACE_FILES_HTTP_ERROR_REASON,
 } from './workspaceFilesHttp';
+import { buildWorkspaceFileHistoryEndpoint } from './workspaceFileHistoryHttp';
 import {
   buildWorkspaceGraphDraftEndpoint,
   createRequestFailedApiError,
@@ -98,6 +100,15 @@ export function createApiWorkspaceDiffQueryPort(apiClient: ApiClient): IWorkspac
       apiClient.getJson<DiffChange[]>(
         buildWorkspaceDiffChangesEndpoint(readWorkspaceDiffChangesScope())
       ),
+  };
+}
+
+export function createApiWorkspaceFileHistoryQueryPort(
+  apiClient: ApiClient
+): IWorkspaceFileHistoryQueryPort {
+  return {
+    getFileHistory: (path) =>
+      apiClient.getJson(buildWorkspaceFileHistoryEndpoint(path, readWorkspaceFilesScope())),
   };
 }
 

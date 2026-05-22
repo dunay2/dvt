@@ -105,6 +105,34 @@ export const PROTECTED_RUNTIME_WORKSPACE_COMMAND_QUERY_RAILS = [
     ]),
   }),
   defineProtectedRuntimeRail({
+    name: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspaceFileHistory.name,
+    kind: PROTECTED_RUNTIME_RAIL_KIND.query,
+    boundedContext: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspaceFileHistory.boundedContext,
+    dddObject: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspaceFileHistory.readModel,
+    applicationPort: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspaceFileHistory.port,
+    adapterSurface: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspaceFileHistory.surface,
+    scopeAndAuthorization:
+      PROTECTED_RUNTIME_WORKSPACE_RAIL.workspaceFileHistory.scopeAndAuthorization,
+    coverage: [
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingToken,
+        PROTECTED_RUNTIME_TEST_REF.workspaceFileHistoryRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingAction,
+        PROTECTED_RUNTIME_TEST_REF.workspaceFileHistoryRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingScope,
+        PROTECTED_RUNTIME_TEST_REF.workspaceFileHistoryRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.invalidPath,
+        PROTECTED_RUNTIME_TEST_REF.workspaceFileHistoryRoutes,
+      ],
+    ],
+  }),
+  defineProtectedRuntimeRail({
     name: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspaceDiffChanges.name,
     kind: PROTECTED_RUNTIME_RAIL_KIND.query,
     boundedContext: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspaceDiffChanges.boundedContext,

@@ -12,6 +12,7 @@ import {
 import { WorkbenchDegradedState } from '../components/workbench/state/WorkbenchStates';
 import {
   useWorkspaceFileContentQuery,
+  useWorkspaceFileHistoryQuery,
   useWorkspaceFileTreeQuery,
 } from '../queries/workspaceQueries';
 import { CANVAS_WORKBENCH_ROUTE_ID } from './canvas/canvasDraftPresentationStore';
@@ -24,6 +25,7 @@ import {
   CodeRouteLoadingStateView,
 } from './code/CodeStateViews';
 import { resolveCodeViewCopy } from './code/codeViewCopy';
+import { CodeFileHistoryPanel } from './code/CodeFileHistoryPanel';
 import { hasCodeWorkspaceFiles, resolveInitialCodeFilePath } from './code/codeViewFileSelection';
 import { resolveCodeWorkbenchErrorPresentation } from './code/codeWorkbenchErrorModel';
 import FileTreePanel from './code/FileTreePanel';
@@ -39,6 +41,7 @@ export default function CodeView() {
     [workspaceFileTree, selectedPath]
   );
   const fileContentQuery = useWorkspaceFileContentQuery(resolvedPath);
+  const fileHistoryQuery = useWorkspaceFileHistoryQuery(resolvedPath);
   const fileTreeErrorPresentation = fileTreeQuery.isError
     ? resolveCodeWorkbenchErrorPresentation({
         scope: 'file-tree',
@@ -126,6 +129,15 @@ export default function CodeView() {
                 setSelectedPath(entry.path);
               }
             }}
+          />
+        ),
+        rightPanel: (
+          <CodeFileHistoryPanel
+            copy={copy}
+            selectedPath={resolvedPath}
+            entries={fileHistoryQuery.data ?? []}
+            isLoading={fileHistoryQuery.isPending}
+            error={fileHistoryQuery.error instanceof Error ? fileHistoryQuery.error : null}
           />
         ),
         primarySurface: (

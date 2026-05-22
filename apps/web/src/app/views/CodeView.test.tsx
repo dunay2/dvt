@@ -150,7 +150,9 @@ describe('CodeView', () => {
     expect(
       currentContainer.querySelector('[data-slot="route-workbench-primary-surface"]')?.textContent
     ).toContain(copy.localBufferTitle);
-    expect(currentContainer.querySelector('[data-slot="route-workbench-right-panel"]')).toBeNull();
+    expect(
+      currentContainer.querySelector('[data-slot="route-workbench-right-panel"]')?.textContent
+    ).toContain(copy.historyTitle);
 
     const editor = currentContainer.querySelector<HTMLTextAreaElement>(
       '[data-testid="monaco-code-editor"]'
@@ -179,6 +181,51 @@ describe('CodeView', () => {
     await waitForInitialRender();
     const editor = verifyInitialState();
     await editAndVerifyEditor(editor);
+  });
+
+  it('renders selected-file history and hands revision review to Diff', async () => {
+    setupContainer();
+    await act(async () => {
+      root?.render(
+        <QueryClientProvider client={createTestQueryClient()}>
+          <AppServicesProvider
+            overrides={{
+              ...createAppServicesTestOverrides(),
+              workspaceFilesQuery: buildWorkspaceFilesQueryPort(),
+              workspaceFileHistoryQuery: {
+                getFileHistory: async (path) => [
+                  {
+                    commitSha: '0123456789abcdef',
+                    shortSha: '0123456',
+                    authorName: 'Ada',
+                    authoredAt: '2026-05-22T12:00:00.000Z',
+                    subject: `Update ${path}`,
+                    path,
+                  },
+                ],
+              },
+            }}
+          >
+            <CodeView />
+          </AppServicesProvider>
+        </QueryClientProvider>
+      );
+    });
+
+    await waitForInitialRender();
+    await waitFor(() => container?.textContent?.includes('File history') === true);
+
+    const currentContainer = getContainer();
+    expect(
+      currentContainer.querySelector('[data-slot="route-workbench-right-panel"]')?.textContent
+    ).toContain('Update models/staging/stg_orders.sql');
+
+    const handoff = currentContainer.querySelector<HTMLAnchorElement>(
+      '[data-slot="code-file-history-open-diff"]'
+    );
+    expect(handoff?.getAttribute('href')).toContain('/diff');
+    expect(handoff?.getAttribute('href')).toContain('models%2Fstaging%2Fstg_orders.sql');
+    expect(handoff?.getAttribute('href')).toContain('0123456789abcdef');
   });
 
   it('renders a governed route empty state when no workspace files are available', async () => {

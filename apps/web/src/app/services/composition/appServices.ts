@@ -9,6 +9,7 @@ import type {
   IWorkspaceAdminReadPort,
   IWorkspaceDiffQueryPort,
   IWorkspaceFileContentCommandPort,
+  IWorkspaceFileHistoryQueryPort,
   IWorkspaceFilesQueryPort,
   IWorkspaceGraphSnapshotQueryPort,
   IWorkspacePluginCatalogQueryPort,
@@ -30,6 +31,7 @@ export interface AppServices {
   readonly apiClient: ApiClient;
   readonly workspaceGraphSnapshotQuery: IWorkspaceGraphSnapshotQueryPort;
   readonly workspaceFilesQuery: IWorkspaceFilesQueryPort;
+  readonly workspaceFileHistoryQuery: IWorkspaceFileHistoryQueryPort;
   readonly workspaceDiffQuery: IWorkspaceDiffQueryPort;
   readonly workspacePluginCatalogQuery: IWorkspacePluginCatalogQueryPort;
   readonly workspaceAdminRead: IWorkspaceAdminReadPort;
@@ -47,6 +49,7 @@ export interface AppServicesOverrides {
   readonly apiClient?: ApiClient;
   readonly workspaceGraphSnapshotQuery?: IWorkspaceGraphSnapshotQueryPort;
   readonly workspaceFilesQuery?: IWorkspaceFilesQueryPort;
+  readonly workspaceFileHistoryQuery?: IWorkspaceFileHistoryQueryPort;
   readonly workspaceDiffQuery?: IWorkspaceDiffQueryPort;
   readonly workspacePluginCatalogQuery?: IWorkspacePluginCatalogQueryPort;
   readonly workspaceAdminRead?: IWorkspaceAdminReadPort;
@@ -69,6 +72,8 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
   const workspaceGraphSnapshotQuery =
     overrides.workspaceGraphSnapshotQuery ?? workspacePorts.workspaceGraphSnapshotQuery;
   const workspaceFilesQuery = overrides.workspaceFilesQuery ?? workspacePorts.workspaceFilesQuery;
+  const workspaceFileHistoryQuery =
+    overrides.workspaceFileHistoryQuery ?? workspacePorts.workspaceFileHistoryQuery;
   const workspaceDiffQuery = overrides.workspaceDiffQuery ?? workspacePorts.workspaceDiffQuery;
   const workspacePluginCatalogQuery =
     overrides.workspacePluginCatalogQuery ?? workspacePorts.workspacePluginCatalogQuery;
@@ -86,6 +91,7 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     apiClient,
     workspaceGraphSnapshotQuery,
     workspaceFilesQuery,
+    workspaceFileHistoryQuery,
     workspaceDiffQuery,
     workspacePluginCatalogQuery,
     workspaceAdminRead,

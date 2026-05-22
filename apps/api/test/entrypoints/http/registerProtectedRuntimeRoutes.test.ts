@@ -91,6 +91,7 @@ describe('registerProtectedRuntimeRoutes', () => {
     expect(app.hasRoute({ method: 'GET', url: '/workspace/graph/draft' })).toBe(true);
     expect(app.hasRoute({ method: 'GET', url: '/workspace/diff/changes' })).toBe(true);
     expect(app.hasRoute({ method: 'GET', url: '/workspace/files' })).toBe(true);
+    expect(app.hasRoute({ method: 'GET', url: '/workspace/file-history/:path' })).toBe(true);
     expect(app.hasRoute({ method: 'GET', url: '/workspace/files/:path' })).toBe(true);
     expect(app.hasRoute({ method: 'GET', url: '/runs/:runId/events' })).toBe(true);
     expect(app.hasRoute({ method: 'POST', url: '/runs/:runId/signal' })).toBe(true);

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   useWorkspaceAdminReadPort,
   useWorkspaceDiffQueryPort,
+  useWorkspaceFileHistoryQueryPort,
   useWorkspaceFilesQueryPort,
   useWorkspaceGraphSnapshotQueryPort,
 } from '../services/AppServicesContext';
@@ -92,6 +93,15 @@ export function useWorkspaceFileContentQuery(path: string | undefined) {
     enabled: path != null,
     queryKey: queryKeys.workspace.fileContent(path ?? ''),
     queryFn: () => workspaceFilesQuery.getFileContent(path ?? ''),
+  });
+}
+
+export function useWorkspaceFileHistoryQuery(path: string | undefined) {
+  const workspaceFileHistoryQuery = useWorkspaceFileHistoryQueryPort();
+  return useQuery({
+    enabled: path != null,
+    queryKey: queryKeys.workspace.fileHistory(path ?? ''),
+    queryFn: () => workspaceFileHistoryQuery.getFileHistory(path ?? ''),
   });
 }
 

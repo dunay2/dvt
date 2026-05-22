@@ -8,6 +8,7 @@ import {
   buildWorkspaceDiffChangesEndpoint,
   WORKSPACE_DIFF_CHANGES_ENDPOINT,
 } from './workspaceDiffChangesHttp';
+import { buildWorkspaceFileHistoryEndpoint } from './workspaceFileHistoryHttp';
 import {
   buildWorkspaceGraphDraftEndpoint,
   WORKSPACE_GRAPH_DRAFT_HTTP_ERROR_REASON,
@@ -151,6 +152,44 @@ describe('workspace ports api diff changes', () => {
       },
     ]);
     expect(getJson).toHaveBeenCalledWith(buildWorkspaceDiffChangesEndpoint(scope));
+  });
+});
+
+describe('workspace ports api file history', () => {
+  installWorkspaceScopeHarness();
+
+  it('loads selected file history through the scoped workspace file-history endpoint', async () => {
+    const scope = buildWorkspaceScope();
+    setWorkspaceScope(scope);
+    const { getJson, workspaceFileHistoryQuery } = createApiWorkspacePortHarness({
+      getJson: async <TResponse>() =>
+        [
+          {
+            commitSha: '0123456789abcdef',
+            shortSha: '0123456',
+            authorName: 'Ada',
+            authoredAt: '2026-05-22T12:00:00.000Z',
+            subject: 'Update staging orders model',
+            path: 'models/staging/stg_orders.sql',
+          },
+        ] as TResponse,
+    });
+
+    await expect(
+      workspaceFileHistoryQuery.getFileHistory('models/staging/stg_orders.sql')
+    ).resolves.toEqual([
+      {
+        commitSha: '0123456789abcdef',
+        shortSha: '0123456',
+        authorName: 'Ada',
+        authoredAt: '2026-05-22T12:00:00.000Z',
+        subject: 'Update staging orders model',
+        path: 'models/staging/stg_orders.sql',
+      },
+    ]);
+    expect(getJson).toHaveBeenCalledWith(
+      buildWorkspaceFileHistoryEndpoint('models/staging/stg_orders.sql', scope)
+    );
   });
 });
 
