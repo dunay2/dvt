@@ -1405,7 +1405,7 @@ tasks:
       Monaco belongs to Diff, Artifacts, and Templates as read-only or diff infrastructure.
     complexity: S
     effort_points: 2
-    progress_pct: 90
+    progress_pct: 92
     evidence_refs:
       - docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/f-23-git-file-history-review-plan-20260407.md
@@ -1756,13 +1756,17 @@ tasks:
       - docs/architecture/components/web/graph/canvas-route-chrome-token-component.md
       - docs/architecture/components/web/graph/canvas-route-chrome-token-user-stories.md
       - docs/planning/closeouts/20260522-f24-canvas-route-chrome-token-convergence-closeout.md
+      - apps/web/src/app/views/lineage/lineageChromeTokens.ts
+      - docs/architecture/components/web/lineage/lineage-panel-token-component.md
+      - docs/architecture/components/web/lineage/lineage-panel-token-user-stories.md
+      - docs/planning/closeouts/20260522-f24-lineage-panel-token-convergence-closeout.md
       - apps/web/src/styles/theme.css
     status_reason: >-
       The visual-system baseline, route frame, shell chrome, Runs dense table token component, and
       Canvas route chrome token component are implemented and guarded. Canvas toolbar, draft status,
-      and tab-strip chrome now consume `canvasChromeTokens` instead of route-level color families.
-      Remaining F-24 work is broader panel, legacy component, React Flow palette, and deeper Monaco
-      convergence across the rest of the operator path.
+      tab-strip chrome, and Lineage graph/impact/column panels now consume route-owned token
+      components instead of route-level color families. Remaining F-24 work is React Flow palette,
+      deeper Monaco visual-system hardening, and additional legacy or plugin surfaces.
     definition_of_done:
       - operator-workbench tokens and density modes are documented in active frontend governance
       - route-level hardcode cleanup targets are mapped to concrete surfaces and components
