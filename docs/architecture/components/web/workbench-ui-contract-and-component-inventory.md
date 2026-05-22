@@ -417,17 +417,17 @@ Main screen composition:
 
 ### Templates
 
-| Component                  | Responsibility                    | Status  |
-| -------------------------- | --------------------------------- | ------- |
-| `TemplatesWorkbench`       | Future source-generation route    | Planned |
-| `TemplateCatalog`          | template selection                | Planned |
-| `ProviderProfileSelector`  | target platform or profile choice | Planned |
-| `TemplateParameterForm`    | schema-driven input               | Planned |
-| `GeneratedSourcePreview`   | Monaco-backed preview             | Planned |
-| `GeneratedSourceDiffPane`  | review before export or apply     | Planned |
-| `GeneratedSourceActions`   | export, copy, dispatch            | Planned |
-| `TemplatesEmptyState`      | no template or context            | Planned |
-| `TemplatesValidationState` | invalid input explanation         | Planned |
+| Component                  | Responsibility                    | Status                               |
+| -------------------------- | --------------------------------- | ------------------------------------ |
+| `TemplatesWorkbench`       | Source-generation route           | Current                              |
+| `TemplateCatalog`          | template selection                | Current                              |
+| `ProviderProfileSelector`  | target platform or profile choice | Current in catalog cards             |
+| `TemplateParameterForm`    | schema-driven input               | Current                              |
+| `GeneratedSourcePreview`   | read-only preview                 | Current; Monaco handoff remains F-17 |
+| `GeneratedSourceDiffPane`  | review before export or apply     | Planned                              |
+| `GeneratedSourceActions`   | export, copy, dispatch            | Planned after backend/provider rail  |
+| `TemplatesEmptyState`      | no template or context            | Not needed for built-in catalog v1   |
+| `TemplatesValidationState` | invalid input explanation         | Current                              |
 
 ### Plugins And Admin
 

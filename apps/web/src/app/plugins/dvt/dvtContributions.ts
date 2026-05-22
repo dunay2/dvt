@@ -1,9 +1,16 @@
+import React from 'react';
+import { FileCode2 } from 'lucide-react';
+
+import { createPublishedRouteBootstrapHandle } from '../../bootstrap/routeBootstrapContract';
 import type { PluginContributions } from '../registry';
 import { GraphNodeRenderer } from '../graph/GraphNodeRenderer';
 import { DVT_AUTHORING_NODE_KINDS } from './dvtNodeTypeCatalog';
 import { transformationCanvasGraphStrategy } from './transformationGraphStrategy';
 
 const DVT_PLUGIN_ID = 'dvt';
+const TEMPLATES_ROUTE_BOOTSTRAP_HANDLE = createPublishedRouteBootstrapHandle({
+  pendingDetail: 'Preparing Templates route',
+});
 
 const nodeRenderers = new Map(
   DVT_AUTHORING_NODE_KINDS.map((kind) => [
@@ -20,8 +27,26 @@ export const dvtContributions: PluginContributions = {
   id: DVT_PLUGIN_ID,
   displayName: 'DVT',
   version: '1.0.0',
-  capabilities: ['canvas.render', 'canvas.edit'],
+  capabilities: ['canvas.render', 'canvas.edit', 'plan.preview'],
   nodeKinds: DVT_AUTHORING_NODE_KINDS,
+  views: [
+    {
+      pluginId: DVT_PLUGIN_ID,
+      id: 'dvt.templates',
+      path: '/templates',
+      component: React.lazy(() => import('../../views/TemplatesView')),
+      handle: {
+        routeBootstrap: TEMPLATES_ROUTE_BOOTSTRAP_HANDLE,
+      },
+      placement: {
+        kind: 'shell-nav',
+        label: 'Templates',
+        icon: FileCode2,
+        order: 60,
+        level: 'extended',
+      },
+    },
+  ],
   canvasKinds: [
     {
       kind: 'transformation',

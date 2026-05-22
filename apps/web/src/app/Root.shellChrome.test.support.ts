@@ -15,7 +15,13 @@ type RootShellMountedHarness = {
   queryClient: Pick<QueryClient, 'getQueryState'>;
 };
 
-const ROOT_SHELL_NAVIGATION_HREFS = ['/canvas', '/runs', '/plugins', '/admin'] as const;
+const ROOT_SHELL_NAVIGATION_HREFS = [
+  '/canvas',
+  '/runs',
+  '/templates',
+  '/plugins',
+  '/admin',
+] as const;
 
 function requireElement<T extends Element>(container: ParentNode, selector: string): T {
   const element = container.querySelector<T>(selector);

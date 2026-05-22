@@ -59,7 +59,7 @@ describe('RootShell chrome', () => {
               '[data-slot="shell-menu-navigation-link"]'
             ),
           ].map((link) => link.getAttribute('href'))
-        ).toEqual(['/canvas', '/runs', '/plugins', '/admin']);
+        ).toEqual(['/canvas', '/runs', '/templates', '/plugins', '/admin']);
       });
     } finally {
       await mounted.cleanup();

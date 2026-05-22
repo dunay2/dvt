@@ -100,6 +100,7 @@ describe('plugin runtime projection architecture', () => {
     const canvasTabIds = getCanvasWorkbenchTabViews().map((view) => view.placement.tabId);
 
     expect(shellViewIds).toContain('dbt.canvas');
+    expect(shellViewIds).toContain('dvt.templates');
     expect(shellViewIds).toContain('monitoring.runs');
     expect(shellViewIds).not.toContain('dbt.code');
     expect(shellViewIds).not.toContain('dbt.lineage');
