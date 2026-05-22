@@ -32,7 +32,7 @@ admin RBAC truth, or file write semantics.
 | ---------------------------------- | ---------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `IWorkspaceGraphSnapshotQueryPort` | web query port         | `GetWorkspaceGraphDraft`                                                    | Return a presentation graph snapshot projected from the protected graph draft read model.                               |
 | `IWorkspaceFilesQueryPort`         | web query port         | `ListWorkspaceFiles`, `GetWorkspaceFileContent`                             | List and read workspace files through existing protected API reads.                                                     |
-| `IWorkspaceDiffQueryPort`          | web query port         | `GetWorkspaceDiffChanges`                                                   | Return authoritative diff changes when the backend rail exists; otherwise unavailable in API mode.                      |
+| `IWorkspaceDiffQueryPort`          | web query port         | `GetWorkspaceDiffChanges`                                                   | Return authoritative diff changes through `GET /workspace/diff/changes`.                                                |
 | `IWorkspacePluginCatalogQueryPort` | web query port         | `ListWorkspacePlugins`                                                      | Return backend-published plugin catalog/readiness when the backend rail exists; presentation registry remains separate. |
 | `IWorkspaceAdminReadPort`          | web query port         | `ListAdminRoles`, `ListAdminAuditLog`                                       | Return admin roles and audit read models when backend rails exist; unavailable in API mode until then.                  |
 | `IWarehouseSourceImportPort`       | web command/query port | `ListWarehouseConnections`, `ListWarehouseTables`, `ImportWarehouseSources` | Discover and import warehouse source metadata when backend rails exist; unavailable in product runtime until then.      |
@@ -95,7 +95,7 @@ flowchart LR
 
   Graph --> GraphRoute["GET /workspace/graph/draft"]
   Files --> FileRoutes["GET /workspace/files*"]
-  Diff -. unavailable until backend .-> DiffRail["GetWorkspaceDiffChanges"]
+  Diff --> DiffRail["GET /workspace/diff/changes"]
   Plugins -. unavailable until backend .-> PluginRail["ListWorkspacePlugins"]
   Admin -. unavailable until backend .-> AdminRails["ListAdminRoles / ListAdminAuditLog"]
   Import -. unavailable until backend .-> ImportRails["Warehouse source rails"]
@@ -137,6 +137,8 @@ thin barrel:
 - no `IWorkspacePort` interface remains as a broad capability surface;
 - every workspace-facing port name has one owned concern;
 - read ports do not expose command verbs such as `save` or `import`;
+- API-mode ports with accepted backend rails call only scoped protected runtime
+  endpoints.
 - API-mode unavailable ports reject before transport;
 - views import the narrow port they consume instead of a composition-root
   workspace service.

@@ -35,7 +35,7 @@ The component consumes these rails:
 
 | Rail                      | Type  | Use                                                        |
 | ------------------------- | ----- | ---------------------------------------------------------- |
-| `GetWorkspaceDiffChanges` | query | Provides graph/catalog diff change rows.                   |
+| `GetWorkspaceDiffChanges` | query | Provides graph/catalog `DiffChange` rows.                  |
 | `GetWorkspaceFileContent` | query | Provides current SQL content for selected-node comparison. |
 
 No command rail is introduced by this component.
@@ -150,6 +150,7 @@ Out of scope:
 
 - editing;
 - applying patches;
-- backend diff computation;
+- generic backend diff computation beyond the current published diff-change
+  artifact read model;
 - Artifacts Monaco viewer closure;
 - bundle budget enforcement beyond lazy loading.

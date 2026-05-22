@@ -64,6 +64,7 @@ export const PROTECTED_RUNTIME_TEST_REF = {
   workspaceDraftRoutes: 'apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts',
   workspaceContextRoute: 'apps/api/test/entrypoints/http/workspaceContextRoute.test.ts',
   workspaceFilesRoutes: 'apps/api/test/entrypoints/http/workspaceFilesRoutes.test.ts',
+  workspaceDiffChangesRoutes: 'apps/api/test/entrypoints/http/workspaceDiffChangesRoutes.test.ts',
 } as const;
 
 export const PROTECTED_RUNTIME_PLAN_RAIL = {
@@ -145,5 +146,13 @@ export const PROTECTED_RUNTIME_WORKSPACE_RAIL = {
     listSurface: 'GET /workspace/files',
     getContentSurface: 'GET /workspace/files/:path',
     scopeAndAuthorization: 'workspace:files:view, tenant/project/environment scope',
+  },
+  workspaceDiffChanges: {
+    name: 'GetWorkspaceDiffChanges',
+    boundedContext: 'Operational evidence read models',
+    readModel: 'WorkspaceDiffChanges',
+    port: 'ListWorkspaceDiffChangesUseCase',
+    surface: 'GET /workspace/diff/changes',
+    scopeAndAuthorization: 'workspace:diff:view, tenant/project/environment scope',
   },
 } as const;

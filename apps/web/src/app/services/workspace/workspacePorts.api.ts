@@ -13,6 +13,7 @@ import type {
   WorkspaceFileEntry,
   WorkspaceGraphSnapshot,
 } from '../../ports/workspace';
+import type { DiffChange } from '../../types/dbt';
 import { ApiError, type ApiClient } from '../api/createApiClient';
 import { detectWorkspacePortLocale, resolveWorkspacePortCopy } from './workspacePortCopy';
 import {
@@ -21,6 +22,10 @@ import {
   type WorkspaceApiUnsupportedCapability,
   type WorkspaceApiUnsupportedRail,
 } from './workspaceErrors';
+import {
+  buildWorkspaceDiffChangesEndpoint,
+  readWorkspaceDiffChangesScope,
+} from './workspaceDiffChangesHttp';
 import {
   buildWorkspaceFileContentEndpoint,
   buildWorkspaceFilesEndpoint,
@@ -87,10 +92,12 @@ export function createApiWorkspaceGraphSnapshotQueryPort(
   };
 }
 
-export function createApiWorkspaceDiffQueryPort(): IWorkspaceDiffQueryPort {
+export function createApiWorkspaceDiffQueryPort(apiClient: ApiClient): IWorkspaceDiffQueryPort {
   return {
     getDiffChanges: () =>
-      rejectUnsupportedApiWorkspaceCapability('workspace.diffChanges', 'GetWorkspaceDiffChanges'),
+      apiClient.getJson<DiffChange[]>(
+        buildWorkspaceDiffChangesEndpoint(readWorkspaceDiffChangesScope())
+      ),
   };
 }
 

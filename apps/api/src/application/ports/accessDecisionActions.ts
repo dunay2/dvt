@@ -15,6 +15,7 @@ export const AUTHORIZATION_ACTION_NAME = {
   runLogsView: 'run:logs:view',
   workspaceGraphDraftView: 'workspace:graph-draft:view',
   workspaceFilesView: 'workspace:files:view',
+  workspaceDiffView: 'workspace:diff:view',
 } as const;
 
 export type CommandAuthorizationActionName =
@@ -30,7 +31,8 @@ export type QueryAuthorizationActionName =
   | typeof AUTHORIZATION_ACTION_NAME.runList
   | typeof AUTHORIZATION_ACTION_NAME.runLogsView
   | typeof AUTHORIZATION_ACTION_NAME.workspaceGraphDraftView
-  | typeof AUTHORIZATION_ACTION_NAME.workspaceFilesView;
+  | typeof AUTHORIZATION_ACTION_NAME.workspaceFilesView
+  | typeof AUTHORIZATION_ACTION_NAME.workspaceDiffView;
 
 export type AuthorizationAction =
   | {
@@ -90,5 +92,9 @@ export const AUTHORIZATION_ACTION = {
   workspaceFilesView: {
     kind: 'query',
     name: AUTHORIZATION_ACTION_NAME.workspaceFilesView,
+  },
+  workspaceDiffView: {
+    kind: 'query',
+    name: AUTHORIZATION_ACTION_NAME.workspaceDiffView,
   },
 } as const satisfies Readonly<Record<string, AuthorizationAction>>;

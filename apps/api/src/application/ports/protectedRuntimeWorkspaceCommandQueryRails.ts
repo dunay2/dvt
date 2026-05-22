@@ -104,4 +104,32 @@ export const PROTECTED_RUNTIME_WORKSPACE_COMMAND_QUERY_RAILS = [
       PROTECTED_RUNTIME_NEGATIVE_CASE.invalidPath,
     ]),
   }),
+  defineProtectedRuntimeRail({
+    name: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspaceDiffChanges.name,
+    kind: PROTECTED_RUNTIME_RAIL_KIND.query,
+    boundedContext: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspaceDiffChanges.boundedContext,
+    dddObject: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspaceDiffChanges.readModel,
+    applicationPort: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspaceDiffChanges.port,
+    adapterSurface: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspaceDiffChanges.surface,
+    scopeAndAuthorization:
+      PROTECTED_RUNTIME_WORKSPACE_RAIL.workspaceDiffChanges.scopeAndAuthorization,
+    coverage: [
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingToken,
+        PROTECTED_RUNTIME_TEST_REF.workspaceDiffChangesRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingAction,
+        PROTECTED_RUNTIME_TEST_REF.workspaceDiffChangesRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingScope,
+        PROTECTED_RUNTIME_TEST_REF.workspaceDiffChangesRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.invalidGraphSource,
+        PROTECTED_RUNTIME_TEST_REF.workspaceDiffChangesRoutes,
+      ],
+    ],
+  }),
 ] as const satisfies readonly ProtectedRuntimeCommandQueryRail[];
