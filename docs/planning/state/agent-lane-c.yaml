@@ -882,7 +882,7 @@ tasks:
   - task_id: CI-AUDIT-CONTRACTS-SCOPE
     parent_task: RC-C2
     priority: P2
-    status: queued
+    status: done
     objective: >-
       decide whether `contracts.yml` should keep inline `dorny/paths-filter` scope rules or move to
       the central workflow-scope policy used by newer CI gates.
@@ -892,16 +892,22 @@ tasks:
       CI-tool tests lock the chosen contract-scope behavior.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
+      - docs/planning/closeouts/20260515-ci-audit-contracts-scope-closeout.md
       - docs/planning/reviews/ci-and-delivery/20260506-ci-build-audit-review.md
       - .github/workflows/contracts.yml
       - tools/ci/policy/workflow-scope.json
       - tools/ci/emit-scope.mjs
+      - tools/ci/scope-config.mjs
+      - tools/ci/emit-scope.test.mjs
+      - tools/ci/workflow-pattern-parity.test.mjs
+      - docs/guides/testing-and-ci-capabilities.md
     status_reason: >-
-      The audit identified workflow-scope ownership drift: most newer gates use the central scope
-      policy and emitter, while the contracts workflow still carries local inline filters.
-    last_verified: '2026-05-09'
+      Closed by accepted 2026-05-15 closeout and re-verified on 2026-05-22: contracts.yml validates
+      the central workflow-scope policy, emits scope via `emit-scope --mode contracts`, and workflow
+      parity tests prohibit reverting to inline `dorny/paths-filter` rules.
+    last_verified: '2026-05-22'
   - task_id: CI-AUDIT-ADR0-OWNER
     parent_task: RC-C2
     priority: P2
