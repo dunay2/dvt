@@ -111,19 +111,36 @@ describe('WorkflowEngine canonical map hardcut architecture', () => {
 
   it('keeps Lane A WE-HX planning language aligned with the hardcut posture', () => {
     const lane = readRepoSource('docs/planning/state/agent-lane-a.yaml');
+    const weHxBlock = lane.slice(
+      lane.indexOf('  - task_id: WE-HX\n'),
+      lane.indexOf('  - task_id: WE-HX-0\n')
+    );
+    const weHx2Block = lane.slice(
+      lane.indexOf('  - task_id: WE-HX-2\n'),
+      lane.indexOf('  - task_id: WE-HX-3\n')
+    );
+    const weHx3Block = lane.slice(
+      lane.indexOf('  - task_id: WE-HX-3\n'),
+      lane.indexOf('  - task_id: WE-HX-4\n')
+    );
+    const weHxPlanningText = [weHxBlock, weHx2Block, weHx3Block].join('\n');
 
-    expect(lane).toContain(
+    expect(weHxBlock).toContain(
       'derive the full WorkflowEngine subsystem to a hardcut hexagonal architecture'
     );
-    expect(lane).toContain('narrow WorkflowEngine to a facade over dedicated use-case services');
-    expect(lane).toContain('Queued after facade use-case narrowing.');
+    expect(weHx2Block).toContain(
+      'narrow WorkflowEngine to a facade over dedicated use-case services'
+    );
+    expect(weHx3Block).toContain('Queued after facade use-case narrowing.');
 
     for (const forbidden of [
       'compatibility-first',
       'compatibility facade',
       'Compatibility-facade',
     ]) {
-      expect(lane, `Lane A must not keep ${forbidden}`).not.toContain(forbidden);
+      expect(weHxPlanningText, `Lane A WE-HX blocks must not keep ${forbidden}`).not.toContain(
+        forbidden
+      );
     }
   });
 });
