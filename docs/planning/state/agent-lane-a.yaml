@@ -236,60 +236,66 @@ tasks:
     effort_points: 1
     progress_pct: 100
     evidence_refs:
-      - docs/planning/closeouts/20260324-s18-follow-up-proposal-capture-closeout.md
-      - docs/planning/proposals/todo.md
-    status_reason: The follow-up is canonically captured but implementation has not started.
-    last_verified: '2026-03-31'
+      - docs/planning/closeouts/20260513-s18-f1-a-state-store-role-boundary-closeout.md
+      - docs/planning/closeouts/20260514-s18-f1-b-state-store-role-regression-guards-closeout.md
+      - docs/planning/closeouts/20260515-s18-f1-c-state-store-role-contract-shape-closeout.md
+    status_reason: >-
+      Completed through S18-F1-A/B/C: the state-store role bundle boundary is root-owned,
+      convenience rewiring is guarded, and the export contract shape has negative-path coverage.
+    last_verified: '2026-05-22'
   - task_id: S18-F1-A
     parent_task: S18-F1
     priority: P2
-    status: queued
+    status: done
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     objective: lock the explicit role bundle behind a stricter root-owned boundary.
     dependency: S18
     target:
       Composition roots cannot reconstruct the role bundle ad hoc outside the sanctioned boundary.
     evidence_refs:
-      - docs/planning/closeouts/20260324-s18-follow-up-proposal-capture-closeout.md
-      - docs/planning/proposals/todo.md
-    status_reason: Planned boundary-hardening slice; implementation not started.
-    last_verified: '2026-03-31'
+      - docs/planning/closeouts/20260513-s18-f1-a-state-store-role-boundary-closeout.md
+    status_reason: >-
+      Implemented by accepted S18-F1-A state-store role boundary closeout, feature-mechanization
+      plan, API role-binding tests, and dvt-api typecheck.
+    last_verified: '2026-05-22'
   - task_id: S18-F1-B
     parent_task: S18-F1
     priority: P2
-    status: queued
+    status: done
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     objective: add regression guards against convenience rewiring of state-store roles.
     dependency: S18-F1-A
     target: >-
       Regression coverage fails if roots drift back to convenience aliasing or aggregate
       reconstruction.
     evidence_refs:
-      - docs/planning/closeouts/20260324-s18-follow-up-proposal-capture-closeout.md
-      - docs/planning/proposals/todo.md
-    status_reason: Guard-rail slice is planned but not started.
-    last_verified: '2026-03-31'
+      - docs/planning/closeouts/20260514-s18-f1-b-state-store-role-regression-guards-closeout.md
+    status_reason: >-
+      Implemented by accepted S18-F1-B state-store role regression guards closeout and executable
+      API architecture guard coverage against convenience rewiring.
+    last_verified: '2026-05-22'
   - task_id: S18-F1-C
     parent_task: S18-F1
     priority: P2
-    status: queued
+    status: done
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     objective:
       close the bundle contract shape with explicit export semantics and negative-path tests.
     dependency: S18-F1-B
     target:
       Consumers see a locked boundary shape with negative-path coverage for invalid role sources.
     evidence_refs:
-      - docs/planning/closeouts/20260324-s18-follow-up-proposal-capture-closeout.md
-      - docs/planning/proposals/todo.md
-    status_reason: Contract-shape closure remains backlog work.
-    last_verified: '2026-03-31'
+      - docs/planning/closeouts/20260515-s18-f1-c-state-store-role-contract-shape-closeout.md
+    status_reason: >-
+      Implemented by accepted S18-F1-C state-store role contract-shape closeout with explicit export
+      semantics and negative-path boundary coverage.
+    last_verified: '2026-05-22'
   - task_id: schema-migration-rollback
     priority: P1
     status: done
@@ -323,7 +329,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: RC-G1
     priority: P1
-    status: in_progress
+    status: done
     objective: retire contract ownership drift across `engine`, `planner`, and `shared`.
     dependency: none
     target: >-
@@ -331,18 +337,13 @@ tasks:
       workboard reflects the active tracker instead of an orphan review note.
     complexity: L
     effort_points: 2
-    progress_pct: 50
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
-      - docs/planning/closeouts/20260402-rc-g1-governance-startup-reconciliation-closeout.md
-      - docs/evidence/ED-20260402-rc-g1-governance-startup-reconciliation.md
-      - docs/evidence/ED-20260411-rc-g1-b4-engine-shared-kernel-hardening.md
-      - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
+      - docs/planning/closeouts/20260514-rc-g1-contract-ownership-closure-closeout.md
     status_reason: >-
-      `RC-G1-A` and `RC-G1-B` are now closed: the ownership matrix is frozen and the engine-owned
-      behavioral ports no longer leak through the active `@dvt/contracts` surface. The remaining
-      execution slices are `RC-G1-C` and `RC-G1-D`.
-    last_verified: '2026-04-04'
+      Closed by accepted RC-G1 contract ownership closure closeout, ARC-2 evidence, mitigated risk
+      register, and focused ownership architecture validation after RC-G1-B/C/D completed.
+    last_verified: '2026-05-22'
   - task_id: RC-G1-A
     parent_task: RC-G1
     priority: P1
@@ -1306,7 +1307,7 @@ tasks:
     last_verified: '2026-04-06'
   - task_id: AR-A4
     priority: P2
-    status: queued
+    status: done
     objective: >-
       remove or freeze the custom policy namespace registry (CustomPolicyNamespaceRegistry.v1.ts)
       until a real consumer exists to reduce speculative extensibility maintenance cost.
@@ -1316,11 +1317,13 @@ tasks:
       consumer and ADR backing.
     complexity: S
     effort_points: 1
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
-    status_reason: Zero consumers exist; speculative extensibility carries maintenance cost.
-    last_verified: '2026-04-02'
+      - docs/planning/closeouts/20260513-ar-a4-custom-policy-namespace-freeze-closeout.md
+    status_reason: >-
+      Implemented by accepted AR-A4 freeze plan, closeout, ARC evidence, risk entry, and
+      planner/contracts architecture guards.
+    last_verified: '2026-05-22'
   - task_id: AR-A5
     priority: P2
     status: done
@@ -1349,7 +1352,7 @@ tasks:
     last_verified: '2026-05-06'
   - task_id: AR-A6
     priority: P2
-    status: queued
+    status: done
     objective: >-
       add snapshot projection concurrency requirement to IRunStateStore contract so that mutual
       exclusion during rebuild is a contract invariant, not an implementation detail of advisory
@@ -1360,13 +1363,13 @@ tasks:
       alternative adapter implementations must honor the invariant.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/planning/closeouts/20260513-ar-a6-snapshot-rebuild-concurrency-contract-closeout.md
     status_reason: >-
-      Advisory locks are PostgreSQL-specific; the contract must mandate concurrency safety for any
-      adapter implementation.
-    last_verified: '2026-04-02'
+      Implemented by accepted AR-A6 snapshot rebuild concurrency contract closeout, ARC evidence,
+      risk entry, state-store docs, and contracts/engine/Postgres validation guards.
+    last_verified: '2026-05-22'
   - task_id: AR-A7
     priority: P2
     status: in_progress
@@ -1949,19 +1952,29 @@ tasks:
   - task_id: WE-HX-3
     parent_task: WE-HX
     priority: P1
-    status: queued
+    status: done
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     objective: decompose start-run application flow into narrow collaborators.
     dependency: WE-HX-2
     target: >-
       Admission, provider/capability resolution, intent creation, execution dispatch, and failure
       policy are isolated and independently testable.
     evidence_refs:
+      - packages/@dvt/engine/src/application/StartRunApplicationService.ts
+      - packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts
+      - packages/@dvt/engine/src/services/startRun/StartRunIntentService.ts
+      - packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts
+      - packages/@dvt/engine/src/services/startRun/StartRunFailurePolicy.ts
+      - packages/@dvt/engine/test/services/StartRunApplicationDecomposition.test.ts
+      - packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
+      - packages/@dvt/engine/test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
-    status_reason: Queued after facade use-case narrowing.
-    last_verified: '2026-04-03'
+    status_reason: >-
+      Start-run application flow is decomposed into admission, intent, execution, and failure-policy
+      phase services with architecture and behavior gates passing.
+    last_verified: '2026-05-22'
   - task_id: WE-HX-4
     parent_task: WE-HX
     priority: P1
@@ -2094,10 +2107,10 @@ tasks:
   - task_id: WE-HX-5
     parent_task: WE-HX
     priority: P1
-    status: queued
+    status: done
     complexity: M
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     objective: standardize provider resolution and telemetry policy seams.
     dependency: WE-HX-3, WE-HX-4
     target: >-
@@ -2105,15 +2118,23 @@ tasks:
       duplication in orchestration paths.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
-    status_reason: Sequenced after decomposition waves.
-    last_verified: '2026-04-03'
+      - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-component.md
+      - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-user-stories.md
+      - docs/planning/closeouts/20260512-we-hx-5-provider-telemetry-seams-closeout.md
+      - docs/evidence/ed-20260512-we-hx-5-provider-telemetry-seams.md
+      - docs/risk-register/quality/R-20260512-WE-HX-5-PROVIDER-TELEMETRY-SEAMS.yaml
+      - packages/@dvt/engine/test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+    status_reason: >-
+      Closed by accepted WE-HX-5 provider and telemetry seams closeout, ARC evidence, risk entry,
+      component guide, user stories, and semantic architecture guard.
+    last_verified: '2026-05-22'
   - task_id: WE-HX-6
     parent_task: WE-HX
     priority: P1
-    status: queued
+    status: done
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     objective: harden test doubles and architecture fitness checks for subsystem boundaries.
     dependency: WE-HX-5
     target: >-
@@ -2121,8 +2142,16 @@ tasks:
       boundary constraints.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
-    status_reason: Final hardening wave to keep decomposition stable.
-    last_verified: '2026-04-03'
+      - docs/architecture/components/engine/architecture/workflow-engine-boundary-fitness-component.md
+      - docs/architecture/components/engine/architecture/workflow-engine-boundary-fitness-user-stories.md
+      - docs/planning/closeouts/20260512-we-hx-6-boundary-fitness-closeout.md
+      - docs/evidence/ed-20260512-we-hx-6-boundary-fitness.md
+      - docs/risk-register/quality/R-20260512-WE-HX-6-BOUNDARY-FITNESS.yaml
+      - packages/@dvt/engine/test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+    status_reason: >-
+      Closed by accepted WE-HX-6 boundary-fitness closeout, ARC evidence, risk entry, component
+      guide, user stories, and semantic architecture guard for fixture/runtime boundary drift.
+    last_verified: '2026-05-22'
   - task_id: plan-version-reset
     priority: P1
     status: done
