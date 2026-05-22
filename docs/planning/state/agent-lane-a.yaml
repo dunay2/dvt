@@ -644,25 +644,26 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: DHM
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
       drive DDD/Hexagonal modularization slices starting with WS5 (test fixture modularization),
       then WS1, WS3, WS4, WS2, WS6.
     dependency: none
     target: >-
-      WS5 fixture modularization is in progress (WorkflowEngine core tests moved to shared
-      builders); complete remaining WS5 helper-heavy engine tests, then lock roadmap for
-      WS1/WS3/WS4/WS2/WS6.
+      WS5-A, WS5-B, WS1, WS3, WS4, WS2, and WS6 are closed with accepted evidence and executable
+      architecture guards.
     complexity: L
     effort_points: 2
-    progress_pct: 52
+    progress_pct: 100
     evidence_refs:
       - docs/evidence/critical/ED-20260330-lane-a-ws5-intent-log-fixture-modularization.md
       - docs/evidence/critical/ED-20260331-lane-a-ws5-b-engine-test-fixture-modularization.md
-      - docs/risk-register/quality/R-20260330-WS5-ENGINE-TEST-FIXTURE-DRIFT.md
+      - docs/planning/closeouts/20260522-dhm-modularization-parent-closeout.md
+      - docs/planning/closeouts/20260512-dhm-ws6-semantic-closure-closeout.md
     status_reason: >-
-      WS5 and WS1 are now closed; the next modularization workstream in sequence is WS3.
-    last_verified: '2026-04-01'
+      DHM is closed as a modularization parent after WS5-A, WS5-B, WS1, WS3, WS4, WS2, and WS6 all
+      have accepted closeout/evidence records and executable architecture guards.
+    last_verified: '2026-05-22'
   - task_id: DHM-WS5-A
     parent_task: DHM
     priority: P1
@@ -721,60 +722,77 @@ tasks:
   - task_id: DHM-WS3
     parent_task: DHM
     priority: P1
-    status: queued
+    status: done
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     objective: execute the WS3 modularization slice for the next bounded DDD seam.
     dependency: DHM-WS1
     target: WS3 responsibilities are isolated behind clearer ports and module seams.
     evidence_refs:
-      - docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md
-    status_reason: Sequenced backlog item; no implementation evidence yet.
-    last_verified: '2026-03-31'
+      - docs/evidence/ed-20260512-dhm-ws3-start-run-decomposition.md
+      - docs/evidence/ed-20260518-dhm-ws3-admission-seam.md
+      - docs/planning/closeouts/20260512-dhm-ws3-start-run-application-decomposition-closeout.md
+      - docs/planning/closeouts/20260518-dhm-ws3-admission-seam-closeout.md
+    status_reason: >-
+      WS3 is closed: start-run execution, failure, and admission phases are injected through
+      explicit seams, with component docs and architecture guards covering the decomposition.
+    last_verified: '2026-05-22'
   - task_id: DHM-WS4
     parent_task: DHM
     priority: P1
-    status: queued
+    status: done
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     objective: execute the WS4 modularization slice after WS3.
     dependency: DHM-WS3
     target: WS4 boundaries are extracted without widening composition-root leakage.
     evidence_refs:
-      - docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md
-    status_reason: Sequenced backlog item; no implementation evidence yet.
-    last_verified: '2026-03-31'
+      - docs/evidence/ed-20260512-dhm-ws4-runtime-path-decomposition.md
+      - docs/planning/closeouts/20260512-dhm-ws4-runtime-path-decomposition-closeout.md
+      - docs/risk-register/quality/R-20260512-DHM-WS4-RUNTIME-PATH-DECOMPOSITION.yaml
+    status_reason: >-
+      WS4 is closed: cancel and signal runtime-control paths are split behind command and signal
+      services, while the compatibility facade remains a delegator.
+    last_verified: '2026-05-22'
   - task_id: DHM-WS2
     parent_task: DHM
     priority: P1
-    status: queued
+    status: done
     complexity: L
     effort_points: 8
-    progress_pct: 0
+    progress_pct: 100
     objective: execute the WS2 modularization slice after WS4.
     dependency: DHM-WS4
     target: WS2 responsibilities are pulled behind explicit DDD seams and testable adapters.
     evidence_refs:
-      - docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md
-    status_reason: Sequenced backlog item; no implementation evidence yet.
-    last_verified: '2026-03-31'
+      - docs/evidence/ed-20260512-dhm-ws2-runtime-composition-root.md
+      - docs/planning/closeouts/20260512-dhm-ws2-runtime-composition-root-closeout.md
+      - docs/risk-register/quality/R-20260512-DHM-WS2-RUNTIME-COMPOSITION-ROOT.yaml
+    status_reason: >-
+      WS2 is closed: the intent reconciler runtime startup sequence is owned by the API runtime
+      composition object and guarded by component-level architecture tests.
+    last_verified: '2026-05-22'
   - task_id: DHM-WS6
     parent_task: DHM
     priority: P1
-    status: queued
+    status: done
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     objective: close the final WS6 modularization stream after the preceding workstreams land.
     dependency: DHM-WS2
     target:
       The remaining helper and module graph drift is retired with explicit architecture ownership.
     evidence_refs:
-      - docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md
-    status_reason: Final modularization backlog item; no implementation evidence yet.
-    last_verified: '2026-03-31'
+      - docs/evidence/ed-20260512-dhm-ws6-semantic-closure.md
+      - docs/planning/closeouts/20260512-dhm-ws6-semantic-closure-closeout.md
+      - docs/risk-register/quality/R-20260512-DHM-WS6-SEMANTIC-CLOSURE.yaml
+    status_reason: >-
+      WS6 is closed: semantic owned-concern headers, component documentation, user stories, and
+      architecture guards now cover the full modularization stream.
+    last_verified: '2026-05-22'
   - task_id: S08
     priority: P0
     status: done
@@ -3026,11 +3044,11 @@ dependency_notes:
     `schema-migration-rollback` remains dependent on `S02` and is already closed with a concrete
     adapter rollback path.
   - >-
-    `DHM` is now split into WS5-A, WS5-B, WS1, WS3, WS4, WS2, and WS6 so remaining modularization
-    work is schedulable.
+    `DHM` is closed after WS5-A, WS5-B, WS1, WS3, WS4, WS2, and WS6 all landed with evidence,
+    closeouts, component docs, and architecture guards.
   - >-
-    `DHM-WS5-B` and `DHM-WS1` are now closed; `DHM-WS3` is the next modularization slice in
-    sequence.
+    The older DHM modularization backlog is no longer the active queue; future WorkflowEngine
+    hardcut work continues under the `WE-HX-*` sequence.
   - >-
     `RC-G1` is now the active Lane A tracker for contract ownership drift; `RC-G1-A` is closed and
     `RC-G1-B/C/D` define the remaining execution sequence.
