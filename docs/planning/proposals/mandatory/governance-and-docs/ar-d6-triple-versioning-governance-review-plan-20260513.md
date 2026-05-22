@@ -76,6 +76,7 @@ allowedImplementationSurfaces:
   - docs/planning/reviews/architecture-and-governance/20260513-ar-d6-triple-versioning-governance-review.md
   - docs/planning/reviews/index.md
   - docs/planning/index.md
+  - docs/planning/state/agent-lane-d.yaml
   - docs/adr/ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md
   - docs/.manifest.json
 forbiddenImplementationSurfaces:
