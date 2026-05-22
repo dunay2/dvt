@@ -1353,7 +1353,7 @@ tasks:
     last_verified: '2026-05-22'
   - task_id: F-17
     priority: P1
-    status: in_progress
+    status: blocked
     objective: >-
       adopt Monaco as an embedded review and generation surface for Diff, Artifacts, and Templates
       without changing the persistent shell or making Canvas Monaco-centric.
@@ -1365,21 +1365,24 @@ tasks:
       panes arrive only after governed query and contract work is in place.
     complexity: L
     effort_points: 8
-    progress_pct: 15
+    progress_pct: 95
     evidence_refs:
-      - docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
-      - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
-      - docs/architecture/components/web/main-workspace-views-and-ux.md
-      - docs/architecture/components/web/library-and-open-source-reference-stack.md
+      - docs/planning/closeouts/20260519-f17b-monaco-diff-review-surface-closeout.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/f17c-artifacts-monaco-readonly-viewer-plan-20260520.md
+      - docs/planning/closeouts/20260522-f17d-templates-monaco-preview-closeout.md
+      - docs/planning/closeouts/20260522-f17e-monaco-bundle-isolation-closeout.md
+      - docs/planning/closeouts/20260522-f17f-workspace-diff-backend-rail-closeout.md
+      - docs/planning/closeouts/20260515-remaining-review-reconciliation-closeout.md
     status_reason: >-
-      The Monaco strategy has been realigned around route-level workbenches and embedded review
-      surfaces. Documentation and task decomposition are now in progress; implementation stays gated
-      behind the current frontend boundary and contract cleanup chain.
+      Monaco embedded surfaces are implemented for Diff, Artifacts, Templates preview, lazy bundle
+      isolation, and the Diff backend rail. Parent closure remains blocked because F-17-A was
+      reopened by hard review: CodeView still exposes Monaco, so the old Diff/Artifacts/Templates
+      only wording needs an explicit product architecture decision before F-17 can be accepted.
     definition_of_done:
       - F-17-A through F-17-F are linked to the same embedded-surface strategy
       - no active task claims Canvas replacement or Monaco shell ownership
       - Monaco is production-ready only after lazy loading and governed contract convergence land
-    last_verified: '2026-04-03'
+    last_verified: '2026-05-22'
   - task_id: F-17-A
     parent_task: F-17
     priority: P1
