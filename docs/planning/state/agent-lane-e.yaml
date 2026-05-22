@@ -1383,7 +1383,7 @@ tasks:
   - task_id: F-17-A
     parent_task: F-17
     priority: P1
-    status: review
+    status: blocked
     objective: >-
       align the proposal, roadmap, and architecture docs so Monaco is positioned only in Diff,
       Artifacts, and Templates.
@@ -1395,24 +1395,19 @@ tasks:
     effort_points: 2
     progress_pct: 90
     evidence_refs:
-      - docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
-      - docs/planning/proposals/nice-to-have/frontend-and-ux/f-23-git-file-history-review-plan-20260407.md
-      - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
-      - docs/architecture/components/web/frontend-data-boundary-architecture.md
-      - docs/architecture/components/web/ux-implementation-guide.md
+      - docs/planning/closeouts/20260515-remaining-review-reconciliation-closeout.md
+      - apps/web/src/app/views/CodeView.tsx
       - docs/architecture/components/web/main-workspace-views-and-ux.md
-      - docs/architecture/components/web/screen-manuals-and-user-stories.md
     status_reason: >-
-      The canonical docs and roadmap are being rewritten around the embedded-surface model, and the
-      legacy `vscode style` integration note has now been realigned so it no longer claims a
-      Canvas-centered Monaco shell or a primary Git explorer outside the governed route-level
-      workbench model. Final closure waits on full validation and regenerated planning outputs.
+      Hard review reopened the closure: active code and docs still expose Monaco in CodeView/Code,
+      so the Diff/Artifacts/Templates-only target needs a product architecture decision or a
+      follow-up hard-cut before canonical close.
     definition_of_done:
       - docs and roadmap wording match each other
       - no task or doc claims Canvas replacement by Monaco
       - route-level shell topology remains unchanged in the architecture story
       - F-21 is described as using Monaco only for preview and diff infrastructure
-    last_verified: '2026-04-07'
+    last_verified: '2026-05-22'
   - task_id: F-17-B
     parent_task: F-17
     priority: P1
@@ -1476,7 +1471,7 @@ tasks:
   - task_id: F-17-D
     parent_task: F-17
     priority: P2
-    status: blocked
+    status: done
     objective: >-
       integrate Monaco into the future Templates route so generated source preview and before or
       after diff use the same governed review primitive.
@@ -1487,24 +1482,27 @@ tasks:
       scaffolds.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
-      - docs/architecture/components/web/main-workspace-views-and-ux.md
-      - docs/architecture/components/web/screen-manuals-and-user-stories.md
+      - buzon/20260522-f17d-fowler-templates-monaco-preview-analysis.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/f17d-templates-monaco-preview-plan-20260522.md
+      - docs/architecture/components/web/templates/execution-template-monaco-preview-component.md
+      - docs/architecture/components/web/templates/execution-template-monaco-preview-user-stories.md
+      - apps/web/src/app/views/templates/templatesMonacoPreview.architecture.test.ts
+      - docs/planning/closeouts/20260522-f17d-templates-monaco-preview-closeout.md
     status_reason: >-
-      Blocked until F-21 establishes the Templates route and its governed source-generation
-      contract. Monaco cannot own a route that does not exist yet.
+      Closed F-17-D with Templates-owned read-only Monaco preview for generated source; the route
+      still owns catalog selection, parameter state, provider context, and generation readiness.
     definition_of_done:
       - Templates remains the route owner and Monaco remains preview or diff infrastructure only
       - generated-source preview and before or after diff are both supported
       - route-level shell topology remains unchanged
       - docs, contracts, and route expectations for Templates stay aligned
-    last_verified: '2026-04-03'
+    last_verified: '2026-05-22'
   - task_id: F-17-E
     parent_task: F-17
     priority: P2
-    status: queued
+    status: done
     objective: >-
       add Monaco lazy loading and bundle isolation so editor weight is excluded from the initial
       route bundle and loaded only when needed.
@@ -1514,23 +1512,27 @@ tasks:
       clean, and lazy loading is mandatory before the slice is treated as production-ready.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
-      - apps/web/package.json
+      - buzon/20260522-f17e-fowler-monaco-bundle-isolation-analysis.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/f17e-monaco-bundle-isolation-plan-20260522.md
+      - docs/architecture/components/web/monaco/monaco-bundle-isolation-component.md
+      - docs/architecture/components/web/monaco/monaco-bundle-isolation-user-stories.md
+      - apps/web/src/app/components/monaco/monacoBundleIsolation.architecture.test.ts
+      - docs/planning/closeouts/20260522-f17e-monaco-bundle-isolation-closeout.md
     status_reason: >-
-      Ready for implementation once the first Monaco-backed routes exist. Lazy loading is a hard
-      gate before any Monaco slice can be called production-ready.
+      Closed F-17-E with route-safe lazy Monaco gateways, surface-only third-party imports,
+      component guide, user stories, and semantic bundle-isolation architecture guards.
     definition_of_done:
       - lazy loading is implemented before the slice is called production-ready
       - Monaco is absent from the initial route bundle until needed
       - route-level shell topology remains unchanged
       - bundle guardrails are documented with the Monaco route slices
-    last_verified: '2026-04-03'
+    last_verified: '2026-05-22'
   - task_id: F-17-F
     parent_task: F-17
     priority: P2
-    status: blocked
+    status: done
     objective: >-
       converge Monaco-backed panes on real backend contracts and artifact truth instead of
       placeholder payloads or provisional route-local data.
@@ -1540,21 +1542,24 @@ tasks:
       exists, and read-only Monaco panes stop depending on fabricated or placeholder content.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
-      - docs/planning/reviews/architecture-and-governance/20260417-dvt-artifacts-review.md
-      - apps/web/src/app/views/DiffView.tsx
-      - apps/web/src/app/views/ArtifactsView.tsx
+      - docs/planning/closeouts/20260522-f17f-workspace-diff-backend-rail-closeout.md
+      - buzon/20260522-f17f-fowler-workspace-diff-backend-rail-analysis.md
+      - apps/api/src/application/ports/workspaceDiffChanges.ts
+      - apps/api/src/application/services/listWorkspaceDiffChangesUseCase.ts
+      - apps/api/src/entrypoints/http/workspaceDiffChangesRoutes.ts
+      - apps/web/src/app/views/diff/useDiffData.ts
     status_reason: >-
-      Blocked on contract and artifact truth. Backend-backed Monaco panes must wait for F-07, F-11,
-      and the route slices that actually consume real data.
+      Closed F-17-F for Diff with the protected GetWorkspaceDiffChanges query rail, backend route,
+      web query consumption, architecture docs, and fail-closed validation. Artifact truth remains a
+      separate governed follow-up instead of a placeholder dependency.
     definition_of_done:
       - backend-backed Monaco panes land only after route contracts are governed
       - Diff and Artifacts stop depending on placeholder payloads where real data exists
       - Templates uses Monaco against governed generation contracts, not view-local string assembly
       - docs, code, and runtime expectations stay aligned
-    last_verified: '2026-04-03'
+    last_verified: '2026-05-22'
   - task_id: F-18
     priority: P2
     status: in_progress
