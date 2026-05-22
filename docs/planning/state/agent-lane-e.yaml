@@ -1597,7 +1597,7 @@ tasks:
     last_verified: '2026-05-22'
   - task_id: F-19
     priority: P2
-    status: in_progress
+    status: done
     objective: >-
       formalize the Marquez visual system for open-data and public-data surfaces so that the product
       distinguishes civic or explanatory views from the operator workbench.
@@ -1608,16 +1608,21 @@ tasks:
       the operator workbench, and which routes or future views can adopt it safely.
     complexity: S
     effort_points: 3
-    progress_pct: 20
+    progress_pct: 100
     evidence_refs:
+      - docs/planning/proposals/mandatory/frontend-and-ux/f19-marquez-public-data-visual-system-plan-20260522.md
+      - docs/planning/closeouts/20260522-f19-marquez-public-data-visual-system-closeout.md
+      - docs/architecture/components/web/public-data/marquez-visual-system-component.md
+      - docs/architecture/components/web/public-data/marquez-visual-system-user-stories.md
+      - apps/web/src/app/views/publicDataVisualSystem.architecture.test.ts
       - docs/architecture/components/web/ux-implementation-guide.md
       - docs/architecture/components/web/library-and-open-source-reference-stack.md
       - docs/planning/proposals/frontend-roadmap-20260219.md
     status_reason: >-
-      Marquez is now named in the UX guide, library and reference stack, and roadmap as the
-      open-data design direction, but no dedicated visual token set or component pattern catalog
-      exists yet.
-    last_verified: '2026-04-03'
+      Closed: Marquez is now a scoped public-data visual system with component docs, visual token
+      set, component pattern catalog, user stories, UX-guide separation, reference-stack
+      classification, and an architecture guard preventing operator workbench drift.
+    last_verified: '2026-05-22'
   - task_id: F-20
     priority: P1
     status: blocked

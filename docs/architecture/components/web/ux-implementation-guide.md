@@ -40,11 +40,12 @@ That means:
   surfaces;
 - explicit empty, loading, error, degraded, and read-only states.
 
-For open-data or public-data slices, the visual direction may diverge from the
-operator workbench. The named design direction for that slice is `Marquez`:
-editorial, curated, and explanatory rather than IDE-like. In frontend
+For public-data surfaces, the visual direction may diverge from the operator
+workbench. The named design direction for that slice is the Marquez visual
+system: editorial, curated, and explanatory rather than IDE-like. In frontend
 architecture docs, `Marquez` here is a design reference, not the OpenLineage
-backend product.
+backend product. It must not be applied to operator workbench routes such as
+Canvas, Runs, Code, Diff, Artifacts, Templates, Plugins, Admin, or Cost.
 
 ## Reuse Strategy
 
@@ -236,7 +237,8 @@ Primary task:
 ### Phase 6. Separate open-data presentation from operator workbench
 
 - keep the workbench grammar for operator routes;
-- use `Marquez` only for public or explanatory open-data surfaces.
+- use the Marquez visual system only for public or explanatory public-data
+  surfaces.
 
 Primary task:
 
