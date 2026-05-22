@@ -129,6 +129,8 @@ governingSources:
   - docs/architecture/components/web/screen-manuals-and-user-stories.md
   - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
 allowedImplementationSurfaces:
+  - apps/web/src/app/Root.shellChrome.test.tsx
+  - apps/web/src/app/Root.shellChrome.test.support.ts
   - apps/web/src/app/views/TemplatesView.tsx
   - apps/web/src/app/views/TemplatesView.test.tsx
   - apps/web/src/app/views/templates/TemplatesRouteWorkbench.tsx
@@ -424,6 +426,14 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/views/templates/templatesWorkbench.architecture.test.ts
     cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/templates/templates-workbench.cy.ts
     unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/TemplatesView.test.tsx]
+  - name: ROOT_SHELL_NAVIGATION_HREFS
+    path: apps/web/src/app/Root.shellChrome.test.support.ts
+    dddOwner: Root shell navigation chrome test contract
+    cqRails: [ListExecutionTemplateProfiles]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/Root.shellChrome.test.tsx
+    cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/templates/templates-workbench.cy.ts
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/Root.shellChrome.test.tsx]
   - name: REPO_ROOT
     path: apps/web/src/app/views/templates/templatesWorkbench.architecture.test.ts
     dddOwner: Web architecture test harness
