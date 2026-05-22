@@ -51,6 +51,7 @@ out of the active tree.
   [Route Workbench Frame Component](./route-workbench-frame-component.md),
   [Workbench UI contract and component inventory](./workbench-ui-contract-and-component-inventory.md),
   [Library and open-source reference stack](./library-and-open-source-reference-stack.md),
+  [Marquez public-data visual system](./public-data/marquez-visual-system-component.md),
   [Plugin Contributions Developer Guide](./plugin-contributions-developer-guide.md)
 
 ## Public Operational Surface

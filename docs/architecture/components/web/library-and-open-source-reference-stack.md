@@ -49,11 +49,11 @@ product UX decisions.
 
 ## Design References
 
-| Reference | Use it for                                                                 | What it is not                                         |
-| --------- | -------------------------------------------------------------------------- | ------------------------------------------------------ |
-| `Marquez` | named visual and narrative direction for open-data or public-data surfaces | not a library, framework, or component runtime         |
-| VS Code   | operator-workbench shell grammar                                           | not DVT's visual theme for every surface               |
-| Grafana   | operational density and observability drill-down                           | not the presentation model for public explanatory data |
+| Reference | Use it for                                                                 | What it is not                                             |
+| --------- | -------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `Marquez` | named visual and narrative direction for open-data or public-data surfaces | not a library, framework, component runtime, or dependency |
+| VS Code   | operator-workbench shell grammar                                           | not DVT's visual theme for every surface                   |
+| Grafana   | operational density and observability drill-down                           | not the presentation model for public explanatory data     |
 
 ## Current Fit Against The Codebase
 
@@ -67,3 +67,6 @@ product UX decisions.
 - The future execution-template workbench should reuse Monaco for preview and
   diff while keeping template semantics and source generation outside React
   component logic.
+- The Marquez visual system is a public-data design reference, not a dependency
+  or backend integration. It may guide public explanatory surfaces, but operator
+  workbench routes continue to use the workbench visual system.
