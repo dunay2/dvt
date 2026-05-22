@@ -33,7 +33,7 @@ Human-readable companion to the canonical machine-readable adoption log:
 
 ## Current Window
 
-No post-rollout Lane C PR cycles have been logged yet.
+No qualifying post-rollout Lane C PR cycles have been logged yet.
 
 The task is not closed until the YAML log records 3 consecutive Lane C cycles
 that satisfy the adoption and round-reduction rules.
@@ -44,11 +44,17 @@ The mechanical closure check is:
 pnpm docs:ai-efficiency:check
 ```
 
-Current result on 2026-05-15:
+Current result on 2026-05-22:
 
 ```text
 0/3 qualifying consecutive cycles; RC-C2 must remain open.
 ```
+
+The 2026-05-22 reconciliation reviewed recent merged Lane C PRs and confirmed
+that PR-level CI evidence exists, but the required interaction, tool-call, and
+avoidable-rerun measurements are not present in the canonical adoption log.
+Those PRs therefore cannot be recorded as qualifying cycles without inventing
+measurement data.
 
 ## Recording Rule
 
@@ -63,6 +69,6 @@ Each qualifying cycle must record:
 
 ## Status
 
-`RC-C2` remains open: tooling and process are shipped, and the adoption closure
-gate is now executable, but measured adoption still has `0/3` qualifying
-cycles.
+`RC-C2` remains open and blocked on measurement evidence: tooling and process
+are shipped, and the adoption closure gate is executable, but measured adoption
+still has `0/3` qualifying cycles.

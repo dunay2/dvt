@@ -762,7 +762,7 @@ tasks:
     last_verified: '2026-04-10'
   - task_id: RC-C2
     priority: P2
-    status: in_progress
+    status: blocked
     objective: >-
       institutionalize shared preflight (`hygiene.ps1`), log-first CI triage, and structured AI
       efficiency measurement for Lane C before scaling the workflow repo-wide.
@@ -824,8 +824,11 @@ tasks:
       generator commands, tracking posture, and manual-edit policy. Wave 4A then promotes `pnpm
       test:ci-tools` into the `CI - Code Quality` merge gate so workflow and scope-helper contract
       tests stop being advisory-only. Final closure still depends on three qualifying Lane C PR
-      cycles logged against the new workflow.
-    last_verified: '2026-04-23'
+      cycles logged against the new workflow. The 2026-05-22 reconciliation confirmed that recent
+      Lane C PRs are visible in GitHub, but the required interaction, tool-call, and avoidable-rerun
+      measurements are not captured in the adoption log, so RC-C2 is explicitly blocked on measured
+      adoption evidence instead of remaining an active implementation claim.
+    last_verified: '2026-05-22'
   - task_id: CI-AUDIT-ARC-STATE-STORE
     parent_task: RC-C2
     priority: P1
