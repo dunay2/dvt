@@ -12,20 +12,15 @@ import {
   routeWorkbenchHeaderBandClassName,
   routeWorkbenchMutedTextClassName,
   routeWorkbenchPanelClassName,
-  routeWorkbenchSectionTitleClassName,
-  routeWorkbenchSubtleTextClassName,
 } from '../../components/workbench/RouteWorkbenchFrame';
-import { resolveString } from '../../plugins/contracts/PluginManifest';
-import { type PluginContributions, PLUGIN_REGISTRY } from '../../plugins/registry';
+import { PLUGIN_REGISTRY } from '../../plugins/registry';
 
+import { PluginCapabilityTable } from './PluginCapabilityTable';
 import {
   type PluginCapabilitiesSnapshot,
   type PluginProbeStatus,
-  type PluginReadiness,
-  type PluginReadinessItem,
   type PluginSurfaceState,
   pluginsViewCopy,
-  resolvePluginReadiness,
 } from './pluginsViewModel';
 
 export function PluginsViewHeader({
@@ -147,157 +142,11 @@ function PluginRegistryContent({
   }
 
   return (
-    <div className="grid gap-4 xl:grid-cols-2">
-      {PLUGIN_REGISTRY.map((plugin) => (
-        <PluginCard
-          key={plugin.id}
-          plugin={plugin}
-          readiness={resolvePluginReadiness(
-            plugin,
-            capabilities,
-            capabilitiesLoading,
-            capabilitiesError
-          )}
-        />
-      ))}
-    </div>
-  );
-}
-
-function PluginCard({
-  plugin,
-  readiness,
-}: Readonly<{ plugin: PluginContributions; readiness: PluginReadiness }>) {
-  return (
-    <Card
-      data-slot="plugin-card"
-      data-plugin-id={plugin.id}
-      className={cn(routeWorkbenchPanelClassName, 'p-5')}
-    >
-      <div className="flex flex-col gap-5">
-        <div className="flex items-start justify-between gap-4">
-          <PluginIdentity plugin={plugin} />
-          <StatusIndicator
-            state={readiness.summary.state}
-            label={readiness.summary.label}
-            icon={resolveStatusIcon(readiness.summary.state)}
-          />
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          {readiness.items.map((item) => (
-            <PluginReadinessCard key={item.key} item={item} />
-          ))}
-        </div>
-
-        <div className="grid gap-4 lg:grid-cols-2">
-          <PluginTaxonomySection
-            title={pluginsViewCopy.capabilitiesTitle}
-            emptyCopy={pluginsViewCopy.noCapabilities}
-            values={plugin.capabilities}
-          />
-          <PluginTaxonomySection
-            title={pluginsViewCopy.nodeKindsTitle}
-            emptyCopy={pluginsViewCopy.noNodeKinds}
-            valueClassName="font-mono text-[10px]"
-            values={plugin.nodeKinds?.map((kind) => kind.kind)}
-          />
-        </div>
-      </div>
-    </Card>
-  );
-}
-
-function PluginIdentity({ plugin }: Readonly<{ plugin: PluginContributions }>) {
-  return (
-    <div className="flex min-w-0 items-start gap-4">
-      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-(--border-default) bg-(--surface-app) text-(--text-muted)">
-        <Puzzle className="size-5" />
-      </div>
-      <div className="min-w-0 space-y-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <h2 className="font-semibold text-(--text-strong)">
-            {resolveString(plugin.displayName)}
-          </h2>
-          <PluginMetadataBadges plugin={plugin} />
-        </div>
-        <p className={cn('font-mono text-xs', routeWorkbenchSubtleTextClassName)}>{plugin.id}</p>
-      </div>
-    </div>
-  );
-}
-
-function PluginMetadataBadges({ plugin }: Readonly<{ plugin: PluginContributions }>) {
-  return (
-    <>
-      <Badge variant="outline" className={cn(routeWorkbenchFieldClassName, 'text-xs')}>
-        v{plugin.version}
-      </Badge>
-      <Badge
-        variant="outline"
-        className={cn(routeWorkbenchFieldClassName, 'text-xs uppercase tracking-wide')}
-      >
-        {plugin.kind ?? 'core'}
-      </Badge>
-      {plugin.backendPluginId ? (
-        <Badge variant="outline" className={cn(routeWorkbenchFieldClassName, 'text-xs')}>
-          backend: {plugin.backendPluginId}
-        </Badge>
-      ) : null}
-    </>
-  );
-}
-
-function PluginReadinessCard({ item }: Readonly<{ item: PluginReadinessItem }>) {
-  return (
-    <div
-      data-slot={`plugin-readiness-${item.key}`}
-      className={cn(routeWorkbenchFieldClassName, 'rounded-lg p-3')}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-1">
-          <div className={routeWorkbenchSectionTitleClassName}>{item.title}</div>
-          <p className={cn('text-sm', routeWorkbenchMutedTextClassName)}>{item.detail}</p>
-        </div>
-        <StatusIndicator
-          state={item.state}
-          label={item.label}
-          icon={resolveStatusIcon(item.state)}
-        />
-      </div>
-    </div>
-  );
-}
-
-function PluginTaxonomySection({
-  emptyCopy,
-  title,
-  valueClassName,
-  values,
-}: Readonly<{
-  emptyCopy: string;
-  title: string;
-  valueClassName?: string;
-  values: readonly string[] | undefined;
-}>) {
-  return (
-    <div className="space-y-2">
-      <div className={routeWorkbenchSectionTitleClassName}>{title}</div>
-      {(values?.length ?? 0) > 0 ? (
-        <div className="flex flex-wrap gap-2">
-          {values?.map((value) => (
-            <Badge
-              key={value}
-              variant="outline"
-              className={cn(routeWorkbenchFieldClassName, 'text-xs', valueClassName)}
-            >
-              {value}
-            </Badge>
-          ))}
-        </div>
-      ) : (
-        <p className={cn('text-sm', routeWorkbenchMutedTextClassName)}>{emptyCopy}</p>
-      )}
-    </div>
+    <PluginCapabilityTable
+      capabilities={capabilities}
+      capabilitiesError={capabilitiesError}
+      capabilitiesLoading={capabilitiesLoading}
+      plugins={PLUGIN_REGISTRY}
+    />
   );
 }
