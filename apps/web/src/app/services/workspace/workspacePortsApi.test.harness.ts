@@ -21,7 +21,7 @@ export function createApiWorkspacePortHarness(
     postJson,
     workspaceGraphSnapshotQuery: createApiWorkspaceGraphSnapshotQueryPort(apiClient),
     workspaceFilesQuery: createApiWorkspaceFilesQueryPort(apiClient),
-    workspaceDiffQuery: createApiWorkspaceDiffQueryPort(),
+    workspaceDiffQuery: createApiWorkspaceDiffQueryPort(apiClient),
     workspacePluginCatalogQuery: createApiWorkspacePluginCatalogQueryPort(),
     workspaceAdminRead: createApiWorkspaceAdminReadPort(),
     warehouseSourceImport: createApiWarehouseSourceImportPort(),

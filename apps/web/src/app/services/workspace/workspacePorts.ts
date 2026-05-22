@@ -54,7 +54,7 @@ export function createWorkspacePorts(apiClient: ApiClient = createApiClient()): 
   return {
     workspaceGraphSnapshotQuery: createApiWorkspaceGraphSnapshotQueryPort(apiClient),
     workspaceFilesQuery: createApiWorkspaceFilesQueryPort(apiClient),
-    workspaceDiffQuery: createApiWorkspaceDiffQueryPort(),
+    workspaceDiffQuery: createApiWorkspaceDiffQueryPort(apiClient),
     workspacePluginCatalogQuery: createApiWorkspacePluginCatalogQueryPort(),
     workspaceAdminRead: createApiWorkspaceAdminReadPort(),
     warehouseSourceImport: createApiWarehouseSourceImportPort(),

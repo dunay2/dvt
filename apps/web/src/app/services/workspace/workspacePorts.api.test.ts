@@ -5,6 +5,10 @@ import { describe, expect, it } from 'vitest';
 
 import { buildDraftReadOkResponse } from './workspaceGraphDraftProtocol.test.fixtures';
 import {
+  buildWorkspaceDiffChangesEndpoint,
+  WORKSPACE_DIFF_CHANGES_ENDPOINT,
+} from './workspaceDiffChangesHttp';
+import {
   buildWorkspaceGraphDraftEndpoint,
   WORKSPACE_GRAPH_DRAFT_HTTP_ERROR_REASON,
 } from './workspaceGraphDraftHttp';
@@ -24,12 +28,6 @@ const unsupportedApiWorkspaceOperations: ReadonlyArray<{
   readonly rail: string;
   readonly call: (ports: ApiWorkspacePorts) => Promise<unknown>;
 }> = [
-  {
-    operation: 'getDiffChanges',
-    capability: 'workspace.diffChanges',
-    rail: 'GetWorkspaceDiffChanges',
-    call: (ports) => ports.workspaceDiffQuery.getDiffChanges(),
-  },
   {
     operation: 'getPlugins',
     capability: 'workspace.plugins',
@@ -120,6 +118,42 @@ describe('workspace ports api graph snapshot', () => {
   });
 });
 
+describe('workspace ports api diff changes', () => {
+  installWorkspaceScopeHarness();
+
+  it('loads diff changes through the scoped workspace diff query endpoint', async () => {
+    const scope = buildWorkspaceScope();
+    setWorkspaceScope(scope);
+    const { getJson, workspaceDiffQuery } = createApiWorkspacePortHarness({
+      getJson: async <TResponse>() =>
+        [
+          {
+            id: 'diff-1',
+            nodeId: 'model.orders',
+            type: 'changed',
+            severity: 'breaking',
+            description: 'Column removed: discount_amount',
+            oldValue: 'discount_amount DECIMAL',
+            newValue: null,
+          },
+        ] as TResponse,
+    });
+
+    await expect(workspaceDiffQuery.getDiffChanges()).resolves.toEqual([
+      {
+        id: 'diff-1',
+        nodeId: 'model.orders',
+        type: 'changed',
+        severity: 'breaking',
+        description: 'Column removed: discount_amount',
+        oldValue: 'discount_amount DECIMAL',
+        newValue: null,
+      },
+    ]);
+    expect(getJson).toHaveBeenCalledWith(buildWorkspaceDiffChangesEndpoint(scope));
+  });
+});
+
 describe('workspace ports api route parity posture', () => {
   it.each(unsupportedApiWorkspaceOperations)(
     'fails closed for %s before issuing transport calls',
@@ -144,7 +178,7 @@ describe('workspace ports api route parity posture', () => {
       'utf8'
     );
 
-    expect(source).not.toContain('/diff/changes');
+    expect(source).not.toContain(`getJson<DiffChange[]>('${WORKSPACE_DIFF_CHANGES_ENDPOINT}')`);
     expect(source).not.toContain('/plugins');
     expect(source).not.toContain('/admin/roles');
     expect(source).not.toContain('/admin/audit');

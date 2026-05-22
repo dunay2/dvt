@@ -18,6 +18,7 @@ export const HTTP_ERROR_REASON = Object.freeze({
   invalidPlanRef: 'invalid_plan_ref',
   invalidPlanSource: 'invalid_plan_source',
   invalidProjectId: 'invalid_project_id',
+  invalidWorkspaceDiffChanges: 'invalid_workspace_diff_changes',
   invalidWorkspacePath: 'invalid_workspace_path',
   invalidRunExecutionContextRef: 'invalid_run_execution_context_ref',
   invalidRunId: 'invalid_run_id',
