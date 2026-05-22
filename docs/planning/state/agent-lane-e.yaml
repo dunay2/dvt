@@ -265,7 +265,7 @@ tasks:
     last_verified: '2026-05-22'
   - task_id: F-04
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       converge frontend data boundaries to a capability-centered hexagonal model where mode
       selection and adapter wiring are owned by one composition root.
@@ -276,7 +276,7 @@ tasks:
       of direct mode or service factory ownership from route-level view code.
     complexity: M
     effort_points: 5
-    progress_pct: 88
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
@@ -286,27 +286,23 @@ tasks:
       - docs/planning/closeouts/F-04-F-capabilities-port-and-route-query-boundary-closeout.md
       - docs/planning/closeouts/F-04-RISK-A-QA-03-backend-owned-planref-closeout.md
       - docs/planning/closeouts/F-04-RISK-B-mock-workspace-isolation-closeout.md
+      - docs/planning/closeouts/20260514-f04-parent-acceptance-closeout.md
+      - docs/planning/closeouts/20260515-lane-e-p0-review-reconciliation-closeout.md
       - docs/planning/reviews/20260407-f04-risk-b-mock-workspace-isolation-hard-qa-review.md
     status_reason: >-
-      TDD-first implementation is now active: the composition root was extracted into a dedicated
-      module, `SessionContextPort` and `ShellFeedbackPort` were formalized, and `Canvas`/`Runs`
-      route seams now consume composition-owned accessors instead of hidden runtime globals.
-      `CapabilitiesPort` is now formalized and `useCapabilitiesQuery` is composition-owned. `QA-03`
-      under `F-04-RISK-A` is now closed with backend-owned `planRef` payloads on preview/import, and
-      `F-04-RISK-B` now isolates mutable mock workspace state per service instance with an explicit
-      shared-state seam plus instance-local file-tree discoverability with unique workspace paths
-      for newly saved files. Documentary hard QA found no blocking issues. The remaining open work
-      is parent-level acceptance and closure consolidation across the `F-04` chain rather than
-      residual implementation.
+      Reconciled after the accepted 2026-05-14 parent closeout and 2026-05-15 Lane E P0 review
+      closeout: F-04-A through F-04-F, risk, and residual chains have evidence-backed closure; the
+      composition root owns runtime mode and adapter wiring; and route-level views no longer own
+      data-source mode directly. The remaining open state was planning drift.
     definition_of_done:
       - F-04-A through F-04-F are all review or done with evidence refs
       - route-level views no longer decide data-source mode directly
       - frontend docs and roadmap entrypoints link to canonical F-04 pack
-    last_verified: '2026-04-07'
+    last_verified: '2026-05-22'
   - task_id: F-04-A
     parent_task: F-04
     priority: P0
-    status: review
+    status: done
     objective: >-
       inventory current frontend data-boundary coupling, including direct mode reads, service
       factory usage in views, raw fetch usage, and legacy store surfaces.
@@ -316,7 +312,7 @@ tasks:
       F-04-E and F-04-F.
     complexity: S
     effort_points: 2
-    progress_pct: 90
+    progress_pct: 100
     evidence_refs:
       - docs/architecture/components/web/frontend-data-boundary-architecture.md
       - docs/architecture/components/web/web-store-domain-ownership-component.md
@@ -324,20 +320,20 @@ tasks:
       - apps/web/src/app/views/RunsView.tsx
       - apps/web/src/app/queries/useCapabilitiesQuery.ts
       - apps/web/src/app/stores/webStoreDomainOwnership.architecture.test.ts
+      - docs/planning/closeouts/20260514-f04-parent-acceptance-closeout.md
+      - docs/planning/closeouts/20260515-lane-e-p0-review-reconciliation-closeout.md
     status_reason: >-
-      Inventory is captured in the technical architecture document and mapped to concrete code
-      anchors. The retired `stores/index.ts` evidence reference was replaced with the current store
-      ownership component and architecture guard; remaining work is final acceptance during F-04
-      closeout.
+      Closed by the accepted F-04 parent closeout: the current-state coupling inventory is captured
+      in the frontend data-boundary architecture and mapped to current code anchors.
     definition_of_done:
       - inventory lists direct resolveDataSource and create*Service usage by file
       - inventory identifies raw fetch usage and legacy store parallel surfaces
       - migration dependencies for F-04-E and F-04-F are explicit
-    last_verified: '2026-05-09'
+    last_verified: '2026-05-22'
   - task_id: F-04-B
     parent_task: F-04
     priority: P0
-    status: review
+    status: done
     objective: >-
       produce the canonical technical architecture document for the frontend data-boundary
       subsystem, including as-is and target hexagonal topology with Mermaid diagrams.
@@ -347,23 +343,25 @@ tasks:
       migration chain, and system-level improvements.
     complexity: M
     effort_points: 3
-    progress_pct: 85
+    progress_pct: 100
     evidence_refs:
       - docs/architecture/components/web/frontend-data-boundary-architecture.md
       - docs/architecture/components/web/index.md
       - docs/architecture/domain-ui.md
+      - docs/planning/closeouts/20260514-f04-parent-acceptance-closeout.md
+      - docs/planning/closeouts/20260515-lane-e-p0-review-reconciliation-closeout.md
     status_reason: >-
-      Core content and diagrams are written and linked from active entrypoints; review pass remains
-      open for final wording and contract alignment checks.
+      Closed by the accepted F-04 parent closeout: the canonical frontend data-boundary architecture
+      document exists with current and target topology diagrams and active entrypoint links.
     definition_of_done:
       - as-is, target, ports, and migration diagrams render correctly
       - document explicitly states frontend is not execution authority
       - frontend and domain entrypoints link to this canonical page
-    last_verified: '2026-04-03'
+    last_verified: '2026-05-22'
   - task_id: F-04-C
     parent_task: F-04
     priority: P0
-    status: review
+    status: done
     objective: >-
       deliver a runtime-modes user manual that explains shell behavior, route expectations, and
       operator interpretation of capability and availability failures.
@@ -373,22 +371,24 @@ tasks:
       expectations under the target model.
     complexity: S
     effort_points: 2
-    progress_pct: 80
+    progress_pct: 100
     evidence_refs:
       - docs/architecture/components/web/frontend-runtime-modes-user-manual.md
       - docs/architecture/components/web/index.md
+      - docs/planning/closeouts/20260514-f04-parent-acceptance-closeout.md
+      - docs/planning/closeouts/20260515-lane-e-p0-review-reconciliation-closeout.md
     status_reason: >-
-      The manual is drafted with target route journey and shell guarantees; final acceptance depends
-      on consistency checks with active route behavior.
+      Closed by the accepted F-04 parent closeout: the runtime-modes user manual is active and
+      explains shell, route, capability, degraded, and offline behavior.
     definition_of_done:
       - manual defines loading, empty, degraded, offline, and read-only shell states
       - manual explains capability-unavailable vs backend-failure semantics
       - manual is linked from frontend architecture entrypoint
-    last_verified: '2026-04-03'
+    last_verified: '2026-05-22'
   - task_id: F-04-D
     parent_task: F-04
     priority: P0
-    status: review
+    status: done
     objective: >-
       define explicit frontend ports and split hybrid service surfaces into domain ports, adapters,
       and mapping boundaries.
@@ -398,7 +398,7 @@ tasks:
       consumed by application facades rather than by route-local service factories.
     complexity: M
     effort_points: 5
-    progress_pct: 85
+    progress_pct: 100
     evidence_refs:
       - docs/architecture/components/web/frontend-data-boundary-architecture.md
       - docs/planning/proposals/nice-to-have/frontend-and-ux/f-04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
@@ -410,22 +410,22 @@ tasks:
       - apps/web/src/app/services/runs/runsService.mock.ts
       - docs/planning/closeouts/F-04-D-E-composition-root-foundation-closeout.md
       - docs/planning/closeouts/F-04-F-capabilities-port-and-route-query-boundary-closeout.md
+      - docs/planning/closeouts/20260514-f04-parent-acceptance-closeout.md
+      - docs/planning/closeouts/20260515-lane-e-p0-review-reconciliation-closeout.md
     status_reason: >-
-      `SessionContextPort` and `ShellFeedbackPort` now exist as explicit runtime seams and the Runs
-      adapters consume injected session context rather than reading hidden globals directly.
-      `CapabilitiesPort` is now formalized and composition-owned; remaining closure depends on final
-      adapter-parity acceptance across the wider F-04 convergence chain.
+      Closed by the accepted F-04 parent closeout: explicit frontend ports and port/adapter evidence
+      exist through the F-04 D/E and F-04 F closeouts.
     definition_of_done:
       - named ports exist and are typed in frontend domain/application layers
       - api and mock adapters implement the same port contracts
       - route-level code depends on facades or hooks, not adapter factories
       - failing port/adapter tests are introduced before implementation (TDD red phase)
       - tests pass after implementation and refactor (green + refactor phases)
-    last_verified: '2026-04-07'
+    last_verified: '2026-05-22'
   - task_id: F-04-E
     parent_task: F-04
     priority: P0
-    status: review
+    status: done
     objective: >-
       introduce composition-root wiring so data-source mode and adapter selection happen at boot,
       then expose route-safe service accessors.
@@ -435,7 +435,7 @@ tasks:
       composition accessors.
     complexity: M
     effort_points: 5
-    progress_pct: 95
+    progress_pct: 100
     evidence_refs:
       - apps/web/src/app/services/composition/appServices.ts
       - apps/web/src/app/services/AppServicesContext.tsx
@@ -446,19 +446,18 @@ tasks:
       - apps/web/src/app/views/runs/useRunWorkspace.ts
       - docs/planning/closeouts/F-04-D-E-composition-root-foundation-closeout.md
       - docs/planning/closeouts/F-04-F-capabilities-port-and-route-query-boundary-closeout.md
+      - docs/planning/closeouts/20260514-f04-parent-acceptance-closeout.md
+      - docs/planning/closeouts/20260515-lane-e-p0-review-reconciliation-closeout.md
     status_reason: >-
-      Composition-root tests now exist and pass, `resolveDataSource` moved under
-      `services/composition/appServices.ts`, and the React provider is reduced to a thin delivery
-      wrapper over composition-built services. Core `Canvas` and `Runs` paths plus the capabilities
-      query boundary now consume composition-owned seams; final closure depends on broader F-04
-      acceptance and residual cleanup, not missing composition wiring.
+      Closed by the accepted F-04 parent closeout: composition-root wiring is implemented and
+      documented through the F-04 D/E and F-04 F closeouts.
     definition_of_done:
       - VITE_DATA_SOURCE is read in one composition boundary for route-facing services
       - views/controllers no longer instantiate create*Service directly
       - core routes build and typecheck with composition-root accessors
       - failing composition-root tests exist before implementation (TDD red phase)
       - composition tests pass after implementation and refactor (green + refactor phases)
-    last_verified: '2026-04-07'
+    last_verified: '2026-05-22'
   - task_id: F-04-F
     parent_task: F-04
     priority: P0
@@ -1819,7 +1818,7 @@ tasks:
     last_verified: '2026-04-10'
   - task_id: F-26
     priority: P0
-    status: review
+    status: done
     objective: >-
       convert the web auth, tenant-admin, project-onboarding, and disabled-action stories into a
       CQRS and DDD design baseline before implementation starts.
@@ -1835,15 +1834,10 @@ tasks:
       - docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md
       - docs/guides/canvas-authoring-user-manual-20260501.md
       - docs/architecture/command-query-rail-governance.md
+      - docs/planning/closeouts/20260515-lane-e-p0-review-reconciliation-closeout.md
     status_reason: >-
-      The design baseline is complete and awaiting acceptance rather than still being active
-      implementation. The repository owns a command/query rail governance rule, and the web proposal
-      specializes that rail with story-by-story command/query catalog coverage, concrete DDD object
-      construction backlog, bounded contexts, hexagonal port plan, Fowler/SOLID review, anti-pattern
-      list, implementation file plan, and negative-test mapping required before coding the
-      identity-first startup and clean project-onboarding route. Parent dependencies `F-04` and
-      `F-07` still remain outside accepted done posture, so this task stays in review instead of
-      being closed.
+      Reconciled after the accepted 2026-05-15 Lane E P0 review closeout: the web auth/project
+      onboarding CQRS/DDD baseline is complete, and the prior blocking dependencies are closed.
     definition_of_done:
       - command and query catalogs cover every story in the web auth/project onboarding proposal
       - DDD objects and invariants are named by bounded context before code starts
@@ -1851,7 +1845,7 @@ tasks:
       - negative tests are mapped to auth, scope, project startup, and disabled-action behavior
       - route implementation cannot treat localStorage or fixture nodes as product authority
       - docs sync, workboard generation, markdown lint, and prepush validation pass
-    last_verified: '2026-05-06'
+    last_verified: '2026-05-22'
   - task_id: F-27
     priority: P0
     status: in_progress
