@@ -4,6 +4,7 @@ import type {
   IWorkspaceAdminReadPort,
   IWorkspaceDiffQueryPort,
   IWorkspaceFileContentCommandPort,
+  IWorkspaceFileHistoryQueryPort,
   IWorkspaceFilesQueryPort,
   IWorkspaceGraphSnapshotQueryPort,
   IWorkspacePluginCatalogQueryPort,
@@ -15,6 +16,7 @@ import {
   createApiWorkspaceAdminReadPort,
   createApiWorkspaceDiffQueryPort,
   createApiWorkspaceFileContentCommandPort,
+  createApiWorkspaceFileHistoryQueryPort,
   createApiWorkspaceFilesQueryPort,
   createApiWorkspaceGraphSnapshotQueryPort,
   createApiWorkspacePluginCatalogQueryPort,
@@ -39,6 +41,7 @@ export type WorkspacePortCapabilities = {
 export type WorkspacePorts = {
   readonly workspaceGraphSnapshotQuery: IWorkspaceGraphSnapshotQueryPort;
   readonly workspaceFilesQuery: IWorkspaceFilesQueryPort;
+  readonly workspaceFileHistoryQuery: IWorkspaceFileHistoryQueryPort;
   readonly workspaceDiffQuery: IWorkspaceDiffQueryPort;
   readonly workspacePluginCatalogQuery: IWorkspacePluginCatalogQueryPort;
   readonly workspaceAdminRead: IWorkspaceAdminReadPort;
@@ -54,6 +57,7 @@ export function createWorkspacePorts(apiClient: ApiClient = createApiClient()): 
   return {
     workspaceGraphSnapshotQuery: createApiWorkspaceGraphSnapshotQueryPort(apiClient),
     workspaceFilesQuery: createApiWorkspaceFilesQueryPort(apiClient),
+    workspaceFileHistoryQuery: createApiWorkspaceFileHistoryQueryPort(apiClient),
     workspaceDiffQuery: createApiWorkspaceDiffQueryPort(apiClient),
     workspacePluginCatalogQuery: createApiWorkspacePluginCatalogQueryPort(),
     workspaceAdminRead: createApiWorkspaceAdminReadPort(),

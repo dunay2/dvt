@@ -33,6 +33,7 @@ const RUNTIME_ROUTE_METHOD_BY_KEY = {
   workspaceGraphDraft: ['GET', 'PUT'],
   workspaceDiffChanges: ['GET'],
   workspaceFiles: ['GET'],
+  workspaceFileHistory: ['GET'],
   workspaceFileContent: ['GET'],
   list: ['GET'],
   get: ['GET'],

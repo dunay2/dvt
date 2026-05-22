@@ -203,7 +203,7 @@ function buildPrepushPlan(changedFiles, options = {}) {
   if (options.full === true) {
     pushSteps(plan, PREPUSH_GROUPS.fullOnly);
   }
-  if (scope.needsPlanningDbInventory && options.full === true) {
+  if (scope.needsPlanningDbInventory) {
     pushSteps(plan, PREPUSH_GROUPS.planningDb);
   }
   if (scope.needsGovernanceGlobal) {

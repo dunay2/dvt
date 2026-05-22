@@ -30,6 +30,7 @@ export const queryKeys = {
     audit: () => ['workspace', 'audit'] as const,
     fileTree: () => ['workspace', 'file-tree'] as const,
     fileContent: (path: string) => ['workspace', 'file-content', path] as const,
+    fileHistory: (path: string) => ['workspace', 'file-history', path] as const,
     artifacts: () => ['workspace', 'artifacts'] as const,
   },
 

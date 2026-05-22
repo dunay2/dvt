@@ -24,6 +24,12 @@ export type CodeViewCopy = Readonly<{
   previewErrorMessage: string;
   previewMissingTitle: string;
   previewMissingMessagePrefix: string;
+  historyTitle: string;
+  historyNoFile: string;
+  historyLoadingMessage: string;
+  historyEmptyMessage: string;
+  historyErrorMessage: string;
+  historyOpenDiffLabel: string;
   bootstrapLoadingFilesDetail: string;
   bootstrapNoWorkspaceFilesDetail: string;
   bootstrapLoadingPreviewDetail: string;
@@ -96,6 +102,21 @@ const COPY_BY_KEY: Record<keyof CodeViewCopy, LocalizableString> = {
     key: 'code.previewMissingMessagePrefix',
     fallback: 'The selected file is no longer available in this workspace:',
   },
+  historyTitle: { key: 'code.historyTitle', fallback: 'File history' },
+  historyNoFile: { key: 'code.historyNoFile', fallback: 'Select a file to inspect history.' },
+  historyLoadingMessage: {
+    key: 'code.historyLoadingMessage',
+    fallback: 'Loading file history...',
+  },
+  historyEmptyMessage: {
+    key: 'code.historyEmptyMessage',
+    fallback: 'No commits found for this file.',
+  },
+  historyErrorMessage: {
+    key: 'code.historyErrorMessage',
+    fallback: 'File history could not be loaded right now.',
+  },
+  historyOpenDiffLabel: { key: 'code.historyOpenDiffLabel', fallback: 'Open in Diff' },
   bootstrapLoadingFilesDetail: {
     key: 'code.bootstrapLoadingFilesDetail',
     fallback: 'Loading workspace files for the code route',
@@ -135,6 +156,12 @@ const SPANISH_COPY: CodeViewCopy = {
   previewErrorMessage: 'No se pudo cargar el archivo seleccionado ahora.',
   previewMissingTitle: 'Archivo seleccionado no disponible',
   previewMissingMessagePrefix: 'El archivo seleccionado ya no esta disponible en este workspace:',
+  historyTitle: 'Historial de archivo',
+  historyNoFile: 'Selecciona un archivo para inspeccionar su historial.',
+  historyLoadingMessage: 'Cargando historial del archivo...',
+  historyEmptyMessage: 'No se encontraron commits para este archivo.',
+  historyErrorMessage: 'No se pudo cargar el historial del archivo ahora.',
+  historyOpenDiffLabel: 'Abrir en Diff',
   bootstrapLoadingFilesDetail: 'Cargando archivos del workspace para la ruta de codigo',
   bootstrapNoWorkspaceFilesDetail: 'La ruta de codigo esta lista sin archivos del workspace',
   bootstrapLoadingPreviewDetail: 'Cargando la vista previa inicial del archivo',

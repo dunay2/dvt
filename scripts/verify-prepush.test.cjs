@@ -65,7 +65,7 @@
     const plan = buildPrepushPlan(['scripts/planning-db-query.cjs']);
     const ids = stepIds(plan);
 
-    assert.deepEqual(ids, ['verify-changed']);
+    assert.deepEqual(ids, ['verify-changed', 'planning-db-inventory-check']);
     assertExcludes(ids, 'docs-governance-document-unit-map');
     assertExcludes(ids, 'docs-governance-remediation-queue');
     assertExcludes(ids, 'arch-deps');

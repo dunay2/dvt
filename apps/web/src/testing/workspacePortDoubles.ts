@@ -16,6 +16,7 @@ import type {
   IWorkspaceAdminReadPort,
   IWorkspaceDiffQueryPort,
   IWorkspaceFileContentCommandPort,
+  IWorkspaceFileHistoryQueryPort,
   IWorkspaceFilesQueryPort,
   IWorkspaceGraphSnapshotQueryPort,
   IWorkspacePluginCatalogQueryPort,
@@ -23,6 +24,7 @@ import type {
   WarehouseConnection,
   WarehouseTable,
   WorkspaceFileEntry,
+  WorkspaceFileHistoryEntry,
   WorkspaceGraphSnapshot,
 } from '../app/ports/workspace';
 import { WorkspaceFileLoadError } from '../app/services/workspace/workspaceErrors';
@@ -188,6 +190,7 @@ export interface MockWorkspaceState {
   graphSnapshot: WorkspaceGraphSnapshot;
   fileTree: WorkspaceFileEntry[];
   fileContents: Record<string, FileContent>;
+  fileHistory: Record<string, WorkspaceFileHistoryEntry[]>;
 }
 
 export function createMockWorkspaceState(): MockWorkspaceState {
@@ -195,6 +198,7 @@ export function createMockWorkspaceState(): MockWorkspaceState {
     graphSnapshot: cloneGraphSnapshot(defaultGraphSnapshot),
     fileTree: createDefaultWorkspaceFileTree(),
     fileContents: cloneFileContents(defaultFileContents),
+    fileHistory: {},
   };
 }
 
@@ -602,6 +606,7 @@ export type MockWorkspacePorts = {
   readonly workspaceAdminRead: IWorkspaceAdminReadPort;
   readonly warehouseSourceImport: IWarehouseSourceImportPort;
   readonly workspaceFilesQuery: IWorkspaceFilesQueryPort;
+  readonly workspaceFileHistoryQuery: IWorkspaceFileHistoryQueryPort;
   readonly workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
 };
 
@@ -661,6 +666,14 @@ export function createMockWorkspaceFilesQueryPort(
   };
 }
 
+export function createMockWorkspaceFileHistoryQueryPort(
+  state: MockWorkspaceState = createMockWorkspaceState()
+): IWorkspaceFileHistoryQueryPort {
+  return {
+    getFileHistory: async (path) => state.fileHistory[path]?.map((entry) => ({ ...entry })) ?? [],
+  };
+}
+
 export function createMockWorkspaceFileContentCommandPort(
   state: MockWorkspaceState = createMockWorkspaceState()
 ): IWorkspaceFileContentCommandPort {
@@ -692,6 +705,7 @@ export function createMockWorkspacePorts(
     workspaceAdminRead: createMockWorkspaceAdminReadPort(),
     warehouseSourceImport: createMockWarehouseSourceImportPort(state),
     workspaceFilesQuery: createMockWorkspaceFilesQueryPort(state),
+    workspaceFileHistoryQuery: createMockWorkspaceFileHistoryQueryPort(state),
     workspaceFileContentCommand: createMockWorkspaceFileContentCommandPort(state),
   };
 }
