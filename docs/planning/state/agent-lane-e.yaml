@@ -221,7 +221,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: F-03
     priority: P0
-    status: review
+    status: done
     objective: >-
       wire real backend health state into the top bar, a global degraded/offline banner, and the
       unified Raven startup bootstrap that gates the first route.
@@ -235,7 +235,7 @@ tasks:
       anywhere in the shell.
     complexity: M
     effort_points: 5
-    progress_pct: 98
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/nice-to-have/frontend-and-ux/mvp-e1-f03-frontend-backend-contract-and-health-plan-20260404.md
       - docs/architecture/components/web/runs/frontend-backend-mvp-contract.md
@@ -244,6 +244,7 @@ tasks:
       - docs/architecture/components/web/frontend-runtime-modes-user-manual.md
       - docs/planning/state/lane-e-shell-baseline-target-guide.md
       - docs/planning/closeouts/20260414-unified-raven-startup-bootstrap-closeout.md
+      - docs/planning/closeouts/20260515-lane-e-p0-review-reconciliation-closeout.md
       - apps/web/src/app/Root.tsx
       - apps/web/src/app/AppRouteErrorBoundary.tsx
       - apps/web/src/app/AppProviders.tsx
@@ -258,13 +259,10 @@ tasks:
       - apps/web/src/capabilities/platform-health/domain/platformHealthSelectors.test.ts
       - apps/web/src/app/Root.test.tsx
     status_reason: >-
-      F-03-A, F-03-B, and F-03-C are now explicit: canonical state machine, deterministic
-      retry/backoff policy, and one presenter seam driving both top bar and banner from the same
-      health model. The remaining active closure slice is startup ownership: replace stacked
-      loading/error surfaces with one Raven bootstrap screen that reports ordered startup progress,
-      keeps backend readiness blockers hidden behind the startup gate in API runtime, and only
-      reveals the first route when it reaches an allowed terminal state.
-    last_verified: '2026-04-27'
+      Reconciled after the accepted 2026-05-15 Lane E P0 review closeout: platform-health presenter,
+      query, shell banner, top bar, startup bootstrap documentation, and negative-path tests are
+      present. The previous review state was planning drift, not remaining implementation work.
+    last_verified: '2026-05-22'
   - task_id: F-04
     priority: P0
     status: in_progress
