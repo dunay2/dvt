@@ -17,6 +17,17 @@ export const graphVisualClasses = {
   columnRow: 'flex items-center justify-between rounded bg-slate-950 px-2 py-1 text-[10px]',
   columnName: 'truncate font-mono text-white',
   columnType: 'ml-2 shrink-0 text-slate-400',
+  inspectorCard: 'border-slate-700 bg-slate-950 p-3 text-slate-50',
+  inspectorTitle: 'mb-2 text-sm font-medium text-slate-100',
+  inspectorLabel: 'text-slate-400',
+  inspectorLabelFixed: 'shrink-0 text-slate-400',
+  inspectorBody: 'text-xs text-slate-300',
+  inspectorMuted: 'text-sm text-slate-400',
+  inspectorMutedBlock: 'space-y-2 text-sm text-slate-400',
+  inspectorSubtle: 'text-slate-500',
+  inspectorCodeBlock:
+    'whitespace-pre-wrap rounded border border-slate-700 bg-slate-900 p-3 font-mono text-xs text-slate-50',
+  inspectorCodeText: 'whitespace-pre-wrap font-mono text-xs text-slate-50',
 } as const;
 
 export const graphStatusRingClasses: Record<string, string> = {
@@ -33,6 +44,14 @@ export const graphStatusDotClasses: Record<string, string> = {
   failed: 'bg-red-500',
   skipped: 'bg-yellow-500',
   warn: 'bg-orange-500',
+};
+
+export const graphStatusBadgeClasses: Record<string, string> = {
+  idle: 'border-gray-500/80 bg-gray-900/60 text-slate-100',
+  running: 'border-blue-500/80 bg-blue-950/60 text-blue-200',
+  success: 'border-green-500/80 bg-green-950/60 text-green-200',
+  failed: 'border-red-500/80 bg-red-950/60 text-red-200',
+  skipped: 'border-yellow-500/80 bg-yellow-950/60 text-yellow-200',
 };
 
 type GraphNodeKindTone = Readonly<{

@@ -17,6 +17,8 @@ Flow projection and generic plugin graph node rendering.
   cards, tags, metadata rows, and column chrome.
 - `graphStatusDotClasses`: status dot tone classes for node execution state.
 - `graphStatusRingClasses`: selected runtime status ring classes.
+- `graphStatusBadgeClasses`: inspector badge tone classes for plugin node
+  runtime state.
 - `graphNodeKindToneClasses`: semantic border and minimap tones for known node
   kinds.
 - `graphFlowPalette`: React Flow edge and fallback minimap palette values.
@@ -27,8 +29,8 @@ Flow projection and generic plugin graph node rendering.
 
 - Canvas edge projection reads edge colors from `graphFlowPalette`.
 - Node-kind catalogs do not own hex minimap literals.
-- Generic graph renderers do not own `slate-*`, `gray-*`, `neutral-*`, or hex
-  visual decisions.
+- Generic graph renderers and plugin-owned dbt node renderer chrome do not own
+  `slate-*`, `gray-*`, `neutral-*`, or hex visual decisions.
 - Plugin-specific behavior remains in plugin contracts; this component owns only
   presentation tokens.
 
@@ -41,6 +43,8 @@ flowchart LR
     Tone --> NodeBorder["Node border class"]
     CanvasMapper["Canvas node mapper"] --> EdgePalette["graphFlowPalette.edge"]
     Renderer["Graph node renderer"] --> Classes["graphVisualClasses"]
+    DbtRenderer["dbt node renderer"] --> Classes
+    DbtRenderer --> StatusBadge["graphStatusBadgeClasses"]
 ```
 
 ## Consumers
@@ -50,9 +54,10 @@ flowchart LR
 - `canvasNodeMapper.ts`
 - `GraphNodeRenderer.tsx`
 - `FallbackNodeRenderer.tsx`
+- `DbtNodeRenderer.tsx`
 
 ## Drift Guard
 
 `graphVisualTokenConvergence.architecture.test.ts` rejects reintroduced local
-color-family or hex ownership in the graph renderer, fallback renderer, node-kind
-catalogs, and Canvas edge mapper.
+color-family or hex ownership in the graph renderer, fallback renderer, dbt
+node renderer, node-kind catalogs, and Canvas edge mapper.

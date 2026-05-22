@@ -23,6 +23,10 @@ const DVT_NODE_CATALOG_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../dvt/dvtNodeTypeCatalog.ts'
 );
+const DBT_NODE_RENDERER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  '../dbt/DbtNodeRenderer.tsx'
+);
 const COMPONENT_GUIDE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../../../../../../docs/architecture/components/web/graph/react-flow-visual-token-component.md'
@@ -38,6 +42,7 @@ const GRAPH_CONSUMER_SOURCES = [
   CANVAS_NODE_MAPPER_SOURCE,
   DBT_NODE_CATALOG_SOURCE,
   DVT_NODE_CATALOG_SOURCE,
+  DBT_NODE_RENDERER_SOURCE,
 ];
 
 describe('React Flow visual token convergence architecture', () => {
