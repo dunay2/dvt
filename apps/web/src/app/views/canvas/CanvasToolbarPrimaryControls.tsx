@@ -6,6 +6,7 @@ import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Separator } from '../../components/ui/separator';
 import { cn } from '../../components/ui/utils';
+import { canvasChromeClasses } from './canvasChromeTokens';
 import { canvasViewCopy } from './copy';
 
 type CanvasToolbarPrimaryControlsProps = {
@@ -46,15 +47,12 @@ export function CanvasToolbarPrimaryControls({
       <Badge
         data-slot="canvas-workflow-status"
         variant="outline"
-        className={cn(
-          'h-7 border-slate-700 bg-slate-950/60 px-2 text-[11px] font-medium',
-          workflowStatusClass
-        )}
+        className={cn(canvasChromeClasses.statusBadge, workflowStatusClass)}
         title={workflowStatusTitle}
       >
         {workflowStatusLabel}
       </Badge>
-      <Separator orientation="vertical" className="h-5 bg-slate-700" />
+      <Separator orientation="vertical" className={canvasChromeClasses.separator} />
 
       <Button
         type="button"
@@ -63,7 +61,7 @@ export function CanvasToolbarPrimaryControls({
         size="sm"
         onClick={onExportProjectSnapshot}
         disabled={!canExportProjectSnapshot}
-        className="h-8 gap-1.5 px-3 text-xs text-slate-300 hover:bg-slate-800 hover:text-white"
+        className={canvasChromeClasses.ghostButton}
       >
         <Download className="size-4" />
         {canvasViewCopy.toolbarExportSnapshotLabel}
@@ -75,7 +73,7 @@ export function CanvasToolbarPrimaryControls({
         size="sm"
         onClick={() => importInputRef.current?.click()}
         disabled={!canImportProjectSnapshot}
-        className="h-8 gap-1.5 px-3 text-xs text-slate-300 hover:bg-slate-800 hover:text-white"
+        className={canvasChromeClasses.ghostButton}
       >
         <Upload className="size-4" />
         {canvasViewCopy.toolbarImportSnapshotLabel}
@@ -95,7 +93,7 @@ export function CanvasToolbarPrimaryControls({
         }}
       />
 
-      <Separator orientation="vertical" className="h-5 bg-slate-700" />
+      <Separator orientation="vertical" className={canvasChromeClasses.separator} />
       <Button
         type="button"
         data-slot="canvas-toolbar-plan-command"
@@ -103,7 +101,7 @@ export function CanvasToolbarPrimaryControls({
         size="sm"
         onClick={onPlan}
         disabled={!canPlan || !canPlanTransformation}
-        className="h-8 border-slate-600 bg-transparent px-3 text-xs text-slate-200 hover:bg-slate-800 hover:text-white"
+        className={canvasChromeClasses.outlineButton}
       >
         <FileCheck className="mr-1.5 size-4" />
         {canvasViewCopy.toolbarPlanLabel}
