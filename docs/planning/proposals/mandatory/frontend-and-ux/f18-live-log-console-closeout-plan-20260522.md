@@ -28,11 +28,11 @@ unavailable.
 
 ## Command And Query Rail Catalog
 
-| Rail                          | Type  | Owning bounded context | DDD owner                         | Port or adapter surface                        | Scope and authorization                                              | Negative tests                                          |
-| ----------------------------- | ----- | ---------------------- | --------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------- |
-| `GetRunEventTimeline`         | query | Web operator workbench | `RunEventTimelineReadModel`       | `IRunsPort.listRunEvents`                      | Current workspace and selected run only; follows existing web auth.  | Missing run id and empty pages do not fabricate events. |
-| `BuildBottomConsoleDrawModel` | query | Web operator workbench | `BottomConsoleDrawerReadModel`    | Shell presentation model                       | Local shell projection only; no backend mutation or dispatch.        | API idle state must not claim live logging is absent.   |
-| `RenderXtermConsoleLines`     | query | Web operator workbench | `LiveRunConsolePresentationModel` | `XtermConsole` terminal presentation component | Read-only terminal view; stdin is disabled and events are formatted. | Console remains read-only and line formatting is owned. |
+| Rail                            | Type  | Owning bounded context | DDD owner                         | Port or adapter surface                        | Scope and authorization                                              | Negative tests                                          |
+| ------------------------------- | ----- | ---------------------- | --------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------- |
+| `GetRunEventTimeline`           | query | Web operator workbench | `RunEventTimelineReadModel`       | `IRunsPort.listRunEvents`                      | Current workspace and selected run only; follows existing web auth.  | Missing run id and empty pages do not fabricate events. |
+| `BuildBottomConsoleDrawerModel` | query | Web operator workbench | `BottomConsoleDrawerReadModel`    | Shell presentation model                       | Local shell projection only; no backend mutation or dispatch.        | API idle state must not claim live logging is absent.   |
+| `RenderXtermConsoleLines`       | query | Web operator workbench | `LiveRunConsolePresentationModel` | `XtermConsole` terminal presentation component | Read-only terminal view; stdin is disabled and events are formatted. | Console remains read-only and line formatting is owned. |
 
 ## Fowler Opportunity Matrix
 
@@ -103,7 +103,7 @@ commandQueryRails:
   - name: GetRunEventTimeline
     type: query
     dddOwner: RunEventTimelineReadModel
-  - name: BuildBottomConsoleDrawModel
+  - name: BuildBottomConsoleDrawerModel
     type: query
     dddOwner: BottomConsoleDrawerReadModel
   - name: RenderXtermConsoleLines
@@ -156,7 +156,7 @@ symbols:
   - name: API_IDLE_MESSAGE
     path: apps/web/src/app/components/shell/bottomConsoleDrawerModel.ts
     dddOwner: BottomConsoleDrawerReadModel
-    cqRails: [BuildBottomConsoleDrawModel]
+    cqRails: [BuildBottomConsoleDrawerModel]
     fowlerSignals: [Documentation drift]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/views/runs/runsDomainBoundary.architecture.test.ts
     cypressCoverage: N/A
@@ -164,7 +164,7 @@ symbols:
   - name: buildBottomConsoleDrawerModel
     path: apps/web/src/app/components/shell/bottomConsoleDrawerModel.ts
     dddOwner: BottomConsoleDrawerReadModel
-    cqRails: [BuildBottomConsoleDrawModel]
+    cqRails: [BuildBottomConsoleDrawerModel]
     fowlerSignals: [Presentation Model]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/views/runs/runsDomainBoundary.architecture.test.ts
     cypressCoverage: N/A
