@@ -435,7 +435,7 @@ tasks:
     last_verified: '2026-04-19'
   - task_id: MW-D2
     priority: P2
-    status: queued
+    status: done
     objective: >-
       define worker routing model by step kind — which workers execute which types of steps, how
       task queues are assigned per step kind, and how worker images are specialized (e.g., a
@@ -446,13 +446,26 @@ tasks:
       includes step kind or capability; worker deployment manifests are parameterized by step kind.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/mw-d2-provider-neutral-temporal-worker-routing-plan-20260513.md
+      - docs/planning/closeouts/20260513-mw-d2-provider-neutral-worker-routing-closeout.md
+      - docs/adr/ADR-0057-temporal-step-activity-routing-by-capability.md
+      - docs/architecture/components/engine/adapters/temporal/temporal-worker-routing-by-capability.md
+      - docs/architecture/components/engine/adapters/temporal/temporal-worker-routing-by-capability-user-stories.md
+      - docs/evidence/ed-20260513-mw-d2-temporal-worker-routing.md
+      - docs/risk-register/quality/R-20260513-MW-D2-TEMPORAL-WORKER-ROUTING.yaml
+      - packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts
+      - packages/@dvt/adapter-temporal/test/TemporalAdapter.startRun.test.ts
+      - packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts
+      - packages/@dvt/adapter-temporal/test/dbt-core-decoupling.architecture.test.ts
     status_reason: >-
-      A PYTHON_SCRIPT step needs a different worker runtime than a DBT_MODEL step; routing model
-      must be explicit for multi-workflow to function.
-    last_verified: '2026-04-02'
+      MW-D2 is implemented through ADR-0057 as provider-neutral Temporal executeStep activity
+      routing by capability. Workflow starts remain tenant queue scoped, routes are frozen into
+      RunPlanWorkflowInput.stepActivityRouting, continue-as-new preserves the snapshot, and DBT
+      remains a plugin consumer rather than the generic routing model.
+    last_verified: '2026-05-22'
   - task_id: AR-D6
     priority: P2
     status: done

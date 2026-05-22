@@ -128,6 +128,7 @@ allowedImplementationSurfaces:
   - docs/runbooks/temporal-worker-scaling-operations.md
   - docs/evidence/ed-20260513-mw-d2-temporal-worker-routing.md
   - docs/risk-register/quality/R-20260513-MW-D2-TEMPORAL-WORKER-ROUTING.yaml
+  - docs/planning/state/agent-lane-d.yaml
   - docs/**/index.md
   - docs/.manifest.json
   - apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts
