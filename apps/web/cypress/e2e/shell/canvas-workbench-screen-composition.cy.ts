@@ -129,6 +129,7 @@ describe('Canvas workbench screen composition', () => {
       expect([...$links].map((link) => link.getAttribute('href'))).to.deep.equal([
         '/canvas',
         '/runs',
+        '/templates',
         '/plugins',
         '/admin',
       ]);
