@@ -28,6 +28,7 @@ out of the active tree.
   [Admin route position component](./admin-route-position-component.md),
   [API client auth component](./api-client-auth-component.md),
   [App shell](./appshell/app-shell.md),
+  [Web Auth Project Onboarding Component](./appshell/web-auth-project-onboarding-component.md),
   [Data source service boundary](./appshell/data-source-service-boundary.md)
 - graph and authoring surfaces:
   [Graph docs entrypoint](./graph/index.md),

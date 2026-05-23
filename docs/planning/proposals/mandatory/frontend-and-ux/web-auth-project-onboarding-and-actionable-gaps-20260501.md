@@ -1493,3 +1493,189 @@ Phase 5: browser proof and regression guard.
 - Every disabled action has a linked story, missing capability, backend
   contract, and negative test.
 - Documentation and user manual state the real product prerequisites in English.
+
+## 2026-05-23 Canonical Absorption Status
+
+The current branch absorbs this broad product proposal as a governed architecture
+slice instead of pretending the full tenant-admin and project-creation product
+journey has shipped.
+
+Current code truth:
+
+- `/login` exists as the public recovery route.
+- `AuthRouteGate` wraps protected product routes.
+- `resolveProtectedRouteSessionContext` queries `/session` before
+  `/workspace/context`.
+- `sessionStore` and `authorizationStore` are browser projections after server
+  context resolution, not independent authority.
+- Project onboarding UI, tenant-admin CRUD, and first empty project creation are
+  still future vertical slices.
+
+Fowler assessment:
+
+- Pattern improved: protected route admission is now an Application Service
+  style boundary rather than Canvas or route components owning startup truth.
+- Pattern improved: browser persistence is treated as projection/cache.
+- Anti-pattern rejected: fixture nodes as product seed data.
+- Anti-pattern rejected: `localStorage` as authorization or project authority.
+- Grouping opportunity: future implementation should introduce a
+  project-onboarding component under web services/views rather than extending
+  generic shell route wiring.
+
+Canonical component guide:
+
+- [Web Auth Project Onboarding Component](../../../../architecture/components/web/appshell/web-auth-project-onboarding-component.md)
+- [Web Auth Project Onboarding User Stories](../../../../architecture/components/web/appshell/web-auth-project-onboarding-user-stories.md)
+- [Fowler analysis in buzon](../../../../../buzon/20260523-codex-fowler-web-auth-project-onboarding-canon.md)
+
+Architecture fitness:
+
+- `apps/web/src/app/bootstrap/webAuthProjectOnboarding.architecture.test.ts`
+  validates semantic ownership: protected shell admission, proposal binding,
+  component sections, user stories, and the fixture/localStorage boundary.
+
+```feature-mechanization
+version: 1
+featureId: E-MAND-WEB-AUTH-ONBOARDING-CANON
+mechanizationStatus: closed
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md
+componentGuides:
+  - docs/architecture/components/web/appshell/web-auth-project-onboarding-component.md
+userStories:
+  - docs/architecture/components/web/appshell/web-auth-project-onboarding-user-stories.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+allowedImplementationSurfaces:
+  - apps/web/src/app/bootstrap/webAuthProjectOnboarding.architecture.test.ts
+  - buzon/20260523-codex-fowler-web-auth-project-onboarding-canon.md
+  - docs/.manifest.json
+  - docs/**/index.md
+  - docs/architecture/components/web/index.md
+  - docs/architecture/components/web/appshell/web-auth-project-onboarding-component.md
+  - docs/architecture/components/web/appshell/web-auth-project-onboarding-user-stories.md
+  - docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md
+  - docs/planning/proposals/portfolio-map-20260403.md
+  - docs/planning/status/**
+forbiddenImplementationSurfaces:
+  - apps/api/**
+  - packages/**
+  - specs/**
+commandQueryRails:
+  - name: StartLogin
+    type: command
+    dddOwner: ReturnRoute value object
+  - name: GetSessionProfile
+    type: query
+    dddOwner: SessionProfile read model
+  - name: GetEffectiveWorkspaceContext
+    type: query
+    dddOwner: SelectedScope read model
+  - name: ListProjects
+    type: query
+    dddOwner: ProjectDescriptor read model
+  - name: CreateProject
+    type: command
+    dddOwner: Project aggregate
+  - name: GetWorkspaceManifest
+    type: query
+    dddOwner: WorkspaceManifest read model
+  - name: GetWorkspaceGraphDraft
+    type: query
+    dddOwner: WorkspaceGraphDraft read model
+  - name: EnableDemoProjectSeed
+    type: command
+    dddOwner: DemoSeedPolicy
+domainObjects:
+  - name: SessionProfile
+    type: read model
+    owner: Identity and access
+  - name: SelectedScope
+    type: value object
+    owner: Project and workspace
+  - name: WorkspaceManifest
+    type: read model
+    owner: Project and workspace
+  - name: DemoSeedPolicy
+    type: policy
+    owner: Project and workspace
+  - name: WebAuthProjectOnboardingCanon
+    type: architecture policy
+    owner: Frontend product architecture
+fowlerSignals:
+  - Application Service
+  - Presentation Model
+  - Gateway
+  - Anti-Corruption Layer
+  - Fixture-as-product anti-pattern
+  - Browser-store authority drift
+architectureGuards:
+  - pnpm --filter @dvt/web test:architecture:run -- webAuthProjectOnboarding.architecture.test.ts
+  - pnpm docs:feature-mechanization -- --feature E-MAND-WEB-AUTH-ONBOARDING-CANON
+  - pnpm docs:feature-mechanization:implementation -- --feature E-MAND-WEB-AUTH-ONBOARDING-CANON
+cypressFlows:
+  - Future Cypress flow: login-required protected route.
+  - Future Cypress flow: stale dvt-web-session ignored.
+  - Future Cypress flow: empty tenant shows project onboarding with no fixture nodes.
+  - Future Cypress flow: project creation starts with empty Canvas.
+completionGate:
+  - pnpm --filter @dvt/web test:architecture:run -- webAuthProjectOnboarding.architecture.test.ts
+  - pnpm --filter @dvt/web test:architecture:run -- protectedRouteSessionContext.architecture.test.ts webAuthProjectOnboarding.architecture.test.ts
+  - pnpm docs:sync
+  - pnpm docs:status:generate
+  - pnpm docs:feature-mechanization -- --feature E-MAND-WEB-AUTH-ONBOARDING-CANON
+  - pnpm docs:feature-mechanization:implementation -- --feature E-MAND-WEB-AUTH-ONBOARDING-CANON
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: web-auth-onboarding-semantic-canon
+    redTest: pnpm --filter @dvt/web test:architecture:run -- webAuthProjectOnboarding.architecture.test.ts
+    expectedFailure: Component guide, user stories, Fowler analysis, and proposal absorption status are absent.
+    patchSurfaces:
+      - apps/web/src/app/bootstrap/webAuthProjectOnboarding.architecture.test.ts
+      - buzon/20260523-codex-fowler-web-auth-project-onboarding-canon.md
+      - docs/architecture/components/web/index.md
+      - docs/architecture/components/web/appshell/web-auth-project-onboarding-component.md
+      - docs/architecture/components/web/appshell/web-auth-project-onboarding-user-stories.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md
+    greenTest: pnpm --filter @dvt/web test:architecture:run -- webAuthProjectOnboarding.architecture.test.ts
+symbols:
+  - name: readRepoFile
+    path: apps/web/src/app/bootstrap/webAuthProjectOnboarding.architecture.test.ts
+    dddOwner: WebAuthProjectOnboardingCanon architecture guard
+    cqRails:
+      - GetSessionProfile
+      - GetEffectiveWorkspaceContext
+      - GetWorkspaceManifest
+    fowlerSignals:
+      - Application Service
+      - Presentation Model
+      - Browser-store authority drift
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- webAuthProjectOnboarding.architecture.test.ts
+    cypressCoverage: Future Cypress flows are documented in this manifest; this slice adds semantic architecture coverage only.
+    unitTests:
+      - pnpm --filter @dvt/web test:architecture:run -- webAuthProjectOnboarding.architecture.test.ts
+  - name: WebAuthProjectOnboardingCanon
+    path: docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md
+    dddOwner: Frontend product architecture
+    cqRails:
+      - StartLogin
+      - GetSessionProfile
+      - GetEffectiveWorkspaceContext
+      - ListProjects
+      - CreateProject
+      - GetWorkspaceManifest
+      - GetWorkspaceGraphDraft
+      - EnableDemoProjectSeed
+    fowlerSignals:
+      - Application Service
+      - Anti-Corruption Layer
+      - Fixture-as-product anti-pattern
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- webAuthProjectOnboarding.architecture.test.ts
+    cypressCoverage: Future Cypress flows are documented in this manifest; this slice adds semantic architecture coverage only.
+    unitTests:
+      - pnpm docs:feature-mechanization -- --feature E-MAND-WEB-AUTH-ONBOARDING-CANON
+```
