@@ -100,6 +100,7 @@ Evidence documents that justify or validate relevant changes.
 - [Ed 20260514 Ar A7 Delivery In Memory Outbox Ownership](ed-20260514-ar-a7-delivery-in-memory-outbox-ownership.md)
 - [Ed 20260514 Ar D Plan Pointer Dbt Package Extraction](ed-20260514-ar-d-plan-pointer-dbt-package-extraction.md)
 - [Ed 20260515 Ar D Plan Pointer Semantic Fitness](ed-20260515-ar-d-plan-pointer-semantic-fitness.md)
+- [ED 20260522 Ar D5 Tenant Retention Policy](ED-20260522-ar-d5-tenant-retention-policy.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)
 - [ED-20260402 S05 envelope boundary hardening](ED-20260402-s05-envelope-boundary-hardening.md)
 - [ED-20260402 S08 contract-layer hardening](ED-20260402-s08-contract-layer-hardening.md)

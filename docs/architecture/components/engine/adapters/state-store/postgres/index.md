@@ -10,6 +10,8 @@ last_reviewed: 2026-04-09
 ## Pages
 
 - [StateStoreAdapter](./StateStoreAdapter.md)
+- [Run event retention policy component](./run-event-retention-policy-component.md)
+- [Run event retention policy user stories](./run-event-retention-policy-user-stories.md)
 - [Schema rollback zero-downtime component](./schema-rollback-zero-downtime-component.md)
 - [Schema rollback zero-downtime user stories](./schema-rollback-zero-downtime-user-stories.md)
 

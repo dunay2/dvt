@@ -8,6 +8,12 @@ export interface RunEventRetentionPolicy {
   readonly hotRetentionDays: number;
   readonly archiveBucketCount: number;
   readonly pinTerminalSnapshots: boolean;
+  readonly tenantHotRetentionDays?: readonly TenantRunEventRetentionOverride[];
+}
+
+export interface TenantRunEventRetentionOverride {
+  readonly tenantId: string;
+  readonly hotRetentionDays: number;
 }
 
 export type ArchiveBatchStatus = 'STARTED' | 'EXPORTED' | 'FAILED' | 'VERIFIED' | 'VERIFY_FAILED';
@@ -195,6 +201,46 @@ export function toArchiveFailureMessage(error: unknown): string {
     return error.message;
   }
   return String(error);
+}
+
+export function validateRunEventRetentionPolicy(policy: RunEventRetentionPolicy): void {
+  if (!Number.isInteger(policy.hotRetentionDays) || policy.hotRetentionDays <= 0) {
+    throw new Error('ARCHIVE_HOT_RETENTION_DAYS_INVALID');
+  }
+  if (!Number.isInteger(policy.archiveBucketCount) || policy.archiveBucketCount <= 0) {
+    throw new Error('ARCHIVE_BUCKET_COUNT_INVALID');
+  }
+
+  const seenTenantIds = new Set<string>();
+  for (const override of policy.tenantHotRetentionDays ?? []) {
+    const tenantId = override.tenantId.trim();
+    if (!tenantId) {
+      throw new Error('RUN_EVENT_RETENTION_TENANT_ID_INVALID');
+    }
+    if (!Number.isInteger(override.hotRetentionDays) || override.hotRetentionDays <= 0) {
+      throw new Error('RUN_EVENT_RETENTION_TENANT_HOT_RETENTION_DAYS_INVALID');
+    }
+    if (seenTenantIds.has(tenantId)) {
+      throw new Error('RUN_EVENT_RETENTION_TENANT_DUPLICATE');
+    }
+    seenTenantIds.add(tenantId);
+  }
+}
+
+export function resolveTenantHotRetentionDays(
+  policy: RunEventRetentionPolicy,
+  tenantId: string
+): number {
+  validateRunEventRetentionPolicy(policy);
+  const normalizedTenantId = tenantId.trim();
+  if (!normalizedTenantId) {
+    throw new Error('RUN_EVENT_RETENTION_TENANT_ID_INVALID');
+  }
+
+  const override = policy.tenantHotRetentionDays?.find(
+    (candidate) => candidate.tenantId.trim() === normalizedTenantId
+  );
+  return override?.hotRetentionDays ?? policy.hotRetentionDays;
 }
 
 // ---------------------------------------------------------------------------

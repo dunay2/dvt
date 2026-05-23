@@ -65,11 +65,14 @@ export type {
   RestoreLogRecord,
   RunArchiveDeletionPolicy,
   RunEventRetentionPolicy,
+  TenantRunEventRetentionOverride,
 } from './lifecycle/archiveRuntime.js';
 export {
   buildArchivedSnapshotsForUnit,
   createNoopArchiveLifecycleTelemetry,
+  resolveTenantHotRetentionDays,
   toArchiveFailureMessage,
+  validateRunEventRetentionPolicy,
 } from './lifecycle/archiveRuntime.js';
 export { ObjectStorageRunArchiveExporter } from './lifecycle/ObjectStorageRunArchiveExporter.js';
 export { RunArchiveCoordinator } from './lifecycle/RunArchiveCoordinator.js';

@@ -83,6 +83,7 @@ export function buildRunEventRetentionRuntime(
   });
   const policy = {
     hotRetentionDays: env.DVT_RUN_EVENT_RETENTION_HOT_RETENTION_DAYS,
+    tenantHotRetentionDays: env.DVT_RUN_EVENT_RETENTION_TENANT_HOT_RETENTION_DAYS,
     archiveBucketCount: env.DVT_RUN_EVENT_RETENTION_ARCHIVE_BUCKET_COUNT,
     pinTerminalSnapshots: env.DVT_RUN_EVENT_RETENTION_PIN_TERMINAL_SNAPSHOTS,
   };

@@ -76,6 +76,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Lineage stale-claimer concurrency remains timestamp-fenced without lease tokens](R-20260328-RCB5F2-LINEAGE-CLAIM-RACE.md)
 - [Local dev-stack Temporal bootstrap can drift from production runtime assumptions](R-20260427-DEV-STACK-TEMPORAL-BOOTSTRAP.yaml)
 - [manifestRef runtime composition could regress back to documented-but-unwired behavior](R-20260331-MANIFESTREF-PRODUCTION-PATH.yaml)
+- [Mixed-tenant archive units can delay aggressive tenant retention](R-20260522-AR-D5-TENANT-RETENTION-POLICY.yaml)
 - [Narrowed engine read boundary could regress through facade re-growth](R-20260412-AR-A12-C-READ-BOUNDARY-PURITY-REGRESSION.yaml)
 - [Online rollback classification could mislabel a future destructive schema step](R-20260513-AR-D4-ZERO-DOWNTIME-SCHEMA-ROLLBACK.yaml)
 - [Persisted plan record contracts can drift back into dual truth and invalid state acceptance](R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT.yaml)

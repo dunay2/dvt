@@ -23,6 +23,32 @@ const envShardIdList = z.preprocess((value) => {
   return value;
 }, z.array(z.coerce.number().int().nonnegative()));
 
+const tenantRunEventRetentionOverrides = z.preprocess(
+  (value) => {
+    if (value === undefined) return undefined;
+    if (Array.isArray(value)) return value;
+    if (typeof value !== 'string') return value;
+    const trimmed = value.trim();
+    if (trimmed.length === 0) {
+      return [];
+    }
+
+    return trimmed.split(',').map((segment) => {
+      const [tenantId, hotRetentionDays, extra] = segment.split('=');
+      if (extra !== undefined) {
+        return { tenantId: '', hotRetentionDays: Number.NaN };
+      }
+      return {
+        tenantId: tenantId?.trim() ?? '',
+        hotRetentionDays: hotRetentionDays?.trim() ?? '',
+      };
+    });
+  },
+  z.array(
+    z.object({ tenantId: z.string().min(1), hotRetentionDays: z.coerce.number().int().positive() })
+  )
+);
+
 const nonBlankString = z.string().refine((value) => value.trim().length > 0, {
   message: 'must not be empty',
 });
@@ -64,6 +90,7 @@ const ActiveCommonEnvSchema = CommonEnvSchema.extend({
   DVT_RUN_EVENT_RETENTION_INITIAL_DELAY_MS: z.coerce.number().int().min(0).default(30_000),
   DVT_RUN_EVENT_RETENTION_INTERVAL_MS: z.coerce.number().int().positive().default(3_600_000),
   DVT_RUN_EVENT_RETENTION_HOT_RETENTION_DAYS: z.coerce.number().int().positive().default(90),
+  DVT_RUN_EVENT_RETENTION_TENANT_HOT_RETENTION_DAYS: tenantRunEventRetentionOverrides.default([]),
   DVT_RUN_EVENT_RETENTION_ARCHIVE_BUCKET_COUNT: z.coerce.number().int().positive().default(64),
   DVT_RUN_EVENT_RETENTION_PIN_TERMINAL_SNAPSHOTS: envBoolean.default(true),
   DVT_RUN_EVENT_RETENTION_ARCHIVE_DIRECTORY: nonBlankString.default('.dvt/archive'),

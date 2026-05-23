@@ -64,6 +64,7 @@ Core env vars:
 - `DVT_OUTBOX_HTTP_TARGET_URL`: downstream HTTP sink when bus mode is `http`
 - `DVT_PURGE_ENABLED`: defaults to `true`; set `false` only for a controlled diagnostic run, and alert on `dvt_delivery_buffer_purge_disabled`
 - `DVT_RUN_EVENT_RETENTION_ENABLED`: defaults to `true`; set `false` only for a controlled diagnostic run, and alert on `dvt_run_event_retention_disabled`
+- `DVT_RUN_EVENT_RETENTION_TENANT_HOT_RETENTION_DAYS`: optional comma-separated tenant overrides, for example `free-tier=7,enterprise=365`; tenants without an override use `DVT_RUN_EVENT_RETENTION_HOT_RETENTION_DAYS`
 - `DVT_RUN_EVENT_RETENTION_ALLOW_FILESYSTEM_IN_PROD`: must be `true` when `NODE_ENV=production` and `DVT_RUN_EVENT_RETENTION_ENABLED=true`; this is an explicit risk-acceptance opt-in for filesystem archive storage
 
 Shard ownership rule:

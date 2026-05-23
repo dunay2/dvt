@@ -1,0 +1,20 @@
+---
+id: R-20260522-AR-D5-TENANT-RETENTION-POLICY
+title: Mixed-tenant archive units can delay aggressive tenant retention
+status: Open
+date: 2026-05-22
+owners:
+  - dvt/state-store
+  - dvt/adapter-postgres
+severity: Medium
+probability: Medium
+description: >-
+  ADR-0037 defines the physical archive unit as tenant bucket plus persisted day. Tenant-specific
+  hot-retention windows therefore interact when tenants share the same bucket/day. This slice
+  preserves archive-unit integrity by requiring every tenant in a shared unit to satisfy its own
+  retention window before export. That prevents partial exports and stranded data, but aggressive
+  free-tier retention can be delayed by longer enterprise retention in the same unit.
+mitigation: >-
+  Keep this risk visible for any future archive-unit key redesign, tenant-bucket isolation policy,
+  or per-tier bucket-count strategy.
+---
