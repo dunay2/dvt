@@ -1,5 +1,31 @@
 # Changelog
 
+## [5.28.0](https://github.com/dunay2/dvt/compare/v5.27.0...v5.28.0) (2026-05-23)
+
+
+### Features
+
+* **ci:** Enable default retention runtime baseline ([#1343](https://github.com/dunay2/dvt/issues/1343)) ([830069d](https://github.com/dunay2/dvt/commit/830069d75ea9dbca9308cf6a37ee722123a04a72))
+* **state-store:** Add tenant configurable run event retention ([#1349](https://github.com/dunay2/dvt/issues/1349)) ([cfa9b01](https://github.com/dunay2/dvt/commit/cfa9b0138bb63f5567f1bf1962f08a47a588d64c))
+* **web:** Add execution templates workbench ([06e228e](https://github.com/dunay2/dvt/commit/06e228edaef245a0e820051ecacace22f455e5d3))
+* **web:** Add governed Git file history review ([#1311](https://github.com/dunay2/dvt/issues/1311)) ([5b39901](https://github.com/dunay2/dvt/commit/5b399015e90d53b311de8d4a16eb4a73a4f0527b))
+* **web:** Add Monaco bundle isolation guardrails ([59a2ec7](https://github.com/dunay2/dvt/commit/59a2ec70fe8ea8db2e7f47c8ad4b9e50c4538b20))
+* **web:** Add plugin capability table ([#1328](https://github.com/dunay2/dvt/issues/1328)) ([af08507](https://github.com/dunay2/dvt/commit/af08507ba20040fcc3e6941fd2ee1d35670f2224))
+* **web:** Add plugin UX dock contract rails ([#1331](https://github.com/dunay2/dvt/issues/1331)) ([49c70cd](https://github.com/dunay2/dvt/commit/49c70cd6df2d3966b03a7d08afe82435b61388fa))
+* **web:** Add templates Monaco preview ([75f4239](https://github.com/dunay2/dvt/commit/75f423970f56218c01f0949dc7e1472fecd38b76))
+* **web:** Add workspace diff backend rail ([#1310](https://github.com/dunay2/dvt/issues/1310)) ([3bf84d3](https://github.com/dunay2/dvt/commit/3bf84d391a265ee9afd19f0037253b1a82a79d0c))
+* **web:** Converge dbt graph renderer visual tokens ([#1325](https://github.com/dunay2/dvt/issues/1325)) ([2bb200e](https://github.com/dunay2/dvt/commit/2bb200e85e367cbfd7e67a3be8bb15551474dfab))
+* **web:** Converge graph context panel visual tokens ([#1326](https://github.com/dunay2/dvt/issues/1326)) ([f2b8580](https://github.com/dunay2/dvt/commit/f2b8580503d3830070ceb6c5a072cfe6063aa9f7))
+* **web:** Converge Monaco visual tokens ([#1327](https://github.com/dunay2/dvt/issues/1327)) ([90a8670](https://github.com/dunay2/dvt/commit/90a8670a097cb4bb0cfb15321f152f21bc677b4b))
+* **web:** Converge React Flow graph visual tokens ([#1324](https://github.com/dunay2/dvt/issues/1324)) ([5b527a1](https://github.com/dunay2/dvt/commit/5b527a1a9af89433246ea38b8c57f65cfed5094e))
+
+
+### Bug Fixes
+
+* **api:** Enforce generated start-run identity shape ([62a4117](https://github.com/dunay2/dvt/commit/62a4117287dd564db3aadd708f1628abc1a95115))
+* **web:** Close F-18 live log console drift ([#1339](https://github.com/dunay2/dvt/issues/1339)) ([94886a1](https://github.com/dunay2/dvt/commit/94886a12f68a6f9d0318e9851f08cf78f2a7e7df))
+* **web:** Preserve route workbench body container classes ([4513502](https://github.com/dunay2/dvt/commit/4513502bd9954970b5f38afa17116aae395c298d))
+
 ## [5.27.0](https://github.com/dunay2/dvt/compare/v5.26.0...v5.27.0) (2026-05-21)
 
 
