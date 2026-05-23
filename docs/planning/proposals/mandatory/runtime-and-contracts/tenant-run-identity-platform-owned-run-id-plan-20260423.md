@@ -255,7 +255,10 @@ governingSources:
   - docs/adr/adr-0050-platform-owned-start-run-identity.md
 allowedImplementationSurfaces:
   - apps/api/src/entrypoints/http/startRunRouteCommandBuilder.ts
+  - apps/api/test/entrypoints/http/planRouteParserHelpers.test.ts
   - apps/api/test/entrypoints/http/startRunIdentity.architecture.test.ts
+  - apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts
+  - apps/api/test/entrypoints/http/startRunRoute.planSourcePolicy.test.ts
   - apps/api/test/entrypoints/http/startRunRoute.test.support.ts
   - apps/api/test/entrypoints/http/startRunRoute.validation.test.ts
   - apps/api/docs/start-run-http-entrypoint-component.md
@@ -328,4 +331,26 @@ symbols:
     cypressCoverage: Not applicable - protected API boundary invariant only
     unitTests:
       - pnpm --filter dvt-api exec vitest run test/entrypoints/http/startRunRoute.validation.test.ts
+  - name: VALID_GENERATED_RUN_ID
+    path: apps/api/test/entrypoints/http/startRunRoute.test.support.ts
+    dddOwner: PlatformStartRunIdentity
+    cqRails:
+      - startRun
+    fowlerSignals:
+      - Test-only confidence
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/startRunIdentity.architecture.test.ts
+    cypressCoverage: Not applicable - protected API boundary invariant only
+    unitTests:
+      - pnpm --filter dvt-api test
+  - name: VALID_GENERATED_RUN_ID_ALT
+    path: apps/api/test/entrypoints/http/startRunRoute.test.support.ts
+    dddOwner: PlatformStartRunIdentity
+    cqRails:
+      - startRun
+    fowlerSignals:
+      - Test-only confidence
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/startRunIdentity.architecture.test.ts
+    cypressCoverage: Not applicable - protected API boundary invariant only
+    unitTests:
+      - pnpm --filter dvt-api test
 ```
