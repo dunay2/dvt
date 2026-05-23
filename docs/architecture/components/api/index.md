@@ -86,6 +86,8 @@ shape, and the governed transition route:
 - [API Current To Target Architecture](./api-current-to-target-architecture.md)
 - [Protected Runtime Command/Query Rail Design](./protected-runtime-command-query-rail-design.md)
 - [Protected Runtime And Plan Compile Component](./protected-runtime-and-plan-compile-component.md)
+- [Planner Ingress Hard-Cut Component](./planner-ingress-hard-cut-component.md)
+- [Planner Ingress Hard-Cut User Stories](./planner-ingress-hard-cut-user-stories.md)
 - [Temporal Fowler provider-truth follow-up review](../../../planning/reviews/architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md)
 - [API Control-Plane User Manual](../../../guides/api-control-plane-user-manual-20260404.md)
 - [API Control-Plane Technical Manual](../../../guides/api-control-plane-technical-manual-20260404.md)
@@ -100,6 +102,9 @@ shape, and the governed transition route:
 - [Protected Runtime And Plan Compile Component](./protected-runtime-and-plan-compile-component.md):
   public API, invariants, transitions, consumers, focused file map, and
   semantic test anchors for the protected runtime composition seam.
+- [Planner Ingress Hard-Cut Component](./planner-ingress-hard-cut-component.md):
+  local guide for canonical `graphSource` planner ingress and legacy
+  `manifestRef`/`targetProfile` hard-cut rejection.
 - [Protected runtime route group component](../../../../apps/api/docs/protected-runtime-route-group-component.md):
   local API maintainer guide for route registration, route-family mapping,
   invariants, and compatibility posture.
