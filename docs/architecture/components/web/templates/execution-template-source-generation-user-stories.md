@@ -19,6 +19,8 @@ component: Templates workbench
 | US-TEMPLATES-003 | Generate preview               | Completing required fields produces deterministic read-only source and filename metadata. |
 | US-TEMPLATES-004 | Preserve route ownership       | Templates uses the shared route workbench frame and is not embedded as a Canvas tab.      |
 | US-TEMPLATES-005 | Avoid hidden backend authority | The route exposes preview/export posture only and does not persist, dispatch, or apply.   |
+| US-TEMPLATES-006 | Navigate from shell            | User can reach Templates from shell navigation without manually entering the route URL.   |
+| US-TEMPLATES-007 | Understand active form state   | The selected template and required-field errors are exposed through accessible state.     |
 
 ## UX Flow
 
@@ -39,6 +41,14 @@ sequenceDiagram
   TemplatesView-->>User: Read-only preview and export metadata
 ```
 
+```mermaid
+flowchart LR
+  Plugins["Shell route"] --> Nav["Shell navigation"]
+  Nav --> Templates["Templates workbench"]
+  Templates --> Catalog["Selected template aria-pressed=true"]
+  Templates --> Errors["Required fields aria-invalid + describedby"]
+```
+
 ## Negative Scenarios
 
 | Scenario               | Expected result                                                | Guard                                          |
@@ -46,3 +56,4 @@ sequenceDiagram
 | Required value empty   | Preview remains blocked with explicit required-field message.  | `templatesViewModel.test.ts` and Cypress flow. |
 | Unknown template id    | Pure model falls back to first catalog entry.                  | `templatesViewModel.test.ts`.                  |
 | Route tries to persist | Architecture guard rejects provider mutation wording in route. | `templatesWorkbench.architecture.test.ts`.     |
+| Navigation drift       | Shell navigation still reaches `/templates`.                   | Cypress shell navigation flow.                 |
