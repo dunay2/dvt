@@ -95,6 +95,7 @@ function TemplateCatalog({
             <Button
               key={template.id}
               type="button"
+              aria-pressed={isSelected}
               variant={isSelected ? 'default' : 'outline'}
               className={cn(
                 'h-auto justify-start whitespace-normal px-3 py-3 text-left',
@@ -176,11 +177,13 @@ function TemplateParameterField({
   onParameterChange: (parameterId: string, value: string) => void;
 }>) {
   const fieldId = `template-parameter-${parameter.id}`;
+  const errorId = `${fieldId}-error`;
   const commonProps = {
     id: fieldId,
     name: parameter.id,
     value,
     'aria-invalid': errorMessage ? true : undefined,
+    'aria-describedby': errorMessage ? errorId : undefined,
     onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       onParameterChange(parameter.id, event.target.value);
     },
@@ -198,7 +201,9 @@ function TemplateParameterField({
         <Input {...commonProps} className={routeWorkbenchFieldClassName} />
       )}
       {errorMessage ? (
-        <span className="text-xs text-[var(--status-warning)]">{errorMessage}</span>
+        <span id={errorId} className="text-xs text-[var(--status-warning)]">
+          {errorMessage}
+        </span>
       ) : null}
     </label>
   );

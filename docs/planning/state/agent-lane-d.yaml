@@ -401,7 +401,7 @@ tasks:
     last_verified: '2026-05-22'
   - task_id: AR-D5
     priority: P2
-    status: queued
+    status: done
     objective: >-
       add tenant-configurable retention policies so enterprise tenants can retain data longer and
       free-tier tenants have aggressive purging, instead of one-size-fits-all hotRetentionDays.
@@ -412,13 +412,26 @@ tasks:
       archive unit respect their individual retention policies.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-d5-tenant-configurable-retention-policy-plan-20260522.md
+      - docs/planning/closeouts/20260522-ar-d5-tenant-configurable-retention-policy-closeout.md
+      - docs/architecture/components/engine/adapters/state-store/postgres/run-event-retention-policy-component.md
+      - docs/architecture/components/engine/adapters/state-store/postgres/run-event-retention-policy-user-stories.md
+      - docs/evidence/ed-20260522-ar-d5-tenant-retention-policy.md
+      - docs/risk-register/quality/R-20260522-AR-D5-TENANT-RETENTION-POLICY.yaml
+      - packages/@dvt/state-store/test/RunEventRetentionPolicy.test.ts
+      - packages/@dvt/adapter-postgres/test/PostgresRunArchiveStore.tenant-retention.test.ts
+      - packages/@dvt/adapter-postgres/test/PostgresRunArchiveStore.tenant-retention.integration.test.ts
+      - apps/outbox-worker/test/plugins/env.test.ts
+      - apps/outbox-worker/test/runtime/createOutboxWorkerRuntime.test.ts
     status_reason: >-
-      All tenants currently share the same retention window; enterprise and free-tier tenants have
-      fundamentally different retention requirements.
-    last_verified: '2026-04-02'
+      AR-D5 is closed by tenant-specific run-event retention policy overrides. The state-store
+      policy resolves per-tenant hot-retention windows, the outbox worker parses and passes
+      overrides, and Postgres archive eligibility preserves ADR-0037 unit integrity by waiting for
+      every tenant in a shared archive unit to satisfy its own policy before export.
+    last_verified: '2026-05-22'
   - task_id: MW-D1
     priority: P1
     status: done

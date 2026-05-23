@@ -518,7 +518,7 @@ describe('createOutboxWorkerRuntime', () => {
 
   it('starts run-event retention runtime by default', async () => {
     await withRuntimePool(async (pool, patches) => {
-      let archiveCalls = 0;
+      let archivePolicy: Parameters<RunArchiveCoordinator['archiveEligibleHotData']>[0] | undefined;
       patches.patch(pool, 'end', async function end(): Promise<void> {} as typeof pool.end);
       patches.patch(PostgresStateStoreAdapter.prototype, 'close', async function close() {});
       patches.patch(
@@ -538,8 +538,8 @@ describe('createOutboxWorkerRuntime', () => {
       patches.patch(
         RunArchiveCoordinator.prototype,
         'archiveEligibleHotData',
-        async function archiveEligibleHotData() {
-          archiveCalls += 1;
+        async function archiveEligibleHotData(policy) {
+          archivePolicy = policy;
           return [];
         }
       );
@@ -547,14 +547,18 @@ describe('createOutboxWorkerRuntime', () => {
       const runtime = await createTestRuntime({
         DVT_RUN_EVENT_RETENTION_INITIAL_DELAY_MS: '0',
         DVT_RUN_EVENT_RETENTION_INTERVAL_MS: '60000',
+        DVT_RUN_EVENT_RETENTION_TENANT_HOT_RETENTION_DAYS: 'free-tier=7,enterprise=365',
       });
 
       const loop = runtime.start();
-      await waitFor(() => archiveCalls > 0);
+      await waitFor(() => archivePolicy !== undefined);
       await runtime.stop();
       await loop;
 
-      expect(archiveCalls).toBeGreaterThan(0);
+      expect(archivePolicy?.tenantHotRetentionDays).toEqual([
+        { tenantId: 'free-tier', hotRetentionDays: 7 },
+        { tenantId: 'enterprise', hotRetentionDays: 365 },
+      ]);
     });
   });
 

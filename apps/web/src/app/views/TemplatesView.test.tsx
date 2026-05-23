@@ -67,6 +67,12 @@ describe('TemplatesView', () => {
     expect(mounted.container.textContent).toContain('Preview blocked');
     expect(mounted.container.textContent).toContain('Task name is required.');
     expect(mounted.container.textContent).toContain('Warehouse is required.');
+    expect(mounted.container.querySelector('button[aria-pressed="true"]')?.textContent).toContain(
+      'Snowflake Task'
+    );
+    expect(
+      mounted.container.querySelector('input[name="taskName"]')?.getAttribute('aria-describedby')
+    ).toBe('template-parameter-taskName-error');
     expect(mounted.container.querySelector('[data-slot="route-workbench-frame"]')).not.toBeNull();
     expect(
       mounted.container.querySelector('[data-slot="templates-generated-source-preview"]')

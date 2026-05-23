@@ -128,9 +128,7 @@ describe('RootShell chrome', () => {
       expect(bottomDrawer?.closest('[data-slot="app-shell-main"]')).toBe(appShellMain);
       expect(consoleDrawer).not.toBeNull();
       expect(bottomDrawer?.textContent).toContain('Console');
-      expect(bottomDrawer?.textContent).toContain(
-        'Start a run to see run events here. Live log streaming is not available in API mode yet.'
-      );
+      expect(bottomDrawer?.textContent).toContain('Start a run to see live run events here.');
     } finally {
       await mounted.cleanup();
     }
