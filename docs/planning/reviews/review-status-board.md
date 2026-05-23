@@ -359,6 +359,35 @@ Canonical component and stories:
 - [Runtime review canon user stories](../../architecture/components/api/runtime-review-canon-user-stories.md)
 - [Runtime review canon plan 2026-05-23](../proposals/mandatory/runtime-and-contracts/runtime-review-canon-plan-20260523.md)
 
+## 2026-05-23 CI Delivery Retention Review Canonical Disposition
+
+`D-REV-CI-RETENTION-CANON` classifies CI, delivery, and retention review inputs
+through `ClassifyCiRetentionReviewDisposition` and records the outcome with
+`RecordCiRetentionReviewCanon`. No CI, delivery, or retention review remains an orphan execution queue;
+executable follow-up belongs in Planning DB, measured adoption gates, component
+guides, or closeouts.
+
+| Review input                                                                                                                                      | Disposition                                                         | Canonical owner                      |
+| ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------ |
+| [20260328 Lane C AI efficiency and cost review](./ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md)                               | blocked on measurement; still feeds `RC-C2`                         | AI efficiency adoption status        |
+| [20260330 CI, prepush, and PR process observations](./ci-and-delivery/20260330-ci-prepush-pr-process-observations.md)                             | blocked on measurement; shipped tooling remains closeout evidence   | `RC-C2`                              |
+| [20260401 Lane C RC-C2 efficiency institutionalization review](./ci-and-delivery/20260401-lane-c-rc-c2-efficiency-institutionalization-review.md) | blocked on measurement; no closure without three qualifying cycles  | `RC-C2`                              |
+| [20260402 RC-C2 operational friction intake review](./ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md)                       | blocked on measurement; friction fixes remain closeout evidence     | `RC-C2`                              |
+| [20260330 CI performance review and action plan](./ci-and-delivery/20260330-ci-performance-review-and-action-plan.md)                             | reference rationale for CI throughput                               | CI governance component              |
+| [20260401 CI process review](./ci-and-delivery/20260401-ci-process-review.md)                                                                     | reference baseline for CI process                                   | CI governance component              |
+| [20260422 Environment configuration audit](./ci-and-delivery/20260422-environment-configuration-audit-review.md)                                  | reference intake for config/build posture                           | CI governance and CI-AUDIT tasks     |
+| [20260506 CI build config audit](./ci-and-delivery/20260506-ci-build-audit-review.md)                                                             | reference intake routed to `CI-AUDIT-*` tasks                       | CI-AUDIT task family                 |
+| [20260329 Run event retention TTL kickoff review](./event-lifecycle-and-retention/20260329-run-event-retention-ttl-kickoff-review.md)             | done/reference; component owner is run-event retention policy       | event lifecycle and retention domain |
+| [20260329 Run event retention Fowler hard review](./event-lifecycle-and-retention/20260329-run-event-retention-fowler-hard-review.md)             | done/reference; QA rationale absorbed by retention policy component | event lifecycle and retention domain |
+| [20260329 Run event retention risks and mitigations](./event-lifecycle-and-retention/20260329-run-event-retention-risks-mitigations.md)           | done/reference; residual risk handled by retention closeouts        | event lifecycle and retention domain |
+| [20260330 MVP-D1 residual risk baseline review](./event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md)                 | done/reference; baseline retained as evidence                       | MVP-D1 and AR-D5 closeouts           |
+
+Canonical component and stories:
+
+- [CI retention review canon component](../../architecture/components/ci-governance/ci-retention-review-canon-component.md)
+- [CI retention review canon user stories](../../architecture/components/ci-governance/ci-retention-review-canon-user-stories.md)
+- [CI retention review canon plan 2026-05-23](../proposals/mandatory/governance-and-docs/ci-retention-review-canon-plan-20260523.md)
+
 ## Newly Classified Review
 
 - Review:

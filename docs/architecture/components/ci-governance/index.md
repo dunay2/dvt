@@ -31,6 +31,8 @@ workflow parity, and local-to-remote quality gates.
 - [System Governance Generation Workflow Component](./system-governance-generation-workflow-component.md)
 - [Tsconfig BaseUrl Policy Component](./tsconfig-baseurl-policy-component.md)
 - [Tsconfig BaseUrl Policy User Stories](./tsconfig-baseurl-policy-user-stories.md)
+- [CI Retention Review Canon Component](./ci-retention-review-canon-component.md)
+- [CI Retention Review Canon User Stories](./ci-retention-review-canon-user-stories.md)
 - [Component Engineering Record Component](./component-engineering-record-component.md)
 - [Component Engineering Invariant Model](./component-engineering-invariants.md)
 - [Component Engineering Record User Stories](./component-engineering-record-user-stories.md)

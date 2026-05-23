@@ -24,6 +24,7 @@ flows, and operational lifecycle governance.
 - [Review Sprint Critical Path 2026-04](../roadmap/diagrams/review-sprint-critical-path-2026-04.md)
 - [20260330 MVP-D1 residual risk baseline review](../reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md)
 - [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
+- [CI Retention Review Canon Plan 2026-05-23](../proposals/mandatory/governance-and-docs/ci-retention-review-canon-plan-20260523.md)
 
 ## Historical Proposal Inputs
 
@@ -45,6 +46,20 @@ they are archived inputs rather than active planning authorities.
 - [20260321 Gap 5 PR2 Deferred Deletion Restore Closeout](../closeouts/20260321-gap-5-pr2-deferred-deletion-restore-closeout.md)
 - [20260321 Gap 5 PR3 Delivery Buffer Retention Closeout](../closeouts/20260321-gap-5-pr3-delivery-buffer-retention-closeout.md)
 - [20260413 TF-D1 Proof Environment Lifecycle Closeout](../closeouts/20260413-tf-d1-proof-environment-lifecycle-closeout.md)
+- [AR-D5 tenant-configurable retention policy closeout](../closeouts/20260522-ar-d5-tenant-configurable-retention-policy-closeout.md)
+
+## Review Canon
+
+Event-retention reviews are rationale and evidence, not independent policy
+owners. `D-REV-CI-RETENTION-CANON` routes retention review findings through the
+`ClassifyCiRetentionReviewDisposition` query and the
+`RecordCiRetentionReviewCanon` command before implementation. Use these local
+guides for public API, invariants, transitions, consumers, and semantic guard
+expectations:
+
+- [CI retention review canon component](../../architecture/components/ci-governance/ci-retention-review-canon-component.md)
+- [CI retention review canon user stories](../../architecture/components/ci-governance/ci-retention-review-canon-user-stories.md)
+- [Run event retention policy component](../../architecture/components/engine/adapters/state-store/postgres/run-event-retention-policy-component.md)
 
 ## Diagram Sources
 
