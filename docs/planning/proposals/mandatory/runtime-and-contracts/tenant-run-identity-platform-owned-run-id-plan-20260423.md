@@ -227,3 +227,105 @@ flowchart LR
 - `pnpm docs:workboard:generate`
 - `pnpm docs:sync`
 - `pnpm verify:prepush`
+
+## AR-C11 canonization mechanization
+
+This manifest records the 2026-05-23 AR-C11 follow-up that moved the
+documented generated-id invariant into the start-run command-building boundary.
+
+```feature-mechanization
+version: 1
+featureId: AR-C11-RUN-ID-CANON
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/tenant-run-identity-platform-owned-run-id-plan-20260423.md
+componentGuides:
+  - apps/api/docs/start-run-http-entrypoint-component.md
+  - apps/api/docs/start-run-platform-identity-component.md
+  - docs/architecture/components/api/start-run-platform-identity-user-stories.md
+  - docs/architecture/components/web/runs/start-run-client-identity-boundary.md
+userStories:
+  - docs/architecture/components/api/start-run-platform-identity-user-stories.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/adr/adr-0050-platform-owned-start-run-identity.md
+allowedImplementationSurfaces:
+  - apps/api/src/entrypoints/http/startRunRouteCommandBuilder.ts
+  - apps/api/test/entrypoints/http/startRunIdentity.architecture.test.ts
+  - apps/api/test/entrypoints/http/startRunRoute.test.support.ts
+  - apps/api/test/entrypoints/http/startRunRoute.validation.test.ts
+  - apps/api/docs/start-run-http-entrypoint-component.md
+  - apps/api/docs/start-run-platform-identity-component.md
+  - buzon/20260523-codex-fowler-ar-c11-start-run-identity-follow-up.md
+  - docs/architecture/components/api/start-run-platform-identity-user-stories.md
+  - docs/planning/closeouts/20260423-tenant-run-identity-platform-owned-run-id-closeout.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/tenant-run-identity-platform-owned-run-id-plan-20260423.md
+forbiddenImplementationSurfaces:
+  - packages/@dvt/contracts/**
+  - packages/@dvt/engine/**
+  - packages/@dvt/adapter-*/**
+  - apps/web/**
+commandQueryRails:
+  - name: startRun
+    type: command
+    dddOwner: StartRunCommand
+domainObjects:
+  - name: StartRunCommand
+    type: command
+    owner: API / Runtime
+  - name: PlatformStartRunIdentity
+    type: value object invariant
+    owner: apps/api HTTP entrypoint
+fowlerSignals:
+  - Documentation drift
+  - Test-only confidence
+  - Hidden authority
+architectureGuards:
+  - pnpm --filter dvt-api exec vitest run test/entrypoints/http/startRunIdentity.architecture.test.ts
+cypressFlows:
+  - Not applicable - protected API boundary invariant only
+completionGate:
+  - pnpm --filter dvt-api exec vitest run test/entrypoints/http/startRunRoute.validation.test.ts test/entrypoints/http/startRunIdentity.architecture.test.ts test/entrypoints/http/startRunRouteCommandBuilder.test.ts
+  - pnpm --filter dvt-api typecheck
+  - pnpm docs:sync
+  - pnpm docs:status:generate
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: generated-run-id-format-boundary
+    redTest: pnpm --filter dvt-api exec vitest run test/entrypoints/http/startRunRoute.validation.test.ts -t "platform run-id generator"
+    expectedFailure: The route calls the authenticated facade when an injected generated id is not run_<UUIDv7>.
+    patchSurfaces:
+      - apps/api/src/entrypoints/http/startRunRouteCommandBuilder.ts
+      - apps/api/test/entrypoints/http/startRunRoute.validation.test.ts
+      - apps/api/test/entrypoints/http/startRunIdentity.architecture.test.ts
+    greenTest: pnpm --filter dvt-api exec vitest run test/entrypoints/http/startRunRoute.validation.test.ts -t "platform run-id generator"
+symbols:
+  - name: PLATFORM_START_RUN_ID_PATTERN
+    path: apps/api/src/entrypoints/http/startRunRouteCommandBuilder.ts
+    dddOwner: PlatformStartRunIdentity
+    cqRails:
+      - startRun
+    fowlerSignals:
+      - Documentation drift
+      - Test-only confidence
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/startRunIdentity.architecture.test.ts
+    cypressCoverage: Not applicable - protected API boundary invariant only
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/startRunRoute.validation.test.ts
+  - name: registryWith
+    path: apps/api/test/entrypoints/http/startRunRoute.test.support.ts
+    dddOwner: PlatformStartRunIdentity
+    cqRails:
+      - startRun
+    fowlerSignals:
+      - Test-only confidence
+    architectureGuard: pnpm --filter dvt-api exec vitest run test/entrypoints/http/startRunIdentity.architecture.test.ts
+    cypressCoverage: Not applicable - protected API boundary invariant only
+    unitTests:
+      - pnpm --filter dvt-api exec vitest run test/entrypoints/http/startRunRoute.validation.test.ts
+```

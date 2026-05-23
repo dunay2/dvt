@@ -194,3 +194,29 @@ Lane C review reconciliation accepted this closeout as closure evidence for
 `AR-C7`. The platform-owned start-run identity boundary remains backed by
 ADR-0050, API parser rejection coverage, web caller-scope coverage, and semantic
 architecture tests.
+
+## 2026-05-23 AR-C11 Canonization Pass
+
+AR-C11 re-reviewed the completed platform-owned start-run identity work against
+the current Fowler governance model.
+
+The implementation was materially complete, but one semantic drift remained:
+the default allocator emitted `run_<UUIDv7>`, while the injected generator seam
+inside `startRunRouteCommandBuilder.ts` accepted any non-empty string.
+
+The follow-up pass closed that gap:
+
+- `parseGeneratedStartRunRunId(...)` now rejects generated values that do not
+  match `run_<UUIDv7>`;
+- `POST /runs/start` returns `400 invalid_run_id` before the authenticated
+  facade is called when a malformed generated id is injected;
+- `startRunIdentity.architecture.test.ts` now verifies the command-building
+  boundary owns generated-id format validation;
+- `start-run-platform-identity-user-stories.md` records API-side positive,
+  negative, and architecture scenarios;
+- `buzon/20260523-codex-fowler-ar-c11-start-run-identity-follow-up.md`
+  records the Fowler analysis, mature-system comparison, diagrams, lessons,
+  repetitions, remaining opportunities, and drift correction.
+
+No new ADR was required. `ADR-0050` already owns the long-lived decision:
+platform-owned `run_<UUIDv7>` identity at start-run admission.
