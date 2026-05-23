@@ -117,3 +117,93 @@ runtime migration plan.
   not mislabeled as `baseUrl` cleanup.
 - `CFG-TS-T1` lane state points at this plan and records the 2026-05-22
   inventory evidence.
+
+## Feature Mechanization
+
+```feature-mechanization
+version: 1
+featureId: CFG-TS-T1-BASEURL-DEPRECATION
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/cfg-ts-t1-baseurl-deprecation-migration-plan-20260522.md
+componentGuides:
+  - docs/architecture/components/ci-governance/tsconfig-baseurl-policy-component.md
+userStories:
+  - docs/architecture/components/ci-governance/tsconfig-baseurl-policy-user-stories.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/architecture/typescript-package-classification.md
+allowedImplementationSurfaces:
+  - buzon/20260523-codex-fowler-tsconfig-baseurl-policy-canon.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/cfg-ts-t1-baseurl-deprecation-migration-plan-20260522.md
+  - docs/architecture/components/ci-governance/index.md
+  - docs/architecture/components/ci-governance/tsconfig-baseurl-policy-component.md
+  - docs/architecture/components/ci-governance/tsconfig-baseurl-policy-user-stories.md
+  - tools/ci/tsconfig-baseurl-policy.test.mjs
+forbiddenImplementationSurfaces:
+  - apps/**
+  - packages/**
+  - .github/workflows/**
+commandQueryRails:
+  - name: TsconfigBaseUrlRetirementPolicyQuery
+    type: query
+    dddOwner: CI governance TypeScript config policy
+domainObjects:
+  - name: ActiveTsconfigInventory
+    type: read model
+    owner: tools/ci/tsconfig-baseurl-policy.test.mjs
+  - name: TsconfigBaseUrlRetirementPolicy
+    type: invariant
+    owner: docs/architecture/components/ci-governance/tsconfig-baseurl-policy-component.md
+fowlerSignals:
+  - Separates deprecated compiler setting retirement from still-owned paths alias policy.
+  - Keeps package, runtime, and web alias migration under owning bounded contexts.
+  - Converts an accepted configuration posture into a fail-closed CI policy guard.
+architectureGuards:
+  - node --test tools/ci/tsconfig-baseurl-policy.test.mjs
+  - pnpm docs:feature-mechanization:implementation
+cypressFlows:
+  - N/A - repository TypeScript configuration policy only
+completionGate:
+  - node --test tools/ci/tsconfig-baseurl-policy.test.mjs
+  - pnpm test:ci-tools
+  - pnpm docs:sync
+  - pnpm docs:status:generate
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: tsconfig-baseurl-policy-semantic-guard
+    redTest: node --test tools/ci/tsconfig-baseurl-policy.test.mjs
+    expectedFailure: component guide and user stories were absent even though active tsconfig inventory already had no compilerOptions.baseUrl.
+    patchSurfaces:
+      - tools/ci/tsconfig-baseurl-policy.test.mjs
+      - docs/architecture/components/ci-governance/tsconfig-baseurl-policy-component.md
+      - docs/architecture/components/ci-governance/tsconfig-baseurl-policy-user-stories.md
+    greenTest: node --test tools/ci/tsconfig-baseurl-policy.test.mjs
+symbols:
+  - name: ActiveTsconfigInventory
+    path: tools/ci/tsconfig-baseurl-policy.test.mjs
+    dddOwner: CI governance TypeScript config policy
+    cqRails:
+      - TsconfigBaseUrlRetirementPolicyQuery
+    fowlerSignals:
+      - Published Language for active tracked tsconfig inventory.
+    architectureGuard: node --test tools/ci/tsconfig-baseurl-policy.test.mjs
+    cypressCoverage: N/A - repository TypeScript configuration policy only
+    unitTests:
+      - node --test tools/ci/tsconfig-baseurl-policy.test.mjs
+  - name: TsconfigBaseUrlRetirementPolicy
+    path: docs/architecture/components/ci-governance/tsconfig-baseurl-policy-component.md
+    dddOwner: CI governance TypeScript config policy
+    cqRails:
+      - TsconfigBaseUrlRetirementPolicyQuery
+    fowlerSignals:
+      - Distinguishes baseUrl retirement from paths alias migration.
+    architectureGuard: node --test tools/ci/tsconfig-baseurl-policy.test.mjs
+    cypressCoverage: N/A - repository TypeScript configuration policy only
+    unitTests:
+      - node --test tools/ci/tsconfig-baseurl-policy.test.mjs
+```
