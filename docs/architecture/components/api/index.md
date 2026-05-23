@@ -105,6 +105,12 @@ shape, and the governed transition route:
 - [Planner Ingress Hard-Cut Component](./planner-ingress-hard-cut-component.md):
   local guide for canonical `graphSource` planner ingress and legacy
   `manifestRef`/`targetProfile` hard-cut rejection.
+- [Runtime Review Canon Component](./runtime-review-canon-component.md):
+  local guide for canonical runtime/API review disposition, public API,
+  invariants, transitions, consumers, and semantic architecture guard.
+- [Runtime Review Canon User Stories](./runtime-review-canon-user-stories.md):
+  user-facing scenarios for maintainers and planning stewards who route runtime
+  review findings into rails, closeouts, or Planning DB tasks.
 - [Protected runtime route group component](../../../../apps/api/docs/protected-runtime-route-group-component.md):
   local API maintainer guide for route registration, route-family mapping,
   invariants, and compatibility posture.

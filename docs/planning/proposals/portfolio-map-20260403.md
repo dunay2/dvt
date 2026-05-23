@@ -43,6 +43,7 @@ planning_type: proposal
 - [Temporal workflow helper artifact facts narrowing slice 2026-04-10](./mandatory/runtime-and-contracts/temporal-workflow-helper-artifact-facts-narrowing-slice-20260410.md)
 - [MW-C1 to TF-C2 runtime vertical sequence analysis](./mandatory/runtime-and-contracts/mw-c1-to-tf-c2-runtime-vertical-sequence-analysis-20260409.md)
 - [Runtime hardening, shared-kernel, and operations roadmap](./mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md)
+- [Runtime review canon plan 2026-05-23](./mandatory/runtime-and-contracts/runtime-review-canon-plan-20260523.md)
 - [AR-D plan-pointer workflow input hardening plan](./mandatory/runtime-and-contracts/ar-d-plan-pointer-workflow-input-hardening-plan-20260420.md)
 - [Transformation Flow Proposal Set](./mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md)
 - [TF-A2 workspace graph draft persistence boundary plan](./mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md)
