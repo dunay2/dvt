@@ -28,6 +28,10 @@ export const VALID_BODY = {
   targetAdapter: 'temporal' as const,
 } as const;
 
+export const VALID_GENERATED_RUN_ID = 'run_0196454a-f0c8-7d37-a8e8-8a7f9afac0f1' as const;
+
+export const VALID_GENERATED_RUN_ID_ALT = 'run_0196454a-f0c8-7f7f-a8e8-8a7f9afac0f2' as const;
+
 export function okResult<T>(value: T): { readonly ok: true; readonly value: T } {
   return { ok: true, value };
 }
@@ -116,7 +120,11 @@ export async function invokeStartRunRoute(args: InvokeRouteArgs = {}): Promise<{
     args.facade ??
     ({
       async execute() {
-        return okResult({ kind: 'accepted' as const, runId: 'r1', accepted: true });
+        return okResult({
+          kind: 'accepted' as const,
+          runId: VALID_GENERATED_RUN_ID,
+          accepted: true,
+        });
       },
     } satisfies FacadeDouble);
 
@@ -124,7 +132,7 @@ export async function invokeStartRunRoute(args: InvokeRouteArgs = {}): Promise<{
 
   const routeDependencies = {
     ...(args.registry === undefined ? {} : { adapterRegistry: args.registry }),
-    runIdGenerator: args.runIdGenerator ?? (() => 'run_0196454a-f0c8-7d37-a8e8-8a7f9afac0f1'),
+    runIdGenerator: args.runIdGenerator ?? (() => VALID_GENERATED_RUN_ID),
   };
 
   await startRunRoute(

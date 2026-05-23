@@ -7,6 +7,8 @@ import { parsePlanRouteRunExecutionContextRef } from '../../../src/entrypoints/h
 import { parsePlanRouteScope as parseScopedPlanRouteScope } from '../../../src/entrypoints/http/planRouteScopeParser.js';
 import { parseStartRunBody } from '../../../src/entrypoints/http/startRunRouteParser.js';
 
+import { VALID_GENERATED_RUN_ID } from './startRunRoute.test.support.js';
+
 const VALID_PLAN_REF = {
   uri: 'https://plans.example.com/p.json',
   sha256: 'abc123',
@@ -317,7 +319,7 @@ describe('plan-route helper parsers', () => {
           },
         },
         START_RUN_ADAPTER_REGISTRY,
-        () => 'run_generated_parser'
+        () => VALID_GENERATED_RUN_ID
       )
     ).toEqual({
       ok: false,
@@ -337,7 +339,7 @@ describe('plan-route helper parsers', () => {
           planRef: { uri: 'https://plans.example.com/p.json' },
         },
         START_RUN_ADAPTER_REGISTRY,
-        () => 'run_generated_parser'
+        () => VALID_GENERATED_RUN_ID
       )
     ).toEqual({
       ok: false,
@@ -357,7 +359,7 @@ describe('plan-route helper parsers', () => {
           planRef: VALID_PLAN_REF,
         },
         START_RUN_ADAPTER_REGISTRY,
-        () => 'run_generated_parser'
+        () => VALID_GENERATED_RUN_ID
       )
     ).toEqual({
       ok: false,
@@ -376,7 +378,7 @@ describe('plan-route helper parsers', () => {
           planRef: VALID_PLAN_REF,
         },
         START_RUN_ADAPTER_REGISTRY,
-        () => 'run_generated_parser'
+        () => VALID_GENERATED_RUN_ID
       )
     ).toEqual({
       ok: false,
@@ -394,7 +396,7 @@ describe('plan-route helper parsers', () => {
           planRef: VALID_PLAN_REF,
         },
         START_RUN_ADAPTER_REGISTRY,
-        () => 'run_generated_parser'
+        () => VALID_GENERATED_RUN_ID
       )
     ).toEqual({
       ok: false,
