@@ -282,6 +282,14 @@ symbols:
     architectureGuard: pnpm --filter @dvt/adapter-postgres test -- PostgresRunArchiveStore.tenant-retention.test.ts
     cypressCoverage: not_applicable_runtime_worker_policy
     unitTests: [pnpm --filter @dvt/adapter-postgres test -- PostgresRunArchiveStore.tenant-retention.test.ts]
+  - name: getShortestHotRetentionDays
+    path: packages/@dvt/adapter-postgres/src/PostgresRunArchiveStore.ts
+    dddOwner: Postgres archive lifecycle adapter
+    cqRails: [ConfigureRunEventRetentionPolicy]
+    fowlerSignals: [Gateway, Query object]
+    architectureGuard: pnpm --filter @dvt/adapter-postgres test -- PostgresRunArchiveStore.tenant-retention.test.ts
+    cypressCoverage: not_applicable_runtime_worker_policy
+    unitTests: [pnpm --filter @dvt/adapter-postgres test -- PostgresRunArchiveStore.tenant-retention.test.ts]
   - name: validateArchiveNow
     path: packages/@dvt/adapter-postgres/src/PostgresRunArchiveStore.ts
     dddOwner: Postgres archive lifecycle adapter
