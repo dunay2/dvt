@@ -110,6 +110,7 @@ export class PostgresRunArchiveStore
   ): Promise<readonly EligibleArchiveUnit[]> {
     validateRunEventRetentionPolicy(policy);
     validateArchiveNow(nowIso);
+    const scanCutoffIso = computeCutoffIso(nowIso, getShortestHotRetentionDays(policy));
 
     return this.withTransaction(async (client) => {
       await enterPostgresMaintenanceContext(client, RUN_ARCHIVE_SERVICE_ACCESS);
@@ -128,6 +129,7 @@ export class PostgresRunArchiveStore
           LEFT JOIN ${quoteIdentifier(this.schema)}.run_snapshots s
             ON s.run_id = e.run_id
             AND s.tenant_id = e.tenant_id
+          WHERE e.persisted_at < $1::timestamptz
           GROUP BY
             e.tenant_id,
             to_char(timezone('UTC', e.persisted_at)::date, 'YYYY-MM-DD'),
@@ -135,7 +137,7 @@ export class PostgresRunArchiveStore
             s.snapshot_status
           ORDER BY persisted_at_day ASC, e.tenant_id ASC, e.run_id ASC
         `,
-        []
+        [scanCutoffIso]
       );
 
       const candidatesByKey = new Map<
@@ -889,6 +891,13 @@ function computeCutoffIso(nowIso: string, hotRetentionDays: number): string {
     throw new Error('ARCHIVE_NOW_INVALID');
   }
   return new Date(now.getTime() - hotRetentionDays * 24 * 60 * 60 * 1000).toISOString();
+}
+
+function getShortestHotRetentionDays(policy: RunEventRetentionPolicy): number {
+  return Math.min(
+    policy.hotRetentionDays,
+    ...(policy.tenantHotRetentionDays ?? []).map((override) => override.hotRetentionDays)
+  );
 }
 
 function validateArchiveNow(nowIso: string): void {

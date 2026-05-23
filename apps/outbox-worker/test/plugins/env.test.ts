@@ -65,6 +65,18 @@ describe('loadEnv', () => {
     ]);
   });
 
+  it('fails fast when tenant-specific run-event retention overrides contain duplicate tenants', () => {
+    expect(() =>
+      loadEnv({
+        NODE_ENV: 'test',
+        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+        DVT_RUN_EVENT_RETENTION_TENANT_HOT_RETENTION_DAYS: 'free-tier=7,free-tier=30',
+      })
+    ).toThrow(/duplicate tenant/i);
+  });
+
   it('applies passive worker defaults without runtime dependencies', () => {
     const env = loadEnv({
       NODE_ENV: 'test',

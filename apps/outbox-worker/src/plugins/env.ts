@@ -47,9 +47,26 @@ const tenantRunEventRetentionOverrides = z.preprocess(
       };
     });
   },
-  z.array(
-    z.object({ tenantId: z.string().min(1), hotRetentionDays: z.coerce.number().int().positive() })
-  )
+  z
+    .array(
+      z.object({
+        tenantId: z.string().min(1),
+        hotRetentionDays: z.coerce.number().int().positive(),
+      })
+    )
+    .superRefine((overrides, context) => {
+      const seenTenantIds = new Set<string>();
+      for (const override of overrides) {
+        if (seenTenantIds.has(override.tenantId)) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `duplicate tenant override: ${override.tenantId}`,
+          });
+          return;
+        }
+        seenTenantIds.add(override.tenantId);
+      }
+    })
 );
 
 const nonBlankString = z.string().refine((value) => value.trim().length > 0, {

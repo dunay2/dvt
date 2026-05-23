@@ -71,6 +71,27 @@ describe('PostgresRunArchiveStore tenant retention policy', () => {
     ]);
     expect(client.queries.some((query) => query.sql.includes('INSERT INTO'))).toBe(true);
   });
+
+  it('uses the shortest configured tenant retention window as the SQL scan cutoff', async () => {
+    const client = new ScriptedClient([]);
+    const store = makeStore(client);
+
+    await store.listEligibleArchiveUnits(
+      {
+        hotRetentionDays: 30,
+        archiveBucketCount: 1,
+        pinTerminalSnapshots: true,
+        tenantHotRetentionDays: [{ tenantId: 'free-tier', hotRetentionDays: 7 }],
+      },
+      '2026-05-22T00:00:00.000Z'
+    );
+
+    const runEventsQuery = client.queries.find((query) =>
+      query.sql.includes('FROM "dvt".run_events e')
+    );
+    expect(runEventsQuery?.sql).toContain('WHERE e.persisted_at < $1::timestamptz');
+    expect(runEventsQuery?.params).toEqual(['2026-05-15T00:00:00.000Z']);
+  });
 });
 
 function makeStore(client: ScriptedClient): PostgresRunArchiveStore {
