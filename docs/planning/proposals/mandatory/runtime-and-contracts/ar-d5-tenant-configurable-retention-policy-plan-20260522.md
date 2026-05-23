@@ -142,6 +142,7 @@ allowedImplementationSurfaces:
   - apps/outbox-worker/src/runtime/buildRunEventRetentionRuntime.ts
   - apps/outbox-worker/test/plugins/env.test.ts
   - apps/outbox-worker/test/runtime/createOutboxWorkerRuntime.test.ts
+  - buzon/20260523-codex-fowler-ar-d5-tenant-retention-policy-analysis.md
   - docs/architecture/components/engine/adapters/state-store/postgres/index.md
   - docs/architecture/components/engine/adapters/state-store/postgres/run-event-retention-policy-component.md
   - docs/architecture/components/engine/adapters/state-store/postgres/run-event-retention-policy-user-stories.md
@@ -153,6 +154,7 @@ allowedImplementationSurfaces:
   - docs/risk-register/quality/R-20260522-AR-D5-TENANT-RETENTION-POLICY.yaml
   - docs/risk-register/quality/index.md
   - packages/@dvt/adapter-postgres/src/PostgresRunArchiveStore.ts
+  - packages/@dvt/adapter-postgres/test/PostgresRunEventRetentionPolicy.architecture.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresRunArchiveStore.tenant-retention.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresRunArchiveStore.tenant-retention.integration.test.ts
   - packages/@dvt/state-store/src/index.ts
@@ -180,6 +182,7 @@ fowlerSignals:
   - Unit of work
   - Explicit lifecycle boundary
 architectureGuards:
+  - pnpm --filter @dvt/adapter-postgres test -- PostgresRunEventRetentionPolicy.architecture.test.ts
   - pnpm --filter @dvt/state-store test -- RunEventRetentionPolicy.test.ts
   - pnpm --filter @dvt/adapter-postgres test -- PostgresRunArchiveStore.tenant-retention.integration.test.ts
 cypressFlows:
@@ -190,6 +193,7 @@ completionGate:
   - pnpm --filter @dvt/state-store typecheck
   - pnpm --filter @dvt/adapter-postgres typecheck
   - pnpm --filter dvt-outbox-worker typecheck
+  - pnpm --filter @dvt/adapter-postgres test -- PostgresRunEventRetentionPolicy.architecture.test.ts
   - pnpm verify:prepush
 redGreenCycles:
   - id: ar-d5-policy-resolution
@@ -206,6 +210,21 @@ redGreenCycles:
       - packages/@dvt/adapter-postgres/src/PostgresRunArchiveStore.ts
       - packages/@dvt/adapter-postgres/test/PostgresRunArchiveStore.tenant-retention.integration.test.ts
     greenTest: pnpm --filter @dvt/adapter-postgres test -- PostgresRunArchiveStore.tenant-retention.integration.test.ts
+  - id: ar-d5-semantic-architecture-guard
+    redTest: pnpm --filter @dvt/adapter-postgres test -- PostgresRunEventRetentionPolicy.architecture.test.ts
+    expectedFailure: AR-D5 modules, docs, evidence, risk, and Fowler mailbox are not semantically bound.
+    patchSurfaces:
+      - apps/outbox-worker/src/plugins/env.ts
+      - buzon/20260523-codex-fowler-ar-d5-tenant-retention-policy-analysis.md
+      - docs/architecture/components/engine/adapters/state-store/postgres/run-event-retention-policy-component.md
+      - docs/architecture/components/engine/adapters/state-store/postgres/run-event-retention-policy-user-stories.md
+      - docs/evidence/ed-20260522-ar-d5-tenant-retention-policy.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-d5-tenant-configurable-retention-policy-plan-20260522.md
+      - docs/risk-register/quality/R-20260522-AR-D5-TENANT-RETENTION-POLICY.yaml
+      - packages/@dvt/adapter-postgres/src/PostgresRunArchiveStore.ts
+      - packages/@dvt/adapter-postgres/test/PostgresRunEventRetentionPolicy.architecture.test.ts
+      - packages/@dvt/state-store/src/lifecycle/archiveRuntime.ts
+    greenTest: pnpm --filter @dvt/adapter-postgres test -- PostgresRunEventRetentionPolicy.architecture.test.ts
 symbols:
   - name: RunEventRetentionPolicy
     path: packages/@dvt/state-store/src/lifecycle/archiveRuntime.ts
@@ -247,6 +266,14 @@ symbols:
     architectureGuard: pnpm --filter @dvt/adapter-postgres test -- PostgresRunArchiveStore.tenant-retention.test.ts PostgresRunArchiveStore.tenant-retention.integration.test.ts
     cypressCoverage: not_applicable_runtime_worker_policy
     unitTests: [pnpm --filter @dvt/adapter-postgres test -- PostgresRunArchiveStore.tenant-retention.test.ts]
+  - name: PostgresRunEventRetentionPolicy architecture guard
+    path: packages/@dvt/adapter-postgres/test/PostgresRunEventRetentionPolicy.architecture.test.ts
+    dddOwner: Postgres archive lifecycle adapter semantic guard
+    cqRails: [ConfigureRunEventRetentionPolicy]
+    fowlerSignals: [Test-only confidence, Documentation drift]
+    architectureGuard: pnpm --filter @dvt/adapter-postgres test -- PostgresRunEventRetentionPolicy.architecture.test.ts
+    cypressCoverage: not_applicable_runtime_worker_policy
+    unitTests: [pnpm --filter @dvt/adapter-postgres test -- PostgresRunEventRetentionPolicy.architecture.test.ts]
   - name: computeCutoffIso
     path: packages/@dvt/adapter-postgres/src/PostgresRunArchiveStore.ts
     dddOwner: Postgres archive lifecycle adapter

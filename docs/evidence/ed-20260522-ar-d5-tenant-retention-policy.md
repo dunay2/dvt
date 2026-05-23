@@ -28,8 +28,9 @@ evidence:
 ---
 
 This evidence record covers AR-D5 tenant-configurable run-event hot-retention
-policy. The slice keeps ADR-0037 archive-unit identity unchanged and adds
-tenant-specific retention resolution before Postgres archive eligibility.
+policy and the `ConfigureRunEventRetentionPolicy` command rail. The slice keeps
+ADR-0037 archive-unit identity unchanged and adds tenant-specific retention
+resolution before Postgres archive eligibility.
 
 The adapter does not partially export tenant subsets from a shared archive unit.
 A shared unit becomes eligible only when every tenant represented in the unit

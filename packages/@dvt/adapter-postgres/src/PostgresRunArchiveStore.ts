@@ -1,3 +1,6 @@
+/**
+ * @ownedConcern Owns PostgreSQL run-event archive-unit eligibility, export/verification state transitions, restore writes, and hot-store deletion for the state-store adapter.
+ */
 import { randomUUID } from 'node:crypto';
 
 import {

@@ -23,8 +23,12 @@ planning_type: architecture
 ## Owned Concern
 
 This component owns the policy that decides when hot `run_events` are old
-enough to enter ADR-0037 archive export. It does not own engine event
-semantics, object-storage layout, restore, or delete-after-grace.
+enough to enter ADR-0037 archive export. It owns the
+`ConfigureRunEventRetentionPolicy` command rail across worker configuration,
+state-store policy resolution, and Postgres archive eligibility. Its core
+behavior is tenant-specific hot-retention without changing archive-unit
+identity. It does not own engine event semantics, object-storage layout,
+restore, or delete-after-grace.
 
 ## Public API
 
@@ -75,7 +79,7 @@ DVT_RUN_EVENT_RETENTION_TENANT_HOT_RETENTION_DAYS=free-tier=7,enterprise=365
 - The component does not partially export tenant subsets under an existing
   archive-unit key.
 
-## State Transitions
+## Transitions
 
 ```mermaid
 stateDiagram-v2
@@ -87,7 +91,9 @@ stateDiagram-v2
   Eligible --> Exported: coordinator starts archive batch
 ```
 
-## Runtime Flow
+## Diagrams
+
+### Runtime Flow
 
 ```mermaid
 sequenceDiagram
@@ -103,6 +109,18 @@ sequenceDiagram
   Store->>Pg: scan run_events grouped by tenant/day/run
   Store->>Store: resolveTenantHotRetentionDays()
   Store-->>Coord: full eligible units only
+```
+
+### Component Boundary
+
+```mermaid
+flowchart LR
+  Env["dvt-outbox-worker env"] --> Policy["RunEventRetentionPolicy"]
+  Policy --> Resolver["resolveTenantHotRetentionDays"]
+  Resolver --> Adapter["PostgresRunArchiveStore"]
+  Adapter --> Unit["tenant_bucket + persisted_at_day"]
+  Unit --> Eligible["Full-unit ELIGIBLE"]
+  Unit --> Blocked["Blocked until every tenant satisfies policy"]
 ```
 
 ## Consumers
@@ -126,6 +144,9 @@ sequenceDiagram
   - env override parsing
 - `apps/outbox-worker/test/runtime/createOutboxWorkerRuntime.test.ts`
   - runtime passes overrides into the coordinator policy
+- `packages/@dvt/adapter-postgres/test/PostgresRunEventRetentionPolicy.architecture.test.ts`
+  - semantic alignment across policy object, adapter gateway, env parsing,
+    component docs, evidence, risk, and Fowler analysis
 
 ## Drift Guard
 

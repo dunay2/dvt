@@ -10,6 +10,8 @@ planning_type: architecture
 
 ## Story 1: Default Retention
 
+Story id: `US-RER-001`
+
 As an operator with no tenant-specific retention requirements, I want run-event
 archival to keep using the default hot-retention window so existing deployments
 do not need a new setting.
@@ -21,6 +23,8 @@ Acceptance:
 - Existing runtime defaults remain valid.
 
 ## Story 2: Free-Tier Purging
+
+Story id: `US-RER-002`
 
 As an operator managing free-tier tenants, I want a tenant override with a short
 hot-retention window so hot storage can be reduced aggressively for those
@@ -35,6 +39,8 @@ Acceptance:
 
 ## Story 3: Enterprise Retention
 
+Story id: `US-RER-003`
+
 As an operator managing enterprise tenants, I want a tenant override with a
 longer hot-retention window so enterprise data is not archived from hot storage
 too early.
@@ -46,6 +52,8 @@ Acceptance:
 - The default retention window for other tenants is unchanged.
 
 ## Story 4: Shared Archive Unit
+
+Story id: `US-RER-004`
 
 As the archive lifecycle owner, I want mixed-tenant archive units to preserve
 ADR-0037 unit integrity so partial exports do not strand tenant data under an
@@ -61,6 +69,8 @@ Acceptance:
 
 ## Story 5: Invalid Configuration
 
+Story id: `US-RER-005`
+
 As an operator, I want malformed tenant-retention overrides rejected during
 configuration so lifecycle behavior cannot silently drift.
 
@@ -69,3 +79,20 @@ Acceptance:
 - Empty tenant IDs are rejected.
 - Non-positive retention days are rejected.
 - Duplicate tenant IDs are rejected by policy validation.
+
+## Scenario Coverage
+
+```mermaid
+flowchart TD
+  Default["US-RER-001 default retention"]
+  Short["US-RER-002 short tenant override"]
+  Long["US-RER-003 long tenant override"]
+  Mixed["US-RER-004 shared archive unit"]
+  Invalid["US-RER-005 invalid configuration"]
+
+  Default --> Policy["RunEventRetentionPolicy"]
+  Short --> Policy
+  Long --> Policy
+  Policy --> Mixed
+  Invalid --> Reject["fail closed before runtime starts"]
+```

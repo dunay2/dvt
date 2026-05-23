@@ -1,3 +1,6 @@
+/**
+ * @ownedConcern Owns run-event archive lifecycle policy contracts, tenant retention resolution, and archive runtime ports.
+ */
 import type { EventEnvelope, RunId, WorkflowSnapshot } from '@dvt/contracts';
 
 import type { ArchiveUnitState } from '../archiveLifecycle.js';

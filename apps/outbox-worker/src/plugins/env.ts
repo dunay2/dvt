@@ -1,3 +1,6 @@
+/**
+ * @ownedConcern Owns outbox worker environment parsing and runtime configuration policy for active/passive worker modes.
+ */
 import { z } from 'zod';
 
 const envBoolean = z.preprocess((value) => {
