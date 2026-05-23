@@ -145,7 +145,7 @@ allowedImplementationSurfaces:
   - docs/architecture/components/engine/adapters/state-store/postgres/index.md
   - docs/architecture/components/engine/adapters/state-store/postgres/run-event-retention-policy-component.md
   - docs/architecture/components/engine/adapters/state-store/postgres/run-event-retention-policy-user-stories.md
-  - docs/evidence/ED-20260522-ar-d5-tenant-retention-policy.md
+  - docs/evidence/ed-20260522-ar-d5-tenant-retention-policy.md
   - docs/evidence/index.md
   - docs/planning/closeouts/20260522-ar-d5-tenant-configurable-retention-policy-closeout.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/ar-d5-tenant-configurable-retention-policy-plan-20260522.md

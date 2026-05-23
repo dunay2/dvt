@@ -419,7 +419,7 @@ tasks:
       - docs/planning/closeouts/20260522-ar-d5-tenant-configurable-retention-policy-closeout.md
       - docs/architecture/components/engine/adapters/state-store/postgres/run-event-retention-policy-component.md
       - docs/architecture/components/engine/adapters/state-store/postgres/run-event-retention-policy-user-stories.md
-      - docs/evidence/ED-20260522-ar-d5-tenant-retention-policy.md
+      - docs/evidence/ed-20260522-ar-d5-tenant-retention-policy.md
       - docs/risk-register/quality/R-20260522-AR-D5-TENANT-RETENTION-POLICY.yaml
       - packages/@dvt/state-store/test/RunEventRetentionPolicy.test.ts
       - packages/@dvt/adapter-postgres/test/PostgresRunArchiveStore.tenant-retention.test.ts
