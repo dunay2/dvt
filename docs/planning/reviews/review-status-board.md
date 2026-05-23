@@ -335,6 +335,30 @@ Additional active QA:
   - status: `done`
   - progress: `100%`
 
+## 2026-05-23 Runtime Review Canonical Disposition
+
+`C-REV-RUNTIME-CANON` classifies runtime/API review inputs through
+`ClassifyRuntimeReviewDisposition` and records the outcome with
+`RecordRuntimeReviewCanon`. No runtime review remains an orphan execution queue;
+executable follow-up belongs in Planning DB, protected runtime rails, or an
+explicit closeout.
+
+| Review input                                                                                                                                                  | Disposition                                                                                 | Canonical owner                |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------ |
+| [20260321 Planner-backed StartRun QA review](./execution-runtime/20260321-planner-backed-start-run-qa-review.md)                                              | reference rationale absorbed by protected runtime planner-ingress work                      | protected runtime rail catalog |
+| [20260326 RunMaintenanceService SRP review](./execution-runtime/20260326-run-maintenance-service-srp-review.md)                                               | reference rationale for runtime decomposition                                               | execution-runtime domain page  |
+| [20260326 S03 hard QA review](./execution-runtime/20260326-s03-hard-qa-review.md)                                                                             | superseded as active critique by AR-C10, TF-C2, and RC closeouts                            | runtime review canon component |
+| [20260410 Runtime and shared-kernel risk triage review](./architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md)               | reference intake with linked Planning DB task families                                      | Lane C/A/D task families       |
+| [20260410 Contract pack and read boundary reset Fowler review](./architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md) | future/active work remains under AR-A12 task family                                         | Lane A AR-A12 task family      |
+| [20260409 TF-C2-B runtime read-surface hard QA review](execution-runtime/20260409-tf-c2-b-read-surface-hard-qa-review.md)                                     | done and evidence-backed                                                                    | TF-C2-B closeout               |
+| [20260510 Web API integration gap review](./20260510-web-api-integration-gap-review.md)                                                                       | runtime side must route through protected runtime command/query rails before implementation | API/runtime rail catalog       |
+
+Canonical component and stories:
+
+- [Runtime review canon component](../../architecture/components/api/runtime-review-canon-component.md)
+- [Runtime review canon user stories](../../architecture/components/api/runtime-review-canon-user-stories.md)
+- [Runtime review canon plan 2026-05-23](../proposals/mandatory/runtime-and-contracts/runtime-review-canon-plan-20260523.md)
+
 ## Newly Classified Review
 
 - Review:
