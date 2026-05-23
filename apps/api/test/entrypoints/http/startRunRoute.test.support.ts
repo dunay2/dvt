@@ -80,9 +80,7 @@ export function createReply(): ReplyDouble {
   };
 }
 
-export function registryWith(
-  ...supported: Array<'temporal'>
-): IStartRunTargetAdapterRegistry {
+export function registryWith(...supported: Array<'temporal'>): IStartRunTargetAdapterRegistry {
   return {
     isSupported(value: string): value is 'temporal' {
       return supported.includes(value as 'temporal');
@@ -126,7 +124,7 @@ export async function invokeStartRunRoute(args: InvokeRouteArgs = {}): Promise<{
 
   const routeDependencies = {
     ...(args.registry === undefined ? {} : { adapterRegistry: args.registry }),
-    runIdGenerator: args.runIdGenerator ?? (() => 'run_generated_test'),
+    runIdGenerator: args.runIdGenerator ?? (() => 'run_0196454a-f0c8-7d37-a8e8-8a7f9afac0f1'),
   };
 
   await startRunRoute(
