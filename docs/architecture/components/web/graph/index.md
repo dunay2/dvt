@@ -48,6 +48,8 @@ Canonical navigation for the Graph and Canvas architecture pack.
 - [Canvas Workbench Tab Strip Component](./canvas-workbench-tab-strip-component.md)
 - [Canvas Workbench Tabs User Stories](./canvas-workbench-tabs-user-stories.md)
 - [Canvas Workbench Command Query Catalog](./canvas-workbench-command-query-catalog.md)
+- [Canvas Fowler Canon Component](./canvas-fowler-canon-component.md)
+- [Canvas Fowler Canon User Stories](./canvas-fowler-canon-user-stories.md)
 
 ## Related Existing Reviews
 

@@ -56,6 +56,24 @@ Sprint execution board:
 | [20260422 Environment configuration audit](./ci-and-delivery/20260422-environment-configuration-audit-review.md)                                  | `ci-and-delivery`                 | current monorepo environment and tooling audit baseline | `none`                                     | reference        | `n/a`              |
 | [20260506 CI build config audit](./ci-and-delivery/20260506-ci-build-audit-review.md)                                                             | `ci-and-delivery`                 | CI/build/config audit intake routed to Lane C tasks     | `CI-AUDIT-*`                               | reference        | `n/a`              |
 
+## 2026-05-23 Canvas Fowler Canonical Disposition
+
+`F-MAND-CANVAS-FOWLER` canonizes the mandatory Canvas workbench Fowler
+remediation proposal into a Planning DB-owned frontend governance task, a local
+component guide, user stories, and semantic architecture proof.
+
+No Canvas Fowler remediation proposal remains an orphan execution queue after
+this disposition. Runtime Canvas behavior remains owned by the existing Canvas
+component guide family; future executable behavior must be promoted to Planning
+DB before code changes begin.
+
+Canonical surfaces:
+
+- [Canvas Fowler Canon Plan 2026-05-23](../proposals/mandatory/frontend-and-ux/canvas-fowler-canon-plan-20260523.md)
+- [Canvas Fowler Canon Component](../../architecture/components/web/graph/canvas-fowler-canon-component.md)
+- [Canvas Fowler Canon User Stories](../../architecture/components/web/graph/canvas-fowler-canon-user-stories.md)
+- [Canvas Workbench Fowler Canon Analysis](../../../buzon/20260523-codex-fowler-canvas-workbench-canon.md)
+
 Additional active rationale:
 
 - [20260504 Internal alpha product route review](./architecture-and-governance/20260504-internal-alpha-evolution-route.md)
