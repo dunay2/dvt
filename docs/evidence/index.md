@@ -144,6 +144,7 @@ Evidence documents that justify or validate relevant changes.
 - [Summary](ed-20260429-plan-admission-hard-cut.md)
 - [Summary](ed-20260514-rc-g1-contract-ownership-closure.md)
 - [Summary](ed-20260514-s08-plan-store-inventory-drift.md)
+- [Summary](ed-20260523-postgres-tenant-isolation-canon.md)
 - [Temporal SDK 1.16.1 Patch Upgrade](ed-20260430-temporal-sdk-1-16-1-patch-upgrade.md)
 - [Temporal Step Plugin Semantics Hardening](ed-20260429-temporal-step-plugin-semantics.md)
 - [Temporal worker DBT Docker canary](ed-20260514-temporal-worker-dbt-canary.md)

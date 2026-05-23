@@ -93,6 +93,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [PlanStore integration tests can drift from current artifact and contract shapes](R-20260408-ADAPTER-POSTGRES-PLANSTORE-TEST-DRIFT.yaml)
 - [Plugin admission architecture can drift back into executor-specific coupling](R-20260429-PLUGIN-ADMISSION-ARCHITECTURE.yaml)
 - [Policy-first precedence drift for unbounded timeout and concurrency](R-20260405-MWA2-POLICY-UNBOUNDED-PRECEDENCE.yaml)
+- [Postgres tenant isolation semantic docs can drift from runtime RLS catalog](R-20260523-POSTGRES-TENANT-ISOLATION-CANON.yaml)
 - [Postgres three-part model migration and compatibility drift](R-20260403-S08-4-POSTGRES-THREE-PART-MODEL.yaml)
 - [Protected runtime rail catalog documentation source of truth is closed](R-20260503-PROTECTED-RUNTIME-RAIL-SSOT-DEBT.yaml)
 - [Protected runtime rail closure is governed by executable C&Q evidence](R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml)
