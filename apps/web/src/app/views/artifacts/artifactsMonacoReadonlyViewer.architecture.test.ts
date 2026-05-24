@@ -99,6 +99,8 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
 
   it('keeps Monaco as a lazy read-only Artifacts panel primitive instead of route, shell, or Canvas authority', () => {
     const artifactsView = readAppSource('views/ArtifactsView.tsx');
+    const workspaceQueries = readAppSource('queries/workspaceQueries.ts');
+    const workspaceArtifactPolicy = readAppSource('queries/workspaceArtifactPolicy.ts');
     const artifactPreviewTabs = readAppSource('views/artifacts/ArtifactPreviewTabs.tsx');
     const artifactPreviewPanelPath = path.join(
       APP_ROOT,
@@ -115,6 +117,8 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
 
     for (const [modulePath, source] of [
       ['views/ArtifactsView.tsx', artifactsView],
+      ['queries/workspaceQueries.ts', workspaceQueries],
+      ['queries/workspaceArtifactPolicy.ts', workspaceArtifactPolicy],
       ['views/artifacts/ArtifactPreviewTabs.tsx', artifactPreviewTabs],
       ['views/artifacts/ArtifactMonacoPreviewPanel.tsx', artifactPreviewPanel],
       ['components/monaco/MonacoCodeViewer.tsx', monacoViewer],
@@ -130,6 +134,14 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
     expect(artifactsView).not.toContain('MonacoCodeViewer');
     expect(artifactsView).not.toContain('@monaco-editor/react');
 
+    expect(workspaceQueries).toContain('classifyWorkspaceArtifact');
+    expect(workspaceQueries).not.toContain('^pipelines\\\\/');
+    expect(workspaceQueries).not.toContain('^models\\\\/');
+    expect(workspaceArtifactPolicy).toContain('WorkspaceArtifactClassification');
+    expect(workspaceArtifactPolicy).toContain('classifyWorkspaceArtifact');
+    expect(workspaceArtifactPolicy).toContain('/^pipelines\\/.+\\.ya?ml$/u');
+    expect(workspaceArtifactPolicy).toContain('/^models\\/.+\\.sql$/u');
+
     expect(artifactPreviewTabs).toContain('ArtifactMonacoPreviewPanel');
     expect(artifactPreviewTabs).not.toContain('MonacoCodeViewer');
     expect(artifactPreviewTabs).not.toContain('@monaco-editor/react');
@@ -137,7 +149,7 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
 
     expect(artifactPreviewPanel).toContain('MonacoCodeViewer');
     expect(artifactPreviewPanel).toContain('formatStructuredArtifactContent');
-    expect(artifactPreviewPanel).toContain('language="json"');
+    expect(artifactPreviewPanel).toContain("language={document.language ?? 'json'}");
     expect(artifactPreviewPanel).not.toContain('Button');
     expect(artifactPreviewPanel).not.toContain('viewFullFile');
 

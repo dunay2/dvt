@@ -39,6 +39,18 @@ function Probe(): JSX.Element {
       <span data-testid="manifest-content">
         {JSON.stringify(viewModel.previewDocuments['manifest.json']?.content ?? null)}
       </span>
+      <span data-testid="pipeline-path">
+        {viewModel.previewDocuments['pipelines/sales_pipeline.yaml']?.path ?? 'none'}
+      </span>
+      <span data-testid="pipeline-content">
+        {String(viewModel.previewDocuments['pipelines/sales_pipeline.yaml']?.content ?? 'none')}
+      </span>
+      <span data-testid="model-path">
+        {viewModel.previewDocuments['models/analytics/model_orders.sql']?.path ?? 'none'}
+      </span>
+      <span data-testid="model-language">
+        {viewModel.previewDocuments['models/analytics/model_orders.sql']?.language ?? 'none'}
+      </span>
     </div>
   );
 }
@@ -102,6 +114,86 @@ describe('useArtifactsViewModel', () => {
     expect(
       mounted.container.querySelector('[data-testid="manifest-content"]')?.textContent
     ).toContain('"workspace"');
+  });
+
+  it('exposes workflow project artifacts persisted in workspace files', async () => {
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          workspaceFilesQuery: buildWorkspaceFilesQueryPort({
+            listFiles: async () => [
+              {
+                path: 'pipelines',
+                name: 'pipelines',
+                kind: 'directory',
+                children: [
+                  {
+                    path: 'pipelines/sales_pipeline.yaml',
+                    name: 'sales_pipeline.yaml',
+                    kind: 'file',
+                  },
+                ],
+              },
+              {
+                path: 'models',
+                name: 'models',
+                kind: 'directory',
+                children: [
+                  {
+                    path: 'models/analytics',
+                    name: 'analytics',
+                    kind: 'directory',
+                    children: [
+                      {
+                        path: 'models/analytics/model_orders.sql',
+                        name: 'model_orders.sql',
+                        kind: 'file',
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+            getFileContent: async (path) => ({
+              path,
+              name: path.split('/').at(-1) ?? path,
+              language: path.endsWith('.sql') ? 'sql' : 'yaml',
+              content: path.endsWith('.sql')
+                ? 'select * from raw.orders'
+                : 'executionTarget: warehouse\nentrypoint: models/analytics/model_orders.sql',
+              lastModified: '2026-04-06T10:00:00Z',
+            }),
+          }),
+        }}
+      >
+        <Probe />
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(
+      () => mounted?.container.textContent?.includes('pipelines/sales_pipeline.yaml') === true,
+      { description: 'workflow artifact resolution' }
+    );
+
+    expect(mounted.container.querySelector('[data-testid="artifacts-count"]')?.textContent).toBe(
+      '2'
+    );
+    expect(mounted.container.querySelector('[data-testid="pipeline-path"]')?.textContent).toBe(
+      'pipelines/sales_pipeline.yaml'
+    );
+    expect(
+      mounted.container.querySelector('[data-testid="pipeline-content"]')?.textContent
+    ).toContain('executionTarget');
+    expect(mounted.container.querySelector('[data-testid="model-path"]')?.textContent).toBe(
+      'models/analytics/model_orders.sql'
+    );
+    expect(mounted.container.querySelector('[data-testid="model-language"]')?.textContent).toBe(
+      'sql'
+    );
+    expect(mounted.container.querySelector('[data-testid="manifest-path"]')?.textContent).toBe(
+      'none'
+    );
   });
 
   it('returns an explicit empty result when no workspace artifacts exist', async () => {
