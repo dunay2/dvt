@@ -216,6 +216,28 @@ These should be reconciled by class, not bulk-converted to tasks:
 - Do not create duplicate tasks for existing generated governance remediation
   queue items.
 
+## 2026-05-24 Canonical Disposition
+
+`GD-DOC-DISPOSITION-CANON` closes this inventory as a dated status snapshot, not
+as an active work queue.
+
+Current Planning DB evidence:
+
+- `planning:db:query docs-disposition --resolution open` returns no open rows.
+- `planning:db:query docs-disposition --resolution resolved` returns linked
+  disposition rows for Draft active docs, Superseded active docs, and
+  task-like identifier findings.
+
+The canonical follow-up rule is now:
+
+- use [Docs Disposition Canon Plan 2026-05-24](../proposals/mandatory/governance-and-docs/docs-disposition-canon-plan-20260524.md)
+  and the Planning DB `docs-disposition` rail for future open findings;
+- keep `ResolveDocsDispositionQueue` as the resolution command rail and
+  `ClassifyDocsDispositionClosure` as the closure query rail;
+- keep the 2026-05-10 counts below as historical triage evidence;
+- do not treat this document as a parallel backlog after the DB queue reports
+  no open rows.
+
 ## Commands Used
 
 - `pnpm planning:db:query summary`
