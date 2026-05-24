@@ -7,6 +7,7 @@ import type { ProtectedRuntimeModule } from '../../modules/types.js';
 import type { Env } from '../../plugins/env.js';
 
 import { cancelRunRoute } from './cancelRunRoute.js';
+import { costAttributionSummaryRoute } from './costAttributionSummaryRoute.js';
 import { getRunEventsRoute } from './getRunEventsRoute.js';
 import { getRunRoute } from './getRunRoute.js';
 import { listRunsRoute } from './listRunsRoute.js';
@@ -44,6 +45,15 @@ export function registerProtectedRunRoutes(
       ...runtimeAuth,
       useCase: dependencies.getRunEventsUseCase,
     })
+  );
+  app.get(
+    RUNTIME_ROUTE_PATH.costAttributionSummary,
+    { config: { rateLimit } },
+    async (request, reply) =>
+      costAttributionSummaryRoute(request as never, reply, {
+        ...runtimeAuth,
+        useCase: dependencies.getCostAttributionSummaryUseCase,
+      })
   );
   app.post(RUNTIME_ROUTE_PATH.signal, { config: { rateLimit } }, async (request, reply) =>
     signalRunRoute(request as never, reply, {

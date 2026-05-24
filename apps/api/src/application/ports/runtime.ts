@@ -119,6 +119,62 @@ export interface IListRunsUseCase {
   execute(query: ListRunsQuery, context: AuthorizedQueryExecutionContext): Promise<ListRunsResult>;
 }
 
+export interface GetCostAttributionSummaryQuery {
+  readonly limit: number;
+}
+
+export interface CostAttributionObservedWindowDto {
+  readonly firstEventAt: string | null;
+  readonly lastEventAt: string | null;
+}
+
+export interface CostAttributionRunDto {
+  readonly runId: string;
+  readonly projectId: string;
+  readonly environmentId: string;
+  readonly planId: string;
+  readonly planVersion: string;
+  readonly status: CanonicalRunStatus['status'] | null;
+  readonly completedStepCount: number;
+  readonly failedStepCount: number;
+  readonly totalStepDurationMs: number;
+  readonly costAmount: null;
+  readonly currency: null;
+}
+
+export interface CostAttributionStepDto {
+  readonly runId: string;
+  readonly stepId: string;
+  readonly eventType: 'StepCompleted' | 'StepFailed';
+  readonly durationMs: number;
+  readonly costAmount: null;
+  readonly currency: null;
+}
+
+export interface GetCostAttributionSummaryResult {
+  readonly tenantId: string;
+  readonly projectId: string | null;
+  readonly environmentId: string | null;
+  readonly runCount: number;
+  readonly completedStepCount: number;
+  readonly failedStepCount: number;
+  readonly totalStepDurationMs: number;
+  readonly totalCostAmount: null;
+  readonly currency: null;
+  readonly costCaptureStatus: 'unavailable';
+  readonly observedWindow: CostAttributionObservedWindowDto;
+  readonly runs: ReadonlyArray<CostAttributionRunDto>;
+  readonly steps: ReadonlyArray<CostAttributionStepDto>;
+  readonly nextCursor: string | null;
+}
+
+export interface IGetCostAttributionSummaryUseCase {
+  execute(
+    query: GetCostAttributionSummaryQuery,
+    context: AuthorizedQueryExecutionContext
+  ): Promise<GetCostAttributionSummaryResult>;
+}
+
 export interface GetRunEventsQuery {
   readonly runId: string;
   readonly afterSeq?: number;
