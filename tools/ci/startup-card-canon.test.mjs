@@ -21,6 +21,33 @@ const requiredRails = [
   'ValidateGovernanceStartupBaseline',
 ];
 
+const requiredRouteBaselines = [
+  {
+    route: 'code',
+    baseline: 'touched-package validation + `pnpm verify:prepush`',
+  },
+  {
+    route: 'docs',
+    baseline: '`pnpm docs:sync` when structure changes + `pnpm verify:prepush`',
+  },
+  {
+    route: 'planning',
+    baseline: '`pnpm docs:workboard:generate` + `pnpm verify:prepush`',
+  },
+  {
+    route: 'contracts',
+    baseline: 'contract/package validation + `pnpm verify:prepush`',
+  },
+  {
+    route: 'ci',
+    baseline: 'relevant CI/tool validation + `pnpm verify:prepush`',
+  },
+  {
+    route: 'cross-cutting',
+    baseline: 'per-slice validation + `pnpm verify:prepush`',
+  },
+];
+
 function readRepoFile(path) {
   return readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8');
 }
@@ -49,8 +76,15 @@ test('governance startup card canonization preserves routing semantics and basel
   }
 
   const inventory = readRepoFile('docs/planning/status/governance-document-rule-inventory.md');
-  for (const route of ['code', 'docs', 'planning', 'contracts', 'ci', 'cross-cutting']) {
-    assert.match(inventory, new RegExp(`\\| \`${escapeRegExp(route)}\``));
+  const startupCardRows = inventory.split(/\r?\n/);
+  for (const { route, baseline } of requiredRouteBaselines) {
+    const routeRow = startupCardRows.find((line) => line.startsWith(`| \`${route}\``));
+    assert.ok(routeRow, `startup card must define the ${route} route`);
+    assert.match(
+      routeRow,
+      new RegExp(escapeRegExp(baseline)),
+      `${route} route must preserve baseline ${baseline}`
+    );
   }
 
   const componentGuide = readRepoFile(

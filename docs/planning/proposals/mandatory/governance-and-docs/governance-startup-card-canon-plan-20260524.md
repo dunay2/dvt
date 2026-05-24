@@ -231,6 +231,13 @@ redGreenCycles:
       - docs/planning/proposals/portfolio-map-20260403.md
       - buzon/20260524-codex-fowler-governance-startup-card-canon.md
     greenTest: node --test tools/ci/startup-card-canon.test.mjs
+  - id: governance-startup-card-baseline-review
+    redTest: node --test tools/ci/startup-card-canon.test.mjs
+    expectedFailure: A route can keep its label while weakening the minimum validation baseline.
+    patchSurfaces:
+      - tools/ci/startup-card-canon.test.mjs
+      - docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md
+    greenTest: node --test tools/ci/startup-card-canon.test.mjs
 symbols:
   - name: requiredFiles
     path: tools/ci/startup-card-canon.test.mjs
@@ -252,6 +259,18 @@ symbols:
       - ValidateGovernanceStartupBaseline
     fowlerSignals:
       - Semantic route drift guard
+    architectureGuard: node --test tools/ci/startup-card-canon.test.mjs
+    unitTests:
+      - pnpm test:ci-tools
+    cypressCoverage: N/A - docs governance semantic guard only
+  - name: requiredRouteBaselines
+    path: tools/ci/startup-card-canon.test.mjs
+    dddOwner: Governance startup card canon semantic guard
+    cqRails:
+      - ValidateGovernanceStartupBaseline
+    fowlerSignals:
+      - Route baseline drift guard
+      - Startup card validation baseline preservation
     architectureGuard: node --test tools/ci/startup-card-canon.test.mjs
     unitTests:
       - pnpm test:ci-tools
