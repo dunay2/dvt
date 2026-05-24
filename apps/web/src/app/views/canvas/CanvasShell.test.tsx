@@ -45,7 +45,9 @@ vi.mock('../../components/SourceImportWizard', () => ({
 }));
 
 vi.mock('./CanvasToolbar', () => ({
-  default: () => <div data-testid="canvas-toolbar" />,
+  default: (props: { variant?: string }) => (
+    <div data-testid="canvas-toolbar" data-variant={props.variant ?? 'standalone'} />
+  ),
 }));
 
 vi.mock('./CanvasViewport', () => ({
@@ -260,6 +262,35 @@ describe('CanvasShell', () => {
     });
 
     expect(container.querySelector('[data-testid="canvas-host-tab-strip"]')).not.toBeNull();
+  });
+
+  it('collapses canvas identity, workbench tabs, and route commands into one workbench chrome row', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasShell
+          {...buildProps({
+            layout: {
+              hostTabStrip: <div data-testid="canvas-host-tab-strip" />,
+              workbenchTabStrip: <div data-testid="canvas-workbench-tab-strip" />,
+            },
+          })}
+        />
+      );
+    });
+
+    const chrome = container.querySelector('[data-slot="canvas-workbench-chrome"]');
+    const hostTabStrip = container.querySelector('[data-testid="canvas-host-tab-strip"]');
+    const workbenchTabStrip = container.querySelector('[data-testid="canvas-workbench-tab-strip"]');
+    const canvasToolbar = container.querySelector('[data-testid="canvas-toolbar"]');
+
+    expect(chrome).not.toBeNull();
+    expect(hostTabStrip).not.toBeNull();
+    expect(workbenchTabStrip).not.toBeNull();
+    expect(canvasToolbar).not.toBeNull();
+    expect(chrome?.contains(hostTabStrip)).toBe(true);
+    expect(chrome?.contains(workbenchTabStrip)).toBe(true);
+    expect(chrome?.contains(canvasToolbar)).toBe(true);
+    expect(canvasToolbar?.getAttribute('data-variant')).toBe('inline');
   });
 
   it('keeps Canvas route commands hidden while the first canvas document is not created', async () => {

@@ -2,6 +2,7 @@
 export const canvasChromeClasses = {
   toolbar:
     'flex h-10 shrink-0 items-center justify-end gap-3 border-b border-[color:var(--border-default)] bg-[var(--surface-panel)] px-3',
+  toolbarInline: 'flex min-w-0 shrink-0 items-center justify-end gap-3',
   separator: 'h-5 bg-[var(--border-default)]',
   statusBadge:
     'h-7 border border-[color:var(--border-default)] bg-[var(--surface-app)] px-2 text-[11px] font-medium',

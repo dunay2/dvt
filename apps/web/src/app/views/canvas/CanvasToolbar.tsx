@@ -44,13 +44,19 @@ export type CanvasToolbarProps = {
   readonly transformationValidation: TransformationGraphValidationResult;
   readonly nodeCount: number;
   readonly edgeCount: number;
+  readonly variant?: 'standalone' | 'inline';
 };
 
 export default function CanvasToolbar(props: CanvasToolbarProps) {
   const viewModel = deriveCanvasToolbarViewModel(props);
+  const variant = props.variant ?? 'standalone';
 
   return (
-    <div className={canvasChromeClasses.toolbar}>
+    <div
+      className={
+        variant === 'inline' ? canvasChromeClasses.toolbarInline : canvasChromeClasses.toolbar
+      }
+    >
       <div className="flex min-w-0 items-center gap-2">
         <CanvasViewMenuContributionRegistrar
           canEditEdges={props.canEditEdges}

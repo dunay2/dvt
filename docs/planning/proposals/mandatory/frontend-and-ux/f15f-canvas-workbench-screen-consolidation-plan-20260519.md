@@ -386,6 +386,30 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasToolbar.architecture.test.tsx
     unitTests: [pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasShell.test.tsx]
     cypressCoverage: Canvas first-screen visual smoke.
+  - name: CanvasShellWorkbenchChromeProps
+    path: apps/web/src/app/views/canvas/CanvasShellMainPanel.tsx
+    dddOwner: CanvasWorkbenchScreenComposition
+    cqRails: [ResolveCanvasWorkbenchContext, VerifyCanvasWorkbenchVisualPosture]
+    fowlerSignals: [Responsibility overload, Boundary drift, Presentation Model]
+    architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.canvas-architecture.config.ts src/app/views/canvas/CanvasShell.architecture.test.tsx
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/CanvasShell.test.tsx]
+    cypressCoverage: Canvas first-screen visual smoke.
+  - name: CanvasShellWorkbenchChrome
+    path: apps/web/src/app/views/canvas/CanvasShellMainPanel.tsx
+    dddOwner: CanvasWorkbenchScreenComposition
+    cqRails: [ResolveCanvasWorkbenchContext, VerifyCanvasWorkbenchVisualPosture]
+    fowlerSignals: [Responsibility overload, Boundary drift, Presentation Model]
+    architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.canvas-architecture.config.ts src/app/views/canvas/CanvasShell.architecture.test.tsx
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/CanvasShell.test.tsx]
+    cypressCoverage: Canvas first-screen visual smoke.
+  - name: CanvasShellMainPanel
+    path: apps/web/src/app/views/canvas/CanvasShellMainPanel.tsx
+    dddOwner: CanvasWorkbenchScreenComposition
+    cqRails: [ResolveCanvasWorkbenchContext, VerifyCanvasWorkbenchVisualPosture]
+    fowlerSignals: [Responsibility overload, Boundary drift, Presentation Model]
+    architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.canvas-architecture.config.ts src/app/views/canvas/CanvasShell.architecture.test.tsx
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/CanvasShell.test.tsx]
+    cypressCoverage: Canvas first-screen visual smoke.
   - name: buildCanvasKind
     path: apps/web/src/app/views/canvas/canvasTemplatePresentation.test.ts
     dddOwner: CanvasTemplatePresentation

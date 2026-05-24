@@ -11,16 +11,22 @@ import type { CanvasWorkbenchTabsReadModel } from './canvasWorkbenchTabs';
 export type CanvasWorkbenchTabStripProps = Readonly<{
   tabsState: CanvasWorkbenchTabsReadModel;
   onSelectTab: (tabId: CanvasWorkbenchTabId) => void;
+  variant?: 'standalone' | 'inline';
 }>;
 
 export function CanvasWorkbenchTabStrip({
   tabsState,
   onSelectTab,
+  variant = 'standalone',
 }: CanvasWorkbenchTabStripProps): JSX.Element {
   return (
     <div
       data-slot="canvas-workbench-tab-strip"
-      className="flex shrink-0 items-center gap-2 overflow-x-auto border-b border-[color:var(--border-default)] bg-[var(--surface-panel)] px-3 py-1.5"
+      className={
+        variant === 'inline'
+          ? 'flex shrink items-center gap-2 overflow-x-auto'
+          : 'flex shrink-0 items-center gap-2 overflow-x-auto border-b border-[color:var(--border-default)] bg-[var(--surface-panel)] px-3 py-1.5'
+      }
     >
       <Tabs value={tabsState.activeTabId} className="min-w-max flex-none">
         <TabsList className={cn(routeWorkbenchTabListClassName, 'h-auto min-w-max gap-1 p-1')}>

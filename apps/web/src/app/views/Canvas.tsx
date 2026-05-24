@@ -71,6 +71,7 @@ function CanvasContent(): JSX.Element {
       <CanvasWorkbenchTabStrip
         tabsState={canvasWorkbenchTabsState}
         onSelectTab={handleSelectWorkbenchTab}
+        variant="inline"
       />
     ),
     workbenchTabPanel:
