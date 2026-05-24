@@ -1,4 +1,5 @@
 /** Owned concern: prove Code workbench reads workspace files through scoped browser query rails. */
+import { resolveCodeViewCopy } from '../../../src/app/views/code/codeViewCopy';
 import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
 import {
   getLastE2eApiCall,
@@ -31,6 +32,8 @@ const WORKSPACE_FILE_TREE = [
     kind: 'file',
   },
 ] as const;
+
+const CODE_COPY = resolveCodeViewCopy('es-ES');
 
 function stubMissingCanvasDraft(): void {
   stubE2eApi('GET', '/workspace/graph/draft', ({ url }) => {
@@ -103,9 +106,9 @@ describe('Code workbench workspace files', () => {
     waitForE2eApiCall(/\/workspace\/files\/.+/, 'GET');
 
     cy.contains('button', /^(Code|Codigo)$/).should('be.visible');
-    cy.contains('Explorer').should('be.visible');
+    cy.contains(CODE_COPY.explorerTitle).should('be.visible');
     cy.contains('stg_orders.sql').should('be.visible');
-    cy.contains('Editable local buffer').should('be.visible');
+    cy.contains(CODE_COPY.localBufferTitle).should('be.visible');
     cy.contains('select * from orders').should('be.visible');
 
     cy.get('[data-testid="monaco-code-editor"]').within(() => {
@@ -135,7 +138,7 @@ describe('Code workbench workspace files', () => {
     waitForE2eApiCall(/\/workspace\/files\/.+/, 'GET');
 
     cy.location('pathname').should('eq', '/canvas/code');
-    cy.contains('Explorer').should('be.visible');
+    cy.contains(CODE_COPY.explorerTitle).should('be.visible');
     cy.get('[data-testid="monaco-code-editor"]').within(() => {
       cy.get('.monaco-editor textarea')
         .first()
@@ -151,8 +154,8 @@ describe('Code workbench workspace files', () => {
     visitWithE2eWorkspaceSession('/canvas/code');
 
     waitForE2eApiCall('/workspace/files', 'GET');
-    cy.contains('No workspace files available').should('be.visible');
-    cy.contains('This workspace does not expose files to browse yet.').should('be.visible');
+    cy.contains(CODE_COPY.routeEmptyTitle).should('be.visible');
+    cy.contains(CODE_COPY.routeEmptyMessage).should('be.visible');
   });
 
   it('passes tenant, project, and environment scope on workspace file queries', () => {

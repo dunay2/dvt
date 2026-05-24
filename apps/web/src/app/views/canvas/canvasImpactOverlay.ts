@@ -70,11 +70,14 @@ export function buildNodesWithImpact({
   columnLevelLineageEnabled,
   handlers,
 }: BuildNodesWithImpactParams): Node[] {
+  const selectedNodeIdSet = new Set(selectedNodeIds);
+
   if (!impactOverlayEnabled || selectedNodeIds.length === 0) {
     return nodes.map((node) => ({
       ...node,
       data: {
         ...node.data,
+        selectedForExecution: selectedNodeIdSet.has(node.id),
         showColumns: columnLevelLineageEnabled,
         onInspectNode: handlers.onInspectNode,
         onDuplicateNode: handlers.onDuplicateNode,
@@ -94,6 +97,7 @@ export function buildNodesWithImpact({
     ...node,
     data: {
       ...node.data,
+      selectedForExecution: selectedNodeIdSet.has(node.id),
       isHighlighted: selectedNodeIds.includes(node.id),
       impactLevel: upstream.has(node.id)
         ? 'upstream'

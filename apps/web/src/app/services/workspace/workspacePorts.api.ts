@@ -170,9 +170,14 @@ export function createApiWorkspaceFilesQueryPort(apiClient: ApiClient): IWorkspa
   };
 }
 
-export function createApiWorkspaceFileContentCommandPort(): IWorkspaceFileContentCommandPort {
+export function createApiWorkspaceFileContentCommandPort(
+  apiClient: ApiClient
+): IWorkspaceFileContentCommandPort {
   return {
-    saveFileContent: () =>
-      rejectUnsupportedApiWorkspaceCapability('workspace.fileWrite', 'SaveWorkspaceFileContent'),
+    saveFileContent: (path, content) =>
+      apiClient.postJson<{ content: string }, FileContent>(
+        buildWorkspaceFileContentEndpoint(path, readWorkspaceFilesScope()),
+        { content }
+      ),
   };
 }

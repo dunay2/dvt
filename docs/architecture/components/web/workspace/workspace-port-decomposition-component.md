@@ -36,7 +36,7 @@ admin RBAC truth, or file write semantics.
 | `IWorkspacePluginCatalogQueryPort` | web query port         | `ListWorkspacePlugins`                                                      | Return backend-published plugin catalog/readiness when the backend rail exists; presentation registry remains separate. |
 | `IWorkspaceAdminReadPort`          | web query port         | `ListAdminRoles`, `ListAdminAuditLog`                                       | Return admin roles and audit read models when backend rails exist; unavailable in API mode until then.                  |
 | `IWarehouseSourceImportPort`       | web command/query port | `ListWarehouseConnections`, `ListWarehouseTables`, `ImportWarehouseSources` | Discover and import warehouse source metadata when backend rails exist; unavailable in product runtime until then.      |
-| `IWorkspaceFileContentCommandPort` | web command port       | `SaveWorkspaceFileContent`                                                  | Persist file content only after an accepted backend command exists.                                                     |
+| `IWorkspaceFileContentCommandPort` | web command port       | `SaveWorkspaceFileContent`                                                  | Persist file content through the accepted scoped backend command.                                                       |
 
 ## Invariants
 
@@ -99,7 +99,7 @@ flowchart LR
   Plugins -. unavailable until backend .-> PluginRail["ListWorkspacePlugins"]
   Admin -. unavailable until backend .-> AdminRails["ListAdminRoles / ListAdminAuditLog"]
   Import -. unavailable until backend .-> ImportRails["Warehouse source rails"]
-  FileWrite -. unavailable until backend .-> WriteRail["SaveWorkspaceFileContent"]
+  FileWrite --> WriteRail["POST /workspace/files/:path"]
 ```
 
 ## Transitions

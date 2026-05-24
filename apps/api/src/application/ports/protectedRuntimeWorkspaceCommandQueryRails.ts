@@ -105,6 +105,22 @@ export const PROTECTED_RUNTIME_WORKSPACE_COMMAND_QUERY_RAILS = [
     ]),
   }),
   defineProtectedRuntimeRail({
+    name: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspaceFiles.saveContentName,
+    kind: PROTECTED_RUNTIME_RAIL_KIND.command,
+    boundedContext: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspaceFiles.boundedContext,
+    dddObject: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspaceFiles.contentAggregate,
+    applicationPort: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspaceFiles.saveContentPort,
+    adapterSurface: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspaceFiles.saveContentSurface,
+    scopeAndAuthorization:
+      PROTECTED_RUNTIME_WORKSPACE_RAIL.workspaceFiles.saveScopeAndAuthorization,
+    coverage: buildWorkspaceFileNegativeCoverage([
+      PROTECTED_RUNTIME_NEGATIVE_CASE.missingToken,
+      PROTECTED_RUNTIME_NEGATIVE_CASE.missingAction,
+      PROTECTED_RUNTIME_NEGATIVE_CASE.missingScope,
+      PROTECTED_RUNTIME_NEGATIVE_CASE.invalidPath,
+    ]),
+  }),
+  defineProtectedRuntimeRail({
     name: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspaceFileHistory.name,
     kind: PROTECTED_RUNTIME_RAIL_KIND.query,
     boundedContext: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspaceFileHistory.boundedContext,

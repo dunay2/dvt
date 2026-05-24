@@ -12,6 +12,7 @@ import {
   waitForE2eApiCall,
 } from '../../support/e2eApiStub';
 import {
+  E2E_WORKSPACE_SESSION,
   stubShellBootstrapApis,
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
@@ -247,6 +248,10 @@ function stubCanvasRuntimeApis(options: CanvasRuntimeApiOptions = {}): void {
       dvt: { available: true },
     },
   });
+  stubE2eJsonApi('GET', '/workspace/context', {
+    effectiveWorkspace: E2E_WORKSPACE_SESSION,
+    availableWorkspaces: [E2E_WORKSPACE_SESSION],
+  });
   stubCanvasDraftRead(options);
 }
 
@@ -460,7 +465,16 @@ function stubPlanRejectedStartRun(
 
 describe('Canvas preview-run persisted path', () => {
   beforeEach(() => {
-    stubShellBootstrapApis();
+    stubShellBootstrapApis({
+      scopes: [
+        'workspace:graph-draft:view',
+        'workspace:graph-draft:save',
+        'workspace:files:save',
+        'workspace:files:view',
+        'plan:preview',
+        'run:start',
+      ],
+    });
     stubSelectedClosurePreviewArtifacts();
   });
 
@@ -478,7 +492,7 @@ describe('Canvas preview-run persisted path', () => {
     cy.contains('Add first dbt node').should('be.visible');
     cy.contains('button', 'Source').should('be.enabled');
     cy.contains('button', 'Plan').should('be.disabled');
-    cy.contains('button', 'Run').should('be.disabled');
+    cy.get('[data-slot="canvas-toolbar-run-command"]').should('be.disabled');
     cy.then(() => {
       expect(getE2eApiCalls('/plans/preview', 'POST')).to.have.length(0);
       expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
@@ -625,7 +639,7 @@ describe('Canvas preview-run persisted path', () => {
 
     cy.contains('Execution Plan Preview').should('be.visible');
     cy.contains(canvasViewCopy.planStatusPreviewNotAlignedMessage).should('be.visible');
-    cy.contains('button', 'Run').should('be.disabled');
+    cy.get('[data-slot="canvas-toolbar-run-command"]').should('be.disabled');
     cy.contains('button', 'Start Run').should('be.disabled');
     cy.then(() => {
       expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
