@@ -17,6 +17,17 @@ scope: Full system architecture, contracts, engine, planner, state, delivery, RB
 
 ---
 
+## 2026-05-24 Canonical disposition
+
+This review is now canonized by
+[Architecture Governance Review Canon Plan 2026-05-24](../../proposals/mandatory/governance-and-docs/architecture-governance-review-canon-plan-20260524.md).
+
+The plan records the authoritative disposition ledger for P0/P1/P2 findings:
+closed rows point to existing task, ADR, evidence, or risk ownership; queued
+rows remain in the Planning DB; follow-up and risk-accepted rows retain their
+explicit owner. This review remains active architectural context, but it is not
+a parallel backlog.
+
 ## 1. Conceptual Soundness
 
 ### Core Separation Under Review
