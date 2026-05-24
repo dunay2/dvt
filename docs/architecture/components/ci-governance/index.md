@@ -26,6 +26,8 @@ workflow parity, and local-to-remote quality gates.
 
 ## Component Decomposition
 
+- [CI Delivery Governance Component](./ci-delivery-governance-component.md)
+- [CI Delivery Governance User Stories](./ci-delivery-governance-user-stories.md)
 - [Local Changed Files Gate Component](./local-changed-files-gate-component.md)
 - [Engine Coverage Scope Gate Component](./engine-coverage-scope-gate-component.md)
 - [System Governance Generation Workflow Component](./system-governance-generation-workflow-component.md)

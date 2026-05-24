@@ -69,6 +69,125 @@ as open proposals:
 The backlog below therefore focuses on residual drift, maintainability, and
 parallel-work safety.
 
+## 2026-05-23 Canonical Absorption Status
+
+The 2026-05-23 canon pass reconciles this proposal with the real repository
+state. The plan remains active for residual opportunities, but already-shipped
+delivery gates are no longer treated as open implementation work.
+
+Current absorbed state:
+
+| Plan item               | Status   | Current canonical evidence                                                                                                                                     |
+| ----------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CDG-W1-1` / `CDG-W1-2` | Absorbed | `ci.yml`, `test.yml`, and `contracts.yml` consume shared scope emitters and parity tests.                                                                      |
+| `CDG-W2-3`              | Absorbed | staged tooling coverage is now enforced through changed-file and pre-commit hardening.                                                                         |
+| `CDG-W3-3`              | Absorbed | generated-doc single-writer ownership is declared in `docs/generated-docs-policy.json` and guarded by `tools/ci/generated-docs-single-writer-policy.test.mjs`. |
+| `CDG-W4-1`              | Absorbed | `.github/workflows/ci.yml` runs the `CI tool contracts` lane with `pnpm test:ci-tools`; `tools/ci/workflow-pattern-parity.test.mjs` proves the wiring.         |
+
+Canonical component:
+
+- [CI Delivery Governance Component](../../../../architecture/components/ci-governance/ci-delivery-governance-component.md)
+- [CI Delivery Governance User Stories](../../../../architecture/components/ci-governance/ci-delivery-governance-user-stories.md)
+- [Fowler analysis mailbox entry](../../../../../buzon/20260523-codex-fowler-ci-delivery-governance-canon.md)
+
+Command/query rail:
+
+| Rail                                | Type  | Owning bounded context         | DDD owner                              | Application port     | Adapter surface                   | Negative tests                                                                                                                      |
+| ----------------------------------- | ----- | ------------------------------ | -------------------------------------- | -------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `ValidateCiDeliveryGovernanceCanon` | query | Repository delivery governance | `CiDeliveryGovernanceCanon` read model | `pnpm test:ci-tools` | `CI tool contracts` workflow lane | `tools/ci/ci-delivery-governance-canon.test.mjs` fails if the component guide, stories, analysis, or absorbed proposal state drift. |
+
+Fowler planning matrix:
+
+| Scenario                            | Opportunity                                 | Fowler pattern                   | DDD owner                              | Command/query rail                  | Implementation surfaces                                                  | Unit or package test                                         | Architecture test    | User-flow test                           | Out of scope                                                       |
+| ----------------------------------- | ------------------------------------------- | -------------------------------- | -------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------ | -------------------- | ---------------------------------------- | ------------------------------------------------------------------ |
+| Canonize absorbed CI delivery gates | Documentation drift and duplicate semantics | Service Layer plus Policy Object | `CiDeliveryGovernanceCanon` read model | `ValidateCiDeliveryGovernanceCanon` | component docs, mailbox analysis, proposal status, CI-tool semantic test | `node --test tools/ci/ci-delivery-governance-canon.test.mjs` | `pnpm test:ci-tools` | none - repository delivery workflow only | changing workflow behavior, adding a new workflow, weakening gates |
+
+```feature-mechanization
+version: 1
+featureId: CI-Delivery-Governance-Canon
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
+componentGuides:
+  - docs/architecture/components/ci-governance/ci-delivery-governance-component.md
+  - buzon/20260523-codex-fowler-ci-delivery-governance-canon.md
+userStories:
+  - docs/architecture/components/ci-governance/ci-delivery-governance-user-stories.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
+allowedImplementationSurfaces:
+  - buzon/20260523-codex-fowler-ci-delivery-governance-canon.md
+  - docs/architecture/components/ci-governance/ci-delivery-governance-component.md
+  - docs/architecture/components/ci-governance/ci-delivery-governance-user-stories.md
+  - docs/architecture/components/ci-governance/index.md
+  - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
+  - tools/ci/ci-delivery-governance-canon.test.mjs
+forbiddenImplementationSurfaces:
+  - .github/workflows/**
+  - apps/**
+  - packages/**
+commandQueryRails:
+  - name: ValidateCiDeliveryGovernanceCanon
+    type: query
+    dddOwner: CiDeliveryGovernanceCanon
+domainObjects:
+  - name: CiDeliveryGovernanceCanon
+    type: read-model
+    owner: Repository delivery governance
+fowlerSignals:
+  - Documentation Drift
+  - Duplicate Semantics
+  - Test-only Confidence
+  - Service Layer
+architectureGuards:
+  - node --test tools/ci/ci-delivery-governance-canon.test.mjs
+  - pnpm test:ci-tools
+cypressFlows:
+  - not-applicable: Repository delivery governance has no browser workflow.
+completionGate:
+  - node --test tools/ci/ci-delivery-governance-canon.test.mjs
+  - pnpm test:ci-tools
+  - pnpm docs:feature-mechanization -- --feature CI-Delivery-Governance-Canon
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: ci-delivery-canon-guard
+    redTest: node --test tools/ci/ci-delivery-governance-canon.test.mjs
+    expectedFailure: Missing CI delivery component guide, user stories, mailbox analysis, and absorbed proposal state.
+    patchSurfaces:
+      - buzon/20260523-codex-fowler-ci-delivery-governance-canon.md
+      - docs/architecture/components/ci-governance/ci-delivery-governance-component.md
+      - docs/architecture/components/ci-governance/ci-delivery-governance-user-stories.md
+      - docs/architecture/components/ci-governance/index.md
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
+      - tools/ci/ci-delivery-governance-canon.test.mjs
+    greenTest: node --test tools/ci/ci-delivery-governance-canon.test.mjs
+symbolDefaults: &ciDeliveryCanonSymbolDefaults
+  dddOwner: CiDeliveryGovernanceCanon
+  cqRails:
+    - ValidateCiDeliveryGovernanceCanon
+  fowlerSignals:
+    - Documentation Drift
+    - Duplicate Semantics
+    - Test-only Confidence
+  architectureGuard: node --test tools/ci/ci-delivery-governance-canon.test.mjs
+  cypressCoverage: "not-applicable: Repository delivery governance has no browser workflow."
+  unitTests:
+    - node --test tools/ci/ci-delivery-governance-canon.test.mjs
+    - pnpm test:ci-tools
+symbols:
+  - <<: *ciDeliveryCanonSymbolDefaults
+    name: ValidateCiDeliveryGovernanceCanon
+    path: tools/ci/ci-delivery-governance-canon.test.mjs
+  - <<: *ciDeliveryCanonSymbolDefaults
+    name: CiDeliveryGovernanceCanon
+    path: docs/architecture/components/ci-governance/ci-delivery-governance-component.md
+```
+
 ## Residual Problem Set
 
 ### CDG-1: Scope authority is still split across workflows, hooks, and scripts
