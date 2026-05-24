@@ -139,6 +139,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/queries/workspaceArtifactPolicy.test.ts
   - apps/web/src/app/queries/workspaceArtifactPolicy.ts
   - apps/web/src/app/queries/workspaceQueries.ts
+  - apps/web/src/app/views/CodeView.test.tsx
   - apps/web/src/app/views/ArtifactsView.test.tsx
   - apps/web/src/app/views/artifacts/ArtifactMonacoPreviewPanel.tsx
   - apps/web/src/app/views/artifacts/ArtifactPreviewTabs.tsx
@@ -205,6 +206,7 @@ redGreenCycles:
     greenTest: pnpm docs:feature-mechanization:implementation -- --feature ARTIFACTS-WORKSPACE-PROJECT-FILES
 symbols:
   - { name: WORKFLOW_PROJECT_FILE_TREE, path: apps/web/cypress/e2e/canvas/artifacts-workspace-project-files.cy.ts, dddOwner: WorkspaceArtifactIndex e2e fixture, cqRails: [ListWorkspaceFiles, GetWorkspaceFileContent], fowlerSignals: [Test-only confidence], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/artifacts-workspace-project-files.cy.ts, unitTests: [apps/web/src/app/views/artifacts/useArtifactsViewModel.test.tsx] }
+  - { name: CodeView.test.tsx, path: apps/web/src/app/views/CodeView.test.tsx, dddOwner: Code workbench project artifact presentation proof, cqRails: [ListWorkspaceFiles, GetWorkspaceFileContent], fowlerSignals: [Test-only confidence], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts, unitTests: [apps/web/src/app/views/CodeView.test.tsx] }
   - { name: file, path: apps/web/src/app/queries/workspaceArtifactPolicy.test.ts, dddOwner: WorkspaceArtifactClassification test fixture, cqRails: [ListWorkspaceFiles], fowlerSignals: [Test-only confidence], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/artifacts-workspace-project-files.cy.ts, unitTests: [apps/web/src/app/queries/workspaceArtifactPolicy.test.ts] }
   - { name: workspaceArtifactPolicy.test.ts, path: apps/web/src/app/queries/workspaceArtifactPolicy.test.ts, dddOwner: WorkspaceArtifactClassification test, cqRails: [ListWorkspaceFiles], fowlerSignals: [Boundary drift, Primitive obsession, Test-only confidence], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/artifacts-workspace-project-files.cy.ts, unitTests: [apps/web/src/app/queries/workspaceArtifactPolicy.test.ts] }
   - { name: stubArtifactsWorkbenchApis, path: apps/web/cypress/e2e/canvas/artifacts-workspace-project-files.cy.ts, dddOwner: WorkspaceArtifactPreview e2e fixture, cqRails: [ListWorkspaceFiles, GetWorkspaceFileContent], fowlerSignals: [Test-only confidence], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/artifacts-workspace-project-files.cy.ts, unitTests: [apps/web/src/app/views/ArtifactsView.test.tsx] }
