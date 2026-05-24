@@ -36,6 +36,11 @@ test('docs disposition canonization has semantic ownership and DB-first closure'
     assert.doesNotThrow(() => readRepoFile(path), `${path} must exist`);
   }
 
+  for (const path of requiredFiles) {
+    assertContains(path, 'ResolveDocsDispositionQueue');
+    assertContains(path, 'ClassifyDocsDispositionClosure');
+  }
+
   assertContains(
     'docs/planning/domains/documentation-governance.md',
     'Docs Disposition Canon Plan 2026-05-24'

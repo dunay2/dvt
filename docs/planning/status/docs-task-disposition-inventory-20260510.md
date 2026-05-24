@@ -232,6 +232,8 @@ The canonical follow-up rule is now:
 
 - use [Docs Disposition Canon Plan 2026-05-24](../proposals/mandatory/governance-and-docs/docs-disposition-canon-plan-20260524.md)
   and the Planning DB `docs-disposition` rail for future open findings;
+- keep `ResolveDocsDispositionQueue` as the resolution command rail and
+  `ClassifyDocsDispositionClosure` as the closure query rail;
 - keep the 2026-05-10 counts below as historical triage evidence;
 - do not treat this document as a parallel backlog after the DB queue reports
   no open rows.

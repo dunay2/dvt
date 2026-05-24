@@ -68,3 +68,6 @@ findings for Draft, Superseded, and task-like identifier rows.
 records the current DB-first closure: No Draft, Superseded, or task-like identifier finding remains an open parallel documentation backlog.
 Future findings must reopen through the Planning DB `docs-disposition` rail
 rather than living only in status prose.
+
+The local semantic rails are `ResolveDocsDispositionQueue` for resolution
+commands and `ClassifyDocsDispositionClosure` for closure queries.
