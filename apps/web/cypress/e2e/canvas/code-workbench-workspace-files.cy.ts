@@ -15,13 +15,25 @@ import {
 
 const WORKSPACE_FILE_TREE = [
   {
+    path: 'pipelines',
+    name: 'pipelines',
+    kind: 'directory',
+    children: [
+      {
+        path: 'pipelines/sales_pipeline.yaml',
+        name: 'sales_pipeline.yaml',
+        kind: 'file',
+      },
+    ],
+  },
+  {
     path: 'models',
     name: 'models',
     kind: 'directory',
     children: [
       {
-        path: 'models/staging/stg_orders.sql',
-        name: 'stg_orders.sql',
+        path: 'models/analytics/model_orders.sql',
+        name: 'model_orders.sql',
         kind: 'file',
       },
     ],
@@ -84,10 +96,10 @@ function stubCodeWorkbenchApis(
 
   stubE2eJsonApi('GET', '/workspace/files', fileTree);
   stubE2eJsonApi('GET', /\/workspace\/files\/.+/, {
-    path: 'models/staging/stg_orders.sql',
-    name: 'stg_orders.sql',
-    language: 'sql',
-    content: 'select * from orders',
+    path: 'pipelines/sales_pipeline.yaml',
+    name: 'sales_pipeline.yaml',
+    language: 'yaml',
+    content: 'executionTarget: "postgres"\nentrypoint: "models/analytics/model_orders.sql"',
     lastModified: '2026-05-04T00:00:00.000Z',
   });
 }
@@ -107,9 +119,10 @@ describe('Code workbench workspace files', () => {
 
     cy.contains('button', /^(Code|Codigo)$/).should('be.visible');
     cy.contains(CODE_COPY.explorerTitle).should('be.visible');
-    cy.contains('stg_orders.sql').should('be.visible');
+    cy.contains('sales_pipeline.yaml').should('be.visible');
+    cy.contains('model_orders.sql').should('be.visible');
     cy.contains(CODE_COPY.localBufferTitle).should('be.visible');
-    cy.contains('select * from orders').should('be.visible');
+    cy.contains('entrypoint: "models/analytics/model_orders.sql"').should('be.visible');
 
     cy.get('[data-testid="monaco-code-editor"]').within(() => {
       cy.get('.monaco-editor textarea')

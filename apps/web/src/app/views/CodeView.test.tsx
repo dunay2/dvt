@@ -50,8 +50,12 @@ function buildWorkspaceFilesQueryPort(
     getFileContent: async (path) => ({
       path,
       name: path.split('/').at(-1) ?? path,
-      language: path.endsWith('.sql') ? 'sql' : 'markdown',
-      content: path.endsWith('.sql') ? 'select * from orders' : '# Workspace',
+      language: path.endsWith('.sql') ? 'sql' : path.endsWith('.yaml') ? 'yaml' : 'markdown',
+      content: path.endsWith('.sql')
+        ? 'select * from orders'
+        : path.endsWith('.yaml')
+          ? 'executionTarget: "postgres"\nentrypoint: "models/analytics/model_orders.sql"'
+          : '# Workspace',
       lastModified: '2026-04-06T00:00:00Z',
     }),
   };
@@ -226,6 +230,61 @@ describe('CodeView', () => {
     expect(handoff?.getAttribute('href')).toContain('/diff');
     expect(handoff?.getAttribute('href')).toContain('models%2Fstaging%2Fstg_orders.sql');
     expect(handoff?.getAttribute('href')).toContain('0123456789abcdef');
+  });
+
+  it('opens a Canvas workflow pipeline file as project code', async () => {
+    setupContainer();
+    await act(async () => {
+      root?.render(
+        <QueryClientProvider client={createTestQueryClient()}>
+          <AppServicesProvider
+            overrides={{
+              ...createAppServicesTestOverrides(),
+              workspaceFilesQuery: buildWorkspaceFilesQueryPort({
+                listFiles: async () => [
+                  {
+                    path: 'pipelines',
+                    name: 'pipelines',
+                    kind: 'directory',
+                    children: [
+                      {
+                        path: 'pipelines/sales_pipeline.yaml',
+                        name: 'sales_pipeline.yaml',
+                        kind: 'file',
+                      },
+                    ],
+                  },
+                  {
+                    path: 'models',
+                    name: 'models',
+                    kind: 'directory',
+                    children: [
+                      {
+                        path: 'models/analytics/model_orders.sql',
+                        name: 'model_orders.sql',
+                        kind: 'file',
+                      },
+                    ],
+                  },
+                ],
+              }),
+            }}
+          >
+            <CodeView />
+          </AppServicesProvider>
+        </QueryClientProvider>
+      );
+    });
+
+    await waitFor(() => container?.textContent?.includes('sales_pipeline.yaml') === true);
+    await waitFor(() => container?.querySelector('[data-testid="monaco-code-editor"]') != null);
+
+    const editor = getContainer().querySelector<HTMLTextAreaElement>(
+      '[data-testid="monaco-code-editor"]'
+    );
+    expect(editor?.getAttribute('data-path')).toBe('pipelines/sales_pipeline.yaml');
+    expect(editor?.getAttribute('data-language')).toBe('yaml');
+    expect(editor?.value).toContain('entrypoint: "models/analytics/model_orders.sql"');
   });
 
   it('renders a governed route empty state when no workspace files are available', async () => {
