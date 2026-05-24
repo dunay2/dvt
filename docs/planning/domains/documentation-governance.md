@@ -96,3 +96,16 @@ component contract. No documentation tree move is performed in this slice.
 The local semantic rails are `ClassifyDocumentationEntryPoint` for entry-point
 classification, `QueryDocumentationConsultationPath` for reader path queries,
 and `ValidateDocumentationUsefulness` for consultation usefulness validation.
+
+## 2026-05-24 Governance Startup Card Canon
+
+`GD-MAND-STARTUP-CARD` owns canonization of the governance startup-card router.
+
+[Governance Startup Card Canon Plan 2026-05-24](../proposals/mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md)
+keeps the implemented startup card in the governance inventory, but promotes it
+to an explicit routing component with route classification, next-document
+queries, and validation-baseline semantics.
+
+The local semantic rails are `ClassifyGovernanceStartupRoute` for route
+classification, `QueryGovernanceStartupRoute` for route read-model queries, and
+`ValidateGovernanceStartupBaseline` for closeout baseline validation.
