@@ -83,3 +83,16 @@ component contract. No generated page is removed from tracking in this slice.
 The local semantic rails are `ClassifyGeneratedDocsSurface` for classification
 queries, `ExtractGeneratedDocsSurface` for future extraction commands, and
 `ValidateGeneratedDocsArtifact` for artifact validation queries.
+
+## 2026-05-24 Documentation Usability Canon
+
+`GD-MAND-DOC-USABILITY` owns canonization of the documentation usability change
+proposal.
+
+[Documentation Usability Canon Plan 2026-05-24](../proposals/mandatory/governance-and-docs/documentation-usability-canon-plan-20260524.md)
+promotes the 2026-03-08 documentation usability target operating model into a
+component contract. No documentation tree move is performed in this slice.
+
+The local semantic rails are `ClassifyDocumentationEntryPoint` for entry-point
+classification, `QueryDocumentationConsultationPath` for reader path queries,
+and `ValidateDocumentationUsefulness` for consultation usefulness validation.
