@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.29.0](https://github.com/dunay2/dvt/compare/v5.28.0...v5.29.0) (2026-05-24)
+
+
+### Features
+
+* **api:** Add cost attribution usage summary ([#1365](https://github.com/dunay2/dvt/issues/1365)) ([5831d9f](https://github.com/dunay2/dvt/commit/5831d9f749a99b86a8bc0690ce76ce6e51a9a850))
+
 ## [5.28.0](https://github.com/dunay2/dvt/compare/v5.27.0...v5.28.0) (2026-05-23)
 
 
