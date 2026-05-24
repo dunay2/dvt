@@ -3,9 +3,7 @@
 import { type Edge, type Node, type ReactFlowProps } from '@xyflow/react';
 import { useCallback } from 'react';
 
-import type {
-  CanvasSelectionContracts,
-} from './canvasGraphHandlerContracts';
+import type { CanvasSelectionContracts } from './canvasGraphHandlerContracts';
 
 type UseCanvasSelectionHandlersArgs = CanvasSelectionContracts;
 
@@ -48,12 +46,9 @@ export function useCanvasSelectionHandlers({
 
   const onSelectionChange = useCallback<
     NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']>
-  >(
-    ({ nodes: nextSelectedNodes }) => {
-      setSelectedNodes(nextSelectedNodes.map((node) => node.id));
-    },
-    [setSelectedNodes]
-  );
+  >(() => {
+    return;
+  }, []);
 
   const handleToggleNodeSelection = useCallback(
     (nodeId: string, shouldSelect: boolean) => {

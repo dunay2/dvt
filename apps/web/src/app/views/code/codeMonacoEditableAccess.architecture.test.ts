@@ -40,7 +40,7 @@ describe('Code Monaco editable access architecture', () => {
       'SaveWorkspaceFileContent',
       'ListWorkspaceFiles',
       'GetWorkspaceFileContent',
-      'must not persist',
+      'Any persisted content must',
     ]) {
       expect(componentGuide).toContain(requiredText);
     }
@@ -63,7 +63,7 @@ describe('Code Monaco editable access architecture', () => {
     );
   });
 
-  it('keeps Code editable, Artifacts read-only, and persistence unwired', () => {
+  it('keeps Code editable, Artifacts read-only, and persistence outside the route', () => {
     const codeView = readAppSource('views/CodeView.tsx');
     const codeEditor = readAppSource('components/monaco/MonacoCodeEditor.tsx');
     const codeViewer = readAppSource('components/monaco/MonacoCodeViewer.tsx');

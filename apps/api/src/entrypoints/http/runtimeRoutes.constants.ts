@@ -32,6 +32,7 @@ export const PROTECTED_RUNTIME_ROUTE_SUMMARY = [
   `GET ${RUNTIME_ROUTE_PATH.workspaceFiles}`,
   `GET ${RUNTIME_ROUTE_PATH.workspaceFileHistory}`,
   `GET ${RUNTIME_ROUTE_PATH.workspaceFileContent}`,
+  `POST ${RUNTIME_ROUTE_PATH.workspaceFileContent}`,
   `GET ${RUNTIME_ROUTE_PATH.costAttributionSummary}`,
   `GET ${RUNTIME_ROUTE_PATH.list}`,
   `GET ${RUNTIME_ROUTE_PATH.get}`,

@@ -54,6 +54,7 @@ export interface DbtNodeData extends Record<string, unknown> {
   activeRunId?: string | null;
   runStatusByNodeId?: ReadonlyMap<string, string>;
   runtimeCapabilities?: RuntimeCapabilities;
+  selectedForExecution?: boolean;
   onInspectNode?: (nodeId: string) => void;
   onDuplicateNode?: (nodeId: string) => void;
   onRemoveNode?: (nodeId: string) => void;
@@ -161,6 +162,7 @@ function buildCanonicalNode(
 function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   const data = props.data as DbtNodeData;
   const { id, selected } = props;
+  const selectedForExecution = data.selectedForExecution ?? selected;
   const pluginKind =
     data.pluginKind ??
     (isDbtNodeType(data.type) ? mapDbtTypeToKind(data.type) : ('dvt:unknown' as PluginNodeKind));
@@ -238,11 +240,11 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
           Duplicate node
         </ContextMenuItem>
         <ContextMenuItem
-          onSelect={() => data.onToggleNodeSelection?.(id, !selected)}
+          onSelect={() => data.onToggleNodeSelection?.(id, !selectedForExecution)}
           disabled={!data.onToggleNodeSelection}
         >
           <MousePointer className="size-4" />
-          {selected ? 'Deselect node' : 'Select node'}
+          {selectedForExecution ? 'Deselect node' : 'Select node'}
         </ContextMenuItem>
         <ContextMenuSeparator className="bg-slate-600" />
         <ContextMenuItem

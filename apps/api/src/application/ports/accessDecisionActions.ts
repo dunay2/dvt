@@ -9,6 +9,7 @@ export const AUTHORIZATION_ACTION_NAME = {
   runRetry: 'run:retry',
   runSignal: 'run:signal',
   workspaceGraphDraftSave: 'workspace:graph-draft:save',
+  workspaceFilesSave: 'workspace:files:save',
   adminRebuildSnapshot: 'admin:rebuild-snapshot',
   runView: 'run:view',
   runList: 'run:list',
@@ -24,6 +25,7 @@ export type CommandAuthorizationActionName =
   | typeof AUTHORIZATION_ACTION_NAME.runRetry
   | typeof AUTHORIZATION_ACTION_NAME.runSignal
   | typeof AUTHORIZATION_ACTION_NAME.workspaceGraphDraftSave
+  | typeof AUTHORIZATION_ACTION_NAME.workspaceFilesSave
   | typeof AUTHORIZATION_ACTION_NAME.adminRebuildSnapshot;
 
 export type QueryAuthorizationActionName =
@@ -68,6 +70,10 @@ export const AUTHORIZATION_ACTION = {
   workspaceGraphDraftSave: {
     kind: 'command',
     name: AUTHORIZATION_ACTION_NAME.workspaceGraphDraftSave,
+  },
+  workspaceFilesSave: {
+    kind: 'command',
+    name: AUTHORIZATION_ACTION_NAME.workspaceFilesSave,
   },
   adminRebuildSnapshot: {
     kind: 'command',

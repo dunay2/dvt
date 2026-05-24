@@ -47,13 +47,6 @@ const unsupportedApiWorkspaceOperations: ReadonlyArray<{
     rail: 'ListAdminAuditLog',
     call: (ports) => ports.workspaceAdminRead.getAuditLog(),
   },
-  {
-    operation: 'saveFileContent',
-    capability: 'workspace.fileWrite',
-    rail: 'SaveWorkspaceFileContent',
-    call: (ports) =>
-      ports.workspaceFileContentCommand.saveFileContent('models/generated.sql', 'select 1'),
-  },
 ] as const;
 
 describe('workspace ports api graph snapshot', () => {
@@ -193,6 +186,36 @@ describe('workspace ports api file history', () => {
   });
 });
 
+describe('workspace ports api file content command', () => {
+  installWorkspaceScopeHarness();
+
+  it('saves file content through the scoped workspace file command endpoint', async () => {
+    const scope = buildWorkspaceScope();
+    setWorkspaceScope(scope);
+    const { postJson, workspaceFileContentCommand } = createApiWorkspacePortHarness({
+      postJson: async <_TRequest, TResponse>() =>
+        ({
+          path: 'pipelines/sales_pipeline.yaml',
+          name: 'sales_pipeline.yaml',
+          language: 'yaml',
+          content: 'nodes: []',
+          lastModified: '2026-05-24T00:00:00.000Z',
+        }) as TResponse,
+    });
+
+    await expect(
+      workspaceFileContentCommand.saveFileContent('pipelines/sales_pipeline.yaml', 'nodes: []')
+    ).resolves.toMatchObject({
+      path: 'pipelines/sales_pipeline.yaml',
+      content: 'nodes: []',
+    });
+    expect(postJson).toHaveBeenCalledWith(
+      `/workspace/files/pipelines%2Fsales_pipeline.yaml?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}`,
+      { content: 'nodes: []' }
+    );
+  });
+});
+
 describe('workspace ports api route parity posture', () => {
   it.each(unsupportedApiWorkspaceOperations)(
     'fails closed for %s before issuing transport calls',
@@ -221,6 +244,6 @@ describe('workspace ports api route parity posture', () => {
     expect(source).not.toContain('/plugins');
     expect(source).not.toContain('/admin/roles');
     expect(source).not.toContain('/admin/audit');
-    expect(source).not.toContain('postJson<{ content: string }, FileContent>');
+    expect(source).toContain('postJson<{ content: string }, FileContent>');
   });
 });

@@ -26,6 +26,8 @@ export const TENANT_ACTIONS_FULL = [
   'run:retry',
   'workspace:graph-draft:view',
   'workspace:graph-draft:save',
+  'workspace:files:view',
+  'workspace:files:save',
 ] as const;
 export const TENANT_ACTIONS_WITH_ADMIN_REBUILD = [
   ...TENANT_ACTIONS_FULL,

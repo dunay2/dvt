@@ -10,4 +10,12 @@ describe('DbtNodeComponent architecture', () => {
     expect(CanvasNodeMapperSource).not.toContain('CANVAS_NODE_DRAG_HANDLE_SELECTOR');
     expect(CanvasNodeMapperSource).not.toContain('dragHandle:');
   });
+
+  it('uses Canvas execution selection state for node selection menu intent', () => {
+    expect(DbtNodeComponentSource).toContain('selectedForExecution');
+    expect(DbtNodeComponentSource).toContain('data.selectedForExecution ?? selected');
+    expect(DbtNodeComponentSource).toContain(
+      'data.onToggleNodeSelection?.(id, !selectedForExecution)'
+    );
+  });
 });

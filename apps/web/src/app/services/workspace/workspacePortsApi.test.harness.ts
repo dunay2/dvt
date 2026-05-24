@@ -27,6 +27,6 @@ export function createApiWorkspacePortHarness(
     workspacePluginCatalogQuery: createApiWorkspacePluginCatalogQueryPort(),
     workspaceAdminRead: createApiWorkspaceAdminReadPort(),
     warehouseSourceImport: createApiWarehouseSourceImportPort(),
-    workspaceFileContentCommand: createApiWorkspaceFileContentCommandPort(),
+    workspaceFileContentCommand: createApiWorkspaceFileContentCommandPort(apiClient),
   };
 }

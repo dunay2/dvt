@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GetWorkspaceFileContentUseCase } from '../../../src/application/services/getWorkspaceFileContentUseCase.js';
 import { ListWorkspaceFilesUseCase } from '../../../src/application/services/listWorkspaceFilesUseCase.js';
+import { SaveWorkspaceFileContentUseCase } from '../../../src/application/services/saveWorkspaceFileContentUseCase.js';
 import { registerWorkspaceFilesRoutes } from '../../../src/entrypoints/http/workspaceFilesRoutes.js';
 import { LocalWorkspaceFileRepository } from '../../../src/infrastructure/workspaceFiles/LocalWorkspaceFileRepository.js';
 
@@ -86,6 +87,7 @@ describe('workspaceFilesRoutes', () => {
       authorizer: { authorize } as never,
       getUseCase: new GetWorkspaceFileContentUseCase(repository),
       listUseCase: new ListWorkspaceFilesUseCase(repository),
+      saveUseCase: new SaveWorkspaceFileContentUseCase(repository),
       rateLimit: { max: 100, timeWindow: 60_000 },
     });
 
@@ -146,6 +148,56 @@ describe('workspaceFilesRoutes', () => {
 
     expect(response.statusCode).toBe(200);
     expect(Date.parse(response.json().lastModified)).not.toBeNaN();
+  });
+
+  it('persists scoped workspace file content through the save command', async () => {
+    const { app, authorize } = buildApp();
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/workspace/files/models%2Fgenerated%2Forders_daily.sql?${SCOPE_QUERY}`,
+      payload: { content: 'select * from raw.orders' },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      path: 'models/generated/orders_daily.sql',
+      name: 'orders_daily.sql',
+      language: 'sql',
+      content: 'select * from raw.orders',
+      lastModified: expect.any(String),
+    });
+    expect(authorize).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ action: { kind: 'command', name: 'workspace:files:save' } }),
+      expect.any(String)
+    );
+
+    const readResponse = await app.inject({
+      method: 'GET',
+      url: `/workspace/files/models%2Fgenerated%2Forders_daily.sql?${SCOPE_QUERY}`,
+    });
+    expect(readResponse.statusCode).toBe(200);
+    expect(readResponse.json().content).toBe('select * from raw.orders');
+  });
+
+  it('rejects invalid save bodies before writing content', async () => {
+    const { app } = buildApp();
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/workspace/files/models%2Fgenerated%2Forders_daily.sql?${SCOPE_QUERY}`,
+      payload: { content: null },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      error: {
+        type: 'bad_request',
+        reason: 'invalid_workspace_path',
+        target: 'content',
+      },
+    });
   });
 
   it('returns canonical not-found envelope for a missing workspace file', async () => {

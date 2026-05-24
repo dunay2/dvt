@@ -55,7 +55,8 @@ const COPY_BY_KEY: Record<keyof CodeViewCopy, LocalizableString> = {
   },
   localBufferNote: {
     key: 'code.localBufferNote',
-    fallback: 'Changes are local until a governed save command exists.',
+    fallback:
+      'Changes in Code stay local; workflow artifact saves use the governed workspace command.',
   },
   routeLoadingMessage: { key: 'code.routeLoadingMessage', fallback: 'Loading workspace files...' },
   routeEmptyTitle: {
@@ -143,7 +144,8 @@ const SPANISH_COPY: CodeViewCopy = {
   editorAriaLabelPrefix: 'Editando',
   localBufferTitle: 'Buffer local editable',
   localBufferMessage: 'Escribe en Monaco mientras revisas archivos del workspace.',
-  localBufferNote: 'Los cambios son locales hasta que exista un comando gobernado de guardado.',
+  localBufferNote:
+    'Los cambios en Code son locales; los artefactos de workflow se guardan con el comando gobernado.',
   routeLoadingMessage: 'Cargando archivos del workspace...',
   routeEmptyTitle: 'No hay archivos del workspace disponibles',
   routeEmptyMessage: 'Este workspace todavia no expone archivos para explorar.',

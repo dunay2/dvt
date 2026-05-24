@@ -34,7 +34,7 @@ const RUNTIME_ROUTE_METHOD_BY_KEY = {
   workspaceDiffChanges: ['GET'],
   workspaceFiles: ['GET'],
   workspaceFileHistory: ['GET'],
-  workspaceFileContent: ['GET'],
+  workspaceFileContent: ['GET', 'POST'],
   costAttributionSummary: ['GET'],
   list: ['GET'],
   get: ['GET'],
