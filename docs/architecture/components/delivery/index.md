@@ -65,6 +65,8 @@ handling. It is no longer just a placeholder around worker apps.
 
 - [In-Memory Outbox Storage Component](./in-memory-outbox-storage-component.md)
 - [In-Memory Outbox Storage User Stories](./in-memory-outbox-storage-user-stories.md)
+- [Projector Event-Driven Invalidation Component](./projector-event-driven-invalidation-component.md)
+- [Projector Event-Driven Invalidation User Stories](./projector-event-driven-invalidation-user-stories.md)
 
 ## Historical Deep Dives
 

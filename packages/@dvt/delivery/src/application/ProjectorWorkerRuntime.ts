@@ -33,6 +33,7 @@ export interface ProjectorWorkerRuntimeOptions {
   pollIntervalMs?: number;
   errorBackoffMs?: number;
   fallbackPollEveryTicks?: number;
+  enableFallbackPolling?: boolean;
 }
 
 const DEFAULT_OPTIONS = {
@@ -50,6 +51,7 @@ export class ProjectorWorkerRuntime {
   private readonly pollIntervalMs: number;
   private readonly errorBackoffMs: number;
   private readonly fallbackPollEveryTicks: number;
+  private readonly enableFallbackPolling: boolean;
   private loopPromise: Promise<void> | null = null;
   private waitController: globalThis.AbortController | null = null;
   private running = false;
@@ -68,6 +70,7 @@ export class ProjectorWorkerRuntime {
     this.fallbackPollEveryTicks = normalizeFallbackPollEveryTicks(
       options.fallbackPollEveryTicks ?? DEFAULT_OPTIONS.fallbackPollEveryTicks
     );
+    this.enableFallbackPolling = options.enableFallbackPolling ?? false;
   }
 
   get lagCount(): number {
@@ -246,7 +249,7 @@ export class ProjectorWorkerRuntime {
     if (
       this.stateStore.listStaleSnapshotRuns &&
       (workItems.length === 0 || workItems.length < this.batchSize) &&
-      (!this.stateStore.claimSnapshotWork || allowFallbackPoll)
+      (!this.stateStore.claimSnapshotWork || (this.enableFallbackPolling && allowFallbackPoll))
     ) {
       const pollingBatchSize = this.batchSize - workItems.length;
       if (pollingBatchSize > 0) {
@@ -276,6 +279,9 @@ export class ProjectorWorkerRuntime {
   private shouldRunFallbackPoll(): boolean {
     if (!this.stateStore.claimSnapshotWork || !this.stateStore.listStaleSnapshotRuns) {
       return true;
+    }
+    if (!this.enableFallbackPolling) {
+      return false;
     }
     return this.tickCount === 1 || this.tickCount % this.fallbackPollEveryTicks === 0;
   }
