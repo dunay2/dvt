@@ -20,6 +20,14 @@ export const PROTECTED_RUNTIME_RUN_RAIL = {
     adapterSurface: 'GET /runs/:runId/events',
     scopeAndAuthorization: 'run:logs:view, tenant scope',
   },
+  getCostAttributionSummary: {
+    name: 'GetCostAttributionSummary',
+    boundedContext: 'Runtime read model',
+    dddObject: 'Cost attribution summary read model',
+    applicationPort: 'GetCostAttributionSummaryUseCase',
+    adapterSurface: 'GET /cost/attribution-summary',
+    scopeAndAuthorization: 'run:list, tenant/project/environment scope',
+  },
   getRunStatus: {
     name: 'GetRunStatus',
     boundedContext: 'Runtime read model',

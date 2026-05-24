@@ -22,6 +22,15 @@ Sprint execution board:
 
 - [Review Sprint Board](./sprints/index.md)
 
+## 2026-05-24 Planning review canonical disposition
+
+`GD-REV-PLANNING-CANON` canonizes the review status board, review naming
+policy, and sprint-board intake rules into DB-first follow-up semantics.
+
+This board is the review navigation and intake map. It may name workboard task
+linkage, but executable follow-up, claims, status, progress, dependencies, and
+evidence are owned by the Planning DB command rail.
+
 ## Active Reviews
 
 | Review                                                                                                                                            | Domain folder                     | Current review role                                     | Workboard task linkage                     | Execution status | Execution progress |

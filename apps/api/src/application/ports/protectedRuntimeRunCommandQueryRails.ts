@@ -49,6 +49,24 @@ export const PROTECTED_RUNTIME_RUN_COMMAND_QUERY_RAILS = [
     ],
   }),
   defineProtectedRuntimeRail({
+    ...PROTECTED_RUNTIME_RUN_RAIL.getCostAttributionSummary,
+    kind: PROTECTED_RUNTIME_RAIL_KIND.query,
+    coverage: [
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingToken,
+        PROTECTED_RUNTIME_TEST_REF.costAttributionSummaryRoute,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingAction,
+        PROTECTED_RUNTIME_TEST_REF.costAttributionSummaryRoute,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.tenantMismatch,
+        PROTECTED_RUNTIME_TEST_REF.costAttributionSummaryRoute,
+      ],
+    ],
+  }),
+  defineProtectedRuntimeRail({
     ...PROTECTED_RUNTIME_RUN_RAIL.signalRun,
     kind: PROTECTED_RUNTIME_RAIL_KIND.command,
     coverage: [

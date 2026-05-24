@@ -86,6 +86,8 @@ shape, and the governed transition route:
 - [API Current To Target Architecture](./api-current-to-target-architecture.md)
 - [Protected Runtime Command/Query Rail Design](./protected-runtime-command-query-rail-design.md)
 - [Protected Runtime And Plan Compile Component](./protected-runtime-and-plan-compile-component.md)
+- [Cost Attribution Summary Component](./cost-attribution-summary-component.md)
+- [Cost Attribution Summary User Stories](./cost-attribution-summary-user-stories.md)
 - [Planner Ingress Hard-Cut Component](./planner-ingress-hard-cut-component.md)
 - [Planner Ingress Hard-Cut User Stories](./planner-ingress-hard-cut-user-stories.md)
 - [Temporal Fowler provider-truth follow-up review](../../../planning/reviews/architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md)

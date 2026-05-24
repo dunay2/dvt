@@ -39,6 +39,8 @@ export const PROTECTED_RUNTIME_TEST_REF = {
   cancelRunParser: 'apps/api/test/entrypoints/http/cancelRunRouteParser.test.ts',
   cancelRunRoute: 'apps/api/test/entrypoints/http/cancelRunRoute.test.ts',
   compilePlanRoute: 'apps/api/test/entrypoints/http/compilePlanRoute.test.ts',
+  costAttributionSummaryRoute:
+    'apps/api/test/entrypoints/http/getCostAttributionSummaryRoute.test.ts',
   getRunEventsRoute: 'apps/api/test/entrypoints/http/getRunEventsRoute.test.ts',
   getRunRoute: 'apps/api/test/entrypoints/http/getRunRoute.test.ts',
   importPlanRoute: 'apps/api/test/entrypoints/http/importPlanRoute.test.ts',

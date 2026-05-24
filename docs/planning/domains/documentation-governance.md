@@ -21,6 +21,7 @@ gates.
 
 - [Architecture Documentation Reconciliation Plan 2026-04-02](../proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md)
 - [Architecture Documentation Reconciliation Canon Plan 2026-05-23](../proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md)
+- [Architecture Governance Review Canon Plan 2026-05-24](../proposals/mandatory/governance-and-docs/architecture-governance-review-canon-plan-20260524.md)
 - [Generated Planning Surfaces Extraction Plan 2026-04-03](../proposals/mandatory/governance-and-docs/generated-planning-surfaces-extraction-plan-20260403.md)
 - [Doc-driven framework and tooling plan 2026-04-04](../proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md)
 - [CI Delivery Governance Consolidated Action Plan](../proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md)
@@ -109,3 +110,18 @@ queries, and validation-baseline semantics.
 The local semantic rails are `ClassifyGovernanceStartupRoute` for route
 classification, `QueryGovernanceStartupRoute` for route read-model queries, and
 `ValidateGovernanceStartupBaseline` for closeout baseline validation.
+
+## 2026-05-24 Architecture Governance Review Canon
+
+`GD-REV-ARCH-GOV-CANON` owns canonization of the active 2026-04-02 deep
+architecture review.
+
+[Architecture Governance Review Canon Plan 2026-05-24](../proposals/mandatory/governance-and-docs/architecture-governance-review-canon-plan-20260524.md)
+turns the review into a disposition ledger. Closed findings point to existing
+task, ADR, evidence, or risk ownership; queued product rows remain visible for
+Planning DB selection.
+
+The local semantic rails are `ClassifyArchitectureGovernanceReviewFinding` for
+finding classification, `RecordArchitectureGovernanceReviewDisposition` for
+ledger updates, and `ValidateArchitectureGovernanceReviewTraceability` for
+semantic validation.

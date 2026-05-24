@@ -6,6 +6,7 @@ import type { IObservability } from '@dvt/observability';
 
 import { CancelRunUseCase } from '../../application/services/cancelRunUseCase.js';
 import { CompilePlanUseCase } from '../../application/services/CompilePlanUseCase.js';
+import { GetCostAttributionSummaryUseCase } from '../../application/services/getCostAttributionSummaryUseCase.js';
 import { GetRunEventsUseCase } from '../../application/services/getRunEventsUseCase.js';
 import { GetRunStatusUseCase } from '../../application/services/getRunStatusUseCase.js';
 import { ImportPlanUseCase } from '../../application/services/ImportPlanUseCase.js';
@@ -62,6 +63,9 @@ export function buildProtectedRuntimeRouteDependencies(
   return {
     cancelRunUseCase: new CancelRunUseCase(protectedModule.engine, protectedModule.stateStore.read),
     compilePlanUseCase: new CompilePlanUseCase({ planner: protectedModule.planCompilePlanner }),
+    getCostAttributionSummaryUseCase: new GetCostAttributionSummaryUseCase(
+      protectedModule.stateStore.read
+    ),
     getRunEventsUseCase: new GetRunEventsUseCase(protectedModule.stateStore.read),
     getRunStatusUseCase,
     importPlanUseCase: new ImportPlanUseCase({
