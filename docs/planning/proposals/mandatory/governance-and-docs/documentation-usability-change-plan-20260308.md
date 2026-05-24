@@ -38,6 +38,11 @@ Execution status on 2026-03-08:
 Turn the current documentation set into a usable consultation and tracking
 system instead of a collection of disconnected artifacts.
 
+This proposal is canonized by
+[Documentation Usability Canon Plan 2026-05-24](./documentation-usability-canon-plan-20260524.md).
+The governing rails are `ClassifyDocumentationEntryPoint`,
+`QueryDocumentationConsultationPath`, and `ValidateDocumentationUsefulness`.
+
 The change is successful when a reader can find, in one navigation system:
 
 - the canonical definition of a concept;
@@ -60,6 +65,10 @@ Observed issues:
 - duplicate or compatibility entry points keep historical confusion alive;
 - current CI checks validate hygiene but do not validate discoverability,
   canonical ownership, or consultation usefulness.
+
+The canon slice treats that gap as `ValidateDocumentationUsefulness`: a
+semantic validation policy that guards reader outcomes in addition to markdown
+syntax, links, and generated indexes.
 
 ## Baseline
 
@@ -255,6 +264,7 @@ Acceptance:
 - freeze new top-level documentation sections unless explicitly approved;
 - classify all active entry points as canonical, alias, local-reference-only, or
   archive.
+- record entry-point purpose through `ClassifyDocumentationEntryPoint`.
 
 Exit criterion:
 
@@ -279,6 +289,7 @@ Exit criterion:
 Exit criterion:
 
 - readers can find concept definitions and roadmap status without path hunting.
+- readers can resolve the path through `QueryDocumentationConsultationPath`.
 
 ### Phase 3: Workspace integration and traceability
 
@@ -298,6 +309,8 @@ Exit criterion:
 
 - the repo can no longer drift back into the current fragmented state without
   CI surfacing it as a failure.
+- `ValidateDocumentationUsefulness` gives future CI hardening a named semantic
+  target.
 
 ## Risks
 
