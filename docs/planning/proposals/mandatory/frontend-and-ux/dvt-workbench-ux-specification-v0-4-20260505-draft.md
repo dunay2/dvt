@@ -13,15 +13,14 @@ accepted_subset: dvt-workbench-ux-canon-plan-20260524
 
 # DVT+ Workbench UX Specification
 
-This draft is not the canonical implementation plan. The accepted subset for
-the next executable slice is recorded in
-[Canvas Workbench Shell Save Export Sequence Plan](./canvas-workbench-shell-save-export-sequence-plan-20260505.md).
-
-Canonical disposition: `F-MAND-WORKBENCH-UX` keeps this document as historical
-UX input. The active executable subset is
+This draft is not the canonical implementation plan. `F-MAND-WORKBENCH-UX`
+keeps this document as historical UX input. The active executable subset is
 [DVT Workbench UX Canon Plan 2026-05-24](./dvt-workbench-ux-canon-plan-20260524.md),
 and the active component contract remains
 [Workbench UI Contract And Component Inventory](../../../architecture/components/web/workbench-ui-contract-and-component-inventory.md).
+Earlier Canvas shell save/export work remains recorded in
+[Canvas Workbench Shell Save Export Sequence Plan](./canvas-workbench-shell-save-export-sequence-plan-20260505.md)
+as closed slice evidence, not as the current canonical subset pointer.
 
 ## 1. Purpose
 
