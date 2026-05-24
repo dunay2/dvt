@@ -43,6 +43,8 @@ workflow parity, and local-to-remote quality gates.
 - [Documentation Usability Canon User Stories](./documentation-usability-canon-user-stories.md)
 - [Governance Startup Card Canon Component](./governance-startup-card-canon-component.md)
 - [Governance Startup Card Canon User Stories](./governance-startup-card-canon-user-stories.md)
+- [Planning Review Canon Component](./planning-review-canon-component.md)
+- [Planning Review Canon User Stories](./planning-review-canon-user-stories.md)
 - [Docs Disposition Canon Component](./docs-disposition-canon-component.md)
 - [Docs Disposition Canon User Stories](./docs-disposition-canon-user-stories.md)
 - [Component Engineering Record Component](./component-engineering-record-component.md)

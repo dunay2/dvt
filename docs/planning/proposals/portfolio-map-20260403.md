@@ -35,6 +35,8 @@ planning_type: proposal
   2026-05-24](./mandatory/governance-and-docs/documentation-usability-canon-plan-20260524.md)
 - [Governance startup card canon plan
   2026-05-24](./mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md)
+- [Planning review canon plan
+  2026-05-24](./mandatory/governance-and-docs/planning-review-canon-plan-20260524.md)
 - [Planning Knowledge Rail DB-First Plan
   2026-05-13](./mandatory/governance-and-docs/planning-knowledge-rail-db-first-plan-20260513.md)
 - [Component Engineering Composite Hierarchy Plan
