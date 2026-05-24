@@ -25,6 +25,8 @@ planning_type: proposal
   2026-05-23](./mandatory/governance-and-docs/ci-retention-review-canon-plan-20260523.md)
 - [Architecture documentation reconciliation canon plan
   2026-05-23](./mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md)
+- [Docs disposition canon plan
+  2026-05-24](./mandatory/governance-and-docs/docs-disposition-canon-plan-20260524.md)
 - [Planning Knowledge Rail DB-First Plan
   2026-05-13](./mandatory/governance-and-docs/planning-knowledge-rail-db-first-plan-20260513.md)
 - [Component Engineering Composite Hierarchy Plan

@@ -58,3 +58,13 @@ Concrete remediation remains in the child task family:
 - `GD-MAND-STARTUP-CARD`
 - `GD-REV-ARCH-GOV-CANON`
 - `GD-REV-PLANNING-CANON`
+
+## 2026-05-24 Docs Disposition Canon
+
+`GD-DOC-DISPOSITION-CANON` owns closure of active documentation disposition
+findings for Draft, Superseded, and task-like identifier rows.
+
+[Docs Disposition Canon Plan 2026-05-24](../proposals/mandatory/governance-and-docs/docs-disposition-canon-plan-20260524.md)
+records the current DB-first closure: No Draft, Superseded, or task-like identifier finding remains an open parallel documentation backlog.
+Future findings must reopen through the Planning DB `docs-disposition` rail
+rather than living only in status prose.
