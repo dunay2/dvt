@@ -6,7 +6,7 @@ import {
   type WorkspaceArtifactRecord,
   type WorkspaceArtifactMap,
 } from '../../queries/workspaceQueries';
-import { type ArtifactFileName, type ArtifactPreviewDocumentMap } from './constants';
+import { type ArtifactPreviewDocumentMap } from './constants';
 import type { ArtifactPreview, ImportState } from './types';
 import { formatFileSize } from './utils';
 
@@ -25,12 +25,6 @@ type ArtifactsViewModel = {
   isLoading: boolean;
   errorMessage: string | null;
 };
-
-const ARTIFACT_FILE_NAMES: ArtifactFileName[] = [
-  'manifest.json',
-  'run_results.json',
-  'catalog.json',
-];
 
 function buildImportedArtifact(state: ImportState): ArtifactPreview | null {
   if (state.status !== 'success') {
@@ -61,18 +55,31 @@ function buildImportedStats(state: ImportState): ImportedStats | null {
   };
 }
 
-function buildWorkspaceArtifactPreview(
-  fileName: ArtifactFileName,
-  artifact: WorkspaceArtifactRecord
-): ArtifactPreview {
+function buildWorkspaceArtifactPreview(artifact: WorkspaceArtifactRecord): ArtifactPreview {
   return {
     id: `workspace:${artifact.file.path}`,
-    type: fileName,
+    type: artifact.kind === 'dbt-json' ? artifact.label : getProjectArtifactType(artifact),
     description: `Workspace artifact synchronized from ${artifact.file.path}`,
     size: formatFileSize(artifact.file.content.length),
     lastUpdated: artifact.file.lastModified,
     sourceLabel: artifact.file.path,
   };
+}
+
+function getProjectArtifactType(artifact: WorkspaceArtifactRecord): string {
+  if (artifact.kind === 'pipeline-yaml') {
+    return 'Workflow pipeline';
+  }
+
+  if (artifact.kind === 'model-sql') {
+    return 'SQL model';
+  }
+
+  return artifact.label;
+}
+
+function getPreviewTitle(label: string): string {
+  return `Preview: ${label}`;
 }
 
 function getErrorMessage(error: unknown): string {
@@ -90,10 +97,8 @@ export function useArtifactsViewModel(state: ImportState): ArtifactsViewModel {
     const workspaceArtifacts: WorkspaceArtifactMap = workspaceArtifactsQuery.data ?? {};
     const importedArtifact = buildImportedArtifact(state);
     const importedStats = buildImportedStats(state);
-    const workspaceArtifactPreviews = ARTIFACT_FILE_NAMES.flatMap((fileName) =>
-      workspaceArtifacts[fileName]
-        ? [buildWorkspaceArtifactPreview(fileName, workspaceArtifacts[fileName])]
-        : []
+    const workspaceArtifactPreviews = Object.values(workspaceArtifacts).map(
+      buildWorkspaceArtifactPreview
     );
 
     const artifacts =
@@ -103,29 +108,23 @@ export function useArtifactsViewModel(state: ImportState): ArtifactsViewModel {
 
     const previewDocuments: ArtifactPreviewDocumentMap = {};
 
+    for (const artifact of Object.values(workspaceArtifacts)) {
+      previewDocuments[artifact.key] = {
+        content: artifact.parsedContent,
+        path: artifact.file.path,
+        language: artifact.language,
+        label: artifact.label,
+        title: getPreviewTitle(artifact.label),
+      };
+    }
+
     if (state.status === 'success') {
       previewDocuments['manifest.json'] = {
         content: state.result.rawManifest,
         path: state.fileName,
-      };
-    } else if (workspaceArtifacts['manifest.json']) {
-      previewDocuments['manifest.json'] = {
-        content: workspaceArtifacts['manifest.json'].parsedContent,
-        path: workspaceArtifacts['manifest.json'].file.path,
-      };
-    }
-
-    if (workspaceArtifacts['run_results.json']) {
-      previewDocuments['run_results.json'] = {
-        content: workspaceArtifacts['run_results.json'].parsedContent,
-        path: workspaceArtifacts['run_results.json'].file.path,
-      };
-    }
-
-    if (workspaceArtifacts['catalog.json']) {
-      previewDocuments['catalog.json'] = {
-        content: workspaceArtifacts['catalog.json'].parsedContent,
-        path: workspaceArtifacts['catalog.json'].file.path,
+        language: 'json',
+        label: 'manifest.json',
+        title: getPreviewTitle('manifest.json'),
       };
     }
 

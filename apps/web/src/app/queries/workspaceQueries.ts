@@ -8,22 +8,19 @@ import {
   useWorkspaceGraphSnapshotQueryPort,
 } from '../services/AppServicesContext';
 import type { FileContent, WorkspaceFileEntry } from '../ports/workspace';
+import { classifyWorkspaceArtifact, type WorkspaceArtifactKind } from './workspaceArtifactPolicy';
 import { queryKeys } from './queryKeys';
 
 export type WorkspaceArtifactRecord = {
   file: FileContent;
   parsedContent: unknown;
+  key: string;
+  label: string;
+  language: string;
+  kind: WorkspaceArtifactKind;
 };
 
-export type WorkspaceArtifactMap = Partial<
-  Record<'manifest.json' | 'run_results.json' | 'catalog.json', WorkspaceArtifactRecord>
->;
-
-const WORKSPACE_ARTIFACT_FILE_NAMES = [
-  'manifest.json',
-  'run_results.json',
-  'catalog.json',
-] as const;
+export type WorkspaceArtifactMap = Record<string, WorkspaceArtifactRecord>;
 
 function flattenWorkspaceEntries(entries: WorkspaceFileEntry[]): WorkspaceFileEntry[] {
   return entries.flatMap((entry) => [
@@ -45,21 +42,30 @@ async function loadWorkspaceArtifacts(
   getFileContent: (path: string) => Promise<FileContent>
 ): Promise<WorkspaceArtifactMap> {
   const entries = flattenWorkspaceEntries(await listFiles());
+  const classifiedEntries = entries.flatMap((entry) => {
+    const classification = classifyWorkspaceArtifact(entry);
+    return classification ? [{ entry, classification }] : [];
+  });
   const records = await Promise.all(
-    WORKSPACE_ARTIFACT_FILE_NAMES.map(async (fileName) => {
-      const match = entries.find((entry) => entry.kind === 'file' && entry.name === fileName);
-      if (!match) {
-        return null;
-      }
-
-      const file = await getFileContent(match.path);
-      return [fileName, { file, parsedContent: parseStructuredContent(file.content) }] as const;
+    classifiedEntries.map(async ({ entry, classification }) => {
+      const file = await getFileContent(entry.path);
+      const parsedContent =
+        classification.language === 'json' ? parseStructuredContent(file.content) : file.content;
+      return [
+        classification.key,
+        {
+          file,
+          parsedContent,
+          key: classification.key,
+          label: classification.label,
+          language: classification.language,
+          kind: classification.kind,
+        },
+      ] as const;
     })
   );
 
-  return Object.fromEntries(
-    records.filter((record): record is NonNullable<typeof record> => record !== null)
-  );
+  return Object.fromEntries(records);
 }
 
 export function useWorkspaceDiffChangesQuery() {

@@ -142,6 +142,75 @@ describe('ArtifactsView', () => {
     expect(mounted.container.textContent).toContain('About dbt Artifacts');
   });
 
+  it('renders workflow project artifacts from the workspace in preview tabs', async () => {
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          workspaceFilesQuery: buildWorkspaceFilesQueryPort({
+            listFiles: async () => [
+              {
+                path: 'pipelines',
+                name: 'pipelines',
+                kind: 'directory',
+                children: [
+                  {
+                    path: 'pipelines/sales_pipeline.yaml',
+                    name: 'sales_pipeline.yaml',
+                    kind: 'file',
+                  },
+                ],
+              },
+              {
+                path: 'models',
+                name: 'models',
+                kind: 'directory',
+                children: [
+                  {
+                    path: 'models/analytics',
+                    name: 'analytics',
+                    kind: 'directory',
+                    children: [
+                      {
+                        path: 'models/analytics/model_orders.sql',
+                        name: 'model_orders.sql',
+                        kind: 'file',
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+            getFileContent: async (path) => ({
+              path,
+              name: path.split('/').at(-1) ?? path,
+              language: path.endsWith('.sql') ? 'sql' : 'yaml',
+              content: path.endsWith('.sql')
+                ? 'select * from raw.orders'
+                : 'executionTarget: warehouse\nentrypoint: models/analytics/model_orders.sql',
+              lastModified: '2026-04-06T00:00:00Z',
+            }),
+          }),
+        }}
+      >
+        <ArtifactsView />
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(
+      () => mounted?.container.textContent?.includes('pipelines/sales_pipeline.yaml') === true,
+      { description: 'workflow artifact previews render' }
+    );
+
+    expect(mounted.container.textContent).toContain('pipelines/sales_pipeline.yaml');
+    expect(mounted.container.textContent).toContain('models/analytics/model_orders.sql');
+    expect(mounted.container.textContent).toContain('executionTarget');
+    const viewer = mounted.container.querySelector('[data-testid="monaco-code-viewer"]');
+    expect(viewer?.getAttribute('data-language')).toBe('yaml');
+    expect(viewer?.getAttribute('data-path')).toBe('pipelines/sales_pipeline.yaml');
+    expect(viewer?.getAttribute('data-aria-label')).toBe('Preview: pipelines/sales_pipeline.yaml');
+  });
+
   it('keeps route header outside the scroll body and preserves section-title spacing', async () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider

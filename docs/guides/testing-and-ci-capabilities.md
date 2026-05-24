@@ -311,10 +311,17 @@ Planning-generated pages that are intentionally untracked:
   from `verify:prepush`, PR metadata checks, and Temporal integration.
   Source: [`.github/workflows/pr-quality-gate.yml`](../../.github/workflows/pr-quality-gate.yml)
 - `Dependency Review`: pull-request dependency review with pinned action usage
-  and high-severity failure policy.
+  and high-severity failure policy. It runs for public repositories and for
+  private repositories that set the repository variable
+  `GH_ADVANCED_SECURITY_ENABLED=true`; GitHub dependency review otherwise fails
+  before evaluating the dependency diff when Dependency graph/GitHub Advanced
+  Security is unavailable.
   Source: [`.github/workflows/dependency-review.yml`](../../.github/workflows/dependency-review.yml)
 - `CodeQL`: JavaScript/TypeScript SAST on PRs, pushes to `main`, weekly
-  schedule, and manual dispatch.
+  schedule, and manual dispatch. It runs for public repositories and for
+  private repositories that set the repository variable
+  `GH_ADVANCED_SECURITY_ENABLED=true`; CodeQL otherwise fails during SARIF
+  upload when code scanning/GitHub Advanced Security is unavailable.
   Source: [`.github/workflows/codeql.yml`](../../.github/workflows/codeql.yml)
 - `Adapter Postgres Integration Nightly`: scheduled adapter-postgres smoke
   coverage with GitHub issue notification on failure.
@@ -506,15 +513,21 @@ Current workflow consumers:
   affected dependency builds. Root-config PRs still use `pnpm build` to exercise
   the full root graph.
 - Dependency review and CodeQL workflows provide the current dependency/SAST
-  baseline. The manual docs deploy workflow pins the Zensical package version
-  used to build the site, and the label-bootstrap workflow uses a SHA-pinned
-  `actions/github-script` reference like the other active workflows. Remote
-  Turbo cache is still not configured because it requires repository secret
-  ownership for `TURBO_TOKEN` and `TURBO_TEAM`.
+  baseline when the repository has the required GitHub Advanced Security
+  capabilities. Private repositories must set
+  `GH_ADVANCED_SECURITY_ENABLED=true` after enabling the required GitHub
+  security features; without that capability, those workflows are intentionally
+  skipped instead of failing before diff analysis. The manual docs deploy
+  workflow pins the Zensical package version used to build the site, and the
+  label-bootstrap workflow uses a SHA-pinned `actions/github-script` reference
+  like the other active workflows. Remote Turbo cache is still not configured
+  because it requires repository secret ownership for `TURBO_TOKEN` and
+  `TURBO_TEAM`.
 - Current branch-protection status checks are repository settings, not tracked
   YAML. Verify in GitHub settings that `CI - Code Quality`, `Test Suite`,
   `PR Quality Gate`, `Contracts & Determinism`, `Dependency Review`, and
-  `CodeQL` are required before treating these workflows as a merge guarantee.
+  `CodeQL` are required before treating these workflows as a merge guarantee
+  for repositories where those GHAS-backed workflows are enabled.
 - For slices that change code, config, tests, CI, or docs, include
   `pnpm verify:prepush` in the end-of-task validation baseline before claiming
   the work is ready.

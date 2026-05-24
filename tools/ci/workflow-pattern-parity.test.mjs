@@ -305,6 +305,8 @@ test('security and nightly workflows stay wired to pinned actions and failure no
     'actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0'
   );
   assertWorkflowContains(dependencyReview, 'fail-on-severity: high');
+  assertWorkflowContains(dependencyReview, "vars.GH_ADVANCED_SECURITY_ENABLED == 'true'");
+  assertWorkflowContains(dependencyReview, "github.event.repository.visibility == 'public'");
 
   assertWorkflowContains(
     codeql,
@@ -316,6 +318,8 @@ test('security and nightly workflows stay wired to pinned actions and failure no
   );
   assertWorkflowContains(codeql, 'security-events: write');
   assertWorkflowContains(codeql, 'javascript-typescript');
+  assertWorkflowContains(codeql, "vars.GH_ADVANCED_SECURITY_ENABLED == 'true'");
+  assertWorkflowContains(codeql, "github.event.repository.visibility == 'public'");
 
   assertWorkflowContains(nightly, 'issues: write');
   assertWorkflowContains(nightly, 'name: Notify nightly failure');

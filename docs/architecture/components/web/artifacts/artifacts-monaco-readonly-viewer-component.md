@@ -10,8 +10,8 @@ planning_type: architecture
 
 ## Purpose
 
-This component governs Monaco-backed read-only inspection for `manifest.json`,
-`run_results.json`, and `catalog.json` inside the Artifacts route.
+This component governs Monaco-backed read-only inspection for dbt JSON artifacts
+and workflow project artifacts inside the Artifacts route.
 
 Owned concern: render route-scoped, read-only, structured artifact payload
 inspection without adding editing semantics, shell ownership, or Canvas Monaco
@@ -23,17 +23,17 @@ hosting.
 | ---------------------------- | ---------------------- | ---------------- | ----------------------------------------------------------------------------------------------- |
 | `ArtifactsView`              | route component        | Artifacts route  | Composes query/import state, route frame, import panel, list, preview tabs, and info.           |
 | `useArtifactsViewModel`      | hook                   | Artifacts route  | Builds the route-local artifact preview read model from imported and workspace-backed payloads. |
-| `ArtifactPreviewTabs`        | presentation component | Artifacts route  | Selects the supported artifact document tab.                                                    |
-| `ArtifactMonacoPreviewPanel` | presentation adapter   | Artifacts route  | Maps one structured artifact document to a JSON `MonacoCodeViewer`.                             |
+| `ArtifactPreviewTabs`        | presentation component | Artifacts route  | Selects an available artifact document tab.                                                     |
+| `ArtifactMonacoPreviewPanel` | presentation adapter   | Artifacts route  | Maps one structured artifact document to a read-only `MonacoCodeViewer`.                        |
 | `MonacoCodeViewer`           | lazy gateway           | Monaco component | Exposes the DVT-safe lazy read-only code viewer API.                                            |
 | `MonacoCodeSurface`          | third-party binding    | Monaco component | Binds `@monaco-editor/react` `Editor` with read-only options.                                   |
 
 The component consumes existing rails through `useWorkspaceArtifactsQuery`:
 
-| Rail                      | Type  | Use                                                                             |
-| ------------------------- | ----- | ------------------------------------------------------------------------------- |
-| `ListWorkspaceFiles`      | query | Finds workspace-backed `manifest.json`, `run_results.json`, and `catalog.json`. |
-| `GetWorkspaceFileContent` | query | Loads the selected artifact payload for read-only inspection.                   |
+| Rail                      | Type  | Use                                                                      |
+| ------------------------- | ----- | ------------------------------------------------------------------------ |
+| `ListWorkspaceFiles`      | query | Finds workspace-backed dbt JSON, pipeline YAML, and model SQL artifacts. |
+| `GetWorkspaceFileContent` | query | Loads the selected artifact payload for read-only inspection.            |
 
 No command rail is introduced by this component.
 
@@ -41,8 +41,8 @@ No command rail is introduced by this component.
 
 | Object                                | Kind                    | Responsibility                                                              |
 | ------------------------------------- | ----------------------- | --------------------------------------------------------------------------- |
-| `ArtifactPreviewDocumentMap`          | presentation read model | Holds optional payload documents for supported dbt artifact files.          |
-| `ArtifactPreviewDocument`             | presentation document   | Carries one artifact path and parsed or raw content.                        |
+| `ArtifactPreviewDocumentMap`          | presentation read model | Holds payload documents keyed by supported workspace artifact identity.     |
+| `ArtifactPreviewDocument`             | presentation document   | Carries one artifact path, language, label, and parsed or raw content.      |
 | `ArtifactsWorkbenchState`             | state model             | Represents loading, empty, error, invalid-import, and ready route states.   |
 | `ArtifactsStructuredPayloadReadModel` | conceptual read model   | Describes read-only JSON inspection for manifest, run results, and catalog. |
 
@@ -53,6 +53,8 @@ No command rail is introduced by this component.
 - `ArtifactPreviewTabs` must not import `@monaco-editor/react` or `MonacoCodeViewer`.
 - `ArtifactMonacoPreviewPanel` is the only Artifacts module that maps a payload
   document to `MonacoCodeViewer`.
+- `ArtifactMonacoPreviewPanel` uses the document language when present and
+  falls back to JSON for imported or legacy structured payloads.
 - `MonacoCodeViewer` lazy-loads `MonacoCodeSurface`.
 - `MonacoCodeSurface` uses `Editor` with `readOnly: true`,
   `domReadOnly: true`, and `contextmenu: false`.
@@ -76,9 +78,13 @@ stateDiagram-v2
   Ready --> ManifestPreview: manifest tab selected
   Ready --> RunResultsPreview: run_results tab selected
   Ready --> CatalogPreview: catalog tab selected
+  Ready --> PipelinePreview: pipeline YAML tab selected
+  Ready --> ModelPreview: SQL model tab selected
   ManifestPreview --> Ready: tab changes
   RunResultsPreview --> Ready: tab changes
   CatalogPreview --> Ready: tab changes
+  PipelinePreview --> Ready: tab changes
+  ModelPreview --> Ready: tab changes
 ```
 
 ## Component Diagram
@@ -117,13 +123,13 @@ flowchart TB
 
 ## Consumers
 
-| Consumer               | Uses                                        | Rule                                                                   |
-| ---------------------- | ------------------------------------------- | ---------------------------------------------------------------------- |
-| Artifacts route users  | manifest, run results, and catalog payloads | May inspect and search JSON but cannot edit from this surface.         |
-| Canvas route           | imported manifest projection                | May consume imported graph state elsewhere, but does not host Monaco.  |
-| Diff route             | shared Monaco primitives                    | May reuse Monaco primitives without sharing Artifacts route ownership. |
-| Future Templates route | Monaco pattern                              | Must define its own component guide and command/query rails.           |
-| Architecture tests     | semantic guard                              | Must prove read-only, route-safe, and non-Canvas-hosted posture.       |
+| Consumer               | Uses                                                                  | Rule                                                                       |
+| ---------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Artifacts route users  | manifest, run results, catalog, pipeline YAML, and model SQL payloads | May inspect and search loaded artifacts but cannot edit from this surface. |
+| Canvas route           | imported manifest projection                                          | May consume imported graph state elsewhere, but does not host Monaco.      |
+| Diff route             | shared Monaco primitives                                              | May reuse Monaco primitives without sharing Artifacts route ownership.     |
+| Future Templates route | Monaco pattern                                                        | Must define its own component guide and command/query rails.               |
+| Architecture tests     | semantic guard                                                        | Must prove read-only, route-safe, and non-Canvas-hosted posture.           |
 
 ## Architecture Guard
 
@@ -144,6 +150,7 @@ guards:
 Included:
 
 - `manifest.json`, `run_results.json`, and `catalog.json` previews;
+- `pipelines/*.yaml|yml` and `models/**/*.sql` previews from workspace files;
 - imported manifest and workspace-backed artifact payloads;
 - route-local loading, empty, error, invalid-import, unavailable, and ready states;
 - semantic documentation and architecture guard.

@@ -1,11 +1,11 @@
 /** Owned concern: adapt one structured Artifacts payload to the read-only Monaco code viewer. */
 import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer';
-import type { ArtifactFileName, ArtifactPreviewDocument } from './constants';
+import type { ArtifactPreviewDocument } from './constants';
 import { formatStructuredArtifactContent } from './structuredArtifactContent';
 
 type ArtifactMonacoPreviewPanelProps = {
   readonly title: string;
-  readonly fileName: ArtifactFileName;
+  readonly fileName: string;
   readonly document: ArtifactPreviewDocument;
 };
 
@@ -21,7 +21,7 @@ export function ArtifactMonacoPreviewPanel({
       </div>
       <MonacoCodeViewer
         ariaLabel={title}
-        language="json"
+        language={document.language ?? 'json'}
         loadingLabel={`Loading ${fileName}...`}
         path={document.path}
         value={formatStructuredArtifactContent(document.content)}
