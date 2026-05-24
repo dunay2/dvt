@@ -23,6 +23,8 @@ planning_type: proposal
 - [System Governance Unit Index Plan](./mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md)
 - [CI retention review canon plan
   2026-05-23](./mandatory/governance-and-docs/ci-retention-review-canon-plan-20260523.md)
+- [Architecture documentation reconciliation canon plan
+  2026-05-23](./mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md)
 - [Planning Knowledge Rail DB-First Plan
   2026-05-13](./mandatory/governance-and-docs/planning-knowledge-rail-db-first-plan-20260513.md)
 - [Component Engineering Composite Hierarchy Plan

@@ -20,6 +20,7 @@ gates.
 ## Active Proposal Set
 
 - [Architecture Documentation Reconciliation Plan 2026-04-02](../proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md)
+- [Architecture Documentation Reconciliation Canon Plan 2026-05-23](../proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md)
 - [Generated Planning Surfaces Extraction Plan 2026-04-03](../proposals/mandatory/governance-and-docs/generated-planning-surfaces-extraction-plan-20260403.md)
 - [Doc-driven framework and tooling plan 2026-04-04](../proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md)
 - [CI Delivery Governance Consolidated Action Plan](../proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md)
@@ -40,3 +41,20 @@ gates.
 
 - [Documentation Governance Architecture Delta](../roadmap/diagrams/documentation-governance-architecture-delta.md)
 - [Planning Domain Map](../roadmap/diagrams/planning-domain-map.md)
+
+## 2026-05-23 Architecture Documentation Reconciliation Canon
+
+`GD-MAND-ARCH-DOC-RECON` owns canonization of the 2026-04-02 architecture
+documentation reconciliation proposal.
+
+No architecture documentation reconciliation proposal remains an orphan execution queue after this disposition.
+
+The parent canon task records the classification rail and child-task routing.
+Concrete remediation remains in the child task family:
+
+- `GD-DOC-DISPOSITION-CANON`
+- `GD-MAND-AUTOGEN-PAGES`
+- `GD-MAND-DOC-USABILITY`
+- `GD-MAND-STARTUP-CARD`
+- `GD-REV-ARCH-GOV-CANON`
+- `GD-REV-PLANNING-CANON`
