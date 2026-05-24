@@ -51,6 +51,7 @@ function renderCanvasShellHostTabStrip(
       tabState={routePresentation.canvasTabState}
       availableCanvasKinds={routePresentation.availableCanvasKinds}
       canEditEdges={routePresentation.effectiveUserPermissions.canEditEdges}
+      variant="inline"
       onCreateCanvasDocument={(command) => {
         void authoringCommands.handleCreateCanvasDocument(command);
       }}

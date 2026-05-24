@@ -26,6 +26,7 @@ export type CanvasPlaygroundTabStripTemplateProps = Readonly<{
   tabState: CanvasPlaygroundTabState;
   replacementAction: CanvasReplacementActionViewState;
   isReplacementDialogOpen: boolean;
+  variant?: 'standalone' | 'inline';
   onRequestReplacement: () => void;
   onReplacementDialogOpenChange: (open: boolean) => void;
   onCancelReplacement: () => void;
@@ -49,6 +50,7 @@ export function CanvasPlaygroundTabStripTemplate({
   tabState,
   replacementAction,
   isReplacementDialogOpen,
+  variant = 'standalone',
   onRequestReplacement,
   onReplacementDialogOpenChange,
   onCancelReplacement,
@@ -57,7 +59,11 @@ export function CanvasPlaygroundTabStripTemplate({
   return (
     <div
       data-slot="canvas-playground-tab-strip"
-      className="flex shrink-0 items-center justify-between gap-3 border-b border-[color:var(--border-default)] bg-[var(--surface-panel)] px-4 py-2"
+      className={
+        variant === 'inline'
+          ? 'flex min-w-0 shrink-0 items-center justify-between gap-2'
+          : 'flex shrink-0 items-center justify-between gap-3 border-b border-[color:var(--border-default)] bg-[var(--surface-panel)] px-4 py-2'
+      }
     >
       <CanvasPlaygroundTabsTemplate tabState={tabState} />
       <CanvasReplacementActionTemplate

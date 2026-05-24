@@ -38,6 +38,8 @@ type CanvasShellMainPanelProps = Readonly<{
   chromeCommands: CanvasShellChromeCommands;
 }>;
 
+type CanvasShellWorkbenchChromeProps = CanvasShellMainPanelProps;
+
 function shouldRenderCanvasToolbar(routeState: CanvasShellToolbar['routeState']): boolean {
   return ![
     'loading_backend',
@@ -134,23 +136,38 @@ function CanvasShellMainSurface({
   );
 }
 
-export function CanvasShellMainPanel({
+function CanvasShellWorkbenchChrome({
   layout,
   panels,
   graph,
   toolbar,
-  graphCommands,
   chromeCommands,
-}: CanvasShellMainPanelProps): JSX.Element {
+}: CanvasShellWorkbenchChromeProps): JSX.Element | null {
+  const renderToolbar = shouldRenderCanvasToolbar(toolbar.routeState);
+
+  if (!layout.hostTabStrip && !layout.workbenchTabStrip && !renderToolbar) {
+    return null;
+  }
+
   return (
-    <ResizablePanel defaultSize={resolveCanvasShellMainPanelDefaultSize(layout)}>
-      <div className="h-full flex flex-col bg-(--surface-panel)">
-        {layout.hostTabStrip ? <div className="shrink-0">{layout.hostTabStrip}</div> : null}
-        {layout.workbenchTabStrip ? (
-          <div className="shrink-0">{layout.workbenchTabStrip}</div>
-        ) : null}
-        {shouldRenderCanvasToolbar(toolbar.routeState) ? (
+    <div
+      data-slot="canvas-workbench-chrome"
+      className="flex min-h-12 shrink-0 flex-wrap items-center gap-2 border-b border-[color:var(--border-default)] bg-[var(--surface-panel)] px-3 py-2"
+    >
+      {layout.hostTabStrip ? (
+        <div data-slot="canvas-workbench-chrome-host" className="min-w-0 shrink-0">
+          {layout.hostTabStrip}
+        </div>
+      ) : null}
+      {layout.workbenchTabStrip ? (
+        <div data-slot="canvas-workbench-chrome-tabs" className="min-w-0 flex-1 overflow-x-auto">
+          {layout.workbenchTabStrip}
+        </div>
+      ) : null}
+      {renderToolbar ? (
+        <div data-slot="canvas-workbench-chrome-actions" className="ml-auto min-w-0 shrink-0">
           <CanvasToolbar
+            variant="inline"
             onAutoLayout={chromeCommands.onAutoLayout}
             onToggleCostOverlay={chromeCommands.onToggleCostOverlay}
             onToggleImpact={chromeCommands.onToggleImpact}
@@ -184,7 +201,31 @@ export function CanvasShellMainPanel({
             nodeCount={graph.nodesWithImpact.length}
             edgeCount={graph.edges.length}
           />
-        ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export function CanvasShellMainPanel({
+  layout,
+  panels,
+  graph,
+  toolbar,
+  graphCommands,
+  chromeCommands,
+}: CanvasShellMainPanelProps): JSX.Element {
+  return (
+    <ResizablePanel defaultSize={resolveCanvasShellMainPanelDefaultSize(layout)}>
+      <div className="h-full flex flex-col bg-(--surface-panel)">
+        <CanvasShellWorkbenchChrome
+          layout={layout}
+          panels={panels}
+          graph={graph}
+          toolbar={toolbar}
+          graphCommands={graphCommands}
+          chromeCommands={chromeCommands}
+        />
         {layout.readOnlyBanner ? <div className="shrink-0">{layout.readOnlyBanner}</div> : null}
         <CanvasShellMainSurface
           layout={layout}

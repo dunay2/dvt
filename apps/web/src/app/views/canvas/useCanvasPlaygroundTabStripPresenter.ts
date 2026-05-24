@@ -16,6 +16,7 @@ export type CanvasPlaygroundTabStripProps = Readonly<{
   tabState: CanvasPlaygroundTabState;
   availableCanvasKinds?: readonly CanvasKindRegistration[];
   canEditEdges?: boolean;
+  variant?: 'standalone' | 'inline';
   onCreateCanvasDocument?: (command: CanvasCreateCanvasDocumentCommand) => void;
 }>;
 
@@ -25,6 +26,7 @@ export function useCanvasPlaygroundTabStripPresenter({
   tabState,
   availableCanvasKinds = EMPTY_CANVAS_KIND_REGISTRATIONS,
   canEditEdges = false,
+  variant,
   onCreateCanvasDocument,
 }: CanvasPlaygroundTabStripProps): CanvasPlaygroundTabStripTemplateProps | null {
   const [replacementCanvasKind, setReplacementCanvasKind] = useState<CanvasKindRegistration | null>(
@@ -59,6 +61,7 @@ export function useCanvasPlaygroundTabStripPresenter({
     tabState,
     replacementAction: replacementActionState.viewState,
     isReplacementDialogOpen: replacementCanvasKind != null,
+    variant,
     onRequestReplacement: requestReplacement,
     onReplacementDialogOpenChange: (open) => {
       if (!open) {
