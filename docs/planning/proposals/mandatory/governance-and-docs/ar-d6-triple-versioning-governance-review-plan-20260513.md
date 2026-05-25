@@ -66,7 +66,7 @@ governingSources:
   - docs/guides/ai-work-protocol.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - [Task: GOV-PROP-DISP-1] docs/planning/state/how-to-add-tasks.md
+  - docs/planning/state/how-to-add-tasks.md # Task: GOV-PROP-DISP-1
   - docs/adr/ADR-0017_ExecutionPlan_Schema_Versioning.md
   - docs/adr/ADR-0018_Shared_Kernel_Ownership_Governance.md
   - docs/adr/ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md

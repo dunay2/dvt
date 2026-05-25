@@ -160,7 +160,7 @@ domainObjects:
 fowlerSignals:
   - Review backlog hidden in prose
   - Duplicate planning queues
-  - [Task: GOV-PROP-DISP-1] Drift between review and task state
+  - Drift between review and task state # Task: GOV-PROP-DISP-1
   - Product value hidden behind platform hygiene
 architectureGuards:
   - node --test tools/ci/architecture-governance-review-canon.test.mjs

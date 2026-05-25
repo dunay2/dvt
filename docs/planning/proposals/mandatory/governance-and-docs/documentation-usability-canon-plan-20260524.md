@@ -115,7 +115,7 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/portfolio-map-20260403.md
   - docs/planning/state/agent-lane-a.md
   - docs/planning/state/execution-workboard.md
-  - [Task: GOV-PROP-DISP-1] docs/planning/state/open-task-route.md
+  - docs/planning/state/open-task-route.md # Task: GOV-PROP-DISP-1
   - docs/planning/status/**
   - tools/ci/documentation-usability-canon.test.mjs
 forbiddenImplementationSurfaces:

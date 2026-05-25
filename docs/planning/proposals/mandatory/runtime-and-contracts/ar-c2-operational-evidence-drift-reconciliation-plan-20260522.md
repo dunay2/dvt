@@ -59,7 +59,7 @@ allowedImplementationSurfaces:
   - docs/planning/state/agent-lane-c.yaml
   - docs/planning/state/agent-lane-c.md
   - docs/planning/state/execution-workboard.md
-  - [Task: RUNTIME-PROP-DISP-1] docs/planning/state/open-task-route.md
+  - docs/planning/state/open-task-route.md # Task: RUNTIME-PROP-DISP-1
   - docs/planning/index.md
   - docs/planning/proposals/index.md
   - docs/planning/status/**
@@ -105,7 +105,7 @@ redGreenCycles:
       - docs/planning/closeouts/20260522-ar-c2-operational-evidence-drift-closeout.md
     greenTest: pnpm docs:feature-mechanization -- --feature AR-C2-OPERATIONAL-EVIDENCE-DRIFT
 symbols:
-  - [Task: RUNTIME-PROP-DISP-1] name: AR-C2 lane task state
+  - name: AR-C2 lane task state # Task: RUNTIME-PROP-DISP-1
     path: docs/planning/state/agent-lane-c.yaml
     dddOwner: PlanningTaskLifecycle
     cqRails: [ReconcilePlanningTaskOperationalState]

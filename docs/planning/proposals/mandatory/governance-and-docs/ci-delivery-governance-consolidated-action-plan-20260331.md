@@ -118,13 +118,13 @@ governingSources:
   - docs/planning/status/governance-document-rule-inventory.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - [Task: GOV-PROP-DISP-1] docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
+  - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md # Task: GOV-PROP-DISP-1
 allowedImplementationSurfaces:
   - buzon/20260523-codex-fowler-ci-delivery-governance-canon.md
   - docs/architecture/components/ci-governance/ci-delivery-governance-component.md
   - docs/architecture/components/ci-governance/ci-delivery-governance-user-stories.md
   - docs/architecture/components/ci-governance/index.md
-  - [Task: GOV-PROP-DISP-1] docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
+  - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md # Task: GOV-PROP-DISP-1
   - tools/ci/ci-delivery-governance-canon.test.mjs
 forbiddenImplementationSurfaces:
   - .github/workflows/**
@@ -163,7 +163,7 @@ redGreenCycles:
       - docs/architecture/components/ci-governance/ci-delivery-governance-component.md
       - docs/architecture/components/ci-governance/ci-delivery-governance-user-stories.md
       - docs/architecture/components/ci-governance/index.md
-      - [Task: GOV-PROP-DISP-1] docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md # Task: GOV-PROP-DISP-1
       - tools/ci/ci-delivery-governance-canon.test.mjs
     greenTest: node --test tools/ci/ci-delivery-governance-canon.test.mjs
 symbolDefaults: &ciDeliveryCanonSymbolDefaults

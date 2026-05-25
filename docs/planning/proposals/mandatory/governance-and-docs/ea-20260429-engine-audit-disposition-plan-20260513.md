@@ -65,7 +65,7 @@ governingSources:
   - docs/guides/ai-work-protocol.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - [Task: GOV-PROP-DISP-1] docs/planning/state/how-to-add-tasks.md
+  - docs/planning/state/how-to-add-tasks.md # Task: GOV-PROP-DISP-1
   - docs/planning/reviews/architecture-and-governance/20260429-dvt-engine-package-audit-review.md
 allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/governance-and-docs/ea-20260429-engine-audit-disposition-plan-20260513.md
@@ -74,7 +74,7 @@ allowedImplementationSurfaces:
   - docs/planning/reviews/architecture-and-governance/20260429-dvt-engine-package-audit-review.md
   - docs/planning/reviews/review-status-board.md
   - docs/planning/state/execution-workboard.md
-  - [Task: GOV-PROP-DISP-1] docs/planning/state/open-task-route.md
+  - docs/planning/state/open-task-route.md # Task: GOV-PROP-DISP-1
   - docs/planning/reviews/index.md
   - docs/planning/closeouts/index.md
   - docs/planning/index.md
@@ -112,14 +112,14 @@ fowlerSignals:
   - Documentation Drift
   - Backlog Decomposition
 architectureGuards:
-  - [Task: GOV-PROP-DISP-1] pnpm planning:db:query task-trace --task EA-20260429 --limit 50
+  - pnpm planning:db:query task-trace --task EA-20260429 --limit 50 # Task: GOV-PROP-DISP-1
   - pnpm docs:workboard:generate
   - pnpm planning:db:export:check
   - pnpm docs:feature-mechanization:implementation
 cypressFlows:
   - not-applicable: EA-20260429 is planning decomposition only.
 completionGate:
-  - [Task: GOV-PROP-DISP-1] pnpm planning:db:query task-trace --task EA-20260429 --limit 50
+  - pnpm planning:db:query task-trace --task EA-20260429 --limit 50 # Task: GOV-PROP-DISP-1
   - pnpm docs:workboard:generate
   - pnpm planning:db:export:check
   - pnpm lint:md:changed
@@ -135,7 +135,7 @@ redGreenCycles:
       - docs/planning/reviews/architecture-and-governance/20260429-dvt-engine-package-audit-review.md
       - docs/planning/reviews/review-status-board.md
       - docs/planning/state/execution-workboard.md
-      - [Task: GOV-PROP-DISP-1] docs/planning/state/open-task-route.md
+      - docs/planning/state/open-task-route.md # Task: GOV-PROP-DISP-1
       - docs/planning/reviews/index.md
       - docs/planning/closeouts/index.md
       - docs/planning/index.md

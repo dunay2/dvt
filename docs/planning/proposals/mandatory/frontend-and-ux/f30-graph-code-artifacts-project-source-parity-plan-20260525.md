@@ -191,7 +191,7 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/frontend-and-ux/f30-graph-code-artifacts-project-source-parity-plan-20260525.md
   - docs/planning/reviews/architecture-and-governance/20260525-f30-monaco-code-artifacts-reconciliation-review.md
   - docs/planning/state/execution-workboard.md
-  - [Task: F-30] docs/planning/state/open-task-route.md
+  - docs/planning/state/open-task-route.md # Task: F-30
   - docs/planning/status/**
   - pnpm-lock.yaml
 forbiddenImplementationSurfaces:

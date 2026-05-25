@@ -73,7 +73,7 @@ allowedImplementationSurfaces:
   - docs/planning/state/agent-lane-b.yaml
   - docs/planning/state/agent-lane-b.md
   - docs/planning/state/execution-workboard.md
-  - [Task: RUNTIME-PROP-DISP-1] docs/planning/state/open-task-route.md
+  - docs/planning/state/open-task-route.md # Task: RUNTIME-PROP-DISP-1
   - docs/guides/ai-work-protocol.md
   - docs/planning/index.md
   - docs/planning/proposals/index.md
@@ -86,8 +86,8 @@ allowedImplementationSurfaces:
   - packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.architecture.test.ts
   - packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.runOnce.test.ts
   - packages/@dvt/traceability-service/test/lineage/lineageWorkerTick.test.ts
-  - [Task: RUNTIME-PROP-DISP-1] scripts/planning-db-migrate.cjs
-  - [Task: RUNTIME-PROP-DISP-1] scripts/planning-db-migrate.test.cjs
+  - scripts/planning-db-migrate.cjs # Task: RUNTIME-PROP-DISP-1
+  - scripts/planning-db-migrate.test.cjs # Task: RUNTIME-PROP-DISP-1
 forbiddenImplementationSurfaces:
   - apps/**
   - packages/@dvt/contracts/**
@@ -121,7 +121,7 @@ completionGate:
   - pnpm exec vitest run packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.architecture.test.ts packages/@dvt/traceability-service/test/lineage/LineageWorkerRuntime.runOnce.test.ts packages/@dvt/traceability-service/test/lineage/lineageWorkerTick.test.ts
   - pnpm --filter @dvt/traceability-service test
   - pnpm --filter @dvt/traceability-service build
-  - [Task: RUNTIME-PROP-DISP-1] node --test scripts/planning-db-migrate.test.cjs
+  - node --test scripts/planning-db-migrate.test.cjs # Task: RUNTIME-PROP-DISP-1
   - pnpm governance:refresh
   - pnpm docs:feature-mechanization:implementation
   - pnpm verify:prepush
@@ -141,8 +141,8 @@ redGreenCycles:
     redTest: node --test scripts/planning-db-migrate.test.cjs
     expectedFailure: CRLF and LF variants of the same migration SQL produce incompatible checksums.
     patchSurfaces:
-      - [Task: RUNTIME-PROP-DISP-1] scripts/planning-db-migrate.cjs
-      - [Task: RUNTIME-PROP-DISP-1] scripts/planning-db-migrate.test.cjs
+      - scripts/planning-db-migrate.cjs # Task: RUNTIME-PROP-DISP-1
+      - scripts/planning-db-migrate.test.cjs # Task: RUNTIME-PROP-DISP-1
     greenTest: node --test scripts/planning-db-migrate.test.cjs
 symbols:
   - name: LineageWorkerRuntime
@@ -232,7 +232,7 @@ symbols:
     architectureGuard: node --test scripts/planning-db-migrate.test.cjs
     cypressCoverage: Not applicable - planning DB migration checksum helper only
     unitTests:
-      - [Task: RUNTIME-PROP-DISP-1] node --test scripts/planning-db-migrate.test.cjs
+      - node --test scripts/planning-db-migrate.test.cjs # Task: RUNTIME-PROP-DISP-1
   - name: buildLineEndingCompatibleChecksums
     path: scripts/planning-db-migrate.cjs
     dddOwner: PlanningQueryStoreMigrationReadModel
@@ -243,5 +243,5 @@ symbols:
     architectureGuard: node --test scripts/planning-db-migrate.test.cjs
     cypressCoverage: Not applicable - planning DB migration checksum helper only
     unitTests:
-      - [Task: RUNTIME-PROP-DISP-1] node --test scripts/planning-db-migrate.test.cjs
+      - node --test scripts/planning-db-migrate.test.cjs # Task: RUNTIME-PROP-DISP-1
 ```

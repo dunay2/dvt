@@ -566,7 +566,7 @@ allowedImplementationSurfaces:
   - docs/planning/state/agent-lane-e.yaml
   - docs/planning/state/agent-lane-e.md
   - docs/planning/state/execution-workboard.md
-  - [Task: E-PROP-DISP-1] docs/planning/state/open-task-route.md
+  - docs/planning/state/open-task-route.md # Task: E-PROP-DISP-1
   - docs/planning/status/**
 forbiddenImplementationSurfaces:
   - .github/**
@@ -639,7 +639,7 @@ redGreenCycles:
       - docs/planning/state/agent-lane-e.yaml
       - docs/planning/state/agent-lane-e.md
       - docs/planning/state/execution-workboard.md
-      - [Task: E-PROP-DISP-1] docs/planning/state/open-task-route.md
+      - docs/planning/state/open-task-route.md # Task: E-PROP-DISP-1
     greenTest: pnpm docs:workboard:generate
   - id: authoring-draft-boundary-design
     redTest: pnpm docs:gov:links

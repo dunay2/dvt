@@ -104,7 +104,7 @@ allowedImplementationSurfaces:
   - packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts
   - packages/@dvt/adapter-postgres/src/StartRunIntentSchemaManager.ts
   - packages/@dvt/adapter-postgres/src/PostgresTenantIsolationPolicy.ts
-  - [Task: RUNTIME-PROP-DISP-1] packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts
+  - packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts # Task: RUNTIME-PROP-DISP-1
   - packages/@dvt/adapter-postgres/test/PostgresSchemaManager.rollback.test.ts
   - packages/@dvt/adapter-postgres/test/StartRunIntentSchemaManager.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresTenant*.test.ts
@@ -150,7 +150,7 @@ redGreenCycles:
     patchSurfaces:
       - packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts
       - packages/@dvt/adapter-postgres/src/StartRunIntentSchemaManager.ts
-      - [Task: RUNTIME-PROP-DISP-1] packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts
+      - packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts # Task: RUNTIME-PROP-DISP-1
       - packages/@dvt/adapter-postgres/test/PostgresSchemaManager.rollback.test.ts
       - packages/@dvt/adapter-postgres/test/StartRunIntentSchemaManager.test.ts
     greenTest: pnpm --filter @dvt/adapter-postgres test -- PostgresStateStoreAdapter.migrate.test.ts StartRunIntentSchemaManager.test.ts PostgresSchemaManager.rollback.test.ts
@@ -165,7 +165,7 @@ symbols:
     architectureGuard: pnpm docs:feature-mechanization:implementation
     cypressCoverage: N/A
     unitTests:
-      - [Task: RUNTIME-PROP-DISP-1] pnpm --filter @dvt/adapter-postgres test -- PostgresStateStoreAdapter.migrate.test.ts PostgresSchemaManager.rollback.test.ts
+      - pnpm --filter @dvt/adapter-postgres test -- PostgresStateStoreAdapter.migrate.test.ts PostgresSchemaManager.rollback.test.ts # Task: RUNTIME-PROP-DISP-1
   - name: 20260512_006_start_run_intents_tenant_mode_rls_hardening
     path: packages/@dvt/adapter-postgres/src/StartRunIntentSchemaManager.ts
     dddOwner: PostgresTenantIsolationPolicy

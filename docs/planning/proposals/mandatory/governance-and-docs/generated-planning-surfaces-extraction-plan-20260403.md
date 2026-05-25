@@ -306,7 +306,7 @@ noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/generated-planning-surfaces-extraction-plan-20260403.md
 componentGuides:
   - docs/planning/state/planning-control-tower.md
-  - [Task: GOV-PROP-DISP-1] docs/planning/state/how-to-add-tasks.md
+  - docs/planning/state/how-to-add-tasks.md # Task: GOV-PROP-DISP-1
   - docs/planning/proposals/mandatory/governance-and-docs/generated-planning-surfaces-extraction-plan-20260403.md
 userStories:
   - docs/planning/proposals/mandatory/governance-and-docs/generated-planning-surfaces-extraction-plan-20260403.md
@@ -316,7 +316,7 @@ governingSources:
   - docs/guides/ai-work-protocol.md
   - docs/DOCS_README.md
   - docs/planning/state/planning-control-tower.md
-  - [Task: GOV-PROP-DISP-1] docs/planning/state/how-to-add-tasks.md
+  - docs/planning/state/how-to-add-tasks.md # Task: GOV-PROP-DISP-1
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
 allowedImplementationSurfaces:

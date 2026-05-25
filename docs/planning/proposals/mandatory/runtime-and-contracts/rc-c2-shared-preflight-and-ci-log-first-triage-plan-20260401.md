@@ -189,7 +189,7 @@ domainObjects:
     type: command classification policy
     owner: tools/ci/repository-command-catalog.mjs
 fowlerSignals:
-  - [Task: RUNTIME-PROP-DISP-1] Replaces narrative task closure with an executable policy query.
+  - Replaces narrative task closure with an executable policy query. # Task: RUNTIME-PROP-DISP-1
   - Keeps adoption measurement separate from CI workflow execution.
   - Routes new command surfaces through the repository command catalog.
 architectureGuards:

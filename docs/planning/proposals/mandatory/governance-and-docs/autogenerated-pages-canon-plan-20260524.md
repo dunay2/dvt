@@ -116,7 +116,7 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/portfolio-map-20260403.md
   - docs/planning/state/agent-lane-a.md
   - docs/planning/state/execution-workboard.md
-  - [Task: GOV-PROP-DISP-1] docs/planning/state/open-task-route.md
+  - docs/planning/state/open-task-route.md # Task: GOV-PROP-DISP-1
   - docs/planning/status/**
   - docs/runbooks/index.md
   - docs/runbooks/planning-generated-artifacts-operations-20260403.md

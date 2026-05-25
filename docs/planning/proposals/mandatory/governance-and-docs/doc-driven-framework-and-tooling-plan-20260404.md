@@ -449,7 +449,7 @@ componentGuides:
   - docs/planning/status/governance-document-rule-inventory.md
   - docs/guides/ai-work-protocol.md
   - docs/planning/state/planning-control-tower.md
-  - [Task: GOV-PROP-DISP-1] docs/planning/state/how-to-add-tasks.md
+  - docs/planning/state/how-to-add-tasks.md # Task: GOV-PROP-DISP-1
   - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
 userStories:
   - docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md
@@ -460,7 +460,7 @@ governingSources:
   - docs/planning/status/governance-document-rule-inventory.md
   - docs/guides/ai-work-protocol.md
   - docs/planning/state/planning-control-tower.md
-  - [Task: GOV-PROP-DISP-1] docs/planning/state/how-to-add-tasks.md
+  - docs/planning/state/how-to-add-tasks.md # Task: GOV-PROP-DISP-1
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md

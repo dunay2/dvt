@@ -331,7 +331,7 @@ allowedImplementationSurfaces:
   - docs/planning/state/agent-lane-c.yaml
   - docs/planning/state/agent-lane-c.md
   - docs/planning/state/execution-workboard.md
-  - [Task: RUNTIME-PROP-DISP-1] docs/planning/state/open-task-route.md
+  - docs/planning/state/open-task-route.md # Task: RUNTIME-PROP-DISP-1
   - docs/planning/status/**
   - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
   - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-SSOT-DEBT.yaml
