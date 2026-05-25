@@ -1,6 +1,6 @@
 ---
 title: F-30 Graph Code Artifacts Project Source Parity Closeout
-status: Review
+status: Accepted
 date: 2026-05-25
 owners:
   - apps/web
@@ -12,9 +12,9 @@ featureId: F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525
 
 ## Summary
 
-F-30 is implemented and ready for integration review, not yet presented as a
-cleanly closed slice because the current worktree also contains earlier
-planning-reconciliation changes.
+F-30 is implemented and closed. The work was separated from the earlier
+planning-reconciliation slice into its own local commit, so the F-30
+implementation guard can be checked with `GIT_BASE=38f227c9`.
 
 The product proof now covers the user path that matters: a graph workflow is
 planned in Grafo, persisted as a governed workspace artifact, opened as the
@@ -59,18 +59,18 @@ Artifacts.
   - passed.
 - `pnpm docs:feature-mechanization -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525`
   - passed.
+- `GIT_BASE=38f227c9 pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525`
+  - passed.
 - `pnpm docs:feature-mechanization:implementation`
-  - passed across the current combined worktree.
-- `pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525`
-  - failed because unrelated planning-reconciliation files are already dirty in
-    the same worktree and are outside the F-30 selected manifest.
+  - passed across the combined two-commit stack.
+- `pnpm verify:prepush`
+  - passed after the pre-commit hook normalized formatting.
 
-## Integration Caveat
+## Integration Note
 
-The failing selected implementation gate is a slice-isolation problem, not a
-known product regression in the F-30 flow. F-30 should be integrated only after
-the current planning-reconciliation changes are either separated into their own
-slice or committed under their owning feature manifests.
+The local stack contains a planning DB reconciliation commit before the F-30
+commit. Reviewers can evaluate F-30 alone by using `38f227c9` as the comparison
+base, or evaluate the full stack with the normal pre-push gate.
 
 ## No Debt / No Stubs
 
