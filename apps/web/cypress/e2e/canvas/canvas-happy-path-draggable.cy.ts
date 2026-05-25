@@ -79,6 +79,7 @@ function addSourceNodeIfMissing(): void {
     const hasSourceNode = $body.find('.react-flow__node:contains("Source 1")').length > 0;
     if (!hasSourceNode) {
       cy.get('[data-slot="canvas-empty-state"]', { timeout: 20_000 }).within(() => {
+        cy.get('[data-slot="canvas-add-node-palette-trigger"]').click();
         cy.contains('button', /^Source$/).click();
       });
     }

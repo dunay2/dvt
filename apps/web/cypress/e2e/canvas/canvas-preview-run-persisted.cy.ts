@@ -489,8 +489,10 @@ describe('Canvas preview-run persisted path', () => {
 
     cy.contains('Warehouse dbt').should('be.visible');
     cy.contains('Start dbt canvas').should('be.visible');
-    cy.contains('Add first dbt node').should('be.visible');
-    cy.contains('button', 'Source').should('be.enabled');
+    cy.contains('button', 'Add first dbt node').should('be.enabled').click();
+    cy.get('[data-slot="canvas-add-node-palette"]').within(() => {
+      cy.contains('button', 'Source').should('be.enabled');
+    });
     cy.contains('button', 'Plan').should('be.disabled');
     cy.get('[data-slot="canvas-toolbar-run-command"]').should('be.disabled');
     cy.then(() => {

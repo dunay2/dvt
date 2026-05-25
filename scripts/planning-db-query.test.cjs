@@ -6,6 +6,7 @@ const {
   buildComponentEngineeringRecordRows,
   buildFeatureWorkRows,
   buildFocusRows,
+  buildRealWorkRows,
   buildComponentEngineeringComponentDriftRows,
   buildComponentEngineeringComponentMetadataRows,
   buildArchitectureComponentRows,
@@ -57,6 +58,7 @@ const {
   readComponentEngineeringRuleCatalogRows,
   readComponentEngineeringRuleEvaluationRows,
   readFocusRows,
+  readRealWorkRows,
   readTaskGapRows,
   readRepositoryCommandRows,
   readTaskTraceRows,
@@ -97,6 +99,7 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('task-trace'), 'task-trace');
   assert.equal(resolveQueryName('task-gaps'), 'task-gaps');
   assert.equal(resolveQueryName('focus'), 'focus');
+  assert.equal(resolveQueryName('real-work'), 'real-work');
   assert.equal(resolveQueryName('cer'), 'cer');
   assert.equal(resolveQueryName('knowledge-documents'), 'knowledge-documents');
   assert.equal(resolveQueryName('knowledge-actions'), 'knowledge-actions');
@@ -328,6 +331,39 @@ test('parseArgs parses work intake focus filters for DB-first work selection', (
       priority: 'P1',
       taskId: 'F-28-C',
       path: 'docs/planning/reviews/example.md',
+      limit: 10,
+    },
+  });
+});
+
+test('parseArgs parses real work filters for DB-first backlog triage', () => {
+  const command = parseArgs([
+    'real-work',
+    '--kind',
+    'knowledge_action',
+    '--lane',
+    'D',
+    '--priority',
+    'P1',
+    '--status',
+    'unlinked_required_action',
+    '--task',
+    'D-KNOWLEDGE-ACTION-LINKAGE-1',
+    '--path',
+    'docs/planning/proposals/example.md',
+    '--limit',
+    '10',
+  ]);
+
+  assert.deepEqual(command, {
+    queryName: 'real-work',
+    filters: {
+      kind: 'knowledge_action',
+      laneId: 'D',
+      priority: 'P1',
+      status: 'unlinked_required_action',
+      taskId: 'D-KNOWLEDGE-ACTION-LINKAGE-1',
+      path: 'docs/planning/proposals/example.md',
       limit: 10,
     },
   });
@@ -1233,6 +1269,83 @@ test('readFocusRows queries the DB-owned planning work intake view', async () =>
     'docs/planning/reviews/example.md',
     5,
   ]);
+});
+
+test('readRealWorkRows queries the DB-owned aggregated real work view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readRealWorkRows(client, {
+    kind: 'knowledge_action',
+    laneId: 'D',
+    priority: 'P1',
+    status: 'unlinked_required_action',
+    taskId: 'D-KNOWLEDGE-ACTION-LINKAGE-1',
+    path: 'docs/planning/proposals/example.md',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.planning_real_work_query/);
+  assert.match(captured.sql, /work_kind = \$1/);
+  assert.match(captured.sql, /lane_id = \$2/);
+  assert.match(captured.sql, /priority = \$3/);
+  assert.match(captured.sql, /work_status = \$4/);
+  assert.match(captured.sql, /task_id = \$5/);
+  assert.match(captured.sql, /source_path = \$6/);
+  assert.match(captured.sql, /order by\s+rank_score,\s+priority,\s+work_kind,\s+work_id/s);
+  assert.match(captured.sql, /limit \$7/);
+  assert.deepEqual(captured.params, [
+    'knowledge_action',
+    'D',
+    'P1',
+    'unlinked_required_action',
+    'D-KNOWLEDGE-ACTION-LINKAGE-1',
+    'docs/planning/proposals/example.md',
+    5,
+  ]);
+});
+
+test('real work row builders collapse work sources into operator output', () => {
+  assert.deepEqual(
+    buildRealWorkRows([
+      {
+        priority: 'P1',
+        work_kind: 'knowledge_action',
+        work_status: 'unlinked_required_action',
+        work_id: 'knowledge_action:docs/example.md',
+        lane_id: null,
+        task_id: null,
+        source_path: 'docs/example.md',
+        open_item_count: 7,
+        linked_task_count: 0,
+        missing_dependency_count: 0,
+        title: '7 unresolved knowledge_action items: Extract task lineage',
+        suggested_query:
+          "pnpm planning:db:query knowledge-actions --path 'docs/example.md' --limit 30",
+      },
+    ]),
+    [
+      [
+        'P1',
+        'knowledge_action',
+        'unlinked_required_action',
+        'knowledge_action:docs/example.md',
+        '-',
+        'docs/example.md',
+        7,
+        0,
+        0,
+        '7 unresolved knowledge_action items: Extract task lineage',
+        "pnpm planning:db:query knowledge-actions --path 'docs/example.md' --limit 30",
+      ],
+    ]
+  );
 });
 
 test('docs disposition row builders format cleanup queues for operator output', () => {

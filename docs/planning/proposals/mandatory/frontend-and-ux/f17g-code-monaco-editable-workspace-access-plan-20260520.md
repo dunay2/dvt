@@ -1,9 +1,9 @@
 ---
 title: F-17-G Code Monaco Editable Workspace Access Plan
-status: Active
+status: Accepted
 owner: Web / Architecture
 date: 2026-05-20
-last_reviewed: 2026-05-20
+last_reviewed: 2026-05-25
 planning_type: proposal
 ---
 
@@ -24,7 +24,7 @@ Code reads workspace files and can be workspace-scoped.
 Constraints and invariants:
 
 - `ListWorkspaceFiles` and `GetWorkspaceFileContent` remain query rails.
-- This slice does not create `SaveWorkspaceFileContent`.
+- No `SaveWorkspaceFileContent` rail is introduced.
 - Code may own a route-local editable buffer, but not persistence authority.
 - Artifacts remains a read-only Monaco viewer consumer.
 - Canvas remains graph-first; Monaco does not become the Canvas route owner.
@@ -36,13 +36,13 @@ Mode: Full.
 
 Scope:
 
-- update Monaco rationale and Code component docs to distinguish viewer and
-  editor consumers;
-- make Code workspace-scoped in the Canvas workbench tab model;
-- add an editable Monaco editor wrapper for Code;
-- keep Artifacts on the read-only viewer wrapper;
-- add Cypress coverage for visible Code access beside `Grafo` and typing;
-- add a Monaco focus Vitest suite so changed-file routing stays small.
+- [x] update Monaco rationale and Code component docs to distinguish viewer and
+      editor consumers;
+- [x] make Code workspace-scoped in the Canvas workbench tab model;
+- [x] add an editable Monaco editor wrapper for Code;
+- [x] keep Artifacts on the read-only viewer wrapper;
+- [x] add Cypress coverage for visible Code access beside `Grafo` and typing;
+- [x] add a Monaco focus Vitest suite so changed-file routing stays small.
 
 Out of scope:
 
@@ -52,6 +52,11 @@ Out of scope:
 - Canvas graph editing semantics;
 - turning Canvas into an IDE shell;
 - changing Diff review semantics.
+
+## F-30 Reconciliation
+
+- F-17 task records this F-17-G implemented proposal as evidence-closed by
+  `docs/planning/closeouts/20260525-f17g-code-monaco-editable-workspace-access-closeout.md`.
 
 ## Fowler Opportunity Matrix
 
@@ -154,6 +159,7 @@ allowedImplementationSurfaces:
   - apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
   - docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md
   - docs/planning/proposals/mandatory/frontend-and-ux/f17g-code-monaco-editable-workspace-access-plan-20260520.md
+  - docs/planning/reviews/architecture-and-governance/20260525-f30-monaco-code-artifacts-reconciliation-review.md
   - docs/architecture/components/web/code-workbench-workspace-files-component.md
   - docs/architecture/components/web/code-workbench-workspace-files-user-stories.md
   - docs/architecture/components/web/graph/canvas-workbench-tabs-component.md

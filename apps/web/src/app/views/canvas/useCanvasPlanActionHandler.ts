@@ -1,6 +1,8 @@
 /** Owned concern: bind Canvas plan command handling to minimal execution ports. */
+import { useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 
+import { queryKeys } from '../../queries/queryKeys';
 import { canvasViewCopy } from './copy';
 import type {
   SetLastPlannedDraftSignature,
@@ -49,6 +51,8 @@ export function useCanvasPlanActionHandler({
   setLastPlannedDraftSignature,
   setPlanModalOpen,
 }: UseCanvasPlanActionHandlerArgs): () => Promise<void> {
+  const queryClient = useQueryClient();
+
   return useCallback(async () => {
     const result = await executeCanvasPlanAction({
       canPlan,
@@ -70,6 +74,14 @@ export function useCanvasPlanActionHandler({
       return;
     }
 
+    void queryClient.invalidateQueries({ queryKey: queryKeys.workspace.fileTree() });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.workspace.artifacts() });
+    if (previewProvenanceConfig.graphArtifactPath) {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.workspace.fileContent(previewProvenanceConfig.graphArtifactPath),
+      });
+    }
+
     setCurrentPlan(result.plan);
     setLastPlannedDraftSignature(result.draftSignature);
     setPlanModalOpen(true);
@@ -87,6 +99,7 @@ export function useCanvasPlanActionHandler({
     workspaceNodeIds,
     workspaceFilesQuery,
     workspaceFileContentCommand,
+    queryClient,
     shellFeedback,
     setCurrentPlan,
     setLastPlannedDraftSignature,

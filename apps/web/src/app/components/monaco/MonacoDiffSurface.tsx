@@ -2,6 +2,7 @@
 import { DiffEditor } from '@monaco-editor/react';
 
 import { DEFAULT_MONACO_CONTAINER_CLASS_NAME } from './MonacoViewerFallback';
+import { configureMonacoLocalWorkers } from './monacoLocalWorkers';
 import { createMonacoDiffOptions, monacoTheme } from './monacoVisualTokens';
 
 type MonacoDiffSurfaceProps = Readonly<{
@@ -11,6 +12,8 @@ type MonacoDiffSurfaceProps = Readonly<{
   modified: string;
   original: string;
 }>;
+
+configureMonacoLocalWorkers();
 
 export default function MonacoDiffSurface({
   ariaLabel,

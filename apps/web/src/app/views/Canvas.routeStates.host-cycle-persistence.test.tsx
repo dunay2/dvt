@@ -1,3 +1,4 @@
+import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { NodeKindRegistration } from '../plugins/nodeTypeContracts';
@@ -99,6 +100,24 @@ describe('Canvas route host-cycle persistence', () => {
     harness.cleanup();
   });
 
+  async function openFirstNodePalette(firstNodeLabel: string): Promise<void> {
+    const trigger = Array.from(harness.container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes(firstNodeLabel)
+    );
+    expect(trigger).toBeDefined();
+    await act(async () => {
+      trigger?.click();
+    });
+  }
+
+  function findPaletteOption(label: string): HTMLButtonElement | undefined {
+    return Array.from(
+      harness.container.querySelectorAll<HTMLButtonElement>(
+        '[data-slot="canvas-add-node-palette-option"]'
+      )
+    ).find((button) => button.textContent?.includes(label));
+  }
+
   it.each(Object.values(FIRST_CANVAS_CYCLE_FIXTURES))(
     'proves the first $canvasKind host cycle from create canvas to graph-ready authoring',
     async (fixture) => {
@@ -128,12 +147,14 @@ describe('Canvas route host-cycle persistence', () => {
         canCompleteBootstrap: true,
       });
 
-      const sourceButton = Array.from(harness.container.querySelectorAll('button')).find((button) =>
-        button.textContent?.includes('Source')
-      );
+      await openFirstNodePalette(fixture.firstNodeText);
+
+      const sourceButton = findPaletteOption('Source');
       expect(sourceButton).toBeDefined();
 
-      sourceButton?.click();
+      await act(async () => {
+        sourceButton?.click();
+      });
       await harness.render();
 
       expect(handleCreateAuthoringNode).toHaveBeenCalledWith(
@@ -236,9 +257,10 @@ describe('Canvas route host-cycle persistence', () => {
       ?.click();
     await harness.render();
 
-    Array.from(harness.container.querySelectorAll('button'))
-      .find((button) => button.textContent?.includes('Source'))
-      ?.click();
+    await openFirstNodePalette('Add first transformation node');
+    await act(async () => {
+      findPaletteOption('Source')?.click();
+    });
     await harness.render();
 
     expectActiveCanvasTab({

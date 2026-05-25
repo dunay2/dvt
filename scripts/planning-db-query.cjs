@@ -41,6 +41,7 @@ const knownQueries = new Set([
   'task-trace',
   'task-gaps',
   'focus',
+  'real-work',
   'cer',
   'knowledge-documents',
   'knowledge-actions',
@@ -528,6 +529,22 @@ function buildFocusRows(rows) {
     row.document_path ?? row.documentPath ?? '-',
     compactText(row.title),
     compactText(row.reason),
+    row.suggested_query ?? row.suggestedQuery ?? '-',
+  ]);
+}
+
+function buildRealWorkRows(rows) {
+  return rows.map((row) => [
+    row.priority ?? '-',
+    row.work_kind ?? row.workKind,
+    row.work_status ?? row.workStatus,
+    row.work_id ?? row.workId,
+    taskScope(row),
+    row.source_path ?? row.sourcePath ?? row.document_path ?? row.documentPath ?? '-',
+    row.open_item_count ?? row.openItemCount ?? 0,
+    row.linked_task_count ?? row.linkedTaskCount ?? 0,
+    row.missing_dependency_count ?? row.missingDependencyCount ?? 0,
+    compactText(row.title),
     row.suggested_query ?? row.suggestedQuery ?? '-',
   ]);
 }
@@ -1176,6 +1193,31 @@ function workIntakeSelect() {
       source_view,
       source_content_sha256
     from ${schemaName}.planning_work_intake_query`;
+}
+
+function realWorkSelect() {
+  return `
+    select
+      rank_score,
+      priority,
+      work_kind,
+      work_id,
+      lane_id,
+      task_id,
+      document_path,
+      source_path,
+      title,
+      work_status,
+      open_item_count,
+      linked_task_count,
+      dependency_count,
+      missing_dependency_count,
+      missing_dependencies,
+      reason,
+      suggested_query,
+      source_view,
+      source_content_sha256
+    from ${schemaName}.planning_real_work_query`;
 }
 
 function governanceFileSelect() {
@@ -2069,6 +2111,34 @@ async function readFocusRows(client, filters = {}) {
       rank_score,
       intake_kind,
       item_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readRealWorkRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'work_kind', filters.kind);
+  appendFilter(predicates, params, 'lane_id', filters.laneId);
+  appendFilter(predicates, params, 'priority', filters.priority);
+  appendFilter(predicates, params, 'work_status', filters.status);
+  appendFilter(predicates, params, 'task_id', filters.taskId);
+  appendFilter(predicates, params, 'source_path', filters.path);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${realWorkSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by
+      rank_score,
+      priority,
+      work_kind,
+      work_id
      limit $${params.length}`,
     params
   );
@@ -2977,6 +3047,15 @@ async function runQuery(options = {}) {
       return focusRows;
     }
 
+    if (queryName === 'real-work') {
+      const rows = await readRealWorkRows(client, options.filters || {});
+      const realWorkRows = buildRealWorkRows(rows);
+      if (options.print !== false) {
+        printTaskRows(realWorkRows);
+      }
+      return realWorkRows;
+    }
+
     if (queryName === 'knowledge-documents') {
       const rows = await readKnowledgeDocumentRows(client, options.filters || {});
       const documentRows = buildKnowledgeDocumentRows(rows);
@@ -3322,6 +3401,7 @@ module.exports = {
   buildDocsDispositionRows,
   buildFeatureWorkRows,
   buildFocusRows,
+  buildRealWorkRows,
   buildGovernanceComponentRows,
   buildGovernanceCoverageRows,
   buildGovernanceDriftRows,
@@ -3384,6 +3464,7 @@ module.exports = {
   readArchitectureRelationRows,
   readArchitectureResponsibilityRows,
   readFocusRows,
+  readRealWorkRows,
   readGovernanceComponentRows,
   readGovernanceCoverageRows,
   readGovernanceDriftRows,

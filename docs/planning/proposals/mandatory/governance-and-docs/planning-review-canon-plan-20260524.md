@@ -110,11 +110,16 @@ governingSources:
   - docs/planning/reviews/sprints/index.md
 allowedImplementationSurfaces:
   - buzon/20260524-codex-fowler-planning-review-canon.md
+  - docs/.manifest.json
   - docs/architecture/components/ci-governance/index.md
   - docs/architecture/components/ci-governance/planning-review-canon-component.md
   - docs/architecture/components/ci-governance/planning-review-canon-user-stories.md
   - docs/planning/proposals/mandatory/governance-and-docs/planning-review-canon-plan-20260524.md
   - docs/planning/proposals/portfolio-map-20260403.md
+  - docs/planning/reviews/architecture-and-governance/20260525-buzon-fowler-canonization-inventory.md
+  - docs/planning/reviews/architecture-and-governance/20260525-backlog-intake-reconciliation-review.md
+  - docs/planning/reviews/architecture-and-governance/20260525-architecture-buzon-fowler-canonization-review.md
+  - docs/planning/reviews/architecture-and-governance/20260525-frontend-buzon-fowler-canonization-review.md
   - docs/planning/reviews/review-status-board.md
   - docs/planning/reviews/sprints/index.md
   - tools/ci/planning-review-canon.test.mjs

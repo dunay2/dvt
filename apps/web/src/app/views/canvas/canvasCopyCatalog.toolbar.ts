@@ -65,6 +65,10 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.toolbar.importSnapshotLabel',
     fallback: 'Import',
   },
+  toolbarInsertLabel: {
+    key: 'canvas.toolbar.insertLabel',
+    fallback: 'Insert',
+  },
   toolbarPlanLabel: {
     key: 'canvas.toolbar.planLabel',
     fallback: 'Plan',
@@ -72,6 +76,14 @@ export const canvasViewToolbarCopyByKey = {
   toolbarRunLabel: {
     key: 'canvas.toolbar.runLabel',
     fallback: 'Run',
+  },
+  addNodePaletteSearchLabel: {
+    key: 'canvas.addNodePalette.searchLabel',
+    fallback: 'Search node types',
+  },
+  addNodePaletteEmptyLabel: {
+    key: 'canvas.addNodePalette.emptyLabel',
+    fallback: 'No node types match this search.',
   },
   projectSnapshotExportUnavailableMessage: {
     key: 'canvas.projectSnapshot.exportUnavailableMessage',

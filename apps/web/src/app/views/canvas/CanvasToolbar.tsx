@@ -3,7 +3,10 @@ import { Separator } from '../../components/ui/separator';
 import { CanvasToolbarDraftStatus } from './CanvasToolbarDraftStatus';
 import { CanvasToolbarPrimaryControls } from './CanvasToolbarPrimaryControls';
 import { CanvasViewMenuContributionRegistrar } from './CanvasViewMenuControls';
-import type { CanvasGraphAuthoringMode } from '../../plugins/nodeTypeContracts';
+import type {
+  CanvasGraphAuthoringMode,
+  NodeKindRegistration,
+} from '../../plugins/nodeTypeContracts';
 import type { CanvasPaletteId } from './canvasPalette';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
 import { deriveCanvasToolbarViewModel } from './canvasToolbarViewModel';
@@ -24,6 +27,7 @@ export type CanvasToolbarProps = {
   readonly onReloadLatestDraft: () => void;
   readonly onPlan: () => void;
   readonly onRun: () => void;
+  readonly onCreateAuthoringNode?: (registration: NodeKindRegistration) => void;
   readonly routeState: CanvasRouteState;
   readonly draftToolbarState: CanvasDraftToolbarState;
   readonly canPlan: boolean;
@@ -44,6 +48,7 @@ export type CanvasToolbarProps = {
   readonly transformationValidation: TransformationGraphValidationResult;
   readonly nodeCount: number;
   readonly edgeCount: number;
+  readonly authoringNodeKinds?: readonly NodeKindRegistration[];
   readonly variant?: 'standalone' | 'inline';
 };
 
@@ -80,8 +85,10 @@ export default function CanvasToolbar(props: CanvasToolbarProps) {
           onImportProjectSnapshotFile={props.onImportProjectSnapshotFile}
           onPlan={props.onPlan}
           onRun={props.onRun}
+          onCreateAuthoringNode={props.onCreateAuthoringNode}
           canPlan={props.canPlan}
           canRun={props.canRun}
+          canEditEdges={props.canEditEdges}
           canExportProjectSnapshot={props.canExportProjectSnapshot}
           canImportProjectSnapshot={props.canImportProjectSnapshot}
           canStartRun={props.canStartRun}
@@ -89,6 +96,7 @@ export default function CanvasToolbar(props: CanvasToolbarProps) {
           workflowStatusClass={viewModel.workflowStatusClass}
           workflowStatusTitle={viewModel.workflowStatusTitle}
           canPlanTransformation={viewModel.canPlanTransformation}
+          authoringNodeKinds={props.authoringNodeKinds ?? []}
         />
         <Separator orientation="vertical" className={canvasChromeClasses.separator} />
         <CanvasToolbarDraftStatus

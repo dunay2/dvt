@@ -40,6 +40,11 @@ The runtime shape is mostly correct, but the chunk decision is inline inside
 `vite.config.ts`. That makes future drift easy: a contributor can change Vite
 chunking without touching Monaco tests or docs.
 
+F-30 follow-up: local product-flow Cypress execution also proved that worker
+loading must remain local. Monaco-backed routes must configure Vite-bundled
+workers and must not depend on `cdn.jsdelivr.net` worker loading during local
+or CI execution.
+
 ## Target State
 
 ```mermaid
@@ -92,6 +97,9 @@ Not included:
   `lazy(() => import(...Surface))`.
 - Only `MonacoCodeSurface` and `MonacoDiffSurface` import
   `@monaco-editor/react`.
+- Monaco code and diff surfaces call the owned local-worker configuration
+  before rendering editors, so local and CI runs do not depend on public CDN
+  worker scripts.
 
 ## Feature Mechanization Manifest
 

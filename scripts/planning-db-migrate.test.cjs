@@ -970,6 +970,40 @@ test('tracked migrations route unowned review tasks through claim recovery', () 
   assert.match(nextTaskClaimMigration.sql, /planning_claim_recovery_tasks/);
 });
 
+test('tracked migrations expose aggregated real work backlog query', () => {
+  const migrations = readMigrationFiles();
+  const realWorkMigration = migrations.find(
+    (migration) => migration.fileName === '044_planning_real_work_query.sql'
+  );
+
+  assert.ok(realWorkMigration);
+  assert.match(
+    realWorkMigration.sql,
+    /create or replace view planning_query_store\.planning_real_work_query/
+  );
+  assert.match(realWorkMigration.sql, /planning_open_tasks task/);
+  assert.match(realWorkMigration.sql, /planning_work_intake_query intake/);
+  assert.match(realWorkMigration.sql, /'blocked_by_dependency'/);
+  assert.match(realWorkMigration.sql, /'unlinked_required_action'/);
+  assert.match(realWorkMigration.sql, /open_item_count/);
+  assert.match(realWorkMigration.sql, /linked_task_count/);
+});
+
+test('tracked migrations keep real work disposition groups semantically aligned', () => {
+  const migrations = readMigrationFiles();
+  const groupingMigration = migrations.find(
+    (migration) => migration.fileName === '045_planning_real_work_query_grouping_hardening.sql'
+  );
+
+  assert.ok(groupingMigration);
+  assert.match(groupingMigration.sql, /work_group_key/);
+  assert.match(groupingMigration.sql, /intake\.intake_kind in \('docs_disposition', 'task_gap'\)/);
+  assert.match(
+    groupingMigration.sql,
+    /group by intake\.intake_kind, intake\.work_source_path, intake\.work_group_key/
+  );
+});
+
 test('tracked migrations create the DB-first architecture authority schema', () => {
   const migrations = readMigrationFiles();
   const authorityMigration = migrations.find(
