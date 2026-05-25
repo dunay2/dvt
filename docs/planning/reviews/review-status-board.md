@@ -46,6 +46,12 @@ canonization tasks so mailbox analysis does not remain an informal backlog.
 records the Lane E disposition for frontend and workbench mailbox analyses,
 including zero-reference Canvas, workbench, web API, and Runs findings.
 
+[Architecture Buzon Fowler Canonization Review](./architecture-and-governance/20260525-architecture-buzon-fowler-canonization-review.md)
+records the Lane A disposition for architecture, contracts, planner,
+state-store, DDD, and hexagonal mailbox analyses. It restores the remaining
+provider-registry/conformance debt as blocked Planning DB task
+`EA-20260429-04`.
+
 Disposition:
 
 - `F-29`, `F-30`, `GOV-PROP-DISP-1`, and `RUNTIME-PROP-DISP-1` remain the

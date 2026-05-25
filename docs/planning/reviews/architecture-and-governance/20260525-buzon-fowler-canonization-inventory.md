@@ -58,9 +58,16 @@ The tracked `buzon/` set contains 133 Markdown analyses.
 
 ## Execution Updates
 
-| Date       | Task                     | Canonical review                                                                                     | Result                                                                                                                                                                                       |
-| ---------- | ------------------------ | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-05-25 | `E-BUZON-FOWLER-CANON-1` | [Frontend Buzon Fowler Canonization Review](./20260525-frontend-buzon-fowler-canonization-review.md) | Lane E mailbox analyses now have formal dispositions. Remaining executable product debt stays in existing tasks `F-08`, `F-11`, and `E-PROP-DISP-1`; no duplicate frontend task was created. |
+- 2026-05-25, `E-BUZON-FOWLER-CANON-1`:
+  [Frontend Buzon Fowler Canonization Review](./20260525-frontend-buzon-fowler-canonization-review.md)
+  records formal Lane E mailbox dispositions. Remaining executable product debt
+  stays in existing tasks `F-08`, `F-11`, and `E-PROP-DISP-1`; no duplicate
+  frontend task was created.
+- 2026-05-25, `A-BUZON-FOWLER-CANON-1`:
+  [Architecture Buzon Fowler Canonization Review](./20260525-architecture-buzon-fowler-canonization-review.md)
+  records formal Lane A architecture, contracts, planner, state-store, DDD, and
+  hexagonal mailbox dispositions. Remaining provider-registry debt is restored
+  as blocked task `EA-20260429-04`.
 
 ## Zero-Reference Priority Set
 
