@@ -1,3 +1,4 @@
+import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildCanvasHostCycleControllerState } from './Canvas.test.hostCycleScenario';
@@ -21,6 +22,24 @@ describe('Canvas route first-canvas policy', () => {
   afterEach(() => {
     harness.cleanup();
   });
+
+  async function openFirstNodePalette(firstNodeLabel: string): Promise<void> {
+    const trigger = Array.from(harness.container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes(firstNodeLabel)
+    );
+    expect(trigger).toBeDefined();
+    await act(async () => {
+      trigger?.click();
+    });
+  }
+
+  function findPaletteOption(label: string): HTMLButtonElement | undefined {
+    return Array.from(
+      harness.container.querySelectorAll<HTMLButtonElement>(
+        '[data-slot="canvas-add-node-palette-option"]'
+      )
+    ).find((button) => button.textContent?.includes(label));
+  }
 
   it('creates the first transformation canvas through the controller command', async () => {
     const handleCreateCanvasDocument = vi.fn();
@@ -83,17 +102,19 @@ describe('Canvas route first-canvas policy', () => {
       handleCreateAuthoringNode,
     });
 
-    const sourceButton = Array.from(harness.container.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Source')
-    );
-
     expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
     expect(harness.container.textContent).toContain('Main canvas');
     expect(harness.container.textContent).toContain('Start transformation canvas');
     expect(harness.container.textContent).toContain('Add first transformation node');
+
+    await openFirstNodePalette('Add first transformation node');
+
+    const sourceButton = findPaletteOption('Source');
     expect(sourceButton).toBeDefined();
 
-    sourceButton?.click();
+    await act(async () => {
+      sourceButton?.click();
+    });
 
     expect(handleCreateAuthoringNode).toHaveBeenCalledWith(requireAuthoringNodeKind('dvt:source'));
   });
@@ -126,6 +147,7 @@ describe('Canvas route first-canvas policy', () => {
     expect(harness.container.textContent).toContain('Start transformation canvas');
     expect(harness.container.textContent).toContain('Add first transformation node');
     expect(harness.container.textContent).toContain('Main canvas');
+    await openFirstNodePalette('Add first transformation node');
     expect(harness.container.textContent).toContain('SQL transform');
     expect(harness.container.textContent).not.toContain('Exposure');
     expect(harness.container.textContent).not.toContain('Metric');
@@ -144,6 +166,7 @@ describe('Canvas route first-canvas policy', () => {
     expect(harness.container.textContent).toContain('Start dbt canvas');
     expect(harness.container.textContent).toContain('Add first dbt node');
     expect(harness.container.textContent).toContain('dbt canvas');
+    await openFirstNodePalette('Add first dbt node');
     expect(harness.container.textContent).toContain('Exposure');
     expect(harness.container.textContent).toContain('Metric');
     expect(harness.container.textContent).not.toContain('SQL transform');
@@ -166,11 +189,8 @@ describe('Canvas route first-canvas policy', () => {
     });
     expect(harness.container.textContent).toContain('Start dbt canvas');
     expect(harness.container.textContent).toContain('Add first dbt node');
-    expect(
-      Array.from(harness.container.querySelectorAll('button'))
-        .find((button) => button.textContent?.includes('Source'))
-        ?.getAttribute('disabled')
-    ).toBeNull();
+    await openFirstNodePalette('Add first dbt node');
+    expect(findPaletteOption('Source')?.getAttribute('disabled')).toBeNull();
 
     const { planButton, runButton } = getPrimaryCanvasButtons(harness.container);
     expect(planButton?.getAttribute('disabled')).not.toBeNull();
