@@ -42,6 +42,10 @@ and the risk register.
 classifies the tracked `buzon/` Fowler analyses into domain-owned
 canonization tasks so mailbox analysis does not remain an informal backlog.
 
+[Frontend Buzon Fowler Canonization Review](./architecture-and-governance/20260525-frontend-buzon-fowler-canonization-review.md)
+records the Lane E disposition for frontend and workbench mailbox analyses,
+including zero-reference Canvas, workbench, web API, and Runs findings.
+
 Disposition:
 
 - `F-29`, `F-30`, `GOV-PROP-DISP-1`, and `RUNTIME-PROP-DISP-1` remain the

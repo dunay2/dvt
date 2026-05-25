@@ -56,6 +56,12 @@ The tracked `buzon/` set contains 133 Markdown analyses.
 | `D-DOCS-DISPOSITION-QUEUE-1`   | D    | Resolve the open `docs-disposition` queue for unknown IDs, Draft active docs, missing frontmatter, and pending-marker hotspots. |
 | `D-KNOWLEDGE-ACTION-LINKAGE-1` | D    | Reduce unlinked proposed knowledge-action rows across active docs, reviews, `buzon/`, and risk entries.                         |
 
+## Execution Updates
+
+| Date       | Task                     | Canonical review                                                                                     | Result                                                                                                                                                                                       |
+| ---------- | ------------------------ | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-05-25 | `E-BUZON-FOWLER-CANON-1` | [Frontend Buzon Fowler Canonization Review](./20260525-frontend-buzon-fowler-canonization-review.md) | Lane E mailbox analyses now have formal dispositions. Remaining executable product debt stays in existing tasks `F-08`, `F-11`, and `E-PROP-DISP-1`; no duplicate frontend task was created. |
+
 ## Zero-Reference Priority Set
 
 The following tracked analyses had zero direct `docs/**` references at the time
