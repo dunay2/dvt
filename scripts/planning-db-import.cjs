@@ -1058,7 +1058,7 @@ function listTrackedRiskDocuments() {
 }
 
 function parseMarkdownFrontmatter(raw) {
-  const text = normalizeText(raw);
+  const text = normalizeText(raw).replace(/^\uFEFF/, '');
   const lines = text.split(/\r?\n/);
   if (lines[0] !== '---') {
     return { frontmatter: {}, body: text };
@@ -1200,7 +1200,7 @@ const pendingMarkerTerms = [
 ];
 
 const taskLikeReferencePattern =
-  /\b(?:ADR-\d{4}|ED-\d{8}-[A-Za-z0-9][A-Za-z0-9-]*|R-\d{8}-[A-Za-z0-9][A-Za-z0-9-]*|US-\d+[A-Za-z0-9-]*|[A-Z][A-Z0-9]{1,12}(?:-[A-Z0-9][A-Z0-9]{0,24})+)\b/g;
+  /(?<![A-Za-z0-9-])(?:ADR-\d{4}|ED-\d{8}-[A-Za-z0-9][A-Za-z0-9-]*|R-\d{8}-[A-Za-z0-9][A-Za-z0-9-]*|US-\d+[A-Za-z0-9-]*|[A-Z][A-Z0-9]{1,12}(?:-[A-Z0-9][A-Z0-9]{0,24})+)(?![A-Za-z0-9-])/g;
 
 function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
@@ -1361,7 +1361,13 @@ function classifyTaskLikeReference(
   if (/^US-/.test(upperValue)) {
     return { classification: 'user_story', registeredPlanningTask: false };
   }
+  if (/^EPIC-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(upperValue)) {
+    return { classification: 'epic_reference', registeredPlanningTask: false };
+  }
   if (/^(?:[A-Z0-9]+-)*[A-Z0-9]+-US\d+$/.test(upperValue)) {
+    return { classification: 'user_story', registeredPlanningTask: false };
+  }
+  if (/^(?:WAPO|E\d+-ARCH|WEB-(?:AUTH|GAP|PROJECT|SCOPE))-\d+$/.test(upperValue)) {
     return { classification: 'user_story', registeredPlanningTask: false };
   }
   if (/^(?:EWC|CODE-FILES)-\d+$/.test(upperValue)) {
@@ -1429,14 +1435,31 @@ function classifyTaskLikeReference(
   if (/^(?:AUTO-FAIL|TEST-MODE)$/.test(upperValue)) {
     return { classification: 'policy_state_reference', registeredPlanningTask: false };
   }
+  if (/^CI-AUDIT$/.test(upperValue)) {
+    return { classification: 'governance_workstream_reference', registeredPlanningTask: false };
+  }
   if (/^(?:AV|CE|DW)-\d{3}$/.test(upperValue) || /^EA-\d{8}-\d+$/.test(upperValue)) {
     return { classification: 'review_finding_reference', registeredPlanningTask: false };
   }
-  if (/^(?:GAP|MVP|RESIDUAL|RISK|LEGACY|INV)-/.test(upperValue) || /^F-\d{2}/.test(upperValue)) {
-    return { classification: 'historical_planning_reference', registeredPlanningTask: false };
-  }
   if (/^AR-[A-Z]\d+-INV-\d+$/.test(upperValue)) {
     return { classification: 'review_invariant_reference', registeredPlanningTask: false };
+  }
+  if (
+    /^EA-\d{8}$/.test(upperValue) ||
+    /^QA-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(upperValue) ||
+    /^TF-[A-Z0-9]+(?:-[A-Z0-9]+)*-QA-\d+$/.test(upperValue) ||
+    /^AR-[A-Z](?:\d+)?(?:-[A-Z0-9]+)*$/.test(upperValue)
+  ) {
+    return { classification: 'review_finding_reference', registeredPlanningTask: false };
+  }
+  if (
+    /^(?:INT|PKR|PR)-[A-Z0-9]+$/.test(upperValue) ||
+    /^(?:MW|RC|TF)-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(upperValue)
+  ) {
+    return { classification: 'historical_planning_reference', registeredPlanningTask: false };
+  }
+  if (/^(?:GAP|MVP|RESIDUAL|RISK|LEGACY|INV)-/.test(upperValue) || /^F-\d{2}/.test(upperValue)) {
+    return { classification: 'historical_planning_reference', registeredPlanningTask: false };
   }
   if (/^SYS-/.test(upperValue)) {
     return { classification: 'governance_unit_reference', registeredPlanningTask: false };
@@ -1506,7 +1529,7 @@ function extractTaskLikeReferences(
       const escapedReference = escapeRegExp(entry.referenceText);
       const { sampleLines } = lineNumbersForPattern(
         raw,
-        new RegExp(`\\b${escapedReference}\\b`, 'g')
+        new RegExp(`(?<![A-Za-z0-9-])${escapedReference}(?![A-Za-z0-9-])`, 'g')
       );
       return {
         referenceId: `doc-reference:${sha256(`${document.sourcePath}:${entry.referenceText}`).slice(
