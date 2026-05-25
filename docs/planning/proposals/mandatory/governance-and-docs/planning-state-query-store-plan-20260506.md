@@ -1719,6 +1719,9 @@ commandQueryRails:
   - name: QueryPlanningWorkIntake
     type: query
     dddOwner: PlanningWorkIntakeReadModel
+  - name: QueryPlanningRealWorkBacklog
+    type: query
+    dddOwner: PlanningRealWorkBacklogReadModel
   - name: QueryRiskDebtWorkIntake
     type: query
     dddOwner: RiskDebtWorkIntakeReadModel
@@ -1798,6 +1801,9 @@ domainObjects:
   - name: PlanningWorkIntakeReadModel
     type: read model
     owner: Product / Architecture / Delivery / Docs
+  - name: PlanningRealWorkBacklogReadModel
+    type: read model
+    owner: Product / Architecture / Delivery / Docs
   - name: RiskDebtWorkIntakeReadModel
     type: read model
     owner: Product / Architecture / Delivery / Docs
@@ -1826,6 +1832,7 @@ fowlerSignals:
   - Manual component contract reconstruction
   - Manual docs disposition resolution
   - Manual work intake reconstruction
+  - Split active-task and intake queues hide real backlog
   - Risk register debt outside planning work intake
   - Mutable external tracker authority risk
 architectureGuards:
@@ -1850,6 +1857,7 @@ completionGate:
   - pnpm planning:db:query docs-disposition --resolution all --limit 10
   - pnpm planning:db:query task-gaps --resolution all --limit 10
   - pnpm planning:db:query focus --limit 10
+  - pnpm planning:db:query real-work --limit 10
   - pnpm planning:db:query debt --limit 10
   - pnpm planning:db:query cer --component SYS-API-HTTP-ENTRYPOINTS --limit 1
   - pnpm planning:db:query units --unit SYS-API-ROOT --limit 5
@@ -2126,6 +2134,15 @@ redGreenCycles:
       - scripts/planning-db-*.cjs
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     greenTest: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
+  - id: planning-db-real-work-backlog-query
+    redTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+    expectedFailure: Operators still cannot compare claim recovery, actionable tasks, blocked tasks, intake gaps, docs disposition, risk debt, and governance remediation in one DB-owned work backlog view.
+    patchSurfaces:
+      - tools/planning-db/**
+      - scripts/planning-db-*.cjs
+      - docs/planning/status/db-surface-inventory.md
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
   - id: planning-db-component-engineering-record-query
     redTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
     expectedFailure: Component engineering questions still require manually reconstructing purpose, ownership, contracts, tests, risks, and runtime evidence across governance indexes because no DB-owned component engineering record query view or planning:db:query cer adapter exists.
@@ -2853,6 +2870,38 @@ symbols:
     path: scripts/planning-db-query.cjs
   - <<: *planningDbContentSymbol
     name: readFocusRows
+    path: scripts/planning-db-query.cjs
+  - &planningRealWorkBacklogSymbol
+    name: PlanningDbRealWorkQueryMigration
+    path: tools/planning-db/migrations/044_planning_real_work_query.sql
+    dddOwner: PlanningRealWorkBacklogReadModel
+    cqRails:
+      - QueryPlanningRealWorkBacklog
+      - QueryPlanningStateReadModel
+      - QueryPlanningWorkIntake
+      - QueryRiskDebtWorkIntake
+      - MigratePlanningQueryStoreSchema
+    fowlerSignals:
+      - Manual work intake reconstruction
+      - Hidden query model inside YAML
+      - Split active-task and intake queues hide real backlog
+    architectureGuard: pnpm test:planning:db
+    cypressCoverage: N/A - planning real-work backlog has no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+      - pnpm test:planning:db
+      - pnpm planning:db:query real-work --limit 10
+  - <<: *planningRealWorkBacklogSymbol
+    name: PlanningDbRealWorkQueryGroupingHardeningMigration
+    path: tools/planning-db/migrations/045_planning_real_work_query_grouping_hardening.sql
+  - <<: *planningRealWorkBacklogSymbol
+    name: realWorkSelect
+    path: scripts/planning-db-query.cjs
+  - <<: *planningRealWorkBacklogSymbol
+    name: buildRealWorkRows
+    path: scripts/planning-db-query.cjs
+  - <<: *planningRealWorkBacklogSymbol
+    name: readRealWorkRows
     path: scripts/planning-db-query.cjs
   - &riskDebtWorkIntakeSymbol
     name: riskDebtSelect

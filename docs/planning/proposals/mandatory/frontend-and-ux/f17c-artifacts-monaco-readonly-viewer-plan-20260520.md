@@ -1,9 +1,9 @@
 ---
 title: F-17-C Artifacts Monaco Read-Only Viewer Plan
-status: Active
+status: Accepted
 owner: Web / Architecture
 date: 2026-05-20
-last_reviewed: 2026-05-20
+last_reviewed: 2026-05-25
 planning_type: proposal
 ---
 
@@ -36,13 +36,13 @@ Mode: Full.
 
 Scope:
 
-- Add Fowler analysis in `buzon`.
-- Add Artifacts Monaco component guide and user stories.
-- Add module owned-concern docblocks.
-- Extract `ArtifactMonacoPreviewPanel`.
-- Remove the inert `View Full File` affordance.
-- Add semantic architecture guard.
-- Update planning state and generated docs.
+- [x] Add Fowler analysis in `buzon`.
+- [x] Add Artifacts Monaco component guide and user stories.
+- [x] Add module owned-concern docblocks.
+- [x] Extract `ArtifactMonacoPreviewPanel`.
+- [x] Remove the inert `View Full File` affordance.
+- [x] Add semantic architecture guard.
+- [x] Update planning state and generated docs.
 
 Out of scope:
 
@@ -52,6 +52,11 @@ Out of scope:
 - Canvas Monaco hosting;
 - Templates Monaco closure;
 - bundle-budget enforcement beyond existing lazy loading.
+
+## F-30 Reconciliation
+
+- F-17-C task records this implemented proposal as evidence-closed by
+  `docs/planning/closeouts/20260525-f17c-artifacts-monaco-readonly-viewer-closeout.md`.
 
 Validation plan:
 
@@ -112,6 +117,7 @@ allowedImplementationSurfaces:
   - apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts
   - docs/architecture/components/web/artifacts/artifacts-monaco-readonly-viewer-component.md
   - docs/architecture/components/web/artifacts/artifacts-monaco-readonly-viewer-user-stories.md
+  - docs/planning/reviews/architecture-and-governance/20260525-f30-monaco-code-artifacts-reconciliation-review.md
   - docs/planning/proposals/mandatory/frontend-and-ux/f17c-artifacts-monaco-readonly-viewer-plan-20260520.md
   - docs/.manifest.json
   - buzon/20260520-f17c-fowler-artifacts-monaco-readonly-viewer-analysis.md

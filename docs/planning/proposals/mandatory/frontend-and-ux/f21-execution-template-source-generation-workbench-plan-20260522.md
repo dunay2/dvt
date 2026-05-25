@@ -45,7 +45,7 @@ Options considered:
   infrastructure and F-21 should establish route ownership first.
 - Create backend API contracts now: rejected because provider semantics remain
   governed backend services and contracts; this slice is presentation-local.
-- Implement a pure local catalog and preview projection: selected because it
+- Pure local catalog and preview projection: selected because it
   removes documentation drift, creates a route owner, and gives `F-17-D` a real
   surface to enhance later.
 
@@ -54,6 +54,9 @@ execution-template catalog, a pure generation/validation model, route-level
 workbench slots, docs, architecture guard, and Cypress UX proof. The workbench
 generates deterministic preview source and export metadata only; it does not
 persist, dispatch, or call provider APIs.
+
+- F-21 task records this implemented proposal as evidence-closed by
+  `docs/planning/closeouts/20260522-f21-execution-template-source-generation-workbench-closeout.md`.
 
 Rejected alternatives:
 
@@ -146,6 +149,7 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/templates/execution-template-source-generation-component.md
   - docs/architecture/components/web/templates/execution-template-source-generation-user-stories.md
   - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
+  - docs/planning/reviews/architecture-and-governance/20260525-f30-monaco-code-artifacts-reconciliation-review.md
   - docs/planning/closeouts/20260522-f21-execution-template-source-generation-workbench-closeout.md
   - docs/planning/proposals/mandatory/frontend-and-ux/f21-execution-template-source-generation-workbench-plan-20260522.md
 forbiddenImplementationSurfaces:

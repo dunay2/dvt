@@ -31,6 +31,31 @@ This board is the review navigation and intake map. It may name workboard task
 linkage, but executable follow-up, claims, status, progress, dependencies, and
 evidence are owned by the Planning DB command rail.
 
+## 2026-05-25 Backlog intake reconciliation
+
+[Backlog Intake Reconciliation Review](./architecture-and-governance/20260525-backlog-intake-reconciliation-review.md)
+records the current gap between the normalized `next_task` view and the larger
+intake set in mandatory proposals, active reviews, proposed knowledge actions,
+and the risk register.
+
+[Buzon Fowler Canonization Inventory](./architecture-and-governance/20260525-buzon-fowler-canonization-inventory.md)
+classifies the tracked `buzon/` Fowler analyses into domain-owned
+canonization tasks so mailbox analysis does not remain an informal backlog.
+
+Disposition:
+
+- `F-29`, `F-30`, `GOV-PROP-DISP-1`, and `RUNTIME-PROP-DISP-1` remain the
+  existing Planning DB reconciliation rails.
+- six `task-gaps` need first-pass disposition before further prioritization.
+- active reviews and open risks need one explicit review/risk intake task or an
+  equivalent Planning DB linkage decision.
+- `buzon/` analyses are owned by `A-BUZON-FOWLER-CANON-1`,
+  `C-BUZON-FOWLER-CANON-1`, `D-BUZON-GOV-CANON-1`,
+  `E-BUZON-FOWLER-CANON-1`, and `D-RISK-DEBT-CANON-1`.
+- mandatory proposal gaps, open docs-disposition rows, and unlinked knowledge
+  actions are owned by `D-MAND-PROP-GAP-INTAKE-1`, `E-PROP-DISP-1`,
+  `D-DOCS-DISPOSITION-QUEUE-1`, and `D-KNOWLEDGE-ACTION-LINKAGE-1`.
+
 ## Active Reviews
 
 | Review                                                                                                                                            | Domain folder                     | Current review role                                     | Workboard task linkage                     | Execution status | Execution progress |

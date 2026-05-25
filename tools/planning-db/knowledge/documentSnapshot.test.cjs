@@ -66,6 +66,34 @@ test('keeps governance reference ids out of task links', () => {
   );
 });
 
+test('links short-prefix planning task ids from proposal action lines', () => {
+  const snapshot = buildKnowledgeSnapshotFromDocuments(
+    [
+      {
+        sourcePath: 'docs/planning/proposals/mandatory/frontend-and-ux/f17c-plan.md',
+        raw: [
+          '---',
+          'title: F17C Plan',
+          'planning_type: proposal',
+          '---',
+          '# F17C Plan',
+          '',
+          '- F-17-C task records this implemented proposal as evidence-closed.',
+          '- F-21 task records the execution template closeout.',
+          '',
+        ].join('\n'),
+        contentSha256: '1'.repeat(64),
+      },
+    ],
+    { planningTaskIds: ['F-17-C', 'F-21'] }
+  );
+
+  assert.deepEqual(
+    snapshot.actionLinks.map((link) => link.targetId),
+    ['F-17-C', 'F-21']
+  );
+});
+
 test('classifies Fowler analysis and review documents without making them tasks', () => {
   const snapshot = buildKnowledgeSnapshotFromDocuments([
     {

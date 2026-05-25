@@ -72,7 +72,7 @@ function normalizeTaskIdSet(taskIds = []) {
 }
 
 function extractTaskIds(text, planningTaskIds) {
-  const candidates = normalizeText(text).match(/[A-Z][A-Z0-9]+(?:-[A-Z0-9]+){1,}/g) ?? [];
+  const candidates = normalizeText(text).match(/[A-Z][A-Z0-9]*(?:-[A-Z0-9]+){1,}/g) ?? [];
   return [...new Set(candidates)].filter((taskId) => planningTaskIds.has(taskId.toUpperCase()));
 }
 
