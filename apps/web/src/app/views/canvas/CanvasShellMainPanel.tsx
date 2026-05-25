@@ -141,6 +141,7 @@ function CanvasShellWorkbenchChrome({
   panels,
   graph,
   toolbar,
+  graphCommands,
   chromeCommands,
 }: CanvasShellWorkbenchChromeProps): JSX.Element | null {
   const renderToolbar = shouldRenderCanvasToolbar(toolbar.routeState);
@@ -180,6 +181,7 @@ function CanvasShellWorkbenchChrome({
             onReloadLatestDraft={chromeCommands.onReloadLatestDraft}
             onPlan={chromeCommands.onPlan}
             onRun={chromeCommands.onRun}
+            onCreateAuthoringNode={graphCommands.onCreateAuthoringNode}
             routeState={toolbar.routeState}
             draftToolbarState={toolbar.draftToolbarState}
             canPlan={panels.userPermissions.canPlan}
@@ -200,6 +202,7 @@ function CanvasShellWorkbenchChrome({
             transformationValidation={toolbar.transformationValidation}
             nodeCount={graph.nodesWithImpact.length}
             edgeCount={graph.edges.length}
+            authoringNodeKinds={panels.authoringNodeKinds}
           />
         </div>
       ) : null}

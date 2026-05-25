@@ -17,8 +17,11 @@ export const canvasViewToolbarCopyEs = {
   toolbarSnapToGridLabel: 'Ajustar',
   toolbarExportSnapshotLabel: 'Exportar',
   toolbarImportSnapshotLabel: 'Importar',
+  toolbarInsertLabel: 'Insertar',
   toolbarPlanLabel: 'Plan',
   toolbarRunLabel: 'Ejecutar',
+  addNodePaletteSearchLabel: 'Buscar tipos de nodo',
+  addNodePaletteEmptyLabel: 'No hay tipos de nodo para esta busqueda.',
   projectSnapshotExportUnavailableMessage:
     'La exportacion del snapshot esta disponible cuando el borrador esta guardado.',
   projectSnapshotImportRejectedMessage: 'La importacion del snapshot fue rechazada.',

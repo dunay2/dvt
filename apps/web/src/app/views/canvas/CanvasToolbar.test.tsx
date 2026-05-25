@@ -3,6 +3,7 @@
 /** Owned concern: prove Canvas toolbar command wiring and passive control behavior. */
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { Circle, Square } from 'lucide-react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import CanvasToolbar from './CanvasToolbar';
@@ -11,6 +12,34 @@ import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
 import { useCanvasViewMenuContributionStore } from './canvasViewMenuContributionStore';
 import type { CanvasViewMenuContribution } from './canvasViewMenuContributionStore';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
+import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
+
+const nodeKinds: readonly NodeKindRegistration[] = [
+  {
+    kind: 'dvt:source',
+    pluginId: 'dvt',
+    label: 'Source',
+    role: 'input',
+    icon: Circle,
+    borderClass: 'border-sky-500',
+    minimapColor: '#0ea5e9',
+    allowsIncoming: false,
+    allowsOutgoing: true,
+    supportsColumns: true,
+  },
+  {
+    kind: 'dvt:sql_transform',
+    pluginId: 'dvt',
+    label: 'SQL transform',
+    role: 'transform',
+    icon: Square,
+    borderClass: 'border-violet-500',
+    minimapColor: '#8b5cf6',
+    allowsIncoming: true,
+    allowsOutgoing: true,
+    supportsColumns: true,
+  },
+];
 
 function buildToolbarProps(
   overrides?: Partial<React.ComponentProps<typeof CanvasToolbar>>
@@ -242,6 +271,48 @@ describe('CanvasToolbar', () => {
     expect(onExportProjectSnapshot).toHaveBeenCalledTimes(1);
     expect(onImportProjectSnapshotFile).not.toHaveBeenCalled();
     expect(container.querySelector('input[type="file"]')).not.toBeNull();
+  });
+
+  it('opens the active-canvas Insert/Add palette without adding a permanent rail', async () => {
+    const onCreateAuthoringNode = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <CanvasToolbar
+          {...buildToolbarProps({
+            draftToolbarState: defaultDraftToolbarState,
+            authoringNodeKinds: nodeKinds,
+            onCreateAuthoringNode,
+          })}
+        />
+      );
+    });
+
+    const insertButton = container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-toolbar-insert-command"]'
+    );
+
+    expect(insertButton).not.toBeNull();
+    expect(insertButton?.textContent).toContain('Insert');
+    expect(container.querySelector('[data-slot="canvas-add-node-palette"]')).toBeNull();
+
+    await act(async () => {
+      insertButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    const search = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="canvas-add-node-palette-search"]'
+    );
+    expect(document.body.querySelector('[data-slot="canvas-add-node-palette"]')).not.toBeNull();
+
+    await act(async () => {
+      search?.focus();
+      search?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      search?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    });
+
+    expect(onCreateAuthoringNode).toHaveBeenCalledTimes(1);
+    expect(onCreateAuthoringNode).toHaveBeenCalledWith(nodeKinds[1]);
   });
 
   it('keeps plan button disabled when transformation validation is invalid', async () => {

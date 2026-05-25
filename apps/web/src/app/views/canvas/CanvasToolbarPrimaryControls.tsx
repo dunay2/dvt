@@ -6,6 +6,8 @@ import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Separator } from '../../components/ui/separator';
 import { cn } from '../../components/ui/utils';
+import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
+import { CanvasAddNodePalette } from './CanvasAddNodePalette';
 import { canvasChromeClasses } from './canvasChromeTokens';
 import { canvasViewCopy } from './copy';
 
@@ -14,8 +16,10 @@ type CanvasToolbarPrimaryControlsProps = {
   onImportProjectSnapshotFile: (file: File) => void;
   onPlan: () => void;
   onRun: () => void;
+  onCreateAuthoringNode?: (registration: NodeKindRegistration) => void;
   canPlan: boolean;
   canRun: boolean;
+  canEditEdges: boolean;
   canExportProjectSnapshot: boolean;
   canImportProjectSnapshot: boolean;
   canStartRun: boolean;
@@ -23,6 +27,7 @@ type CanvasToolbarPrimaryControlsProps = {
   workflowStatusClass: string;
   workflowStatusTitle: string;
   canPlanTransformation: boolean;
+  authoringNodeKinds: readonly NodeKindRegistration[];
 };
 
 export function CanvasToolbarPrimaryControls({
@@ -30,8 +35,10 @@ export function CanvasToolbarPrimaryControls({
   onImportProjectSnapshotFile,
   onPlan,
   onRun,
+  onCreateAuthoringNode,
   canPlan,
   canRun,
+  canEditEdges,
   canExportProjectSnapshot,
   canImportProjectSnapshot,
   canStartRun,
@@ -39,6 +46,7 @@ export function CanvasToolbarPrimaryControls({
   workflowStatusClass,
   workflowStatusTitle,
   canPlanTransformation,
+  authoringNodeKinds,
 }: CanvasToolbarPrimaryControlsProps): JSX.Element {
   const importInputRef = useRef<HTMLInputElement>(null);
 
@@ -53,6 +61,20 @@ export function CanvasToolbarPrimaryControls({
         {workflowStatusLabel}
       </Badge>
       <Separator orientation="vertical" className={canvasChromeClasses.separator} />
+
+      {onCreateAuthoringNode != null && authoringNodeKinds.length > 0 ? (
+        <>
+          <CanvasAddNodePalette
+            nodeKinds={authoringNodeKinds}
+            onCreateAuthoringNode={onCreateAuthoringNode}
+            triggerLabel={canvasViewCopy.toolbarInsertLabel}
+            triggerDataSlot="canvas-toolbar-insert-command"
+            disabled={!canEditEdges}
+            align="right"
+          />
+          <Separator orientation="vertical" className={canvasChromeClasses.separator} />
+        </>
+      ) : null}
 
       <Button
         type="button"

@@ -1,7 +1,6 @@
 /** Owned concern: render governed Canvas state views and read-only banners from route presentation models. */
 import type { ReactNode } from 'react';
 
-import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import { cn } from '../../components/ui/utils';
 import {
@@ -11,6 +10,7 @@ import {
 import { WorkbenchReadOnlyState } from '../../components/workbench/state/WorkbenchStates';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanvasReadOnlyState } from './canvasWorkbenchStateModel';
+import { CanvasAddNodePalette } from './CanvasAddNodePalette';
 import { canvasViewCopy } from './copy';
 
 function CanvasSurfaceStateCard({
@@ -73,27 +73,13 @@ function CanvasEmptyAuthoringCatalog({
     <div data-slot="canvas-empty-authoring-catalog" className="mt-5 space-y-3">
       <div>
         <h3 className="text-sm font-semibold text-(--text-default)">{firstNodeLabel}</h3>
-        <p className={cn('mt-1 text-xs', routeWorkbenchMutedTextClassName)}>
-          {firstNodeHelper}
-        </p>
+        <p className={cn('mt-1 text-xs', routeWorkbenchMutedTextClassName)}>{firstNodeHelper}</p>
       </div>
-      <div className="grid gap-2 sm:grid-cols-3">
-        {nodeKinds.map((registration) => {
-          const Icon = registration.icon;
-          return (
-            <Button
-              key={registration.kind}
-              type="button"
-              variant="outline"
-              className="justify-start gap-2"
-              onClick={() => onCreateAuthoringNode(registration)}
-            >
-              <Icon className="size-4" />
-              {registration.label}
-            </Button>
-          );
-        })}
-      </div>
+      <CanvasAddNodePalette
+        nodeKinds={nodeKinds}
+        onCreateAuthoringNode={onCreateAuthoringNode}
+        triggerLabel={firstNodeLabel}
+      />
     </div>
   );
 }
@@ -126,11 +112,7 @@ export function CanvasEmptyStateView({
   const canCreateAuthoringNode = onCreateAuthoringNode != null && nodeKinds.length > 0;
 
   return (
-    <CanvasSurfaceStateCard
-      dataSlot="canvas-empty-state"
-      title={title}
-      message={message}
-    >
+    <CanvasSurfaceStateCard dataSlot="canvas-empty-state" title={title} message={message}>
       {canCreateAuthoringNode ? (
         <CanvasEmptyAuthoringCatalog
           nodeKinds={nodeKinds}
