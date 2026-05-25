@@ -1,8 +1,10 @@
+import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { vi } from 'vitest';
 
 import { mockExecutionPlan } from '../../../testing/fixtures/mockDbtData';
+import { createTestQueryClient } from '../../../testing/reactQueryHarness';
 import type { IPlansPort } from '../../ports/plans';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
@@ -469,20 +471,24 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
   workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   setConsolePanelHeight: ResolvedExecutionActionsHarnessArgs['setConsolePanelHeight'];
   toggleConsolePanel: ResolvedExecutionActionsHarnessArgs['toggleConsolePanel'];
+  queryClient: QueryClient;
 } {
   let currentArgs = resolveHarnessArgs(initialArgs);
   const container = document.createElement('div');
   document.body.appendChild(container);
   const root: Root = createRoot(container);
+  const queryClient = createTestQueryClient();
 
   function buildElement(): React.JSX.Element {
     const commonProps = resolveCommonHookProps(currentArgs);
 
-    return currentArgs.stateful ? (
+    const host = currentArgs.stateful ? (
       <StatefulExecutionActionsHookHost {...commonProps} initialPlan={currentArgs.initialPlan} />
     ) : (
       <ControlledExecutionActionsHookHost {...commonProps} currentPlan={currentArgs.currentPlan} />
     );
+
+    return <QueryClientProvider client={queryClient}>{host}</QueryClientProvider>;
   }
 
   function queryButton(index: number): Element | null {
@@ -530,6 +536,7 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
     workspaceFileContentCommand: currentArgs.workspaceFileContentCommand,
     setConsolePanelHeight: currentArgs.setConsolePanelHeight,
     toggleConsolePanel: currentArgs.toggleConsolePanel,
+    queryClient,
   };
 }
 

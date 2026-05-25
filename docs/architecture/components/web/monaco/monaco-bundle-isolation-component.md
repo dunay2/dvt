@@ -22,6 +22,7 @@ template generation.
 | `resolveWebManualChunk()` | `apps/web/vite.manualChunks.ts`                                          | Pure Vite chunk-name resolver. |
 | `vite.config.ts`          | `apps/web/vite.config.ts`                                                | Build configuration consumer.  |
 | Monaco lazy gateways      | `apps/web/src/app/components/monaco/*Viewer.tsx`, `MonacoCodeEditor.tsx` | Route-safe lazy entry points.  |
+| Monaco local workers      | `apps/web/src/app/components/monaco/monacoLocalWorkers.ts`               | Local worker configuration.    |
 
 ## Invariants
 
@@ -32,6 +33,10 @@ template generation.
 - Route modules consume lazy gateways, not `@monaco-editor/react`.
 - `@monaco-editor/react` imports are limited to `MonacoCodeSurface` and
   `MonacoDiffSurface`.
+- `apps/web` declares `monaco-editor` directly because local worker bundling
+  imports Monaco runtime modules, not only the React adapter package.
+- Monaco surfaces configure local Vite-bundled workers before rendering editor
+  instances; they must not depend on CDN worker loading.
 - Canvas production modules must not import Monaco gateways or
   `@monaco-editor/react`.
 
@@ -42,6 +47,7 @@ flowchart LR
   Route["Route or workbench panel"] --> Gateway["Lazy Monaco gateway"]
   Gateway --> Surface["Monaco surface module"]
   Surface --> Vendor["@monaco-editor/react"]
+  Surface --> Workers["Local Monaco workers"]
   Vite["vite.config.ts"] --> Resolver["resolveWebManualChunk"]
   Resolver --> Chunk["monaco-vendor"]
 ```
@@ -53,6 +59,7 @@ flowchart LR
 | Add another Monaco surface     | Keep third-party import inside the surface module.            |
 | Add another Monaco route panel | Use an existing lazy gateway or create a route-local adapter. |
 | Change Vite chunk naming       | Update `resolveWebManualChunk()` tests and this guide.        |
+| Change worker loading          | Update `monacoLocalWorkers.ts`, tests, and this guide.        |
 | Add another heavy vendor       | Add a named resolver branch with an architecture test.        |
 
 ## Consumers

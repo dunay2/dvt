@@ -15,6 +15,7 @@ component: Monaco bundle isolation
 | US-F17E-003 | Operator            | Opens a non-Monaco route.                                 | Route modules do not eagerly import `@monaco-editor/react`.               |
 | US-F17E-004 | Reviewer            | Opens Code, Diff, Artifacts, or Templates Monaco surface. | The route reaches Monaco through a lazy gateway and owned surface module. |
 | US-F17E-005 | Maintainer          | Adds a new route workbench.                               | Architecture guard fails if the route imports Monaco vendor directly.     |
+| US-F17E-006 | Operator            | Opens a Monaco-backed route in local or CI execution.     | Monaco workers load from the web bundle instead of a public CDN.          |
 
 ## Test Matrix
 
@@ -23,4 +24,5 @@ component: Monaco bundle isolation
 | Monaco and terminal chunk names stay explicit               | `monacoBundleIsolation.architecture.test.ts` |
 | Vite config delegates to the pure resolver                  | `monacoBundleIsolation.architecture.test.ts` |
 | Lazy gateway and surface-only import boundaries hold        | `monacoBundleIsolation.architecture.test.ts` |
+| Monaco worker loading stays local to the web bundle         | `monacoBundleIsolation.architecture.test.ts` |
 | Changed Monaco/config files route to the Monaco focus suite | `vitestSuites.architecture.test.ts`          |

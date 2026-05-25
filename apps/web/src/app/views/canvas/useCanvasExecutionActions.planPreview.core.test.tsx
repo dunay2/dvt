@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { queryKeys } from '../../queries/queryKeys';
 import type { CanonicalNode } from '../../types/canonical';
 import { canvasViewCopy } from './copy';
 import {
@@ -261,6 +262,35 @@ describe('useCanvasExecutionActions plan preview core', () => {
     expect(harness.text('current-plan-sha')).toBe(persistedPlan.planRef?.sha256 ?? 'none');
     expect(harness.text('can-start-run')).toBe('true');
     expect(harness.text('plan-status-summary')).toBe(canvasViewCopy.planStatusPreviewReadyMessage);
+  });
+
+  it('invalidates workspace project-source queries after a successful graph artifact save', async () => {
+    const persistedPlan = buildPersistedPreviewPlan();
+    const plansService = createPlansServiceMock(persistedPlan);
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService: createRunsServiceMock(),
+      initialPlan: null,
+      stateful: true,
+      canonicalNodes: buildCanonicalNodes(),
+      canonicalEdges: buildCanonicalEdges(),
+    });
+    await harness.render();
+
+    const invalidateQueries = vi.spyOn(harness.queryClient, 'invalidateQueries');
+    await harness.clickPlan();
+
+    expect(plansService.previewPlan).toHaveBeenCalledTimes(1);
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: queryKeys.workspace.fileTree(),
+    });
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: queryKeys.workspace.fileContent('pipelines/sales_pipeline.yaml'),
+    });
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: queryKeys.workspace.artifacts(),
+    });
   });
 
   it('reuses the selected-subgraph preview proof when Start Run follows a partial preview', async () => {

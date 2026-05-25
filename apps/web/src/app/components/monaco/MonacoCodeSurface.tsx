@@ -2,6 +2,7 @@
 import Editor from '@monaco-editor/react';
 
 import { DEFAULT_MONACO_CONTAINER_CLASS_NAME } from './MonacoViewerFallback';
+import { configureMonacoLocalWorkers } from './monacoLocalWorkers';
 import { createMonacoCodeOptions, monacoTheme } from './monacoVisualTokens';
 
 type MonacoCodeSurfaceProps = Readonly<{
@@ -13,6 +14,8 @@ type MonacoCodeSurfaceProps = Readonly<{
   readOnly?: boolean;
   value: string;
 }>;
+
+configureMonacoLocalWorkers();
 
 export default function MonacoCodeSurface({
   ariaLabel,
