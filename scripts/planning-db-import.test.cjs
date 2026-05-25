@@ -829,6 +829,123 @@ test('docs disposition snapshot treats closed feature mechanization ids as regis
   assert.deepEqual(snapshot.actions, []);
 });
 
+test('docs disposition snapshot does not split lane-prefixed planning task ids into suffix references', () => {
+  const snapshot = buildDocsDispositionSnapshot({
+    planningTaskIds: [
+      'C-REV-RUNTIME-CANON',
+      'D-DOCS-DISPOSITION-QUEUE-1',
+      'D-REV-CI-RETENTION-CANON',
+      'E-PROP-DISP-1',
+      'F-MAND-WORKBENCH-UX',
+    ],
+    documents: [
+      {
+        sourcePath: 'docs/planning/status/current-work.md',
+        raw: [
+          '---',
+          'title: Current work',
+          'status: Active',
+          'planning_type: status',
+          '---',
+          '`E-PROP-DISP-1`, `F-MAND-WORKBENCH-UX`, and',
+          '`D-REV-CI-RETENTION-CANON` are Planning DB tasks.',
+          '`C-REV-RUNTIME-CANON` and `D-DOCS-DISPOSITION-QUEUE-1` are tasks too.',
+        ].join('\n'),
+      },
+    ],
+  });
+
+  const classifications = new Map(
+    snapshot.references.map((reference) => [reference.referenceText, reference.classification])
+  );
+
+  assert.equal(classifications.get('E-PROP-DISP-1'), 'registered_planning_task');
+  assert.equal(classifications.get('F-MAND-WORKBENCH-UX'), 'registered_planning_task');
+  assert.equal(classifications.get('D-REV-CI-RETENTION-CANON'), 'registered_planning_task');
+  assert.equal(classifications.get('C-REV-RUNTIME-CANON'), 'registered_planning_task');
+  assert.equal(classifications.get('D-DOCS-DISPOSITION-QUEUE-1'), 'registered_planning_task');
+  assert.equal(classifications.has('PROP-DISP-1'), false);
+  assert.equal(classifications.has('MAND-WORKBENCH-UX'), false);
+  assert.equal(classifications.has('REV-CI-RETENTION-CANON'), false);
+  assert.equal(classifications.has('REV-RUNTIME-CANON'), false);
+  assert.equal(classifications.has('DOCS-DISPOSITION-QUEUE-1'), false);
+  assert.deepEqual(snapshot.actions, []);
+});
+
+test('docs disposition snapshot classifies story, QA, and historical work-item ids as non-task references', () => {
+  const snapshot = buildDocsDispositionSnapshot({
+    planningTaskIds: [],
+    documents: [
+      {
+        sourcePath: 'docs/planning/proposals/mandatory/frontend-and-ux/story-catalog.md',
+        raw: [
+          '---',
+          'title: Story catalog',
+          'status: Active',
+          'planning_type: mandatory-proposal',
+          '---',
+          'WAPO-1 WEB-AUTH-1 WEB-GAP-1 WEB-PROJECT-1 WEB-SCOPE-1',
+          'E2-ARCH-01 EPIC-E2-01 QA-MWA2-01 QA-RS-4 QA-EP-11 TF-C2-B-QA-01',
+          'AR-C11 AR-C10-A AR-D-PLAN-POINTER-A AR-A-READSIDE-CONTRACTS',
+          'CI-AUDIT EA-20260429 PKR-1 PR-1 INT-W0 MW-D1-B2 RC-G1-D-A TF-A2-A',
+        ].join('\n'),
+      },
+    ],
+  });
+
+  const classifications = new Map(
+    snapshot.references.map((reference) => [reference.referenceText, reference.classification])
+  );
+
+  assert.equal(classifications.get('WAPO-1'), 'user_story');
+  assert.equal(classifications.get('WEB-AUTH-1'), 'user_story');
+  assert.equal(classifications.get('WEB-GAP-1'), 'user_story');
+  assert.equal(classifications.get('WEB-PROJECT-1'), 'user_story');
+  assert.equal(classifications.get('WEB-SCOPE-1'), 'user_story');
+  assert.equal(classifications.get('E2-ARCH-01'), 'user_story');
+  assert.equal(classifications.get('EPIC-E2-01'), 'epic_reference');
+  assert.equal(classifications.get('QA-MWA2-01'), 'review_finding_reference');
+  assert.equal(classifications.get('QA-RS-4'), 'review_finding_reference');
+  assert.equal(classifications.get('QA-EP-11'), 'review_finding_reference');
+  assert.equal(classifications.get('TF-C2-B-QA-01'), 'review_finding_reference');
+  assert.equal(classifications.get('AR-C11'), 'review_finding_reference');
+  assert.equal(classifications.get('AR-C10-A'), 'review_finding_reference');
+  assert.equal(classifications.get('AR-D-PLAN-POINTER-A'), 'review_finding_reference');
+  assert.equal(classifications.get('AR-A-READSIDE-CONTRACTS'), 'review_finding_reference');
+  assert.equal(classifications.get('CI-AUDIT'), 'governance_workstream_reference');
+  assert.equal(classifications.get('EA-20260429'), 'review_finding_reference');
+  assert.equal(classifications.get('PKR-1'), 'historical_planning_reference');
+  assert.equal(classifications.get('PR-1'), 'historical_planning_reference');
+  assert.equal(classifications.get('INT-W0'), 'historical_planning_reference');
+  assert.equal(classifications.get('MW-D1-B2'), 'historical_planning_reference');
+  assert.equal(classifications.get('RC-G1-D-A'), 'historical_planning_reference');
+  assert.equal(classifications.get('TF-A2-A'), 'historical_planning_reference');
+  assert.deepEqual(snapshot.actions, []);
+});
+
+test('docs disposition snapshot parses UTF-8 BOM frontmatter before missing-status checks', () => {
+  const snapshot = buildDocsDispositionSnapshot({
+    planningTaskIds: [],
+    documents: [
+      {
+        sourcePath: 'docs/guides/bom-frontmatter.md',
+        raw: [
+          '\ufeff---',
+          'title: BOM frontmatter',
+          'status: Active',
+          'owner: Docs',
+          '---',
+          '',
+          '# BOM frontmatter',
+        ].join('\n'),
+      },
+    ],
+  });
+
+  assert.equal(snapshot.documents[0].status, 'Active');
+  assert.deepEqual(snapshot.actions, []);
+});
+
 test('docs disposition snapshot classifies priority markers and date placeholders as non-task references', () => {
   const snapshot = buildDocsDispositionSnapshot({
     planningTaskIds: [],
