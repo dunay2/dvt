@@ -282,6 +282,11 @@ routing to `pnpm verify:changed` once, so package tests, changed docs checks,
 format/lint checks, and developer-workflow self-tests are selected by the same
 plan used during iteration.
 
+The Git hook calls `pnpm verify:prepush -- --hook`. A successful manual
+`verify:prepush` writes a local `.git` stamp for the current `HEAD`, changed
+file set, and diff fingerprint; the hook skips only when that same state
+already passed an equivalent or stronger gate.
+
 Use `pnpm verify:prepush -- --full` only when a full local closeout is required.
 Full mode adds the prepush-only regression, governance, traceability,
 architecture, and type-check groups after the changed-slice gate.

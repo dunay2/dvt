@@ -38,9 +38,9 @@ Mode: Full.
 
 Scope:
 
-- Add a Templates Monaco component guide, user stories, and Fowler analysis.
-- Add semantic architecture tests for Templates Monaco ownership.
-- Extract a route-local `TemplateMonacoPreviewPanel`.
+- [Task: F-30] Add a Templates Monaco component guide, user stories, and Fowler analysis.
+- [Task: F-30] Add semantic architecture tests for Templates Monaco ownership.
+- [Task: F-30] Extract a route-local `TemplateMonacoPreviewPanel`.
 - Replace the ready `<pre>` preview with `MonacoCodeViewer`.
 - Preserve blocked-preview behavior and deterministic preview projection.
 

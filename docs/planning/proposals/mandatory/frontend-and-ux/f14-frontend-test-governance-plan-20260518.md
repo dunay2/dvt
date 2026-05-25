@@ -31,9 +31,9 @@ Options considered:
 
 - Keep the existing generic `Run Tests` step only. Rejected because reviewers
   still cannot see web test status as a first-class frontend lane.
-- Add ad hoc route-specific commands. Rejected because it duplicates suite
+- [Task: E-PROP-DISP-1] Add ad hoc route-specific commands. Rejected because it duplicates suite
   taxonomy and undermines F-14-A.
-- Add a named `Web Frontend Tests` job backed by `pnpm test:web:ci`. Selected
+- [Task: E-PROP-DISP-1] Add a named `Web Frontend Tests` job backed by `pnpm test:web:ci`. Selected
   because it exposes the web lane while preserving the existing suite catalog.
 
 ## Pre-Implementation Brief
@@ -42,9 +42,9 @@ Mode: Full.
 
 Scope:
 
-- Add semantic architecture guards for the web test governance boundary.
-- Add the dedicated `Web Frontend Tests` CI job.
-- Add local component and user-story docs.
+- [Task: E-PROP-DISP-1] Add semantic architecture guards for the web test governance boundary.
+- [Task: E-PROP-DISP-1] Add the dedicated `Web Frontend Tests` CI job.
+- [Task: E-PROP-DISP-1] Add local component and user-story docs.
 - Update roadmap language that previously said the governed path was absent.
 
 Out of scope:

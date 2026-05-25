@@ -75,7 +75,7 @@ The remaining drift is web-local:
   of a boundary-native authoring read model.
 - Canvas cache, session, working-set, host-cycle, and tab-state modules still
   import projected draft records from the generic workspace port.
-- Canvas active-graph, create-canvas save result, autosave, center-surface,
+- [Task: E-PROP-DISP-1] Canvas active-graph, create-canvas save result, autosave, center-surface,
   lifecycle snapshot, authoring graph projection, local-node catalog, and
   affected test fixtures still name the route-local DTO or semantic projection.
 - Several tests still build projected `WorkspaceGraphDraft` objects, making
@@ -275,7 +275,7 @@ flowchart LR
 - `docs/planning/state/agent-lane-e.md`
 - `docs/planning/state/agent-lane-e.yaml`
 - `docs/planning/state/execution-workboard.md`
-- `docs/planning/state/open-task-route.md`
+- [Task: E-PROP-DISP-1] `docs/planning/state/open-task-route.md`
 - `docs/planning/status/generated-code-state.md`
 - `docs/planning/status/system-governance-component-index-20260501.md`
 - `docs/planning/status/system-governance-component-index.components.yaml`
@@ -378,7 +378,7 @@ out of scope.
 
 ### Task 1: Add The Semantic Architecture Guard
 
-- [ ] Add a failing test in
+- [ ] [Task: E-PROP-DISP-1] Add a failing test in
       `apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts`
       that asserts:
   - `apps/web/src/app/ports/workspace.ts` does not export
@@ -401,14 +401,14 @@ out of scope.
 
 ### Task 2: Introduce Canvas-Named Authoring Read Types
 
-- [ ] Add `CanvasAuthoringDraftReadModel` beside `canvasDraftReadModel.ts`.
-- [ ] Add `CanvasAuthoringDraftRecord` for revision, saved timestamp, and
+- [ ] [Task: E-PROP-DISP-1] Add `CanvasAuthoringDraftReadModel` beside `canvasDraftReadModel.ts`.
+- [ ] [Task: E-PROP-DISP-1] Add `CanvasAuthoringDraftRecord` for revision, saved timestamp, and
       `WorkspaceGraphAuthoringDraft`.
-- [ ] Add `CanvasAuthoringSemanticGraph` for canonical graph projection derived
+- [ ] [Task: E-PROP-DISP-1] Add `CanvasAuthoringSemanticGraph` for canonical graph projection derived
       from authoring truth.
 - [ ] Keep capability, audit, format metadata, revision, and
       `WorkspaceGraphAuthoringDraft` in one object.
-- [ ] Add tests proving `ok`, `not_found`, `denied`, and `format_error`
+- [ ] [Task: E-PROP-DISP-1] Add tests proving `ok`, `not_found`, `denied`, and `format_error`
       outcomes.
 - [ ] Run:
       `pnpm --filter @dvt/web test -- canvasDraftReadModel.test.ts`
@@ -428,7 +428,7 @@ out of scope.
       `apps/web/src/app/services/workspace/workspaceService.ts`.
 - [ ] Delete the `projectedDraft + canonicalNodes + canonicalEdges` save
       input path from `canvasDraftRepository.ts`.
-- [ ] Replace create-canvas save-result and autosave execution/scheduling
+- [ ] [Task: E-PROP-DISP-1] Replace create-canvas save-result and autosave execution/scheduling
       payloads with aggregate-native `WorkspaceGraphAuthoringDraft`.
 - [ ] Replace Canvas cache, session, and working-set imports with
       `CanvasAuthoringDraftRecord`.
@@ -436,7 +436,7 @@ out of scope.
       local-node catalog canvas document imports with `CanvasAuthoringCanvasDocument`.
 - [ ] Replace Canvas active-graph, authoring graph projection, and affected
       test fixtures with `CanvasAuthoringSemanticGraph`.
-- [ ] Replace create-canvas policy output with
+- [ ] [Task: E-PROP-DISP-1] Replace create-canvas policy output with
       `CanvasCreateCanvasDocumentCommandResult` wrapping
       `WorkspaceGraphAuthoringDraft`.
 - [ ] Keep projection helpers for view/read paths only and expose them under
@@ -448,7 +448,7 @@ out of scope.
 
 ### Task 4: Move Authoring Mutations To Aggregate Commands
 
-- [ ] Ensure create canvas, add node, move node, connect, disconnect, update,
+- [ ] [Task: E-PROP-DISP-1] Ensure create canvas, add node, move node, connect, disconnect, update,
       duplicate, and remove produce or apply `WorkspaceGraphAuthoringCommand`
       semantics before save. Node duplication must be represented as an `add_node`
       command with a new node id; it must not add a parallel duplicate-specific
@@ -461,7 +461,7 @@ out of scope.
 ### Task 5: Preserve Preview/Run Projection Boundary
 
 - [ ] Verify `DesignGraphDraft` remains only in preview/run artifact modules.
-- [ ] Add a negative unit test proving an incomplete one-node authoring draft
+- [ ] [Task: E-PROP-DISP-1] Add a negative unit test proving an incomplete one-node authoring draft
       can be saved but cannot be compiled unless the selected executable subgraph
       is valid.
 - [ ] Run:
@@ -566,7 +566,7 @@ allowedImplementationSurfaces:
   - docs/planning/state/agent-lane-e.yaml
   - docs/planning/state/agent-lane-e.md
   - docs/planning/state/execution-workboard.md
-  - docs/planning/state/open-task-route.md
+  - docs/planning/state/open-task-route.md # Task: E-PROP-DISP-1
   - docs/planning/status/**
 forbiddenImplementationSurfaces:
   - .github/**
@@ -639,7 +639,7 @@ redGreenCycles:
       - docs/planning/state/agent-lane-e.yaml
       - docs/planning/state/agent-lane-e.md
       - docs/planning/state/execution-workboard.md
-      - docs/planning/state/open-task-route.md
+      - docs/planning/state/open-task-route.md # Task: E-PROP-DISP-1
     greenTest: pnpm docs:workboard:generate
   - id: authoring-draft-boundary-design
     redTest: pnpm docs:gov:links

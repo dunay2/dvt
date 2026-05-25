@@ -73,7 +73,7 @@ but no single executable planning artifact that says:
 This is a boundary-clarity refactoring and governance closure opportunity, not
 feature expansion.
 
-- **Fowler category**: clarify interface and extract/cohere component boundary.
+- [Task: RUNTIME-PROP-DISP-1] **Fowler category**: clarify interface and extract/cohere component boundary.
 - **DDD intent**: keep protected runtime as an application ingress over runtime,
   planner, workspace-draft, and admin-repair bounded contexts; do not let the
   HTTP entrypoint become a shadow domain model.
@@ -118,7 +118,7 @@ Current good signals:
 Current closure gap:
 
 - no canonical protected-runtime rail matrix covers the full route group,
-- no lane task owns closure across all protected runtime routes,
+- [Task: RUNTIME-PROP-DISP-1] no lane task owns closure across all protected runtime routes,
 - negative authorization and tenant-scope requirements are not summarized in a
   single acceptance matrix,
 - compatibility posture for `CANCEL` through `/signal` is not governed as a
@@ -162,7 +162,7 @@ each protected runtime route:
 - DDD object/read model,
 - application port or service,
 - adapter surface,
-- authorization action and tenant scope,
+- [Task: RUNTIME-PROP-DISP-1] authorization action and tenant scope,
 - required negative tests,
 - component documentation owner,
 - legacy/drift posture.
@@ -231,17 +231,17 @@ Disallowed without a separate plan:
 
 ### AR-C10-A: rail matrix and component map hardening
 
-- add or update API component documentation for the protected runtime route
+- [Task: RUNTIME-PROP-DISP-1] add or update API component documentation for the protected runtime route
   group,
 - make each executable catalog row point to a concrete source file and test
   evidence reference,
-- add architecture tests that fail if a protected runtime route exists outside
+- [Task: RUNTIME-PROP-DISP-1] add architecture tests that fail if a protected runtime route exists outside
   the executable rail catalog or route summary.
 
 ### AR-C10-B: negative coverage closure
 
 - inventory existing negative tests for each catalog row,
-- add missing authorization, tenant-scope, malformed payload, and compatibility
+- [Task: RUNTIME-PROP-DISP-1] add missing authorization, tenant-scope, malformed payload, and compatibility
   negative tests,
 - keep test helpers shared where they express the same protected runtime
   contract, not copy-pasted per route.
@@ -255,8 +255,8 @@ Disallowed without a separate plan:
 
 ## Acceptance Criteria
 
-- Lane C has one explicit protected runtime rail closure task.
-- `open-task-route.md` shows that task until closure is implemented.
+- [Task: RUNTIME-PROP-DISP-1] Lane C has one explicit protected runtime rail closure task.
+- [Task: RUNTIME-PROP-DISP-1] `open-task-route.md` shows that task until closure is implemented.
 - Every protected runtime route in `runtimeRoutes.constants.ts` has a catalog
   row and component owner.
 - Every catalog row has at least one positive test and the required negative
@@ -331,7 +331,7 @@ allowedImplementationSurfaces:
   - docs/planning/state/agent-lane-c.yaml
   - docs/planning/state/agent-lane-c.md
   - docs/planning/state/execution-workboard.md
-  - docs/planning/state/open-task-route.md
+  - docs/planning/state/open-task-route.md # Task: RUNTIME-PROP-DISP-1
   - docs/planning/status/**
   - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml
   - docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-SSOT-DEBT.yaml

@@ -26,11 +26,11 @@ warehouse credit capture rail exists.
 
 Rejected alternatives:
 
-- Build or wire the web Cost view first. Rejected because it would keep cost
+- [Task: RUNTIME-PROP-DISP-1] Build or wire the web Cost view first. Rejected because it would keep cost
   semantics mock-driven.
-- Add provider-specific Snowflake credit ingestion. Rejected for this slice
+- [Task: RUNTIME-PROP-DISP-1] Add provider-specific Snowflake credit ingestion. Rejected for this slice
   because query tagging and `QUERY_HISTORY` ingestion are not present.
-- Store estimated dollars in event payloads. Rejected because that would create
+- [Task: RUNTIME-PROP-DISP-1] Store estimated dollars in event payloads. Rejected because that would create
   fake finance data.
 
 ## Fowler Analysis
@@ -62,7 +62,7 @@ Mode: Full.
 
 Scope:
 
-- Add a protected API query and route for cost attribution summary.
+- [Task: RUNTIME-PROP-DISP-1] Add a protected API query and route for cost attribution summary.
 - Return only real usage facts from existing runtime stores.
 - Keep monetary totals explicit and unavailable (`null`) until provider credit
   capture is implemented.

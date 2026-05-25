@@ -168,3 +168,7 @@ symbols:
   - { name: buildWorkspaceFilesEndpoint, path: apps/web/src/app/services/workspace/workspaceFilesHttp.ts, dddOwner: WorkspaceFileTree, cqRails: [ListWorkspaceFiles], fowlerSignals: [Boundary drift], architectureGuard: apps/api/test/architecture/workspaceFilesQueryRail.architecture.test.ts, cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts, unitTests: [apps/web/src/app/services/workspace/workspaceService.files.test.ts] }
   - { name: readWorkspaceFilesScope, path: apps/web/src/app/services/workspace/workspaceFilesHttp.ts, dddOwner: WorkspaceFileReadPolicy, cqRails: [ListWorkspaceFiles, GetWorkspaceFileContent], fowlerSignals: [Hidden authority], architectureGuard: apps/api/test/architecture/workspaceFilesQueryRail.architecture.test.ts, cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts, unitTests: [apps/web/src/app/services/workspace/workspaceService.files.test.ts] }
 ```
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `E-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

@@ -189,3 +189,7 @@ These consequences are accepted as part of the decision set:
 
 No implementation slice should contradict this document without first updating
 this decision register and the linked delivery plan.
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `RUNTIME-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

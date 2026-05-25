@@ -54,7 +54,7 @@ bounded contexts, ports, aggregates, and phased validation".
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
-- `docs/planning/state/how-to-add-tasks.md`
+- [Task: E-PROP-DISP-1] `docs/planning/state/how-to-add-tasks.md`
 - `docs/planning/state/agent-lane-e.yaml`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md`
@@ -318,9 +318,9 @@ Output:
 
 - unit tests for graph mutation reducers, guards, and serialization
 - integration tests for controller plus Inspector edit flows
-- Cypress coverage for create, connect, edit, reload, and delete behavior
+- [Task: E-PROP-DISP-1] Cypress coverage for create, connect, edit, reload, and delete behavior
 - negative-path coverage for save failure, invalid connection, and stale reload
-- execution-action test-file splitting on `main` is baseline; the remaining
+- [Task: E-PROP-DISP-1] execution-action test-file splitting on `main` is baseline; the remaining
   proof work is shared test-support and application-service/command coverage
 
 ## Operability baseline
@@ -375,7 +375,7 @@ operator documentation.
 - `useCanvasController` consumes canonical draft truth, not visual-only state
 - Inspector save updates the rendered node and persisted draft consistently
 - failed save does not leave the route in a fake-saved state
-- preview action reads the saved authoring truth after edits through
+- [Task: E-PROP-DISP-1] preview action reads the saved authoring truth after edits through
   `ExecutionSelection`
 - selected SQL node preview/run ignores unrelated loose draft nodes outside the
   selected closure
@@ -383,7 +383,7 @@ operator documentation.
   replacing the editable draft
 - stale revision writes surface an explicit conflict state instead of silent
   overwrite
-- duplicate save retries do not create duplicate semantic mutations
+- [Task: E-PROP-DISP-1] duplicate save retries do not create duplicate semantic mutations
 - read-authorized and write-forbidden callers see read-only Canvas behavior
   without hidden mutation paths
 - save failure and conflict flows preserve caller-visible correlation data

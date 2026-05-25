@@ -25,7 +25,7 @@ planning DB command rail.
 - `docs/guides/ai-work-protocol.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
-- `docs/planning/state/how-to-add-tasks.md`
+- [Task: GOV-PROP-DISP-1] `docs/planning/state/how-to-add-tasks.md`
 - `docs/adr/ADR-0017_ExecutionPlan_Schema_Versioning.md`
 - `docs/adr/ADR-0018_Shared_Kernel_Ownership_Governance.md`
 - `docs/adr/ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md`
@@ -34,9 +34,9 @@ planning DB command rail.
 
 In scope:
 
-- add an AR-D6 governance review under
+- [Task: GOV-PROP-DISP-1] add an AR-D6 governance review under
   `docs/planning/reviews/architecture-and-governance/`;
-- add an ADR-0036 addendum recording the retain/defer decision;
+- [Task: GOV-PROP-DISP-1] add an ADR-0036 addendum recording the retain/defer decision;
 - close `AR-D6` through `pnpm planning:db:operate`;
 - regenerate documentation and planning derived surfaces required by the repo.
 
@@ -66,7 +66,7 @@ governingSources:
   - docs/guides/ai-work-protocol.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/planning/state/how-to-add-tasks.md
+  - docs/planning/state/how-to-add-tasks.md # Task: GOV-PROP-DISP-1
   - docs/adr/ADR-0017_ExecutionPlan_Schema_Versioning.md
   - docs/adr/ADR-0018_Shared_Kernel_Ownership_Governance.md
   - docs/adr/ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md

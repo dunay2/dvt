@@ -26,7 +26,7 @@ delivery plan, and the current open task route.
 - [Planning Dashboard](../../../state/planning-dashboard.md)
 - [Roadmap Of Record](../../../roadmap/index.md)
 - [Roadmap By Domain](../../../roadmap/roadmap-by-domain.md)
-- [Open Task Route](../../../state/open-task-route.md)
+- [Task: RUNTIME-PROP-DISP-1] [Open Task Route](../../../state/open-task-route.md)
 - [Agent Lane C](../../../state/agent-lane-c.yaml)
 - [Engine Roadmap](../../../../architecture/components/engine/roadmap/engine-phases.md)
 - [Transformation Flow Proposal Set 2026-04-05](./plan-creation-interface-route-proposal-20260405.md)
@@ -100,7 +100,7 @@ general step-kind runtime.
 Without it, `TF-C2-A` would have only two bad options:
 
 - bend PostgreSQL execution into dbt-shaped runtime assumptions; or
-- add another hard-coded branch inside workflow execution.
+- [Task: RUNTIME-PROP-DISP-1] add another hard-coded branch inside workflow execution.
 
 Both options increase the exact drift that `MW-C1` exists to remove.
 
@@ -114,7 +114,7 @@ Both options increase the exact drift that `MW-C1` exists to remove.
 ### Non-goals
 
 - deliver a full non-dbt external SDK
-- add all future step kinds immediately
+- [Task: RUNTIME-PROP-DISP-1] add all future step kinds immediately
 - reopen a multi-provider runtime program
 
 ## Slice 2 - `TF-C2-A` (now materially landed)

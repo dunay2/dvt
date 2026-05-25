@@ -34,11 +34,11 @@ Constraints and invariants:
 
 Options considered:
 
-- Keep cards and add CSS density. Rejected because it preserves repeated
+- [Task: E-PROP-DISP-1] Keep cards and add CSS density. Rejected because it preserves repeated
   semantics and weak scanability.
-- Add a generic app-wide data-grid abstraction. Rejected as premature because
+- [Task: E-PROP-DISP-1] Add a generic app-wide data-grid abstraction. Rejected as premature because
   only Runs has a concrete row contract in this slice.
-- Add local Runs table models and table renderers. Selected because it improves
+- [Task: E-PROP-DISP-1] Add local Runs table models and table renderers. Selected because it improves
   operator UX while preserving bounded ownership.
 
 ## Pre-Implementation Brief
@@ -47,11 +47,11 @@ Mode: Full.
 
 Scope:
 
-- Add local run table row/filter/sort model.
+- [Task: E-PROP-DISP-1] Add local run table row/filter/sort model.
 - Replace `/runs` card list with a dense table.
 - Replace run timeline event cards with dense event rows.
-- Add docs, user stories, analysis, and semantic architecture guard.
-- Add TanStack Table as the approved dense-table primitive for `@dvt/web`.
+- [Task: E-PROP-DISP-1] Add docs, user stories, analysis, and semantic architecture guard.
+- [Task: E-PROP-DISP-1] Add TanStack Table as the approved dense-table primitive for `@dvt/web`.
 
 Out of scope:
 

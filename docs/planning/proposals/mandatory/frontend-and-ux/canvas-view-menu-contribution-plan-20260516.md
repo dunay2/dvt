@@ -21,7 +21,7 @@ rail. The Canvas route owns the contribution state; the shell owns placement.
   export, and route status.
 - Move layout, impact, column, cost, grid, grid color, and snap controls into
   the shell `View` menu.
-- Add semantic component docs, user stories, and architecture tests for the
+- [Task: F-29] Add semantic component docs, user stories, and architecture tests for the
   contribution boundary.
 
 ```feature-mechanization

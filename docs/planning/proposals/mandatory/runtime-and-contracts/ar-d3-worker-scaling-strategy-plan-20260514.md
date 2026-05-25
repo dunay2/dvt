@@ -117,9 +117,9 @@ symbols:
 
 ## Residual Work
 
-- Implement tenant-to-queue assignment automation if DVT later needs pooled
+- [Task: RUNTIME-PROP-DISP-1] Implement tenant-to-queue assignment automation if DVT later needs pooled
   low-volume tenant queues.
-- Add Kubernetes/KEDA deployment artifacts when infrastructure ownership is
+- [Task: RUNTIME-PROP-DISP-1] Add Kubernetes/KEDA deployment artifacts when infrastructure ownership is
   ready.
 - Collect production load evidence for the target tenant count before claiming
   a specific environment is scale-ready.

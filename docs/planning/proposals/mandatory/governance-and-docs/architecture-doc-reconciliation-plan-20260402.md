@@ -115,11 +115,11 @@ Candidate archive-or-rewrite set:
 
 ### Wave 4: Add missing contributor guides
 
-- create an architecture doc maintenance guide:
+- [Task: GOV-PROP-DISP-1] create an architecture doc maintenance guide:
   "what to update when runtime behavior changes"
-- create an architecture reading-path guide:
+- [Task: GOV-PROP-DISP-1] create an architecture reading-path guide:
   "which doc to read for principle, current truth, and supporting context"
-- create a doc taxonomy guide for `canonical` versus `status` versus
+- [Task: GOV-PROP-DISP-1] create a doc taxonomy guide for `canonical` versus `status` versus
   `historical` architecture surfaces if existing guidance remains too implicit
 
 ### Wave 5: Close with governed navigation and validation
@@ -146,7 +146,7 @@ Candidate archive-or-rewrite set:
 ### Batch B: Active truth correction
 
 - update canonical and status pages first
-- fix broken domain references and stale cross-links
+- [Task: GOV-PROP-DISP-1] fix broken domain references and stale cross-links
 - make supporting docs explicitly non-authoritative where needed
 
 ### Batch C: Simplification and archive moves

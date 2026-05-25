@@ -167,3 +167,7 @@ symbols:
   - { name: registerProtectedRunRoutes, path: apps/api/src/entrypoints/http/protectedRuntimeRunRoutes.ts, dddOwner: ProtectedRuntimeRouteComposition, cqRails: [ListWorkspaceFiles, GetWorkspaceFileContent], fowlerSignals: [Responsibility overload], architectureGuard: apps/api/test/architecture/workspaceFilesQueryRail.architecture.test.ts, cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts, unitTests: [apps/api/test/entrypoints/http/workspaceFilesRoutes.test.ts] }
   - { name: registerProtectedWorkspaceGraphDraftRouteGroup, path: apps/api/src/entrypoints/http/protectedRuntimeWorkspaceGraphDraftRouteGroup.ts, dddOwner: ProtectedRuntimeRouteComposition, cqRails: [ListWorkspaceFiles, GetWorkspaceFileContent], fowlerSignals: [Responsibility overload], architectureGuard: apps/api/test/architecture/workspaceFilesQueryRail.architecture.test.ts, cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts, unitTests: [apps/api/test/entrypoints/http/workspaceFilesRoutes.test.ts] }
 ```
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `E-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

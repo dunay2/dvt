@@ -44,10 +44,10 @@ Mode: Full.
 
 Scope:
 
-- Add Fowler analysis in `buzon`.
-- Add Diff Monaco component guide and user stories.
-- Add module owned-concern docblocks.
-- Add semantic architecture guard.
+- [Task: F-30] Add Fowler analysis in `buzon`.
+- [Task: F-30] Add Diff Monaco component guide and user stories.
+- [Task: F-30] Add module owned-concern docblocks.
+- [Task: F-30] Add semantic architecture guard.
 - Update planning state and generated docs.
 
 Out of scope:

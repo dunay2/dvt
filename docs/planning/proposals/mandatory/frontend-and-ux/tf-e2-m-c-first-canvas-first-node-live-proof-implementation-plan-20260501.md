@@ -147,7 +147,7 @@ Rejected alternatives:
   model ownership let route internals drift.
 - Treat seed nodes as acceptable first-canvas proof. Rejected because the user
   reported seeded nodes as garbage when no project or canvas has been created.
-- Add backend fixtures for this slice. Rejected because the target explicitly
+- [Task: E-PROP-DISP-1] Add backend fixtures for this slice. Rejected because the target explicitly
   requires no intercepted draft requests and the existing protected runtime must
   be exercised.
 - Fold the proof into the draft access posture model. Rejected because access
@@ -1818,17 +1818,17 @@ symbols:
 
 ## Mechanical Implementation Tasks
 
-- [x] Add `canvasFirstAuthoringLiveProof.test.ts` red cases for
+- [x] [Task: E-PROP-DISP-1] Add `canvasFirstAuthoringLiveProof.test.ts` red cases for
       `needs_canvas`, typed canvas creation, first-node creation, persisted
       layout, reload restore, missing active canvas, read-only posture, and
       duplicate first-canvas attempts.
-- [x] Add the `canvasFirstAuthoringLiveProof*` module family with closed
+- [x] [Task: E-PROP-DISP-1] Add the `canvasFirstAuthoringLiveProof*` module family with closed
       discriminated vocabulary, first-node policy, restored-layout policy,
       invariant checks, and transition derivation with no React, HTTP, or
       Cypress imports.
 - [x] Extend clean host-cycle tests so a protected empty draft produces an
       empty entrypoint and no seeded project nodes.
-- [x] Extend first-canvas command tests so `transformation` and `dbt` create
+- [x] [Task: E-PROP-DISP-1] Extend first-canvas command tests so `transformation` and `dbt` create
       typed empty documents and duplicate creation fails closed.
 - [x] Extend controller tests so first-node creation waits for the first-canvas
       save, creates `dvt-source-1` for transformation, creates `dbt-source-1`
@@ -1839,10 +1839,10 @@ symbols:
       the layout store ready without manual test-only rehydrate calls.
 - [x] Keep whole-card drag as the governed surface and extend tests so the node
       moves from the card body while permissions remain fail-closed.
-- [x] Add semantic architecture guard assertions for proof ownership, no seeded
+- [x] [Task: E-PROP-DISP-1] Add semantic architecture guard assertions for proof ownership, no seeded
       startup nodes, first-node defaults, no direct Cypress draft seeding, no
       draft endpoint intercepts, and docs/implementation traceability.
-- [x] Add Cypress live proof with clean-scope preflight, no direct draft `PUT`
+- [x] [Task: E-PROP-DISP-1] Add Cypress live proof with clean-scope preflight, no direct draft `PUT`
       before UI commands, and no `cy.intercept()` for draft read/write
       endpoints.
 - [x] Run all completion gates in the order listed by the manifest.
@@ -1903,7 +1903,7 @@ Improved patterns expected from the implementation:
 
 - Walking skeleton over the real boundary instead of fixture-only confidence.
 - Domain service encapsulation for first-authoring proof.
-- Explicit command/query rails for every user-visible action.
+- [Task: E-PROP-DISP-1] Explicit command/query rails for every user-visible action.
 - Projection separation between graph authority and viewport layout.
 - Semantic architecture guard that detects drift before Cypress does.
 
@@ -1911,7 +1911,7 @@ Antipatterns this plan forbids:
 
 - seeded nodes on clean startup;
 - Cypress draft endpoint intercepts as success proof;
-- direct Cypress `PUT /workspace/graph/draft` seeding before the UI create
+- [Task: E-PROP-DISP-1] direct Cypress `PUT /workspace/graph/draft` seeding before the UI create
   command;
 - JSX-level command branching;
 - duplicate first-canvas semantics in host, tab strip, and controller;

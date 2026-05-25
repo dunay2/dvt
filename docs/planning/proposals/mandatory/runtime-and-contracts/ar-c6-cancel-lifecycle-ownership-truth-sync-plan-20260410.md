@@ -132,14 +132,14 @@ flowchart LR
 
 ### RunEvents.v1
 
-- add `RunCancelRequested` to the known lifecycle catalog
+- [Task: RUNTIME-PROP-DISP-1] add `RunCancelRequested` to the known lifecycle catalog
 - define its read-model semantics explicitly:
   - non-terminal
   - canonical cancelling-state transition
 
 ### ExecutionSemantics.v1
 
-- add `RunCancelRequested` to the run-level lifecycle set
+- [Task: RUNTIME-PROP-DISP-1] add `RunCancelRequested` to the run-level lifecycle set
 - define cancellation as an ordered runtime-owned lifecycle:
   - `RunCancelRequested`
   - `RunCancelled`

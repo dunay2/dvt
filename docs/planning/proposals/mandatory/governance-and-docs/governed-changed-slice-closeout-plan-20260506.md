@@ -36,8 +36,8 @@ the index.
 
 In scope:
 
-- add `pnpm closeout:changed`;
-- add `pnpm pr:closeout` as the final PR closeout rail;
+- [Task: GOV-PROP-DISP-1] add `pnpm closeout:changed`;
+- [Task: GOV-PROP-DISP-1] add `pnpm pr:closeout` as the final PR closeout rail;
 - plan generators from the local changed-file set;
 - run `docs:sync`, workboard generation, governance regeneration,
   unstaged and staged `git diff --check`, conflict-marker scan, and
@@ -45,7 +45,7 @@ In scope:
 - run commit-helper, normal hooks, one final `pnpm verify:prepush`, and
   optional push in a mechanically enforced order;
 - register the closeout helper regression test in the prepush gate;
-- add a runbook entry documenting usage and the untracked-doc caveat;
+- [Task: GOV-PROP-DISP-1] add a runbook entry documenting usage and the untracked-doc caveat;
 - prove the planner with `node --test scripts/closeout-changed.test.cjs`.
 
 Out of scope:

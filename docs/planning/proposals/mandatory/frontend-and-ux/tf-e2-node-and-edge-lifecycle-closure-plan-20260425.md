@@ -91,7 +91,7 @@ Add two explicit command seams beside `canvasGraphLifecycle`:
 These new commands stay responsible for:
 
 - generating duplicate-node identity, name, and placement
-- validating reconnect against the same connection guards used for edge create
+- [Task: E-PROP-DISP-1] validating reconnect against the same connection guards used for edge create
 - producing the next visible graph that is then committed through
   `canvasGraphLifecycle`
 
@@ -203,7 +203,7 @@ move, conflict, and missing-remote posture.
 Acceptance:
 
 - existing move and reload proofs stay green
-- duplicate and reconnect add focused proof rather than widening unrelated
+- [Task: E-PROP-DISP-1] duplicate and reconnect add focused proof rather than widening unrelated
   adapters
 
 ## TDD Route

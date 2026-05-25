@@ -35,7 +35,7 @@ Constraints and invariants:
 - `docs/architecture/fowler-opportunity-planning-governance.md` requires root
   opportunity classification, DDD ownership, allowed surfaces, negative tests,
   and user-flow proof before implementation.
-- `docs/planning/state/planning-control-tower.md` keeps the task lifecycle in
+- [Task: F-30] `docs/planning/state/planning-control-tower.md` keeps the task lifecycle in
   the planning DB.
 - `docs/planning/reviews/architecture-and-governance/20260525-f30-monaco-code-artifacts-reconciliation-review.md`
   creates `E/F-30-GRAPH-CODE-PARITY` as the remaining product-facing gap after
@@ -46,11 +46,11 @@ Constraints and invariants:
 
 Options considered:
 
-- Add another mocked Artifacts or Code fixture: rejected because it would keep
+- [Task: F-30] Add another mocked Artifacts or Code fixture: rejected because it would keep
   the same fragmented proof and would not exercise user continuity.
-- Add a backend artifact catalog endpoint: rejected because the existing
+- [Task: F-30] Add a backend artifact catalog endpoint: rejected because the existing
   workspace file rails already represent the product intent for this slice.
-- Add cross-route browser proof and invalidate workspace file read models after
+- [Task: F-30] Add cross-route browser proof and invalidate workspace file read models after
   a successful Grafo preview artifact save: selected because it reuses the
   existing command/query rails and closes the user-facing gap without widening
   backend contracts.
@@ -191,7 +191,7 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/frontend-and-ux/f30-graph-code-artifacts-project-source-parity-plan-20260525.md
   - docs/planning/reviews/architecture-and-governance/20260525-f30-monaco-code-artifacts-reconciliation-review.md
   - docs/planning/state/execution-workboard.md
-  - docs/planning/state/open-task-route.md
+  - docs/planning/state/open-task-route.md # Task: F-30
   - docs/planning/status/**
   - pnpm-lock.yaml
 forbiddenImplementationSurfaces:

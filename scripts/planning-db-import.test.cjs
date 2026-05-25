@@ -11,8 +11,10 @@ const {
   clearGovernanceSnapshotTables,
   governanceImportDeleteTables,
   importContent,
+  mergePlanningTaskIds,
   normalizeText,
   parseArgs,
+  readLocalPlanningTaskIds,
   runPlanningImport,
 } = require('./planning-db-import.cjs');
 const { governanceGeneratedPath } = require('./governance-generated-paths.cjs');
@@ -910,6 +912,26 @@ test('normalizeText keeps structured lane fields queryable without dropping cont
   assert.equal(normalizeText(undefined), '');
   assert.equal(normalizeText(['one', 'two']), 'one\ntwo');
   assert.equal(normalizeText({ a: 1 }), '{"a":1}');
+});
+
+test('planning governance import includes DB-local task ids in knowledge task linking', async () => {
+  const queries = [];
+  const client = {
+    async query(sql) {
+      queries.push(String(sql).trim());
+      return {
+        rows: [{ task_id: 'E-PROP-DISP-1' }, { taskId: 'GOV-PROP-DISP-1' }],
+      };
+    },
+  };
+
+  assert.deepEqual(mergePlanningTaskIds(['F-30', 'E-PROP-DISP-1'], ['E-PROP-DISP-1', '']), [
+    'F-30',
+    'E-PROP-DISP-1',
+  ]);
+  assert.deepEqual(await readLocalPlanningTaskIds(client), ['E-PROP-DISP-1', 'GOV-PROP-DISP-1']);
+  assert.match(queries[0], /planning_task_local_definitions/);
+  assert.match(queries[0], /planning_task_local_tombstones/);
 });
 
 test('importContent serializes destructive read-model replacement with an advisory lock', async () => {

@@ -196,8 +196,8 @@ Scope:
 - define `IStartRunExecutionCapacityPort`
 - define request/result vocabulary
 - integrate the port into `BackpressureAwareStartRunUseCase`
-- add a fail-closed default implementation for composition-time use
-- add unit coverage and component-local docs
+- [Task: RUNTIME-PROP-DISP-1] add a fail-closed default implementation for composition-time use
+- [Task: RUNTIME-PROP-DISP-1] add unit coverage and component-local docs
 
 Definition of done:
 
@@ -210,9 +210,9 @@ Definition of done:
 
 Scope:
 
-- implement the concrete binding for the selected adapter
-- wire the binding in the protected runtime composition root
-- add integration tests proving caller-visible admission behavior under
+- [Task: RUNTIME-PROP-DISP-1] implement the concrete binding for the selected adapter
+- [Task: RUNTIME-PROP-DISP-1] wire the binding in the protected runtime composition root
+- [Task: RUNTIME-PROP-DISP-1] add integration tests proving caller-visible admission behavior under
   saturation and unavailable-capacity conditions
 
 Definition of done:

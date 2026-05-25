@@ -89,7 +89,7 @@ English and Spanish for the same presentation surface.
   or graph semantics.
 - Do not touch backend routes, contracts, adapters, planner, engine, or
   protected draft API surfaces.
-- Do not add a manual Save command. Canvas save remains automatic.
+- [Task: E-PROP-DISP-1] Do not add a manual Save command. Canvas save remains automatic.
 - Do not make Cypress rely on bilingual regexes as proof of localization.
 
 ## Required Future Checks

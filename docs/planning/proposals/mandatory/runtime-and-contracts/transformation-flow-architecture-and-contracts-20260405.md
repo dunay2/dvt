@@ -540,3 +540,7 @@ Not allowed in phase 2:
 - inferring profile requirements from compiled step regexes
 - mixing multiple providers inside the same run
 - creating a second user-facing flow for dbt runs
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `RUNTIME-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

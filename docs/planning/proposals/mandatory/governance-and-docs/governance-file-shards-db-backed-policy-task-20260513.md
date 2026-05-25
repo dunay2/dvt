@@ -30,7 +30,7 @@ only as optional inspection artifacts.
 
 ## Task Definition
 
-- Task ID: `GOV-SHARD-DB-1`
+- [Task: GOV-PROP-DISP-1] Task ID: `GOV-SHARD-DB-1`
 - Lane: `D`
 - Priority: `P0`
 - Objective: replace the governance file shard size gate with DB-backed
@@ -63,7 +63,7 @@ implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/govern
 componentGuides:
   - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
 userStories:
-  - docs/planning/proposals/mandatory/governance-and-docs/governance-file-shards-db-backed-policy-task-20260513.md
+  - docs/planning/proposals/mandatory/governance-and-docs/governance-file-shards-db-backed-policy-task-20260513.md # Task: GOV-PROP-DISP-1
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -75,7 +75,7 @@ allowedImplementationSurfaces:
   - docs/generated-docs-policy.json
   - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
   - docs/planning/status/db-surface-inventory.md
-  - docs/planning/proposals/mandatory/governance-and-docs/governance-file-shards-db-backed-policy-task-20260513.md
+  - docs/planning/proposals/mandatory/governance-and-docs/governance-file-shards-db-backed-policy-task-20260513.md # Task: GOV-PROP-DISP-1
   - docs/planning/closeouts/20260513-governance-file-shards-db-backed-policy-closeout.md
   - docs/.manifest.json
   - docs/**/index.md

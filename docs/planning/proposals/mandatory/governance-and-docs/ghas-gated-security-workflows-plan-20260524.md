@@ -22,7 +22,7 @@ when this private repository does not have GitHub Advanced Security enabled.
 - Run both workflows for private repositories only when the repository variable
   `GH_ADVANCED_SECURITY_ENABLED=true` declares that GitHub Advanced Security
   and the required dependency/security analysis features are available.
-- Preserve pinned action references and high-severity dependency failure
+- [Task: GOV-PROP-DISP-1] Preserve pinned action references and high-severity dependency failure
   policy.
 - Do not weaken product, test, docs, contract, or PR quality gates.
 
@@ -44,7 +44,7 @@ commands or queries.
   explicit.
 - Feature envy: product PRs should not absorb repository entitlement failures.
   Keep the check in CI governance instead of product code.
-- Test-only confidence: add workflow parity coverage so future workflow edits
+- [Task: GOV-PROP-DISP-1] Test-only confidence: add workflow parity coverage so future workflow edits
   preserve the GHAS gate and pinned security actions together.
 
 ```feature-mechanization

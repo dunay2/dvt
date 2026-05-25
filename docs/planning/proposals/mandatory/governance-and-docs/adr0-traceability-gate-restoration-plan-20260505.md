@@ -15,8 +15,8 @@ metadata regressions.
 
 ## Scope
 
-- Wire `pnpm traceability:adr0` into the PR quality workflow parity surface.
-- Add missing ADR-0000 traceability headers to current governed package files
+- [Task: GOV-PROP-DISP-1] Wire `pnpm traceability:adr0` into the PR quality workflow parity surface.
+- [Task: GOV-PROP-DISP-1] Add missing ADR-0000 traceability headers to current governed package files
   where the changed-files gate allows direct remediation.
 - Keep existing drift-owned files in the explicit traceability issue baseline
   instead of touching drift units outside this slice.

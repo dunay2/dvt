@@ -155,3 +155,7 @@ matrix.
       plan-store tenancy as residual risks.
 - [x] Run `pnpm docs:sync` and `pnpm docs:status:generate`.
 - [x] Run final adapter tests, typecheck, and `pnpm verify:prepush`.
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `RUNTIME-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

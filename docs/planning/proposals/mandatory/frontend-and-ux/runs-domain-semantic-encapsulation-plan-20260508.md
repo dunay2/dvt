@@ -469,3 +469,7 @@ symbols:
 3. Regenerate code/docs/governance status after structural additions.
 4. Run `pnpm docs:feature-mechanization:implementation`.
 5. Finish with `pnpm verify:prepush`.
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `E-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

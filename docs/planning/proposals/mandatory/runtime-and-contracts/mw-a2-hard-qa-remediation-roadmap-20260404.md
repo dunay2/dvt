@@ -26,8 +26,8 @@ This order minimizes product risk because it closes ambiguity at the contract bo
 - [x] `QA-MWA2-04` Split `PlannerFacade` responsibilities (resolver orchestration, translation, validation, cache).
 - [x] `QA-MWA2-05` Isolate DBT-specific translation from planner core policy.
 - [ ] `QA-MWA2-06` Complete negative tests for provenance-only identity invariants (`sourceFamily/sourceVersion/metadata` do not change plan identity).
-- [ ] `QA-MWA2-07` Add architecture fitness checks to enforce hexagonal boundaries/import ownership.
-- [ ] `QA-MWA2-08` Add invariant-to-test trace template (`INV-*` -> test case mapping) as docs gate.
+- [ ] [Task: RUNTIME-PROP-DISP-1] `QA-MWA2-07` Add architecture fitness checks to enforce hexagonal boundaries/import ownership.
+- [ ] [Task: RUNTIME-PROP-DISP-1] `QA-MWA2-08` Add invariant-to-test trace template (`INV-*` -> test case mapping) as docs gate.
 - [ ] `QA-MWA2-09` Align docs to implemented vs planned behavior at every section where target model is referenced.
 
 ## Task roadmap

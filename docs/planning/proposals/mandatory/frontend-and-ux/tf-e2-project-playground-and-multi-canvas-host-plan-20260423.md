@@ -41,7 +41,7 @@ is premature: there is still no governed user-visible flow for:
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
-- `docs/planning/state/how-to-add-tasks.md`
+- [Task: E-PROP-DISP-1] `docs/planning/state/how-to-add-tasks.md`
 - `docs/planning/state/agent-lane-e.yaml`
 - `docs/architecture/reference-architecture.md`
 - `docs/concepts/domain-language.md`
@@ -138,7 +138,7 @@ Rejected because:
 Benefits:
 
 - matches the existing `workspace-first` canon
-- gives a real place to create and switch canvases
+- [Task: E-PROP-DISP-1] gives a real place to create and switch canvases
 - lets plugins own graph semantics without owning the product shell
 - makes the selected-closure and node-creation E2E route defensible
 
@@ -170,7 +170,7 @@ The host owns:
 
 - workspace selection
 - tab registry and restoration
-- create-canvas flow
+- [Task: E-PROP-DISP-1] create-canvas flow
 - capability gating
 - persistence and route state
 
@@ -299,7 +299,7 @@ flowchart TD
 - plugin-owned execution authority
 - marketplace or untrusted plugin runtime
 - automatic creation of a hidden default graph without user intent
-- E2E selected-closure claims before create-canvas and create-first-node UX
+- [Task: E-PROP-DISP-1] E2E selected-closure claims before create-canvas and create-first-node UX
 
 ## Proposed slice order
 
@@ -317,9 +317,9 @@ flowchart TD
 - the workspace route no longer overclaims that one canvas is the whole authoring surface
 - a workspace can host multiple canvases as first-class tabs
 - each canvas has an explicit kind
-- the host can create the first canvas through governed UI
+- [Task: E-PROP-DISP-1] the host can create the first canvas through governed UI
 - a typed empty canvas can render a first-node entrypoint honestly
-- selected-closure Cypress work is sequenced after create-canvas and create-node UX
+- [Task: E-PROP-DISP-1] selected-closure Cypress work is sequenced after create-canvas and create-node UX
 
 ## Recommendation
 

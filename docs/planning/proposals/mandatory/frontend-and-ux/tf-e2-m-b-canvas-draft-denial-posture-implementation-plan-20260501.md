@@ -162,7 +162,7 @@ Rejected alternatives:
 
 - Patch only toolbar copy. Rejected because banner and permissions would still
   derive their own truth.
-- Add a route-level auth branch. Rejected because API auth already owns token
+- [Task: E-PROP-DISP-1] Add a route-level auth branch. Rejected because API auth already owns token
   refresh and Canvas must not decode JWTs.
 - Treat read-only as forbidden. Rejected because read-only keeps product value
   for inspection.
@@ -1226,9 +1226,9 @@ completionGate:
 
 **Files:**
 
-- Create:
+- [Task: E-PROP-DISP-1] Create:
   `apps/web/src/app/views/canvas/canvasDraftAuthTransportPosture.ts`
-- Create:
+- [Task: E-PROP-DISP-1] Create:
   `apps/web/src/app/views/canvas/canvasDraftAuthTransportPosture.test.ts`
 
 - [ ] **Step 1: Write the failing auth transport tests**
@@ -1274,7 +1274,7 @@ pnpm --filter @dvt/web test -- canvasDraftAuthTransportPosture.test.ts
 
 Expected: fails because `canvasDraftAuthTransportPosture.ts` does not exist.
 
-- [ ] **Step 3: Add the adapter**
+- [ ] [Task: E-PROP-DISP-1] **Step 3: Add the adapter**
 
 Create:
 
@@ -1311,9 +1311,9 @@ Expected: all tests pass.
 
 **Files:**
 
-- Create:
+- [Task: E-PROP-DISP-1] Create:
   `apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.ts`
-- Create:
+- [Task: E-PROP-DISP-1] Create:
   `apps/web/src/app/views/canvas/canvasDraftAccessPostureModel.test.ts`
 
 - [ ] **Step 1: Write the failing posture tests**
@@ -1431,7 +1431,7 @@ pnpm --filter @dvt/web test -- canvasDraftAccessPostureModel.test.ts
 
 Expected: fails because `canvasDraftAccessPostureModel.ts` does not exist.
 
-- [ ] **Step 3: Add the posture model**
+- [ ] [Task: E-PROP-DISP-1] **Step 3: Add the posture model**
 
 Create the model with this public shape:
 
@@ -1564,7 +1564,7 @@ expect(resolveCanvasViewCopy('es').sessionRequiredDraftLabel).toBe('Sesion reque
 
 Expected red: the keys do not exist.
 
-- [ ] **Step 2: Add closed copy keys**
+- [ ] [Task: E-PROP-DISP-1] **Step 2: Add closed copy keys**
 
 Add these keys to `CanvasViewCopy`:
 
@@ -1735,7 +1735,7 @@ It must then pass the admitted values into `resolveCanvasRuntimePolicy(...)`.
 not inspect `draftAccessMode`, `draftCapabilityReason`, or `draftFormatError`
 directly.
 
-- [ ] **Step 3: Add posture to route view state**
+- [ ] [Task: E-PROP-DISP-1] **Step 3: Add posture to route view state**
 
 `CanvasRouteViewState` must include:
 
@@ -1794,7 +1794,7 @@ Expected: pass.
 
 **Files:**
 
-- Create:
+- [Task: E-PROP-DISP-1] Create:
   `apps/web/src/app/views/canvas/CanvasDraftAccessRecovery.templates.tsx`
 - Modify:
   `apps/web/src/app/views/canvas/CanvasRecoveryBanner.templates.tsx`
@@ -1815,7 +1815,7 @@ expect(screen.getByText('Session required for draft access')).toBeVisible();
 expect(screen.queryByRole('button', { name: 'Plan' })).not.toBeInTheDocument();
 ```
 
-- [ ] **Step 2: Add passive template**
+- [ ] [Task: E-PROP-DISP-1] **Step 2: Add passive template**
 
 The new template must receive fully resolved state:
 
@@ -1857,7 +1857,7 @@ Expected: pass.
 - Modify:
   `apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts`
 
-- [ ] **Step 1: Add failing architecture expectations**
+- [ ] [Task: E-PROP-DISP-1] **Step 1: Add failing architecture expectations**
 
 Add these expectations:
 
@@ -1899,7 +1899,7 @@ expect(controllerSource).toContain('applyCanvasDraftPostureToRuntimePolicyInput'
 
 Expected red before Task 1, Task 2, and Task 4 are complete.
 
-- [ ] **Step 2: Add docs traceability expectations**
+- [ ] [Task: E-PROP-DISP-1] **Step 2: Add docs traceability expectations**
 
 Add:
 
@@ -1930,12 +1930,12 @@ Expected: pass.
 
 **Files:**
 
-- Create:
+- [Task: E-PROP-DISP-1] Create:
   `apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts`
 - Modify existing Cypress support only if a reusable fixture helper already
   exists and can stay scoped to Canvas draft authoring.
 
-- [ ] **Step 1: Add unauthenticated flow**
+- [ ] [Task: E-PROP-DISP-1] **Step 1: Add unauthenticated flow**
 
 Test behavior:
 
@@ -1966,7 +1966,7 @@ it('shows session recovery and disables unsafe Canvas actions when draft access 
 });
 ```
 
-- [ ] **Step 2: Add forbidden-scope flow**
+- [ ] [Task: E-PROP-DISP-1] **Step 2: Add forbidden-scope flow**
 
 Test behavior:
 
@@ -1991,7 +1991,7 @@ it('shows forbidden-scope recovery when workspace scope is denied', () => {
 });
 ```
 
-- [ ] **Step 3: Add read-only flow**
+- [ ] [Task: E-PROP-DISP-1] **Step 3: Add read-only flow**
 
 Test behavior:
 

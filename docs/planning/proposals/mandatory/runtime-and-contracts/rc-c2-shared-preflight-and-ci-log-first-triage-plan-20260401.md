@@ -71,9 +71,9 @@ tooling surface.
 In scope:
 
 - extend `scripts/hygiene.ps1` with shared preflight and log-first PR triage
-- add a repo-native helper under `tools/ci/` with unit tests
-- add a canonical guide for preflight and CI triage
-- add YAML-backed adoption tracking plus a readable status companion
+- [Task: RUNTIME-PROP-DISP-1] add a repo-native helper under `tools/ci/` with unit tests
+- [Task: RUNTIME-PROP-DISP-1] add a canonical guide for preflight and CI triage
+- [Task: RUNTIME-PROP-DISP-1] add YAML-backed adoption tracking plus a readable status companion
 - update Lane C planning state and the supporting proposal/closeout surfaces
 
 Out of scope:
@@ -113,7 +113,7 @@ Out of scope:
 - [x] mechanical adoption closure check added as `pnpm docs:ai-efficiency:check`
 - [ ] 3 consecutive Lane C PR cycles logged
 - [ ] > =20% round reduction demonstrated
-- [ ] task marked `done`
+- [ ] [Task: RUNTIME-PROP-DISP-1] task marked `done`
 
 ## Validation Commands
 
@@ -189,7 +189,7 @@ domainObjects:
     type: command classification policy
     owner: tools/ci/repository-command-catalog.mjs
 fowlerSignals:
-  - Replaces narrative task closure with an executable policy query.
+  - Replaces narrative task closure with an executable policy query. # Task: RUNTIME-PROP-DISP-1
   - Keeps adoption measurement separate from CI workflow execution.
   - Routes new command surfaces through the repository command catalog.
 architectureGuards:

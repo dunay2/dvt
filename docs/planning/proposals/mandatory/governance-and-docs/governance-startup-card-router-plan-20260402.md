@@ -93,3 +93,7 @@ pnpm verify:prepush
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `GOV-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

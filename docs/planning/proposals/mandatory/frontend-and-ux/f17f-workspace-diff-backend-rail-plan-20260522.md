@@ -469,3 +469,7 @@ symbols:
     cypressCoverage: N/A
     unitTests: [pnpm exec vitest run --config vitest.unit.config.ts src/app/services/workspace/workspacePorts.api.test.ts]
 ```
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `E-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

@@ -214,11 +214,10 @@ Command semantics:
 - `pnpm docs:governance:remediation-queue:check` regenerates the queue that turns coverage gaps into component-scoped remediation tasks and fails when that actionable plan is stale.
 - `pnpm docs:gov` now includes the docs manifest generation step, so the aggregate governance command keeps the tracked manifest current during local-friendly docs validation.
 - `pnpm docs:gov` also runs the changed-doc filename and ADR/evidence frontmatter gates, so new or changed docs fail locally on canonical naming and doc-class metadata violations without turning historical warning-only docs into global blockers.
-- `pnpm verify:changed` is the fast local pre-push path used by
-  `.husky/pre-push` by default; it stays on changed-file docs, markdown,
-  formatting, QA-artifact, and focused adjacent-script gates without invoking
-  root type-check or the full planning DB suite for every planning workflow
-  script edit.
+- `pnpm verify:changed` is the fast changed-slice gate. It stays on
+  changed-file docs, markdown, formatting, QA-artifact, and focused
+  adjacent-script gates without invoking root type-check or the full planning
+  DB suite for every planning workflow script edit.
 - Changed-file gates use the local changed-file set, not only committed
   `HEAD` diff. That set is the union of the merge-base diff, staged files,
   unstaged tracked files, and untracked non-ignored files. A local pre-push
@@ -228,6 +227,13 @@ Command semantics:
   [Local Changed Files Gate Component](../architecture/components/ci-governance/local-changed-files-gate-component.md).
 - `pnpm verify:prepush` uses `node scripts/docs-workboard-check-changed.cjs`, so workboard drift is enforced when lane YAML changed, not for every module-only commit.
 - `pnpm verify:prepush` is mechanical by default. It runs changed-file docs, markdown, formatting, ARC evidence, QA artifact, feature mechanization implementation, and forbidden-file checks without root type-check, architecture dependency checks, global governance maps, or verifier self-tests.
+- `.husky/pre-push` routes through `pnpm verify:prepush -- --hook` by default
+  and `pnpm verify:prepush -- --full --hook` when `DVT_PREPUSH_STRICT=1`.
+  A successful manual `pnpm verify:prepush` writes a local `.git` validation
+  stamp for the current `HEAD`, changed-file set, and local diff fingerprint;
+  the hook skips only when that exact state already passed an equivalent or
+  stronger gate. If any file content, staged state, untracked file, base ref,
+  or `HEAD` changes, the hook runs normally.
 - `pnpm verify:prepush` is routed through
   [`scripts/verify-prepush.cjs`](../../scripts/verify-prepush.cjs). The router
   gets repository path semantics from

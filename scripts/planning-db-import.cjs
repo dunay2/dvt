@@ -2506,6 +2506,33 @@ async function beginImportTransaction(client) {
   ]);
 }
 
+function mergePlanningTaskIds(...taskIdGroups) {
+  return [
+    ...new Set(
+      taskIdGroups
+        .flat()
+        .map((taskId) => normalizeText(taskId).trim())
+        .filter(Boolean)
+    ),
+  ];
+}
+
+async function readLocalPlanningTaskIds(client) {
+  const result = await client.query(
+    `select local_definition.task_id
+     from ${schemaName}.planning_task_local_definitions local_definition
+     where not exists (
+       select 1
+       from ${schemaName}.planning_task_local_tombstones tombstone
+       where tombstone.lane_id = local_definition.lane_id
+         and tombstone.task_id = local_definition.task_id
+     )
+     order by local_definition.task_id`
+  );
+
+  return result.rows.map((row) => row.task_id ?? row.taskId);
+}
+
 async function importContent(options = {}) {
   const url = options.databaseUrl || databaseUrl();
   const silent = options.silent === true;
@@ -2519,16 +2546,8 @@ async function importContent(options = {}) {
   const prReadinessSnapshot = includeGovernance ? buildPrReadinessSnapshot() : null;
   const docsDispositionPlanningSnapshot =
     includeGovernance && !planningSnapshot ? buildPlanningContentSnapshot() : planningSnapshot;
-  const docsDispositionSnapshot = includeGovernance
-    ? buildDocsDispositionSnapshot({
-        planningTaskIds: (docsDispositionPlanningSnapshot?.tasks || []).map((task) => task.taskId),
-      })
-    : null;
-  const knowledgeSnapshot = includeGovernance
-    ? buildKnowledgeDocumentSnapshot({
-        planningTaskIds: (docsDispositionPlanningSnapshot?.tasks || []).map((task) => task.taskId),
-      })
-    : null;
+  let docsDispositionSnapshot;
+  let knowledgeSnapshot;
   const client = options.client || new Client({ connectionString: url });
   const ownsClient = !options.client;
 
@@ -2539,6 +2558,18 @@ async function importContent(options = {}) {
   try {
     await runMigrations({ client, silent: true });
     await beginImportTransaction(client);
+    const planningTaskIds = includeGovernance
+      ? mergePlanningTaskIds(
+          (docsDispositionPlanningSnapshot?.tasks || []).map((task) => task.taskId),
+          await readLocalPlanningTaskIds(client)
+        )
+      : [];
+    docsDispositionSnapshot = includeGovernance
+      ? buildDocsDispositionSnapshot({ planningTaskIds })
+      : null;
+    knowledgeSnapshot = includeGovernance
+      ? buildKnowledgeDocumentSnapshot({ planningTaskIds })
+      : null;
     if (includePlanning) {
       await insertPlanningSnapshot(client, planningSnapshot);
     }
@@ -3428,12 +3459,14 @@ module.exports = {
   evaluateArcPolicyReadiness,
   governanceImportDeleteTables,
   importContent,
+  mergePlanningTaskIds,
   insertDocsDispositionSnapshot,
   insertKnowledgeSnapshot,
   insertPrReadinessSnapshot,
   insertRepositoryCommandSnapshot,
   normalizeText,
   parseArgs,
+  readLocalPlanningTaskIds,
   readGovernanceSourceState,
   readGovernanceAuxiliarySourceState,
   readGovernanceAuxiliaryState,

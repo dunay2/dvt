@@ -19,7 +19,7 @@ planning_type: proposal
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md`
-- Planning DB task `GD-MAND-STARTUP-CARD`
+- [Task: GOV-PROP-DISP-1] Planning DB task `GD-MAND-STARTUP-CARD`
 
 ## Fowler Analysis
 
@@ -32,7 +32,7 @@ planning_type: proposal
 - Semantic compression: mature systems route by intent before deep reference
   reading. Action: preserve the startup-card table, but govern it as route
   semantics rather than formatting.
-- Fitness function: markdown/link checks cannot detect route drift. Action: add
+- [Task: GOV-PROP-DISP-1] Fitness function: markdown/link checks cannot detect route drift. Action: add
   a CI semantic test that checks routes, rails, component guide, stories, and
   Fowler mailbox.
 - Evolution constraint: future governance additions can overload the startup
@@ -53,7 +53,7 @@ names, minimum baselines, and escalation rules.
 
 ## Antipatterns Detected
 
-- **God inventory opening**: forcing every task to read the full catalog before
+- [Task: GOV-PROP-DISP-1] **God inventory opening**: forcing every task to read the full catalog before
   routing.
 - **Table as policy**: treating the startup card as presentation rather than a
   semantic classifier.
@@ -120,7 +120,7 @@ Use an **Intent Router** pattern:
 
 ## User Stories
 
-- As a bounded-task contributor, I want to classify the task quickly so I open
+- [Task: GOV-PROP-DISP-1] As a bounded-task contributor, I want to classify the task quickly so I open
   the right governing docs without reading unrelated catalog sections.
 - As a cross-cutting implementer, I want the card to tell me when deep inventory
   reading is required so I do not under-govern risky changes.
@@ -170,7 +170,7 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/portfolio-map-20260403.md
   - docs/planning/state/agent-lane-a.md
   - docs/planning/state/execution-workboard.md
-  - docs/planning/state/open-task-route.md
+  - docs/planning/state/open-task-route.md # Task: GOV-PROP-DISP-1
   - docs/planning/status/**
   - docs/planning/status/governance-document-rule-inventory.md
   - tools/ci/startup-card-canon.test.mjs
