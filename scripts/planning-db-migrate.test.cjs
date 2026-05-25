@@ -146,6 +146,19 @@ test('tracked migrations include the planning knowledge document relation rail',
   );
 });
 
+test('tracked migrations flag partial mandatory proposal action task linkage', () => {
+  const migrations = readMigrationFiles();
+  const partialGapMigration = migrations.find(
+    (migration) => migration.fileName === '047_knowledge_mandatory_proposal_partial_action_gaps.sql'
+  );
+
+  assert.ok(partialGapMigration);
+  assert.match(
+    partialGapMigration.sql,
+    /count\(distinct action\.action_id\) > count\(distinct task_link\.action_id\)/
+  );
+});
+
 test('tracked migrations include governance component definition command rail tables', () => {
   const migrations = readMigrationFiles();
   const componentDefinitionMigration = migrations.find(

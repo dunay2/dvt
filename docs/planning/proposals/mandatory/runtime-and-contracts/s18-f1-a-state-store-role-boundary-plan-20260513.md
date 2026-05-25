@@ -52,7 +52,7 @@ from an ad hoc aggregate reconstructed in a caller.
   - Rejected for this slice because existing tests and the reconciler runtime
     already share the helper; removing the export belongs to the later export
     semantics slice (`S18-F1-C`).
-- Add a module-private nominal brand to `StateStoreRoleBindings` and stamp it
+- [Task: RUNTIME-PROP-DISP-1] Add a module-private nominal brand to `StateStoreRoleBindings` and stamp it
   only inside `bindStateStoreRoles`.
   - Selected because it preserves existing runtime wiring while making ad hoc
     structural reconstruction fail at type-check time.
@@ -77,7 +77,7 @@ construct it structurally without going through the sanctioned boundary.
 - Mode: Full
 - Scope:
   - harden `apps/api/src/modules/stateStoreRoles.ts`
-  - add direct TDD coverage in `apps/api/test/modules/stateStoreRoles.test.ts`
+  - [Task: RUNTIME-PROP-DISP-1] add direct TDD coverage in `apps/api/test/modules/stateStoreRoles.test.ts`
   - record closeout and planning DB state for `S18-F1-A`
 - Expected outcome:
   - only `bindStateStoreRoles` can produce a `StateStoreRoleBindings` value

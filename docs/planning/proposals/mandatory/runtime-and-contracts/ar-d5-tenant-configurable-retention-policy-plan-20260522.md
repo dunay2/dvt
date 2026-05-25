@@ -89,12 +89,12 @@ all tenants represented in that unit satisfy their own configured window.
 ## Implementation Slice
 
 - Extend `RunEventRetentionPolicy` with tenant override entries.
-- Add a pure resolver for tenant hot-retention days.
+- [Task: RUNTIME-PROP-DISP-1] Add a pure resolver for tenant hot-retention days.
 - Parse tenant overrides from active outbox worker env.
 - Pass overrides into `RunArchiveCoordinator.archiveEligibleHotData`.
 - Make `PostgresRunArchiveStore.listEligibleArchiveUnits` evaluate each tenant
   against its resolved cutoff while preserving full-unit export semantics.
-- Add architecture/component documentation for the retention policy component.
+- [Task: RUNTIME-PROP-DISP-1] Add architecture/component documentation for the retention policy component.
 
 ## Non-Goals
 

@@ -416,3 +416,7 @@ symbols:
     cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/shell/route-workbench-slots.cy.ts
     unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/PluginsView.test.tsx]
 ```
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `E-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

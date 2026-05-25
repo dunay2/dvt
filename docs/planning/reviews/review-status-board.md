@@ -54,17 +54,20 @@ provider-registry/conformance debt as blocked Planning DB task
 
 Disposition:
 
-- `F-29`, `F-30`, `GOV-PROP-DISP-1`, and `RUNTIME-PROP-DISP-1` remain the
-  existing Planning DB reconciliation rails.
-- six `task-gaps` need first-pass disposition before further prioritization.
+- `D-MAND-PROP-GAP-INTAKE-1` cleared the mandatory-proposal binding gap on
+  2026-05-25: `mandatory-proposal-gaps` and `task-gaps` both return zero rows.
+- `E-PROP-DISP-1`, `GOV-PROP-DISP-1`, and `RUNTIME-PROP-DISP-1` are the
+  domain Planning DB reconciliation rails for the remaining proposal and
+  action-level intake.
 - active reviews and open risks need one explicit review/risk intake task or an
   equivalent Planning DB linkage decision.
 - `buzon/` analyses are owned by `A-BUZON-FOWLER-CANON-1`,
   `C-BUZON-FOWLER-CANON-1`, `D-BUZON-GOV-CANON-1`,
   `E-BUZON-FOWLER-CANON-1`, and `D-RISK-DEBT-CANON-1`.
 - mandatory proposal gaps, open docs-disposition rows, and unlinked knowledge
-  actions are owned by `D-MAND-PROP-GAP-INTAKE-1`, `E-PROP-DISP-1`,
-  `D-DOCS-DISPOSITION-QUEUE-1`, and `D-KNOWLEDGE-ACTION-LINKAGE-1`.
+  actions are owned by `E-PROP-DISP-1`, `GOV-PROP-DISP-1`,
+  `RUNTIME-PROP-DISP-1`, `D-DOCS-DISPOSITION-QUEUE-1`, and
+  `D-KNOWLEDGE-ACTION-LINKAGE-1`.
 
 ## Active Reviews
 

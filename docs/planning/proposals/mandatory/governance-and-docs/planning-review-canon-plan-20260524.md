@@ -59,8 +59,8 @@ Current disposition:
 ## Applied Patterns
 
 - **Intake Catalog:** review boards classify rationale and source documents.
-- **DB-First Unit of Work:** task lifecycle state lives in Planning DB.
-- **Published Language:** review, board, task, risk, evidence, and closeout
+- [Task: GOV-PROP-DISP-1] **DB-First Unit of Work:** task lifecycle state lives in Planning DB.
+- [Task: GOV-PROP-DISP-1] **Published Language:** review, board, task, risk, evidence, and closeout
   remain distinct terms.
 - **Semantic Fitness Function:** the CI guard checks review intake ownership,
   not only generated index shape.

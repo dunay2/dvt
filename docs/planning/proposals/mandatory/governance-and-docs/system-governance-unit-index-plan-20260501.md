@@ -216,7 +216,7 @@ full content.
 
 ## Phase 1: Create The Taxonomy
 
-- [ ] Create `system-governance-unit-taxonomy-20260501.md`.
+- [ ] [Task: GOV-PROP-DISP-1] Create `system-governance-unit-taxonomy-20260501.md`.
 - [ ] Define unit levels and allowed parent-child relationships.
 - [ ] Define status semantics.
 - [ ] Define ID naming rules.
@@ -230,9 +230,9 @@ full content.
 
 ## Phase 2: Create The Root Unit Index
 
-- [ ] Create `system-governance-unit-index-20260501.md`.
-- [ ] Add root unit `SYS-DVT`.
-- [ ] Add first-level units:
+- [ ] [Task: GOV-PROP-DISP-1] Create `system-governance-unit-index-20260501.md`.
+- [ ] [Task: GOV-PROP-DISP-1] Add root unit `SYS-DVT`.
+- [ ] [Task: GOV-PROP-DISP-1] Add first-level units:
   - `SYS-CONTRACTS`
   - `SYS-RUNTIME`
   - `SYS-PLANSTORE`
@@ -249,10 +249,10 @@ full content.
       status, and next subdivision.
 - [ ] Mark `SYS-WEB` as `coverage-required`, not as drift.
 - [ ] Mark `SYS-PLANSTORE` as `review` with active S08 drift references.
-- [ ] Create the machine-readable unit manifest with broad component coverage
+- [ ] [Task: GOV-PROP-DISP-1] Create the machine-readable unit manifest with broad component coverage
       for every tracked repository file.
-- [ ] Add the unit coverage guard script and tests.
-- [ ] Wire `pnpm docs:governance:unit-coverage` into repository validation.
+- [ ] [Task: GOV-PROP-DISP-1] Add the unit coverage guard script and tests.
+- [ ] [Task: GOV-PROP-DISP-1] Wire `pnpm docs:governance:unit-coverage` into repository validation.
 - [ ] Run markdown lint on the index.
 
 ## Phase 3: Link Existing Inventory And Planning Surfaces

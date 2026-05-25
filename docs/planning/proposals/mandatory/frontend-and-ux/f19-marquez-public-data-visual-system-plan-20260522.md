@@ -158,3 +158,7 @@ symbols:
     cypressCoverage: N/A
     unitTests: [pnpm --filter @dvt/web test -- src/app/views/publicDataVisualSystem.architecture.test.ts]
 ```
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `E-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

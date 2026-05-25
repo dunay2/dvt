@@ -105,7 +105,7 @@ allowedImplementationSurfaces:
   - docs/planning/state/agent-lane-c.yaml
   - docs/planning/state/agent-lane-c.md
   - docs/planning/state/execution-workboard.md
-  - docs/planning/state/open-task-route.md
+  - [Task: RUNTIME-PROP-DISP-1] docs/planning/state/open-task-route.md
   - docs/.manifest.json
   - docs/planning/status/**
 forbiddenImplementationSurfaces:
@@ -498,7 +498,7 @@ engine core, and tests.
   worker responsibilities.
 - Engine-owned DBT behavior: rejected because it violates the provider/plugin
   boundary.
-- "Just keep the seam and wire later": rejected because it is not a design; it
+- [Task: RUNTIME-PROP-DISP-1] "Just keep the seam and wire later": rejected because it is not a design; it
   is deferred ambiguity.
 
 ## Fowler-style System Model

@@ -35,7 +35,7 @@ Separate physical and semantic ownership so that:
 This document is the accepted canonical proposal for `RC-G1`.
 
 - operational tracker: `docs/planning/state/agent-lane-a.yaml`
-- umbrella task: `RC-G1`
+- [Task: RUNTIME-PROP-DISP-1] umbrella task: `RC-G1`
 - delivered slices:
   - `RC-G1-A`: ownership-matrix freeze
   - `RC-G1-B`: engine ports migration
@@ -187,8 +187,8 @@ convenience wrappers.
   `IRunSnapshotStalenessQuery`, `IProjector`, and `StartRunIntentPolicy` into
   `@dvt/engine`
 - treat that list as the minimum mandatory scope of `RC-G1-B`
-- migrate internal engine imports to owner-local paths
-- migrate implementations in `adapter-postgres`, `adapter-temporal`, and
+- [Task: RUNTIME-PROP-DISP-1] migrate internal engine imports to owner-local paths
+- [Task: RUNTIME-PROP-DISP-1] migrate implementations in `adapter-postgres`, `adapter-temporal`, and
   `state-store`
 
 ### Phase 2 - delivery / traceability / artifacts ownership
@@ -223,7 +223,7 @@ convenience wrappers.
 **Objective**
 
 - freeze the exact inventory of engine-owned ports leaving `@dvt/contracts`
-- fix source-path to owner-path targets
+- [Task: RUNTIME-PROP-DISP-1] fix source-path to owner-path targets
 - measure the residual-import baseline that later slices must drive to zero
 
 **Frozen mandatory scope manifest**

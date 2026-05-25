@@ -154,3 +154,7 @@ symbols:
     cypressCoverage: N/A - workflow test routing only.
     unitTests: [pnpm --filter @dvt/web test -- src/testing/vitestSuites.architecture.test.ts]
 ```
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `E-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

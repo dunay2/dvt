@@ -150,7 +150,7 @@ domainObjects:
     type: product readiness record
     owner: Product / GTM
 fowlerSignals:
-  - Roadmap item masquerading as code task
+  - [Task: RUNTIME-PROP-DISP-1] Roadmap item masquerading as code task
   - Product-market fit claim without customer evidence
 architectureGuards:
   - pnpm docs:feature-mechanization:implementation -- --feature D-FIRST-ENTERPRISE-PILOT-READINESS-20260524

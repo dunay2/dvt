@@ -25,8 +25,8 @@ draft boundary must persist an editable authoring draft, not a compile-ready
 The design decision is:
 
 - treat `empty` as a productive route state, not as passive copy
-- expose one explicit primary action for authoring: `Add first node`
-- keep `Import sources` as a secondary capability-gated action only
+- [Task: E-PROP-DISP-1] expose one explicit primary action for authoring: `Add first node`
+- [Task: E-PROP-DISP-1] keep `Import sources` as a secondary capability-gated action only
 - never reintroduce mock, local-only, or snapshot-backed startup nodes
 
 ## Governing sources
@@ -139,7 +139,7 @@ Rejected because:
 Benefits:
 
 - aligns with one currently visible creation metaphor
-- keeps first authoring action tied to backend-owned object registration
+- [Task: E-PROP-DISP-1] keeps first authoring action tied to backend-owned object registration
 
 Rejected because:
 
@@ -177,7 +177,7 @@ writer.
 
 ### Rejected alternatives
 
-- floating action buttons without empty-state semantics
+- [Task: E-PROP-DISP-1] floating action buttons without empty-state semantics
 - toolbar-only creation affordances
 - reopening mock startup nodes
 - auto-creating a magic default node on first load
@@ -192,7 +192,7 @@ The canonical Canvas empty-state behavior is:
    read-only empty state with no creation CTAs.
 3. If the route is empty and mutation is allowed, render a productive empty
    authoring state:
-   - primary CTA: `Add first node`
+   - [Task: E-PROP-DISP-1] primary CTA: `Add first node`
    - secondary CTA: `Import sources` only when
      `workspaceServiceCapabilities.sourceImportAvailable === true`
 4. Creating the first node must round-trip through the protected editable draft
@@ -291,8 +291,8 @@ type CanvasEmptyAuthoringActionModel = Readonly<{
 
 Rule:
 
-- action presence is semantic, not inferred from copy
-- handlers are omitted when the action is not permitted
+- [Task: E-PROP-DISP-1] action presence is semantic, not inferred from copy
+- [Task: E-PROP-DISP-1] handlers are omitted when the action is not permitted
 
 ### Empty-state presentation component
 
@@ -434,23 +434,23 @@ truth, not a styling-only enhancement.
 ### Required web tests
 
 - `Canvas.routeStates.test.tsx`
-  - empty authorable shows `Add first node`
+  - [Task: E-PROP-DISP-1] empty authorable shows `Add first node`
   - empty read-only shows no mutation CTA
   - empty authorable without import capability shows no import CTA
 - controller or application-service tests
-  - create-first-node command persists through protected draft authority
+  - [Task: E-PROP-DISP-1] create-first-node command persists through protected draft authority
   - local state does not claim success without authoritative refresh
   - selected SQL node run/preview ignores unrelated loose draft nodes
   - selecting an invalid loose node returns diagnostics without mutating draft
 - architecture tests
-  - empty-state component depends on typed action model, not loose booleans
+  - [Task: E-PROP-DISP-1] empty-state component depends on typed action model, not loose booleans
   - `DbtExplorer` remains project-resource inventory, not first-node catalog
   - `Run` command wiring depends on `ExecutionSelection`, not whole-draft
     compile-by-default behavior
 
 ### Required browser proof later under `TF-E2-E`
 
-- live-runtime path can create the first node from an empty protected draft
+- [Task: E-PROP-DISP-1] live-runtime path can create the first node from an empty protected draft
 - no fake graph appears when backend capability is absent or blocked
 
 ## Documentation drift to fix in the implementation slice
@@ -472,7 +472,7 @@ New component-level docs expected from implementation:
 - Mode: `Full`
 - Scope:
   - productize the empty Canvas state as a route-owned authoring entrypoint
-  - add a governed first-node command path
+  - [Task: E-PROP-DISP-1] add a governed first-node command path
   - keep import capability secondary and explicit
 - Touched files or paths:
   - `apps/web/src/app/views/canvas/CanvasCenterSurface.tsx`
@@ -506,7 +506,7 @@ New component-level docs expected from implementation:
 - Test coverage plan:
   - blocked runtime still has no creation CTA
   - read-only empty state still has no mutation CTA
-  - create-first-node fails closed on protected draft save failure
+  - [Task: E-PROP-DISP-1] create-first-node fails closed on protected draft save failure
   - no fake node is shown before authoritative refresh
   - import CTA remains hidden when capability is unavailable
 - Libraries evaluated:
@@ -534,7 +534,7 @@ Canvas empty state is no longer just a message.
 
 It becomes the governed authoring entrypoint for the first graph action, with:
 
-- one primary route-owned `Add first node` command
+- [Task: E-PROP-DISP-1] one primary route-owned `Add first node` command
 - one optional capability-gated `Import sources` command
 - zero legacy startup nodes
 - zero mock fallback

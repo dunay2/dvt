@@ -17,7 +17,7 @@ This document is part of the repository governance proposal set.
 - Complementary proposals:
   - [Documentation Restructuring Diagnostic And Roadmap](../../../archive/proposals/documentation-restructuring-diagnostic-and-roadmap.md) is the diagnostic precursor
   - [Package Module Build Policy v2](../../../archive/proposals/package-module-build-policy-v2-20260317.md) defines the technical target model for packages and builds
-  - [CI Delivery Governance Consolidated Action Plan](./ci-delivery-governance-consolidated-action-plan-20260331.md) defines enforcement strategy for reusable CI checks
+  - [Task: GOV-PROP-DISP-1] [CI Delivery Governance Consolidated Action Plan](./ci-delivery-governance-consolidated-action-plan-20260331.md) defines enforcement strategy for reusable CI checks
 
 ## Execution Status
 
@@ -104,7 +104,7 @@ Interpretation of each area:
   lifecycle vocabulary;
 - `Reference`: contracts, schemas, APIs, invariants, versioned technical
   reference;
-- `How-to`: development and contributor task guides;
+- [Task: GOV-PROP-DISP-1] `How-to`: development and contributor task guides;
 - `Operations`: runbooks, observability, SLOs, incident response;
 - `Decisions`: ADRs only;
 - `Planning`: roadmap, status, gaps, proposals, reviews;
@@ -139,7 +139,7 @@ Actions:
   model;
 - stop using hidden active sections as parallel entry points;
 - remove empty or misleading landing pages from the active surface;
-- make the home page role-based and task-oriented.
+- [Task: GOV-PROP-DISP-1] make the home page role-based and task-oriented.
 
 Deliverables:
 
@@ -158,7 +158,7 @@ Acceptance:
 
 Actions:
 
-- create a `Concepts` area with at least:
+- [Task: GOV-PROP-DISP-1] create a `Concepts` area with at least:
   - glossary;
   - domain language;
   - system map;
@@ -211,7 +211,7 @@ Actions:
   - move under `docs/`;
   - be imported into the published site;
   - remain local reference-only and be linked from a canonical landing page;
-- add a package-to-doc matrix for all active workspaces;
+- [Task: GOV-PROP-DISP-1] add a package-to-doc matrix for all active workspaces;
 - eliminate "important but unpublished" documentation.
 
 Deliverables:
@@ -237,7 +237,7 @@ Actions:
   - test paths;
   - verification command;
   - evidence or risk record when applicable;
-- add CI checks for:
+- [Task: GOV-PROP-DISP-1] add CI checks for:
   - empty indexes;
   - duplicate active entry points;
   - active docs outside the allowed IA;
@@ -272,7 +272,7 @@ Exit criterion:
 
 ### Phase 1: Navigation and home rewrite
 
-- implement the new top-level IA;
+- [Task: GOV-PROP-DISP-1] implement the new top-level IA;
 - rewrite home and landing pages;
 - remove empty or misleading active indexes.
 
@@ -302,7 +302,7 @@ Exit criterion:
 
 ### Phase 4: CI hardening
 
-- add missing validators;
+- [Task: GOV-PROP-DISP-1] add missing validators;
 - convert warnings into failures where the baseline debt is closed.
 
 Exit criterion:

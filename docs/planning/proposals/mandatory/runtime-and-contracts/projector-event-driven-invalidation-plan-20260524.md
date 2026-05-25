@@ -173,3 +173,7 @@ symbols:
 - `pnpm docs:sync`
 - `pnpm docs:feature-mechanization:implementation`
 - `pnpm verify:prepush`
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `RUNTIME-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

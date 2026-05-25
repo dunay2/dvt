@@ -122,7 +122,7 @@ This follows the repo dependency direction and keeps the highest-authority seam
 
 - planner contract seam hardening in `@dvt/contracts`
 - preview graph seam hardening in `apps/web`
-- preview and start-run action split in `apps/web`
+- [Task: RUNTIME-PROP-DISP-1] preview and start-run action split in `apps/web`
 - preview route seam hardening in `apps/api`
 - planning, roadmap, and status surfaces for the new follow-up slice
 

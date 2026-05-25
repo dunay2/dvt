@@ -14,7 +14,7 @@ This is the single active proposal for repository delivery-process hardening.
 It replaces the former audit prompt with an executable plan and absorbs the
 still-relevant work from prior CI/docs proposals and reviews, including:
 
-- [CI Performance Review And Action Plan](../../../reviews/ci-and-delivery/20260330-ci-performance-review-and-action-plan.md)
+- [Task: GOV-PROP-DISP-1] [CI Performance Review And Action Plan](../../../reviews/ci-and-delivery/20260330-ci-performance-review-and-action-plan.md)
 - [CI, Prepush & PR Process - Observations and Improvement Log](../../../reviews/ci-and-delivery/20260330-ci-prepush-pr-process-observations.md)
 
 This document does not reopen already-closed fixes. It carries forward only the
@@ -60,7 +60,7 @@ as open proposals:
 - `ci.yml` already gates markdown lint on docs-relevant scope.
 - `pr-quality-gate.yml` already scopes docs checks and skips global type-check
   on docs-only PRs.
-- `.github/actions/setup-node-pnpm/action.yml` already has pnpm-store and
+- [Task: GOV-PROP-DISP-1] `.github/actions/setup-node-pnpm/action.yml` already has pnpm-store and
   `node_modules` caching.
 - PR title, size, description, and ARC evidence checks are already wired.
 - `docs:ci` already has local-friendly regenerate-and-validate semantics.
@@ -118,13 +118,13 @@ governingSources:
   - docs/planning/status/governance-document-rule-inventory.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
+  - [Task: GOV-PROP-DISP-1] docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
 allowedImplementationSurfaces:
   - buzon/20260523-codex-fowler-ci-delivery-governance-canon.md
   - docs/architecture/components/ci-governance/ci-delivery-governance-component.md
   - docs/architecture/components/ci-governance/ci-delivery-governance-user-stories.md
   - docs/architecture/components/ci-governance/index.md
-  - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
+  - [Task: GOV-PROP-DISP-1] docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
   - tools/ci/ci-delivery-governance-canon.test.mjs
 forbiddenImplementationSurfaces:
   - .github/workflows/**
@@ -163,7 +163,7 @@ redGreenCycles:
       - docs/architecture/components/ci-governance/ci-delivery-governance-component.md
       - docs/architecture/components/ci-governance/ci-delivery-governance-user-stories.md
       - docs/architecture/components/ci-governance/index.md
-      - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
+      - [Task: GOV-PROP-DISP-1] docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
       - tools/ci/ci-delivery-governance-canon.test.mjs
     greenTest: node --test tools/ci/ci-delivery-governance-canon.test.mjs
 symbolDefaults: &ciDeliveryCanonSymbolDefaults
@@ -406,7 +406,7 @@ execution route for the verified residual items.
     authoritative
 - Options considered:
   - execute the full audit in one branch
-  - create a second proposal dedicated to the audit
+  - [Task: GOV-PROP-DISP-1] create a second proposal dedicated to the audit
   - absorb the audit into the active CI/delivery proposal and execute the
     lowest-risk wave first
 - Selected option and rationale:
@@ -455,11 +455,11 @@ Primary gains to record by wave:
 
 - Mode: `Full`
 - Scope:
-  - add local Node pin files that match the actual CI/runtime baseline
+  - [Task: GOV-PROP-DISP-1] add local Node pin files that match the actual CI/runtime baseline
   - align root `engines.node` with the real Node 22 baseline
   - scope the deterministic-runtime pre-commit gate to files that actually
     affect the engine or Temporal workflow determinism surface
-  - add `.turbo` cache support to the shared CI setup for the already-shipped
+  - [Task: GOV-PROP-DISP-1] add `.turbo` cache support to the shared CI setup for the already-shipped
     root Turbo `build` path
   - update the canonical docs that describe the affected local/CI command
     contract
@@ -467,7 +467,7 @@ Primary gains to record by wave:
   - `.node-version`
   - `.nvmrc`
   - `package.json`
-  - `.github/actions/setup-node-pnpm/action.yml`
+  - [Task: GOV-PROP-DISP-1] `.github/actions/setup-node-pnpm/action.yml`
   - new helper under `scripts/` for staged-file determinism scope detection
   - `docs/guides/testing-and-ci-capabilities.md`
   - linked closeout/planning surfaces created or updated by the shipped slice
@@ -608,10 +608,10 @@ the existing docs manifest path stable enough to become a governed artifact.
 That slice should:
 
 - remove timestamp and traversal-order noise from the manifest generator
-- create a tracked `docs/.manifest.json` output that stays byte-stable on an
+- [Task: GOV-PROP-DISP-1] create a tracked `docs/.manifest.json` output that stays byte-stable on an
   unchanged worktree
 - keep local-friendly regeneration under `docs:gov`
-- add an explicit strict drift gate for the tracked manifest in `ci:docs`
+- [Task: GOV-PROP-DISP-1] add an explicit strict drift gate for the tracked manifest in `ci:docs`
 
 This converts the existing helper into a real machine-readable docs inventory
 without reopening the broader docs-governance rollout.
@@ -624,13 +624,13 @@ without normalizing all historical docs debt first.
 
 That slice should:
 
-- add changed-only strict filename enforcement for docs Markdown files
-- add changed-only ADR/evidence frontmatter validation
+- [Task: GOV-PROP-DISP-1] add changed-only strict filename enforcement for docs Markdown files
+- [Task: GOV-PROP-DISP-1] add changed-only ADR/evidence frontmatter validation
 - keep historical filename and metadata backlog warning-only in the full-repo
   scan
 - improve changed Markdown placement failures so contributors are told to move
   governed documentation into `docs/`
-- wire the changed-doc gates into both `docs:gov` and `verify:prepush`
+- [Task: GOV-PROP-DISP-1] wire the changed-doc gates into both `docs:gov` and `verify:prepush`
 
 This keeps Wave 3 honest: new or changed docs must meet the current governance
 contract, while legacy cleanup remains a separate backlog instead of becoming
@@ -651,7 +651,7 @@ That slice should:
   planning outputs remain untracked
 - validate generated markers for declared Markdown outputs when those outputs
   exist locally
-- wire the policy checker into local-friendly docs governance, strict docs CI,
+- [Task: GOV-PROP-DISP-1] wire the policy checker into local-friendly docs governance, strict docs CI,
   and pre-push
 
 This keeps generated docs honest without reopening broader merge-hotspot

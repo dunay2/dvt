@@ -261,3 +261,7 @@ symbols:
 
 No new ADR is required. This is an internal presentation-token convergence slice
 under the existing `F-24` frontend visual-system work.
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `E-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

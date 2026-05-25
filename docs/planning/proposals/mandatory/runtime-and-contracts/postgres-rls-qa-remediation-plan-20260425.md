@@ -82,9 +82,9 @@ run as the application role. This is the mature split:
 
 **Files**
 
-- Create: `packages/@dvt/adapter-postgres/test/PostgresAppRoleRuntime.integration.test.ts`
+- [Task: RUNTIME-PROP-DISP-1] Create: `packages/@dvt/adapter-postgres/test/PostgresAppRoleRuntime.integration.test.ts`
 - Modify: `packages/@dvt/adapter-postgres/test/PostgresTenantRlsEnforcement.integration.test.ts`
-- Optional create: `packages/@dvt/adapter-postgres/test/helpers/postgresRlsProofHarness.ts`
+- [Task: RUNTIME-PROP-DISP-1] Optional create: `packages/@dvt/adapter-postgres/test/helpers/postgresRlsProofHarness.ts`
 
 **TDD steps**
 
@@ -94,7 +94,7 @@ run as the application role. This is the mature split:
       app-role connection string.
 - [x] Expected first red: `permission denied` or missing helper until runtime
       grants and harness are implemented.
-- [x] Implement a test helper that grants only runtime privileges on the
+- [x] [Task: RUNTIME-PROP-DISP-1] Implement a test helper that grants only runtime privileges on the
       transient schema:
       `USAGE` on schema, `SELECT`, `INSERT`, `UPDATE`, `DELETE` on tables.
 - [x] Prove `bootstrapRunTx` works as the app role for tenant A and tenant B.
@@ -108,7 +108,7 @@ run as the application role. This is the mature split:
   or schema-creating role.
 - The test fails if app-role adapter writes only work when `DVT_PG_URL` is an
   admin role.
-- The test does not require the app role to create schemas or run migrations.
+- [Task: RUNTIME-PROP-DISP-1] The test does not require the app role to create schemas or run migrations.
 
 ### Task 2: Enforce Full Service-Owner Catalog In RLS Policy Proof
 
@@ -138,24 +138,24 @@ run as the application role. This is the mature split:
 **Files**
 
 - Modify: `scripts/provision-postgres-app-role.cjs`
-- Add or modify: script-level test if an existing script test suite covers
+- [Task: RUNTIME-PROP-DISP-1] Add or modify: script-level test if an existing script test suite covers
   provisioning behavior
 - Modify: `docs/evidence/ed-20260425-production-tenant-isolation-baseline.md`
 - Modify: `docs/risk-register/quality/R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE.yaml`
 
 **TDD steps**
 
-- [x] Add a failing verification path that detects `CREATE` on schema `public`
+- [x] [Task: RUNTIME-PROP-DISP-1] Add a failing verification path that detects `CREATE` on schema `public`
       for the app role.
-- [x] Implement `REVOKE CREATE ON SCHEMA public FROM <appUser>`.
+- [x] [Task: RUNTIME-PROP-DISP-1] Implement `REVOKE CREATE ON SCHEMA public FROM <appUser>`.
 - [x] Verify the script fails with
       `POSTGRES_APP_ROLE_CAN_CREATE_PUBLIC_SCHEMA_OBJECTS:<appUser>` if the
       role still has schema-level create privileges.
-- [x] Keep the existing database-level `CREATE` verification.
+- [x] [Task: RUNTIME-PROP-DISP-1] Keep the existing database-level `CREATE` verification.
 
 **Acceptance criteria**
 
-- The app role cannot create databases, roles, schemas in the database, or
+- [Task: RUNTIME-PROP-DISP-1] The app role cannot create databases, roles, schemas in the database, or
   objects in `public`.
 - The script remains idempotent.
 - The evidence doc claim “non-schema-creating application role” is mechanically
@@ -166,14 +166,14 @@ run as the application role. This is the mature split:
 **Files**
 
 - Modify: `packages/@dvt/adapter-postgres/test/PostgresTenantRlsEnforcement.integration.test.ts`
-- Optional create: `packages/@dvt/adapter-postgres/test/helpers/postgresRlsProofHarness.ts`
+- [Task: RUNTIME-PROP-DISP-1] Optional create: `packages/@dvt/adapter-postgres/test/helpers/postgresRlsProofHarness.ts`
 
 **Refactor steps**
 
-- [x] Extract connection-string resolution and role-name parsing into a small
+- [x] [Task: RUNTIME-PROP-DISP-1] Extract connection-string resolution and role-name parsing into a small
       test helper.
-- [x] Extract transient schema allocation and cleanup into a helper.
-- [x] Extract admin migration plus app/probe grants into a helper.
+- [x] [Task: RUNTIME-PROP-DISP-1] Extract transient schema allocation and cleanup into a helper.
+- [x] [Task: RUNTIME-PROP-DISP-1] Extract admin migration plus app/probe grants into a helper.
 - [x] Split assertions into independent tests:
       role posture, catalog shape, tenant row isolation, missing-context row
       isolation, and approved service access behavior.
@@ -197,7 +197,7 @@ run as the application role. This is the mature split:
 
 - [x] Keep `DVT_PG_URL` and `DATABASE_URL` as admin for the full suite.
 - [x] Keep `DVT_PG_RLS_URL` as the app-role DSN.
-- [x] Add an explicit step after provisioning:
+- [x] [Task: RUNTIME-PROP-DISP-1] Add an explicit step after provisioning:
       `pnpm --filter @dvt/adapter-postgres test -- PostgresAppRoleRuntime.integration.test.ts PostgresTenantRlsEnforcement.integration.test.ts`.
 - [x] Ensure this step runs with `DVT_PG_INTEGRATION=1` in the three Postgres
       workflows.
@@ -249,7 +249,7 @@ pnpm verify:prepush
 
 - App-role runtime smoke is red/green verified.
 - Full service-owner catalog is asserted in RLS policy proof.
-- Provisioner verifies both database-level and schema-level create privileges.
+- [Task: RUNTIME-PROP-DISP-1] Provisioner verifies both database-level and schema-level create privileges.
 - RLS tests are split by owned concern.
 - CI has explicit admin-migration/app-runtime/direct-RLS proof steps.
 - Evidence and risk docs describe the actual posture without overstating it.

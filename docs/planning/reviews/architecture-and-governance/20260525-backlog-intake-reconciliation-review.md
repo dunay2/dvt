@@ -31,7 +31,7 @@ be prioritized as product work.
 
 ## Evidence Snapshot
 
-Commands run on 2026-05-25:
+Initial commands run on 2026-05-25:
 
 - `pnpm planning:db:query next`
 - `pnpm planning:db:query task-gaps --limit 500`
@@ -51,6 +51,50 @@ Observed counts:
 | open risk-register entries             |   136 | Risks still needing mitigation, acceptance, closure, or explicit linkage.                                                |
 | high-severity open risks               |     8 | Highest technical/delivery risk band found in the tracked risk register.                                                 |
 
+## D-MAND Iteration Result
+
+`D-MAND-PROP-GAP-INTAKE-1` reconciled the mandatory-proposal binding gap as a
+Planning DB ownership problem, not as direct product implementation.
+
+Follow-up commands run on 2026-05-25:
+
+- `pnpm planning:db:import -- --governance-only`
+- `pnpm planning:db:query mandatory-proposal-gaps --limit 500`
+- `pnpm planning:db:query task-gaps --limit 500`
+- `pnpm planning:db:query real-work --limit 30`
+- `pnpm planning:db:query next --limit 20`
+
+Current results:
+
+| Surface                        | Count | Meaning                                                                                                            |
+| ------------------------------ | ----: | ------------------------------------------------------------------------------------------------------------------ |
+| `mandatory-proposal-gaps` rows |     0 | The 125 mandatory proposal binding gaps now have Planning DB task lineage or explicit DB-owned disposition.        |
+| `task-gaps` rows               |     0 | The prior task-gap queue no longer reports missing first-pass task linkage.                                        |
+| proposed knowledge-action rows |  1390 | Action rows remain the next reconciliation surface; linked disposition rows are intentionally visible.             |
+| `next` rows                    |     6 | Executable queue: docs disposition, knowledge linkage, frontend, governance, review/risk, and runtime disposition. |
+| `real-work` planning-task rows |     6 | The same six tasks are actionable before lower-level knowledge-action rows.                                        |
+
+Implementation evidence:
+
+- `scripts/planning-db-import.cjs` now includes DB-local task definitions when
+  building docs-disposition and knowledge projections. This makes the Planning
+  DB, not lane YAML bootstrap files alone, the source of truth for task IDs.
+- `tools/planning-db/migrations/047_knowledge_mandatory_proposal_partial_action_gaps.sql`
+  tightens the mandatory-proposal gap view so a document with only partial
+  action linkage still reports as a gap.
+- `scripts/planning-db-import.test.cjs` covers DB-local task ID inclusion.
+- 125 mandatory proposal documents now carry explicit task ownership through
+  `F-29`, `F-30`, `E-PROP-DISP-1`, `GOV-PROP-DISP-1`, or
+  `RUNTIME-PROP-DISP-1`.
+
+Residual intake:
+
+`knowledge_action_work_intake_query` still exposes action-level rows that need
+domain disposition. Those rows are no longer a blocker for D-MAND, because the
+D-MAND acceptance query is `mandatory-proposal-gaps`; they are the next work
+surface for `E-PROP-DISP-1`, `GOV-PROP-DISP-1`,
+`RUNTIME-PROP-DISP-1`, and `D-KNOWLEDGE-ACTION-LINKAGE-1`.
+
 ## Current Operational Queue
 
 `pnpm planning:db:query next` currently reports:
@@ -66,7 +110,10 @@ This is the executable queue, not the full backlog. It is correct but
 insufficient for prioritization because it only shows work already normalized
 into Planning DB rows.
 
-## Explicit Task Gaps
+## Historical Explicit Task Gaps
+
+This was the initial pre-D-MAND snapshot. The current
+`pnpm planning:db:query task-gaps --limit 500` result is empty.
 
 `pnpm planning:db:query task-gaps --limit 500` reports these P1 gaps:
 
@@ -136,17 +183,17 @@ tasks; they need acceptance, closure evidence, or explicit mitigation tasks.
 
 The next route should be:
 
-1. Close the six `task-gaps` first because they are already flagged by the
-   planning DB as documents with missing governed linkage.
-2. Continue `F-29` and `F-30` as the frontend/product reconciliation path,
-   using browser/user proof for the product promise before creating new UI work.
-3. Start `GOV-PROP-DISP-1` to classify the governance/docs proposal backlog by
-   document family instead of creating hundreds of one-off tasks.
-4. Start `RUNTIME-PROP-DISP-1` only after the governance/docs and frontend
-   product promise route is stable enough to avoid mixing runtime hardening
-   with product-readiness triage.
-5. Create or claim one explicit review/risk intake task for active reviews and
-   open risks that are not covered by existing proposal-disposition tasks.
+1. Close `D-MAND-PROP-GAP-INTAKE-1` because the mandatory proposal binding
+   query and task-gap query now return zero rows.
+2. Release the dependent domain disposition tasks to the executable queue:
+   `E-PROP-DISP-1`, `GOV-PROP-DISP-1`, and `RUNTIME-PROP-DISP-1`.
+3. For product movement, take `E-PROP-DISP-1` first after D-MAND closes. The
+   user-facing promise is Canvas/Code/Artifacts workflow parity, not more
+   governance taxonomy.
+4. Keep `GOV-REVIEW-RISK-INTAKE-1` as the review/risk cleanup path so active
+   reviews, risk rows, and mailbox analyses do not pollute product priority.
+5. Use `D-KNOWLEDGE-ACTION-LINKAGE-1` for the remaining action-level intake
+   rows once domain owners have finished proposal disposition.
 
 ## Product Implication
 
@@ -164,11 +211,12 @@ feature slice. It is making the current promise auditable:
 
 ## Recommendation
 
-The next task should be a reconciliation task, not a product feature task:
+The next product-facing route after D-MAND is `E-PROP-DISP-1`: reduce the
+remaining frontend mandatory proposal and knowledge-action intake into a small
+set of product tasks, with priority given to Canvas/Code/Artifacts workflows
+that a demanding user can actually complete.
 
-`GOV-REVIEW-RISK-INTAKE-1`: classify active reviews, sprint-board intake, and
-open risk-register entries into task-linked, closed-by-evidence, superseded,
-reference-only, accepted-risk, mitigation-task, or non-goal dispositions.
-
-That task should run alongside the existing `F-29`, `F-30`,
-`GOV-PROP-DISP-1`, and `RUNTIME-PROP-DISP-1` queues instead of replacing them.
+`GOV-REVIEW-RISK-INTAKE-1`, `GOV-PROP-DISP-1`, and
+`RUNTIME-PROP-DISP-1` remain necessary reconciliation tasks, but they should not
+displace the product route unless the DB query views show a blocking governance
+or runtime dependency.

@@ -1320,7 +1320,7 @@ symbols:
 ### `WE-HX-6` Test-double and fitness-function hardening
 
 - depends on `WE-HX-5`
-- narrow in-memory doubles, split heavy fixtures, and add architecture-boundary
+- [Task: RUNTIME-PROP-DISP-1] narrow in-memory doubles, split heavy fixtures, and add architecture-boundary
   regression guards
 
 ```feature-mechanization
@@ -1648,7 +1648,7 @@ symbols:
 
 Lane A execution mapping:
 
-- create umbrella `WE-HX` with child tasks `WE-HX-0..6`
+- [Task: RUNTIME-PROP-DISP-1] create umbrella `WE-HX` with child tasks `WE-HX-0..6`
 - reference this proposal and the two canonical docs:
   - `docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md`
   - `docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md`
@@ -1675,7 +1675,7 @@ Mitigation:
 
 - enforce wave sequencing in Lane A
 - keep canonical navigation explicit in engine and components indexes
-- add architecture fitness checks in `WE-HX-6`
+- [Task: RUNTIME-PROP-DISP-1] add architecture fitness checks in `WE-HX-6`
 
 ## Non-goals
 

@@ -224,3 +224,7 @@ symbols:
   - { name: getPreviewTitle, path: apps/web/src/app/views/artifacts/useArtifactsViewModel.ts, dddOwner: WorkspaceArtifactPreview, cqRails: [GetWorkspaceFileContent], fowlerSignals: [Primitive obsession], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/artifacts-workspace-project-files.cy.ts, unitTests: [apps/web/src/app/views/ArtifactsView.test.tsx] }
   - { name: getProjectArtifactType, path: apps/web/src/app/views/artifacts/useArtifactsViewModel.ts, dddOwner: WorkspaceArtifactClassification, cqRails: [ListWorkspaceFiles], fowlerSignals: [Boundary drift], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/artifacts-workspace-project-files.cy.ts, unitTests: [apps/web/src/app/views/artifacts/useArtifactsViewModel.test.tsx] }
 ```
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `E-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

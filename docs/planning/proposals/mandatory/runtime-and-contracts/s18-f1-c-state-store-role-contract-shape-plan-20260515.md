@@ -187,3 +187,7 @@ symbols:
     cypressCoverage: N/A - internal API composition boundary only
     unitTests: [pnpm --filter dvt-api test -- stateStoreRoles.test.ts]
 ```
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `RUNTIME-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

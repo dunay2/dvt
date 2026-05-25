@@ -32,7 +32,7 @@ Options considered:
 
 - Extend `ops:ar-c2:evidence` with a sustained-window assertion flag.
 - Treat T4 rows as manually reviewed closeout text only.
-- Add a separate script just for sustained validation.
+- [Task: RUNTIME-PROP-DISP-1] Add a separate script just for sustained validation.
 
 Selected option and rationale: extend the existing collector with
 `--require-sustained-validation-windows`. This keeps AR-C2 closure evidence on
@@ -49,8 +49,8 @@ Mode: Full.
 
 Scope:
 
-- Add a T4 assertion mode to `tools/ops/ar-c2-evidence-collector.mjs`.
-- Add red/green coverage in
+- [Task: RUNTIME-PROP-DISP-1] Add a T4 assertion mode to `tools/ops/ar-c2-evidence-collector.mjs`.
+- [Task: RUNTIME-PROP-DISP-1] Add red/green coverage in
   `tools/ops/ar-c2-evidence-collector.architecture.test.mjs`.
 - Update AR-C2 operational docs to name the sustained-window gate.
 - Record closeout evidence for `AR-C2-INV-4` without fabricating live metric
@@ -132,7 +132,7 @@ architectureGuards: [node --test tools/ops/ar-c2-evidence-collector.architecture
 completionGate: [pnpm docs:feature-mechanization -- --feature AR-C2-INV-4-SUSTAINED-VALIDATION-WINDOW-GATE, node --test tools/ops/ar-c2-evidence-collector.architecture.test.mjs, pnpm ops:ar-c2:evidence, pnpm qa:artifact:check, pnpm docs:sync, pnpm docs:status:generate, pnpm governance:refresh, pnpm docs:feature-mechanization:implementation, pnpm verify:prepush]
 symbols:
   - {name: parseArgs, path: tools/ops/ar-c2-evidence-collector.mjs, dddOwner: AR-C2OperationalEvidenceCommand, cqRails: [AR-C2OperationalEvidenceCommand], fowlerSignals: [explicit assertion mode], architectureGuard: node --test tools/ops/ar-c2-evidence-collector.architecture.test.mjs, cypressCoverage: N/A - ops command only, unitTests: [node --test tools/ops/ar-c2-evidence-collector.architecture.test.mjs]}
-  - {name: buildSustainedRows, path: tools/ops/ar-c2-evidence-collector.mjs, dddOwner: AR-C2 sustained validation policy, cqRails: [AR-C2OperationalEvidenceCommand], fowlerSignals: [Extract Function for assertion reuse], architectureGuard: node --test tools/ops/ar-c2-evidence-collector.architecture.test.mjs, cypressCoverage: N/A - ops command only, unitTests: [node --test tools/ops/ar-c2-evidence-collector.architecture.test.mjs]}
+  - [Task: RUNTIME-PROP-DISP-1] {name: buildSustainedRows, path: tools/ops/ar-c2-evidence-collector.mjs, dddOwner: AR-C2 sustained validation policy, cqRails: [AR-C2OperationalEvidenceCommand], fowlerSignals: [Extract Function for assertion reuse], architectureGuard: node --test tools/ops/ar-c2-evidence-collector.architecture.test.mjs, cypressCoverage: N/A - ops command only, unitTests: [node --test tools/ops/ar-c2-evidence-collector.architecture.test.mjs]}
   - {name: collectSustainedValidationWindowBlockers, path: tools/ops/ar-c2-evidence-collector.mjs, dddOwner: AR-C2 sustained validation policy, cqRails: [AR-C2OperationalEvidenceCommand], fowlerSignals: [fail-closed policy], architectureGuard: node --test tools/ops/ar-c2-evidence-collector.architecture.test.mjs, cypressCoverage: N/A - ops command only, unitTests: [node --test tools/ops/ar-c2-evidence-collector.architecture.test.mjs]}
   - {name: assertSustainedValidationWindows, path: tools/ops/ar-c2-evidence-collector.mjs, dddOwner: AR-C2 sustained validation policy, cqRails: [AR-C2OperationalEvidenceCommand], fowlerSignals: [Introduce Assertion], architectureGuard: node --test tools/ops/ar-c2-evidence-collector.architecture.test.mjs, cypressCoverage: N/A - ops command only, unitTests: [node --test tools/ops/ar-c2-evidence-collector.architecture.test.mjs]}
 ```

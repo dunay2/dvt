@@ -97,7 +97,7 @@ Cons:
 - keep `graphSource` canonical in the shared planner contract
 - move DBT-native ingress DTOs to adapter or application boundary code
 - translate DBT-native input to `GenericGraphSourceV1` before planner admission
-- keep the compatibility path explicit until callers migrate
+- [Task: RUNTIME-PROP-DISP-1] keep the compatibility path explicit until callers migrate
 
 Pros:
 

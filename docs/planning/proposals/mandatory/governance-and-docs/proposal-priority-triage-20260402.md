@@ -21,7 +21,7 @@ boards, review status board, and active governance/docs tracks).
 
 - [Architecture Documentation Reconciliation Plan](./architecture-doc-reconciliation-plan-20260402.md)
   Rationale: active truth-correction and simplification path for repository-wide architecture docs.
-- [CI Delivery Governance Consolidated Action Plan](./ci-delivery-governance-consolidated-action-plan-20260331.md)
+- [Task: GOV-PROP-DISP-1] [CI Delivery Governance Consolidated Action Plan](./ci-delivery-governance-consolidated-action-plan-20260331.md)
   Rationale: declared as the single active CI governance execution surface.
 - [Contracts Domain Ownership Migration Plan](../runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md)
   Rationale: active domain-boundary and ownership alignment work.
@@ -58,7 +58,7 @@ boards, review status board, and active governance/docs tracks).
   Rationale: active roadmap line, but not on backend critical closure path.
 - [MVP Backend Operability Baseline Roadmap](../../nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md)
   Rationale: broad roadmap surface; immediate slices are tracked elsewhere.
-- [RC-E3 Execution And Task Tracking Plan](../../nice-to-have/architecture/rc-e3-execution-tracking-plan-20260328.md)
+- [Task: GOV-PROP-DISP-1] [RC-E3 Execution And Task Tracking Plan](../../nice-to-have/architecture/rc-e3-execution-tracking-plan-20260328.md)
   Rationale: useful coordination track with lower criticality than must set.
 
 ## Superseded

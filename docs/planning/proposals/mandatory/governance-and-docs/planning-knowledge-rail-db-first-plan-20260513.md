@@ -74,7 +74,7 @@ allowedImplementationSurfaces:
   - package.json
   - scripts/planning-db-import.cjs
   - scripts/planning-db-query.cjs
-  - scripts/planning-db-migrate.test.cjs
+  - [Task: GOV-PROP-DISP-1] scripts/planning-db-migrate.test.cjs
   - scripts/planning-db-query.test.cjs
   - tools/planning-db/knowledge/**
   - tools/planning-db/migrations/034_planning_knowledge_document_relations.sql
@@ -102,7 +102,7 @@ domainObjects:
   - name: Planning knowledge rail proposal
     type: governance proposal
     owner: Architecture / Docs / Delivery
-  - name: Review action read model
+  - [Task: GOV-PROP-DISP-1] name: Review action read model
     type: planned read model
     owner: Planning knowledge local operations
   - name: Fowler learning ledger
@@ -111,7 +111,7 @@ domainObjects:
 fowlerSignals:
   - Documentation Drift from review findings that stay only in Markdown
   - Duplicate Semantics between reviews, proposals, and planning tasks
-  - Hidden Authority when action items are implied but not queryable
+  - [Task: GOV-PROP-DISP-1] Hidden Authority when action items are implied but not queryable
   - Responsibility Overload in large planning DB scripts
 architectureGuards:
   - pnpm docs:feature-mechanization:implementation
@@ -148,29 +148,29 @@ symbols:
     architectureGuard: pnpm docs:feature-mechanization:implementation
     cypressCoverage: N/A
     unitTests:
-      - node --test tools/planning-db/knowledge/documentSnapshot.test.cjs scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+      - [Task: GOV-PROP-DISP-1] node --test tools/planning-db/knowledge/documentSnapshot.test.cjs scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
       - pnpm test:planning:db
   - { name: buildKnowledgeDocumentSnapshot, path: scripts/planning-db-import.cjs, dddOwner: Knowledge import snapshot, cqRails: [ImportPlanningKnowledgeSnapshot], fowlerSignals: [Documentation Drift], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [pnpm test:planning:db] }
   - { name: insertKnowledgeSnapshot, path: scripts/planning-db-import.cjs, dddOwner: Knowledge import snapshot, cqRails: [ImportPlanningKnowledgeSnapshot], fowlerSignals: [Documentation Drift], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [pnpm test:planning:db] }
   - { name: listTrackedKnowledgeDocuments, path: scripts/planning-db-import.cjs, dddOwner: Knowledge import snapshot, cqRails: [ImportPlanningKnowledgeSnapshot], fowlerSignals: [Documentation Drift], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [pnpm test:planning:db] }
-  - { name: buildKnowledgeActionRows, path: scripts/planning-db-query.cjs, dddOwner: Knowledge action read model, cqRails: [ReadPlanningKnowledgeActions], fowlerSignals: [Hidden Authority], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [pnpm test:planning:db] }
+  - [Task: GOV-PROP-DISP-1] { name: buildKnowledgeActionRows, path: scripts/planning-db-query.cjs, dddOwner: Knowledge action read model, cqRails: [ReadPlanningKnowledgeActions], fowlerSignals: [Hidden Authority], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [pnpm test:planning:db] }
   - { name: buildKnowledgeDocumentRows, path: scripts/planning-db-query.cjs, dddOwner: Knowledge document read model, cqRails: [ReadPlanningKnowledgeDocuments], fowlerSignals: [Documentation Drift], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [pnpm test:planning:db] }
   - { name: buildMandatoryProposalGapRows, path: scripts/planning-db-query.cjs, dddOwner: Mandatory proposal gap read model, cqRails: [ReadMandatoryProposalBindingGaps], fowlerSignals: [Hidden Authority], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [pnpm test:planning:db] }
-  - { name: knowledgeActionSelect, path: scripts/planning-db-query.cjs, dddOwner: Knowledge action read model, cqRails: [ReadPlanningKnowledgeActions], fowlerSignals: [Hidden Authority], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [pnpm test:planning:db] }
+  - [Task: GOV-PROP-DISP-1] { name: knowledgeActionSelect, path: scripts/planning-db-query.cjs, dddOwner: Knowledge action read model, cqRails: [ReadPlanningKnowledgeActions], fowlerSignals: [Hidden Authority], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [pnpm test:planning:db] }
   - { name: knowledgeDocumentSelect, path: scripts/planning-db-query.cjs, dddOwner: Knowledge document read model, cqRails: [ReadPlanningKnowledgeDocuments], fowlerSignals: [Documentation Drift], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [pnpm test:planning:db] }
   - { name: mandatoryProposalGapSelect, path: scripts/planning-db-query.cjs, dddOwner: Mandatory proposal gap read model, cqRails: [ReadMandatoryProposalBindingGaps], fowlerSignals: [Hidden Authority], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [pnpm test:planning:db] }
-  - { name: readKnowledgeActionRows, path: scripts/planning-db-query.cjs, dddOwner: Knowledge action read model, cqRails: [ReadPlanningKnowledgeActions], fowlerSignals: [Hidden Authority], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [pnpm test:planning:db] }
+  - [Task: GOV-PROP-DISP-1] { name: readKnowledgeActionRows, path: scripts/planning-db-query.cjs, dddOwner: Knowledge action read model, cqRails: [ReadPlanningKnowledgeActions], fowlerSignals: [Hidden Authority], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [pnpm test:planning:db] }
   - { name: readKnowledgeDocumentRows, path: scripts/planning-db-query.cjs, dddOwner: Knowledge document read model, cqRails: [ReadPlanningKnowledgeDocuments], fowlerSignals: [Documentation Drift], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [pnpm test:planning:db] }
   - { name: readMandatoryProposalGapRows, path: scripts/planning-db-query.cjs, dddOwner: Mandatory proposal gap read model, cqRails: [ReadMandatoryProposalBindingGaps], fowlerSignals: [Hidden Authority], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [pnpm test:planning:db] }
   - { name: documentLinks, path: tools/planning-db/knowledge/documentLinks.cjs, dddOwner: Knowledge document relation projection, cqRails: [ImportPlanningKnowledgeSnapshot], fowlerSignals: [Duplicate Semantics], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [tools/planning-db/knowledge/documentSnapshot.test.cjs] }
   - { name: normalizeRelativeDocumentPath, path: tools/planning-db/knowledge/documentLinks.cjs, dddOwner: Knowledge document relation projection, cqRails: [ImportPlanningKnowledgeSnapshot], fowlerSignals: [Duplicate Semantics], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [tools/planning-db/knowledge/documentSnapshot.test.cjs] }
-  - { name: actionRows, path: tools/planning-db/knowledge/documentSnapshot.cjs, dddOwner: Knowledge action projection, cqRails: [ImportPlanningKnowledgeSnapshot], fowlerSignals: [Hidden Authority], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [tools/planning-db/knowledge/documentSnapshot.test.cjs] }
-  - { name: actionStatusFromLine, path: tools/planning-db/knowledge/documentSnapshot.cjs, dddOwner: Knowledge action projection, cqRails: [ImportPlanningKnowledgeSnapshot], fowlerSignals: [Hidden Authority], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [tools/planning-db/knowledge/documentSnapshot.test.cjs] }
+  - [Task: GOV-PROP-DISP-1] { name: actionRows, path: tools/planning-db/knowledge/documentSnapshot.cjs, dddOwner: Knowledge action projection, cqRails: [ImportPlanningKnowledgeSnapshot], fowlerSignals: [Hidden Authority], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [tools/planning-db/knowledge/documentSnapshot.test.cjs] }
+  - [Task: GOV-PROP-DISP-1] { name: actionStatusFromLine, path: tools/planning-db/knowledge/documentSnapshot.cjs, dddOwner: Knowledge action projection, cqRails: [ImportPlanningKnowledgeSnapshot], fowlerSignals: [Hidden Authority], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [tools/planning-db/knowledge/documentSnapshot.test.cjs] }
   - { name: buildKnowledgeSnapshotFromDocuments, path: tools/planning-db/knowledge/documentSnapshot.cjs, dddOwner: Knowledge import snapshot, cqRails: [ImportPlanningKnowledgeSnapshot], fowlerSignals: [Documentation Drift], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [tools/planning-db/knowledge/documentSnapshot.test.cjs] }
   - { name: documentTypeForPath, path: tools/planning-db/knowledge/documentSnapshot.cjs, dddOwner: Knowledge document projection, cqRails: [ImportPlanningKnowledgeSnapshot], fowlerSignals: [Documentation Drift], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [tools/planning-db/knowledge/documentSnapshot.test.cjs] }
-  - { name: extractTaskIds, path: tools/planning-db/knowledge/documentSnapshot.cjs, dddOwner: Knowledge action projection, cqRails: [ImportPlanningKnowledgeSnapshot], fowlerSignals: [Hidden Authority], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [tools/planning-db/knowledge/documentSnapshot.test.cjs] }
+  - [Task: GOV-PROP-DISP-1] { name: extractTaskIds, path: tools/planning-db/knowledge/documentSnapshot.cjs, dddOwner: Knowledge action projection, cqRails: [ImportPlanningKnowledgeSnapshot], fowlerSignals: [Hidden Authority], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [tools/planning-db/knowledge/documentSnapshot.test.cjs] }
   - { name: isKnowledgePath, path: tools/planning-db/knowledge/documentSnapshot.cjs, dddOwner: Knowledge document projection, cqRails: [ImportPlanningKnowledgeSnapshot], fowlerSignals: [Documentation Drift], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [tools/planning-db/knowledge/documentSnapshot.test.cjs] }
-  - { name: normalizeTaskIdSet, path: tools/planning-db/knowledge/documentSnapshot.cjs, dddOwner: Knowledge action projection, cqRails: [ImportPlanningKnowledgeSnapshot], fowlerSignals: [Hidden Authority], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [tools/planning-db/knowledge/documentSnapshot.test.cjs] }
+  - [Task: GOV-PROP-DISP-1] { name: normalizeTaskIdSet, path: tools/planning-db/knowledge/documentSnapshot.cjs, dddOwner: Knowledge action projection, cqRails: [ImportPlanningKnowledgeSnapshot], fowlerSignals: [Hidden Authority], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [tools/planning-db/knowledge/documentSnapshot.test.cjs] }
   - { name: sectionRows, path: tools/planning-db/knowledge/documentSnapshot.cjs, dddOwner: Knowledge document section projection, cqRails: [ImportPlanningKnowledgeSnapshot], fowlerSignals: [Documentation Drift], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [tools/planning-db/knowledge/documentSnapshot.test.cjs] }
   - { name: slugify, path: tools/planning-db/knowledge/documentSnapshot.cjs, dddOwner: Knowledge identity projection, cqRails: [ImportPlanningKnowledgeSnapshot], fowlerSignals: [Primitive Obsession], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [tools/planning-db/knowledge/documentSnapshot.test.cjs] }
   - { name: assert, path: tools/planning-db/knowledge/documentSnapshot.test.cjs, dddOwner: Knowledge extractor tests, cqRails: [ImportPlanningKnowledgeSnapshot], fowlerSignals: [Test-only confidence], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: N/A, unitTests: [tools/planning-db/knowledge/documentSnapshot.test.cjs] }
@@ -288,9 +288,9 @@ flowchart LR
      `knowledge_review_proposal_links`.
 
 4. Knowledge does not create tasks automatically.
-   - Missing task links become explicit gaps such as
+   - [Task: GOV-PROP-DISP-1] Missing task links become explicit gaps such as
      `review_action_without_task`.
-   - Operators decide whether to create work through `pnpm planning:db:operate`.
+   - [Task: GOV-PROP-DISP-1] Operators decide whether to create work through `pnpm planning:db:operate`.
 
 5. New code must stay modular.
    - New scripts and modules target fewer than 200 lines.
@@ -380,7 +380,7 @@ The following scripts may only receive minimal delegation glue:
 
 ### `PKR-1` Proposal And DB Surface Inventory
 
-- Add this proposal.
+- [Task: GOV-PROP-DISP-1] Add this proposal.
 - Link it from the proposal portfolio map.
 - Inventory the current DB surfaces that the future knowledge rail must extend.
 - Run `pnpm docs:sync`.
@@ -396,25 +396,25 @@ Acceptance criteria:
 
 ### `PKR-2` Migration And Normalized Read Model
 
-- Add `tools/planning-db/migrations/034_planning_knowledge_document_relations.sql`.
-- Create the first `knowledge_*` document, section, proposal, action, and link
+- [Task: GOV-PROP-DISP-1] Add `tools/planning-db/migrations/034_planning_knowledge_document_relations.sql`.
+- [Task: GOV-PROP-DISP-1] Create the first `knowledge_*` document, section, proposal, action, and link
   tables and query views under `planning_query_store`.
-- Add migration tests for every table and view.
+- [Task: GOV-PROP-DISP-1] Add migration tests for every table and view.
 - Update `docs/planning/status/db-surface-inventory.md`.
 
 Acceptance criteria:
 
 - migration creates the first implemented `knowledge_*` document relation
   objects;
-- `planning-db-migrate.test.cjs` proves the migration exists;
-- `planning:db:migrate` applies cleanly on a local DB.
+- [Task: GOV-PROP-DISP-1] `planning-db-migrate.test.cjs` proves the migration exists;
+- [Task: GOV-PROP-DISP-1] `planning:db:migrate` applies cleanly on a local DB.
 
 ### `PKR-3` Import Modules And Standalone CLI
 
-- Add import modules under `tools/planning-db/knowledge/`.
-- Add thin import routing through `scripts/planning-db-import.cjs`; defer
+- [Task: GOV-PROP-DISP-1] Add import modules under `tools/planning-db/knowledge/`.
+- [Task: GOV-PROP-DISP-1] Add thin import routing through `scripts/planning-db-import.cjs`; defer
   standalone `scripts/planning-knowledge-import.cjs` until query names settle.
-- Import review/proposal metadata without adding task lifecycle writes.
+- [Task: GOV-PROP-DISP-1] Import review/proposal metadata without adding task lifecycle writes.
 - Preserve source hashes for idempotent stale checks.
 
 Acceptance criteria:
@@ -425,12 +425,12 @@ Acceptance criteria:
 
 ### `PKR-4` Query Modules And Formatters
 
-- Add query routing through `scripts/planning-db-query.cjs`; defer standalone
+- [Task: GOV-PROP-DISP-1] Add query routing through `scripts/planning-db-query.cjs`; defer standalone
   `scripts/planning-knowledge-query.cjs` until the Fowler learning ledger is
   normalized.
-- Add `knowledge-documents`, `knowledge-actions`, and
+- [Task: GOV-PROP-DISP-1] Add `knowledge-documents`, `knowledge-actions`, and
   `mandatory-proposal-gaps` query handlers.
-- Add table output for operator use and JSON output if existing query patterns
+- [Task: GOV-PROP-DISP-1] Add table output for operator use and JSON output if existing query patterns
   require it.
 
 Acceptance criteria:
@@ -445,13 +445,13 @@ Acceptance criteria:
 
 - Link the knowledge rail to component engineering record v2 without making CER
   own knowledge state.
-- Add related review actions and Fowler learning counts to CER gaps or related
+- [Task: GOV-PROP-DISP-1] Add related review actions and Fowler learning counts to CER gaps or related
   documents.
 
 Acceptance criteria:
 
 - CER can show related review actions for a component;
-- CER can show open knowledge gaps without duplicating action item state;
+- [Task: GOV-PROP-DISP-1] CER can show open knowledge gaps without duplicating action item state;
 - `pnpm planning:db:query cer --schema-version v2` remains backward compatible.
 
 ## Validation Baseline
@@ -469,8 +469,8 @@ Required DB implementation scenarios:
 
 - one review produces multiple proposals;
 - one proposal links to multiple reviews;
-- one finding links to multiple components and one task;
-- one action item without a task appears as `review_action_without_task`;
+- [Task: GOV-PROP-DISP-1] one finding links to multiple components and one task;
+- [Task: GOV-PROP-DISP-1] one action item without a task appears as `review_action_without_task`;
 - one Fowler signal links to component, finding, proposal, and evidence.
 
 DB implementation slices:
@@ -489,7 +489,7 @@ pnpm verify:prepush
 
 ## Out Of Scope
 
-- automatic task creation;
+- [Task: GOV-PROP-DISP-1] automatic task creation;
 - embeddings, semantic search, or AI extraction;
 - product runtime storage;
 - browser UI rendering;

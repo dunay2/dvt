@@ -446,3 +446,7 @@ artifacts via `pnpm docs:gov:generated-policy`:
 
 This makes unbounded growth a mechanical failure in local and CI validation
 instead of a manual review concern.
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `GOV-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

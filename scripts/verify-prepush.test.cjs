@@ -6,7 +6,15 @@
   const test = require('node:test');
   const assert = require('node:assert/strict');
 
-  const { buildPrepushPlan, classifyPrepushScope, commandLabel } = require('./verify-prepush.cjs');
+  const {
+    buildPrepushPlan,
+    buildPrepushStamp,
+    classifyPrepushScope,
+    commandLabel,
+    isPrepushStampValid,
+    parseArgs,
+    validationLevelSatisfies,
+  } = require('./verify-prepush.cjs');
 
   function stepIds(plan) {
     return plan.map((step) => step.id);
@@ -127,6 +135,44 @@
     assert.deepEqual(labels, ['pnpm verify:changed']);
   });
 
+  test('prepush hook arguments are parsed without changing normal preflight flags', () => {
+    assert.deepEqual(parseArgs(['--hook']), { dryRun: false, full: false, hook: true });
+    assert.deepEqual(parseArgs(['--full', '--hook']), { dryRun: false, full: true, hook: true });
+  });
+
+  test('prepush validation stamp skips only equivalent or stronger validation', () => {
+    const changedFiles = ['apps/web/src/app/AppProviders.tsx'];
+    const defaultStamp = buildPrepushStamp(changedFiles, {
+      full: false,
+      stateFingerprint: 'same-tree',
+    });
+    const fullStamp = buildPrepushStamp(changedFiles, {
+      full: true,
+      stateFingerprint: 'same-tree',
+    });
+    const expectedDefault = buildPrepushStamp(changedFiles, {
+      full: false,
+      stateFingerprint: 'same-tree',
+    });
+    const expectedFull = buildPrepushStamp(changedFiles, {
+      full: true,
+      stateFingerprint: 'same-tree',
+    });
+
+    assert.equal(validationLevelSatisfies('full', 'default'), true);
+    assert.equal(validationLevelSatisfies('default', 'full'), false);
+    assert.equal(isPrepushStampValid(defaultStamp, expectedDefault), true);
+    assert.equal(isPrepushStampValid(defaultStamp, expectedFull), false);
+    assert.equal(isPrepushStampValid(fullStamp, expectedDefault), true);
+    assert.equal(
+      isPrepushStampValid(
+        { ...fullStamp, changedFiles: ['apps/web/src/app/Other.tsx'] },
+        expectedDefault
+      ),
+      false
+    );
+  });
+
   test('scope classification exposes reasons for skipped conditional groups', () => {
     const scope = classifyPrepushScope(['README.md']);
 
@@ -182,6 +228,14 @@
       packageJson.scripts['test:pr-closeout'],
       'node --test scripts/pr-closeout.test.cjs'
     );
+  });
+
+  test('pre-push hook routes through verify prepush so the validation stamp can avoid duplication', () => {
+    const hookSource = fs.readFileSync(path.resolve(__dirname, '..', '.husky', 'pre-push'), 'utf8');
+
+    assert.match(hookSource, /pnpm -s verify:prepush -- --hook/);
+    assert.match(hookSource, /pnpm -s verify:prepush -- --full --hook/);
+    assert.doesNotMatch(hookSource, /pnpm -s verify:changed/);
   });
 
   test('web package exposes an owned lint command for local package validation', () => {

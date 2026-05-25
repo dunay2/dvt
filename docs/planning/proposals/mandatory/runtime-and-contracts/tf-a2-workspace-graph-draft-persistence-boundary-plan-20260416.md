@@ -281,7 +281,7 @@ Field rules:
 - `decisionId` identifies the protected authorization or mutation decision
 - `decisionId` must be reusable as an observability attribute for protected
   route diagnosis
-- `action` is closed to `draft_read` and `draft_write` for the v1 slice
+- [Task: RUNTIME-PROP-DISP-1] `action` is closed to `draft_read` and `draft_write` for the v1 slice
 - `outcome` is caller-visible and must match the protected decision outcome
 - `recordedAt` is server-produced, not inferred by the browser
 
@@ -340,7 +340,7 @@ persist or emit, even if the final storage schema is implemented later:
 
 - actor identity or subject reference
 - workspace scope (`tenantId`, `projectId`, `environmentId`)
-- action (`draft_read` or `draft_write`)
+- [Task: RUNTIME-PROP-DISP-1] action (`draft_read` or `draft_write`)
 - outcome (`allowed`, `read_only`, `forbidden`, or `conflict`)
 - `correlationId`
 - `decisionId`
@@ -370,7 +370,7 @@ observability must preserve for this boundary:
 - writes must carry a caller-visible revision or equivalent concurrency token
 - writes must use compare-and-swap semantics against that revision
 - stale writes must fail closed with a typed conflict outcome
-- duplicate retries of the same logical write must not create a second semantic
+- [Task: RUNTIME-PROP-DISP-1] duplicate retries of the same logical write must not create a second semantic
   state transition
 
 ### 1.1 First merge posture

@@ -62,9 +62,9 @@ flowchart LR
 
 Included:
 
-- Extract a pure Vite manual chunk resolver.
-- Add semantic tests for Monaco vendor isolation and lazy gateway boundaries.
-- Add a Monaco bundle isolation component guide and user stories.
+- [Task: F-30] Extract a pure Vite manual chunk resolver.
+- [Task: F-30] Add semantic tests for Monaco vendor isolation and lazy gateway boundaries.
+- [Task: F-30] Add a Monaco bundle isolation component guide and user stories.
 - Update the Monaco changed-suite routing so this guard stays close to Monaco
   edits.
 - Update F-17 progress evidence.

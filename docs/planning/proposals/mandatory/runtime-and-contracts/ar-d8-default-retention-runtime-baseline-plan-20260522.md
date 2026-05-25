@@ -58,7 +58,7 @@ stateDiagram-v2
 - Change `DVT_RUN_EVENT_RETENTION_ENABLED` default from `false` to `true`.
 - Keep explicit `false` overrides for controlled diagnostics.
 - Keep the production filesystem archive opt-in fail-fast rule.
-- Add Prometheus posture gauges:
+- [Task: RUNTIME-PROP-DISP-1] Add Prometheus posture gauges:
   - `dvt_delivery_buffer_purge_configured`
   - `dvt_delivery_buffer_purge_disabled`
   - `dvt_run_event_retention_configured`

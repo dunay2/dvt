@@ -336,3 +336,7 @@ This planning slice is ready to hand off when it yields:
    from the shared kernel
 3. one linked Lane A task for implementation ownership
 4. one validation matrix for the later implementation slice
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `RUNTIME-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

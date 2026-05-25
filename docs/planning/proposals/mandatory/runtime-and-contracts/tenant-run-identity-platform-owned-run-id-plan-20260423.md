@@ -205,7 +205,7 @@ flowchart LR
 
 ## Out-of-scope boundaries
 
-- This slice does not migrate runtime storage schemas because platform-owned
+- [Task: RUNTIME-PROP-DISP-1] This slice does not migrate runtime storage schemas because platform-owned
   generated ids preserve the existing global `run_id` key assumptions.
 - This slice does not introduce start-run retry idempotency. Repeated admitted
   requests create distinct platform-owned run ids unless a later governed

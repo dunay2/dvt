@@ -333,3 +333,7 @@ symbols:
       - pnpm --filter @dvt/web test:canvas-unit
       - pnpm --filter @dvt/web test:canvas-architecture
 ```
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `E-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

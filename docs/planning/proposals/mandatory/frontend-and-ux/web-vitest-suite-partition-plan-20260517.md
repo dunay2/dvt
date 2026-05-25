@@ -17,8 +17,8 @@ lanes without reducing coverage or changing product behavior. The historical
 
 ## Scope
 
-- Add one suite catalog for `@dvt/web` Vitest ownership.
-- Add unit, presentation, architecture, Canvas focus, and CI package commands.
+- [Task: E-PROP-DISP-1] Add one suite catalog for `@dvt/web` Vitest ownership.
+- [Task: E-PROP-DISP-1] Add unit, presentation, architecture, Canvas focus, and CI package commands.
 - Preserve the historical web `pretest` dependency build for every public split
   suite command through an explicit `test:deps` rail before raw Vitest delegates.
 - Split Canvas route-state and startup/draft-recovery architecture god tests by

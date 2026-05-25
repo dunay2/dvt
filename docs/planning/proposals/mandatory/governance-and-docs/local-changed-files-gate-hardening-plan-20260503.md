@@ -38,7 +38,7 @@ allowedImplementationSurfaces:
   - scripts/lint-markdown-changed.cjs
   - scripts/format-markdown-changed.cjs
   - scripts/docs-workboard-check-changed.cjs
-  - scripts/fix-changed.cjs
+  - [Task: GOV-PROP-DISP-1] scripts/fix-changed.cjs
   - scripts/verify-changed.cjs
   - scripts/verify-changed.test.cjs
   - scripts/README.md
@@ -126,7 +126,7 @@ redGreenCycles:
       - scripts/lint-markdown-changed.cjs
       - scripts/format-markdown-changed.cjs
       - scripts/docs-workboard-check-changed.cjs
-      - scripts/fix-changed.cjs
+      - [Task: GOV-PROP-DISP-1] scripts/fix-changed.cjs
       - scripts/qa-artifact-check.cjs
       - scripts/validate-arc-evidence-frontmatter.cjs
       - scripts/check-markdown-locations.cjs
@@ -384,7 +384,7 @@ testEvidence:
     unitTests:
       - node --test scripts/verify-changed.test.cjs
     negativeTests:
-      - Planning DB changes must add planning DB validation.
+      - [Task: GOV-PROP-DISP-1] Planning DB changes must add planning DB validation.
       - Developer workflow verifier changes must run their own regression test.
 ```
 
@@ -420,4 +420,4 @@ for PR CI to discover omitted files.
 - A clean branch with no worktree changes may skip changed-file-only gates.
 - A dirty worktree must not skip changed-file-only gates.
 - Untracked implementation files must be visible to feature mechanization.
-- The fix must not relax lint, typecheck, ARC, docs, or governance rules.
+- [Task: GOV-PROP-DISP-1] The fix must not relax lint, typecheck, ARC, docs, or governance rules.

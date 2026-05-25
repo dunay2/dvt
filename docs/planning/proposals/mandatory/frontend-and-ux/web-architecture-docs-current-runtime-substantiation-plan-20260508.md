@@ -184,3 +184,7 @@ symbols:
     name: ArchivedFrontendArchitectureIntroduction
     path: docs/archive/architecture/components/web-app/dvt-frontend-architecture-introduction.md
 ```
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `E-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

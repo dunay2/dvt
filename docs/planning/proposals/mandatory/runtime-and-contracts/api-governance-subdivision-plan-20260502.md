@@ -218,8 +218,8 @@ Allowed:
   results.
 - Application services may depend on ports and domain policies, not on Fastify
   route modules.
-- Infrastructure adapters implement ports and must not define product intent.
-- Runtime composition wires dependencies and must not create hidden domain
+- [Task: RUNTIME-PROP-DISP-1] Infrastructure adapters implement ports and must not define product intent.
+- [Task: RUNTIME-PROP-DISP-1] Runtime composition wires dependencies and must not create hidden domain
   authority.
 
 Forbidden:

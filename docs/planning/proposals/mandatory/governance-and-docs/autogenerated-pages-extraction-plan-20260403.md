@@ -136,3 +136,7 @@ Gain:
 - [`docs/planning/status/governance-document-rule-inventory.md`](../../../status/governance-document-rule-inventory.md)
 - [`AGENTS.md`](../../../../../AGENTS.md)
 - [`package.json`](../../../../../package.json)
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `GOV-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

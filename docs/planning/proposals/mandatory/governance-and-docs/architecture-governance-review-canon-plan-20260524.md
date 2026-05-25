@@ -35,7 +35,7 @@ reports. They keep a review finding ledger whose rows point at bounded-context
 owners, accepted decisions, risk entries, executable tests, and product
 backlog items. This canon applies that pattern locally:
 
-- closed findings point to the task, ADR, evidence, or risk that closed them;
+- [Task: GOV-PROP-DISP-1] closed findings point to the task, ADR, evidence, or risk that closed them;
 - queued findings stay visible as product or platform backlog rows;
 - blocked findings are separated from closed rows and retain their blocker;
 - speculative recommendations are frozen or risk-accepted instead of becoming
@@ -74,7 +74,7 @@ Disposition status vocabulary: `status: Closed`, `status: Queued`,
 - **Review Finding Ledger:** every finding has one status and one owner.
 - **Semantic Disposition:** closed, queued, follow-up, and risk-accepted are
   different states; review text cannot imply untracked work.
-- **Published Language:** task IDs, risk IDs, and ADR IDs remain the vocabulary
+- [Task: GOV-PROP-DISP-1] **Published Language:** task IDs, risk IDs, and ADR IDs remain the vocabulary
   shared by architecture, planning, and product.
 - **Fitness Function:** the CI test checks the semantic artifact set and the
   high-value findings, not only file existence.
@@ -160,7 +160,7 @@ domainObjects:
 fowlerSignals:
   - Review backlog hidden in prose
   - Duplicate planning queues
-  - Drift between review and task state
+  - [Task: GOV-PROP-DISP-1] Drift between review and task state
   - Product value hidden behind platform hygiene
 architectureGuards:
   - node --test tools/ci/architecture-governance-review-canon.test.mjs

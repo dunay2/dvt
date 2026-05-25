@@ -181,7 +181,7 @@ Pros:
 Cons:
 
 - mixes too many reasons to change
-- expands from a component-boundary fix into a broad runtime refactor
+- [Task: RUNTIME-PROP-DISP-1] expands from a component-boundary fix into a broad runtime refactor
 - raises delivery risk without needing to
 
 ## Selected Direction

@@ -41,7 +41,7 @@ stage-specific authorities and cannot declare alpha full by implication.
 
 In scope:
 
-- one route-level alpha task in Lane E;
+- [Task: E-PROP-DISP-1] one route-level alpha task in Lane E;
 - Lane C dependency visibility for protected runtime and plan/run readiness
   inputs;
 - explicit separation between route-level alpha authority and child-slice

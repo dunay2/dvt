@@ -146,3 +146,7 @@ diagram cleanup, and hardening guards around the split.
 - the boundary names make authority explicit
 - current docs do not pretend code convergence that has not landed yet
 - planning treats `AR-A12-B` as the active slice after `AR-A12-A`
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `RUNTIME-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

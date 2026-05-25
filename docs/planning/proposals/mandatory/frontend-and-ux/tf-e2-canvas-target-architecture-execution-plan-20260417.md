@@ -952,7 +952,7 @@ proceed in this sequence unless another governed review changes it first:
      - `apps/web/src/app/views/canvas/useCanvasViewportGraphModel.ts`
 5. Graph-first empty authoring entrypoint.
    - Owner: `TF-E2-A`
-   - Goal: add the route-owned `Add first node` command once the protected
+   - [Task: E-PROP-DISP-1] Goal: add the route-owned `Add first node` command once the protected
      authoring boundary can represent incomplete graph states.
    - Primary files:
      - `apps/web/src/app/views/canvas/CanvasCenterSurface.tsx`

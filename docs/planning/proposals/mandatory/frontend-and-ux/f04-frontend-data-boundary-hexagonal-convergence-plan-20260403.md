@@ -238,13 +238,13 @@ flowchart LR
 
 Deliverables:
 
-- Extract `IWorkspacePort`, `IRunsPort`, `IPlansPort` as pure TypeScript
+- [Task: E-PROP-DISP-1] Extract `IWorkspacePort`, `IRunsPort`, `IPlansPort` as pure TypeScript
   interfaces in `src/app/ports/`.
 - Each port defines only the operations the presentation layer needs — no
   HTTP details, no error classification internals.
 - Existing service interfaces (`RunsService`, etc.) become the adapter-side
   implementation type that satisfies the port.
-- Add port-level JSDoc documenting each operation's contract.
+- [Task: E-PROP-DISP-1] Add port-level JSDoc documenting each operation's contract.
 
 Validation:
 
@@ -257,7 +257,7 @@ Validation:
 
 Deliverables:
 
-- Refactor `AppServicesProvider` to wire ports (not service implementations)
+- [Task: E-PROP-DISP-1] Refactor `AppServicesProvider` to wire ports (not service implementations)
   into context.
 - Remove `resolveDataSource()` calls from any location outside the composition
   root.
@@ -285,7 +285,7 @@ Deliverables:
 - Merge session-related fields from `appStore` into `sessionStore` as single
   source of truth — remove duplicate tenant/project/env fields.
 - Each store retains its own persistence partialize config.
-- Create `useCanvasStoreFacade` (already exists) as the canonical aggregation
+- [Task: E-PROP-DISP-1] Create `useCanvasStoreFacade` (already exists) as the canonical aggregation
   point for canvas hooks that need cross-store data.
 
 Validation:
@@ -303,9 +303,9 @@ Deliverables:
 - Refactor `RunsView` to consume `IRunsPort` via hook and delegate facade
   construction to a domain-level use-case hook (not inline `useMemo`).
 - Refactor `useCanvasController` to reduce orchestration breadth:
-  - Extract `useCanvasDataModel` (graph + overlay) as a self-contained hook
+  - [Task: E-PROP-DISP-1] Extract `useCanvasDataModel` (graph + overlay) as a self-contained hook
     that depends only on ports and the canvas interaction store.
-  - Extract `useCanvasExecutionBridge` (plan + run actions) that depends only
+  - [Task: E-PROP-DISP-1] Extract `useCanvasExecutionBridge` (plan + run actions) that depends only
     on ports and the execution store.
   - `useCanvasController` becomes a thin composition of these two plus
     layout/navigation hooks.
@@ -325,8 +325,8 @@ Validation:
 
 Deliverables:
 
-- Create `src/app/queries/queryKeys.ts` with a typed query key registry.
-- Migrate all inline query key definitions to the registry.
+- [Task: E-PROP-DISP-1] Create `src/app/queries/queryKeys.ts` with a typed query key registry.
+- [Task: E-PROP-DISP-1] Migrate all inline query key definitions to the registry.
 - Define invalidation policies per domain (runs, plans, workspace, health).
 - Document query key conventions in a short technical reference.
 
@@ -366,12 +366,12 @@ Deliverables:
   the achieved architecture with diagrams.
 - Update `DVT_FRONTEND_PLUGIN_ARCHITECTURE.md` to reflect the hexagonal data
   flow.
-- Add an architecture fitness test that asserts:
+- [Task: E-PROP-DISP-1] Add an architecture fitness test that asserts:
   - no view file imports from adapter or infrastructure directories
   - no adapter file imports from view directories
   - port interfaces have no infrastructure dependencies
 - Update the frontend user manual and frontend roadmap.
-- Create closeout evidence doc under `docs/evidence/`.
+- [Task: E-PROP-DISP-1] Create closeout evidence doc under `docs/evidence/`.
 
 Validation:
 
@@ -406,7 +406,7 @@ flowchart LR
 This proposal maps to **Lane E** (Frontend) or a new frontend-specific lane if
 one is created. Task structure:
 
-- Create umbrella task `F-04` with child tasks `F04-W0..W6`
+- [Task: E-PROP-DISP-1] Create umbrella task `F-04` with child tasks `F04-W0..W6`
 - Reference this proposal and:
   - `docs/planning/proposals/frontend-f04-scope-and-slicing-20260404.md`
   - `docs/architecture/reference-architecture.md`
@@ -447,7 +447,7 @@ one is created. Task structure:
 - Replacing React Query with a different server-state library
 - Introducing a new UI component library or design system
 - Real-time WebSocket adapter implementation (future wave beyond F-04)
-- Retirement of `GraphCanvas` legacy component (separate task)
+- [Task: E-PROP-DISP-1] Retirement of `GraphCanvas` legacy component (separate task)
 
 ## Quality bar and QA validation framework
 
@@ -549,9 +549,9 @@ MUST include:
   determinism, harness/fixture needs, test grouping by type with rationale
 - **Quality gates**: commands executed, what passed, what failed, what could not
   be verified
-- **Action artifact** with:
-  - Task checklist with GitHub-style checkboxes
-  - Per task: objective, scope, owner, dependencies, documentation impact,
+- [Task: E-PROP-DISP-1] **Action artifact** with:
+  - [Task: E-PROP-DISP-1] Task checklist with GitHub-style checkboxes
+  - [Task: E-PROP-DISP-1] Per task: objective, scope, owner, dependencies, documentation impact,
     evidence/risk-doc impact, comment with rationale, Definition of Done
 - **At least one Mermaid diagram** explaining the current state, risk, flow, or
   remediation map
@@ -641,7 +641,7 @@ pnpm test --filter @dvt/web -- --grep "architecture fitness"
 
 - Objective: Define explicit frontend outbound ports as the only consumer-facing service contracts.
 - Scope: `apps/web/src/app/ports/**` and service typing boundaries.
-- In current task scope: Yes.
+- [Task: E-PROP-DISP-1] In current task scope: Yes.
 - Dependencies: None.
 - Documentation impact: Update architecture docs with port ownership references.
 - Evidence / risk-doc impact: None expected for this planning-first slice.
@@ -655,11 +655,11 @@ pnpm test --filter @dvt/web -- --grep "architecture fitness"
 
 - Objective: Centralize mode selection and adapter wiring in one composition root.
 - Scope: `AppServicesProvider` and data-source resolution ownership.
-- In current task scope: Yes.
+- [Task: E-PROP-DISP-1] In current task scope: Yes.
 - Dependencies: `F04-W0`.
 - Documentation impact: Composition-root ownership diagrams and notes.
 - Evidence / risk-doc impact: None expected for this planning-first slice.
-- Comment with rationale: Multiple wiring points create drift between mock and API behavior.
+- [Task: E-PROP-DISP-1] Comment with rationale: Multiple wiring points create drift between mock and API behavior.
 - Definition of Done:
   - Only composition root resolves data source mode.
   - Views do not call adapter factories directly.
@@ -669,7 +669,7 @@ pnpm test --filter @dvt/web -- --grep "architecture fitness"
 
 - Objective: Split monolithic store into bounded slices with explicit ownership.
 - Scope: UI, canvas, execution, and session state boundaries.
-- In current task scope: Yes.
+- [Task: E-PROP-DISP-1] In current task scope: Yes.
 - Dependencies: `F04-W0`.
 - Documentation impact: Store-boundary map and ownership table.
 - Evidence / risk-doc impact: Evaluate if implementation touches governed ARC paths.
@@ -683,7 +683,7 @@ pnpm test --filter @dvt/web -- --grep "architecture fitness"
 
 - Objective: Ensure views consume ports and facades, not infrastructure or mode logic.
 - Scope: `RunsView`, canvas controller chain, and route-level data consumption.
-- In current task scope: Yes.
+- [Task: E-PROP-DISP-1] In current task scope: Yes.
 - Dependencies: `F04-W1`, `F04-W2`.
 - Documentation impact: Current-vs-target view dependency diagrams.
 - Evidence / risk-doc impact: Evaluate if behavior changes require evidence updates.
@@ -697,7 +697,7 @@ pnpm test --filter @dvt/web -- --grep "architecture fitness"
 
 - Objective: Normalize query key ownership and invalidation policies.
 - Scope: Query key registry, query hooks, invalidation policy.
-- In current task scope: Yes.
+- [Task: E-PROP-DISP-1] In current task scope: Yes.
 - Dependencies: `F04-W3`.
 - Documentation impact: Query policy section and key naming conventions.
 - Evidence / risk-doc impact: None expected for planning slice.
@@ -711,7 +711,7 @@ pnpm test --filter @dvt/web -- --grep "architecture fitness"
 
 - Objective: Decouple UI domain types from raw shared-kernel contracts.
 - Scope: Frontend mapping layer between `@dvt/contracts` DTOs and UI models.
-- In current task scope: Yes.
+- [Task: E-PROP-DISP-1] In current task scope: Yes.
 - Dependencies: `F04-W4`.
 - Documentation impact: Contract mapping table and ownership note.
 - Evidence / risk-doc impact: Evaluate ARC requirements if contracts package is touched.
@@ -725,10 +725,10 @@ pnpm test --filter @dvt/web -- --grep "architecture fitness"
 
 - Objective: Lock architecture boundaries with automated checks and close with evidence.
 - Scope: Architecture fitness tests, docs alignment, closeout evidence.
-- In current task scope: Yes.
+- [Task: E-PROP-DISP-1] In current task scope: Yes.
 - Dependencies: `F04-W5`.
 - Documentation impact: Architecture and manual updates aligned to shipped model.
-- Evidence / risk-doc impact: Create evidence/risk docs if governance requires.
+- [Task: E-PROP-DISP-1] Evidence / risk-doc impact: Create evidence/risk docs if governance requires.
 - Comment with rationale: Without fitness tests, boundary drift reappears after first refactor.
 - Definition of Done:
   - Import-boundary fitness checks run in CI for web workspace.
@@ -737,10 +737,10 @@ pnpm test --filter @dvt/web -- --grep "architecture fitness"
 
 ### Task Checklist
 
-- [ ] `F04-W0` Extract and adopt port contracts for workspace, runs, and plans
+- [ ] [Task: E-PROP-DISP-1] `F04-W0` Extract and adopt port contracts for workspace, runs, and plans
 - [ ] `F04-W1` Harden composition root as single mode and adapter wiring owner
 - [ ] `F04-W2` Decompose monolithic store into bounded ownership slices
-- [ ] `F04-W3` Migrate views and controllers to port-driven consumption only
+- [ ] [Task: E-PROP-DISP-1] `F04-W3` Migrate views and controllers to port-driven consumption only
 - [ ] `F04-W4` Normalize query keys and invalidation policy with shared registry
 - [ ] `F04-W5` Introduce anti-corruption mapping layer for frontend domain types
-- [ ] `F04-W6` Add architecture fitness checks and close with validated evidence
+- [ ] [Task: E-PROP-DISP-1] `F04-W6` Add architecture fitness checks and close with validated evidence
