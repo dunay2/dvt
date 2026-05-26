@@ -1,11 +1,13 @@
 /** Owned concern: compose the passive Inspector view with the route-owned Inspector authoring surface. */
 import InspectorPanel from '../../components/InspectorPanel';
-import type { CanonicalNode } from '../../types/canonical';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { CanvasInspectorAuthoringSection } from './CanvasInspectorAuthoringSection';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
 
 type CanvasInspectorPanelProps = Readonly<{
   node: CanonicalNode | null;
+  nodes: readonly CanonicalNode[];
+  edges: readonly CanonicalEdge[];
   activeRunId: string | null;
   registeredPlugins?: ReadonlySet<string>;
   onHide: () => void;
@@ -14,6 +16,8 @@ type CanvasInspectorPanelProps = Readonly<{
 
 export function CanvasInspectorPanel({
   node,
+  nodes,
+  edges,
   activeRunId,
   registeredPlugins,
   onHide,
@@ -26,7 +30,14 @@ export function CanvasInspectorPanel({
       registeredPlugins={registeredPlugins}
       onHide={onHide}
       beforePanels={
-        node ? <CanvasInspectorAuthoringSection node={node} authoring={authoring} /> : null
+        node ? (
+          <CanvasInspectorAuthoringSection
+            node={node}
+            nodes={nodes}
+            edges={edges}
+            authoring={authoring}
+          />
+        ) : null
       }
     />
   );

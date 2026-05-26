@@ -100,6 +100,8 @@ export async function buildProtectedRuntimeModule(
     planStore: storageRuntime.planStore,
     stepTypeRegistry: storageRuntime.stepTypeRegistry,
     workspaceGraphDraftStore: workspaceGraphDraftRuntime.workspaceGraphDraftStore,
+    workspaceRoot: storageRuntime.workspaceFilesRoot,
+    dbtBundleStore: storageRuntime.dbtBundleStore,
   });
 
   return {

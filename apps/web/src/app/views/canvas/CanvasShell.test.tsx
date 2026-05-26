@@ -102,6 +102,8 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
       ],
       authoringNodeKinds: [buildTestNodeKind()],
       inspectorNode: null,
+      inspectorGraphNodes: [],
+      inspectorGraphEdges: [],
       inspectorAuthoring: {
         canEditNode: true,
         onApplyNodeDraft: vi.fn(),
@@ -132,6 +134,7 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
       canvasAuthoringMode: 'transformation',
       routeState: 'ready',
       draftToolbarState: defaultDraftToolbarState,
+      canPlanGraph: false,
       canStartRun: false,
       canExportProjectSnapshot: true,
       canImportProjectSnapshot: true,

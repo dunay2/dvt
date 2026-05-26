@@ -1,3 +1,4 @@
+import { asSha256HexString } from '@dvt/contracts';
 import { describe, expect, test } from 'vitest';
 
 import {
@@ -41,6 +42,32 @@ describe('PostgresPlanStore invariants (unit, always-on)', () => {
         executablePlanJson: baseStoredRow.executable_plan_json ?? '',
       })
     ).toThrow('PLAN_STORE_CONFLICT');
+  });
+
+  test('assertStoredPlanMatchesRequest accepts replayed plan payloads that only differ by createdAtIso', () => {
+    const row = {
+      ...baseStoredRow,
+      plan_sha256: 'a'.repeat(64),
+      canonical_plan_json:
+        '{"metadata":{"createdAtIso":"2026-05-26T10:00:00.000Z","planId":"p1"},"steps":[]}',
+      executable_plan_json:
+        '{"metadata":{"createdAtIso":"2026-05-26T10:00:00.000Z","planId":"p1"},"steps":[]}',
+    } satisfies StoredPlanRow;
+    const replayedRef = {
+      ...buildPlanRefFromStoredRow(row),
+      sha256: asSha256HexString('b'.repeat(64)),
+    };
+
+    expect(() =>
+      assertStoredPlanMatchesRequest(row, {
+        planRef: replayedRef,
+        executionPolicy: buildExecutionPolicyFromStoredRow(row),
+        canonicalPlanJson:
+          '{"metadata":{"createdAtIso":"2026-05-26T10:01:00.000Z","planId":"p1"},"steps":[]}',
+        executablePlanJson:
+          '{"metadata":{"createdAtIso":"2026-05-26T10:01:00.000Z","planId":"p1"},"steps":[]}',
+      })
+    ).not.toThrow();
   });
 
   test('toPersistedCanonicalPlanJson is stable for equivalent nested key ordering', () => {

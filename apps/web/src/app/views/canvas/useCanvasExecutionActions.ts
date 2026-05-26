@@ -30,6 +30,7 @@ export function useCanvasExecutionActions({
   canonicalEdges,
   selectedNodeIds,
   workspaceNodeIds,
+  flushDraftForExecution,
   canPlan,
   canRun,
   sessionContext,
@@ -58,6 +59,7 @@ export function useCanvasExecutionActions({
     transformationValidation,
     hasPersistedPlanForRun,
     isCurrentPlanStale,
+    canPlanGraph,
     canStartRun,
     planStatusSummary,
   } = executionState;
@@ -77,6 +79,7 @@ export function useCanvasExecutionActions({
     selectedNodeIds,
     sessionContext,
     shellFeedback,
+    flushDraftForExecution,
     transformationValidation,
     workspaceNodeIds,
     workspaceFilesQuery,
@@ -87,7 +90,7 @@ export function useCanvasExecutionActions({
   });
 
   const handleStartRun = useCanvasRunStartHandler({
-    canRun: canRun && executionStrategy?.kind === 'transformation_preview',
+    canRun: canRun && executionStrategy != null && executionStrategy.kind !== 'not_executable',
     consolePanelVisible,
     currentPlan,
     hasPersistedPlanForRun,
@@ -104,6 +107,7 @@ export function useCanvasExecutionActions({
   return {
     planModalOpen,
     setPlanModalOpen,
+    canPlanGraph,
     canStartRun,
     isCurrentPlanStale,
     planStatusSummary,

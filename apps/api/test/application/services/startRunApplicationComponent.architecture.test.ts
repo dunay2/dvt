@@ -11,6 +11,7 @@ const OWNED_COMPONENT_ARTIFACTS = [
   artifacts.authorizedFacade,
   artifacts.backpressureUseCase,
   artifacts.plannerBackedUseCase,
+  artifacts.dbtRunExecutionContextBindingUseCase,
   artifacts.engineBridge,
   artifacts.engineUseCase,
   artifacts.targetAdapterRegistry,
@@ -46,6 +47,16 @@ const CANONICAL_START_RUN_IMPORT_CASES = [
     imports: ['START_RUN_RESULT_KIND', 'StartRunCommand', 'StartRunPlanRef'],
   },
   {
+    artifact: artifacts.dbtRunExecutionContextBindingUseCase,
+    imports: [
+      'START_RUN_PLAN_REJECTION_CODE',
+      'START_RUN_RESULT_KIND',
+      'StartRunCommand',
+      'parseRunExecutionContext',
+      'parseRunExecutionContextRef',
+    ],
+  },
+  {
     artifact: artifacts.engineBridge,
     imports: [
       'START_RUN_DUPLICATE_OF',
@@ -74,12 +85,7 @@ describe('Start-run application component architecture', () => {
     expect(artifacts.componentGuide.exists()).toBe(true);
 
     const docText = artifacts.componentGuide.readText();
-    for (const section of [
-      '## Public API',
-      '## Invariants',
-      '## Transitions',
-      '## Consumers',
-    ]) {
+    for (const section of ['## Public API', '## Invariants', '## Transitions', '## Consumers']) {
       expect(docText).toContain(section);
     }
     expect(docText).toContain('```mermaid');
@@ -110,6 +116,7 @@ describe('Start-run application component architecture', () => {
       artifacts.authorizedFacadeAuthTest,
       artifacts.authorizedFacadeEnginePassThroughTest,
       artifacts.authorizedFacadeTestSupport,
+      artifacts.dbtRunExecutionContextBindingTest,
       artifacts.engineUseCaseCommandPathTest,
       artifacts.engineUseCaseErrorMappingTest,
       artifacts.engineUseCaseTestSupport,
@@ -120,9 +127,9 @@ describe('Start-run application component architecture', () => {
 
   it('imports canonical start-run boundary types directly from @dvt/contracts', () => {
     for (const { artifact, imports } of CANONICAL_START_RUN_IMPORT_CASES) {
-      expect(artifact.readSource().hasAllNamedImports(contracts.canonicalBoundaryModule, imports)).toBe(
-        true
-      );
+      expect(
+        artifact.readSource().hasAllNamedImports(contracts.canonicalBoundaryModule, imports)
+      ).toBe(true);
     }
 
     for (const artifact of CANONICAL_START_RUN_COMMAND_IMPORT_ARTIFACTS) {
@@ -135,12 +142,10 @@ describe('Start-run application component architecture', () => {
     }
 
     expect(
-      artifacts.targetAdapterRegistryPort
-        .readSource()
-        .hasNamedImport({
-          importedName: 'StartRunTargetAdapter',
-          moduleSpecifier: contracts.canonicalBoundaryModule,
-        })
+      artifacts.targetAdapterRegistryPort.readSource().hasNamedImport({
+        importedName: 'StartRunTargetAdapter',
+        moduleSpecifier: contracts.canonicalBoundaryModule,
+      })
     ).toBe(true);
   });
 

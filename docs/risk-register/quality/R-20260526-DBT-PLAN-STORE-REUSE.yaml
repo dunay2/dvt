@@ -1,0 +1,18 @@
+---
+id: R-20260526-DBT-PLAN-STORE-REUSE
+title: DBT plan-store replay reuse must keep canonical payload comparison stable
+status: Open
+date: 2026-05-26
+owners:
+  - '@dvt/adapter-postgres'
+  - dvt-api
+severity: Low
+probability: Low
+context: >
+  The DBT live authoring flow can preview the same deterministic graph more than once.
+  Runtime-created metadata such as createdAtIso must not force a false plan-store conflict when the
+  stable canonical and executable plan payloads are otherwise equivalent.
+mitigation: >
+  Adapter unit and integration tests cover replay with volatile metadata differences and
+  already-valid artifact reuse. The API preview route test covers skipping duplicate validation
+  transitions for plans that are already valid.

@@ -128,6 +128,17 @@ export function seedLiveSelectedClosureDraft(
     });
 }
 
+export function readLiveGraphDraft(): Cypress.Chainable<Cypress.Response<unknown>> {
+  const session = resolveLiveWorkspaceSession();
+
+  return cy.request({
+    method: 'GET',
+    url: buildDraftReadUrl(session),
+    headers: buildAuthorizationHeaders(),
+    auth: buildBearerAuth(),
+  });
+}
+
 export function readLiveRunSnapshot(runId: string): Cypress.Chainable<Cypress.Response<unknown>> {
   const session = resolveLiveWorkspaceSession();
   const query = new URLSearchParams(session);

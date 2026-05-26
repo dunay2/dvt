@@ -77,9 +77,7 @@ function buildDraftPayload(): Record<string, unknown> {
   };
 }
 
-function buildExecutableSubgraph(
-  overrides: Partial<ExecutableSubgraph> = {}
-): ExecutableSubgraph {
+function buildExecutableSubgraph(overrides: Partial<ExecutableSubgraph> = {}): ExecutableSubgraph {
   return {
     selection: parseExecutionSelection({
       mode: 'explicit',
@@ -166,6 +164,74 @@ describe('ResolveAuthorizedExecutableSubgraphService', () => {
         cause: 'dependency_gap',
         reason: 'transform-node requires source-node to be selected.',
       },
+    });
+    expect(planner.deriveExecutableSubgraph).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores reference-only authoring edges before deriving the executable closure', async () => {
+    const selection = parseExecutionSelection({
+      mode: 'explicit',
+      nodeIds: ['transform-node'],
+    });
+    const planner = {
+      deriveExecutableSubgraph: vi.fn((input) => {
+        expect(input.draft.edges).toEqual([]);
+        return buildExecutableSubgraph({
+          selection,
+          nodeIds: ['transform-node'],
+          edgeIds: [],
+        });
+      }),
+    };
+    const service = new ResolveAuthorizedExecutableSubgraphService({
+      planner: planner as never,
+      workspaceGraphDraftStore: {
+        read: vi.fn(async () => ({
+          schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+          draftPayload: {
+            ...buildDraftPayload(),
+            edges: [
+              {
+                id: 'edge-reference',
+                sourceId: 'source-node',
+                targetId: 'transform-node',
+                relation: 'lineage',
+                metadata: {
+                  executionDependency: false,
+                },
+              },
+            ],
+          },
+        })),
+      } as never,
+    });
+
+    const result = await service.execute(
+      {
+        selection,
+        graphSource: {
+          kind: 'generic-graph-v1',
+          sourceFamily: 'dbt',
+          sourceVersion: '1.0',
+          nodes: [
+            {
+              nodeId: 'transform-node',
+              stepKind: 'DBT_MODEL',
+              dependsOn: [],
+            },
+          ],
+        },
+      },
+      buildContext()
+    );
+
+    expect(result).toEqual({
+      ok: true,
+      value: buildExecutableSubgraph({
+        selection,
+        nodeIds: ['transform-node'],
+        edgeIds: [],
+      }),
     });
     expect(planner.deriveExecutableSubgraph).toHaveBeenCalledTimes(1);
   });

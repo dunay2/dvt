@@ -31,6 +31,7 @@ export type CanvasToolbarProps = {
   readonly routeState: CanvasRouteState;
   readonly draftToolbarState: CanvasDraftToolbarState;
   readonly canPlan: boolean;
+  readonly canPlanGraph: boolean;
   readonly canRun: boolean;
   readonly canEditEdges: boolean;
   readonly canExportProjectSnapshot: boolean;
@@ -95,7 +96,7 @@ export default function CanvasToolbar(props: CanvasToolbarProps) {
           workflowStatusLabel={viewModel.workflowStatusLabel}
           workflowStatusClass={viewModel.workflowStatusClass}
           workflowStatusTitle={viewModel.workflowStatusTitle}
-          canPlanTransformation={viewModel.canPlanTransformation}
+          canPlanGraph={viewModel.canPlanGraph}
           authoringNodeKinds={props.authoringNodeKinds ?? []}
         />
         <Separator orientation="vertical" className={canvasChromeClasses.separator} />

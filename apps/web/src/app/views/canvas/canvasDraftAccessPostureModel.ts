@@ -407,6 +407,15 @@ export function applyCanvasDraftPostureToRuntimePolicyInput(args: {
     };
   }
 
+  if (args.posture.kind === 'saving') {
+    return {
+      canMutateGraph: args.canMutateGraph,
+      canPlan: false,
+      canRun: false,
+      canReloadLatestDraft: args.canReloadLatestDraft,
+    };
+  }
+
   return {
     canMutateGraph: args.canMutateGraph,
     canPlan: args.canPlan,

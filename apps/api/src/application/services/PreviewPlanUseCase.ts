@@ -3,7 +3,7 @@
  * through planner-owned selected-closure resolution without widening to the
  * whole protected draft.
  */
-import type { IStoredPlanArtifactWriter } from '@dvt/artifacts';
+import type { IStoredPlanArtifactReader, IStoredPlanArtifactWriter } from '@dvt/artifacts';
 import type {
   ExecutionPlan,
   ExecutionSelection,
@@ -67,7 +67,8 @@ export class PreviewPlanUseCase {
   public constructor(
     private readonly deps: {
       readonly planner: IPlanner;
-      readonly planStore: IStoredPlanArtifactWriter;
+      readonly planStore: IStoredPlanArtifactWriter &
+        Pick<IStoredPlanArtifactReader, 'getStoredPlanValidationRecord'>;
       readonly planValidator: IPlanExecutabilityValidator;
       readonly executableSubgraphResolver: ResolveAuthorizedExecutableSubgraphService;
     }
@@ -133,7 +134,15 @@ export class PreviewPlanUseCase {
       };
     }
 
-    await this.deps.planStore.markStoredPlanArtifactValid(scopedPlanRef);
+    const validationRecord = await this.deps.planStore.getStoredPlanValidationRecord({
+      tenantId: scopedPlanRef.tenantId,
+      projectId: scopedPlanRef.projectId,
+      environmentId: scopedPlanRef.environmentId,
+      planId: scopedPlanRef.planRef.planId,
+    });
+    if (validationRecord?.state !== 'VALID') {
+      await this.deps.planStore.markStoredPlanArtifactValid(scopedPlanRef);
+    }
     return {
       kind: PREVIEW_PLAN_RESULT_KIND.accepted,
       plan: buildResult.plan,

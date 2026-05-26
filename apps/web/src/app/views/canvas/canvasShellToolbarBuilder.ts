@@ -12,6 +12,7 @@ export function buildCanvasShellToolbar({
     canvasAuthoringMode: toolbarState.canvasAuthoringMode,
     routeState: routePresentation.presentationState.routeState,
     draftToolbarState: routePresentation.presentationState.draftToolbarState,
+    canPlanGraph: toolbarState.canPlanGraph,
     canStartRun: toolbarState.canStartRun,
     canExportProjectSnapshot: toolbarState.canExportProjectSnapshot,
     canImportProjectSnapshot: toolbarState.canImportProjectSnapshot,

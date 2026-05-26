@@ -9,7 +9,7 @@ import type {
   CanvasGraphAuthoringMode,
   NodeKindRegistration,
 } from '../../plugins/nodeTypeContracts';
-import type { CanonicalNode } from '../../types/canonical';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasPaletteId } from './canvasPalette';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
 import type { CanvasPlaygroundTabState } from './canvasPlaygroundTabState';
@@ -47,6 +47,8 @@ export type CanvasShellPanels = {
   explorerNodes: CanonicalNode[];
   authoringNodeKinds: readonly NodeKindRegistration[];
   inspectorNode: CanonicalNode | null;
+  inspectorGraphNodes: readonly CanonicalNode[];
+  inspectorGraphEdges: readonly CanonicalEdge[];
   inspectorAuthoring: CanvasInspectorAuthoringContract;
   activeRunId: string | null;
   registeredPlugins: ReadonlySet<string>;
@@ -70,6 +72,7 @@ export type CanvasShellToolbar = {
   canvasAuthoringMode: CanvasGraphAuthoringMode;
   routeState: CanvasRouteState;
   draftToolbarState: CanvasDraftToolbarState;
+  canPlanGraph: boolean;
   canStartRun: boolean;
   canExportProjectSnapshot: boolean;
   canImportProjectSnapshot: boolean;

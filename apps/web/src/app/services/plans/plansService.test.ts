@@ -185,6 +185,35 @@ function buildContractPlanWithRetiredRetryConfig(): Readonly<Record<string, unkn
   } as const;
 }
 
+function buildGenericContractPlanWithoutNodeIds(): Readonly<Record<string, unknown>> {
+  return {
+    metadata: {
+      planVersion: '1.0',
+      schemaVersion: 'v1.2',
+      contractVersion: '1.0.0',
+      inputHashSha256: 'a'.repeat(64),
+      planId: 'b'.repeat(64),
+      createdAtIso: '2026-04-03T00:00:00.000Z',
+    },
+    steps: [
+      {
+        stepId: 'model-orders',
+        kind: 'DBT_MODEL',
+        dependsOn: [],
+        stepTypeConfig: {
+          name: 'Orders Model',
+        },
+      },
+    ],
+    observability: {
+      tags: {
+        adapter: 'temporal',
+        environmentId: 'dev',
+      },
+    },
+  } as const;
+}
+
 function buildValidPlanRef(): ReturnType<typeof makePlanRef> {
   return makePlanRef({
     uri: 'dvt://plans/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
@@ -587,6 +616,37 @@ describe('createPlansService', () => {
       policies: {
         retries: 3,
       },
+    });
+  });
+
+  it('derives planner-generic preview step nodes from step ids when canonical nodeIds are absent', async () => {
+    const postJsonMock = vi.fn(async () =>
+      buildGenericPreviewPayload(buildGenericContractPlanWithoutNodeIds())
+    );
+    const service = createPlansService(
+      buildApiClientStub({
+        postJson: postJsonMock as ApiClient['postJson'],
+      })
+    );
+
+    const plan = await service.previewPlan({
+      previewProfile: 'planner-generic-v1',
+      graphSource: VALID_GENERIC_GRAPH_SOURCE,
+      selection: toExplicitSelection(VALID_GENERIC_SELECTION),
+      persist: true,
+      context: makeRunContext('run-1', {
+        tenantId: 't1',
+        projectId: 'p1',
+        environmentId: 'e1',
+        targetAdapter: 'temporal',
+      }),
+    });
+
+    expect(plan.steps[0]).toMatchObject({
+      id: 'model-orders',
+      type: 'DBT_MODEL',
+      name: 'Orders Model',
+      nodes: ['model-orders'],
     });
   });
 

@@ -185,6 +185,7 @@ function CanvasShellWorkbenchChrome({
             routeState={toolbar.routeState}
             draftToolbarState={toolbar.draftToolbarState}
             canPlan={panels.userPermissions.canPlan}
+            canPlanGraph={toolbar.canPlanGraph}
             canRun={panels.userPermissions.canRun}
             canEditEdges={panels.userPermissions.canEditEdges}
             canExportProjectSnapshot={toolbar.canExportProjectSnapshot}

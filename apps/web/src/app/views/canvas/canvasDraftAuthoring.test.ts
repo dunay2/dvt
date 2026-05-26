@@ -66,6 +66,54 @@ describe('canvasDraftAuthoring', () => {
     expect(result.nodes.map((node) => node.kind)).toEqual(['source', 'sql_transform', 'sink']);
   });
 
+  it('marks dbt source-to-model authoring edges as reference-only for execution closure', () => {
+    const result = buildCanvasAuthoringDraft({
+      canvas: {
+        kind: 'dbt',
+        title: 'dbt canvas',
+      },
+      nodeIds: ['source-orders', 'model-orders'],
+      nodePositions: {
+        'source-orders': { x: 0, y: 0 },
+        'model-orders': { x: 240, y: 0 },
+      },
+      visibleEdges: [{ sourceId: 'source-orders', targetId: 'model-orders' }],
+      canonicalNodes: [
+        {
+          id: 'source-orders',
+          name: 'Raw Orders',
+          pluginId: 'dbt',
+          kind: 'dbt:source',
+          role: 'input',
+          status: 'idle',
+          tags: [],
+        },
+        {
+          id: 'model-orders',
+          name: 'Orders Model',
+          pluginId: 'dbt',
+          kind: 'dbt:model',
+          role: 'transform',
+          status: 'idle',
+          tags: [],
+        },
+      ],
+      canonicalEdges: [],
+    });
+
+    expect(result.edges).toEqual([
+      {
+        id: 'draft_edge_source-orders_model-orders',
+        sourceId: 'source-orders',
+        targetId: 'model-orders',
+        relation: 'lineage',
+        metadata: {
+          executionDependency: false,
+        },
+      },
+    ]);
+  });
+
   it('keeps the persistence signature stable for layout-only position changes', () => {
     const draft = buildSaveInput().draft;
     const layoutOnlyDraft = {

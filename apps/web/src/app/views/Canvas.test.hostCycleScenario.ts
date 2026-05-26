@@ -141,6 +141,7 @@ export function buildCanvasHostCycleControllerState(
         canEditEdges: dto.canEditEdges ?? true,
         canPersistGraphDraft: true,
       },
+      canPlanGraph: false,
       canOpenSourceImport: dto.canOpenSourceImport ?? true,
       canvasAuthoringMode: dto.canvasKind,
     };
@@ -155,5 +156,6 @@ export function buildCanvasHostCycleControllerState(
     canCreateCanvasDocument: false,
     explorerNodes: [buildCanvasHostCycleExplorerNode(dto.canvasKind, dto.firstNodeKind)],
     canvasAuthoringMode: dto.canvasKind,
+    canPlanGraph: true,
   };
 }

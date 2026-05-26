@@ -249,4 +249,28 @@ describe('resolveCanvasRuntimePolicy', () => {
       canRun: false,
     });
   });
+
+  it('blocks plan and run while a writable draft save is pending', () => {
+    const draftAdmission = applyCanvasDraftPostureToRuntimePolicyInput({
+      posture: deriveCanvasDraftAccessPosture({
+        draftAccessMode: 'writable',
+        draftCapabilityReason: 'authorized',
+        draftFormatError: null,
+        authTransportPosture: 'none',
+        recoveryReason: null,
+        draftSaveStatus: 'saving',
+      }),
+      canMutateGraph: true,
+      canPlan: true,
+      canRun: true,
+      canReloadLatestDraft: false,
+    });
+
+    expect(draftAdmission).toEqual({
+      canMutateGraph: true,
+      canPlan: false,
+      canRun: false,
+      canReloadLatestDraft: false,
+    });
+  });
 });

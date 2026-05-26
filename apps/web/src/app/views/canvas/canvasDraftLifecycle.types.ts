@@ -115,6 +115,18 @@ export type CanvasDraftLifecycleDto = {
 
 export type CanvasDraftLifecycle = {
   draftSaveStatus: DraftSaveStatus;
+  flushDraftForExecution: () => Promise<
+    | {
+        ok: true;
+        canonicalNodes: readonly CanonicalNode[];
+        canonicalEdges: readonly CanonicalEdge[];
+        workspaceNodeIds: readonly string[];
+      }
+    | {
+        ok: false;
+        message: string;
+      }
+  >;
   reloadLatestDraft: () => void;
   handleCreateCanvasDocument: (command: CanvasCreateCanvasDocumentCommand) => Promise<void>;
   canCreateCanvasDocument: boolean;

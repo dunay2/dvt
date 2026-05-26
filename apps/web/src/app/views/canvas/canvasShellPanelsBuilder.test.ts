@@ -11,6 +11,8 @@ function buildArgs(
     panelState: {
       explorerNodes: [],
       inspectorNode: null,
+      inspectorGraphNodes: [],
+      inspectorGraphEdges: [],
       canEditInspectorNode: true,
       applyInspectorNodeDraft: vi.fn(),
       activeRunId: null,

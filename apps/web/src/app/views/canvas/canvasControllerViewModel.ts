@@ -55,7 +55,13 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
   const {
     environment: { dataSourceMode, capabilities, store },
     graphPolicy: { canvasAuthoringMode, runtimePolicy },
-    authoringRuntime: { backendPosture, graphModel, draftReadModel, canCreateCanvasDocument },
+    authoringRuntime: {
+      backendPosture,
+      graphModel,
+      visibleScope,
+      draftReadModel,
+      canCreateCanvasDocument,
+    },
     overlayModel,
     readModel: { nodesWithImpact, inspectorNode },
   } = args;
@@ -73,6 +79,8 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
     inspectorPanelVisible: store.inspectorPanelVisible,
     explorerNodes: graphModel.canonicalNodes,
     inspectorNode,
+    inspectorGraphNodes: graphModel.canonicalNodes,
+    inspectorGraphEdges: visibleScope.canonicalEdges,
     activeRunId: overlayModel.activeRunId,
     registeredPlugins: getRegisteredPluginIds(capabilities),
     runtimeCapabilities: capabilities,
@@ -162,6 +170,7 @@ function buildCanvasExecutionViewModel(args: CanvasControllerViewModelArgs) {
   return {
     handlePlan: executionActions.handlePlan,
     handleStartRun: executionActions.handleStartRun,
+    canPlanGraph: executionActions.canPlanGraph,
     canStartRun: executionActions.canStartRun && runtimePolicy.commands.canRun,
     planStatusSummary: executionActions.planStatusSummary,
     transformationValidation,

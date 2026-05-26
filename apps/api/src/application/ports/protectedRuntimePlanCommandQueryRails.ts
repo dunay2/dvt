@@ -45,6 +45,10 @@ export const PROTECTED_RUNTIME_PLAN_COMMAND_QUERY_RAILS = [
         PROTECTED_RUNTIME_NEGATIVE_CASE.invalidPlanSource,
         PROTECTED_RUNTIME_TEST_REF.startRunPlanSourcePolicy,
       ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingRunExecutionContextBinding,
+        PROTECTED_RUNTIME_TEST_REF.startRunDbtRunExecutionContextBinding,
+      ],
     ],
   }),
   defineProtectedRuntimeRail({

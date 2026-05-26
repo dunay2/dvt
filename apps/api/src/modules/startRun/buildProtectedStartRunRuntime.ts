@@ -2,7 +2,7 @@
  * Owned concern: assemble the protected start-run runtime subcomponent for
  * `apps/api` from already-bound abstract dependencies.
  */
-import type { IStoredPlanArtifactStore } from '@dvt/artifacts';
+import type { DbtProjectBundleArtifactStore, IStoredPlanArtifactStore } from '@dvt/artifacts';
 import type { IPlanner, IStepTypeRegistry } from '@dvt/contracts';
 import type { EngineRunRef, IProviderAdapter, IWorkflowEngine } from '@dvt/engine';
 import type { IObservability } from '@dvt/observability';
@@ -16,6 +16,7 @@ import type { IStartRunExecutionCapacityPort } from '../../application/ports/ISt
 import type { IWorkspaceGraphDraftStore } from '../../application/ports/workspaceGraphDraft.js';
 import type { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import { BackpressureAwareStartRunUseCase } from '../../application/services/BackpressureAwareStartRunUseCase.js';
+import { DbtRunExecutionContextBindingUseCase } from '../../application/services/DbtRunExecutionContextBindingUseCase.js';
 import { DEFAULT_START_RUN_EXECUTION_CAPACITY_PORT } from '../../application/services/defaultStartRunExecutionCapacityPort.js';
 import { EngineStartRunUseCase } from '../../application/services/engineStartRunUseCase.js';
 import { PlannerBackedStartRunUseCase } from '../../application/services/PlannerBackedStartRunUseCase.js';
@@ -40,6 +41,8 @@ export type BuildProtectedStartRunRuntimeDeps = {
   readonly planStore: IStoredPlanArtifactStore;
   readonly stepTypeRegistry: IStepTypeRegistry;
   readonly workspaceGraphDraftStore: IWorkspaceGraphDraftStore;
+  readonly workspaceRoot: string;
+  readonly dbtBundleStore: DbtProjectBundleArtifactStore | undefined;
 };
 
 export type ProtectedStartRunRuntime = {
@@ -67,13 +70,20 @@ export function buildProtectedStartRunRuntime(
     planner,
     workspaceGraphDraftStore: deps.workspaceGraphDraftStore,
   });
+  const engineStartRunUseCase = new EngineStartRunUseCase(deps.engine);
+  const dbtRunExecutionContextBindingUseCase = new DbtRunExecutionContextBindingUseCase({
+    delegate: engineStartRunUseCase,
+    planStore: deps.planStore,
+    workspaceRoot: deps.workspaceRoot,
+    dbtBundleStore: deps.dbtBundleStore,
+  });
   const plannerBackedUseCase = new PlannerBackedStartRunUseCase({
     planner,
     planStore: deps.planStore,
     validator: planValidator,
     compileTelemetry: startRunSlaTelemetry,
     executableSubgraphResolver,
-    delegate: new EngineStartRunUseCase(deps.engine),
+    delegate: dbtRunExecutionContextBindingUseCase,
   });
   const admissionUseCase = new BackpressureAwareStartRunUseCase({
     duplicateProbe: deps.duplicateProbe,

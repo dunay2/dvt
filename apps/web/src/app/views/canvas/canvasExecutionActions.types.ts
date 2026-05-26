@@ -14,6 +14,18 @@ import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceCo
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 
+export type CanvasExecutionDraftGraph =
+  | {
+      ok: true;
+      canonicalNodes: readonly CanonicalNode[];
+      canonicalEdges: readonly CanonicalEdge[];
+      workspaceNodeIds: readonly string[];
+    }
+  | {
+      ok: false;
+      message: string;
+    };
+
 export type UseCanvasExecutionActionsParams = {
   plansService: IPlansPort;
   runsService: IRunsPort;
@@ -24,6 +36,7 @@ export type UseCanvasExecutionActionsParams = {
   canonicalEdges: CanonicalEdge[];
   selectedNodeIds: string[];
   workspaceNodeIds: string[];
+  flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
   canPlan: boolean;
   canRun: boolean;
   sessionContext: SessionContextPort;
@@ -43,6 +56,7 @@ export type UseCanvasExecutionActionsParams = {
 export type UseCanvasExecutionActionsResult = {
   planModalOpen: boolean;
   setPlanModalOpen: Dispatch<SetStateAction<boolean>>;
+  canPlanGraph: boolean;
   canStartRun: boolean;
   isCurrentPlanStale: boolean;
   planStatusSummary: string;
