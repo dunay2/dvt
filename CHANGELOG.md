@@ -1,5 +1,28 @@
 # Changelog
 
+## [5.30.0](https://github.com/dunay2/dvt/compare/v5.29.0...v5.30.0) (2026-05-25)
+
+
+### Features
+
+* **api:** Add workspace file save rail ([e0222ee](https://github.com/dunay2/dvt/commit/e0222ee765addd31b53e68b9d9fe36204cf60be9))
+* **api:** Add workspace file save rail ([6fa8a26](https://github.com/dunay2/dvt/commit/6fa8a26d23051d22b61b26dea293ca7a5bcdc378))
+* **planner:** Add real work backlog query ([38f227c](https://github.com/dunay2/dvt/commit/38f227c9e76f7bfeabec1b9ffb3b245df5a923ec))
+* **web:** Add Canvas Insert palette ([d0cf581](https://github.com/dunay2/dvt/commit/d0cf581840808b9aca0d21b026bdb5b523ec9c3b))
+* **web:** Integrate Canvas and planning reconciliation ([2577e40](https://github.com/dunay2/dvt/commit/2577e40763d8d7669969e76c82042c3b73bc2098))
+* **web:** Prove graph workflow artifact parity ([dc22731](https://github.com/dunay2/dvt/commit/dc22731dc15b287b98fadc2ea7091621ad5d16a6))
+* **web:** Show workspace project artifacts ([#1369](https://github.com/dunay2/dvt/issues/1369)) ([7cc88a5](https://github.com/dunay2/dvt/commit/7cc88a5685e2172cc181cff27da5ce7d19d29b4a))
+
+
+### Bug Fixes
+
+* **ci:** Reconcile proposal gaps and pre-push validation ([ac996a7](https://github.com/dunay2/dvt/commit/ac996a7bf58e55ea74d68caf584e696cb1d813f2))
+* **ci:** Reconcile proposal gaps and pre-push validation ([4a45157](https://github.com/dunay2/dvt/commit/4a451570146730414070ecc0d0072f90c4ffb1b7))
+* **ci:** Reconcile proposal gaps and pre-push validation ([2775241](https://github.com/dunay2/dvt/commit/2775241de0b1e4526598d241277ebc69ef5f2ed5))
+* **planner:** Harden docs disposition queue classification ([5ef2d4b](https://github.com/dunay2/dvt/commit/5ef2d4b05c2cdeaba8e908f06b28e4a3ab98c35d))
+* **planner:** Harden docs disposition queue classification ([02cab97](https://github.com/dunay2/dvt/commit/02cab97d8cb8daa5bcb03a6383652962dfd3a1e8))
+* **web:** Collapse canvas workbench chrome bars ([#1371](https://github.com/dunay2/dvt/issues/1371)) ([9c88d7d](https://github.com/dunay2/dvt/commit/9c88d7df815d1c7b4c00a651c31899cbb61dd35b))
+
 ## [5.29.0](https://github.com/dunay2/dvt/compare/v5.28.0...v5.29.0) (2026-05-24)
 
 
