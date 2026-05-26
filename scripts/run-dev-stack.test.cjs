@@ -70,6 +70,9 @@ test('buildApiEnv injects readiness flags and local postgres defaults for the co
   assert.equal(apiEnv.TEMPORAL_NAMESPACE, 'default');
   assert.equal(apiEnv.TEMPORAL_TASK_QUEUE, 'dvt-temporal');
   assert.equal(apiEnv.DVT_TEMPORAL_WORKER_READYZ_URL, 'http://127.0.0.1:9468/readyz');
+  assert.equal(apiEnv.DVT_DBT_BUNDLE_STORE_BACKEND, 'file');
+  assert.match(apiEnv.DVT_DBT_BUNDLE_FILE_ROOT, /[\\/]\.dvt[\\/]dev-stack[\\/]dbt-bundles$/);
+  assert.match(apiEnv.DVT_WORKSPACE_FILES_ROOT, /[\\/]\.dvt[\\/]dev-stack[\\/]workspace-files$/);
 });
 
 test('buildApiEnv leaves database unset when postgres bootstrap is explicitly skipped', () => {
@@ -103,6 +106,9 @@ test('buildApiEnv preserves explicit temporal posture when provided', () => {
       TEMPORAL_NAMESPACE: 'dev',
       TEMPORAL_TASK_QUEUE: 'dev-task-queue',
       DVT_TEMPORAL_WORKER_READYZ_URL: 'http://temporal-worker.dev/readyz',
+      DVT_DBT_BUNDLE_STORE_BACKEND: 'file',
+      DVT_DBT_BUNDLE_FILE_ROOT: 'C:\\custom\\dbt-bundles',
+      DVT_WORKSPACE_FILES_ROOT: 'C:\\custom\\workspace-files',
     }
   );
 
@@ -110,6 +116,9 @@ test('buildApiEnv preserves explicit temporal posture when provided', () => {
   assert.equal(apiEnv.TEMPORAL_NAMESPACE, 'dev');
   assert.equal(apiEnv.TEMPORAL_TASK_QUEUE, 'dev-task-queue');
   assert.equal(apiEnv.DVT_TEMPORAL_WORKER_READYZ_URL, 'http://temporal-worker.dev/readyz');
+  assert.equal(apiEnv.DVT_DBT_BUNDLE_STORE_BACKEND, 'file');
+  assert.equal(apiEnv.DVT_DBT_BUNDLE_FILE_ROOT, 'C:\\custom\\dbt-bundles');
+  assert.equal(apiEnv.DVT_WORKSPACE_FILES_ROOT, 'C:\\custom\\workspace-files');
 });
 
 test('buildTemporalWorkerEnv injects canonical local temporal worker posture', () => {
@@ -130,6 +139,24 @@ test('buildTemporalWorkerEnv injects canonical local temporal worker posture', (
   assert.equal(workerEnv.DVT_TEMPORAL_ADMIN_HOST, '127.0.0.1');
   assert.equal(workerEnv.DVT_TEMPORAL_ADMIN_PORT, '9468');
   assert.equal(workerEnv.DVT_TEMPORAL_WORKER_RUN_MIGRATIONS, 'true');
+});
+
+test('buildTemporalWorkerEnv forwards configured DBT bundle store settings', () => {
+  const workerEnv = buildTemporalWorkerEnv(
+    {
+      host: '127.0.0.1',
+      apiPort: 3000,
+      skipPostgres: false,
+    },
+    {
+      DVT_DBT_BUNDLE_STORE_BACKEND: 'file',
+      DVT_DBT_BUNDLE_FILE_ROOT: 'C:\\custom\\dbt-bundles',
+    },
+    defaultPgUrl
+  );
+
+  assert.equal(workerEnv.DVT_DBT_BUNDLE_STORE_BACKEND, 'file');
+  assert.equal(workerEnv.DVT_DBT_BUNDLE_FILE_ROOT, 'C:\\custom\\dbt-bundles');
 });
 
 test('shouldStartTemporalWorker follows protected runtime posture', () => {

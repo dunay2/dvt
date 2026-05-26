@@ -104,6 +104,9 @@ jobs:
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
 
+      - name: Lint affected workspace
+        run: node scripts/run-turbo-workspace-task.cjs lint --filter=${{ matrix.pkg }}
+
       - name: Build affected workspace (including workspace dependencies)
         run: node scripts/run-turbo-workspace-task.cjs build --filter=${{ matrix.pkg }}
 

@@ -3,7 +3,7 @@
 const { spawnSync } = require('node:child_process');
 
 const DEFAULT_FILTER = '...[origin/main]';
-const SUPPORTED_TASKS = new Set(['build', 'test', 'typecheck']);
+const SUPPORTED_TASKS = new Set(['build', 'lint', 'test', 'typecheck']);
 
 function parseArgs(argv) {
   const [task, ...rest] = argv;

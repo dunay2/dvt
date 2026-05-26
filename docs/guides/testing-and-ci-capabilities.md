@@ -38,6 +38,7 @@ See also:
 | Immediate PR check gate        | `pnpm pr:checks`                 | [`tools/ci/pr-check-triage.mjs`](../../tools/ci/pr-check-triage.mjs)                                 |
 | CI tool contract suite         | `pnpm test:ci-tools`             | [`package.json`](../../package.json)                                                                 |
 | Affected workspace build       | `pnpm ci:affected:build`         | [`package.json`](../../package.json)                                                                 |
+| Affected workspace lint        | `pnpm ci:affected:lint`          | [`package.json`](../../package.json)                                                                 |
 | Affected workspace test        | `pnpm ci:affected:test`          | [`package.json`](../../package.json)                                                                 |
 | Affected workspace type-check  | `pnpm ci:affected:typecheck`     | [`package.json`](../../package.json)                                                                 |
 | ADR-0000 regression gate       | `pnpm traceability:adr0`         | [`package.json`](../../package.json), [`traceability.config.json`](../../traceability.config.json)   |
@@ -50,8 +51,9 @@ Warm-build note:
   See the guardrail note in the `Notes` section below; this is not the
   fresh-worktree default path.
 - Root `pnpm build` is now a Turborepo-backed build graph, and the affected
-  workspace commands (`pnpm ci:affected:build`, `pnpm ci:affected:typecheck`,
-  `pnpm ci:affected:test`) now route through governed Turbo task contracts.
+  workspace commands (`pnpm ci:affected:build`, `pnpm ci:affected:lint`,
+  `pnpm ci:affected:typecheck`, `pnpm ci:affected:test`) now route through
+  governed Turbo task contracts.
   Full-root `pnpm test`, root `pnpm type-check`, and docs commands still keep
   their existing repo-local orchestration.
 - The shared GitHub Actions setup now restores `.turbo` in addition to the
@@ -60,9 +62,9 @@ Warm-build note:
 - The shared GitHub Actions setup defaults to
   `pnpm install --frozen-lockfile --prefer-offline`, so jobs prefer the restored
   pnpm store while keeping lockfile enforcement.
-- Turbo task contracts explicitly declare `DVT_CI` for `build`, `typecheck`,
-  and `test`, so CI-only guard behavior is visible to Turborepo hashing and
-  task environment handling.
+- Turbo task contracts explicitly declare `DVT_CI` for `build`, `lint`,
+  `typecheck`, and `test`, so CI-only guard behavior is visible to Turborepo
+  hashing and task environment handling.
 - `turbo.json` is listed in Turborepo `globalDependencies` as well as the
   shared CI `.turbo` cache key. Changes to the task graph therefore invalidate
   both restore-level and task-hash-level cache state.
@@ -106,6 +108,7 @@ Warm-build note:
 | Contracts package tests            | `pnpm test:contracts`                                                      | `@dvt/contracts`                                     | [`package.json`](../../package.json)                                                                   |
 | Contracts compile gate             | `pnpm test:contracts:compile`                                              | `@dvt/contracts`                                     | [`package.json`](../../package.json)                                                                   |
 | API package tests                  | `pnpm --filter dvt-api test`                                               | `apps/api`                                           | [`apps/api/package.json`](../../apps/api/package.json)                                                 |
+| API package lint                   | `pnpm --filter dvt-api lint`                                               | `apps/api` TypeScript sources, tests, and configs    | [`apps/api/package.json`](../../apps/api/package.json)                                                 |
 | API protected runtime integration  | `pnpm --filter dvt-api test:integration`                                   | `apps/api` OIDC + PostgreSQL runtime                 | [`apps/api/package.json`](../../apps/api/package.json)                                                 |
 | PostgreSQL adapter tests           | `pnpm test:adapter-postgres`                                               | `@dvt/adapter-postgres`                              | [`package.json`](../../package.json)                                                                   |
 | Temporal adapter unit tests        | `pnpm test:adapter-temporal`                                               | `@dvt/adapter-temporal`                              | [`package.json`](../../package.json)                                                                   |
@@ -303,9 +306,9 @@ Planning-generated pages that are intentionally untracked:
 
 ## GitHub Workflow Coverage
 
-- `CI - Code Quality`: affected workspace matrix, changed-file lint/format,
-  changed-only markdown lint on PRs, and CI tool contract tests. It does not own
-  ADR-0000 traceability.
+- `CI - Code Quality`: affected workspace matrix lint/build/type-check,
+  changed-file lint/format, changed-only markdown lint on PRs, and CI tool
+  contract tests. It does not own ADR-0000 traceability.
   Source: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)
 - `Test Suite`: package tests, affected test routing, Turbo-backed root build
   coverage for full-root lanes, coverage, determinism/replay tests.
@@ -396,8 +399,8 @@ job closed.
 Current workflow consumers:
 
 - [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) uses the shared policy plus
-  workspace matrix emission for affected build/type-check routing, and now also
-  runs `pnpm test:ci-tools` as a merge-gated CI-tool contract lane. Its shared
+  workspace matrix emission for affected lint/build/type-check routing, and now
+  also runs `pnpm test:ci-tools` as a merge-gated CI-tool contract lane. Its shared
   `any_code` and `workspace_global` policy now include `turbo.json`, so Turbo
   graph changes trigger the affected-workspace lane instead of falling through
   to `No affected workspaces`.
@@ -498,14 +501,14 @@ Current workflow consumers:
 - `pnpm build` routes through `turbo run build` in the current repo state.
   Direct package `build` commands still keep their package-local dependency
   fallback when they are not running under `turbo`.
-- `pnpm ci:affected:build`, `pnpm ci:affected:typecheck`, and
-  `pnpm ci:affected:test` route through `node scripts/run-turbo-workspace-task.cjs`
-  so affected local preflight and lightweight CI lanes can reuse the same
-  governed Turbo graph without changing the full-root `test` or `type-check`
-  contract yet.
+- `pnpm ci:affected:build`, `pnpm ci:affected:lint`,
+  `pnpm ci:affected:typecheck`, and `pnpm ci:affected:test` route through
+  `node scripts/run-turbo-workspace-task.cjs` so affected local preflight and
+  lightweight CI lanes can reuse the same governed Turbo graph without changing
+  the full-root `test` or `type-check` contract yet.
 - `CI - Code Quality` now uses the same Turbo workspace wrapper for its
-  affected build/typecheck matrix, keeping the local command and the lightweight
-  CI lane on one orchestration path.
+  affected lint/build/typecheck matrix, keeping the local command and the
+  lightweight CI lane on one orchestration path.
 - `pnpm arch:deps` is the root architecture dependency guard for package and
   app boundaries. It runs dependency-cruiser plus repository semantic ownership
   checks. It forbids contract-to-runtime imports, planner-to-engine/adapter

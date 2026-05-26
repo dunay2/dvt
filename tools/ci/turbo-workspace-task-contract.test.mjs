@@ -16,9 +16,8 @@ const rootPackage = JSON.parse(readFileSync('package.json', 'utf8'));
 const ciWorkflow = readFileSync('.github/workflows/ci.yml', 'utf8');
 const testWorkflow = readFileSync('.github/workflows/test.yml', 'utf8');
 
-test('Turbo workspace wrapper rejects unsupported task names and defaults to the affected filter', () => {
+test('Turbo workspace wrapper accepts governed task names and defaults to the affected filter', () => {
   assert.throws(() => parseArgs([]), /Unsupported Turbo workspace task/);
-  assert.throws(() => parseArgs(['lint']), /Unsupported Turbo workspace task/);
   assert.deepEqual(parseArgs(['typecheck']), {
     task: 'typecheck',
     filter: DEFAULT_FILTER,
@@ -31,6 +30,10 @@ test('Turbo workspace wrapper rejects unsupported task names and defaults to the
     task: 'build',
     filter: '@dvt/web',
   });
+  assert.deepEqual(parseArgs(['lint', '--filter=dvt-api']), {
+    task: 'lint',
+    filter: 'dvt-api',
+  });
   assert.deepEqual(buildTurboArgs('typecheck', '@dvt/contracts'), [
     'exec',
     'turbo',
@@ -38,16 +41,19 @@ test('Turbo workspace wrapper rejects unsupported task names and defaults to the
     'typecheck',
     '--filter=@dvt/contracts',
   ]);
-  assert.deepEqual([...SUPPORTED_TASKS], ['build', 'test', 'typecheck']);
+  assert.deepEqual([...SUPPORTED_TASKS], ['build', 'lint', 'test', 'typecheck']);
 });
 
-test('turbo.json declares governed build, typecheck, and test task contracts', () => {
+test('turbo.json declares governed build, lint, typecheck, and test task contracts', () => {
   assert.ok(turbo.globalDependencies.includes('turbo.json'));
   assert.ok(turbo.globalDependencies.includes('scripts/skip-prebuild-if-orchestrated.cjs'));
   assert.ok(turbo.globalDependencies.includes('scripts/skip-pretest-if-ci.cjs'));
   assert.deepEqual(turbo.tasks.build.dependsOn, ['^build']);
   assert.deepEqual(turbo.tasks.build.outputs, ['dist/**', '**/*.tsbuildinfo']);
   assert.deepEqual(turbo.tasks.build.env, ['DVT_CI']);
+
+  assert.deepEqual(turbo.tasks.lint.outputs, []);
+  assert.deepEqual(turbo.tasks.lint.env, ['DVT_CI']);
 
   assert.deepEqual(turbo.tasks.typecheck.dependsOn, ['^build']);
   assert.deepEqual(turbo.tasks.typecheck.outputs, []);
@@ -58,10 +64,14 @@ test('turbo.json declares governed build, typecheck, and test task contracts', (
   assert.deepEqual(turbo.tasks.test.env, ['DVT_CI']);
 });
 
-test('root affected commands and CI matrix build/typecheck steps use the Turbo workspace wrapper', () => {
+test('root affected commands and CI matrix lint/build/typecheck steps use the Turbo workspace wrapper', () => {
   assert.equal(
     rootPackage.scripts['ci:affected:build'],
     'node scripts/run-turbo-workspace-task.cjs build'
+  );
+  assert.equal(
+    rootPackage.scripts['ci:affected:lint'],
+    'node scripts/run-turbo-workspace-task.cjs lint'
   );
   assert.equal(
     rootPackage.scripts['ci:affected:typecheck'],
@@ -76,6 +86,9 @@ test('root affected commands and CI matrix build/typecheck steps use the Turbo w
     ciWorkflow.includes(
       'node scripts/run-turbo-workspace-task.cjs build --filter=${{ matrix.pkg }}'
     )
+  );
+  assert.ok(
+    ciWorkflow.includes('node scripts/run-turbo-workspace-task.cjs lint --filter=${{ matrix.pkg }}')
   );
   assert.ok(
     ciWorkflow.includes(
