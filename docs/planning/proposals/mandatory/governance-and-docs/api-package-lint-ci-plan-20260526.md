@@ -51,6 +51,7 @@ governingSources:
   - docs/guides/testing-and-ci-capabilities.md
 allowedImplementationSurfaces:
   - .github/workflows/ci.yml
+  - .gitignore
   - apps/api/package.json
   - docs/.manifest.json
   - docs/**/index.md
@@ -58,6 +59,11 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/governance-and-docs/api-package-lint-ci-plan-20260526.md
   - package.json
   - scripts/README.md
+  - scripts/run-dev-stack.auth.cjs
+  - scripts/run-dev-stack.auth.test.cjs
+  - scripts/run-dev-stack.cjs
+  - scripts/run-dev-stack.temporal.cjs
+  - scripts/run-dev-stack.test.cjs
   - scripts/run-turbo-workspace-task.cjs
   - scripts/verify-prepush.test.cjs
   - tools/ci/turbo-workspace-task-contract.test.mjs
@@ -129,4 +135,40 @@ symbols:
     cypressCoverage: N/A - CI validation rail, no browser flow
     unitTests:
       - node --test tools/ci/turbo-workspace-task-contract.test.mjs
+  - name: DEFAULT_LOCAL_DBT_BUNDLE_FILE_ROOT
+    path: scripts/run-dev-stack.cjs
+    dddOwner: Local protected-runtime dev stack
+    cqRails:
+      - RunApiPackageLint
+    fowlerSignals:
+      - Explicit Gate
+      - Package validation ownership
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: N/A - local dev-stack validation rail, no browser flow
+    unitTests:
+      - node --test scripts/run-dev-stack.test.cjs
+  - name: DEFAULT_LOCAL_WORKSPACE_FILES_ROOT
+    path: scripts/run-dev-stack.cjs
+    dddOwner: Local protected-runtime dev stack
+    cqRails:
+      - RunApiPackageLint
+    fowlerSignals:
+      - Explicit Gate
+      - Package validation ownership
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: N/A - local dev-stack validation rail, no browser flow
+    unitTests:
+      - node --test scripts/run-dev-stack.test.cjs
+  - name: buildLocalDbtArtifactEnv
+    path: scripts/run-dev-stack.cjs
+    dddOwner: Local protected-runtime dev stack
+    cqRails:
+      - RunApiPackageLint
+    fowlerSignals:
+      - Explicit Gate
+      - Package validation ownership
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: N/A - local dev-stack validation rail, no browser flow
+    unitTests:
+      - node --test scripts/run-dev-stack.test.cjs
 ```
