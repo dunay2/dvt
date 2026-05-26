@@ -15,15 +15,18 @@ repository lint remains useful, but it is not a package-local validation rail
 and it is too easy for API changes to rely on root behavior without a package
 command that CI can route through the affected workspace matrix.
 
-This slice adds the package command and makes `CI - Code Quality` execute the
-governed Turbo `lint` task for each affected workspace before build and
-type-check.
+This slice adds the package command and makes `CI - Code Quality` execute a
+governed Turbo build for each affected workspace before lint and type-check.
+The build-first order is required because package export resolution for
+workspace dependencies is a real lint input in a clean CI checkout.
 
 ## Decision
 
 - `apps/api/package.json` owns `pnpm --filter dvt-api lint`.
 - The affected-workspace wrapper accepts `lint` as a governed Turbo task.
-- `CI - Code Quality` runs affected workspace lint before build/type-check.
+- `CI - Code Quality` runs affected workspace build before lint/type-check so
+  `import/no-unresolved` checks built workspace export declarations instead of
+  relying on stale local `dist` output.
 - Workspaces without a package `lint` script remain valid: Turbo executes zero
   tasks for that package and exits successfully.
 - `scripts/verify-prepush.test.cjs` keeps a regression guard for the API package

@@ -96,6 +96,22 @@ test('root affected commands and CI matrix lint/build/typecheck steps use the Tu
     )
   );
   assert.ok(
+    ciWorkflow.indexOf(
+      'node scripts/run-turbo-workspace-task.cjs build --filter=${{ matrix.pkg }}'
+    ) <
+      ciWorkflow.indexOf(
+        'node scripts/run-turbo-workspace-task.cjs lint --filter=${{ matrix.pkg }}'
+      )
+  );
+  assert.ok(
+    ciWorkflow.indexOf(
+      'node scripts/run-turbo-workspace-task.cjs lint --filter=${{ matrix.pkg }}'
+    ) <
+      ciWorkflow.indexOf(
+        'node scripts/run-turbo-workspace-task.cjs typecheck --filter=${{ matrix.pkg }}'
+      )
+  );
+  assert.ok(
     testWorkflow.includes(
       'node scripts/run-turbo-workspace-task.cjs build --filter=${{ matrix.pkg }}'
     )

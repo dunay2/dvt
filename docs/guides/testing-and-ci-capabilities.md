@@ -306,7 +306,7 @@ Planning-generated pages that are intentionally untracked:
 
 ## GitHub Workflow Coverage
 
-- `CI - Code Quality`: affected workspace matrix lint/build/type-check,
+- `CI - Code Quality`: affected workspace matrix build/lint/type-check,
   changed-file lint/format, changed-only markdown lint on PRs, and CI tool
   contract tests. It does not own ADR-0000 traceability.
   Source: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)
@@ -507,8 +507,10 @@ Current workflow consumers:
   lightweight CI lanes can reuse the same governed Turbo graph without changing
   the full-root `test` or `type-check` contract yet.
 - `CI - Code Quality` now uses the same Turbo workspace wrapper for its
-  affected lint/build/typecheck matrix, keeping the local command and the
-  lightweight CI lane on one orchestration path.
+  affected build/lint/typecheck matrix, keeping the local command and the
+  lightweight CI lane on one orchestration path. The matrix builds before lint
+  so clean CI checkouts have the workspace export declarations that
+  `import/no-unresolved` validates.
 - `pnpm arch:deps` is the root architecture dependency guard for package and
   app boundaries. It runs dependency-cruiser plus repository semantic ownership
   checks. It forbids contract-to-runtime imports, planner-to-engine/adapter
