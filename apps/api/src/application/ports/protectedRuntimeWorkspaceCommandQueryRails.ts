@@ -36,6 +36,34 @@ export const PROTECTED_RUNTIME_WORKSPACE_COMMAND_QUERY_RAILS = [
     ],
   }),
   defineProtectedRuntimeRail({
+    ...PROTECTED_RUNTIME_WORKSPACE_RAIL.listProjects,
+    kind: PROTECTED_RUNTIME_RAIL_KIND.query,
+    coverage: [
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingToken,
+        PROTECTED_RUNTIME_TEST_REF.projectOnboardingRoutes,
+      ],
+    ],
+  }),
+  defineProtectedRuntimeRail({
+    ...PROTECTED_RUNTIME_WORKSPACE_RAIL.createProject,
+    kind: PROTECTED_RUNTIME_RAIL_KIND.command,
+    coverage: [
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingToken,
+        PROTECTED_RUNTIME_TEST_REF.projectOnboardingRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingIdempotencyKey,
+        PROTECTED_RUNTIME_TEST_REF.projectOnboardingRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.idempotencyConflict,
+        PROTECTED_RUNTIME_TEST_REF.projectOnboardingRoutes,
+      ],
+    ],
+  }),
+  defineProtectedRuntimeRail({
     ...PROTECTED_RUNTIME_WORKSPACE_RAIL.getWorkspaceGraphDraft,
     kind: PROTECTED_RUNTIME_RAIL_KIND.query,
     coverage: [

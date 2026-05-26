@@ -1,9 +1,17 @@
 /** Owned concern: gate protected product routes behind authenticated session profile resolution. */
+import { asNonBlankString } from '@dvt/contracts';
 import { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router';
 
+import { completeBootstrapScreen, setBootstrapStepStatus } from './appBootstrapScreen';
 import { createApiClient, type ApiError } from '../services/api/createApiClient';
+import type {
+  CreateProjectResponse,
+  EffectiveProjectWorkspaceContext,
+} from '../services/projectOnboarding/projectOnboardingService';
 import { resolveProtectedRouteSessionContext } from '../services/session/protectedRouteSessionContext';
+import { useSessionStore } from '../stores/sessionStore';
+import ProjectOnboardingView from '../views/ProjectOnboardingView';
 
 type AuthGateState =
   | { kind: 'checking' }
@@ -55,6 +63,34 @@ export default function AuthRouteGate({
   const location = useLocation();
   const [state, setState] = useState<AuthGateState>({ kind: 'checking' });
 
+  async function recoverProtectedRouteSession(): Promise<void> {
+    setState({ kind: 'checking' });
+    try {
+      await resolveProtectedRouteSessionContext(sessionApiClient);
+      setState({ kind: 'allowed' });
+    } catch (error) {
+      setState({ kind: 'denied', reason: classifyProtectedRouteSessionError(error) });
+    }
+  }
+
+  async function handleProjectCreated(response: CreateProjectResponse): Promise<void> {
+    useSessionStore.getState().setSessionContext({
+      tenantId: asNonBlankString(response.effectiveWorkspace.tenantId),
+      projectId: asNonBlankString(response.effectiveWorkspace.projectId),
+      environmentId: asNonBlankString(response.effectiveWorkspace.environmentId),
+    });
+    await recoverProtectedRouteSession();
+  }
+
+  async function handleProjectSelected(selection: EffectiveProjectWorkspaceContext): Promise<void> {
+    useSessionStore.getState().setSessionContext({
+      tenantId: asNonBlankString(selection.tenantId),
+      projectId: asNonBlankString(selection.projectId),
+      environmentId: asNonBlankString(selection.environmentId),
+    });
+    await recoverProtectedRouteSession();
+  }
+
   useEffect(() => {
     let cancelled = false;
     setState({ kind: 'checking' });
@@ -77,6 +113,29 @@ export default function AuthRouteGate({
     };
   }, [location.pathname, location.search, location.hash]);
 
+  useEffect(() => {
+    if (state.kind !== 'denied' || state.reason !== 'workspace_context_not_granted') {
+      return;
+    }
+
+    setBootstrapStepStatus({
+      step: 'capabilities',
+      status: 'degraded',
+      detail: 'Runtime capabilities resume after project context is ready.',
+    });
+    setBootstrapStepStatus({
+      step: 'health',
+      status: 'degraded',
+      detail: 'Platform health checks resume after project context is ready.',
+    });
+    setBootstrapStepStatus({
+      step: 'route',
+      status: 'complete',
+      detail: 'Project onboarding is ready.',
+    });
+    completeBootstrapScreen();
+  }, [state]);
+
   if (state.kind === 'checking') {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-950 text-slate-200">
@@ -88,14 +147,10 @@ export default function AuthRouteGate({
   if (state.kind === 'denied') {
     if (state.reason === 'workspace_context_not_granted') {
       return (
-        <div className="flex h-screen items-center justify-center bg-slate-950 px-6 text-slate-200">
-          <div className="max-w-md space-y-3 text-center" role="alert">
-            <h1 className="text-xl font-semibold text-white">Workspace access required</h1>
-            <p className="text-sm text-slate-300">
-              Your session is valid, but no workspace grant is available for this account.
-            </p>
-          </div>
-        </div>
+        <ProjectOnboardingView
+          onProjectCreated={handleProjectCreated}
+          onProjectSelected={handleProjectSelected}
+        />
       );
     }
 

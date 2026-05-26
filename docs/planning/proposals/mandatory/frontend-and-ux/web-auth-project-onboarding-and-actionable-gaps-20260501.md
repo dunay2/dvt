@@ -167,9 +167,9 @@ Scope, project, and workspace:
 
 - `SelectTenantScope`: selects a tenant from the authenticated grant set.
 - `SelectProjectScope`: selects a project from the selected tenant grants.
-- `CreateProject`: creates a tenant-owned project with no sample graph data.
-- `CreateWorkspace`: creates a workspace container for a project.
-- `CreateCanvas`: creates an empty typed canvas inside a workspace.
+- [Task: F-31] `CreateProject`: creates a tenant-owned project with no sample graph data.
+- [Task: F-31] `CreateWorkspace`: creates a workspace container for a project.
+- [Task: F-31] `CreateCanvas`: creates an empty typed canvas inside a workspace.
 - `EnableDemoProjectSeed`: explicitly enables demo seed data for a project.
 
 Canvas authoring:
@@ -211,13 +211,13 @@ Tenant administration:
 
 Project, workspace, and Canvas:
 
-- `ListProjects`: returns tenant-scoped project descriptors.
-- `GetProject`: returns one project descriptor and project posture.
-- `GetWorkspaceManifest`: returns workspaces, canvases, files, and openable
+- [Task: F-31] `ListProjects`: returns tenant-scoped project descriptors.
+- [Task: F-31] `GetProject`: returns one project descriptor and project posture.
+- [Task: F-31] `GetWorkspaceManifest`: returns workspaces, canvases, files, and openable
   surfaces for the selected project.
 - `GetWorkspaceGraphDraft`: returns the protected graph draft after
   authentication and project selection.
-- `ListCanvasKinds`: returns canvas kinds available to the selected project.
+- [Task: F-31] `ListCanvasKinds`: returns canvas kinds available to the selected project.
 - `ListNodeKindCatalog`: returns node kinds allowed for the active canvas kind.
 
 Capability-gap governance:
@@ -360,8 +360,8 @@ Acceptance criteria:
 
 - Project creation collects name, owning tenant, and initial plugin/source
   posture.
-- [Task: E-PROP-DISP-1] New projects create no sample nodes by default.
-- [Task: E-PROP-DISP-1] User can create an empty canvas and choose its canvas kind.
+- [Task: F-31] New projects create no sample nodes by default.
+- [Task: F-31] User can create an empty canvas and choose its canvas kind.
 - First node catalog is derived from the canvas kind.
 - Negative tests cover duplicate project name, unsupported canvas kind, missing
   plugin capability, and failed draft creation.
