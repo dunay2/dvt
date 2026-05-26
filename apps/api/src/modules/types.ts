@@ -15,7 +15,9 @@ import type { IWorkspaceContextQuery } from '../application/ports/workspaceConte
 import type { IWorkspaceGraphDraftStore } from '../application/ports/workspaceGraphDraft.js';
 import type { AuthorizeCommandScopeService } from '../application/services/authorizeCommandScopeService.js';
 import type { AuthorizeWorkspaceGraphDraftCapabilityService } from '../application/services/authorizeWorkspaceGraphDraftCapabilityService.js';
+import type { CreateProjectUseCase } from '../application/services/createProjectUseCase.js';
 import type { GetWorkspaceGraphDraftUseCase } from '../application/services/getWorkspaceGraphDraftUseCase.js';
+import type { ListProjectsUseCase } from '../application/services/listProjectsUseCase.js';
 import type { SaveWorkspaceGraphDraftUseCase } from '../application/services/saveWorkspaceGraphDraftUseCase.js';
 import type { StartRunAuthorizedFacade } from '../application/services/startRunAuthorizedFacade.js';
 
@@ -26,6 +28,8 @@ export interface ProtectedRuntimeModule {
   authenticator: IAuthenticator;
   authorizer: AuthorizeCommandScopeService;
   workspaceContextQuery: IWorkspaceContextQuery;
+  listProjectsUseCase: ListProjectsUseCase;
+  createProjectUseCase: CreateProjectUseCase;
   engine: IWorkflowEngine;
   runEnrichmentService: IRunEnrichmentService;
   runHealthService: IRunHealthService;

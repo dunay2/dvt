@@ -6,6 +6,7 @@ last_reviewed: 2026-05-23
 planning_type: user-stories
 task_ids:
   - E-MAND-WEB-AUTH-ONBOARDING-CANON
+  - F-31
 ---
 
 # Web Auth Project Onboarding User Stories
@@ -65,7 +66,7 @@ the product starts honestly instead of showing sample graph data.
 
 Acceptance:
 
-- `ListProjects` can return an empty list.
+- [Task: F-31] `ListProjects` can return an empty list.
 - Empty state does not call `GetWorkspaceGraphDraft`.
 - `src_orders`, `model_orders`, and `orders_dashboard` are absent unless an
   explicit demo seed or fixture rail created them.
@@ -77,9 +78,9 @@ canvas so that my graph starts from my own resources.
 
 Acceptance:
 
-- `CreateProject` is tenant scoped.
+- [Task: F-31] `CreateProject` is tenant scoped.
 - `GetWorkspaceManifest` returns an honest empty project manifest.
-- `CreateCanvas` creates the first canvas without hidden sample nodes.
+- [Task: F-31] `CreateCanvas` creates the first canvas without hidden sample nodes.
 
 ## WAPO-7: Disabled Actions Are Backlog-Linked
 

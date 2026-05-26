@@ -9,6 +9,7 @@ import { LocalWorkspaceFileHistoryRepository } from '../../infrastructure/worksp
 import type { ProtectedRuntimeModule } from '../../modules/types.js';
 import type { Env } from '../../plugins/env.js';
 
+import { registerProjectOnboardingRouteGroup } from './projectOnboardingRouteGroup.js';
 import { registerProtectedAdminRouteGroup } from './protectedRuntimeAdminRouteGroup.js';
 import { registerProtectedPlanRoutes } from './protectedRuntimePlanRoutes.js';
 import { buildProtectedRuntimeRouteDependencies } from './protectedRuntimeRouteDependencies.js';
@@ -34,6 +35,7 @@ export async function registerProtectedRuntimeRoutes(
   const dependencies = buildProtectedRuntimeRouteDependencies(options);
 
   registerProtectedPlanRoutes(app, env, protectedModule, dependencies);
+  registerProjectOnboardingRouteGroup(app, env, protectedModule);
   registerProtectedWorkspaceContextRouteGroup(app, env, protectedModule);
   registerProtectedWorkspaceGraphDraftRouteGroup(app, observability, protectedModule, dependencies);
   registerProtectedWorkspaceDiffChangesRouteGroup(app, {

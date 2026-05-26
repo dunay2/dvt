@@ -6,6 +6,7 @@ last_reviewed: 2026-05-23
 planning_type: component
 task_ids:
   - E-MAND-WEB-AUTH-ONBOARDING-CANON
+  - F-31
 ---
 
 # Web Auth Project Onboarding Component
@@ -21,7 +22,8 @@ workspace context resolve before route children can render project data.
 The component does not own external identity-provider configuration, API
 authorization policy, Canvas graph mutation, or tenant-admin implementation.
 Those remain behind their existing API, protected-runtime, and Canvas authoring
-rails.
+rails. `F-31` adds the first project-onboarding implementation slice for
+authenticated users who have tenant scope but no effective project/workspace.
 
 ## Public API
 

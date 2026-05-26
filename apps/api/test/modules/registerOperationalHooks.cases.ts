@@ -111,6 +111,16 @@ function createProtectedRuntimeModuleHarness(): {
           return null;
         },
       },
+      listProjectsUseCase: {
+        async execute() {
+          return { tenants: [], projects: [] };
+        },
+      } as never,
+      createProjectUseCase: {
+        async execute() {
+          return { kind: 'tenant_not_granted' as const };
+        },
+      } as never,
       workspaceGraphDraftStore: createWorkspaceGraphDraftStore(),
       workspaceGraphDraftCapabilityService: {
         async authorize() {
