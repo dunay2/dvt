@@ -151,6 +151,10 @@ function appendSourceYaml(lines: string[], sources: readonly DbtSourceProjection
   }
 }
 
+function serializeYamlString(value: string): string {
+  return JSON.stringify(value);
+}
+
 function buildSchemaYaml(models: readonly DbtModelProjection[]): string {
   const lines = ['version: 2', ''];
   const sources = models
@@ -165,9 +169,8 @@ function buildSchemaYaml(models: readonly DbtModelProjection[]): string {
   lines.push('models:');
   for (const model of models) {
     lines.push(`  - name: ${model.name}`);
-    lines.push(
-      `    description: ${model.node.description ?? `Generated from canvas node ${model.node.id}`}`
-    );
+    const description = model.node.description ?? `Generated from canvas node ${model.node.id}`;
+    lines.push(`    description: ${serializeYamlString(description)}`);
   }
   lines.push('');
 

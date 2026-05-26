@@ -84,6 +84,7 @@ export async function executeCanvasPlanAction({
       const scopeSelection = collectPreviewSelection(selectedNodeIds, workspaceNodeIds);
       const scopedNodeIds = resolveDbtExecutionScopeNodeIds({
         nodes: canonicalNodes,
+        edges: canonicalEdges,
         selectedNodeIds: scopeSelection.nodeIds,
         workspaceNodeIds,
       });

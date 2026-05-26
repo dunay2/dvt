@@ -41,6 +41,21 @@ const testNode: CanonicalNode = {
   tags: [],
 };
 
+const downstreamModelNode: CanonicalNode = {
+  id: 'model-order-revenue',
+  name: 'Order Revenue',
+  pluginId: 'dbt',
+  kind: 'dbt:model',
+  role: 'transform',
+  status: 'idle',
+  tags: ['mart'],
+  metadata: {
+    dbt: {
+      selectedSourceId: 'model-orders',
+    },
+  },
+};
+
 const macroNode: CanonicalNode = {
   id: 'macro-format',
   name: 'Format Macro',
@@ -68,6 +83,16 @@ const edges: CanonicalEdge[] = [
     id: 'edge-macro-model',
     sourceId: 'macro-format',
     targetId: 'model-orders',
+    relation: 'lineage',
+  },
+];
+
+const dependencyEdges: CanonicalEdge[] = [
+  ...edges,
+  {
+    id: 'edge-model-downstream',
+    sourceId: 'model-orders',
+    targetId: 'model-order-revenue',
     relation: 'lineage',
   },
 ];
@@ -141,9 +166,41 @@ describe('canvas dbt planner graph source', () => {
     expect(
       resolveDbtExecutionScopeNodeIds({
         nodes: [sourceNode, modelNode, testNode],
+        edges,
         selectedNodeIds: ['source-orders'],
         workspaceNodeIds: ['source-orders', 'model-orders', 'test-orders'],
       })
     ).toEqual(['source-orders', 'model-orders', 'test-orders']);
+  });
+
+  it('includes upstream executable dbt dependencies for partial executable selection', () => {
+    expect(
+      resolveDbtExecutionScopeNodeIds({
+        nodes: [sourceNode, modelNode, downstreamModelNode, testNode],
+        edges: dependencyEdges,
+        selectedNodeIds: ['model-order-revenue'],
+        workspaceNodeIds: ['source-orders', 'model-orders', 'model-order-revenue', 'test-orders'],
+      })
+    ).toEqual(['model-orders', 'model-order-revenue']);
+
+    const result = buildDbtPlannerGraphSource({
+      nodes: [sourceNode, modelNode, downstreamModelNode, testNode],
+      edges: dependencyEdges,
+      scopedNodeIds: ['model-orders', 'model-order-revenue'],
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.graphSource.nodes).toEqual([
+      expect.objectContaining({
+        nodeId: 'model-orders',
+        dependsOn: [],
+      }),
+      expect.objectContaining({
+        nodeId: 'model-order-revenue',
+        dependsOn: ['model-orders'],
+      }),
+    ]);
   });
 });

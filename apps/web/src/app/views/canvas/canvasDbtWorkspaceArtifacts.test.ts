@@ -82,4 +82,24 @@ describe('canvas dbt workspace artifacts', () => {
       message: 'DBT model "Orders Model" must be connected to a source or model origin.',
     });
   });
+
+  it('serializes free-form model descriptions as valid YAML scalars', () => {
+    const describedModelNode: CanonicalNode = {
+      ...modelNode,
+      description: 'Revenue: by channel\nIncludes wholesale "partner" orders',
+    };
+
+    const result = buildDbtWorkspaceArtifacts({
+      nodes: [sourceNode, describedModelNode],
+      edges: [sourceEdge],
+      scopedNodeIds: ['source-orders', 'model-orders'],
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.artifacts[2]?.content).toContain(
+      '    description: "Revenue: by channel\\nIncludes wholesale \\"partner\\" orders"'
+    );
+  });
 });

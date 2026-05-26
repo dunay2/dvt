@@ -62,6 +62,7 @@ export function deriveCanvasExecutionState({
           edges: canonicalEdges,
           scopedNodeIds: resolveDbtExecutionScopeNodeIds({
             nodes: canonicalNodes,
+            edges: canonicalEdges,
             selectedNodeIds,
             workspaceNodeIds,
           }),

@@ -44,6 +44,7 @@ function resolveDbtStepKind(node: CanonicalNode): string | null {
 
 export function resolveDbtExecutionScopeNodeIds(args: {
   nodes: readonly CanonicalNode[];
+  edges: readonly CanonicalEdge[];
   selectedNodeIds: readonly string[];
   workspaceNodeIds: readonly string[];
 }): string[] {
@@ -53,9 +54,34 @@ export function resolveDbtExecutionScopeNodeIds(args: {
     return node != null && resolveDbtStepKind(node) !== null;
   });
 
-  return selectedExecutableNodeIds.length > 0
-    ? [...args.selectedNodeIds]
-    : [...args.workspaceNodeIds];
+  if (selectedExecutableNodeIds.length === 0) {
+    return [...args.workspaceNodeIds];
+  }
+
+  const scopedNodeIdSet = new Set(args.selectedNodeIds);
+  const visitExecutableUpstreamDependencies = (targetNodeId: string): void => {
+    for (const edge of args.edges) {
+      if (edge.targetId !== targetNodeId) {
+        continue;
+      }
+
+      const sourceNode = nodeById.get(edge.sourceId);
+      if (sourceNode == null || resolveDbtStepKind(sourceNode) === null) {
+        continue;
+      }
+
+      if (!scopedNodeIdSet.has(edge.sourceId)) {
+        scopedNodeIdSet.add(edge.sourceId);
+        visitExecutableUpstreamDependencies(edge.sourceId);
+      }
+    }
+  };
+
+  for (const selectedNodeId of selectedExecutableNodeIds) {
+    visitExecutableUpstreamDependencies(selectedNodeId);
+  }
+
+  return args.workspaceNodeIds.filter((nodeId) => scopedNodeIdSet.has(nodeId));
 }
 
 function resolveExecutableDbtNodes(args: {
