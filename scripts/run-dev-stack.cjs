@@ -29,6 +29,11 @@ const DEFAULT_READY_TIMEOUT_MS = 240_000;
 const DEFAULT_POLL_INTERVAL_MS = 500;
 const PNPM_COMMAND = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
 const POSTGRES_BOOTSTRAP_SCRIPT = path.resolve(__dirname, 'run-temporal-postgres-proof.cjs');
+const DEFAULT_LOCAL_WORKSPACE_FILES_ROOT = path.resolve(
+  __dirname,
+  '../.dvt/dev-stack/workspace-files'
+);
+const DEFAULT_LOCAL_DBT_BUNDLE_FILE_ROOT = path.resolve(__dirname, '../.dvt/dev-stack/dbt-bundles');
 
 function parseArgs(argv) {
   const parsed = {
@@ -111,12 +116,14 @@ function shouldBootstrapLocalPostgres(options, env = process.env) {
 function buildApiEnv(options, env = process.env) {
   const databaseUrl = resolveDatabaseUrl(options, env);
   const temporalEnv = databaseUrl === undefined ? {} : buildTemporalApiEnv(options, env);
+  const dbtArtifactEnv = buildLocalDbtArtifactEnv(env);
 
   return {
     ...env,
     HOST: options.host,
     PORT: String(options.apiPort),
     DVT_READYZ_ENABLED: 'true',
+    ...dbtArtifactEnv,
     ...temporalEnv,
     ...(databaseUrl === undefined
       ? {}
@@ -124,6 +131,18 @@ function buildApiEnv(options, env = process.env) {
           DATABASE_URL: databaseUrl,
           DVT_DB_READY_ENABLED: 'true',
         }),
+  };
+}
+
+function buildLocalDbtArtifactEnv(env = process.env) {
+  const configuredBundleBackend = readNonEmptyEnv(env.DVT_DBT_BUNDLE_STORE_BACKEND);
+  const configuredBundleRoot = readNonEmptyEnv(env.DVT_DBT_BUNDLE_FILE_ROOT);
+  const configuredWorkspaceRoot = readNonEmptyEnv(env.DVT_WORKSPACE_FILES_ROOT);
+
+  return {
+    DVT_DBT_BUNDLE_STORE_BACKEND: configuredBundleBackend ?? 'file',
+    DVT_DBT_BUNDLE_FILE_ROOT: configuredBundleRoot ?? DEFAULT_LOCAL_DBT_BUNDLE_FILE_ROOT,
+    DVT_WORKSPACE_FILES_ROOT: configuredWorkspaceRoot ?? DEFAULT_LOCAL_WORKSPACE_FILES_ROOT,
   };
 }
 

@@ -11,6 +11,7 @@
     "start": "node dist/server.js",
     "pretypecheck": "node ../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"dvt-api^...\" build",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p test/tsconfig.json --noEmit",
+    "lint": "eslint \"src/**/*.ts\" \"test/**/*.ts\" \"*.config.ts\" --max-warnings 0",
     "pretest": "node ../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"dvt-api^...\" build",
     "test": "vitest run --config vitest.config.ts",
     "pretest:integration": "pnpm --filter \"dvt-api^...\" build && pnpm build",

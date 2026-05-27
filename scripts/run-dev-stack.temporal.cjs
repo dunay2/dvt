@@ -84,6 +84,15 @@ function buildTemporalWorkerEnv(options, env = process.env, databaseUrl) {
     ...(readNonEmptyEnv(env.DVT_TEMPORAL_DBT_ENABLED) === undefined
       ? {}
       : { DVT_TEMPORAL_DBT_ENABLED: readNonEmptyEnv(env.DVT_TEMPORAL_DBT_ENABLED) }),
+    ...(readNonEmptyEnv(env.DVT_DBT_BUNDLE_STORE_BACKEND) === undefined
+      ? {}
+      : { DVT_DBT_BUNDLE_STORE_BACKEND: readNonEmptyEnv(env.DVT_DBT_BUNDLE_STORE_BACKEND) }),
+    ...(readNonEmptyEnv(env.DVT_DBT_BUNDLE_FILE_ROOT) === undefined
+      ? {}
+      : { DVT_DBT_BUNDLE_FILE_ROOT: readNonEmptyEnv(env.DVT_DBT_BUNDLE_FILE_ROOT) }),
+    ...(readNonEmptyEnv(env.DVT_DBT_BUNDLE_S3_BUCKET) === undefined
+      ? {}
+      : { DVT_DBT_BUNDLE_S3_BUCKET: readNonEmptyEnv(env.DVT_DBT_BUNDLE_S3_BUCKET) }),
   };
 }
 

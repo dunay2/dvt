@@ -121,6 +121,7 @@ Usage:
 
 ```bash
 node scripts/run-turbo-workspace-task.cjs build
+node scripts/run-turbo-workspace-task.cjs lint
 node scripts/run-turbo-workspace-task.cjs typecheck
 node scripts/run-turbo-workspace-task.cjs test
 node scripts/run-turbo-workspace-task.cjs build --filter @dvt/engine
@@ -128,7 +129,7 @@ node scripts/run-turbo-workspace-task.cjs build --filter @dvt/engine
 
 Behavior:
 
-- only allows the governed task set: `build`, `typecheck`, and `test`
+- only allows the governed task set: `build`, `lint`, `typecheck`, and `test`
 - defaults to the affected-work filter `...[origin/main]`
 - accepts an explicit `--filter <value>` override for CI/package-targeted runs
 - delegates dependency ownership to the Turbo graph, which surfaces

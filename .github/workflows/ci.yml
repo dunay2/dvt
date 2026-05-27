@@ -107,6 +107,9 @@ jobs:
       - name: Build affected workspace (including workspace dependencies)
         run: node scripts/run-turbo-workspace-task.cjs build --filter=${{ matrix.pkg }}
 
+      - name: Lint affected workspace
+        run: node scripts/run-turbo-workspace-task.cjs lint --filter=${{ matrix.pkg }}
+
       - name: Type-check affected workspace
         run: node scripts/run-turbo-workspace-task.cjs typecheck --filter=${{ matrix.pkg }}
 

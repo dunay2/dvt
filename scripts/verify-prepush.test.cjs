@@ -249,6 +249,17 @@
     );
   });
 
+  test('api package exposes an owned lint command for local package validation', () => {
+    const apiPackageJson = JSON.parse(
+      fs.readFileSync(path.resolve(__dirname, '..', 'apps', 'api', 'package.json'), 'utf8')
+    );
+
+    assert.equal(
+      apiPackageJson.scripts.lint,
+      'eslint "src/**/*.ts" "test/**/*.ts" "*.config.ts" --max-warnings 0'
+    );
+  });
+
   test('generated docs policy regression tests are wired into full prepush gate', () => {
     const plan = buildPrepushPlan(['docs/generated-docs-policy.json'], { full: true });
     const step = plan.find((candidate) => candidate.id === 'test-generated-docs-policy');
