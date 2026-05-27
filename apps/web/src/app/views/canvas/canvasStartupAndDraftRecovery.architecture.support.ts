@@ -82,12 +82,12 @@ export const ownedConcernModules = [
   {
     label: 'canvas tab-strip presenter',
     path: 'useCanvasPlaygroundTabStripPresenter.ts',
-    phrase: 'Owned concern: adapt Canvas tab-strip replacement policy',
+    phrase: 'Owned concern: adapt Canvas tab-strip creation policy',
   },
   {
-    label: 'canvas tab-strip replacement model',
+    label: 'canvas tab-strip creation model',
     path: 'canvasPlaygroundTabStripModel.ts',
-    phrase: 'Owned concern: resolve Canvas playground tab-strip replacement policy',
+    phrase: 'Owned concern: resolve Canvas playground tab-strip creation policy',
   },
   {
     label: 'create canvas command policy',

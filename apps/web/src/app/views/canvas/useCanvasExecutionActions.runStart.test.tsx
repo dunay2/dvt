@@ -116,6 +116,7 @@ async function renderRunStartHarness(
     runsService?: ReturnType<typeof createRunsServiceMock>;
     currentPlan?: PlanViewModel | null;
     canRun?: boolean;
+    executionEnvironmentId?: string;
     consolePanelVisible?: boolean;
     setConsolePanelHeight?: (height: number) => void;
     toggleConsolePanel?: () => void;
@@ -134,6 +135,7 @@ async function renderRunStartHarness(
     canonicalNodes: buildCanonicalNodes(),
     canonicalEdges: buildCanonicalEdges(),
     canRun: args.canRun,
+    executionEnvironmentId: args.executionEnvironmentId,
     consolePanelVisible: args.consolePanelVisible,
     setConsolePanelHeight: args.setConsolePanelHeight,
     toggleConsolePanel: args.toggleConsolePanel,
@@ -282,6 +284,31 @@ describe('useCanvasExecutionActions run start', () => {
     });
     expect(harness.shellFeedback.success).toHaveBeenCalledWith(canvasViewCopy.runStartedMessage);
     expect(harness.onRunStarted).toHaveBeenCalledWith('run-success');
+  });
+
+  it('starts run with the active canvas execution environment when selected', async () => {
+    const startedScenario = await renderRunStartHarness({
+      runsService: createRunsServiceMock({
+        startRun: vi.fn(async () => ({
+          runId: 'run-prod',
+          accepted: true,
+        })),
+      }),
+      executionEnvironmentId: 'prod',
+    });
+    harness = startedScenario.harness;
+
+    await harness.clickStartRun();
+
+    expect(startedScenario.runsService.startRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        workspaceScope: expect.objectContaining({
+          tenantId: 'tenant',
+          projectId: 'project',
+          environmentId: 'prod',
+        }),
+      })
+    );
   });
 
   it.each(startedRunConsoleScenarios)('$name', async (scenario) => {

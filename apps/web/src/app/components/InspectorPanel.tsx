@@ -43,11 +43,17 @@ export default function InspectorPanel({
     return (
       <div className={graphVisualClasses.contextPanelRightShell}>
         <PanelHeader title="Inspector" status={null} kind="" onHide={onHide} />
-        <div className="flex flex-1 items-center justify-center px-6">
-          <div className={graphVisualClasses.contextPanelEmptyText}>
-            <p>Select a node to inspect.</p>
+        {beforePanels ? (
+          <ScrollArea className="flex-1">
+            <div className="space-y-4 p-4">{beforePanels}</div>
+          </ScrollArea>
+        ) : (
+          <div className="flex flex-1 items-center justify-center px-6">
+            <div className={graphVisualClasses.contextPanelEmptyText}>
+              <p>Select a node to inspect.</p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     );
   }

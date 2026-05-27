@@ -33,15 +33,29 @@ export function buildCanvasShellPanels({
   routePresentation,
   userPermissions,
 }: CanvasShellPanelsBuilderArgs): CanvasShellPanels {
+  const activeCanvas =
+    routePresentation.canvasDocuments.find(
+      (canvas) => canvas.id === routePresentation.activeCanvasId
+    ) ?? null;
+
   return {
     explorerResourceGroups: buildCanvasWorkspaceResourceGroups({
       nodes: panelState.explorerNodes,
       canvasDocument: routePresentation.canvasDocument,
+      canvasDocuments: routePresentation.canvasDocuments,
+      activeCanvasId: routePresentation.activeCanvasId,
     }),
     authoringNodeKinds: resolveActiveCanvasAuthoringNodeKinds({
       routePresentation,
       userPermissions,
     }),
+    activeCanvasId: routePresentation.activeCanvasId,
+    activeCanvas,
+    canvasDocuments: routePresentation.canvasDocuments,
+    executionEnvironmentOptions: panelState.executionEnvironmentOptions,
+    canEditCanvas: userPermissions.canEditEdges,
+    canDeleteActiveCanvas:
+      userPermissions.canEditEdges && routePresentation.canvasDocuments.length > 1,
     inspectorNode: panelState.inspectorNode,
     inspectorGraphNodes: panelState.inspectorGraphNodes,
     inspectorGraphEdges: panelState.inspectorGraphEdges,

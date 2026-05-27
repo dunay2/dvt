@@ -162,6 +162,31 @@ describe('useCanvasExecutionActions plan preview core', () => {
     );
   });
 
+  it('previews the plan with the active canvas execution environment when selected', async () => {
+    const plansService = createPlansServiceMock();
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService: createRunsServiceMock(),
+      canonicalNodes: buildCanonicalNodes(),
+      canonicalEdges: buildCanonicalEdges(),
+      executionEnvironmentId: 'prod',
+    });
+    await harness.render();
+
+    await harness.clickPlan();
+
+    expect(plansService.previewPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        context: expect.objectContaining({
+          tenantId: 'tenant',
+          projectId: 'project',
+          environmentId: 'prod',
+        }),
+      })
+    );
+  });
+
   it('does not call previewPlan when the active canvas execution strategy is disabled', async () => {
     const plansService = createPlansServiceMock();
 

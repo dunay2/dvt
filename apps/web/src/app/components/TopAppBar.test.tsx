@@ -155,4 +155,32 @@ describe('ShellTopBar workspace context', () => {
       environmentScope: 'Entorno',
     });
   });
+
+  it('opens an About dialog from the Raven application menu with compiled version metadata', async () => {
+    await act(async () => {
+      root.render(
+        <MemoryRouter initialEntries={['/canvas']}>
+          <ShellTopBar navigationModel={TEST_NAVIGATION_MODEL} />
+        </MemoryRouter>
+      );
+    });
+
+    await act(async () => {
+      fireEvent.pointerDown(container.querySelector('[data-slot="shell-app-menu-trigger"]')!);
+    });
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('About Raven');
+    });
+
+    await act(async () => {
+      fireEvent.click(document.body.querySelector('[data-slot="shell-about-command"]')!);
+    });
+
+    await waitFor(() => {
+      expect(document.body.querySelector('[data-slot="shell-about-dialog"]')).not.toBeNull();
+      expect(document.body.textContent).toContain('Compiled version');
+      expect(document.body.textContent).toMatch(/0\.0\.0|[0-9]+\.[0-9]+\.[0-9]+/);
+    });
+  });
 });

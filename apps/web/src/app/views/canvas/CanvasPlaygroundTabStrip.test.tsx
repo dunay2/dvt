@@ -90,7 +90,7 @@ describe('CanvasPlaygroundTabStrip', () => {
     vi.clearAllMocks();
   });
 
-  it('requires confirmation before replacing the current draft canvas with a blank canvas', async () => {
+  it('requires confirmation before adding a blank canvas to the current draft', async () => {
     const { container, onCreateCanvasDocument, root } = renderTabStrip();
 
     const newCanvasButton = Array.from(container.querySelectorAll('button')).find((button) =>
@@ -116,7 +116,7 @@ describe('CanvasPlaygroundTabStrip', () => {
     expect(onCreateCanvasDocument).toHaveBeenCalledWith({
       kind: 'transformation',
       title: 'Transformation canvas',
-      mode: 'replace_current',
+      mode: 'create_new',
     });
 
     act(() => {
@@ -124,7 +124,7 @@ describe('CanvasPlaygroundTabStrip', () => {
     });
   });
 
-  it('lets the user choose SQL-first transformation when replacing a dbt canvas', async () => {
+  it('lets the user choose SQL-first transformation when adding a canvas from a dbt canvas', async () => {
     const { container, onCreateCanvasDocument, root } = renderTabStrip({
       tabState: {
         activeTabId: 'workspace-draft-canvas',
@@ -169,7 +169,7 @@ describe('CanvasPlaygroundTabStrip', () => {
     expect(onCreateCanvasDocument).toHaveBeenCalledWith({
       kind: 'transformation',
       title: 'Transformation canvas',
-      mode: 'replace_current',
+      mode: 'create_new',
     });
 
     act(() => {

@@ -24,7 +24,7 @@ describe('canvasCreateCanvasDocumentAvailability', () => {
     ).toBe(true);
   });
 
-  it('closes first-canvas creation when authoritative draft truth is not create-first eligible', () => {
+  it('closes canvas creation when authoritative draft truth is unavailable', () => {
     expect(
       deriveCanCreateCanvasDocument({
         canPersistGraphDraft: false,
@@ -57,7 +57,9 @@ describe('canvasCreateCanvasDocumentAvailability', () => {
         },
       })
     ).toBe(false);
+  });
 
+  it('keeps canvas creation open when an authoritative draft already exists', () => {
     expect(
       deriveCanCreateCanvasDocument({
         canPersistGraphDraft: true,
@@ -87,6 +89,6 @@ describe('canvasCreateCanvasDocumentAvailability', () => {
           isError: false,
         },
       })
-    ).toBe(false);
+    ).toBe(true);
   });
 });

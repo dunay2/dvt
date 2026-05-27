@@ -22,7 +22,11 @@ export type CanvasShellLayoutBuilderArgs = Readonly<{
     }>;
   authoringCommands: Pick<
     CanvasRouteController,
-    'handleCreateAuthoringNode' | 'handleCreateCanvasDocument'
+    | 'handleCreateAuthoringNode'
+    | 'handleCreateCanvasDocument'
+    | 'handleSelectCanvasDocument'
+    | 'handleApplyCanvasDocumentPatch'
+    | 'handleDeleteCanvasDocument'
   >;
   routePresentation: Pick<
     CanvasRouteViewState,
@@ -33,6 +37,8 @@ export type CanvasShellLayoutBuilderArgs = Readonly<{
     | 'draftTransportError'
     | 'workbenchErrorMessage'
     | 'canvasDocument'
+    | 'canvasDocuments'
+    | 'activeCanvasId'
     | 'canCreateCanvasDocument'
     | 'draftSaveStatus'
     | 'availableCanvasKinds'
@@ -54,9 +60,13 @@ export type CanvasShellPanelsBuilderArgs = Readonly<{
     | 'activeRunId'
     | 'registeredPlugins'
     | 'importedNodeFocusIds'
+    | 'executionEnvironmentOptions'
   >;
   userPermissions: CanvasRouteViewState['effectiveUserPermissions'];
-  routePresentation: Pick<CanvasRouteViewState, 'canvasDocument' | 'availableCanvasKinds'>;
+  routePresentation: Pick<
+    CanvasRouteViewState,
+    'canvasDocument' | 'canvasDocuments' | 'activeCanvasId' | 'availableCanvasKinds'
+  >;
 }>;
 
 export type CanvasShellGraphBuilderArgs = Readonly<{

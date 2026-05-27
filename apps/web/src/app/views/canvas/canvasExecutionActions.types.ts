@@ -3,7 +3,7 @@ import type { Dispatch, SetStateAction } from 'react';
 
 import type { IPlansPort } from '../../ports/plans';
 import type { IRunsPort } from '../../ports/runs';
-import type { SessionContextPort } from '../../ports/sessionContext';
+import type { SessionContextPort, WorkspaceScope } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
 import type {
   IWorkspaceFileContentCommandPort,
@@ -40,6 +40,7 @@ export type UseCanvasExecutionActionsParams = {
   canPlan: boolean;
   canRun: boolean;
   sessionContext: SessionContextPort;
+  executionEnvironmentId?: WorkspaceScope['environmentId'];
   shellFeedback: ShellFeedbackPort;
   previewProvenanceConfig: Pick<
     WorkspaceBootstrapConfig,

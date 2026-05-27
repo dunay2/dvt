@@ -76,6 +76,7 @@ export type CanvasViewCopy = {
   readonly toolbarGridLabel: string;
   readonly toolbarGridColorLabel: string;
   readonly toolbarSnapToGridLabel: string;
+  readonly toolbarProjectSnapshotMenuLabel: string;
   readonly toolbarExportSnapshotLabel: string;
   readonly toolbarImportSnapshotLabel: string;
   readonly toolbarInsertLabel: string;

@@ -1,7 +1,7 @@
 import type { DataSourceMode } from './dataSource';
 import { getRuntimeDataSourceMode } from './runtimeDataSourceMode';
 
-type WorkspaceOption = {
+export type WorkspaceOption = {
   value: string;
   label: string;
 };

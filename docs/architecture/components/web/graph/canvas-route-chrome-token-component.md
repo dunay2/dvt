@@ -35,6 +35,8 @@ Owned concern: Canvas route chrome consumes named presentation tokens;
    mutation, draft persistence, React Flow configuration, or route policy.
 4. Raw color values remain in `theme.css` or user-configurable Canvas palette
    code, not in route chrome components.
+5. Low-frequency project snapshot actions stay grouped in the Canvas project
+   menu instead of consuming persistent toolbar width as separate buttons.
 
 ## Transitions
 
@@ -53,12 +55,12 @@ stateDiagram-v2
 
 ## Consumers
 
-| Consumer                                 | Responsibility                                     |
-| ---------------------------------------- | -------------------------------------------------- |
-| `CanvasToolbar`                          | Uses toolbar and separator chrome                  |
-| `CanvasToolbarPrimaryControls`           | Uses shared badge, separator, and command classes  |
-| `CanvasToolbarDraftStatus`               | Resolves draft status tone through token helpers   |
-| `CanvasPlaygroundTabStrip.templates.tsx` | Uses shared replacement and tab-kind token classes |
+- `CanvasToolbar` uses toolbar and separator chrome.
+- `CanvasToolbarPrimaryControls` uses badge, separator, project menu, and
+  command classes.
+- `CanvasToolbarDraftStatus` resolves draft status tone through token helpers.
+- `CanvasPlaygroundTabStrip.templates.tsx` uses shared replacement and
+  tab-kind token classes.
 
 ## Consumer Diagram
 
@@ -68,6 +70,7 @@ flowchart TB
   Tokens["canvasChromeTokens.ts"]
   Toolbar["CanvasToolbar.tsx"]
   Controls["CanvasToolbarPrimaryControls.tsx"]
+  ProjectMenu["Project snapshot menu"]
   Draft["CanvasToolbarDraftStatus.tsx"]
   Tabs["CanvasPlaygroundTabStrip.templates.tsx"]
   Guard["canvasRoutePosturePriority.architecture.test.ts"]
@@ -75,6 +78,7 @@ flowchart TB
   Theme --> Tokens
   Tokens --> Toolbar
   Tokens --> Controls
+  Controls --> ProjectMenu
   Tokens --> Draft
   Tokens --> Tabs
   Guard --> Tokens

@@ -4,7 +4,7 @@ import type { CanvasKindRegistration } from '../../plugins/nodeTypeContracts';
 import { resolveCanvasViewCopy } from './copy';
 import type { CanvasPlaygroundTabState } from './canvasPlaygroundTabState';
 import {
-  createReplaceCurrentCanvasDocumentCommand,
+  createNewCanvasDocumentCommand,
   hasRenderableCanvasTabs,
   resolveCanvasReplacementActionState,
 } from './canvasPlaygroundTabStripModel';
@@ -86,11 +86,11 @@ describe('canvas playground tab strip model', () => {
     });
   });
 
-  it('keeps replacement command construction out of the presentation template', () => {
-    expect(createReplaceCurrentCanvasDocumentCommand(transformationCanvasKind)).toEqual({
+  it('keeps new-canvas command construction out of the presentation template', () => {
+    expect(createNewCanvasDocumentCommand(transformationCanvasKind)).toEqual({
       kind: 'transformation',
       title: 'Transformation canvas',
-      mode: 'replace_current',
+      mode: 'create_new',
     });
   });
 

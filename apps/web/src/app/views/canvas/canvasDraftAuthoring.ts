@@ -170,8 +170,13 @@ export function buildCanvasAuthoringDraft(
 
   return {
     canvas: {
+      ...(input.canvas.id == null ? {} : { id: input.canvas.id }),
       kind: input.canvas.kind,
       title: input.canvas.title,
+      ...(input.canvas.environmentId == null ? {} : { environmentId: input.canvas.environmentId }),
+      ...(input.canvas.defaultPermission == null
+        ? {}
+        : { defaultPermission: input.canvas.defaultPermission }),
     },
     nodeIds: [...input.nodeIds],
     nodePositions: { ...input.nodePositions },

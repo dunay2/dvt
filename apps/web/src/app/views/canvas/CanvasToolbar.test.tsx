@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 /** Owned concern: prove Canvas toolbar command wiring and passive control behavior. */
+import { fireEvent, waitFor } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { Circle, Square } from 'lucide-react';
@@ -252,21 +253,27 @@ describe('CanvasToolbar', () => {
       );
     });
 
-    const buttons = Array.from(container.querySelectorAll('button'));
-    const exportButton = buttons.find((button) =>
-      button.textContent?.includes(canvasViewCopy.toolbarExportSnapshotLabel)
+    const projectMenuTrigger = container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-toolbar-project-menu-trigger"]'
     );
-    const importButton = buttons.find((button) =>
-      button.textContent?.includes(canvasViewCopy.toolbarImportSnapshotLabel)
-    );
-
-    expect(exportButton).toBeDefined();
-    expect(importButton).toBeDefined();
+    expect(projectMenuTrigger).not.toBeNull();
     expect(container.textContent).not.toContain('Save');
 
     await act(async () => {
-      exportButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      importButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      fireEvent.pointerDown(projectMenuTrigger!);
+    });
+
+    await waitFor(() => {
+      expect(
+        document.body.querySelector('[data-slot="canvas-toolbar-export-command"]')
+      ).not.toBeNull();
+      expect(
+        document.body.querySelector('[data-slot="canvas-toolbar-import-command"]')
+      ).not.toBeNull();
+    });
+
+    await act(async () => {
+      fireEvent.click(document.body.querySelector('[data-slot="canvas-toolbar-export-command"]')!);
     });
 
     expect(onExportProjectSnapshot).toHaveBeenCalledTimes(1);

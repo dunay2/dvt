@@ -23,6 +23,7 @@ Evidence documents that justify or validate relevant changes.
 - [AR-D3 Worker Scaling Strategy Closeout](ed-20260514-ar-d3-worker-scaling-strategy.md)
 - [AR-D4 zero-downtime schema rollback evidence](ed-20260513-ar-d4-zero-downtime-schema-rollback.md)
 - [Canvas happy-path draggable proof after create/save](ed-20260503-canvas-happy-path-draggable-proof.md)
+- [Canvas Multi-Worksheet Draft Contract](ed-20260527-canvas-multi-worksheet-draft.md)
 - [Context](ED-20260404-mw-a2-graph-source-cardinality-and-boundary-hardening.md)
 - [Context](ED-20260405-mwa2-policy-unbounded-precedence.md)
 - [DBT Authoring Run Vertical And Plan-Store Replay Reuse](ed-20260526-dbt-authoring-run-plan-store-reuse.md)

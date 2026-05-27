@@ -5,6 +5,7 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { buildCanvasAuthoringDraft } from './canvasDraftAuthoring';
 import type { CanvasDraftEdge, CanvasDraftSession } from './canvasDraftSession';
 import type { CanvasAuthoringCanvasDocument } from './canvasDraftReadModel';
+import { preserveProjectCanvasWorkspaces } from './canvasProjectCanvasLifecycle';
 
 export type CanvasDraftLifecycleCanonicalSnapshot = {
   canonicalNodeIds: string[];
@@ -72,6 +73,7 @@ export function buildCurrentDraftPayload(
   graphNodes: CanvasDraftLifecycleGraphNode[],
   draftSession: CanvasDraftSession,
   canvasDocument: CanvasAuthoringCanvasDocument,
+  baselineDraft: WorkspaceGraphAuthoringDraft | null,
   canonicalNodes: readonly CanonicalNode[],
   canonicalEdges: readonly CanonicalEdge[]
 ): WorkspaceGraphAuthoringDraft {
@@ -93,10 +95,17 @@ export function buildCurrentDraftPayload(
     }
   }
 
-  return buildCanvasAuthoringDraft({
+  const activeDraft = buildCanvasAuthoringDraft({
     canvas: {
+      ...(canvasDocument.id == null ? {} : { id: canvasDocument.id }),
       kind: canvasDocument.kind,
       title: canvasDocument.title,
+      ...(canvasDocument.environmentId == null
+        ? {}
+        : { environmentId: canvasDocument.environmentId }),
+      ...(canvasDocument.defaultPermission == null
+        ? {}
+        : { defaultPermission: canvasDocument.defaultPermission }),
     },
     nodeIds: buildableNodeIds,
     nodePositions,
@@ -105,6 +114,11 @@ export function buildCurrentDraftPayload(
     ),
     canonicalNodes,
     canonicalEdges,
+  });
+
+  return preserveProjectCanvasWorkspaces({
+    currentDraft: activeDraft,
+    baselineDraft,
   });
 }
 

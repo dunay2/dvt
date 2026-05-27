@@ -24,7 +24,7 @@ describe('canvas route posture priority architecture', () => {
 
     expect(tabStripPresenterSource).toContain('function useCanvasPlaygroundTabStripPresenter(');
     expect(tabStripPresenterSource).toContain('resolveCanvasReplacementActionState');
-    expect(tabStripPresenterSource).toContain('createReplaceCurrentCanvasDocumentCommand');
+    expect(tabStripPresenterSource).toContain('createNewCanvasDocumentCommand');
     expect(tabStripPresenterSource).toContain('resolveCanvasViewCopy');
     expect(tabStripPresenterSource).toContain('CanvasPlaygroundTabStripTemplateProps');
     expect(tabStripPresenterSource).not.toContain('JSX.Element');
@@ -33,6 +33,7 @@ describe('canvas route posture priority architecture', () => {
 
     expect(tabStripModelSource).toContain('function resolveCanvasReplacementActionState(');
     expect(tabStripModelSource).toContain('function createReplaceCurrentCanvasDocumentCommand(');
+    expect(tabStripModelSource).toContain('function createNewCanvasDocumentCommand(');
     expect(tabStripModelSource).toContain('copy: CanvasReplacementActionCopy');
     expect(tabStripModelSource).toContain('export type CanvasReplacementActionViewState');
     expect(tabStripModelSource).toContain('viewState: CanvasReplacementActionViewState');

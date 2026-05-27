@@ -1,5 +1,6 @@
 /** Owned concern: declare the lifecycle vocabulary for Canvas draft bootstrapping, persistence, and save-attempt coordination. */
 import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
+import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
 import type { WorkspaceScope } from '../../ports/sessionContext';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -43,6 +44,7 @@ export type CanvasCurrentDraftPayloadDto = {
   graphNodes: CanvasDraftLifecycleGraphNode[];
   draftSession: CanvasDraftSession;
   canvasDocument: NonNullable<CanvasAuthoringDraftReadModel['record']>['draft']['canvas'] | null;
+  baselineDraft: WorkspaceGraphAuthoringDraft | null;
   canonicalNodes: readonly CanonicalNode[];
   canonicalEdges: readonly CanonicalEdge[];
   workspaceScope: WorkspaceScope;
@@ -80,11 +82,29 @@ export type CanvasDraftLifecyclePolicyDto = {
 export type CanvasCreateCanvasDocumentCommand = {
   kind: string;
   title: string;
-  mode?: 'create_first' | 'replace_current';
+  mode?: 'create_first' | 'replace_current' | 'create_new';
+};
+
+export type CanvasUpdateCanvasDocumentCommand = {
+  title?: string;
+  environmentId?: string | undefined;
+  defaultPermission?: 'read' | 'write' | undefined;
 };
 
 export type CanvasCreateCanvasDocumentCommandDto = {
   command: CanvasCreateCanvasDocumentCommand;
+  currentDraftPayload: WorkspaceGraphAuthoringDraft;
+  draftRepository: CanvasDraftRepository;
+  graphDraftQuery: GraphDraftQueryState;
+  draftQueryCache: CanvasDraftQueryCache;
+  canPersistGraphDraft: boolean;
+  setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
+  setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
+  lastSavedSignatureRef: { current: string | null };
+};
+
+export type CanvasProjectCanvasLifecycleCommandDto = {
+  currentDraftPayload: WorkspaceGraphAuthoringDraft;
   draftRepository: CanvasDraftRepository;
   graphDraftQuery: GraphDraftQueryState;
   draftQueryCache: CanvasDraftQueryCache;
@@ -129,6 +149,9 @@ export type CanvasDraftLifecycle = {
   >;
   reloadLatestDraft: () => void;
   handleCreateCanvasDocument: (command: CanvasCreateCanvasDocumentCommand) => Promise<void>;
+  handleSelectCanvasDocument: (canvasId: string) => Promise<void>;
+  handleApplyCanvasDocumentPatch: (command: CanvasUpdateCanvasDocumentCommand) => Promise<void>;
+  handleDeleteCanvasDocument: () => Promise<void>;
   canCreateCanvasDocument: boolean;
   canExportProjectSnapshot: boolean;
   canImportProjectSnapshot: boolean;

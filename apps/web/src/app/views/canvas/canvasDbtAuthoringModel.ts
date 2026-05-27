@@ -95,19 +95,25 @@ export function applyDbtNodeAuthoringMetadata(
   metadata: DbtNodeAuthoringMetadata
 ): CanonicalNode {
   const materialized = normalizeMaterialized(metadata.materialized);
+  const existingConfig = readNodeMetadataRecord(node, 'config') ?? {};
+  const schemaName = metadata.schemaName.trim() || DEFAULT_SCHEMA_NAME;
+  const tableName = normalizeIdentifier(metadata.tableName, 'table');
 
   return {
     ...node,
     metadata: {
       ...node.metadata,
       config: {
+        ...existingConfig,
+        schema: schemaName,
+        table: tableName,
         materialized,
       },
       dbt: {
         packageName: metadata.packageName.trim() || DEFAULT_PACKAGE_NAME,
         sourceName: normalizeIdentifier(metadata.sourceName, 'source'),
-        schemaName: metadata.schemaName.trim() || DEFAULT_SCHEMA_NAME,
-        tableName: normalizeIdentifier(metadata.tableName, 'table'),
+        schemaName,
+        tableName,
         materialized,
         selectedSourceId: metadata.selectedSourceId.trim(),
       },

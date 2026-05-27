@@ -39,6 +39,9 @@ function buildCanvasShellLayoutArgs({
     authoringCommands: {
       handleCreateAuthoringNode: controller.handleCreateAuthoringNode,
       handleCreateCanvasDocument: controller.handleCreateCanvasDocument,
+      handleSelectCanvasDocument: controller.handleSelectCanvasDocument,
+      handleApplyCanvasDocumentPatch: controller.handleApplyCanvasDocumentPatch,
+      handleDeleteCanvasDocument: controller.handleDeleteCanvasDocument,
     },
     routePresentation: {
       presentationState: routeViewState.presentationState,
@@ -48,6 +51,8 @@ function buildCanvasShellLayoutArgs({
       draftTransportError: routeViewState.draftTransportError,
       workbenchErrorMessage: routeViewState.workbenchErrorMessage,
       canvasDocument: routeViewState.canvasDocument,
+      canvasDocuments: routeViewState.canvasDocuments,
+      activeCanvasId: routeViewState.activeCanvasId,
       canCreateCanvasDocument: routeViewState.canCreateCanvasDocument,
       draftSaveStatus: routeViewState.draftSaveStatus,
       availableCanvasKinds: routeViewState.availableCanvasKinds,
@@ -74,10 +79,13 @@ function buildCanvasShellPanelsArgs({
       activeRunId: controller.activeRunId,
       registeredPlugins: controller.registeredPlugins,
       importedNodeFocusIds: controller.importedNodeFocusIds,
+      executionEnvironmentOptions: controller.executionEnvironmentOptions,
     },
     userPermissions: routeViewState.effectiveUserPermissions,
     routePresentation: {
       canvasDocument: routeViewState.canvasDocument,
+      canvasDocuments: routeViewState.canvasDocuments,
+      activeCanvasId: routeViewState.activeCanvasId,
       availableCanvasKinds: routeViewState.availableCanvasKinds,
     },
   };
@@ -183,5 +191,16 @@ export function buildCanvasShellProps(args: CanvasShellRouteComposerArgs): Canva
     toolbar: buildCanvasShellToolbar(buildCanvasShellToolbarArgs(args)),
     graphCommands: buildCanvasShellGraphCommands(buildCanvasShellGraphCommandsArgs(args)),
     chromeCommands: buildCanvasShellChromeCommands(buildCanvasShellChromeCommandsArgs(args)),
+    canvasCommands: {
+      onSelectCanvas: (canvasId) => {
+        void args.controller.handleSelectCanvasDocument(canvasId);
+      },
+      onApplyCanvasPatch: (patch) => {
+        void args.controller.handleApplyCanvasDocumentPatch(patch);
+      },
+      onDeleteActiveCanvas: () => {
+        void args.controller.handleDeleteCanvasDocument();
+      },
+    },
   };
 }

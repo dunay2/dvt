@@ -2,7 +2,7 @@
 import styles from './DbtNodeComponent.module.css';
 import { Handle, Node, NodeProps, Position } from '@xyflow/react';
 import { Copy, Info, MousePointer, Trash2 } from 'lucide-react';
-import { memo, type CSSProperties } from 'react';
+import { memo, type CSSProperties, type DragEvent } from 'react';
 
 import { mapDbtTypeToKind } from '../../plugins/nodeTypeCatalog.dbt';
 import { getNodeBadges, getNodeRenderer, type RuntimeCapabilities } from '../../plugins/registry';
@@ -24,6 +24,10 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from '../ui/context-menu';
+import {
+  CANVAS_WORKSPACE_RESOURCE_DRAG_MIME_TYPE,
+  parseCanvasWorkspaceResourceDragPayload,
+} from '../canvasWorkspaceExplorerModel';
 import { cn } from '../ui/utils';
 
 // ---------------------------------------------------------------------------
@@ -59,6 +63,7 @@ export interface DbtNodeData extends Record<string, unknown> {
   onDuplicateNode?: (nodeId: string) => void;
   onRemoveNode?: (nodeId: string) => void;
   onToggleNodeSelection?: (nodeId: string, shouldSelect: boolean) => void;
+  onAttachSchemaToNode?: (nodeId: string, schemaName: string) => void;
 }
 
 type DbtFlowNode = Node<DbtNodeData, 'dbtNode'>;
@@ -183,11 +188,46 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
 
   const shouldShowSourceHandle = kindRegistration.allowsOutgoing;
   const shouldShowTargetHandle = kindRegistration.allowsIncoming;
+  const canAttachSchema = typeof data.onAttachSchemaToNode === 'function';
+
+  const handleSchemaResourceDragOver = (event: DragEvent<HTMLDivElement>) => {
+    if (
+      !canAttachSchema ||
+      !Array.from(event.dataTransfer.types).includes(CANVAS_WORKSPACE_RESOURCE_DRAG_MIME_TYPE)
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.dataTransfer.dropEffect = 'copy';
+  };
+
+  const handleSchemaResourceDrop = (event: DragEvent<HTMLDivElement>) => {
+    if (!canAttachSchema) {
+      return;
+    }
+
+    const payload = parseCanvasWorkspaceResourceDragPayload(
+      event.dataTransfer.getData(CANVAS_WORKSPACE_RESOURCE_DRAG_MIME_TYPE)
+    );
+    if (payload == null) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    data.onAttachSchemaToNode?.(id, payload.schemaName);
+  };
 
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <div className={cn(styles.root, 'relative')}>
+        <div
+          className={cn(styles.root, 'relative')}
+          onDragOver={handleSchemaResourceDragOver}
+          onDrop={handleSchemaResourceDrop}
+        >
           {/* Target Handle (input) */}
           {shouldShowTargetHandle && (
             <Handle

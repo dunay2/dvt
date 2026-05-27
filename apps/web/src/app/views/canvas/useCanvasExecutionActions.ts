@@ -1,6 +1,8 @@
 /** Owned concern: coordinate Canvas plan and run action handlers. */
 import { useEffect, useState } from 'react';
+import { asNonBlankString } from '@dvt/contracts';
 
+import type { SessionContextPort, WorkspaceScope } from '../../ports/sessionContext';
 import { deriveCanvasExecutionState } from './canvasExecutionState';
 import type {
   UseCanvasExecutionActionsParams,
@@ -8,6 +10,39 @@ import type {
 } from './canvasExecutionActions.types';
 import { useCanvasPlanActionHandler } from './useCanvasPlanActionHandler';
 import { useCanvasRunStartHandler } from './useCanvasRunStartHandler';
+
+function normalizeExecutionEnvironmentId(
+  environmentId: WorkspaceScope['environmentId'] | undefined
+): WorkspaceScope['environmentId'] | null {
+  const normalized = environmentId?.trim();
+  return normalized && normalized.length > 0 ? normalized : null;
+}
+
+function createCanvasExecutionSessionContext(args: {
+  sessionContext: SessionContextPort;
+  executionEnvironmentId: WorkspaceScope['environmentId'] | undefined;
+}): SessionContextPort {
+  const environmentId = normalizeExecutionEnvironmentId(args.executionEnvironmentId);
+  if (environmentId == null) {
+    return args.sessionContext;
+  }
+
+  const withExecutionEnvironment = (scope: WorkspaceScope): WorkspaceScope => ({
+    ...scope,
+    environmentId,
+  });
+
+  return {
+    getWorkspaceScope: () => withExecutionEnvironment(args.sessionContext.getWorkspaceScope()),
+    getWorkspaceScopeSnapshot: () =>
+      withExecutionEnvironment(args.sessionContext.getWorkspaceScopeSnapshot()),
+    subscribeWorkspaceScope: args.sessionContext.subscribeWorkspaceScope,
+    buildRunContext: (runId) => ({
+      ...args.sessionContext.buildRunContext(runId),
+      environmentId: asNonBlankString(environmentId),
+    }),
+  };
+}
 
 function useCanvasExecutionDraftSignatureSync(args: {
   currentPlan: UseCanvasExecutionActionsParams['currentPlan'];
@@ -34,6 +69,7 @@ export function useCanvasExecutionActions({
   canPlan,
   canRun,
   sessionContext,
+  executionEnvironmentId,
   shellFeedback,
   previewProvenanceConfig,
   consolePanelVisible,
@@ -45,6 +81,10 @@ export function useCanvasExecutionActions({
 }: UseCanvasExecutionActionsParams): UseCanvasExecutionActionsResult {
   const [planModalOpen, setPlanModalOpen] = useState(false);
   const [lastPlannedDraftSignature, setLastPlannedDraftSignature] = useState<string | null>(null);
+  const executionSessionContext = createCanvasExecutionSessionContext({
+    sessionContext,
+    executionEnvironmentId,
+  });
   const executionState = deriveCanvasExecutionState({
     canRun,
     executionStrategy,
@@ -77,7 +117,7 @@ export function useCanvasExecutionActions({
     executionStrategy,
     previewProvenanceConfig,
     selectedNodeIds,
-    sessionContext,
+    sessionContext: executionSessionContext,
     shellFeedback,
     flushDraftForExecution,
     transformationValidation,
@@ -97,7 +137,7 @@ export function useCanvasExecutionActions({
     isCurrentPlanStale,
     onRunStarted,
     runsService,
-    sessionContext,
+    sessionContext: executionSessionContext,
     setConsolePanelHeight,
     setPlanModalOpen,
     shellFeedback,

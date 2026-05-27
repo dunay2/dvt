@@ -17,6 +17,8 @@ import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
 import type { CanvasWorkspaceResourceGroup } from '../../components/canvasWorkspaceExplorerModel';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
+import type { ProjectCanvasDocument, ProjectCanvasPatch } from './canvasProjectCanvasLifecycle';
+import type { WorkspaceOption } from '../../services/config/workspaceConfig';
 
 export type UserPermissions = {
   canPlan: boolean;
@@ -47,6 +49,12 @@ export type CanvasShellLayout = {
 export type CanvasShellPanels = {
   explorerResourceGroups: readonly CanvasWorkspaceResourceGroup[];
   authoringNodeKinds: readonly NodeKindRegistration[];
+  activeCanvasId: string | null;
+  activeCanvas: ProjectCanvasDocument | null;
+  canvasDocuments: readonly ProjectCanvasDocument[];
+  executionEnvironmentOptions: readonly WorkspaceOption[];
+  canEditCanvas: boolean;
+  canDeleteActiveCanvas: boolean;
   inspectorNode: CanonicalNode | null;
   inspectorGraphNodes: readonly CanonicalNode[];
   inspectorGraphEdges: readonly CanonicalEdge[];
@@ -121,6 +129,12 @@ export type CanvasShellChromeCommands = {
   onRun: () => void;
 };
 
+export type CanvasShellCanvasCommands = {
+  onSelectCanvas: (canvasId: string) => void;
+  onApplyCanvasPatch: (patch: ProjectCanvasPatch) => void;
+  onDeleteActiveCanvas: () => void;
+};
+
 export type CanvasShellProps = Readonly<{
   layout: CanvasShellLayout;
   panels: CanvasShellPanels;
@@ -128,4 +142,5 @@ export type CanvasShellProps = Readonly<{
   toolbar: CanvasShellToolbar;
   graphCommands: CanvasShellGraphCommands;
   chromeCommands: CanvasShellChromeCommands;
+  canvasCommands: CanvasShellCanvasCommands;
 }>;

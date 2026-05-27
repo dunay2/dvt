@@ -214,6 +214,321 @@ flowchart LR
   Git -->|"sync project state"| Files
 ```
 
+## Feature Mechanization: Canvas Properties Lifecycle Slice
+
+```feature-mechanization
+version: 1
+featureId: E-CANVAS-PROPERTIES-LIFECYCLE-1
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md
+componentGuides:
+  - docs/architecture/components/web/graph/canvas-workspace-explorer-component.md
+  - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
+userStories:
+  - docs/architecture/components/web/graph/canvas-workspace-explorer-user-stories.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
+allowedImplementationSurfaces:
+  - apps/web/src/app/components/DbtExplorer.tsx
+  - apps/web/src/app/components/InspectorPanel.tsx
+  - apps/web/src/app/components/canvasWorkspaceExplorerModel.ts
+  - apps/web/src/app/components/canvasWorkspaceExplorerModel.test.ts
+  - apps/web/src/app/services/config/workspaceConfig.ts
+  - apps/web/src/app/views/Canvas.test.controller.defaults.ts
+  - apps/web/src/app/views/canvas/**
+  - packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts
+  - packages/@dvt/contracts/src/index.ts
+  - packages/@dvt/contracts/test/workspace-graph-authoring-draft.contract.test.ts
+  - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
+  - docs/architecture/components/web/graph/canvas-workspace-explorer-component.md
+  - docs/architecture/components/web/graph/canvas-workspace-explorer-user-stories.md
+  - docs/evidence/ed-20260527-canvas-multi-worksheet-draft.md
+  - docs/evidence/index.md
+  - docs/risk-register/quality/R-20260527-CANVAS-MULTI-WORKSHEET.yaml
+  - docs/risk-register/quality/index.md
+  - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md
+forbiddenImplementationSurfaces:
+  - apps/api/**
+  - packages/@dvt/adapter-*/**
+  - packages/@dvt/engine/**
+  - packages/@dvt/planner/**
+  - specs/**
+commandQueryRails:
+  - name: ListProjectCanvases
+    type: query
+    dddOwner: ProjectCanvasCatalog
+  - name: CreateProjectCanvas
+    type: command
+    dddOwner: ProjectCanvasLifecycle
+  - name: SelectProjectCanvas
+    type: command
+    dddOwner: ProjectCanvasLifecycle
+  - name: RenameProjectCanvas
+    type: command
+    dddOwner: ProjectCanvasLifecycle
+  - name: UpdateCanvasProperties
+    type: command
+    dddOwner: ProjectCanvasLifecycle
+  - name: DeleteProjectCanvas
+    type: command
+    dddOwner: ProjectCanvasLifecycle
+domainObjects:
+  - name: ProjectCanvasCatalog
+    type: read model
+    owner: Canvas workspace explorer
+  - name: ProjectCanvasDocument
+    type: value object
+    owner: Canvas workspace explorer
+  - name: ProjectCanvasLifecycle
+    type: command policy
+    owner: Canvas authoring draft
+  - name: WorkspaceGraphAuthoringCanvasWorkspace
+    type: contract document
+    owner: Planner shared-kernel draft contract
+fowlerSignals:
+  - Primitive obsession
+  - Duplicate semantics
+  - Responsibility overload
+  - Documentation drift
+  - Test-only confidence
+architectureGuards:
+  - pnpm --filter @dvt/web test:canvas-architecture:run -- canvasRoutePosturePriority.architecture.test.ts canvasStartupBootstrapPublication.architecture.test.ts
+  - pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+cypressFlows:
+  - N/A - lifecycle is covered by model, presentation, contract, and shell composition tests before browser e2e.
+completionGate:
+  - pnpm docs:feature-mechanization -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+  - pnpm --filter @dvt/contracts test -- workspace-graph-authoring-draft.contract.test.ts
+  - pnpm --filter @dvt/contracts typecheck
+  - pnpm --filter @dvt/web test:unit:run -- canvasWorkspaceExplorerModel.test.ts canvasCreateCanvasDocumentCommand.test.ts canvasPlaygroundTabStripModel.test.ts canvasProjectCanvasLifecycle.test.ts canvasCreateCanvasDocumentAvailability.test.ts canvasShellPanelsBuilder.test.ts
+  - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasPlaygroundTabStrip.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - pnpm --filter @dvt/web test:canvas-architecture:run -- canvasRoutePosturePriority.architecture.test.ts canvasStartupBootstrapPublication.architecture.test.ts
+  - pnpm --filter @dvt/web typecheck
+  - pnpm --filter @dvt/web lint
+  - pnpm lint
+  - pnpm lint:md:changed
+  - pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: multi-canvas-contract
+    redTest: pnpm --filter @dvt/contracts test -- workspace-graph-authoring-draft.contract.test.ts
+    expectedFailure: WorkspaceGraphAuthoringDraft rejects optional multi-canvas workspace state.
+    patchSurfaces:
+      - packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts
+      - packages/@dvt/contracts/src/index.ts
+      - packages/@dvt/contracts/test/workspace-graph-authoring-draft.contract.test.ts
+    greenTest: pnpm --filter @dvt/contracts test -- workspace-graph-authoring-draft.contract.test.ts
+  - id: append-select-delete-lifecycle
+    redTest: pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts canvasCreateCanvasDocumentCommand.test.ts
+    expectedFailure: Creating a canvas replaces the current draft and has no selectable/deletable worksheet lifecycle.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/canvasProjectCanvasLifecycle.ts
+      - apps/web/src/app/views/canvas/canvasProjectCanvasLifecycleCommand.ts
+      - apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommandPolicy.ts
+      - apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommand.ts
+      - apps/web/src/app/views/canvas/canvasProjectCanvasLifecycle.test.ts
+      - apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommand.test.ts
+    greenTest: pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts canvasCreateCanvasDocumentCommand.test.ts
+  - id: explorer-inspector-shell-composition
+    redTest: pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx
+    expectedFailure: Explorer cannot select multiple canvases and Inspector cannot rename or delete the active canvas.
+    patchSurfaces:
+      - apps/web/src/app/components/DbtExplorer.tsx
+      - apps/web/src/app/components/InspectorPanel.tsx
+      - apps/web/src/app/components/canvasWorkspaceExplorerModel.ts
+      - apps/web/src/app/views/canvas/CanvasInspectorPanel.tsx
+      - apps/web/src/app/views/canvas/CanvasShell.tsx
+      - apps/web/src/app/views/canvas/canvasShell.types.ts
+    greenTest: pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx
+  - id: inspector-execution-environment
+    redTest: pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+    expectedFailure: Inspector has no canvas environment selector and Plan/Run use only the global session environment.
+    patchSurfaces:
+      - apps/web/src/app/services/config/workspaceConfig.ts
+      - apps/web/src/app/views/canvas/CanvasInspectorPanel.tsx
+      - apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx
+      - apps/web/src/app/views/canvas/CanvasShell.tsx
+      - apps/web/src/app/views/canvas/canvasControllerViewModel.ts
+      - apps/web/src/app/views/canvas/canvasExecutionActions.types.ts
+      - apps/web/src/app/views/canvas/canvasShell.types.ts
+      - apps/web/src/app/views/canvas/canvasShellBuilder.types.ts
+      - apps/web/src/app/views/canvas/canvasShellPanelsBuilder.ts
+      - apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx
+      - apps/web/src/app/views/canvas/useCanvasController.ts
+      - apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
+      - apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasExecutionActions.runStart.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx
+    greenTest: pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+symbols:
+  - &canvas_lifecycle_symbol
+    name: ProjectCanvasDocument
+    path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycle.ts
+    dddOwner: ProjectCanvasLifecycle
+    cqRails: [ListProjectCanvases, CreateProjectCanvas, SelectProjectCanvas, RenameProjectCanvas, UpdateCanvasProperties, DeleteProjectCanvas]
+    fowlerSignals: [Primitive obsession, Duplicate semantics]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - <<: *canvas_lifecycle_symbol
+    name: ProjectCanvasPatch
+  - <<: *canvas_lifecycle_symbol
+    name: buildDraftWithCreatedProjectCanvas
+  - <<: *canvas_lifecycle_symbol
+    name: buildDraftWithDeletedActiveProjectCanvas
+  - <<: *canvas_lifecycle_symbol
+    name: buildDraftWithSelectedProjectCanvas
+  - <<: *canvas_lifecycle_symbol
+    name: buildDraftWithUpdatedActiveProjectCanvas
+  - <<: *canvas_lifecycle_symbol
+    name: cloneGraphWorkspace
+  - <<: *canvas_lifecycle_symbol
+    name: createCanvasIdBase
+  - <<: *canvas_lifecycle_symbol
+    name: createProjectCanvasId
+  - <<: *canvas_lifecycle_symbol
+    name: listProjectCanvasDocuments
+  - <<: *canvas_lifecycle_symbol
+    name: normalizeProjectCanvasDraft
+  - <<: *canvas_lifecycle_symbol
+    name: preserveProjectCanvasWorkspaces
+  - <<: *canvas_lifecycle_symbol
+    name: resolveActiveProjectCanvasId
+  - <<: *canvas_lifecycle_symbol
+    name: slugifyCanvasIdPart
+  - <<: *canvas_lifecycle_symbol
+    name: toProjectCanvasDocument
+  - <<: *canvas_lifecycle_symbol
+    name: workspaceToDraft
+  - <<: *canvas_lifecycle_symbol
+    name: SaveGraphDraftInput
+    path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycleCommand.ts
+    cqRails: [SelectProjectCanvas, RenameProjectCanvas, UpdateCanvasProperties, DeleteProjectCanvas]
+  - <<: *canvas_lifecycle_symbol
+    name: executeDeleteCanvasDocumentCommand
+    path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycleCommand.ts
+    cqRails: [DeleteProjectCanvas]
+  - <<: *canvas_lifecycle_symbol
+    name: executeProjectCanvasDraftSave
+    path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycleCommand.ts
+    cqRails: [SelectProjectCanvas, RenameProjectCanvas, UpdateCanvasProperties, DeleteProjectCanvas]
+  - <<: *canvas_lifecycle_symbol
+    name: executeSelectCanvasDocumentCommand
+    path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycleCommand.ts
+    cqRails: [SelectProjectCanvas]
+  - <<: *canvas_lifecycle_symbol
+    name: executeUpdateCanvasDocumentCommand
+    path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycleCommand.ts
+    cqRails: [RenameProjectCanvas, UpdateCanvasProperties]
+  - <<: *canvas_lifecycle_symbol
+    name: resolveExpectedRevision
+    path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycleCommand.ts
+    cqRails: [SelectProjectCanvas, RenameProjectCanvas, UpdateCanvasProperties, DeleteProjectCanvas]
+  - <<: *canvas_lifecycle_symbol
+    name: buildCreateCanvasDocumentDraftInput
+    path: apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommandPolicy.ts
+    cqRails: [CreateProjectCanvas]
+  - <<: *canvas_lifecycle_symbol
+    name: resolveCreateNewCanvasDocumentEligibility
+    path: apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommandPolicy.ts
+    cqRails: [CreateProjectCanvas]
+  - <<: *canvas_lifecycle_symbol
+    name: CanvasProjectCanvasLifecycleCommandDto
+    path: apps/web/src/app/views/canvas/canvasDraftLifecycle.types.ts
+    cqRails: [SelectProjectCanvas, RenameProjectCanvas, UpdateCanvasProperties, DeleteProjectCanvas]
+  - <<: *canvas_lifecycle_symbol
+    name: CanvasUpdateCanvasDocumentCommand
+    path: apps/web/src/app/views/canvas/canvasDraftLifecycle.types.ts
+    cqRails: [RenameProjectCanvas, UpdateCanvasProperties]
+  - <<: *canvas_lifecycle_symbol
+    name: createNewCanvasDocumentCommand
+    path: apps/web/src/app/views/canvas/canvasPlaygroundTabStripModel.ts
+    cqRails: [CreateProjectCanvas]
+  - <<: *canvas_lifecycle_symbol
+    name: CanvasShellCanvasCommands
+    path: apps/web/src/app/views/canvas/canvasShell.types.ts
+  - <<: *canvas_lifecycle_symbol
+    name: CanvasInspectorCanvasContract
+    path: apps/web/src/app/views/canvas/CanvasInspectorPanel.tsx
+    cqRails: [ListProjectCanvases, RenameProjectCanvas, UpdateCanvasProperties, DeleteProjectCanvas]
+  - <<: *canvas_lifecycle_symbol
+    name: CanvasInspectorCanvasSection
+    path: apps/web/src/app/views/canvas/CanvasInspectorPanel.tsx
+    cqRails: [ListProjectCanvases, RenameProjectCanvas, UpdateCanvasProperties, DeleteProjectCanvas]
+  - <<: *canvas_lifecycle_symbol
+    name: buildCanvasEnvironmentOptions
+    path: apps/web/src/app/views/canvas/CanvasInspectorPanel.tsx
+    cqRails: [UpdateCanvasProperties]
+  - <<: *canvas_lifecycle_symbol
+    name: resolveCurrentCanvasEnvironmentId
+    path: apps/web/src/app/views/canvas/CanvasInspectorPanel.tsx
+    cqRails: [UpdateCanvasProperties]
+  - <<: *canvas_lifecycle_symbol
+    name: createCanvasExecutionSessionContext
+    path: apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
+    cqRails: [UpdateCanvasProperties]
+    unitTests:
+      - pnpm --filter @dvt/web test:presentation:run -- useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - <<: *canvas_lifecycle_symbol
+    name: normalizeExecutionEnvironmentId
+    path: apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
+    cqRails: [UpdateCanvasProperties]
+  - <<: *canvas_lifecycle_symbol
+    name: WorkspaceOption
+    path: apps/web/src/app/services/config/workspaceConfig.ts
+    cqRails: [UpdateCanvasProperties]
+  - <<: *canvas_lifecycle_symbol
+    name: buildDraft
+    path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycle.test.ts
+    fowlerSignals: [Test-only confidence]
+    cypressCoverage: N/A - unit test fixture
+  - <<: *canvas_lifecycle_symbol
+    name: WorkspaceGraphAuthoringCanvasWorkspace
+    path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts
+    dddOwner: Planner shared-kernel draft contract
+    cqRails: [ListProjectCanvases, CreateProjectCanvas, SelectProjectCanvas, RenameProjectCanvas, UpdateCanvasProperties, DeleteProjectCanvas]
+    unitTests:
+      - pnpm --filter @dvt/contracts test -- workspace-graph-authoring-draft.contract.test.ts
+  - <<: *canvas_lifecycle_symbol
+    name: WorkspaceGraphAuthoringCanvasWorkspaceSchema
+    path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts
+    dddOwner: Planner shared-kernel draft contract
+    unitTests:
+      - pnpm --filter @dvt/contracts test -- workspace-graph-authoring-draft.contract.test.ts
+  - <<: *canvas_lifecycle_symbol
+    name: WorkspaceGraphAuthoringGraphShape
+    path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts
+    dddOwner: Planner shared-kernel draft contract
+    unitTests:
+      - pnpm --filter @dvt/contracts test -- workspace-graph-authoring-draft.contract.test.ts
+  - <<: *canvas_lifecycle_symbol
+    name: addGraphShapeIssues
+    path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts
+    dddOwner: Planner shared-kernel draft contract
+    unitTests:
+      - pnpm --filter @dvt/contracts test -- workspace-graph-authoring-draft.contract.test.ts
+  - <<: *canvas_lifecycle_symbol
+    name: areCanvasDocumentsEquivalent
+    path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts
+    dddOwner: Planner shared-kernel draft contract
+    unitTests:
+      - pnpm --filter @dvt/contracts test -- workspace-graph-authoring-draft.contract.test.ts
+  - <<: *canvas_lifecycle_symbol
+    name: areGraphShapesEquivalent
+    path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts
+    dddOwner: Planner shared-kernel draft contract
+    unitTests:
+      - pnpm --filter @dvt/contracts test -- workspace-graph-authoring-draft.contract.test.ts
+```
+
 ## Command And Query Rail Catalog
 
 These rails are proposed for the slices below. Implementation must either reuse
@@ -450,16 +765,28 @@ governingSources:
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/planning/reviews/architecture-and-governance/20260527-canvas-workspace-explorer-fowler-review.md
 allowedImplementationSurfaces:
+  - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
+  - apps/web/src/app/components/canvas/DbtNodeComponent.architecture.test.ts
   - apps/web/src/app/components/DbtExplorer.tsx
   - apps/web/src/app/components/DbtExplorer.test.tsx
   - apps/web/src/app/components/canvasWorkspaceExplorerModel.ts
   - apps/web/src/app/components/canvasWorkspaceExplorerModel.test.ts
+  - apps/web/src/app/views/canvas/canvasDbtAuthoringModel.ts
+  - apps/web/src/app/views/canvas/canvasDbtAuthoringModel.test.ts
+  - apps/web/src/app/views/canvas/canvasGraphHandlerContracts.ts
+  - apps/web/src/app/views/canvas/canvasImpactOverlay.ts
   - apps/web/src/app/views/canvas/CanvasShell.tsx
   - apps/web/src/app/views/canvas/CanvasShell.test.tsx
   - apps/web/src/app/views/canvas/CanvasShell.architecture.test.tsx
   - apps/web/src/app/views/canvas/canvasShell.types.ts
   - apps/web/src/app/views/canvas/canvasShellPanelsBuilder.ts
   - apps/web/src/app/views/canvas/canvasShellPanelsBuilder.test.ts
+  - apps/web/src/app/views/canvas/useCanvasControllerReadModel.ts
+  - apps/web/src/app/views/canvas/useCanvasGraphHandlers.types.ts
+  - apps/web/src/app/views/canvas/useCanvasGraphHandlers.nodeDrop.test.tsx
+  - apps/web/src/app/views/canvas/useCanvasNodeAuthoringHandlers.ts
+  - apps/web/src/app/views/canvas/useCanvasViewportGraphModel.ts
+  - apps/web/src/app/views/canvas/useCanvasViewportGraphModel.test.tsx
   - docs/.manifest.json
   - docs/architecture/components/web/graph/canvas-ready-node-authoring-entrypoint-component.md
   - docs/architecture/components/web/graph/canvas-ready-node-authoring-user-stories.md
@@ -494,6 +821,9 @@ domainObjects:
   - name: CanvasResourceAttachmentPolicy
     type: policy
     owner: Canvas authoring
+  - name: CanvasSchemaResourceReference
+    type: value object
+    owner: Canvas workspace explorer
 fowlerSignals:
   - Duplicate semantics
   - Primitive obsession
@@ -507,7 +837,7 @@ cypressFlows:
   - N/A - this slice is model and shell composition; full resource drag flow remains in AttachProjectResourceToCanvasObject
 completionGate:
   - pnpm docs:feature-mechanization -- --feature E-CANVAS-WORKSPACE-EXPLORER-1
-  - pnpm --filter @dvt/web test -- src/app/components/canvasWorkspaceExplorerModel.test.ts src/app/components/DbtExplorer.test.tsx src/app/views/canvas/CanvasShell.test.tsx src/app/views/canvas/CanvasShell.architecture.test.tsx src/app/views/canvas/canvasShellPanelsBuilder.test.ts
+  - pnpm --filter @dvt/web test -- src/app/components/canvasWorkspaceExplorerModel.test.ts src/app/components/DbtExplorer.test.tsx src/app/components/canvas/DbtNodeComponent.architecture.test.ts src/app/views/canvas/canvasDbtAuthoringModel.test.ts src/app/views/canvas/useCanvasGraphHandlers.nodeDrop.test.tsx src/app/views/canvas/useCanvasViewportGraphModel.test.tsx src/app/views/canvas/CanvasShell.test.tsx src/app/views/canvas/CanvasShell.architecture.test.tsx src/app/views/canvas/canvasShellPanelsBuilder.test.ts
   - pnpm --filter @dvt/web typecheck
   - pnpm --filter @dvt/web lint
   - pnpm lint:md:changed
@@ -543,7 +873,99 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/canvasShellPanelsBuilder.ts
       - apps/web/src/app/views/canvas/canvasShellPanelsBuilder.test.ts
     greenTest: pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasShell.test.tsx src/app/views/canvas/canvasShellPanelsBuilder.test.ts
+  - id: workspace-explorer-schema-resource-attachment
+    redTest: pnpm --filter @dvt/web test -- src/app/components/canvasWorkspaceExplorerModel.test.ts src/app/components/DbtExplorer.test.tsx src/app/views/canvas/canvasDbtAuthoringModel.test.ts src/app/views/canvas/useCanvasGraphHandlers.nodeDrop.test.tsx src/app/views/canvas/useCanvasViewportGraphModel.test.tsx
+    expectedFailure: Schemas are not projected as project resources, cannot be dragged with a resource payload, and cannot be attached to a node card through the CanvasResourceAttachmentPolicy.
+    patchSurfaces:
+      - apps/web/src/app/components/canvasWorkspaceExplorerModel.ts
+      - apps/web/src/app/components/canvasWorkspaceExplorerModel.test.ts
+      - apps/web/src/app/components/DbtExplorer.tsx
+      - apps/web/src/app/components/DbtExplorer.test.tsx
+      - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
+      - apps/web/src/app/views/canvas/canvasDbtAuthoringModel.ts
+      - apps/web/src/app/views/canvas/canvasDbtAuthoringModel.test.ts
+      - apps/web/src/app/views/canvas/canvasGraphHandlerContracts.ts
+      - apps/web/src/app/views/canvas/canvasImpactOverlay.ts
+      - apps/web/src/app/views/canvas/useCanvasControllerReadModel.ts
+      - apps/web/src/app/views/canvas/useCanvasGraphHandlers.types.ts
+      - apps/web/src/app/views/canvas/useCanvasGraphHandlers.nodeDrop.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasNodeAuthoringHandlers.ts
+      - apps/web/src/app/views/canvas/useCanvasViewportGraphModel.ts
+      - apps/web/src/app/views/canvas/useCanvasViewportGraphModel.test.tsx
+    greenTest: pnpm --filter @dvt/web test -- src/app/components/canvasWorkspaceExplorerModel.test.ts src/app/components/DbtExplorer.test.tsx src/app/views/canvas/canvasDbtAuthoringModel.test.ts src/app/views/canvas/useCanvasGraphHandlers.nodeDrop.test.tsx src/app/views/canvas/useCanvasViewportGraphModel.test.tsx
 symbols:
+  - name: CANVAS_WORKSPACE_RESOURCE_DRAG_MIME_TYPE
+    path: apps/web/src/app/components/canvasWorkspaceExplorerModel.ts
+    dddOwner: CanvasSchemaResourceReference
+    cqRails: [AttachProjectResourceToCanvasObject]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-WORKSPACE-EXPLORER-1
+    cypressCoverage: N/A - unit-covered drag payload
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/DbtExplorer.test.tsx]
+  - name: CanvasWorkspaceResourceDragPayload
+    path: apps/web/src/app/components/canvasWorkspaceExplorerModel.ts
+    dddOwner: CanvasSchemaResourceReference
+    cqRails: [AttachProjectResourceToCanvasObject]
+    fowlerSignals: [Replace Primitive with Object]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-WORKSPACE-EXPLORER-1
+    cypressCoverage: N/A - unit-covered drag payload
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/canvasWorkspaceExplorerModel.test.ts src/app/components/DbtExplorer.test.tsx]
+  - name: serializeCanvasWorkspaceResourceDragPayload
+    path: apps/web/src/app/components/canvasWorkspaceExplorerModel.ts
+    dddOwner: CanvasSchemaResourceReference
+    cqRails: [AttachProjectResourceToCanvasObject]
+    fowlerSignals: [Replace Primitive with Object]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-WORKSPACE-EXPLORER-1
+    cypressCoverage: N/A - unit-covered drag payload
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/DbtExplorer.test.tsx]
+  - name: parseCanvasWorkspaceResourceDragPayload
+    path: apps/web/src/app/components/canvasWorkspaceExplorerModel.ts
+    dddOwner: CanvasSchemaResourceReference
+    cqRails: [AttachProjectResourceToCanvasObject]
+    fowlerSignals: [Replace Primitive with Object]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-WORKSPACE-EXPLORER-1
+    cypressCoverage: N/A - unit-covered drag payload
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/canvasWorkspaceExplorerModel.test.ts]
+  - name: readMetadataRecord
+    path: apps/web/src/app/components/canvasWorkspaceExplorerModel.ts
+    dddOwner: ProjectWorkspaceResourceCatalog
+    cqRails: [ListProjectWorkspaceResources]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-WORKSPACE-EXPLORER-1
+    cypressCoverage: N/A - read model helper
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/canvasWorkspaceExplorerModel.test.ts]
+  - name: readMetadataString
+    path: apps/web/src/app/components/canvasWorkspaceExplorerModel.ts
+    dddOwner: ProjectWorkspaceResourceCatalog
+    cqRails: [ListProjectWorkspaceResources]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-WORKSPACE-EXPLORER-1
+    cypressCoverage: N/A - read model helper
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/canvasWorkspaceExplorerModel.test.ts]
+  - name: readNodeSchemaName
+    path: apps/web/src/app/components/canvasWorkspaceExplorerModel.ts
+    dddOwner: ProjectWorkspaceResourceCatalog
+    cqRails: [ListProjectWorkspaceResources]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-WORKSPACE-EXPLORER-1
+    cypressCoverage: N/A - read model helper
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/canvasWorkspaceExplorerModel.test.ts]
+  - name: buildSchemaResourceGroup
+    path: apps/web/src/app/components/canvasWorkspaceExplorerModel.ts
+    dddOwner: ProjectWorkspaceResourceCatalog
+    cqRails: [ListProjectWorkspaceResources]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-WORKSPACE-EXPLORER-1
+    cypressCoverage: N/A - read model helper
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/canvasWorkspaceExplorerModel.test.ts]
+  - name: dispatchDragStart
+    path: apps/web/src/app/components/DbtExplorer.test.tsx
+    dddOwner: Canvas workspace explorer test seam
+    cqRails: [AttachProjectResourceToCanvasObject]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-WORKSPACE-EXPLORER-1
+    cypressCoverage: N/A - unit test seam
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/DbtExplorer.test.tsx]
   - name: CanvasWorkspaceResourceType
     path: apps/web/src/app/components/canvasWorkspaceExplorerModel.ts
     dddOwner: CanvasWorkspaceResource

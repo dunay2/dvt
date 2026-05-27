@@ -19,6 +19,7 @@ function buildArgs(
       activeRunId: null,
       registeredPlugins: new Set(['dvt']),
       importedNodeFocusIds: [],
+      executionEnvironmentOptions: [{ value: 'dev', label: 'dev' }],
     },
     userPermissions: {
       canPlan: true,
@@ -30,9 +31,18 @@ function buildArgs(
     },
     routePresentation: {
       canvasDocument: {
+        id: 'transformation-canvas',
         kind: 'transformation',
         title: 'Transformation canvas',
       },
+      canvasDocuments: [
+        {
+          id: 'transformation-canvas',
+          kind: 'transformation',
+          title: 'Transformation canvas',
+        },
+      ],
+      activeCanvasId: 'transformation-canvas',
       availableCanvasKinds: [
         buildTestCanvasKind('dbt', [buildTestNodeKind('dbt:model', 'Model')]),
         buildTestCanvasKind('transformation', [buildTestNodeKind('dvt:source', 'Source')]),
@@ -101,9 +111,18 @@ describe('buildCanvasShellPanels', () => {
       buildArgs({
         routePresentation: {
           canvasDocument: {
+            id: 'transformation-canvas',
             kind: ' Transformation ',
             title: 'Transformation canvas',
           },
+          canvasDocuments: [
+            {
+              id: 'transformation-canvas',
+              kind: ' Transformation ',
+              title: 'Transformation canvas',
+            },
+          ],
+          activeCanvasId: 'transformation-canvas',
           availableCanvasKinds: [
             buildTestCanvasKind('dbt', [buildTestNodeKind('dbt:model', 'Model')]),
             buildTestCanvasKind('transformation', [buildTestNodeKind('dvt:source', 'Source')]),

@@ -1,0 +1,22 @@
+---
+id: R-20260527-CANVAS-MULTI-WORKSHEET
+title: Multi-canvas draft compatibility across active-graph consumers
+status: Open
+date: 2026-05-27
+owners:
+  - '@dvt/contracts'
+  - '@dvt/web'
+severity: Medium
+probability: Low
+description: >
+  WorkspaceGraphAuthoringDraft.v1 now allows optional multi-canvas worksheet state while preserving
+  the top-level active graph projection. A future consumer might read canvases directly and ignore
+  the active projection invariant, creating divergence between the selected worksheet and runtime
+  execution.
+mitigation:
+  - Contract validation requires the active workspace to mirror the top-level graph.
+  - Web lifecycle helpers centralize selection, rename, and delete transitions in
+    canvasProjectCanvasLifecycle.ts.
+  - Command writes persist through protected draft CAS instead of route-local state.
+  - Architecture docs name the governing ProjectCanvas rails.
+---
