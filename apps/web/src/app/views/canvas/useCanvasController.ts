@@ -193,6 +193,7 @@ export function useCanvasController() {
     canonicalEdges: visibleScope.canonicalEdges,
     selectedNodeIds: executionScope.selectedNodeIds,
     workspaceNodeIds: executionScope.workspaceNodeIds,
+    flushDraftForExecution: authoringRuntime.flushDraftForExecution,
     canPlan: runtimePolicy.commands.canPlan,
     canRun: runtimePolicy.commands.canRun,
     sessionContext,

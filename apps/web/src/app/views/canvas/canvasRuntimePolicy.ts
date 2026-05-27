@@ -49,7 +49,10 @@ export type CanvasRuntimeDocumentPolicy =
 export type CanvasRuntimeExecutionPolicy =
   | {
       kind: 'executable';
-      strategy: Extract<CanvasExecutionStrategy, { kind: 'transformation_preview' }>;
+      strategy: Extract<
+        CanvasExecutionStrategy,
+        { kind: 'transformation_preview' | 'planner_generic_preview' }
+      >;
     }
   | {
       kind: 'not_executable';
@@ -136,7 +139,10 @@ function resolveRuntimeExecutionPolicy(
     };
   }
 
-  if (activeRuntime.executionStrategy.kind === 'transformation_preview') {
+  if (
+    activeRuntime.executionStrategy.kind === 'transformation_preview' ||
+    activeRuntime.executionStrategy.kind === 'planner_generic_preview'
+  ) {
     return {
       kind: 'executable',
       strategy: activeRuntime.executionStrategy,

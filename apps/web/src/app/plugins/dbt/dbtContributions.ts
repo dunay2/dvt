@@ -127,7 +127,9 @@ export const dbtContributions: PluginContributions = {
       kind: 'dbt',
       pluginId: DBT_PLUGIN_ID,
       executionStrategy: {
-        kind: 'not_executable',
+        kind: 'planner_generic_preview',
+        previewProfile: 'planner-generic-v1',
+        sourceFamily: 'dbt',
       },
       graphStrategy: dbtCanvasGraphStrategy,
       label: 'dbt',

@@ -26,7 +26,7 @@ type CanvasToolbarPrimaryControlsProps = {
   workflowStatusLabel: string;
   workflowStatusClass: string;
   workflowStatusTitle: string;
-  canPlanTransformation: boolean;
+  canPlanGraph: boolean;
   authoringNodeKinds: readonly NodeKindRegistration[];
 };
 
@@ -45,7 +45,7 @@ export function CanvasToolbarPrimaryControls({
   workflowStatusLabel,
   workflowStatusClass,
   workflowStatusTitle,
-  canPlanTransformation,
+  canPlanGraph,
   authoringNodeKinds,
 }: CanvasToolbarPrimaryControlsProps): JSX.Element {
   const importInputRef = useRef<HTMLInputElement>(null);
@@ -122,7 +122,7 @@ export function CanvasToolbarPrimaryControls({
         variant="outline"
         size="sm"
         onClick={onPlan}
-        disabled={!canPlan || !canPlanTransformation}
+        disabled={!canPlan || !canPlanGraph}
         className={canvasChromeClasses.outlineButton}
       >
         <FileCheck className="mr-1.5 size-4" />

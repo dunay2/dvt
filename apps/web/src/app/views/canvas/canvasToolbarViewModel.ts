@@ -12,13 +12,14 @@ export type CanvasToolbarViewModel = {
   workflowStatusLabel: string;
   workflowStatusClass: string;
   workflowStatusTitle: string;
-  canPlanTransformation: boolean;
+  canPlanGraph: boolean;
 };
 
 type DeriveCanvasToolbarViewModelArgs = {
   draftToolbarState: CanvasDraftToolbarState;
   routeState: CanvasRouteState;
   canPlan: boolean;
+  canPlanGraph: boolean;
   canRun: boolean;
   canStartRun: boolean;
   canvasAuthoringMode: CanvasGraphAuthoringMode;
@@ -75,6 +76,7 @@ export function deriveCanvasToolbarViewModel({
   draftToolbarState,
   routeState,
   canPlan,
+  canPlanGraph,
   canRun,
   canStartRun,
   canvasAuthoringMode,
@@ -98,6 +100,6 @@ export function deriveCanvasToolbarViewModel({
       canStartRun
     ),
     workflowStatusTitle: `${canvasAuthoringMode}:${planStatusSummary}:${transformationValidationSummary}:${nodeCount}:${edgeCount}`,
-    canPlanTransformation: transformationValidation.valid,
+    canPlanGraph,
   };
 }

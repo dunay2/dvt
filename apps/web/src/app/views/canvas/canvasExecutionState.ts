@@ -7,11 +7,14 @@ import {
   hasPersistedPreviewIdentityMismatch,
   observePlanRunReadiness,
 } from './canvasPlanReadiness';
-import { canvasViewCopy } from './copy';
 import {
   validateTransformationGraph,
   type TransformationGraphValidationResult,
 } from './transformationGraphValidation';
+import {
+  buildDbtPlannerGraphSource,
+  resolveDbtExecutionScopeNodeIds,
+} from './canvasDbtPlannerGraphSource';
 
 type DeriveCanvasExecutionStateArgs = {
   canRun: boolean;
@@ -29,6 +32,7 @@ export type CanvasExecutionState = {
   hasPersistedPlanForRun: boolean;
   persistedPreviewIdentityMismatch: boolean;
   isCurrentPlanStale: boolean;
+  canPlanGraph: boolean;
   canStartRun: boolean;
   planStatusSummary: string;
 };
@@ -51,16 +55,42 @@ export function deriveCanvasExecutionState({
     selectedNodeIds,
     workspaceNodeIds,
   });
+  const dbtPlannerGraphSource =
+    executionStrategy?.kind === 'planner_generic_preview'
+      ? buildDbtPlannerGraphSource({
+          nodes: canonicalNodes,
+          edges: canonicalEdges,
+          scopedNodeIds: resolveDbtExecutionScopeNodeIds({
+            nodes: canonicalNodes,
+            edges: canonicalEdges,
+            selectedNodeIds,
+            workspaceNodeIds,
+          }),
+        })
+      : null;
+  const activeDraftSignature =
+    dbtPlannerGraphSource?.ok === true
+      ? dbtPlannerGraphSource.draftSignature
+      : transformationValidation.draftSignature;
+  const isExecutableGraphReady =
+    executionStrategy?.kind === 'planner_generic_preview'
+      ? dbtPlannerGraphSource?.ok === true
+      : transformationValidation.valid;
+  const canPlanGraph =
+    executionStrategy != null &&
+    executionStrategy.kind !== 'not_executable' &&
+    isExecutableGraphReady;
   const isCurrentPlanStale =
     currentPlan != null &&
     lastPlannedDraftSignature != null &&
-    lastPlannedDraftSignature !== transformationValidation.draftSignature;
+    lastPlannedDraftSignature !== activeDraftSignature;
   const canStartRun =
     canRun &&
-    executionStrategy?.kind === 'transformation_preview' &&
+    executionStrategy != null &&
+    executionStrategy.kind !== 'not_executable' &&
     currentPlan != null &&
     hasPersistedPlanForRun &&
-    transformationValidation.valid &&
+    isExecutableGraphReady &&
     !isCurrentPlanStale;
   const planStatusSummary =
     executionStrategy == null || executionStrategy.kind === 'not_executable'
@@ -72,19 +102,22 @@ export function deriveCanvasExecutionState({
           hasPersistedPlanForRun,
           capabilityMismatch: true,
         }).summary
-      : buildPlanStatusSummary({
-          canRun,
-          currentPlan,
-          isCurrentPlanStale,
-          persistedPreviewIdentityMismatch,
-          hasPersistedPlanForRun,
-        });
+      : dbtPlannerGraphSource?.ok === false
+        ? dbtPlannerGraphSource.message
+        : buildPlanStatusSummary({
+            canRun,
+            currentPlan,
+            isCurrentPlanStale,
+            persistedPreviewIdentityMismatch,
+            hasPersistedPlanForRun,
+          });
 
   return {
     transformationValidation,
     hasPersistedPlanForRun,
     persistedPreviewIdentityMismatch,
     isCurrentPlanStale,
+    canPlanGraph,
     canStartRun,
     planStatusSummary,
   };

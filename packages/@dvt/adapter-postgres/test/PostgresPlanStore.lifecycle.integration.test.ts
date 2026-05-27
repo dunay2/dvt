@@ -137,7 +137,7 @@ describeIfPg('PostgresPlanStore lifecycle integration (real PostgreSQL)', () => 
       );
     }));
 
-  test('rejects reuse of already validated plan', () =>
+  test('treats identical already validated plan store attempt as idempotent', () =>
     withStore(schema, async (store) => {
       const planRef = await store.storePlanArtifact({
         buildResult: makeBuildResult(PLAN_ID.r4_7),
@@ -145,7 +145,10 @@ describeIfPg('PostgresPlanStore lifecycle integration (real PostgreSQL)', () => 
       await store.markStoredPlanArtifactValid({ ...PLAN_STORE_SCOPE, planRef });
       await expect(
         store.storePlanArtifact({ buildResult: makeBuildResult(PLAN_ID.r4_7) })
-      ).rejects.toThrow('PLAN_VALIDATION_STATE_REUSE_UNSUPPORTED');
+      ).resolves.toEqual(planRef);
+      await expect(
+        store.markStoredPlanArtifactValid({ ...PLAN_STORE_SCOPE, planRef })
+      ).rejects.toThrow('PLAN_VALIDATION_STATE_INVALID_TRANSITION');
     }));
 
   test('allows duplicate pending admission but only one transition succeeds', () =>

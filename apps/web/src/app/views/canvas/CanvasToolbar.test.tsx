@@ -64,6 +64,7 @@ function buildToolbarProps(
       showReloadAction: false,
     },
     canPlan: true,
+    canPlanGraph: true,
     canRun: true,
     canEditEdges: true,
     canExportProjectSnapshot: true,
@@ -326,6 +327,7 @@ describe('CanvasToolbar', () => {
               valid: false,
               summaryCode: 'requires_three_nodes',
             }),
+            canPlanGraph: false,
             nodeCount: 2,
             edgeCount: 1,
           })}

@@ -176,7 +176,8 @@ function mapContractPlanToUi(
       const nodes =
         nodesFromConfig.length > 0
           ? nodesFromConfig
-          : previewProfile === PREVIEW_PROFILE.transformationSqlFirstV1
+          : previewProfile === PREVIEW_PROFILE.transformationSqlFirstV1 ||
+              previewProfile === PREVIEW_PROFILE.plannerGenericV1
             ? [step.stepId]
             : [];
 
@@ -209,26 +210,34 @@ export function createApiPlansService(apiClient: ApiClient): IPlansPort {
   return {
     previewPlan: async (input: PlanPreviewInput) => {
       try {
-        const payload = await apiClient.postJson<PlanPreviewInput, unknown>('/plans/preview', input);
+        const payload = await apiClient.postJson<PlanPreviewInput, unknown>(
+          '/plans/preview',
+          input
+        );
         const preview = parsePlanPreviewPersistResponse(payload);
-        return mapContractPlanToUi(preview.plan, preview.planRef, {
-          ...(preview.planSummary
-            ? {
-                summary: {
-                  executor: preview.planSummary.executor,
-                  nodeCount: preview.planSummary.nodeCount,
-                  stepCount: preview.planSummary.stepCount,
-                  sourceTables: [...preview.planSummary.sourceTables],
-                  sinkTables: [...preview.planSummary.sinkTables],
-                },
-              }
-            : {}),
-          persisted: {
-            planRecordId: preview.persisted.planRecordId,
-            canonicalPlanSha256: preview.persisted.canonicalPlanSha256,
+        return mapContractPlanToUi(
+          preview.plan,
+          preview.planRef,
+          {
+            ...(preview.planSummary
+              ? {
+                  summary: {
+                    executor: preview.planSummary.executor,
+                    nodeCount: preview.planSummary.nodeCount,
+                    stepCount: preview.planSummary.stepCount,
+                    sourceTables: [...preview.planSummary.sourceTables],
+                    sinkTables: [...preview.planSummary.sinkTables],
+                  },
+                }
+              : {}),
+            persisted: {
+              planRecordId: preview.persisted.planRecordId,
+              canonicalPlanSha256: preview.persisted.canonicalPlanSha256,
+            },
+            ...(preview.provenance ? { provenance: preview.provenance } : {}),
           },
-          ...(preview.provenance ? { provenance: preview.provenance } : {}),
-        }, preview.previewProfile);
+          preview.previewProfile
+        );
       } catch (error) {
         throw normalizeProtectedRuntimeRejection(error) ?? error;
       }

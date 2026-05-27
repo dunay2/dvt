@@ -51,6 +51,9 @@ export const graphVisualClasses = {
   contextPanelTabsTrigger:
     'text-slate-200 data-[state=active]:bg-slate-900 data-[state=active]:text-white',
   inspectorErrorText: 'text-xs text-red-300',
+  inspectorSelectInput:
+    'border-input bg-input-background focus-visible:border-ring focus-visible:ring-ring/50 h-9 w-full rounded-md border px-3 py-1 text-sm text-slate-50 outline-none transition-[color,box-shadow] focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+  inspectorDbtSection: 'space-y-3 border-t border-slate-700 pt-3',
 } as const;
 
 export const graphStatusRingClasses: Record<string, string> = {

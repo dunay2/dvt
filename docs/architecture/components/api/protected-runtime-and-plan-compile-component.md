@@ -59,6 +59,10 @@ acts as a fake namespace.
 - [buildProtectedStartRunRuntime.ts](../../../../apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts)
   Start-run runtime composition seam. Binds the authenticated start-run
   facade/use-case chain from abstract dependencies.
+- [DbtRunExecutionContextBindingUseCase.ts](../../../../apps/api/src/application/services/DbtRunExecutionContextBindingUseCase.ts)
+  DBT PlanRef execution binder. Materializes DBT workspace files into an
+  immutable project bundle and generated run execution context before engine
+  dispatch.
 - [resolveAuthorizedExecutableSubgraph.ts](../../../../apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts)
   Protected selected-closure resolver. Binds workspace-draft read truth to the
   planner-owned executable-subgraph seam for preview and planner-backed
@@ -114,6 +118,10 @@ acts as a fake namespace.
 - `buildProtectedStartRunRuntime(deps)`
   Factory. Assembles the authenticated start-run runtime subcomponent from
   abstract runtime dependencies.
+- `DbtRunExecutionContextBindingUseCase.execute(command, context)`
+  Application service. Enriches persisted DBT `StartRun` commands with a
+  generated `runExecutionContextRef` or rejects fail-closed when required
+  bundle inputs are unavailable.
 - `buildWorkspaceGraphDraftRuntime(deps)`
   Factory. Assembles the protected workspace-graph-draft runtime subcomponent
   from abstract runtime dependencies.
@@ -169,6 +177,10 @@ acts as a fake namespace.
   `IProviderAdapter` port.
 - `buildProtectedStartRunRuntime.ts` is the only module allowed to construct
   the authenticated start-run runtime chain inside that root.
+- `DbtRunExecutionContextBindingUseCase.ts` must sit between
+  `PlannerBackedStartRunUseCase` and `EngineStartRunUseCase` for persisted DBT
+  plans so plugin execution never reaches the engine without a DBT project
+  bundle and run execution context.
 - `resolveAuthorizedExecutableSubgraph.ts` is the only module allowed to parse
   protected draft payloads for selected-closure resolution in preview and
   planner-backed start-run flows.
@@ -200,6 +212,7 @@ flowchart LR
     Compile[planCompileBoundary]
     Registry[startRunTargetAdapterRegistry]
     Validator[StoredPlanExecutabilityValidator]
+    DbtBinding[DbtRunExecutionContextBindingUseCase]
     Resolver[StoredExecutablePlanResolver]
     Planner[@dvt/planner]
     Engine[@dvt/engine]
@@ -233,6 +246,8 @@ flowchart LR
     Validator --> Registry
     Validator --> Stores
     Resolver --> Stores
+    StartRun --> DbtBinding
+    DbtBinding --> Engine
 ```
 
 ## Transitions
@@ -266,6 +281,7 @@ sequenceDiagram
     Execution->>Registry: filter implemented adapters
     StartRun->>Compile: build compile planner
     StartRun->>Validator: bind plan fetcher + adapters + step registry
+    StartRun->>StartRun: bind DBT run-execution-context wrapper before engine delegate
     Hooks->>Boot: onReady -> migrate()
     Hooks->>Boot: onClose -> close()
 ```
@@ -311,10 +327,14 @@ Admission transition:
    [buildProtectedStartRunRuntime.ts](../../../../apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts).
    That file is the start-run subcomponent seam inside the protected runtime.
 10. Read
+    [DbtRunExecutionContextBindingUseCase.ts](../../../../apps/api/src/application/services/DbtRunExecutionContextBindingUseCase.ts).
+    That file owns DBT PlanRef run-context materialization before engine
+    dispatch.
+11. Read
     [buildWorkspaceGraphDraftRuntime.ts](../../../../apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts).
     That file is the workspace-graph-draft subcomponent seam inside the
     protected runtime.
-11. Finish with
+12. Finish with
     [buildProtectedRuntimeModule.ts](../../../../apps/api/src/modules/buildProtectedRuntimeModule.ts).
     That file is the top-level assembly root that binds the component together.
 

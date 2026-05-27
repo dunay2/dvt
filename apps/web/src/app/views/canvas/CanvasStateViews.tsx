@@ -1,13 +1,13 @@
 /** Owned concern: render governed Canvas state views and read-only banners from route presentation models. */
 import type { ReactNode } from 'react';
 
+import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import { cn } from '../../components/ui/utils';
 import {
   routeWorkbenchMutedTextClassName,
   routeWorkbenchPanelClassName,
 } from '../../components/workbench/RouteWorkbenchFrame';
-import { WorkbenchReadOnlyState } from '../../components/workbench/state/WorkbenchStates';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanvasReadOnlyState } from './canvasWorkbenchStateModel';
 import { CanvasAddNodePalette } from './CanvasAddNodePalette';
@@ -159,18 +159,36 @@ export function CanvasBlockedStateView({
   );
 }
 
-export function CanvasReadOnlyBannerView({ state }: Readonly<{ state: CanvasReadOnlyState }>) {
+export function CanvasReadOnlyBannerView({
+  state,
+  onRequestExecutableScope,
+}: Readonly<{ state: CanvasReadOnlyState; onRequestExecutableScope?: () => void }>) {
   if (state == null) {
     return null;
   }
 
   return (
-    <WorkbenchReadOnlyState
-      dataSlot="canvas-readonly-state"
-      className="rounded-none border-x-0 border-b border-t-0 px-4 py-3"
-      title={state.title}
-      message={state.message}
-      note={state.note}
-    />
+    <div
+      data-slot="canvas-readonly-state"
+      className="border-b border-[color:var(--border-default)] bg-[var(--surface-panel)] px-3 py-1.5 text-xs"
+      aria-live="polite"
+    >
+      <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+        <span className="font-semibold text-[var(--status-readonly)]">{state.title}</span>
+        <span className={cn('min-w-0', routeWorkbenchMutedTextClassName)}>{state.message}</span>
+        <span className={cn('min-w-0', routeWorkbenchMutedTextClassName)}>{state.note}</span>
+        {onRequestExecutableScope != null ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-6 px-2 text-xs"
+            onClick={onRequestExecutableScope}
+          >
+            {canvasViewCopy.readOnlyActionLabel}
+          </Button>
+        ) : null}
+      </div>
+    </div>
   );
 }

@@ -66,6 +66,8 @@ function buildCanvasShellPanelsArgs({
     panelState: {
       explorerNodes: controller.explorerNodes,
       inspectorNode: controller.inspectorNode,
+      inspectorGraphNodes: controller.inspectorGraphNodes,
+      inspectorGraphEdges: controller.inspectorGraphEdges,
       canEditInspectorNode:
         controller.canEditInspectorNode && routeViewState.effectiveUserPermissions.canEditEdges,
       applyInspectorNodeDraft: controller.applyInspectorNodeDraft,
@@ -106,6 +108,7 @@ function buildCanvasShellToolbarArgs({
   return {
     toolbarState: {
       canvasAuthoringMode: controller.canvasAuthoringMode,
+      canPlanGraph: controller.canPlanGraph,
       canStartRun: controller.canStartRun,
       canExportProjectSnapshot: controller.canExportProjectSnapshot,
       canImportProjectSnapshot: controller.canImportProjectSnapshot,

@@ -42,6 +42,42 @@ export function toPersistedCanonicalPlanJson(buildResult: PlannerBuildResultV1):
   return jcsCanonicalize(buildResult.plan);
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function normalizePlanJsonForReuseComparison(value: string | undefined): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    if (isRecord(parsed) && isRecord(parsed['metadata'])) {
+      const metadata = { ...parsed['metadata'] };
+      delete metadata['createdAtIso'];
+      return jcsCanonicalize({
+        ...parsed,
+        metadata,
+      });
+    }
+
+    return jcsCanonicalize(parsed);
+  } catch {
+    return value;
+  }
+}
+
+function planJsonMatchesForReuse(actual: string | undefined, expected: string): boolean {
+  if (actual === expected) {
+    return true;
+  }
+
+  return (
+    normalizePlanJsonForReuseComparison(actual) === normalizePlanJsonForReuseComparison(expected)
+  );
+}
+
 export function buildPlanRecord(
   buildResult: PlannerBuildResultV1,
   planRef: PlanRefSchemaT
@@ -209,10 +245,15 @@ export function assertStoredPlanMatchesRequest(
   }
 ): void {
   const mismatches: string[] = [];
+  const executablePlanJsonMatches = planJsonMatchesForReuse(
+    row.executable_plan_json,
+    expected.executablePlanJson
+  );
 
   if (row.plan_version !== expected.planRef.planVersion) mismatches.push('plan_version');
   if (row.plan_uri !== expected.planRef.uri) mismatches.push('plan_uri');
-  if (row.plan_sha256 !== expected.planRef.sha256) mismatches.push('plan_sha256');
+  if (row.plan_sha256 !== expected.planRef.sha256 && !executablePlanJsonMatches)
+    mismatches.push('plan_sha256');
   if (row.schema_version !== expected.planRef.schemaVersion) mismatches.push('schema_version');
   if (row.size_bytes !== expected.planRef.sizeBytes) mismatches.push('size_bytes');
 
@@ -231,10 +272,9 @@ export function assertStoredPlanMatchesRequest(
     mismatches.push('requires_capabilities');
   }
 
-  if (row.canonical_plan_json !== expected.canonicalPlanJson)
+  if (!planJsonMatchesForReuse(row.canonical_plan_json, expected.canonicalPlanJson))
     mismatches.push('canonical_plan_json');
-  if (row.executable_plan_json !== expected.executablePlanJson)
-    mismatches.push('executable_plan_json');
+  if (!executablePlanJsonMatches) mismatches.push('executable_plan_json');
 
   if (mismatches.length > 0) {
     throw new Error(`PLAN_STORE_CONFLICT: ${expected.planRef.planId}:${mismatches.join(',')}`);

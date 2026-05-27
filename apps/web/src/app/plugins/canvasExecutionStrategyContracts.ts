@@ -5,5 +5,10 @@ export type CanvasExecutionStrategy =
       previewProfile: 'transformation-sql-first-v1';
     }
   | {
+      kind: 'planner_generic_preview';
+      previewProfile: 'planner-generic-v1';
+      sourceFamily: 'dbt';
+    }
+  | {
       kind: 'not_executable';
     };

@@ -80,19 +80,59 @@ function buildCanonicalEdgeLookup(
   return new Map(canonicalEdges.map((edge) => [`${edge.sourceId}::${edge.targetId}`, edge]));
 }
 
+function isDbtReferenceOnlyEdge(args: {
+  sourceNode: CanonicalNode | undefined;
+  targetNode: CanonicalNode | undefined;
+}): boolean {
+  const { sourceNode, targetNode } = args;
+  if (sourceNode?.pluginId !== 'dbt' || targetNode?.pluginId !== 'dbt') {
+    return false;
+  }
+
+  return (
+    targetNode.kind === 'dbt:model' &&
+    (sourceNode.kind === 'dbt:source' || sourceNode.kind === 'dbt:macro')
+  );
+}
+
+function resolveAuthoringEdgeMetadata(args: {
+  canonicalEdge: CanonicalEdge | undefined;
+  sourceNode: CanonicalNode | undefined;
+  targetNode: CanonicalNode | undefined;
+}) {
+  const metadata = toCanvasAuthoringMetadata(args.canonicalEdge?.metadata);
+  if (!isDbtReferenceOnlyEdge(args)) {
+    return metadata;
+  }
+
+  if (metadata != null && Object.hasOwn(metadata, 'executionDependency')) {
+    return metadata;
+  }
+
+  return {
+    ...(metadata ?? {}),
+    executionDependency: false,
+  };
+}
+
 function projectDraftEdgeToAuthoringEdge(
   edge: Pick<WorkspaceGraphAuthoringEdge, 'sourceId' | 'targetId'>,
-  canonicalEdgeLookup: ReadonlyMap<string, CanonicalEdge>
+  canonicalEdgeLookup: ReadonlyMap<string, CanonicalEdge>,
+  canonicalNodesById: ReadonlyMap<string, CanonicalNode>
 ): WorkspaceGraphAuthoringEdge {
   const canonicalEdge = canonicalEdgeLookup.get(`${edge.sourceId}::${edge.targetId}`);
+  const metadata = resolveAuthoringEdgeMetadata({
+    canonicalEdge,
+    sourceNode: canonicalNodesById.get(edge.sourceId),
+    targetNode: canonicalNodesById.get(edge.targetId),
+  });
+
   return {
     id: canonicalEdge?.id ?? createAuthoringEdgeId(edge.sourceId, edge.targetId),
     sourceId: edge.sourceId,
     targetId: edge.targetId,
     relation: canonicalEdge?.relation ?? 'lineage',
-    ...(canonicalEdge?.metadata == null
-      ? {}
-      : { metadata: toCanvasAuthoringMetadata(canonicalEdge.metadata) }),
+    ...(metadata == null ? {} : { metadata }),
   };
 }
 
@@ -144,7 +184,7 @@ export function buildCanvasAuthoringDraft(
       return projectCanonicalNodeToAuthoringNode(node);
     }),
     edges: input.visibleEdges.map((edge) =>
-      projectDraftEdgeToAuthoringEdge(edge, canonicalEdgeLookup)
+      projectDraftEdgeToAuthoringEdge(edge, canonicalEdgeLookup, canonicalNodesById)
     ),
   };
 }

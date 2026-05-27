@@ -59,6 +59,84 @@ export function buildCanvasAuthoringDraft({
     });
   }
 
+  if (canvasKind === 'dbt') {
+    return buildWorkspaceGraphAuthoringDraft({
+      canvas,
+      nodeIds: ['raw_orders', 'warehouse_payments', 'orders_model'],
+      nodePositions: {
+        raw_orders: { x: 40, y: 120 },
+        warehouse_payments: { x: 40, y: 320 },
+        orders_model: { x: 360, y: 220 },
+      },
+      nodes: [
+        {
+          id: 'raw_orders',
+          name: 'raw_orders',
+          pluginId: 'dbt',
+          kind: 'dbt:source',
+          role: 'input',
+          status: 'idle',
+          tags: ['source'],
+          metadata: {
+            dbt: {
+              packageName: 'analytics',
+              sourceName: 'raw',
+              schemaName: 'raw',
+              tableName: 'orders',
+            },
+          },
+        },
+        {
+          id: 'warehouse_payments',
+          name: 'warehouse_payments',
+          pluginId: 'dbt',
+          kind: 'dbt:source',
+          role: 'input',
+          status: 'idle',
+          tags: ['source'],
+          metadata: {
+            dbt: {
+              packageName: 'analytics',
+              sourceName: 'warehouse',
+              schemaName: 'warehouse_raw',
+              tableName: 'payments',
+            },
+          },
+        },
+        {
+          id: 'orders_model',
+          name: 'orders_model',
+          pluginId: 'dbt',
+          kind: 'dbt:model',
+          role: 'transform',
+          status: 'idle',
+          tags: ['model'],
+          metadata: {
+            dbt: {
+              packageName: 'analytics',
+              materialized: 'view',
+              selectedSourceId: '',
+            },
+          },
+        },
+      ],
+      edges: [
+        {
+          id: 'edge_raw_orders_model',
+          sourceId: 'raw_orders',
+          targetId: 'orders_model',
+          relation: 'lineage',
+        },
+        {
+          id: 'edge_warehouse_payments_model',
+          sourceId: 'warehouse_payments',
+          targetId: 'orders_model',
+          relation: 'lineage',
+        },
+      ],
+    });
+  }
+
   if (canvasKind !== 'transformation') {
     throw new Error(
       'Canvas e2e draft fixtures only support non-empty transformation canvases or empty typed canvases.'

@@ -72,17 +72,13 @@ function resolveEffectiveUserPermissions(args: {
     };
   }
 
+  const mutationBlocked = isCanvasDraftPostureMutationBlocked(controller.draftAccessPosture);
+
   return {
     ...controller.userPermissions,
-    canPlan:
-      controller.userPermissions.canPlan &&
-      !isCanvasDraftPostureMutationBlocked(controller.draftAccessPosture),
-    canRun:
-      controller.userPermissions.canRun &&
-      !isCanvasDraftPostureMutationBlocked(controller.draftAccessPosture),
-    canEditEdges:
-      controller.userPermissions.canEditEdges &&
-      !isCanvasDraftPostureMutationBlocked(controller.draftAccessPosture),
+    canPlan: controller.userPermissions.canPlan && !mutationBlocked,
+    canRun: controller.userPermissions.canRun && !mutationBlocked,
+    canEditEdges: controller.userPermissions.canEditEdges && !mutationBlocked,
   };
 }
 

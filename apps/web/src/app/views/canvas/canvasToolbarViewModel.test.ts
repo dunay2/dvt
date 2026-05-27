@@ -20,6 +20,7 @@ describe('canvasToolbarViewModel', () => {
       draftToolbarState: toCanvasDraftToolbarState(posture),
       routeState: 'error_graph',
       canPlan: false,
+      canPlanGraph: false,
       canRun: false,
       canStartRun: false,
       canvasAuthoringMode: 'transformation',

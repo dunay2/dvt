@@ -121,6 +121,48 @@ describe('previewPlanRoute outcomes', () => {
     expect(deps.planStore.markStoredPlanArtifactInvalid).not.toHaveBeenCalled();
   });
 
+  it('reuses an already valid stored plan without issuing a duplicate validation transition', async () => {
+    const reply = createReply();
+    const plan = buildStoredPlan();
+    const buildPlan = vi.fn(async () => ({
+      plan,
+      executionPolicy: {},
+      canonicalPlanCoreJson: '{}',
+    }));
+    const deps = createPreviewDeps({
+      planner: { buildPlan },
+      planStore: {
+        storePlanArtifact: vi.fn(async () => VALID_PLAN_REF),
+        markStoredPlanArtifactValid: vi.fn(async () => undefined),
+        markStoredPlanArtifactInvalid: vi.fn(async () => undefined),
+        getStoredPlanValidationRecord: vi.fn(async () => ({
+          planId: VALID_PLAN_REF.planId,
+          state: 'VALID',
+          storedAtIso: '2026-05-26T00:00:00.000Z',
+          updatedAtIso: '2026-05-26T00:00:00.000Z',
+        })),
+      },
+      planValidator: {
+        validatePlan: vi.fn(async () => ({
+          status: 'OK',
+          planId: VALID_PLAN_REF.planId,
+          adapterId: 'temporal',
+        })),
+      },
+    });
+
+    await executePreviewRequest(reply, deps, { id: 'req-preview-valid-reuse' });
+
+    expect(reply.statusCode).toBe(200);
+    expect(deps.planStore.getStoredPlanValidationRecord).toHaveBeenCalledWith({
+      tenantId: 'tenant-1',
+      projectId: 'project-1',
+      environmentId: 'env-1',
+      planId: VALID_PLAN_REF.planId,
+    });
+    expect(deps.planStore.markStoredPlanArtifactValid).not.toHaveBeenCalled();
+  });
+
   it('returns 422 and marks the stored plan invalid when executability fails', async () => {
     const reply = createReply();
     const deps = createPreviewDeps({

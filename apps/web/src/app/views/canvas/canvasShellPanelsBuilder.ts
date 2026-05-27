@@ -39,6 +39,8 @@ export function buildCanvasShellPanels({
       userPermissions,
     }),
     inspectorNode: panelState.inspectorNode,
+    inspectorGraphNodes: panelState.inspectorGraphNodes,
+    inspectorGraphEdges: panelState.inspectorGraphEdges,
     inspectorAuthoring: {
       canEditNode: panelState.canEditInspectorNode,
       onApplyNodeDraft: panelState.applyInspectorNodeDraft,

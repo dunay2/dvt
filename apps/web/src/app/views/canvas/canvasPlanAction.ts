@@ -13,6 +13,11 @@ import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceCo
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 
+import {
+  buildDbtPlannerGraphSource,
+  resolveDbtExecutionScopeNodeIds,
+} from './canvasDbtPlannerGraphSource';
+import { buildDbtWorkspaceArtifacts } from './canvasDbtWorkspaceArtifacts';
 import { resolvePreviewProvenance } from './canvasPreviewProvenance';
 import { collectPreviewSelection } from './canvasRunSelection';
 import { canvasViewCopy, formatTransformationGraphValidationSummary } from './copy';
@@ -28,6 +33,7 @@ type CanvasPlanActionSuccess = {
   ok: true;
   draftSignature: string;
   plan: PlanViewModel;
+  writtenArtifactPaths: readonly string[];
 };
 
 export type CanvasPlanActionResult = CanvasPlanActionFailure | CanvasPlanActionSuccess;
@@ -71,6 +77,59 @@ export async function executeCanvasPlanAction({
       ok: false,
       message: canvasViewCopy.canvasExecutionUnavailableMessage,
     };
+  }
+
+  if (executionStrategy.kind === 'planner_generic_preview') {
+    try {
+      const scopeSelection = collectPreviewSelection(selectedNodeIds, workspaceNodeIds);
+      const scopedNodeIds = resolveDbtExecutionScopeNodeIds({
+        nodes: canonicalNodes,
+        edges: canonicalEdges,
+        selectedNodeIds: scopeSelection.nodeIds,
+        workspaceNodeIds,
+      });
+      const artifactProjection = buildDbtWorkspaceArtifacts({
+        nodes: canonicalNodes,
+        edges: canonicalEdges,
+        scopedNodeIds,
+      });
+      if (!artifactProjection.ok) {
+        return { ok: false, message: artifactProjection.message };
+      }
+
+      const plannerProjection = buildDbtPlannerGraphSource({
+        nodes: canonicalNodes,
+        edges: canonicalEdges,
+        scopedNodeIds,
+      });
+      if (!plannerProjection.ok) {
+        return { ok: false, message: plannerProjection.message };
+      }
+
+      for (const artifact of artifactProjection.artifacts) {
+        await workspaceFileContentCommand.saveFileContent(artifact.path, artifact.content);
+      }
+
+      const plan = await plansService.previewPlan({
+        previewProfile: executionStrategy.previewProfile,
+        graphSource: plannerProjection.graphSource,
+        selection: plannerProjection.selection,
+        context: sessionContext.buildRunContext('preview_context'),
+        persist: true,
+      });
+
+      return {
+        ok: true,
+        draftSignature: plannerProjection.draftSignature,
+        plan,
+        writtenArtifactPaths: artifactProjection.artifacts.map((artifact) => artifact.path),
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        message: error instanceof Error ? error.message : canvasViewCopy.planUnableToCreateMessage,
+      };
+    }
   }
 
   if (!transformationValidation.valid) {
@@ -123,6 +182,7 @@ export async function executeCanvasPlanAction({
       ok: true,
       draftSignature: transformationValidation.draftSignature,
       plan,
+      writtenArtifactPaths: [],
     };
   } catch (error) {
     return {

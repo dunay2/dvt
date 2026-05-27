@@ -51,7 +51,12 @@ describe('Canvas route access states', () => {
   });
 
   it('keeps the viewport visible and shows limited access when the draft boundary is read_only', async () => {
+    const scopeTrigger = document.createElement('button');
+    scopeTrigger.dataset.slot = 'shell-workspace-context-trigger';
+    document.body.append(scopeTrigger);
+
     await renderCanvasRouteWithController(harness, {
+      canPlanGraph: true,
       canStartRun: true,
       draftAccessMode: 'read_only',
       draftCapabilityReason: 'write_denied',
@@ -75,9 +80,13 @@ describe('Canvas route access states', () => {
     const { layoutButton, planButton, runButton } = getPrimaryCanvasButtons(harness.container);
 
     expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
-    expect(harness.container.querySelector('[data-slot="canvas-readonly-state"]')).not.toBeNull();
+    const accessState = harness.container.querySelector('[data-slot="canvas-readonly-state"]');
+
+    expect(accessState).not.toBeNull();
+    expect(accessState?.className).toContain('py-1.5');
     expect(harness.container.textContent).toContain('Read-only canvas');
-    expect(harness.container.textContent).toContain('graph edits');
+    expect(harness.container.textContent).toContain('Use an executable workspace scope');
+    expect(harness.container.textContent).toContain('Choose execution scope');
     expect(layoutButton).toBeUndefined();
     expect(planButton).toBeDefined();
     expect(runButton).toBeDefined();
@@ -86,7 +95,14 @@ describe('Canvas route access states', () => {
     expect(useCanvasViewMenuContributionStore.getState().contribution).toMatchObject({
       canEditEdges: false,
     });
-    expect(harness.container.textContent).toContain('Draft is read-only');
+    expect(harness.container.textContent).not.toContain('Inspect only');
+
+    harness.container
+      .querySelector<HTMLButtonElement>('[data-slot="canvas-readonly-state"] button')
+      ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    expect(document.activeElement).toBe(scopeTrigger);
+    scopeTrigger.remove();
   });
 
   it('blocks the canvas with an explicit forbidden-draft message when the draft boundary denies reads', async () => {

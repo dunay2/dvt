@@ -65,6 +65,8 @@ type CanvasShellInspectorRailProps = Readonly<{
   focusMode: boolean;
   inspectorPanelVisible: boolean;
   inspectorNode: CanvasShellPanels['inspectorNode'];
+  inspectorGraphNodes: CanvasShellPanels['inspectorGraphNodes'];
+  inspectorGraphEdges: CanvasShellPanels['inspectorGraphEdges'];
   inspectorAuthoring: CanvasShellPanels['inspectorAuthoring'];
   activeRunId: CanvasShellPanels['activeRunId'];
   registeredPlugins: CanvasShellPanels['registeredPlugins'];
@@ -75,6 +77,8 @@ function CanvasShellInspectorRail({
   focusMode,
   inspectorPanelVisible,
   inspectorNode,
+  inspectorGraphNodes,
+  inspectorGraphEdges,
   inspectorAuthoring,
   activeRunId,
   registeredPlugins,
@@ -90,6 +94,8 @@ function CanvasShellInspectorRail({
       <ResizablePanel defaultSize={20} minSize={15} maxSize={28}>
         <CanvasInspectorPanel
           node={inspectorNode}
+          nodes={inspectorGraphNodes}
+          edges={inspectorGraphEdges}
           activeRunId={activeRunId}
           registeredPlugins={registeredPlugins}
           onHide={onHideInspector}
@@ -146,6 +152,8 @@ export default function CanvasShell({
         focusMode={layout.focusMode}
         inspectorPanelVisible={layout.inspectorPanelVisible}
         inspectorNode={panels.inspectorNode}
+        inspectorGraphNodes={panels.inspectorGraphNodes}
+        inspectorGraphEdges={panels.inspectorGraphEdges}
         inspectorAuthoring={panels.inspectorAuthoring}
         activeRunId={panels.activeRunId}
         registeredPlugins={panels.registeredPlugins}

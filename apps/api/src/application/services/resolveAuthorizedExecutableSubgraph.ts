@@ -7,6 +7,7 @@ import type {
   ExecutionSelection,
   GenericGraphSourceV1,
   IPlanner,
+  WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
 import { WorkspaceGraphAuthoringDraftSchema } from '@dvt/contracts';
 
@@ -74,7 +75,9 @@ export class ResolveAuthorizedExecutableSubgraphService {
 
     let executableSubgraph: ExecutableSubgraph;
     try {
-      const draft = WorkspaceGraphAuthoringDraftSchema.parse(stored.draftPayload);
+      const draft = projectExecutionDependencyDraft(
+        WorkspaceGraphAuthoringDraftSchema.parse(stored.draftPayload)
+      );
       executableSubgraph = this.deps.planner.deriveExecutableSubgraph({
         draft,
         selection: input.selection,
@@ -115,6 +118,19 @@ export class ResolveAuthorizedExecutableSubgraphService {
 
     return { ok: true, value: executableSubgraph };
   }
+}
+
+function isExecutionDependencyEdge(edge: WorkspaceGraphAuthoringDraft['edges'][number]): boolean {
+  return edge.metadata?.['executionDependency'] !== false;
+}
+
+function projectExecutionDependencyDraft(
+  draft: WorkspaceGraphAuthoringDraft
+): WorkspaceGraphAuthoringDraft {
+  return {
+    ...draft,
+    edges: draft.edges.filter(isExecutionDependencyEdge),
+  };
 }
 
 function reject(cause: string, reason: string): ExecutableSubgraphResolution {

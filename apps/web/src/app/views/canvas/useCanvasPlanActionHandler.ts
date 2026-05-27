@@ -23,6 +23,7 @@ type UseCanvasPlanActionHandlerArgs = Pick<
   | 'selectedNodeIds'
   | 'sessionContext'
   | 'shellFeedback'
+  | 'flushDraftForExecution'
   | 'workspaceNodeIds'
   | 'workspaceFilesQuery'
   | 'workspaceFileContentCommand'
@@ -43,6 +44,7 @@ export function useCanvasPlanActionHandler({
   selectedNodeIds,
   sessionContext,
   shellFeedback,
+  flushDraftForExecution,
   transformationValidation,
   workspaceNodeIds,
   workspaceFilesQuery,
@@ -54,17 +56,26 @@ export function useCanvasPlanActionHandler({
   const queryClient = useQueryClient();
 
   return useCallback(async () => {
+    const flushedDraftGraph =
+      executionStrategy?.kind === 'planner_generic_preview' && flushDraftForExecution != null
+        ? await flushDraftForExecution()
+        : null;
+    if (flushedDraftGraph?.ok === false) {
+      shellFeedback.error(flushedDraftGraph.message);
+      return;
+    }
+
     const result = await executeCanvasPlanAction({
       canPlan,
-      canonicalEdges,
-      canonicalNodes,
+      canonicalEdges: flushedDraftGraph?.canonicalEdges ?? canonicalEdges,
+      canonicalNodes: flushedDraftGraph?.canonicalNodes ?? canonicalNodes,
       executionStrategy,
       plansService,
       previewProvenanceConfig,
       selectedNodeIds,
       sessionContext,
       transformationValidation,
-      workspaceNodeIds,
+      workspaceNodeIds: flushedDraftGraph?.workspaceNodeIds ?? workspaceNodeIds,
       workspaceFilesQuery,
       workspaceFileContentCommand,
     });
@@ -79,6 +90,11 @@ export function useCanvasPlanActionHandler({
     if (previewProvenanceConfig.graphArtifactPath) {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.workspace.fileContent(previewProvenanceConfig.graphArtifactPath),
+      });
+    }
+    for (const artifactPath of result.writtenArtifactPaths) {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.workspace.fileContent(artifactPath),
       });
     }
 
@@ -101,6 +117,7 @@ export function useCanvasPlanActionHandler({
     workspaceFileContentCommand,
     queryClient,
     shellFeedback,
+    flushDraftForExecution,
     setCurrentPlan,
     setLastPlannedDraftSignature,
     setPlanModalOpen,

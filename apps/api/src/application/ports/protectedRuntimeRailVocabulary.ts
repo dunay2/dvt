@@ -20,6 +20,7 @@ export const PROTECTED_RUNTIME_NEGATIVE_CASE = {
   invalidRecoverySource: 'invalid recovery source',
   invalidSelection: 'invalid selection',
   idempotencyConflict: 'idempotency conflict',
+  missingRunExecutionContextBinding: 'missing run execution context binding',
   missingAction: 'missing action',
   missingFile: 'missing file',
   missingIdempotencyKey: 'missing idempotency key',
@@ -62,6 +63,8 @@ export const PROTECTED_RUNTIME_TEST_REF = {
   startRunAuthAndSuccess: 'apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts',
   startRunAuthorizedFacadeAuth:
     'apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts',
+  startRunDbtRunExecutionContextBinding:
+    'apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts',
   startRunPlanSourcePolicy: 'apps/api/test/entrypoints/http/startRunRoute.planSourcePolicy.test.ts',
   startRunValidation: 'apps/api/test/entrypoints/http/startRunRoute.validation.test.ts',
   workspaceDraftAuth:

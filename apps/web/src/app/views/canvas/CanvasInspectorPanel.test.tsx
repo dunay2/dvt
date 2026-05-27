@@ -20,6 +20,44 @@ function buildNode(): CanonicalNode {
   };
 }
 
+function buildDbtSourceNode(id: string, name: string, sourceName: string): CanonicalNode {
+  return {
+    id,
+    name,
+    pluginId: 'dbt',
+    kind: 'dbt:source',
+    role: 'input',
+    status: 'idle',
+    tags: [],
+    metadata: {
+      dbt: {
+        packageName: 'analytics',
+        sourceName,
+        schemaName: 'raw',
+        tableName: 'orders',
+      },
+    },
+  };
+}
+
+function buildDbtModelNode(): CanonicalNode {
+  return {
+    id: 'model-orders',
+    name: 'Orders Model',
+    pluginId: 'dbt',
+    kind: 'dbt:model',
+    role: 'transform',
+    status: 'idle',
+    tags: [],
+    metadata: {
+      dbt: {
+        packageName: 'analytics',
+        materialized: 'view',
+      },
+    },
+  };
+}
+
 describe('CanvasInspectorPanel', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -48,6 +86,8 @@ describe('CanvasInspectorPanel', () => {
       root.render(
         <CanvasInspectorPanel
           node={buildNode()}
+          nodes={[]}
+          edges={[]}
           activeRunId={null}
           onHide={vi.fn()}
           authoring={{
@@ -99,6 +139,8 @@ describe('CanvasInspectorPanel', () => {
       root.render(
         <CanvasInspectorPanel
           node={buildNode()}
+          nodes={[]}
+          edges={[]}
           activeRunId={null}
           onHide={vi.fn()}
           authoring={{
@@ -116,5 +158,84 @@ describe('CanvasInspectorPanel', () => {
 
     expect(nameInput?.getAttribute('disabled')).not.toBeNull();
     expect(applyButton).toBeUndefined();
+  });
+
+  it('lets dbt model cards select origin and materialization through the route-owned draft', async () => {
+    const onApplyNodeDraft = vi.fn();
+    const sourceA = buildDbtSourceNode('source-raw-orders', 'Raw Orders', 'raw');
+    const sourceB = buildDbtSourceNode('source-staging-orders', 'Staging Orders', 'staging');
+    const model = buildDbtModelNode();
+
+    await act(async () => {
+      root.render(
+        <CanvasInspectorPanel
+          node={model}
+          nodes={[sourceA, sourceB, model]}
+          edges={[
+            {
+              id: 'edge-raw-model',
+              sourceId: sourceA.id,
+              targetId: model.id,
+              relation: 'lineage',
+            },
+            {
+              id: 'edge-staging-model',
+              sourceId: sourceB.id,
+              targetId: model.id,
+              relation: 'lineage',
+            },
+          ]}
+          activeRunId={null}
+          onHide={vi.fn()}
+          authoring={{
+            canEditNode: true,
+            onApplyNodeDraft,
+          }}
+        />
+      );
+    });
+
+    const originSelect = container.querySelector(
+      'select[name="dbt-origin"]'
+    ) as HTMLSelectElement | null;
+    const materializedSelect = container.querySelector(
+      'select[name="dbt-materialized"]'
+    ) as HTMLSelectElement | null;
+
+    await act(async () => {
+      if (originSelect != null) {
+        const valueSetter = Object.getOwnPropertyDescriptor(
+          HTMLSelectElement.prototype,
+          'value'
+        )?.set;
+        valueSetter?.call(originSelect, sourceB.id);
+        originSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      if (materializedSelect != null) {
+        const valueSetter = Object.getOwnPropertyDescriptor(
+          HTMLSelectElement.prototype,
+          'value'
+        )?.set;
+        valueSetter?.call(materializedSelect, 'table');
+        materializedSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+
+    const applyButton = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Apply')
+    );
+
+    await act(async () => {
+      applyButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(onApplyNodeDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        dbt: expect.objectContaining({
+          materialized: 'table',
+          selectedSourceId: sourceB.id,
+        }),
+      })
+    );
   });
 });

@@ -143,12 +143,14 @@ export class PostgresPlanStore
         executablePlanJson: executable.text,
       });
 
-      if (persisted.validation_state !== 'PENDING_VALIDATION') {
+      if (persisted.validation_state === 'INVALID') {
         throw new Error(
           `PLAN_VALIDATION_STATE_REUSE_UNSUPPORTED: ${planId}:${persisted.validation_state}`
         );
       }
-      await this.planRecordRepository.upsert(client, buildPlanRecord(buildResult, planRef));
+      if (inserted !== undefined) {
+        await this.planRecordRepository.upsert(client, buildPlanRecord(buildResult, planRef));
+      }
 
       return buildPlanRefFromStoredRow(persisted);
     });

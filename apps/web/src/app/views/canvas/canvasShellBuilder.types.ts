@@ -47,6 +47,8 @@ export type CanvasShellPanelsBuilderArgs = Readonly<{
     CanvasRouteController,
     | 'explorerNodes'
     | 'inspectorNode'
+    | 'inspectorGraphNodes'
+    | 'inspectorGraphEdges'
     | 'canEditInspectorNode'
     | 'applyInspectorNodeDraft'
     | 'activeRunId'
@@ -76,6 +78,7 @@ export type CanvasShellToolbarBuilderArgs = Readonly<{
   toolbarState: Pick<
     CanvasRouteController,
     | 'canvasAuthoringMode'
+    | 'canPlanGraph'
     | 'canStartRun'
     | 'canExportProjectSnapshot'
     | 'canImportProjectSnapshot'

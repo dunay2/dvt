@@ -74,6 +74,11 @@ application behavior ports. Local behavior remains in `startRunUseCasePort.ts`,
   delegate
 - `PlannerBackedStartRunUseCase.ts`
   Planner-backed compilation and stored-plan validation before execution
+- `DbtRunExecutionContextBindingUseCase.ts`
+  PlanRef-backed DBT run-context binder. For persisted DBT plans that do not
+  carry a caller-provided `runExecutionContextRef`, it materializes a DBT
+  project bundle from workspace files, writes the immutable run execution
+  context artifact, and delegates the enriched command.
 - `EngineStartRunUseCase.ts`
   Bridge from canonical `StartRunCommand` to `IWorkflowEngine.startRun(...)`
 - `startRunTargetAdapterRegistry.ts`
@@ -94,6 +99,10 @@ application behavior ports. Local behavior remains in `startRunUseCasePort.ts`,
   duplicate probe -> delivery admission -> execution-capacity admission ->
   delegate
 - planner-backed execution must validate the stored plan before engine dispatch
+- DBT persisted-plan execution must bind a validated project bundle and
+  `runExecutionContextRef` before engine dispatch; missing bundle store or
+  missing `dbt_project.yml` rejects as `plan_rejected` instead of dispatching a
+  plugin-incomplete command
 - `EngineStartRunUseCase` is the only module in this component that calls
   `IWorkflowEngine.startRun(...)`
 - `buildProtectedStartRunRuntime.ts` is the only module in the protected
@@ -115,7 +124,8 @@ flowchart LR
   Route --> Facade["StartRunAuthorizedFacade.ts"]
   Facade --> Admission["BackpressureAwareStartRunUseCase.ts"]
   Admission --> Planner["PlannerBackedStartRunUseCase.ts"]
-  Planner --> Engine["EngineStartRunUseCase.ts"]
+  Planner --> DbtBinding["DbtRunExecutionContextBindingUseCase.ts"]
+  DbtBinding --> Engine["EngineStartRunUseCase.ts"]
   Engine --> Bridge["startRunEngineBridge.ts"]
   Admission --> Capacity["IStartRunExecutionCapacityPort.ts"]
   Bridge --> Workflow["IWorkflowEngine.startRun(...)"]
@@ -133,6 +143,7 @@ sequenceDiagram
   participant Facade as StartRunAuthorizedFacade
   participant Admission as BackpressureAwareStartRunUseCase
   participant Planner as PlannerBackedStartRunUseCase
+  participant DbtBinding as DbtRunExecutionContextBindingUseCase
   participant Engine as EngineStartRunUseCase
 
   Route->>Facade: execute(token, requestId, command, requestedScope)
@@ -146,7 +157,11 @@ sequenceDiagram
     Planner->>Planner: build plan
     Planner->>Planner: store + validate plan
   end
-  Planner->>Engine: execute(...)
+  Planner->>DbtBinding: execute persisted PlanRef command
+  alt DBT persisted plan without runExecutionContextRef
+    DbtBinding->>DbtBinding: create DBT bundle + run execution context artifact
+  end
+  DbtBinding->>Engine: execute enriched or unchanged command
   Engine->>Engine: map engine result or error
 ```
 
@@ -171,6 +186,7 @@ sequenceDiagram
 - `apps/api/src/application/services/startRunAuthorizedFacade.ts`
 - `apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts`
 - `apps/api/src/application/services/PlannerBackedStartRunUseCase.ts`
+- `apps/api/src/application/services/DbtRunExecutionContextBindingUseCase.ts`
 - `apps/api/src/application/services/startRunEngineBridge.ts`
 - `apps/api/src/application/services/engineStartRunUseCase.ts`
 - `apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts`
@@ -181,6 +197,7 @@ sequenceDiagram
 - `apps/api/src/entrypoints/http/startRunRouteCommandBuilder.ts`
 - `apps/api/src/entrypoints/http/startRunRouteParser.ts`
 - `apps/api/src/entrypoints/http/startRunRouteTargetAdapterParser.ts`
+- `apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts`
 - `apps/api/test/application/services/startRunApplicationComponent.architecture.test.ts`
 
 ## Extension rules

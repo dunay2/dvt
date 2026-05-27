@@ -12,6 +12,7 @@ import { useCanvasCurrentDraftPayload } from './useCanvasCurrentDraftPayload';
 import { useCanvasDraftAttemptRefs } from './useCanvasDraftAttemptRefs';
 import { useCanvasDraftBootstrapSync } from './useCanvasDraftBootstrapSync';
 import { useCanvasDraftPersistence } from './useCanvasDraftPersistence';
+import { useCanvasExecutionDraftFlush } from './useCanvasExecutionDraftFlush';
 import { executeCreateCanvasDocumentCommand } from './canvasCreateCanvasDocumentCommand';
 import { deriveCanCreateCanvasDocument } from './canvasCreateCanvasDocumentAvailability';
 import { executeImportProjectSnapshotCommand } from './canvasProjectSnapshotImportCommand';
@@ -86,6 +87,13 @@ export function useCanvasDraftLifecycle({
     applyReloadedRemoteDraft,
     createDraftIdempotencyKey: createCanvasDraftIdempotencyKey,
   });
+  const effectiveDraftSaveStatus =
+    draftSession.syncState === 'editing' &&
+    canPersistCurrentDraft &&
+    currentDraftPayloadSignature !== refs.lastSavedSignatureRef.current &&
+    currentDraftPayloadSignature !== refs.lastFailedSignatureRef.current
+      ? 'saving'
+      : draftSaveStatus;
 
   const handleCreateCanvasDocument = useCallback<
     CanvasDraftLifecycle['handleCreateCanvasDocument']
@@ -113,6 +121,22 @@ export function useCanvasDraftLifecycle({
       setDraftSaveStatus,
     ]
   );
+  const flushDraftForExecution = useCanvasExecutionDraftFlush({
+    draftRepository,
+    draftQueryCache,
+    graphDraftState: graphDraftQuery.data,
+    draftRevision: draftSession.draftRevision,
+    draftSyncState: draftSession.syncState,
+    currentDraftPayload,
+    currentDraftPayloadSignature,
+    canPersistGraphDraft,
+    canPersistCurrentDraft,
+    refs,
+    setDraftSession,
+    setDraftSaveStatus,
+    invalidateInFlightSaveAttempt,
+    createDraftIdempotencyKey: createCanvasDraftIdempotencyKey,
+  });
   const canExportProjectSnapshot =
     graphDraftQuery.data?.record != null &&
     !graphDraftQuery.isPending &&
@@ -181,7 +205,8 @@ export function useCanvasDraftLifecycle({
   );
 
   return {
-    draftSaveStatus,
+    draftSaveStatus: effectiveDraftSaveStatus,
+    flushDraftForExecution,
     reloadLatestDraft,
     handleCreateCanvasDocument,
     canCreateCanvasDocument,

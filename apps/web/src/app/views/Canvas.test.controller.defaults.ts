@@ -24,6 +24,8 @@ type CanvasWorkbenchDefaultsDto = {
   canOpenSourceImport: CanvasController['canOpenSourceImport'];
   explorerNodes: CanvasController['explorerNodes'];
   inspectorNode: CanvasController['inspectorNode'];
+  inspectorGraphNodes: CanvasController['inspectorGraphNodes'];
+  inspectorGraphEdges: CanvasController['inspectorGraphEdges'];
   canEditInspectorNode: CanvasController['canEditInspectorNode'];
   activeRunId: CanvasController['activeRunId'];
   registeredPlugins: CanvasController['registeredPlugins'];
@@ -63,6 +65,7 @@ type CanvasDraftDefaultsDto = {
 };
 
 type CanvasExecutionDefaultsDto = {
+  canPlanGraph: CanvasController['canPlanGraph'];
   canStartRun: CanvasController['canStartRun'];
   planStatusSummary: CanvasController['planStatusSummary'];
   exclusiveOverlayMode: CanvasController['exclusiveOverlayMode'];
@@ -143,6 +146,8 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
     canOpenSourceImport: true,
     explorerNodes: buildDefaultCanvasExplorerNodes(),
     inspectorNode: null,
+    inspectorGraphNodes: [],
+    inspectorGraphEdges: [],
     canEditInspectorNode: true,
     activeRunId: null,
     registeredPlugins: new Set(['dbt']),
@@ -231,6 +236,7 @@ function buildDefaultCanvasDraftState(): CanvasDraftDefaultsDto {
 
 function buildDefaultCanvasExecutionState(): CanvasExecutionDefaultsDto {
   return {
+    canPlanGraph: false,
     canStartRun: false,
     planStatusSummary: 'Preview required before running.',
     exclusiveOverlayMode: 'runtime',

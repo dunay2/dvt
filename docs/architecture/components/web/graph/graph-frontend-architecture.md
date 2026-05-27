@@ -152,9 +152,11 @@ As of 2026-04-25:
   registered canvas kinds whose plugin is disabled fail closed as
   `disabled_plugin` with separate operator copy; only a missing document may
   use the default transformation creation posture
-- `transformation` is the only executable preview posture; `dbt` authoring is
-  first-class but intentionally non-executable until a real DBT execution
-  strategy exists
+- `transformation` uses `transformation-sql-first-v1`; `dbt` uses the
+  TF-C3-backed `planner-generic-v1` posture. DBT preview/run is available only
+  through generated workspace artifacts, a dbt `GenericGraphSourceV1`, and a
+  persisted `PlanRef`; API-mode warehouse source import remains unavailable
+  unless the workspace port advertises it.
 - route shell composition applies the effective fail-closed route posture to
   Inspector authoring, so an unsupported or blocked canvas cannot reopen
   side-panel mutation even if a lower-level controller value drifts
@@ -411,9 +413,10 @@ Policy invariants:
 - disabled registered canvas plugins deny the same mutation and execution
   commands as unsupported kinds, but retain their own `disabled_plugin`
   document state and route copy;
-- DBT authoring remains mutable when permissions and draft posture allow it,
-  but `not_executable` runtime posture denies plan and run before toolbar or
-  command handlers advertise them;
+- DBT authoring remains mutable when permissions and draft posture allow it;
+  DBT plan/run availability comes from the registered
+  `planner_generic_preview` execution posture and still fails closed when the
+  graph has no executable dbt model, test, or snapshot node;
 - node create/drop commands must call
   `CanvasRuntimePolicy.admission.allowsCanonicalNode` before a viewport node or
   draft-session mutation is produced;
@@ -578,8 +581,9 @@ string checks. Current semantic coverage includes:
   renderers through `RuntimeCapabilities`;
 - route shell composition closing graph, Inspector authoring, Plan, and Run for
   unsupported persisted canvas kinds;
-- route and Cypress coverage proving DBT first-node authoring stays available
-  while Plan and Run remain unavailable under the `not_executable` posture;
+- route coverage proving DBT first-node authoring stays available, dbt card
+  config can be applied through Inspector, generated dbt workspace files are
+  written before preview, and run start uses only a persisted `PlanRef`;
 - Cypress preview/run status assertions consuming resolved Canvas copy instead
   of hardcoded fallback text, so locale does not hide policy regressions;
 - typed empty-state catalog and copy derivation from the active runtime;

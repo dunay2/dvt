@@ -18,6 +18,7 @@ import { makeRunContext, nb } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
+import type { CanvasExecutionDraftGraph } from './canvasExecutionActions.types';
 import { useCanvasExecutionActions } from './useCanvasExecutionActions';
 
 export type PreviewProvenanceConfig = Pick<
@@ -44,6 +45,7 @@ type ExecutionActionsHookCommonProps = Readonly<{
   executionStrategy: CanvasExecutionStrategy;
   selectedNodeIds: string[];
   workspaceNodeIds: string[];
+  flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
   canPlan: boolean;
   canRun: boolean;
   consolePanelVisible: boolean;
@@ -80,6 +82,7 @@ export type RenderExecutionActionsHarnessArgs = {
   executionStrategy?: CanvasExecutionStrategy;
   selectedNodeIds?: string[];
   workspaceNodeIds?: string[];
+  flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
   canPlan?: boolean;
   canRun?: boolean;
   consolePanelVisible?: boolean;
@@ -102,6 +105,7 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   | 'workspaceFilesQuery'
   | 'workspaceFileContentCommand'
   | 'previewProvenanceConfig'
+  | 'flushDraftForExecution'
   | 'canPlan'
   | 'canRun'
   | 'consolePanelVisible'
@@ -122,6 +126,7 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   executionStrategy: CanvasExecutionStrategy;
   selectedNodeIds: string[];
   workspaceNodeIds?: string[];
+  flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
   canPlan: boolean;
   canRun: boolean;
   consolePanelVisible: boolean;
@@ -215,6 +220,9 @@ function resolveCommonHookProps(
     executionStrategy: args.executionStrategy,
     selectedNodeIds: args.selectedNodeIds,
     workspaceNodeIds: args.workspaceNodeIds ?? args.canonicalNodes.map((node) => node.id),
+    ...(args.flushDraftForExecution == null
+      ? {}
+      : { flushDraftForExecution: args.flushDraftForExecution }),
     canPlan: args.canPlan,
     canRun: args.canRun,
     consolePanelVisible: args.consolePanelVisible,
