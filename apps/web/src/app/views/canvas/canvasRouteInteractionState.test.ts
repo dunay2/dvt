@@ -97,7 +97,7 @@ describe('canvasRouteInteractionState', () => {
     );
   });
 
-  it('keeps route interactions readable but non-editable for read-only draft access', () => {
+  it('keeps route interactions inspectable but non-executable for read-only draft access', () => {
     const draftAccessPosture = deriveCanvasDraftAccessPosture({
       draftAccessMode: 'read_only',
       draftCapabilityReason: 'write_denied',

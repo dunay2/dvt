@@ -127,15 +127,19 @@ export const canvasViewRouteCopyByKey = {
   readOnlyMessage: {
     key: 'canvas.readOnly.message',
     fallback:
-      'Inspect the graph and overlays here, but planning, run start, and graph edits are disabled in this context.',
+      'Inspect the graph and overlays here. Use an executable workspace scope to plan or run.',
   },
   limitedAccessTitle: {
     key: 'canvas.readOnly.limitedAccessTitle',
-    fallback: 'Limited mutation access',
+    fallback: 'Limited work mode',
   },
   readOnlyNote: {
     key: 'canvas.readOnly.note',
-    fallback: 'Graph inspection and overlays remain available while mutation is gated.',
+    fallback: 'Open a writable project or execution scope to keep working.',
+  },
+  readOnlyActionLabel: {
+    key: 'canvas.readOnly.actionLabel',
+    fallback: 'Choose execution scope',
   },
   draftAccessDeniedTitle: {
     key: 'canvas.draft.accessDeniedTitle',
@@ -202,7 +206,7 @@ export const canvasViewRouteCopyByKey = {
   draftReadOnlyMessage: {
     key: 'canvas.draft.readOnlyMessage',
     fallback:
-      'Canvas can inspect this draft, but graph edits, planning, and run start are disabled for the current scope.',
+      'Canvas can inspect this draft, but graph edits, planning, and run start are disabled for the current scope. Choose an executable workspace scope to work.',
   },
   draftUnsupportedSchemaTitle: {
     key: 'canvas.draft.unsupportedSchemaTitle',

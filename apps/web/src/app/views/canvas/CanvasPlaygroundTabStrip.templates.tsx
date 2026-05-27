@@ -12,9 +12,11 @@ import {
   AlertDialogTitle,
 } from '../../components/ui/alert-dialog';
 import { Button } from '../../components/ui/button';
+import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group';
 import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { cn } from '../../components/ui/utils';
 import {
+  routeWorkbenchSubtleTextClassName,
   routeWorkbenchTabListClassName,
   routeWorkbenchTabTriggerClassName,
 } from '../../components/workbench/RouteWorkbenchFrame';
@@ -26,9 +28,11 @@ export type CanvasPlaygroundTabStripTemplateProps = Readonly<{
   tabState: CanvasPlaygroundTabState;
   replacementAction: CanvasReplacementActionViewState;
   isReplacementDialogOpen: boolean;
+  selectedReplacementKind: string | null;
   variant?: 'standalone' | 'inline';
   onRequestReplacement: () => void;
   onReplacementDialogOpenChange: (open: boolean) => void;
+  onReplacementTemplateKindChange: (kind: string) => void;
   onCancelReplacement: () => void;
   onConfirmReplacement: () => void;
 }>;
@@ -40,8 +44,10 @@ type CanvasPlaygroundTabsTemplateProps = Readonly<{
 type CanvasReplacementActionTemplateProps = Readonly<{
   action: CanvasReplacementActionViewState;
   isDialogOpen: boolean;
+  selectedReplacementKind: string | null;
   onRequestReplacement: () => void;
   onDialogOpenChange: (open: boolean) => void;
+  onTemplateKindChange: (kind: string) => void;
   onCancelReplacement: () => void;
   onConfirmReplacement: () => void;
 }>;
@@ -50,9 +56,11 @@ export function CanvasPlaygroundTabStripTemplate({
   tabState,
   replacementAction,
   isReplacementDialogOpen,
+  selectedReplacementKind,
   variant = 'standalone',
   onRequestReplacement,
   onReplacementDialogOpenChange,
+  onReplacementTemplateKindChange,
   onCancelReplacement,
   onConfirmReplacement,
 }: CanvasPlaygroundTabStripTemplateProps): JSX.Element {
@@ -69,8 +77,10 @@ export function CanvasPlaygroundTabStripTemplate({
       <CanvasReplacementActionTemplate
         action={replacementAction}
         isDialogOpen={isReplacementDialogOpen}
+        selectedReplacementKind={selectedReplacementKind}
         onRequestReplacement={onRequestReplacement}
         onDialogOpenChange={onReplacementDialogOpenChange}
+        onTemplateKindChange={onReplacementTemplateKindChange}
         onCancelReplacement={onCancelReplacement}
         onConfirmReplacement={onConfirmReplacement}
       />
@@ -107,8 +117,10 @@ function CanvasPlaygroundTabsTemplate({
 function CanvasReplacementActionTemplate({
   action,
   isDialogOpen,
+  selectedReplacementKind,
   onRequestReplacement,
   onDialogOpenChange,
+  onTemplateKindChange,
   onCancelReplacement,
   onConfirmReplacement,
 }: CanvasReplacementActionTemplateProps): JSX.Element {
@@ -133,6 +145,40 @@ function CanvasReplacementActionTemplate({
             {action.dialogDescription}
           </AlertDialogDescription>
         </AlertDialogHeader>
+        <div className="space-y-2">
+          <div className="text-sm font-semibold text-[var(--text-default)]">
+            {action.templateLabel}
+          </div>
+          <RadioGroup
+            value={selectedReplacementKind ?? undefined}
+            onValueChange={onTemplateKindChange}
+            className="grid gap-2"
+          >
+            {action.templateOptions.map((option) => (
+              <label
+                key={option.kind}
+                data-slot="canvas-replacement-template-option"
+                data-kind={option.kind}
+                className="flex cursor-pointer items-start gap-3 rounded-md border border-[color:var(--border-default)] bg-[var(--surface-panel)] px-3 py-2 text-left"
+                htmlFor={`canvas-replacement-template-${option.kind}`}
+              >
+                <RadioGroupItem
+                  id={`canvas-replacement-template-${option.kind}`}
+                  value={option.kind}
+                  className="mt-1"
+                />
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-[var(--text-default)]">
+                    {option.title}
+                  </span>
+                  <span className={cn('block text-xs', routeWorkbenchSubtleTextClassName)}>
+                    {option.description}
+                  </span>
+                </span>
+              </label>
+            ))}
+          </RadioGroup>
+        </div>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onCancelReplacement}>{action.cancelLabel}</AlertDialogCancel>
           <AlertDialogAction onClick={onConfirmReplacement}>
