@@ -181,23 +181,35 @@ direction.
   `pnpm --filter @dvt/traceability-service build`, and
   `pnpm --filter dvt-lineage-worker typecheck`.
 
-## Phase 2 Slice Debt
+## Legacy Slice IDs
 
-| Slice | Title                            | Status                  |
-| ----- | -------------------------------- | ----------------------- |
-| S01   | Contract And Dead Code Cleanup   | Closed 2026-03-21       |
-| S06   | Migration Version Table          | Closed 2026-03-21       |
-| S10   | Typed Graph-Source Boundary      | Closed 2026-03-20       |
-| S02   | IRunStateStore Split             | Open (unblocked by S01) |
-| S03   | StartRunCoordinator Extraction   | Open (unblocked by S01) |
-| S05   | EventEnvelope.payloadVersion     | Closed 2026-04-04       |
-| S07   | OpenLineage Job Naming Fix       | Open                    |
-| S09   | Retry Ownership ADR              | Closed 2026-03-24       |
-| S04   | ProviderRefUpdated Event         | Retired 2026-04-09      |
-| S08   | Plan record and plan store model | Closed 2026-05-22       |
-| S11   | ILineageSink.jobFacets Tighten   | Open (blocked by S07)   |
+The historical `S-*` slice identifiers are not active execution authority.
 
-See [Phase 2 Architectural Debt Roadmap](../planning/archive/proposals/phase2-arch-debt-roadmap-20260315.md) for full details.
+Do not use `S01`, `S02`, `S03`, `S04`, `S05`, `S06`, `S07`, `S08`, `S09`,
+`S10`, or `S11` as current backlog, active debt, roadmap lanes, or next-work
+references.
+
+Current task authority lives in:
+
+- [Planning Dashboard](../planning/state/planning-dashboard.md)
+- [Planning Control Tower](../planning/state/planning-control-tower.md)
+- Planning DB effective task views:
+  - `pnpm planning:db:query focus`
+  - `pnpm planning:db:query next`
+  - `pnpm planning:db:query open`
+  - `pnpm planning:db:query tasks`
+- [Execution Workboard](../planning/state/execution-workboard.md)
+- [Open Task Route](../planning/state/open-task-route.md)
+
+The archived Phase 2 slice roadmap remains historical context only:
+
+- [Phase 2 Architectural Debt Roadmap](../planning/archive/proposals/phase2-arch-debt-roadmap-20260315.md)
+
+Interpretation rule:
+
+- `System Delivery Status` describes implementation truth.
+- Planning DB effective task views describe active work.
+- Legacy `S-*` identifiers must not be inferred as active work from this page.
 
 ## Reading Order
 
