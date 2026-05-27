@@ -225,6 +225,78 @@ describe('useCanvasViewportGraphModel', () => {
     }
   });
 
+  it('refreshes projected node data when canonical node metadata changes', async () => {
+    const initialProjection = buildCanvasAuthoringGraphProjection({
+      visibleNodeIds: ['source-node'],
+      visibleEdges: [],
+      draftSemanticGraph: {
+        canonicalNodes: [
+          {
+            ...buildCanonicalNode('source-node', 'dvt:source', 'input'),
+            metadata: {
+              config: {
+                schema: 'raw',
+              },
+            },
+          },
+        ],
+        canonicalEdges: [],
+      },
+      localCanonicalNodes: [],
+    });
+    const mounted = await renderViewportGraphModel({
+      visibleNodeIds: ['source-node'],
+      visibleEdges: [],
+      canonicalNodesById: initialProjection.canonicalNodesById,
+      canonicalEdgeIdBySignature: initialProjection.canonicalEdgeIdBySignature,
+      columnLevelLineageEnabled: false,
+      persistedNodePositions: {},
+    });
+
+    try {
+      expect(mounted.readState()?.nodes[0]?.data.metadata).toEqual({
+        config: {
+          schema: 'raw',
+        },
+      });
+
+      const updatedProjection = buildCanvasAuthoringGraphProjection({
+        visibleNodeIds: ['source-node'],
+        visibleEdges: [],
+        draftSemanticGraph: {
+          canonicalNodes: [buildCanonicalNode('source-node', 'dvt:source', 'input')],
+          canonicalEdges: [],
+        },
+        localCanonicalNodes: [
+          {
+            ...buildCanonicalNode('source-node', 'dvt:source', 'input'),
+            metadata: {
+              config: {
+                schema: 'mart',
+              },
+            },
+          },
+        ],
+      });
+      await mounted.rerender({
+        visibleNodeIds: ['source-node'],
+        visibleEdges: [],
+        canonicalNodesById: updatedProjection.canonicalNodesById,
+        canonicalEdgeIdBySignature: updatedProjection.canonicalEdgeIdBySignature,
+        columnLevelLineageEnabled: false,
+        persistedNodePositions: {},
+      });
+
+      expect(mounted.readState()?.nodes[0]?.data.metadata).toEqual({
+        config: {
+          schema: 'mart',
+        },
+      });
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
   it('keeps live node positions ahead of persisted layout during viewport rerenders', async () => {
     const authoringProjection = buildCanvasAuthoringGraphProjection({
       visibleNodeIds: ['source-node'],

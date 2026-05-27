@@ -80,6 +80,7 @@ export type RenderExecutionActionsHarnessArgs = {
   canonicalNodes?: CanonicalNode[];
   canonicalEdges?: CanonicalEdge[];
   executionStrategy?: CanvasExecutionStrategy;
+  executionEnvironmentId?: string;
   selectedNodeIds?: string[];
   workspaceNodeIds?: string[];
   flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
@@ -124,6 +125,7 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
   executionStrategy: CanvasExecutionStrategy;
+  executionEnvironmentId?: string;
   selectedNodeIds: string[];
   workspaceNodeIds?: string[];
   flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
@@ -218,6 +220,9 @@ function resolveCommonHookProps(
     canonicalNodes: args.canonicalNodes,
     canonicalEdges: args.canonicalEdges,
     executionStrategy: args.executionStrategy,
+    ...(args.executionEnvironmentId == null
+      ? {}
+      : { executionEnvironmentId: args.executionEnvironmentId }),
     selectedNodeIds: args.selectedNodeIds,
     workspaceNodeIds: args.workspaceNodeIds ?? args.canonicalNodes.map((node) => node.id),
     ...(args.flushDraftForExecution == null
@@ -263,6 +268,9 @@ function resolveHarnessArgs(
       kind: 'transformation_preview',
       previewProfile: 'transformation-sql-first-v1',
     },
+    ...(args.executionEnvironmentId == null
+      ? {}
+      : { executionEnvironmentId: args.executionEnvironmentId }),
     selectedNodeIds: args.selectedNodeIds ?? [],
     canPlan: args.canPlan ?? true,
     canRun: args.canRun ?? true,

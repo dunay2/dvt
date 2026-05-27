@@ -1,6 +1,7 @@
 /** Owned concern: decide create-canvas document CAS eligibility and draft save input semantics. */
 import { createCanvasDraftIdempotencyKey } from './canvasDraftIdempotencyKey';
 import type { CanvasCreateCanvasDocumentCommandDto } from './canvasDraftLifecycle.types';
+import { buildDraftWithCreatedProjectCanvas } from './canvasProjectCanvasLifecycle';
 
 export type CanvasCreateCanvasDocumentCommandEligibility =
   | {
@@ -40,6 +41,16 @@ function resolveReplaceCurrentCanvasDocumentEligibility(
   return { kind: 'ready', expectedRevision: existingRecord.revision };
 }
 
+function resolveCreateNewCanvasDocumentEligibility(
+  existingRecord: ExistingGraphDraftRecordOrNull
+): CanvasCreateCanvasDocumentCommandEligibility {
+  if (existingRecord == null) {
+    return { kind: 'blocked' };
+  }
+
+  return { kind: 'ready', expectedRevision: existingRecord.revision };
+}
+
 export function resolveCreateCanvasDocumentCommandEligibility({
   command,
   graphDraftQuery,
@@ -64,6 +75,8 @@ export function resolveCreateCanvasDocumentCommandEligibility({
       return resolveCreateFirstCanvasDocumentEligibility(existingRecord);
     case 'replace_current':
       return resolveReplaceCurrentCanvasDocumentEligibility(existingRecord);
+    case 'create_new':
+      return resolveCreateNewCanvasDocumentEligibility(existingRecord);
   }
 }
 
@@ -87,4 +100,28 @@ export function buildBlankCanvasDocumentDraftInput({
       edges: [],
     },
   };
+}
+
+export function buildCreateCanvasDocumentDraftInput({
+  command,
+  currentDraftPayload,
+  expectedRevision,
+}: Pick<CanvasCreateCanvasDocumentCommandDto, 'command' | 'currentDraftPayload'> & {
+  expectedRevision: string | null;
+}): SaveGraphDraftInput {
+  if (command.mode === 'create_new') {
+    return {
+      expectedRevision,
+      idempotencyKey: createCanvasDraftIdempotencyKey(),
+      draft: buildDraftWithCreatedProjectCanvas({
+        currentDraft: currentDraftPayload,
+        command,
+      }),
+    };
+  }
+
+  return buildBlankCanvasDocumentDraftInput({
+    command,
+    expectedRevision,
+  });
 }

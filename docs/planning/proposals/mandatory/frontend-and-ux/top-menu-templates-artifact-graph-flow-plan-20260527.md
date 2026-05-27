@@ -200,6 +200,194 @@ global navigation and it is not duplicated in the top menu.
 Before implementation is complete, proposed rails must be promoted from this
 proposal into the canonical component docs that own the long-lived semantics.
 
+## Feature Mechanization
+
+```feature-mechanization
+version: 1
+featureId: E-SHELL-TOP-MENU-RATIONALIZATION-1
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/top-menu-templates-artifact-graph-flow-plan-20260527.md
+componentGuides:
+  - docs/architecture/components/web/appshell/app-shell.md
+  - docs/architecture/components/web/top-app-bar-component-technical-manual-20260404.md
+  - docs/architecture/components/web/graph/canvas-route-chrome-token-component.md
+userStories:
+  - docs/architecture/components/web/workbench-ux-canon-user-stories.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/architecture/components/web/appshell/app-shell.md
+  - docs/architecture/components/web/top-app-bar-component-technical-manual-20260404.md
+  - docs/architecture/components/web/graph/canvas-route-chrome-token-component.md
+allowedImplementationSurfaces:
+  - docs/planning/proposals/mandatory/frontend-and-ux/top-menu-templates-artifact-graph-flow-plan-20260527.md
+  - docs/architecture/components/web/appshell/app-shell.md
+  - docs/architecture/components/web/top-app-bar-component-technical-manual-20260404.md
+  - docs/architecture/components/web/graph/canvas-route-chrome-token-component.md
+  - apps/web/src/app/components/TopAppBar.tsx
+  - apps/web/src/app/components/TopAppBar.test.tsx
+  - apps/web/src/app/components/shell/ShellAppMenu.tsx
+  - apps/web/src/app/components/shell/appBuildMetadata.ts
+  - apps/web/src/app/components/shell/appBuildMetadata.test.ts
+  - apps/web/src/app/components/shell/copy.ts
+  - apps/web/src/app/views/canvas/CanvasToolbarPrimaryControls.tsx
+  - apps/web/src/app/views/canvas/CanvasToolbarPrimaryControls.test.tsx
+  - apps/web/src/app/views/canvas/canvasCopy.types.ts
+  - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.ts
+  - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.es.ts
+  - apps/web/vite.config.ts
+forbiddenImplementationSurfaces:
+  - apps/web/cypress/**
+  - apps/web/src/**/*.cy.ts
+domainObjects:
+  - CompiledApplicationMetadata
+  - ShellAppMenu
+  - CanvasToolbarProjectSnapshotActionGroup
+fowlerSignals:
+  - Presentation Model for the shell About projection.
+  - Explicit query for compiled application metadata.
+  - Low-frequency project snapshot actions grouped out of the primary toolbar.
+architectureGuards:
+  - pnpm --filter @dvt/web typecheck
+  - pnpm --filter @dvt/web lint
+  - pnpm docs:feature-mechanization:implementation
+cypressFlows:
+  - Not required for this compact shell chrome slice; covered by presentation tests.
+completionGate:
+  - pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/components/shell/appBuildMetadata.test.ts
+  - pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/components/TopAppBar.test.tsx src/app/views/canvas/CanvasToolbarPrimaryControls.test.tsx
+  - pnpm --filter @dvt/web typecheck
+  - pnpm --filter @dvt/web lint
+  - pnpm --filter @dvt/web build
+  - pnpm governance:refresh
+  - pnpm verify:prepush
+commandQueryRails:
+  - name: GetCompiledApplicationMetadata
+    type: query
+    dddOwner: CompiledApplicationMetadata
+  - name: ResolveCanvasProjectSnapshotActions
+    type: query
+    dddOwner: CanvasToolbarProjectSnapshotActionGroup
+redGreenCycles:
+  - id: E-SHELL-TOP-MENU-RATIONALIZATION-1-RG1
+    redTest: pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/components/shell/appBuildMetadata.test.ts
+    expectedFailure: The compiled application metadata query did not exist.
+    patchSurfaces:
+      - apps/web/src/app/components/shell/appBuildMetadata.ts
+      - apps/web/src/app/components/shell/appBuildMetadata.test.ts
+      - apps/web/vite.config.ts
+    greenTest: pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/components/shell/appBuildMetadata.test.ts
+  - id: E-SHELL-TOP-MENU-RATIONALIZATION-1-RG2
+    redTest: pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/components/TopAppBar.test.tsx src/app/views/canvas/CanvasToolbarPrimaryControls.test.tsx
+    expectedFailure: The About command and grouped project snapshot menu did not exist.
+    patchSurfaces:
+      - apps/web/src/app/components/TopAppBar.tsx
+      - apps/web/src/app/components/TopAppBar.test.tsx
+      - apps/web/src/app/components/shell/ShellAppMenu.tsx
+      - apps/web/src/app/components/shell/copy.ts
+      - apps/web/src/app/views/canvas/CanvasToolbarPrimaryControls.tsx
+      - apps/web/src/app/views/canvas/CanvasToolbarPrimaryControls.test.tsx
+      - apps/web/src/app/views/canvas/canvasCopy.types.ts
+      - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.ts
+      - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.es.ts
+    greenTest: pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/components/TopAppBar.test.tsx src/app/views/canvas/CanvasToolbarPrimaryControls.test.tsx
+symbols:
+  - name: ShellAppMenu
+    path: apps/web/src/app/components/shell/ShellAppMenu.tsx
+    dddOwner: Shell app menu presentation component
+    cqRails:
+      - GetCompiledApplicationMetadata
+    fowlerSignals:
+      - Presentation Model
+      - Information Hiding
+    architectureGuard: pnpm --filter @dvt/web typecheck
+    cypressCoverage: Not required; covered by TopAppBar presentation test.
+    unitTests:
+      - pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/components/TopAppBar.test.tsx
+  - name: ShellAppMenuProps
+    path: apps/web/src/app/components/shell/ShellAppMenu.tsx
+    dddOwner: Shell app menu presentation contract
+    cqRails:
+      - GetCompiledApplicationMetadata
+    fowlerSignals:
+      - Explicit Interface
+    architectureGuard: pnpm --filter @dvt/web typecheck
+    cypressCoverage: Not required; covered by TopAppBar presentation test.
+    unitTests:
+      - pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/components/TopAppBar.test.tsx
+  - name: AppBuildMetadataEnv
+    path: apps/web/src/app/components/shell/appBuildMetadata.ts
+    dddOwner: Compiled application metadata query input
+    cqRails:
+      - GetCompiledApplicationMetadata
+    fowlerSignals:
+      - Explicit Interface
+    architectureGuard: pnpm --filter @dvt/web typecheck
+    cypressCoverage: Not required; covered by unit test.
+    unitTests:
+      - pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/components/shell/appBuildMetadata.test.ts
+  - name: CompiledApplicationMetadata
+    path: apps/web/src/app/components/shell/appBuildMetadata.ts
+    dddOwner: Compiled application metadata read model
+    cqRails:
+      - GetCompiledApplicationMetadata
+    fowlerSignals:
+      - Read Model
+      - Value Object
+    architectureGuard: pnpm --filter @dvt/web typecheck
+    cypressCoverage: Not required; covered by unit test.
+    unitTests:
+      - pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/components/shell/appBuildMetadata.test.ts
+  - name: readNonBlankBuildValue
+    path: apps/web/src/app/components/shell/appBuildMetadata.ts
+    dddOwner: Compiled application metadata normalization
+    cqRails:
+      - GetCompiledApplicationMetadata
+    fowlerSignals:
+      - Encapsulated normalization
+    architectureGuard: pnpm --filter @dvt/web typecheck
+    cypressCoverage: Not required; covered by unit test.
+    unitTests:
+      - pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/components/shell/appBuildMetadata.test.ts
+  - name: resolveCompiledApplicationMetadata
+    path: apps/web/src/app/components/shell/appBuildMetadata.ts
+    dddOwner: Compiled application metadata query
+    cqRails:
+      - GetCompiledApplicationMetadata
+    fowlerSignals:
+      - Query Object
+      - Presentation Model
+    architectureGuard: pnpm --filter @dvt/web typecheck
+    cypressCoverage: Not required; covered by unit test.
+    unitTests:
+      - pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/components/shell/appBuildMetadata.test.ts
+  - name: DEFAULT_PROPS
+    path: apps/web/src/app/views/canvas/CanvasToolbarPrimaryControls.test.tsx
+    dddOwner: Canvas toolbar presentation test fixture
+    cqRails:
+      - ResolveCanvasProjectSnapshotActions
+    fowlerSignals:
+      - Test Fixture
+    architectureGuard: pnpm --filter @dvt/web typecheck
+    cypressCoverage: Not required; covered by Canvas toolbar presentation test.
+    unitTests:
+      - pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/canvas/CanvasToolbarPrimaryControls.test.tsx
+  - name: resolveProductVersion
+    path: apps/web/vite.config.ts
+    dddOwner: Web build metadata configuration
+    cqRails:
+      - GetCompiledApplicationMetadata
+    fowlerSignals:
+      - Configuration Gateway
+    architectureGuard: pnpm --filter @dvt/web typecheck
+    cypressCoverage: Not required; covered by appBuildMetadata unit test and build.
+    unitTests:
+      - pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/components/shell/appBuildMetadata.test.ts
+```
+
 ## Fowler Opportunity Matrix
 
 | Scenario                                                                      | Opportunity             | Fowler pattern                                            | DDD owner                                                          | Rail                                                   | Implementation surfaces                                                   | Unit or package test                 | Architecture test                           | User-flow test                           | Out of scope                              |
@@ -216,9 +404,8 @@ proposal into the canonical component docs that own the long-lived semantics.
 
 1. [Task: E-SHELL-TOP-MENU-RATIONALIZATION-1] Update canonical component docs for shell menu ownership, Templates artifact
    save ownership, and Canvas artifact-step insertion ownership.
-2. [Task: E-SHELL-TOP-MENU-RATIONALIZATION-1] Add the feature mechanization manifest when implementation starts. This
-   plan intentionally does not declare a fenced `feature-mechanization` block
-   yet because repository guards only accept `implemented` or `closed` status.
+2. [Task: E-SHELL-TOP-MENU-RATIONALIZATION-1] Keep the feature mechanization manifest aligned with implementation
+   surfaces and new symbols before the prepush gate.
 3. [Task: E-SHELL-TOP-MENU-RATIONALIZATION-1] Write red tests for the shell menu taxonomy and no-left-rail invariant.
 4. [Task: E-SHELL-TOP-MENU-RATIONALIZATION-1] Implement `ResolveShellCommandMenu` as a shell read model, then wire the top
    menu without changing Canvas into a secondary navigation layout.

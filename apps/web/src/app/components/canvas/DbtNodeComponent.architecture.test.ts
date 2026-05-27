@@ -18,4 +18,11 @@ describe('DbtNodeComponent architecture', () => {
       'data.onToggleNodeSelection?.(id, !selectedForExecution)'
     );
   });
+
+  it('routes schema resource drops through the node attachment command handler', () => {
+    expect(DbtNodeComponentSource).toContain('CANVAS_WORKSPACE_RESOURCE_DRAG_MIME_TYPE');
+    expect(DbtNodeComponentSource).toContain('parseCanvasWorkspaceResourceDragPayload');
+    expect(DbtNodeComponentSource).toContain('onAttachSchemaToNode');
+    expect(DbtNodeComponentSource).toContain('data.onAttachSchemaToNode?.(id, payload.schemaName)');
+  });
 });

@@ -4,7 +4,11 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { buildCanvasWorkspaceResourceGroups } from './canvasWorkspaceExplorerModel';
+import {
+  CANVAS_WORKSPACE_RESOURCE_DRAG_MIME_TYPE,
+  buildCanvasWorkspaceResourceGroups,
+  serializeCanvasWorkspaceResourceDragPayload,
+} from './canvasWorkspaceExplorerModel';
 import DbtExplorer from './DbtExplorer';
 import type { CanonicalNode } from '../types/canonical';
 import { buildTestNodeKind } from '../views/canvas/canvasKindRegistration.testSupport';
@@ -25,6 +29,14 @@ function buildNode(): CanonicalNode {
     status: 'idle' as const,
     tags: [],
   };
+}
+
+function dispatchDragStart(target: Element, dataTransfer: DataTransfer): void {
+  const event = new Event('dragstart', { bubbles: true, cancelable: true });
+  Object.defineProperty(event, 'dataTransfer', {
+    value: dataTransfer,
+  });
+  target.dispatchEvent(event);
 }
 
 describe('DbtExplorer', () => {
@@ -145,5 +157,47 @@ describe('DbtExplorer', () => {
     expect(container.textContent).not.toContain('Add node');
     expect(createButton).toBeUndefined();
     expect(onCreateAuthoringNode).not.toHaveBeenCalled();
+  });
+
+  it('serializes schema resources with the project resource drag payload', async () => {
+    await act(async () => {
+      root.render(
+        <DbtExplorer
+          resourceGroups={buildResourceGroups([
+            {
+              ...buildNode(),
+              metadata: {
+                config: {
+                  schema: 'mart',
+                },
+              },
+            },
+          ])}
+          canEditGraph={true}
+        />
+      );
+    });
+
+    const schemaRow = Array.from(container.querySelectorAll('[draggable="true"]')).find((row) =>
+      row.textContent?.includes('mart')
+    );
+    const setData = vi.fn();
+    const dataTransfer = {
+      effectAllowed: '',
+      setData,
+    } as unknown as DataTransfer;
+
+    expect(schemaRow).toBeDefined();
+    dispatchDragStart(schemaRow as Element, dataTransfer);
+
+    expect(setData).toHaveBeenCalledWith(
+      CANVAS_WORKSPACE_RESOURCE_DRAG_MIME_TYPE,
+      serializeCanvasWorkspaceResourceDragPayload({
+        resourceId: 'schema:mart',
+        resourceType: 'schema',
+        schemaName: 'mart',
+        label: 'mart',
+      })
+    );
   });
 });

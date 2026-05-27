@@ -7,9 +7,9 @@ import { resolveShellNavigationDisposition } from '../shell/shellNavigationDispo
 import { usePlatformConnectionStore } from '../stores/platformConnectionStore';
 import { useSessionStore } from '../stores/sessionStore';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
-import AppBrandMark from './AppBrandMark';
 import { topAppBarClasses } from './shell/chrome';
 import { detectShellTopBarLocale, resolveShellTopBarCopy } from './shell/copy';
+import { ShellAppMenu } from './shell/ShellAppMenu';
 import { ShellConnectionStatus } from './shell/ShellConnectionStatus';
 import { ShellGitRef } from './shell/ShellGitRef';
 import { ShellMenu } from './shell/ShellMenu';
@@ -58,10 +58,7 @@ export function ShellTopBar({
   return (
     <TooltipProvider>
       <div data-slot="shell-top-bar" className={topAppBarClasses.shellBar}>
-        <div className="mr-1 flex shrink-0 items-center gap-2">
-          <AppBrandMark className="size-6 shrink-0" />
-          <span className={topAppBarClasses.brand}>Raven</span>
-        </div>
+        <ShellAppMenu copy={copy} />
 
         {!isWorkbenchShell && (
           <>

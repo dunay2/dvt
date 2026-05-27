@@ -124,12 +124,23 @@ function viewportNodePositionEqual(left: Node, right: Node): boolean {
 }
 
 function viewportNodeDataEqual(left: Node['data'], right: Node['data']): boolean {
+  let metadataEqual = left.metadata === right.metadata;
+  if (!metadataEqual) {
+    try {
+      metadataEqual =
+        JSON.stringify(left.metadata ?? null) === JSON.stringify(right.metadata ?? null);
+    } catch {
+      metadataEqual = false;
+    }
+  }
+
   return (
     left.showColumns === right.showColumns &&
     left.name === right.name &&
     left.description === right.description &&
     left.path === right.path &&
-    left.status === right.status
+    left.status === right.status &&
+    metadataEqual
   );
 }
 

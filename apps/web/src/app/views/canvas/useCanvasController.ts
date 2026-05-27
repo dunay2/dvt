@@ -197,6 +197,7 @@ export function useCanvasController() {
     canPlan: runtimePolicy.commands.canPlan,
     canRun: runtimePolicy.commands.canRun,
     sessionContext,
+    executionEnvironmentId: draftReadModel?.record?.draft.canvas.environmentId,
     shellFeedback,
     previewProvenanceConfig: workspaceBootstrapConfig,
     consolePanelVisible: store.consolePanelVisible,

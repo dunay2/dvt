@@ -32,7 +32,11 @@ type UseCanvasControllerReadModelArgs = {
   };
   graphHandlers: Pick<
     UseCanvasGraphHandlersResult,
-    'handleInspectNode' | 'handleDuplicateNode' | 'handleRemoveNode' | 'handleToggleNodeSelection'
+    | 'handleInspectNode'
+    | 'handleDuplicateNode'
+    | 'handleRemoveNode'
+    | 'handleToggleNodeSelection'
+    | 'handleAttachSchemaToNode'
   >;
   runtimeCapabilities?: RuntimeCapabilities;
   canMutateGraph: boolean;
@@ -81,6 +85,7 @@ export function useCanvasControllerReadModel({
           onDuplicateNode: canMutateGraph ? graphHandlers.handleDuplicateNode : undefined,
           onRemoveNode: canMutateGraph ? graphHandlers.handleRemoveNode : undefined,
           onToggleNodeSelection: graphHandlers.handleToggleNodeSelection,
+          onAttachSchemaToNode: canMutateGraph ? graphHandlers.handleAttachSchemaToNode : undefined,
         },
       }).map((node) => ({
         ...node,
@@ -99,6 +104,7 @@ export function useCanvasControllerReadModel({
       graphHandlers.handleDuplicateNode,
       graphHandlers.handleRemoveNode,
       graphHandlers.handleToggleNodeSelection,
+      graphHandlers.handleAttachSchemaToNode,
       graphModel.edges,
       graphModel.nodes,
       impactOverlayEnabled,

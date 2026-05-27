@@ -25,6 +25,8 @@ export type CanvasRouteInteractionState = {
   effectiveWorkbenchState: ReturnType<typeof getCanvasWorkbenchState>;
   startupBlockState: CanvasRouteStartupBlockState | null;
   canvasDocument: CanvasController['canvasDocument'];
+  canvasDocuments: CanvasController['canvasDocuments'];
+  activeCanvasId: CanvasController['activeCanvasId'];
   availableCanvasKinds: CanvasController['availableCanvasKinds'];
   canvasTabState: CanvasPlaygroundTabState;
   effectiveUserPermissions: CanvasController['userPermissions'];
@@ -145,6 +147,8 @@ export function deriveCanvasRouteInteractionState(
     effectiveWorkbenchState,
     startupBlockState,
     canvasDocument: controller.canvasDocument,
+    canvasDocuments: controller.canvasDocuments,
+    activeCanvasId: controller.activeCanvasId,
     availableCanvasKinds: controller.availableCanvasKinds,
     canvasTabState: deriveCanvasPlaygroundTabState({
       canvasDocument: controller.canvasDocument,

@@ -1,4 +1,4 @@
-/** Owned concern: decide whether the first Canvas document creation command can be exposed. */
+/** Owned concern: decide whether Canvas document creation commands can be exposed. */
 import type { GraphDraftQueryState } from './canvasDraftLifecycle.types';
 
 export type CanvasCreateCanvasDocumentAvailabilityInput = Readonly<{
@@ -10,10 +10,5 @@ export function deriveCanCreateCanvasDocument({
   canPersistGraphDraft,
   graphDraftQuery,
 }: CanvasCreateCanvasDocumentAvailabilityInput): boolean {
-  return (
-    canPersistGraphDraft &&
-    graphDraftQuery.data?.record == null &&
-    !graphDraftQuery.isPending &&
-    !graphDraftQuery.isError
-  );
+  return canPersistGraphDraft && !graphDraftQuery.isPending && !graphDraftQuery.isError;
 }

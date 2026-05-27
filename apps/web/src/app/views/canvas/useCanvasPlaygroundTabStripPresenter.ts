@@ -1,11 +1,11 @@
-/** Owned concern: adapt Canvas tab-strip replacement policy into renderable presenter callbacks without JSX. */
+/** Owned concern: adapt Canvas tab-strip creation policy into renderable presenter callbacks without JSX. */
 import { useState } from 'react';
 
 import type { CanvasKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanvasCreateCanvasDocumentCommand } from './canvasDraftLifecycle.types';
 import type { CanvasPlaygroundTabState } from './canvasPlaygroundTabState';
 import {
-  createReplaceCurrentCanvasDocumentCommand,
+  createNewCanvasDocumentCommand,
   hasRenderableCanvasTabs,
   resolveCanvasReplacementActionState,
 } from './canvasPlaygroundTabStripModel';
@@ -50,7 +50,7 @@ export function useCanvasPlaygroundTabStripPresenter({
   };
   const confirmReplacement = () => {
     if (replacementCanvasKind != null) {
-      onCreateCanvasDocument?.(createReplaceCurrentCanvasDocumentCommand(replacementCanvasKind));
+      onCreateCanvasDocument?.(createNewCanvasDocumentCommand(replacementCanvasKind));
     }
 
     closeReplacementDialog();

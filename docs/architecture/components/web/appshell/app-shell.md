@@ -24,6 +24,8 @@ Primary code anchors:
 - [routes.ts](../../../../../apps/web/src/app/routes.ts)
 - [AppShellFrame.tsx](../../../../../apps/web/src/app/components/shell/AppShellFrame.tsx)
 - [TopAppBar.tsx](../../../../../apps/web/src/app/components/TopAppBar.tsx)
+- [ShellAppMenu.tsx](../../../../../apps/web/src/app/components/shell/ShellAppMenu.tsx)
+- [appBuildMetadata.ts](../../../../../apps/web/src/app/components/shell/appBuildMetadata.ts)
 - [LeftNavigation.tsx](../../../../../apps/web/src/app/components/LeftNavigation.tsx)
 - [Console.tsx](../../../../../apps/web/src/app/components/Console.tsx)
 - [bottomConsoleDrawerModel.ts](../../../../../apps/web/src/app/components/shell/bottomConsoleDrawerModel.ts)
@@ -38,6 +40,7 @@ Current shell regions:
 flowchart TB
   Root["Root shell"] --> Frame["AppShellFrame"]
   Frame --> TopBar["TopAppBar"]
+  TopBar --> AppMenu["ShellAppMenu"]
   Frame --> Health["ShellHealthBanner"]
   Frame --> Body["Shell body"]
   Body --> Nav["LeftNavigation"]
@@ -56,6 +59,30 @@ composes typed service instances for views and plugins through hooks.
 
 This prevents route-level components from instantiating mode-aware services or
 reading `resolveDataSource()` directly.
+
+## Shell Application Menu
+
+The Raven brand in the top bar is the application-level menu surface. It owns
+small app-wide commands that should not consume persistent toolbar width.
+
+Current command/query rail:
+
+| Rail                             | Type  | Owner         | Surface                     |
+| -------------------------------- | ----- | ------------- | --------------------------- |
+| `GetCompiledApplicationMetadata` | query | Web App Shell | `ShellAppMenu` About dialog |
+
+`GetCompiledApplicationMetadata` reads compile-time bundle metadata from
+`import.meta.env.VITE_APP_VERSION` and `VITE_APP_BUILD_DATE`. It does not call
+the backend `/version` endpoint because the About dialog answers which Raven
+bundle is running in the browser, not which API build is reachable.
+
+```mermaid
+flowchart LR
+  Vite["vite.config.ts"] --> Env["VITE_APP_VERSION / VITE_APP_BUILD_DATE"]
+  Env --> Query["resolveCompiledApplicationMetadata"]
+  Query --> Menu["ShellAppMenu"]
+  Menu --> Dialog["About Raven dialog"]
+```
 
 ## Shell Navigation Ownership
 

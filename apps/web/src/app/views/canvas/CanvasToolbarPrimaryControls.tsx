@@ -1,9 +1,16 @@
 /** Owned concern: render primary Canvas toolbar controls without owning route command semantics. */
-import { Download, FileCheck, Play, Upload } from 'lucide-react';
+import { Download, FileCheck, Folder, Play, Upload } from 'lucide-react';
 import { useRef } from 'react';
 
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '../../components/ui/dropdown-menu';
 import { Separator } from '../../components/ui/separator';
 import { cn } from '../../components/ui/utils';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
@@ -76,30 +83,39 @@ export function CanvasToolbarPrimaryControls({
         </>
       ) : null}
 
-      <Button
-        type="button"
-        data-slot="canvas-toolbar-export-command"
-        variant="ghost"
-        size="sm"
-        onClick={onExportProjectSnapshot}
-        disabled={!canExportProjectSnapshot}
-        className={canvasChromeClasses.ghostButton}
-      >
-        <Download className="size-4" />
-        {canvasViewCopy.toolbarExportSnapshotLabel}
-      </Button>
-      <Button
-        type="button"
-        data-slot="canvas-toolbar-import-command"
-        variant="ghost"
-        size="sm"
-        onClick={() => importInputRef.current?.click()}
-        disabled={!canImportProjectSnapshot}
-        className={canvasChromeClasses.ghostButton}
-      >
-        <Upload className="size-4" />
-        {canvasViewCopy.toolbarImportSnapshotLabel}
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            data-slot="canvas-toolbar-project-menu-trigger"
+            variant="ghost"
+            size="sm"
+            className={canvasChromeClasses.ghostButton}
+          >
+            <Folder className="size-4" />
+            {canvasViewCopy.toolbarProjectSnapshotMenuLabel}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuLabel>{canvasViewCopy.toolbarProjectSnapshotMenuLabel}</DropdownMenuLabel>
+          <DropdownMenuItem
+            data-slot="canvas-toolbar-export-command"
+            disabled={!canExportProjectSnapshot}
+            onClick={onExportProjectSnapshot}
+          >
+            <Download className="mr-2 size-4" />
+            {canvasViewCopy.toolbarExportSnapshotLabel}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            data-slot="canvas-toolbar-import-command"
+            disabled={!canImportProjectSnapshot}
+            onClick={() => importInputRef.current?.click()}
+          >
+            <Upload className="mr-2 size-4" />
+            {canvasViewCopy.toolbarImportSnapshotLabel}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       <input
         ref={importInputRef}
         type="file"

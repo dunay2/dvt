@@ -154,6 +154,7 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/workbench-ux-canon-component.md
   - docs/architecture/components/web/workbench-ux-canon-user-stories.md
   - docs/architecture/index.md
+  - docs/planning/reviews/architecture-and-governance/20260527-frontend-ux-maturity-audit-review.md
   - docs/planning/proposals/index.md
   - docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md
   - docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md

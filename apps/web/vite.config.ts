@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { fileURLToPath, URL } from 'node:url';
 
 import tailwindcss from '@tailwindcss/vite';
@@ -6,10 +7,19 @@ import { defineConfig, loadEnv } from 'vite';
 
 import { resolveWebManualChunk } from './vite.manualChunks';
 
+function resolveProductVersion(): string {
+  const rootPackageJson = JSON.parse(
+    readFileSync(new URL('../../package.json', import.meta.url), 'utf8')
+  ) as { version?: string };
+
+  return rootPackageJson.version?.trim() || process.env.npm_package_version?.trim() || '0.0.0';
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const proxyTarget = env.VITE_API_BASE_URL?.trim() || 'http://127.0.0.1:3000';
-  const appVersion = process.env.npm_package_version?.trim() || '0.0.0';
+  const appVersion =
+    env.VITE_APP_VERSION?.trim() || process.env.VITE_APP_VERSION?.trim() || resolveProductVersion();
   // Keep the bundle deterministic under Turbo cache; callers may inject an
   // explicit build date when they need one, whether it comes from package-local
   // .env files or the invoking shell environment.

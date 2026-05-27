@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { buildCanvasWorkspaceResourceGroups } from './canvasWorkspaceExplorerModel';
+import {
+  buildCanvasWorkspaceResourceGroups,
+  parseCanvasWorkspaceResourceDragPayload,
+} from './canvasWorkspaceExplorerModel';
 import type { CanonicalNode } from '../types/canonical';
 
 const mockResolveNodeKindRegistration = vi.hoisted(() => vi.fn());
@@ -87,5 +90,127 @@ describe('buildCanvasWorkspaceResourceGroups', () => {
       detail: 'transformation',
     });
     expect(groups[0]?.resources[0]?.dragPayload).toBeUndefined();
+  });
+
+  it('lists all project canvases and marks the active worksheet', () => {
+    mockResolveNodeKindRegistration.mockImplementation(() => ({
+      label: 'Model',
+      minimapColor: '#22c55e',
+      icon: vi.fn(),
+    }));
+
+    const groups = buildCanvasWorkspaceResourceGroups({
+      nodes: [],
+      activeCanvasId: 'canvas-modeling',
+      canvasDocuments: [
+        {
+          id: 'canvas-ingest',
+          kind: 'transformation',
+          title: 'Ingest',
+        },
+        {
+          id: 'canvas-modeling',
+          kind: 'transformation',
+          title: 'Modeling',
+        },
+      ],
+    });
+
+    expect(groups[0]).toMatchObject({
+      id: 'canvas',
+      label: 'Canvases',
+    });
+    expect(groups[0]?.resources).toEqual([
+      expect.objectContaining({
+        id: 'canvas:canvas-ingest',
+        label: 'Ingest',
+        isActive: false,
+      }),
+      expect.objectContaining({
+        id: 'canvas:canvas-modeling',
+        label: 'Modeling',
+        isActive: true,
+      }),
+    ]);
+  });
+
+  it('projects schemas as existing project resources that can be attached to cards', () => {
+    mockResolveNodeKindRegistration.mockImplementation(() => ({
+      label: 'Model',
+      minimapColor: '#22c55e',
+      icon: vi.fn(),
+    }));
+
+    const groups = buildCanvasWorkspaceResourceGroups({
+      nodes: [
+        buildNode({
+          id: 'node.raw.orders',
+          name: 'raw_orders',
+          metadata: {
+            package: 'analytics',
+            config: {
+              schema: 'raw',
+            },
+          },
+        }),
+        buildNode({
+          id: 'node.mart.orders',
+          name: 'mart_orders',
+          metadata: {
+            package: 'analytics',
+            dbt: {
+              schemaName: 'mart',
+            },
+          },
+        }),
+      ],
+    });
+
+    const schemaGroup = groups.find((group) => group.id === 'schemas');
+
+    expect(schemaGroup).toMatchObject({
+      id: 'schemas',
+      label: 'Schemas',
+    });
+    expect(schemaGroup?.resources).toEqual([
+      expect.objectContaining({
+        id: 'schema:mart',
+        label: 'mart',
+        resourceType: 'schema',
+        badge: 'schema',
+        detail: '1 node',
+        projectResourceDragPayload: {
+          resourceId: 'schema:mart',
+          resourceType: 'schema',
+          schemaName: 'mart',
+          label: 'mart',
+        },
+      }),
+      expect.objectContaining({
+        id: 'schema:raw',
+        label: 'raw',
+        resourceType: 'schema',
+        badge: 'schema',
+        detail: '1 node',
+        projectResourceDragPayload: {
+          resourceId: 'schema:raw',
+          resourceType: 'schema',
+          schemaName: 'raw',
+          label: 'raw',
+        },
+      }),
+    ]);
+    expect(schemaGroup?.resources[0]?.dragPayload).toBeUndefined();
+    expect(
+      parseCanvasWorkspaceResourceDragPayload(
+        JSON.stringify(schemaGroup?.resources[0]?.projectResourceDragPayload)
+      )
+    ).toEqual({
+      resourceId: 'schema:mart',
+      resourceType: 'schema',
+      schemaName: 'mart',
+      label: 'mart',
+    });
+    expect(parseCanvasWorkspaceResourceDragPayload('{')).toBeNull();
   });
 });

@@ -37,6 +37,9 @@ function buildDbtModelNode(): CanonicalNode {
     status: 'idle',
     tags: [],
     metadata: {
+      config: {
+        alias: 'orders_current',
+      },
       dbt: {
         packageName: 'analytics',
         materialized: 'view',
@@ -84,6 +87,9 @@ describe('canvas dbt authoring model', () => {
       metadata: {
         ...model.metadata,
         config: {
+          alias: 'orders_current',
+          schema: 'raw',
+          table: 'orders',
           materialized: 'table',
         },
         dbt: {
