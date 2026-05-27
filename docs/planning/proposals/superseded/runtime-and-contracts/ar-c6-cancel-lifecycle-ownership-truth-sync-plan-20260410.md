@@ -23,7 +23,7 @@ the cancel-lifecycle ownership lesson before further runtime work landed.
 
 The broader engine-runtime contract-pack and read-boundary reset now continues
 exclusively under the follow-on proposal
-[`Contract pack and read boundary reset plan`](./contract-pack-and-read-boundary-reset-plan-20260410.md).
+[`Contract pack and read boundary reset plan`](../../mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md).
 
 This document now remains as local architecture rationale only. It is no longer
 the active contract-pack execution direction.
@@ -44,7 +44,7 @@ the active contract-pack execution direction.
 - [DVT execution model](../../../execution-model/dvt-execution-model.md)
 - [Temporal Engine Policies](../../../../architecture/components/engine/adapters/temporal/EnginePolicies.md)
 - [Implementation architecture diagrams](../../../../architecture/diagrams/implementation-architecture-diagrams.md)
-- [AR-C6 Temporal cancel semantics plan](./ar-c6-temporal-cancel-semantics-plan-20260410.md)
+- [AR-C6 Temporal cancel semantics plan](../../mandatory/runtime-and-contracts/ar-c6-temporal-cancel-semantics-plan-20260410.md)
 
 ## Drift to resolve
 
