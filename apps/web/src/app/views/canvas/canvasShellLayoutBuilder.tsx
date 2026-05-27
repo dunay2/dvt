@@ -9,6 +9,18 @@ import { resolveCanvasDraftAccessRecoveryCommand } from './canvasDraftAccessPost
 import type { CanvasShellLayoutBuilderArgs } from './canvasShellBuilder.types';
 import type { CanvasShellLayout } from './canvasShell.types';
 
+function focusWorkspaceScopeControls(): void {
+  document
+    .querySelector<HTMLElement>(
+      [
+        '[data-slot="shell-workspace-context-trigger"]',
+        '[data-slot="shell-workspace-menu-trigger"]',
+        '[data-slot="select-trigger"]',
+      ].join(',')
+    )
+    ?.focus();
+}
+
 function renderCanvasShellReadOnlyBanner(
   recoveryCommands: CanvasShellLayoutBuilderArgs['recoveryCommands'],
   routePresentation: Pick<
@@ -25,12 +37,17 @@ function renderCanvasShellReadOnlyBanner(
           posture: routePresentation.draftAccessPosture,
           reloadLatestDraft: recoveryCommands.reloadLatestDraft,
           refetchDraftAfterAuthRefresh: recoveryCommands.refetchDraftAfterAuthRefresh,
-          focusScopeControls: () => {
-            document.querySelector<HTMLElement>('[data-slot="select-trigger"]')?.focus();
-          },
+          focusScopeControls: focusWorkspaceScopeControls,
         })}
       />
-      <CanvasReadOnlyBannerView state={routePresentation.readOnlyState} />
+      <CanvasReadOnlyBannerView
+        state={routePresentation.readOnlyState}
+        onRequestExecutableScope={
+          routePresentation.draftAccessPosture.kind === 'read_only'
+            ? focusWorkspaceScopeControls
+            : undefined
+        }
+      />
     </>
   );
 }

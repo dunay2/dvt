@@ -373,7 +373,11 @@ function resolveCanvasDraftRecoveryBannerDataSlot(posture: CanvasDraftAccessPost
 export function toCanvasDraftRecoveryBannerViewState(
   posture: CanvasDraftAccessPosture
 ): CanvasDraftRecoveryBannerState | null {
-  if (posture.recoveryAction === 'none' || posture.recoveryAction === 'wait') {
+  if (
+    posture.recoveryAction === 'none' ||
+    posture.recoveryAction === 'wait' ||
+    posture.recoveryAction === 'inspect_only'
+  ) {
     return null;
   }
 
@@ -385,8 +389,7 @@ export function toCanvasDraftRecoveryBannerViewState(
     title: posture.title,
     message: posture.message,
     actionLabel: resolveCanvasDraftRecoveryActionLabel(posture),
-    actionEnabled:
-      posture.recoveryAction !== 'inspect_only' && posture.recoveryAction !== 'escalate_format',
+    actionEnabled: posture.recoveryAction !== 'escalate_format',
     recoveryAction: posture.recoveryAction,
   };
 }

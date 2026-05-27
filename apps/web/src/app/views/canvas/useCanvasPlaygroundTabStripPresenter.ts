@@ -39,10 +39,13 @@ export function useCanvasPlaygroundTabStripPresenter({
     onCreateCanvasDocument,
     copy: resolveCanvasViewCopy(),
   });
+  const resolveDefaultReplacementCanvasKind = () =>
+    replacementActionState.activeCanvasKind ?? availableCanvasKinds[0] ?? null;
   const closeReplacementDialog = () => setReplacementCanvasKind(null);
   const requestReplacement = () => {
-    if (replacementActionState.activeCanvasKind != null) {
-      setReplacementCanvasKind(replacementActionState.activeCanvasKind);
+    const defaultReplacementKind = resolveDefaultReplacementCanvasKind();
+    if (replacementActionState.viewState.canReplaceCanvas && defaultReplacementKind != null) {
+      setReplacementCanvasKind(defaultReplacementKind);
     }
   };
   const confirmReplacement = () => {
@@ -61,11 +64,19 @@ export function useCanvasPlaygroundTabStripPresenter({
     tabState,
     replacementAction: replacementActionState.viewState,
     isReplacementDialogOpen: replacementCanvasKind != null,
+    selectedReplacementKind: replacementCanvasKind?.kind ?? null,
     variant,
     onRequestReplacement: requestReplacement,
     onReplacementDialogOpenChange: (open) => {
       if (!open) {
         closeReplacementDialog();
+      }
+    },
+    onReplacementTemplateKindChange: (kind) => {
+      const nextCanvasKind =
+        availableCanvasKinds.find((registration) => registration.kind === kind) ?? null;
+      if (nextCanvasKind != null) {
+        setReplacementCanvasKind(nextCanvasKind);
       }
     },
     onCancelReplacement: closeReplacementDialog,

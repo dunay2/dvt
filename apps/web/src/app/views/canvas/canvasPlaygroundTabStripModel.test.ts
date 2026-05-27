@@ -24,6 +24,21 @@ const transformationCanvasKind: CanvasKindRegistration = {
   nodeKinds: [],
 };
 
+const dbtCanvasKind: CanvasKindRegistration = {
+  kind: 'dbt',
+  pluginId: 'dbt',
+  label: 'dbt',
+  description: 'Author dbt projects.',
+  createTitle: 'dbt canvas',
+  emptyState: {
+    title: 'No dbt content loaded',
+    editableMessage: 'Add dbt resources to start authoring.',
+    firstNodeLabel: 'Add first dbt node',
+    firstNodeHelper: 'Choose a dbt resource.',
+  },
+  nodeKinds: [],
+};
+
 const populatedTabState: CanvasPlaygroundTabState = {
   activeTabId: 'workspace-draft-canvas',
   tabs: [
@@ -59,6 +74,14 @@ describe('canvas playground tab strip model', () => {
         dialogDescription: copy.replaceCanvasMessage,
         cancelLabel: copy.replaceCanvasCancelLabel,
         confirmLabel: copy.replaceCanvasConfirmLabel,
+        templateLabel: copy.routeNeedsCanvasTemplateLabel,
+        templateOptions: [
+          {
+            kind: 'transformation',
+            title: 'Transformation canvas',
+            description: 'Author transformation pipelines.',
+          },
+        ],
       },
     });
   });
@@ -69,6 +92,21 @@ describe('canvas playground tab strip model', () => {
       title: 'Transformation canvas',
       mode: 'replace_current',
     });
+  });
+
+  it('offers every registered canvas runtime template for replacement', () => {
+    const state = resolveCanvasReplacementActionState({
+      tabState: populatedTabState,
+      availableCanvasKinds: [dbtCanvasKind, transformationCanvasKind],
+      canEditEdges: true,
+      onCreateCanvasDocument: vi.fn(),
+      copy: resolveCanvasViewCopy('en-US'),
+    });
+
+    expect(state.viewState.templateOptions.map((option) => option.kind)).toEqual([
+      'dbt',
+      'transformation',
+    ]);
   });
 
   it('fails closed when no authoritative canvas tab can be rendered', () => {

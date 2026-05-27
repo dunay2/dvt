@@ -265,6 +265,12 @@ commandQueryRails:
   - name: BuildDbtPlannerGraphSource
     type: query
     dddOwner: DbtCanvasGraphSourceProjection
+  - name: SelectCanvasRuntimeTemplate
+    type: command
+    dddOwner: CanvasRuntimeTemplateSelection
+  - name: RequestCanvasExecutionScope
+    type: command
+    dddOwner: CanvasExecutionScopeRequest
   - name: PreviewExecutablePlan
     type: command
     dddOwner: ProtectedRuntimePlanPreview
@@ -293,12 +299,19 @@ domainObjects:
   - name: DbtCanvasGraphSourceProjection
     type: read model
     owner: apps/web
+  - name: CanvasRuntimeTemplateSelection
+    type: value object
+    owner: apps/web
+  - name: CanvasExecutionScopeRequest
+    type: command request
+    owner: apps/web
   - name: DbtRunExecutionContextBindingUseCase
     type: application service
     owner: apps/api
 fowlerSignals:
   - Documentation drift
   - Hidden authority
+  - Hidden choice
   - Boundary drift
   - Primitive obsession
   - Responsibility overload
@@ -406,6 +419,12 @@ symbols:
   - { name: resolveDbtSourceRelationshipSelection, path: apps/web/src/app/views/canvas/canvasDbtAuthoringModel.ts, dddOwner: DbtSourceRelationshipSelection, cqRails: [SelectDbtModelOrigin], fowlerSignals: [Boundary drift], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-DBT-AUTHOR-RUN-20260526, cypressCoverage: manual Playwright /canvas dbt flow, unitTests: [apps/web/src/app/views/canvas/canvasDbtAuthoringModel.test.ts] }
   - { name: buildDbtWorkspaceArtifacts, path: apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.ts, dddOwner: DbtWorkspaceArtifactProjection, cqRails: [GenerateDbtWorkspaceArtifacts, SaveWorkspaceFileContent], fowlerSignals: [Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-DBT-AUTHOR-RUN-20260526, cypressCoverage: manual Playwright /canvas dbt flow, unitTests: [apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts] }
   - { name: buildDbtPlannerGraphSource, path: apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.ts, dddOwner: DbtCanvasGraphSourceProjection, cqRails: [BuildDbtPlannerGraphSource, PreviewExecutablePlan], fowlerSignals: [Responsibility overload], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-DBT-AUTHOR-RUN-20260526, cypressCoverage: manual Playwright /canvas dbt flow, unitTests: [apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts] }
+  - { name: CanvasReplacementTemplateOption, path: apps/web/src/app/views/canvas/canvasPlaygroundTabStripModel.ts, dddOwner: CanvasRuntimeTemplateSelection, cqRails: [SelectCanvasRuntimeTemplate], fowlerSignals: [Hidden choice], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-DBT-AUTHOR-RUN-20260526, cypressCoverage: manual Playwright /canvas runtime-template flow, unitTests: [apps/web/src/app/views/canvas/canvasPlaygroundTabStripModel.test.ts] }
+  - { name: toCanvasReplacementTemplateOption, path: apps/web/src/app/views/canvas/canvasPlaygroundTabStripModel.ts, dddOwner: CanvasRuntimeTemplateSelection, cqRails: [SelectCanvasRuntimeTemplate], fowlerSignals: [Hidden choice], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-DBT-AUTHOR-RUN-20260526, cypressCoverage: manual Playwright /canvas runtime-template flow, unitTests: [apps/web/src/app/views/canvas/canvasPlaygroundTabStripModel.test.ts] }
+  - { name: dbtCanvasKind, path: apps/web/src/app/views/canvas/canvasPlaygroundTabStripModel.test.ts, dddOwner: CanvasRuntimeTemplateSelection, cqRails: [SelectCanvasRuntimeTemplate], fowlerSignals: [Hidden choice], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-DBT-AUTHOR-RUN-20260526, cypressCoverage: manual Playwright /canvas runtime-template flow, unitTests: [apps/web/src/app/views/canvas/canvasPlaygroundTabStripModel.test.ts] }
+  - { name: dbtCanvasKind, path: apps/web/src/app/views/canvas/CanvasPlaygroundTabStrip.test.tsx, dddOwner: CanvasRuntimeTemplateSelection, cqRails: [SelectCanvasRuntimeTemplate], fowlerSignals: [Hidden choice], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-DBT-AUTHOR-RUN-20260526, cypressCoverage: manual Playwright /canvas runtime-template flow, unitTests: [apps/web/src/app/views/canvas/CanvasPlaygroundTabStrip.test.tsx] }
+  - { name: CanvasReadOnlyBannerView, path: apps/web/src/app/views/canvas/CanvasStateViews.tsx, dddOwner: CanvasExecutionScopeRequest, cqRails: [RequestCanvasExecutionScope], fowlerSignals: [Responsibility overload], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-DBT-AUTHOR-RUN-20260526, cypressCoverage: manual Playwright /canvas read-only flow, unitTests: [apps/web/src/app/views/Canvas.readOnlyStates.test.tsx] }
+  - { name: focusWorkspaceScopeControls, path: apps/web/src/app/views/canvas/canvasShellLayoutBuilder.tsx, dddOwner: CanvasExecutionScopeRequest, cqRails: [RequestCanvasExecutionScope], fowlerSignals: [Responsibility overload], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-DBT-AUTHOR-RUN-20260526, cypressCoverage: manual Playwright /canvas read-only flow, unitTests: [apps/web/src/app/views/Canvas.readOnlyStates.test.tsx] }
   - { name: executeCanvasPlanAction, path: apps/web/src/app/views/canvas/canvasPlanAction.ts, dddOwner: CanvasExecutionPlanAction, cqRails: [PreviewExecutablePlan, GenerateDbtWorkspaceArtifacts], fowlerSignals: [Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-DBT-AUTHOR-RUN-20260526, cypressCoverage: manual Playwright /canvas dbt flow, unitTests: [apps/web/src/app/views/canvas/useCanvasExecutionActions.dbt.test.tsx] }
   - { name: UseCanvasExecutionDraftFlushArgs, path: apps/web/src/app/views/canvas/useCanvasExecutionDraftFlush.ts, dddOwner: CanvasExecutionPlanAction, cqRails: [PreviewExecutablePlan, StartRun], fowlerSignals: [Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-DBT-AUTHOR-RUN-20260526, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts, unitTests: [apps/web/src/app/views/canvas/useCanvasExecutionActions.dbt.test.tsx] }
   - { name: projectFlushGraph, path: apps/web/src/app/views/canvas/useCanvasExecutionDraftFlush.ts, dddOwner: CanvasExecutionPlanAction, cqRails: [PreviewExecutablePlan, StartRun], fowlerSignals: [Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-DBT-AUTHOR-RUN-20260526, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts, unitTests: [apps/web/src/app/views/canvas/useCanvasExecutionActions.dbt.test.tsx] }

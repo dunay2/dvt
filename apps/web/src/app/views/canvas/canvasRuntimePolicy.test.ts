@@ -212,7 +212,7 @@ describe('resolveCanvasRuntimePolicy', () => {
     ).toBe(false);
   });
 
-  it('keeps runtime command policy closed when draft posture is read-only', () => {
+  it('blocks plan and run when draft posture is read-only', () => {
     const draftAdmission = applyCanvasDraftPostureToRuntimePolicyInput({
       posture: deriveCanvasDraftAccessPosture({
         draftAccessMode: 'read_only',

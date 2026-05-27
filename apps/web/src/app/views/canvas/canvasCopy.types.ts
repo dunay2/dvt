@@ -33,6 +33,7 @@ export type CanvasViewCopy = {
   readonly readOnlyMessage: string;
   readonly limitedAccessTitle: string;
   readonly readOnlyNote: string;
+  readonly readOnlyActionLabel: string;
   readonly draftAccessDeniedTitle: string;
   readonly draftAccessDeniedMessage: string;
   readonly sessionRequiredDraftLabel: string;
