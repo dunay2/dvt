@@ -14,6 +14,10 @@ import type { useCanvasInspectorCommands } from './useCanvasInspectorCommands';
 import type { useCanvasLayoutPersistence } from './useCanvasLayoutPersistence';
 import type { useCanvasMutationHandlers } from './useCanvasMutationHandlers';
 import type { useCanvasOverlayModel } from './useCanvasOverlayModel';
+import {
+  listProjectCanvasDocuments,
+  resolveActiveProjectCanvasId,
+} from './canvasProjectCanvasLifecycle';
 
 const canvasControllerNodeTypes: NodeTypes = {
   dbtNode: DbtNodeComponent,
@@ -86,6 +90,9 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
     runtimeCapabilities: capabilities,
     availableCanvasKinds: getAllCanvasKinds(capabilities),
     canvasDocument: draftReadModel?.record?.draft.canvas ?? null,
+    canvasDocuments: listProjectCanvasDocuments(draftReadModel?.record?.draft ?? null),
+    activeCanvasId: resolveActiveProjectCanvasId(draftReadModel?.record?.draft ?? null),
+    executionEnvironmentOptions: args.environment.workspaceBootstrapConfig.environmentOptions,
     canCreateCanvasDocument,
     userPermissions: {
       ...store.userPermissions,
@@ -133,6 +140,9 @@ function buildCanvasInteractionViewModel(args: CanvasControllerViewModelArgs) {
     handleDragOver: graphHandlers.handleDragOver,
     handleCreateAuthoringNode: graphHandlers.handleCreateAuthoringNode,
     handleCreateCanvasDocument,
+    handleSelectCanvasDocument: args.authoringRuntime.handleSelectCanvasDocument,
+    handleApplyCanvasDocumentPatch: args.authoringRuntime.handleApplyCanvasDocumentPatch,
+    handleDeleteCanvasDocument: args.authoringRuntime.handleDeleteCanvasDocument,
     handleExportProjectSnapshot: args.authoringRuntime.handleExportProjectSnapshot,
     handleImportProjectSnapshotFile: args.authoringRuntime.handleImportProjectSnapshotFile,
     handleSourceImportComplete: mutationHandlers.handleSourceImportComplete,

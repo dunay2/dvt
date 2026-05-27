@@ -109,6 +109,7 @@ function buildCommandArgs(overrides: BuildCommandOverrides = {}): BuildCommandAr
         kind: 'transformation',
         title: 'Transformation canvas',
       },
+      currentDraftPayload: buildEmptyDraft(),
       draftRepository: effectiveDraftRepository,
       graphDraftQuery: {
         data: createUnknownCanvasAuthoringDraftReadModel(),
@@ -270,6 +271,81 @@ describe('canvasCreateCanvasDocumentCommand', () => {
     });
     expect(draftQueryCache.replaceRemoteDraftState).toHaveBeenCalledTimes(1);
     expect(setDraftSaveStatus.mock.calls).toEqual([['saving'], ['saved']]);
+  });
+
+  it('creates a new canvas workspace without deleting the current active graph', async () => {
+    const existingDraft = buildEmptyDraft({
+      nodeIds: ['src_orders'],
+      nodePositions: {
+        src_orders: { x: 120, y: 80 },
+      },
+      nodes: [
+        {
+          id: 'src_orders',
+          name: 'src_orders',
+          pluginId: 'dvt',
+          kind: 'source',
+          role: 'input',
+          status: 'idle',
+          tags: [],
+        },
+      ],
+      edges: [],
+    });
+    const existingRecord = buildRecord({
+      revision: 'rev-existing',
+      draft: existingDraft,
+    });
+    const { args, draftRepository } = buildCommandArgs({
+      command: {
+        kind: 'dbt',
+        title: 'DBT canvas',
+        mode: 'create_new',
+      },
+      currentDraftPayload: existingDraft,
+      graphDraftQuery: {
+        data: createWritableCanvasAuthoringDraftReadModel(existingRecord),
+        isPending: false,
+        isError: false,
+      },
+    });
+
+    await executeCreateCanvasDocumentCommand(args);
+
+    expect(draftRepository.saveGraphDraft).toHaveBeenCalledWith({
+      expectedRevision: 'rev-existing',
+      idempotencyKey: expect.any(String),
+      draft: expect.objectContaining({
+        canvas: {
+          id: 'dbt-canvas',
+          kind: 'dbt',
+          title: 'DBT canvas',
+        },
+        activeCanvasId: 'dbt-canvas',
+        nodeIds: [],
+        nodePositions: {},
+        nodes: [],
+        edges: [],
+        canvases: [
+          expect.objectContaining({
+            canvas: {
+              id: 'transformation-canvas',
+              kind: 'transformation',
+              title: 'Transformation canvas',
+            },
+            nodeIds: ['src_orders'],
+          }),
+          expect.objectContaining({
+            canvas: {
+              id: 'dbt-canvas',
+              kind: 'dbt',
+              title: 'DBT canvas',
+            },
+            nodeIds: [],
+          }),
+        ],
+      }),
+    });
   });
 
   it.each([

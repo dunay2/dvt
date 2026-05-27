@@ -15,6 +15,7 @@ export function useCanvasCurrentDraftPayload({
   graphNodes,
   draftSession,
   canvasDocument,
+  baselineDraft,
   canonicalNodes,
   canonicalEdges,
 }: CanvasCurrentDraftPayloadDto) {
@@ -24,10 +25,11 @@ export function useCanvasCurrentDraftPayload({
         graphNodes,
         draftSession,
         canvasDocument ?? { kind: '', title: '' },
+        baselineDraft,
         canonicalNodes,
         canonicalEdges
       ),
-    [canvasDocument, canonicalEdges, canonicalNodes, draftSession, graphNodes]
+    [baselineDraft, canvasDocument, canonicalEdges, canonicalNodes, draftSession, graphNodes]
   );
   const currentDraftPayloadSignature = useMemo(
     () => serializeCanvasDraftAuthoringSignature(currentDraftPayload),

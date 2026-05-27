@@ -57,6 +57,10 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.toolbar.snapToGridLabel',
     fallback: 'Snap',
   },
+  toolbarProjectSnapshotMenuLabel: {
+    key: 'canvas.toolbar.projectSnapshotMenuLabel',
+    fallback: 'Project',
+  },
   toolbarExportSnapshotLabel: {
     key: 'canvas.toolbar.exportSnapshotLabel',
     fallback: 'Export',
@@ -127,12 +131,12 @@ export const canvasViewToolbarCopyByKey = {
   },
   replaceCanvasTitle: {
     key: 'canvas.toolbar.replaceCanvasTitle',
-    fallback: 'Replace current canvas?',
+    fallback: 'Create a new canvas?',
   },
   replaceCanvasMessage: {
     key: 'canvas.toolbar.replaceCanvasMessage',
     fallback:
-      'This creates a blank canvas in the current workspace draft. Existing nodes and edges are removed after confirmation.',
+      'This adds another worksheet to the current project draft. The active canvas stays available in the left project list.',
   },
   replaceCanvasCancelLabel: {
     key: 'canvas.toolbar.replaceCanvasCancelLabel',
@@ -140,7 +144,7 @@ export const canvasViewToolbarCopyByKey = {
   },
   replaceCanvasConfirmLabel: {
     key: 'canvas.toolbar.replaceCanvasConfirmLabel',
-    fallback: 'Create blank canvas',
+    fallback: 'Create canvas',
   },
   draftSyncedLabel: {
     key: 'canvas.draft.toolbar.syncedLabel',

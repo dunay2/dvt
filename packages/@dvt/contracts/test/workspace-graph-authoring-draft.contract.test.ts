@@ -51,6 +51,128 @@ describe('WorkspaceGraphAuthoringDraft contract', () => {
     expect(result.success).toBe(true);
   });
 
+  it('accepts a project draft with multiple named canvases and one active canvas', () => {
+    const result = WorkspaceGraphAuthoringDraftSchema.safeParse({
+      canvas: {
+        id: 'canvas-modeling',
+        kind: 'transformation',
+        title: 'Modeling',
+        environmentId: 'dev',
+        defaultPermission: 'write',
+      },
+      activeCanvasId: 'canvas-modeling',
+      canvases: [
+        {
+          canvas: {
+            id: 'canvas-ingest',
+            kind: 'transformation',
+            title: 'Ingest',
+            environmentId: 'dev',
+            defaultPermission: 'write',
+          },
+          nodeIds: [],
+          nodePositions: {},
+          nodes: [],
+          edges: [],
+        },
+        {
+          canvas: {
+            id: 'canvas-modeling',
+            kind: 'transformation',
+            title: 'Modeling',
+            environmentId: 'dev',
+            defaultPermission: 'write',
+          },
+          nodeIds: [sourceNode.id],
+          nodePositions: {
+            [sourceNode.id]: { x: 120, y: 80 },
+          },
+          nodes: [sourceNode],
+          edges: [],
+        },
+      ],
+      nodeIds: [sourceNode.id],
+      nodePositions: {
+        [sourceNode.id]: { x: 120, y: 80 },
+      },
+      nodes: [sourceNode],
+      edges: [],
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects multiple canvases with duplicate canvas ids', () => {
+    const result = WorkspaceGraphAuthoringDraftSchema.safeParse({
+      canvas: {
+        id: 'canvas-1',
+        kind: 'transformation',
+        title: 'Main canvas',
+      },
+      activeCanvasId: 'canvas-1',
+      canvases: [
+        {
+          canvas: {
+            id: 'canvas-1',
+            kind: 'transformation',
+            title: 'Main canvas',
+          },
+          nodeIds: [],
+          nodePositions: {},
+          nodes: [],
+          edges: [],
+        },
+        {
+          canvas: {
+            id: 'canvas-1',
+            kind: 'transformation',
+            title: 'Duplicate',
+          },
+          nodeIds: [],
+          nodePositions: {},
+          nodes: [],
+          edges: [],
+        },
+      ],
+      nodeIds: [],
+      nodePositions: {},
+      nodes: [],
+      edges: [],
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects multiple canvases when the active canvas id is not listed', () => {
+    const result = WorkspaceGraphAuthoringDraftSchema.safeParse({
+      canvas: {
+        id: 'canvas-missing',
+        kind: 'transformation',
+        title: 'Missing canvas',
+      },
+      activeCanvasId: 'canvas-missing',
+      canvases: [
+        {
+          canvas: {
+            id: 'canvas-existing',
+            kind: 'transformation',
+            title: 'Existing canvas',
+          },
+          nodeIds: [],
+          nodePositions: {},
+          nodes: [],
+          edges: [],
+        },
+      ],
+      nodeIds: [],
+      nodePositions: {},
+      nodes: [],
+      edges: [],
+    });
+
+    expect(result.success).toBe(false);
+  });
+
   it('rejects edges that reference nodes outside the aggregate', () => {
     const result = WorkspaceGraphAuthoringDraftSchema.safeParse({
       canvas: {

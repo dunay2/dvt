@@ -112,6 +112,7 @@ export {
   WORKSPACE_GRAPH_AUTHORING_NODE_ROLE,
   WORKSPACE_GRAPH_AUTHORING_NODE_STATUS,
   WorkspaceGraphAuthoringCanvasDocumentSchema,
+  WorkspaceGraphAuthoringCanvasWorkspaceSchema,
   WorkspaceGraphAuthoringDraftSchema,
   WorkspaceGraphAuthoringEdgeSchema,
   WorkspaceGraphAuthoringNodePositionSchema,
@@ -119,6 +120,7 @@ export {
 } from './contracts/planner/WorkspaceGraphAuthoringDraft.v1.js';
 export type {
   WorkspaceGraphAuthoringCanvasDocument,
+  WorkspaceGraphAuthoringCanvasWorkspace,
   WorkspaceGraphAuthoringDraft,
   WorkspaceGraphAuthoringEdge,
   WorkspaceGraphAuthoringEdgeRelation,

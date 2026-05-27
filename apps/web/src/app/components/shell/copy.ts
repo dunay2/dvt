@@ -3,6 +3,12 @@ import { resolveString, type LocalizableString } from '../../plugins/contracts/P
 
 export type ShellTopBarCopy = {
   readonly shell: string;
+  readonly aboutCommand: string;
+  readonly aboutTitle: string;
+  readonly aboutDescription: string;
+  readonly aboutVersionLabel: string;
+  readonly aboutBuildDateLabel: string;
+  readonly aboutBuildDateUnavailable: string;
   readonly workspaceMenu: string;
   readonly workspacePanels: string;
   readonly globalNavigation: string;
@@ -33,6 +39,15 @@ export type ShellTopBarCopy = {
 
 const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
   shell: { key: 'shell.view', fallback: 'View' },
+  aboutCommand: { key: 'shell.about.command', fallback: 'About Raven' },
+  aboutTitle: { key: 'shell.about.title', fallback: 'About Raven' },
+  aboutDescription: {
+    key: 'shell.about.description',
+    fallback: 'Compiled application metadata for the running Raven bundle.',
+  },
+  aboutVersionLabel: { key: 'shell.about.versionLabel', fallback: 'Compiled version' },
+  aboutBuildDateLabel: { key: 'shell.about.buildDateLabel', fallback: 'Build date' },
+  aboutBuildDateUnavailable: { key: 'shell.about.buildDateUnavailable', fallback: 'Not published' },
   workspaceMenu: { key: 'shell.workspaceMenu', fallback: 'Workspace' },
   workspacePanels: { key: 'shell.workspacePanels', fallback: 'Panels' },
   globalNavigation: { key: 'shell.globalNavigation', fallback: 'Navigation' },
@@ -75,6 +90,12 @@ const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
 
 const COPY_ES: ShellTopBarCopy = {
   shell: 'Vista',
+  aboutCommand: 'Acerca de Raven',
+  aboutTitle: 'Acerca de Raven',
+  aboutDescription: 'Metadatos compilados del bundle de Raven en ejecucion.',
+  aboutVersionLabel: 'Version compilada',
+  aboutBuildDateLabel: 'Fecha de build',
+  aboutBuildDateUnavailable: 'No publicada',
   workspaceMenu: 'Workspace',
   workspacePanels: 'Paneles',
   globalNavigation: 'Navegacion',
@@ -131,6 +152,12 @@ export function resolveShellTopBarCopy(locale?: string): ShellTopBarCopy {
 
   return {
     shell: resolveString(COPY_BY_KEY.shell, locale),
+    aboutCommand: resolveString(COPY_BY_KEY.aboutCommand, locale),
+    aboutTitle: resolveString(COPY_BY_KEY.aboutTitle, locale),
+    aboutDescription: resolveString(COPY_BY_KEY.aboutDescription, locale),
+    aboutVersionLabel: resolveString(COPY_BY_KEY.aboutVersionLabel, locale),
+    aboutBuildDateLabel: resolveString(COPY_BY_KEY.aboutBuildDateLabel, locale),
+    aboutBuildDateUnavailable: resolveString(COPY_BY_KEY.aboutBuildDateUnavailable, locale),
     workspaceMenu: resolveString(COPY_BY_KEY.workspaceMenu, locale),
     workspacePanels: resolveString(COPY_BY_KEY.workspacePanels, locale),
     globalNavigation: resolveString(COPY_BY_KEY.globalNavigation, locale),

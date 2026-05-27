@@ -13,6 +13,7 @@ import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
 import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
 import type {
   CanvasShellChromeCommands,
+  CanvasShellCanvasCommands,
   CanvasShellGraph,
   CanvasShellGraphCommands,
   CanvasShellLayout,
@@ -65,6 +66,7 @@ type CanvasShellPropsOverrides = {
   toolbar?: Partial<CanvasShellToolbar>;
   graphCommands?: Partial<CanvasShellGraphCommands>;
   chromeCommands?: Partial<CanvasShellChromeCommands>;
+  canvasCommands?: Partial<CanvasShellCanvasCommands>;
 };
 
 function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
@@ -104,6 +106,12 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
     panels: {
       explorerResourceGroups: buildCanvasWorkspaceResourceGroups({ nodes: explorerNodes }),
       authoringNodeKinds: [buildTestNodeKind()],
+      activeCanvasId: null,
+      activeCanvas: null,
+      canvasDocuments: [],
+      executionEnvironmentOptions: [{ value: 'dev', label: 'dev' }],
+      canEditCanvas: true,
+      canDeleteActiveCanvas: false,
       inspectorNode: null,
       inspectorGraphNodes: [],
       inspectorGraphEdges: [],
@@ -191,6 +199,12 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
       onPlan: vi.fn(),
       onRun: vi.fn(),
       ...overrides?.chromeCommands,
+    },
+    canvasCommands: {
+      onSelectCanvas: vi.fn(),
+      onApplyCanvasPatch: vi.fn(),
+      onDeleteActiveCanvas: vi.fn(),
+      ...overrides?.canvasCommands,
     },
   };
 }

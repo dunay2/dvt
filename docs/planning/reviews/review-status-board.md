@@ -87,6 +87,25 @@ Disposition:
 - closeout-specific residual scanning remains owned by
   `GD-CLOSEOUT-DEBT-RECON-1`.
 
+## 2026-05-27 Frontend UX maturity audit
+
+[Frontend UX Maturity Audit Review](./architecture-and-governance/20260527-frontend-ux-maturity-audit-review.md)
+records the current Canvas, Runs, Templates, Plugins, and Admin UX audit
+against the local workbench rules and mature systems such as VS Code, dbt
+Cloud, Databricks Workflows, Airflow, Snowflake Snowsight, and Oracle SQL
+Developer.
+
+Disposition:
+
+- desktop Canvas and Templates show the right workbench direction, but the
+  product flow is not yet mature enough for import/edit/save/run/export;
+- narrow viewport behavior is not product-ready because route controls, tables,
+  and panels clip horizontally;
+- the next product route remains Planning DB-owned by
+  `E-SHELL-TOP-MENU-RATIONALIZATION-1`, `E-DBT-AUTHOR-RUN-1`, and
+  `E-DBT-PROJECT-ROUNDTRIP-1`;
+- no Markdown-only follow-up queue is introduced by the review.
+
 ## Active Reviews
 
 | Review                                                                                                                                            | Domain folder                     | Current review role                                     | Workboard task linkage                     | Execution status | Execution progress |

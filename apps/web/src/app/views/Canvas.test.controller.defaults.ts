@@ -32,6 +32,9 @@ type CanvasWorkbenchDefaultsDto = {
   runtimeCapabilities: CanvasController['runtimeCapabilities'];
   availableCanvasKinds: CanvasController['availableCanvasKinds'];
   canvasDocument: CanvasController['canvasDocument'];
+  canvasDocuments: CanvasController['canvasDocuments'];
+  activeCanvasId: CanvasController['activeCanvasId'];
+  executionEnvironmentOptions: CanvasController['executionEnvironmentOptions'];
   canCreateCanvasDocument: CanvasController['canCreateCanvasDocument'];
   userPermissions: CanvasController['userPermissions'];
   canvasAuthoringMode: CanvasController['canvasAuthoringMode'];
@@ -187,9 +190,19 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
       },
     ],
     canvasDocument: {
+      id: 'main-canvas',
       kind: 'transformation',
       title: 'Main canvas',
     },
+    canvasDocuments: [
+      {
+        id: 'main-canvas',
+        kind: 'transformation',
+        title: 'Main canvas',
+      },
+    ],
+    activeCanvasId: 'main-canvas',
+    executionEnvironmentOptions: [{ value: 'dev', label: 'dev' }],
     canCreateCanvasDocument: false,
     userPermissions: buildDefaultCanvasUserPermissions(),
     canvasAuthoringMode: 'transformation',
@@ -273,6 +286,9 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'handleDragOver'
   | 'handleCreateAuthoringNode'
   | 'handleCreateCanvasDocument'
+  | 'handleSelectCanvasDocument'
+  | 'handleApplyCanvasDocumentPatch'
+  | 'handleDeleteCanvasDocument'
   | 'handleExportProjectSnapshot'
   | 'handleImportProjectSnapshotFile'
   | 'applyInspectorNodeDraft'
@@ -311,6 +327,9 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     handleDragOver: vi.fn(),
     handleCreateAuthoringNode: vi.fn(),
     handleCreateCanvasDocument: vi.fn(),
+    handleSelectCanvasDocument: vi.fn(),
+    handleApplyCanvasDocumentPatch: vi.fn(),
+    handleDeleteCanvasDocument: vi.fn(),
     handleExportProjectSnapshot: vi.fn(),
     handleImportProjectSnapshotFile: vi.fn(),
     applyInspectorNodeDraft: vi.fn(),

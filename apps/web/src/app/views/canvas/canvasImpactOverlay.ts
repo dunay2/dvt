@@ -5,6 +5,7 @@ type NodeActionHandlers = {
   onDuplicateNode?: (nodeId: string) => void;
   onRemoveNode?: (nodeId: string) => void;
   onToggleNodeSelection: (nodeId: string, shouldSelect: boolean) => void;
+  onAttachSchemaToNode?: (nodeId: string, schemaName: string) => void;
 };
 
 type BuildNodesWithImpactParams = {
@@ -83,6 +84,7 @@ export function buildNodesWithImpact({
         onDuplicateNode: handlers.onDuplicateNode,
         onRemoveNode: handlers.onRemoveNode,
         onToggleNodeSelection: handlers.onToggleNodeSelection,
+        onAttachSchemaToNode: handlers.onAttachSchemaToNode,
       },
     }));
   }
@@ -109,6 +111,7 @@ export function buildNodesWithImpact({
       onDuplicateNode: handlers.onDuplicateNode,
       onRemoveNode: handlers.onRemoveNode,
       onToggleNodeSelection: handlers.onToggleNodeSelection,
+      onAttachSchemaToNode: handlers.onAttachSchemaToNode,
     },
   }));
 }

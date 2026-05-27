@@ -135,7 +135,7 @@ describe('canvas startup bootstrap publication architecture', () => {
     const workspaceApiPortsSource = readAppSource('../../services/workspace/workspacePorts.api.ts');
 
     expect(tabStripSource).toContain('CanvasPlaygroundTabStripTemplate');
-    expect(tabStripModelSource).toContain("mode: 'replace_current'");
+    expect(tabStripModelSource).toContain("mode: 'create_new'");
     expect(tabStripModelSource).toContain('resolveCanvasReplacementActionState');
     expect(tabStripTemplateSource).toContain('AlertDialog');
 
@@ -143,6 +143,7 @@ describe('canvas startup bootstrap publication architecture', () => {
     expect(createCommandPolicySource).toContain("command.mode ?? 'create_first'");
     expect(createCommandPolicySource).toContain("case 'create_first'");
     expect(createCommandPolicySource).toContain("case 'replace_current'");
+    expect(createCommandPolicySource).toContain("case 'create_new'");
     expect(createCommandPolicySource).toContain('resolveCreateFirstCanvasDocumentEligibility');
     expect(createCommandPolicySource).toContain('resolveReplaceCurrentCanvasDocumentEligibility');
     expect(createCommandPolicySource).toContain('expectedRevision: existingRecord.revision');

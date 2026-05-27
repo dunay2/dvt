@@ -1,4 +1,4 @@
-/** Owned concern: resolve Canvas playground tab-strip replacement policy and commands without JSX. */
+/** Owned concern: resolve Canvas playground tab-strip creation policy and commands without JSX. */
 import type { CanvasKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanvasViewCopy } from './canvasCopy.types';
 import type { CanvasCreateCanvasDocumentCommand } from './canvasDraftLifecycle.types';
@@ -104,5 +104,15 @@ export function createReplaceCurrentCanvasDocumentCommand(
     kind: canvasKind.kind,
     title: canvasKind.createTitle,
     mode: 'replace_current',
+  };
+}
+
+export function createNewCanvasDocumentCommand(
+  canvasKind: CanvasKindRegistration
+): CanvasCreateCanvasDocumentCommand {
+  return {
+    kind: canvasKind.kind,
+    title: canvasKind.createTitle,
+    mode: 'create_new',
   };
 }
