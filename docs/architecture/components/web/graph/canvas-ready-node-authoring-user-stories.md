@@ -10,31 +10,32 @@ last_reviewed: 2026-04-30
 ## Scope
 
 These stories cover adding, persisting, reloading, and removing governed nodes
-from an existing ready Canvas document through the Explorer rail and node menu.
+from an existing ready Canvas document through the `Insert` node menu.
 
 ## Stories
 
 ### US-WEB-CANVAS-READY-NODE-001: Add a node after the graph already exists
 
 As an operator editing a ready transformation canvas, I can choose an available
-node kind from the Explorer rail so that I can extend the graph without
+node kind from `Insert` so that I can extend the graph without
 returning to an empty-state screen.
 
 Acceptance:
 
-- the Explorer shows an `Add node` section when mutation is allowed
-- the section lists node kinds from the active canvas kind
+- the toolbar or top-menu `Insert` shows node kinds when mutation is allowed
+- the menu lists node kinds from the active canvas kind
 - selecting a node kind creates a node through the governed authoring command
 
 ### US-WEB-CANVAS-READY-NODE-002: Keep project resources and node creation separate
 
-As an operator, I can still drag project resources from the Explorer while
-using explicit create buttons for new local authoring nodes.
+As an operator, I can drag project resources from the Explorer while using
+`Insert` for new local authoring nodes.
 
 Acceptance:
 
 - existing project nodes remain grouped by kind
-- create buttons do not replace drag/drop
+- `Insert` create buttons do not replace drag/drop
+- the Explorer does not duplicate node-type creation
 - both paths use governed node admission
 
 ### US-WEB-CANVAS-READY-NODE-003: Respect read-only posture
@@ -44,7 +45,8 @@ mutating node creation actions.
 
 Acceptance:
 
-- `Add node` is hidden when `canEditEdges` is false
+- `Insert` creation is disabled or hidden when `canEditEdges` is false
+- the Explorer never shows `Add node`
 - project resources remain visible for inspection
 - import and creation commands are not exposed
 
@@ -66,7 +68,8 @@ admission policy as dropped or empty-state nodes.
 
 Acceptance:
 
-- `DbtExplorer` only calls `onCreateAuthoringNode`
+- `CanvasToolbarPrimaryControls` only calls `onCreateAuthoringNode`
+- `DbtExplorer` never receives `onCreateAuthoringNode`
 - the command continues through `useCanvasAuthoringNodeCreationHandlers`
 - invalid node kinds are rejected by runtime admission before effects
 
@@ -108,12 +111,12 @@ Acceptance:
 
 | Scenario                  | Expected behavior                                               | Guard                                    |
 | ------------------------- | --------------------------------------------------------------- | ---------------------------------------- |
-| Mutation denied           | Explorer hides `Add node` and exposes no creation command       | `canvasShellPanelsBuilder.test.ts`       |
+| Mutation denied           | `Insert` hides or disables creation and Explorer exposes none   | `canvasShellPanelsBuilder.test.ts`       |
 | Save failed               | locally added node is not treated as persisted after reload     | `canvas-ready-node-authoring.cy.ts`      |
 | Canvas document missing   | no ready-canvas authoring catalog is exposed                    | `canvasShellPanelsBuilder.ts` null guard |
 | Wrong canvas kind         | node kinds come only from the matching `CanvasKindRegistration` | `CanvasShell.architecture.test.tsx`      |
 | Global catalog temptation | shell panels builder must not call `getAllNodeKinds`            | `CanvasShell.architecture.test.tsx`      |
-| UI bypass                 | Explorer must call `onCreateAuthoringNode`, not draft lifecycle | `CanvasShell.architecture.test.tsx`      |
+| UI bypass                 | Insert must call `onCreateAuthoringNode`, not draft lifecycle   | `CanvasShell.architecture.test.tsx`      |
 
 ## Coverage Matrix
 

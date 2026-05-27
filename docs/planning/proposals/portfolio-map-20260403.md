@@ -37,6 +37,8 @@ planning_type: proposal
   2026-05-24](./mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md)
 - [Planning review canon plan
   2026-05-24](./mandatory/governance-and-docs/planning-review-canon-plan-20260524.md)
+- [API package lint CI plan
+  2026-05-26](./mandatory/governance-and-docs/api-package-lint-ci-plan-20260526.md)
 - [Planning Knowledge Rail DB-First Plan
   2026-05-13](./mandatory/governance-and-docs/planning-knowledge-rail-db-first-plan-20260513.md)
 - [Component Engineering Composite Hierarchy Plan
@@ -86,6 +88,12 @@ planning_type: proposal
 - [DVT+ Web user stories 2026-04-29](./web-user-stories-20260429.md)
 - [Web auth, project onboarding, and actionable product gaps 2026-05-01](./mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md)
 - [Internal Alpha Product Route Plan 2026-05-05](./mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md)
+- [Top menu templates artifact graph flow plan
+  2026-05-27](./mandatory/frontend-and-ux/top-menu-templates-artifact-graph-flow-plan-20260527.md)
+- [Canvas workspace explorer console theme modeling plan
+  2026-05-27](./mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md)
+- [dbt project round-trip product plan
+  2026-05-27](./mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md)
 
 ## Nice To Have
 

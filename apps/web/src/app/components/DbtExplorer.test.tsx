@@ -4,6 +4,7 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { buildCanvasWorkspaceResourceGroups } from './canvasWorkspaceExplorerModel';
 import DbtExplorer from './DbtExplorer';
 import type { CanonicalNode } from '../types/canonical';
 import { buildTestNodeKind } from '../views/canvas/canvasKindRegistration.testSupport';
@@ -52,11 +53,17 @@ describe('DbtExplorer', () => {
     vi.clearAllMocks();
   });
 
+  function buildResourceGroups(
+    nodes: CanonicalNode[]
+  ): ReturnType<typeof buildCanvasWorkspaceResourceGroups> {
+    return buildCanvasWorkspaceResourceGroups({ nodes });
+  }
+
   it('keeps drag affordances and import guidance when graph edits are allowed', async () => {
     await act(async () => {
       root.render(
         <DbtExplorer
-          nodes={[buildNode()]}
+          resourceGroups={buildResourceGroups([buildNode()])}
           canEditGraph={true}
           onHide={vi.fn()}
           onOpenDataRegistry={vi.fn()}
@@ -76,7 +83,7 @@ describe('DbtExplorer', () => {
     await act(async () => {
       root.render(
         <DbtExplorer
-          nodes={[buildNode()]}
+          resourceGroups={buildResourceGroups([buildNode()])}
           canEditGraph={false}
           onHide={vi.fn()}
           onOpenDataRegistry={vi.fn()}
@@ -99,7 +106,12 @@ describe('DbtExplorer', () => {
   it('keeps Add data action visible even with an empty workspace', async () => {
     await act(async () => {
       root.render(
-        <DbtExplorer nodes={[]} canEditGraph={true} onHide={vi.fn()} onOpenDataRegistry={vi.fn()} />
+        <DbtExplorer
+          resourceGroups={[]}
+          canEditGraph={true}
+          onHide={vi.fn()}
+          onOpenDataRegistry={vi.fn()}
+        />
       );
     });
 
@@ -111,18 +123,18 @@ describe('DbtExplorer', () => {
     expect(addDataButton?.getAttribute('disabled')).toBeNull();
   });
 
-  it('exposes editable node-kind creation actions beside project resources', async () => {
+  it('keeps node-kind creation out of the project-resource explorer', async () => {
     const nodeKind = buildTestNodeKind();
     const onCreateAuthoringNode = vi.fn();
 
     await act(async () => {
       root.render(
-        <DbtExplorer
-          nodes={[buildNode()]}
-          canEditGraph={true}
-          nodeKinds={[nodeKind]}
-          onCreateAuthoringNode={onCreateAuthoringNode}
-        />
+        React.createElement(DbtExplorer as React.ComponentType<Record<string, unknown>>, {
+          resourceGroups: buildResourceGroups([buildNode()]),
+          canEditGraph: true,
+          nodeKinds: [nodeKind],
+          onCreateAuthoringNode,
+        })
       );
     });
 
@@ -130,13 +142,8 @@ describe('DbtExplorer', () => {
       button.textContent?.includes('Source')
     );
 
-    expect(container.textContent).toContain('Add node');
-    expect(createButton).not.toBeNull();
-
-    await act(async () => {
-      createButton?.click();
-    });
-
-    expect(onCreateAuthoringNode).toHaveBeenCalledWith(nodeKind);
+    expect(container.textContent).not.toContain('Add node');
+    expect(createButton).toBeUndefined();
+    expect(onCreateAuthoringNode).not.toHaveBeenCalled();
   });
 });

@@ -4,11 +4,15 @@ status: Review
 owner: Engineering
 last_reviewed: 2026-05-26
 planning_type: mandatory-proposal
+task_ids:
+  - D-API-LINT-CI-20260526
 ---
 
 # API Package Lint CI Plan
 
 ## Intent
+
+[Task: D-API-LINT-CI-20260526]
 
 `dvt-api` needs the same package-owned lint maturity as the web app. The root
 repository lint remains useful, but it is not a package-local validation rail
@@ -23,7 +27,7 @@ workspace dependencies is a real lint input in a clean CI checkout.
 ## Decision
 
 - `apps/api/package.json` owns `pnpm --filter dvt-api lint`.
-- The affected-workspace wrapper accepts `lint` as a governed Turbo task.
+- [Task: D-API-LINT-CI-20260526] The affected-workspace wrapper accepts `lint` as a governed Turbo task.
 - `CI - Code Quality` runs affected workspace build before lint/type-check so
   `import/no-unresolved` checks built workspace export declarations instead of
   relying on stale local `dist` output.
@@ -67,9 +71,9 @@ allowedImplementationSurfaces:
   - scripts/run-dev-stack.cjs
   - scripts/run-dev-stack.temporal.cjs
   - scripts/run-dev-stack.test.cjs
-  - scripts/run-turbo-workspace-task.cjs
+  - scripts/run-turbo-workspace-task.cjs # D-API-LINT-CI-20260526
   - scripts/verify-prepush.test.cjs
-  - tools/ci/turbo-workspace-task-contract.test.mjs
+  - tools/ci/turbo-workspace-task-contract.test.mjs # D-API-LINT-CI-20260526
   - turbo.json
 forbiddenImplementationSurfaces:
   - packages/@dvt/contracts/**
@@ -85,7 +89,7 @@ commandQueryRails:
     dddOwner: CI workspace quality gate
 domainObjects:
   - API package lint command
-  - Affected workspace lint task
+  - Affected workspace lint task # D-API-LINT-CI-20260526
   - CI quality gate contract
 fowlerSignals:
   - Explicit Gate
@@ -93,16 +97,16 @@ fowlerSignals:
   - CI routing boundary
 architectureGuards:
   - node --test scripts/verify-prepush.test.cjs
-  - node --test tools/ci/turbo-workspace-task-contract.test.mjs
+  - node --test tools/ci/turbo-workspace-task-contract.test.mjs # D-API-LINT-CI-20260526
   - pnpm test:ci-tools
 cypressFlows:
   - N/A - CI validation rail, no browser flow
 completionGate:
   - pnpm --filter dvt-api lint
-  - node scripts/run-turbo-workspace-task.cjs lint --filter=dvt-api
-  - node scripts/run-turbo-workspace-task.cjs lint --filter=@dvt/contracts
+  - node scripts/run-turbo-workspace-task.cjs lint --filter=dvt-api # D-API-LINT-CI-20260526
+  - node scripts/run-turbo-workspace-task.cjs lint --filter=@dvt/contracts # D-API-LINT-CI-20260526
   - node --test scripts/verify-prepush.test.cjs
-  - node --test tools/ci/turbo-workspace-task-contract.test.mjs
+  - node --test tools/ci/turbo-workspace-task-contract.test.mjs # D-API-LINT-CI-20260526
   - pnpm test:ci-tools
   - pnpm governance:refresh
   - pnpm verify:prepush
@@ -121,8 +125,8 @@ redGreenCycles:
       - .github/workflows/ci.yml
       - package.json
       - scripts/README.md
-      - scripts/run-turbo-workspace-task.cjs
-      - tools/ci/turbo-workspace-task-contract.test.mjs
+      - scripts/run-turbo-workspace-task.cjs # D-API-LINT-CI-20260526
+      - tools/ci/turbo-workspace-task-contract.test.mjs # D-API-LINT-CI-20260526
       - turbo.json
     greenTest: node --test tools/ci/turbo-workspace-task-contract.test.mjs
 symbols:
@@ -137,7 +141,7 @@ symbols:
     architectureGuard: node --test tools/ci/turbo-workspace-task-contract.test.mjs
     cypressCoverage: N/A - CI validation rail, no browser flow
     unitTests:
-      - node --test tools/ci/turbo-workspace-task-contract.test.mjs
+      - node --test tools/ci/turbo-workspace-task-contract.test.mjs # D-API-LINT-CI-20260526
   - name: DEFAULT_LOCAL_DBT_BUNDLE_FILE_ROOT
     path: scripts/run-dev-stack.cjs
     dddOwner: Local protected-runtime dev stack

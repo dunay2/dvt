@@ -15,6 +15,18 @@ const CANVAS_SHELL_MAIN_PANEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasShellMainPanel.tsx'
 );
+const CANVAS_TOOLBAR_PRIMARY_CONTROLS_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'CanvasToolbarPrimaryControls.tsx'
+);
+const CANVAS_ADD_NODE_PALETTE_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'CanvasAddNodePalette.tsx'
+);
+const CANVAS_WORKSPACE_EXPLORER_MODEL_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  '../../components/canvasWorkspaceExplorerModel.ts'
+);
 const DBT_EXPLORER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../../components/DbtExplorer.tsx'
@@ -67,12 +79,23 @@ describe('CanvasShell architecture', () => {
     );
   });
 
-  it('keeps ready-canvas node creation semantically tied to the active canvas runtime catalog', () => {
+  it('keeps ready-canvas node creation in Insert and out of the workspace explorer', () => {
     expect(CANVAS_SHELL_TYPES_SOURCE).toContain(
       'authoringNodeKinds: readonly NodeKindRegistration[];'
     );
+    expect(CANVAS_SHELL_TYPES_SOURCE).toContain(
+      'explorerResourceGroups: readonly CanvasWorkspaceResourceGroup[];'
+    );
+    expect(CANVAS_WORKSPACE_EXPLORER_MODEL_SOURCE).toContain(
+      'Owned concern: build the Project Workspace Explorer read model from existing resources.'
+    );
+    expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain('buildCanvasWorkspaceResourceGroups({');
+    expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain('nodes: panelState.explorerNodes');
     expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain(
-      'function resolveExplorerAuthoringNodeKinds('
+      'canvasDocument: routePresentation.canvasDocument'
+    );
+    expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain(
+      'function resolveActiveCanvasAuthoringNodeKinds('
     );
     expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain('function normalizeCanvasKind(');
     expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain(
@@ -83,11 +106,23 @@ describe('CanvasShell architecture', () => {
     );
     expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain('userPermissions.canEditEdges');
     expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).not.toContain('getAllNodeKinds');
-    expect(CANVAS_SHELL_SOURCE).toContain('nodeKinds={authoringNodeKinds}');
-    expect(CANVAS_SHELL_SOURCE).toContain(
+    expect(CANVAS_TOOLBAR_PRIMARY_CONTROLS_SOURCE).toContain('CanvasAddNodePalette');
+    expect(CANVAS_TOOLBAR_PRIMARY_CONTROLS_SOURCE).toContain(
+      'triggerDataSlot="canvas-toolbar-insert-command"'
+    );
+    expect(CANVAS_ADD_NODE_PALETTE_SOURCE).toContain('onCreateAuthoringNode(registration)');
+    expect(CANVAS_SHELL_SOURCE).not.toContain('nodeKinds={authoringNodeKinds}');
+    expect(CANVAS_SHELL_SOURCE).not.toContain(
       'onCreateAuthoringNode={graphCommands.onCreateAuthoringNode}'
     );
-    expect(DBT_EXPLORER_SOURCE).toContain('onCreateAuthoringNode(registration)');
-    expect(DBT_EXPLORER_SOURCE).toContain('canCreateAuthoringNode');
+    expect(DBT_EXPLORER_SOURCE).toContain(
+      'Owned concern: render the Canvas workspace explorer for existing project resources'
+    );
+    expect(DBT_EXPLORER_SOURCE).not.toContain('import type { NodeKindRegistration }');
+    expect(DBT_EXPLORER_SOURCE).not.toContain('readonly NodeKindRegistration');
+    expect(DBT_EXPLORER_SOURCE).not.toContain('nodeKinds');
+    expect(DBT_EXPLORER_SOURCE).not.toContain('onCreateAuthoringNode');
+    expect(DBT_EXPLORER_SOURCE).not.toContain('nodes: CanonicalNode[]');
+    expect(DBT_EXPLORER_SOURCE).not.toContain('Add node');
   });
 });

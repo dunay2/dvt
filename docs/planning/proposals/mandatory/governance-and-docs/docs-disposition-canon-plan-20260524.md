@@ -174,6 +174,7 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/index.md
   - docs/planning/proposals/mandatory/governance-and-docs/docs-disposition-canon-plan-20260524.md
   - docs/planning/proposals/portfolio-map-20260403.md
+  - docs/planning/reviews/architecture-and-governance/20260527-docs-engine-component-reconciliation-fowler-review.md
   - docs/planning/state/agent-lane-a.md
   - docs/planning/state/execution-workboard.md
   - docs/planning/state/open-task-route.md

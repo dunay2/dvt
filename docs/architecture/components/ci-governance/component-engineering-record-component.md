@@ -97,6 +97,27 @@ determinism utilities, and architecture tests.
 Plan-ref policy files remain owned by `SYS-PLANSTORE-ENGINE-FETCH`, so the
 engine component tree reflects the cross-domain reality instead of hiding it.
 
+### 2026-05-27 Engine Mapping Pass
+
+The current Planning DB query state shows the engine pilot is mechanically
+mapped but not semantically complete.
+
+Evidence:
+
+- `pnpm planning:db:query component-tree` lists 16 child components below
+  `SYS-RUNTIME-ENGINE-CORE`.
+- `pnpm planning:db:query component-quality --component SYS-RUNTIME-ENGINE-CORE`
+  returns `pass`, 0 direct files, 199 descendant files, and 16 children.
+- `pnpm planning:db:query component-drift --component SYS-RUNTIME-ENGINE-CORE`
+  returns no drift rows.
+- `pnpm planning:db:query component-metadata --component SYS-RUNTIME-ENGINE-CORE`
+  still returns `incomplete`.
+
+That means the next engine component-engineering step is metadata enrichment,
+not a blind source refactor. The residual is tracked by
+`D-ENGINE-COMPONENT-METADATA-INDEX-1` and by the Fowler review at
+`docs/planning/reviews/architecture-and-governance/20260527-docs-engine-component-reconciliation-fowler-review.md`.
+
 ## Topology
 
 ```mermaid
@@ -128,22 +149,22 @@ flowchart TB
 ```mermaid
 flowchart TB
   Root["SYS-RUNTIME-ENGINE-CORE"]
-  Package["PACKAGE-SURFACE"]
-  Adapters["ADAPTERS"]
-  App["APPLICATION"]
-  UseCases["WORKFLOW-USE-CASES"]
-  Contracts["CONTRACTS"]
-  Core["CORE-LIFECYCLE"]
-  Ports["DOMAIN-PORTS"]
-  Security["SECURITY"]
-  Services["RUNTIME-SERVICES"]
-  StartRun["START-RUN"]
-  Control["RUN-CONTROL"]
-  Maintenance["RUN-MAINTENANCE"]
-  State["STATE"]
-  Outbox["OUTBOX"]
-  Utils["DETERMINISM-UTILS"]
-  Arch["ARCHITECTURE-TESTS"]
+  Package["SYS-RUNTIME-ENGINE-PACKAGE-SURFACE"]
+  Adapters["SYS-RUNTIME-ENGINE-ADAPTERS"]
+  App["SYS-RUNTIME-ENGINE-APPLICATION"]
+  UseCases["SYS-RUNTIME-ENGINE-WORKFLOW-USE-CASES"]
+  Contracts["SYS-RUNTIME-ENGINE-CONTRACTS"]
+  Core["SYS-RUNTIME-ENGINE-CORE-LIFECYCLE"]
+  Ports["SYS-RUNTIME-ENGINE-DOMAIN-PORTS"]
+  Security["SYS-RUNTIME-ENGINE-SECURITY"]
+  Services["SYS-RUNTIME-ENGINE-RUNTIME-SERVICES"]
+  StartRun["SYS-RUNTIME-ENGINE-START-RUN"]
+  Control["SYS-RUNTIME-ENGINE-RUN-CONTROL"]
+  Maintenance["SYS-RUNTIME-ENGINE-RUN-MAINTENANCE"]
+  State["SYS-RUNTIME-ENGINE-STATE"]
+  Outbox["SYS-RUNTIME-ENGINE-OUTBOX"]
+  Utils["SYS-RUNTIME-ENGINE-DETERMINISM-UTILS"]
+  Arch["SYS-RUNTIME-ENGINE-ARCHITECTURE-TESTS"]
 
   Root --> Package
   Root --> Adapters

@@ -20,11 +20,9 @@ import type {
 type CanvasShellExplorerRailProps = Readonly<{
   focusMode: boolean;
   explorerPanelVisible: boolean;
-  explorerNodes: CanvasShellPanels['explorerNodes'];
-  authoringNodeKinds: CanvasShellPanels['authoringNodeKinds'];
+  explorerResourceGroups: CanvasShellPanels['explorerResourceGroups'];
   canEditGraph: boolean;
   canOpenSourceImport: boolean;
-  onCreateAuthoringNode: CanvasShellProps['graphCommands']['onCreateAuthoringNode'];
   onHideExplorer: CanvasShellChromeCommands['onHideExplorer'];
   onOpenDataRegistry?: () => void;
 }>;
@@ -32,11 +30,9 @@ type CanvasShellExplorerRailProps = Readonly<{
 function CanvasShellExplorerRail({
   focusMode,
   explorerPanelVisible,
-  explorerNodes,
-  authoringNodeKinds,
+  explorerResourceGroups,
   canEditGraph,
   canOpenSourceImport,
-  onCreateAuthoringNode,
   onHideExplorer,
   onOpenDataRegistry,
 }: CanvasShellExplorerRailProps): JSX.Element | null {
@@ -48,10 +44,8 @@ function CanvasShellExplorerRail({
     <>
       <ResizablePanel defaultSize={17} minSize={12} maxSize={25}>
         <DbtExplorer
-          nodes={explorerNodes}
-          nodeKinds={authoringNodeKinds}
+          resourceGroups={explorerResourceGroups}
           canEditGraph={canEditGraph}
-          onCreateAuthoringNode={onCreateAuthoringNode}
           onHide={onHideExplorer}
           onOpenDataRegistry={canOpenSourceImport ? onOpenDataRegistry : undefined}
         />
@@ -130,11 +124,9 @@ export default function CanvasShell({
       <CanvasShellExplorerRail
         focusMode={layout.focusMode}
         explorerPanelVisible={layout.explorerPanelVisible}
-        explorerNodes={panels.explorerNodes}
-        authoringNodeKinds={panels.authoringNodeKinds}
+        explorerResourceGroups={panels.explorerResourceGroups}
         canEditGraph={canEditGraph}
         canOpenSourceImport={layout.canOpenSourceImport}
-        onCreateAuthoringNode={graphCommands.onCreateAuthoringNode}
         onHideExplorer={chromeCommands.onHideExplorer}
         onOpenDataRegistry={handleOpenDataRegistry}
       />

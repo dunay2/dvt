@@ -3,12 +3,13 @@
  */
 import type { CanvasShellPanelsBuilderArgs } from './canvasShellBuilder.types';
 import type { CanvasShellPanels } from './canvasShell.types';
+import { buildCanvasWorkspaceResourceGroups } from '../../components/canvasWorkspaceExplorerModel';
 
 function normalizeCanvasKind(kind: string): string {
   return kind.trim().toLowerCase();
 }
 
-function resolveExplorerAuthoringNodeKinds({
+function resolveActiveCanvasAuthoringNodeKinds({
   routePresentation,
   userPermissions,
 }: Pick<
@@ -33,8 +34,11 @@ export function buildCanvasShellPanels({
   userPermissions,
 }: CanvasShellPanelsBuilderArgs): CanvasShellPanels {
   return {
-    explorerNodes: panelState.explorerNodes,
-    authoringNodeKinds: resolveExplorerAuthoringNodeKinds({
+    explorerResourceGroups: buildCanvasWorkspaceResourceGroups({
+      nodes: panelState.explorerNodes,
+      canvasDocument: routePresentation.canvasDocument,
+    }),
+    authoringNodeKinds: resolveActiveCanvasAuthoringNodeKinds({
       routePresentation,
       userPermissions,
     }),

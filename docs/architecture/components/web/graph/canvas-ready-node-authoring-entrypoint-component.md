@@ -31,7 +31,7 @@ The public API remains the shell contract:
 
 ```ts
 type CanvasShellPanels = {
-  explorerNodes: CanonicalNode[];
+  explorerResourceGroups: readonly CanvasWorkspaceResourceGroup[];
   authoringNodeKinds: readonly NodeKindRegistration[];
   // ...
 };
@@ -44,8 +44,10 @@ type CanvasShellGraphCommands = {
 
 Visible UI consumes that contract through:
 
-- `CanvasShell.tsx`
-- `DbtExplorer.tsx`
+- `CanvasShellMainPanel.tsx`
+- `CanvasToolbar.tsx`
+- `CanvasToolbarPrimaryControls.tsx`
+- `CanvasAddNodePalette.tsx`
 
 Contract derivation is owned by:
 
@@ -61,7 +63,10 @@ Contract derivation is owned by:
 - Mutations denied by effective route permissions expose no create buttons.
 - Clicking a create button must call `onCreateAuthoringNode(registration)`.
 - Node admission remains owned by `useCanvasNodeAdmissionCommandRunner`.
-- `DbtExplorer` may render creation affordances but must not mutate draft state.
+- `DbtExplorer` must not render creation affordances or receive creation
+  commands.
+- The visible ready-canvas creation entrypoint is the toolbar or top-menu
+  `Insert` surface.
 - Existing project-node drag/drop remains a separate affordance.
 - Authored node creation and removal must round-trip through protected draft
   save/read before being treated as durable across reloads.
@@ -89,14 +94,14 @@ sequenceDiagram
   participant Route as Canvas route
   participant Builder as canvasShellPanelsBuilder
   participant Shell as CanvasShell
-  participant Explorer as DbtExplorer
+  participant Insert as CanvasToolbar Insert
   participant Command as onCreateAuthoringNode
   participant Admission as useCanvasNodeAdmissionCommandRunner
 
   Route->>Builder: canvasDocument.kind + availableCanvasKinds + permissions
   Builder-->>Shell: panels.authoringNodeKinds
-  Shell-->>Explorer: nodeKinds + onCreateAuthoringNode
-  Explorer->>Command: selected NodeKindRegistration
+  Shell-->>Insert: nodeKinds + onCreateAuthoringNode
+  Insert->>Command: selected NodeKindRegistration
   Command->>Admission: canonical authoring node
   Admission-->>Route: update viewport nodes + draft session
   Route->>Route: autosave protected draft
@@ -105,8 +110,9 @@ sequenceDiagram
 
 ## Consumers
 
-- `CanvasShell.tsx` wires shell panel data to the Explorer rail.
-- `DbtExplorer.tsx` renders the active ready-canvas create buttons.
+- `CanvasShellMainPanel.tsx` wires shell panel data to the toolbar.
+- `CanvasToolbarPrimaryControls.tsx` renders the active ready-canvas `Insert`
+  create buttons.
 - `useCanvasAuthoringNodeCreationHandlers.ts` handles the command.
 - `canvasShellPanelsBuilder.test.ts`, `CanvasShell.test.tsx`, and
   `DbtExplorer.test.tsx` prove behavior.
@@ -127,6 +133,7 @@ slice now follows the same split for ready canvases.
 - Do not reintroduce a second ready-canvas node list beside
   `CanvasKindRegistration.nodeKinds`.
 - Do not let `DbtExplorer` write draft session state.
+- Do not let `DbtExplorer` render node-kind creation buttons.
 - Do not hide local node creation behind source import capability.
 - Do not make ready-canvas creation available when `canEditEdges` is false.
 - Do not route ready-canvas creation through drag/drop-only affordances.

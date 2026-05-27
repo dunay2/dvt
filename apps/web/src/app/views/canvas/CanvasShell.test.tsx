@@ -6,6 +6,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import CanvasShell from './CanvasShell';
+import { buildCanvasWorkspaceResourceGroups } from '../../components/canvasWorkspaceExplorerModel';
 import { DEFAULT_CANVAS_GRID_COLOR, DEFAULT_CANVAS_PALETTE_ID } from './canvasPalette';
 import { canvasViewCopy } from './copy';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
@@ -73,6 +74,18 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
     showReloadAction: false,
   };
 
+  const explorerNodes = [
+    {
+      id: 'node.orders',
+      name: 'orders',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+    },
+  ] satisfies CanvasShellPanels['inspectorGraphNodes'];
+
   return {
     layout: {
       focusMode: false,
@@ -89,17 +102,7 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
       ...overrides?.layout,
     },
     panels: {
-      explorerNodes: [
-        {
-          id: 'node.orders',
-          name: 'orders',
-          pluginId: 'dbt',
-          kind: 'dbt:model',
-          role: 'transform',
-          status: 'idle',
-          tags: [],
-        },
-      ],
+      explorerResourceGroups: buildCanvasWorkspaceResourceGroups({ nodes: explorerNodes }),
       authoringNodeKinds: [buildTestNodeKind()],
       inspectorNode: null,
       inspectorGraphNodes: [],
@@ -345,7 +348,7 @@ describe('CanvasShell', () => {
     expect(shellState.dbtExplorerProps?.onOpenDataRegistry).toBeTypeOf('function');
   });
 
-  it('wires explorer node creation through the shell contract in ready canvases', async () => {
+  it('keeps ready-canvas node creation out of the explorer contract', async () => {
     const props = buildProps();
 
     await act(async () => {
@@ -353,9 +356,12 @@ describe('CanvasShell', () => {
     });
 
     expect(shellState.dbtExplorerProps).toMatchObject({
-      nodeKinds: props.panels.authoringNodeKinds,
-      onCreateAuthoringNode: props.graphCommands.onCreateAuthoringNode,
+      resourceGroups: props.panels.explorerResourceGroups,
+      canEditGraph: true,
     });
+    expect(shellState.dbtExplorerProps).not.toHaveProperty('nodeKinds');
+    expect(shellState.dbtExplorerProps).not.toHaveProperty('authoringNodeKinds');
+    expect(shellState.dbtExplorerProps).not.toHaveProperty('onCreateAuthoringNode');
   });
 
   it('hides explorer import affordances when source import is unavailable', async () => {

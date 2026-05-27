@@ -6,6 +6,9 @@ last_reviewed: 2026-05-26
 owners:
   - apps/web
 task_id: E-DBT-AUTHOR-RUN-1
+task_ids:
+  - E-DBT-AUTHOR-RUN-1
+planning_type: mandatory-proposal
 ---
 
 # DBT Authoring Code Run Vertical Plan
@@ -21,6 +24,10 @@ Architect/developer stance: the implementation must reuse the existing Canvas
 draft aggregate, workspace-file command rail, plan preview route, and start-run
 PlanRef rail. It must not present mock execution, source-import fallback, or
 plugin-local state as product truth.
+
+- [x] [Task: E-DBT-AUTHOR-RUN-1] Implemented dbt card configuration, source
+      origin selection, generated workspace artifacts, Code visibility, and
+      persisted PlanRef run path through governed rails.
 
 ## Current Gap
 

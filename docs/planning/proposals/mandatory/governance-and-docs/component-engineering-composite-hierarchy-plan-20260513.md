@@ -81,6 +81,7 @@ allowedImplementationSurfaces:
   - docs/architecture/components/ci-governance/component-engineering-record-user-stories.md
   - docs/architecture/components/ci-governance/index.md
   - docs/architecture/components/index.md
+  - docs/planning/reviews/architecture-and-governance/20260527-docs-engine-component-reconciliation-fowler-review.md
   - scripts/planning-db-query.cjs
   - scripts/planning-db-query.test.cjs
   - scripts/planning-db-import.cjs

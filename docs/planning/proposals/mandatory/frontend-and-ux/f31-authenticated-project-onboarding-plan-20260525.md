@@ -1,6 +1,6 @@
 ---
 title: F-31 Authenticated Project Onboarding Plan
-status: Draft
+status: Review
 date: 2026-05-25
 owners:
   - apps/web

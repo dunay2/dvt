@@ -104,11 +104,11 @@ There are three boundary failures:
 
 ## Invariants
 
-- Do not add a permanent left navigation rail to Canvas.
+- [Task: E-SHELL-TOP-MENU-RATIONALIZATION-1] Do not add a permanent left navigation rail to Canvas.
 - Do not hide workspace context or git context on the primary workbench route.
 - Do not let Templates execute, mutate graph state, or write project files
   directly outside a named command rail.
-- Do not create a parallel file browser, artifact service, or graph mutation
+- [Task: E-TEMPLATES-ARTIFACT-GRAPH-FLOW-1] Do not create a parallel file browser, artifact service, or graph mutation
   service for generated template output.
 - Do not present read-only mode as executable. Execution-capable mode must be a
   clear user action and must still pass authorization/readiness checks.
@@ -214,24 +214,24 @@ proposal into the canonical component docs that own the long-lived semantics.
 
 ## Implementation Route
 
-1. Update canonical component docs for shell menu ownership, Templates artifact
+1. [Task: E-SHELL-TOP-MENU-RATIONALIZATION-1] Update canonical component docs for shell menu ownership, Templates artifact
    save ownership, and Canvas artifact-step insertion ownership.
-2. Add the feature mechanization manifest when implementation starts. This
+2. [Task: E-SHELL-TOP-MENU-RATIONALIZATION-1] Add the feature mechanization manifest when implementation starts. This
    plan intentionally does not declare a fenced `feature-mechanization` block
    yet because repository guards only accept `implemented` or `closed` status.
-3. Write red tests for the shell menu taxonomy and no-left-rail invariant.
-4. Implement `ResolveShellCommandMenu` as a shell read model, then wire the top
+3. [Task: E-SHELL-TOP-MENU-RATIONALIZATION-1] Write red tests for the shell menu taxonomy and no-left-rail invariant.
+4. [Task: E-SHELL-TOP-MENU-RATIONALIZATION-1] Implement `ResolveShellCommandMenu` as a shell read model, then wire the top
    menu without changing Canvas into a secondary navigation layout.
-5. Write red tests for template artifact save eligibility and rejection paths.
-6. Implement `SaveExecutionTemplateArtifact` through the workspace artifact
+5. [Task: E-TEMPLATES-ARTIFACT-GRAPH-FLOW-1] Write red tests for template artifact save eligibility and rejection paths.
+6. [Task: E-TEMPLATES-ARTIFACT-GRAPH-FLOW-1] Implement `SaveExecutionTemplateArtifact` through the workspace artifact
    command boundary.
-7. Reuse `ListWorkspaceFiles` and `GetWorkspaceFileContent` so Code and
+7. [Task: E-TEMPLATES-ARTIFACT-GRAPH-FLOW-1] Reuse `ListWorkspaceFiles` and `GetWorkspaceFileContent` so Code and
    Artifacts discover saved generated source through the existing workspace
    file rails.
-8. Write red tests for inserting a saved artifact as a Canvas step.
-9. Implement `AttachWorkspaceArtifactToGraph` through the Canvas graph draft
+8. [Task: E-TEMPLATES-ARTIFACT-GRAPH-FLOW-1] Write red tests for inserting a saved artifact as a Canvas step.
+9. [Task: E-TEMPLATES-ARTIFACT-GRAPH-FLOW-1] Implement `AttachWorkspaceArtifactToGraph` through the Canvas graph draft
    command boundary.
-10. Add user-flow proof for Generate template -> Save artifact -> Inspect in
+10. [Task: E-TEMPLATES-ARTIFACT-GRAPH-FLOW-1] Add user-flow proof for Generate template -> Save artifact -> Inspect in
     Code/Artifacts -> Insert into Canvas graph -> Plan/Run readiness.
 
 ## Test Plan

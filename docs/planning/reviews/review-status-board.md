@@ -69,6 +69,24 @@ Disposition:
   `RUNTIME-PROP-DISP-1`, `D-DOCS-DISPOSITION-QUEUE-1`, and
   `D-KNOWLEDGE-ACTION-LINKAGE-1`.
 
+## 2026-05-27 Docs and engine component reconciliation
+
+[Docs And Engine Component Reconciliation Fowler Review](./architecture-and-governance/20260527-docs-engine-component-reconciliation-fowler-review.md)
+records the current DB-first cleanup pass for mandatory proposal gaps,
+task-like action lineage, docs-disposition rows, and the engine component
+engineering pilot.
+
+Disposition:
+
+- current `mandatory-proposal-gaps`, `task-gaps`, and `docs-disposition`
+  queries returned zero rows after task-linked updates and DB dispositions;
+- `SYS-RUNTIME-ENGINE-CORE` is mechanically mapped as an aggregator with 16
+  child components, 0 direct files, and no component-drift rows;
+- the remaining engine component residual is semantic metadata depth, now
+  tracked by `D-ENGINE-COMPONENT-METADATA-INDEX-1`;
+- closeout-specific residual scanning remains owned by
+  `GD-CLOSEOUT-DEBT-RECON-1`.
+
 ## Active Reviews
 
 | Review                                                                                                                                            | Domain folder                     | Current review role                                     | Workboard task linkage                     | Execution status | Execution progress |
