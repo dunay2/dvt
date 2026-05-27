@@ -166,15 +166,19 @@ governingSources:
 allowedImplementationSurfaces:
   - buzon/20260524-codex-fowler-docs-disposition-canon.md
   - docs/.manifest.json
+  - docs/archive/**
   - docs/architecture/components/ci-governance/docs-disposition-canon-component.md
   - docs/architecture/components/ci-governance/docs-disposition-canon-user-stories.md
   - docs/architecture/components/ci-governance/index.md
+  - docs/planning/archive/**
   - docs/planning/domains/documentation-governance.md
   - docs/planning/index.md
   - docs/planning/proposals/index.md
   - docs/planning/proposals/mandatory/governance-and-docs/docs-disposition-canon-plan-20260524.md
+  - docs/planning/proposals/superseded/**
   - docs/planning/proposals/portfolio-map-20260403.md
   - docs/planning/reviews/architecture-and-governance/20260527-docs-engine-component-reconciliation-fowler-review.md
+  - docs/planning/reviews/sprints/**
   - docs/planning/state/agent-lane-a.md
   - docs/planning/state/execution-workboard.md
   - docs/planning/state/open-task-route.md

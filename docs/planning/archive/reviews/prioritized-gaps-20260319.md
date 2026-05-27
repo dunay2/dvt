@@ -9,7 +9,7 @@ source: Architectural Review 2026-03-19
 # DVT+ Prioritized Gap Register
 
 **Date:** 2026-03-19
-**Source:** [Architectural Review 2026-03-19](./DVT+_Architectural_Review_20260319.md)
+**Source:** [Architectural Review 2026-03-19](./dvt-plus-architectural-review-20260319.md)
 **Scope:** Gaps identified post G1ï¿½G10 closure. These are not delivery gaps in the sense of G1ï¿½G10 ï¿½ they are architectural and operational gaps that will produce correctness failures, security incidents, or operational crises if not addressed before the phases that depend on them.
 
 Each gap is assigned a tier:

@@ -9,7 +9,7 @@ planning_type: proposal
 # DVT+ - Top 5 Architectural Gaps
 
 **Repository:** `c:/dvt`
-**Primary review source:** [`docs/reviews/DVT+_Architectural_Review_20260319.md`](./DVT+_Architectural_Review_20260319.md)
+**Primary review source:** [`docs/planning/archive/reviews/dvt-plus-architectural-review-20260319.md`](./reviews/dvt-plus-architectural-review-20260319.md)
 **Gap register:** [`docs/reviews/prioritized-gaps-20260319.md`](./prioritized-gaps-20260319.md)
 **Delivery status:** [`docs/architecture/system-delivery-status.md`](../architecture/system-delivery-status.md)
 

@@ -8,7 +8,7 @@ planning_type: proposal
 
 # Planner generic ingress compatibility slice 2026-04-10
 
-Superseded by [Planner hard-cut boundary remediation 2026-04-10](./planner-hard-cut-boundary-remediation-20260410.md).
+Superseded by [Planner hard-cut boundary remediation 2026-04-10](../../mandatory/runtime-and-contracts/planner-hard-cut-boundary-remediation-20260410.md).
 
 ## Summary
 
@@ -30,13 +30,13 @@ It focuses on the first clean boundary move:
 
 ## Governing Sources
 
-- [ADR-0018](../../../adr/ADR-0018_Shared_Kernel_Ownership_Governance.md)
-- [ADR-0034](../../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md)
-- [ADR-0035](../../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)
-- [MW-A2 GenericGraphSource plan](./mw-a2-generic-graph-source-plan-20260404.md)
-- [Planner kernel DBT boundary extraction follow-up 2026-04-10](./planner-kernel-dbt-boundary-extraction-follow-up-20260410.md)
-- [Workflow helpers architecture review](../../reviews/execution-runtime/20260315-workflow-helpers-architecture-review.md)
-- [ExecutionPlan.v1.ts](../../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts)
+- [ADR-0018](../../../../adr/ADR-0018_Shared_Kernel_Ownership_Governance.md)
+- [ADR-0034](../../../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md)
+- [ADR-0035](../../../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)
+- [MW-A2 GenericGraphSource plan](../../mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)
+- [Planner kernel DBT boundary extraction follow-up 2026-04-10](../../mandatory/runtime-and-contracts/planner-kernel-dbt-boundary-extraction-follow-up-20260410.md)
+- [Workflow helpers architecture review](../../../reviews/execution-runtime/20260315-workflow-helpers-architecture-review.md)
+- [ExecutionPlan.v1.ts](../../../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts)
 
 ## Problem Summary
 

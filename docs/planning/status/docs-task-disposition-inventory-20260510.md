@@ -114,10 +114,10 @@ backlink checks and docs validation.
 Five active files still live under `docs/reviews/` instead of the current
 planning review or archive surfaces:
 
-- `docs/reviews/DVT+_Architectural_Review_20260319.md`
+- `docs/planning/archive/reviews/dvt-plus-architectural-review-20260319.md`
 - `docs/reviews/architectural-review-dvtplus-2026-03-24.md`
 - `docs/reviews/dvt-top3-gaps-roadmap-20260319.md`
-- `docs/reviews/dvt_planner_technical_vision.md`
+- `docs/planning/archive/reviews/dvt-planner-technical-vision.md`
 - `docs/reviews/prioritized-gaps-20260319.md`
 
 Disposition rule: move to the current planning review namespace only if the
