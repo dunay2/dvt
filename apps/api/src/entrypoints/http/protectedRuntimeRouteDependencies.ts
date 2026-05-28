@@ -2,6 +2,11 @@
  * Owned concern: build protected runtime route dependencies from the runtime
  * module without registering HTTP routes.
  */
+import {
+  TRANSFORMATION_DESIGN_GRAPH_SOURCE_FAMILY,
+  type IPlanner,
+  type PlannerInputEnvelopeV1,
+} from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 
 import { CancelRunUseCase } from '../../application/services/cancelRunUseCase.js';
@@ -51,7 +56,10 @@ export function buildProtectedRuntimeRouteDependencies(
     protectedModule.planStore as unknown as ConstructorParameters<typeof GetRunStatusUseCase>[5]
   );
   const previewPlanUseCase = new PreviewPlanUseCase({
-    planner: protectedModule.planCompilePlanner,
+    planner: createPreviewPlannerRouter({
+      runtimePlanner: protectedModule.planner,
+      compilePlanner: protectedModule.planCompilePlanner,
+    }),
     planStore: protectedModule.planStore,
     planValidator: protectedModule.planValidator,
     executableSubgraphResolver: new ResolveAuthorizedExecutableSubgraphService({
@@ -81,4 +89,22 @@ export function buildProtectedRuntimeRouteDependencies(
     signalRunUseCase: new SignalRunUseCase(protectedModule.engine, protectedModule.stateStore.read),
     workspaceGraphDraftTelemetry: new ObservabilityWorkspaceGraphDraftTelemetry({ observability }),
   };
+}
+
+function createPreviewPlannerRouter(input: {
+  readonly runtimePlanner: IPlanner;
+  readonly compilePlanner: IPlanner;
+}): IPlanner {
+  return {
+    buildPlan: (plannerInput) =>
+      usesTransformationCompileBoundary(plannerInput)
+        ? input.compilePlanner.buildPlan(plannerInput)
+        : input.runtimePlanner.buildPlan(plannerInput),
+    deriveExecutableSubgraph: (selectionInput) =>
+      input.runtimePlanner.deriveExecutableSubgraph(selectionInput),
+  };
+}
+
+function usesTransformationCompileBoundary(plannerInput: PlannerInputEnvelopeV1): boolean {
+  return plannerInput.graphSource.sourceFamily === TRANSFORMATION_DESIGN_GRAPH_SOURCE_FAMILY;
 }
