@@ -82,6 +82,75 @@ The user-facing target is:
 - If the user only wants to execute SQL, the Run menu must expose that product
   intent as a distinct path from full graph execution.
 
+## 2026-05-28 Double-Role Iteration: Canvas Command Menus
+
+### Demanding User Stories
+
+- As a Canvas author, I want `Insert` to live in the upper command menu, not as
+  a loose graph-toolbar button, so I can understand it as a workbench command.
+- As a Canvas author, I want project snapshot import/export to live under a
+  clear upper `File` menu, not as a loose `Project` button beside execution
+  controls, so project file actions are not confused with graph execution.
+- As a Canvas author, I still want Plan and Execute visible as primary workflow
+  actions, so the execution path remains direct after command-menu cleanup.
+- As a reviewer, I want the Canvas route to register its command capabilities
+  while the shell renders the menu, so the shell does not import Canvas
+  controller hooks or become a graph-editing service.
+
+### Selected Technical Option
+
+Canvas contributes a transient `CanvasWorkbenchCommandMenuContribution` while
+the Canvas toolbar is mounted. The global shell renders Canvas-aware `File` and
+`Insert` menus only when that contribution is present. The route toolbar keeps
+workflow status, Plan, Execute, and draft status only.
+
+Rejected alternatives:
+
+- keep `Insert` and `Project` as loose toolbar buttons: this preserves the
+  current clutter and violates the top-menu taxonomy;
+- move Canvas callbacks directly into `TopAppBar`: this creates shell-to-route
+  feature envy and makes the shell own graph command details;
+- add a permanent left navigation/action rail: explicitly rejected by the task
+  invariant and user direction.
+
+### Iteration Fowler Matrix
+
+Scenario: Canvas `Insert` and `Project` appear as loose toolbar commands.
+Opportunity: duplicate semantics.
+Fowler pattern: Presentation Model, Move Method.
+DDD owner: `CanvasWorkbenchCommandMenuContribution`.
+Rail: `ResolveShellCommandMenu`.
+Implementation surfaces: `CanvasToolbar`, `CanvasToolbarPrimaryControls`,
+`CanvasWorkbenchCommandMenuControls`, `ShellMenu`, `TopAppBar`.
+Tests: `TopAppBar.test.tsx`, `CanvasToolbar.test.tsx`,
+`CanvasToolbarPrimaryControls.test.tsx`, `CanvasToolbar.architecture.test.tsx`,
+and the existing Canvas plan/run Cypress flow.
+Out of scope: command palette and SQL-only execution.
+
+Scenario: Shell needs Canvas actions without owning Canvas internals.
+Opportunity: feature envy.
+Fowler pattern: Gateway, Published Interface.
+DDD owner: `CanvasWorkbenchCommandMenuContribution`.
+Rail: `ResolveShellCommandMenu`.
+Implementation surfaces: `canvasWorkbenchCommandMenuContributionStore`,
+`CanvasWorkbenchCommandMenuControls`, `ShellMenu`.
+Tests: store cleanup identity behavior in `CanvasToolbar.test.tsx`, top-menu
+rendering in `TopAppBar.test.tsx`, a guard that `ShellMenu` consumes controls
+instead of hooks, and the existing graph creation and plan/run flow.
+Out of scope: backend command changes.
+
+Scenario: Project snapshot import/export occupies primary workflow space.
+Opportunity: responsibility overload.
+Fowler pattern: Separate Presentation Model by command.
+DDD owner: `CanvasProjectSnapshotActionGroup`.
+Rail: `ResolveCanvasProjectSnapshotActions`.
+Implementation surfaces: `CanvasWorkbenchCommandMenuControls`, `ShellMenu`,
+`CanvasToolbarPrimaryControls`.
+Tests: import/export callbacks invoked through the shell `File` menu, toolbar no
+longer exposing the project-snapshot trigger, and a guard that toolbar primary
+controls stay free of file menus.
+Out of scope: new project browser.
+
 ## Problem Summary
 
 The current shell makes the product feel split into unrelated screens. Canvas is
@@ -212,6 +281,7 @@ componentGuides:
   - docs/architecture/components/web/appshell/app-shell.md
   - docs/architecture/components/web/top-app-bar-component-technical-manual-20260404.md
   - docs/architecture/components/web/graph/canvas-route-chrome-token-component.md
+  - docs/architecture/components/web/graph/canvas-workbench-command-menu-component.md
 userStories:
   - docs/architecture/components/web/workbench-ux-canon-user-stories.md
 governingSources:
@@ -227,12 +297,20 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/appshell/app-shell.md
   - docs/architecture/components/web/top-app-bar-component-technical-manual-20260404.md
   - docs/architecture/components/web/graph/canvas-route-chrome-token-component.md
+  - docs/architecture/components/web/graph/canvas-workbench-command-menu-component.md
+  - docs/architecture/components/web/workbench-ux-canon-user-stories.md
   - apps/web/src/app/components/TopAppBar.tsx
   - apps/web/src/app/components/TopAppBar.test.tsx
   - apps/web/src/app/components/shell/ShellAppMenu.tsx
+  - apps/web/src/app/components/shell/ShellMenu.tsx
   - apps/web/src/app/components/shell/appBuildMetadata.ts
   - apps/web/src/app/components/shell/appBuildMetadata.test.ts
   - apps/web/src/app/components/shell/copy.ts
+  - apps/web/src/app/views/canvas/CanvasToolbar.tsx
+  - apps/web/src/app/views/canvas/CanvasToolbar.test.tsx
+  - apps/web/src/app/views/canvas/CanvasToolbar.architecture.test.tsx
+  - apps/web/src/app/views/canvas/CanvasWorkbenchCommandMenuControls.tsx
+  - apps/web/src/app/views/canvas/canvasWorkbenchCommandMenuContributionStore.ts
   - apps/web/src/app/views/canvas/CanvasToolbarPrimaryControls.tsx
   - apps/web/src/app/views/canvas/CanvasToolbarPrimaryControls.test.tsx
   - apps/web/src/app/views/canvas/canvasCopy.types.ts
@@ -250,6 +328,7 @@ fowlerSignals:
   - Presentation Model for the shell About projection.
   - Explicit query for compiled application metadata.
   - Low-frequency project snapshot actions grouped out of the primary toolbar.
+  - Canvas route command capabilities exposed through a transient shell contribution.
 architectureGuards:
   - pnpm --filter @dvt/web typecheck
   - pnpm --filter @dvt/web lint
@@ -294,6 +373,22 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.ts
       - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.es.ts
     greenTest: pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/components/TopAppBar.test.tsx src/app/views/canvas/CanvasToolbarPrimaryControls.test.tsx
+  - id: E-SHELL-TOP-MENU-RATIONALIZATION-1-RG3
+    redTest: pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/components/TopAppBar.test.tsx src/app/views/canvas/CanvasToolbar.test.tsx src/app/views/canvas/CanvasToolbarPrimaryControls.test.tsx
+    expectedFailure: Canvas File and Insert contributions were not rendered by the shell top menu, and the route toolbar still exposed loose Insert and Project controls.
+    patchSurfaces:
+      - apps/web/src/app/components/TopAppBar.tsx
+      - apps/web/src/app/components/TopAppBar.test.tsx
+      - apps/web/src/app/components/shell/ShellMenu.tsx
+      - apps/web/src/app/components/shell/copy.ts
+      - apps/web/src/app/views/canvas/CanvasToolbar.tsx
+      - apps/web/src/app/views/canvas/CanvasToolbar.test.tsx
+      - apps/web/src/app/views/canvas/CanvasToolbar.architecture.test.tsx
+      - apps/web/src/app/views/canvas/CanvasToolbarPrimaryControls.tsx
+      - apps/web/src/app/views/canvas/CanvasToolbarPrimaryControls.test.tsx
+      - apps/web/src/app/views/canvas/CanvasWorkbenchCommandMenuControls.tsx
+      - apps/web/src/app/views/canvas/canvasWorkbenchCommandMenuContributionStore.ts
+    greenTest: pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/components/TopAppBar.test.tsx src/app/views/canvas/CanvasToolbar.test.tsx src/app/views/canvas/CanvasToolbarPrimaryControls.test.tsx
 symbols:
   - name: ShellAppMenu
     path: apps/web/src/app/components/shell/ShellAppMenu.tsx
@@ -375,6 +470,57 @@ symbols:
     cypressCoverage: Not required; covered by Canvas toolbar presentation test.
     unitTests:
       - pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/canvas/CanvasToolbarPrimaryControls.test.tsx
+  - name: CanvasWorkbenchCommandMenuContributionRegistrar
+    path: apps/web/src/app/views/canvas/CanvasWorkbenchCommandMenuControls.tsx
+    dddOwner: Canvas workbench command-menu contribution registrar
+    cqRails:
+      - ResolveShellCommandMenu
+      - ResolveCanvasProjectSnapshotActions
+    fowlerSignals:
+      - Gateway
+      - Presentation Model
+    architectureGuard: pnpm --filter @dvt/web typecheck
+    cypressCoverage: Covered indirectly by Canvas plan/run user-flow proof.
+    unitTests:
+      - pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/canvas/CanvasToolbar.test.tsx
+  - name: CanvasWorkbenchCommandMenus
+    path: apps/web/src/app/views/canvas/CanvasWorkbenchCommandMenuControls.tsx
+    dddOwner: Shell-rendered Canvas workbench command menus
+    cqRails:
+      - ResolveShellCommandMenu
+      - ResolveCanvasProjectSnapshotActions
+    fowlerSignals:
+      - Presentation Model
+      - Information Hiding
+    architectureGuard: pnpm --filter @dvt/web typecheck
+    cypressCoverage: Covered indirectly by Canvas plan/run user-flow proof.
+    unitTests:
+      - pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/components/TopAppBar.test.tsx
+  - name: CanvasWorkbenchCommandMenuContribution
+    path: apps/web/src/app/views/canvas/canvasWorkbenchCommandMenuContributionStore.ts
+    dddOwner: Canvas command-menu contribution read model
+    cqRails:
+      - ResolveShellCommandMenu
+      - ResolveCanvasProjectSnapshotActions
+    fowlerSignals:
+      - Published Interface
+      - Read Model
+    architectureGuard: pnpm --filter @dvt/web typecheck
+    cypressCoverage: Covered indirectly by Canvas plan/run user-flow proof.
+    unitTests:
+      - pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/canvas/CanvasToolbar.test.tsx
+  - name: useCanvasWorkbenchCommandMenuContributionStore
+    path: apps/web/src/app/views/canvas/canvasWorkbenchCommandMenuContributionStore.ts
+    dddOwner: Active Canvas command-menu contribution state
+    cqRails:
+      - ResolveShellCommandMenu
+    fowlerSignals:
+      - Gateway
+      - Identity-guarded cleanup
+    architectureGuard: pnpm --filter @dvt/web typecheck
+    cypressCoverage: Covered indirectly by Canvas plan/run user-flow proof.
+    unitTests:
+      - pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/canvas/CanvasToolbar.test.tsx
   - name: resolveProductVersion
     path: apps/web/vite.config.ts
     dddOwner: Web build metadata configuration
