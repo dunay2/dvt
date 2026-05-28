@@ -87,6 +87,41 @@ The demanding user acceptance criterion is:
    pipeline artifact, with the same YAML preview.
 6. Unsupported or stale files must not be fabricated to make the flow pass.
 
+### 2026-05-28 Code Selection Drift Follow-up
+
+Observed defect: after planning a transformation graph, the Code tab listed the
+generated workflow artifact but still opened `dbt_project.yml` because
+`CodeFileSelection` selected the first reachable file in the tree. That made the
+real screen diverge from the Grafo -> Code -> Artifacts product promise.
+
+Root cause: the F-30 parity proof asserted artifact visibility, but the Code
+selection read model did not encode the product priority that workflow artifacts
+explain the graph better than root project configuration files.
+
+Selected correction: keep `ListWorkspaceFiles` as the only query rail and make
+`CodeFileSelection` prefer `pipelines/*.yaml|yml` workflow artifacts before
+falling back to the first reachable file. This is a read-model selection fix,
+not a new persistence or graph mutation behavior.
+
+```mermaid
+flowchart LR
+  Graph["Grafo planned workflow"]
+  Save["SaveWorkspaceFileContent"]
+  Files["ListWorkspaceFiles"]
+  Select["CodeFileSelection"]
+  Workflow["pipelines/*.yaml|yml"]
+  Config["dbt_project.yml fallback"]
+  Editor["Code Monaco buffer"]
+
+  Graph --> Save
+  Save --> Files
+  Files --> Select
+  Select -->|prefer| Workflow
+  Select -->|fallback| Config
+  Workflow --> Editor
+  Config --> Editor
+```
+
 ## Command And Query Rail Impact
 
 No new rail is introduced.
@@ -174,6 +209,8 @@ allowedImplementationSurfaces:
   - apps/web/src/app/components/monaco/MonacoDiffSurface.tsx
   - apps/web/src/app/components/monaco/monacoBundleIsolation.architecture.test.ts
   - apps/web/src/app/components/monaco/monacoLocalWorkers.ts
+  - apps/web/src/app/views/code/codeViewFileSelection.ts
+  - apps/web/src/app/views/code/codeViewFileSelection.test.ts
   - apps/web/src/app/views/canvas/canvasCopyCatalog.execution.es.ts
   - apps/web/src/app/views/canvas/canvasCopyCatalog.execution.ts
   - apps/web/src/app/views/canvas/canvasPreviewProvenance.ts
@@ -183,6 +220,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx
   - apps/web/src/app/views/canvas/useCanvasPlanActionHandler.ts
   - docs/.manifest.json
+  - docs/architecture/components/web/code-workbench-workspace-files-component.md
   - docs/architecture/components/web/graph/canvas-execution-selection-component.md
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/architecture/components/web/monaco/monaco-bundle-isolation-component.md
@@ -338,6 +376,30 @@ symbols:
     architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525
     cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-graph-code-artifacts-parity.cy.ts
     unitTests: [N/A - Cypress route proof]
+  - name: resolveInitialCodeFilePath
+    path: apps/web/src/app/views/code/codeViewFileSelection.ts
+    dddOwner: CodeWorkspaceFileTreeReadModel
+    cqRails: [ListWorkspaceFiles]
+    fowlerSignals: [Documentation drift, Hidden authority]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525
+    cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-graph-code-artifacts-parity.cy.ts
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/code/codeViewFileSelection.test.ts]
+  - name: WORKFLOW_ARTIFACT_PATH_PATTERN
+    path: apps/web/src/app/views/code/codeViewFileSelection.ts
+    dddOwner: CodeWorkspaceFileTreeReadModel
+    cqRails: [ListWorkspaceFiles]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525
+    cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-graph-code-artifacts-parity.cy.ts
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/code/codeViewFileSelection.test.ts]
+  - name: isWorkflowArtifactFile
+    path: apps/web/src/app/views/code/codeViewFileSelection.ts
+    dddOwner: CodeWorkspaceFileTreeReadModel
+    cqRails: [ListWorkspaceFiles]
+    fowlerSignals: [Encapsulated Predicate]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525
+    cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-graph-code-artifacts-parity.cy.ts
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/code/codeViewFileSelection.test.ts]
   - name: MONACO_LOCAL_WORKER_FACTORIES
     path: apps/web/src/app/components/monaco/monacoLocalWorkers.ts
     dddOwner: MonacoLocalWorkerConfiguration

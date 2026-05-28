@@ -36,6 +36,42 @@ describe('codeViewFileSelection', () => {
     expect(hasCodeWorkspaceFiles(tree)).toBe(true);
   });
 
+  it('prefers the graph workflow artifact over project config files', () => {
+    const tree: WorkspaceFileEntry[] = [
+      {
+        path: 'dbt_project.yml',
+        name: 'dbt_project.yml',
+        kind: 'file',
+      },
+      {
+        path: 'models',
+        name: 'models',
+        kind: 'directory',
+        children: [
+          {
+            path: 'models/dvt-sql-transform-1.sql',
+            name: 'dvt-sql-transform-1.sql',
+            kind: 'file',
+          },
+        ],
+      },
+      {
+        path: 'pipelines',
+        name: 'pipelines',
+        kind: 'directory',
+        children: [
+          {
+            path: 'pipelines/project-transformation-preview.yaml',
+            name: 'project-transformation-preview.yaml',
+            kind: 'file',
+          },
+        ],
+      },
+    ];
+
+    expect(resolveInitialCodeFilePath(tree)).toBe('pipelines/project-transformation-preview.yaml');
+  });
+
   it('keeps directory-only trees out of the editable Code route', () => {
     const tree: WorkspaceFileEntry[] = [
       {

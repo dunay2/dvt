@@ -84,6 +84,14 @@ semantics.
 | `MonacoCodeEditor`   | presentation gateway | Opens the shared Monaco surface in editable mode for Code.              |
 | `MonacoCodeViewer`   | presentation gateway | Opens the shared Monaco surface in read-only mode for Artifacts/review. |
 
+### Initial Selection Policy
+
+`CodeFileSelection` opens the file most likely to explain the graph the user
+just planned. It must prefer `pipelines/*.yaml|yml` workflow artifacts over
+root project configuration files such as `dbt_project.yml`. If no workflow
+artifact exists, it falls back to the first reachable file in the workspace
+tree.
+
 ## DDD Model
 
 | Object                     | Kind               | Responsibility                                                         |
@@ -108,6 +116,9 @@ semantics.
   file types, and oversized files.
 - The Code workbench may edit a browser-local buffer. Any persisted content must
   use `SaveWorkspaceFileContent` and must not bypass the scoped command rail.
+- Initial Code file selection must prioritize workflow artifacts under
+  `pipelines/` so the Code tab opens the artifact that matches the visible graph
+  before lower-context project configuration files.
 - Code route copy resolves through `resolveCodeViewCopy(locale)`; route,
   bootstrap, error, and Monaco surfaces must not own fixed-language strings.
 - Canvas preview provenance may persist generated graph artifacts through
@@ -132,6 +143,25 @@ stateDiagram-v2
   DirtyLocalBuffer --> PreviewLoaded: user reloads or selects another file
   PreviewLoaded --> LoadingContent: user selects another file
   PreviewError --> LoadingContent: user selects another file
+```
+
+## Selection Flow
+
+```mermaid
+flowchart LR
+  Tree["WorkspaceFileTree"]
+  Flatten["CodeFileSelection flattens files"]
+  Workflow{"Has pipelines/*.yaml|yml?"}
+  WorkflowFile["Open workflow artifact"]
+  FirstFile["Open first reachable file"]
+  Editor["MonacoCodeEditor local buffer"]
+
+  Tree --> Flatten
+  Flatten --> Workflow
+  Workflow -->|yes| WorkflowFile
+  Workflow -->|no| FirstFile
+  WorkflowFile --> Editor
+  FirstFile --> Editor
 ```
 
 ## Component Diagram
@@ -202,7 +232,9 @@ Add a semantic architecture test that checks:
 - web API adapter does not call bare `/workspace/files` without scope;
 - no route component imports a concrete filesystem adapter;
 - `CodeView` delegates initial file selection to `CodeFileSelection` instead
-  of owning file-tree traversal logic;
+  of owning file-tree traversal logic, and `CodeFileSelection` prefers
+  `pipelines/*.yaml|yml` workflow artifacts before generic project config
+  files;
 - `CodeView` delegates local edit storage to `CodeEditableBuffer` instead of
   owning a path-keyed buffer map inline;
 - `CodeView` delegates route frame semantics to `RouteWorkbenchFrameSlots` so
