@@ -33,10 +33,9 @@ Current values:
 
 ## Invariants
 
-- Workbench routes such as `/canvas` and `/canvas/:workbenchTab` do not mount a
-  permanent left rail.
-- Global shell routes such as `/runs`, `/plugins`, and `/admin` keep the
-  permanent rail.
+- Product workbench routes such as `/canvas`, `/runs`, `/runs/:runId`,
+  `/templates`, `/plugins`, and `/admin` do not mount a permanent left rail.
+- Only uncataloged global shell routes keep the permanent rail.
 - Hiding the rail must not hide global routes. The top-bar `View` menu remains
   the menu-mode navigation surface.
 - `AppShellFrame` applies posture but does not classify route pathnames.
@@ -47,8 +46,8 @@ Current values:
 ```mermaid
 stateDiagram-v2
   [*] --> GlobalRoute
-  GlobalRoute --> WorkbenchRoute: pathname enters /canvas
-  WorkbenchRoute --> GlobalRoute: pathname leaves /canvas
+  GlobalRoute --> WorkbenchRoute: pathname enters product route
+  WorkbenchRoute --> GlobalRoute: pathname leaves product route
 
   GlobalRoute: railMode visible
   GlobalRoute: footerMode pinned
@@ -101,7 +100,9 @@ This is a frontend shell query rail:
 
 Negative coverage:
 
-- `/canvas` must not mount `[data-slot="left-navigation-rail"]`.
-- `/runs` must keep the left rail and active route state.
-- `/canvas` must still expose `/canvas`, `/runs`, `/plugins`, and `/admin`
+- `/canvas`, `/runs`, `/runs/:runId`, `/templates`, `/plugins`, and `/admin`
+  must not mount `[data-slot="left-navigation-rail"]`.
+- `/legacy` keeps the left rail as the uncataloged global fallback.
+- Product workbench routes must still expose Canvas, Runs, Templates, Plugins,
+  and Admin
   through `shell-menu-navigation-link`.

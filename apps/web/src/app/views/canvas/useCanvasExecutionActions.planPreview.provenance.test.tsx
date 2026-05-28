@@ -3,6 +3,7 @@
 import { sha256HexUtf8 } from '@dvt/contracts';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { canvasViewCopy } from './copy';
 import { buildPreviewDesignGraphArtifactContent } from './previewGraphSource';
 import {
@@ -29,6 +30,129 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
     harness?.cleanup();
     harness = null;
     restoreExecutionActionsTestDoubles();
+  });
+
+  it('projects canvas-authored transformation nodes into workspace artifacts before preview', async () => {
+    const plansService = createPlansServiceMock();
+    const authoringNodes: CanonicalNode[] = [
+      {
+        id: 'source-2',
+        name: 'Source 2',
+        pluginId: 'dvt',
+        kind: 'dvt:source',
+        role: 'input' as const,
+        status: 'idle' as const,
+        tags: ['authoring'],
+        metadata: { typeLabel: 'Source' },
+      },
+      {
+        id: 'dvt-sql-transform-1',
+        name: 'SQL transform 1',
+        pluginId: 'dvt',
+        kind: 'dvt:sql_transform',
+        role: 'transform' as const,
+        status: 'idle' as const,
+        tags: ['authoring'],
+        metadata: { typeLabel: 'SQL transform' },
+      },
+      {
+        id: 'sink-1',
+        name: 'Sink 1',
+        pluginId: 'dvt',
+        kind: 'dvt:sink',
+        role: 'output' as const,
+        status: 'idle' as const,
+        tags: ['authoring'],
+        metadata: { typeLabel: 'Sink' },
+      },
+    ];
+    const authoringEdges: CanonicalEdge[] = [
+      {
+        id: 'edge-source-transform',
+        sourceId: 'source-2',
+        targetId: 'dvt-sql-transform-1',
+        relation: 'lineage' as const,
+      },
+      {
+        id: 'edge-transform-sink',
+        sourceId: 'dvt-sql-transform-1',
+        targetId: 'sink-1',
+        relation: 'lineage' as const,
+      },
+    ];
+    const workspaceFilePorts = createWorkspaceFilePortMocks({});
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService: createRunsServiceMock(),
+      ...workspaceFilePorts,
+      canonicalNodes: authoringNodes,
+      canonicalEdges: authoringEdges,
+      previewProvenanceConfig: {
+        gitBranch: 'detached',
+        gitSha: 'unknown',
+      },
+    });
+    await harness.render();
+
+    await harness.clickPlan();
+
+    expect(workspaceFilePorts.workspaceFileContentCommand.saveFileContent).toHaveBeenCalledWith(
+      'models/dvt-sql-transform-1.sql',
+      'select *\nfrom public.source_2;\n'
+    );
+    expect(workspaceFilePorts.workspaceFileContentCommand.saveFileContent).toHaveBeenCalledWith(
+      'pipelines/project-transformation-preview.yaml',
+      expect.stringContaining('entrypoint: "models/dvt-sql-transform-1.sql"')
+    );
+    expect(plansService.previewPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        previewProfile: 'transformation-sql-first-v1',
+        graphSource: expect.objectContaining({
+          nodes: expect.arrayContaining([
+            expect.objectContaining({
+              nodeId: 'source-2',
+              stepTypeConfig: expect.objectContaining({
+                sourceSchema: 'public',
+                sourceTable: 'source_2',
+                sourceAlias: 'source_2',
+              }),
+            }),
+            expect.objectContaining({
+              nodeId: 'dvt-sql-transform-1',
+              stepTypeConfig: expect.objectContaining({
+                entrypoint: 'models/dvt-sql-transform-1.sql',
+                sql: 'select *\nfrom public.source_2;\n',
+              }),
+            }),
+            expect.objectContaining({
+              nodeId: 'sink-1',
+              stepTypeConfig: expect.objectContaining({
+                sinkSchema: 'public',
+                sinkTable: 'sink_1',
+                materialization: 'table',
+                writeMode: 'replace',
+              }),
+            }),
+          ]),
+        }),
+        provenance: {
+          graphArtifact: expect.objectContaining({
+            repo: 'workspace://tenant/project',
+            path: 'pipelines/project-transformation-preview.yaml',
+            ref: 'workspace/env',
+            commitSha: 'workspace-draft',
+          }),
+          sqlArtifact: expect.objectContaining({
+            repo: 'workspace://tenant/project',
+            path: 'models/dvt-sql-transform-1.sql',
+            ref: 'workspace/env',
+            commitSha: 'workspace-draft',
+          }),
+        },
+      })
+    );
+    expect(harness.shellFeedback.success).toHaveBeenCalledWith(canvasViewCopy.planCreatedMessage);
   });
 
   it('adds preview provenance for temporal targets when workspace files resolve', async () => {

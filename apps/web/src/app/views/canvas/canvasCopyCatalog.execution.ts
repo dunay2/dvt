@@ -10,8 +10,7 @@ export const canvasViewExecutionCopyByKey = {
   },
   planSqlArtifactRequiredMessage: {
     key: 'canvas.plan.sqlArtifactRequiredMessage',
-    fallback:
-      'Preview provenance must resolve the SQL artifact before creating a persisted plan.',
+    fallback: 'Preview provenance must resolve the SQL artifact before creating a persisted plan.',
   },
   planUnableToCreateMessage: {
     key: 'canvas.plan.unableToCreateMessage',
@@ -20,7 +19,7 @@ export const canvasViewExecutionCopyByKey = {
   previewProvenanceTransformPathRequiredMessage: {
     key: 'canvas.preview.transformPathRequiredMessage',
     fallback:
-      'Preview provenance requires one SQL transform node with a workspace file path before planning.',
+      'Plan needs SQL content. Select a workspace SQL file for the SQL transform, or use a canvas-authored transform so DVT can create one.',
   },
   previewProvenanceWorkspaceNotConfiguredMessage: {
     key: 'canvas.preview.workspaceNotConfiguredMessage',

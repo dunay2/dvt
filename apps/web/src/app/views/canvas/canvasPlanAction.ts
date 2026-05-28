@@ -38,6 +38,23 @@ type CanvasPlanActionSuccess = {
 
 export type CanvasPlanActionResult = CanvasPlanActionFailure | CanvasPlanActionSuccess;
 
+function formatPlanActionErrorMessage(error: unknown): string {
+  if (!(error instanceof Error)) {
+    return canvasViewCopy.planUnableToCreateMessage;
+  }
+
+  const message = error.message.trim();
+  if (!message) {
+    return canvasViewCopy.planUnableToCreateMessage;
+  }
+
+  if (/^Request to \/plans\/preview failed \(/.test(message)) {
+    return canvasViewCopy.planUnableToCreateMessage;
+  }
+
+  return message;
+}
+
 export async function executeCanvasPlanAction({
   canPlan,
   canonicalEdges,
@@ -127,7 +144,7 @@ export async function executeCanvasPlanAction({
     } catch (error) {
       return {
         ok: false,
-        message: error instanceof Error ? error.message : canvasViewCopy.planUnableToCreateMessage,
+        message: formatPlanActionErrorMessage(error),
       };
     }
   }
@@ -182,12 +199,17 @@ export async function executeCanvasPlanAction({
       ok: true,
       draftSignature: transformationValidation.draftSignature,
       plan,
-      writtenArtifactPaths: [],
+      writtenArtifactPaths: [
+        previewProvenance.sqlArtifact.path,
+        ...(previewProvenance.provenance?.graphArtifact.path
+          ? [previewProvenance.provenance.graphArtifact.path]
+          : []),
+      ],
     };
   } catch (error) {
     return {
       ok: false,
-      message: error instanceof Error ? error.message : canvasViewCopy.planUnableToCreateMessage,
+      message: formatPlanActionErrorMessage(error),
     };
   }
 }

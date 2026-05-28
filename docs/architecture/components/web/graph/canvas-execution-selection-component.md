@@ -41,6 +41,11 @@ It does **not** own:
   Resolve run intent from the persisted plan view.
 - `executeCanvasPlanAction(...)`
   Uses `collectPreviewSelection(...)` before calling `plansService.previewPlan`.
+  For SQL-first transformation canvases, it also requires preview provenance to
+  resolve through workspace artifacts. File-backed transforms read the existing
+  SQL file; canvas-authored transforms without a path first project a
+  deterministic SQL artifact and design-graph artifact through the workspace
+  file-content command rail.
 - `executeCanvasRunStartAction(...)`
   Uses `collectPlanSelection(...)` before calling `runsService.startRun`.
 
@@ -57,6 +62,12 @@ It does **not** own:
   local array shaping inline.
 - preview selection falls back from explicit selected nodes to visible
   workspace node ids only inside the same canonical seam.
+- SQL-first Plan never calls `previewPlan` with browser-only graph state:
+  `GenerateTransformationWorkspaceArtifacts` must provide SQL and graph
+  artifact provenance first.
+- Non-authoring SQL transforms without a workspace path still fail closed;
+  only canvas-authored nodes can receive deterministic local-draft artifact
+  paths during Plan.
 - run selection preserves persisted plan order while deduplicating node ids.
 - protected runtime rejection causes are normalized in the plans and runs
   service adapters, not inside the selection seam.
@@ -89,7 +100,8 @@ sequenceDiagram
 
   Canvas->>Selection: collectPreviewSelection(selectedNodeIds, workspaceNodeIds)
   Selection-->>Canvas: ExecutionSelection
-  Canvas->>Plans: previewPlan(..., selection)
+  Canvas->>Canvas: resolve SQL and graph artifact provenance
+  Canvas->>Plans: previewPlan(..., selection, provenance)
 
   Canvas->>Selection: collectPlanSelection(plan)
   Selection-->>Canvas: ExecutionSelection
@@ -111,7 +123,8 @@ sequenceDiagram
 
   Canvas->>Selection: collectPreviewSelection(selectedNodeIds, workspaceNodeIds)
   Selection-->>Canvas: ExecutionSelection
-  Canvas->>Plans: previewPlan(graphSource, selection, persist=true)
+  Canvas->>Canvas: project file-backed or local-draft artifacts
+  Canvas->>Plans: previewPlan(graphSource, selection, persist=true, provenance)
   Plans->>Preview: POST /plans/preview
   Preview->>Resolver: resolve selected closure from protected draft
   Resolver->>Planner: build selected-closure plan
@@ -168,6 +181,35 @@ Browser proof for this posture now lives in:
 - `apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts`
 - `apps/web/src/app/services/plans/plansService.test.ts`
 - `apps/web/src/app/services/runs/runsService.test.ts`
+
+## Demanding-user E2E story matrix
+
+These stories are the regression checklist for the product promise. They must
+stay tied to executable browser proof instead of remaining a loose QA note.
+
+| Story       | User intent                                                           | Proof surface                                                                                         |
+| ----------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `UX-E2E-01` | Create the first graph/canvas node through the UI and restore it.     | `apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts`                                       |
+| `UX-E2E-02` | Build a graph, plan the selected closure, execute it, and see result. | `apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts`                                      |
+| `UX-E2E-03` | Return from run result to Canvas, plan again, and execute again.      | `apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts`                                      |
+| `UX-E2E-04` | Prove the same selected-closure flow against the protected runtime.   | `apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts`                                           |
+| `UX-E2E-05` | Configure dbt cards, select origin, view generated code, and run.     | `apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts`                                   |
+| `UX-E2E-06` | Verify Graph, Code, Lineage, and Artifacts describe the same project. | `apps/web/cypress/e2e/canvas/canvas-graph-code-artifacts-parity.cy.ts`                                |
+| `UX-E2E-07` | See explicit re-plan guidance instead of raw transport failures.      | `apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts` and plan action unit coverage below. |
+
+Minimum local product gate for this component:
+
+```bash
+pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+```
+
+Live protected-runtime lanes remain separate because they require the local
+backend and authorization context:
+
+```bash
+pnpm --filter @dvt/web test:e2e:first-authoring:live
+pnpm --filter @dvt/web test:e2e:selected-closure:live
+```
 
 ## Live-runtime browser truth boundary
 

@@ -17,9 +17,6 @@ import {
 } from './Root.test.support';
 import {
   createHealthyPlatformCapability,
-  expectActiveRootShellNavigationLink,
-  expectRootShellFrameChrome,
-  expectRootShellNavigationChrome,
   expectRootShellWorkbenchFrameChrome,
   waitForHealthyShellChrome,
 } from './Root.shellChrome.test.support';
@@ -66,29 +63,30 @@ describe('RootShell chrome', () => {
     }
   });
 
-  it('keeps the global rail visible on non-workbench routes', async () => {
+  it('renders Runs list chrome without the permanent left navigation rail', async () => {
     const mounted = await withTestQueryClient(
       createRootShellNode(createHealthyPlatformCapability(), ['/runs'])
     );
 
     try {
       await waitForHealthyShellChrome(mounted);
-      expectRootShellFrameChrome(mounted.container, 'Runs route');
-      expectRootShellNavigationChrome(mounted.container, '/runs');
+      expectRootShellWorkbenchFrameChrome(mounted.container, 'Runs route');
+      expect(mounted.container.querySelector('[data-slot="left-navigation-rail"]')).toBeNull();
     } finally {
       await mounted.cleanup();
     }
   });
 
-  it('keeps the runs navigation item active for run detail routes', async () => {
+  it('renders run detail chrome without changing away from workbench navigation', async () => {
     const mounted = await withTestQueryClient(
       createRootShellNode(createHealthyPlatformCapability(), ['/runs/run_123'])
     );
 
     try {
-      await waitForShellBootstrapSurface(mounted);
+      await waitForHealthyShellChrome(mounted);
       expect(mounted.container.textContent).toContain('Run detail route');
-      expectActiveRootShellNavigationLink(mounted.container, '/runs');
+      expectRootShellWorkbenchFrameChrome(mounted.container, 'Run detail route');
+      expect(mounted.container.querySelector('[data-slot="left-navigation-rail"]')).toBeNull();
     } finally {
       await mounted.cleanup();
     }

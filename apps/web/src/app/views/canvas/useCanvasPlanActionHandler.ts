@@ -57,9 +57,7 @@ export function useCanvasPlanActionHandler({
 
   return useCallback(async () => {
     const flushedDraftGraph =
-      executionStrategy?.kind === 'planner_generic_preview' && flushDraftForExecution != null
-        ? await flushDraftForExecution()
-        : null;
+      flushDraftForExecution != null ? await flushDraftForExecution() : null;
     if (flushedDraftGraph?.ok === false) {
       shellFeedback.error(flushedDraftGraph.message);
       return;

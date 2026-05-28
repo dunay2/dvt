@@ -8,6 +8,7 @@ import {
 import {
   getE2eApiCalls,
   getLastE2eApiCall,
+  stubE2eApi,
   stubE2eJsonApi,
   waitForE2eApiCall,
 } from '../../support/e2eApiStub';
@@ -570,17 +571,24 @@ describe('Canvas preview-run persisted path', () => {
     cy.contains('Run run_e2e_selected_1').should('exist');
   });
 
-  it('starts run when persisted preview identity matches the active plan', () => {
+  it('starts run when persisted preview identity matches the active plan and can run again', () => {
     stubCanvasRuntimeApis();
     stubRunWorkspaceApis('run_e2e_1');
+    stubRunWorkspaceApis('run_e2e_2');
     stubPlanPreviewResponse({
       planRecordId: 'b'.repeat(64),
       persistedSha: 'c'.repeat(64),
       planRefSha: 'd'.repeat(64),
     });
-    stubE2eJsonApi('POST', '/runs/start', {
-      runId: 'run_e2e_1',
-      accepted: true,
+    let startRunCount = 0;
+    stubE2eApi('POST', '/runs/start', () => {
+      startRunCount += 1;
+      return {
+        body: {
+          runId: `run_e2e_${startRunCount}`,
+          accepted: true,
+        },
+      };
     });
 
     visitCanvasWithSettledBootstrap();
@@ -609,6 +617,31 @@ describe('Canvas preview-run persisted path', () => {
 
     cy.contains('Run run_e2e_1').should('exist');
     cy.contains('Materialization evidence').should('not.exist');
+    cy.contains('Failure diagnostics').should('exist');
+    cy.contains('STEP_FAILURE').should('exist');
+
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').should('be.visible').click();
+    cy.get('[data-slot="shell-menu-navigation-link"][href="/canvas"]').should('be.visible').click();
+    cy.location('pathname').should('eq', '/canvas');
+
+    cy.contains('button', 'Plan').should('be.enabled').click();
+    waitForSelectedClosurePreviewArtifacts();
+    cy.wrap(null).should(() => {
+      expect(getE2eApiCalls('/plans/preview', 'POST')).to.have.length(2);
+    });
+    assertPreviewPlanRequest();
+
+    cy.contains('Execution Plan Preview').should('be.visible');
+    cy.contains(canvasViewCopy.planStatusPreviewReadyMessage).should('be.visible');
+    clickButtonNatively('Start Run');
+
+    cy.wrap(null).should(() => {
+      expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(2);
+    });
+    assertRunStartSelection('d'.repeat(64));
+    cy.location('pathname').should('eq', '/runs/run_e2e_2');
+
+    cy.contains('Run run_e2e_2').should('exist');
     cy.contains('Failure diagnostics').should('exist');
     cy.contains('STEP_FAILURE').should('exist');
   });
