@@ -51,7 +51,7 @@ export function buildProtectedRuntimeRouteDependencies(
     protectedModule.planStore as unknown as ConstructorParameters<typeof GetRunStatusUseCase>[5]
   );
   const previewPlanUseCase = new PreviewPlanUseCase({
-    planner: protectedModule.planner,
+    planner: protectedModule.planCompilePlanner,
     planStore: protectedModule.planStore,
     planValidator: protectedModule.planValidator,
     executableSubgraphResolver: new ResolveAuthorizedExecutableSubgraphService({

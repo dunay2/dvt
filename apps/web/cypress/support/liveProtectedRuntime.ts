@@ -7,6 +7,7 @@ import {
   type CanvasDraftSessionScope,
   type StubCanvasDraftReadOptions,
 } from './canvasDraftAuthoring';
+import { installE2eApiFetchStub } from './e2eApiStub';
 import { LIVE_WORKSPACE_SESSION, seedE2eWorkspaceSession } from './workspaceSession';
 
 function readRequiredEnv(name: string): string {
@@ -76,6 +77,7 @@ export function visitWithLiveWorkspaceSession(
     onBeforeLoad(window) {
       window.localStorage.clear();
       seedE2eWorkspaceSession(window, session);
+      installE2eApiFetchStub(window);
       options.onBeforeLoad?.(window);
     },
   });

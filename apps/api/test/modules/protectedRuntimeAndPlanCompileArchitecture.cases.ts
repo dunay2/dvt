@@ -70,12 +70,15 @@ export function describeProtectedRuntimeAndPlanCompileArchitectureCases(): void 
       expect(PLAN_COMPILE_BOUNDARY_SOURCE).not.toContain("['conductor', 'mock', 'temporal']");
     });
 
-    it('keeps generic preview planning on the protected runtime planner while compile stays on the compile boundary', () => {
-      expect(PROTECTED_RUNTIME_ROUTES_SOURCE).toMatch(
+    it('builds preview and compile plans through the compile boundary while runtime planner derives selection', () => {
+      expect(PROTECTED_RUNTIME_ROUTES_SOURCE).not.toMatch(
         /const previewPlanUseCase = new PreviewPlanUseCase\(\{\s*planner: protectedModule\.planner,/s
       );
-      expect(PROTECTED_RUNTIME_ROUTES_SOURCE).not.toMatch(
+      expect(PROTECTED_RUNTIME_ROUTES_SOURCE).toMatch(
         /const previewPlanUseCase = new PreviewPlanUseCase\(\{\s*planner: protectedModule\.planCompilePlanner,/s
+      );
+      expect(PROTECTED_RUNTIME_ROUTES_SOURCE).toMatch(
+        /new ResolveAuthorizedExecutableSubgraphService\(\{\s*planner: protectedModule\.planner,/s
       );
       expect(PROTECTED_RUNTIME_ROUTES_SOURCE).toMatch(
         /compilePlanUseCase: new CompilePlanUseCase\(\{\s*planner: protectedModule\.planCompilePlanner/s
