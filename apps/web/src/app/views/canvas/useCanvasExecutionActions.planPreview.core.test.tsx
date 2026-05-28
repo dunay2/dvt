@@ -267,12 +267,19 @@ describe('useCanvasExecutionActions plan preview core', () => {
 
   it('does not call previewPlan when the active canvas execution strategy is disabled', async () => {
     const plansService = createPlansServiceMock();
+    const flushDraftForExecution = vi.fn(async () => ({
+      ok: true as const,
+      canonicalNodes: buildCanonicalNodes(),
+      canonicalEdges: buildCanonicalEdges(),
+      workspaceNodeIds: buildCanonicalNodes().map((node) => node.id),
+    }));
 
     harness = renderExecutionActionsHarness({
       plansService,
       runsService: createRunsServiceMock(),
       canonicalNodes: buildCanonicalNodes(),
       canonicalEdges: buildCanonicalEdges(),
+      flushDraftForExecution,
       executionStrategy: {
         kind: 'not_executable',
       },
@@ -281,6 +288,7 @@ describe('useCanvasExecutionActions plan preview core', () => {
 
     await harness.clickPlan();
 
+    expect(flushDraftForExecution).not.toHaveBeenCalled();
     expect(plansService.previewPlan).not.toHaveBeenCalled();
     expect(harness.shellFeedback.error).toHaveBeenCalledWith(
       canvasViewCopy.canvasExecutionUnavailableMessage
@@ -288,6 +296,34 @@ describe('useCanvasExecutionActions plan preview core', () => {
     expect(harness.text('can-start-run')).toBe('false');
     expect(harness.text('plan-status-summary')).toBe(
       canvasViewCopy.canvasExecutionUnavailableMessage
+    );
+  });
+
+  it('does not flush the draft when planning is not permitted', async () => {
+    const plansService = createPlansServiceMock();
+    const flushDraftForExecution = vi.fn(async () => ({
+      ok: true as const,
+      canonicalNodes: buildCanonicalNodes(),
+      canonicalEdges: buildCanonicalEdges(),
+      workspaceNodeIds: buildCanonicalNodes().map((node) => node.id),
+    }));
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService: createRunsServiceMock(),
+      canonicalNodes: buildCanonicalNodes(),
+      canonicalEdges: buildCanonicalEdges(),
+      flushDraftForExecution,
+      canPlan: false,
+    });
+    await harness.render();
+
+    await harness.clickPlan();
+
+    expect(flushDraftForExecution).not.toHaveBeenCalled();
+    expect(plansService.previewPlan).not.toHaveBeenCalled();
+    expect(harness.shellFeedback.error).toHaveBeenCalledWith(
+      canvasViewCopy.planPermissionDeniedMessage
     );
   });
 

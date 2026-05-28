@@ -56,6 +56,16 @@ export function useCanvasPlanActionHandler({
   const queryClient = useQueryClient();
 
   return useCallback(async () => {
+    if (!canPlan) {
+      shellFeedback.error(canvasViewCopy.planPermissionDeniedMessage);
+      return;
+    }
+
+    if (executionStrategy == null || executionStrategy.kind === 'not_executable') {
+      shellFeedback.error(canvasViewCopy.canvasExecutionUnavailableMessage);
+      return;
+    }
+
     const flushedDraftGraph =
       flushDraftForExecution != null ? await flushDraftForExecution() : null;
     if (flushedDraftGraph?.ok === false) {
