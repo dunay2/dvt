@@ -75,13 +75,13 @@ export function describeProtectedRuntimeAndPlanCompileArchitectureCases(): void 
         /const previewPlanUseCase = new PreviewPlanUseCase\(\{\s*planner: protectedModule\.planner,/s
       );
       expect(PROTECTED_RUNTIME_ROUTES_SOURCE).toMatch(
-        /const previewPlanUseCase = new PreviewPlanUseCase\(\{\s*planner: createPreviewPlannerRouter\(\{/s
+        /const previewPlanUseCase = new PreviewPlanUseCase\(\{\s*planner: \{\s*buildPlan: \(plannerInput\) =>/s
       );
       expect(PROTECTED_RUNTIME_ROUTES_SOURCE).toMatch(
-        /runtimePlanner: protectedModule\.planner,\s*compilePlanner: protectedModule\.planCompilePlanner,/s
+        /plannerInput\.graphSource\.sourceFamily === TRANSFORMATION_DESIGN_GRAPH_SOURCE_FAMILY\s*\? protectedModule\.planCompilePlanner\.buildPlan\(plannerInput\)\s*: protectedModule\.planner\.buildPlan\(plannerInput\)/s
       );
-      expect(PROTECTED_RUNTIME_ROUTES_SOURCE).toContain(
-        'plannerInput.graphSource.sourceFamily === TRANSFORMATION_DESIGN_GRAPH_SOURCE_FAMILY'
+      expect(PROTECTED_RUNTIME_ROUTES_SOURCE).toMatch(
+        /deriveExecutableSubgraph: \(selectionInput\) =>\s*protectedModule\.planner\.deriveExecutableSubgraph\(selectionInput\)/s
       );
       expect(PROTECTED_RUNTIME_ROUTES_SOURCE).toMatch(
         /new ResolveAuthorizedExecutableSubgraphService\(\{\s*planner: protectedModule\.planner,/s
