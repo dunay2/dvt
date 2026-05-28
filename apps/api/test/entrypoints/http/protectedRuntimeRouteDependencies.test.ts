@@ -17,130 +17,132 @@ import {
   buildTransformationStoredPlan,
 } from './planRouteFixtures.js';
 
-const OBSERVABILITY: IObservability = {
-  logs: {
-    debug: () => undefined,
-    error: () => undefined,
-    info: () => undefined,
-    warn: () => undefined,
-  },
-  metrics: {
-    counter: () => ({ add: () => undefined }),
-    gauge: () => ({ set: () => undefined }),
-    histogram: () => ({ record: () => undefined }),
-  },
-  traces: {
-    startSpan: () => ({
-      end: () => undefined,
-      recordException: () => undefined,
-      setAttribute: () => undefined,
-      setAttributes: () => undefined,
-      setStatus: () => undefined,
-    }),
-    withSpan: (_name, _options, fn) =>
-      fn({
+describe('buildProtectedRuntimeRouteDependencies', () => {
+  const OBSERVABILITY: IObservability = {
+    logs: {
+      debug: () => undefined,
+      error: () => undefined,
+      info: () => undefined,
+      warn: () => undefined,
+    },
+    metrics: {
+      counter: () => ({ add: () => undefined }),
+      gauge: () => ({ set: () => undefined }),
+      histogram: () => ({ record: () => undefined }),
+    },
+    traces: {
+      startSpan: () => ({
         end: () => undefined,
         recordException: () => undefined,
         setAttribute: () => undefined,
         setAttributes: () => undefined,
         setStatus: () => undefined,
       }),
-  },
-  withContext: (_ctx, fn) => fn(),
-};
-
-function buildPreviewDraft(): Record<string, unknown> {
-  return {
-    canvas: {
-      kind: 'workspace-graph-authoring-v1',
-      title: 'Transformation canvas',
+      withSpan: (_name, _options, fn) =>
+        fn({
+          end: () => undefined,
+          recordException: () => undefined,
+          setAttribute: () => undefined,
+          setAttributes: () => undefined,
+          setStatus: () => undefined,
+        }),
     },
-    nodeIds: ['source-node', 'transform-node', 'sink-node'],
-    nodePositions: {
-      'source-node': { x: 0, y: 0 },
-      'transform-node': { x: 1, y: 1 },
-      'sink-node': { x: 2, y: 2 },
-    },
-    nodes: [
-      {
-        id: 'source-node',
-        name: 'Source',
-        pluginId: 'dvt',
-        kind: 'source',
-        role: 'input',
-        status: 'idle',
-        tags: ['authoring'],
-      },
-      {
-        id: 'transform-node',
-        name: 'SQL transform',
-        pluginId: 'dvt',
-        kind: 'sql_transform',
-        role: 'transform',
-        status: 'idle',
-        tags: ['authoring'],
-      },
-      {
-        id: 'sink-node',
-        name: 'Sink',
-        pluginId: 'dvt',
-        kind: 'sink',
-        role: 'output',
-        status: 'idle',
-        tags: ['authoring'],
-      },
-    ],
-    edges: [
-      {
-        id: 'edge-source-transform',
-        sourceId: 'source-node',
-        targetId: 'transform-node',
-        relation: 'lineage',
-      },
-      {
-        id: 'edge-transform-sink',
-        sourceId: 'transform-node',
-        targetId: 'sink-node',
-        relation: 'lineage',
-      },
-    ],
+    withContext: (_ctx, fn) => fn(),
   };
-}
 
-function buildProtectedModule(overrides: Partial<ProtectedRuntimeModule>): ProtectedRuntimeModule {
-  return {
-    adapters: new Map(),
-    authenticator: {},
-    authorizer: {},
-    close: async () => undefined,
-    createProjectUseCase: {},
-    engine: {},
-    executablePlanResolver: {},
-    facade: {},
-    getWorkspaceGraphDraftUseCase: {},
-    listProjectsUseCase: {},
-    migrate: async () => undefined,
-    planCompilePlanner: {},
-    planner: {},
-    planStore: {},
-    planValidator: {},
-    runEnrichmentService: {},
-    runHealthService: {},
-    saveWorkspaceGraphDraftUseCase: {},
-    startRunTargetAdapterRegistry: {},
-    stateStore: {
-      maintenance: {},
-      read: {},
-      snapshotStaleness: {},
-    },
-    workspaceContextQuery: {},
-    workspaceGraphDraftCapabilityService: {},
-    workspaceGraphDraftStore: {},
-    ...overrides,
-  } as unknown as ProtectedRuntimeModule;
-}
+  function buildPreviewDraft(): Record<string, unknown> {
+    return {
+      canvas: {
+        kind: 'workspace-graph-authoring-v1',
+        title: 'Transformation canvas',
+      },
+      nodeIds: ['source-node', 'transform-node', 'sink-node'],
+      nodePositions: {
+        'source-node': { x: 0, y: 0 },
+        'transform-node': { x: 1, y: 1 },
+        'sink-node': { x: 2, y: 2 },
+      },
+      nodes: [
+        {
+          id: 'source-node',
+          name: 'Source',
+          pluginId: 'dvt',
+          kind: 'source',
+          role: 'input',
+          status: 'idle',
+          tags: ['authoring'],
+        },
+        {
+          id: 'transform-node',
+          name: 'SQL transform',
+          pluginId: 'dvt',
+          kind: 'sql_transform',
+          role: 'transform',
+          status: 'idle',
+          tags: ['authoring'],
+        },
+        {
+          id: 'sink-node',
+          name: 'Sink',
+          pluginId: 'dvt',
+          kind: 'sink',
+          role: 'output',
+          status: 'idle',
+          tags: ['authoring'],
+        },
+      ],
+      edges: [
+        {
+          id: 'edge-source-transform',
+          sourceId: 'source-node',
+          targetId: 'transform-node',
+          relation: 'lineage',
+        },
+        {
+          id: 'edge-transform-sink',
+          sourceId: 'transform-node',
+          targetId: 'sink-node',
+          relation: 'lineage',
+        },
+      ],
+    };
+  }
 
-describe('buildProtectedRuntimeRouteDependencies', () => {
+  function buildProtectedModule(
+    overrides: Partial<ProtectedRuntimeModule>
+  ): ProtectedRuntimeModule {
+    return {
+      adapters: new Map(),
+      authenticator: {},
+      authorizer: {},
+      close: async () => undefined,
+      createProjectUseCase: {},
+      engine: {},
+      executablePlanResolver: {},
+      facade: {},
+      getWorkspaceGraphDraftUseCase: {},
+      listProjectsUseCase: {},
+      migrate: async () => undefined,
+      planCompilePlanner: {},
+      planner: {},
+      planStore: {},
+      planValidator: {},
+      runEnrichmentService: {},
+      runHealthService: {},
+      saveWorkspaceGraphDraftUseCase: {},
+      startRunTargetAdapterRegistry: {},
+      stateStore: {
+        maintenance: {},
+        read: {},
+        snapshotStaleness: {},
+      },
+      workspaceContextQuery: {},
+      workspaceGraphDraftCapabilityService: {},
+      workspaceGraphDraftStore: {},
+      ...overrides,
+    } as unknown as ProtectedRuntimeModule;
+  }
+
   it('builds transformation previews with the compile planner while deriving selection from the runtime planner', async () => {
     const selectedNodeIds = ['source-node', 'transform-node', 'sink-node'].map(asNonBlankString);
     const runtimePlanner = {
