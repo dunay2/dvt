@@ -56,10 +56,18 @@ export function useCanvasPlanActionHandler({
   const queryClient = useQueryClient();
 
   return useCallback(async () => {
+    if (!canPlan) {
+      shellFeedback.error(canvasViewCopy.planPermissionDeniedMessage);
+      return;
+    }
+
+    if (executionStrategy == null || executionStrategy.kind === 'not_executable') {
+      shellFeedback.error(canvasViewCopy.canvasExecutionUnavailableMessage);
+      return;
+    }
+
     const flushedDraftGraph =
-      executionStrategy?.kind === 'planner_generic_preview' && flushDraftForExecution != null
-        ? await flushDraftForExecution()
-        : null;
+      flushDraftForExecution != null ? await flushDraftForExecution() : null;
     if (flushedDraftGraph?.ok === false) {
       shellFeedback.error(flushedDraftGraph.message);
       return;

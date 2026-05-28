@@ -6,7 +6,7 @@ export const canvasViewExecutionCopyEs = {
     'La provenance del preview debe resolver el artefacto SQL antes de crear un plan persistido.',
   planUnableToCreateMessage: 'No se ha podido crear el plan de ejecucion',
   previewProvenanceTransformPathRequiredMessage:
-    'La provenance del preview requiere un nodo SQL transform con una ruta de fichero del workspace antes de planificar.',
+    'El plan necesita contenido SQL. Selecciona un fichero SQL del workspace para el SQL transform o usa un transform creado en el canvas para que DVT lo cree.',
   previewProvenanceWorkspaceNotConfiguredMessage:
     'La provenance del preview no esta configurada para este workspace. Define el repo Git y la ruta del artefacto de grafo antes de planificar.',
   previewProvenanceExplicitGitRevisionRequiredMessage:

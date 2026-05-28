@@ -41,10 +41,10 @@ describe('ShellTopBar workspace context', () => {
     container.remove();
   });
 
-  it('keeps workspace scope as read-only context in the main top bar', async () => {
+  it('keeps workspace scope as read-only context in uncataloged global top-bar chrome', async () => {
     await act(async () => {
       root.render(
-        <MemoryRouter initialEntries={['/runs']}>
+        <MemoryRouter initialEntries={['/legacy']}>
           <ShellTopBar navigationModel={TEST_NAVIGATION_MODEL} />
         </MemoryRouter>
       );
@@ -63,62 +63,67 @@ describe('ShellTopBar workspace context', () => {
     expect(topBar?.querySelectorAll('[role="combobox"]')).toHaveLength(0);
   });
 
-  it('keeps Canvas top bar low-noise while separating workspace navigation from View controls', async () => {
-    await act(async () => {
-      root.render(
-        <MemoryRouter initialEntries={['/canvas']}>
-          <ShellTopBar navigationModel={TEST_NAVIGATION_MODEL} />
-        </MemoryRouter>
-      );
-    });
+  it.each(['/canvas', '/runs/run_123'])(
+    'keeps product workbench top bar low-noise on %s while separating workspace navigation from View controls',
+    async (pathname) => {
+      await act(async () => {
+        root.render(
+          <MemoryRouter initialEntries={[pathname]}>
+            <ShellTopBar navigationModel={TEST_NAVIGATION_MODEL} />
+          </MemoryRouter>
+        );
+      });
 
-    const topBar = container.querySelector('[data-slot="shell-top-bar"]');
+      const topBar = container.querySelector('[data-slot="shell-top-bar"]');
 
-    expect(topBar?.querySelector('[data-slot="shell-project-identity-badge"]')).toBeNull();
-    expect(topBar?.querySelector('[data-slot="shell-workspace-context-trigger"]')).toBeNull();
-    expect(topBar?.querySelector('[data-slot="shell-git-ref"]')).toBeNull();
-    expect(topBar?.querySelector('[data-slot="shell-top-bar-canvas-controls"]')).toBeNull();
-    expect(topBar?.querySelector('[data-slot="shell-workspace-menu-trigger"]')).not.toBeNull();
-    expect(topBar?.querySelector('[data-slot="shell-menu-trigger"]')).not.toBeNull();
+      expect(topBar?.querySelector('[data-slot="shell-project-identity-badge"]')).toBeNull();
+      expect(topBar?.querySelector('[data-slot="shell-workspace-context-trigger"]')).toBeNull();
+      expect(topBar?.querySelector('[data-slot="shell-git-ref"]')).toBeNull();
+      expect(topBar?.querySelector('[data-slot="shell-top-bar-canvas-controls"]')).toBeNull();
+      expect(topBar?.querySelector('[data-slot="shell-workspace-menu-trigger"]')).not.toBeNull();
+      expect(topBar?.querySelector('[data-slot="shell-menu-trigger"]')).not.toBeNull();
 
-    await act(async () => {
-      fireEvent.pointerDown(container.querySelector('[data-slot="shell-menu-trigger"]')!);
-    });
+      await act(async () => {
+        fireEvent.pointerDown(container.querySelector('[data-slot="shell-menu-trigger"]')!);
+      });
 
-    await waitFor(() => {
-      expect(document.body.textContent).toContain('View options');
-      expect(document.body.textContent).toContain('Panels');
-      expect(
-        document.body.querySelectorAll('[data-slot="shell-menu-navigation-link"]')
-      ).toHaveLength(0);
-      expect(document.body.textContent).not.toContain('Workspace context');
-    });
+      await waitFor(() => {
+        expect(document.body.textContent).toContain('View options');
+        expect(document.body.textContent).toContain('Panels');
+        expect(
+          document.body.querySelectorAll('[data-slot="shell-menu-navigation-link"]')
+        ).toHaveLength(0);
+        expect(document.body.textContent).not.toContain('Workspace context');
+      });
 
-    await act(async () => {
-      fireEvent.keyDown(document, { key: 'Escape' });
-      fireEvent.pointerDown(container.querySelector('[data-slot="shell-workspace-menu-trigger"]')!);
-    });
+      await act(async () => {
+        fireEvent.keyDown(document, { key: 'Escape' });
+        fireEvent.pointerDown(
+          container.querySelector('[data-slot="shell-workspace-menu-trigger"]')!
+        );
+      });
 
-    await waitFor(() => {
-      const menuLinks = [
-        ...document.body.querySelectorAll<HTMLAnchorElement>(
-          '[data-slot="shell-menu-navigation-link"]'
-        ),
-      ];
+      await waitFor(() => {
+        const menuLinks = [
+          ...document.body.querySelectorAll<HTMLAnchorElement>(
+            '[data-slot="shell-menu-navigation-link"]'
+          ),
+        ];
 
-      expect(menuLinks.map((link) => link.getAttribute('href'))).toEqual(['/plugins', '/admin']);
-      expect(document.body.textContent).toContain('Workspace context');
-      expect(document.body.textContent).toContain('dbt-analytics');
-      expect(document.body.textContent).toContain('dev');
-    });
-  });
+        expect(menuLinks.map((link) => link.getAttribute('href'))).toEqual(['/plugins', '/admin']);
+        expect(document.body.textContent).toContain('Workspace context');
+        expect(document.body.textContent).toContain('dbt-analytics');
+        expect(document.body.textContent).toContain('dev');
+      });
+    }
+  );
 
   it('exposes workspace navigation when focus mode hides the global route rail', async () => {
     useUiLayoutStore.setState({ focusMode: true });
 
     await act(async () => {
       root.render(
-        <MemoryRouter initialEntries={['/runs']}>
+        <MemoryRouter initialEntries={['/legacy']}>
           <ShellTopBar navigationModel={TEST_NAVIGATION_MODEL} />
         </MemoryRouter>
       );

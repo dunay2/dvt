@@ -187,14 +187,99 @@ describe('useCanvasExecutionActions plan preview core', () => {
     );
   });
 
-  it('does not call previewPlan when the active canvas execution strategy is disabled', async () => {
+  it('flushes transformation draft truth before planning so Plan matches the visible graph', async () => {
     const plansService = createPlansServiceMock();
+    const flushedNodes = buildCanonicalNodes().map((node) =>
+      node.id === 'source-node'
+        ? {
+            ...node,
+            metadata: {
+              config: {
+                schema: 'raw',
+                table: 'payments',
+                alias: 'payments',
+              },
+            },
+          }
+        : node
+    );
+    const flushDraftForExecution = vi.fn(async () => ({
+      ok: true as const,
+      canonicalNodes: flushedNodes,
+      canonicalEdges: buildCanonicalEdges(),
+      workspaceNodeIds: flushedNodes.map((node) => node.id),
+    }));
 
     harness = renderExecutionActionsHarness({
       plansService,
       runsService: createRunsServiceMock(),
       canonicalNodes: buildCanonicalNodes(),
       canonicalEdges: buildCanonicalEdges(),
+      flushDraftForExecution,
+    });
+    await harness.render();
+
+    await harness.clickPlan();
+
+    expect(flushDraftForExecution).toHaveBeenCalledTimes(1);
+    expect(plansService.previewPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        graphSource: expect.objectContaining({
+          nodes: expect.arrayContaining([
+            expect.objectContaining({
+              nodeId: 'source-node',
+              stepTypeConfig: expect.objectContaining({
+                sourceTable: 'payments',
+                sourceAlias: 'payments',
+              }),
+            }),
+          ]),
+        }),
+      })
+    );
+  });
+
+  it('keeps raw plan-preview transport failures out of user-facing feedback', async () => {
+    const plansService = {
+      ...createPlansServiceMock(),
+      previewPlan: vi.fn(async () => {
+        throw new Error('Request to /plans/preview failed (500)');
+      }),
+    };
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService: createRunsServiceMock(),
+      canonicalNodes: buildCanonicalNodes(),
+      canonicalEdges: buildCanonicalEdges(),
+    });
+    await harness.render();
+
+    await harness.clickPlan();
+
+    expect(harness.shellFeedback.error).toHaveBeenCalledWith(
+      canvasViewCopy.planUnableToCreateMessage
+    );
+    expect(harness.shellFeedback.error).not.toHaveBeenCalledWith(
+      'Request to /plans/preview failed (500)'
+    );
+  });
+
+  it('does not call previewPlan when the active canvas execution strategy is disabled', async () => {
+    const plansService = createPlansServiceMock();
+    const flushDraftForExecution = vi.fn(async () => ({
+      ok: true as const,
+      canonicalNodes: buildCanonicalNodes(),
+      canonicalEdges: buildCanonicalEdges(),
+      workspaceNodeIds: buildCanonicalNodes().map((node) => node.id),
+    }));
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService: createRunsServiceMock(),
+      canonicalNodes: buildCanonicalNodes(),
+      canonicalEdges: buildCanonicalEdges(),
+      flushDraftForExecution,
       executionStrategy: {
         kind: 'not_executable',
       },
@@ -203,6 +288,7 @@ describe('useCanvasExecutionActions plan preview core', () => {
 
     await harness.clickPlan();
 
+    expect(flushDraftForExecution).not.toHaveBeenCalled();
     expect(plansService.previewPlan).not.toHaveBeenCalled();
     expect(harness.shellFeedback.error).toHaveBeenCalledWith(
       canvasViewCopy.canvasExecutionUnavailableMessage
@@ -210,6 +296,34 @@ describe('useCanvasExecutionActions plan preview core', () => {
     expect(harness.text('can-start-run')).toBe('false');
     expect(harness.text('plan-status-summary')).toBe(
       canvasViewCopy.canvasExecutionUnavailableMessage
+    );
+  });
+
+  it('does not flush the draft when planning is not permitted', async () => {
+    const plansService = createPlansServiceMock();
+    const flushDraftForExecution = vi.fn(async () => ({
+      ok: true as const,
+      canonicalNodes: buildCanonicalNodes(),
+      canonicalEdges: buildCanonicalEdges(),
+      workspaceNodeIds: buildCanonicalNodes().map((node) => node.id),
+    }));
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService: createRunsServiceMock(),
+      canonicalNodes: buildCanonicalNodes(),
+      canonicalEdges: buildCanonicalEdges(),
+      flushDraftForExecution,
+      canPlan: false,
+    });
+    await harness.render();
+
+    await harness.clickPlan();
+
+    expect(flushDraftForExecution).not.toHaveBeenCalled();
+    expect(plansService.previewPlan).not.toHaveBeenCalled();
+    expect(harness.shellFeedback.error).toHaveBeenCalledWith(
+      canvasViewCopy.planPermissionDeniedMessage
     );
   });
 

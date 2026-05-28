@@ -174,10 +174,17 @@ allowedImplementationSurfaces:
   - apps/web/src/app/components/monaco/MonacoDiffSurface.tsx
   - apps/web/src/app/components/monaco/monacoBundleIsolation.architecture.test.ts
   - apps/web/src/app/components/monaco/monacoLocalWorkers.ts
+  - apps/web/src/app/views/canvas/canvasCopyCatalog.execution.es.ts
+  - apps/web/src/app/views/canvas/canvasCopyCatalog.execution.ts
+  - apps/web/src/app/views/canvas/canvasPreviewProvenance.ts
+  - apps/web/src/app/views/canvas/previewGraphNodePayloads.ts
   - apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx
+  - apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx
   - apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx
   - apps/web/src/app/views/canvas/useCanvasPlanActionHandler.ts
   - docs/.manifest.json
+  - docs/architecture/components/web/graph/canvas-execution-selection-component.md
+  - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/architecture/components/web/monaco/monaco-bundle-isolation-component.md
   - docs/architecture/components/web/monaco/monaco-bundle-isolation-user-stories.md
   - docs/index.md
@@ -202,6 +209,9 @@ commandQueryRails:
   - name: SaveWorkspaceFileContent
     type: command
     dddOwner: PreviewGraphArtifact
+  - name: GenerateTransformationWorkspaceArtifacts
+    type: command
+    dddOwner: TransformationWorkspaceArtifactProjection
   - name: ListWorkspaceFiles
     type: query
     dddOwner: WorkspaceProjectSourceReadModel
@@ -215,6 +225,9 @@ domainObjects:
   - name: PreviewGraphArtifact
     type: value object
     owner: Canvas plan action
+  - name: TransformationWorkspaceArtifactProjection
+    type: value object
+    owner: Canvas preview provenance
   - name: CodeWorkspaceFileTreeReadModel
     type: read model
     owner: Code workbench
@@ -268,6 +281,16 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx
     greenTest: pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx
+  - id: f30-transformation-authoring-plan-projection
+    redTest: pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx
+    expectedFailure: A canvas-authored SQL transform without a workspace path cannot create the SQL and graph workspace artifacts required by Plan.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/canvasPreviewProvenance.ts
+      - apps/web/src/app/views/canvas/previewGraphNodePayloads.ts
+      - apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx
+      - docs/architecture/components/web/graph/canvas-execution-selection-component.md
+      - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
+    greenTest: pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx
   - id: f30-monaco-local-worker-runtime
     redTest: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-graph-code-artifacts-parity.cy.ts
     expectedFailure: Monaco tries to load editor workers from cdn.jsdelivr.net during local e2e execution.
@@ -291,6 +314,14 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/views/canvas/useCanvasExecutionActions.architecture.test.ts
     cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-graph-code-artifacts-parity.cy.ts
     unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx]
+  - name: formatPlanActionErrorMessage
+    path: apps/web/src/app/views/canvas/canvasPlanAction.ts
+    dddOwner: Canvas plan action application controller
+    cqRails: [PreviewExecutionPlan]
+    fowlerSignals: [Leaky abstraction]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525
+    cypressCoverage: N/A - plan error projection unit proof
+    unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx]
   - name: renderExecutionActionsHarness
     path: apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx
     dddOwner: Canvas plan action test harness
@@ -323,4 +354,25 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.monaco.config.ts src/app/components/monaco/monacoBundleIsolation.architecture.test.ts
     cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-graph-code-artifacts-parity.cy.ts
     unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.monaco.config.ts src/app/components/monaco/monacoBundleIsolation.architecture.test.ts]
+  - { name: TransformArtifactSource, path: apps/web/src/app/views/canvas/canvasPreviewProvenance.ts, dddOwner: TransformationWorkspaceArtifactProjection, cqRails: [GenerateTransformationWorkspaceArtifacts, SaveWorkspaceFileContent], fowlerSignals: [Hidden authority, Boundary drift], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit provenance proof, unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx] }
+  - { name: buildAuthoringPreviewSql, path: apps/web/src/app/views/canvas/canvasPreviewProvenance.ts, dddOwner: TransformationWorkspaceArtifactProjection, cqRails: [GenerateTransformationWorkspaceArtifacts], fowlerSignals: [Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit provenance proof, unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx] }
+  - { name: isAsciiAlphaNumeric, path: apps/web/src/app/views/canvas/canvasPreviewProvenance.ts, dddOwner: TransformationWorkspaceArtifactProjection, cqRails: [GenerateTransformationWorkspaceArtifacts], fowlerSignals: [Primitive obsession], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit provenance proof, unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx] }
+  - { name: normalizeNonBlankString, path: apps/web/src/app/views/canvas/canvasPreviewProvenance.ts, dddOwner: TransformationWorkspaceArtifactProjection, cqRails: [GenerateTransformationWorkspaceArtifacts], fowlerSignals: [Primitive obsession], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit provenance proof, unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx] }
+  - { name: readNodeSqlText, path: apps/web/src/app/views/canvas/canvasPreviewProvenance.ts, dddOwner: TransformationWorkspaceArtifactProjection, cqRails: [GenerateTransformationWorkspaceArtifacts], fowlerSignals: [Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit provenance proof, unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx] }
+  - { name: resolvePreviewSqlArtifact, path: apps/web/src/app/views/canvas/canvasPreviewProvenance.ts, dddOwner: TransformationWorkspaceArtifactProjection, cqRails: [GenerateTransformationWorkspaceArtifacts, SaveWorkspaceFileContent], fowlerSignals: [Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit provenance proof, unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx] }
+  - { name: resolvePreviewWorkspaceConfig, path: apps/web/src/app/views/canvas/canvasPreviewProvenance.ts, dddOwner: TransformationWorkspaceArtifactProjection, cqRails: [GenerateTransformationWorkspaceArtifacts], fowlerSignals: [Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit provenance proof, unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx] }
+  - { name: resolveTransformArtifactSource, path: apps/web/src/app/views/canvas/canvasPreviewProvenance.ts, dddOwner: TransformationWorkspaceArtifactProjection, cqRails: [GenerateTransformationWorkspaceArtifacts], fowlerSignals: [Hidden authority, Boundary drift], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit provenance proof, unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx] }
+  - { name: slugifyPathSegment, path: apps/web/src/app/views/canvas/canvasPreviewProvenance.ts, dddOwner: TransformationWorkspaceArtifactProjection, cqRails: [GenerateTransformationWorkspaceArtifacts], fowlerSignals: [Primitive obsession], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit provenance proof, unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx] }
+  - { name: collectAsciiWords, path: apps/web/src/app/views/canvas/previewGraphNodePayloads.ts, dddOwner: TransformationWorkspaceArtifactProjection, cqRails: [GenerateTransformationWorkspaceArtifacts], fowlerSignals: [Primitive obsession], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit provenance proof, unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx] }
+  - { name: isAsciiAlphaNumeric, path: apps/web/src/app/views/canvas/previewGraphNodePayloads.ts, dddOwner: TransformationWorkspaceArtifactProjection, cqRails: [GenerateTransformationWorkspaceArtifacts], fowlerSignals: [Primitive obsession], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit provenance proof, unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx] }
+  - { name: isCanvasAuthoringNode, path: apps/web/src/app/views/canvas/previewGraphNodePayloads.ts, dddOwner: TransformationWorkspaceArtifactProjection, cqRails: [GenerateTransformationWorkspaceArtifacts], fowlerSignals: [Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit provenance proof, unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx] }
+  - { name: readAuthoringDefaultMaterialization, path: apps/web/src/app/views/canvas/previewGraphNodePayloads.ts, dddOwner: TransformationWorkspaceArtifactProjection, cqRails: [GenerateTransformationWorkspaceArtifacts], fowlerSignals: [Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit provenance proof, unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx] }
+  - { name: readAuthoringDefaultSchema, path: apps/web/src/app/views/canvas/previewGraphNodePayloads.ts, dddOwner: TransformationWorkspaceArtifactProjection, cqRails: [GenerateTransformationWorkspaceArtifacts], fowlerSignals: [Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit provenance proof, unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx] }
+  - { name: readAuthoringDefaultTable, path: apps/web/src/app/views/canvas/previewGraphNodePayloads.ts, dddOwner: TransformationWorkspaceArtifactProjection, cqRails: [GenerateTransformationWorkspaceArtifacts], fowlerSignals: [Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit provenance proof, unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx] }
+  - { name: readAuthoringDefaultWriteMode, path: apps/web/src/app/views/canvas/previewGraphNodePayloads.ts, dddOwner: TransformationWorkspaceArtifactProjection, cqRails: [GenerateTransformationWorkspaceArtifacts], fowlerSignals: [Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit provenance proof, unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx] }
+  - { name: resolveAuthoringSqlArtifactPath, path: apps/web/src/app/views/canvas/previewGraphNodePayloads.ts, dddOwner: TransformationWorkspaceArtifactProjection, cqRails: [GenerateTransformationWorkspaceArtifacts], fowlerSignals: [Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit provenance proof, unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx] }
+  - { name: resolveAuthoringSqlIdentifier, path: apps/web/src/app/views/canvas/previewGraphNodePayloads.ts, dddOwner: TransformationWorkspaceArtifactProjection, cqRails: [GenerateTransformationWorkspaceArtifacts], fowlerSignals: [Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit provenance proof, unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx] }
+  - { name: slugifyPathSegment, path: apps/web/src/app/views/canvas/previewGraphNodePayloads.ts, dddOwner: TransformationWorkspaceArtifactProjection, cqRails: [GenerateTransformationWorkspaceArtifacts], fowlerSignals: [Primitive obsession], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit provenance proof, unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx] }
+  - { name: slugifySqlIdentifier, path: apps/web/src/app/views/canvas/previewGraphNodePayloads.ts, dddOwner: TransformationWorkspaceArtifactProjection, cqRails: [GenerateTransformationWorkspaceArtifacts], fowlerSignals: [Primitive obsession], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit provenance proof, unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx] }
+  - { name: startsWithDigit, path: apps/web/src/app/views/canvas/previewGraphNodePayloads.ts, dddOwner: TransformationWorkspaceArtifactProjection, cqRails: [GenerateTransformationWorkspaceArtifacts], fowlerSignals: [Primitive obsession], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit provenance proof, unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx] }
 ```

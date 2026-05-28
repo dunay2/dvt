@@ -22,6 +22,7 @@ describe('shell navigation disposition architecture', () => {
     expect(dispositionSource).toContain('Owned concern: decide shell navigation chrome posture');
     expect(dispositionSource).toContain('workbench_route');
     expect(dispositionSource).toContain("'/canvas'");
+    expect(dispositionSource).toContain("'/runs'");
     expect(rootSource).toContain('resolveShellNavigationDisposition(location.pathname)');
     expect(frameSource).toContain('navigationDisposition.railMode');
     expect(frameSource).not.toContain("pathname.startsWith('/canvas')");
