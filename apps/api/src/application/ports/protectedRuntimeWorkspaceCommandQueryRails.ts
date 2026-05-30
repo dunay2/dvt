@@ -204,4 +204,64 @@ export const PROTECTED_RUNTIME_WORKSPACE_COMMAND_QUERY_RAILS = [
       ],
     ],
   }),
+  defineProtectedRuntimeRail({
+    name: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.listConnectionsName,
+    kind: PROTECTED_RUNTIME_RAIL_KIND.query,
+    boundedContext: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.boundedContext,
+    dddObject: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.connectionCatalogReadModel,
+    applicationPort: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.listConnectionsPort,
+    adapterSurface: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.listConnectionsSurface,
+    scopeAndAuthorization:
+      PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.scopeAndAuthorization,
+    coverage: [
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingToken,
+        PROTECTED_RUNTIME_TEST_REF.warehouseSourceImportRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingScope,
+        PROTECTED_RUNTIME_TEST_REF.warehouseSourceImportRoutes,
+      ],
+    ],
+  }),
+  defineProtectedRuntimeRail({
+    name: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.listTablesName,
+    kind: PROTECTED_RUNTIME_RAIL_KIND.query,
+    boundedContext: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.boundedContext,
+    dddObject: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.tableCatalogReadModel,
+    applicationPort: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.listTablesPort,
+    adapterSurface: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.listTablesSurface,
+    scopeAndAuthorization:
+      PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.scopeAndAuthorization,
+    coverage: [
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingToken,
+        PROTECTED_RUNTIME_TEST_REF.warehouseSourceImportRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.unknownRun,
+        PROTECTED_RUNTIME_TEST_REF.warehouseSourceImportRoutes,
+      ],
+    ],
+  }),
+  defineProtectedRuntimeRail({
+    name: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.importSourcesName,
+    kind: PROTECTED_RUNTIME_RAIL_KIND.command,
+    boundedContext: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.boundedContext,
+    dddObject: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.sourceRegistrationAggregate,
+    applicationPort: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.importSourcesPort,
+    adapterSurface: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.importSourcesSurface,
+    scopeAndAuthorization:
+      PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.importScopeAndAuthorization,
+    coverage: [
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingToken,
+        PROTECTED_RUNTIME_TEST_REF.warehouseSourceImportRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.invalidSelection,
+        PROTECTED_RUNTIME_TEST_REF.warehouseSourceImportRoutes,
+      ],
+    ],
+  }),
 ] as const satisfies readonly ProtectedRuntimeCommandQueryRail[];

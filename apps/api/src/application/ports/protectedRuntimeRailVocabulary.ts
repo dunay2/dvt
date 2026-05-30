@@ -74,6 +74,7 @@ export const PROTECTED_RUNTIME_TEST_REF = {
   workspaceFilesRoutes: 'apps/api/test/entrypoints/http/workspaceFilesRoutes.test.ts',
   workspaceFileHistoryRoutes: 'apps/api/test/entrypoints/http/workspaceFileHistoryRoutes.test.ts',
   workspaceDiffChangesRoutes: 'apps/api/test/entrypoints/http/workspaceDiffChangesRoutes.test.ts',
+  warehouseSourceImportRoutes: 'apps/api/test/entrypoints/http/warehouseSourceImportRoutes.test.ts',
 } as const;
 
 export const PROTECTED_RUNTIME_PLAN_RAIL = {
@@ -192,5 +193,22 @@ export const PROTECTED_RUNTIME_WORKSPACE_RAIL = {
     port: 'ListWorkspaceDiffChangesUseCase',
     surface: 'GET /workspace/diff/changes',
     scopeAndAuthorization: 'workspace:diff:view, tenant/project/environment scope',
+  },
+  warehouseSourceImport: {
+    listConnectionsName: 'ListWarehouseConnections',
+    listTablesName: 'ListWarehouseConnectionTables',
+    importSourcesName: 'ImportWarehouseSources',
+    boundedContext: 'Warehouse source import',
+    connectionCatalogReadModel: 'WarehouseConnectionCatalog',
+    tableCatalogReadModel: 'WarehouseConnectionTableCatalog',
+    sourceRegistrationAggregate: 'WorkspaceGraphAuthoringDraft via WarehouseSourceRegistration',
+    listConnectionsPort: 'ListWarehouseConnectionsUseCase',
+    listTablesPort: 'ListWarehouseConnectionTablesUseCase',
+    importSourcesPort: 'ImportWarehouseSourcesUseCase',
+    listConnectionsSurface: 'GET /workspace/warehouse/connections',
+    listTablesSurface: 'GET /workspace/warehouse/connections/:connectionId/tables',
+    importSourcesSurface: 'POST /workspace/sources/import',
+    scopeAndAuthorization: 'workspace:source-import:view, tenant/project/environment scope',
+    importScopeAndAuthorization: 'workspace:source-import:import, tenant/project/environment scope',
   },
 } as const;

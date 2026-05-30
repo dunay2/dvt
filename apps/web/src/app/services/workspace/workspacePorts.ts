@@ -61,7 +61,7 @@ export function createWorkspacePorts(apiClient: ApiClient = createApiClient()): 
     workspaceDiffQuery: createApiWorkspaceDiffQueryPort(apiClient),
     workspacePluginCatalogQuery: createApiWorkspacePluginCatalogQueryPort(),
     workspaceAdminRead: createApiWorkspaceAdminReadPort(),
-    warehouseSourceImport: createApiWarehouseSourceImportPort(),
+    warehouseSourceImport: createApiWarehouseSourceImportPort(apiClient),
     workspaceFileContentCommand: createApiWorkspaceFileContentCommandPort(apiClient),
   };
 }
