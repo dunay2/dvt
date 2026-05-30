@@ -70,8 +70,9 @@ YAML through the workspace file port.
 - `pnpm docs:feature-mechanization:implementation`: initially failed because
   internal YAML helper types were missing from the manifest; after adding the
   real symbols to the plan, PASS.
-
-Final pre-push validation is recorded after `pnpm verify:prepush` completes.
+- `pnpm verify:prepush`: initially failed before commit because changed files
+  had not yet been normalized by the repository's pre-commit Prettier hook;
+  after committing through `pnpm commit`, the repeated pre-push gate PASSed.
 
 ## No-Debt Evidence
 
