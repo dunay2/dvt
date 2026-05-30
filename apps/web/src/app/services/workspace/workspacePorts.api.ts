@@ -16,7 +16,6 @@ import type {
 } from '../../ports/workspace';
 import type { DiffChange } from '../../types/dbt';
 import { ApiError, type ApiClient } from '../api/createApiClient';
-import { detectWorkspacePortLocale, resolveWorkspacePortCopy } from './workspacePortCopy';
 import {
   WorkspaceApiCapabilityUnsupportedError,
   WorkspaceFileLoadError,
@@ -45,7 +44,7 @@ import {
 import { projectWorkspaceGraphDraftReadResponseSnapshot } from './workspaceGraphDraftSnapshotProjection';
 
 export const apiWorkspacePortCapabilities = {
-  sourceImportAvailable: false,
+  sourceImportAvailable: true,
 } as const;
 
 function isWorkspaceFileNotFoundApiError(error: ApiError): boolean {
@@ -128,23 +127,41 @@ export function createApiWorkspaceAdminReadPort(): IWorkspaceAdminReadPort {
   };
 }
 
-export function createApiWarehouseSourceImportPort(): IWarehouseSourceImportPort {
+function buildWarehouseConnectionsEndpoint(): string {
+  const scope = readWorkspaceGraphDraftScope();
+  return `/workspace/warehouse/connections?tenantId=${encodeURIComponent(
+    scope.tenantId
+  )}&projectId=${encodeURIComponent(scope.projectId)}&environmentId=${encodeURIComponent(
+    scope.environmentId
+  )}`;
+}
+
+function buildWarehouseConnectionTablesEndpoint(connectionId: string): string {
+  const scope = readWorkspaceGraphDraftScope();
+  return `/workspace/warehouse/connections/${encodeURIComponent(
+    connectionId
+  )}/tables?tenantId=${encodeURIComponent(scope.tenantId)}&projectId=${encodeURIComponent(
+    scope.projectId
+  )}&environmentId=${encodeURIComponent(scope.environmentId)}`;
+}
+
+function buildWarehouseSourcesImportEndpoint(): string {
+  const scope = readWorkspaceGraphDraftScope();
+  return `/workspace/sources/import?tenantId=${encodeURIComponent(
+    scope.tenantId
+  )}&projectId=${encodeURIComponent(scope.projectId)}&environmentId=${encodeURIComponent(
+    scope.environmentId
+  )}`;
+}
+
+export function createApiWarehouseSourceImportPort(
+  apiClient: ApiClient
+): IWarehouseSourceImportPort {
   return {
-    listWarehouseConnections: async () => {
-      throw new Error(
-        resolveWorkspacePortCopy(detectWorkspacePortLocale()).warehouseImportApiModeUnavailable
-      );
-    },
-    listWarehouseTables: async () => {
-      throw new Error(
-        resolveWorkspacePortCopy(detectWorkspacePortLocale()).warehouseImportApiModeUnavailable
-      );
-    },
-    importSources: async () => {
-      throw new Error(
-        resolveWorkspacePortCopy(detectWorkspacePortLocale()).warehouseImportApiModeUnavailable
-      );
-    },
+    listWarehouseConnections: () => apiClient.getJson(buildWarehouseConnectionsEndpoint()),
+    listWarehouseTables: (connectionId) =>
+      apiClient.getJson(buildWarehouseConnectionTablesEndpoint(connectionId)),
+    importSources: (input) => apiClient.postJson(buildWarehouseSourcesImportEndpoint(), input),
   };
 }
 

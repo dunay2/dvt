@@ -10,6 +10,7 @@ export const AUTHORIZATION_ACTION_NAME = {
   runSignal: 'run:signal',
   workspaceGraphDraftSave: 'workspace:graph-draft:save',
   workspaceFilesSave: 'workspace:files:save',
+  workspaceSourceImportImport: 'workspace:source-import:import',
   adminRebuildSnapshot: 'admin:rebuild-snapshot',
   runView: 'run:view',
   runList: 'run:list',
@@ -17,6 +18,7 @@ export const AUTHORIZATION_ACTION_NAME = {
   workspaceGraphDraftView: 'workspace:graph-draft:view',
   workspaceFilesView: 'workspace:files:view',
   workspaceDiffView: 'workspace:diff:view',
+  workspaceSourceImportView: 'workspace:source-import:view',
 } as const;
 
 export type CommandAuthorizationActionName =
@@ -26,6 +28,7 @@ export type CommandAuthorizationActionName =
   | typeof AUTHORIZATION_ACTION_NAME.runSignal
   | typeof AUTHORIZATION_ACTION_NAME.workspaceGraphDraftSave
   | typeof AUTHORIZATION_ACTION_NAME.workspaceFilesSave
+  | typeof AUTHORIZATION_ACTION_NAME.workspaceSourceImportImport
   | typeof AUTHORIZATION_ACTION_NAME.adminRebuildSnapshot;
 
 export type QueryAuthorizationActionName =
@@ -34,7 +37,8 @@ export type QueryAuthorizationActionName =
   | typeof AUTHORIZATION_ACTION_NAME.runLogsView
   | typeof AUTHORIZATION_ACTION_NAME.workspaceGraphDraftView
   | typeof AUTHORIZATION_ACTION_NAME.workspaceFilesView
-  | typeof AUTHORIZATION_ACTION_NAME.workspaceDiffView;
+  | typeof AUTHORIZATION_ACTION_NAME.workspaceDiffView
+  | typeof AUTHORIZATION_ACTION_NAME.workspaceSourceImportView;
 
 export type AuthorizationAction =
   | {
@@ -75,6 +79,10 @@ export const AUTHORIZATION_ACTION = {
     kind: 'command',
     name: AUTHORIZATION_ACTION_NAME.workspaceFilesSave,
   },
+  workspaceSourceImportImport: {
+    kind: 'command',
+    name: AUTHORIZATION_ACTION_NAME.workspaceSourceImportImport,
+  },
   adminRebuildSnapshot: {
     kind: 'command',
     name: AUTHORIZATION_ACTION_NAME.adminRebuildSnapshot,
@@ -102,5 +110,9 @@ export const AUTHORIZATION_ACTION = {
   workspaceDiffView: {
     kind: 'query',
     name: AUTHORIZATION_ACTION_NAME.workspaceDiffView,
+  },
+  workspaceSourceImportView: {
+    kind: 'query',
+    name: AUTHORIZATION_ACTION_NAME.workspaceSourceImportView,
   },
 } as const satisfies Readonly<Record<string, AuthorizationAction>>;
