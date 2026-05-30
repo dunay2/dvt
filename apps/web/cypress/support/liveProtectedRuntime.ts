@@ -164,3 +164,15 @@ export function readLiveRunEvents(runId: string): Cypress.Chainable<Cypress.Resp
     auth: buildBearerAuth(),
   });
 }
+
+export function readLiveWorkspaceFile(path: string): Cypress.Chainable<Cypress.Response<unknown>> {
+  const session = resolveLiveWorkspaceSession();
+  const query = new URLSearchParams(session);
+
+  return cy.request({
+    method: 'GET',
+    url: `${readRequiredEnv('apiBaseUrl')}/workspace/files/${encodeURIComponent(path)}?${query.toString()}`,
+    headers: buildAuthorizationHeaders(),
+    auth: buildBearerAuth(),
+  });
+}
