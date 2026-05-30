@@ -1124,3 +1124,83 @@ sequenceDiagram
 _Documento generado a partir de revisión de código del 30 de mayo de 2026.
 Anclado a `apps/web/src/app/views/` en el estado de la rama `main`.
 Complementa `web-user-stories-20260429.md` sin sustituirlo._
+
+---
+
+## Sección 11 — Orígenes de Datos Adicionales (Addendum Mayo 2026)
+
+> Historias derivadas del análisis del wizard de DataObject Registry. El wizard
+> declara cuatro tipos de fuente (`database`, `file`, `api`, `stream`) pero solo
+> `database` tiene pasos implementados (y su port también está stub). Se añade
+> además `dbt_project` como tipo primario de onboarding — actualmente existe una
+> importación de manifest separada pero no está integrada en el wizard.
+
+### S11.1 — Importar ficheros CSV / JSON / Parquet como fuentes `[Gap]`
+
+**Como** DE **quiero** subir un fichero CSV, JSON o Parquet al wizard de fuentes
+**para** registrarlo como DataObject en el canvas sin necesitar una conexión a warehouse.
+
+**Criterios:**
+
+- La tarjeta "File" en el paso de tipo de fuente es seleccionable (actualmente bloqueada con error al pulsar Siguiente).
+- El paso de conexión se reemplaza por un paso de subida de fichero con drag-and-drop y validación de formato.
+- Tras la subida, el sistema infiere el schema y lo muestra en un paso de selección de columnas.
+- El usuario confirma el schema y registra el fichero como fuente; el nodo aparece en el canvas.
+- Si el formato no está soportado, se muestra un error inmediato en el paso de subida, no al enviar.
+
+**Prioridad:** P1
+
+### S11.2 — Conectar un endpoint REST o GraphQL como fuente `[Gap]`
+
+**Como** DE **quiero** conectar un endpoint REST o GraphQL como fuente de datos
+**para** registrar sus campos como DataObject en el canvas y referenciarlos en mis transformaciones.
+
+**Criterios:**
+
+- La tarjeta "API" en el paso de tipo de fuente es seleccionable.
+- El paso de conexión muestra: URL base, tipo de autenticación (API Key / Bearer / OAuth) y URL de spec opcional.
+- Un botón "Probar endpoint" valida la URL y la auth antes de avanzar al paso de schema.
+- Las credenciales de auth no se almacenan en el estado del cliente.
+
+**Prioridad:** P1
+
+### S11.3 — Registrar un topic de Kafka o Kinesis como fuente `[Gap]`
+
+**Como** DE **quiero** registrar un topic de Kafka o Kinesis como fuente de datos
+**para** poder referenciar eventos del stream como DataObject en el canvas.
+
+**Criterios:**
+
+- La tarjeta "Stream" en el paso de tipo de fuente es seleccionable.
+- El paso de conexión muestra: broker URL, topic, tipo de auth y URL opcional de Schema Registry.
+- El usuario elige una política de materialización: snapshot / windowed / continuous.
+- La política queda registrada en el nodo del canvas.
+
+**Prioridad:** P2
+
+### S11.4 — Importar un proyecto dbt desde el wizard de fuentes `[Gap — onboarding primario]`
+
+**Como** NU **quiero** importar mi proyecto dbt (manifest.json o dbt Cloud) directamente desde el wizard de DataObject Registry
+**para** que todos mis modelos aparezcan como nodos en el canvas sin necesitar encontrar una opción oculta en la toolbar.
+
+**Criterios:**
+
+- La tarjeta "dbt Project" aparece en el wizard posicionada primera como path de onboarding principal.
+- El wizard salta los pasos de conexión a warehouse, selección de tablas y agrupación.
+- El botón de importación en la toolbar del canvas permanece como atajo pero abre el wizard.
+- Tras la importación, el grafo de modelos dbt aparece en el canvas.
+
+**Prioridad:** MVP
+
+### S11.5 — Tarjetas de fuente no disponible muestran estado claro `[Gap — UX]`
+
+**Como** NU **quiero** que las tarjetas de tipo de fuente no disponible muestren un estado visual claro
+**para** no intentar seleccionarlas y recibir un error inesperado.
+
+**Criterios:**
+
+- Las tarjetas no disponibles no son clicables (cursor `not-allowed`, sin handler `onClick`).
+- Al hacer hover aparece un tooltip "Próximamente".
+- El tipo de fuente por defecto al abrir el wizard es `dbt_project`.
+
+**Prioridad:** P1
