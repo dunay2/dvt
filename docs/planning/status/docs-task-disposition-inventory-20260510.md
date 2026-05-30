@@ -111,14 +111,15 @@ backlink checks and docs validation.
 
 ### Legacy Review Namespace
 
-Five active files still live under `docs/reviews/` instead of the current
-planning review or archive surfaces:
+Resolved on the archive surface. The legacy `docs/reviews/` directory is no
+longer tracked; the historical review files now live under
+`docs/planning/archive/reviews/`:
 
 - `docs/planning/archive/reviews/dvt-plus-architectural-review-20260319.md`
-- `docs/reviews/architectural-review-dvtplus-2026-03-24.md`
-- `docs/reviews/dvt-top3-gaps-roadmap-20260319.md`
+- `docs/planning/archive/reviews/architectural-review-dvtplus-2026-03-24.md`
+- `docs/planning/archive/reviews/dvt-top3-gaps-roadmap-20260319.md`
 - `docs/planning/archive/reviews/dvt-planner-technical-vision.md`
-- `docs/reviews/prioritized-gaps-20260319.md`
+- `docs/planning/archive/reviews/prioritized-gaps-20260319.md`
 
 Disposition rule: move to the current planning review namespace only if the
 file is still an active review; otherwise move to archive and preserve or update
