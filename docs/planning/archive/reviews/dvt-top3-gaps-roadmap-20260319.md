@@ -1,6 +1,6 @@
 ---
 title: DVT+ - Top 3 Gaps and Roadmap
-status: Active
+status: Historical
 owner: Architecture
 date: 2026-03-19
 sources:

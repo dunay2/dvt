@@ -1,3 +1,10 @@
+---
+title: DVT Planner Technical Vision
+status: Historical
+owner: Architecture / Planner
+date: 2026-03-19
+---
+
 # DVT Planner � Technical Vision
 
 ## What it actually is

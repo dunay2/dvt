@@ -1,6 +1,6 @@
 ﻿---
 title: DVT+ Prioritized Gap Register ï¿½ March 2026
-status: Active
+status: Historical
 owner: Architecture
 date: 2026-03-19
 source: Architectural Review 2026-03-19

@@ -1,6 +1,6 @@
 ---
 title: DVT+ Architectural Review � March 2026
-status: Active
+status: Historical
 owner: Architecture
 date: 2026-03-19
 reviewer_role: Principal / Staff Architect

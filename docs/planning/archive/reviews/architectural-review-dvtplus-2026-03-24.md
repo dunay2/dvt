@@ -1,6 +1,6 @@
 ---
 title: 'DVT+ Architectural Review — Principal/Staff Level'
-status: Final
+status: Historical
 author: Architectural Audit
 date: 2026-03-24
 ---
