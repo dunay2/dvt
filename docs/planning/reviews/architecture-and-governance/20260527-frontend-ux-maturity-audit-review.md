@@ -12,6 +12,8 @@ task_ids:
   - E-DBT-AUTHOR-RUN-1
   - E-DBT-PROJECT-ROUNDTRIP-1
   - E-CANVAS-WORKSPACE-EXPLORER-1
+  - E-RUNS-WORKBENCH-CONTRACT-1
+  - E-FRONT-PRODUCT-E2E-GATE-1
 ---
 
 # Frontend UX Maturity Audit Review
@@ -71,9 +73,146 @@ path used Chrome headless screenshots under:
 
 That failure is treated as tooling evidence only, not as a product defect.
 
-## Product Maturity Score
+## 2026-05-28 Demanding User Audit Refresh
 
-Overall UX maturity: **5.2 / 10**
+This refresh was triggered by direct product feedback that the frontend still
+does not behave like a coherent tool. The audit used a demanding-user lens:
+each finding below is framed as a product story the user reasonably expects to
+complete, then checked against the current screen behavior and E2E evidence.
+
+The in-app Browser runtime was attempted first. It exposed no connected browser
+instances in this session, so the rendered audit used the active local app at
+`http://127.0.0.1:5173` plus native Cypress evidence from the same branch.
+
+### Evidence Commands
+
+```text
+pnpm --filter @dvt/web test:e2e:native -- --spec "cypress/e2e/shell/shell-layout-contract.cy.ts,cypress/e2e/shell/route-workbench-slots.cy.ts,cypress/e2e/canvas/canvas-workbench-tabs.cy.ts,cypress/e2e/canvas/canvas-graph-code-artifacts-parity.cy.ts,cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts,cypress/e2e/runs/runs-runtime-contract.cy.ts,cypress/e2e/templates/templates-workbench.cy.ts"
+
+pnpm --filter @dvt/web test:e2e:native -- --spec "cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts,cypress/e2e/canvas/canvas-preview-run-live.cy.ts,cypress/e2e/canvas/canvas-project-snapshot-roundtrip.cy.ts,cypress/e2e/canvas/artifacts-workspace-project-files.cy.ts,cypress/e2e/canvas/code-workbench-workspace-files.cy.ts"
+```
+
+Observed outcome:
+
+- first suite: `15` tests, `3` passing, `11` failing, `1` pending;
+- second suite: `15` tests, `13` passing, `1` failing, `1` pending;
+- `canvas-graph-code-artifacts-parity.cy.ts` passed, so the current graph to
+  Code/Artifacts projection is not the main remaining defect;
+- `canvas-dbt-author-code-run-live.cy.ts` and
+  `canvas-preview-run-live.cy.ts` are pending, so the live protected runtime
+  product proof is not currently enforced;
+- shell, route-slot, canvas workbench tab, runs runtime contract, templates
+  navigation, and project snapshot round-trip tests still expose user-facing
+  failure modes.
+
+During the local audit run, Cypress produced failure screenshots under its
+generated `apps/web/cypress/screenshots/**` output tree. Those images were
+inspected as run evidence but are not repository source and are not retained by
+this review.
+
+The inspected screenshot groups covered:
+
+```text
+shell startup gate
+canvas top-menu and workbench-tab drift
+runs startup/runtime contract drift
+templates route discovery drift
+canvas project snapshot round-trip drift
+```
+
+### Demanding User Findings
+
+| Story | User expectation                                                                                     | Current evidence                                                                                                                       | Disposition                                                                                |
+| ----- | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| DU-01 | I open Runs, Plugins, or Templates and immediately get the product screen.                           | Shell tests and Runs tests stay on `Preparando Raven` waiting for startup checks or expected API calls.                                | P0: route startup gate is still too fragile for product use.                               |
+| DU-02 | I can discover Canvas, Runs, Templates, Plugins, and Admin from one consistent top navigation model. | Templates E2E cannot find the old left-navigation link, while Canvas intentionally removed that rail.                                  | P0: top navigation is directionally right but not yet the canonical route discovery model. |
+| DU-03 | I can create a graph, request a plan, execute it, inspect the run, then run again.                   | Persisted preview/run mocks pass, but live plan/run proof is pending and user-visible Plan still fails in observed sessions.           | P0: product execution story is not proven.                                                 |
+| DU-04 | Code, Lineage, Artifacts, and Runs reflect the same active graph context.                            | Code/Artifacts parity passes; Runs contract and run-detail shell consistency still fail.                                               | P0: cross-surface execution context remains inconsistent.                                  |
+| DU-05 | I can export/import a project snapshot without learning internal node-palette copy.                  | Project snapshot round-trip fails because the test expects `Add node`, while UI now presents `Add first transformation node`.          | P1: copy and automation contract drift make round-trip brittle.                            |
+| DU-06 | I can use Templates as part of the flow, not as a separate demo.                                     | Template generation passes, but shell navigation to Templates fails and no artifact-to-graph handoff is enforced here.                 | P1: template workbench is promising but still detached from the graph workflow.            |
+| DU-07 | I understand why `Plan` or `Execute` is disabled and what action unlocks it.                         | Current labels such as `Plan required`, `Solo lectura`, `Borrador sincronizado`, and route toasts do not provide a simple next action. | P0: execution readiness copy and action model must be productized.                         |
+
+### Root-Cause Pattern
+
+The failing stories are not isolated style issues. They show a repeated
+architectural/UX pattern:
+
+```mermaid
+flowchart LR
+  ProductIntent["User wants one workbench"]
+  RouteChrome["Route-specific chrome"]
+  StartupGate["Startup gate and runtime probes"]
+  LegacyTests["Tests expecting old shell rail/copy"]
+  LiveFlow["Live runtime proof pending"]
+  UserFailure["User sees blocked or inconsistent flow"]
+
+  ProductIntent --> RouteChrome
+  ProductIntent --> StartupGate
+  RouteChrome --> LegacyTests
+  StartupGate --> UserFailure
+  LiveFlow --> UserFailure
+  LegacyTests --> UserFailure
+```
+
+The root concern is **product-flow fragmentation**:
+
+- Canvas is moving toward a top-menu workbench model;
+- non-Canvas routes still carry or test old left-rail assumptions;
+- startup readiness can block a route before the user reaches the workbench;
+- live dbt authoring and run execution are not enforced by the default E2E
+  posture;
+- disabled states describe implementation posture instead of a user action.
+
+### Updated Product Maturity Score
+
+Overall UX maturity after the 2026-05-28 demanding-user pass: **4.1 / 10**.
+
+The prior score overrated the surface because it weighted visual direction more
+than end-to-end task completion. A product user does not experience "nice
+surfaces"; they experience whether the work can be completed.
+
+| Dimension                       | 2026-05-27 | 2026-05-28 | Reading                                                  |
+| ------------------------------- | ---------: | ---------: | -------------------------------------------------------- |
+| Workbench visual cohesion       |        7.0 |        6.0 | Direction is good, but route chrome is inconsistent.     |
+| Primary workflow completion     |        4.0 |        2.5 | Live dbt author/run proof is pending and plan can fail.  |
+| Navigation and discovery        |        4.5 |        3.0 | Old rail tests fail while top navigation is incomplete.  |
+| State and action clarity        |        4.0 |        2.5 | Disabled action labels are not actionable enough.        |
+| Template-to-artifact continuity |        4.5 |        3.5 | Templates generate source but are still detached.        |
+| Runs operational narrative      |        4.5 |        2.5 | Runs tests fail before reaching operational evidence.    |
+| Product E2E gate confidence     |        4.0 |        2.0 | Critical live flows are pending, not failing or passing. |
+
+```mermaid
+xychart-beta
+  title "Demanding-user maturity reset"
+  x-axis ["Cohesion", "Workflow", "Discovery", "States", "Templates", "Runs", "E2E gate"]
+  y-axis "Score" 0 --> 10
+  bar [6, 2.5, 3, 2.5, 3.5, 2.5, 2]
+```
+
+### Planning DB Disposition
+
+This refresh does not introduce a Markdown-only queue. The current executable
+work should be routed as follows:
+
+| Finding                                                   | Planning DB owner                        |
+| --------------------------------------------------------- | ---------------------------------------- |
+| Top navigation and old left-rail drift                    | `E-SHELL-TOP-MENU-RATIONALIZATION-1`     |
+| Plan/execute disabled states and live dbt authoring       | `E-DBT-AUTHOR-RUN-1`                     |
+| dbt import/edit/save/run/export                           | `E-DBT-PROJECT-ROUNDTRIP-1` and children |
+| Canvas explorer/object-resource semantics                 | `E-CANVAS-WORKSPACE-EXPLORER-1`          |
+| Runs list/detail shell and execution evidence consistency | `E-RUNS-WORKBENCH-CONTRACT-1`            |
+| Pending live product flows in E2E gates                   | `E-FRONT-PRODUCT-E2E-GATE-1`             |
+
+The next implementation slice should not be another visual polish pass. It
+should start with `E-FRONT-PRODUCT-E2E-GATE-1` plus the minimum product fixes
+needed to make `create graph -> plan -> execute -> run detail -> execute again`
+an enforced flow.
+
+## Prior Product Maturity Baseline
+
+Status: superseded by the 2026-05-28 demanding-user audit refresh above.
+
+Prior overall UX maturity: **5.2 / 10**
 
 Desktop operator maturity: **6.1 / 10**
 

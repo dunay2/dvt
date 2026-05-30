@@ -21,6 +21,9 @@ import {
 import { canvasViewCopy } from './copy';
 import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 
+const DRAFT_SAVE_SETTLE_POLL_MS = 25;
+const DRAFT_SAVE_SETTLE_TIMEOUT_MS = 5000;
+
 type UseCanvasExecutionDraftFlushArgs = {
   draftRepository: CanvasDraftRepository;
   draftQueryCache: CanvasDraftQueryCache;
@@ -54,6 +57,24 @@ function projectFlushGraph(draftState: CanvasAuthoringDraftReadModel) {
   };
 }
 
+async function waitForDraftSaveToSettle(latestFlushInputRef: {
+  current: { draftSyncState: CanvasDraftSession['syncState'] };
+}): Promise<boolean> {
+  const startedAt = Date.now();
+
+  while (latestFlushInputRef.current.draftSyncState === 'saving') {
+    if (Date.now() - startedAt >= DRAFT_SAVE_SETTLE_TIMEOUT_MS) {
+      return false;
+    }
+
+    await new Promise((resolve) => {
+      globalThis.setTimeout(resolve, DRAFT_SAVE_SETTLE_POLL_MS);
+    });
+  }
+
+  return true;
+}
+
 export function useCanvasExecutionDraftFlush({
   draftRepository,
   draftQueryCache,
@@ -71,6 +92,7 @@ export function useCanvasExecutionDraftFlush({
   createDraftIdempotencyKey,
 }: UseCanvasExecutionDraftFlushArgs): CanvasDraftLifecycle['flushDraftForExecution'] {
   const latestFlushInputRef = useRef({
+    canPersistGraphDraft,
     canPersistCurrentDraft,
     currentDraftPayload,
     currentDraftPayloadSignature,
@@ -79,6 +101,7 @@ export function useCanvasExecutionDraftFlush({
     graphDraftState,
   });
   latestFlushInputRef.current = {
+    canPersistGraphDraft,
     canPersistCurrentDraft,
     currentDraftPayload,
     currentDraftPayloadSignature,
@@ -88,9 +111,9 @@ export function useCanvasExecutionDraftFlush({
   };
 
   return useCallback<CanvasDraftLifecycle['flushDraftForExecution']>(async () => {
-    const latest = latestFlushInputRef.current;
+    let latest = latestFlushInputRef.current;
 
-    if (!canPersistGraphDraft || !latest.canPersistCurrentDraft) {
+    if (!latest.canPersistGraphDraft || !latest.canPersistCurrentDraft) {
       return {
         ok: false,
         message: canvasViewCopy.planUnableToCreateMessage,
@@ -98,10 +121,20 @@ export function useCanvasExecutionDraftFlush({
     }
 
     if (latest.draftSyncState === 'saving') {
-      return {
-        ok: false,
-        message: canvasViewCopy.savingDraftLabel,
-      };
+      const draftSaveSettled = await waitForDraftSaveToSettle(latestFlushInputRef);
+      latest = latestFlushInputRef.current;
+      if (!draftSaveSettled) {
+        return {
+          ok: false,
+          message: canvasViewCopy.savingDraftLabel,
+        };
+      }
+      if (!latest.canPersistGraphDraft || !latest.canPersistCurrentDraft) {
+        return {
+          ok: false,
+          message: canvasViewCopy.planUnableToCreateMessage,
+        };
+      }
     }
 
     if (

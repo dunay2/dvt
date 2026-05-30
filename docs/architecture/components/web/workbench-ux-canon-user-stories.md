@@ -44,6 +44,38 @@ Acceptance:
 - route toolbars and panels remain route-owned;
 - command palette or top-menu expansions require their own task.
 
+## Canvas Command-Menu User
+
+As a Canvas user, I need file/project actions and insert actions to appear in
+the upper command menus instead of as loose buttons beside Plan and Execute, so
+the working surface stays focused on authoring and running the graph.
+
+Acceptance:
+
+- Canvas registers its active File and Insert commands only while Canvas is the
+  active workbench;
+- the shell renders those commands in upper menus without importing Canvas
+  controller hooks;
+- project snapshot import/export are available through File;
+- node creation is available through Insert;
+- the Canvas route toolbar keeps workflow status, Plan, Execute, and draft
+  status visible, and does not duplicate the File or Insert menu commands.
+
+## Canvas Flow Reviewer
+
+As a reviewer, I need the menu cleanup to preserve the end-to-end graph path, so
+a user can still create or inspect a graph, plan it, execute it, inspect the run,
+return to Canvas, and plan/run again.
+
+Acceptance:
+
+- presentation tests prove File and Insert are available from the upper shell
+  menu when Canvas contributes them;
+- presentation tests prove the route toolbar no longer exposes loose Project or
+  Insert controls;
+- the existing Canvas persisted plan/run E2E flow remains the user-flow proof;
+- no permanent left navigation rail is introduced.
+
 ## Planning Steward
 
 As a planning steward, I need UX drafts to be classified as active contract,

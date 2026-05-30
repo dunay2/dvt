@@ -24,6 +24,7 @@ export type StubCanvasDraftReadOptions = {
   includeLooseNode?: boolean;
   canvasKind?: 'transformation' | 'dbt';
   emptyCanvas?: boolean;
+  authoringGenerated?: boolean;
   title?: string;
   readOnly?: boolean;
 };
@@ -42,6 +43,7 @@ export function buildCanvasAuthoringDraft({
   includeLooseNode = false,
   canvasKind = 'transformation',
   emptyCanvas = false,
+  authoringGenerated = false,
   title,
 }: StubCanvasDraftReadOptions = {}): CanvasAuthoringDraft {
   const canvas = {
@@ -141,6 +143,64 @@ export function buildCanvasAuthoringDraft({
     throw new Error(
       'Canvas e2e draft fixtures only support non-empty transformation canvases or empty typed canvases.'
     );
+  }
+
+  if (authoringGenerated) {
+    return buildWorkspaceGraphAuthoringDraft({
+      canvas,
+      nodeIds: ['source-1', 'dvt-sql-transform-1', 'sink-1'],
+      nodePositions: {
+        'source-1': { x: 40, y: 140 },
+        'dvt-sql-transform-1': { x: 340, y: 140 },
+        'sink-1': { x: 650, y: 140 },
+      },
+      nodes: [
+        {
+          id: 'source-1',
+          name: 'Source 1',
+          pluginId: 'dvt',
+          kind: 'dvt:source',
+          role: 'input',
+          status: 'idle',
+          tags: ['authoring'],
+          metadata: { typeLabel: 'Source' },
+        },
+        {
+          id: 'dvt-sql-transform-1',
+          name: 'SQL transform 1',
+          pluginId: 'dvt',
+          kind: 'dvt:sql_transform',
+          role: 'transform',
+          status: 'idle',
+          tags: ['authoring'],
+          metadata: { typeLabel: 'SQL transform' },
+        },
+        {
+          id: 'sink-1',
+          name: 'Sink 1',
+          pluginId: 'dvt',
+          kind: 'dvt:sink',
+          role: 'output',
+          status: 'idle',
+          tags: ['authoring'],
+          metadata: { typeLabel: 'Sink' },
+        },
+      ],
+      edges: [
+        {
+          id: 'edge-source-transform',
+          sourceId: 'source-1',
+          targetId: 'dvt-sql-transform-1',
+          relation: 'lineage',
+        },
+        {
+          id: 'edge-transform-sink',
+          sourceId: 'dvt-sql-transform-1',
+          targetId: 'sink-1',
+          relation: 'lineage',
+        },
+      ],
+    });
   }
 
   return buildWorkspaceGraphAuthoringDraft({

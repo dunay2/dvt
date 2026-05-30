@@ -7,6 +7,7 @@ import {
   type CanvasDraftSessionScope,
   type StubCanvasDraftReadOptions,
 } from './canvasDraftAuthoring';
+import { installE2eApiFetchStub } from './e2eApiStub';
 import { LIVE_WORKSPACE_SESSION, seedE2eWorkspaceSession } from './workspaceSession';
 
 function readRequiredEnv(name: string): string {
@@ -76,6 +77,7 @@ export function visitWithLiveWorkspaceSession(
     onBeforeLoad(window) {
       window.localStorage.clear();
       seedE2eWorkspaceSession(window, session);
+      installE2eApiFetchStub(window);
       options.onBeforeLoad?.(window);
     },
   });
@@ -158,6 +160,18 @@ export function readLiveRunEvents(runId: string): Cypress.Chainable<Cypress.Resp
   return cy.request({
     method: 'GET',
     url: `${readRequiredEnv('apiBaseUrl')}/runs/${runId}/events?${query.toString()}`,
+    headers: buildAuthorizationHeaders(),
+    auth: buildBearerAuth(),
+  });
+}
+
+export function readLiveWorkspaceFile(path: string): Cypress.Chainable<Cypress.Response<unknown>> {
+  const session = resolveLiveWorkspaceSession();
+  const query = new URLSearchParams(session);
+
+  return cy.request({
+    method: 'GET',
+    url: `${readRequiredEnv('apiBaseUrl')}/workspace/files/${encodeURIComponent(path)}?${query.toString()}`,
     headers: buildAuthorizationHeaders(),
     auth: buildBearerAuth(),
   });

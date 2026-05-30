@@ -87,6 +87,41 @@ The demanding user acceptance criterion is:
    pipeline artifact, with the same YAML preview.
 6. Unsupported or stale files must not be fabricated to make the flow pass.
 
+### 2026-05-28 Code Selection Drift Follow-up
+
+Observed defect: after planning a transformation graph, the Code tab listed the
+generated workflow artifact but still opened `dbt_project.yml` because
+`CodeFileSelection` selected the first reachable file in the tree. That made the
+real screen diverge from the Grafo -> Code -> Artifacts product promise.
+
+Root cause: the F-30 parity proof asserted artifact visibility, but the Code
+selection read model did not encode the product priority that workflow artifacts
+explain the graph better than root project configuration files.
+
+Selected correction: keep `ListWorkspaceFiles` as the only query rail and make
+`CodeFileSelection` prefer `pipelines/*.yaml|yml` workflow artifacts before
+falling back to the first reachable file. This is a read-model selection fix,
+not a new persistence or graph mutation behavior.
+
+```mermaid
+flowchart LR
+  Graph["Grafo planned workflow"]
+  Save["SaveWorkspaceFileContent"]
+  Files["ListWorkspaceFiles"]
+  Select["CodeFileSelection"]
+  Workflow["pipelines/*.yaml|yml"]
+  Config["dbt_project.yml fallback"]
+  Editor["Code Monaco buffer"]
+
+  Graph --> Save
+  Save --> Files
+  Files --> Select
+  Select -->|prefer| Workflow
+  Select -->|fallback| Config
+  Workflow --> Editor
+  Config --> Editor
+```
+
 ## Command And Query Rail Impact
 
 No new rail is introduced.
@@ -170,19 +205,27 @@ governingSources:
 allowedImplementationSurfaces:
   - apps/web/package.json
   - apps/web/cypress/e2e/canvas/canvas-graph-code-artifacts-parity.cy.ts
+  - apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+  - apps/web/cypress/support/canvasDraftAuthoring.ts
+  - apps/web/cypress/support/liveProtectedRuntime.ts
   - apps/web/src/app/components/monaco/MonacoCodeSurface.tsx
   - apps/web/src/app/components/monaco/MonacoDiffSurface.tsx
   - apps/web/src/app/components/monaco/monacoBundleIsolation.architecture.test.ts
   - apps/web/src/app/components/monaco/monacoLocalWorkers.ts
+  - apps/web/src/app/views/code/codeViewFileSelection.ts
+  - apps/web/src/app/views/code/codeViewFileSelection.test.ts
   - apps/web/src/app/views/canvas/canvasCopyCatalog.execution.es.ts
   - apps/web/src/app/views/canvas/canvasCopyCatalog.execution.ts
   - apps/web/src/app/views/canvas/canvasPreviewProvenance.ts
   - apps/web/src/app/views/canvas/previewGraphNodePayloads.ts
+  - apps/web/src/app/views/canvas/useCanvasExecutionDraftFlush.ts
+  - apps/web/src/app/views/canvas/useCanvasExecutionDraftFlush.test.tsx
   - apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx
   - apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx
   - apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx
   - apps/web/src/app/views/canvas/useCanvasPlanActionHandler.ts
   - docs/.manifest.json
+  - docs/architecture/components/web/code-workbench-workspace-files-component.md
   - docs/architecture/components/web/graph/canvas-execution-selection-component.md
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/architecture/components/web/monaco/monaco-bundle-isolation-component.md
@@ -206,9 +249,18 @@ forbiddenImplementationSurfaces:
   - packages/**
   - specs/**
 commandQueryRails:
+  - name: SaveWorkspaceGraphDraft
+    type: command
+    dddOwner: WorkspaceGraphAuthoringDraft
+  - name: GetWorkspaceGraphDraft
+    type: query
+    dddOwner: WorkspaceGraphAuthoringDraftReadModel
   - name: SaveWorkspaceFileContent
     type: command
     dddOwner: PreviewGraphArtifact
+  - name: PreviewExecutionPlan
+    type: command
+    dddOwner: Canvas execution preview
   - name: GenerateTransformationWorkspaceArtifacts
     type: command
     dddOwner: TransformationWorkspaceArtifactProjection
@@ -256,12 +308,15 @@ architectureGuards:
   - pnpm --filter @dvt/web exec vitest run --config vitest.monaco.config.ts src/app/components/monaco/monacoBundleIsolation.architecture.test.ts
 cypressFlows:
   - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-graph-code-artifacts-parity.cy.ts
+  - pnpm --filter @dvt/web test:e2e:selected-closure:live
 completionGate:
   - pnpm docs:feature-mechanization -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525
+  - pnpm --filter @dvt/web exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionDraftFlush.test.tsx src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx
   - pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx
   - pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/views/canvas/useCanvasExecutionActions.architecture.test.ts src/app/views/code/codeMonacoEditableAccess.architecture.test.ts src/app/views/artifacts/artifactsMonacoReadonlyViewer.architecture.test.ts
   - pnpm --filter @dvt/web exec vitest run --config vitest.monaco.config.ts src/app/components/monaco/monacoBundleIsolation.architecture.test.ts
   - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-graph-code-artifacts-parity.cy.ts
+  - pnpm --filter @dvt/web test:e2e:selected-closure:live
   - pnpm --filter @dvt/web typecheck
   - pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525
   - pnpm governance:refresh
@@ -305,6 +360,21 @@ redGreenCycles:
       - docs/planning/proposals/mandatory/frontend-and-ux/f17e-monaco-bundle-isolation-plan-20260522.md
       - pnpm-lock.yaml
     greenTest: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-graph-code-artifacts-parity.cy.ts
+  - id: f30-plan-after-draft-save-race
+    redTest: pnpm --filter @dvt/web exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionDraftFlush.test.tsx
+    expectedFailure: Plan returns a user-visible failure while autosave is still settling instead of waiting for the current draft save to complete.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/useCanvasExecutionDraftFlush.ts
+      - apps/web/src/app/views/canvas/useCanvasExecutionDraftFlush.test.tsx
+    greenTest: pnpm --filter @dvt/web exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionDraftFlush.test.tsx
+  - id: f30-live-authoring-generated-artifacts
+    redTest: pnpm --filter @dvt/web test:e2e:selected-closure:live
+    expectedFailure: Live protected runtime proof does not verify a canvas-authored graph persists generated SQL and graph artifacts before plan preview.
+    patchSurfaces:
+      - apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+      - apps/web/cypress/support/canvasDraftAuthoring.ts
+      - apps/web/cypress/support/liveProtectedRuntime.ts
+    greenTest: pnpm --filter @dvt/web test:e2e:selected-closure:live
 symbols:
   - name: useCanvasPlanActionHandler
     path: apps/web/src/app/views/canvas/useCanvasPlanActionHandler.ts
@@ -338,6 +408,30 @@ symbols:
     architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525
     cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-graph-code-artifacts-parity.cy.ts
     unitTests: [N/A - Cypress route proof]
+  - name: resolveInitialCodeFilePath
+    path: apps/web/src/app/views/code/codeViewFileSelection.ts
+    dddOwner: CodeWorkspaceFileTreeReadModel
+    cqRails: [ListWorkspaceFiles]
+    fowlerSignals: [Documentation drift, Hidden authority]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525
+    cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-graph-code-artifacts-parity.cy.ts
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/code/codeViewFileSelection.test.ts]
+  - name: WORKFLOW_ARTIFACT_PATH_PATTERN
+    path: apps/web/src/app/views/code/codeViewFileSelection.ts
+    dddOwner: CodeWorkspaceFileTreeReadModel
+    cqRails: [ListWorkspaceFiles]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525
+    cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-graph-code-artifacts-parity.cy.ts
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/code/codeViewFileSelection.test.ts]
+  - name: isWorkflowArtifactFile
+    path: apps/web/src/app/views/code/codeViewFileSelection.ts
+    dddOwner: CodeWorkspaceFileTreeReadModel
+    cqRails: [ListWorkspaceFiles]
+    fowlerSignals: [Encapsulated Predicate]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525
+    cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-graph-code-artifacts-parity.cy.ts
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/code/codeViewFileSelection.test.ts]
   - name: MONACO_LOCAL_WORKER_FACTORIES
     path: apps/web/src/app/components/monaco/monacoLocalWorkers.ts
     dddOwner: MonacoLocalWorkerConfiguration
@@ -354,6 +448,16 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.monaco.config.ts src/app/components/monaco/monacoBundleIsolation.architecture.test.ts
     cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-graph-code-artifacts-parity.cy.ts
     unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.monaco.config.ts src/app/components/monaco/monacoBundleIsolation.architecture.test.ts]
+  - { name: DRAFT_SAVE_SETTLE_POLL_MS, path: apps/web/src/app/views/canvas/useCanvasExecutionDraftFlush.ts, dddOwner: Canvas draft execution flush policy, cqRails: [SaveWorkspaceGraphDraft, PreviewExecutionPlan], fowlerSignals: [Boundary drift], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: pnpm --filter @dvt/web test:e2e:selected-closure:live, unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionDraftFlush.test.tsx] }
+  - { name: DRAFT_SAVE_SETTLE_TIMEOUT_MS, path: apps/web/src/app/views/canvas/useCanvasExecutionDraftFlush.ts, dddOwner: Canvas draft execution flush policy, cqRails: [SaveWorkspaceGraphDraft, PreviewExecutionPlan], fowlerSignals: [Boundary drift], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: pnpm --filter @dvt/web test:e2e:selected-closure:live, unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionDraftFlush.test.tsx] }
+  - { name: waitForDraftSaveToSettle, path: apps/web/src/app/views/canvas/useCanvasExecutionDraftFlush.ts, dddOwner: Canvas draft execution flush policy, cqRails: [SaveWorkspaceGraphDraft, PreviewExecutionPlan], fowlerSignals: [Boundary drift, Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: pnpm --filter @dvt/web test:e2e:selected-closure:live, unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionDraftFlush.test.tsx] }
+  - { name: FlushHook, path: apps/web/src/app/views/canvas/useCanvasExecutionDraftFlush.test.tsx, dddOwner: Canvas draft execution flush test harness, cqRails: [SaveWorkspaceGraphDraft, PreviewExecutionPlan], fowlerSignals: [Test-only confidence], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit harness, unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionDraftFlush.test.tsx] }
+  - { name: HookArgs, path: apps/web/src/app/views/canvas/useCanvasExecutionDraftFlush.test.tsx, dddOwner: Canvas draft execution flush test harness, cqRails: [SaveWorkspaceGraphDraft, PreviewExecutionPlan], fowlerSignals: [Test-only confidence], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit harness, unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionDraftFlush.test.tsx] }
+  - { name: buildDraftState, path: apps/web/src/app/views/canvas/useCanvasExecutionDraftFlush.test.tsx, dddOwner: Canvas draft execution flush test harness, cqRails: [SaveWorkspaceGraphDraft, PreviewExecutionPlan], fowlerSignals: [Test-only confidence], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit harness, unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionDraftFlush.test.tsx] }
+  - { name: buildHookArgs, path: apps/web/src/app/views/canvas/useCanvasExecutionDraftFlush.test.tsx, dddOwner: Canvas draft execution flush test harness, cqRails: [SaveWorkspaceGraphDraft, PreviewExecutionPlan], fowlerSignals: [Test-only confidence], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit harness, unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionDraftFlush.test.tsx] }
+  - { name: buildRefs, path: apps/web/src/app/views/canvas/useCanvasExecutionDraftFlush.test.tsx, dddOwner: Canvas draft execution flush test harness, cqRails: [SaveWorkspaceGraphDraft, PreviewExecutionPlan], fowlerSignals: [Test-only confidence], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit harness, unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionDraftFlush.test.tsx] }
+  - { name: renderFlushHook, path: apps/web/src/app/views/canvas/useCanvasExecutionDraftFlush.test.tsx, dddOwner: Canvas draft execution flush test harness, cqRails: [SaveWorkspaceGraphDraft, PreviewExecutionPlan], fowlerSignals: [Test-only confidence], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit harness, unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionDraftFlush.test.tsx] }
+  - { name: readLiveWorkspaceFile, path: apps/web/cypress/support/liveProtectedRuntime.ts, dddOwner: Live protected runtime Cypress query helper, cqRails: [GetWorkspaceFileContent], fowlerSignals: [Test-only confidence, Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: pnpm --filter @dvt/web test:e2e:selected-closure:live, unitTests: [N/A - Cypress support helper] }
   - { name: TransformArtifactSource, path: apps/web/src/app/views/canvas/canvasPreviewProvenance.ts, dddOwner: TransformationWorkspaceArtifactProjection, cqRails: [GenerateTransformationWorkspaceArtifacts, SaveWorkspaceFileContent], fowlerSignals: [Hidden authority, Boundary drift], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit provenance proof, unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx] }
   - { name: buildAuthoringPreviewSql, path: apps/web/src/app/views/canvas/canvasPreviewProvenance.ts, dddOwner: TransformationWorkspaceArtifactProjection, cqRails: [GenerateTransformationWorkspaceArtifacts], fowlerSignals: [Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit provenance proof, unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx] }
   - { name: isAsciiAlphaNumeric, path: apps/web/src/app/views/canvas/canvasPreviewProvenance.ts, dddOwner: TransformationWorkspaceArtifactProjection, cqRails: [GenerateTransformationWorkspaceArtifacts], fowlerSignals: [Primitive obsession], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature F30-GRAPH-CODE-ARTIFACTS-PARITY-20260525, cypressCoverage: N/A - unit provenance proof, unitTests: [pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.provenance.test.tsx] }

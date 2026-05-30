@@ -2,6 +2,7 @@
  * Owned concern: build protected runtime route dependencies from the runtime
  * module without registering HTTP routes.
  */
+import { TRANSFORMATION_DESIGN_GRAPH_SOURCE_FAMILY } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 
 import { CancelRunUseCase } from '../../application/services/cancelRunUseCase.js';
@@ -51,7 +52,14 @@ export function buildProtectedRuntimeRouteDependencies(
     protectedModule.planStore as unknown as ConstructorParameters<typeof GetRunStatusUseCase>[5]
   );
   const previewPlanUseCase = new PreviewPlanUseCase({
-    planner: protectedModule.planner,
+    planner: {
+      buildPlan: (plannerInput) =>
+        plannerInput.graphSource.sourceFamily === TRANSFORMATION_DESIGN_GRAPH_SOURCE_FAMILY
+          ? protectedModule.planCompilePlanner.buildPlan(plannerInput)
+          : protectedModule.planner.buildPlan(plannerInput),
+      deriveExecutableSubgraph: (selectionInput) =>
+        protectedModule.planner.deriveExecutableSubgraph(selectionInput),
+    },
     planStore: protectedModule.planStore,
     planValidator: protectedModule.planValidator,
     executableSubgraphResolver: new ResolveAuthorizedExecutableSubgraphService({
