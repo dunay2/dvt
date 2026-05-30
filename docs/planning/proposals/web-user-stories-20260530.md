@@ -11,8 +11,7 @@ planning_type: proposal
 **Plan-driven. Outcome-agnostic.**
 
 Este documento recoge las historias de usuario resultantes de una revisión
-completa del front-end de DVT+ (`apps/web/src`) realizada el 30 de mayo de
-2026. Cada historia describe lo que un usuario esperaría que funcionase, anclada
+completa del front-end de DVT+ (`apps/web/src`) realizada el 30 de mayo de 2026. Cada historia describe lo que un usuario esperaría que funcionase, anclada
 al código fuente real de las vistas existentes.
 
 Complementa el documento previo `web-user-stories-20260429.md` poniendo el
@@ -35,13 +34,13 @@ Cada historia incluye criterios de aceptación y una etiqueta de prioridad:
 
 ## Personas
 
-| ID | Persona               | Descripción                                                          |
-| -- | --------------------- | -------------------------------------------------------------------- |
-| NU | Nuevo Usuario         | Primera vez que accede; necesita ser guiado hasta el canvas activo.  |
-| DE | Data Engineer         | Construye modelos; crea plans; lanza runs.                           |
-| DA | Data Analyst          | Consume linaje, costes y resultados sin modificar el grafo.          |
-| TL | Tech Lead / Reviewer  | Revisa plans, diffs y aprueba cambios entre entornos.                |
-| PA | Platform Admin        | Gestiona tenants, roles, capabilities y auditoría.                  |
+| ID  | Persona              | Descripción                                                         |
+| --- | -------------------- | ------------------------------------------------------------------- |
+| NU  | Nuevo Usuario        | Primera vez que accede; necesita ser guiado hasta el canvas activo. |
+| DE  | Data Engineer        | Construye modelos; crea plans; lanza runs.                          |
+| DA  | Data Analyst         | Consume linaje, costes y resultados sin modificar el grafo.         |
+| TL  | Tech Lead / Reviewer | Revisa plans, diffs y aprueba cambios entre entornos.               |
+| PA  | Platform Admin       | Gestiona tenants, roles, capabilities y auditoría.                  |
 
 ---
 
@@ -102,7 +101,7 @@ el contexto de lo que estaba haciendo.
 
 - El formulario lista los tenants disponibles; desactiva el campo de nombre si
   el tenant seleccionado no tiene permiso de creación (`canCreateProject:
-  false`).
+false`).
 - Si `canCreateProject` es `false`, se muestra un aviso amber en lugar de
   ocultar el formulario.
 - El botón de envío está deshabilitado si el nombre está vacío o el tenant no
@@ -751,8 +750,7 @@ manual.
 - `ManifestImportPanel` acepta drag & drop y file picker.
 - La validación del schema ocurre antes de persistir; errores se muestran
   inline con contexto (`ArtifactsInvalidImportStateView`).
-- Tras importar, se muestran estadísticas del artifact: # nodos, # sources,
-  # tests.
+- Tras importar, se muestran estadísticas del artifact: núm. nodos, fuentes y tests.
 - El artifact importado aparece en la `ArtifactsList` con metadatos.
 
 **Prioridad:** MVP
@@ -969,21 +967,21 @@ personalizada sin repetirla manualmente.
 Esta sección recoge los gaps observados entre el estado actual de la UI y lo
 que un usuario esperaría que funcionase.
 
-| ID    | Vista       | Gap                                                                  | Impacto |
-| ----- | ----------- | -------------------------------------------------------------------- | ------- |
-| G-01  | Canvas      | Source import wizard deshabilitado en modo `api` (backend pendiente) | Alto    |
-| G-02  | Canvas      | Undo/redo del draft no está expuesto en la toolbar                   | Medio   |
-| G-03  | Canvas      | Selección de subgrafo para run parcial no está implementada          | Medio   |
-| G-04  | Runs        | Sin filtros de runs por status, env o rango temporal                 | Alto    |
-| G-05  | Runs        | Cancelar/pausar/reanudar pendiente de integración backend            | Alto    |
-| G-06  | Runs        | Streaming de logs por step no disponible                             | Medio   |
-| G-07  | Cost        | Datos reales de coste pendientes de contrato backend                 | Alto    |
-| G-08  | Lineage     | Linaje de columna dependiente de metadata de OpenLineage disponible  | Medio   |
-| G-09  | Diff        | Diff visual sobre el grafo (overlay verde/rojo) no implementado      | Medio   |
-| G-10  | Templates   | Templates son estáticas; no hay integración con backend              | Alto    |
-| G-11  | Admin       | Asignación/revocación de roles no disponible en la UI                | Alto    |
-| G-12  | Admin       | Rebuild snapshot action no expuesta en la UI                         | Medio   |
-| G-13  | Shell       | Cambio de tenant/project/env no implementado en el scope selector    | Alto    |
+| ID   | Vista     | Gap                                                                  | Impacto |
+| ---- | --------- | -------------------------------------------------------------------- | ------- |
+| G-01 | Canvas    | Source import wizard deshabilitado en modo `api` (backend pendiente) | Alto    |
+| G-02 | Canvas    | Undo/redo del draft no está expuesto en la toolbar                   | Medio   |
+| G-03 | Canvas    | Selección de subgrafo para run parcial no está implementada          | Medio   |
+| G-04 | Runs      | Sin filtros de runs por status, env o rango temporal                 | Alto    |
+| G-05 | Runs      | Cancelar/pausar/reanudar pendiente de integración backend            | Alto    |
+| G-06 | Runs      | Streaming de logs por step no disponible                             | Medio   |
+| G-07 | Cost      | Datos reales de coste pendientes de contrato backend                 | Alto    |
+| G-08 | Lineage   | Linaje de columna dependiente de metadata de OpenLineage disponible  | Medio   |
+| G-09 | Diff      | Diff visual sobre el grafo (overlay verde/rojo) no implementado      | Medio   |
+| G-10 | Templates | Templates son estáticas; no hay integración con backend              | Alto    |
+| G-11 | Admin     | Asignación/revocación de roles no disponible en la UI                | Alto    |
+| G-12 | Admin     | Rebuild snapshot action no expuesta en la UI                         | Medio   |
+| G-13 | Shell     | Cambio de tenant/project/env no implementado en el scope selector    | Alto    |
 
 ---
 
@@ -1025,6 +1023,6 @@ sequenceDiagram
 
 ---
 
-*Documento generado a partir de revisión de código del 30 de mayo de 2026.
+_Documento generado a partir de revisión de código del 30 de mayo de 2026.
 Anclado a `apps/web/src/app/views/` en el estado de la rama `main`.
-Complementa `web-user-stories-20260429.md` sin sustituirlo.*
+Complementa `web-user-stories-20260429.md` sin sustituirlo._
