@@ -28,10 +28,15 @@ describe('warehouse source import command/query rails architecture', () => {
     const routeRegistration = read(
       'apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts'
     );
+    const routeGroup = read('apps/api/src/entrypoints/http/warehouseSourceImportRouteGroup.ts');
     const routeModule = read('apps/api/src/entrypoints/http/warehouseSourceImportRoutes.ts');
     const webAdapter = read('apps/web/src/app/services/workspace/workspacePorts.api.ts');
 
     expect(routeRegistration).toContain('registerProtectedWarehouseSourceImportRouteGroup');
+    expect(routeGroup).toContain('WorkspaceWarehouseConnectionCatalog');
+    expect(routeGroup).toContain('LocalWorkspaceFileRepository');
+    expect(routeGroup).not.toContain('createDefaultWarehouseConnectionCatalog');
+    expect(routeGroup).not.toContain('InMemoryWarehouseConnectionCatalog');
     expect(routeModule).toContain('RUNTIME_ROUTE_PATH.warehouseConnections');
     expect(routeModule).toContain('RUNTIME_ROUTE_PATH.warehouseConnectionTables');
     expect(routeModule).toContain('RUNTIME_ROUTE_PATH.warehouseSourcesImport');

@@ -4,7 +4,9 @@ import type { FastifyInstance } from 'fastify';
 import { ImportWarehouseSourcesUseCase } from '../../application/services/importWarehouseSourcesUseCase.js';
 import { ListWarehouseConnectionsUseCase } from '../../application/services/listWarehouseConnectionsUseCase.js';
 import { ListWarehouseConnectionTablesUseCase } from '../../application/services/listWarehouseConnectionTablesUseCase.js';
-import { createDefaultWarehouseConnectionCatalog } from '../../infrastructure/warehouseSourceImport/InMemoryWarehouseConnectionCatalog.js';
+import { WorkspaceWarehouseConnectionCatalog } from '../../infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.js';
+import { LocalWorkspaceFileRepository } from '../../infrastructure/workspaceFiles/LocalWorkspaceFileRepository.js';
+import { resolveWorkspaceFilesRoot } from '../../infrastructure/workspaceFiles/resolveWorkspaceFilesRoot.js';
 import type { ProtectedRuntimeModule } from '../../modules/types.js';
 import type { Env } from '../../plugins/env.js';
 
@@ -21,7 +23,10 @@ export function registerProtectedWarehouseSourceImportRouteGroup(
   app: FastifyInstance,
   options: ProtectedWarehouseSourceImportRouteGroupOptions
 ): void {
-  const catalog = createDefaultWarehouseConnectionCatalog();
+  const workspaceFiles = new LocalWorkspaceFileRepository({
+    root: resolveWorkspaceFilesRoot(options.env),
+  });
+  const catalog = new WorkspaceWarehouseConnectionCatalog({ repository: workspaceFiles });
   registerWarehouseSourceImportRoutes(app, {
     ...options.runtimeAuth,
     listConnectionsUseCase: new ListWarehouseConnectionsUseCase(catalog),
@@ -29,6 +34,7 @@ export function registerProtectedWarehouseSourceImportRouteGroup(
     importSourcesUseCase: new ImportWarehouseSourcesUseCase(
       catalog,
       options.protectedModule.workspaceGraphDraftStore,
+      workspaceFiles,
       () => new Date()
     ),
     rateLimit: {

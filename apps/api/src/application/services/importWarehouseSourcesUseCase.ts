@@ -21,16 +21,21 @@ import {
   WarehouseSourceImportDraftConflictError,
   WarehouseTableNotFoundError,
 } from '../ports/warehouseSourceImport.js';
+import type { IWorkspaceFileRepository } from '../ports/workspaceFiles.js';
+import { WorkspaceFileNotFoundError } from '../ports/workspaceFiles.js';
 import type { IWorkspaceGraphDraftStore } from '../ports/workspaceGraphDraft.js';
 import {
   WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
   WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
 } from '../ports/workspaceGraphDraft.js';
 
+import { buildWarehouseSourceYamlUpdates } from './warehouseSourceYaml.js';
+
 export class ImportWarehouseSourcesUseCase {
   public constructor(
     private readonly catalog: IWarehouseConnectionCatalog,
     private readonly draftStore: IWorkspaceGraphDraftStore,
+    private readonly workspaceFiles: IWorkspaceFileRepository,
     private readonly clock: () => Date
   ) {}
 
@@ -62,6 +67,15 @@ export class ImportWarehouseSourcesUseCase {
       ...input,
       tables: authoritativeTables,
     });
+    const existingSourceFiles = await this.readExistingSourceFiles(mutation.yamlFiles);
+    const sourceYamlUpdates = buildWarehouseSourceYamlUpdates({
+      tables: authoritativeTables,
+      groupingStrategy: input.groupingStrategy,
+      includeColumns: input.includeColumns,
+      addTests: input.addTests,
+      addFreshness: input.addFreshness,
+      existingFiles: existingSourceFiles,
+    });
     const requestHash = createHash('sha256')
       .update(JSON.stringify({ scope: input.scope, importedNodeIds: mutation.importedNodeIds }))
       .digest('hex');
@@ -80,11 +94,15 @@ export class ImportWarehouseSourcesUseCase {
       throw new WarehouseSourceImportDraftConflictError();
     }
 
+    for (const update of sourceYamlUpdates) {
+      await this.workspaceFiles.saveFileContent(update.path, update.content);
+    }
+
     return {
       success: true,
       sourcesCreated: mutation.importedNodeIds.length,
       tablesImported: input.tables.length,
-      yamlFiles: mutation.yamlFiles,
+      yamlFiles: sourceYamlUpdates.map((update) => update.path),
       importedNodeIds: mutation.importedNodeIds,
       grouping: input.groupingStrategy,
       options: {
@@ -93,6 +111,23 @@ export class ImportWarehouseSourcesUseCase {
         addFreshness: input.addFreshness,
       },
     };
+  }
+
+  private async readExistingSourceFiles(
+    paths: readonly string[]
+  ): Promise<ReadonlyMap<string, string>> {
+    const files = new Map<string, string>();
+    for (const filePath of paths) {
+      try {
+        files.set(filePath, (await this.workspaceFiles.getFileContent(filePath)).content);
+      } catch (error) {
+        if (error instanceof WorkspaceFileNotFoundError) {
+          continue;
+        }
+        throw error;
+      }
+    }
+    return files;
   }
 }
 
