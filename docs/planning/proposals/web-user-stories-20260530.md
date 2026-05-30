@@ -701,6 +701,104 @@ gasto anómalas.
 - `CostCharts` renderiza: coste por run (línea o barras) y duración por
   modelo (horizontal bar).
 - Los gráficos muestran empty state informativo cuando no hay datos.
+
+---
+
+## Sección 10 — Flujos Básicos de Usuario (Addendum Mayo 2026)
+
+> Estas historias complementan la revisión inicial. Surgen de una investigación
+> directa del código que identificó flujos básicos que el usuario esperaría
+> completar pero que están total o parcialmente sin implementar.
+
+### S10.1 — Conectar una base de datos como fuente `[Gap]`
+
+**Como** DE **quiero** conectar una base de datos warehouse como fuente de datos
+**para** importar tablas al canvas sin salir de la aplicación.
+
+**Criterios:**
+
+- La lista de conexiones configuradas se carga al abrir el wizard (no siempre
+  vacía).
+- El usuario puede seleccionar una conexión y ver las tablas disponibles.
+- Existe un paso "Probar conexión" antes de proceder a la importación.
+- Si la carga de conexiones falla, se muestra un error explícito diferenciado
+  de "no hay conexiones".
+- Al finalizar el wizard, las fuentes aparecen como nodos en el canvas.
+
+**Prioridad:** MVP
+
+### S10.2 — Guardar cambios en un fichero SQL desde el editor `[Gap]`
+
+**Como** DE **quiero** editar un fichero SQL en el Code view y guardarlo
+**para** que el cambio persista y sea visible en el canal Git del workspace.
+
+**Criterios:**
+
+- El editor Code view tiene un botón "Guardar" y responde a Ctrl+S.
+- Al guardar, el fichero se escribe en el backend; el cambio aparece en el
+  historial Git del panel derecho.
+- Si el usuario navega a otra vista con cambios sin guardar, se muestra un
+  diálogo de confirmación.
+- El indicador de branch y SHA en la cabecera de la shell es clicable y abre
+  un panel con opción de commit.
+
+**Prioridad:** P1
+
+### S10.3 — Ejecutar un flujo desde el canvas `[Implementado]`
+
+**Como** DE **quiero** ejecutar el plan actual directamente desde el canvas
+**para** ver los resultados del run sin cambiar de vista.
+
+**Criterios:**
+
+- El botón "Run" en la toolbar del canvas está activo cuando el plan es válido.
+- Al pulsar Run, el backend recibe `POST /runs/start` y devuelve un `runId`.
+- La consola de la parte inferior se abre automáticamente y muestra eventos
+  del run en tiempo real.
+- El usuario puede navegar a la vista Runs y ver el detalle del run completado.
+- Si el plan está desactualizado (`planIsStale`), el botón Run muestra el motivo
+  y solicita regenrar el plan antes de ejecutar.
+
+**Prioridad:** MVP
+
+### S10.4 — Escribir SQL en un nodo de transformación DVT `[Gap]`
+
+**Como** DE **quiero** escribir SQL directamente en el panel del inspector de un
+nodo `dvt:sql_transform`
+**para** definir transformaciones personalizadas incluyendo funciones ventana,
+CTEs y joins complejos.
+
+**Criterios:**
+
+- Al seleccionar un nodo `dvt:sql_transform` en el canvas, el inspector muestra
+  un editor SQL con resaltado de sintaxis.
+- El editor acepta SQL estándar incluyendo funciones ventana
+  (`ROW_NUMBER() OVER (PARTITION BY … ORDER BY …)`, `LAG`, `LEAD`, etc.).
+- Al guardar el SQL en el inspector, el artefacto SQL del nodo se actualiza en
+  el workspace (fichero resuelto por `resolveAuthoringSqlArtifactPath`).
+- El plan preview refleja el SQL actualizado al regenerar el plan.
+- El editor muestra el contenido actual del fichero SQL al abrir el inspector
+  (no empieza en blanco si el nodo ya tiene SQL).
+
+**Prioridad:** MVP
+
+### S10.5 — Ver el historial de un fichero y comparar versiones `[Parcial]`
+
+**Como** DE **quiero** ver el historial de commits de un fichero SQL y comparar
+dos versiones
+**para** entender qué cambió y quién lo cambió antes de ejecutar un run.
+
+**Criterios:**
+
+- El panel de historial en Code view muestra commits reales con autor, fecha y
+  mensaje.
+- Al clicar en un commit, el Diff view muestra el antes y después del fichero.
+- El usuario puede navegar entre versiones sin salir del Code view.
+- El historial está disponible también desde el inspector del canvas al hacer
+  clic en "Ver historial" en un nodo.
+
+**Prioridad:** P1
+
 - Hover en un punto muestra el runId y el valor exacto.
 
 **Prioridad:** P1
