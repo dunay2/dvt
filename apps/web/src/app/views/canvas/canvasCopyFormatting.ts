@@ -113,12 +113,8 @@ export function formatCanvasConnectionRejection(
       return copy.connectionIncompleteMessage;
     case 'node_not_found_in_graph':
       return copy.nodeNotFoundInGraphMessage;
-    case 'transformation_invalid_edge_order':
+    case 'role_rule_blocked':
       return copy.transformationConnectionOrderMessage;
-    case 'transformation_edge_count_exceeded':
-      return copy.transformationConnectionEdgeCountMessage;
-    case 'transformation_duplicate_edge':
-      return copy.transformationConnectionDuplicateMessage;
     case 'self_connection':
       return copy.connectionSelfNotAllowedMessage;
     case 'duplicate_edge':
