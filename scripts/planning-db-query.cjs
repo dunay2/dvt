@@ -106,7 +106,7 @@ function usesGovernanceProjection(queryName) {
 }
 
 async function ensureFreshGovernanceProjection(queryName, options = {}) {
-  if (options.autoImportGovernance === false || !usesGovernanceProjection(queryName)) {
+  if (options.autoImportGovernance !== true || !usesGovernanceProjection(queryName)) {
     return null;
   }
 
@@ -181,6 +181,9 @@ function parseArgs(args = process.argv.slice(2)) {
   const queryName = resolveQueryName(queryNameArg);
   const filters = {};
   let autoImportGovernance;
+  let refreshRequested = false;
+  let refreshConfirmed = false;
+  let noRefreshRequested = false;
 
   for (let index = 0; index < rest.length; index += 1) {
     const arg = rest[index];
@@ -193,7 +196,17 @@ function parseArgs(args = process.argv.slice(2)) {
     }
 
     if (arg === '--no-refresh') {
+      noRefreshRequested = true;
       autoImportGovernance = false;
+      continue;
+    }
+    if (arg === '--refresh') {
+      refreshRequested = true;
+      autoImportGovernance = true;
+      continue;
+    }
+    if (arg === '--confirm-expensive-governance-refresh') {
+      refreshConfirmed = true;
       continue;
     }
 
@@ -313,6 +326,19 @@ function parseArgs(args = process.argv.slice(2)) {
     }
 
     throw new Error(`Unknown planning DB query option "${arg}".`);
+  }
+
+  if (refreshRequested && noRefreshRequested) {
+    throw new Error('Cannot combine --refresh and --no-refresh.');
+  }
+  if (refreshConfirmed && !refreshRequested) {
+    throw new Error('--confirm-expensive-governance-refresh requires --refresh.');
+  }
+  if (refreshRequested && !refreshConfirmed) {
+    throw new Error('--refresh requires --confirm-expensive-governance-refresh.');
+  }
+  if (refreshRequested && !usesGovernanceProjection(queryName)) {
+    throw new Error('--refresh is only valid for governance projection queries.');
   }
 
   return {

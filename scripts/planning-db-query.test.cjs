@@ -504,6 +504,51 @@ test('parseArgs parses component engineering rule filters', () => {
       },
     }
   );
+
+  assert.deepEqual(
+    parseArgs([
+      'component-metadata',
+      '--component',
+      'SYS-RUNTIME-ENGINE-CORE',
+      '--state',
+      'coverage-required',
+      '--refresh',
+      '--confirm-expensive-governance-refresh',
+    ]),
+    {
+      queryName: 'component-metadata',
+      autoImportGovernance: true,
+      filters: {
+        component: 'SYS-RUNTIME-ENGINE-CORE',
+        governanceState: 'coverage-required',
+      },
+    }
+  );
+});
+
+test('parseArgs requires explicit confirmation before query-time governance refresh', () => {
+  assert.throws(
+    () => parseArgs(['component-tree', '--refresh']),
+    /--refresh requires --confirm-expensive-governance-refresh/
+  );
+  assert.throws(
+    () => parseArgs(['component-tree', '--confirm-expensive-governance-refresh']),
+    /--confirm-expensive-governance-refresh requires --refresh/
+  );
+  assert.throws(
+    () =>
+      parseArgs([
+        'component-tree',
+        '--refresh',
+        '--confirm-expensive-governance-refresh',
+        '--no-refresh',
+      ]),
+    /Cannot combine --refresh and --no-refresh/
+  );
+  assert.throws(
+    () => parseArgs(['tasks', '--refresh', '--confirm-expensive-governance-refresh']),
+    /--refresh is only valid for governance projection queries/
+  );
 });
 
 test('parseArgs parses architecture authority query filters', () => {
@@ -575,7 +620,55 @@ test('formatQueryError preserves nested connection failures for unavailable DB',
   assert.match(message, /pnpm planning:db:up/);
 });
 
-test('runQuery refreshes stale governance projections before component tree reads', async () => {
+test('runQuery does not refresh governance projections by default for DB-first reads', async () => {
+  const events = [];
+  const client = {
+    async query(sql, params) {
+      events.push(['query', sql, params]);
+      return {
+        rows: [
+          {
+            component_id: 'SYS-RUNTIME-ENGINE-CORE',
+            name: 'Runtime engine core',
+            component_level: 'component',
+            parent_component_id: 'SYS-RUNTIME-ROOT',
+            governance_state: 'coverage-required',
+            direct_file_count: 0,
+            descendant_file_count: 189,
+            ddd_owner: 'AS',
+            is_leaf_component: false,
+          },
+        ],
+      };
+    },
+  };
+
+  const rows = await runQuery({
+    queryName: 'component-tree',
+    filters: { component: 'SYS-RUNTIME-ENGINE-CORE' },
+    databaseUrl: 'postgresql://example/db',
+    client,
+    print: false,
+    runPlanningImport: async () => {
+      throw new Error('DB-first query must not import governance by default');
+    },
+  });
+
+  assert.equal(events[0][0], 'query');
+  assert.deepEqual(rows[0], [
+    'SYS-RUNTIME-ENGINE-CORE',
+    'Runtime engine core',
+    'component',
+    'SYS-RUNTIME-ROOT',
+    'coverage-required',
+    0,
+    189,
+    'AS',
+    'false',
+  ]);
+});
+
+test('runQuery refreshes stale governance projections only when explicitly requested', async () => {
   const events = [];
   const client = {
     async query(sql, params) {
@@ -602,6 +695,7 @@ test('runQuery refreshes stale governance projections before component tree read
   const rows = await runQuery({
     queryName: 'component-tree',
     filters: { component: 'SYS-RUNTIME-ENGINE-CORE' },
+    autoImportGovernance: true,
     databaseUrl: 'postgresql://example/db',
     client,
     print: false,
