@@ -121,7 +121,7 @@ commandQueryRails:
     type: query
     dddOwner: Warehouse source discovery read model
     status: missing-backend-rail
-  - name: ListWarehouseTables
+  - name: ListWarehouseConnectionTables
     type: query
     dddOwner: Warehouse source discovery read model
     status: missing-backend-rail
@@ -231,7 +231,7 @@ symbols:
   - <<: *workspace_port_symbol
     name: IWarehouseSourceImportPort
     path: apps/web/src/app/ports/workspace.ts
-    cqRails: [ListWarehouseConnections, ListWarehouseTables, ImportWarehouseSources]
+    cqRails: [ListWarehouseConnections, ListWarehouseConnectionTables, ImportWarehouseSources]
   - <<: *workspace_port_symbol
     name: IWorkspaceFileContentCommandPort
     path: apps/web/src/app/ports/workspace.ts
@@ -258,7 +258,7 @@ symbols:
   - <<: *workspace_port_symbol
     name: useWarehouseSourceImportPort
     path: apps/web/src/app/services/AppServicesContext.tsx
-    cqRails: [ListWarehouseConnections, ListWarehouseTables, ImportWarehouseSources]
+    cqRails: [ListWarehouseConnections, ListWarehouseConnectionTables, ImportWarehouseSources]
   - <<: *workspace_port_symbol
     name: useWorkspaceFileContentCommandPort
     path: apps/web/src/app/services/AppServicesContext.tsx
@@ -316,7 +316,7 @@ symbols:
   - <<: *workspace_port_symbol
     name: createApiWarehouseSourceImportPort
     path: apps/web/src/app/services/workspace/workspacePorts.api.ts
-    cqRails: [ListWarehouseConnections, ListWarehouseTables, ImportWarehouseSources]
+    cqRails: [ListWarehouseConnections, ListWarehouseConnectionTables, ImportWarehouseSources]
   - <<: *workspace_port_symbol
     name: createApiWorkspaceFileContentCommandPort
     path: apps/web/src/app/services/workspace/workspacePorts.api.ts
@@ -396,7 +396,7 @@ symbols:
   - <<: *workspace_port_symbol
     name: mockWarehouseTablesByConnectionId
     path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
-    cqRails: [ListWarehouseTables]
+    cqRails: [ListWarehouseConnectionTables]
   - <<: *workspace_port_symbol
     name: defaultGraphSnapshot
     path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
@@ -477,7 +477,7 @@ symbols:
   - <<: *workspace_port_symbol
     name: createMockWarehouseSourceImportPort
     path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
-    cqRails: [ListWarehouseConnections, ListWarehouseTables, ImportWarehouseSources]
+    cqRails: [ListWarehouseConnections, ListWarehouseConnectionTables, ImportWarehouseSources]
   - <<: *workspace_port_symbol
     name: createMockWorkspaceFilesQueryPort
     path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
@@ -534,7 +534,7 @@ symbols:
   - <<: *workspace_port_symbol
     name: buildWarehouseSourceImportPort
     path: apps/web/src/app/components/SourceImportWizard.test.tsx
-    cqRails: [ListWarehouseConnections, ListWarehouseTables, ImportWarehouseSources]
+    cqRails: [ListWarehouseConnections, ListWarehouseConnectionTables, ImportWarehouseSources]
   - <<: *workspace_port_symbol
     name: useConnectionsLoader
     path: apps/web/src/app/components/sourceImportWizard/useSourceImportWizardDataLoaders.ts
@@ -581,14 +581,14 @@ symbols:
 
 ## Fowler Planning Matrix
 
-| Scenario                                                | Opportunity             | Fowler pattern              | DDD owner                                   | Command/query rail                                                          | Implementation surfaces                                  | Unit or package test           | Architecture test                                 | User-flow test                | Out of scope                         |
-| ------------------------------------------------------- | ----------------------- | --------------------------- | ------------------------------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------ | ------------------------------------------------- | ----------------------------- | ------------------------------------ |
-| Split graph snapshot reads from broad workspace service | Responsibility overload | Extract Interface, Gateway  | Workspace graph draft read model            | `GetWorkspaceGraphDraft`                                                    | `workspace.ts`, `workspacePorts.api.ts`, graph consumers | `workspacePorts.api.test.ts`   | `workspacePortDecomposition.architecture.test.ts` | Existing canvas/lineage tests | New graph backend route              |
-| Split file reads from file writes                       | Command/query mixing    | CQRS, Gateway               | Workspace file read/write model             | `ListWorkspaceFiles`, `GetWorkspaceFileContent`, `SaveWorkspaceFileContent` | `workspace.ts`, files service/tests, file consumers      | `workspacePorts.files.test.ts` | `workspacePortDecomposition.architecture.test.ts` | Existing code/artifact tests  | non-file workspace mutation commands |
-| Isolate missing diff rail                               | Hidden authority        | Fail-closed Adapter         | Workspace diff read model                   | `GetWorkspaceDiffChanges`                                                   | diff port, `DiffView`, tests                             | `DiffView.test.tsx`            | `workspacePortDecomposition.architecture.test.ts` | N/A                           | Implementing diff backend            |
-| Isolate plugin catalog readiness                        | Hidden authority        | Gateway, Published Language | Runtime plugin catalog read model           | `ListWorkspacePlugins`                                                      | plugin catalog port, plugin view tests                   | plugin view test               | architecture guard                                | N/A                           | Runtime plugin execution             |
-| Isolate admin roles/audit                               | Feature envy            | Service Layer, Read Model   | Admin RBAC/audit read models                | `ListAdminRoles`, `ListAdminAuditLog`                                       | admin read port, admin view tests                        | `AdminView.test.tsx`           | architecture guard                                | N/A                           | Backend admin routes                 |
-| Fence warehouse import                                  | Mock runtime authority  | Command Gateway             | Warehouse source import command/read models | `ListWarehouseConnections`, `ListWarehouseTables`, `ImportWarehouseSources` | source import port, wizard tests                         | `SourceImportWizard.test.tsx`  | architecture guard                                | N/A                           | Backend warehouse connector          |
+| Scenario                                                | Opportunity             | Fowler pattern              | DDD owner                                   | Command/query rail                                                                    | Implementation surfaces                                  | Unit or package test           | Architecture test                                 | User-flow test                | Out of scope                         |
+| ------------------------------------------------------- | ----------------------- | --------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------ | ------------------------------------------------- | ----------------------------- | ------------------------------------ |
+| Split graph snapshot reads from broad workspace service | Responsibility overload | Extract Interface, Gateway  | Workspace graph draft read model            | `GetWorkspaceGraphDraft`                                                              | `workspace.ts`, `workspacePorts.api.ts`, graph consumers | `workspacePorts.api.test.ts`   | `workspacePortDecomposition.architecture.test.ts` | Existing canvas/lineage tests | New graph backend route              |
+| Split file reads from file writes                       | Command/query mixing    | CQRS, Gateway               | Workspace file read/write model             | `ListWorkspaceFiles`, `GetWorkspaceFileContent`, `SaveWorkspaceFileContent`           | `workspace.ts`, files service/tests, file consumers      | `workspacePorts.files.test.ts` | `workspacePortDecomposition.architecture.test.ts` | Existing code/artifact tests  | non-file workspace mutation commands |
+| Isolate missing diff rail                               | Hidden authority        | Fail-closed Adapter         | Workspace diff read model                   | `GetWorkspaceDiffChanges`                                                             | diff port, `DiffView`, tests                             | `DiffView.test.tsx`            | `workspacePortDecomposition.architecture.test.ts` | N/A                           | Implementing diff backend            |
+| Isolate plugin catalog readiness                        | Hidden authority        | Gateway, Published Language | Runtime plugin catalog read model           | `ListWorkspacePlugins`                                                                | plugin catalog port, plugin view tests                   | plugin view test               | architecture guard                                | N/A                           | Runtime plugin execution             |
+| Isolate admin roles/audit                               | Feature envy            | Service Layer, Read Model   | Admin RBAC/audit read models                | `ListAdminRoles`, `ListAdminAuditLog`                                                 | admin read port, admin view tests                        | `AdminView.test.tsx`           | architecture guard                                | N/A                           | Backend admin routes                 |
+| Fence warehouse import                                  | Mock runtime authority  | Command Gateway             | Warehouse source import command/read models | `ListWarehouseConnections`, `ListWarehouseConnectionTables`, `ImportWarehouseSources` | source import port, wizard tests                         | `SourceImportWizard.test.tsx`  | architecture guard                                | N/A                           | Backend warehouse connector          |
 
 ## File Structure
 
