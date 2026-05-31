@@ -6,9 +6,11 @@ import {
   getCommandPaletteContributions,
   getAllOverlays,
   getNodeBadges,
+  getSourceImportOptions,
   getRuntimePlugins,
   PLUGIN_REGISTRY,
   getPluginPortMap,
+  getSourceImportContributions,
   getRouteHeaderContributions,
   type RuntimeCapabilities,
 } from './registry';
@@ -106,5 +108,19 @@ describe('plugin runtime projection', () => {
     expect(getRouteHeaderContributions(capabilities)).toEqual([]);
     expect(getCommandPaletteContributions(capabilities)).toEqual([]);
     expect(getBottomDiagnosticsContributions(capabilities)).toEqual([]);
+  });
+
+  it('projects source import properties from available plugin declarations', () => {
+    const dbtImport = getSourceImportContributions().find(
+      (contribution) => contribution.pluginId === 'dbt'
+    );
+
+    expect(dbtImport?.artifactKind).toBe('dbt-source-yaml');
+    expect(getSourceImportOptions().map((option) => option.id)).toEqual([
+      'includeColumns',
+      'addTests',
+      'addFreshness',
+    ]);
+    expect(getSourceImportOptions(buildRuntimeCapabilities('dbt'))).toEqual([]);
   });
 });

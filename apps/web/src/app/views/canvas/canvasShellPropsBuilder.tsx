@@ -78,6 +78,7 @@ function buildCanvasShellPanelsArgs({
       applyInspectorNodeDraft: controller.applyInspectorNodeDraft,
       activeRunId: controller.activeRunId,
       registeredPlugins: controller.registeredPlugins,
+      runtimeCapabilities: controller.runtimeCapabilities,
       importedNodeFocusIds: controller.importedNodeFocusIds,
       executionEnvironmentOptions: controller.executionEnvironmentOptions,
     },

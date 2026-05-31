@@ -21,6 +21,8 @@ type SourceYamlTable = {
 type GeneratedSourceYamlFreshness = {
   readonly warnAfterCount: number;
   readonly warnAfterPeriod: 'hour';
+  readonly errorAfterCount: number;
+  readonly errorAfterPeriod: 'hour';
 };
 
 type SourceYamlFreshness = GeneratedSourceYamlFreshness | SourceYamlMetadata;
@@ -38,6 +40,52 @@ type SourceYamlDocument = {
   readonly sources: readonly SourceYamlSource[];
   readonly metadata: SourceYamlMetadata;
 };
+
+export type WarehouseSourceYamlArtifactDescriptor = {
+  readonly pluginId: string;
+  readonly artifactKind: string;
+  readonly pathForTable: (table: WarehouseTable, groupingStrategy: SourceImportGrouping) => string;
+  readonly sourceNameForTable: (table: WarehouseTable) => string;
+  readonly tableNameForTable: (table: WarehouseTable) => string;
+  readonly generatedFreshness: GeneratedSourceYamlFreshness;
+  readonly reservedKeys: {
+    readonly document: readonly string[];
+    readonly source: readonly string[];
+    readonly table: readonly string[];
+    readonly column: readonly string[];
+  };
+};
+
+export const DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR: WarehouseSourceYamlArtifactDescriptor = {
+  pluginId: 'dbt',
+  artifactKind: 'dbt-source-yaml',
+  pathForTable: (table, groupingStrategy) => {
+    const groupKey =
+      groupingStrategy === 'database' ? table.database.toLowerCase() : table.schema.toLowerCase();
+    return `models/sources/src_${groupKey}.yml`;
+  },
+  sourceNameForTable: (table) => table.schema.toLowerCase(),
+  tableNameForTable: (table) => table.table.toLowerCase(),
+  generatedFreshness: {
+    warnAfterCount: 24,
+    warnAfterPeriod: 'hour',
+    errorAfterCount: 48,
+    errorAfterPeriod: 'hour',
+  },
+  reservedKeys: {
+    document: ['sources'],
+    source: ['name', 'database', 'schema', 'freshness', 'tables'],
+    table: ['name', 'columns'],
+    column: ['name', 'data_type', 'tests'],
+  },
+};
+
+export class InvalidWarehouseSourceYamlError extends Error {
+  public constructor(readonly cause: unknown) {
+    super('Existing dbt source YAML could not be parsed.');
+    this.name = 'InvalidWarehouseSourceYamlError';
+  }
+}
 
 export type WarehouseSourceYamlUpdate = {
   readonly path: string;
@@ -79,13 +127,18 @@ export function readExistingSourceDocument(content: string | undefined): SourceY
     return { metadata: { version: 2 }, sources: [] };
   }
 
-  const loaded = loadYaml(content);
+  let loaded: unknown;
+  try {
+    loaded = loadYaml(content);
+  } catch (error) {
+    throw new InvalidWarehouseSourceYamlError(error);
+  }
   if (!isRecord(loaded) || !Array.isArray(loaded.sources)) {
     return { metadata: { version: 2 }, sources: [] };
   }
 
   return {
-    metadata: readYamlMetadata(loaded, ['sources']),
+    metadata: readYamlMetadata(loaded, DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.reservedKeys.document),
     sources: loaded.sources
       .filter(isRecord)
       .map((source): SourceYamlSource => {
@@ -96,7 +149,10 @@ export function readExistingSourceDocument(content: string | undefined): SourceY
                 (table): SourceYamlTable => ({
                   name: typeof table.name === 'string' ? table.name : '',
                   columns: readExistingColumns(table.columns),
-                  metadata: readYamlMetadata(table, ['name', 'columns']),
+                  metadata: readYamlMetadata(
+                    table,
+                    DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.reservedKeys.table
+                  ),
                 })
               )
               .filter((table) => table.name.length > 0)
@@ -108,11 +164,21 @@ export function readExistingSourceDocument(content: string | undefined): SourceY
           ...(typeof source.schema === 'string' ? { schema: source.schema } : {}),
           ...freshness,
           tables,
-          metadata: readYamlMetadata(source, ['name', 'database', 'schema', 'freshness', 'tables']),
+          metadata: readYamlMetadata(
+            source,
+            DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.reservedKeys.source
+          ),
         };
       })
       .filter((source) => source.name.length > 0),
   };
+}
+
+export function buildWarehouseSourceYamlPath(
+  table: WarehouseTable,
+  groupingStrategy: SourceImportGrouping
+): string {
+  return DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.pathForTable(table, groupingStrategy);
 }
 
 export function groupTablesForYaml(
@@ -121,9 +187,7 @@ export function groupTablesForYaml(
 ): ReadonlyMap<string, readonly WarehouseTable[]> {
   const grouped = new Map<string, WarehouseTable[]>();
   for (const table of tables) {
-    const groupKey =
-      groupingStrategy === 'database' ? table.database.toLowerCase() : table.schema.toLowerCase();
-    const path = `models/sources/src_${groupKey}.yml`;
+    const path = buildWarehouseSourceYamlPath(table, groupingStrategy);
     const group = grouped.get(path) ?? [];
     group.push(table);
     grouped.set(path, group);
@@ -140,10 +204,12 @@ export function upsertSourceTable(
     readonly addFreshness: boolean;
   }
 ): SourceYamlDocument {
-  const sourceName = table.schema.toLowerCase();
-  const tableName = table.table.toLowerCase();
+  const sourceName = DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.sourceNameForTable(table);
+  const tableName = DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.tableNameForTable(table);
   const sourcesByName = new Map(document.sources.map((source) => [source.name, source]));
   const existingSource = sourcesByName.get(sourceName);
+  const sourceDatabase = existingSource?.database ?? table.database;
+  const sourceSchema = existingSource?.schema ?? table.schema.toLowerCase();
   const existingTables = existingSource?.tables ?? [];
   const nextTablesByName = new Map(
     existingTables.map((existingTable) => [existingTable.name, existingTable])
@@ -159,15 +225,14 @@ export function upsertSourceTable(
   nextTablesByName.set(tableName, nextTable);
   sourcesByName.set(sourceName, {
     name: sourceName,
-    database: table.database,
-    schema: table.schema.toLowerCase(),
+    ...(sourceDatabase !== undefined ? { database: sourceDatabase } : {}),
+    ...(sourceSchema !== undefined ? { schema: sourceSchema } : {}),
     ...(existingSource?.freshness
       ? { freshness: existingSource.freshness }
       : options.addFreshness
         ? {
             freshness: {
-              warnAfterCount: 24,
-              warnAfterPeriod: 'hour',
+              ...DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.generatedFreshness,
             } satisfies SourceYamlFreshness,
           }
         : {}),
@@ -192,11 +257,11 @@ export function serializeSourceDocument(document: SourceYamlDocument): string {
   lines.push('sources:');
   for (const source of document.sources) {
     lines.push(`  - name: ${source.name}`);
-    if (source.database) {
-      lines.push(`    database: ${source.database}`);
+    if (source.database !== undefined) {
+      appendYamlEntry(lines, 'database', source.database, 4);
     }
-    if (source.schema) {
-      lines.push(`    schema: ${source.schema}`);
+    if (source.schema !== undefined) {
+      appendYamlEntry(lines, 'schema', source.schema, 4);
     }
     appendYamlMetadata(lines, source.metadata, 4);
     if (source.freshness) {
@@ -205,6 +270,9 @@ export function serializeSourceDocument(document: SourceYamlDocument): string {
         lines.push('      warn_after:');
         lines.push(`        count: ${source.freshness.warnAfterCount}`);
         lines.push(`        period: ${source.freshness.warnAfterPeriod}`);
+        lines.push('      error_after:');
+        lines.push(`        count: ${source.freshness.errorAfterCount}`);
+        lines.push(`        period: ${source.freshness.errorAfterPeriod}`);
       } else {
         appendYamlEntry(lines, 'freshness', source.freshness, 4);
       }
@@ -255,7 +323,7 @@ function readExistingColumns(input: unknown): readonly SourceYamlColumn[] {
         name: typeof column.name === 'string' ? column.name : '',
         ...(typeof column.data_type === 'string' ? { dataType: column.data_type } : {}),
         ...(Array.isArray(column.tests) ? { tests: column.tests } : {}),
-        metadata: readYamlMetadata(column, ['name', 'data_type', 'tests']),
+        metadata: readYamlMetadata(column, DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.reservedKeys.column),
       };
     })
     .filter((column) => column.name.length > 0);
@@ -332,7 +400,11 @@ function appendYamlEntry(lines: string[], key: string, value: unknown, indentSpa
 
 function isGeneratedFreshness(value: SourceYamlFreshness): value is GeneratedSourceYamlFreshness {
   return (
-    isRecord(value) && typeof value.warnAfterCount === 'number' && value.warnAfterPeriod === 'hour'
+    isRecord(value) &&
+    typeof value.warnAfterCount === 'number' &&
+    value.warnAfterPeriod === 'hour' &&
+    typeof value.errorAfterCount === 'number' &&
+    value.errorAfterPeriod === 'hour'
   );
 }
 

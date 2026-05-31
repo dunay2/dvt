@@ -146,6 +146,38 @@ export const dbtContributions: PluginContributions = {
       nodeKinds: DBT_NODE_KINDS,
     },
   ],
+  sourceImport: [
+    {
+      id: 'dbt.source-yaml',
+      pluginId: DBT_PLUGIN_ID,
+      sourceType: 'database',
+      artifactKind: 'dbt-source-yaml',
+      options: [
+        {
+          id: 'includeColumns',
+          label: 'Include Column Metadata',
+          description:
+            'Add column names and data types to YAML (stored under meta.warehouse_data_type).',
+          defaultEnabled: false,
+          order: 10,
+        },
+        {
+          id: 'addTests',
+          label: 'Add Generic Tests',
+          description: 'Automatically add not_null and unique tests for detected primary keys.',
+          defaultEnabled: false,
+          order: 20,
+        },
+        {
+          id: 'addFreshness',
+          label: 'Add Freshness Checks',
+          description: 'Add default freshness thresholds (warn_after: 24h, error_after: 48h).',
+          defaultEnabled: false,
+          order: 30,
+        },
+      ],
+    },
+  ],
   // Connection rules express dbt-local authoring policy; shell-level graph
   // invariants still run before these plugin rules are evaluated.
   connectionRules: [

@@ -1,8 +1,47 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildWarehouseSourceYamlUpdates } from '../../../src/application/services/warehouseSourceYaml.js';
+import {
+  DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR,
+  InvalidWarehouseSourceYamlError,
+  buildWarehouseSourceYamlPath,
+  buildWarehouseSourceYamlUpdates,
+  readExistingSourceDocument,
+} from '../../../src/application/services/warehouseSourceYaml.js';
 
 describe('warehouse source YAML builder', () => {
+  it('declares dbt source artifact ownership and path semantics in one descriptor', () => {
+    expect(DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR).toMatchObject({
+      pluginId: 'dbt',
+      artifactKind: 'dbt-source-yaml',
+    });
+    expect(
+      buildWarehouseSourceYamlPath(
+        {
+          database: 'analytics',
+          schema: 'ERP',
+          table: 'ORDERS',
+        },
+        'schema'
+      )
+    ).toBe('models/sources/src_erp.yml');
+    expect(
+      buildWarehouseSourceYamlPath(
+        {
+          database: 'ANALYTICS',
+          schema: 'erp',
+          table: 'orders',
+        },
+        'database'
+      )
+    ).toBe('models/sources/src_analytics.yml');
+  });
+
+  it('rejects malformed existing YAML instead of rewriting it as an empty source file', () => {
+    expect(() => readExistingSourceDocument('version: 2\nsources:\n  - name: [')).toThrow(
+      InvalidWarehouseSourceYamlError
+    );
+  });
+
   it('creates deterministic dbt source YAML with columns, tests, and freshness', () => {
     const updates = buildWarehouseSourceYamlUpdates({
       existingFiles: new Map(),
@@ -37,6 +76,9 @@ describe('warehouse source YAML builder', () => {
           '    freshness:',
           '      warn_after:',
           '        count: 24',
+          '        period: hour',
+          '      error_after:',
+          '        count: 48',
           '        period: hour',
           '    tables:',
           '      - name: orders',
@@ -114,6 +156,8 @@ describe('warehouse source YAML builder', () => {
             '',
             'sources:',
             '  - name: erp',
+            '    database: "{{ env_var(\'RAW_DATABASE\') }}"',
+            '    schema: ERP_CUSTOM',
             '    description: ERP source metadata maintained by analytics',
             '    meta:',
             '      owner: finance',
@@ -151,6 +195,8 @@ describe('warehouse source YAML builder', () => {
     });
 
     const content = updates[0]?.content ?? '';
+    expect(content).toContain("database: '{{ env_var(''RAW_DATABASE'') }}'");
+    expect(content).toContain('schema: ERP_CUSTOM');
     expect(content).toContain('description: ERP source metadata maintained by analytics');
     expect(content).toContain('owner: finance');
     expect(content).toContain('count: 12');

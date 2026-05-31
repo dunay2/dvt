@@ -6,6 +6,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ImportSourcesResult, IWarehouseSourceImportPort } from '../ports/workspace';
+import type { SourceImportOptionContribution } from '../plugins/registry';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import SourceImportWizard from './SourceImportWizard';
 
@@ -100,9 +101,11 @@ describe('SourceImportWizard', () => {
   });
 
   async function renderWizard(args?: {
+    open?: boolean;
     warehouseSourceImport?: IWarehouseSourceImportPort;
     onClose?: () => void;
     onComplete?: (result: ImportSourcesResult) => void;
+    sourceImportOptions?: readonly SourceImportOptionContribution[];
   }): Promise<void> {
     await act(async () => {
       root.render(
@@ -113,9 +116,10 @@ describe('SourceImportWizard', () => {
           }}
         >
           <SourceImportWizard
-            open={true}
+            open={args?.open ?? true}
             onClose={args?.onClose ?? vi.fn()}
             onComplete={args?.onComplete}
+            sourceImportOptions={args?.sourceImportOptions}
           />
         </AppServicesProvider>
       );
@@ -215,6 +219,71 @@ describe('SourceImportWizard', () => {
 
     expect(onComplete).toHaveBeenCalledTimes(1);
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders only the source import options declared by the active plugin', async () => {
+    await renderWizard({
+      sourceImportOptions: [
+        {
+          id: 'includeColumns',
+          label: 'Include Column Metadata',
+          description: 'Add columns to the plugin-owned source artifact.',
+          defaultEnabled: false,
+          order: 10,
+        },
+      ],
+    });
+
+    await clickNext();
+    await clickClickableDivByText('Snowflake PROD');
+    await clickNext();
+    await clickClickableDivByText('ORDERS');
+    await clickNext();
+    await clickNext();
+
+    expect(document.body.textContent).toContain('Include Column Metadata');
+    expect(document.body.textContent).not.toContain('Add Generic Tests');
+    expect(document.body.textContent).not.toContain('Add Freshness Checks');
+  });
+
+  it('applies plugin option defaults when runtime declarations arrive after mount', async () => {
+    const importSources = vi.fn(buildWarehouseSourceImportPort().importSources);
+    const warehouseSourceImport = buildWarehouseSourceImportPort({ importSources });
+
+    await renderWizard({
+      warehouseSourceImport,
+      sourceImportOptions: [],
+    });
+    await renderWizard({
+      warehouseSourceImport,
+      sourceImportOptions: [
+        {
+          id: 'includeColumns',
+          label: 'Include Column Metadata',
+          description: 'Add columns to the plugin-owned source artifact.',
+          defaultEnabled: true,
+          order: 10,
+        },
+      ],
+    });
+
+    await clickNext();
+    await clickClickableDivByText('Snowflake PROD');
+    await clickNext();
+    await clickClickableDivByText('ORDERS');
+    await clickNext();
+    await clickNext();
+    await clickNext();
+
+    await clickButtonContaining('Register data objects');
+
+    expect(importSources).toHaveBeenCalledWith(
+      expect.objectContaining({
+        includeColumns: true,
+        addTests: false,
+        addFreshness: false,
+      })
+    );
   });
 
   it('surfaces a no-op result when the selected sources already exist and does not fire the canvas handoff', async () => {

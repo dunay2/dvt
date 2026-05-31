@@ -59,6 +59,7 @@ export type CanvasShellPanelsBuilderArgs = Readonly<{
     | 'applyInspectorNodeDraft'
     | 'activeRunId'
     | 'registeredPlugins'
+    | 'runtimeCapabilities'
     | 'importedNodeFocusIds'
     | 'executionEnvironmentOptions'
   >;

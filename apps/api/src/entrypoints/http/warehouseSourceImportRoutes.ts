@@ -125,10 +125,16 @@ export function registerWarehouseSourceImportRoutes(
           return;
         }
         if (error instanceof InvalidWarehouseSourceImportRequestError) {
+          const reason =
+            error.reason === 'invalid_existing_source_yaml'
+              ? HTTP_ERROR_REASON.invalidWorkspaceSourceYaml
+              : HTTP_ERROR_REASON.invalidBody;
           httpErrorTranslation.respond(
             reply,
             httpErrorTranslation.parse.issue(
-              badRequestIssue(HTTP_ERROR_REASON.invalidBody, { target: 'body' })
+              badRequestIssue(reason, {
+                target: error.reason === 'invalid_existing_source_yaml' ? 'workspace_file' : 'body',
+              })
             )
           );
           return;

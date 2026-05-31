@@ -65,6 +65,7 @@ export function buildCanvasShellPanels({
     },
     activeRunId: panelState.activeRunId,
     registeredPlugins: panelState.registeredPlugins,
+    runtimeCapabilities: panelState.runtimeCapabilities,
     userPermissions,
     importedNodeFocusIds: panelState.importedNodeFocusIds,
   };

@@ -1,9 +1,10 @@
 /**
  * Owned concern: compose the Canvas shell from route-owned presentation contracts.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import DbtExplorer from '../../components/DbtExplorer';
 import SourceImportWizard from '../../components/SourceImportWizard';
+import { getSourceImportContributions, getSourceImportOptions } from '../../plugins/registry';
 import {
   ResizableHandle,
   ResizablePanel,
@@ -148,7 +149,16 @@ export default function CanvasShell({
 }: CanvasShellProps): JSX.Element {
   const [dataRegistryOpen, setDataRegistryOpen] = useState(false);
   const canEditGraph = panels.userPermissions.canEditEdges;
-  const canOpenDataRegistry = canEditGraph && layout.canOpenSourceImport;
+  const sourceImportContributions = useMemo(
+    () => getSourceImportContributions(panels.runtimeCapabilities),
+    [panels.runtimeCapabilities]
+  );
+  const sourceImportOptions = useMemo(
+    () => getSourceImportOptions(panels.runtimeCapabilities),
+    [panels.runtimeCapabilities]
+  );
+  const canOpenDataRegistry =
+    canEditGraph && layout.canOpenSourceImport && sourceImportContributions.length > 0;
   const handleOpenDataRegistry = canOpenDataRegistry ? () => setDataRegistryOpen(true) : undefined;
 
   useEffect(() => {
@@ -202,6 +212,7 @@ export default function CanvasShell({
         open={dataRegistryOpen}
         onClose={() => setDataRegistryOpen(false)}
         onComplete={graphCommands.onSourceImportComplete}
+        sourceImportOptions={sourceImportOptions}
       />
     </ResizablePanelGroup>
   );

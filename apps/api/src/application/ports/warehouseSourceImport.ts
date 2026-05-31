@@ -74,7 +74,10 @@ export class WarehouseTableNotFoundError extends Error {
 }
 
 export class InvalidWarehouseSourceImportRequestError extends Error {
-  public constructor(message: string) {
+  public constructor(
+    message: string,
+    readonly reason: 'invalid_request' | 'invalid_existing_source_yaml' = 'invalid_request'
+  ) {
     super(message);
     this.name = 'InvalidWarehouseSourceImportRequestError';
   }

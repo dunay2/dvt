@@ -121,6 +121,7 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
       },
       activeRunId: null,
       registeredPlugins: new Set(['dbt']),
+      runtimeCapabilities: undefined,
       userPermissions: {
         canPlan: true,
         canRun: true,
@@ -360,6 +361,13 @@ describe('CanvasShell', () => {
       canEditGraph: true,
     });
     expect(shellState.dbtExplorerProps?.onOpenDataRegistry).toBeTypeOf('function');
+    expect(shellState.sourceImportWizardProps).toMatchObject({
+      sourceImportOptions: [
+        expect.objectContaining({ id: 'includeColumns' }),
+        expect.objectContaining({ id: 'addTests' }),
+        expect.objectContaining({ id: 'addFreshness' }),
+      ],
+    });
   });
 
   it('keeps ready-canvas node creation out of the explorer contract', async () => {
@@ -393,6 +401,33 @@ describe('CanvasShell', () => {
       canEditGraph: true,
     });
     expect(shellState.dbtExplorerProps?.onOpenDataRegistry).toBeUndefined();
+  });
+
+  it('hides explorer import affordances when the dbt source import plugin is unavailable', async () => {
+    const props = buildProps({
+      panels: {
+        runtimeCapabilities: {
+          plugins: {
+            dbt: {
+              available: false,
+              reason: 'disabled in test',
+            },
+          },
+        },
+      },
+    });
+
+    await act(async () => {
+      root.render(<CanvasShell {...props} />);
+    });
+
+    expect(shellState.dbtExplorerProps).toMatchObject({
+      canEditGraph: true,
+    });
+    expect(shellState.dbtExplorerProps?.onOpenDataRegistry).toBeUndefined();
+    expect(shellState.sourceImportWizardProps).toMatchObject({
+      sourceImportOptions: [],
+    });
   });
 
   it('wires source import completion and imported-node focus through the shell surfaces', async () => {
