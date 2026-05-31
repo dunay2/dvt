@@ -1,23 +1,29 @@
 /** Owned concern: build deterministic dbt source YAML artifacts for warehouse source import. */
-import { load as loadYaml } from 'js-yaml';
+import { dump as dumpYaml, load as loadYaml } from 'js-yaml';
 
 import type { SourceImportGrouping, WarehouseTable } from '../ports/warehouseSourceImport.js';
+
+type SourceYamlMetadata = Readonly<Record<string, unknown>>;
 
 type SourceYamlColumn = {
   readonly name: string;
   readonly dataType?: string;
-  readonly tests: readonly string[];
+  readonly tests?: readonly unknown[];
+  readonly metadata: SourceYamlMetadata;
 };
 
 type SourceYamlTable = {
   readonly name: string;
   readonly columns: readonly SourceYamlColumn[];
+  readonly metadata: SourceYamlMetadata;
 };
 
-type SourceYamlFreshness = {
+type GeneratedSourceYamlFreshness = {
   readonly warnAfterCount: number;
   readonly warnAfterPeriod: 'hour';
 };
+
+type SourceYamlFreshness = GeneratedSourceYamlFreshness | SourceYamlMetadata;
 
 type SourceYamlSource = {
   readonly name: string;
@@ -25,10 +31,12 @@ type SourceYamlSource = {
   readonly schema?: string;
   readonly freshness?: SourceYamlFreshness;
   readonly tables: readonly SourceYamlTable[];
+  readonly metadata: SourceYamlMetadata;
 };
 
 type SourceYamlDocument = {
   readonly sources: readonly SourceYamlSource[];
+  readonly metadata: SourceYamlMetadata;
 };
 
 export type WarehouseSourceYamlUpdate = {
@@ -68,29 +76,39 @@ export function buildWarehouseSourceYamlUpdates(
 
 export function readExistingSourceDocument(content: string | undefined): SourceYamlDocument {
   if (content === undefined || content.trim().length === 0) {
-    return { sources: [] };
+    return { metadata: { version: 2 }, sources: [] };
   }
 
   const loaded = loadYaml(content);
   if (!isRecord(loaded) || !Array.isArray(loaded.sources)) {
-    return { sources: [] };
+    return { metadata: { version: 2 }, sources: [] };
   }
 
   return {
+    metadata: readYamlMetadata(loaded, ['sources']),
     sources: loaded.sources
       .filter(isRecord)
       .map((source): SourceYamlSource => {
         const tables = Array.isArray(source.tables)
-          ? source.tables.filter(isRecord).map((table) => ({
-              name: typeof table.name === 'string' ? table.name : '',
-              columns: readExistingColumns(table.columns),
-            }))
+          ? source.tables
+              .filter(isRecord)
+              .map(
+                (table): SourceYamlTable => ({
+                  name: typeof table.name === 'string' ? table.name : '',
+                  columns: readExistingColumns(table.columns),
+                  metadata: readYamlMetadata(table, ['name', 'columns']),
+                })
+              )
+              .filter((table) => table.name.length > 0)
           : [];
+        const freshness = isRecord(source.freshness) ? { freshness: source.freshness } : {};
         return {
           name: typeof source.name === 'string' ? source.name : '',
           ...(typeof source.database === 'string' ? { database: source.database } : {}),
           ...(typeof source.schema === 'string' ? { schema: source.schema } : {}),
+          ...freshness,
           tables,
+          metadata: readYamlMetadata(source, ['name', 'database', 'schema', 'freshness', 'tables']),
         };
       })
       .filter((source) => source.name.length > 0),
@@ -127,29 +145,40 @@ export function upsertSourceTable(
   const sourcesByName = new Map(document.sources.map((source) => [source.name, source]));
   const existingSource = sourcesByName.get(sourceName);
   const existingTables = existingSource?.tables ?? [];
-  const nextTable = {
-    name: tableName,
-    columns: options.includeColumns ? buildColumns(table, options.addTests) : [],
-  };
   const nextTablesByName = new Map(
     existingTables.map((existingTable) => [existingTable.name, existingTable])
   );
+  const existingTable = nextTablesByName.get(tableName);
+  const nextTable = {
+    name: tableName,
+    columns: options.includeColumns
+      ? mergeColumns(existingTable?.columns ?? [], buildColumns(table, options.addTests))
+      : (existingTable?.columns ?? []),
+    metadata: existingTable?.metadata ?? {},
+  };
   nextTablesByName.set(tableName, nextTable);
   sourcesByName.set(sourceName, {
     name: sourceName,
     database: table.database,
     schema: table.schema.toLowerCase(),
-    ...(options.addFreshness
-      ? { freshness: { warnAfterCount: 24, warnAfterPeriod: 'hour' } satisfies SourceYamlFreshness }
-      : existingSource?.freshness
-        ? { freshness: existingSource.freshness }
+    ...(existingSource?.freshness
+      ? { freshness: existingSource.freshness }
+      : options.addFreshness
+        ? {
+            freshness: {
+              warnAfterCount: 24,
+              warnAfterPeriod: 'hour',
+            } satisfies SourceYamlFreshness,
+          }
         : {}),
     tables: Array.from(nextTablesByName.values()).sort((left, right) =>
       left.name.localeCompare(right.name)
     ),
+    metadata: existingSource?.metadata ?? {},
   });
 
   return {
+    metadata: document.metadata,
     sources: Array.from(sourcesByName.values()).sort((left, right) =>
       left.name.localeCompare(right.name)
     ),
@@ -157,7 +186,10 @@ export function upsertSourceTable(
 }
 
 export function serializeSourceDocument(document: SourceYamlDocument): string {
-  const lines = ['version: 2', '', 'sources:'];
+  const lines: string[] = [];
+  appendYamlMetadata(lines, { version: 2, ...document.metadata }, 0);
+  lines.push('');
+  lines.push('sources:');
   for (const source of document.sources) {
     lines.push(`  - name: ${source.name}`);
     if (source.database) {
@@ -166,15 +198,21 @@ export function serializeSourceDocument(document: SourceYamlDocument): string {
     if (source.schema) {
       lines.push(`    schema: ${source.schema}`);
     }
+    appendYamlMetadata(lines, source.metadata, 4);
     if (source.freshness) {
-      lines.push('    freshness:');
-      lines.push('      warn_after:');
-      lines.push(`        count: ${source.freshness.warnAfterCount}`);
-      lines.push(`        period: ${source.freshness.warnAfterPeriod}`);
+      if (isGeneratedFreshness(source.freshness)) {
+        lines.push('    freshness:');
+        lines.push('      warn_after:');
+        lines.push(`        count: ${source.freshness.warnAfterCount}`);
+        lines.push(`        period: ${source.freshness.warnAfterPeriod}`);
+      } else {
+        appendYamlEntry(lines, 'freshness', source.freshness, 4);
+      }
     }
     lines.push('    tables:');
     for (const table of source.tables) {
       lines.push(`      - name: ${table.name}`);
+      appendYamlMetadata(lines, table.metadata, 8);
       if (table.columns.length > 0) {
         lines.push('        columns:');
         for (const column of table.columns) {
@@ -182,11 +220,9 @@ export function serializeSourceDocument(document: SourceYamlDocument): string {
           if (column.dataType) {
             lines.push(`            data_type: ${column.dataType}`);
           }
-          if (column.tests.length > 0) {
-            lines.push('            tests:');
-            for (const testName of column.tests) {
-              lines.push(`              - ${testName}`);
-            }
+          appendYamlMetadata(lines, column.metadata, 12);
+          if (column.tests && column.tests.length > 0) {
+            appendYamlEntry(lines, 'tests', column.tests, 12);
           }
         }
       }
@@ -201,7 +237,8 @@ function buildColumns(table: WarehouseTable, addTests: boolean): readonly Source
     (column): SourceYamlColumn => ({
       name: column.name,
       ...(column.type.length > 0 ? { dataType: column.type } : {}),
-      tests: addTests && !column.nullable ? ['not_null'] : [],
+      ...(addTests && !column.nullable ? { tests: ['not_null'] } : {}),
+      metadata: {},
     })
   );
 }
@@ -211,16 +248,92 @@ function readExistingColumns(input: unknown): readonly SourceYamlColumn[] {
     return [];
   }
 
-  return input.filter(isRecord).map((column): SourceYamlColumn => {
-    const tests = Array.isArray(column.tests)
-      ? column.tests.filter((testName): testName is string => typeof testName === 'string')
-      : [];
-    return {
-      name: typeof column.name === 'string' ? column.name : '',
-      ...(typeof column.data_type === 'string' ? { dataType: column.data_type } : {}),
-      tests,
-    };
-  });
+  return input
+    .filter(isRecord)
+    .map((column): SourceYamlColumn => {
+      return {
+        name: typeof column.name === 'string' ? column.name : '',
+        ...(typeof column.data_type === 'string' ? { dataType: column.data_type } : {}),
+        ...(Array.isArray(column.tests) ? { tests: column.tests } : {}),
+        metadata: readYamlMetadata(column, ['name', 'data_type', 'tests']),
+      };
+    })
+    .filter((column) => column.name.length > 0);
+}
+
+function mergeColumns(
+  existingColumns: readonly SourceYamlColumn[],
+  generatedColumns: readonly SourceYamlColumn[]
+): readonly SourceYamlColumn[] {
+  const columnsByName = new Map(existingColumns.map((column) => [column.name, column]));
+  for (const generatedColumn of generatedColumns) {
+    const existingColumn = columnsByName.get(generatedColumn.name);
+    const dataType = generatedColumn.dataType ?? existingColumn?.dataType;
+    const tests = mergeYamlArrays(existingColumn?.tests, generatedColumn.tests);
+    columnsByName.set(generatedColumn.name, {
+      name: generatedColumn.name,
+      ...(dataType !== undefined ? { dataType } : {}),
+      ...(tests !== undefined ? { tests } : {}),
+      metadata: existingColumn?.metadata ?? {},
+    });
+  }
+  return Array.from(columnsByName.values());
+}
+
+function mergeYamlArrays(
+  existingItems: readonly unknown[] | undefined,
+  generatedItems: readonly unknown[] | undefined
+): readonly unknown[] | undefined {
+  const merged = [...(existingItems ?? [])];
+  const serializedItems = new Set(merged.map((item) => JSON.stringify(item)));
+  for (const generatedItem of generatedItems ?? []) {
+    const serializedItem = JSON.stringify(generatedItem);
+    if (!serializedItems.has(serializedItem)) {
+      merged.push(generatedItem);
+      serializedItems.add(serializedItem);
+    }
+  }
+  return merged.length > 0 ? merged : undefined;
+}
+
+function readYamlMetadata(
+  record: Readonly<Record<string, unknown>>,
+  reservedKeys: readonly string[]
+): SourceYamlMetadata {
+  const reserved = new Set(reservedKeys);
+  return Object.fromEntries(
+    Object.entries(record).filter(([key, value]) => !reserved.has(key) && value !== undefined)
+  );
+}
+
+function appendYamlMetadata(
+  lines: string[],
+  metadata: SourceYamlMetadata,
+  indentSpaces: number
+): void {
+  for (const [key, value] of Object.entries(metadata)) {
+    appendYamlEntry(lines, key, value, indentSpaces);
+  }
+}
+
+function appendYamlEntry(lines: string[], key: string, value: unknown, indentSpaces: number): void {
+  if (value === undefined) {
+    return;
+  }
+
+  const indent = ' '.repeat(indentSpaces);
+  const dumped = dumpYaml({ [key]: value }, { lineWidth: -1, noRefs: true, sortKeys: false })
+    .trimEnd()
+    .split('\n');
+  for (const line of dumped) {
+    lines.push(`${indent}${line}`);
+  }
+}
+
+function isGeneratedFreshness(value: SourceYamlFreshness): value is GeneratedSourceYamlFreshness {
+  return (
+    isRecord(value) && typeof value.warnAfterCount === 'number' && value.warnAfterPeriod === 'hour'
+  );
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {

@@ -103,4 +103,62 @@ describe('warehouse source YAML builder', () => {
       },
     ]);
   });
+
+  it('preserves existing dbt metadata when adding tables to a source file', () => {
+    const updates = buildWarehouseSourceYamlUpdates({
+      existingFiles: new Map([
+        [
+          'models/sources/src_erp.yml',
+          [
+            'version: 2',
+            '',
+            'sources:',
+            '  - name: erp',
+            '    description: ERP source metadata maintained by analytics',
+            '    meta:',
+            '      owner: finance',
+            '    freshness:',
+            '      warn_after:',
+            '        count: 12',
+            '        period: hour',
+            "      filter: loaded_at >= current_timestamp - interval '7 days'",
+            '    tables:',
+            '      - name: orders',
+            '        description: Existing orders table description',
+            '        tests:',
+            '          - dbt_utils.unique_combination_of_columns:',
+            '              combination_of_columns:',
+            '                - id',
+            '                - created_at',
+            '        config:',
+            '          tags:',
+            '            - critical',
+            '        columns:',
+            '          - name: id',
+            '            description: Stable order id',
+            '            tests:',
+            '              - not_null',
+            '              - unique',
+            '',
+          ].join('\n'),
+        ],
+      ]),
+      groupingStrategy: 'schema',
+      includeColumns: false,
+      addTests: false,
+      addFreshness: true,
+      tables: [{ database: 'analytics', schema: 'erp', table: 'customers' }],
+    });
+
+    const content = updates[0]?.content ?? '';
+    expect(content).toContain('description: ERP source metadata maintained by analytics');
+    expect(content).toContain('owner: finance');
+    expect(content).toContain('count: 12');
+    expect(content).toContain('filter:');
+    expect(content).toContain('description: Existing orders table description');
+    expect(content).toContain('dbt_utils.unique_combination_of_columns:');
+    expect(content).toContain('tags:');
+    expect(content).toContain('description: Stable order id');
+    expect(content).toContain('- name: customers');
+  });
 });

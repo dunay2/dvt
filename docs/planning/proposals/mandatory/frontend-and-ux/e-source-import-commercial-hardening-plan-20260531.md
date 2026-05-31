@@ -198,6 +198,13 @@ redGreenCycles:
       - apps/api/test/application/services/warehouseSourceYaml.test.ts
       - apps/api/test/entrypoints/http/warehouseSourceImportRoutes.test.ts
     greenTest: pnpm --filter dvt-api test -- test/application/services/warehouseSourceYaml.test.ts test/entrypoints/http/warehouseSourceImportRoutes.test.ts
+  - id: preserve-existing-dbt-source-metadata
+    redTest: pnpm --filter dvt-api test -- test/application/services/warehouseSourceYaml.test.ts
+    expectedFailure: Adding a table to an existing dbt source YAML strips existing source, table, column, test, config, and meta metadata.
+    patchSurfaces:
+      - apps/api/src/application/services/warehouseSourceYaml.ts
+      - apps/api/test/application/services/warehouseSourceYaml.test.ts
+    greenTest: pnpm --filter dvt-api test -- test/application/services/warehouseSourceYaml.test.ts
 xApiSymbol: &api_symbol
   dddOwner: Warehouse source import
   cqRails: [ListWarehouseConnections, ListWarehouseConnectionTables, ImportWarehouseSources]
@@ -211,10 +218,16 @@ xApiSymbol: &api_symbol
     - apps/api/test/architecture/warehouseSourceImportRails.architecture.test.ts
 symbols:
   - <<: *api_symbol
+    name: SourceYamlMetadata
+    path: apps/api/src/application/services/warehouseSourceYaml.ts
+  - <<: *api_symbol
     name: SourceYamlColumn
     path: apps/api/src/application/services/warehouseSourceYaml.ts
   - <<: *api_symbol
     name: SourceYamlTable
+    path: apps/api/src/application/services/warehouseSourceYaml.ts
+  - <<: *api_symbol
+    name: GeneratedSourceYamlFreshness
     path: apps/api/src/application/services/warehouseSourceYaml.ts
   - <<: *api_symbol
     name: SourceYamlFreshness
@@ -280,7 +293,25 @@ symbols:
     name: buildColumns
     path: apps/api/src/application/services/warehouseSourceYaml.ts
   - <<: *api_symbol
+    name: mergeColumns
+    path: apps/api/src/application/services/warehouseSourceYaml.ts
+  - <<: *api_symbol
+    name: mergeYamlArrays
+    path: apps/api/src/application/services/warehouseSourceYaml.ts
+  - <<: *api_symbol
     name: readExistingColumns
+    path: apps/api/src/application/services/warehouseSourceYaml.ts
+  - <<: *api_symbol
+    name: readYamlMetadata
+    path: apps/api/src/application/services/warehouseSourceYaml.ts
+  - <<: *api_symbol
+    name: appendYamlMetadata
+    path: apps/api/src/application/services/warehouseSourceYaml.ts
+  - <<: *api_symbol
+    name: appendYamlEntry
+    path: apps/api/src/application/services/warehouseSourceYaml.ts
+  - <<: *api_symbol
+    name: isGeneratedFreshness
     path: apps/api/src/application/services/warehouseSourceYaml.ts
   - <<: *api_symbol
     name: isRecord
