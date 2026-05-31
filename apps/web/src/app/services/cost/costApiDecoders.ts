@@ -6,11 +6,6 @@ import type {
   CostAttributionSummary,
 } from '../../ports/cost';
 
-const VALID_STEP_EVENT_TYPES = new Set<CostAttributionStep['eventType']>([
-  'StepCompleted',
-  'StepFailed',
-]);
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -107,10 +102,10 @@ function decodeRun(input: unknown, index: number): CostAttributionRun {
 
 function readStepEventType(input: Record<string, unknown>, index: number): CostAttributionStep['eventType'] {
   const value = input.eventType;
-  if (typeof value !== 'string' || !VALID_STEP_EVENT_TYPES.has(value as CostAttributionStep['eventType'])) {
-    return fail(`steps[${index}].eventType`, 'StepCompleted or StepFailed');
+  if (value === 'StepCompleted' || value === 'StepFailed') {
+    return value;
   }
-  return value as CostAttributionStep['eventType'];
+  return fail(`steps[${index}].eventType`, 'StepCompleted or StepFailed');
 }
 
 function decodeStep(input: unknown, index: number): CostAttributionStep {
