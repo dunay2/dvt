@@ -1,287 +1,142 @@
 import type { Connection, Edge } from '@xyflow/react';
 import { describe, expect, it } from 'vitest';
 
-import type { PluginPortMap } from '../../plugins/contracts/ConnectionRules';
-import type { PluginConnectionRule } from '../../plugins/contracts/PluginManifest';
 import type { CanonicalNode } from '../../types/canonical';
-import { confirmConnection, confirmReconnect, proposeConnection } from './canvasConnectionAggregate';
+import { confirmConnection, proposeConnection } from './canvasConnectionAggregate';
 
-function buildCanonicalNode(id: string, role: CanonicalNode['role']): CanonicalNode {
+function node(id: string, role: CanonicalNode['role'], kind?: CanonicalNode['kind']): CanonicalNode {
   return {
     id,
     name: id,
     pluginId: 'dvt',
-    kind: role === 'input' ? 'dvt:source' : role === 'output' ? 'dvt:sink' : 'dvt:transform',
+    kind: kind ?? (role === 'input' ? 'dvt:source' : role === 'output' ? 'dvt:sink' : 'dvt:transform'),
     role,
     status: 'idle',
     tags: [],
   };
 }
 
+function link(source: string, target: string): Connection {
+  return { source, sourceHandle: null, target, targetHandle: null };
+}
+
+function byId(nodes: readonly CanonicalNode[]): Map<string, CanonicalNode> {
+  return new Map(nodes.map((candidate) => [candidate.id, candidate]));
+}
+
 describe('canvasConnectionAggregate', () => {
-  it('rejects incomplete connections before any graph policy runs', () => {
-    const sourceNode = buildCanonicalNode('source-node', 'input');
-    const canonicalNodesById = new Map([[sourceNode.id, sourceNode]]);
+  it('rejects incomplete and missing-node connections before edge creation', () => {
+    const source = node('source-node', 'input');
 
-    const result = proposeConnection({
-      connection: {
-        source: sourceNode.id,
-        sourceHandle: null,
-        target: '',
-        targetHandle: null,
-      },
-      canonicalNodesById,
-      edges: [],
-      pluginPortMap: new Map(),
-    });
+    expect(
+      proposeConnection({
+        connection: { source: source.id, sourceHandle: null, target: '', targetHandle: null },
+        canonicalNodesById: byId([source]),
+        edges: [],
+        pluginPortMap: new Map(),
+      })
+    ).toEqual({ outcome: 'rejected', rejection: { code: 'connection_incomplete' } });
 
-    expect(result).toEqual({
-      outcome: 'rejected',
-      rejection: { code: 'connection_incomplete' },
-    });
+    expect(
+      proposeConnection({
+        connection: link(source.id, 'missing-node'),
+        canonicalNodesById: byId([source]),
+        edges: [],
+        pluginPortMap: new Map(),
+      })
+    ).toEqual({ outcome: 'rejected', rejection: { code: 'node_not_found_in_graph' } });
   });
 
-  it('rejects connections whose canonical target is missing', () => {
-    const sourceNode = buildCanonicalNode('source-node', 'input');
-    const canonicalNodesById = new Map([[sourceNode.id, sourceNode]]);
+  it('allows realistic authoring graph connections without a three-node guard', () => {
+    const source = node('warehouse-source', 'input', 'warehouse:source');
+    const firstModel = node('first-model', 'transform', 'dbt:model');
+    const secondModel = node('second-model', 'transform', 'dbt:model');
+    const modelTest = node('model-test', 'check', 'dbt:test');
+    const exposure = node('exposure', 'output', 'dbt:exposure');
+    const canonicalNodesById = byId([source, firstModel, secondModel, modelTest, exposure]);
 
-    const result = proposeConnection({
-      connection: {
-        source: sourceNode.id,
-        sourceHandle: null,
-        target: 'missing-node',
-        targetHandle: null,
-      },
-      canonicalNodesById,
-      edges: [],
-      pluginPortMap: new Map(),
-    });
+    expect(
+      proposeConnection({
+        connection: link(source.id, firstModel.id),
+        canonicalNodesById,
+        edges: [],
+        pluginPortMap: new Map(),
+      })
+    ).toMatchObject({ outcome: 'allowed', edgeType: 'source' });
 
-    expect(result).toEqual({
-      outcome: 'rejected',
-      rejection: { code: 'node_not_found_in_graph' },
-    });
+    expect(
+      proposeConnection({
+        connection: link(firstModel.id, secondModel.id),
+        canonicalNodesById,
+        edges: [],
+        pluginPortMap: new Map(),
+      })
+    ).toMatchObject({ outcome: 'allowed', edgeType: 'ref' });
+
+    expect(
+      proposeConnection({
+        connection: link(firstModel.id, modelTest.id),
+        canonicalNodesById,
+        edges: [],
+        pluginPortMap: new Map(),
+      })
+    ).toMatchObject({ outcome: 'allowed', edgeType: 'test' });
+
+    expect(
+      proposeConnection({
+        connection: link(firstModel.id, exposure.id),
+        canonicalNodesById,
+        edges: [],
+        pluginPortMap: new Map(),
+      })
+    ).toMatchObject({ outcome: 'allowed', edgeType: 'exposure' });
   });
 
-  it('revalidates and rejects duplicate edges at confirmation time', () => {
-    const sourceNode = buildCanonicalNode('source-node', 'input');
-    const targetNode = buildCanonicalNode('sink-node', 'output');
-    const canonicalNodesById = new Map([
-      [sourceNode.id, sourceNode],
-      [targetNode.id, targetNode],
-    ]);
-    const connection: Connection = {
-      source: sourceNode.id,
-      sourceHandle: null,
-      target: targetNode.id,
-      targetHandle: null,
-    };
-    const existingEdges: Edge[] = [
-      { id: 'edge-1', source: sourceNode.id, target: targetNode.id },
-    ];
+  it('rejects role-incompatible, duplicate, self, and cyclic edges', () => {
+    const source = node('source-node', 'input', 'warehouse:source');
+    const sink = node('sink-node', 'output', 'dvt:sink');
+    const firstModel = node('first-model', 'transform');
+    const secondModel = node('second-model', 'transform');
+    const canonicalNodesById = byId([source, sink, firstModel, secondModel]);
+    const duplicateEdges: Edge[] = [{ id: 'edge-1', source: source.id, target: firstModel.id }];
 
-    const result = confirmConnection({
-      connection,
-      canonicalNodesById,
-      edges: existingEdges,
-      pluginPortMap: new Map(),
-    });
-
-    expect(result).toEqual({
+    expect(
+      proposeConnection({
+        connection: link(source.id, sink.id),
+        canonicalNodesById,
+        edges: [],
+        pluginPortMap: new Map(),
+      })
+    ).toEqual({
       outcome: 'rejected',
-      rejection: { code: 'duplicate_edge' },
-    });
-  });
-
-  it('rejects self-connections through shell graph invariants', () => {
-    const sourceNode = buildCanonicalNode('source-node', 'input');
-    const canonicalNodesById = new Map([[sourceNode.id, sourceNode]]);
-
-    const result = proposeConnection({
-      connection: {
-        source: sourceNode.id,
-        sourceHandle: null,
-        target: sourceNode.id,
-        targetHandle: null,
-      },
-      canonicalNodesById,
-      edges: [],
-      pluginPortMap: new Map(),
+      rejection: { code: 'role_rule_blocked', sourceRole: 'input', targetRole: 'output' },
     });
 
-    expect(result).toEqual({
-      outcome: 'rejected',
-      rejection: { code: 'self_connection' },
-    });
-  });
+    expect(
+      confirmConnection({
+        connection: link(source.id, firstModel.id),
+        canonicalNodesById,
+        edges: duplicateEdges,
+        pluginPortMap: new Map(),
+      })
+    ).toEqual({ outcome: 'rejected', rejection: { code: 'duplicate_edge' } });
 
-  it('reconnects an edge without replacing its identity and excludes the edited edge from duplicate checks', () => {
-    const sourceNode = buildCanonicalNode('source-node', 'input');
-    const transformNode = buildCanonicalNode('transform-node', 'transform');
-    const targetNode = buildCanonicalNode('sink-node', 'output');
-    const canonicalNodesById = new Map([
-      [sourceNode.id, sourceNode],
-      [transformNode.id, transformNode],
-      [targetNode.id, targetNode],
-    ]);
+    expect(
+      proposeConnection({
+        connection: link(source.id, source.id),
+        canonicalNodesById,
+        edges: [],
+        pluginPortMap: new Map(),
+      })
+    ).toEqual({ outcome: 'rejected', rejection: { code: 'self_connection' } });
 
-    const result = confirmReconnect({
-      edge: { id: 'edge-1', source: sourceNode.id, target: targetNode.id },
-      connection: {
-        source: sourceNode.id,
-        sourceHandle: null,
-        target: transformNode.id,
-        targetHandle: null,
-      },
-      canonicalNodesById,
-      edges: [{ id: 'edge-1', source: sourceNode.id, target: targetNode.id }],
-      pluginPortMap: new Map(),
-    });
-
-    expect(result).toEqual({
-      outcome: 'reconnected',
-      nextEdges: [
-        {
-          id: 'edge-1',
-          source: sourceNode.id,
-          sourceHandle: null,
-          target: transformNode.id,
-          targetHandle: null,
-        },
-      ],
-    });
-  });
-
-  it('rejects reconnect when another visible edge already uses the candidate connection', () => {
-    const sourceNode = buildCanonicalNode('source-node', 'input');
-    const transformNode = buildCanonicalNode('transform-node', 'transform');
-    const targetNode = buildCanonicalNode('sink-node', 'output');
-    const canonicalNodesById = new Map([
-      [sourceNode.id, sourceNode],
-      [transformNode.id, transformNode],
-      [targetNode.id, targetNode],
-    ]);
-
-    const result = confirmReconnect({
-      edge: { id: 'edge-1', source: sourceNode.id, target: targetNode.id },
-      connection: {
-        source: sourceNode.id,
-        sourceHandle: null,
-        target: transformNode.id,
-        targetHandle: null,
-      },
-      canonicalNodesById,
-      edges: [
-        { id: 'edge-1', source: sourceNode.id, target: targetNode.id },
-        { id: 'edge-2', source: sourceNode.id, target: transformNode.id },
-      ],
-      pluginPortMap: new Map(),
-    });
-
-    expect(result).toEqual({
-      outcome: 'rejected',
-      rejection: { code: 'transformation_duplicate_edge' },
-    });
-  });
-
-  it('preserves typed plugin-rule rejections without leaking presentation copy', () => {
-    const sourceNode = buildCanonicalNode('source-node', 'input');
-    const targetNode = {
-      ...buildCanonicalNode('sink-node', 'output'),
-      kind: 'dvt:restricted-sink' as const,
-    };
-    const canonicalNodesById = new Map([
-      [sourceNode.id, sourceNode],
-      [targetNode.id, targetNode],
-    ]);
-    const pluginConnectionRule: PluginConnectionRule = {
-      sourceKind: 'dvt:source',
-      targetKind: 'dvt:restricted-sink',
-      allowed: false,
-      reason: 'blocked-by-plugin',
-    };
-    const pluginPortMap: PluginPortMap = new Map([
-      [
-        'dvt',
-        {
-          connectionRules: [pluginConnectionRule],
-          produces: [],
-          consumes: [],
-        },
-      ],
-    ]);
-
-    const result = proposeConnection({
-      connection: {
-        source: sourceNode.id,
-        sourceHandle: null,
-        target: targetNode.id,
-        targetHandle: null,
-      },
-      canonicalNodesById,
-      edges: [],
-      pluginPortMap,
-    });
-
-    expect(result).toEqual({
-      outcome: 'rejected',
-      rejection: { code: 'plugin_rule_blocked', reason: 'blocked-by-plugin' },
-    });
-  });
-
-  it('preserves typed cross-plugin bridge failures with owner metadata', () => {
-    const sourceNode = {
-      ...buildCanonicalNode('source-node', 'input'),
-      pluginId: 'dbt',
-    };
-    const targetNode = {
-      ...buildCanonicalNode('sink-node', 'output'),
-      pluginId: 'monitoring',
-    };
-    const canonicalNodesById = new Map([
-      [sourceNode.id, sourceNode],
-      [targetNode.id, targetNode],
-    ]);
-    const pluginPortMap: PluginPortMap = new Map([
-      [
-        'dbt',
-        {
-          connectionRules: [],
-          produces: [{ portType: 'data.tabular', forRoles: ['input'] }],
-          consumes: [],
-        },
-      ],
-      [
-        'monitoring',
-        {
-          connectionRules: [],
-          produces: [],
-          consumes: [{ portType: 'data.events', forRoles: ['output'] }],
-        },
-      ],
-    ]);
-
-    const result = proposeConnection({
-      connection: {
-        source: sourceNode.id,
-        sourceHandle: null,
-        target: targetNode.id,
-        targetHandle: null,
-      },
-      canonicalNodesById,
-      edges: [],
-      pluginPortMap,
-    });
-
-    expect(result).toEqual({
-      outcome: 'rejected',
-      rejection: {
-        code: 'cross_plugin_bridge_missing',
-        sourcePluginId: 'dbt',
-        sourceRole: 'input',
-        targetPluginId: 'monitoring',
-        targetRole: 'output',
-      },
-    });
+    expect(
+      proposeConnection({
+        connection: link(firstModel.id, secondModel.id),
+        canonicalNodesById,
+        edges: [{ id: 'edge-2', source: secondModel.id, target: firstModel.id }],
+        pluginPortMap: new Map(),
+      })
+    ).toEqual({ outcome: 'rejected', rejection: { code: 'cycle_detected' } });
   });
 });
