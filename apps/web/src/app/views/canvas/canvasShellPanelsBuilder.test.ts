@@ -18,6 +18,7 @@ function buildArgs(
       applyInspectorNodeDraft: vi.fn(),
       activeRunId: null,
       registeredPlugins: new Set(['dvt']),
+      runtimeCapabilities: undefined,
       importedNodeFocusIds: [],
       executionEnvironmentOptions: [{ value: 'dev', label: 'dev' }],
     },

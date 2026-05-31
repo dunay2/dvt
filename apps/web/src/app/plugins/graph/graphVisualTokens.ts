@@ -43,6 +43,7 @@ export const graphVisualClasses = {
   contextPanelSectionTitle: 'text-xs font-semibold uppercase text-slate-300',
   contextPanelAccordionItem: 'border-b border-slate-700',
   contextPanelAccordionTrigger: 'px-2 py-2 text-sm hover:bg-slate-950',
+  contextPanelActiveRow: 'bg-slate-800 text-slate-50 ring-1 ring-blue-500',
   contextPanelInteractiveRow: 'cursor-move hover:bg-slate-950',
   contextPanelReadOnlyRow: 'cursor-default text-slate-300',
   contextPanelSecondaryText: 'text-[10px] text-slate-400',

@@ -149,7 +149,7 @@ export default function DbtExplorer({
                           className={cn(
                             'group flex items-center gap-2 rounded px-3 py-2 text-sm',
                             selectedResourceId === resource.id || resource.isActive
-                              ? 'bg-slate-800 text-slate-50 ring-1 ring-blue-500'
+                              ? graphVisualClasses.contextPanelActiveRow
                               : '',
                             canEditGraph && hasDraggablePayload
                               ? graphVisualClasses.contextPanelInteractiveRow

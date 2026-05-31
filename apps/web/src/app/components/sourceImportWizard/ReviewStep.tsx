@@ -2,6 +2,8 @@ import { Badge } from '../ui/badge';
 import { Card } from '../ui/card';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
+import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
+import { resolveString } from '../../plugins/contracts/PluginManifest';
 import { sourceImportWizardCopy as copy } from './copy';
 import { buildPreviewGroups } from './sourceImportWizardModel';
 import type { TableInfo } from './types';
@@ -11,9 +13,8 @@ interface ReviewStepProps {
   selectedCount: number;
   groupingStrategy: 'schema' | 'database' | 'custom';
   selectedConnectionName: string;
-  includeColumns: boolean;
-  addTests: boolean;
-  addFreshness: boolean;
+  sourceImportOptions: readonly SourceImportOptionContribution[];
+  sourceImportOptionValues: Readonly<Record<SourceImportOptionId, boolean>>;
 }
 
 export function ReviewStep({
@@ -21,9 +22,8 @@ export function ReviewStep({
   selectedCount,
   groupingStrategy,
   selectedConnectionName,
-  includeColumns,
-  addTests,
-  addFreshness,
+  sourceImportOptions,
+  sourceImportOptionValues,
 }: ReviewStepProps) {
   const previewGroups = buildPreviewGroups(tables, groupingStrategy);
   return (
@@ -53,22 +53,15 @@ export function ReviewStep({
             <Badge variant="outline">{groupingStrategy}</Badge>
           </div>
           <Separator />
-          <div className="flex justify-between">
-            <span className="text-slate-300">Include Columns:</span>
-            <Badge variant={includeColumns ? 'default' : 'secondary'}>
-              {includeColumns ? 'Yes' : 'No'}
-            </Badge>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-slate-300">Add Tests:</span>
-            <Badge variant={addTests ? 'default' : 'secondary'}>{addTests ? 'Yes' : 'No'}</Badge>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-slate-300">Add Freshness:</span>
-            <Badge variant={addFreshness ? 'default' : 'secondary'}>
-              {addFreshness ? 'Yes' : 'No'}
-            </Badge>
-          </div>
+          {sourceImportOptions.map((option) => {
+            const enabled = sourceImportOptionValues[option.id];
+            return (
+              <div key={option.id} className="flex justify-between gap-4">
+                <span className="text-slate-300">{resolveString(option.label)}:</span>
+                <Badge variant={enabled ? 'default' : 'secondary'}>{enabled ? 'Yes' : 'No'}</Badge>
+              </div>
+            );
+          })}
         </div>
       </Card>
 

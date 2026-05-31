@@ -1,24 +1,20 @@
 import { Badge } from '../ui/badge';
 import { Card } from '../ui/card';
 import { Checkbox } from '../ui/checkbox';
+import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
+import { resolveString } from '../../plugins/contracts/PluginManifest';
 import { sourceImportWizardCopy as copy } from './copy';
 
 interface OptionsStepProps {
-  includeColumns: boolean;
-  addTests: boolean;
-  addFreshness: boolean;
-  onIncludeColumnsChange: (value: boolean) => void;
-  onAddTestsChange: (value: boolean) => void;
-  onAddFreshnessChange: (value: boolean) => void;
+  sourceImportOptions: readonly SourceImportOptionContribution[];
+  sourceImportOptionValues: Readonly<Record<SourceImportOptionId, boolean>>;
+  onSourceImportOptionChange: (optionId: SourceImportOptionId, value: boolean) => void;
 }
 
 export function OptionsStep({
-  includeColumns,
-  addTests,
-  addFreshness,
-  onIncludeColumnsChange,
-  onAddTestsChange,
-  onAddFreshnessChange,
+  sourceImportOptions,
+  sourceImportOptionValues,
+  onSourceImportOptionChange,
 }: OptionsStepProps) {
   return (
     <div className="space-y-4">
@@ -27,50 +23,23 @@ export function OptionsStep({
         <p className="mb-4 text-sm text-slate-300">{copy.options.description}</p>
       </div>
 
-      <Card className="border-slate-600 p-4">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <h4 className="mb-1 text-sm font-medium">Include Column Metadata</h4>
-            <p className="text-xs text-slate-300">
-              Add column names and data types to YAML (stored under meta.warehouse_data_type)
-            </p>
-            <Badge variant="secondary" className="mt-2 text-xs">
-              Default: OFF (Minimal YAML)
-            </Badge>
+      {sourceImportOptions.map((option) => (
+        <Card key={option.id} className="border-slate-600 p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <h4 className="mb-1 text-sm font-medium">{resolveString(option.label)}</h4>
+              <p className="text-xs text-slate-300">{resolveString(option.description)}</p>
+              <Badge variant="secondary" className="mt-2 text-xs">
+                Default: {option.defaultEnabled ? 'ON' : 'OFF'}
+              </Badge>
+            </div>
+            <Checkbox
+              checked={sourceImportOptionValues[option.id]}
+              onCheckedChange={(value) => onSourceImportOptionChange(option.id, value === true)}
+            />
           </div>
-          <Checkbox checked={includeColumns} onCheckedChange={onIncludeColumnsChange} />
-        </div>
-      </Card>
-
-      <Card className="border-slate-600 p-4">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <h4 className="mb-1 text-sm font-medium">Add Generic Tests</h4>
-            <p className="text-xs text-slate-300">
-              Automatically add not_null and unique tests for detected primary keys
-            </p>
-            <Badge variant="secondary" className="mt-2 text-xs">
-              Default: OFF
-            </Badge>
-          </div>
-          <Checkbox checked={addTests} onCheckedChange={onAddTestsChange} />
-        </div>
-      </Card>
-
-      <Card className="border-slate-600 p-4">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <h4 className="mb-1 text-sm font-medium">Add Freshness Checks</h4>
-            <p className="text-xs text-slate-300">
-              Add default freshness thresholds (warn_after: 24h, error_after: 48h)
-            </p>
-            <Badge variant="secondary" className="mt-2 text-xs">
-              Default: OFF
-            </Badge>
-          </div>
-          <Checkbox checked={addFreshness} onCheckedChange={onAddFreshnessChange} />
-        </div>
-      </Card>
+        </Card>
+      ))}
     </div>
   );
 }

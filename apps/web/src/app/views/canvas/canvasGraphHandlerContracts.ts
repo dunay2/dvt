@@ -114,6 +114,7 @@ export type CanvasNodeDropEffects = {
 };
 
 export type CanvasNodeDropState = {
+  canonicalNodesById: Map<string, CanonicalNode>;
   draftSession: CanvasDraftSession;
   nodes: Node[];
 };

@@ -71,6 +71,7 @@ function buildApp(
           readonly storedSchemaVersion: string;
           readonly updatedAt: string | null;
         };
+    readonly existingSourceFileContent?: string;
   } = {}
 ): {
   readonly app: FastifyInstance;
@@ -140,7 +141,18 @@ function buildApp(
     listFiles: vi.fn<() => Promise<readonly WorkspaceFileEntry[]>>().mockResolvedValue([]),
     getFileContent: vi
       .fn<(path: string) => Promise<WorkspaceFileContent>>()
-      .mockRejectedValue(new WorkspaceFileNotFoundError('models/sources/src_erp.yml')),
+      .mockImplementation(async (path) => {
+        if (options.existingSourceFileContent !== undefined) {
+          return {
+            path,
+            name: path.split('/').at(-1) ?? path,
+            language: 'yaml',
+            content: options.existingSourceFileContent,
+            lastModified: '2026-05-30T00:00:00.000Z',
+          };
+        }
+        throw new WorkspaceFileNotFoundError('models/sources/src_erp.yml');
+      }),
     saveFileContent: vi.fn<(path: string, content: string) => Promise<WorkspaceFileContent>>(
       async (path, content) => ({
         path,
@@ -378,6 +390,36 @@ describe('warehouseSourceImportRoutes', () => {
     expect(response.json()).toEqual({
       error: { type: 'conflict', reason: 'workspace_source_import_draft_conflict' },
     });
+  });
+
+  it('rejects malformed existing source YAML before mutating the draft', async () => {
+    const { app, draftStore, workspaceFiles } = buildApp({
+      existingSourceFileContent: 'version: 2\nsources:\n  - name: [',
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/workspace/sources/import?${SCOPE_QUERY}`,
+      payload: {
+        connectionId: 'warehouse-prod',
+        tables: [{ database: 'analytics', schema: 'erp', table: 'orders' }],
+        groupingStrategy: 'schema',
+        includeColumns: true,
+        addTests: false,
+        addFreshness: false,
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      error: {
+        type: 'bad_request',
+        reason: 'invalid_workspace_source_yaml',
+        target: 'workspace_file',
+      },
+    });
+    expect(draftStore.save).not.toHaveBeenCalled();
+    expect(workspaceFiles.saveFileContent).not.toHaveBeenCalled();
   });
 
   it('fails closed when the bearer token is missing', async () => {

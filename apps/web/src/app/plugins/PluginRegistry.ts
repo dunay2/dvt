@@ -20,6 +20,11 @@ export {
   getInspectorPanels,
   getNodeBadges,
   getPluginPortMap,
+  getSourceImportContributions,
+  getSourceImportOptions,
   type PluginContributions,
   type RuntimeCapabilities,
+  type SourceImportContribution,
+  type SourceImportOptionContribution,
+  type SourceImportOptionId,
 } from './registry';

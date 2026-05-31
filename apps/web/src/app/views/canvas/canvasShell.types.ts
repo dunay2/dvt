@@ -19,6 +19,7 @@ import type { CanvasWorkspaceResourceGroup } from '../../components/canvasWorksp
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 import type { ProjectCanvasDocument, ProjectCanvasPatch } from './canvasProjectCanvasLifecycle';
 import type { WorkspaceOption } from '../../services/config/workspaceConfig';
+import type { RuntimeCapabilities } from '../../plugins/registry';
 
 export type UserPermissions = {
   canPlan: boolean;
@@ -61,6 +62,7 @@ export type CanvasShellPanels = {
   inspectorAuthoring: CanvasInspectorAuthoringContract;
   activeRunId: string | null;
   registeredPlugins: ReadonlySet<string>;
+  runtimeCapabilities?: RuntimeCapabilities;
   userPermissions: UserPermissions;
   importedNodeFocusIds: string[];
 };

@@ -69,6 +69,7 @@ export type PluginContributions = {
   connectionRules?: PluginConnectionRule[];
   produces?: PluginDataPort[];
   consumes?: PluginDataPort[];
+  sourceImport?: readonly SourceImportContribution[];
 
   /**
    * Optional run adapter — normalises plugin-specific run data to CanonicalRun.
@@ -96,6 +97,24 @@ import { monitoringContributions } from './monitoring/monitoringContributions';
 
 export type RuntimeCapabilities = {
   plugins: Record<string, { available: boolean; reason?: string }>;
+};
+
+export type SourceImportOptionId = 'includeColumns' | 'addTests' | 'addFreshness';
+
+export type SourceImportOptionContribution = {
+  id: SourceImportOptionId;
+  label: LocalizableString;
+  description: LocalizableString;
+  defaultEnabled: boolean;
+  order: number;
+};
+
+export type SourceImportContribution = {
+  id: string;
+  pluginId: string;
+  sourceType: 'database';
+  artifactKind: string;
+  options: readonly SourceImportOptionContribution[];
 };
 
 function getEnvFlagValue(envFlag: string | undefined): string | boolean | undefined {
@@ -165,6 +184,27 @@ export function getRuntimePlugins(capabilities?: RuntimeCapabilities): PluginCon
 
 export function getAllViews(capabilities?: RuntimeCapabilities): ViewContribution[] {
   return getRuntimePlugins(capabilities).flatMap((p) => p.views ?? []);
+}
+
+export function getSourceImportContributions(
+  capabilities?: RuntimeCapabilities
+): SourceImportContribution[] {
+  return getRuntimePlugins(capabilities).flatMap((plugin) => plugin.sourceImport ?? []);
+}
+
+export function getSourceImportOptions(
+  capabilities?: RuntimeCapabilities
+): SourceImportOptionContribution[] {
+  const optionsById = new Map<SourceImportOptionId, SourceImportOptionContribution>();
+  for (const contribution of getSourceImportContributions(capabilities)) {
+    for (const option of contribution.options) {
+      if (!optionsById.has(option.id)) {
+        optionsById.set(option.id, option);
+      }
+    }
+  }
+
+  return Array.from(optionsById.values()).sort((left, right) => left.order - right.order);
 }
 
 function compareByOrder<T extends { order: number }>(a: T, b: T): number {

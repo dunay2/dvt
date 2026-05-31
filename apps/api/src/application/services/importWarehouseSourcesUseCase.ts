@@ -29,7 +29,12 @@ import {
   WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
 } from '../ports/workspaceGraphDraft.js';
 
-import { buildWarehouseSourceYamlUpdates } from './warehouseSourceYaml.js';
+import {
+  InvalidWarehouseSourceYamlError,
+  buildWarehouseSourceYamlPath,
+  buildWarehouseSourceYamlUpdates,
+  type WarehouseSourceYamlUpdate,
+} from './warehouseSourceYaml.js';
 
 export class ImportWarehouseSourcesUseCase {
   public constructor(
@@ -68,14 +73,25 @@ export class ImportWarehouseSourcesUseCase {
       tables: authoritativeTables,
     });
     const existingSourceFiles = await this.readExistingSourceFiles(mutation.yamlFiles);
-    const sourceYamlUpdates = buildWarehouseSourceYamlUpdates({
-      tables: authoritativeTables,
-      groupingStrategy: input.groupingStrategy,
-      includeColumns: input.includeColumns,
-      addTests: input.addTests,
-      addFreshness: input.addFreshness,
-      existingFiles: existingSourceFiles,
-    });
+    let sourceYamlUpdates: readonly WarehouseSourceYamlUpdate[];
+    try {
+      sourceYamlUpdates = buildWarehouseSourceYamlUpdates({
+        tables: authoritativeTables,
+        groupingStrategy: input.groupingStrategy,
+        includeColumns: input.includeColumns,
+        addTests: input.addTests,
+        addFreshness: input.addFreshness,
+        existingFiles: existingSourceFiles,
+      });
+    } catch (error) {
+      if (error instanceof InvalidWarehouseSourceYamlError) {
+        throw new InvalidWarehouseSourceImportRequestError(
+          error.message,
+          'invalid_existing_source_yaml'
+        );
+      }
+      throw error;
+    }
     const requestHash = createHash('sha256')
       .update(JSON.stringify({ scope: input.scope, importedNodeIds: mutation.importedNodeIds }))
       .digest('hex');
@@ -147,7 +163,7 @@ function appendImportedSourceNodes(
 
   for (const table of input.tables) {
     const nodeId = toSourceNodeId(table);
-    yamlFiles.add(buildYamlFileName(table, input.groupingStrategy));
+    yamlFiles.add(buildWarehouseSourceYamlPath(table, input.groupingStrategy));
     if (existingIds.has(nodeId)) {
       continue;
     }
@@ -198,7 +214,7 @@ function toSourceNode(
     role: WORKSPACE_GRAPH_AUTHORING_NODE_ROLE.input,
     status: WORKSPACE_GRAPH_AUTHORING_NODE_STATUS.idle,
     tags: ['source', schema],
-    path: buildYamlFileName(table, groupingStrategy),
+    path: buildWarehouseSourceYamlPath(table, groupingStrategy),
     description: `Imported source for ${table.database}.${table.schema}.${table.table}`,
     metadata: {
       sourceName: schema,
@@ -238,10 +254,4 @@ function sameTable(left: WarehouseTable, right: WarehouseTable): boolean {
 
 function toSourceNodeId(table: WarehouseTable): string {
   return `src_${table.schema.toLowerCase()}_${table.table.toLowerCase()}`;
-}
-
-function buildYamlFileName(table: WarehouseTable, groupingStrategy: SourceImportGrouping): string {
-  const groupKey =
-    groupingStrategy === 'database' ? table.database.toLowerCase() : table.schema.toLowerCase();
-  return `models/sources/src_${groupKey}.yml`;
 }
