@@ -931,7 +931,7 @@ visualización tabular **para** entender quién puede hacer qué de un vistazo.
 
 **Prioridad:** P1
 
-### S11.4 — Audit log con búsqueda `[Implementado]`
+### S11.4 — Audit log con búsqueda `[Gap — backend audit log pendiente]`
 
 **Como** PA **quiero** buscar en el audit log por actor, acción o rango
 temporal **para** investigar incidentes post-mortem.
@@ -946,6 +946,12 @@ temporal **para** investigar incidentes post-mortem.
   no tiene resultados".
 
 **Prioridad:** P1
+
+**Estado:** La UI contiene la pestaña y el filtro local, pero el adapter API
+mantiene `ListAdminAuditLog` como capacidad no soportada y `useAdminViewData()`
+solo puede filtrar una colección vacía cuando no hay read model real. No debe
+contar como implementado hasta que exista un rail de audit log que devuelva
+eventos administrativos reales.
 
 ### S11.5 — Navegación entre tabs por URL `[Implementado]`
 
