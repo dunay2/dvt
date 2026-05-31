@@ -10,6 +10,7 @@ import type {
   IWorkspacePluginCatalogQueryPort,
 } from '../../ports/workspace';
 import { type ApiClient, createApiClient } from '../api/createApiClient';
+import { createApiWorkspacePluginCatalogQueryPort } from './workspacePluginCatalog.api';
 import {
   apiWorkspacePortCapabilities,
   createApiWarehouseSourceImportPort,
@@ -19,7 +20,6 @@ import {
   createApiWorkspaceFileHistoryQueryPort,
   createApiWorkspaceFilesQueryPort,
   createApiWorkspaceGraphSnapshotQueryPort,
-  createApiWorkspacePluginCatalogQueryPort,
 } from './workspacePorts.api';
 
 export type {
@@ -59,7 +59,7 @@ export function createWorkspacePorts(apiClient: ApiClient = createApiClient()): 
     workspaceFilesQuery: createApiWorkspaceFilesQueryPort(apiClient),
     workspaceFileHistoryQuery: createApiWorkspaceFileHistoryQueryPort(apiClient),
     workspaceDiffQuery: createApiWorkspaceDiffQueryPort(apiClient),
-    workspacePluginCatalogQuery: createApiWorkspacePluginCatalogQueryPort(),
+    workspacePluginCatalogQuery: createApiWorkspacePluginCatalogQueryPort(apiClient),
     workspaceAdminRead: createApiWorkspaceAdminReadPort(),
     warehouseSourceImport: createApiWarehouseSourceImportPort(apiClient),
     workspaceFileContentCommand: createApiWorkspaceFileContentCommandPort(apiClient),
