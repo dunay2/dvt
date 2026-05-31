@@ -388,6 +388,12 @@ symbols:
     name: BuildWarehouseSourceYamlUpdatesInput
     path: apps/api/src/application/services/warehouseSourceYaml.ts
   - <<: *api_symbol
+    name: WarehouseSourceYamlBinding
+    path: apps/api/src/application/services/warehouseSourceYaml.ts
+  - <<: *api_symbol
+    name: BuildWarehouseSourceYamlBindingsInput
+    path: apps/api/src/application/services/warehouseSourceYaml.ts
+  - <<: *api_symbol
     name: InvalidWarehouseSourceImportRequestError
     path: apps/api/src/application/ports/warehouseSourceImport.ts
   - <<: *api_symbol
@@ -397,6 +403,9 @@ symbols:
     name: buildWarehouseSourceYamlUpdates
     path: apps/api/src/application/services/warehouseSourceYaml.ts
   - <<: *api_symbol
+    name: buildWarehouseSourceYamlBindings
+    path: apps/api/src/application/services/warehouseSourceYaml.ts
+  - <<: *api_symbol
     name: readExistingSourceDocument
     path: apps/api/src/application/services/warehouseSourceYaml.ts
   - <<: *api_symbol
@@ -404,6 +413,18 @@ symbols:
     path: apps/api/src/application/services/warehouseSourceYaml.ts
   - <<: *api_symbol
     name: groupTablesForYaml
+    path: apps/api/src/application/services/warehouseSourceYaml.ts
+  - <<: *api_symbol
+    name: buildSourceTableDatabaseIndex
+    path: apps/api/src/application/services/warehouseSourceYaml.ts
+  - <<: *api_symbol
+    name: findExistingSourceNameForTable
+    path: apps/api/src/application/services/warehouseSourceYaml.ts
+  - <<: *api_symbol
+    name: tableIdentity
+    path: apps/api/src/application/services/warehouseSourceYaml.ts
+  - <<: *api_symbol
+    name: sourceTableIdentity
     path: apps/api/src/application/services/warehouseSourceYaml.ts
   - <<: *api_symbol
     name: upsertSourceTable
@@ -438,6 +459,9 @@ symbols:
   - <<: *api_symbol
     name: isRecord
     path: apps/api/src/application/services/warehouseSourceYaml.ts
+  - <<: *api_symbol
+    name: toSourceTableKey
+    path: apps/api/src/application/services/importWarehouseSourcesUseCase.ts
   - <<: *api_symbol
     name: TestWarehouseConnectionCatalog
     path: apps/api/test/entrypoints/http/warehouseSourceImportRoutes.test.ts

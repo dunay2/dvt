@@ -31,8 +31,10 @@ import {
 
 import {
   InvalidWarehouseSourceYamlError,
+  buildWarehouseSourceYamlBindings,
   buildWarehouseSourceYamlPath,
   buildWarehouseSourceYamlUpdates,
+  type WarehouseSourceYamlBinding,
   type WarehouseSourceYamlUpdate,
 } from './warehouseSourceYaml.js';
 
@@ -68,13 +70,22 @@ export class ImportWarehouseSourcesUseCase {
       stored === null
         ? createInitialDraft(input.scope.environmentId)
         : WorkspaceGraphAuthoringDraftSchema.parse(stored.draftPayload);
-    const mutation = appendImportedSourceNodes(draft, {
-      ...input,
-      tables: authoritativeTables,
-    });
-    const existingSourceFiles = await this.readExistingSourceFiles(mutation.yamlFiles);
+    const yamlFiles = Array.from(
+      new Set(
+        authoritativeTables.map((table) =>
+          buildWarehouseSourceYamlPath(table, input.groupingStrategy)
+        )
+      )
+    );
+    const existingSourceFiles = await this.readExistingSourceFiles(yamlFiles);
+    let sourceYamlBindings: ReadonlyMap<string, WarehouseSourceYamlBinding>;
     let sourceYamlUpdates: readonly WarehouseSourceYamlUpdate[];
     try {
+      sourceYamlBindings = buildWarehouseSourceYamlBindings({
+        tables: authoritativeTables,
+        groupingStrategy: input.groupingStrategy,
+        existingFiles: existingSourceFiles,
+      });
       sourceYamlUpdates = buildWarehouseSourceYamlUpdates({
         tables: authoritativeTables,
         groupingStrategy: input.groupingStrategy,
@@ -92,6 +103,14 @@ export class ImportWarehouseSourcesUseCase {
       }
       throw error;
     }
+    const mutation = appendImportedSourceNodes(
+      draft,
+      {
+        ...input,
+        tables: authoritativeTables,
+      },
+      sourceYamlBindings
+    );
     const requestHash = createHash('sha256')
       .update(JSON.stringify({ scope: input.scope, importedNodeIds: mutation.importedNodeIds }))
       .digest('hex');
@@ -149,7 +168,8 @@ export class ImportWarehouseSourcesUseCase {
 
 function appendImportedSourceNodes(
   draft: WorkspaceGraphAuthoringDraft,
-  input: ImportWarehouseSourcesInput
+  input: ImportWarehouseSourcesInput,
+  sourceYamlBindings: ReadonlyMap<string, WarehouseSourceYamlBinding>
 ): {
   readonly draft: WorkspaceGraphAuthoringDraft;
   readonly importedNodeIds: readonly string[];
@@ -170,7 +190,14 @@ function appendImportedSourceNodes(
 
     existingIds.add(nodeId);
     importedNodeIds.push(nodeId);
-    importedNodes.push(toSourceNode(table, input.groupingStrategy, input.includeColumns));
+    importedNodes.push(
+      toSourceNode(
+        table,
+        input.groupingStrategy,
+        input.includeColumns,
+        sourceYamlBindings.get(toSourceTableKey(table))
+      )
+    );
     nextPositions[nodeId] = { x: 80 + importedNodeIds.length * 40, y: 120 };
   }
 
@@ -201,10 +228,11 @@ function appendImportedSourceNodes(
 function toSourceNode(
   table: WarehouseTable,
   groupingStrategy: SourceImportGrouping,
-  includeColumns: boolean
+  includeColumns: boolean,
+  sourceYamlBinding: WarehouseSourceYamlBinding | undefined
 ): WorkspaceGraphAuthoringNode {
   const schema = table.schema.toLowerCase();
-  const tableName = table.table.toLowerCase();
+  const tableName = sourceYamlBinding?.tableName ?? table.table.toLowerCase();
 
   return {
     id: toSourceNodeId(table),
@@ -214,10 +242,10 @@ function toSourceNode(
     role: WORKSPACE_GRAPH_AUTHORING_NODE_ROLE.input,
     status: WORKSPACE_GRAPH_AUTHORING_NODE_STATUS.idle,
     tags: ['source', schema],
-    path: buildWarehouseSourceYamlPath(table, groupingStrategy),
+    path: sourceYamlBinding?.path ?? buildWarehouseSourceYamlPath(table, groupingStrategy),
     description: `Imported source for ${table.database}.${table.schema}.${table.table}`,
     metadata: {
-      sourceName: schema,
+      sourceName: sourceYamlBinding?.sourceName ?? schema,
       tableName,
       database: table.database,
       schema: table.schema,
@@ -259,4 +287,12 @@ function toSourceNodeId(table: WarehouseTable): string {
     table.schema.toLowerCase(),
     table.table.toLowerCase(),
   ].join('_');
+}
+
+function toSourceTableKey(table: WarehouseTable): string {
+  return JSON.stringify([
+    table.database.toLowerCase(),
+    table.schema.toLowerCase(),
+    table.table.toLowerCase(),
+  ]);
 }

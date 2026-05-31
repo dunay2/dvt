@@ -207,4 +207,67 @@ describe('warehouse source YAML builder', () => {
     expect(content).toContain('description: Stable order id');
     expect(content).toContain('- name: customers');
   });
+
+  it('updates existing disambiguated source names when re-importing one side of a database collision', () => {
+    const updates = buildWarehouseSourceYamlUpdates({
+      existingFiles: new Map([
+        [
+          'models/sources/src_erp.yml',
+          [
+            'version: 2',
+            '',
+            'sources:',
+            '  - name: analytics_erp',
+            '    database: analytics',
+            '    schema: erp',
+            '    tables:',
+            '      - name: orders',
+            '  - name: finance_erp',
+            '    database: finance',
+            '    schema: erp',
+            '    tables:',
+            '      - name: orders',
+            '',
+          ].join('\n'),
+        ],
+      ]),
+      groupingStrategy: 'schema',
+      includeColumns: true,
+      addTests: false,
+      addFreshness: false,
+      tables: [
+        {
+          database: 'finance',
+          schema: 'erp',
+          table: 'orders',
+          columns: [{ name: 'id', type: 'number', nullable: false }],
+        },
+      ],
+    });
+
+    expect(updates).toEqual([
+      {
+        path: 'models/sources/src_erp.yml',
+        content: [
+          'version: 2',
+          '',
+          'sources:',
+          '  - name: analytics_erp',
+          '    database: analytics',
+          '    schema: erp',
+          '    tables:',
+          '      - name: orders',
+          '  - name: finance_erp',
+          '    database: finance',
+          '    schema: erp',
+          '    tables:',
+          '      - name: orders',
+          '        columns:',
+          '          - name: id',
+          '            data_type: number',
+          '',
+        ].join('\n'),
+      },
+    ]);
+  });
 });

@@ -397,8 +397,8 @@ describe('warehouseSourceImportRoutes', () => {
     });
   });
 
-  it('keeps schema-grouped YAML sources distinct when database names disambiguate nodes', async () => {
-    const { app, workspaceFiles } = buildApp({
+  it('keeps schema-grouped YAML sources and imported node metadata distinct when database names disambiguate nodes', async () => {
+    const { app, draftStore, workspaceFiles } = buildApp({
       catalogEntries: [
         {
           id: 'warehouse-prod',
@@ -472,6 +472,28 @@ describe('warehouseSourceImportRoutes', () => {
         '            data_type: number',
         '',
       ].join('\n')
+    );
+    expect(draftStore.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        draft: expect.objectContaining({
+          nodes: expect.arrayContaining([
+            expect.objectContaining({
+              id: 'src_analytics_erp_orders',
+              metadata: expect.objectContaining({
+                sourceName: 'analytics_erp',
+                tableName: 'orders',
+              }),
+            }),
+            expect.objectContaining({
+              id: 'src_finance_erp_orders',
+              metadata: expect.objectContaining({
+                sourceName: 'finance_erp',
+                tableName: 'orders',
+              }),
+            }),
+          ]),
+        }),
+      })
     );
   });
 

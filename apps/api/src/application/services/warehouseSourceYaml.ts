@@ -92,6 +92,18 @@ export type WarehouseSourceYamlUpdate = {
   readonly content: string;
 };
 
+export type WarehouseSourceYamlBinding = {
+  readonly path: string;
+  readonly sourceName: string;
+  readonly tableName: string;
+};
+
+export type BuildWarehouseSourceYamlBindingsInput = {
+  readonly tables: readonly WarehouseTable[];
+  readonly groupingStrategy: SourceImportGrouping;
+  readonly existingFiles: ReadonlyMap<string, string>;
+};
+
 export type BuildWarehouseSourceYamlUpdatesInput = {
   readonly tables: readonly WarehouseTable[];
   readonly groupingStrategy: SourceImportGrouping;
@@ -105,38 +117,11 @@ export function buildWarehouseSourceYamlUpdates(
   input: BuildWarehouseSourceYamlUpdatesInput
 ): readonly WarehouseSourceYamlUpdate[] {
   const tablesByPath = groupTablesForYaml(input.tables, input.groupingStrategy);
+  const bindings = buildWarehouseSourceYamlBindings(input);
   return Array.from(tablesByPath.entries())
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([path, tables]) => {
       const existingDocument = readExistingSourceDocument(input.existingFiles.get(path));
-      const databasesBySourceTable = new Map<string, Set<string>>();
-      const tableSourceNameKeys = new Map<string, string>();
-      const tableIdentity = (table: WarehouseTable): string =>
-        JSON.stringify([
-          table.database.toLowerCase(),
-          table.schema.toLowerCase(),
-          table.table.toLowerCase(),
-        ]);
-      const sourceTableIdentity = (table: WarehouseTable): string =>
-        JSON.stringify([table.schema.toLowerCase(), table.table.toLowerCase()]);
-
-      for (const table of tables) {
-        const sourceTableKey = sourceTableIdentity(table);
-        const databases = databasesBySourceTable.get(sourceTableKey) ?? new Set<string>();
-        databases.add(table.database.toLowerCase());
-        databasesBySourceTable.set(sourceTableKey, databases);
-      }
-
-      for (const table of tables) {
-        const collidesAcrossDatabases =
-          (databasesBySourceTable.get(sourceTableIdentity(table))?.size ?? 0) > 1;
-        tableSourceNameKeys.set(
-          tableIdentity(table),
-          collidesAcrossDatabases
-            ? `${table.database.toLowerCase()}_${table.schema.toLowerCase()}`
-            : DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.sourceNameForTable(table)
-        );
-      }
 
       const nextDocument = tables.reduce(
         (document, table) =>
@@ -145,13 +130,43 @@ export function buildWarehouseSourceYamlUpdates(
             addTests: input.addTests,
             addFreshness: input.addFreshness,
             sourceName:
-              tableSourceNameKeys.get(tableIdentity(table)) ??
+              bindings.get(tableIdentity(table))?.sourceName ??
               DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.sourceNameForTable(table),
           }),
         existingDocument
       );
       return { path, content: serializeSourceDocument(nextDocument) };
     });
+}
+
+export function buildWarehouseSourceYamlBindings(
+  input: BuildWarehouseSourceYamlBindingsInput
+): ReadonlyMap<string, WarehouseSourceYamlBinding> {
+  const tablesByPath = groupTablesForYaml(input.tables, input.groupingStrategy);
+  const bindings = new Map<string, WarehouseSourceYamlBinding>();
+
+  for (const [path, tables] of tablesByPath.entries()) {
+    const existingDocument = readExistingSourceDocument(input.existingFiles.get(path));
+    const databasesBySourceTable = buildSourceTableDatabaseIndex(existingDocument, tables);
+
+    for (const table of tables) {
+      const tableName = DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.tableNameForTable(table);
+      const existingSourceName = findExistingSourceNameForTable(existingDocument, table);
+      const collidesAcrossDatabases =
+        (databasesBySourceTable.get(sourceTableIdentity(table))?.size ?? 0) > 1;
+      bindings.set(tableIdentity(table), {
+        path,
+        sourceName:
+          existingSourceName ??
+          (collidesAcrossDatabases
+            ? `${table.database.toLowerCase()}_${table.schema.toLowerCase()}`
+            : DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.sourceNameForTable(table)),
+        tableName,
+      });
+    }
+  }
+
+  return bindings;
 }
 
 export function readExistingSourceDocument(content: string | undefined): SourceYamlDocument {
@@ -225,6 +240,63 @@ export function groupTablesForYaml(
     grouped.set(path, group);
   }
   return grouped;
+}
+
+function buildSourceTableDatabaseIndex(
+  existingDocument: SourceYamlDocument,
+  tables: readonly WarehouseTable[]
+): ReadonlyMap<string, ReadonlySet<string>> {
+  const databasesBySourceTable = new Map<string, Set<string>>();
+  const addDatabase = (sourceTableKey: string, database: string): void => {
+    const databases = databasesBySourceTable.get(sourceTableKey) ?? new Set<string>();
+    databases.add(database.toLowerCase());
+    databasesBySourceTable.set(sourceTableKey, databases);
+  };
+
+  for (const source of existingDocument.sources) {
+    if (source.database === undefined || source.schema === undefined) {
+      continue;
+    }
+    for (const table of source.tables) {
+      addDatabase(
+        JSON.stringify([source.schema.toLowerCase(), table.name.toLowerCase()]),
+        source.database
+      );
+    }
+  }
+
+  for (const table of tables) {
+    addDatabase(sourceTableIdentity(table), table.database);
+  }
+
+  return databasesBySourceTable;
+}
+
+function findExistingSourceNameForTable(
+  document: SourceYamlDocument,
+  table: WarehouseTable
+): string | undefined {
+  const database = table.database.toLowerCase();
+  const schema = table.schema.toLowerCase();
+  const matchingSource = document.sources.find((source) => {
+    return source.database?.toLowerCase() === database && source.schema?.toLowerCase() === schema;
+  });
+  return matchingSource?.name;
+}
+
+function tableIdentity(table: WarehouseTable): string {
+  return JSON.stringify([
+    table.database.toLowerCase(),
+    table.schema.toLowerCase(),
+    table.table.toLowerCase(),
+  ]);
+}
+
+function sourceTableIdentity(table: WarehouseTable): string {
+  return JSON.stringify([
+    table.schema.toLowerCase(),
+    DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.tableNameForTable(table),
+  ]);
 }
 
 export function upsertSourceTable(
