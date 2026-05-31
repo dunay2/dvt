@@ -129,6 +129,13 @@ allowedImplementationSurfaces:
   - apps/api/src/application/ports/warehouseSourceImport.ts
   - apps/api/src/application/services/importWarehouseSourcesUseCase.ts
   - apps/api/src/application/services/warehouseSourceYaml.ts
+  - apps/api/src/application/services/warehouseSourceYamlBindings.ts
+  - apps/api/src/application/services/warehouseSourceYamlDescriptor.ts
+  - apps/api/src/application/services/warehouseSourceYamlDocument.ts
+  - apps/api/src/application/services/warehouseSourceYamlIdentity.ts
+  - apps/api/src/application/services/warehouseSourceYamlMerge.ts
+  - apps/api/src/application/services/warehouseSourceYamlSerializer.ts
+  - apps/api/src/application/services/warehouseSourceYamlTypes.ts
   - apps/api/src/entrypoints/http/warehouseSourceImportRouteGroup.ts
   - apps/api/src/entrypoints/http/warehouseSourceImportRoutes.ts
   - apps/api/src/entrypoints/http/httpErrorReasonCatalog.ts
@@ -432,6 +439,114 @@ symbols:
   - <<: *api_symbol
     name: isRetiredSourceNameForTable
     path: apps/api/src/application/services/warehouseSourceYaml.ts
+  - <<: *api_symbol
+    name: SourceYamlMetadata
+    path: apps/api/src/application/services/warehouseSourceYamlTypes.ts
+  - <<: *api_symbol
+    name: SourceYamlColumn
+    path: apps/api/src/application/services/warehouseSourceYamlTypes.ts
+  - <<: *api_symbol
+    name: SourceYamlTable
+    path: apps/api/src/application/services/warehouseSourceYamlTypes.ts
+  - <<: *api_symbol
+    name: GeneratedSourceYamlFreshness
+    path: apps/api/src/application/services/warehouseSourceYamlTypes.ts
+  - <<: *api_symbol
+    name: SourceYamlFreshness
+    path: apps/api/src/application/services/warehouseSourceYamlTypes.ts
+  - <<: *api_symbol
+    name: SourceYamlSource
+    path: apps/api/src/application/services/warehouseSourceYamlTypes.ts
+  - <<: *api_symbol
+    name: SourceYamlDocument
+    path: apps/api/src/application/services/warehouseSourceYamlTypes.ts
+  - <<: *api_symbol
+    name: WarehouseSourceYamlArtifactDescriptor
+    path: apps/api/src/application/services/warehouseSourceYamlTypes.ts
+  - <<: *api_symbol
+    name: InvalidWarehouseSourceYamlError
+    path: apps/api/src/application/services/warehouseSourceYamlTypes.ts
+  - <<: *api_symbol
+    name: WarehouseSourceYamlUpdate
+    path: apps/api/src/application/services/warehouseSourceYamlTypes.ts
+  - <<: *api_symbol
+    name: BuildWarehouseSourceYamlUpdatesInput
+    path: apps/api/src/application/services/warehouseSourceYamlTypes.ts
+  - <<: *api_symbol
+    name: WarehouseSourceYamlBinding
+    path: apps/api/src/application/services/warehouseSourceYamlTypes.ts
+  - <<: *api_symbol
+    name: BuildWarehouseSourceYamlBindingsInput
+    path: apps/api/src/application/services/warehouseSourceYamlTypes.ts
+  - <<: *api_symbol
+    name: DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR
+    path: apps/api/src/application/services/warehouseSourceYamlDescriptor.ts
+  - <<: *api_symbol
+    name: buildWarehouseSourceYamlPath
+    path: apps/api/src/application/services/warehouseSourceYamlDescriptor.ts
+  - <<: *api_symbol
+    name: groupTablesForYaml
+    path: apps/api/src/application/services/warehouseSourceYamlDescriptor.ts
+  - <<: *api_symbol
+    name: toStableYamlIdentifierPart
+    path: apps/api/src/application/services/warehouseSourceYamlDescriptor.ts
+  - <<: *api_symbol
+    name: readExistingSourceDocument
+    path: apps/api/src/application/services/warehouseSourceYamlDocument.ts
+  - <<: *api_symbol
+    name: readExistingColumns
+    path: apps/api/src/application/services/warehouseSourceYamlDocument.ts
+  - <<: *api_symbol
+    name: readYamlMetadata
+    path: apps/api/src/application/services/warehouseSourceYamlDocument.ts
+  - <<: *api_symbol
+    name: isRecord
+    path: apps/api/src/application/services/warehouseSourceYamlDocument.ts
+  - <<: *api_symbol
+    name: tableIdentity
+    path: apps/api/src/application/services/warehouseSourceYamlIdentity.ts
+  - <<: *api_symbol
+    name: sourceTableIdentity
+    path: apps/api/src/application/services/warehouseSourceYamlIdentity.ts
+  - <<: *api_symbol
+    name: buildCanonicalSourceName
+    path: apps/api/src/application/services/warehouseSourceYamlIdentity.ts
+  - <<: *api_symbol
+    name: isRetiredSourceNameForTable
+    path: apps/api/src/application/services/warehouseSourceYamlIdentity.ts
+  - <<: *api_symbol
+    name: buildWarehouseSourceYamlBindings
+    path: apps/api/src/application/services/warehouseSourceYamlBindings.ts
+  - <<: *api_symbol
+    name: buildSourceTableDatabaseIndex
+    path: apps/api/src/application/services/warehouseSourceYamlBindings.ts
+  - <<: *api_symbol
+    name: findExistingSourceNameForTable
+    path: apps/api/src/application/services/warehouseSourceYamlBindings.ts
+  - <<: *api_symbol
+    name: upsertSourceTable
+    path: apps/api/src/application/services/warehouseSourceYamlMerge.ts
+  - <<: *api_symbol
+    name: buildColumns
+    path: apps/api/src/application/services/warehouseSourceYamlMerge.ts
+  - <<: *api_symbol
+    name: mergeColumns
+    path: apps/api/src/application/services/warehouseSourceYamlMerge.ts
+  - <<: *api_symbol
+    name: mergeYamlArrays
+    path: apps/api/src/application/services/warehouseSourceYamlMerge.ts
+  - <<: *api_symbol
+    name: serializeSourceDocument
+    path: apps/api/src/application/services/warehouseSourceYamlSerializer.ts
+  - <<: *api_symbol
+    name: appendYamlMetadata
+    path: apps/api/src/application/services/warehouseSourceYamlSerializer.ts
+  - <<: *api_symbol
+    name: appendYamlEntry
+    path: apps/api/src/application/services/warehouseSourceYamlSerializer.ts
+  - <<: *api_symbol
+    name: isGeneratedFreshness
+    path: apps/api/src/application/services/warehouseSourceYamlSerializer.ts
   - <<: *api_symbol
     name: upsertSourceTable
     path: apps/api/src/application/services/warehouseSourceYaml.ts
