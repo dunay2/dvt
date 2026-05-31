@@ -24,6 +24,7 @@ import { createPlansService } from '../plans/plansService';
 import { createRunsService } from '../runs/runsService';
 import { createSessionContextPort } from '../session/sessionContextPort';
 import { createApiWorkspaceGraphDraftAuthoringPort } from '../workspace/workspaceGraphDraftAuthoring.api';
+import { createApiWorkspacePluginCatalogQueryPort } from '../workspace/workspacePluginCatalog.api';
 import { createWorkspacePorts } from '../workspace/workspacePorts';
 
 export interface AppServices {
@@ -76,7 +77,7 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     overrides.workspaceFileHistoryQuery ?? workspacePorts.workspaceFileHistoryQuery;
   const workspaceDiffQuery = overrides.workspaceDiffQuery ?? workspacePorts.workspaceDiffQuery;
   const workspacePluginCatalogQuery =
-    overrides.workspacePluginCatalogQuery ?? workspacePorts.workspacePluginCatalogQuery;
+    overrides.workspacePluginCatalogQuery ?? createApiWorkspacePluginCatalogQueryPort(apiClient);
   const workspaceAdminRead = overrides.workspaceAdminRead ?? workspacePorts.workspaceAdminRead;
   const warehouseSourceImport =
     overrides.warehouseSourceImport ?? workspacePorts.warehouseSourceImport;
