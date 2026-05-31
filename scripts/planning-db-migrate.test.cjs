@@ -892,6 +892,73 @@ test('tracked migrations derive component quality from effective file ownership 
   assert.match(effectiveQualityMigration.sql, /component_engineering\.component_quality_query/);
 });
 
+test('tracked migrations normalize local component metadata after W48', () => {
+  const migrations = readMigrationFiles();
+  const relationalComponentMetadataMigration = migrations.find(
+    (migration) => migration.fileName === '048_component_definition_relational_metadata.sql'
+  );
+
+  assert.ok(relationalComponentMetadataMigration);
+  assert.match(
+    relationalComponentMetadataMigration.sql,
+    /create table if not exists planning_query_store\.governance_component_local_ownership_patterns/
+  );
+  assert.match(
+    relationalComponentMetadataMigration.sql,
+    /create table if not exists planning_query_store\.governance_component_local_semantic_items/
+  );
+  assert.match(
+    relationalComponentMetadataMigration.sql,
+    /primary key \(component_id, pattern_kind, pattern\)/
+  );
+  assert.match(
+    relationalComponentMetadataMigration.sql,
+    /primary key \(component_id, item_kind, item_value\)/
+  );
+  assert.match(
+    relationalComponentMetadataMigration.sql,
+    /governance_component_local_ownership_patterns_component_kind_order_idx/
+  );
+  assert.match(
+    relationalComponentMetadataMigration.sql,
+    /governance_component_local_semantic_items_component_kind_order_idx/
+  );
+  assert.match(
+    relationalComponentMetadataMigration.sql,
+    /from planning_query_store\.governance_component_local_ownership_patterns/
+  );
+  assert.doesNotMatch(
+    relationalComponentMetadataMigration.sql,
+    /jsonb_array_elements_text\(local_component\.owns\)/
+  );
+  assert.match(
+    relationalComponentMetadataMigration.sql,
+    /from planning_query_store\.governance_component_definition_query definition/
+  );
+});
+
+test('tracked migrations remove legacy local component JSONB storage after W49', () => {
+  const migrations = readMigrationFiles();
+  const localComponentJsonbRemovalMigration = migrations.find(
+    (migration) => migration.fileName === '049_component_definition_drop_local_jsonb_storage.sql'
+  );
+
+  assert.ok(localComponentJsonbRemovalMigration);
+  assert.match(
+    localComponentJsonbRemovalMigration.sql,
+    /create or replace view planning_query_store\.governance_component_local_metadata_query/
+  );
+  assert.match(
+    localComponentJsonbRemovalMigration.sql,
+    /create or replace view planning_query_store\.governance_unit_query/
+  );
+  assert.match(localComponentJsonbRemovalMigration.sql, /drop column if exists owns/);
+  assert.match(localComponentJsonbRemovalMigration.sql, /drop column if exists public_api/);
+  assert.match(localComponentJsonbRemovalMigration.sql, /drop column if exists raw_unit/);
+  assert.doesNotMatch(localComponentJsonbRemovalMigration.sql, /local_definition\.raw_unit/);
+  assert.doesNotMatch(localComponentJsonbRemovalMigration.sql, /local_definition\.owns/);
+});
+
 test('tracked migrations route claimed active work and clean queued work into next tasks', () => {
   const migrations = readMigrationFiles();
   const nextTaskClaimMigration = migrations.find(

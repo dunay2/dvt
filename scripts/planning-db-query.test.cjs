@@ -1606,7 +1606,7 @@ test('buildGovernanceFileRows formats DB-owned governance file rows', () => {
   ]);
 });
 
-test('readGovernanceFileRows queries the DB governance file view', async () => {
+test('readGovernanceFileRows queries effective DB file ownership', async () => {
   const captured = { sql: '', params: null };
   const client = {
     async query(sql, params) {
@@ -1623,11 +1623,11 @@ test('readGovernanceFileRows queries the DB governance file view', async () => {
     limit: 5,
   });
 
-  assert.match(captured.sql, /from planning_query_store\.governance_file_query/);
+  assert.match(captured.sql, /from component_engineering\.file_ownership_query/);
   assert.doesNotMatch(captured.sql, /system-governance-file-index\.files\.yaml/);
-  assert.match(captured.sql, /component_unit = \$1/);
+  assert.match(captured.sql, /leaf_component_id = \$1/);
   assert.match(captured.sql, /governance_state = \$2/);
-  assert.match(captured.sql, /path = \$3/);
+  assert.match(captured.sql, /file_path = \$3/);
   assert.match(captured.sql, /limit \$4/);
   assert.deepEqual(captured.params, [
     'SYS-DOCS-GOVERNANCE',

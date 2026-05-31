@@ -3650,6 +3650,9 @@ symbols:
     name: appendGovernanceFileFilters
     path: scripts/planning-db-query.cjs
   - <<: *governanceDbQuerySurfaceSymbol
+    name: appendGovernanceDriftFilters
+    path: scripts/planning-db-query.cjs
+  - <<: *governanceDbQuerySurfaceSymbol
     name: appendGovernanceComponentFilters
     path: scripts/planning-db-query.cjs
   - <<: *governanceDbQuerySurfaceSymbol
