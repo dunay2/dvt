@@ -35,6 +35,8 @@
     "test:canvas-architecture:run": "vitest run --config vitest.canvas-architecture.config.ts",
     "test:monaco": "pnpm run test:deps && pnpm run test:monaco:run",
     "test:monaco:run": "vitest run --config vitest.monaco.config.ts",
+    "test:workspace-services": "pnpm run test:deps && pnpm run test:workspace-services:run",
+    "test:workspace-services:run": "vitest run --config vitest.workspace-services.config.ts",
     "test:changed": "pnpm exec tsx scripts/run-vitest-changed-suites.ts",
     "test:ci": "pnpm run test:deps && pnpm run test:unit:run && pnpm run test:presentation:run && pnpm run test:architecture:run",
     "test:watch": "vitest --config vitest.config.ts"
