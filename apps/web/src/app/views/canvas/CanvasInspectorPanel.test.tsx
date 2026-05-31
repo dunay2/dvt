@@ -20,6 +20,22 @@ function buildNode(): CanonicalNode {
   };
 }
 
+function buildDvtNode(
+  kind: 'dvt:source' | 'dvt:sql_transform' | 'dvt:sink',
+  metadata?: Record<string, unknown>
+): CanonicalNode {
+  return {
+    id: `dvt-${kind.replace('dvt:', '').replace('_', '-')}`,
+    name: kind === 'dvt:sql_transform' ? 'Clean Orders' : 'Orders',
+    pluginId: 'dvt',
+    kind,
+    role: kind === 'dvt:source' ? 'input' : kind === 'dvt:sink' ? 'output' : 'transform',
+    status: 'idle',
+    tags: ['authoring'],
+    metadata,
+  };
+}
+
 function buildDbtSourceNode(id: string, name: string, sourceName: string): CanonicalNode {
   return {
     id,
@@ -131,6 +147,12 @@ describe('CanvasInspectorPanel', () => {
     expect(onApplyNodeDraft).toHaveBeenCalledWith({
       name: 'orders_source_v2',
       description: 'Orders source table',
+      dvt: {
+        kind: 'source',
+        schema: 'public',
+        table: 'orders_source',
+        alias: 'orders_source',
+      },
     });
   });
 
@@ -420,6 +442,216 @@ describe('CanvasInspectorPanel', () => {
           materialized: 'table',
           selectedSourceId: sourceB.id,
         }),
+      })
+    );
+  });
+
+  it('lets DVT source nodes configure source schema, table, and alias before preview', async () => {
+    const onApplyNodeDraft = vi.fn();
+    const sourceNode = buildDvtNode('dvt:source', {
+      config: {
+        schema: 'public',
+        table: 'orders',
+        alias: 'orders_raw',
+      },
+    });
+
+    await act(async () => {
+      root.render(
+        <CanvasInspectorPanel
+          node={sourceNode}
+          nodes={[sourceNode]}
+          edges={[]}
+          activeRunId={null}
+          onHide={vi.fn()}
+          authoring={{
+            canEditNode: true,
+            onApplyNodeDraft,
+          }}
+        />
+      );
+    });
+
+    const schemaInput = container.querySelector(
+      'input[name="dvt-source-schema"]'
+    ) as HTMLInputElement | null;
+    const tableInput = container.querySelector(
+      'input[name="dvt-source-table"]'
+    ) as HTMLInputElement | null;
+    const aliasInput = container.querySelector(
+      'input[name="dvt-source-alias"]'
+    ) as HTMLInputElement | null;
+
+    expect(container.textContent).toContain('DVT source');
+    expect(schemaInput?.value).toBe('public');
+    expect(tableInput?.value).toBe('orders');
+    expect(aliasInput?.value).toBe('orders_raw');
+
+    await act(async () => {
+      if (schemaInput != null) {
+        const valueSetter = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype,
+          'value'
+        )?.set;
+        valueSetter?.call(schemaInput, 'analytics');
+        schemaInput.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    });
+
+    const applyButton = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Apply')
+    );
+
+    await act(async () => {
+      applyButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(onApplyNodeDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        dvt: {
+          kind: 'source',
+          schema: 'analytics',
+          table: 'orders',
+          alias: 'orders_raw',
+        },
+      })
+    );
+  });
+
+  it('lets DVT SQL transform nodes edit SQL text in the route-owned draft', async () => {
+    const onApplyNodeDraft = vi.fn();
+    const transformNode = buildDvtNode('dvt:sql_transform', {
+      config: {
+        sql: 'select * from public.orders',
+      },
+    });
+
+    await act(async () => {
+      root.render(
+        <CanvasInspectorPanel
+          node={transformNode}
+          nodes={[transformNode]}
+          edges={[]}
+          activeRunId={null}
+          onHide={vi.fn()}
+          authoring={{
+            canEditNode: true,
+            onApplyNodeDraft,
+          }}
+        />
+      );
+    });
+
+    const sqlTextarea = container.querySelector(
+      'textarea[name="dvt-transform-sql"]'
+    ) as HTMLTextAreaElement | null;
+
+    expect(container.textContent).toContain('DVT SQL transform');
+    expect(sqlTextarea?.value).toBe('select * from public.orders');
+
+    await act(async () => {
+      if (sqlTextarea != null) {
+        const valueSetter = Object.getOwnPropertyDescriptor(
+          HTMLTextAreaElement.prototype,
+          'value'
+        )?.set;
+        valueSetter?.call(sqlTextarea, 'select id from public.orders');
+        sqlTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    });
+
+    const applyButton = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Apply')
+    );
+
+    await act(async () => {
+      applyButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(onApplyNodeDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        dvt: {
+          kind: 'sql_transform',
+          sql: 'select id from public.orders',
+        },
+      })
+    );
+  });
+
+  it('lets DVT sink nodes configure materialization and write mode before preview', async () => {
+    const onApplyNodeDraft = vi.fn();
+    const sinkNode = buildDvtNode('dvt:sink', {
+      config: {
+        schema: 'marts',
+        table: 'orders_daily',
+        materialization: 'view',
+        writeMode: 'append',
+      },
+    });
+
+    await act(async () => {
+      root.render(
+        <CanvasInspectorPanel
+          node={sinkNode}
+          nodes={[sinkNode]}
+          edges={[]}
+          activeRunId={null}
+          onHide={vi.fn()}
+          authoring={{
+            canEditNode: true,
+            onApplyNodeDraft,
+          }}
+        />
+      );
+    });
+
+    const materializationSelect = container.querySelector(
+      'select[name="dvt-sink-materialization"]'
+    ) as HTMLSelectElement | null;
+    const writeModeSelect = container.querySelector(
+      'select[name="dvt-sink-write-mode"]'
+    ) as HTMLSelectElement | null;
+
+    expect(container.textContent).toContain('DVT sink');
+    expect(materializationSelect?.value).toBe('view');
+    expect(writeModeSelect?.value).toBe('append');
+
+    await act(async () => {
+      if (materializationSelect != null) {
+        const valueSetter = Object.getOwnPropertyDescriptor(
+          HTMLSelectElement.prototype,
+          'value'
+        )?.set;
+        valueSetter?.call(materializationSelect, 'table');
+        materializationSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      if (writeModeSelect != null) {
+        const valueSetter = Object.getOwnPropertyDescriptor(
+          HTMLSelectElement.prototype,
+          'value'
+        )?.set;
+        valueSetter?.call(writeModeSelect, 'replace');
+        writeModeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+
+    const applyButton = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Apply')
+    );
+
+    await act(async () => {
+      applyButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(onApplyNodeDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        dvt: {
+          kind: 'sink',
+          schema: 'marts',
+          table: 'orders_daily',
+          materialization: 'table',
+          writeMode: 'replace',
+        },
       })
     );
   });

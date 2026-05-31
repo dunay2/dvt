@@ -4,6 +4,11 @@ import {
   applyDbtNodeAuthoringMetadata,
   createDbtNodeAuthoringMetadata,
 } from './canvasDbtAuthoringModel';
+import {
+  applyDvtNodeAuthoringMetadata,
+  createDvtNodeAuthoringMetadata,
+  validateDvtNodeAuthoringMetadata,
+} from './canvasDvtAuthoringModel';
 import type {
   CanvasInspectorNodeDraft,
   CanvasInspectorNodeDraftErrors,
@@ -19,10 +24,13 @@ function normalizeNodeDescription(value: string): string | undefined {
 }
 
 export function createCanvasInspectorNodeDraft(node: CanonicalNode): CanvasInspectorNodeDraft {
+  const dvtMetadata = createDvtNodeAuthoringMetadata(node);
+
   return {
     name: node.name,
     description: node.description ?? '',
     ...(node.pluginId === 'dbt' ? { dbt: createDbtNodeAuthoringMetadata(node) } : {}),
+    ...(dvtMetadata ? { dvt: dvtMetadata } : {}),
   };
 }
 
@@ -59,6 +67,15 @@ export function validateCanvasInspectorNodeDraft(
     }
   }
 
+  if (draft.dvt) {
+    const dvtErrors = validateDvtNodeAuthoringMetadata(draft.dvt);
+    if (Object.keys(dvtErrors).length > 0) {
+      return {
+        dvt: dvtErrors,
+      };
+    }
+  }
+
   return {};
 }
 
@@ -70,7 +87,9 @@ export function hasCanvasInspectorNodeDraftChanges(
     node.name !== normalizeNodeName(draft.name) ||
     (node.description ?? undefined) !== normalizeNodeDescription(draft.description) ||
     JSON.stringify(createCanvasInspectorNodeDraft(node).dbt ?? null) !==
-      JSON.stringify(draft.dbt ?? null)
+      JSON.stringify(draft.dbt ?? null) ||
+    JSON.stringify(createCanvasInspectorNodeDraft(node).dvt ?? null) !==
+      JSON.stringify(draft.dvt ?? null)
   );
 }
 
@@ -84,5 +103,13 @@ export function applyCanvasInspectorNodeDraft(
     description: normalizeNodeDescription(draft.description),
   };
 
-  return draft.dbt ? applyDbtNodeAuthoringMetadata(baseNode, draft.dbt) : baseNode;
+  if (draft.dbt) {
+    return applyDbtNodeAuthoringMetadata(baseNode, draft.dbt);
+  }
+
+  if (draft.dvt) {
+    return applyDvtNodeAuthoringMetadata(baseNode, draft.dvt);
+  }
+
+  return baseNode;
 }
