@@ -1,4 +1,4 @@
-/** Owned concern: render the Cost route workbench from run cost read models. */
+/** Owned concern: render the Cost route workbench from protected runtime cost attribution read models. */
 import { DollarSign } from 'lucide-react';
 
 import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
@@ -17,12 +17,11 @@ import { CostDriverList } from './cost/CostDriverList';
 import { CostStatGrid } from './cost/CostStatGrid';
 import { resolveCostViewCopy } from './cost/copy';
 import { COST_ROUTE_ID, deriveCostRouteBootstrapPresentation } from './cost/costRouteBootstrap';
-import { formatCurrency } from './cost/costViewModel';
 import { useCostData } from './cost/useCostData';
 
 export default function CostView() {
   const copy = resolveCostViewCopy();
-  const { currentRun, isLoading, loadError, runsQuery, viewModel } = useCostData();
+  const { currentRun, isLoading, loadError, viewModel } = useCostData();
   usePublishedRouteBootstrap(
     COST_ROUTE_ID,
     deriveCostRouteBootstrapPresentation({
@@ -38,7 +37,7 @@ export default function CostView() {
           <ViewHeader
             className="border-0 bg-transparent px-0 py-0"
             title={copy.title}
-            icon={<DollarSign className="size-6 text-[var(--status-success)]" />}
+            icon={<DollarSign className="size-6 text-[var(--status-warning)]" />}
             subtitle={
               <>
                 {copy.subtitle}
@@ -50,14 +49,13 @@ export default function CostView() {
               </>
             }
             actions={
-              viewModel.currentRunCost != null ? (
-                <Badge
-                  data-slot="cost-current-run-estimate"
-                  className="border-transparent bg-[var(--status-success)] text-[var(--surface-app)] text-xs"
-                >
-                  {copy.currentRunEstimate} {formatCurrency(viewModel.currentRunCost)}
-                </Badge>
-              ) : undefined
+              <Badge
+                data-slot="cost-capture-unavailable"
+                variant="outline"
+                className="border-[color:var(--status-warning)] text-xs text-[var(--status-warning)]"
+              >
+                {copy.costCaptureUnavailable}
+              </Badge>
             }
           />
         </div>
@@ -84,24 +82,25 @@ export default function CostView() {
             ) : null}
 
             <CostStatGrid
-              totalCost={viewModel.totalCost}
-              runsCount={runsQuery.data?.length ?? 0}
-              averageCostPerRun={viewModel.averageCostPerRun}
-              costAlertsCount={viewModel.costAlerts.length}
+              totalCostLabel={viewModel.totalCostLabel}
+              runCount={viewModel.runCount}
+              completedStepCount={viewModel.completedStepCount}
+              failedStepCount={viewModel.failedStepCount}
               copy={copy}
             />
 
             <CostCharts
-              costByRun={viewModel.costByRun}
-              durationByModel={viewModel.durationByModel}
+              durationByRun={viewModel.durationByRun}
+              durationByStep={viewModel.durationByStep}
               copy={copy}
             />
 
             <CostDriverList drivers={viewModel.costByModel} copy={copy} />
             <CostAlertsList alerts={viewModel.costAlerts} copy={copy} />
             <CostCoverageCard
-              nodesWithCostCount={viewModel.nodesWithCostCount}
-              totalDuration={viewModel.totalDuration}
+              stepsWithUsageCount={viewModel.stepsWithUsageCount}
+              totalDurationSeconds={viewModel.totalDurationSeconds}
+              observedWindowLabel={viewModel.observedWindowLabel}
               copy={copy}
             />
           </>
