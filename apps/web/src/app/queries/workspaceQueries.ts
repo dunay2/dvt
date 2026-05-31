@@ -6,6 +6,7 @@ import {
   useWorkspaceFileHistoryQueryPort,
   useWorkspaceFilesQueryPort,
   useWorkspaceGraphSnapshotQueryPort,
+  useWorkspacePluginCatalogQueryPort,
 } from '../services/AppServicesContext';
 import type { FileContent, WorkspaceFileEntry } from '../ports/workspace';
 import { classifyWorkspaceArtifact, type WorkspaceArtifactKind } from './workspaceArtifactPolicy';
@@ -73,6 +74,14 @@ export function useWorkspaceDiffChangesQuery() {
   return useQuery({
     queryKey: queryKeys.workspace.diffChanges(),
     queryFn: () => workspaceDiffQuery.getDiffChanges(),
+  });
+}
+
+export function useWorkspacePluginCatalogQuery() {
+  const workspacePluginCatalogQuery = useWorkspacePluginCatalogQueryPort();
+  return useQuery({
+    queryKey: queryKeys.workspace.plugins(),
+    queryFn: () => workspacePluginCatalogQuery.getPlugins(),
   });
 }
 
