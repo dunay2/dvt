@@ -1,11 +1,5 @@
 import { defineConfig } from 'vitest/config';
 
-const workspaceServicesVitestConfig = {
-  test: {
-    environment: 'jsdom',
-    globals: true,
-    include: ['src/app/services/workspace/**/*.{test,spec}.{ts,tsx}'],
-  },
-};
+import { createWebVitestConfig } from './vitest.suites';
 
-export default defineConfig(workspaceServicesVitestConfig);
+export default defineConfig(createWebVitestConfig('workspace-services'));
