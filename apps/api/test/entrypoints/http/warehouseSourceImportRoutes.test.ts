@@ -2,13 +2,42 @@ import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
+import { WarehouseConnectionNotFoundError } from '../../../src/application/ports/warehouseSourceImport.js';
+import type {
+  IWarehouseConnectionCatalog,
+  WarehouseConnection,
+  WarehouseConnectionCatalogEntry,
+  WarehouseTable,
+} from '../../../src/application/ports/warehouseSourceImport.js';
+import { WorkspaceFileNotFoundError } from '../../../src/application/ports/workspaceFiles.js';
+import type {
+  IWorkspaceFileRepository,
+  WorkspaceFileContent,
+  WorkspaceFileEntry,
+} from '../../../src/application/ports/workspaceFiles.js';
 import { ImportWarehouseSourcesUseCase } from '../../../src/application/services/importWarehouseSourcesUseCase.js';
 import { ListWarehouseConnectionsUseCase } from '../../../src/application/services/listWarehouseConnectionsUseCase.js';
 import { ListWarehouseConnectionTablesUseCase } from '../../../src/application/services/listWarehouseConnectionTablesUseCase.js';
 import { registerWarehouseSourceImportRoutes } from '../../../src/entrypoints/http/warehouseSourceImportRoutes.js';
-import { InMemoryWarehouseConnectionCatalog } from '../../../src/infrastructure/warehouseSourceImport/InMemoryWarehouseConnectionCatalog.js';
 
 const SCOPE_QUERY = 'tenantId=tenant-a&projectId=project-a&environmentId=env-a';
+
+class TestWarehouseConnectionCatalog implements IWarehouseConnectionCatalog {
+  public constructor(private readonly entries: readonly WarehouseConnectionCatalogEntry[]) {}
+
+  public async listConnections(): Promise<readonly WarehouseConnection[]> {
+    return this.entries.map(({ tables: _tables, ...connection }) => connection);
+  }
+
+  public async listTables(connectionId: string): Promise<readonly WarehouseTable[]> {
+    const connection = this.entries.find((entry) => entry.id === connectionId);
+    if (!connection) {
+      throw new WarehouseConnectionNotFoundError(connectionId);
+    }
+
+    return connection.tables;
+  }
+}
 
 function principal(): Record<string, unknown> {
   return {
@@ -50,27 +79,29 @@ function buildApp(
     readonly read: ReturnType<typeof vi.fn>;
     readonly save: ReturnType<typeof vi.fn>;
   };
+  readonly workspaceFiles: {
+    readonly getFileContent: ReturnType<typeof vi.fn>;
+    readonly saveFileContent: ReturnType<typeof vi.fn>;
+  };
 } {
   const app = Fastify({ logger: false });
-  const catalog = new InMemoryWarehouseConnectionCatalog({
-    connections: [
-      {
-        id: 'warehouse-prod',
-        name: 'Production warehouse',
-        type: 'snowflake',
-        database: 'analytics',
-        tables: [
-          {
-            database: 'analytics',
-            schema: 'erp',
-            table: 'orders',
-            rowCount: 42,
-            columns: [{ name: 'id', type: 'number', nullable: false }],
-          },
-        ],
-      },
-    ],
-  });
+  const catalog = new TestWarehouseConnectionCatalog([
+    {
+      id: 'warehouse-prod',
+      name: 'Production warehouse',
+      type: 'snowflake',
+      database: 'analytics',
+      tables: [
+        {
+          database: 'analytics',
+          schema: 'erp',
+          table: 'orders',
+          rowCount: 42,
+          columns: [{ name: 'id', type: 'number', nullable: false }],
+        },
+      ],
+    },
+  ]);
   const draftStore = {
     read: vi.fn().mockResolvedValue({
       scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
@@ -105,6 +136,21 @@ function buildApp(
       }
     ),
   };
+  const workspaceFiles = {
+    listFiles: vi.fn<() => Promise<readonly WorkspaceFileEntry[]>>().mockResolvedValue([]),
+    getFileContent: vi
+      .fn<(path: string) => Promise<WorkspaceFileContent>>()
+      .mockRejectedValue(new WorkspaceFileNotFoundError('models/sources/src_erp.yml')),
+    saveFileContent: vi.fn<(path: string, content: string) => Promise<WorkspaceFileContent>>(
+      async (path, content) => ({
+        path,
+        name: path.split('/').at(-1) ?? path,
+        language: 'yaml',
+        content,
+        lastModified: '2026-05-30T00:00:01.000Z',
+      })
+    ),
+  };
   const authorize = vi.fn().mockResolvedValue(
     options.authorized === false
       ? { ok: false, reason: 'ACTION_NOT_GRANTED' }
@@ -137,12 +183,13 @@ function buildApp(
     importSourcesUseCase: new ImportWarehouseSourcesUseCase(
       catalog,
       draftStore as never,
+      workspaceFiles as IWorkspaceFileRepository,
       () => new Date('2026-05-30T00:00:01.000Z')
     ),
     rateLimit: { max: 100, timeWindow: 60_000 },
   });
 
-  return { app, authorize, draftStore };
+  return { app, authorize, draftStore, workspaceFiles };
 }
 
 describe('warehouseSourceImportRoutes', () => {
@@ -193,7 +240,7 @@ describe('warehouseSourceImportRoutes', () => {
   });
 
   it('imports selected tables into the authoritative workspace graph draft', async () => {
-    const { app, authorize } = buildApp();
+    const { app, authorize, workspaceFiles } = buildApp();
 
     const response = await app.inject({
       method: 'POST',
@@ -223,6 +270,23 @@ describe('warehouseSourceImportRoutes', () => {
         action: { kind: 'command', name: 'workspace:source-import:import' },
       }),
       expect.any(String)
+    );
+    expect(workspaceFiles.saveFileContent).toHaveBeenCalledWith(
+      'models/sources/src_erp.yml',
+      [
+        'version: 2',
+        '',
+        'sources:',
+        '  - name: erp',
+        '    database: analytics',
+        '    schema: erp',
+        '    tables:',
+        '      - name: orders',
+        '        columns:',
+        '          - name: id',
+        '            data_type: number',
+        '',
+      ].join('\n')
     );
   });
 
