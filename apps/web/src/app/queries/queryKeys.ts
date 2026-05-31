@@ -47,4 +47,16 @@ export const queryKeys = {
     list: (viewId: string) => ['runs', 'list', viewId] as const,
     consoleLogStream: (runId: string | undefined) => ['runs', 'console-log-stream', runId] as const,
   },
+
+  // -------------------------------------------------------------------------
+  // Cost attribution
+  // -------------------------------------------------------------------------
+  cost: {
+    attributionSummary: (
+      tenantId: string,
+      projectId: string | null,
+      environmentId: string | null,
+      limit: number
+    ) => ['cost', 'attribution-summary', tenantId, projectId, environmentId, limit] as const,
+  },
 } as const;
