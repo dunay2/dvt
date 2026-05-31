@@ -1085,7 +1085,8 @@ que un usuario esperaría que funcionase.
 | G-10 | Templates | Templates son estáticas; no hay integración con backend              | Alto    |
 | G-11 | Admin     | Asignación/revocación de roles no disponible en la UI                | Alto    |
 | G-12 | Admin     | Rebuild snapshot action no expuesta en la UI                         | Medio   |
-| G-13 | Shell     | Cambio de tenant/project/env no implementado en el scope selector    | Alto    |
+| G-13 | Admin     | Audit log backend no disponible para búsqueda real                   | Alto    |
+| G-14 | Shell     | Cambio de tenant/project/env no implementado en el scope selector    | Alto    |
 
 ---
 
