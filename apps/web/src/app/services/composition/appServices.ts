@@ -1,5 +1,6 @@
 /** Owned concern: assemble web application ports at the composition root. */
 import type { CapabilitiesPort } from '../../ports/capabilities';
+import type { ICostAttributionSummaryPort } from '../../ports/cost';
 import type { IPlansPort } from '../../ports/plans';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
@@ -19,6 +20,7 @@ import { createApiClient, type ApiClient } from '../api/createApiClient';
 import { createCapabilitiesPort } from '../capabilities/capabilitiesPort';
 import { resolveDataSource, type DataSourceMode } from '../config/dataSource';
 import { setRuntimeDataSourceMode } from '../config/runtimeDataSourceMode';
+import { createApiCostAttributionSummaryPort } from '../cost/costService.api';
 import { createToastShellFeedbackPort } from '../feedback/shellFeedbackPort';
 import { createPlansService } from '../plans/plansService';
 import { createRunsService } from '../runs/runsService';
@@ -41,6 +43,7 @@ export interface AppServices {
   readonly workspaceGraphDraftAuthoringPort: IWorkspaceGraphDraftAuthoringPort;
   readonly runsService: IRunsPort;
   readonly plansService: IPlansPort;
+  readonly costAttributionSummaryPort: ICostAttributionSummaryPort;
   readonly capabilitiesPort: CapabilitiesPort;
   readonly sessionContext: SessionContextPort;
   readonly shellFeedback: ShellFeedbackPort;
@@ -59,6 +62,7 @@ export interface AppServicesOverrides {
   readonly workspaceGraphDraftAuthoringPort?: IWorkspaceGraphDraftAuthoringPort;
   readonly runsService?: IRunsPort;
   readonly plansService?: IPlansPort;
+  readonly costAttributionSummaryPort?: ICostAttributionSummaryPort;
   readonly capabilitiesPort?: CapabilitiesPort;
   readonly sessionContext?: SessionContextPort;
   readonly shellFeedback?: ShellFeedbackPort;
@@ -101,6 +105,8 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     workspaceGraphDraftAuthoringPort,
     runsService: overrides.runsService ?? createRunsService(apiClient, { sessionContext }),
     plansService: overrides.plansService ?? createPlansService(apiClient),
+    costAttributionSummaryPort:
+      overrides.costAttributionSummaryPort ?? createApiCostAttributionSummaryPort(apiClient),
     capabilitiesPort: overrides.capabilitiesPort ?? createCapabilitiesPort(apiClient),
     sessionContext,
     shellFeedback: overrides.shellFeedback ?? createToastShellFeedbackPort(),
