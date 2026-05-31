@@ -55,6 +55,7 @@ function principal(): Record<string, unknown> {
 
 function buildApp(
   options: {
+    readonly catalogEntries?: readonly WarehouseConnectionCatalogEntry[];
     readonly authenticated?: boolean;
     readonly authorized?: boolean;
     readonly saveResult?:
@@ -86,23 +87,25 @@ function buildApp(
   };
 } {
   const app = Fastify({ logger: false });
-  const catalog = new TestWarehouseConnectionCatalog([
-    {
-      id: 'warehouse-prod',
-      name: 'Production warehouse',
-      type: 'snowflake',
-      database: 'analytics',
-      tables: [
-        {
-          database: 'analytics',
-          schema: 'erp',
-          table: 'orders',
-          rowCount: 42,
-          columns: [{ name: 'id', type: 'number', nullable: false }],
-        },
-      ],
-    },
-  ]);
+  const catalog = new TestWarehouseConnectionCatalog(
+    options.catalogEntries ?? [
+      {
+        id: 'warehouse-prod',
+        name: 'Production warehouse',
+        type: 'snowflake',
+        database: 'analytics',
+        tables: [
+          {
+            database: 'analytics',
+            schema: 'erp',
+            table: 'orders',
+            rowCount: 42,
+            columns: [{ name: 'id', type: 'number', nullable: false }],
+          },
+        ],
+      },
+    ]
+  );
   const draftStore = {
     read: vi.fn().mockResolvedValue({
       scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
@@ -273,7 +276,7 @@ describe('warehouseSourceImportRoutes', () => {
       sourcesCreated: 1,
       tablesImported: 1,
       yamlFiles: ['models/sources/src_erp.yml'],
-      importedNodeIds: ['src_erp_orders'],
+      importedNodeIds: ['src_analytics_erp_orders'],
       grouping: 'schema',
     });
     expect(authorize).toHaveBeenCalledWith(
@@ -339,6 +342,59 @@ describe('warehouseSourceImportRoutes', () => {
         }),
       })
     );
+  });
+
+  it('imports same schema and table name from different databases as distinct source nodes', async () => {
+    const { app } = buildApp({
+      catalogEntries: [
+        {
+          id: 'warehouse-prod',
+          name: 'Production warehouse',
+          type: 'snowflake',
+          database: 'analytics',
+          tables: [
+            {
+              database: 'analytics',
+              schema: 'erp',
+              table: 'orders',
+              columns: [{ name: 'id', type: 'number', nullable: false }],
+            },
+            {
+              database: 'finance',
+              schema: 'erp',
+              table: 'orders',
+              columns: [{ name: 'id', type: 'number', nullable: false }],
+            },
+          ],
+        },
+      ],
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/workspace/sources/import?${SCOPE_QUERY}`,
+      payload: {
+        connectionId: 'warehouse-prod',
+        tables: [
+          { database: 'analytics', schema: 'erp', table: 'orders' },
+          { database: 'finance', schema: 'erp', table: 'orders' },
+        ],
+        groupingStrategy: 'database',
+        includeColumns: true,
+        addTests: false,
+        addFreshness: false,
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      success: true,
+      sourcesCreated: 2,
+      tablesImported: 2,
+      yamlFiles: ['models/sources/src_analytics.yml', 'models/sources/src_finance.yml'],
+      importedNodeIds: ['src_analytics_erp_orders', 'src_finance_erp_orders'],
+      grouping: 'database',
+    });
   });
 
   it('rejects unknown connections before import', async () => {
