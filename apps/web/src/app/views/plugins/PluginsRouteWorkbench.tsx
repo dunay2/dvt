@@ -13,8 +13,8 @@ import {
   routeWorkbenchMutedTextClassName,
   routeWorkbenchPanelClassName,
 } from '../../components/workbench/RouteWorkbenchFrame';
-import { PLUGIN_REGISTRY, type PluginContributions } from '../../plugins/registry';
 import type { PluginCapabilityId } from '../../plugins/contracts/PluginManifest';
+import { PLUGIN_REGISTRY, type PluginContributions } from '../../plugins/registry';
 import type { Plugin } from '../../types/dbt';
 
 import { PluginCapabilityTable } from './PluginCapabilityTable';
@@ -139,14 +139,44 @@ function PluginCapabilityProbeCard({
   );
 }
 
-function toCatalogContribution(plugin: Plugin): PluginContributions {
-  return {
+function pluginCapabilities(plugin: Plugin): PluginCapabilityId[] {
+  return plugin.capabilities as PluginCapabilityId[];
+}
+
+function applyCatalogOverlay(
+  base: PluginContributions,
+  plugin: Plugin,
+  backendPluginId: string | undefined
+): PluginContributions {
+  const next: PluginContributions = {
+    ...base,
     id: plugin.id,
     displayName: plugin.name,
     version: plugin.version,
-    backendPluginId: plugin.backendPluginId,
-    capabilities: plugin.capabilities as PluginCapabilityId[],
+    capabilities: pluginCapabilities(plugin),
   };
+
+  if (backendPluginId) {
+    return {
+      ...next,
+      backendPluginId,
+    };
+  }
+
+  return next;
+}
+
+function toCatalogContribution(plugin: Plugin): PluginContributions {
+  return applyCatalogOverlay(
+    {
+      id: plugin.id,
+      displayName: plugin.name,
+      version: plugin.version,
+      capabilities: pluginCapabilities(plugin),
+    },
+    plugin,
+    plugin.backendPluginId
+  );
 }
 
 function mergePluginCatalogWithLocalContributions(
@@ -156,14 +186,11 @@ function mergePluginCatalogWithLocalContributions(
 
   return pluginCatalog.map((catalogPlugin) => {
     const local = localById.get(catalogPlugin.id);
-    return {
-      ...(local ?? toCatalogContribution(catalogPlugin)),
-      id: catalogPlugin.id,
-      displayName: catalogPlugin.name,
-      version: catalogPlugin.version,
-      backendPluginId: catalogPlugin.backendPluginId ?? local?.backendPluginId,
-      capabilities: catalogPlugin.capabilities as PluginCapabilityId[],
-    };
+    return applyCatalogOverlay(
+      local ?? toCatalogContribution(catalogPlugin),
+      catalogPlugin,
+      catalogPlugin.backendPluginId ?? local?.backendPluginId
+    );
   });
 }
 
