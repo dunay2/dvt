@@ -7,8 +7,8 @@ import {
   createApiWorkspaceFileHistoryQueryPort,
   createApiWorkspaceFilesQueryPort,
   createApiWorkspaceGraphSnapshotQueryPort,
-  createApiWorkspacePluginCatalogQueryPort,
 } from './workspacePorts.api';
+import { createApiWorkspacePluginCatalogQueryPort } from './workspacePluginCatalog.api';
 import { createApiClientHarness } from './workspaceApiClient.test.harness';
 
 export function createApiWorkspacePortHarness(
@@ -24,7 +24,7 @@ export function createApiWorkspacePortHarness(
     workspaceFilesQuery: createApiWorkspaceFilesQueryPort(apiClient),
     workspaceFileHistoryQuery: createApiWorkspaceFileHistoryQueryPort(apiClient),
     workspaceDiffQuery: createApiWorkspaceDiffQueryPort(apiClient),
-    workspacePluginCatalogQuery: createApiWorkspacePluginCatalogQueryPort(),
+    workspacePluginCatalogQuery: createApiWorkspacePluginCatalogQueryPort(apiClient),
     workspaceAdminRead: createApiWorkspaceAdminReadPort(),
     warehouseSourceImport: createApiWarehouseSourceImportPort(apiClient),
     workspaceFileContentCommand: createApiWorkspaceFileContentCommandPort(apiClient),
