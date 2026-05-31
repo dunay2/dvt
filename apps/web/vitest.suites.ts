@@ -276,8 +276,18 @@ function createExactChangedTestCommandPlanEntry(
   };
 }
 
-function formatExactVitestCommand(entry: Extract<WebVitestChangedCommandPlanEntry, { kind: 'vitest-file' }>): string {
-  return ['pnpm', 'exec', 'vitest', 'run', '--config', entry.config, entry.filePath].join(' ');
+function quoteExactTestPath(filePath: string): string {
+  const quote = String.fromCharCode(39);
+  const replacement = `${quote}\\${quote}${quote}`;
+  return `${quote}${filePath.split(quote).join(replacement)}${quote}`;
+}
+
+function formatExactVitestCommand(
+  entry: Extract<WebVitestChangedCommandPlanEntry, { kind: 'vitest-file' }>
+): string {
+  return ['pnpm', 'exec', 'vitest', 'run', '--config', entry.config, quoteExactTestPath(entry.filePath)].join(
+    ' '
+  );
 }
 
 export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): {
