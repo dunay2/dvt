@@ -427,6 +427,12 @@ symbols:
     name: sourceTableIdentity
     path: apps/api/src/application/services/warehouseSourceYaml.ts
   - <<: *api_symbol
+    name: toStableYamlIdentifierPart
+    path: apps/api/src/application/services/warehouseSourceYaml.ts
+  - <<: *api_symbol
+    name: isRetiredSourceNameForTable
+    path: apps/api/src/application/services/warehouseSourceYaml.ts
+  - <<: *api_symbol
     name: upsertSourceTable
     path: apps/api/src/application/services/warehouseSourceYaml.ts
   - <<: *api_symbol

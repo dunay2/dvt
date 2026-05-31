@@ -270,4 +270,135 @@ describe('warehouse source YAML builder', () => {
       },
     ]);
   });
+
+  it('removes legacy schema-only source names when a database collision requires canonical names', () => {
+    const updates = buildWarehouseSourceYamlUpdates({
+      existingFiles: new Map([
+        [
+          'models/sources/src_erp.yml',
+          [
+            'version: 2',
+            '',
+            'sources:',
+            '  - name: analytics_erp',
+            '    database: analytics',
+            '    schema: erp',
+            '    tables:',
+            '      - name: orders',
+            '  - name: erp',
+            '    database: finance',
+            '    schema: erp',
+            '    description: Legacy finance source name',
+            '    tables:',
+            '      - name: orders',
+            '        description: Legacy orders table metadata',
+            '',
+          ].join('\n'),
+        ],
+      ]),
+      groupingStrategy: 'schema',
+      includeColumns: true,
+      addTests: false,
+      addFreshness: false,
+      tables: [
+        {
+          database: 'finance',
+          schema: 'erp',
+          table: 'orders',
+          columns: [{ name: 'id', type: 'number', nullable: false }],
+        },
+      ],
+    });
+
+    expect(updates).toEqual([
+      {
+        path: 'models/sources/src_erp.yml',
+        content: [
+          'version: 2',
+          '',
+          'sources:',
+          '  - name: analytics_erp',
+          '    database: analytics',
+          '    schema: erp',
+          '    tables:',
+          '      - name: orders',
+          '  - name: finance_erp',
+          '    database: finance',
+          '    schema: erp',
+          '    description: Legacy finance source name',
+          '    tables:',
+          '      - name: orders',
+          '        description: Legacy orders table metadata',
+          '        columns:',
+          '          - name: id',
+          '            data_type: number',
+          '',
+        ].join('\n'),
+      },
+    ]);
+  });
+
+  it('updates the source owned by the selected connection when physical table names match', () => {
+    const updates = buildWarehouseSourceYamlUpdates({
+      existingFiles: new Map([
+        [
+          'models/sources/src_erp.yml',
+          [
+            'version: 2',
+            '',
+            'sources:',
+            '  - name: warehouse_prod_analytics_erp',
+            '    database: analytics',
+            '    schema: erp',
+            '    tables:',
+            '      - name: orders',
+            '  - name: warehouse_sandbox_analytics_erp',
+            '    database: analytics',
+            '    schema: erp',
+            '    tables:',
+            '      - name: orders',
+            '',
+          ].join('\n'),
+        ],
+      ]),
+      groupingStrategy: 'schema',
+      includeColumns: true,
+      addTests: false,
+      addFreshness: false,
+      tables: [
+        {
+          connectionId: 'warehouse-sandbox',
+          database: 'analytics',
+          schema: 'erp',
+          table: 'orders',
+          columns: [{ name: 'id', type: 'number', nullable: false }],
+        },
+      ],
+    });
+
+    expect(updates).toEqual([
+      {
+        path: 'models/sources/src_erp.yml',
+        content: [
+          'version: 2',
+          '',
+          'sources:',
+          '  - name: warehouse_prod_analytics_erp',
+          '    database: analytics',
+          '    schema: erp',
+          '    tables:',
+          '      - name: orders',
+          '  - name: warehouse_sandbox_analytics_erp',
+          '    database: analytics',
+          '    schema: erp',
+          '    tables:',
+          '      - name: orders',
+          '        columns:',
+          '          - name: id',
+          '            data_type: number',
+          '',
+        ].join('\n'),
+      },
+    ]);
+  });
 });

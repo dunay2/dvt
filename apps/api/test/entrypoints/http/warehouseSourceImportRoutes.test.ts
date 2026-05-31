@@ -276,7 +276,7 @@ describe('warehouseSourceImportRoutes', () => {
       sourcesCreated: 1,
       tablesImported: 1,
       yamlFiles: ['models/sources/src_erp.yml'],
-      importedNodeIds: ['src_analytics_erp_orders'],
+      importedNodeIds: ['src_warehouse_prod_analytics_erp_orders'],
       grouping: 'schema',
     });
     expect(authorize).toHaveBeenCalledWith(
@@ -292,7 +292,7 @@ describe('warehouseSourceImportRoutes', () => {
         'version: 2',
         '',
         'sources:',
-        '  - name: erp',
+        '  - name: warehouse_prod_analytics_erp',
         '    database: analytics',
         '    schema: erp',
         '    tables:',
@@ -339,6 +339,64 @@ describe('warehouseSourceImportRoutes', () => {
               }),
             }),
           ],
+        }),
+      })
+    );
+  });
+
+  it('scopes imported source identity by connection when warehouse objects share physical names', async () => {
+    const { app, draftStore, workspaceFiles } = buildApp({
+      catalogEntries: [
+        {
+          id: 'warehouse-prod',
+          name: 'Production warehouse',
+          type: 'snowflake',
+          database: 'analytics',
+          tables: [{ database: 'analytics', schema: 'erp', table: 'orders' }],
+        },
+        {
+          id: 'warehouse-sandbox',
+          name: 'Sandbox warehouse',
+          type: 'snowflake',
+          database: 'analytics',
+          tables: [{ database: 'analytics', schema: 'erp', table: 'orders' }],
+        },
+      ],
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/workspace/sources/import?${SCOPE_QUERY}`,
+      payload: {
+        connectionId: 'warehouse-sandbox',
+        tables: [{ database: 'analytics', schema: 'erp', table: 'orders' }],
+        groupingStrategy: 'schema',
+        includeColumns: false,
+        addTests: false,
+        addFreshness: false,
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      sourcesCreated: 1,
+      importedNodeIds: ['src_warehouse_sandbox_analytics_erp_orders'],
+    });
+    expect(workspaceFiles.saveFileContent).toHaveBeenCalledWith(
+      'models/sources/src_erp.yml',
+      expect.stringContaining('  - name: warehouse_sandbox_analytics_erp')
+    );
+    expect(draftStore.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        draft: expect.objectContaining({
+          nodes: expect.arrayContaining([
+            expect.objectContaining({
+              id: 'src_warehouse_sandbox_analytics_erp_orders',
+              metadata: expect.objectContaining({
+                sourceName: 'warehouse_sandbox_analytics_erp',
+              }),
+            }),
+          ]),
         }),
       })
     );
@@ -392,7 +450,10 @@ describe('warehouseSourceImportRoutes', () => {
       sourcesCreated: 2,
       tablesImported: 2,
       yamlFiles: ['models/sources/src_analytics.yml', 'models/sources/src_finance.yml'],
-      importedNodeIds: ['src_analytics_erp_orders', 'src_finance_erp_orders'],
+      importedNodeIds: [
+        'src_warehouse_prod_analytics_erp_orders',
+        'src_warehouse_prod_finance_erp_orders',
+      ],
       grouping: 'database',
     });
   });
@@ -445,7 +506,10 @@ describe('warehouseSourceImportRoutes', () => {
       sourcesCreated: 2,
       tablesImported: 2,
       yamlFiles: ['models/sources/src_erp.yml'],
-      importedNodeIds: ['src_analytics_erp_orders', 'src_finance_erp_orders'],
+      importedNodeIds: [
+        'src_warehouse_prod_analytics_erp_orders',
+        'src_warehouse_prod_finance_erp_orders',
+      ],
       grouping: 'schema',
     });
     expect(workspaceFiles.saveFileContent).toHaveBeenCalledWith(
@@ -454,7 +518,7 @@ describe('warehouseSourceImportRoutes', () => {
         'version: 2',
         '',
         'sources:',
-        '  - name: analytics_erp',
+        '  - name: warehouse_prod_analytics_erp',
         '    database: analytics',
         '    schema: erp',
         '    tables:',
@@ -462,7 +526,7 @@ describe('warehouseSourceImportRoutes', () => {
         '        columns:',
         '          - name: id',
         '            data_type: number',
-        '  - name: finance_erp',
+        '  - name: warehouse_prod_finance_erp',
         '    database: finance',
         '    schema: erp',
         '    tables:',
@@ -478,16 +542,16 @@ describe('warehouseSourceImportRoutes', () => {
         draft: expect.objectContaining({
           nodes: expect.arrayContaining([
             expect.objectContaining({
-              id: 'src_analytics_erp_orders',
+              id: 'src_warehouse_prod_analytics_erp_orders',
               metadata: expect.objectContaining({
-                sourceName: 'analytics_erp',
+                sourceName: 'warehouse_prod_analytics_erp',
                 tableName: 'orders',
               }),
             }),
             expect.objectContaining({
-              id: 'src_finance_erp_orders',
+              id: 'src_warehouse_prod_finance_erp_orders',
               metadata: expect.objectContaining({
-                sourceName: 'finance_erp',
+                sourceName: 'warehouse_prod_finance_erp',
                 tableName: 'orders',
               }),
             }),

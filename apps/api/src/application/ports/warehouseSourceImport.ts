@@ -10,6 +10,7 @@ export type WarehouseColumn = {
 };
 
 export type WarehouseTable = {
+  readonly connectionId?: string;
   readonly database: string;
   readonly schema: string;
   readonly table: string;

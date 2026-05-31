@@ -62,7 +62,7 @@ export class ImportWarehouseSourcesUseCase {
       if (!authoritativeTable) {
         throw new WarehouseTableNotFoundError(selectedTable);
       }
-      authoritativeTables.push(authoritativeTable);
+      authoritativeTables.push({ ...authoritativeTable, connectionId: input.connectionId });
     }
 
     const stored = await this.draftStore.read(input.scope);
@@ -283,14 +283,21 @@ function sameTable(left: WarehouseTable, right: WarehouseTable): boolean {
 function toSourceNodeId(table: WarehouseTable): string {
   return [
     'src',
+    table.connectionId
+      ?.toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, ''),
     table.database.toLowerCase(),
     table.schema.toLowerCase(),
     table.table.toLowerCase(),
-  ].join('_');
+  ]
+    .filter((part): part is string => typeof part === 'string' && part.length > 0)
+    .join('_');
 }
 
 function toSourceTableKey(table: WarehouseTable): string {
   return JSON.stringify([
+    table.connectionId?.toLowerCase() ?? '',
     table.database.toLowerCase(),
     table.schema.toLowerCase(),
     table.table.toLowerCase(),
