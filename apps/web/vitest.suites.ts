@@ -12,6 +12,7 @@ export const WEB_VITEST_FOCUS_SUITE_NAMES = [
   'canvas-presentation',
   'canvas-architecture',
   'monaco',
+  'workspace-services',
 ] as const;
 
 export type WebVitestPrimarySuiteName = (typeof WEB_VITEST_PRIMARY_SUITE_NAMES)[number];
@@ -87,6 +88,10 @@ export const WEB_VITEST_SUITES: Record<WebVitestSuiteName, WebVitestSuiteDefinit
     ],
     exclude: WEB_VITEST_DEFAULT_EXCLUDE,
   },
+  'workspace-services': {
+    include: ['src/app/services/workspace/**/*.{test,spec}.{ts,tsx}'],
+    exclude: WEB_VITEST_DEFAULT_EXCLUDE,
+  },
 };
 
 export const WEB_VITEST_CHANGED_SUITE_COMMANDS: Record<WebVitestChangedSuiteName, string> = {
@@ -97,6 +102,7 @@ export const WEB_VITEST_CHANGED_SUITE_COMMANDS: Record<WebVitestChangedSuiteName
   'canvas-presentation': 'pnpm run test:canvas-presentation:run',
   'canvas-architecture': 'pnpm run test:canvas-architecture:run',
   monaco: 'pnpm run test:monaco:run',
+  'workspace-services': 'pnpm run test:workspace-services:run',
 };
 
 const WEB_VITEST_CHANGED_SUITE_CONFIGS: Record<WebVitestChangedSuiteName, string> = {
@@ -107,6 +113,7 @@ const WEB_VITEST_CHANGED_SUITE_CONFIGS: Record<WebVitestChangedSuiteName, string
   'canvas-presentation': 'vitest.canvas-presentation.config.ts',
   'canvas-architecture': 'vitest.canvas-architecture.config.ts',
   monaco: 'vitest.monaco.config.ts',
+  'workspace-services': 'vitest.workspace-services.config.ts',
 };
 
 const WEB_VITEST_CHANGED_SUITE_ORDER: readonly WebVitestChangedSuiteName[] = [
@@ -114,6 +121,7 @@ const WEB_VITEST_CHANGED_SUITE_ORDER: readonly WebVitestChangedSuiteName[] = [
   'canvas-presentation',
   'canvas-architecture',
   'monaco',
+  'workspace-services',
   'unit',
   'presentation',
   'architecture',
@@ -161,6 +169,10 @@ export function classifyWebVitestFile(filePath: string): {
     focusSuites.push('monaco');
   }
 
+  if (isWorkspaceServicesFocusPath(normalizedPath)) {
+    focusSuites.push('workspace-services');
+  }
+
   return {
     primarySuites,
     focusSuites,
@@ -190,6 +202,11 @@ function tryAddFocusSuite(
 
   if (isMonacoFocusPath(webPath)) {
     selectedSuites.add('monaco');
+    return true;
+  }
+
+  if (isWorkspaceServicesFocusPath(webPath)) {
+    selectedSuites.add('workspace-services');
     return true;
   }
 
@@ -259,12 +276,8 @@ function createExactChangedTestCommandPlanEntry(
   };
 }
 
-function quoteShellArg(value: string): string {
-  if (/^[A-Za-z0-9_@%+=:,./-]+$/.test(value)) {
-    return value;
-  }
-
-  return `'${value.replaceAll("'", "'\\''")}'`;
+function formatExactVitestCommand(entry: Extract<WebVitestChangedCommandPlanEntry, { kind: 'vitest-file' }>): string {
+  return ['pnpm', 'exec', 'vitest', 'run', '--config', entry.config, entry.filePath].join(' ');
 }
 
 export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): {
@@ -312,9 +325,7 @@ export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): 
   return {
     suites,
     commands: commandPlan.map((entry) =>
-      entry.kind === 'shell'
-        ? entry.command
-        : `pnpm exec vitest run --config ${entry.config} ${quoteShellArg(entry.filePath)}`
+      entry.kind === 'shell' ? entry.command : formatExactVitestCommand(entry)
     ),
     commandPlan,
     requiresDependencies: selectedSuites.size > 0,
@@ -371,6 +382,10 @@ function isMonacoFocusPath(filePath: string): boolean {
     filePath === 'vite.manualChunks.ts' ||
     filePath === 'vite.config.ts'
   );
+}
+
+function isWorkspaceServicesFocusPath(filePath: string): boolean {
+  return filePath.startsWith('src/app/services/workspace/');
 }
 
 function resolveCanvasChangedSuite(filePath: string): Exclude<WebVitestFocusSuiteName, 'canvas'> {
