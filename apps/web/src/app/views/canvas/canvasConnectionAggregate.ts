@@ -2,6 +2,8 @@ import { addEdge, reconnectEdge, type Connection, type Edge } from '@xyflow/reac
 
 import {
   evaluateConnection,
+  hasDuplicateEdge,
+  wouldCreateCycle,
   type ConnectionRuleResult,
   type PluginPortMap,
 } from '../../plugins/contracts/ConnectionRules';
@@ -112,6 +114,17 @@ export function proposeConnection({
     return { outcome: 'rejected', rejection: { code: 'node_not_found_in_graph' } };
   }
 
+  const canonicalEdges = mapEdgesToCanonicalEdges(edges);
+  if (sourceNode.id === targetNode.id) {
+    return { outcome: 'rejected', rejection: { code: 'self_connection' } };
+  }
+  if (hasDuplicateEdge(sourceNode.id, targetNode.id, canonicalEdges)) {
+    return { outcome: 'rejected', rejection: { code: 'duplicate_edge' } };
+  }
+  if (wouldCreateCycle(sourceNode.id, targetNode.id, canonicalEdges)) {
+    return { outcome: 'rejected', rejection: { code: 'cycle_detected' } };
+  }
+
   if (!canConnectAuthoringRoles(sourceNode.role, targetNode.role)) {
     return {
       outcome: 'rejected',
@@ -123,12 +136,7 @@ export function proposeConnection({
     };
   }
 
-  const connectionResult = evaluateConnection(
-    sourceNode,
-    targetNode,
-    mapEdgesToCanonicalEdges(edges),
-    pluginPortMap
-  );
+  const connectionResult = evaluateConnection(sourceNode, targetNode, canonicalEdges, pluginPortMap);
   if (!connectionResult.allowed) {
     return {
       outcome: 'rejected',
