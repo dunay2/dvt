@@ -35,28 +35,31 @@ export class EmbeddedWorkspacePluginCatalogRepository
     await this.pool.query(`CREATE SCHEMA IF NOT EXISTS ${schema};`);
     await this.pool.query(`
       CREATE TABLE IF NOT EXISTS ${schema}.workspace_plugins (
-        tenant_id          TEXT,
-        project_id         TEXT,
-        environment_id     TEXT,
-        plugin_id          TEXT        NOT NULL,
-        display_name       TEXT        NOT NULL,
-        version            TEXT        NOT NULL,
-        description        TEXT        NOT NULL DEFAULT '',
-        capabilities       JSONB       NOT NULL DEFAULT '[]',
-        permissions        JSONB       NOT NULL DEFAULT '[]',
-        backend_plugin_id  TEXT,
-        enabled            BOOLEAN     NOT NULL DEFAULT TRUE,
-        source_ref         TEXT        NOT NULL DEFAULT 'embedded-bootstrap',
+        tenant_id             TEXT,
+        project_id            TEXT,
+        environment_id        TEXT,
+        plugin_id             TEXT        NOT NULL,
+        display_name          TEXT        NOT NULL,
+        version               TEXT        NOT NULL,
+        description           TEXT        NOT NULL DEFAULT '',
+        capabilities          JSONB       NOT NULL DEFAULT '[]',
+        permissions           JSONB       NOT NULL DEFAULT '[]',
+        backend_plugin_id     TEXT,
+        enabled               BOOLEAN     NOT NULL DEFAULT TRUE,
+        source_ref            TEXT        NOT NULL DEFAULT 'embedded-bootstrap',
         source_content_sha256 TEXT,
-        created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        updated_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        PRIMARY KEY (
+        created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+    await this.pool.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS workspace_plugins_scope_plugin_key
+        ON ${schema}.workspace_plugins (
           COALESCE(tenant_id, '*'),
           COALESCE(project_id, '*'),
           COALESCE(environment_id, '*'),
           plugin_id
-        )
-      );
+        );
     `);
     await this.pool.query(`
       CREATE INDEX IF NOT EXISTS workspace_plugins_scope_lookup
