@@ -24,6 +24,7 @@ describe('buildApp protected runtime composition', () => {
           expect(migrationCalls()).toEqual({
             accessDecision: 1,
             projectOnboarding: 1,
+            workspacePluginCatalog: 1,
             planStore: 1,
             stateStore: 1,
             intentStore: 1,
