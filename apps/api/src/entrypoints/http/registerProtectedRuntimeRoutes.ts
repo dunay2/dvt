@@ -16,6 +16,7 @@ import { buildProtectedRuntimeRouteDependencies } from './protectedRuntimeRouteD
 import { registerProtectedRunRoutes } from './protectedRuntimeRunRoutes.js';
 import { registerProtectedWorkspaceContextRouteGroup } from './protectedRuntimeWorkspaceContextRouteGroup.js';
 import { registerProtectedWorkspaceGraphDraftRouteGroup } from './protectedRuntimeWorkspaceGraphDraftRouteGroup.js';
+import { registerProtectedWorkspacePluginCatalogRouteGroup } from './workspacePluginCatalogRouteGroup.js';
 import { PROTECTED_RUNTIME_ROUTE_SUMMARY } from './runtimeRoutes.constants.js';
 import { registerProtectedWarehouseSourceImportRouteGroup } from './warehouseSourceImportRouteGroup.js';
 import { registerProtectedWorkspaceDiffChangesRouteGroup } from './workspaceDiffChangesRouteGroup.js';
@@ -38,6 +39,7 @@ export async function registerProtectedRuntimeRoutes(
   registerProtectedPlanRoutes(app, env, protectedModule, dependencies);
   registerProjectOnboardingRouteGroup(app, env, protectedModule);
   registerProtectedWorkspaceContextRouteGroup(app, env, protectedModule);
+  registerProtectedWorkspacePluginCatalogRouteGroup(app, env, protectedModule);
   registerProtectedWorkspaceGraphDraftRouteGroup(app, observability, protectedModule, dependencies);
   registerProtectedWorkspaceDiffChangesRouteGroup(app, {
     env,
