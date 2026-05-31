@@ -959,6 +959,42 @@ test('tracked migrations remove legacy local component JSONB storage after W49',
   assert.doesNotMatch(localComponentJsonbRemovalMigration.sql, /local_definition\.owns/);
 });
 
+test('tracked migrations preserve normalized local component invariants after W50', () => {
+  const migrations = readMigrationFiles();
+  const normalizedInvariantMigration = migrations.find(
+    (migration) => migration.fileName === '050_component_definition_normalized_invariants.sql'
+  );
+
+  assert.ok(normalizedInvariantMigration);
+  assert.match(
+    normalizedInvariantMigration.sql,
+    /create or replace function planning_query_store\.assert_governance_component_local_definition_invariants/
+  );
+  assert.match(
+    normalizedInvariantMigration.sql,
+    /create or replace function planning_query_store\.check_governance_component_local_definition_invariants/
+  );
+  assert.match(
+    normalizedInvariantMigration.sql,
+    /create constraint trigger governance_component_local_definitions_invariants/
+  );
+  assert.match(
+    normalizedInvariantMigration.sql,
+    /create constraint trigger governance_component_local_ownership_patterns_invariants/
+  );
+  assert.match(
+    normalizedInvariantMigration.sql,
+    /create constraint trigger governance_component_local_semantic_items_invariants/
+  );
+  assert.match(normalizedInvariantMigration.sql, /deferrable initially deferred/);
+  assert.match(normalizedInvariantMigration.sql, /pattern_kind = 'owns'/);
+  assert.match(
+    normalizedInvariantMigration.sql,
+    /item_kind in \('public_api', 'invariant', 'transition', 'consumer'\)/
+  );
+  assert.doesNotMatch(normalizedInvariantMigration.sql, /jsonb_array_length/);
+});
+
 test('tracked migrations route claimed active work and clean queued work into next tasks', () => {
   const migrations = readMigrationFiles();
   const nextTaskClaimMigration = migrations.find(
