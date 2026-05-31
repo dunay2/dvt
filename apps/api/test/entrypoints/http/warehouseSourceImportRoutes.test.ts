@@ -397,6 +397,84 @@ describe('warehouseSourceImportRoutes', () => {
     });
   });
 
+  it('keeps schema-grouped YAML sources distinct when database names disambiguate nodes', async () => {
+    const { app, workspaceFiles } = buildApp({
+      catalogEntries: [
+        {
+          id: 'warehouse-prod',
+          name: 'Production warehouse',
+          type: 'snowflake',
+          database: 'analytics',
+          tables: [
+            {
+              database: 'analytics',
+              schema: 'erp',
+              table: 'orders',
+              columns: [{ name: 'id', type: 'number', nullable: false }],
+            },
+            {
+              database: 'finance',
+              schema: 'erp',
+              table: 'orders',
+              columns: [{ name: 'id', type: 'number', nullable: false }],
+            },
+          ],
+        },
+      ],
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/workspace/sources/import?${SCOPE_QUERY}`,
+      payload: {
+        connectionId: 'warehouse-prod',
+        tables: [
+          { database: 'analytics', schema: 'erp', table: 'orders' },
+          { database: 'finance', schema: 'erp', table: 'orders' },
+        ],
+        groupingStrategy: 'schema',
+        includeColumns: true,
+        addTests: false,
+        addFreshness: false,
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      success: true,
+      sourcesCreated: 2,
+      tablesImported: 2,
+      yamlFiles: ['models/sources/src_erp.yml'],
+      importedNodeIds: ['src_analytics_erp_orders', 'src_finance_erp_orders'],
+      grouping: 'schema',
+    });
+    expect(workspaceFiles.saveFileContent).toHaveBeenCalledWith(
+      'models/sources/src_erp.yml',
+      [
+        'version: 2',
+        '',
+        'sources:',
+        '  - name: analytics_erp',
+        '    database: analytics',
+        '    schema: erp',
+        '    tables:',
+        '      - name: orders',
+        '        columns:',
+        '          - name: id',
+        '            data_type: number',
+        '  - name: finance_erp',
+        '    database: finance',
+        '    schema: erp',
+        '    tables:',
+        '      - name: orders',
+        '        columns:',
+        '          - name: id',
+        '            data_type: number',
+        '',
+      ].join('\n')
+    );
+  });
+
   it('rejects unknown connections before import', async () => {
     const { app } = buildApp();
 

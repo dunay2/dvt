@@ -109,12 +109,44 @@ export function buildWarehouseSourceYamlUpdates(
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([path, tables]) => {
       const existingDocument = readExistingSourceDocument(input.existingFiles.get(path));
+      const databasesBySourceTable = new Map<string, Set<string>>();
+      const tableSourceNameKeys = new Map<string, string>();
+      const tableIdentity = (table: WarehouseTable): string =>
+        JSON.stringify([
+          table.database.toLowerCase(),
+          table.schema.toLowerCase(),
+          table.table.toLowerCase(),
+        ]);
+      const sourceTableIdentity = (table: WarehouseTable): string =>
+        JSON.stringify([table.schema.toLowerCase(), table.table.toLowerCase()]);
+
+      for (const table of tables) {
+        const sourceTableKey = sourceTableIdentity(table);
+        const databases = databasesBySourceTable.get(sourceTableKey) ?? new Set<string>();
+        databases.add(table.database.toLowerCase());
+        databasesBySourceTable.set(sourceTableKey, databases);
+      }
+
+      for (const table of tables) {
+        const collidesAcrossDatabases =
+          (databasesBySourceTable.get(sourceTableIdentity(table))?.size ?? 0) > 1;
+        tableSourceNameKeys.set(
+          tableIdentity(table),
+          collidesAcrossDatabases
+            ? `${table.database.toLowerCase()}_${table.schema.toLowerCase()}`
+            : DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.sourceNameForTable(table)
+        );
+      }
+
       const nextDocument = tables.reduce(
         (document, table) =>
           upsertSourceTable(document, table, {
             includeColumns: input.includeColumns,
             addTests: input.addTests,
             addFreshness: input.addFreshness,
+            sourceName:
+              tableSourceNameKeys.get(tableIdentity(table)) ??
+              DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.sourceNameForTable(table),
           }),
         existingDocument
       );
@@ -202,9 +234,11 @@ export function upsertSourceTable(
     readonly includeColumns: boolean;
     readonly addTests: boolean;
     readonly addFreshness: boolean;
+    readonly sourceName?: string;
   }
 ): SourceYamlDocument {
-  const sourceName = DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.sourceNameForTable(table);
+  const defaultSourceName = DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.sourceNameForTable(table);
+  const sourceName = options.sourceName ?? defaultSourceName;
   const tableName = DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.tableNameForTable(table);
   const sourcesByName = new Map(document.sources.map((source) => [source.name, source]));
   const existingSource = sourcesByName.get(sourceName);
