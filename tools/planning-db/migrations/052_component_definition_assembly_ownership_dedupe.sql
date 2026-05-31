@@ -38,8 +38,8 @@ parent_pattern_files as (
       where parent_child.parent_component_id = parent_pattern.component_id
     )
 ),
-child_file_claims as (
-  select distinct
+child_pattern_files as (
+  select
     parent_child.parent_component_id,
     child_pattern.component_id as child_component_id,
     base_file.file_path
@@ -54,6 +54,27 @@ child_file_claims as (
       '*',
       '%'
     )
+),
+child_file_claims as (
+  select distinct
+    child_pattern_file.parent_component_id,
+    child_pattern_file.child_component_id,
+    child_pattern_file.file_path
+  from child_pattern_files child_pattern_file
+  where not exists (
+    select 1
+    from planning_query_store.governance_component_local_ownership_patterns exclude_pattern
+    where exclude_pattern.component_id = child_pattern_file.child_component_id
+      and exclude_pattern.pattern_kind = 'excludes'
+      and (
+        child_pattern_file.file_path = exclude_pattern.pattern
+        or child_pattern_file.file_path like replace(
+          replace(exclude_pattern.pattern, '**', '%'),
+          '*',
+          '%'
+        )
+      )
+  )
 ),
 parent_pattern_coverage as (
   select

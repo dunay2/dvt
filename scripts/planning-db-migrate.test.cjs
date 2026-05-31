@@ -1007,8 +1007,10 @@ test('tracked migrations prefer local leaf component claims after W51', () => {
     /create or replace view planning_query_store\.component_engineering_file_ownership_query/
   );
   assert.match(leafClaimPrecedenceMigration.sql, /component_depth_rollup/);
-  assert.match(leafClaimPrecedenceMigration.sql, /matched_file\.claim_depth desc/);
-  assert.match(leafClaimPrecedenceMigration.sql, /matched_file\.is_leaf_component desc/);
+  assert.match(
+    leafClaimPrecedenceMigration.sql,
+    /order by\s+matched_file\.claim_depth desc,\s+matched_file\.is_leaf_component desc,\s+matched_file\.exact_match desc,\s+length\(matched_file\.own_pattern\) desc,\s+matched_file\.component_id/
+  );
   assert.match(leafClaimPrecedenceMigration.sql, /component_engineering\.file_ownership_query/);
   assert.doesNotMatch(
     leafClaimPrecedenceMigration.sql,
@@ -1025,6 +1027,10 @@ test('tracked migrations remove redundant parent ownership claims after W52', ()
   assert.ok(ownershipDedupeMigration);
   assert.match(ownershipDedupeMigration.sql, /parent_child_claim_overlaps/);
   assert.match(ownershipDedupeMigration.sql, /child_file_claims/);
+  assert.match(
+    ownershipDedupeMigration.sql,
+    /from child_pattern_files child_pattern_file[\s\S]*not exists \([\s\S]*from planning_query_store\.governance_component_local_ownership_patterns exclude_pattern[\s\S]*exclude_pattern\.component_id = child_pattern_file\.child_component_id[\s\S]*exclude_pattern\.pattern_kind = 'excludes'/
+  );
   assert.match(ownershipDedupeMigration.sql, /children_required = true/);
   assert.match(
     ownershipDedupeMigration.sql,

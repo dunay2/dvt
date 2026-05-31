@@ -78,10 +78,10 @@ local_file_claims as (
     row_number() over (
       partition by matched_file.file_path
       order by
-        length(matched_file.own_pattern) desc,
-        matched_file.exact_match desc,
         matched_file.claim_depth desc,
         matched_file.is_leaf_component desc,
+        matched_file.exact_match desc,
+        length(matched_file.own_pattern) desc,
         matched_file.component_id
     ) as claim_rank
   from (
