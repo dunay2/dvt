@@ -1,11 +1,13 @@
-import type { RunSummaryItem } from '../../ports/runs';
-import type { DbtNode } from '../../types/dbt';
+import type { CostAttributionSummary, CostAttributionStep } from '../../ports/cost';
 
 export type CostDriver = {
+  readonly id: string;
   readonly name: string;
-  readonly cost: number;
+  readonly runId: string;
+  readonly eventType: CostAttributionStep['eventType'];
+  readonly durationMs: number;
   readonly duration: number;
-  readonly status: DbtNode['status'];
+  readonly status: 'success' | 'failed';
 };
 
 export type CostAlert = {
@@ -14,68 +16,139 @@ export type CostAlert = {
   readonly description: string;
 };
 
+export type RuntimeDurationPoint = Readonly<{
+  readonly name: string;
+  readonly duration: number;
+}>;
+
 export type CostViewModel = {
-  readonly nodesWithCostCount: number;
-  readonly totalCost: number;
-  readonly totalDuration: number;
-  readonly averageCostPerRun: number;
+  readonly costCaptureStatus: 'unavailable';
+  readonly monetaryCaptureAvailable: false;
+  readonly totalCostLabel: string;
+  readonly runCount: number;
+  readonly completedStepCount: number;
+  readonly failedStepCount: number;
+  readonly stepsWithUsageCount: number;
+  readonly totalDurationMs: number;
+  readonly totalDurationSeconds: number;
+  readonly observedWindowLabel: string;
   readonly costAlerts: CostAlert[];
-  readonly currentRunCost: number | null;
   readonly costByModel: CostDriver[];
-  readonly costByRun: ReadonlyArray<{ readonly name: string; readonly cost: number }>;
-  readonly durationByModel: ReadonlyArray<{ readonly name: string; readonly duration: number }>;
+  readonly durationByRun: readonly RuntimeDurationPoint[];
+  readonly durationByStep: readonly RuntimeDurationPoint[];
 };
 
-export function formatCurrency(value: number): string {
-  return `$${value.toFixed(2)}`;
+const UNAVAILABLE_MONEY_LABEL = 'Unavailable';
+const NO_OBSERVED_WINDOW_LABEL = 'No runtime events observed';
+
+function toSeconds(durationMs: number): number {
+  return Number((durationMs / 1000).toFixed(1));
 }
 
-export function buildCostViewModel(
-  workspaceNodes: DbtNode[],
-  runs: RunSummaryItem[],
-  hasCurrentRun: boolean
-): CostViewModel {
-  const nodesWithCost = workspaceNodes.filter((node) => typeof node.lastCost === 'number');
-  const totalCost = nodesWithCost.reduce((sum, node) => sum + (node.lastCost ?? 0), 0);
-  const totalDuration = nodesWithCost.reduce((sum, node) => sum + (node.lastDuration ?? 0), 0);
-  const averageCostPerRun = runs.length > 0 ? totalCost / runs.length : totalCost;
-  const expensiveNodes = nodesWithCost.filter((node) => (node.lastCost ?? 0) >= 0.4);
-  const currentRunCost = hasCurrentRun ? averageCostPerRun * 0.15 : null;
+export function formatDurationMs(durationMs: number): string {
+  return toSeconds(durationMs).toFixed(1) + 's';
+}
 
-  const costByModel = [...nodesWithCost]
-    .sort((left, right) => (right.lastCost ?? 0) - (left.lastCost ?? 0))
-    .map((node) => ({
-      name: node.name,
-      cost: node.lastCost ?? 0,
-      duration: node.lastDuration ?? 0,
-      status: node.status,
+export function formatMoneyAmount(value: number | null, currency: string | null): string {
+  if (value === null || currency === null) {
+    return UNAVAILABLE_MONEY_LABEL;
+  }
+
+  return currency + ' ' + value.toFixed(2);
+}
+
+function formatObservedWindow(summary: CostAttributionSummary | null): string {
+  const firstEventAt = summary?.observedWindow.firstEventAt;
+  const lastEventAt = summary?.observedWindow.lastEventAt;
+  if (firstEventAt === null || firstEventAt === undefined) {
+    return NO_OBSERVED_WINDOW_LABEL;
+  }
+  if (lastEventAt === null || lastEventAt === undefined || lastEventAt === firstEventAt) {
+    return firstEventAt;
+  }
+  return firstEventAt + ' -> ' + lastEventAt;
+}
+
+function createEmptyCostViewModel(): CostViewModel {
+  return {
+    costCaptureStatus: 'unavailable',
+    monetaryCaptureAvailable: false,
+    totalCostLabel: UNAVAILABLE_MONEY_LABEL,
+    runCount: 0,
+    completedStepCount: 0,
+    failedStepCount: 0,
+    stepsWithUsageCount: 0,
+    totalDurationMs: 0,
+    totalDurationSeconds: 0,
+    observedWindowLabel: NO_OBSERVED_WINDOW_LABEL,
+    costAlerts: [],
+    costByModel: [],
+    durationByRun: [],
+    durationByStep: [],
+  };
+}
+
+function buildCostDrivers(steps: readonly CostAttributionStep[]): CostDriver[] {
+  return [...steps]
+    .sort((left, right) => right.durationMs - left.durationMs || left.stepId.localeCompare(right.stepId))
+    .map((step) => {
+      const status = step.eventType === 'StepFailed' ? 'failed' : 'success';
+      return {
+        id: [step.runId, step.stepId, step.eventType].join(':'),
+        name: step.stepId,
+        runId: step.runId,
+        eventType: step.eventType,
+        durationMs: step.durationMs,
+        duration: toSeconds(step.durationMs),
+        status,
+      };
+    });
+}
+
+function buildCostAlerts(steps: readonly CostAttributionStep[]): CostAlert[] {
+  return steps
+    .filter((step) => step.eventType === 'StepFailed')
+    .map((step) => ({
+      id: [step.runId, step.stepId].join(':'),
+      title: step.stepId + ' failed during runtime attribution',
+      description:
+        'Run ' +
+        step.runId +
+        ' recorded a failed step after ' +
+        formatDurationMs(step.durationMs) +
+        '. Monetary attribution is unavailable until provider credit capture exists.',
     }));
+}
 
-  const costByRun = runs.map((run, index) => ({
-    name: `Run ${index + 1}`,
-    cost: averageCostPerRun,
+export function buildCostViewModel(summary: CostAttributionSummary | null): CostViewModel {
+  if (summary === null) {
+    return createEmptyCostViewModel();
+  }
+
+  const costByModel = buildCostDrivers(summary.steps);
+  const durationByRun = summary.runs.map((run) => ({
+    name: run.runId,
+    duration: toSeconds(run.totalStepDurationMs),
   }));
-
-  const durationByModel = costByModel.map((model) => ({
-    name: model.name,
-    duration: Number(model.duration.toFixed(1)),
-  }));
-
-  const costAlerts = expensiveNodes.map((node) => ({
-    id: node.id,
-    title: `${node.name} exceeded cost threshold`,
-    description: `Last observed cost ${formatCurrency(node.lastCost ?? 0)} exceeded the warning threshold of $0.40.`,
+  const durationByStep = costByModel.map((driver) => ({
+    name: driver.name,
+    duration: driver.duration,
   }));
 
   return {
-    nodesWithCostCount: nodesWithCost.length,
-    totalCost,
-    totalDuration,
-    averageCostPerRun,
-    costAlerts,
-    currentRunCost,
+    costCaptureStatus: summary.costCaptureStatus,
+    monetaryCaptureAvailable: false,
+    totalCostLabel: formatMoneyAmount(summary.totalCostAmount, summary.currency),
+    runCount: summary.runCount,
+    completedStepCount: summary.completedStepCount,
+    failedStepCount: summary.failedStepCount,
+    stepsWithUsageCount: summary.steps.length,
+    totalDurationMs: summary.totalStepDurationMs,
+    totalDurationSeconds: toSeconds(summary.totalStepDurationMs),
+    observedWindowLabel: formatObservedWindow(summary),
+    costAlerts: buildCostAlerts(summary.steps),
     costByModel,
-    costByRun,
-    durationByModel,
+    durationByRun,
+    durationByStep,
   };
 }
