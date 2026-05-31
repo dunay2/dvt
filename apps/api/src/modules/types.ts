@@ -18,6 +18,7 @@ import type { AuthorizeWorkspaceGraphDraftCapabilityService } from '../applicati
 import type { CreateProjectUseCase } from '../application/services/createProjectUseCase.js';
 import type { GetWorkspaceGraphDraftUseCase } from '../application/services/getWorkspaceGraphDraftUseCase.js';
 import type { ListProjectsUseCase } from '../application/services/listProjectsUseCase.js';
+import type { ListWorkspacePluginsUseCase } from '../application/services/listWorkspacePluginsUseCase.js';
 import type { SaveWorkspaceGraphDraftUseCase } from '../application/services/saveWorkspaceGraphDraftUseCase.js';
 import type { StartRunAuthorizedFacade } from '../application/services/startRunAuthorizedFacade.js';
 
@@ -30,6 +31,7 @@ export interface ProtectedRuntimeModule {
   workspaceContextQuery: IWorkspaceContextQuery;
   listProjectsUseCase: ListProjectsUseCase;
   createProjectUseCase: CreateProjectUseCase;
+  listWorkspacePluginsUseCase: ListWorkspacePluginsUseCase;
   engine: IWorkflowEngine;
   runEnrichmentService: IRunEnrichmentService;
   runHealthService: IRunHealthService;
