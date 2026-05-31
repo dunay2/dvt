@@ -167,7 +167,7 @@ flowchart LR
 | Scenario | Opportunity | Fowler pattern | DDD owner | Command/query rail | Implementation surfaces | Unit or package test | Architecture test | User-flow test | Out of scope |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Cost route shows local dollar totals from graph node fields | Hidden authority | Replace Magic Number with Explicit Model | `CostAttributionViewModel` | `GetCostAttributionSummary` | `apps/web/src/app/views/cost/*`, `apps/web/src/app/views/CostView.tsx` | `costViewModel.test.ts` asserts unavailable money is not formatted as dollars | Guard that Cost view data source is the cost port/query, not workspace-node `lastCost` | Cost route render test for usage facts and unavailable money | Snowflake credit capture |
-| Web has no typed cost API port for the backend read model | Boundary drift | Gateway + Data Mapper | `CostAttributionSummaryPort` | `GetCostAttributionSummary` | `apps/web/src/app/ports/cost.ts`, `apps/web/src/app/services/cost/*`, `apps/web/src/app/queries/costQueries.ts` | Decoder/service tests for valid and malformed payloads | Guard no direct `fetch` in Cost view/hook | N/A | New backend route |
+| Web has no typed cost API port for the backend read model | Boundary drift | Gateway + Data Mapper | `CostAttributionSummaryPort` | `GetCostAttributionSummary` | `apps/web/src/app/ports/cost.ts`, `apps/web/src/app/services/cost/*`, `apps/web/src/app/queries/costQueries.ts`, composition root service registration | Decoder/service tests for valid and malformed payloads | Guard no direct `fetch` in Cost view/hook | N/A | New backend route |
 | Cost heatmap can decorate nodes from stale or synthetic cost fields | Hidden authority | Null Object | `CostOverlayContext` | `GetCostAttributionSummary` or none when unavailable | `apps/web/src/app/plugins/cost/costContributions.ts`, `apps/web/src/app/views/canvas/useCanvasOverlayModel.ts` if needed | Overlay model test for unavailable cost capture | Guard heatmap requires real `NodeCostData` source | Canvas overlay proof if impacted | Cost policy engine |
 | User needs operational value before monetary capture exists | Primitive obsession | Introduce Parameter Object | `RuntimeUsageSummary` presentation model | `GetCostAttributionSummary` | `apps/web/src/app/views/cost/costViewModel.ts`, cost cards/charts | Tests for run count, step counts, duration, observed window | N/A | Cost route render test | Billing invoices |
 | Backend query can fail authorization or be unavailable | Test-only confidence | Fail-closed presentation state | `CostAttributionQueryState` | `GetCostAttributionSummary` | `apps/web/src/app/queries/costQueries.ts`, `CostView.tsx` | Query/view tests for loading and error states | Existing API-client boundary guard | Render error state | Offline mock semantics as product truth |
@@ -192,6 +192,9 @@ Allowed surfaces:
 - `apps/web/src/app/services/cost/costService.api.ts`
 - `apps/web/src/app/services/cost/costService.api.test.ts`
 - `apps/web/src/app/queries/costQueries.ts`
+- `apps/web/src/app/queries/queryKeys.ts`
+- `apps/web/src/app/services/AppServicesContext.tsx`
+- `apps/web/src/app/services/composition/appServices.ts`
 
 Expected result:
 
@@ -199,6 +202,7 @@ Expected result:
 - A decoder that rejects malformed payloads.
 - An API service that builds the endpoint from tenant/project/environment/limit.
 - A TanStack query hook for the Cost route.
+- The app composition root exposes the cost port like other web application ports.
 
 ### 21/2.3 Usage-First Cost View Model
 
@@ -209,8 +213,12 @@ Allowed surfaces:
 - `apps/web/src/app/views/cost/copy.ts`
 - `apps/web/src/app/views/cost/copy.test.ts`
 - `apps/web/src/app/views/cost/useCostData.ts`
+- `apps/web/src/app/views/cost/CostStatGrid.tsx`
+- `apps/web/src/app/views/cost/CostCharts.tsx`
+- `apps/web/src/app/views/cost/CostDriverList.tsx`
+- `apps/web/src/app/views/cost/CostAlertsList.tsx`
+- `apps/web/src/app/views/cost/CostCoverageCard.tsx`
 - `apps/web/src/app/views/CostView.tsx`
-- Existing Cost child components when copy or value props must be renamed.
 
 Expected result:
 
@@ -265,6 +273,7 @@ Expected result:
 - [x] 21/2.1 Read governance startup inventory and task rules.
 - [x] 21/2.1 Identify reused query rail and existing backend implementation.
 - [x] 21/2.1 Add Fowler analysis, implementation structure, and tracking plan.
+- [x] 21/2.1 Extend allowed surfaces for composition-root registration after scope verification.
 - [ ] 21/2.1 Run feature mechanization check for this plan.
 - [ ] 21/2.2 Add red tests for cost API decoder and service endpoint.
 - [ ] 21/2.2 Implement web cost port and API service.
@@ -329,12 +338,20 @@ allowedImplementationSurfaces:
   - apps/web/src/app/services/cost/costService.api.ts
   - apps/web/src/app/services/cost/costService.api.test.ts
   - apps/web/src/app/queries/costQueries.ts
+  - apps/web/src/app/queries/queryKeys.ts
+  - apps/web/src/app/services/AppServicesContext.tsx
+  - apps/web/src/app/services/composition/appServices.ts
   - apps/web/src/app/views/cost/costViewModel.ts
   - apps/web/src/app/views/cost/costViewModel.test.ts
   - apps/web/src/app/views/cost/copy.ts
   - apps/web/src/app/views/cost/copy.test.ts
   - apps/web/src/app/views/cost/useCostData.ts
   - apps/web/src/app/views/cost/costAttributionUi.architecture.test.ts
+  - apps/web/src/app/views/cost/CostStatGrid.tsx
+  - apps/web/src/app/views/cost/CostCharts.tsx
+  - apps/web/src/app/views/cost/CostDriverList.tsx
+  - apps/web/src/app/views/cost/CostAlertsList.tsx
+  - apps/web/src/app/views/cost/CostCoverageCard.tsx
   - apps/web/src/app/views/CostView.tsx
   - apps/web/src/app/plugins/cost/costContributions.ts
   - apps/web/src/app/views/canvas/canvasOverlayContext.ts
@@ -386,14 +403,23 @@ redGreenCycles:
       - apps/web/src/app/ports/cost.ts
       - apps/web/src/app/services/cost/costApiDecoders.ts
       - apps/web/src/app/services/cost/costService.api.ts
+      - apps/web/src/app/queries/queryKeys.ts
+      - apps/web/src/app/services/AppServicesContext.tsx
+      - apps/web/src/app/services/composition/appServices.ts
     greenTest: pnpm --filter @dvt/web test -- src/app/services/cost/costService.api.test.ts
   - id: dvt21-cost-view-model
     redTest: pnpm --filter @dvt/web test -- src/app/views/cost/costViewModel.test.ts
     expectedFailure: Cost view model still derives dollars from workspace node fields.
     patchSurfaces:
+      - apps/web/src/app/queries/costQueries.ts
       - apps/web/src/app/views/cost/costViewModel.ts
       - apps/web/src/app/views/cost/copy.ts
       - apps/web/src/app/views/cost/useCostData.ts
+      - apps/web/src/app/views/cost/CostStatGrid.tsx
+      - apps/web/src/app/views/cost/CostCharts.tsx
+      - apps/web/src/app/views/cost/CostDriverList.tsx
+      - apps/web/src/app/views/cost/CostAlertsList.tsx
+      - apps/web/src/app/views/cost/CostCoverageCard.tsx
       - apps/web/src/app/views/CostView.tsx
     greenTest: pnpm --filter @dvt/web test -- src/app/views/cost/costViewModel.test.ts
   - id: dvt21-cost-architecture-guard
