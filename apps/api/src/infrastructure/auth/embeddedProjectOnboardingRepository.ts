@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 
 import type { Pool, PoolClient } from 'pg';
 
+import { AUTHORIZATION_ACTION_NAME } from '../../application/ports/accessDecision.js';
 import {
   PROJECT_ONBOARDING_CREATE_SCOPE,
   PROJECT_ONBOARDING_DEFAULT_ENVIRONMENT_ID,
@@ -294,6 +295,13 @@ async function saveProjectGrant(
   tenantAccess: readonly TenantGrantJson[],
   project: ProjectDescriptor
 ): Promise<void> {
+  const workspaceProjectActions = [
+    AUTHORIZATION_ACTION_NAME.workspaceGraphDraftView,
+    AUTHORIZATION_ACTION_NAME.workspaceGraphDraftSave,
+    AUTHORIZATION_ACTION_NAME.workspaceFilesView,
+    AUTHORIZATION_ACTION_NAME.workspaceSourceImportView,
+    AUTHORIZATION_ACTION_NAME.workspaceSourceImportImport,
+  ];
   const updatedTenants = tenantAccess.map((tenant) =>
     tenant.tenantId === project.tenantId
       ? {
@@ -302,19 +310,11 @@ async function saveProjectGrant(
             ...normalizeProjects(tenant.projectAccess),
             {
               projectId: project.projectId,
-              allowedActions: [
-                'workspace:graph-draft:view',
-                'workspace:graph-draft:save',
-                'workspace:files:view',
-              ],
+              allowedActions: workspaceProjectActions,
               environmentAccess: [
                 {
                   environmentId: PROJECT_ONBOARDING_DEFAULT_ENVIRONMENT_ID,
-                  allowedActions: [
-                    'workspace:graph-draft:view',
-                    'workspace:graph-draft:save',
-                    'workspace:files:view',
-                  ],
+                  allowedActions: workspaceProjectActions,
                 },
               ],
             },

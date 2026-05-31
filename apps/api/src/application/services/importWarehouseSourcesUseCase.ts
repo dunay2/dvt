@@ -253,5 +253,10 @@ function sameTable(left: WarehouseTable, right: WarehouseTable): boolean {
 }
 
 function toSourceNodeId(table: WarehouseTable): string {
-  return `src_${table.schema.toLowerCase()}_${table.table.toLowerCase()}`;
+  return [
+    'src',
+    table.database.toLowerCase(),
+    table.schema.toLowerCase(),
+    table.table.toLowerCase(),
+  ].join('_');
 }
