@@ -277,6 +277,10 @@ function createExactChangedTestCommandPlanEntry(
 }
 
 function quoteExactTestPath(filePath: string): string {
+  if (/^[A-Za-z0-9_@%+=:,./-]+$/.test(filePath)) {
+    return filePath;
+  }
+
   const quote = String.fromCharCode(39);
   const replacement = `${quote}\\${quote}${quote}`;
   return `${quote}${filePath.split(quote).join(replacement)}${quote}`;
