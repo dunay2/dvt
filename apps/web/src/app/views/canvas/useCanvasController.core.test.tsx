@@ -272,6 +272,26 @@ describe('useCanvasController core', () => {
     );
   });
 
+  it('gates source import when runtime capabilities disable the source import contribution', async () => {
+    harness.mocks.useCapabilitiesQuery.mockReturnValue({
+      data: {
+        apiVersion: '0.1.0',
+        minFrontendVersion: '0.1.0',
+        plugins: {
+          dbt: {
+            available: false,
+            reason: 'disabled for workspace',
+          },
+        },
+      },
+    });
+    harness.mocks.getSourceImportContributions.mockReturnValue([]);
+
+    await harness.renderProbe();
+
+    expect(harness.getLatestResult()?.canOpenSourceImport).toBe(false);
+  });
+
   it('applies draft access posture before exposing graph and execution commands', async () => {
     const projectedRemoteDraft = projectCanvasHarnessDraftReadModel(
       harness.state.remoteDraftRecord
