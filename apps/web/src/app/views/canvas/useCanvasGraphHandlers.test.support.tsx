@@ -9,7 +9,6 @@ import type { ConnectionRuleResult, PluginPortMap } from '../../plugins/contract
 import type { RuntimeCapabilities } from '../../plugins/registry';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
-import type { TransformationConnectionGuardReasonCode } from './transformationConnectionGuard';
 import { useCanvasGraphHandlers } from './useCanvasGraphHandlers';
 
 const graphHandlersTestDoubles = vi.hoisted(() => ({
@@ -20,14 +19,6 @@ const graphHandlersTestDoubles = vi.hoisted(() => ({
       currentEdges: unknown,
       pluginPorts: PluginPortMap
     ) => ConnectionRuleResult
-  >(() => ({ allowed: true })),
-  guardTransformationConnection: vi.fn<
-    () =>
-      | { allowed: true }
-      | {
-          allowed: false;
-          reasonCode: TransformationConnectionGuardReasonCode;
-        }
   >(() => ({ allowed: true })),
 }));
 
@@ -42,10 +33,6 @@ vi.mock('../../plugins/nodeTypeRegistry', async (importOriginal) => {
     resolveCanvasEdgeType: () => 'lineage',
   };
 });
-
-vi.mock('./transformationConnectionGuard', () => ({
-  guardTransformationConnection: graphHandlersTestDoubles.guardTransformationConnection,
-}));
 
 vi.mock('sonner', () => ({
   toast: {
@@ -218,48 +205,4 @@ export function renderGraphHandlersHook({
     toggleInspectorPanel,
     onLayoutComplete,
   };
-}
-
-export function resetGraphHandlersTestDoubles() {
-  (
-    globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
-  ).IS_REACT_ACT_ENVIRONMENT = true;
-  graphHandlersTestDoubles.evaluateConnection.mockReset();
-  graphHandlersTestDoubles.evaluateConnection.mockReturnValue({ allowed: true });
-  graphHandlersTestDoubles.guardTransformationConnection.mockReset();
-  graphHandlersTestDoubles.guardTransformationConnection.mockReturnValue({ allowed: true });
-  toastState.error.mockReset();
-  toastState.success.mockReset();
-  toastState.info.mockReset();
-}
-
-export function restoreGraphHandlersTestDoubles() {
-  vi.clearAllMocks();
-  vi.useRealTimers();
-}
-
-export function rejectGraphHandlerConnectionWith(
-  rejection: Exclude<ConnectionRuleResult, { allowed: true }>
-) {
-  graphHandlersTestDoubles.evaluateConnection.mockReturnValue(rejection);
-}
-
-export function evaluateGraphHandlerConnectionWith(
-  implementation: (
-    source: CanonicalNode,
-    target: CanonicalNode,
-    currentEdges: unknown,
-    pluginPorts: PluginPortMap
-  ) => ConnectionRuleResult
-) {
-  graphHandlersTestDoubles.evaluateConnection.mockImplementation(implementation);
-}
-
-export function rejectTransformationConnectionWith(
-  reasonCode: TransformationConnectionGuardReasonCode
-) {
-  graphHandlersTestDoubles.guardTransformationConnection.mockReturnValue({
-    allowed: false,
-    reasonCode,
-  });
 }
