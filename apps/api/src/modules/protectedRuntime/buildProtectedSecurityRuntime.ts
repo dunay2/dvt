@@ -8,12 +8,14 @@ import type { IAccessDecisionService } from '../../application/ports/accessDecis
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import { CreateProjectUseCase } from '../../application/services/createProjectUseCase.js';
 import { ListProjectsUseCase } from '../../application/services/listProjectsUseCase.js';
+import { ListWorkspacePluginsUseCase } from '../../application/services/listWorkspacePluginsUseCase.js';
 import { StructuredAuditLogger } from '../../infrastructure/audit/structuredAuditLogger.js';
 import { EmbeddedAccessDecisionService } from '../../infrastructure/auth/embeddedAccessDecisionService.js';
 import { EmbeddedProjectOnboardingRepository } from '../../infrastructure/auth/embeddedProjectOnboardingRepository.js';
 import { EmbeddedWorkspaceContextQuery } from '../../infrastructure/auth/embeddedWorkspaceContextQuery.js';
 import { JwksJwtVerifier } from '../../infrastructure/auth/jwksJwtVerifier.js';
 import { OidcAuthenticator } from '../../infrastructure/auth/oidcAuthenticator.js';
+import { EmbeddedWorkspacePluginCatalogRepository } from '../../infrastructure/workspacePlugins/EmbeddedWorkspacePluginCatalogRepository.js';
 import type { Env } from '../../plugins/env.js';
 
 import type { RuntimePool } from './shared.js';
@@ -29,8 +31,10 @@ export type ProtectedSecurityRuntime = {
   readonly workspaceContextQuery: EmbeddedWorkspaceContextQuery;
   readonly listProjectsUseCase: ListProjectsUseCase;
   readonly createProjectUseCase: CreateProjectUseCase;
+  readonly listWorkspacePluginsUseCase: ListWorkspacePluginsUseCase;
   readonly migrateAccessDecisionService: () => Promise<void>;
   readonly migrateProjectOnboardingRepository: () => Promise<void>;
+  readonly migrateWorkspacePluginCatalogRepository: () => Promise<void>;
   readonly commandAuthorizer: AuthorizeCommandScopeService;
   readonly authenticator: OidcAuthenticator;
 };
@@ -47,6 +51,10 @@ export function buildProtectedSecurityRuntime(
     deps.env.DVT_PG_SCHEMA
   );
   const projectOnboardingRepository = new EmbeddedProjectOnboardingRepository(
+    deps.pool,
+    deps.env.DVT_PG_SCHEMA
+  );
+  const workspacePluginCatalogRepository = new EmbeddedWorkspacePluginCatalogRepository(
     deps.pool,
     deps.env.DVT_PG_SCHEMA
   );
@@ -70,8 +78,10 @@ export function buildProtectedSecurityRuntime(
     workspaceContextQuery,
     listProjectsUseCase: new ListProjectsUseCase(projectOnboardingRepository),
     createProjectUseCase: new CreateProjectUseCase(projectOnboardingRepository),
+    listWorkspacePluginsUseCase: new ListWorkspacePluginsUseCase(workspacePluginCatalogRepository),
     migrateAccessDecisionService: () => embeddedAccessDecisionService.migrate(),
     migrateProjectOnboardingRepository: () => projectOnboardingRepository.migrate(),
+    migrateWorkspacePluginCatalogRepository: () => workspacePluginCatalogRepository.migrate(),
     commandAuthorizer,
     authenticator,
   };
