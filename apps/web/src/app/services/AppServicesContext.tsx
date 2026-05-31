@@ -2,6 +2,7 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 
 import type { CapabilitiesPort } from '../ports/capabilities';
+import type { ICostAttributionSummaryPort } from '../ports/cost';
 import type { IPlansPort } from '../ports/plans';
 import type { IRunsPort } from '../ports/runs';
 import type { SessionContextPort } from '../ports/sessionContext';
@@ -44,6 +45,7 @@ export function AppServicesProvider({ children, overrides }: AppServicesProvider
       overrides?.apiClient,
       overrides?.plansService,
       overrides?.runsService,
+      overrides?.costAttributionSummaryPort,
       overrides?.workspaceGraphSnapshotQuery,
       overrides?.workspaceFilesQuery,
       overrides?.workspaceFileHistoryQuery,
@@ -116,6 +118,10 @@ export function useRunsService(): IRunsPort {
 
 export function usePlansService(): IPlansPort {
   return useRequiredAppServicesContext().plansService;
+}
+
+export function useCostAttributionSummaryPort(): ICostAttributionSummaryPort {
+  return useRequiredAppServicesContext().costAttributionSummaryPort;
 }
 
 export function useCapabilitiesPort(): CapabilitiesPort {
