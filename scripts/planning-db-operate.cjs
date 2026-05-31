@@ -1707,38 +1707,44 @@ function assertArchitectureDesignScope(designScopes, subjectKind, subjectId, sco
   }
 }
 
-function semanticArrayField(rawUnit, key, values) {
-  if (values && values.length > 0) {
-    rawUnit[key] = values;
-  }
+function buildComponentOwnershipPatterns(command) {
+  return [
+    ...(command.owns || []).map((pattern, index) => ({
+      componentId: command.componentId,
+      patternKind: 'owns',
+      pattern,
+      patternOrder: index,
+    })),
+    ...(command.excludes || []).map((pattern, index) => ({
+      componentId: command.componentId,
+      patternKind: 'excludes',
+      pattern,
+      patternOrder: index,
+    })),
+  ];
 }
 
-function buildRawUnitFromComponentCreateCommand(command) {
-  const rawUnit = {
-    id: command.componentId,
-    name: command.name,
-    level: 'component',
-    parent: command.parentComponentId,
-    status: command.status,
-    childrenRequired: command.childrenRequired,
-    dddOwner: command.dddOwner,
-    cqRails: command.cqRails,
-    ownedConcern: command.ownedConcern,
-    owns: command.owns,
-    excludes: command.excludes,
-  };
+function buildComponentSemanticItems(command) {
+  const fields = [
+    ['responsibility', command.responsibilities],
+    ['non_goal', command.nonGoals],
+    ['reason_to_change', command.reasonsToChange],
+    ['public_api', command.publicApi],
+    ['invariant', command.invariants],
+    ['transition', command.transitions],
+    ['consumer', command.consumers],
+    ['governance_ref', command.governance],
+    ['fowler_signal', command.fowlerSignals],
+  ];
 
-  semanticArrayField(rawUnit, 'responsibilities', command.responsibilities);
-  semanticArrayField(rawUnit, 'nonGoals', command.nonGoals);
-  semanticArrayField(rawUnit, 'reasonsToChange', command.reasonsToChange);
-  semanticArrayField(rawUnit, 'publicApi', command.publicApi);
-  semanticArrayField(rawUnit, 'invariants', command.invariants);
-  semanticArrayField(rawUnit, 'transitions', command.transitions);
-  semanticArrayField(rawUnit, 'consumers', command.consumers);
-  semanticArrayField(rawUnit, 'governance', command.governance);
-  semanticArrayField(rawUnit, 'fowlerSignals', command.fowlerSignals);
-
-  return rawUnit;
+  return fields.flatMap(([itemKind, values]) =>
+    (values || []).map((itemValue, index) => ({
+      componentId: command.componentId,
+      itemKind,
+      itemValue,
+      itemOrder: index,
+    }))
+  );
 }
 
 function componentDefinitionSourceHash(command) {
@@ -1959,7 +1965,8 @@ function planComponentCreateOperation({
   const sourcePath = 'planning_query_store.governance_component_local_definitions';
   const sourceContentSha256 = componentDefinitionSourceHash(command);
   const createdAt = toIso(now);
-  const rawUnit = buildRawUnitFromComponentCreateCommand(command);
+  const ownershipPatterns = buildComponentOwnershipPatterns(command);
+  const semanticItems = buildComponentSemanticItems(command);
   const definition = {
     componentId: command.componentId,
     sourcePath,
@@ -1972,23 +1979,11 @@ function planComponentCreateOperation({
     domainUnit: parent.domainUnit || parent.rootUnit || parent.unitId,
     status: command.status,
     childrenRequired: command.childrenRequired,
-    owns: command.owns,
-    excludes: command.excludes,
     ownedConcern: command.ownedConcern,
-    responsibilities: command.responsibilities,
-    nonGoals: command.nonGoals,
-    reasonsToChange: command.reasonsToChange,
     dddOwner: command.dddOwner,
     cqRails: command.cqRails,
-    publicApi: command.publicApi,
-    invariants: command.invariants,
-    transitions: command.transitions,
-    consumers: command.consumers,
-    governance: command.governance,
-    fowlerSignals: command.fowlerSignals,
     createdBy: command.actor,
     createdAt,
-    rawUnit,
   };
   const audit = {
     operationId,
@@ -2005,7 +2000,7 @@ function planComponentCreateOperation({
     createdAt,
   };
 
-  return { definition, audit };
+  return { definition, ownershipPatterns, semanticItems, audit };
 }
 
 function normalizeTaskDefinition(row) {
@@ -2892,14 +2887,9 @@ async function writePlannedComponentCreateOperation(client, planned) {
   await client.query(
     `insert into ${schemaName}.governance_component_local_definitions
       (component_id, source_path, source_content_sha256, revision, name, level, parent_id,
-       root_unit, domain_unit, status, children_required, owns, excludes, owned_concern,
-       responsibilities, non_goals, reasons_to_change, ddd_owner, cq_rails, public_api,
-       invariants, transitions, consumers, governance_refs, fowler_signals, created_by,
-       created_at, raw_unit)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13::jsonb,
-             $14, $15::jsonb, $16::jsonb, $17::jsonb, $18, $19, $20::jsonb,
-             $21::jsonb, $22::jsonb, $23::jsonb, $24::jsonb, $25::jsonb, $26,
-             $27, $28::jsonb)`,
+       root_unit, domain_unit, status, children_required, owned_concern, ddd_owner,
+       cq_rails, created_by, created_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
     [
       planned.definition.componentId,
       planned.definition.sourcePath,
@@ -2912,25 +2902,35 @@ async function writePlannedComponentCreateOperation(client, planned) {
       planned.definition.domainUnit,
       planned.definition.status,
       planned.definition.childrenRequired,
-      toJson(planned.definition.owns),
-      toJson(planned.definition.excludes),
       planned.definition.ownedConcern,
-      toJson(planned.definition.responsibilities),
-      toJson(planned.definition.nonGoals),
-      toJson(planned.definition.reasonsToChange),
       planned.definition.dddOwner,
       planned.definition.cqRails,
-      toJson(planned.definition.publicApi),
-      toJson(planned.definition.invariants),
-      toJson(planned.definition.transitions),
-      toJson(planned.definition.consumers),
-      toJson(planned.definition.governance),
-      toJson(planned.definition.fowlerSignals),
       planned.definition.createdBy,
       planned.definition.createdAt,
-      toJson(planned.definition.rawUnit),
     ]
   );
+
+  for (const pattern of planned.ownershipPatterns) {
+    await client.query(
+      `insert into ${schemaName}.governance_component_local_ownership_patterns
+        (component_id, pattern_kind, pattern, pattern_order)
+       values ($1, $2, $3, $4)
+       on conflict (component_id, pattern_kind, pattern) do update set
+         pattern_order = excluded.pattern_order`,
+      [pattern.componentId, pattern.patternKind, pattern.pattern, pattern.patternOrder]
+    );
+  }
+
+  for (const item of planned.semanticItems) {
+    await client.query(
+      `insert into ${schemaName}.governance_component_local_semantic_items
+        (component_id, item_kind, item_value, item_order)
+       values ($1, $2, $3, $4)
+       on conflict (component_id, item_kind, item_value) do update set
+         item_order = excluded.item_order`,
+      [item.componentId, item.itemKind, item.itemValue, item.itemOrder]
+    );
+  }
 
   await client.query(
     `insert into ${schemaName}.governance_component_local_operations
@@ -3533,4 +3533,5 @@ module.exports = {
   validateArchitectureDesignStatus,
   validateComponentStatus,
   validateTaskStatus,
+  writePlannedComponentCreateOperation,
 };

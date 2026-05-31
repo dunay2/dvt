@@ -20,6 +20,7 @@ const {
   validateArchitectureDesignStatus,
   validateComponentStatus,
   validateTaskStatus,
+  writePlannedComponentCreateOperation,
 } = require('./planning-db-operate.cjs');
 
 const importedTask = {
@@ -325,11 +326,101 @@ test('component create planner emits a DB definition and audit row', () => {
   assert.equal(planned.definition.domainUnit, 'SYS-RUNTIME');
   assert.equal(planned.definition.revision, 0);
   assert.equal(planned.definition.createdBy, 'codex');
-  assert.equal(planned.definition.rawUnit.level, 'component');
-  assert.equal(planned.definition.rawUnit.ownedConcern, command.ownedConcern);
-  assert.deepEqual(planned.definition.rawUnit.publicApi, ['CreateGovernanceComponent']);
+  assert.equal(Object.hasOwn(planned.definition, 'rawUnit'), false);
+  assert.equal(Object.hasOwn(planned.definition, 'owns'), false);
+  assert.equal(Object.hasOwn(planned.definition, 'publicApi'), false);
+  assert.deepEqual(planned.ownershipPatterns, [
+    {
+      componentId: 'SYS-RUNTIME-ENGINE-ADMISSION',
+      patternKind: 'owns',
+      pattern: 'packages/@dvt/engine/src/admission/**',
+      patternOrder: 0,
+    },
+  ]);
+  assert.deepEqual(
+    planned.semanticItems.filter((item) => item.itemKind === 'public_api'),
+    [
+      {
+        componentId: 'SYS-RUNTIME-ENGINE-ADMISSION',
+        itemKind: 'public_api',
+        itemValue: 'CreateGovernanceComponent',
+        itemOrder: 0,
+      },
+    ]
+  );
   assert.equal(planned.audit.operationType, 'component_create');
   assert.equal(planned.audit.componentId, 'SYS-RUNTIME-ENGINE-ADMISSION');
+});
+
+test('component create writer stores component lists in relational tables', async () => {
+  const now = new Date('2026-05-14T09:00:00.000Z');
+  const command = parseArgs([
+    'component',
+    'create',
+    '--component',
+    'SYS-RUNTIME-ENGINE-ADMISSION',
+    '--name',
+    'Runtime engine admission policy',
+    '--parent',
+    'SYS-RUNTIME-ENGINE-CORE',
+    '--status',
+    'review',
+    '--owned-concern',
+    'Owns admission policy boundaries before runtime execution.',
+    '--owns',
+    'packages/@dvt/engine/src/admission/**',
+    '--excludes',
+    'packages/@dvt/engine/src/admission/README.md',
+    '--ddd-owner',
+    'AS',
+    '--cq-rails',
+    'CreateGovernanceComponent',
+    '--public-api',
+    'CreateGovernanceComponent',
+    '--invariant',
+    'Every accepted admission decision has a governance rail.',
+    '--transition',
+    'review -> canonical after exact ownership validation passes',
+    '--consumer',
+    'component_engineering.component_tree_query',
+    '--actor',
+    'codex',
+  ]);
+  const planned = planComponentCreateOperation({
+    command,
+    parentUnit: {
+      unit_id: 'SYS-RUNTIME-ENGINE-CORE',
+      name: 'Runtime engine core',
+      level: 'component',
+      root_unit: 'SYS-DVT',
+      domain_unit: 'SYS-RUNTIME',
+    },
+    existingComponent: null,
+    operationId: 'op-component-create',
+    now,
+  });
+  const queries = [];
+  const client = {
+    async query(sql, params) {
+      queries.push({ sql, params });
+      return { rows: [] };
+    },
+  };
+
+  await writePlannedComponentCreateOperation(client, planned);
+
+  const definitionInsert = queries.find((query) =>
+    query.sql.includes('governance_component_local_definitions')
+  );
+  assert.ok(definitionInsert);
+  assert.doesNotMatch(definitionInsert.sql, /owns, excludes/);
+  assert.doesNotMatch(definitionInsert.sql, /public_api/);
+  assert.ok(
+    queries.some((query) => query.sql.includes('governance_component_local_ownership_patterns'))
+  );
+  assert.ok(
+    queries.some((query) => query.sql.includes('governance_component_local_semantic_items'))
+  );
 });
 
 test('component create planner rejects duplicate, missing parent, and weak semantics', () => {

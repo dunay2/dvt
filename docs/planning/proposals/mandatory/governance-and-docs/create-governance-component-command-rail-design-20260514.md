@@ -579,10 +579,11 @@ symbols:
   - <<: *createGovernanceComponentSymbol
     name: normalizeComponentDefinition
   - <<: *createGovernanceComponentSymbol
-    name: semanticArrayField
-    dddOwner: ComponentSemanticContract
+    name: buildComponentOwnershipPatterns
+    dddOwner: ComponentOwnershipPolicy
   - <<: *createGovernanceComponentSymbol
-    name: buildRawUnitFromComponentCreateCommand
+    name: buildComponentSemanticItems
+    dddOwner: ComponentSemanticContract
   - <<: *createGovernanceComponentSymbol
     name: componentDefinitionSourceHash
     dddOwner: GovernanceComponentLocalOperation

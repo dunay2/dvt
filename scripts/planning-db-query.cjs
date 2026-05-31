@@ -1249,8 +1249,8 @@ function realWorkSelect() {
 function governanceFileSelect() {
   return `
     select
-      path,
-      component_unit,
+      file_path as path,
+      leaf_component_id as component_unit,
       owning_unit,
       root_unit,
       domain_unit,
@@ -1259,7 +1259,7 @@ function governanceFileSelect() {
       is_legacy,
       ddd_owner,
       cq_rails
-    from ${schemaName}.governance_file_query`;
+    from ${componentEngineeringSchemaName}.file_ownership_query`;
 }
 
 function governanceComponentSelect() {
@@ -2173,10 +2173,17 @@ async function readRealWorkRows(client, filters = {}) {
 }
 
 function appendGovernanceFileFilters(predicates, params, filters = {}) {
-  appendFilter(predicates, params, 'component_unit', filters.component);
+  appendFilter(predicates, params, 'leaf_component_id', filters.component);
   appendFilter(predicates, params, 'root_unit', filters.rootUnit);
   appendFilter(predicates, params, 'domain_unit', filters.domainUnit);
   appendFilter(predicates, params, 'governance_state', filters.governanceState);
+  appendFilter(predicates, params, 'file_path', filters.path);
+}
+
+function appendGovernanceDriftFilters(predicates, params, filters = {}) {
+  appendFilter(predicates, params, 'component_unit', filters.component);
+  appendFilter(predicates, params, 'root_unit', filters.rootUnit);
+  appendFilter(predicates, params, 'domain_unit', filters.domainUnit);
   appendFilter(predicates, params, 'path', filters.path);
 }
 
@@ -2206,7 +2213,7 @@ async function readGovernanceFileRows(client, filters = {}) {
   const result = await client.query(
     `${governanceFileSelect()}
      ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
-     order by is_drift desc, component_unit, path
+     order by is_drift desc, leaf_component_id, file_path
      limit $${params.length}`,
     params
   );
@@ -2781,7 +2788,7 @@ async function readRiskDebtRows(client, filters = {}) {
 async function readGovernanceDriftRows(client, filters = {}) {
   const params = [];
   const predicates = [];
-  appendGovernanceFileFilters(predicates, params, filters);
+  appendGovernanceDriftFilters(predicates, params, filters);
 
   const limit = parseLimit(filters.limit, 50);
   params.push(limit);
