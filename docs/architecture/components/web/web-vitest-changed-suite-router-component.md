@@ -2,7 +2,7 @@
 title: Web Vitest Changed Suite Router Component
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-05-20
+last_reviewed: 2026-05-31
 planning_type: architecture
 ---
 
@@ -31,6 +31,7 @@ Tests` pull-request lane while preserving full primary-suite coverage on
 | `test:canvas-presentation`          | command  | Runs Canvas presentation focus tests.                       |
 | `test:canvas-architecture`          | command  | Runs Canvas architecture focus tests.                       |
 | `test:monaco`                       | command  | Runs Monaco route-surface focus tests.                      |
+| `test:workspace-services`           | command  | Runs workspace service port/facade focus tests.             |
 | `test:web:changed`                  | command  | Root alias for the package-local changed-suite command.     |
 | `run-vitest-changed-suites.ts`      | adapter  | Reads Git change sets or explicit `--files` arguments.      |
 | `Web Frontend Tests` PR route       | CI job   | Runs changed-suite routing for ordinary web PR changes.     |
@@ -45,6 +46,8 @@ Tests` pull-request lane while preserving full primary-suite coverage on
   `canvas-architecture` when the file type makes that safe.
 - Monaco-scoped paths route to `monaco` when the change is local to Code,
   Artifacts/Diff Monaco guards, or shared Monaco code surfaces.
+- Workspace service paths under `src/app/services/workspace/**` route to
+  `workspace-services` before the broad `unit` fallback.
 - Non-Canvas `.tsx` paths route to `presentation`.
 - Non-Canvas `.ts` paths route to `unit`.
 - If no web-relevant changed file exists, the command exits successfully
@@ -62,6 +65,7 @@ stateDiagram-v2
   ChangedFiles --> GovernedPath: suite catalog/config/docs
   ChangedFiles --> CanvasPath: Canvas route or canvas module
   ChangedFiles --> MonacoPath: Monaco route/editor surface
+  ChangedFiles --> WorkspaceServicePath: workspace service port/facade
   ChangedFiles --> TsxPath: non-Canvas TSX
   ChangedFiles --> TsPath: non-Canvas TS
   GovernedPath --> ArchitectureCommand
@@ -69,6 +73,7 @@ stateDiagram-v2
   CanvasPath --> CanvasPresentationCommand: .tsx
   CanvasPath --> CanvasArchitectureCommand: architecture
   MonacoPath --> MonacoCommand
+  WorkspaceServicePath --> WorkspaceServicesCommand
   TsxPath --> PresentationCommand
   TsPath --> UnitCommand
   ArchitectureCommand --> Evidence
@@ -76,6 +81,7 @@ stateDiagram-v2
   CanvasPresentationCommand --> Evidence
   CanvasArchitectureCommand --> Evidence
   MonacoCommand --> Evidence
+  WorkspaceServicesCommand --> Evidence
   PresentationCommand --> Evidence
   UnitCommand --> Evidence
 ```
