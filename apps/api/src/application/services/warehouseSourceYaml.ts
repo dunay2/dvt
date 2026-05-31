@@ -64,7 +64,10 @@ export const DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR: WarehouseSourceYamlArtifactDes
       groupingStrategy === 'database' ? table.database.toLowerCase() : table.schema.toLowerCase();
     return `models/sources/src_${groupKey}.yml`;
   },
-  sourceNameForTable: (table) => table.schema.toLowerCase(),
+  sourceNameForTable: (table) =>
+    (table.connectionId ? [table.connectionId, table.database, table.schema] : [table.schema])
+      .map(toStableYamlIdentifierPart)
+      .join('_'),
   tableNameForTable: (table) => table.table.toLowerCase(),
   generatedFreshness: {
     warnAfterCount: 24,
@@ -92,6 +95,18 @@ export type WarehouseSourceYamlUpdate = {
   readonly content: string;
 };
 
+export type WarehouseSourceYamlBinding = {
+  readonly path: string;
+  readonly sourceName: string;
+  readonly tableName: string;
+};
+
+export type BuildWarehouseSourceYamlBindingsInput = {
+  readonly tables: readonly WarehouseTable[];
+  readonly groupingStrategy: SourceImportGrouping;
+  readonly existingFiles: ReadonlyMap<string, string>;
+};
+
 export type BuildWarehouseSourceYamlUpdatesInput = {
   readonly tables: readonly WarehouseTable[];
   readonly groupingStrategy: SourceImportGrouping;
@@ -105,21 +120,66 @@ export function buildWarehouseSourceYamlUpdates(
   input: BuildWarehouseSourceYamlUpdatesInput
 ): readonly WarehouseSourceYamlUpdate[] {
   const tablesByPath = groupTablesForYaml(input.tables, input.groupingStrategy);
+  const bindings = buildWarehouseSourceYamlBindings(input);
   return Array.from(tablesByPath.entries())
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([path, tables]) => {
       const existingDocument = readExistingSourceDocument(input.existingFiles.get(path));
+
       const nextDocument = tables.reduce(
         (document, table) =>
           upsertSourceTable(document, table, {
             includeColumns: input.includeColumns,
             addTests: input.addTests,
             addFreshness: input.addFreshness,
+            sourceName:
+              bindings.get(tableIdentity(table))?.sourceName ??
+              DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.sourceNameForTable(table),
           }),
         existingDocument
       );
       return { path, content: serializeSourceDocument(nextDocument) };
     });
+}
+
+export function buildWarehouseSourceYamlBindings(
+  input: BuildWarehouseSourceYamlBindingsInput
+): ReadonlyMap<string, WarehouseSourceYamlBinding> {
+  const tablesByPath = groupTablesForYaml(input.tables, input.groupingStrategy);
+  const bindings = new Map<string, WarehouseSourceYamlBinding>();
+
+  for (const [path, tables] of tablesByPath.entries()) {
+    const existingDocument = readExistingSourceDocument(input.existingFiles.get(path));
+    const databasesBySourceTable = buildSourceTableDatabaseIndex(existingDocument, tables);
+
+    for (const table of tables) {
+      const tableName = DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.tableNameForTable(table);
+      const defaultSourceName = DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.sourceNameForTable(table);
+      const existingSourceName = findExistingSourceNameForTable(existingDocument, table);
+      const collidesAcrossDatabases =
+        (databasesBySourceTable.get(sourceTableIdentity(table))?.size ?? 0) > 1;
+      const canonicalSourceName = collidesAcrossDatabases
+        ? (table.connectionId
+            ? [table.connectionId, table.database, table.schema]
+            : [table.database, table.schema]
+          )
+            .map(toStableYamlIdentifierPart)
+            .join('_')
+        : defaultSourceName;
+      const reusableExistingSourceName =
+        existingSourceName !== undefined &&
+        !isRetiredSourceNameForTable(existingSourceName, table, canonicalSourceName)
+          ? existingSourceName
+          : undefined;
+      bindings.set(tableIdentity(table), {
+        path,
+        sourceName: reusableExistingSourceName ?? canonicalSourceName,
+        tableName,
+      });
+    }
+  }
+
+  return bindings;
 }
 
 export function readExistingSourceDocument(content: string | undefined): SourceYamlDocument {
@@ -195,6 +255,102 @@ export function groupTablesForYaml(
   return grouped;
 }
 
+function buildSourceTableDatabaseIndex(
+  existingDocument: SourceYamlDocument,
+  tables: readonly WarehouseTable[]
+): ReadonlyMap<string, ReadonlySet<string>> {
+  const databasesBySourceTable = new Map<string, Set<string>>();
+  const addDatabase = (sourceTableKey: string, database: string): void => {
+    const databases = databasesBySourceTable.get(sourceTableKey) ?? new Set<string>();
+    databases.add(database.toLowerCase());
+    databasesBySourceTable.set(sourceTableKey, databases);
+  };
+
+  for (const source of existingDocument.sources) {
+    if (source.database === undefined || source.schema === undefined) {
+      continue;
+    }
+    for (const table of source.tables) {
+      addDatabase(
+        JSON.stringify(['', source.schema.toLowerCase(), table.name.toLowerCase()]),
+        source.database
+      );
+    }
+  }
+
+  for (const table of tables) {
+    addDatabase(sourceTableIdentity(table), table.database);
+  }
+
+  return databasesBySourceTable;
+}
+
+function findExistingSourceNameForTable(
+  document: SourceYamlDocument,
+  table: WarehouseTable
+): string | undefined {
+  const database = table.database.toLowerCase();
+  const schema = table.schema.toLowerCase();
+  const canonicalSourceName = DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.sourceNameForTable(table);
+  const matchingSources = document.sources.filter((source) => {
+    return source.database?.toLowerCase() === database && source.schema?.toLowerCase() === schema;
+  });
+  if (table.connectionId) {
+    return (
+      matchingSources.find((source) => source.name === canonicalSourceName)?.name ??
+      matchingSources.find((source) =>
+        isRetiredSourceNameForTable(source.name, table, canonicalSourceName)
+      )?.name
+    );
+  }
+  return (
+    matchingSources.find((source) => source.name === canonicalSourceName)?.name ??
+    matchingSources.find(
+      (source) =>
+        source.name === [table.database, table.schema].map(toStableYamlIdentifierPart).join('_')
+    )?.name ??
+    matchingSources[0]?.name
+  );
+}
+
+function tableIdentity(table: WarehouseTable): string {
+  return JSON.stringify([
+    table.connectionId?.toLowerCase() ?? '',
+    table.database.toLowerCase(),
+    table.schema.toLowerCase(),
+    table.table.toLowerCase(),
+  ]);
+}
+
+function sourceTableIdentity(table: WarehouseTable): string {
+  return JSON.stringify([
+    table.connectionId?.toLowerCase() ?? '',
+    table.schema.toLowerCase(),
+    DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.tableNameForTable(table),
+  ]);
+}
+
+function toStableYamlIdentifierPart(part: string): string {
+  return part
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+function isRetiredSourceNameForTable(
+  sourceName: string,
+  table: WarehouseTable,
+  canonicalSourceName: string
+): boolean {
+  if (sourceName === canonicalSourceName) {
+    return false;
+  }
+  return (
+    sourceName === toStableYamlIdentifierPart(table.schema) ||
+    sourceName === [table.database, table.schema].map(toStableYamlIdentifierPart).join('_')
+  );
+}
+
 export function upsertSourceTable(
   document: SourceYamlDocument,
   table: WarehouseTable,
@@ -202,12 +358,24 @@ export function upsertSourceTable(
     readonly includeColumns: boolean;
     readonly addTests: boolean;
     readonly addFreshness: boolean;
+    readonly sourceName?: string;
   }
 ): SourceYamlDocument {
-  const sourceName = DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.sourceNameForTable(table);
+  const defaultSourceName = DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.sourceNameForTable(table);
+  const sourceName = options.sourceName ?? defaultSourceName;
   const tableName = DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.tableNameForTable(table);
   const sourcesByName = new Map(document.sources.map((source) => [source.name, source]));
-  const existingSource = sourcesByName.get(sourceName);
+  const legacySource = document.sources.find(
+    (source) =>
+      source.name !== sourceName &&
+      isRetiredSourceNameForTable(source.name, table, sourceName) &&
+      source.database?.toLowerCase() === table.database.toLowerCase() &&
+      source.schema?.toLowerCase() === table.schema.toLowerCase()
+  );
+  if (legacySource !== undefined) {
+    sourcesByName.delete(legacySource.name);
+  }
+  const existingSource = sourcesByName.get(sourceName) ?? legacySource;
   const sourceDatabase = existingSource?.database ?? table.database;
   const sourceSchema = existingSource?.schema ?? table.schema.toLowerCase();
   const existingTables = existingSource?.tables ?? [];
