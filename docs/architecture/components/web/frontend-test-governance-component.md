@@ -2,7 +2,7 @@
 title: Frontend Test Governance Component
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-05-20
+last_reviewed: 2026-05-31
 planning_type: architecture
 ---
 
@@ -49,6 +49,8 @@ contract validation, or engine determinism tests.
 - Every web Vitest file belongs to exactly one primary suite.
 - Focus suites may overlap with primary ownership only when they are explicitly
   listed in `WEB_VITEST_FOCUS_SUITE_NAMES`.
+- Feature-owned focus suites may narrow local feedback loops without changing
+  primary suite ownership.
 - Architecture tests are excluded from unit and presentation suites.
 - The CI job name for the web Vitest lane is `Web Frontend Tests`.
 - Ordinary web pull requests route through `pnpm test:web:changed`.
@@ -77,7 +79,8 @@ stateDiagram-v2
 ## Consumers
 
 - Local developers use `pnpm --filter @dvt/web test:unit`,
-  `test:presentation`, `test:architecture`, and `test:canvas`.
+  `test:presentation`, `test:architecture`, `test:canvas`, `test:monaco`, and
+  `test:workspace-services`.
 - GitHub Actions uses `pnpm test:web:changed` for ordinary web pull requests
   and `pnpm test:web:ci` for full web coverage routes.
 - Architecture tests use `classifyWebVitestFile` to prevent suite drift.
