@@ -301,6 +301,7 @@ async function saveProjectGrant(
     AUTHORIZATION_ACTION_NAME.workspaceFilesView,
     AUTHORIZATION_ACTION_NAME.workspaceSourceImportView,
     AUTHORIZATION_ACTION_NAME.workspaceSourceImportImport,
+    AUTHORIZATION_ACTION_NAME.workspacePluginsView,
   ];
   const updatedTenants = tenantAccess.map((tenant) =>
     tenant.tenantId === project.tenantId
