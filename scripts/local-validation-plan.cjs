@@ -6,10 +6,21 @@ const { classifyRepositoryChangedScope } = require('../tools/ci/repository-chang
 
 const repoRoot = path.resolve(__dirname, '..');
 const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
+  'scripts/check-governance-unit-coverage.cjs': 'scripts/check-governance-unit-coverage.test.cjs',
+  'scripts/check-governance-unit-coverage.test.cjs':
+    'scripts/check-governance-unit-coverage.test.cjs',
   'scripts/generate-governance-coverage-report.cjs':
     'scripts/generate-governance-coverage-report.test.cjs',
   'scripts/generate-governance-coverage-report.test.cjs':
     'scripts/generate-governance-coverage-report.test.cjs',
+  'scripts/generate-governance-document-unit-map.cjs':
+    'scripts/generate-governance-document-unit-map.test.cjs',
+  'scripts/generate-governance-document-unit-map.test.cjs':
+    'scripts/generate-governance-document-unit-map.test.cjs',
+  'scripts/generate-governance-file-component-index.cjs':
+    'scripts/generate-governance-file-component-index.test.cjs',
+  'scripts/generate-governance-file-component-index.test.cjs':
+    'scripts/generate-governance-file-component-index.test.cjs',
   'scripts/generate-governance-remediation-queue.cjs':
     'scripts/generate-governance-remediation-queue.test.cjs',
   'scripts/generate-governance-remediation-queue.test.cjs':

@@ -126,6 +126,34 @@ test('buildVerifyChangedPlan runs targeted governance report generator tests for
   assert.ok(!labels.includes('pnpm test:planning:db'));
 });
 
+test('buildVerifyChangedPlan runs targeted ownership generator tests for AI-sized changes', () => {
+  const labels = labelsFor([
+    'scripts/check-governance-unit-coverage.cjs',
+    'scripts/generate-governance-file-component-index.cjs',
+    'scripts/generate-governance-document-unit-map.cjs',
+  ]);
+
+  assert.equal(
+    labels.filter(
+      (label) => label === 'node --test scripts/check-governance-unit-coverage.test.cjs'
+    ).length,
+    1
+  );
+  assert.equal(
+    labels.filter(
+      (label) => label === 'node --test scripts/generate-governance-file-component-index.test.cjs'
+    ).length,
+    1
+  );
+  assert.equal(
+    labels.filter(
+      (label) => label === 'node --test scripts/generate-governance-document-unit-map.test.cjs'
+    ).length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
 test('buildVerifyChangedPlan runs changed governance report tests directly', () => {
   const labels = labelsFor(['scripts/generate-governance-remediation-queue.test.cjs']);
 

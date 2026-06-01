@@ -437,6 +437,15 @@ redGreenCycles:
       - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
       - docs/planning/closeouts/**
     greenTest: node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
+  - id: governance-owner-generator-tests-route-through-verify-changed
+    redTest: node --test scripts/verify-changed.test.cjs
+    expectedFailure: verify:changed does not currently route check-governance-unit-coverage, governance file-component index, or document-unit map changes to their focused tests even though those tests are cheap and own the local generator behavior.
+    patchSurfaces:
+      - scripts/local-validation-plan.cjs
+      - scripts/verify-changed.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test scripts/verify-changed.test.cjs
 symbols:
   - name: buildOwnerMatcher
     path: scripts/check-governance-unit-coverage.cjs

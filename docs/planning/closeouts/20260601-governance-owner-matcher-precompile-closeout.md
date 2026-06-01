@@ -200,3 +200,35 @@ flowchart TD
 
 - No stub, placeholder, fake adapter, fake success path, or unfinished branch is
   planned.
+
+## Follow-Up Routing Iteration
+
+- Problem summary: after committing the owner matcher optimization,
+  `pnpm verify:prepush` passed but did not select the focused
+  `check-governance-unit-coverage`, `generate-governance-file-component-index`,
+  or `generate-governance-document-unit-map` tests through `verify:changed`.
+- Root cause: `scripts/local-validation-plan.cjs` only mapped coverage-report
+  and remediation-queue generators in `PLANNING_WORKFLOW_SCRIPT_TESTS`; the
+  ownership/index generators were absent from that route table.
+- Selected option and rationale: extend the existing local validation plan map
+  instead of adding another command or broad suite. This keeps IA validation
+  cheap and ensures future generator changes select the tests that own their
+  behavior.
+- Validation plan:
+  - `node --test scripts/verify-changed.test.cjs`
+  - `node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs`
+  - `pnpm docs:feature-mechanization:implementation`
+  - `pnpm verify:prepush`
+- Red run:
+  `node --test scripts/verify-changed.test.cjs` failed 1/15 as expected
+  because ownership/index generator changes selected no focused tests.
+- Green run:
+  `node --test scripts/verify-changed.test.cjs` passed 15/15 after adding the
+  local validation map entries.
+- Regression coverage:
+  `node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs`
+  passed 37/37 after the routing change.
+- `pnpm lint:md:changed`,
+  `pnpm docs:feature-mechanization -- --feature CI-SCOPE-OPTIMIZATION-20260508`,
+  and `pnpm docs:feature-mechanization:implementation` passed after the routing
+  plan update.
