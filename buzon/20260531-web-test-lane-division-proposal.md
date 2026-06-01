@@ -11,11 +11,11 @@ Split `@dvt/web` tests so changed-file routing can avoid broad unit or presentat
 
 ## Fowler Signals
 
-| Signal | Finding | Fix |
-| --- | --- | --- |
-| Feedback-loop drag | Workspace service changes previously fell back to the broad `unit` lane. | Add a `workspace-services` focus lane. |
-| Boundary drift | Routing must not move into GitHub Actions YAML. | Keep routing in `WebVitestChangedSuiteRouter`. |
-| Duplicate semantics | Suite config, package scripts, and routing can drift. | Add architecture guards over catalog, scripts, config, and routing. |
+| Signal              | Finding                                                                  | Fix                                                                 |
+| ------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------- |
+| Feedback-loop drag  | Workspace service changes previously fell back to the broad `unit` lane. | Add a `workspace-services` focus lane.                              |
+| Boundary drift      | Routing must not move into GitHub Actions YAML.                          | Keep routing in `WebVitestChangedSuiteRouter`.                      |
+| Duplicate semantics | Suite config, package scripts, and routing can drift.                    | Add architecture guards over catalog, scripts, config, and routing. |
 
 ## Implemented Slice
 
