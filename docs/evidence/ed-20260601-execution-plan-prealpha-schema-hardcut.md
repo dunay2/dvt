@@ -17,12 +17,18 @@ code_refs:
   - contracts/compat/plan-compat.json
   - contracts/compat/plan-compat.schema.json
   - packages/@dvt/adapter-temporal/src/versioning.ts
+  - packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts
+  - .golden/hashes.json
+  - apps/web/package.json
 evidence:
   tests:
     - pnpm --filter @dvt/plan-verifier test -- planVersionAdmission.test.ts verify.test.ts
     - pnpm --filter @dvt/contracts test -- plan-admission-matrix.contract.test.ts plan-version.contract.test.ts planner.contract.test.ts
-    - pnpm --filter @dvt/engine test -- PlanSchemaVersionPolicy.test.ts WorkflowEngine.test.ts
-    - pnpm --filter @dvt/adapter-postgres test -- PostgresPlanStore.records-core.integration.test.ts PostgresPlanStore.records-guards.integration.test.ts
+    - pnpm golden:validate
+    - node scripts/compare-hashes.cjs
+    - pnpm --filter @dvt/engine test
+    - pnpm test:adapter-postgres
+    - pnpm --filter @dvt/web run lint
     - pnpm docs:feature-mechanization:implementation -- --feature RUNTIME-EXECUTION-PLAN-PREALPHA-SCHEMA-HARDCUT-20260601
 ---
 
@@ -44,6 +50,11 @@ The previous `schemaVersion = v1.2` value is not retained as a legacy alias.
 - The root compatibility matrix uses the same `major.minor` schema literal.
 - Runtime, adapter, API, web, and persisted plan-store fixtures are aligned to
   the active pair.
+- Golden path deterministic hashes are regenerated for the new canonical
+  fixture payloads.
+- PostgreSQL plan artifact persistence revalidates the tenant-scoped
+  `PlanRecord` even when the executable blob already exists, preserving the
+  existing no-reopen invariant for archived and superseded records.
 - Plan-verifier and contracts tests include negative coverage proving
   `schemaVersion = "v1.2"` rejects.
 

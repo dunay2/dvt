@@ -1,11 +1,11 @@
 {
-  "version": "1.2.0",
+  "version": "1.0.0",
   "description": "Baseline snapshot hashes for golden path contract tests",
-  "generated": "2026-02-23T00:00:00.000Z",
+  "generated": "2026-06-01T00:00:00.000Z",
   "paths": {
     "plan-minimal": {
       "description": "Single step echo task - simplest possible plan",
-      "hash": "e6b2eb19f9ac0b40",
+      "hash": "de2121e6831654b8",
       "status": "implemented",
       "location": "packages/@dvt/engine/test/contracts/plans/plan-minimal.json",
       "metadata": {
@@ -16,7 +16,7 @@
     },
     "plan-parallel": {
       "description": "3 parallel steps with fan-in merge",
-      "hash": "3a1d419ca545af6e",
+      "hash": "01c81ee8ba59c0ab",
       "status": "implemented",
       "location": "packages/@dvt/engine/test/contracts/plans/plan-parallel.json",
       "metadata": {
@@ -27,7 +27,7 @@
     },
     "plan-cancel-and-resume": {
       "description": "5 sequential steps with PAUSE/RESUME signals",
-      "hash": "c0640ad7c769a5e4",
+      "hash": "fd483c255c241c14",
       "status": "implemented",
       "location": "packages/@dvt/engine/test/contracts/plans/plan-cancel-and-resume.json",
       "metadata": {

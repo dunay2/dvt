@@ -123,6 +123,8 @@ governingSources:
   - docs/adr/ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md
   - docs/architecture/components/engine/contracts/plan-admission-matrix.md
 allowedImplementationSurfaces:
+  - .golden/hashes.json
+  - apps/web/package.json
   - docs/.manifest.json
   - docs/adr/ADR-0017_ExecutionPlan_Schema_Versioning.md
   - docs/adr/ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md
@@ -150,6 +152,7 @@ allowedImplementationSurfaces:
   - packages/@dvt/plan-verifier/test/**
   - packages/@dvt/engine/test/**
   - packages/@dvt/adapter-temporal/src/versioning.ts
+  - packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts
   - packages/@dvt/adapter-postgres/test/PostgresPlanStore*
   - apps/api/test/**
   - apps/web/src/app/services/plans/**
@@ -159,7 +162,6 @@ allowedImplementationSurfaces:
   - packages/test/matrix-alignment.test.ts
 forbiddenImplementationSurfaces:
   - apps/api/src/**
-  - packages/@dvt/adapter-postgres/src/**
   - packages/@dvt/engine/src/**
   - packages/@dvt/planner/src/**
   - tools/**
@@ -178,6 +180,11 @@ fowlerSignals:
 architectureGuards:
   - pnpm --filter @dvt/contracts test -- plan-admission-matrix.contract.test.ts plan-version.contract.test.ts planner.contract.test.ts
   - pnpm --filter @dvt/plan-verifier test -- planVersionAdmission.test.ts
+  - pnpm golden:validate
+  - node scripts/compare-hashes.cjs
+  - pnpm --filter @dvt/engine test
+  - pnpm test:adapter-postgres
+  - pnpm --filter @dvt/web run lint
 cypressFlows:
   - N/A - contract hard-cut only; Cypress fixtures are updated when they embed execution-plan refs.
 redGreenCycles:
