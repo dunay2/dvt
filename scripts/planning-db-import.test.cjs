@@ -473,13 +473,14 @@ test('governance snapshot builds DB import sources from in-memory generator proj
   assert.ok(generatedSources.every((source) => typeof source.rawSourceText === 'string'));
 });
 
-test('governance snapshot imports DB-backed coverage and remediation generated artifacts', () => {
+test('governance snapshot imports generated artifacts without trusting stale generated indexes', () => {
   const fs = require('node:fs');
   const path = require('node:path');
   const coveragePath = governanceGeneratedPath('system-governance-coverage-report.coverage.yaml');
   const remediationPath = governanceGeneratedPath('system-governance-remediation-queue.queue.yaml');
+  const fileIndexPath = governanceGeneratedPath('system-governance-file-index.files.yaml');
   const originals = new Map(
-    [coveragePath, remediationPath].map((filePath) => [
+    [coveragePath, remediationPath, fileIndexPath].map((filePath) => [
       filePath,
       fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : null,
     ])
@@ -530,13 +531,18 @@ test('governance snapshot imports DB-backed coverage and remediation generated a
     '    expectedValidation: []',
     '',
   ].join('\n');
+  const staleRaw = 'fileCount: 999999\nshards: []\n';
 
   fs.mkdirSync(path.dirname(coveragePath), { recursive: true });
   fs.writeFileSync(coveragePath, coverageRaw, 'utf8');
   fs.writeFileSync(remediationPath, remediationRaw, 'utf8');
+  fs.writeFileSync(fileIndexPath, staleRaw, 'utf8');
 
   try {
     const snapshot = buildGovernanceFileSnapshot();
+    const fileIndexSource = snapshot.sources.find(
+      (source) => source.sourceType === 'governance_file_index'
+    );
     const coverageSource = snapshot.sources.find(
       (source) => source.sourceType === 'governance_coverage_report'
     );
@@ -550,6 +556,11 @@ test('governance snapshot imports DB-backed coverage and remediation generated a
     assert.equal(remediationSource.metadata.sourceMode, 'generated-artifact');
     assert.equal(coverageSource.rawSourceText, coverageRaw);
     assert.equal(remediationSource.rawSourceText, remediationRaw);
+    assert.ok(fileIndexSource);
+    assert.notEqual(snapshot.index.fileCount, 999999);
+    assert.equal(snapshot.files.length, snapshot.index.fileCount);
+    assert.equal(fileIndexSource.rawSource.fileCount, snapshot.index.fileCount);
+    assert.equal(fileIndexSource.rawSourceText, staleRaw);
   } finally {
     for (const [filePath, original] of originals) {
       if (original === null) {
@@ -578,34 +589,6 @@ test('governance import clears every repopulated governance table before insert'
   assert.ok(governanceImportDeleteTables.includes('governance_remediation'));
   assert.ok(governanceImportDeleteTables.includes('risk_debt_items'));
   assert.equal(governanceImportDeleteTables.at(-1), 'governance_sources');
-});
-
-test('governance snapshot does not use stale generated YAML as structured import input', () => {
-  const fs = require('node:fs');
-  const path = require('node:path');
-  const fileIndexPath = governanceGeneratedPath('system-governance-file-index.files.yaml');
-  const original = fs.existsSync(fileIndexPath) ? fs.readFileSync(fileIndexPath, 'utf8') : null;
-  const staleRaw = 'fileCount: 999999\nshards: []\n';
-
-  fs.mkdirSync(path.dirname(fileIndexPath), { recursive: true });
-  fs.writeFileSync(fileIndexPath, staleRaw, 'utf8');
-
-  try {
-    const snapshot = buildGovernanceFileSnapshot();
-    const source = snapshot.sources.find((entry) => entry.sourceType === 'governance_file_index');
-
-    assert.ok(source);
-    assert.notEqual(snapshot.index.fileCount, 999999);
-    assert.equal(snapshot.files.length, snapshot.index.fileCount);
-    assert.equal(source.rawSource.fileCount, snapshot.index.fileCount);
-    assert.equal(source.rawSourceText, staleRaw);
-  } finally {
-    if (original === null) {
-      fs.unlinkSync(fileIndexPath);
-    } else {
-      fs.writeFileSync(fileIndexPath, original, 'utf8');
-    }
-  }
 });
 
 test('repository command snapshot imports package scripts and command files for DB queries', async () => {

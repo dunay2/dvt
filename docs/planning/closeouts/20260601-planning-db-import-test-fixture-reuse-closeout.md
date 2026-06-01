@@ -161,6 +161,9 @@ advisory lock` took 22.187s.
 - Left generated-artifact mutation tests on direct
   `buildGovernanceFileSnapshot()` calls so stale-file and DB-backed generated
   YAML behavior remains isolated.
+- Combined the DB-backed generated-artifact assertion and stale generated-index
+  assertion into one mutation-sensitive snapshot. This preserves both assertion
+  sets while avoiding a second full governance snapshot build.
 - Changed the advisory-lock assertion to call `importContent` with
   `includePlanning: false` and `includeGovernance: false`, preserving coverage
   of the public import transaction preamble without building unrelated
@@ -172,11 +175,17 @@ advisory lock` took 22.187s.
   before implementation: passed 31/31 tests, `duration_ms 76865.314`.
 - `node --test --test-reporter=spec scripts/planning-db-import.test.cjs`
   after implementation: passed 31/31 tests, `duration_ms 33574.2426`.
-- Measured improvement: 43.291s faster for the focused test file, about 56.3%
-  less wall time.
+- `node --test --test-reporter=spec scripts/planning-db-import.test.cjs` after
+  merging the mutation-sensitive generated YAML assertions: passed 30/30 tests,
+  `duration_ms 22256.3616`.
+- Measured improvement: 54.609s faster for the focused test file, about 71.1%
+  less wall time than the 76.865s baseline.
 - The advisory-lock subtest dropped from 22.187s to 18.809ms while still
   asserting the `begin` and `pg_advisory_xact_lock` sequence emitted through
   `importContent`.
+- The DB-backed generated-artifact and stale generated-index assertions now
+  share one isolated fresh snapshot; no assertion from either previous subtest
+  was removed.
 
 ## No-Debt Evidence
 
