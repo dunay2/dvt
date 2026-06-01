@@ -68,7 +68,7 @@ class FeatureImplementationGuard {
     for (const filePath of this.changedFiles) {
       const forbiddenPatterns = this.collectSurfacePatterns(
         'forbiddenImplementationSurfaces',
-        this.findManifestEntriesAllowingFile(filePath)
+        this.findMostSpecificManifestEntriesAllowingFile(filePath)
       );
       const matchingPattern = forbiddenPatterns.find((pattern) =>
         this.matchesSurface(filePath, pattern)
@@ -157,6 +157,38 @@ class FeatureImplementationGuard {
     );
   }
 
+  findMostSpecificManifestEntriesAllowingFile(filePath) {
+    const matches = this.manifestEntries
+      .map((entry) => {
+        const matchingAllowedPatterns = this.collectSurfacePatterns(
+          'allowedImplementationSurfaces',
+          [entry]
+        ).filter((pattern) => this.matchesSurface(filePath, pattern));
+
+        if (matchingAllowedPatterns.length === 0) {
+          return null;
+        }
+
+        return {
+          entry,
+          specificity: Math.max(
+            ...matchingAllowedPatterns.map((pattern) => this.surfacePatternSpecificity(pattern))
+          ),
+        };
+      })
+      .filter(Boolean);
+
+    if (matches.length === 0) {
+      return [];
+    }
+
+    const maxSpecificity = Math.max(...matches.map((match) => match.specificity));
+
+    return matches
+      .filter((match) => match.specificity === maxSpecificity)
+      .map((match) => match.entry);
+  }
+
   collectDeclaredSymbols() {
     const declaredSymbols = new Set();
 
@@ -187,6 +219,10 @@ class FeatureImplementationGuard {
     const regex = new RegExp(`^${this.globPatternToRegex(normalizedPattern)}$`);
 
     return regex.test(normalizedFilePath);
+  }
+
+  surfacePatternSpecificity(pattern) {
+    return pattern.normalized.replace(/\*\*/g, '').replace(/\*/g, '').length;
   }
 
   globPatternToRegex(pattern) {

@@ -268,6 +268,39 @@ test('validateFeatureImplementationManifests applies forbidden surfaces only fro
   assert.deepEqual(result.errors, []);
 });
 
+test('validateFeatureImplementationManifests prefers the most specific allowed surface before applying forbids', () => {
+  const broadDocsManifest = {
+    ...validManifest,
+    featureId: 'GD-BROAD-DOCS',
+    allowedImplementationSurfaces: ['docs/**/index.md'],
+    forbiddenImplementationSurfaces: ['docs/archive/**'],
+  };
+  const archiveManifest = {
+    ...validManifest,
+    featureId: 'GD-PLANNER-LOCAL-DOC-ARCHIVE-20260601',
+    allowedImplementationSurfaces: ['docs/archive/index.md', 'docs/archive/planner/**'],
+    forbiddenImplementationSurfaces: ['apps/**'],
+  };
+
+  const result = validateFeatureImplementationManifests(
+    [
+      {
+        sourcePath: 'broad-docs-plan.md',
+        manifest: broadDocsManifest,
+      },
+      {
+        sourcePath: 'archive-plan.md',
+        manifest: archiveManifest,
+      },
+    ],
+    {
+      changedFiles: ['docs/archive/index.md', 'docs/archive/planner/index.md'],
+    }
+  );
+
+  assert.deepEqual(result.errors, []);
+});
+
 test('validateFeatureImplementationManifests rejects added exported code symbols missing from the manifest', () => {
   const result = validateFeatureImplementationManifests(
     [

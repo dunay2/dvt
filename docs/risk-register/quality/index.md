@@ -116,6 +116,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [R-20260329-MVP-BACKEND-SCOPE-DRIFT-01](R-20260329-MVP-BACKEND-SCOPE-DRIFT-01.md)
 - [R-20260329-RUN-EVENT-RETENTION-RUNTIME-01](R-20260329-RUN-EVENT-RETENTION-RUNTIME-01.md)
 - [R-20260426-START-RUN-INTENT-ROLLBACK-ASYMMETRY](r-20260426-start-run-intent-rollback-asymmetry.md)
+- [R-20260601-PLANNER-LOCAL-DOC-ARCHIVE](r-20260601-planner-local-doc-archive.md)
 - [RC-C1 boundary hardening could regress if typed not-found errors drift back to string parsing](R-20260331-RC-C1-BOUNDARY-LEGACY-HARDENING.yaml)
 - [RC-G1 contract ownership migration can drift between tracker, proposal, and package moves](R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml)
 - [Residual S08 scoped dispatch depends on upstream plan-record migration](r-20260502-s08-temporal-dispatch-scope.yaml)
