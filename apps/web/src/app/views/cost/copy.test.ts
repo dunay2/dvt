@@ -7,13 +7,14 @@ describe('resolveCostViewCopy', () => {
     const copy = resolveCostViewCopy('en-US');
 
     expect(copy.title).toBe('Cost');
-    expect(copy.durationSeriesLabel).toBe('Duration (s)');
+    expect(copy.durationByRunSeriesLabel).toBe('Run duration (s)');
+    expect(copy.costCaptureUnavailable).toBe('Cost capture unavailable');
   });
 
-  it('falls back to English for unsupported locales', () => {
-    const copy = resolveCostViewCopy('es-ES');
+  it('falls back to English for another locale', () => {
+    const copy = resolveCostViewCopy('fr-FR');
 
     expect(copy.title).toBe('Cost');
-    expect(copy.currentRunEstimate).toBe('Current run estimate');
+    expect(copy.costCaptureStatus).toBe('Cost capture status');
   });
 });
