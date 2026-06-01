@@ -51,14 +51,6 @@ function buildRefreshStages() {
         id: 'workboard',
         script: 'docs:workboard:generate',
       },
-      {
-        id: 'coverage-report',
-        script: 'docs:governance:coverage-report',
-      },
-      {
-        id: 'remediation-queue',
-        script: 'docs:governance:remediation-queue',
-      },
     ],
     databaseStages: [
       {

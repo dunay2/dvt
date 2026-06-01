@@ -85,8 +85,11 @@ flowchart TD
   FileComponent["docs:governance:file-component-index"]
   Fingerprint["docs:governance:file-fingerprint-baseline"]
   FingerprintImpact["docs:governance:file-fingerprint-impact"]
-  Coverage["docs:governance:coverage-report"]
-  Remediation["docs:governance:remediation-queue"]
+  GovernanceImport["governance:db:import final"]
+  QueryStore["planning_query_store governance views"]
+  Coverage["docs:governance:coverage-report\nsource=db final"]
+  Remediation["docs:governance:remediation-queue\nsource=db final"]
+  Workboard["docs:workboard:generate"]
   ChangedFiles["docs:governance:changed-files:check"]
   Prepush["verify:prepush / ci:docs"]
 
@@ -112,30 +115,32 @@ flowchart TD
   FingerprintBaseline --> FingerprintImpact
   FingerprintShards --> FingerprintImpact
   FileIndex --> FingerprintImpact
-  FileIndex --> Import["planning:db:import"]
-  ComponentIndex --> Import
-  ComponentMap --> Import
-  DocumentMapOutputs --> Import
-  FingerprintBaseline --> Import
-  FingerprintShards --> Import
-  FingerprintImpact --> Import
-  Import --> Coverage
+  FileIndex --> Import["planning:db:import\nplanning-only"]
+  Import --> Workboard
+  ComponentIndex --> GovernanceImport
+  ComponentMap --> GovernanceImport
+  DocumentMapOutputs --> GovernanceImport
+  FingerprintBaseline --> GovernanceImport
+  FingerprintShards --> GovernanceImport
+  FingerprintImpact --> GovernanceImport
+  FileIndex --> GovernanceImport
+  GovernanceImport --> QueryStore
+  QueryStore --> Coverage
   Coverage --> CoverageOutputs[".generated-docs/.../system-governance-coverage-report.*"]
-  Import --> Remediation
-  CoverageOutputs --> Remediation
+  QueryStore --> Remediation
   Remediation --> RemediationOutputs[".generated-docs/.../system-governance-remediation-queue.*"]
-  RemediationOutputs --> ImportFinal["planning:db:import final"]
   FileIndex --> ChangedFiles
   FingerprintBaseline --> ChangedFiles
   FingerprintShards --> ChangedFiles
   Worktree --> ChangedFiles
   UnitCoverage --> Prepush
+  Workboard --> Prepush
   DocumentMapOutputs --> Prepush
   FileIndex --> Prepush
   FingerprintImpact --> Prepush
   CoverageOutputs --> Prepush
-  RemediationOutputs --> ImportFinal
-  ImportFinal --> Prepush
+  RemediationOutputs --> Prepush
+  GovernanceImport --> Prepush
   ChangedFiles --> Prepush
 ```
 
@@ -172,22 +177,22 @@ flowchart TD
   `.generated-docs/planning/status/system-governance-file-fingerprint-impact-20260501.md`,
   and its check command regenerates the ignored current impact report.
 - `Coverage report` runs `pnpm docs:governance:coverage-report` through
-  `scripts/generate-governance-coverage-report.cjs`. In
-  `governance:refresh`, the stage runs with
+  `scripts/generate-governance-coverage-report.cjs`. In the final
+  `governance:refresh` database-validation phase, the stage runs with
   `DVT_GOVERNANCE_REPORT_SOURCE=db` and reads
   `planning_query_store.governance_file_query` plus
   `planning_query_store.governance_component_query` after
-  `planning:db:import`. Standalone checks without that source override retain
+  `governance:db:import`. Standalone checks without that source override retain
   the deterministic local generated-input path, write
   `.generated-docs/planning/status/system-governance-coverage-report.*`, and
   regenerate the ignored artifact.
 - `Remediation queue` runs `pnpm docs:governance:remediation-queue` through
-  `scripts/generate-governance-remediation-queue.cjs`. In
-  `governance:refresh`, the stage runs with
+  `scripts/generate-governance-remediation-queue.cjs`. In the final
+  `governance:refresh` database-validation phase, the stage runs with
   `DVT_GOVERNANCE_REPORT_SOURCE=db` and reads
   `planning_query_store.governance_remediation_query` plus
   `planning_query_store.governance_coverage_query` after
-  `planning:db:import`. Standalone checks without that source override retain
+  `governance:db:import`. Standalone checks without that source override retain
   the deterministic local generated-input path, write
   `.generated-docs/planning/status/system-governance-remediation-queue.*`, and
   regenerate the ignored artifact.
@@ -214,19 +219,20 @@ The command runs the docs and governance generation stages in this order:
 6. `docs:governance:file-component-index`
 7. `docs:governance:file-fingerprint-baseline`
 8. `docs:governance:file-fingerprint-impact`
-9. `planning:db:import`
+9. `planning:db:import -- --if-stale --planning-only`
 10. `docs:workboard:generate`
-11. `docs:governance:coverage-report`
-12. `docs:governance:remediation-queue`
-13. `planning:db:import` final import for generated report parity
 
 After each generation pass, the runner hashes staged, unstaged, and untracked
 non-ignored worktree state. It repeats generation until that fingerprint stops
 changing, with a small maximum pass count. `planning:db:import` runs inside each
-generation pass after source-affecting generators and before DB-backed generated
-surfaces. Only after generated outputs are stable does it re-run
-`planning:db:import`, then `planning:db:check`, `planning:db:export:check`,
-`governance:db:check`, and `governance:db:export:check`.
+generation pass after source-affecting generators and before workboard
+generation. Coverage and remediation projections are built in-memory for
+`governance:db:import`; their local artifacts are written only after the DB is
+fresh. Only after generated outputs are stable does it re-run
+`planning:db:import`, then `planning:db:check`, `planning:db:inventory:check`,
+`planning:db:export:check`, `governance:db:import`,
+`governance:db:check`, DB-sourced coverage/remediation generation, and
+`governance:db:export:check`.
 
 The fingerprint is a convergence guard, not a new source of truth. Git-tracked
 sources, generated-docs policy, unit ownership, and generator scripts remain

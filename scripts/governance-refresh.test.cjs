@@ -11,7 +11,7 @@ const {
   runGovernanceRefresh,
 } = require('./governance-refresh.cjs');
 
-test('governance refresh uses local governance reports before DB validation', () => {
+test('governance refresh defers governance reports to DB-backed final generation', () => {
   const stages = buildRefreshStages();
 
   assert.deepEqual(
@@ -27,8 +27,6 @@ test('governance refresh uses local governance reports before DB validation', ()
       'docs:governance:file-fingerprint-impact',
       'planning:db:import',
       'docs:workboard:generate',
-      'docs:governance:coverage-report',
-      'docs:governance:remediation-queue',
     ]
   );
   assert.deepEqual(
@@ -41,12 +39,12 @@ test('governance refresh uses local governance reports before DB validation', ()
     'generation passes must not run heavy governance DB imports before generated surfaces stabilize'
   );
   assert.equal(
-    stages.generationStages.find((stage) => stage.id === 'coverage-report').args,
-    undefined
+    stages.generationStages.some((stage) => stage.id === 'coverage-report'),
+    false
   );
   assert.equal(
-    stages.generationStages.find((stage) => stage.id === 'remediation-queue').args,
-    undefined
+    stages.generationStages.some((stage) => stage.id === 'remediation-queue'),
+    false
   );
   assert.deepEqual(
     stages.databaseStages.map((stage) => stage.script),

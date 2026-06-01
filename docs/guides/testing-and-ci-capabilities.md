@@ -567,9 +567,11 @@ Current workflow consumers:
   Root-config PRs still use `pnpm build` to exercise the full root graph.
 - `pnpm governance:refresh` keeps generated governance file surfaces stable
   before DB validation, but no longer runs `governance:db:import` inside
-  generation passes. It performs the heavy governance DB import once in the
-  final database-validation phase, then runs `governance:db:check` and
-  DB-sourced final coverage/remediation report checks before
+  generation passes and no longer pre-generates local coverage/remediation
+  reports before the DB import. It builds those report projections in-memory
+  for the import, performs the heavy governance DB import once in the final
+  database-validation phase, then runs `governance:db:check` and DB-sourced
+  final coverage/remediation report checks before
   `governance:db:export:check`.
 - Default `pnpm verify:prepush` delegates changed-slice planning DB inventory
   validation to `pnpm verify:changed` instead of running
