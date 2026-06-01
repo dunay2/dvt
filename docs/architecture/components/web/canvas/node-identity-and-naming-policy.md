@@ -22,10 +22,10 @@ The current canvas can display several nodes with the same visible name, for exa
 DVT should separate three different concepts and render them differently in the UI:
 
 ```ts
-nodeId        // immutable technical identity: e.g. src_01J...
-displayName   // editable human label: e.g. Orders source
-semanticRef   // real object/reference: e.g. raw.orders, stg_orders, model.sales.orders
-shortId       // compact visual suffix derived from nodeId: e.g. A7F3
+nodeId; // immutable technical identity: e.g. src_01J...
+displayName; // editable human label: e.g. Orders source
+semanticRef; // real object/reference: e.g. raw.orders, stg_orders, model.sales.orders
+shortId; // compact visual suffix derived from nodeId: e.g. A7F3
 ```
 
 The technical identifier must always exist, but it should not be the primary title shown to the user. The visible card should prioritize business meaning and only expose the identifier as a secondary disambiguator.
@@ -39,11 +39,11 @@ Primary title:     displayName or semanticRef
 Secondary line:    kind label · semanticRef or #shortId
 ```
 
-| Current           | Minimum acceptable     | Preferred                              |
-| ----------------- | ---------------------- | -------------------------------------- |
-| `Source 2`        | `Source 2 · #S2A1`     | `raw.orders` / `Source · #S2A1`        |
+| Current           | Minimum acceptable        | Preferred                                         |
+| ----------------- | ------------------------- | ------------------------------------------------- |
+| `Source 2`        | `Source 2 · #S2A1`        | `raw.orders` / `Source · #S2A1`                   |
 | `SQL transform 1` | `SQL transform 1 · #T91B` | `Normalize orders` / `SQL transform · stg_orders` |
-| `Sink 1`          | `Sink 1 · #K3D2`       | `mart.orders_daily` / `Sink · #K3D2`   |
+| `Sink 1`          | `Sink 1 · #K3D2`          | `mart.orders_daily` / `Sink · #K3D2`              |
 
 ## 4. Naming policy
 
@@ -87,15 +87,15 @@ The suffix should be subtle, not part of the primary name, and derived from `nod
 
 ## 7. Inspector fields
 
-| Field | Description |
-| ----- | ----------- |
-| Display name | Editable user-facing label. |
-| Node ID | Immutable technical identifier, copyable. |
-| Short ID | Compact visual suffix derived from `nodeId`. |
-| Semantic ref | Real object reference: table, model, view, artifact or target. |
-| Kind | `source`, `sql_transform`, `sink`, etc. |
+| Field        | Description                                                           |
+| ------------ | --------------------------------------------------------------------- |
+| Display name | Editable user-facing label.                                           |
+| Node ID      | Immutable technical identifier, copyable.                             |
+| Short ID     | Compact visual suffix derived from `nodeId`.                          |
+| Semantic ref | Real object reference: table, model, view, artifact or target.        |
+| Kind         | `source`, `sql_transform`, `sink`, etc.                               |
 | Created from | `manual`, `dbt_manifest`, `artifact_import`, `template`, `generated`. |
-| Status | `authoring`, `valid`, `invalid`, `running`, `completed`, `failed`. |
+| Status       | `authoring`, `valid`, `invalid`, `running`, `completed`, `failed`.    |
 
 ## 8. Left catalog / Project Nodes
 
@@ -127,17 +127,14 @@ export type CanvasNodeOrigin =
   | 'template'
   | 'generated';
 
-export type CanvasNodeKind =
-  | 'source'
-  | 'sql_transform'
-  | 'sink';
+export type CanvasNodeKind = 'source' | 'sql_transform' | 'sink';
 
 export interface CanvasNodeIdentity {
-  readonly nodeId: string;          // immutable, globally unique in workspace/canvas
+  readonly nodeId: string; // immutable, globally unique in workspace/canvas
   readonly kind: CanvasNodeKind;
-  readonly displayName: string;     // visible, editable
-  readonly semanticRef?: string;    // raw.orders, stg_orders, model.sales.orders
-  readonly shortId: string;         // derived from nodeId, e.g. A7F3
+  readonly displayName: string; // visible, editable
+  readonly semanticRef?: string; // raw.orders, stg_orders, model.sales.orders
+  readonly shortId: string; // derived from nodeId, e.g. A7F3
   readonly createdFrom?: CanvasNodeOrigin;
 }
 ```
@@ -156,13 +153,13 @@ export interface CanvasNodeIdentity {
 
 The user should reason visually in business language, while the system reasons technically through immutable IDs. This is the same separation used by mature graph tools: the visible title is optimized for cognition; the ID is optimized for persistence and references.
 
-| Option | Clarity | Recommendation |
-| ------ | ------- | -------------- |
-| Only repeated `Source 2` | Low | Reject |
-| `Source 2 · #A7F3` | Medium | Acceptable fallback |
-| `raw.orders` plus secondary type/id | High | Preferred |
-| Technical ID as title | Low for business users | Reject |
-| Editable name plus ID in inspector | High | Recommended |
+| Option                              | Clarity                | Recommendation      |
+| ----------------------------------- | ---------------------- | ------------------- |
+| Only repeated `Source 2`            | Low                    | Reject              |
+| `Source 2 · #A7F3`                  | Medium                 | Acceptable fallback |
+| `raw.orders` plus secondary type/id | High                   | Preferred           |
+| Technical ID as title               | Low for business users | Reject              |
+| Editable name plus ID in inspector  | High                   | Recommended         |
 
 ## 12. Implementation notes
 
