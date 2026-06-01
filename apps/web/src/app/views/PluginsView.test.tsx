@@ -7,9 +7,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { RuntimeCapabilitiesDto } from '../../capabilities/runtime-capabilities/contracts/runtimeCapabilitiesDtos';
 import type { CapabilitiesPort } from '../ports/capabilities';
+import type { IWorkspacePluginCatalogQueryPort } from '../ports/workspace';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { resolveString } from '../plugins/contracts/PluginManifest';
-import { PLUGIN_REGISTRY } from '../plugins/registry';
+import { PLUGIN_REGISTRY, type PluginContributions } from '../plugins/registry';
+import type { Plugin } from '../types/dbt';
 import { waitForReactQuery, withTestQueryClient } from '../../testing/reactQueryHarness';
 import PluginsView from './PluginsView';
 
@@ -41,6 +43,33 @@ function buildCapabilitiesPayload(
   };
 }
 
+function toCatalogPlugin(plugin: PluginContributions): Plugin {
+  return {
+    id: plugin.id,
+    name: resolveString(plugin.displayName),
+    version: plugin.version,
+    description: resolveString(plugin.displayName),
+    capabilities: [...(plugin.capabilities ?? [])],
+    enabled: true,
+    permissions: [],
+    ...(plugin.backendPluginId ? { backendPluginId: plugin.backendPluginId } : {}),
+  };
+}
+
+function buildPluginCatalogPayload(
+  plugins: readonly PluginContributions[] = PLUGIN_REGISTRY
+): Plugin[] {
+  return plugins.map(toCatalogPlugin);
+}
+
+function createPluginCatalogQueryPort(
+  plugins: readonly Plugin[] = buildPluginCatalogPayload()
+): IWorkspacePluginCatalogQueryPort {
+  return {
+    getPlugins: vi.fn().mockResolvedValue(plugins),
+  };
+}
+
 describe('PluginsView', () => {
   let mounted: Awaited<ReturnType<typeof withTestQueryClient>> | null;
 
@@ -66,12 +95,20 @@ describe('PluginsView', () => {
   });
 
   it('renders the plugins workbench inside governed route chrome', async () => {
+    const pluginCatalog = buildPluginCatalogPayload();
     const capabilitiesPort: CapabilitiesPort = {
       loadCapabilities: vi.fn().mockResolvedValue(buildCapabilitiesPayload()),
     };
+    const workspacePluginCatalogQuery = createPluginCatalogQueryPort(pluginCatalog);
 
     mounted = await withTestQueryClient(
-      <AppServicesProvider overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
+      <AppServicesProvider
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          capabilitiesPort,
+          workspacePluginCatalogQuery,
+        }}
+      >
         <PluginsView />
       </AppServicesProvider>
     );
@@ -98,7 +135,7 @@ describe('PluginsView', () => {
     expect(headerBand?.className).toContain('border-[color:var(--border-default)]');
     expect(probeCard?.className).toContain('bg-[var(--surface-panel)]');
     expect(probeCard?.className).toContain('border-[color:var(--border-default)]');
-    expect(pluginCards).toHaveLength(PLUGIN_REGISTRY.length);
+    expect(pluginCards).toHaveLength(pluginCatalog.length);
     expect(mounted.container.innerHTML).not.toContain('bg-slate-900');
     expect(mounted.container.innerHTML).not.toContain('bg-slate-950');
     expect(mounted.container.innerHTML).not.toContain('border-slate-700');
@@ -120,9 +157,16 @@ describe('PluginsView', () => {
     const capabilitiesPort: CapabilitiesPort = {
       loadCapabilities: vi.fn(() => new Promise<RuntimeCapabilitiesDto>(() => {})),
     };
+    const workspacePluginCatalogQuery = createPluginCatalogQueryPort();
 
     mounted = await withTestQueryClient(
-      <AppServicesProvider overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
+      <AppServicesProvider
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          capabilitiesPort,
+          workspacePluginCatalogQuery,
+        }}
+      >
         <PluginsView />
       </AppServicesProvider>
     );
@@ -134,6 +178,16 @@ describe('PluginsView', () => {
     expect(probeCard?.textContent).toContain('Checking');
 
     if (backendPlugin) {
+      await waitForReactQuery(
+        () =>
+          mounted?.container
+            .querySelector(
+              `[data-slot="plugin-capability-row"][data-plugin-id="${backendPlugin.id}"]`
+            )
+            ?.textContent?.includes('Pending') === true,
+        { description: 'plugin pending backend capability render' }
+      );
+
       const card = mounted.container.querySelector(
         `[data-slot="plugin-capability-row"][data-plugin-id="${backendPlugin.id}"]`
       );
@@ -157,9 +211,16 @@ describe('PluginsView', () => {
           buildCapabilitiesPayload({ omitPluginIds: [backendPlugin.backendPluginId] })
         ),
     };
+    const workspacePluginCatalogQuery = createPluginCatalogQueryPort();
 
     mounted = await withTestQueryClient(
-      <AppServicesProvider overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
+      <AppServicesProvider
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          capabilitiesPort,
+          workspacePluginCatalogQuery,
+        }}
+      >
         <PluginsView />
       </AppServicesProvider>
     );
@@ -201,9 +262,16 @@ describe('PluginsView', () => {
         })
       ),
     };
+    const workspacePluginCatalogQuery = createPluginCatalogQueryPort();
 
     mounted = await withTestQueryClient(
-      <AppServicesProvider overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
+      <AppServicesProvider
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          capabilitiesPort,
+          workspacePluginCatalogQuery,
+        }}
+      >
         <PluginsView />
       </AppServicesProvider>
     );
@@ -240,9 +308,16 @@ describe('PluginsView', () => {
     const capabilitiesPort: CapabilitiesPort = {
       loadCapabilities: vi.fn().mockRejectedValue(new Error('probe down')),
     };
+    const workspacePluginCatalogQuery = createPluginCatalogQueryPort();
 
     mounted = await withTestQueryClient(
-      <AppServicesProvider overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
+      <AppServicesProvider
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          capabilitiesPort,
+          workspacePluginCatalogQuery,
+        }}
+      >
         <PluginsView />
       </AppServicesProvider>
     );
@@ -278,9 +353,16 @@ describe('PluginsView', () => {
     const capabilitiesPort: CapabilitiesPort = {
       loadCapabilities: vi.fn().mockResolvedValue(buildCapabilitiesPayload()),
     };
+    const workspacePluginCatalogQuery = createPluginCatalogQueryPort();
 
     mounted = await withTestQueryClient(
-      <AppServicesProvider overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
+      <AppServicesProvider
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          capabilitiesPort,
+          workspacePluginCatalogQuery,
+        }}
+      >
         <PluginsView />
       </AppServicesProvider>
     );
@@ -330,9 +412,16 @@ describe('PluginsView', () => {
         })
       ),
     };
+    const workspacePluginCatalogQuery = createPluginCatalogQueryPort();
 
     mounted = await withTestQueryClient(
-      <AppServicesProvider overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
+      <AppServicesProvider
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          capabilitiesPort,
+          workspacePluginCatalogQuery,
+        }}
+      >
         <PluginsView />
       </AppServicesProvider>
     );
