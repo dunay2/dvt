@@ -8,8 +8,8 @@ import {
   buildEnvironmentAccessScope,
 } from '../../application/ports/accessDecision.js';
 import type { IAuthenticator } from '../../application/ports/auth.js';
-import type { ListWorkspacePluginsUseCase } from '../../application/services/listWorkspacePluginsUseCase.js';
 import type { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
+import type { ListWorkspacePluginsUseCase } from '../../application/services/listWorkspacePluginsUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../domain/auth/types.js';
 
 import { extractBearerToken } from './authHeaders.js';

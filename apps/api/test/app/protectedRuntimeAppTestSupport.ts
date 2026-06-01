@@ -3,8 +3,8 @@ import { vi } from 'vitest';
 import * as pgPool from '../../src/db/pool.js';
 import { EmbeddedAccessDecisionService } from '../../src/infrastructure/auth/embeddedAccessDecisionService.js';
 import { EmbeddedProjectOnboardingRepository } from '../../src/infrastructure/auth/embeddedProjectOnboardingRepository.js';
-import { EmbeddedWorkspacePluginCatalogRepository } from '../../src/infrastructure/workspacePlugins/EmbeddedWorkspacePluginCatalogRepository.js';
 import { PostgresWorkspaceGraphDraftStore } from '../../src/infrastructure/workspaceGraphDraft/PostgresWorkspaceGraphDraftStore.js';
+import { EmbeddedWorkspacePluginCatalogRepository } from '../../src/infrastructure/workspacePlugins/EmbeddedWorkspacePluginCatalogRepository.js';
 
 import {
   BASE_APP_ENV,
@@ -58,7 +58,8 @@ function patchProtectedRuntimeMigrations(): ProtectedRuntimeMigrationPatch {
     restore() {
       EmbeddedAccessDecisionService.prototype.migrate = originalAccessDecisionMigrate;
       EmbeddedProjectOnboardingRepository.prototype.migrate = originalProjectOnboardingMigrate;
-      EmbeddedWorkspacePluginCatalogRepository.prototype.migrate = originalWorkspacePluginCatalogMigrate;
+      EmbeddedWorkspacePluginCatalogRepository.prototype.migrate =
+        originalWorkspacePluginCatalogMigrate;
       PostgresPlanStore.prototype.migrate = originalPlanStoreMigrate;
       PostgresStateStoreAdapter.prototype.migrate = originalStateStoreMigrate;
       PostgresStartRunIntentStore.prototype.migrate = originalIntentStoreMigrate;
@@ -161,7 +162,8 @@ export async function withCapturedProtectedRuntimeMigrations<T>(
   } finally {
     EmbeddedAccessDecisionService.prototype.migrate = originalAccessDecisionMigrate;
     EmbeddedProjectOnboardingRepository.prototype.migrate = originalProjectOnboardingMigrate;
-    EmbeddedWorkspacePluginCatalogRepository.prototype.migrate = originalWorkspacePluginCatalogMigrate;
+    EmbeddedWorkspacePluginCatalogRepository.prototype.migrate =
+      originalWorkspacePluginCatalogMigrate;
     PostgresPlanStore.prototype.migrate = originalPlanStoreMigrate;
     PostgresStateStoreAdapter.prototype.migrate = originalStateStoreMigrate;
     PostgresStartRunIntentStore.prototype.migrate = originalIntentStoreMigrate;

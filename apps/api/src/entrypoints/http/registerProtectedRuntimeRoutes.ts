@@ -16,12 +16,12 @@ import { buildProtectedRuntimeRouteDependencies } from './protectedRuntimeRouteD
 import { registerProtectedRunRoutes } from './protectedRuntimeRunRoutes.js';
 import { registerProtectedWorkspaceContextRouteGroup } from './protectedRuntimeWorkspaceContextRouteGroup.js';
 import { registerProtectedWorkspaceGraphDraftRouteGroup } from './protectedRuntimeWorkspaceGraphDraftRouteGroup.js';
-import { registerProtectedWorkspacePluginCatalogRouteGroup } from './workspacePluginCatalogRouteGroup.js';
 import { PROTECTED_RUNTIME_ROUTE_SUMMARY } from './runtimeRoutes.constants.js';
 import { registerProtectedWarehouseSourceImportRouteGroup } from './warehouseSourceImportRouteGroup.js';
 import { registerProtectedWorkspaceDiffChangesRouteGroup } from './workspaceDiffChangesRouteGroup.js';
 import { registerWorkspaceFileHistoryRoutes } from './workspaceFileHistoryRoutes.js';
 import { registerProtectedWorkspaceFilesRouteGroup } from './workspaceFilesRouteGroup.js';
+import { registerProtectedWorkspacePluginCatalogRouteGroup } from './workspacePluginCatalogRouteGroup.js';
 
 export type RegisterProtectedRuntimeRoutesOptions = {
   readonly env: Env;

@@ -1,9 +1,13 @@
 import Fastify from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
+import type { AuthenticatedPrincipal } from '../../../src/domain/auth/types.js';
 import { registerWorkspacePluginCatalogRoutes } from '../../../src/entrypoints/http/workspacePluginCatalogRoutes.js';
 
-function createPrincipal() {
+type WorkspacePluginCatalogRouteDeps = Parameters<typeof registerWorkspacePluginCatalogRoutes>[1];
+type AuthorizeWorkspacePluginCatalog = WorkspacePluginCatalogRouteDeps['authorizer']['authorize'];
+
+function createPrincipal(): AuthenticatedPrincipal {
   return {
     principalId: 'u-1',
     subjectId: 'sub-1',
@@ -20,6 +24,24 @@ function createPrincipal() {
 function createDeps(
   overrides: Partial<Parameters<typeof registerWorkspacePluginCatalogRoutes>[1]> = {}
 ): Parameters<typeof registerWorkspacePluginCatalogRoutes>[1] {
+  const authorize = vi.fn(
+    async (
+      ...[principal, requestedScope, requestId]: Parameters<AuthorizeWorkspacePluginCatalog>
+    ) => {
+      const { action, ...scope } = requestedScope;
+      return {
+        ok: true as const,
+        context: {
+          principal,
+          scope,
+          action,
+          requestId,
+          authorizedAt: new Date('2026-05-31T00:00:00.000Z'),
+        },
+      };
+    }
+  ) as unknown as AuthorizeWorkspacePluginCatalog;
+
   return {
     authenticator: {
       authenticateBearerToken: vi.fn(async () => ({
@@ -28,21 +50,7 @@ function createDeps(
       })),
     },
     authorizer: {
-      authorize: vi.fn(async () => ({
-        ok: true as const,
-        context: {
-          principal: createPrincipal(),
-          scope: {
-            resource: 'environment' as const,
-            tenantId: { value: 'tenant-a' },
-            projectId: { value: 'project-a' },
-            environmentId: { value: 'dev' },
-          },
-          action: { kind: 'query' as const, name: 'workspace:plugins:view' as const },
-          requestId: 'req-1',
-          authorizedAt: new Date('2026-05-31T00:00:00.000Z'),
-        },
-      })),
+      authorize,
     },
     listWorkspacePluginsUseCase: {
       execute: vi.fn(async () => [
@@ -144,5 +152,31 @@ describe('workspacePluginCatalogRoutes', () => {
       projectId: 'project-a',
       environmentId: 'dev',
     });
+  });
+
+  it('returns 403 when the principal lacks the plugin catalog view action', async () => {
+    const app = Fastify({ logger: false });
+    const deps = createDeps({
+      authorizer: {
+        authorize: vi.fn(async () => ({
+          ok: false as const,
+          reason: 'ACTION_NOT_GRANTED' as const,
+        })) as unknown as AuthorizeWorkspacePluginCatalog,
+      },
+    });
+    registerWorkspacePluginCatalogRoutes(app, deps);
+    await app.ready();
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/workspace/plugins?tenantId=tenant-a&projectId=project-a&environmentId=dev',
+      headers: { authorization: 'Bearer token-123' },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json()).toEqual({
+      error: { type: 'forbidden', reason: 'ACTION_NOT_GRANTED' },
+    });
+    expect(deps.listWorkspacePluginsUseCase.execute).not.toHaveBeenCalled();
   });
 });

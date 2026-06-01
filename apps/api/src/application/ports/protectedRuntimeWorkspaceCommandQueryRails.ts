@@ -205,6 +205,30 @@ export const PROTECTED_RUNTIME_WORKSPACE_COMMAND_QUERY_RAILS = [
     ],
   }),
   defineProtectedRuntimeRail({
+    name: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspacePluginCatalog.name,
+    kind: PROTECTED_RUNTIME_RAIL_KIND.query,
+    boundedContext: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspacePluginCatalog.boundedContext,
+    dddObject: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspacePluginCatalog.readModel,
+    applicationPort: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspacePluginCatalog.port,
+    adapterSurface: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspacePluginCatalog.surface,
+    scopeAndAuthorization:
+      PROTECTED_RUNTIME_WORKSPACE_RAIL.workspacePluginCatalog.scopeAndAuthorization,
+    coverage: [
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingToken,
+        PROTECTED_RUNTIME_TEST_REF.workspacePluginCatalogRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingScope,
+        PROTECTED_RUNTIME_TEST_REF.workspacePluginCatalogRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingAction,
+        PROTECTED_RUNTIME_TEST_REF.workspacePluginCatalogRoutes,
+      ],
+    ],
+  }),
+  defineProtectedRuntimeRail({
     name: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.listConnectionsName,
     kind: PROTECTED_RUNTIME_RAIL_KIND.query,
     boundedContext: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.boundedContext,

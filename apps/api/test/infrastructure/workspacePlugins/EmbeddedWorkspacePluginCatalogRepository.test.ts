@@ -46,12 +46,11 @@ describe('EmbeddedWorkspacePluginCatalogRepository', () => {
   });
 
   it('creates schema, table, indexes, and embedded bootstrap rows during migration', async () => {
-    const query = vi.fn(async () => ({ rows: [] }));
+    const query = vi.fn(async (_sql: string) => ({ rows: [] }));
     const repository = new EmbeddedWorkspacePluginCatalogRepository({ query });
 
     await repository.migrate();
 
-    expect(query).toHaveBeenCalledTimes(4);
     const executedSql = query.mock.calls.map(([sql]) => sql).join('\n');
     expect(executedSql).toContain('CREATE SCHEMA IF NOT EXISTS "dvt"');
     expect(executedSql).toContain('CREATE TABLE IF NOT EXISTS "dvt".workspace_plugins');

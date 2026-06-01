@@ -1,15 +1,15 @@
 /**
  * Owned concern: persist and query the protected workspace plugin catalog.
  */
-import type { Pool } from 'pg';
-
 import type {
   IWorkspacePluginCatalogRepository,
   WorkspacePluginCatalogScope,
   WorkspacePluginDescriptor,
 } from '../../application/ports/workspacePluginCatalog.js';
 
-type Queryable = Pick<Pool, 'query'>;
+type Queryable = {
+  query(sql: string, params?: readonly unknown[]): Promise<{ readonly rows: readonly unknown[] }>;
+};
 
 interface WorkspacePluginRow {
   plugin_id: string;
@@ -22,9 +22,7 @@ interface WorkspacePluginRow {
   enabled: boolean;
 }
 
-export class EmbeddedWorkspacePluginCatalogRepository
-  implements IWorkspacePluginCatalogRepository
-{
+export class EmbeddedWorkspacePluginCatalogRepository implements IWorkspacePluginCatalogRepository {
   public constructor(
     private readonly pool: Queryable,
     private readonly schema: string = 'dvt'
@@ -100,7 +98,7 @@ export class EmbeddedWorkspacePluginCatalogRepository
     scope: WorkspacePluginCatalogScope
   ): Promise<readonly WorkspacePluginDescriptor[]> {
     const schema = quoteIdentifier(this.schema);
-    const result = await this.pool.query<WorkspacePluginRow>(
+    const result = (await this.pool.query(
       `SELECT DISTINCT ON (plugin_id)
          plugin_id,
          display_name,
@@ -124,7 +122,7 @@ export class EmbeddedWorkspacePluginCatalogRepository
            ELSE 4
          END`,
       [scope.tenantId, scope.projectId, scope.environmentId]
-    );
+    )) as { readonly rows: readonly WorkspacePluginRow[] };
 
     return result.rows.map(projectPluginRow);
   }

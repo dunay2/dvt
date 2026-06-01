@@ -10,7 +10,6 @@ import type {
   IWorkspaceFileHistoryQueryPort,
   IWorkspaceFilesQueryPort,
   IWorkspaceGraphSnapshotQueryPort,
-  IWorkspacePluginCatalogQueryPort,
   WorkspaceFileEntry,
   WorkspaceGraphSnapshot,
 } from '../../ports/workspace';
@@ -108,13 +107,6 @@ export function createApiWorkspaceFileHistoryQueryPort(
   return {
     getFileHistory: (path) =>
       apiClient.getJson(buildWorkspaceFileHistoryEndpoint(path, readWorkspaceFilesScope())),
-  };
-}
-
-export function createApiWorkspacePluginCatalogQueryPort(): IWorkspacePluginCatalogQueryPort {
-  return {
-    getPlugins: () =>
-      rejectUnsupportedApiWorkspaceCapability('workspace.plugins', 'ListWorkspacePlugins'),
   };
 }
 

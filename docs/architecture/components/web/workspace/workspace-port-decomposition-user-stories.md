@@ -60,8 +60,8 @@ readiness.
 
 Acceptance:
 
-- Given API mode is active and no plugin catalog backend rail exists, when the
-  plugin catalog is requested, then the plugin catalog port returns unavailable.
+- Given API mode is active, when the plugin catalog is requested, then the
+  plugin catalog port uses the protected `ListWorkspacePlugins` rail.
 - Given static frontend registry entries exist, when navigation renders, then
   they are treated as presentation composition only.
 - Given a plugin can execute runtime behavior, then its readiness must come from

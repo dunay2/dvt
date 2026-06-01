@@ -2,14 +2,12 @@ export type WorkspaceFileLoadErrorKind = 'not_found';
 
 export type WorkspaceApiUnsupportedCapability =
   | 'workspace.diffChanges'
-  | 'workspace.plugins'
   | 'workspace.adminRoles'
   | 'workspace.adminAuditLog'
   | 'workspace.fileWrite';
 
 export type WorkspaceApiUnsupportedRail =
   | 'GetWorkspaceDiffChanges'
-  | 'ListWorkspacePlugins'
   | 'ListAdminRoles'
   | 'ListAdminAuditLog'
   | 'SaveWorkspaceFileContent';
