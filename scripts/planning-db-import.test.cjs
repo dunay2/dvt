@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 
 const {
   buildDocsDispositionSnapshot,
+  buildGovernanceAuxiliarySourceExpectedState,
   buildGovernanceFileSnapshot,
   buildGovernanceGeneratedInputs,
   buildPlanningContentSnapshot,
@@ -21,6 +22,7 @@ const {
   parseArgs,
   readLocalPlanningTaskIds,
   runPlanningImport,
+  sha256,
 } = require('./planning-db-import.cjs');
 const { governanceGeneratedPath } = require('./governance-generated-paths.cjs');
 const { schemaName } = require('./planning-db-migrate.cjs');
@@ -354,6 +356,54 @@ test('planning DB import reimports governance when core source freshness is stal
   assert.deepEqual(result.importedScopes, ['governance']);
   assert.deepEqual(result.skippedScopes, []);
   assert.equal(fullGovernanceChecks, 0);
+});
+
+test('governance auxiliary source state hashes only knowledge-surface documents without full projection', async () => {
+  const proposalRaw = [
+    '---',
+    'title: Knowledge source',
+    'status: Active',
+    '---',
+    '',
+    '# Knowledge source',
+    '',
+  ].join('\n');
+  const guideRaw = [
+    '---',
+    'title: Guide source',
+    'status: Active',
+    '---',
+    '',
+    '# Guide source',
+    '',
+  ].join('\n');
+
+  const state = await buildGovernanceAuxiliarySourceExpectedState({
+    planningSnapshot: { sources: [] },
+    repositoryCommandSnapshot: { commands: [] },
+    prReadinessSnapshot: {
+      readiness: {
+        readinessId: 'pr-readiness:fixture',
+        sourcePath: '.arc-policy.yaml',
+        sourceContentSha256: 'fixture-policy-hash',
+        effectiveArcLevel: 'ARC-0',
+        blocking: false,
+      },
+    },
+    markdownDocuments: [],
+    knowledgeDocuments: [
+      { sourcePath: 'docs/planning/proposals/example.md', raw: proposalRaw },
+      { sourcePath: 'docs/guides/example.md', raw: guideRaw },
+    ],
+    riskDocuments: [],
+  });
+
+  assert.deepEqual(state.knowledgeDocuments, [
+    {
+      sourcePath: 'docs/planning/proposals/example.md',
+      sourceContentSha256: sha256(proposalRaw),
+    },
+  ]);
 });
 
 test('planning content snapshot normalizes dependencies and evidence refs for DB reads', () => {

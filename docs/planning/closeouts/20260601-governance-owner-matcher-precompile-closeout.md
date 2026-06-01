@@ -314,3 +314,43 @@ flowchart TD
   21.799s. Stale `pnpm governance:db:import -- --if-stale` improved from the
   prior 29.448s to 24.971s. The fresh path after the import took 5.192s and
   still reported `skipped fresh scopes: governance`.
+
+## Governance Import Hot Path Iteration
+
+- Problem summary: after the combined planning-task matcher pass,
+  `buildDocsDispositionSnapshot()` still dominated the pure local build phase.
+  A fresh profile on this branch measured it at 12.257s, while
+  `buildKnowledgeDocumentSnapshot()` took 1.980s.
+- Root cause: docs disposition still recovered `sampleLines` by rescanning the
+  same document once per extracted task-like reference. It also rebuilt the
+  combined planning-task matcher per document. Separately, auxiliary source
+  freshness rebuilt the full knowledge projection even though it only compares
+  `sourcePath` and `sourceContentSha256`, and the import path reread the docs
+  Markdown corpus separately for docs disposition and knowledge.
+- Selected option and rationale: capture reference sample lines during the
+  initial per-line extraction pass, precompile the planning-task matcher once
+  per docs disposition snapshot, compare knowledge freshness through
+  knowledge-surface source hashes, and share one tracked Markdown read between
+  docs disposition and knowledge import inputs. This removes duplicate local
+  work without changing DB rows, query rails, or classification semantics.
+- Rejected alternatives: skip sample lines, narrow the document corpus, cache
+  production snapshots, or compare all Markdown as knowledge documents. Those
+  options either lose functionality, hide integration impact, or change the
+  knowledge surface.
+- Validation evidence:
+  `node --test scripts/planning-db-import.test.cjs` passed 37/37 with an added
+  regression proving auxiliary knowledge source freshness hashes only
+  knowledge-surface documents without building the full projection.
+- Measurement: `buildDocsDispositionSnapshot()` improved from 12.257s to
+  2.583s in the focused profile. `checkGovernanceAuxiliarySourceFreshness()`
+  measured 0.755s after replacing the full knowledge projection with source
+  hash rows and sharing the Markdown document read. Direct governance-only
+  `importContent()` measured 18.653s, down
+  from the prior 21.799s reported for the previous iteration.
+- Fresh command evidence: after importing the changed script once, repeated
+  `pnpm governance:db:import -- --if-stale` still reported
+  `skipped fresh scopes: governance`; observed fresh timings were variable
+  between 7.46s and 10.05s on this local DB run.
+- No-debt/no-stub position: no production cache, no skipped generated
+  governance check, no reduced document corpus, no hook bypass, and no
+  placeholder implementation were introduced.

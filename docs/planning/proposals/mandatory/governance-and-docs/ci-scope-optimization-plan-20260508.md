@@ -482,7 +482,157 @@ redGreenCycles:
       - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
       - docs/planning/closeouts/**
     greenTest: node --test scripts/planning-db-import.test.cjs
+  - id: docs-disposition-single-pass-reference-samples
+    redTest: node --test scripts/planning-db-import.test.cjs
+    expectedFailure: docs disposition still scans each document again for every task-like reference to recover sample lines after reference extraction has already found those lines.
+    patchSurfaces:
+      - scripts/planning-db-import.cjs
+      - scripts/planning-db-import.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test scripts/planning-db-import.test.cjs
+  - id: governance-auxiliary-knowledge-source-hash-freshness
+    redTest: node --test scripts/planning-db-import.test.cjs
+    expectedFailure: governance auxiliary source freshness rebuilds the full knowledge document projection even though it only compares source-path hashes.
+    patchSurfaces:
+      - scripts/planning-db-import.cjs
+      - scripts/planning-db-import.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test scripts/planning-db-import.test.cjs
+  - id: governance-import-shared-markdown-document-read
+    redTest: node --test scripts/planning-db-import.test.cjs
+    expectedFailure: governance import reads the same tracked Markdown corpus separately for docs disposition and knowledge snapshots.
+    patchSurfaces:
+      - scripts/planning-db-import.cjs
+      - scripts/planning-db-import.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test scripts/planning-db-import.test.cjs
 symbols:
+  - name: readTrackedDocumentPaths
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Governance import should not duplicate git path listing logic per document surface
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: readTrackedDocuments
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Governance import should carry source hashes with document reads instead of recomputing them downstream
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: listTrackedMarkdownDocuments
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Docs disposition and knowledge snapshots share the same tracked Markdown corpus
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: listTrackedBuzonDocuments
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Knowledge import needs buzon-only additions without rereading docs Markdown
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: listTrackedKnowledgeDocuments
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Knowledge import should reuse already-read Markdown documents during governance import
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: extractTaskLikeReferences
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Reference sample lines should be captured during extraction instead of by per-reference rescans
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: buildDocsDispositionSnapshot
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Docs disposition should precompile planning task reference matching once per snapshot
+      - Docs disposition should not rescan document text per reference after extraction
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: isKnowledgeDocumentSourcePath
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Source freshness should preserve the knowledge document surface while avoiding full projection work
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: knowledgeDocumentSourceHashRows
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Freshness checks only need knowledge document source hashes, not sections, links, or actions
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: buildGovernanceAuxiliarySourceExpectedState
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Auxiliary source freshness should not rebuild full knowledge projections
+      - Auxiliary source freshness should reuse one Markdown document read for docs disposition and knowledge hashes
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: importContent
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Governance import should share tracked Markdown inputs across downstream snapshots
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
   - name: buildPlanningTaskReferencePattern
     path: scripts/planning-db-import.cjs
     dddOwner: ValidateCiScopeOptimizationContract

@@ -1027,12 +1027,11 @@ function listChangedFiles(baseRef, headRef) {
     .map(toPosix);
 }
 
-function listTrackedMarkdownDocuments() {
-  const output = execFileSync('git', ['ls-files', '--', 'docs/*.md', 'docs/**/*.md'], {
+function readTrackedDocumentPaths(gitPathspecs) {
+  const output = execFileSync('git', ['ls-files', '--', ...gitPathspecs], {
     cwd: repoRoot,
     encoding: 'utf8',
   });
-
   return [
     ...new Set(
       output
@@ -1041,38 +1040,29 @@ function listTrackedMarkdownDocuments() {
         .filter(Boolean)
         .map(toPosix)
     ),
-  ]
-    .sort()
-    .map((sourcePath) => ({
-      sourcePath,
-      raw: fs.readFileSync(path.join(repoRoot, sourcePath), 'utf8'),
-    }));
+  ].sort();
 }
 
-function listTrackedKnowledgeDocuments() {
-  const output = execFileSync(
-    'git',
-    ['ls-files', '--', 'docs/*.md', 'docs/**/*.md', 'buzon/*.md'],
-    {
-      cwd: repoRoot,
-      encoding: 'utf8',
-    }
-  );
+function readTrackedDocuments(gitPathspecs) {
+  return readTrackedDocumentPaths(gitPathspecs).map((sourcePath) => {
+    const raw = fs.readFileSync(path.join(repoRoot, sourcePath), 'utf8');
+    return { sourcePath, raw, contentSha256: sha256(raw) };
+  });
+}
 
-  return [
-    ...new Set(
-      output
-        .split('\n')
-        .map((value) => normalizeText(value).trim())
-        .filter(Boolean)
-        .map(toPosix)
-    ),
-  ]
-    .sort()
-    .map((sourcePath) => {
-      const raw = fs.readFileSync(path.join(repoRoot, sourcePath), 'utf8');
-      return { sourcePath, raw, contentSha256: sha256(raw) };
-    });
+function listTrackedMarkdownDocuments() {
+  return readTrackedDocuments(['docs/*.md', 'docs/**/*.md']);
+}
+
+function listTrackedBuzonDocuments() {
+  return readTrackedDocuments(['buzon/*.md']);
+}
+
+function listTrackedKnowledgeDocuments(options = {}) {
+  const markdownDocuments = options.markdownDocuments || listTrackedMarkdownDocuments();
+  return [...markdownDocuments, ...listTrackedBuzonDocuments()].sort((left, right) =>
+    left.sourcePath.localeCompare(right.sourcePath)
+  );
 }
 
 function isRiskRegisterItemPath(sourcePath) {
@@ -1550,48 +1540,68 @@ function extractTaskLikeReferences(
   document,
   planningTaskIdSet,
   featureMechanizationIdSet = new Set(),
-  featureMechanizationCycleIdSet = new Set()
+  featureMechanizationCycleIdSet = new Set(),
+  options = {}
 ) {
   const raw = normalizeText(document.raw);
   const grouped = new Map();
+  const lineEntries =
+    options.lineEntries ||
+    raw.split(/\r?\n/).map((line, index) => ({
+      lineNumber: index + 1,
+      line,
+      sampleLine: line.trim().slice(0, 240),
+    }));
 
-  function addReference(referenceText, occurrenceCount = 1) {
-    const entry = grouped.get(referenceText) || {
+  function addReference(referenceText, lineEntry, options = {}) {
+    const groupKey = options.groupKey || referenceText;
+    const entry = grouped.get(groupKey) || {
       referenceText,
       occurrenceCount: 0,
+      sampleLineNumbers: new Set(),
+      sampleLines: [],
     };
-    entry.occurrenceCount += occurrenceCount;
-    grouped.set(referenceText, entry);
+    entry.occurrenceCount += 1;
+    if (
+      lineEntry &&
+      entry.sampleLines.length < 5 &&
+      !entry.sampleLineNumbers.has(lineEntry.lineNumber)
+    ) {
+      entry.sampleLineNumbers.add(lineEntry.lineNumber);
+      entry.sampleLines.push({
+        lineNumber: lineEntry.lineNumber,
+        line: lineEntry.sampleLine,
+      });
+    }
+    grouped.set(groupKey, entry);
   }
 
-  for (const referenceText of raw.match(taskLikeReferencePattern) || []) {
-    addReference(referenceText);
-  }
-
-  const capturedReferenceKeys = new Set(
-    [...grouped.keys()].map((referenceText) => referenceText.toUpperCase())
-  );
-  const planningTaskPattern = buildPlanningTaskReferencePattern(planningTaskIdSet);
-  const planningTaskMatches = new Map();
-
-  if (planningTaskPattern) {
-    for (const match of raw.match(planningTaskPattern) || []) {
-      const matchKey = match.toUpperCase();
-      if (capturedReferenceKeys.has(matchKey)) {
-        continue;
-      }
-
-      const entry = planningTaskMatches.get(matchKey) || {
-        referenceText: match,
-        occurrenceCount: 0,
-      };
-      entry.occurrenceCount += 1;
-      planningTaskMatches.set(matchKey, entry);
+  for (const lineEntry of lineEntries) {
+    taskLikeReferencePattern.lastIndex = 0;
+    let match;
+    while ((match = taskLikeReferencePattern.exec(lineEntry.line)) !== null) {
+      addReference(match[0], lineEntry);
     }
   }
 
-  for (const entry of planningTaskMatches.values()) {
-    addReference(entry.referenceText, entry.occurrenceCount);
+  const capturedReferenceKeys = new Set(
+    [...grouped.values()].map((entry) => entry.referenceText.toUpperCase())
+  );
+  const planningTaskPattern =
+    options.planningTaskPattern || buildPlanningTaskReferencePattern(planningTaskIdSet);
+
+  if (planningTaskPattern) {
+    for (const lineEntry of lineEntries) {
+      planningTaskPattern.lastIndex = 0;
+      let match;
+      while ((match = planningTaskPattern.exec(lineEntry.line)) !== null) {
+        const matchKey = match[0].toUpperCase();
+        if (capturedReferenceKeys.has(matchKey)) {
+          continue;
+        }
+        addReference(match[0], lineEntry, { groupKey: matchKey });
+      }
+    }
   }
 
   return [...grouped.values()]
@@ -1602,11 +1612,6 @@ function extractTaskLikeReferences(
         planningTaskIdSet,
         featureMechanizationIdSet,
         featureMechanizationCycleIdSet
-      );
-      const escapedReference = escapeRegExp(entry.referenceText);
-      const { sampleLines } = lineNumbersForPattern(
-        raw,
-        new RegExp(`(?<![A-Za-z0-9-])${escapedReference}(?![A-Za-z0-9-])`, 'g')
       );
       return {
         referenceId: `doc-reference:${sha256(`${document.sourcePath}:${entry.referenceText}`).slice(
@@ -1619,14 +1624,14 @@ function extractTaskLikeReferences(
         classification: classification.classification,
         registeredPlanningTask: classification.registeredPlanningTask,
         occurrenceCount: entry.occurrenceCount,
-        sampleLines,
+        sampleLines: entry.sampleLines,
         sourceContentSha256: document.contentSha256,
         rawReference: {
           referenceText: entry.referenceText,
           referencePrefix: referencePrefix(entry.referenceText),
           classification: classification.classification,
           occurrenceCount: entry.occurrenceCount,
-          sampleLines,
+          sampleLines: entry.sampleLines,
         },
       };
     });
@@ -1773,6 +1778,7 @@ function buildDocsDispositionSnapshot(options = {}) {
     1,
     normalizeNumber(options.pendingHotspotThreshold) ?? 10
   );
+  const planningTaskPattern = buildPlanningTaskReferencePattern(planningTaskIdSet);
   const documents = [];
   const markers = [];
   const references = [];
@@ -1781,7 +1787,12 @@ function buildDocsDispositionSnapshot(options = {}) {
   for (const sourceDocument of sourceDocuments) {
     const sourcePath = toPosix(normalizeText(sourceDocument.sourcePath));
     const raw = normalizeText(sourceDocument.raw);
-    const contentSha256 = sha256(raw);
+    const contentSha256 = normalizeText(sourceDocument.contentSha256) || sha256(raw);
+    const lineEntries = raw.split(/\r?\n/).map((line, index) => ({
+      lineNumber: index + 1,
+      line,
+      sampleLine: line.trim().slice(0, 240),
+    }));
     const { frontmatter } = parseMarkdownFrontmatter(raw);
     const isArchive = isArchivedDocumentPath(sourcePath);
     const documentInput = { sourcePath, raw, contentSha256 };
@@ -1790,7 +1801,8 @@ function buildDocsDispositionSnapshot(options = {}) {
       documentInput,
       planningTaskIdSet,
       featureMechanizationIdSet,
-      featureMechanizationCycleIdSet
+      featureMechanizationCycleIdSet,
+      { lineEntries, planningTaskPattern }
     );
     const document = {
       documentPath: sourcePath,
@@ -2745,6 +2757,10 @@ async function importContent(options = {}) {
     ? await buildRepositoryCommandSnapshot()
     : null;
   const prReadinessSnapshot = includeGovernance ? buildPrReadinessSnapshot() : null;
+  const markdownDocuments = includeGovernance ? listTrackedMarkdownDocuments() : [];
+  const knowledgeDocuments = includeGovernance
+    ? listTrackedKnowledgeDocuments({ markdownDocuments })
+    : [];
   const docsDispositionPlanningSnapshot =
     includeGovernance && !planningSnapshot ? buildPlanningContentSnapshot() : planningSnapshot;
   let docsDispositionSnapshot;
@@ -2766,10 +2782,10 @@ async function importContent(options = {}) {
         )
       : [];
     docsDispositionSnapshot = includeGovernance
-      ? buildDocsDispositionSnapshot({ planningTaskIds })
+      ? buildDocsDispositionSnapshot({ planningTaskIds, documents: markdownDocuments })
       : null;
     knowledgeSnapshot = includeGovernance
-      ? buildKnowledgeDocumentSnapshot({ planningTaskIds })
+      ? buildKnowledgeDocumentSnapshot({ planningTaskIds, documents: knowledgeDocuments })
       : null;
     if (includePlanning) {
       await insertPlanningSnapshot(client, planningSnapshot);
@@ -3183,6 +3199,26 @@ function documentSourceHashRows(documents) {
   );
 }
 
+function isKnowledgeDocumentSourcePath(sourcePath) {
+  const normalizedPath = toPosix(normalizeText(sourcePath));
+  return (
+    /^buzon\/.*\.md$/i.test(normalizedPath) ||
+    /^docs\/planning\/proposals\/.*\.md$/i.test(normalizedPath) ||
+    /^docs\/planning\/reviews\/.*\.md$/i.test(normalizedPath) ||
+    /^docs\/adr\/.*\.md$/i.test(normalizedPath) ||
+    /^docs\/evidence\/.*\.md$/i.test(normalizedPath) ||
+    /^docs\/risk-register\/.*\.md$/i.test(normalizedPath)
+  );
+}
+
+function knowledgeDocumentSourceHashRows(documents) {
+  return documentSourceHashRows(
+    normalizeArray(documents).filter((document) =>
+      isKnowledgeDocumentSourcePath(document.sourcePath)
+    )
+  );
+}
+
 function compareGovernanceAuxiliarySourceState(expected, actual) {
   const sourceHashComparison = {
     compareFields: ['sourceContentSha256'],
@@ -3309,24 +3345,21 @@ async function buildGovernanceAuxiliarySourceExpectedState(options = {}) {
   const repositoryCommandSnapshot =
     options.repositoryCommandSnapshot || (await buildRepositoryCommandSnapshot());
   const prReadinessSnapshot = options.prReadinessSnapshot || buildPrReadinessSnapshot();
+  const markdownDocuments = options.markdownDocuments || listTrackedMarkdownDocuments();
+  const knowledgeDocuments =
+    options.knowledgeDocuments || listTrackedKnowledgeDocuments({ markdownDocuments });
 
   return {
     planningSources: uniqueSourceHashRows(planningSnapshot.sources, {
       hashField: 'contentSha256',
     }),
     repositoryCommandSources: uniqueSourceHashRows(repositoryCommandSnapshot.commands),
-    docDispositionDocuments: documentSourceHashRows(
-      options.markdownDocuments || listTrackedMarkdownDocuments()
-    ),
-    knowledgeDocuments: uniqueSourceHashRows(
-      options.knowledgeSnapshotDocuments ||
-        buildKnowledgeDocumentSnapshot({
-          documents: options.knowledgeDocuments || listTrackedKnowledgeDocuments(),
-        }).documents,
-      {
-        pathField: 'documentPath',
-      }
-    ),
+    docDispositionDocuments: documentSourceHashRows(markdownDocuments),
+    knowledgeDocuments: options.knowledgeSnapshotDocuments
+      ? uniqueSourceHashRows(options.knowledgeSnapshotDocuments, {
+          pathField: 'documentPath',
+        })
+      : knowledgeDocumentSourceHashRows(knowledgeDocuments),
     riskDebtItems: documentSourceHashRows(options.riskDocuments || listTrackedRiskDocuments()),
     prReadinessChecks: [
       {
