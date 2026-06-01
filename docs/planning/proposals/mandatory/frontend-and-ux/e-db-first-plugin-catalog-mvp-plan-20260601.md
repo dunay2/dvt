@@ -130,7 +130,7 @@ fowlerSignals:
 architectureGuards:
   - pnpm --filter dvt-api test -- test/entrypoints/http/workspacePluginCatalogRoutes.test.ts test/infrastructure/workspacePlugins/EmbeddedWorkspacePluginCatalogRepository.test.ts test/infrastructure/auth/embeddedProjectOnboardingRepository.test.ts
   - pnpm --filter dvt-api test -- test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
-  - pnpm --filter @dvt/web test -- src/app/services/workspace/workspacePorts.api.test.ts src/app/views/plugins/pluginsCapabilityTable.architecture.test.ts
+  - pnpm --filter @dvt/web test -- src/app/services/workspace/workspacePorts.api.test.ts src/app/views/plugins/pluginsCapabilityTable.architecture.test.ts src/app/views/PluginsView.test.tsx
   - pnpm docs:feature-mechanization:implementation
 cypressFlows:
   - N/A - protected query rail and route workbench rendering only
@@ -138,7 +138,7 @@ completionGate:
   - pnpm docs:sync
   - pnpm docs:status:generate
   - pnpm --filter dvt-api test -- test/entrypoints/http/workspacePluginCatalogRoutes.test.ts test/infrastructure/workspacePlugins/EmbeddedWorkspacePluginCatalogRepository.test.ts test/infrastructure/auth/embeddedProjectOnboardingRepository.test.ts test/app/protectedRuntimeComposition.test.ts test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
-  - pnpm --filter @dvt/web test -- src/app/services/workspace/workspacePorts.api.test.ts src/app/views/plugins/pluginsCapabilityTable.architecture.test.ts
+  - pnpm --filter @dvt/web test -- src/app/services/workspace/workspacePorts.api.test.ts src/app/views/plugins/pluginsCapabilityTable.architecture.test.ts src/app/views/PluginsView.test.tsx
   - pnpm --filter dvt-api typecheck
   - pnpm --filter @dvt/web typecheck
   - pnpm verify:prepush
@@ -458,6 +458,33 @@ symbols:
     cypressCoverage: N/A - route composition only
     unitTests:
       - apps/web/src/app/views/plugins/pluginsCapabilityTable.architecture.test.ts
+  - name: toCatalogPlugin
+    path: apps/web/src/app/views/PluginsView.test.tsx
+    dddOwner: Plugins route composition test
+    cqRails: [ListWorkspacePlugins]
+    fowlerSignals: [Route tests project local contributions into explicit DB catalog rows.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/PluginsView.test.tsx
+    cypressCoverage: N/A - route presentation test only
+    unitTests:
+      - apps/web/src/app/views/PluginsView.test.tsx
+  - name: buildPluginCatalogPayload
+    path: apps/web/src/app/views/PluginsView.test.tsx
+    dddOwner: Plugins route composition test
+    cqRails: [ListWorkspacePlugins]
+    fowlerSignals: [Route tests declare the DB catalog instead of relying on local registry fallback.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/PluginsView.test.tsx
+    cypressCoverage: N/A - route presentation test only
+    unitTests:
+      - apps/web/src/app/views/PluginsView.test.tsx
+  - name: createPluginCatalogQueryPort
+    path: apps/web/src/app/views/PluginsView.test.tsx
+    dddOwner: Plugins route composition test
+    cqRails: [ListWorkspacePlugins]
+    fowlerSignals: [Route tests inject the ListWorkspacePlugins query port explicitly.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/PluginsView.test.tsx
+    cypressCoverage: N/A - route presentation test only
+    unitTests:
+      - apps/web/src/app/views/PluginsView.test.tsx
   - name: PluginsViewHeaderProps
     path: apps/web/src/app/views/plugins/PluginsRouteWorkbench.tsx
     dddOwner: Plugins route workbench
@@ -525,7 +552,7 @@ Run:
 pnpm docs:sync
 pnpm docs:status:generate
 pnpm --filter dvt-api test -- test/entrypoints/http/workspacePluginCatalogRoutes.test.ts test/infrastructure/workspacePlugins/EmbeddedWorkspacePluginCatalogRepository.test.ts test/infrastructure/auth/embeddedProjectOnboardingRepository.test.ts test/app/protectedRuntimeComposition.test.ts test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
-pnpm --filter @dvt/web test -- src/app/services/workspace/workspacePorts.api.test.ts src/app/views/plugins/pluginsCapabilityTable.architecture.test.ts
+pnpm --filter @dvt/web test -- src/app/services/workspace/workspacePorts.api.test.ts src/app/views/plugins/pluginsCapabilityTable.architecture.test.ts src/app/views/PluginsView.test.tsx
 pnpm --filter dvt-api typecheck
 pnpm --filter @dvt/web typecheck
 pnpm verify:prepush
