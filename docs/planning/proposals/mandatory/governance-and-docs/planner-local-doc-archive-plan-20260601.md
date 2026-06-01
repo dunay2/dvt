@@ -77,6 +77,8 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/governance-and-docs/planner-local-doc-archive-plan-20260601.md
   - docs/planning/proposals/index.md
   - docs/planning/index.md
+  - scripts/check-feature-mechanization.cjs
+  - scripts/check-feature-mechanization.test.cjs
   - packages/@dvt/planner/docs/PLANNER_IMPLEMENTATION_REVIEW_v2_3_2.md
   - packages/@dvt/planner/docs/adr/**
   - packages/@dvt/planner/docs/contracts/**
@@ -96,11 +98,13 @@ fowlerSignals:
   - Divergent change
   - Duplicated knowledge
 architectureGuards:
+  - node --test scripts/check-feature-mechanization.test.cjs
   - pnpm docs:feature-mechanization:implementation -- --feature GD-PLANNER-LOCAL-DOC-ARCHIVE-20260601
 cypressFlows:
   - N/A - documentation archive slice.
 completionGate:
   - pnpm docs:sync
+  - node --test scripts/check-feature-mechanization.test.cjs
   - pnpm docs:gov:manifest:check
   - pnpm docs:arc:evidence:check -- --changed-only
   - pnpm docs:feature-mechanization:implementation -- --feature GD-PLANNER-LOCAL-DOC-ARCHIVE-20260601
@@ -117,6 +121,8 @@ redGreenCycles:
       - docs/archive/index.md
       - docs/archive/planner/**
       - packages/@dvt/planner/docs/**
+      - scripts/check-feature-mechanization.cjs
+      - scripts/check-feature-mechanization.test.cjs
       - docs/planning/proposals/mandatory/governance-and-docs/planner-local-doc-archive-plan-20260601.md
     greenTest: pnpm docs:feature-mechanization:implementation -- --feature GD-PLANNER-LOCAL-DOC-ARCHIVE-20260601
 symbols:
