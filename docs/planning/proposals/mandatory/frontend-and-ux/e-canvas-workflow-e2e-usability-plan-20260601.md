@@ -245,6 +245,9 @@ allowedImplementationSurfaces:
   - scripts/run-dev-stack.temporal.cjs
   - scripts/run-dev-stack.test.cjs
   - apps/web/src/app/views/canvas/**
+  - apps/web/src/app/views/CodeView.tsx
+  - apps/web/src/app/views/CodeView.test.tsx
+  - apps/web/src/app/views/code/**
   - apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
   - apps/web/src/app/components/**
   - apps/web/src/app/services/workspace/**
@@ -314,6 +317,9 @@ domainObjects:
   - name: RunMaterializationEvidence
     type: read model
     owner: Run detail
+  - name: CodeGraphFileScope
+    type: read model
+    owner: Web Code
 fowlerSignals:
   - Reference-only Canvas edges were being interpreted through an inconsistent execution projection.
   - Opaque protected-draft errors created test-only confidence instead of user-operable feedback.
@@ -321,15 +327,18 @@ fowlerSignals:
   - Legacy v1.2 persisted plan rows must not keep current 1.0 plan creation unusable.
   - Real source import and SQL execution require local proof data, catalog, and authorization to line up.
   - Completed-run evidence must be visible before lower-priority provenance.
+  - Code file browsing must follow the active graph instead of stale workspace artifacts.
 architectureGuards:
   - pnpm --filter dvt-api test -- test/application/services/resolveAuthorizedExecutableSubgraph.test.ts
   - pnpm --filter @dvt/adapter-postgres test -- PostgresPlanStore.lifecycle.integration.test.ts PostgresPlanStore.records-core.integration.test.ts
   - pnpm --filter @dvt/adapter-temporal test -- test/activities.test.ts
   - pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.test.ts
   - node --test scripts/run-dev-stack.test.cjs scripts/run-dev-stack.auth.test.cjs
+  - pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts src/app/views/CodeView.test.tsx
   - pnpm docs:feature-mechanization:implementation
 cypressFlows:
   - apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+  - apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
 completionGate:
   - pnpm docs:sync
   - pnpm docs:status:generate
@@ -338,8 +347,11 @@ completionGate:
   - pnpm --filter @dvt/adapter-temporal test -- test/activities.test.ts
   - pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.test.ts
   - pnpm --filter @dvt/web test -- src/app/views/canvas/transformationGraphValidation.test.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx src/app/views/runs/RunStates.test.tsx
+  - pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts src/app/views/CodeView.test.tsx
+  - pnpm --filter @dvt/web test
   - node --test scripts/run-dev-stack.test.cjs scripts/run-dev-stack.auth.test.cjs
   - pnpm --dir apps/web exec cypress run --config-file cypress.config.ts --config baseUrl=http://127.0.0.1:5173 --spec cypress/e2e/canvas/canvas-preview-run-live.cy.ts --browser electron
+  - pnpm --filter @dvt/web exec cypress run --config-file cypress.config.ts --config baseUrl=http://127.0.0.1:5173 --spec cypress/e2e/canvas/code-workbench-workspace-files.cy.ts --browser electron
   - pnpm --filter dvt-api typecheck
   - pnpm --filter dvt-api lint
   - pnpm --filter @dvt/web typecheck
@@ -397,6 +409,15 @@ redGreenCycles:
       - apps/web/cypress/support/liveProtectedRuntime.ts
       - apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
     greenTest: pnpm --dir apps/web exec cypress run --config-file cypress.config.ts --config baseUrl=http://127.0.0.1:5173 --spec cypress/e2e/canvas/canvas-preview-run-live.cy.ts --browser electron
+  - id: code-route-graph-file-scope
+    redTest: pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts src/app/views/CodeView.test.tsx
+    expectedFailure: Code exposes persisted dbt files that are not part of the active graph and can open stale model SQL.
+    patchSurfaces:
+      - apps/web/src/app/views/CodeView.tsx
+      - apps/web/src/app/views/CodeView.test.tsx
+      - apps/web/src/app/views/code/codeViewFileSelection.ts
+      - apps/web/src/app/views/code/codeViewFileSelection.test.ts
+    greenTest: pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts src/app/views/CodeView.test.tsx
 symbols:
   - name: ResolveAuthorizedExecutableSubgraphService
     path: apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts
@@ -489,6 +510,152 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
     unitTests:
       - apps/web/src/app/views/canvas/transformationGraphValidation.test.ts
+  - name: CODE_GRAPH_FILE_SCOPE_VIEW_ID
+    path: apps/web/src/app/views/CodeView.tsx
+    dddOwner: CodeGraphFileScope
+    cqRails: [GetWorkspaceGraphDraft]
+    fowlerSignals: [Code file browsing must use a stable graph-snapshot query identity.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/CodeView.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests:
+      - apps/web/src/app/views/CodeView.test.tsx
+  - name: MODEL_ARTIFACT_PATH_PATTERN
+    path: apps/web/src/app/views/code/codeViewFileSelection.ts
+    dddOwner: CodeGraphFileScope
+    cqRails: [GetWorkspaceFileContent]
+    fowlerSignals: [Code should prefer graph model SQL over project configuration when no workflow artifact exists.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests:
+      - apps/web/src/app/views/code/codeViewFileSelection.test.ts
+  - name: DEFAULT_TRANSFORMATION_WORKFLOW_ARTIFACT_PATH
+    path: apps/web/src/app/views/code/codeViewFileSelection.ts
+    dddOwner: CodeGraphFileScope
+    cqRails: [GetWorkspaceGraphDraft, GetWorkspaceFileContent]
+    fowlerSignals: [Transformation canvases need a deterministic workflow artifact in Code.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests:
+      - apps/web/src/app/views/code/codeViewFileSelection.test.ts
+  - name: DBT_PROJECT_FILE_PATH
+    path: apps/web/src/app/views/code/codeViewFileSelection.ts
+    dddOwner: CodeGraphFileScope
+    cqRails: [GetWorkspaceGraphDraft, GetWorkspaceFileContent]
+    fowlerSignals: [DBT graph scope includes project configuration without making it the primary model code.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests:
+      - apps/web/src/app/views/code/codeViewFileSelection.test.ts
+  - name: DBT_SCHEMA_FILE_PATH
+    path: apps/web/src/app/views/code/codeViewFileSelection.ts
+    dddOwner: CodeGraphFileScope
+    cqRails: [GetWorkspaceGraphDraft, GetWorkspaceFileContent]
+    fowlerSignals: [DBT graph scope includes schema metadata beside generated model code.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests:
+      - apps/web/src/app/views/code/codeViewFileSelection.test.ts
+  - name: isModelArtifactFile
+    path: apps/web/src/app/views/code/codeViewFileSelection.ts
+    dddOwner: CodeGraphFileScope
+    cqRails: [GetWorkspaceFileContent]
+    fowlerSignals: [Code should select graph model SQL before lower-priority config files.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests:
+      - apps/web/src/app/views/code/codeViewFileSelection.test.ts
+  - name: normalizeIdentifier
+    path: apps/web/src/app/views/code/codeViewFileSelection.ts
+    dddOwner: CodeGraphFileScope
+    cqRails: [GetWorkspaceGraphDraft, GetWorkspaceFileContent]
+    fowlerSignals: [DBT model file identity must follow the current graph node name.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests:
+      - apps/web/src/app/views/code/codeViewFileSelection.test.ts
+  - name: addNonEmptyPath
+    path: apps/web/src/app/views/code/codeViewFileSelection.ts
+    dddOwner: CodeGraphFileScope
+    cqRails: [GetWorkspaceGraphDraft, GetWorkspaceFileContent]
+    fowlerSignals: [Explicit node paths must be preserved when scoping Code files to graph truth.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests:
+      - apps/web/src/app/views/code/codeViewFileSelection.test.ts
+  - name: isDbtNode
+    path: apps/web/src/app/views/code/codeViewFileSelection.ts
+    dddOwner: CodeGraphFileScope
+    cqRails: [GetWorkspaceGraphDraft]
+    fowlerSignals: [DBT and SQL transformation file scopes must not collapse into one artifact rule.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests:
+      - apps/web/src/app/views/code/codeViewFileSelection.test.ts
+  - name: isDbtModelNode
+    path: apps/web/src/app/views/code/codeViewFileSelection.ts
+    dddOwner: CodeGraphFileScope
+    cqRails: [GetWorkspaceGraphDraft]
+    fowlerSignals: [DBT model files are derived from graph model names, not stale node ids.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests:
+      - apps/web/src/app/views/code/codeViewFileSelection.test.ts
+  - name: isNonDbtModelNode
+    path: apps/web/src/app/views/code/codeViewFileSelection.ts
+    dddOwner: CodeGraphFileScope
+    cqRails: [GetWorkspaceGraphDraft]
+    fowlerSignals: [SQL transformation model files are derived from graph node ids.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests:
+      - apps/web/src/app/views/code/codeViewFileSelection.test.ts
+  - name: addGraphNodeFilePath
+    path: apps/web/src/app/views/code/codeViewFileSelection.ts
+    dddOwner: CodeGraphFileScope
+    cqRails: [GetWorkspaceGraphDraft, GetWorkspaceFileContent]
+    fowlerSignals: [Code explorer paths must be derived from active graph nodes.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests:
+      - apps/web/src/app/views/code/codeViewFileSelection.test.ts
+  - name: deriveCodeGraphFilePaths
+    path: apps/web/src/app/views/code/codeViewFileSelection.ts
+    dddOwner: CodeGraphFileScope
+    cqRails: [GetWorkspaceGraphDraft, GetWorkspaceFileContent]
+    fowlerSignals: [Code file browsing must follow the active graph instead of stale workspace artifacts.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests:
+      - apps/web/src/app/views/code/codeViewFileSelection.test.ts
+  - name: filterCodeWorkspaceFilesByPathScope
+    path: apps/web/src/app/views/code/codeViewFileSelection.ts
+    dddOwner: CodeGraphFileScope
+    cqRails: [GetWorkspaceGraphDraft, GetWorkspaceFileContent]
+    fowlerSignals: [Code explorer must hide stale workspace artifacts outside the active graph scope.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests:
+      - apps/web/src/app/views/code/codeViewFileSelection.test.ts
+  - name: hasCodeWorkspaceFilePath
+    path: apps/web/src/app/views/code/codeViewFileSelection.ts
+    dddOwner: CodeGraphFileScope
+    cqRails: [GetWorkspaceFileContent]
+    fowlerSignals: [A stale selected file must not remain active after graph scope changes.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts src/app/views/CodeView.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests:
+      - apps/web/src/app/views/code/codeViewFileSelection.test.ts
+      - apps/web/src/app/views/CodeView.test.tsx
+  - name: resolveGraphScopedCodeWorkspaceFileTree
+    path: apps/web/src/app/views/code/codeViewFileSelection.ts
+    dddOwner: CodeGraphFileScope
+    cqRails: [GetWorkspaceGraphDraft, GetWorkspaceFileContent]
+    fowlerSignals: [Code file browsing must follow the active graph instead of stale workspace artifacts.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts src/app/views/CodeView.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests:
+      - apps/web/src/app/views/code/codeViewFileSelection.test.ts
+      - apps/web/src/app/views/CodeView.test.tsx
   - name: resolveCreatedAtIso
     path: packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts
     dddOwner: StoredPlanArtifact
