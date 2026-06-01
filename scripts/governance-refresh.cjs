@@ -52,22 +52,12 @@ function buildRefreshStages() {
         script: 'docs:workboard:generate',
       },
       {
-        id: 'governance-db-import',
-        script: 'governance:db:import',
-        args: ['--', '--if-stale'],
-      },
-      {
         id: 'coverage-report',
         script: 'docs:governance:coverage-report',
       },
       {
         id: 'remediation-queue',
         script: 'docs:governance:remediation-queue',
-      },
-      {
-        id: 'governance-db-import-after-reports',
-        script: 'governance:db:import',
-        args: ['--', '--if-stale'],
       },
     ],
     databaseStages: [

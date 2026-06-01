@@ -46,6 +46,7 @@ test('Turbo workspace wrapper accepts governed task names and defaults to the af
 
 test('turbo.json declares governed build, lint, typecheck, and test task contracts', () => {
   assert.ok(turbo.globalDependencies.includes('turbo.json'));
+  assert.ok(turbo.globalDependencies.includes('.github/actions/setup-node-pnpm/action.yml'));
   assert.ok(turbo.globalDependencies.includes('scripts/skip-prebuild-if-orchestrated.cjs'));
   assert.ok(turbo.globalDependencies.includes('scripts/skip-pretest-if-ci.cjs'));
   assert.deepEqual(turbo.tasks.build.dependsOn, ['^build']);
@@ -117,4 +118,56 @@ test('root affected commands and CI matrix lint/build/typecheck steps use the Tu
     )
   );
   assert.equal(testWorkflow.includes('declare -A seen'), false);
+});
+
+test('GitHub workflows expose optional remote Turbo cache environment safely', () => {
+  for (const workflow of [ciWorkflow, testWorkflow]) {
+    assert.match(workflow, /TURBO_TOKEN:\s+\$\{\{\s*secrets\.TURBO_TOKEN\s*\}\}/);
+    assert.match(workflow, /TURBO_TEAM:\s+\$\{\{\s*secrets\.TURBO_TEAM\s*\}\}/);
+  }
+
+  const setupAction = readFileSync('.github/actions/setup-node-pnpm/action.yml', 'utf8');
+  assert.match(setupAction, /Cache Turbo/);
+  assert.match(setupAction, /path: \.turbo/);
+});
+
+test('Test Suite cacheable dependency graph builds use the governed Turbo wrapper', () => {
+  const expectedBuildFilters = [
+    '@dvt/adapter-temporal^...',
+    '@dvt/web^...',
+    '@dvt/adapter-postgres...',
+    '@dvt/engine^...',
+  ];
+
+  for (const filter of expectedBuildFilters) {
+    assert.ok(
+      testWorkflow.includes(`node scripts/run-turbo-workspace-task.cjs build --filter=${filter}`),
+      `expected Test Suite to build ${filter} through the Turbo workspace wrapper`
+    );
+  }
+
+  assert.equal(
+    testWorkflow.includes(
+      'run: pnpm --filter "@dvt/adapter-temporal^..." --workspace-concurrency=4 build'
+    ),
+    false
+  );
+  assert.equal(
+    testWorkflow.includes('run: pnpm --filter "@dvt/web^..." --workspace-concurrency=4 build'),
+    false
+  );
+  assert.equal(
+    testWorkflow.includes('run: pnpm --filter "@dvt/engine^..." --workspace-concurrency=4 build'),
+    false
+  );
+  assert.equal(
+    testWorkflow.includes(
+      'run: pnpm --workspace-concurrency=4 --filter @dvt/adapter-postgres... --if-present run build'
+    ),
+    false
+  );
+
+  assert.ok(testWorkflow.includes('run: pnpm test:adapter-temporal'));
+  assert.ok(testWorkflow.includes('run: pnpm test:web:changed'));
+  assert.ok(testWorkflow.includes('run: pnpm test:coverage:engine'));
 });

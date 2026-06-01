@@ -59,6 +59,11 @@ Warm-build note:
 - The shared GitHub Actions setup now restores `.turbo` in addition to the
   pnpm store and `node_modules`, so the existing root Turbo `build` path can
   reuse prior task outputs across CI runs.
+- `CI - Code Quality` and `Test Suite` expose `TURBO_TOKEN` and `TURBO_TEAM`
+  from repository secrets at workflow scope. When those secrets exist,
+  Turborepo can use remote cache for governed Turbo tasks; when they are absent
+  (for example on fork pull requests), the workflows continue with local task
+  execution and the restored `.turbo` cache.
 - The shared GitHub Actions setup defaults to
   `pnpm install --frozen-lockfile --prefer-offline`, so jobs prefer the restored
   pnpm store while keeping lockfile enforcement.
@@ -108,6 +113,7 @@ Warm-build note:
 | Contracts package tests            | `pnpm test:contracts`                                                      | `@dvt/contracts`                                     | [`package.json`](../../package.json)                                                                   |
 | Contracts compile gate             | `pnpm test:contracts:compile`                                              | `@dvt/contracts`                                     | [`package.json`](../../package.json)                                                                   |
 | API package tests                  | `pnpm --filter dvt-api test`                                               | `apps/api`                                           | [`apps/api/package.json`](../../apps/api/package.json)                                                 |
+| API package CI tests               | `pnpm --filter dvt-api test:ci`                                            | `apps/api` after CI dependency graph build           | [`apps/api/package.json`](../../apps/api/package.json)                                                 |
 | API package lint                   | `pnpm --filter dvt-api lint`                                               | `apps/api` TypeScript sources, tests, and configs    | [`apps/api/package.json`](../../apps/api/package.json)                                                 |
 | API protected runtime integration  | `pnpm --filter dvt-api test:integration`                                   | `apps/api` OIDC + PostgreSQL runtime                 | [`apps/api/package.json`](../../apps/api/package.json)                                                 |
 | PostgreSQL adapter tests           | `pnpm test:adapter-postgres`                                               | `@dvt/adapter-postgres`                              | [`package.json`](../../package.json)                                                                   |
@@ -410,7 +416,14 @@ Current workflow consumers:
   `pnpm build`, so the merge gate exercises the same Turbo-backed root build
   path that local root builds now use. Non-root PR affected dependency builds
   use `node scripts/run-turbo-workspace-task.cjs build` with the PR base filter,
-  avoiding a manually maintained package-to-build map. The shared
+  avoiding a manually maintained package-to-build map. Cacheable dependency
+  graph preparation for the dedicated web, adapter-temporal, adapter-postgres,
+  determinism/replay, and engine coverage lanes also uses the same wrapper with
+  the existing package filters; the test, coverage, and integration commands
+  remain explicit package commands. The API package matrix command uses
+  `pnpm --filter dvt-api test:ci` after this Turbo build step, so CI avoids
+  re-entering the local `pretest` dependency build while direct
+  `pnpm --filter dvt-api test` keeps its cold-worktree safety net. The shared
   `root_build_sensitive` scope includes root build graph inputs and runtime
   orchestration helpers, so PRs that change the Turbo graph or its
   orchestration helper cannot skip `Test Suite`. Adapter-postgres integration,
@@ -521,8 +534,13 @@ Current workflow consumers:
   outside public API surfaces, and runtime package imports from repository
   scripts/tools.
 - `Test Suite` now uses the same Turbo workspace wrapper for non-root PR
-  affected dependency builds. Root-config PRs still use `pnpm build` to exercise
-  the full root graph.
+  affected dependency builds and dedicated-lane build graph preparation.
+  Root-config PRs still use `pnpm build` to exercise the full root graph.
+- `pnpm governance:refresh` keeps generated governance file surfaces stable
+  before DB validation, but no longer runs `governance:db:import` inside
+  generation passes. It performs the heavy governance DB import once in the
+  final database-validation phase, then runs `governance:db:check` and
+  `governance:db:export:check`.
 - Dependency review and CodeQL workflows provide the current dependency/SAST
   baseline when the repository has the required GitHub Advanced Security
   capabilities. Private repositories must set
@@ -531,9 +549,9 @@ Current workflow consumers:
   skipped instead of failing before diff analysis. The manual docs deploy
   workflow pins the Zensical package version used to build the site, and the
   label-bootstrap workflow uses a SHA-pinned `actions/github-script` reference
-  like the other active workflows. Remote Turbo cache is still not configured
-  because it requires repository secret ownership for `TURBO_TOKEN` and
-  `TURBO_TEAM`.
+  like the other active workflows. Remote Turbo cache is configured in tracked
+  workflows but requires repository owners to populate `TURBO_TOKEN` and
+  `TURBO_TEAM` before it can produce remote cache hits.
 - Current branch-protection status checks are repository settings, not tracked
   YAML. Verify in GitHub settings that `CI - Code Quality`, `Test Suite`,
   `PR Quality Gate`, `Contracts & Determinism`, `Dependency Review`, and

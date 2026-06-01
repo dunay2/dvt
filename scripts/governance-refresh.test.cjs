@@ -27,19 +27,18 @@ test('governance refresh uses local governance reports before DB validation', ()
       'docs:governance:file-fingerprint-impact',
       'planning:db:import',
       'docs:workboard:generate',
-      'governance:db:import',
       'docs:governance:coverage-report',
       'docs:governance:remediation-queue',
-      'governance:db:import',
     ]
   );
   assert.deepEqual(
     stages.generationStages.find((stage) => stage.id === 'planning-db-import').args,
     ['--', '--if-stale', '--planning-only']
   );
-  assert.deepEqual(
-    stages.generationStages.find((stage) => stage.id === 'governance-db-import').args,
-    ['--', '--if-stale']
+  assert.equal(
+    stages.generationStages.some((stage) => stage.script === 'governance:db:import'),
+    false,
+    'generation passes must not run heavy governance DB imports before generated surfaces stabilize'
   );
   assert.equal(
     stages.generationStages.find((stage) => stage.id === 'coverage-report').args,
@@ -48,10 +47,6 @@ test('governance refresh uses local governance reports before DB validation', ()
   assert.equal(
     stages.generationStages.find((stage) => stage.id === 'remediation-queue').args,
     undefined
-  );
-  assert.deepEqual(
-    stages.generationStages.find((stage) => stage.id === 'governance-db-import-after-reports').args,
-    ['--', '--if-stale']
   );
   assert.deepEqual(
     stages.databaseStages.map((stage) => stage.script),
