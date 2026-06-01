@@ -446,7 +446,113 @@ redGreenCycles:
       - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
       - docs/planning/closeouts/**
     greenTest: node --test scripts/verify-changed.test.cjs
+  - id: governance-import-heavy-table-batching
+    redTest: node --test scripts/planning-db-import.test.cjs
+    expectedFailure: governance DB import inserts 5k-row file, component-file, and fingerprint tables one row per client.query call, making stale governance imports pay thousands of database round trips.
+    patchSurfaces:
+      - scripts/planning-db-import.cjs
+      - scripts/planning-db-import.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test scripts/planning-db-import.test.cjs
+  - id: governance-import-auxiliary-table-batching
+    redTest: node --test scripts/planning-db-import.test.cjs
+    expectedFailure: governance DB import still inserts doc disposition, knowledge, and repository command auxiliary rows one row per client.query call after the primary file table batching pass.
+    patchSurfaces:
+      - scripts/planning-db-import.cjs
+      - scripts/planning-db-import.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test scripts/planning-db-import.test.cjs
 symbols:
+  - name: postgresParameterLimit
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Batched governance import must stay within PostgreSQL parameter limits
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: normalizeInsertColumn
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Shared batched insert helper needs explicit per-column cast metadata
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: insertPlaceholder
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Shared batched insert helper must preserve parameterized SQL and casts
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: insertRows
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Repeated row-by-row governance import round trips in local DB-first validation
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: insertGovernanceSnapshot
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Repeated row-by-row governance import round trips in local DB-first validation
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: insertDocsDispositionSnapshot
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Repeated row-by-row governance import round trips in local DB-first validation
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: insertKnowledgeSnapshot
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Repeated row-by-row governance import round trips in local DB-first validation
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: insertRepositoryCommandSnapshot
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Repeated row-by-row governance import round trips in local DB-first validation
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
   - name: buildOwnerMatcher
     path: scripts/check-governance-unit-coverage.cjs
     dddOwner: ValidateCiScopeOptimizationContract

@@ -12,6 +12,10 @@ const {
   clearGovernanceSnapshotTables,
   governanceImportDeleteTables,
   importContent,
+  insertDocsDispositionSnapshot,
+  insertGovernanceSnapshot,
+  insertKnowledgeSnapshot,
+  insertRepositoryCommandSnapshot,
   mergePlanningTaskIds,
   normalizeText,
   parseArgs,
@@ -629,6 +633,245 @@ test('governance import clears every repopulated governance table before insert'
   assert.ok(governanceImportDeleteTables.includes('governance_remediation'));
   assert.ok(governanceImportDeleteTables.includes('risk_debt_items'));
   assert.equal(governanceImportDeleteTables.at(-1), 'governance_sources');
+});
+
+test('governance import batches heavy file table inserts', async () => {
+  const queries = [];
+  const baseFile = {
+    path: 'docs/example-a.md',
+    fileId: 'F-A',
+    shardId: 'SYS-DOCS',
+    sourcePath: 'docs/planning/status/governance-files/SYS-DOCS.files.yaml',
+    pathHash: 'path-a',
+    contentHash: 'content-a',
+    governanceHash: 'governance-a',
+    stateFingerprint: 'state-a',
+    owningUnit: 'SYS-DOCS-GOVERNANCE-ROOT',
+    rootUnit: 'SYS-DVT',
+    domainUnit: 'SYS-DOCS-GOVERNANCE',
+    componentUnit: 'SYS-DOCS-GOVERNANCE-ROOT',
+    ownerLevel: 'component',
+    unitStatus: 'canonical',
+    governanceState: 'governed',
+    canonicalRole: 'implementation-owner',
+    evidenceState: 'classification-only',
+    isDrift: false,
+    isLegacy: false,
+    dddOwner: 'Docs',
+    cqRails: 'ValidateCiScopeOptimizationContract',
+    governanceRefs: ['docs/index.md'],
+    sourceContentSha256: 'source-a',
+    rawFile: { path: 'docs/example-a.md' },
+  };
+
+  await insertGovernanceSnapshot(
+    {
+      query: async (sql, params = []) => {
+        queries.push({ sql, params });
+      },
+    },
+    {
+      sources: [],
+      fileShards: [],
+      files: [
+        baseFile,
+        {
+          ...baseFile,
+          path: 'docs/example-b.md',
+          fileId: 'F-B',
+          pathHash: 'path-b',
+          contentHash: 'content-b',
+          governanceHash: 'governance-b',
+          stateFingerprint: 'state-b',
+          sourceContentSha256: 'source-b',
+          rawFile: { path: 'docs/example-b.md' },
+        },
+      ],
+      components: [],
+      componentFileShards: [],
+      componentFiles: [],
+      fingerprints: [],
+      coverageRows: [],
+      remediationTasks: [],
+      riskDebtItems: [],
+    }
+  );
+
+  const fileInsertQueries = queries.filter((query) =>
+    query.sql.includes(`insert into ${schemaName}.governance_files`)
+  );
+
+  assert.equal(fileInsertQueries.length, 1);
+  assert.match(fileInsertQueries[0].sql, /\),\s*\(/);
+  assert.equal(fileInsertQueries[0].params.length, 48);
+});
+
+test('docs disposition import batches document inserts', async () => {
+  const queries = [];
+  const baseDocument = {
+    documentPath: 'docs/example-a.md',
+    title: 'Example A',
+    status: 'Review',
+    planningType: 'guide',
+    owner: 'Docs',
+    isActive: true,
+    isArchive: false,
+    pendingMarkerCount: 0,
+    taskLikeReferenceCount: 0,
+    sourceContentSha256: 'source-a',
+    rawFrontmatter: { title: 'Example A' },
+    rawDocument: { documentPath: 'docs/example-a.md' },
+  };
+
+  await insertDocsDispositionSnapshot(
+    {
+      query: async (sql, params = []) => {
+        queries.push({ sql, params });
+      },
+    },
+    {
+      documents: [
+        baseDocument,
+        {
+          ...baseDocument,
+          documentPath: 'docs/example-b.md',
+          title: 'Example B',
+          sourceContentSha256: 'source-b',
+          rawFrontmatter: { title: 'Example B' },
+          rawDocument: { documentPath: 'docs/example-b.md' },
+        },
+      ],
+      markers: [],
+      references: [],
+      actions: [],
+    }
+  );
+
+  const documentInsertQueries = queries.filter((query) =>
+    query.sql.includes(`insert into ${schemaName}.doc_disposition_documents`)
+  );
+
+  assert.equal(documentInsertQueries.length, 1);
+  assert.match(documentInsertQueries[0].sql, /\),\s*\(/);
+  assert.equal(documentInsertQueries[0].params.length, 24);
+});
+
+test('knowledge import batches documents and preserves link conflict handling', async () => {
+  const queries = [];
+  const baseDocument = {
+    documentId: 'DOC-A',
+    documentPath: 'docs/example-a.md',
+    documentType: 'planning',
+    title: 'Example A',
+    status: 'Review',
+    planningType: 'proposal',
+    owner: 'Docs',
+    mandatory: true,
+    sourceContentSha256: 'source-a',
+    rawFrontmatter: { title: 'Example A' },
+  };
+
+  await insertKnowledgeSnapshot(
+    {
+      query: async (sql, params = []) => {
+        queries.push({ sql, params });
+      },
+    },
+    {
+      documents: [
+        baseDocument,
+        {
+          ...baseDocument,
+          documentId: 'DOC-B',
+          documentPath: 'docs/example-b.md',
+          title: 'Example B',
+          sourceContentSha256: 'source-b',
+          rawFrontmatter: { title: 'Example B' },
+        },
+      ],
+      sections: [],
+      proposals: [],
+      documentLinks: [
+        {
+          fromDocumentId: 'DOC-A',
+          toDocumentId: 'DOC-B',
+          relationType: 'references',
+        },
+        {
+          fromDocumentId: 'DOC-B',
+          toDocumentId: 'DOC-A',
+          relationType: 'references',
+        },
+      ],
+      actions: [],
+      actionLinks: [],
+    }
+  );
+
+  const documentInsertQueries = queries.filter((query) =>
+    query.sql.includes(`insert into ${schemaName}.knowledge_documents`)
+  );
+  const linkInsertQueries = queries.filter((query) =>
+    query.sql.includes(`insert into ${schemaName}.knowledge_document_links`)
+  );
+
+  assert.equal(documentInsertQueries.length, 1);
+  assert.match(documentInsertQueries[0].sql, /\),\s*\(/);
+  assert.equal(documentInsertQueries[0].params.length, 20);
+  assert.equal(linkInsertQueries.length, 1);
+  assert.match(linkInsertQueries[0].sql, /\),\s*\(/);
+  assert.match(linkInsertQueries[0].sql, /on conflict do nothing/);
+  assert.equal(linkInsertQueries[0].params.length, 6);
+});
+
+test('repository command import batches command inserts', async () => {
+  const queries = [];
+  const baseCommand = {
+    commandId: 'command-a',
+    commandType: 'script',
+    commandName: 'test:a',
+    commandPath: 'package.json#scripts.test:a',
+    commandText: 'node scripts/a.cjs',
+    domain: 'ci',
+    sensitivity: 'safe',
+    runtimeFanout: 'low',
+    changedFileValidationRelevant: true,
+    referencedFiles: ['scripts/a.cjs'],
+    sourcePath: 'package.json',
+    sourceContentSha256: 'source-a',
+    rawCommand: { name: 'test:a' },
+  };
+
+  await insertRepositoryCommandSnapshot(
+    {
+      query: async (sql, params = []) => {
+        queries.push({ sql, params });
+      },
+    },
+    {
+      commands: [
+        baseCommand,
+        {
+          ...baseCommand,
+          commandId: 'command-b',
+          commandName: 'test:b',
+          commandPath: 'package.json#scripts.test:b',
+          commandText: 'node scripts/b.cjs',
+          referencedFiles: ['scripts/b.cjs'],
+          sourceContentSha256: 'source-b',
+          rawCommand: { name: 'test:b' },
+        },
+      ],
+    }
+  );
+
+  const commandInsertQueries = queries.filter((query) =>
+    query.sql.includes(`insert into ${schemaName}.repository_commands`)
+  );
+
+  assert.equal(commandInsertQueries.length, 1);
+  assert.match(commandInsertQueries[0].sql, /\),\s*\(/);
+  assert.equal(commandInsertQueries[0].params.length, 26);
 });
 
 test('repository command snapshot imports package scripts and command files for DB queries', async () => {

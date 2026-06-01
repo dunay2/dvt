@@ -232,3 +232,40 @@ flowchart TD
   `pnpm docs:feature-mechanization -- --feature CI-SCOPE-OPTIMIZATION-20260508`,
   and `pnpm docs:feature-mechanization:implementation` passed after the routing
   plan update.
+
+## Heavy Governance Import Batching Iteration
+
+- Problem summary: a stale `pnpm governance:db:import -- --if-stale` still took
+  76.508s after the generator optimization. Inspection showed the import path
+  performs one `client.query` per row for the largest governance tables.
+- Root cause: `insertGovernanceSnapshot()` writes `governance_files`,
+  `governance_component_files`, and `governance_fingerprints` row by row. At
+  current repository size those three tables alone create about 15k database
+  round trips per stale import.
+- Selected option and rationale: add a shared parameterized insert helper and
+  use it only for the three largest governance tables in this slice. This keeps
+  behavior, transaction boundaries, and table clearing unchanged while removing
+  the dominant round-trip cost.
+- Rejected alternatives: rewrite every planning/governance import table at
+  once, use untyped string-concatenated SQL values, or defer batching behind a
+  separate migration. Those options either expand blast radius or weaken query
+  safety.
+- Validation plan:
+  - `node --test scripts/planning-db-import.test.cjs`
+  - stale `pnpm governance:db:import -- --if-stale` timing after forcing a
+    changed governance source hash
+  - fresh `pnpm governance:db:import -- --if-stale` timing after the import
+  - `pnpm governance:refresh`
+  - `pnpm verify:prepush`
+- First batching measurement: after batching `governance_files`,
+  `governance_component_files`, and `governance_fingerprints`, stale
+  `pnpm governance:db:import -- --if-stale` took 69.432s versus the 76.508s
+  baseline. The result confirmed a real but incomplete improvement, so the
+  same helper was extended to auxiliary governance tables in the next step.
+- Auxiliary batching measurement: after also batching repository command, docs
+  disposition, and knowledge-document imports, stale
+  `pnpm governance:db:import -- --if-stale` took 55.844s. The fresh path after
+  that import took 5.783s and reported `skipped fresh scopes: governance`.
+- Net measurement: stale governance import improved from 76.508s to 55.844s
+  for this iteration, a 20.664s reduction on the local DB-first path. The
+  improvement is direct CI/local-command pipeline time, not cosmetic routing.
