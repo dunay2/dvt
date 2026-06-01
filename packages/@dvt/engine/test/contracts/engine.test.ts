@@ -58,7 +58,7 @@ function makePlanMetadata(
   return {
     planId: derivePlanId(steps, inputHashSha256),
     planVersion: '1.0',
-    schemaVersion: 'v1.2',
+    schemaVersion: '1.0',
     contractVersion: '1.0.0',
     inputHashSha256,
     createdAtIso: '2026-02-12T00:00:00.000Z',
@@ -369,7 +369,7 @@ describe('WorkflowEngine + in-memory temporal provider adapter', () => {
     const badPlanRef1: PlanRef = {
       uri: 'file:///etc/passwd',
       sha256: '0'.repeat(64),
-      schemaVersion: 'v1.2',
+      schemaVersion: '1.0',
       planId: 'p',
       planVersion: '1',
     };
@@ -381,7 +381,7 @@ describe('WorkflowEngine + in-memory temporal provider adapter', () => {
     const badPlanRef2: PlanRef = {
       uri: 'https://plans.example.com/plan.json',
       sha256: '0'.repeat(64),
-      schemaVersion: 'v2.0', // invalid
+      schemaVersion: '2.0', // invalid
       planId: 'p',
       planVersion: '1.0',
     };

@@ -63,7 +63,7 @@ describe('PlanAdmissionPolicy', () => {
     expect(() =>
       assertAdmittedPlanPair({
         planVersion: CURRENT_EXECUTION_PLAN_VERSION,
-        schemaVersion: 'v1.future',
+        schemaVersion: '1.future',
       })
     ).toThrowError(InvalidSchemaVersionError);
   });

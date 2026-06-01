@@ -86,7 +86,7 @@ export const INVALID_NO_GRAPH_SOURCE_PLANNER_INPUT_FIXTURE = {
 export const VALID_EXECUTION_PLAN_V1_FIXTURE = {
   metadata: {
     planVersion: CURRENT_EXECUTION_PLAN_VERSION,
-    schemaVersion: 'v1.2',
+    schemaVersion: '1.0',
     contractVersion: '1.0.0',
     inputHashSha256: HEX_64_A,
     planId: '',

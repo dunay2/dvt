@@ -8,7 +8,7 @@
 
 /**
  * The highest ExecutionPlan schemaVersion this adapter supports.
- * Format: { major, minor } — corresponds to "v{major}.{minor}" in plan-compat.json.
+ * Format: { major, minor } - corresponds to "{major}.{minor}" in plan-compat.json.
  *
  * Update this constant (and plan-compat.json) when support for a new schema version is added.
  * CI will fail on drift (matrix-alignment.test.ts).

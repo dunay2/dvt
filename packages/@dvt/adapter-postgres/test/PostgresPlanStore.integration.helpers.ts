@@ -41,12 +41,12 @@ export function createStore(schema: string): PostgresPlanStore {
   return new PostgresPlanStore({
     schema,
     toExecutablePlan: (buildResult) => ({
-      schemaVersion: 'v1.2',
+      schemaVersion: '1.0',
       text: JSON.stringify({
         metadata: {
           planId: buildResult.plan.metadata.planId,
           planVersion: buildResult.plan.metadata.planVersion,
-          schemaVersion: 'v1.2',
+          schemaVersion: '1.0',
           contractVersion: '1.0.0',
           inputHashSha256: buildResult.plan.metadata.inputHashSha256,
           ownership: buildResult.plan.metadata.ownership,
@@ -73,7 +73,7 @@ export function makeBuildResult(planId: string): PlannerBuildResultV1 {
     metadata: {
       planId,
       planVersion: '1.0',
-      schemaVersion: 'v1.2',
+      schemaVersion: '1.0',
       contractVersion: '1.0.0',
       inputHashSha256: '1'.repeat(64),
       createdAtIso: NOW,

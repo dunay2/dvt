@@ -11,7 +11,7 @@ severity: Medium
 probability: Low
 context: >
   Start-run admission now uses an explicit `ExecutionPlan` admission matrix to bind `planVersion`
-  and `schemaVersion`. The current executable pair is `(1.0, v1.2)`. The previous broad `v1.*` rule
+  and `schemaVersion`. The current executable pair is `(1.0, 1.0)`. The previous broad `v1.*` rule
   is removed from engine admission, so older, future, or malformed schema lines fail before plan
   fetch or adapter dispatch.
 risk: >

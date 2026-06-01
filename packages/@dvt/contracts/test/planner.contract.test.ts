@@ -133,7 +133,7 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
   it('valida schema del ExecutionPlan canónico versionado', () => {
     const plan = ExecutionPlanSchema.parse(VALID_EXECUTION_PLAN_V1_FIXTURE);
     expect(plan.metadata.planVersion).toBe(CURRENT_EXECUTION_PLAN_VERSION);
-    expect(plan.metadata.schemaVersion).toBe('v1.2');
+    expect(plan.metadata.schemaVersion).toBe('1.0');
     expect(plan.metadata.contractVersion).toBe('1.0.0');
     expect(plan.metadata.planId).toMatch(/^[a-f0-9]{64}$/);
     expect(plan.metadata.ownership).toEqual(VALID_PLANNER_INPUT_FIXTURE.ownership);
@@ -226,7 +226,7 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
         plan: {
           metadata: {
             planVersion: '1.0',
-            schemaVersion: 'v1.2',
+            schemaVersion: '1.0',
             contractVersion: '1.0.0',
             inputHashSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
             planId,

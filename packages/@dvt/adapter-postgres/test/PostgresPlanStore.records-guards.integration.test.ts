@@ -181,7 +181,7 @@ describeIfPg('PostgresPlanStore records guard integration', () => {
                 plan_version, schema_version, contract_version, source_ref, state, created_at,
                 updated_at, derived_from_plan_id
               ) VALUES (
-                $1, $2, $3, $4, $5, $6, '1.0', 'v1.2', '1.0.0', $7, 'ACTIVE',
+                $1, $2, $3, $4, $5, $6, '1.0', '1.0', '1.0.0', $7, 'ACTIVE',
                 NOW(), NOW(), $8
               )
             `,

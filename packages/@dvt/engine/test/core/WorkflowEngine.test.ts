@@ -238,7 +238,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     const invalidPlanRef = {
       uri: '',
       sha256: 'deadbeef',
-      schemaVersion: 'v1.2',
+      schemaVersion: '1.0',
       planId: TEST_PLAN_REF.planId,
       planVersion: '1.0',
     } as any;
@@ -530,7 +530,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     {
       name: 'future schemaVersion on a supported planVersion',
       run: async (engine: WorkflowEngine): Promise<void> => {
-        const unsupported = { ...makePlanRef(), schemaVersion: 'v1.future' };
+        const unsupported = { ...makePlanRef(), schemaVersion: '1.future' };
         await expect(
           engine.startRun(unsupported, makeContext('unsupported-schema-1'))
         ).rejects.toThrow(InvalidSchemaVersionError);
@@ -548,7 +548,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     const { engine, store } = createEngine({
       adapters: makeAdapters({ startRun }),
     });
-    const unsupported = { ...makePlanRef(), schemaVersion: 'v1.future' };
+    const unsupported = { ...makePlanRef(), schemaVersion: '1.future' };
 
     await expect(
       engine.startRun(unsupported, makeContext('unsupported-schema-no-dispatch-1'))

@@ -21,8 +21,8 @@
         "properties": {
           "version": {
             "type": "string",
-            "pattern": "^v[0-9]+\\.[0-9]+$",
-            "description": "Schema version in vMAJOR.MINOR format."
+            "pattern": "^[0-9]+\\.[0-9]+$",
+            "description": "Schema version in MAJOR.MINOR format."
           },
           "adapters": {
             "type": "object",

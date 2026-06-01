@@ -75,7 +75,7 @@ describe('@dvt/plan-verifier', () => {
         canonicalPlanCoreJson: canonical,
         planId,
         planVersion: CURRENT_EXECUTION_PLAN_VERSION,
-        schemaVersion: 'v1.future',
+        schemaVersion: '1.future',
         runtime: 'planner',
       })
     ).rejects.toThrow(/schemaVersion/);

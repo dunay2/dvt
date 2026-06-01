@@ -44,7 +44,7 @@ Current admitted pair:
 
 | `planVersion` | `schemaVersion` | Status    |
 | ------------- | --------------- | --------- |
-| `1.0`         | `v1.2`          | `current` |
+| `1.0`         | `1.0`           | `current` |
 
 ## Component Map
 
@@ -81,7 +81,7 @@ flowchart LR
   literal is an active example or admitted value.
 - A valid `planVersion` does not make an unknown `schemaVersion` executable.
 - A valid `schemaVersion` does not make an unknown `planVersion` executable.
-- `schemaVersion = v1.future` is unsupported.
+- `schemaVersion = 1.future` is unsupported.
 - The engine MUST NOT use a broad `v1.*` prefix rule as runtime admission
   truth.
 - Older plan/schema pairs remain undeclared unless they are the active pair.

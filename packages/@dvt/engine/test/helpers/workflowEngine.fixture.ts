@@ -277,7 +277,7 @@ export function makeDefaultExecutionPlan(): ExecutionPlan {
     metadata: {
       planId,
       planVersion: '1.0',
-      schemaVersion: 'v1.2',
+      schemaVersion: '1.0',
       contractVersion: '1.0.0',
       inputHashSha256,
       createdAtIso: '2026-02-12T00:00:00.000Z',

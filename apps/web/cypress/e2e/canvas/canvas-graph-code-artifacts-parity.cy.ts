@@ -154,7 +154,7 @@ describe('Canvas graph to Code and Artifacts project-source parity', () => {
       plan: {
         metadata: {
           planVersion: '1.0',
-          schemaVersion: 'v1.2',
+          schemaVersion: '1.0',
           contractVersion: '1.0.0',
           inputHashSha256: 'a'.repeat(64),
           planId: 'b'.repeat(64),
@@ -218,7 +218,7 @@ describe('Canvas graph to Code and Artifacts project-source parity', () => {
       planRef: {
         uri: `dvt://plans/${'b'.repeat(64)}`,
         sha256: 'f'.repeat(64),
-        schemaVersion: 'v1.2',
+        schemaVersion: '1.0',
         planId: 'b'.repeat(64),
         planVersion: 'v1',
       },

@@ -19,9 +19,9 @@ plan schema versions before runtime side effects.
   start.
 - `US-EA-20260429-01-002` - As a runtime operator, I want blank schema
   versions rejected so malformed references cannot enter runtime.
-- `US-EA-20260429-01-003` - As a platform maintainer, I want `v1.future`
+- `US-EA-20260429-01-003` - As a platform maintainer, I want `1.future`
   rejected so a future schema cannot be treated as compatible by prefix.
-- `US-EA-20260429-01-004` - As a platform maintainer, I want `v2.0` rejected
+- `US-EA-20260429-01-004` - As a platform maintainer, I want `2.0` rejected
   so unsupported major schema lines fail closed.
 - `US-EA-20260429-01-005` - As a contract maintainer, I want unknown
   `planVersion` values rejected even with the current schema.
@@ -31,13 +31,13 @@ plan schema versions before runtime side effects.
 
 ## Negative Scenarios
 
-| Scenario           | Input                                            | Expected outcome                   |
-| ------------------ | ------------------------------------------------ | ---------------------------------- |
-| Blank schema       | `planVersion = 1.0`, `schemaVersion = ""`        | `InvalidSchemaVersionError`        |
-| Future schema      | `planVersion = 1.0`, `schemaVersion = v1.future` | `InvalidSchemaVersionError`        |
-| Major schema drift | `planVersion = 1.0`, `schemaVersion = v2.0`      | `InvalidSchemaVersionError`        |
-| Unknown plan line  | `planVersion != 1.0`, `schemaVersion = v1.2`     | `UnsupportedPlanVersionError`      |
-| Side-effect guard  | unsupported pair in `startRun`                   | no adapter dispatch, no run events |
+| Scenario           | Input                                           | Expected outcome                   |
+| ------------------ | ----------------------------------------------- | ---------------------------------- |
+| Blank schema       | `planVersion = 1.0`, `schemaVersion = ""`       | `InvalidSchemaVersionError`        |
+| Future schema      | `planVersion = 1.0`, `schemaVersion = 1.future` | `InvalidSchemaVersionError`        |
+| Major schema drift | `planVersion = 1.0`, `schemaVersion = 2.0`      | `InvalidSchemaVersionError`        |
+| Unknown plan line  | `planVersion != 1.0`, `schemaVersion = 1.0`     | `UnsupportedPlanVersionError`      |
+| Side-effect guard  | unsupported pair in `startRun`                  | no adapter dispatch, no run events |
 
 ## Scenario Flow
 

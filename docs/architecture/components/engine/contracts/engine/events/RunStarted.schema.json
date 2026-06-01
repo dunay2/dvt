@@ -92,8 +92,8 @@
         },
         "schemaVersion": {
           "type": "string",
-          "pattern": "^v\\d+\\.\\d+$",
-          "description": "Plan schema version (e.g., v1.2)"
+          "pattern": "^\\d+\\.\\d+$",
+          "description": "Plan schema version (e.g., 1.0)"
         },
         "planId": {
           "type": "string",
@@ -152,11 +152,11 @@
       "engineRunRef": "temporal://default/interpreter-workflow/run_2026-02-11_abc123/f47ac10b",
       "engineType": "temporal",
       "planRef": {
-        "uri": "s3://dvt-plans/prod/plan_xyz_v1.2.json",
+        "uri": "s3://dvt-plans/prod/plan_xyz_1.0.json",
         "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        "schemaVersion": "v1.2",
+        "schemaVersion": "1.0",
         "planId": "plan_xyz",
-        "planVersion": "1.2"
+        "planVersion": "1.0"
       },
       "context": {
         "tenantId": "tenant_acme",

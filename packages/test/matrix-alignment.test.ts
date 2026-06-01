@@ -21,13 +21,13 @@ import Ajv from 'ajv';
 import { it, expect } from 'vitest';
 
 // ADAPTER_SUPPORTED_SCHEMA is added to versioning.ts as part of ADR-0017 implementation.
-// Shape: { major: number; minor: number } — e.g. { major: 1, minor: 1 }
+// Shape: { major: number; minor: number } - e.g. { major: 1, minor: 0 }
 import { ADAPTER_SUPPORTED_SCHEMA as TEMPORAL_SUPPORTED } from '../@dvt/adapter-temporal/src/versioning.ts';
 
 type CompatMatrix = {
   schema: 'ExecutionPlan';
   versions: Array<{
-    version: string; // v<major>.<minor>
+    version: string; // <major>.<minor>
     adapters: Record<string, boolean>;
   }>;
 };
@@ -48,11 +48,11 @@ it('plan-compat.json conforms to plan-compat.schema.json', () => {
 
 it('TemporalAdapter support matches plan-compat.json', () => {
   const matrix = loadJson(path.resolve('contracts/compat/plan-compat.json')) as CompatMatrix;
-  const supported = TEMPORAL_SUPPORTED; // { major: 1, minor: 1 }
+  const supported = TEMPORAL_SUPPORTED; // { major: 1, minor: 0 }
 
   // Positive checks: all minor versions up to supported.minor must be declared true.
   for (let minor = 0; minor <= supported.minor; minor++) {
-    const v = `v${supported.major}.${minor}`;
+    const v = `${supported.major}.${minor}`;
     const row = matrix.versions.find((r) => r.version === v);
     expect(row).toBeTruthy();
     expect(row!.adapters['TemporalAdapter']).toBe(true);
@@ -61,7 +61,7 @@ it('TemporalAdapter support matches plan-compat.json', () => {
   // Negative checks:
   // If a row exists for an unsupported version, it MUST be explicitly false for this adapter.
   // (We allow absence of the row as "not declared / not supported".)
-  const unsupported = ['v1.2', 'v1.3', 'v2.0'];
+  const unsupported = ['1.1', '1.2', '2.0', 'v1.0', 'v1.2'];
   for (const v of unsupported) {
     const row = matrix.versions.find((r) => r.version === v);
     if (row) {

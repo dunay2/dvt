@@ -19,7 +19,7 @@
 The codebase already distinguishes:
 
 - `planVersion`: **revision** of a concrete plan instance (e.g. "1", "2", "3") and participates in idempotency
-- `schemaVersion`: **format/schema** version of the `ExecutionPlan` JSON structure (for example `v1.2`) and does **not** participate in idempotency
+- `schemaVersion`: **format/schema** version of the `ExecutionPlan` JSON structure (for example `1.0`) and does **not** participate in idempotency
 
 As DVT+ evolves, the `ExecutionPlan` schema will change. Without explicit versioning rules:
 
@@ -41,13 +41,13 @@ Every `ExecutionPlan.metadata` MUST include `schemaVersion`.
 
 **Authoritative format:**
 
-- the only currently executable `schemaVersion` is `v1.2`
+- the only currently executable `schemaVersion` is `1.0`
 - future schema versions MUST be admitted by an explicit matrix update
-- `schemaVersion` values such as `v1.future` or any other undeclared string
+- `schemaVersion` values such as `1.future`, `v1.2`, or any other undeclared string
   MUST be rejected before plan fetch or adapter dispatch
 
-This ADR explicitly rejects the former `v1.x` prefix convention as runtime
-admission truth.
+This ADR explicitly rejects both the former `v1.x` prefix convention and any
+legacy alias as runtime admission truth.
 
 ---
 
@@ -84,8 +84,8 @@ If validation fails, the Engine MUST fail fast and MUST NOT create a run record 
 ```ts
 class PlanRejectedError extends Error {
   code: 'UNSUPPORTED_PLAN_VERSION';
-  schemaVersion: string; // e.g. "v2.0"
-  supportedVersion: string; // e.g. "v1.2"
+  schemaVersion: string; // e.g. "2.0"
+  supportedVersion: string; // e.g. "1.0"
   adapterName: string; // e.g. "TemporalAdapter"
 }
 ```
@@ -187,7 +187,8 @@ Forbidden patterns:
 
 ### Positive
 
-- Formalizes and aligns the existing `v<major>.<minor>` schemaVersion practice.
+- Formalizes the pre-alpha `major.minor` schemaVersion literal used by the
+  active admission pair.
 - Prevents executing plans with unknown schema.
 - Makes compatibility auditable (JSON matrix) and enforceable (CI contract test).
 - Protects runs-in-flight via immutability requirement.
@@ -209,7 +210,7 @@ emits an undeclared pair will be rejected at start-run admission.
 This ADR requires updates to:
 
 1. **IWorkflowEngine.v1.md**
-   - require `schemaVersion` format `v<major>.<minor>`
+   - require `schemaVersion` format `major.minor`
    - specify pre-bootstrap validation timing
 2. **ExecutionSemantics.v1.md**
    - add Plan Compatibility section (schema vs plan revision)
@@ -226,7 +227,7 @@ This ADR requires updates to:
 ### Invariants
 
 - **INV-PLAN-001**: Every ExecutionPlan includes `metadata.schemaVersion`
-- **INV-PLAN-001A**: `schemaVersion` format is `v<major>.<minor>`
+- **INV-PLAN-001A**: `schemaVersion` format is `major.minor`
 - **INV-PLAN-002**: Engine validates schemaVersion pre-bootstrap (no run created on mismatch)
 - **INV-PLAN-003**: Runtime admission uses the declared
   `(planVersion, schemaVersion)` pair
@@ -238,7 +239,7 @@ This ADR requires updates to:
 ### Required Tests (mandatory CI)
 
 - `test/plan/schemaVersion-required.test.ts`
-- `test/plan/schemaVersion-format-v-prefix.test.ts`
+- `test/plan/schemaVersion-format-major-minor.test.ts`
 - `test/engine/reject-unsupported-schema-pre-bootstrap.test.ts`
 - `test/plan/compat/uses-planVersion-schemaVersion-pair.test.ts`
 - `test/plan/compat/invalid-schemaVersion-throws.test.ts`

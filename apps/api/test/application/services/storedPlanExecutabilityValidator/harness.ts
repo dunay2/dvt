@@ -20,7 +20,7 @@ export const PLAN_REF: PlanRefSchemaT = {
     'dvt-plan://postgres/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
   ),
   sha256: asNonBlankString('abc123'),
-  schemaVersion: asNonBlankString('v1.2'),
+  schemaVersion: asNonBlankString('1.0'),
   planId: asNonBlankString('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'),
   planVersion: asNonBlankString('1.0'),
 };
@@ -66,7 +66,7 @@ export function storedPlanArtifact(
           planId:
             overrides?.planId ?? 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
           planVersion: overrides?.planVersion ?? '1.0',
-          schemaVersion: overrides?.schemaVersion ?? 'v1.2',
+          schemaVersion: overrides?.schemaVersion ?? '1.0',
           contractVersion: '1.0.0',
           inputHashSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
           createdAtIso: '2026-03-01T00:00:00.000Z',

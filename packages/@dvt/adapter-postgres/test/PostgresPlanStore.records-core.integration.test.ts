@@ -169,7 +169,7 @@ describeIfPg('PostgresPlanStore records core integration', () => {
         metadata: {
           planId: legacyPlanId,
           planVersion: '1.0',
-          schemaVersion: 'v1.2',
+          schemaVersion: '1.0',
           contractVersion: '1.0.0',
           inputHashSha256: '3'.repeat(64),
           createdAtIso: NOW,
@@ -188,7 +188,7 @@ describeIfPg('PostgresPlanStore records core integration', () => {
               requires_capabilities, canonical_plan_json, executable_plan_json, validation_state,
               rejection_report_json, stored_at, updated_at
             ) VALUES (
-              $1, '1.0', $2, $3, 'v1.2', $4, NULL, $5, $6, 'PENDING_VALIDATION', NULL, NOW(), NOW()
+              $1, '1.0', $2, $3, '1.0', $4, NULL, $5, $6, 'PENDING_VALIDATION', NULL, NOW(), NOW()
             ) ON CONFLICT (plan_id) DO NOTHING
           `,
           [
