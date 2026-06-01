@@ -164,13 +164,13 @@ flowchart LR
 
 <!-- markdownlint-disable MD060 -->
 
-| Scenario | Opportunity | Fowler pattern | DDD owner | Command/query rail | Implementation surfaces | Unit or package test | Architecture test | User-flow test | Out of scope |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Cost route shows local dollar totals from graph node fields | Hidden authority | Replace Magic Number with Explicit Model | `CostAttributionViewModel` | `GetCostAttributionSummary` | `apps/web/src/app/views/cost/*`, `apps/web/src/app/views/CostView.tsx` | `costViewModel.test.ts` asserts unavailable money is not formatted as dollars | Guard that Cost view data source is the cost port/query, not workspace-node `lastCost` | Cost route render test for usage facts and unavailable money | Snowflake credit capture |
-| Web has no typed cost API port for the backend read model | Boundary drift | Gateway + Data Mapper | `CostAttributionSummaryPort` | `GetCostAttributionSummary` | `apps/web/src/app/ports/cost.ts`, `apps/web/src/app/services/cost/*`, `apps/web/src/app/queries/costQueries.ts`, composition root service registration | Decoder/service tests for valid and malformed payloads | Guard no direct `fetch` in Cost view/hook | N/A | New backend route |
-| Cost heatmap can decorate nodes from stale or synthetic cost fields | Hidden authority | Null Object | `CostOverlayContext` | `GetCostAttributionSummary` or none when unavailable | `apps/web/src/app/plugins/cost/costContributions.ts`, `apps/web/src/app/views/canvas/useCanvasOverlayModel.ts` if needed | Overlay model test for unavailable cost capture | Guard heatmap requires real `NodeCostData` source | Canvas overlay proof if impacted | Cost policy engine |
-| User needs operational value before monetary capture exists | Primitive obsession | Introduce Parameter Object | `RuntimeUsageSummary` presentation model | `GetCostAttributionSummary` | `apps/web/src/app/views/cost/costViewModel.ts`, cost cards/charts | Tests for run count, step counts, duration, observed window | N/A | Cost route render test | Billing invoices |
-| Backend query can fail authorization or be unavailable | Test-only confidence | Fail-closed presentation state | `CostAttributionQueryState` | `GetCostAttributionSummary` | `apps/web/src/app/queries/costQueries.ts`, `CostView.tsx` | Query/view tests for loading and error states | Existing API-client boundary guard | Render error state | Offline mock semantics as product truth |
+| Scenario                                                            | Opportunity          | Fowler pattern                           | DDD owner                                | Command/query rail                                   | Implementation surfaces                                                                                                                                | Unit or package test                                                          | Architecture test                                                                      | User-flow test                                               | Out of scope                            |
+| ------------------------------------------------------------------- | -------------------- | ---------------------------------------- | ---------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------ | --------------------------------------- |
+| Cost route shows local dollar totals from graph node fields         | Hidden authority     | Replace Magic Number with Explicit Model | `CostAttributionViewModel`               | `GetCostAttributionSummary`                          | `apps/web/src/app/views/cost/*`, `apps/web/src/app/views/CostView.tsx`                                                                                 | `costViewModel.test.ts` asserts unavailable money is not formatted as dollars | Guard that Cost view data source is the cost port/query, not workspace-node `lastCost` | Cost route render test for usage facts and unavailable money | Snowflake credit capture                |
+| Web has no typed cost API port for the backend read model           | Boundary drift       | Gateway + Data Mapper                    | `CostAttributionSummaryPort`             | `GetCostAttributionSummary`                          | `apps/web/src/app/ports/cost.ts`, `apps/web/src/app/services/cost/*`, `apps/web/src/app/queries/costQueries.ts`, composition root service registration | Decoder/service tests for valid and malformed payloads                        | Guard no direct `fetch` in Cost view/hook                                              | N/A                                                          | New backend route                       |
+| Cost heatmap can decorate nodes from stale or synthetic cost fields | Hidden authority     | Null Object                              | `CostOverlayContext`                     | `GetCostAttributionSummary` or none when unavailable | `apps/web/src/app/plugins/cost/costContributions.ts`, `apps/web/src/app/views/canvas/useCanvasOverlayModel.ts` if needed                               | Overlay model test for unavailable cost capture                               | Guard heatmap requires real `NodeCostData` source                                      | Canvas overlay proof if impacted                             | Cost policy engine                      |
+| User needs operational value before monetary capture exists         | Primitive obsession  | Introduce Parameter Object               | `RuntimeUsageSummary` presentation model | `GetCostAttributionSummary`                          | `apps/web/src/app/views/cost/costViewModel.ts`, cost cards/charts                                                                                      | Tests for run count, step counts, duration, observed window                   | N/A                                                                                    | Cost route render test                                       | Billing invoices                        |
+| Backend query can fail authorization or be unavailable              | Test-only confidence | Fail-closed presentation state           | `CostAttributionQueryState`              | `GetCostAttributionSummary`                          | `apps/web/src/app/queries/costQueries.ts`, `CostView.tsx`                                                                                              | Query/view tests for loading and error states                                 | Existing API-client boundary guard                                                     | Render error state                                           | Offline mock semantics as product truth |
 
 <!-- markdownlint-enable MD060 -->
 
@@ -316,7 +316,7 @@ pnpm verify:prepush
 ```feature-mechanization
 version: 1
 featureId: DVT21-COST-ATTRIBUTION-UI-HARD-CUT-20260531
-mechanizationStatus: planned
+mechanizationStatus: implemented
 noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/dvt-21-2-cost-attribution-ui-hard-cut-plan-20260531.md
 componentGuides:
@@ -352,10 +352,13 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/cost/CostDriverList.tsx
   - apps/web/src/app/views/cost/CostAlertsList.tsx
   - apps/web/src/app/views/cost/CostCoverageCard.tsx
+  - apps/web/src/app/views/CostView.test.tsx
   - apps/web/src/app/views/CostView.tsx
   - apps/web/src/app/plugins/cost/costContributions.ts
   - apps/web/src/app/views/canvas/canvasOverlayContext.ts
   - apps/web/src/app/views/canvas/useCanvasOverlayModel.ts
+  - apps/web/src/testing/appServicesTestDoubles.ts
+  - docs/planning/closeouts/20260531-dvt21-cost-attribution-ui-hard-cut-closeout.md
 forbiddenImplementationSurfaces:
   - apps/api/**
   - packages/@dvt/contracts/**
@@ -376,6 +379,205 @@ domainObjects:
   - name: CostCaptureUnavailableState
     type: presentation value object
     owner: apps/web
+symbols:
+  - &cost_attribution_ui_symbol
+    name: ICostAttributionSummaryPort
+    path: apps/web/src/app/ports/cost.ts
+    dddOwner: Cost attribution web query port
+    cqRails: [GetCostAttributionSummary]
+    fowlerSignals: [Hidden authority removed from cost UI]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/cost/costAttributionUi.architecture.test.ts
+    cypressCoverage: N/A - query adapter and route rendering are covered by Vitest.
+    unitTests:
+      - apps/web/src/app/services/cost/costService.api.test.ts
+      - apps/web/src/app/views/cost/costViewModel.test.ts
+      - apps/web/src/app/views/cost/copy.test.ts
+      - apps/web/src/app/views/cost/costAttributionUi.architecture.test.ts
+      - apps/web/src/app/views/CostView.test.tsx
+  - <<: *cost_attribution_ui_symbol
+    name: CostAttributionObservedWindow
+    path: apps/web/src/app/ports/cost.ts
+    dddOwner: Cost attribution web DTO
+  - <<: *cost_attribution_ui_symbol
+    name: CostAttributionRun
+    path: apps/web/src/app/ports/cost.ts
+    dddOwner: Cost attribution web DTO
+  - <<: *cost_attribution_ui_symbol
+    name: CostAttributionStep
+    path: apps/web/src/app/ports/cost.ts
+    dddOwner: Cost attribution web DTO
+  - <<: *cost_attribution_ui_symbol
+    name: CostAttributionSummary
+    path: apps/web/src/app/ports/cost.ts
+    dddOwner: Cost attribution web read model
+  - <<: *cost_attribution_ui_symbol
+    name: CostAttributionSummaryQuery
+    path: apps/web/src/app/ports/cost.ts
+    dddOwner: Cost attribution web query input
+  - <<: *cost_attribution_ui_symbol
+    name: CostCaptureStatus
+    path: apps/web/src/app/ports/cost.ts
+    dddOwner: Cost attribution web value object
+  - <<: *cost_attribution_ui_symbol
+    name: COST_ATTRIBUTION_SUMMARY_LIMIT
+    path: apps/web/src/app/queries/costQueries.ts
+    dddOwner: Cost attribution web query hook
+  - <<: *cost_attribution_ui_symbol
+    name: useCostAttributionSummaryQuery
+    path: apps/web/src/app/queries/costQueries.ts
+    dddOwner: Cost attribution web query hook
+  - <<: *cost_attribution_ui_symbol
+    name: useCostAttributionSummaryPort
+    path: apps/web/src/app/services/AppServicesContext.tsx
+    dddOwner: Cost attribution service composition
+  - <<: *cost_attribution_ui_symbol
+    name: decodeCostAttributionSummary
+    path: apps/web/src/app/services/cost/costApiDecoders.ts
+    dddOwner: Cost attribution API adapter decoder
+  - <<: *cost_attribution_ui_symbol
+    name: decodeObservedWindow
+    path: apps/web/src/app/services/cost/costApiDecoders.ts
+    dddOwner: Cost attribution API adapter decoder
+  - <<: *cost_attribution_ui_symbol
+    name: decodeRun
+    path: apps/web/src/app/services/cost/costApiDecoders.ts
+    dddOwner: Cost attribution API adapter decoder
+  - <<: *cost_attribution_ui_symbol
+    name: decodeStep
+    path: apps/web/src/app/services/cost/costApiDecoders.ts
+    dddOwner: Cost attribution API adapter decoder
+  - <<: *cost_attribution_ui_symbol
+    name: fail
+    path: apps/web/src/app/services/cost/costApiDecoders.ts
+    dddOwner: Cost attribution API adapter decoder
+  - <<: *cost_attribution_ui_symbol
+    name: isRecord
+    path: apps/web/src/app/services/cost/costApiDecoders.ts
+    dddOwner: Cost attribution API adapter decoder
+  - <<: *cost_attribution_ui_symbol
+    name: readArray
+    path: apps/web/src/app/services/cost/costApiDecoders.ts
+    dddOwner: Cost attribution API adapter decoder
+  - <<: *cost_attribution_ui_symbol
+    name: readCostCaptureStatus
+    path: apps/web/src/app/services/cost/costApiDecoders.ts
+    dddOwner: Cost attribution API adapter decoder
+  - <<: *cost_attribution_ui_symbol
+    name: readNull
+    path: apps/web/src/app/services/cost/costApiDecoders.ts
+    dddOwner: Cost attribution API adapter decoder
+  - <<: *cost_attribution_ui_symbol
+    name: readNullableString
+    path: apps/web/src/app/services/cost/costApiDecoders.ts
+    dddOwner: Cost attribution API adapter decoder
+  - <<: *cost_attribution_ui_symbol
+    name: readNumber
+    path: apps/web/src/app/services/cost/costApiDecoders.ts
+    dddOwner: Cost attribution API adapter decoder
+  - <<: *cost_attribution_ui_symbol
+    name: readRecord
+    path: apps/web/src/app/services/cost/costApiDecoders.ts
+    dddOwner: Cost attribution API adapter decoder
+  - <<: *cost_attribution_ui_symbol
+    name: readStepEventType
+    path: apps/web/src/app/services/cost/costApiDecoders.ts
+    dddOwner: Cost attribution API adapter decoder
+  - <<: *cost_attribution_ui_symbol
+    name: readString
+    path: apps/web/src/app/services/cost/costApiDecoders.ts
+    dddOwner: Cost attribution API adapter decoder
+  - <<: *cost_attribution_ui_symbol
+    name: appendStringParam
+    path: apps/web/src/app/services/cost/costService.api.ts
+    dddOwner: Cost attribution API adapter
+  - <<: *cost_attribution_ui_symbol
+    name: buildCostAttributionSummaryEndpoint
+    path: apps/web/src/app/services/cost/costService.api.ts
+    dddOwner: Cost attribution API adapter
+  - <<: *cost_attribution_ui_symbol
+    name: createApiCostAttributionSummaryPort
+    path: apps/web/src/app/services/cost/costService.api.ts
+    dddOwner: Cost attribution API adapter
+  - <<: *cost_attribution_ui_symbol
+    name: buildCostAttributionPayload
+    path: apps/web/src/app/services/cost/costService.api.test.ts
+    dddOwner: Cost attribution API adapter test
+  - <<: *cost_attribution_ui_symbol
+    name: createApiClientMock
+    path: apps/web/src/app/services/cost/costService.api.test.ts
+    dddOwner: Cost attribution API adapter test
+  - <<: *cost_attribution_ui_symbol
+    name: buildAttributionSummary
+    path: apps/web/src/app/views/CostView.test.tsx
+    dddOwner: Cost attribution route test
+  - <<: *cost_attribution_ui_symbol
+    name: CostCharts
+    path: apps/web/src/app/views/cost/CostCharts.tsx
+    dddOwner: Cost attribution route presentation
+  - <<: *cost_attribution_ui_symbol
+    name: resolveDriverStatusLabel
+    path: apps/web/src/app/views/cost/CostDriverList.tsx
+    dddOwner: Cost attribution route presentation
+  - <<: *cost_attribution_ui_symbol
+    name: APP_ROOT
+    path: apps/web/src/app/views/cost/costAttributionUi.architecture.test.ts
+    dddOwner: Cost attribution architecture guard
+  - <<: *cost_attribution_ui_symbol
+    name: readAppSource
+    path: apps/web/src/app/views/cost/costAttributionUi.architecture.test.ts
+    dddOwner: Cost attribution architecture guard
+  - <<: *cost_attribution_ui_symbol
+    name: buildSummary
+    path: apps/web/src/app/views/cost/costViewModel.test.ts
+    dddOwner: Cost attribution view model test
+  - <<: *cost_attribution_ui_symbol
+    name: NO_OBSERVED_WINDOW_LABEL
+    path: apps/web/src/app/views/cost/costViewModel.ts
+    dddOwner: Cost attribution view model
+  - <<: *cost_attribution_ui_symbol
+    name: RuntimeDurationPoint
+    path: apps/web/src/app/views/cost/costViewModel.ts
+    dddOwner: Cost attribution view model
+  - <<: *cost_attribution_ui_symbol
+    name: UNAVAILABLE_MONEY_LABEL
+    path: apps/web/src/app/views/cost/costViewModel.ts
+    dddOwner: Cost attribution view model
+  - <<: *cost_attribution_ui_symbol
+    name: buildCostAlerts
+    path: apps/web/src/app/views/cost/costViewModel.ts
+    dddOwner: Cost attribution view model
+  - <<: *cost_attribution_ui_symbol
+    name: buildCostDrivers
+    path: apps/web/src/app/views/cost/costViewModel.ts
+    dddOwner: Cost attribution view model
+  - <<: *cost_attribution_ui_symbol
+    name: buildCostViewModel
+    path: apps/web/src/app/views/cost/costViewModel.ts
+    dddOwner: Cost attribution view model
+  - <<: *cost_attribution_ui_symbol
+    name: createEmptyCostViewModel
+    path: apps/web/src/app/views/cost/costViewModel.ts
+    dddOwner: Cost attribution view model
+  - <<: *cost_attribution_ui_symbol
+    name: formatDurationMs
+    path: apps/web/src/app/views/cost/costViewModel.ts
+    dddOwner: Cost attribution view model
+  - <<: *cost_attribution_ui_symbol
+    name: formatMoneyAmount
+    path: apps/web/src/app/views/cost/costViewModel.ts
+    dddOwner: Cost attribution view model
+  - <<: *cost_attribution_ui_symbol
+    name: formatObservedWindow
+    path: apps/web/src/app/views/cost/costViewModel.ts
+    dddOwner: Cost attribution view model
+  - <<: *cost_attribution_ui_symbol
+    name: toSeconds
+    path: apps/web/src/app/views/cost/costViewModel.ts
+    dddOwner: Cost attribution view model
+  - <<: *cost_attribution_ui_symbol
+    name: createMockCostAttributionSummaryPort
+    path: apps/web/src/testing/appServicesTestDoubles.ts
+    dddOwner: Cost attribution service test double
 fowlerSignals:
   - Hidden authority
   - Boundary drift
