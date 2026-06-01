@@ -73,6 +73,16 @@ planning_type: closeout
   - First post-commit run failed because the feature mechanization
     implementation gate required the new `hasPlanningDbMigrationChange` symbol
     to be declared in the owning CI scope optimization manifest.
+- `pnpm docs:feature-mechanization:implementation` passed after declaring the
+  symbol in `CI-SCOPE-OPTIMIZATION-20260508`, 169 manifests checked.
+- `pnpm governance:refresh` passed: generated surfaces stabilized after 2
+  passes, planning DB check/export passed, `governance:db:import` imported
+  5216 governance files and 58 components, `governance:db:check` passed, and
+  `governance:db:export:check` passed.
+- Final `pnpm verify:prepush` passed. The changed-slice plan ran docs gates,
+  feature mechanization implementation, `pnpm test:planning:db` at 250/250
+  tests with Node test `duration_ms` 81807.0956, verifier self-tests at 12/12
+  and 20/20, changed-file checks, and forbidden-file checks.
 
 ### No-Debt / No-Stub Evidence
 
