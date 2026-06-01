@@ -220,12 +220,14 @@ allowedImplementationSurfaces:
   - tools/ci/emit-workspace-matrix.test.mjs
   - tools/ci/emit-test-matrix.test.mjs
   - scripts/local-validation-plan.cjs
+  - scripts/planning-db-import.test.cjs
   - scripts/verify-changed.test.cjs
   - scripts/README.md
   - docs/guides/testing-and-ci-capabilities.md
   - docs/planning/proposals/mandatory/governance-and-docs/repository-command-catalog-normalization-plan-20260508.md
   - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
   - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
+  - docs/planning/closeouts/**
   - docs/planning/state/agent-lane-c.yaml
   - docs/planning/status/**
   - docs/.manifest.json
@@ -398,7 +400,26 @@ redGreenCycles:
       - docs/guides/testing-and-ci-capabilities.md
       - docs/planning/status/**
     greenTest: pnpm docs:feature-mechanization:implementation
+  - id: planning-db-import-test-fixture-reuse
+    redTest: node --test --test-reporter=spec scripts/planning-db-import.test.cjs
+    expectedFailure: the current passing profile rebuilds the governance snapshot for independent pure assertions and calls the full import path for an advisory-lock assertion, making one local test file take about 76.865s.
+    patchSurfaces:
+      - scripts/planning-db-import.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test --test-reporter=spec scripts/planning-db-import.test.cjs
 symbols:
+  - name: governanceFileSnapshotFixture
+    path: scripts/planning-db-import.test.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Duplicate expensive fixture construction in local planning DB validation
+    architectureGuard: node --test --test-reporter=spec scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test --test-reporter=spec scripts/planning-db-import.test.cjs
   - name: readJsonAtGitRef
     path: tools/ci/scope-config.mjs
     dddOwner: ChangedScopeContext

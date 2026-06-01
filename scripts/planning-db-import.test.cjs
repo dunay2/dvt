@@ -20,6 +20,18 @@ const {
 const { governanceGeneratedPath } = require('./governance-generated-paths.cjs');
 const { schemaName } = require('./planning-db-migrate.cjs');
 
+const governanceFileSnapshotFixture = (() => {
+  let snapshot;
+
+  return () => {
+    if (!snapshot) {
+      snapshot = buildGovernanceFileSnapshot();
+    }
+
+    return snapshot;
+  };
+})();
+
 test('planning content snapshot preserves real lane task content and hashes', () => {
   const snapshot = buildPlanningContentSnapshot();
 
@@ -322,7 +334,7 @@ test('planning content snapshot normalizes dependencies and evidence refs for DB
 });
 
 test('governance file snapshot preserves every file entry declared by the index', () => {
-  const snapshot = buildGovernanceFileSnapshot();
+  const snapshot = governanceFileSnapshotFixture();
 
   assert.equal(snapshot.files.length, snapshot.index.fileCount);
   assert.ok(snapshot.fileShards.length > 0);
@@ -334,7 +346,7 @@ test('governance file snapshot preserves every file entry declared by the index'
 });
 
 test('governance snapshot preserves component, fingerprint, coverage, and remediation content', () => {
-  const snapshot = buildGovernanceFileSnapshot();
+  const snapshot = governanceFileSnapshotFixture();
 
   assert.equal(snapshot.components.length, snapshot.componentIndex.componentCount);
   assert.equal(snapshot.componentFileShards.length, snapshot.componentFileMap.componentCount);
@@ -432,7 +444,7 @@ test('risk debt snapshot turns risk-register records into DB work items with own
 });
 
 test('governance snapshot builds DB import sources from in-memory generator projections', () => {
-  const snapshot = buildGovernanceFileSnapshot();
+  const snapshot = governanceFileSnapshotFixture();
   const generatedSources = snapshot.sources.filter((source) =>
     source.sourcePath.startsWith('.generated-docs/')
   );
@@ -1060,7 +1072,12 @@ test('importContent serializes destructive read-model replacement with an adviso
     },
   };
 
-  await importContent({ client, silent: true });
+  await importContent({
+    client,
+    includeGovernance: false,
+    includePlanning: false,
+    silent: true,
+  });
 
   const beginIndexes = queries
     .map((query, index) => (query.sql === 'begin' ? index : -1))
