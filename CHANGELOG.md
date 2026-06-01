@@ -1,5 +1,37 @@
 # Changelog
 
+## [5.31.0](https://github.com/dunay2/dvt/compare/v5.30.0...v5.31.0) (2026-06-01)
+
+
+### Features
+
+* **api:** Add backend warehouse source import rails ([#1390](https://github.com/dunay2/dvt/issues/1390)) ([3d21449](https://github.com/dunay2/dvt/commit/3d214490aca1e6779a4449cec2837b652ff4af6e))
+* **contracts:** Extend workspace graph authoring draft ([03ad06d](https://github.com/dunay2/dvt/commit/03ad06d21ba6b88b0e1fa38539412593fdc54cb1))
+* **web:** Add canvas workspace explorer ([9f6b512](https://github.com/dunay2/dvt/commit/9f6b51280080b6087b8527018fb172656e3e74d1))
+* **web:** Add DVT inspector authoring controls ([#1409](https://github.com/dunay2/dvt/issues/1409)) ([542ba36](https://github.com/dunay2/dvt/commit/542ba36620a31025ab7f10302148a769f48c3ea3))
+* **web:** Add product shell canvas integration ([79bb82f](https://github.com/dunay2/dvt/commit/79bb82fc83543498d764bddd09c20294d612647d))
+* **web:** Add product shell canvas integration ([d914059](https://github.com/dunay2/dvt/commit/d914059380cf7b2f64bcd35c9b88dd042a65e8ad))
+* **web:** Connect dbt authoring to code and run rails ([0512588](https://github.com/dunay2/dvt/commit/051258889fa75f88d638cbfcfe6b41e418696b21))
+* **web:** Integrate dbt authoring stack ([4efde99](https://github.com/dunay2/dvt/commit/4efde99b7fe46b0b1b162df00d491b2a3d55637a))
+
+
+### Bug Fixes
+
+* **api:** Align source YAML keys with database collisions ([#1397](https://github.com/dunay2/dvt/issues/1397)) ([d79bb62](https://github.com/dunay2/dvt/commit/d79bb6252f442625739f336f3ca17d06f919175c))
+* **api:** Grant source import and disambiguate imported source nodes ([#1394](https://github.com/dunay2/dvt/issues/1394)) ([89c245d](https://github.com/dunay2/dvt/commit/89c245d78b36b7d0af563d1d401e9b36ad6fc93a))
+* **api:** Harden warehouse source import for governed catalogs ([8690db5](https://github.com/dunay2/dvt/commit/8690db589c190898ea517c356c7c5ad4e7754a00))
+* **api:** Preserve dbt source metadata on warehouse import ([d85b23a](https://github.com/dunay2/dvt/commit/d85b23a3a5e6c5145804a9a4818037d80fae7e61))
+* **api:** Route preview planning through compile planner ([#1387](https://github.com/dunay2/dvt/issues/1387)) ([fbfb65e](https://github.com/dunay2/dvt/commit/fbfb65e34d7ccc8548bf87de07768a5e1faa5425))
+* **contracts:** Hard-cut pre-alpha execution plan schema version ([#1412](https://github.com/dunay2/dvt/issues/1412)) ([e6fe0c8](https://github.com/dunay2/dvt/commit/e6fe0c87c3499141f08e67915025ed2ba1422ab3))
+* **docs:** Deduplicate component ownership claims ([#1408](https://github.com/dunay2/dvt/issues/1408)) ([ed460d3](https://github.com/dunay2/dvt/commit/ed460d3395e07a08aeb2ad18f1cf651350ad59e2))
+* **docs:** Preserve normalized component invariants ([#1403](https://github.com/dunay2/dvt/issues/1403)) ([32ca3ae](https://github.com/dunay2/dvt/commit/32ca3aee15f4425927391f23ddb30c805ab1d23b))
+* **docs:** Require explicit governance query refresh ([#1400](https://github.com/dunay2/dvt/issues/1400)) ([2f16461](https://github.com/dunay2/dvt/commit/2f164618e173d3f4a4083609bce133e03f24e762))
+* **web:** Close dbt partial selection execution gaps ([39dbc47](https://github.com/dunay2/dvt/commit/39dbc4776c0284b478dc49821cf834b4585a4484))
+* **web:** Gate source import by runtime plugin capability ([0a3feac](https://github.com/dunay2/dvt/commit/0a3feacc276145930ca303d3be3b95c06fa7da76))
+* **web:** Keep canvas plan and run details aligned ([3f83ad5](https://github.com/dunay2/dvt/commit/3f83ad568286dc4a7dc3df6a0dc7767be3eb8e44))
+* **web:** Make read-only canvas non-executable ([651006e](https://github.com/dunay2/dvt/commit/651006edb497a530547233360bf568228445d30a))
+* **web:** Make read-only canvas non-executable ([93a2f81](https://github.com/dunay2/dvt/commit/93a2f81aaa4d4a7dc886d10cc36866b076a6e637))
+
 ## [5.30.0](https://github.com/dunay2/dvt/compare/v5.29.0...v5.30.0) (2026-05-25)
 
 
