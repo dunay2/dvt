@@ -249,8 +249,13 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/CodeView.test.tsx
   - apps/web/src/app/views/code/**
   - apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
+  - apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx
+  - apps/web/src/app/plugins/dbt/DbtNodeRenderer.test.tsx
+  - apps/web/src/app/queries/queryKeys.ts
+  - apps/web/src/app/queries/runsQueries.ts
   - apps/web/src/app/components/**
   - apps/web/src/app/services/workspace/**
+  - docs/architecture/components/web/frontend-query-boundary-component.md
   - apps/web/cypress/e2e/canvas/**
   - apps/web/cypress/support/**
 forbiddenImplementationSurfaces:
@@ -320,6 +325,9 @@ domainObjects:
   - name: CodeGraphFileScope
     type: read model
     owner: Web Code
+  - name: DbtNodeRunHistory
+    type: presentation model
+    owner: Web dbt inspector
 fowlerSignals:
   - Reference-only Canvas edges were being interpreted through an inconsistent execution projection.
   - Opaque protected-draft errors created test-only confidence instead of user-operable feedback.
@@ -328,6 +336,8 @@ fowlerSignals:
   - Real source import and SQL execution require local proof data, catalog, and authorization to line up.
   - Completed-run evidence must be visible before lower-priority provenance.
   - Code file browsing must follow the active graph instead of stale workspace artifacts.
+  - dbt Inspector history must consume runtime events instead of retaining a
+    completed-run placeholder panel.
 architectureGuards:
   - pnpm --filter dvt-api test -- test/application/services/resolveAuthorizedExecutableSubgraph.test.ts
   - pnpm --filter @dvt/adapter-postgres test -- PostgresPlanStore.lifecycle.integration.test.ts PostgresPlanStore.records-core.integration.test.ts
@@ -335,6 +345,7 @@ architectureGuards:
   - pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.test.ts
   - node --test scripts/run-dev-stack.test.cjs scripts/run-dev-stack.auth.test.cjs
   - pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts src/app/views/CodeView.test.tsx
+  - pnpm --filter @dvt/web test -- src/app/plugins/dbt/DbtNodeRenderer.test.tsx src/app/queries/queryKeyPolicy.architecture.test.ts
   - pnpm docs:feature-mechanization:implementation
 cypressFlows:
   - apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
@@ -348,6 +359,7 @@ completionGate:
   - pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.test.ts
   - pnpm --filter @dvt/web test -- src/app/views/canvas/transformationGraphValidation.test.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx src/app/views/runs/RunStates.test.tsx
   - pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts src/app/views/CodeView.test.tsx
+  - pnpm --filter @dvt/web test -- src/app/plugins/dbt/DbtNodeRenderer.test.tsx src/app/queries/queryKeyPolicy.architecture.test.ts
   - pnpm --filter @dvt/web test
   - node --test scripts/run-dev-stack.test.cjs scripts/run-dev-stack.auth.test.cjs
   - pnpm --dir apps/web exec cypress run --config-file cypress.config.ts --config baseUrl=http://127.0.0.1:5173 --spec cypress/e2e/canvas/canvas-preview-run-live.cy.ts --browser electron
@@ -418,6 +430,16 @@ redGreenCycles:
       - apps/web/src/app/views/code/codeViewFileSelection.ts
       - apps/web/src/app/views/code/codeViewFileSelection.test.ts
     greenTest: pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts src/app/views/CodeView.test.tsx
+  - id: dbt-inspector-node-run-history
+    redTest: pnpm --filter @dvt/web test -- src/app/plugins/dbt/DbtNodeRenderer.test.tsx src/app/queries/queryKeyPolicy.architecture.test.ts
+    expectedFailure: The dbt Inspector history panel reports runtime detail as unavailable even when ListRunEvents returns node-scoped step events.
+    patchSurfaces:
+      - apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx
+      - apps/web/src/app/plugins/dbt/DbtNodeRenderer.test.tsx
+      - apps/web/src/app/queries/queryKeys.ts
+      - apps/web/src/app/queries/runsQueries.ts
+      - docs/architecture/components/web/frontend-query-boundary-component.md
+    greenTest: pnpm --filter @dvt/web test -- src/app/plugins/dbt/DbtNodeRenderer.test.tsx src/app/queries/queryKeyPolicy.architecture.test.ts
 symbols:
   - name: ResolveAuthorizedExecutableSubgraphService
     path: apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts
@@ -836,4 +858,31 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
     unitTests:
       - apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+  - name: useRunEventsQuery
+    path: apps/web/src/app/queries/runsQueries.ts
+    dddOwner: DbtNodeRunHistory
+    cqRails: [ListRunEvents]
+    fowlerSignals: [dbt Inspector history must consume runtime events through the governed query boundary.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/queries/queryKeyPolicy.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/plugins/dbt/DbtNodeRenderer.test.tsx
+  - name: DbtNodeRunHistoryEntry
+    path: apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx
+    dddOwner: DbtNodeRunHistory
+    cqRails: [ListRunEvents]
+    fowlerSignals: [dbt Inspector history must render node-scoped runtime facts, not placeholder copy.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/plugins/dbt/DbtNodeRenderer.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/plugins/dbt/DbtNodeRenderer.test.tsx
+  - name: buildDbtNodeRunHistoryEntries
+    path: apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx
+    dddOwner: DbtNodeRunHistory
+    cqRails: [ListRunEvents]
+    fowlerSignals: [dbt Inspector history must filter runtime events by selected graph node.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/plugins/dbt/DbtNodeRenderer.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/plugins/dbt/DbtNodeRenderer.test.tsx
 ```
