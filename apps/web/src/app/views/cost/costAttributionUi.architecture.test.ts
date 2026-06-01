@@ -46,11 +46,16 @@ describe('cost attribution UI architecture', () => {
       expect(source, modulePath).not.toContain('currentRunCost');
       expect(source, modulePath).not.toContain('averageCostPerRun');
       expect(source, modulePath).not.toContain('lastCost');
-      expect(source, modulePath).not.toContain('$');
+      expect(source, modulePath).not.toContain("'$");
+      expect(source, modulePath).not.toContain('"$');
+      expect(source, modulePath).not.toContain('USD');
+      expect(source, modulePath).not.toContain('EUR');
     }
 
-    expect(costViewModel).toContain("totalCostLabel: formatMoneyAmount(summary.totalCostAmount, summary.currency)");
-    expect(costViewModel).toContain("return UNAVAILABLE_MONEY_LABEL");
+    expect(costViewModel).toContain(
+      'totalCostLabel: formatMoneyAmount(summary.totalCostAmount, summary.currency)'
+    );
+    expect(costViewModel).toContain('return UNAVAILABLE_MONEY_LABEL');
     expect(costOverlayModel).not.toContain('node.lastCost');
     expect(costOverlayModel).toContain('new Map<string, NodeCostData>()');
   });

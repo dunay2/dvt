@@ -12,7 +12,9 @@ function createApiClientMock(): ApiClient {
   };
 }
 
-function buildCostAttributionPayload(overrides: Record<string, unknown> = {}) {
+function buildCostAttributionPayload(
+  overrides: Record<string, unknown> = {}
+): Record<string, unknown> {
   return {
     tenantId: 'tenant-1',
     projectId: 'project-1',

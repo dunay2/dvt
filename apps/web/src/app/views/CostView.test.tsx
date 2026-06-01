@@ -1,6 +1,9 @@
 // @vitest-environment jsdom
 
-import { createAppServicesTestOverrides, createMockCostAttributionSummaryPort } from '../../testing/appServicesTestDoubles';
+import {
+  createAppServicesTestOverrides,
+  createMockCostAttributionSummaryPort,
+} from '../../testing/appServicesTestDoubles';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { CostAttributionSummary } from '../ports/cost';
@@ -100,7 +103,8 @@ describe('CostView', () => {
       <AppServicesProvider
         overrides={{
           ...createAppServicesTestOverrides(),
-          costAttributionSummaryPort: createMockCostAttributionSummaryPort(buildAttributionSummary()),
+          costAttributionSummaryPort:
+            createMockCostAttributionSummaryPort(buildAttributionSummary()),
         }}
       >
         <CostView />
@@ -115,16 +119,22 @@ describe('CostView', () => {
     expect(mounted.container.textContent).toContain('Cost capture unavailable');
     expect(mounted.container.textContent).toContain('Top runtime usage drivers');
     expect(mounted.container.textContent).toContain('step-slow-failed');
-    expect(mounted.container.textContent).toContain('Run duration');
-    expect(mounted.container.textContent).toContain('Step duration');
+    expect(mounted.container.textContent).toContain('Duration by run');
+    expect(mounted.container.textContent).toContain('Duration by step');
     expect(mounted.container.textContent).toContain('Unavailable');
     expect(mounted.container.textContent).not.toContain('Current run estimate');
     expect(mounted.container.textContent).not.toContain('Average cost per run');
     expect(mounted.container.textContent).not.toContain('fct_sales');
 
-    expect(mounted.container.querySelector('[data-slot="cost-capture-unavailable"]')).not.toBeNull();
-    expect(mounted.container.querySelector('[data-slot="cost-chart-duration-by-run"]')).not.toBeNull();
-    expect(mounted.container.querySelector('[data-slot="cost-chart-duration-by-step"]')).not.toBeNull();
+    expect(
+      mounted.container.querySelector('[data-slot="cost-capture-unavailable"]')
+    ).not.toBeNull();
+    expect(
+      mounted.container.querySelector('[data-slot="cost-chart-duration-by-run"]')
+    ).not.toBeNull();
+    expect(
+      mounted.container.querySelector('[data-slot="cost-chart-duration-by-step"]')
+    ).not.toBeNull();
     expect(mounted.container.querySelector('[data-slot="cost-driver-list"]')).not.toBeNull();
     expect(mounted.container.querySelector('[data-slot="cost-alerts-list"]')).not.toBeNull();
     expect(mounted.container.querySelector('[data-slot="cost-coverage-card"]')).not.toBeNull();
@@ -136,7 +146,8 @@ describe('CostView', () => {
         overrides={{
           ...createAppServicesTestOverrides(),
           costAttributionSummaryPort: {
-            getCostAttributionSummary: async () => Promise.reject(new Error('cost attribution unavailable')),
+            getCostAttributionSummary: async () =>
+              Promise.reject(new Error('cost attribution unavailable')),
           },
         }}
       >
