@@ -675,14 +675,14 @@ describe('GetRunStatusUseCase', () => {
             environmentId: 'env-1',
             planId: '9'.repeat(64),
             planVersion: '1.0',
-            schemaVersion: 'v1.2',
+            schemaVersion: '1.0',
             contractVersion: '1.0.0',
             canonicalHash: 'a'.repeat(64),
             canonicalPlanJson: JSON.stringify({
               metadata: {
                 planId: '9'.repeat(64),
                 planVersion: '1.0',
-                schemaVersion: 'v1.2',
+                schemaVersion: '1.0',
                 contractVersion: '1.0.0',
                 inputHashSha256: 'b'.repeat(64),
                 createdAtIso: '2026-04-08T10:00:00.000Z',

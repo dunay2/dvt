@@ -43,7 +43,7 @@ publish a second `PLAN_RUNTIME_ADMISSION_MATRIX`.
 ## Invariants
 
 - Runtime admission is explicit by pair; there is no major/minor fallback.
-- `planVersion = 1.0` only admits `schemaVersion = v1.2` while that pair is the
+- `planVersion = 1.0` only admits `schemaVersion = 1.0` while that pair is the
   current contracts matrix entry.
 - A supported `planVersion` does not admit an unsupported `schemaVersion`.
 - A supported `schemaVersion` does not admit an unsupported `planVersion`.

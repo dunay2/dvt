@@ -14,7 +14,7 @@ const EXECUTABLE_PLAN_TEXT = JSON.stringify({
   metadata: {
     planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
     planVersion: '1.0',
-    schemaVersion: 'v1.2',
+    schemaVersion: '1.0',
     contractVersion: '1.0.0',
     inputHashSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     createdAtIso: '2026-03-01T00:00:00.000Z',
@@ -27,7 +27,7 @@ const PLAN_REF: PlanRef = {
     'dvt-plan://postgres/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
   ),
   sha256: asNonBlankString(createHash('sha256').update(EXECUTABLE_PLAN_TEXT).digest('hex')),
-  schemaVersion: asNonBlankString('v1.2'),
+  schemaVersion: asNonBlankString('1.0'),
   planId: asNonBlankString('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'),
   planVersion: asNonBlankString('1.0'),
 };
@@ -55,7 +55,7 @@ describe('StoredExecutablePlanResolver', () => {
       metadata: {
         planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
         planVersion: '1.0',
-        schemaVersion: 'v1.2',
+        schemaVersion: '1.0',
         contractVersion: '1.0.0',
         inputHashSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
         createdAtIso: '2026-03-01T00:00:00.000Z',
@@ -84,7 +84,7 @@ describe('StoredExecutablePlanResolver', () => {
       metadata: {
         planId: 'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
         planVersion: '1.0',
-        schemaVersion: 'v1.2',
+        schemaVersion: '1.0',
         contractVersion: '1.0.0',
         inputHashSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
         createdAtIso: '2026-03-01T00:00:00.000Z',
@@ -156,7 +156,7 @@ describe('StoredExecutablePlanResolver', () => {
       metadata: {
         planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
         planVersion: '1.0',
-        schemaVersion: 'v1.2',
+        schemaVersion: '1.0',
         contractVersion: '1.0.0',
         inputHashSha256: PLAN_REF.sha256,
         createdAtIso: expect.any(String),

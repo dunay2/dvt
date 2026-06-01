@@ -137,7 +137,7 @@ function buildDbtPersistedPlan(): PlanViewModel {
     planRef: makePlanRef({
       uri: 'dvt://plans/plan-record-1',
       sha256: 'c'.repeat(64),
-      schemaVersion: 'v1.2',
+      schemaVersion: '1.0',
       planId: 'plan-record-1',
       planVersion: '1.0',
     }),

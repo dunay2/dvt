@@ -34,10 +34,10 @@ ADR-0036 define compatibility as an exact pair, not schema-only semver math.
 
 ## Invariants
 
-- The current pair `(1.0, v1.2)` is admitted.
+- The current pair `(1.0, 1.0)` is admitted.
 - Blank `schemaVersion` rejects with `InvalidSchemaVersionError`.
-- `schemaVersion = v1.future` rejects.
-- `schemaVersion = v2.0` rejects.
+- `schemaVersion = 1.future` rejects.
+- `schemaVersion = 2.0` rejects.
 - Unknown `planVersion` rejects even when `schemaVersion` is current.
 - Rejection happens before plan fetch, run bootstrap, or provider dispatch.
 - The component delegates to the existing matrix and does not duplicate rows.

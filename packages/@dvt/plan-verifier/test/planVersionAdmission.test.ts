@@ -8,9 +8,9 @@ import {
 
 describe('@dvt/plan-verifier runtime admission matrix', () => {
   it('expone la matriz canonica de admision por pares al consumidor runtime', () => {
-    expect(EXECUTION_PLAN_ADMISSION_MATRIX['1.0']).toContain('v1.2');
+    expect(EXECUTION_PLAN_ADMISSION_MATRIX['1.0']).toContain('1.0');
     expect(getSupportedPlanAdmissionPairsForRuntime('planner')).toEqual([
-      { planVersion: '1.0', schemaVersion: 'v1.2' },
+      { planVersion: '1.0', schemaVersion: '1.0' },
     ]);
   });
 
@@ -18,17 +18,27 @@ describe('@dvt/plan-verifier runtime admission matrix', () => {
     expect(() =>
       verifyPlanAdmissionOrThrow({
         planVersion: '1.0',
-        schemaVersion: 'v1.2',
+        schemaVersion: '1.0',
         runtime: 'planner',
       })
     ).not.toThrow();
+  });
+
+  it('rechaza la antigua schemaVersion v1.2 sin alias legacy', () => {
+    expect(() =>
+      verifyPlanAdmissionOrThrow({
+        planVersion: '1.0',
+        schemaVersion: 'v1.2',
+        runtime: 'planner',
+      })
+    ).toThrow(/schemaVersion/);
   });
 
   it('rechaza schemaVersion no declarada aunque planVersion este admitida', () => {
     expect(() =>
       verifyPlanAdmissionOrThrow({
         planVersion: '1.0',
-        schemaVersion: 'v1.future',
+        schemaVersion: '1.future',
         runtime: 'planner',
       })
     ).toThrow(/schemaVersion/);
@@ -38,7 +48,7 @@ describe('@dvt/plan-verifier runtime admission matrix', () => {
     expect(() =>
       verifyPlanAdmissionOrThrow({
         planVersion: '1.0-unsupported',
-        schemaVersion: 'v1.2',
+        schemaVersion: '1.0',
         runtime: 'planner',
       })
     ).toThrow(/planVersion/);

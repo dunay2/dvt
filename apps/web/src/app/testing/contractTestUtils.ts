@@ -43,7 +43,7 @@ export function makePlanRef(
   return {
     uri: nb(overrides?.uri ?? 'dvt-plan://plans/default'),
     sha256: nb(overrides?.sha256 ?? 'a'.repeat(64)),
-    schemaVersion: nb(overrides?.schemaVersion ?? 'v1.2'),
+    schemaVersion: nb(overrides?.schemaVersion ?? '1.0'),
     planId: nb(overrides?.planId ?? 'plan-default'),
     planVersion: nb(overrides?.planVersion ?? '1.0'),
     ...(overrides?.sizeBytes === undefined ? {} : { sizeBytes: overrides.sizeBytes }),

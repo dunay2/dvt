@@ -83,7 +83,7 @@ function buildValidTransformationPlan(): Readonly<Record<string, unknown>> {
   return {
     metadata: {
       planVersion: '1.0',
-      schemaVersion: 'v1.2',
+      schemaVersion: '1.0',
       contractVersion: '1.0.0',
       inputHashSha256: 'a'.repeat(64),
       planId: 'b'.repeat(64),
@@ -122,7 +122,7 @@ function buildContractPlanWithRetryPolicy(): Readonly<Record<string, unknown>> {
   return {
     metadata: {
       planVersion: '1.0',
-      schemaVersion: 'v1.2',
+      schemaVersion: '1.0',
       contractVersion: '1.0.0',
       inputHashSha256: 'a'.repeat(64),
       planId: 'b'.repeat(64),
@@ -158,7 +158,7 @@ function buildContractPlanWithRetiredRetryConfig(): Readonly<Record<string, unkn
   return {
     metadata: {
       planVersion: '1.0',
-      schemaVersion: 'v1.2',
+      schemaVersion: '1.0',
       contractVersion: '1.0.0',
       inputHashSha256: 'a'.repeat(64),
       planId: 'b'.repeat(64),
@@ -189,7 +189,7 @@ function buildGenericContractPlanWithoutNodeIds(): Readonly<Record<string, unkno
   return {
     metadata: {
       planVersion: '1.0',
-      schemaVersion: 'v1.2',
+      schemaVersion: '1.0',
       contractVersion: '1.0.0',
       inputHashSha256: 'a'.repeat(64),
       planId: 'b'.repeat(64),
@@ -218,7 +218,7 @@ function buildValidPlanRef(): ReturnType<typeof makePlanRef> {
   return makePlanRef({
     uri: 'dvt://plans/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
     sha256: 'b'.repeat(64),
-    schemaVersion: 'v1.2',
+    schemaVersion: '1.0',
     planId: 'b'.repeat(64),
     planVersion: 'v1',
   });

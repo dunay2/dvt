@@ -69,7 +69,7 @@ function plannerOutputToEnginePlan(plannerPlan: {
     metadata: {
       planId: plannerPlan.metadata.planId,
       planVersion: plannerPlan.metadata.planVersion,
-      schemaVersion: 'v1.2',
+      schemaVersion: '1.0',
       contractVersion: '1.0.0',
       inputHashSha256: plannerPlan.metadata.inputHashSha256,
       createdAtIso: plannerPlan.metadata.createdAtIso,
@@ -407,7 +407,7 @@ describe('planner -> engine contract', () => {
     expect(indexOf('mart.revenue') < indexOf('test.revenue_not_null')).toBe(true);
 
     const enginePlan = parseExecutionPlan(plannerPlan);
-    expect(enginePlan.metadata.schemaVersion).toBe('v1.2');
+    expect(enginePlan.metadata.schemaVersion).toBe('1.0');
     expect(enginePlan.metadata.contractVersion).toBe('1.0.0');
     expect(enginePlan.metadata.planId).toBe(plannerPlan.metadata.planId);
 
@@ -622,7 +622,7 @@ describe('planner -> engine contract', () => {
 
     const metadata = plan.metadata as Record<string, unknown>;
     expect(() => parseExecutionPlan(plan)).not.toThrow();
-    expect(metadata['schemaVersion']).toBe('v1.2');
+    expect(metadata['schemaVersion']).toBe('1.0');
     expect(metadata['contractVersion']).toBe('1.0.0');
     expect(metadata['planId']).not.toBe(undefined);
     expect(metadata['planVersion']).not.toBe(undefined);

@@ -23,7 +23,7 @@ describe('StartRunEventFactory provider ref preservation', () => {
       {
         uri: 'artifacts://plan.json',
         sha256: 'a'.repeat(64),
-        schemaVersion: 'v1.2',
+        schemaVersion: '1.0',
         planId: 'plan-1',
         planVersion: '1.0',
       },
@@ -61,7 +61,7 @@ describe('StartRunEventFactory provider ref preservation', () => {
       {
         uri: 'artifacts://plan.json',
         sha256: 'a'.repeat(64),
-        schemaVersion: 'v1.2',
+        schemaVersion: '1.0',
         planId: 'plan-1',
         planVersion: '1.0',
       },

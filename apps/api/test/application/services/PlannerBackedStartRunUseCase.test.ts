@@ -59,7 +59,7 @@ const EXECUTABLE_SUBGRAPH_RESOLVER = {
 const STORED_PLAN_REF = parsePlanRef({
   uri: 'dvt-plan://postgres/plan-1',
   sha256: 'abc123',
-  schemaVersion: 'v1.2',
+  schemaVersion: '1.0',
   planId: 'plan-1',
   planVersion: '1.0',
 });
@@ -435,7 +435,7 @@ function makeBuildResult(planId: string): PlannerBuildResultV1 {
       metadata: {
         planId,
         planVersion: '1.0',
-        schemaVersion: 'v1.2',
+        schemaVersion: '1.0',
         contractVersion: '1.0.0',
         inputHashSha256: '1'.repeat(64),
         createdAtIso: '2026-03-21T00:00:00.000Z',

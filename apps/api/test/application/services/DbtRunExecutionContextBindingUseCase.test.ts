@@ -39,7 +39,7 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
     const planRef = parsePlanRef({
       uri: 'dvt-plan://postgres/dbt-plan-1',
       sha256: 'a'.repeat(64),
-      schemaVersion: 'v1.2',
+      schemaVersion: '1.0',
       planId,
       planVersion: '1.0',
     });
@@ -128,7 +128,7 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
       planRef: parsePlanRef({
         uri: 'dvt-plan://postgres/sql-plan-1',
         sha256: 'b'.repeat(64),
-        schemaVersion: 'v1.2',
+        schemaVersion: '1.0',
         planId,
         planVersion: '1.0',
       }),
@@ -171,7 +171,7 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
         planRef: parsePlanRef({
           uri: 'dvt-plan://postgres/dbt-plan-2',
           sha256: 'c'.repeat(64),
-          schemaVersion: 'v1.2',
+          schemaVersion: '1.0',
           planId,
           planVersion: '1.0',
         }),
@@ -216,7 +216,7 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
         planRef: parsePlanRef({
           uri: 'dvt-plan://postgres/dbt-plan-3',
           sha256: 'd'.repeat(64),
-          schemaVersion: 'v1.2',
+          schemaVersion: '1.0',
           planId,
           planVersion: '1.0',
         }),
@@ -266,7 +266,7 @@ function makePlanStore(
           metadata: {
             planId,
             planVersion: '1.0',
-            schemaVersion: 'v1.2',
+            schemaVersion: '1.0',
             contractVersion: '1.0.0',
             inputHashSha256: '1'.repeat(64),
             createdAtIso: '2026-05-26T00:00:00.000Z',

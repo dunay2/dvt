@@ -25,8 +25,8 @@ describe('PlanSchemaVersionPolicy', () => {
 
   it.each([
     { name: 'blank schema', schemaVersion: '' },
-    { name: 'future schema', schemaVersion: 'v1.future' },
-    { name: 'unsupported major schema', schemaVersion: 'v2.0' },
+    { name: 'future schema', schemaVersion: '1.future' },
+    { name: 'unsupported major schema', schemaVersion: '2.0' },
   ])('rejects $name before runtime dispatch', ({ schemaVersion }) => {
     expect(() =>
       assertSupportedPlanSchemaVersion({

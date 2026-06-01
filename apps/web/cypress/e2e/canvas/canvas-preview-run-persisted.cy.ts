@@ -322,7 +322,7 @@ function stubPlanPreviewResponse({
     plan: {
       metadata: {
         planVersion: '1.0',
-        schemaVersion: 'v1.2',
+        schemaVersion: '1.0',
         contractVersion: '1.0.0',
         inputHashSha256: 'a'.repeat(64),
         planId,
@@ -386,7 +386,7 @@ function stubPlanPreviewResponse({
     planRef: {
       uri: 'dvt://plans/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
       sha256: planRefSha,
-      schemaVersion: 'v1.2',
+      schemaVersion: '1.0',
       planId,
       planVersion: 'v1',
     },

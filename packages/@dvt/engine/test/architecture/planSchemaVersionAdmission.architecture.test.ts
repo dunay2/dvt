@@ -64,7 +64,7 @@ describe('Plan schema-version admission architecture', () => {
     expect(() =>
       assertSupportedPlanSchemaVersion({
         planVersion: CURRENT_EXECUTION_PLAN_VERSION,
-        schemaVersion: 'v1.future',
+        schemaVersion: '1.future',
       })
     ).toThrow(InvalidSchemaVersionError);
   });
