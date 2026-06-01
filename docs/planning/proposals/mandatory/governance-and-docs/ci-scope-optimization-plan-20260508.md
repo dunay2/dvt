@@ -464,7 +464,28 @@ redGreenCycles:
       - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
       - docs/planning/closeouts/**
     greenTest: node --test scripts/planning-db-import.test.cjs
+  - id: governance-import-stale-freshness-fast-fail
+    redTest: node --test scripts/planning-db-import.test.cjs
+    expectedFailure: governance --if-stale keeps running full governance and auxiliary projection checks after source freshness has already reported stale, duplicating expensive snapshot work before importing.
+    patchSurfaces:
+      - scripts/planning-db-import.cjs
+      - scripts/planning-db-import.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test scripts/planning-db-import.test.cjs
 symbols:
+  - name: isScopeFresh
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Stale source freshness is already sufficient evidence to reimport
+      - Full projection checks duplicate import-time snapshot construction on stale paths
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
   - name: postgresParameterLimit
     path: scripts/planning-db-import.cjs
     dddOwner: ValidateCiScopeOptimizationContract

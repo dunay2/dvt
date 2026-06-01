@@ -3491,13 +3491,7 @@ async function isScopeFresh(scope, options, deps) {
           databaseUrl: options.databaseUrl,
         });
         if (!sourceFreshnessReport.ok) {
-          const checkGovernanceDatabase = hasGovernanceDatabaseOverride
-            ? deps.checkGovernanceDatabase
-            : require('./governance-db-check.cjs').checkGovernanceDatabase;
-          const report = await checkGovernanceDatabase({ databaseUrl: options.databaseUrl });
-          if (!report.ok) {
-            return false;
-          }
+          return false;
         }
       } else {
         const checkGovernanceDatabase = deps.checkGovernanceDatabase;
@@ -3521,6 +3515,7 @@ async function isScopeFresh(scope, options, deps) {
         if (sourceFreshnessReport.ok) {
           return true;
         }
+        return false;
       }
 
       const checkAuxiliary = hasAuxiliaryProjectionOverride

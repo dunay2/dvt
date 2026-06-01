@@ -269,3 +269,27 @@ flowchart TD
 - Net measurement: stale governance import improved from 76.508s to 55.844s
   for this iteration, a 20.664s reduction on the local DB-first path. The
   improvement is direct CI/local-command pipeline time, not cosmetic routing.
+
+## Stale Freshness Fast-Fail Iteration
+
+- Problem summary: 55.844s remained too slow for `pnpm governance:db:import --
+--if-stale`. Profiling showed direct governance-only `importContent()` took
+  25.735s, while the stale command path took 55.844s.
+- Root cause: `isScopeFresh()` treated source freshness failure as a reason to
+  run full governance or auxiliary projection checks before importing. Those
+  checks rebuild expensive expected snapshots and then the import rebuilds the
+  same content again.
+- Selected option and rationale: when core governance source freshness or
+  auxiliary source freshness reports stale, return `false` immediately from the
+  freshness decision and let the import replace the read model. A stale source
+  signal is already sufficient evidence that the selected scope is not fresh.
+- Rejected alternatives: remove the source freshness checks entirely, weaken
+  freshness comparison fields, or skip auxiliary projection import. Those would
+  lose functionality or hide drift.
+- Red/green evidence: `node --test scripts/planning-db-import.test.cjs` first
+  failed when the tests asserted that full projection checks are not invoked
+  after stale source freshness. After the `isScopeFresh()` change, the same
+  suite passed.
+- Measurement: stale `pnpm governance:db:import -- --if-stale` improved from
+  55.844s to 29.448s. The fresh path after the import took 5.106s and still
+  reported `skipped fresh scopes: governance`.
