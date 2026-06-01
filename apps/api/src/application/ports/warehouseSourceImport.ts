@@ -1,4 +1,14 @@
-/** Owned concern: define warehouse source import catalog and command DTOs. */
+/**
+ * @file apps/api/src/application/ports/warehouseSourceImport.ts
+ * @baseline ADR-0058: Warehouse Source Import Rails
+ * @decision Define warehouse connection discovery queries and source import command DTOs.
+ * @decision Keep source import scope bound to protected runtime workspace authorization.
+ * @consequence Warehouse source import has one API-owned DTO rail for discovery and graph import.
+ * @version 1.0.0
+ * @date 2026-06-01
+ *
+ * Owned concern: define warehouse source import catalog and command DTOs.
+ */
 import type { WorkspaceGraphAuthoringDraft, WorkspaceGraphDraftScope } from '@dvt/contracts';
 
 export type WarehouseConnectionType = 'snowflake' | 'bigquery' | 'redshift' | 'postgres';
