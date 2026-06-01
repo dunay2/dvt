@@ -13,8 +13,6 @@ import {
   WEB_VITEST_SUITES,
 } from '../../vitest.suites';
 
-const webRoot = process.cwd();
-
 describe('workspace services Vitest lane', () => {
   it('declares workspace-services as a governed focus suite', () => {
     expect(WEB_VITEST_FOCUS_SUITE_NAMES).toContain('workspace-services');
@@ -25,10 +23,15 @@ describe('workspace services Vitest lane', () => {
   });
 
   it('keeps workspace-services package commands and config wired', () => {
-    const packageJson = JSON.parse(readFileSync(resolve(webRoot, 'package.json'), 'utf8')) as {
+    const packageJson = JSON.parse(
+      readFileSync(resolve(process.cwd(), 'package.json'), 'utf8')
+    ) as {
       scripts: Record<string, string>;
     };
-    const config = readFileSync(resolve(webRoot, 'vitest.workspace-services.config.ts'), 'utf8');
+    const config = readFileSync(
+      resolve(process.cwd(), 'vitest.workspace-services.config.ts'),
+      'utf8'
+    );
 
     expect(packageJson.scripts['test:workspace-services']).toBe(
       'pnpm run test:deps && pnpm run test:workspace-services:run'
@@ -41,7 +44,9 @@ describe('workspace services Vitest lane', () => {
 
   it('routes workspace service source changes to the workspace-services lane', () => {
     expect(
-      resolveWebVitestChangedSuitePlan(['apps/web/src/app/services/workspace/workspacePorts.api.ts'])
+      resolveWebVitestChangedSuitePlan([
+        'apps/web/src/app/services/workspace/workspacePorts.api.ts',
+      ])
     ).toMatchObject({
       commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS['workspace-services']],
       requiresDependencies: true,

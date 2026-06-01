@@ -49,6 +49,7 @@ allowedImplementationSurfaces:
   - apps/web/package.json
   - apps/web/vitest*.ts
   - apps/web/src/testing/vitestSuites.architecture.test.ts
+  - apps/web/src/testing/workspaceServicesVitestLane.architecture.test.ts
   - apps/web/src/app/views/Canvas.test.support.tsx
   - apps/web/src/app/views/Canvas.routeStates.*.test.tsx
   - apps/web/src/app/views/canvas/canvasStartupBootstrapPublication.architecture.test.ts
@@ -57,6 +58,8 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.support.ts
   - docs/guides/test-architecture.md
   - docs/guides/testing-and-ci-capabilities.md
+  - docs/architecture/components/web/frontend-test-governance-component.md
+  - docs/architecture/components/web/web-vitest-changed-suite-router-component.md
   - docs/architecture/components/web/api-client-auth-component.md
   - docs/architecture/components/web/web-store-domain-ownership-component.md
   - docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md
@@ -69,6 +72,7 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md
   - docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-component.md
   - docs/planning/proposals/mandatory/frontend-and-ux/web-vitest-suite-partition-plan-20260517.md
+  - buzon/20260531-web-test-lane-division-proposal.md
 forbiddenImplementationSurfaces:
   - packages/@dvt/contracts/**
   - packages/@dvt/engine/**
@@ -98,6 +102,8 @@ fowlerSignals:
 architectureGuards:
   - pnpm --filter @dvt/web test:architecture
   - pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/testing/vitestSuites.architecture.test.ts
+  - pnpm --filter @dvt/web test -- src/testing/workspaceServicesVitestLane.architecture.test.ts
+  - pnpm test:web:changed -- --files apps/web/src/app/services/workspace/workspacePorts.api.ts
 cypressFlows:
   - N/A - Vitest suite partition has no browser automation surface.
 completionGate:
@@ -105,6 +111,7 @@ completionGate:
   - pnpm --filter @dvt/web test:presentation
   - pnpm --filter @dvt/web test:architecture
   - pnpm --filter @dvt/web test:canvas
+  - pnpm --filter @dvt/web test:workspace-services
   - pnpm --filter @dvt/web test
   - pnpm --filter @dvt/web typecheck
   - pnpm governance:refresh
@@ -136,6 +143,17 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/canvasRoutePosturePriority.architecture.test.ts
       - apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.support.ts
     greenTest: pnpm --filter @dvt/web test:architecture
+  - id: workspace-services-focus-lane
+    redTest: pnpm --filter @dvt/web test -- src/testing/workspaceServicesVitestLane.architecture.test.ts
+    expectedFailure: Workspace service changes still route to the broad unit lane.
+    patchSurfaces:
+      - apps/web/package.json
+      - apps/web/vitest*.ts
+      - apps/web/src/testing/workspaceServicesVitestLane.architecture.test.ts
+      - docs/architecture/components/web/frontend-test-governance-component.md
+      - docs/architecture/components/web/web-vitest-changed-suite-router-component.md
+      - buzon/20260531-web-test-lane-division-proposal.md
+    greenTest: pnpm --filter @dvt/web test:workspace-services
 symbols:
   - name: WEB_VITEST_PRIMARY_SUITE_NAMES
     path: apps/web/vitest.suites.ts
@@ -241,6 +259,15 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web test:architecture
     cypressCoverage: N/A - Vitest-only test tooling.
     unitTests: [pnpm --filter @dvt/web test:architecture]
+  - name: isWorkspaceServicesFocusPath
+    path: apps/web/vitest.suites.ts
+    dddOwner: WebVitestSuiteCatalog
+    cqRails: [WebVitestSuitePartition]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm --filter @dvt/web test -- src/testing/workspaceServicesVitestLane.architecture.test.ts
+    cypressCoverage: N/A - Vitest-only test tooling.
+    unitTests:
+      - pnpm --filter @dvt/web test -- src/testing/workspaceServicesVitestLane.architecture.test.ts
   - name: webRoot
     path: apps/web/src/testing/vitestSuites.architecture.test.ts
     dddOwner: WebVitestSuitePartition

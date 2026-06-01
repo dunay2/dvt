@@ -276,22 +276,12 @@ function createExactChangedTestCommandPlanEntry(
   };
 }
 
-function quoteExactTestPath(filePath: string): string {
-  if (/^[A-Za-z0-9_@%+=:,./-]+$/.test(filePath)) {
-    return filePath;
+function quoteShellArg(value: string): string {
+  if (/^[A-Za-z0-9_@%+=:,./-]+$/.test(value)) {
+    return value;
   }
 
-  const quote = String.fromCharCode(39);
-  const replacement = `${quote}\\${quote}${quote}`;
-  return `${quote}${filePath.split(quote).join(replacement)}${quote}`;
-}
-
-function formatExactVitestCommand(
-  entry: Extract<WebVitestChangedCommandPlanEntry, { kind: 'vitest-file' }>
-): string {
-  return ['pnpm', 'exec', 'vitest', 'run', '--config', entry.config, quoteExactTestPath(entry.filePath)].join(
-    ' '
-  );
+  return `'${value.replaceAll("'", "'\\''")}'`;
 }
 
 export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): {
@@ -339,7 +329,9 @@ export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): 
   return {
     suites,
     commands: commandPlan.map((entry) =>
-      entry.kind === 'shell' ? entry.command : formatExactVitestCommand(entry)
+      entry.kind === 'shell'
+        ? entry.command
+        : `pnpm exec vitest run --config ${entry.config} ${quoteShellArg(entry.filePath)}`
     ),
     commandPlan,
     requiresDependencies: selectedSuites.size > 0,
