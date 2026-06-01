@@ -251,8 +251,9 @@ test('planning DB import skips governance through source freshness before rebuil
   assert.deepEqual(result.skippedScopes, ['governance']);
 });
 
-test('planning DB import falls back to full auxiliary projection checks when source freshness is stale', async () => {
+test('planning DB import reimports governance when auxiliary source freshness is stale', async () => {
   const calls = [];
+  let auxiliaryProjectionChecks = 0;
 
   const result = await runPlanningImport(
     {
@@ -264,7 +265,10 @@ test('planning DB import falls back to full auxiliary projection checks when sou
     {
       checkGovernanceDatabase: async () => ({ ok: true }),
       checkGovernanceAuxiliarySourceFreshness: async () => ({ ok: false }),
-      checkGovernanceAuxiliaryProjections: async () => ({ ok: true }),
+      checkGovernanceAuxiliaryProjections: async () => {
+        auxiliaryProjectionChecks += 1;
+        return { ok: true };
+      },
       importContent: async (options) => {
         calls.push(options);
         return { governanceFiles: 3, governanceComponents: 2 };
@@ -273,9 +277,16 @@ test('planning DB import falls back to full auxiliary projection checks when sou
     }
   );
 
-  assert.deepEqual(calls, []);
-  assert.deepEqual(result.importedScopes, []);
-  assert.deepEqual(result.skippedScopes, ['governance']);
+  assert.deepEqual(calls, [
+    {
+      databaseUrl: 'postgres://example/planning',
+      includePlanning: false,
+      includeGovernance: true,
+    },
+  ]);
+  assert.deepEqual(result.importedScopes, ['governance']);
+  assert.deepEqual(result.skippedScopes, []);
+  assert.equal(auxiliaryProjectionChecks, 0);
 });
 
 test('planning DB import skips governance through core source freshness before full DB checks', async () => {
@@ -307,8 +318,9 @@ test('planning DB import skips governance through core source freshness before f
   assert.deepEqual(result.skippedScopes, ['governance']);
 });
 
-test('planning DB import falls back to full governance DB checks when core source freshness is stale', async () => {
+test('planning DB import reimports governance when core source freshness is stale', async () => {
   const calls = [];
+  let fullGovernanceChecks = 0;
 
   const result = await runPlanningImport(
     {
@@ -319,7 +331,10 @@ test('planning DB import falls back to full governance DB checks when core sourc
     },
     {
       checkGovernanceSourceFreshness: async () => ({ ok: false }),
-      checkGovernanceDatabase: async () => ({ ok: true }),
+      checkGovernanceDatabase: async () => {
+        fullGovernanceChecks += 1;
+        return { ok: true };
+      },
       checkGovernanceAuxiliarySourceFreshness: async () => ({ ok: true }),
       importContent: async (options) => {
         calls.push(options);
@@ -329,9 +344,16 @@ test('planning DB import falls back to full governance DB checks when core sourc
     }
   );
 
-  assert.deepEqual(calls, []);
-  assert.deepEqual(result.importedScopes, []);
-  assert.deepEqual(result.skippedScopes, ['governance']);
+  assert.deepEqual(calls, [
+    {
+      databaseUrl: 'postgres://example/planning',
+      includePlanning: false,
+      includeGovernance: true,
+    },
+  ]);
+  assert.deepEqual(result.importedScopes, ['governance']);
+  assert.deepEqual(result.skippedScopes, []);
+  assert.equal(fullGovernanceChecks, 0);
 });
 
 test('planning content snapshot normalizes dependencies and evidence refs for DB reads', () => {
