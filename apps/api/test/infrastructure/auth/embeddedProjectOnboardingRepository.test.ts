@@ -7,7 +7,7 @@ import {
 import { EmbeddedProjectOnboardingRepository } from '../../../src/infrastructure/auth/embeddedProjectOnboardingRepository.js';
 
 describe('EmbeddedProjectOnboardingRepository', () => {
-  it('grants source import view and import actions to newly onboarded projects', async () => {
+  it('grants workspace read actions to newly onboarded projects', async () => {
     let savedTenantAccess: unknown;
     const client = {
       release: vi.fn(),
@@ -82,6 +82,7 @@ describe('EmbeddedProjectOnboardingRepository', () => {
             allowedActions: expect.arrayContaining([
               'workspace:source-import:view',
               'workspace:source-import:import',
+              'workspace:plugins:view',
             ]),
             environmentAccess: [
               expect.objectContaining({
@@ -89,6 +90,7 @@ describe('EmbeddedProjectOnboardingRepository', () => {
                 allowedActions: expect.arrayContaining([
                   'workspace:source-import:view',
                   'workspace:source-import:import',
+                  'workspace:plugins:view',
                 ]),
               }),
             ],

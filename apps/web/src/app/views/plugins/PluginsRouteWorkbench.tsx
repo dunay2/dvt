@@ -13,7 +13,9 @@ import {
   routeWorkbenchMutedTextClassName,
   routeWorkbenchPanelClassName,
 } from '../../components/workbench/RouteWorkbenchFrame';
-import { PLUGIN_REGISTRY } from '../../plugins/registry';
+import type { PluginCapabilityId } from '../../plugins/contracts/PluginManifest';
+import { PLUGIN_REGISTRY, type PluginContributions } from '../../plugins/registry';
+import type { Plugin } from '../../types/dbt';
 
 import { PluginCapabilityTable } from './PluginCapabilityTable';
 import {
@@ -23,9 +25,12 @@ import {
   pluginsViewCopy,
 } from './pluginsViewModel';
 
-export function PluginsViewHeader({
-  capabilities,
-}: Readonly<{ capabilities: PluginCapabilitiesSnapshot | undefined }>) {
+type PluginsViewHeaderProps = Readonly<{
+  capabilities: PluginCapabilitiesSnapshot | undefined;
+  pluginCatalog: readonly Plugin[] | undefined;
+}>;
+
+export function PluginsViewHeader({ capabilities, pluginCatalog }: PluginsViewHeaderProps) {
   return (
     <div data-slot="plugins-view-header-band" className={routeWorkbenchHeaderBandClassName}>
       <ViewHeader
@@ -35,6 +40,9 @@ export function PluginsViewHeader({
         subtitle={pluginsViewCopy.subtitle}
         actions={
           <>
+            <Badge variant="outline" className={cn(routeWorkbenchFieldClassName, 'text-xs')}>
+              {pluginsViewCopy.catalogCount}: {pluginCatalog?.length ?? 'n/a'}
+            </Badge>
             <Badge variant="outline" className={cn(routeWorkbenchFieldClassName, 'text-xs')}>
               {pluginsViewCopy.registeredCount}: {PLUGIN_REGISTRY.length}
             </Badge>
@@ -54,11 +62,17 @@ export function PluginsPrimarySurface({
   capabilities,
   capabilitiesError,
   capabilitiesLoading,
+  pluginCatalog,
+  pluginCatalogError,
+  pluginCatalogLoading,
   probeStatus,
 }: Readonly<{
   capabilities: PluginCapabilitiesSnapshot | undefined;
   capabilitiesError: unknown;
   capabilitiesLoading: boolean;
+  pluginCatalog: readonly Plugin[] | undefined;
+  pluginCatalogError: unknown;
+  pluginCatalogLoading: boolean;
   probeStatus: PluginProbeStatus;
 }>) {
   return (
@@ -68,6 +82,9 @@ export function PluginsPrimarySurface({
         capabilities={capabilities}
         capabilitiesError={capabilitiesError}
         capabilitiesLoading={capabilitiesLoading}
+        pluginCatalog={pluginCatalog}
+        pluginCatalogError={pluginCatalogError}
+        pluginCatalogLoading={pluginCatalogLoading}
       />
     </>
   );
@@ -122,16 +139,99 @@ function PluginCapabilityProbeCard({
   );
 }
 
+function pluginCapabilities(plugin: Plugin): PluginCapabilityId[] {
+  return plugin.capabilities as PluginCapabilityId[];
+}
+
+function applyCatalogOverlay(
+  base: PluginContributions,
+  plugin: Plugin,
+  backendPluginId: string | undefined
+): PluginContributions {
+  const next: PluginContributions = {
+    ...base,
+    id: plugin.id,
+    displayName: plugin.name,
+    version: plugin.version,
+    capabilities: pluginCapabilities(plugin),
+  };
+
+  if (backendPluginId) {
+    return {
+      ...next,
+      backendPluginId,
+    };
+  }
+
+  return next;
+}
+
+function toCatalogContribution(plugin: Plugin): PluginContributions {
+  return applyCatalogOverlay(
+    {
+      id: plugin.id,
+      displayName: plugin.name,
+      version: plugin.version,
+      capabilities: pluginCapabilities(plugin),
+    },
+    plugin,
+    plugin.backendPluginId
+  );
+}
+
+function mergePluginCatalogWithLocalContributions(
+  pluginCatalog: readonly Plugin[]
+): PluginContributions[] {
+  const localById = new Map(PLUGIN_REGISTRY.map((plugin) => [plugin.id, plugin]));
+
+  return pluginCatalog.map((catalogPlugin) => {
+    const local = localById.get(catalogPlugin.id);
+    return applyCatalogOverlay(
+      local ?? toCatalogContribution(catalogPlugin),
+      catalogPlugin,
+      catalogPlugin.backendPluginId ?? local?.backendPluginId
+    );
+  });
+}
+
 function PluginRegistryContent({
   capabilities,
   capabilitiesError,
   capabilitiesLoading,
+  pluginCatalog,
+  pluginCatalogError,
+  pluginCatalogLoading,
 }: Readonly<{
   capabilities: PluginCapabilitiesSnapshot | undefined;
   capabilitiesError: unknown;
   capabilitiesLoading: boolean;
+  pluginCatalog: readonly Plugin[] | undefined;
+  pluginCatalogError: unknown;
+  pluginCatalogLoading: boolean;
 }>) {
-  if (PLUGIN_REGISTRY.length === 0) {
+  if (pluginCatalogLoading) {
+    return (
+      <ViewStateOverlay
+        kind="loading"
+        title={pluginsViewCopy.pluginCatalogLoadingTitle}
+        description={pluginsViewCopy.pluginCatalogLoadingDescription}
+      />
+    );
+  }
+
+  if (pluginCatalogError) {
+    return (
+      <ViewStateOverlay
+        kind="error"
+        title={pluginsViewCopy.pluginCatalogErrorTitle}
+        description={pluginsViewCopy.pluginCatalogErrorDescription}
+      />
+    );
+  }
+
+  const plugins = mergePluginCatalogWithLocalContributions(pluginCatalog ?? []);
+
+  if (plugins.length === 0) {
     return (
       <ViewStateOverlay
         kind="empty"
@@ -146,7 +246,7 @@ function PluginRegistryContent({
       capabilities={capabilities}
       capabilitiesError={capabilitiesError}
       capabilitiesLoading={capabilitiesLoading}
-      plugins={PLUGIN_REGISTRY}
+      plugins={plugins}
     />
   );
 }

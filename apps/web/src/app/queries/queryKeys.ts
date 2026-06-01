@@ -26,6 +26,7 @@ export const queryKeys = {
       ['workspace', 'graph-draft-transport', workspaceLayoutKey] as const,
     graphForView: (viewId: string) => ['workspace', 'graph', viewId] as const,
     diffChanges: () => ['workspace', 'diff-changes'] as const,
+    plugins: () => ['workspace', 'plugins'] as const,
     roles: () => ['workspace', 'roles'] as const,
     audit: () => ['workspace', 'audit'] as const,
     fileTree: () => ['workspace', 'file-tree'] as const,

@@ -36,6 +36,7 @@ export const pluginsViewCopy = {
   title: 'Plugins',
   subtitle: 'Inspect registered plugin surfaces, backend probe state, and execution readiness.',
   registeredCount: 'Registered',
+  catalogCount: 'Catalog',
   apiVersion: 'API',
   minFrontendVersion: 'Min frontend',
   capabilityProbeTitle: 'Backend capability probe',
@@ -44,6 +45,12 @@ export const pluginsViewCopy = {
   capabilityProbeLoading: 'Checking backend capability availability.',
   capabilityProbeError:
     'Capability probe unavailable. Backend availability is being derived from frontend declarations only.',
+  pluginCatalogLoadingTitle: 'Loading plugin catalog',
+  pluginCatalogLoadingDescription:
+    'Loading the DB-backed workspace plugin catalog before rendering plugin readiness.',
+  pluginCatalogErrorTitle: 'Plugin catalog unavailable',
+  pluginCatalogErrorDescription:
+    'The DB-backed plugin catalog did not respond, so the Plugins route cannot prove catalog completeness.',
   noPluginsTitle: 'No plugins declared',
   noPluginsDescription:
     'The current runtime does not expose any enabled plugin contributions to the workbench.',

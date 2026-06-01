@@ -21,6 +21,7 @@ import { registerProtectedWarehouseSourceImportRouteGroup } from './warehouseSou
 import { registerProtectedWorkspaceDiffChangesRouteGroup } from './workspaceDiffChangesRouteGroup.js';
 import { registerWorkspaceFileHistoryRoutes } from './workspaceFileHistoryRoutes.js';
 import { registerProtectedWorkspaceFilesRouteGroup } from './workspaceFilesRouteGroup.js';
+import { registerProtectedWorkspacePluginCatalogRouteGroup } from './workspacePluginCatalogRouteGroup.js';
 
 export type RegisterProtectedRuntimeRoutesOptions = {
   readonly env: Env;
@@ -38,6 +39,7 @@ export async function registerProtectedRuntimeRoutes(
   registerProtectedPlanRoutes(app, env, protectedModule, dependencies);
   registerProjectOnboardingRouteGroup(app, env, protectedModule);
   registerProtectedWorkspaceContextRouteGroup(app, env, protectedModule);
+  registerProtectedWorkspacePluginCatalogRouteGroup(app, env, protectedModule);
   registerProtectedWorkspaceGraphDraftRouteGroup(app, observability, protectedModule, dependencies);
   registerProtectedWorkspaceDiffChangesRouteGroup(app, {
     env,

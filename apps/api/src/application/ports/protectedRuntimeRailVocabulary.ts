@@ -71,6 +71,8 @@ export const PROTECTED_RUNTIME_TEST_REF = {
     'apps/api/test/application/services/authorizeWorkspaceGraphDraftCapabilityService.test.ts',
   workspaceDraftRoutes: 'apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts',
   workspaceContextRoute: 'apps/api/test/entrypoints/http/workspaceContextRoute.test.ts',
+  workspacePluginCatalogRoutes:
+    'apps/api/test/entrypoints/http/workspacePluginCatalogRoutes.test.ts',
   workspaceFilesRoutes: 'apps/api/test/entrypoints/http/workspaceFilesRoutes.test.ts',
   workspaceFileHistoryRoutes: 'apps/api/test/entrypoints/http/workspaceFileHistoryRoutes.test.ts',
   workspaceDiffChangesRoutes: 'apps/api/test/entrypoints/http/workspaceDiffChangesRoutes.test.ts',
@@ -193,6 +195,14 @@ export const PROTECTED_RUNTIME_WORKSPACE_RAIL = {
     port: 'ListWorkspaceDiffChangesUseCase',
     surface: 'GET /workspace/diff/changes',
     scopeAndAuthorization: 'workspace:diff:view, tenant/project/environment scope',
+  },
+  workspacePluginCatalog: {
+    name: 'ListWorkspacePlugins',
+    boundedContext: 'Runtime plugin catalog',
+    readModel: 'WorkspacePluginCatalog',
+    port: 'ListWorkspacePluginsUseCase',
+    surface: 'GET /workspace/plugins',
+    scopeAndAuthorization: 'workspace:plugins:view, tenant/project/environment scope',
   },
   warehouseSourceImport: {
     listConnectionsName: 'ListWarehouseConnections',

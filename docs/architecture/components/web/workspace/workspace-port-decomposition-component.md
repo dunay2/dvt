@@ -96,7 +96,7 @@ flowchart LR
   Graph --> GraphRoute["GET /workspace/graph/draft"]
   Files --> FileRoutes["GET /workspace/files*"]
   Diff --> DiffRail["GET /workspace/diff/changes"]
-  Plugins -. unavailable until backend .-> PluginRail["ListWorkspacePlugins"]
+  Plugins --> PluginRail["GET /workspace/plugins"]
   Admin -. unavailable until backend .-> AdminRails["ListAdminRoles / ListAdminAuditLog"]
   Import --> ImportRails["Warehouse source rails"]
   FileWrite --> WriteRail["POST /workspace/files/:path"]

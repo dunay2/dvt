@@ -13,6 +13,7 @@ import {
   buildWorkspaceGraphDraftEndpoint,
   WORKSPACE_GRAPH_DRAFT_HTTP_ERROR_REASON,
 } from './workspaceGraphDraftHttp';
+import { buildWorkspacePluginsEndpoint } from './workspacePluginsHttp';
 import { createApiWorkspacePortHarness } from './workspacePortsApi.test.harness';
 import {
   buildWorkspaceScope,
@@ -29,12 +30,6 @@ const unsupportedApiWorkspaceOperations: ReadonlyArray<{
   readonly rail: string;
   readonly call: (ports: ApiWorkspacePorts) => Promise<unknown>;
 }> = [
-  {
-    operation: 'getPlugins',
-    capability: 'workspace.plugins',
-    rail: 'ListWorkspacePlugins',
-    call: (ports) => ports.workspacePluginCatalogQuery.getPlugins(),
-  },
   {
     operation: 'getRoles',
     capability: 'workspace.adminRoles',
@@ -145,6 +140,46 @@ describe('workspace ports api diff changes', () => {
       },
     ]);
     expect(getJson).toHaveBeenCalledWith(buildWorkspaceDiffChangesEndpoint(scope));
+  });
+});
+
+describe('workspace ports api plugin catalog', () => {
+  installWorkspaceScopeHarness();
+
+  it('loads DB-backed plugins through the scoped workspace plugin catalog endpoint', async () => {
+    const scope = buildWorkspaceScope();
+    setWorkspaceScope(scope);
+    const { getJson, workspacePluginCatalogQuery } = createApiWorkspacePortHarness({
+      getJson: async <TResponse>() =>
+        ({
+          plugins: [
+            {
+              id: 'warehouse-optimizer',
+              name: 'Warehouse Optimizer',
+              version: '0.1.0',
+              description: 'DB-only cost policy plugin.',
+              capabilities: ['cost.analyze'],
+              enabled: true,
+              permissions: [],
+              backendPluginId: 'warehouse-optimizer',
+            },
+          ],
+        }) as TResponse,
+    });
+
+    await expect(workspacePluginCatalogQuery.getPlugins()).resolves.toEqual([
+      {
+        id: 'warehouse-optimizer',
+        name: 'Warehouse Optimizer',
+        version: '0.1.0',
+        description: 'DB-only cost policy plugin.',
+        capabilities: ['cost.analyze'],
+        enabled: true,
+        permissions: [],
+        backendPluginId: 'warehouse-optimizer',
+      },
+    ]);
+    expect(getJson).toHaveBeenCalledWith(buildWorkspacePluginsEndpoint(scope));
   });
 });
 
@@ -345,7 +380,6 @@ describe('workspace ports api route parity posture', () => {
     );
 
     expect(source).not.toContain(`getJson<DiffChange[]>('${WORKSPACE_DIFF_CHANGES_ENDPOINT}')`);
-    expect(source).not.toContain('/plugins');
     expect(source).not.toContain('/admin/roles');
     expect(source).not.toContain('/admin/audit');
     expect(source).toContain('postJson<{ content: string }, FileContent>');

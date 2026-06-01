@@ -111,6 +111,7 @@ export async function buildProtectedRuntimeModule(
     workspaceContextQuery: securityRuntime.workspaceContextQuery,
     listProjectsUseCase: securityRuntime.listProjectsUseCase,
     createProjectUseCase: securityRuntime.createProjectUseCase,
+    listWorkspacePluginsUseCase: securityRuntime.listWorkspacePluginsUseCase,
     engine: executionRuntime.engine,
     runEnrichmentService: executionRuntime.runEnrichmentService,
     runHealthService: executionRuntime.runHealthService,
@@ -130,6 +131,7 @@ export async function buildProtectedRuntimeModule(
     migrate: async () => {
       await securityRuntime.migrateAccessDecisionService();
       await securityRuntime.migrateProjectOnboardingRepository();
+      await securityRuntime.migrateWorkspacePluginCatalogRepository();
       await migratePostgresRuntimeStores({
         stateStore: storageRuntime.stateStore,
         startRunIntentStore: storageRuntime.intentStore,

@@ -121,6 +121,11 @@ function createProtectedRuntimeModuleHarness(): {
           return { kind: 'tenant_not_granted' as const };
         },
       } as never,
+      listWorkspacePluginsUseCase: {
+        async execute() {
+          return [];
+        },
+      } as never,
       workspaceGraphDraftStore: createWorkspaceGraphDraftStore(),
       workspaceGraphDraftCapabilityService: {
         async authorize() {
