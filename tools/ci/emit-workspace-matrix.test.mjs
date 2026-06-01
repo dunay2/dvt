@@ -20,6 +20,15 @@ test('workspace matrix emitter keeps scripts-only package json empty', () => {
   assert.deepEqual(matrix.include, []);
 });
 
+test('workspace matrix emitter keeps workflow policy changes empty', () => {
+  for (const file of ['.github/workflows/ci.yml', '.github/workflows/test.yml']) {
+    const matrix = buildWorkspaceMatrixOutputs([file]);
+
+    assert.equal(matrix.anyChanged, false);
+    assert.deepEqual(matrix.include, []);
+  }
+});
+
 test('workspace matrix emitter fails closed for package json read failure', () => {
   const matrix = computeWorkspaceMatrix(['package.json'], {
     packageJsonChange: {

@@ -417,9 +417,9 @@ The engine coverage scope is documented as the
 For pull requests, `coverage_relevant` is true for the governed engine
 workspace scope, including package-level configuration such as
 `packages/@dvt/engine/vitest.config.ts`. It also remains true for contracts,
-root test configuration, lockfiles, and Test Suite workflow changes that can
-affect threshold enforcement. Unrelated docs-only changes can keep the coverage
-job closed.
+root test configuration, and lockfiles. Workflow YAML changes stay on the CI
+contract and changed-file validation rail instead of opening coverage by
+themselves. Unrelated docs-only changes can keep the coverage job closed.
 
 Current workflow consumers:
 
@@ -428,7 +428,10 @@ Current workflow consumers:
   also runs `pnpm test:ci-tools` as a merge-gated CI-tool contract lane. Its shared
   `any_code` and `workspace_global` policy now include `turbo.json`, so Turbo
   graph changes trigger the affected-workspace lane instead of falling through
-  to `No affected workspaces`.
+  to `No affected workspaces`. Workflow YAML changes remain `any_code` and
+  changed-file-validation relevant, but do not open the workspace matrix unless
+  they also touch a real root-build input such as the setup action, lockfile,
+  Turbo graph, TypeScript config, or runtime orchestration helper.
 - [`.github/workflows/test.yml`](../../.github/workflows/test.yml) uses `emit-scope --mode test`
   for PR test routing across the web app, workers, and library workspaces. Its
   push/manual full-suite lane and PR `root_build_sensitive` fast-path both run
@@ -445,7 +448,11 @@ Current workflow consumers:
   `pnpm --filter dvt-api test` keeps its cold-worktree safety net. The shared
   `root_build_sensitive` scope includes root build graph inputs and runtime
   orchestration helpers, so PRs that change the Turbo graph or its
-  orchestration helper cannot skip `Test Suite`. Adapter-postgres integration,
+  orchestration helper cannot skip `Test Suite`. Test workflow YAML changes are
+  treated as CI policy changes: they stay covered by static/executable CI tool
+  contracts and changed-file checks without forcing package tests, web frontend
+  tests, determinism/replay, coverage, or adapter-postgres integration by
+  filename alone. Adapter-postgres integration,
   determinism/replay, and engine coverage also consume `emit-scope --mode test`
   outputs instead of local `dorny/paths-filter` package-root rules. Engine
   coverage uses the same governed `packages/@dvt/engine/**` package boundary as
@@ -477,7 +484,10 @@ Current workflow consumers:
   `traceability_adr0_relevant`; feature mechanization requires
   `feature_mechanization_relevant`; `pnpm arch:deps` requires
   `code_validation_relevant`; QA artifact validation requires changed docs.
-  Pushes and manual full gates keep the full remote posture.
+  Workflow YAML edits are CI-policy changes for this scope as well: they keep
+  PR metadata, changed-file validation, and CI contract coverage, but no longer
+  imply Temporal or adapter-postgres runtime integration by themselves. Pushes
+  and manual full gates keep the full remote posture.
 
 ## Notes
 

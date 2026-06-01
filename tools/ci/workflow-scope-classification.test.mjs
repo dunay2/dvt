@@ -8,6 +8,7 @@ import {
   WORKFLOW_SCOPE_PATTERNS,
   WORKSPACE_ENTRIES,
   computeBooleanScope,
+  computeWorkflowModeScopeOutputs,
   computeWorkspaceMatrix,
   matchesAnyPattern,
 } from './scope-config.mjs';
@@ -99,6 +100,28 @@ test('classifies turbo root-build surfaces for workflow scope and workspace matr
   const matrix = computeWorkspaceMatrix(['turbo.json']);
   assert.equal(matrix.anyChanged, true);
   assert.equal(matrix.include.length, WORKSPACE_ENTRIES.length);
+});
+
+test('workflow policy changes stay on CI contracts without runtime fan-out', () => {
+  for (const file of ['.github/workflows/ci.yml', '.github/workflows/test.yml']) {
+    const workflowScope = computeWorkflowModeScopeOutputs('workflow', [file]);
+    const matrix = computeWorkspaceMatrix([file]);
+
+    assert.equal(workflowScope.any_code, true);
+    assert.equal(workflowScope.changed_file_validation_relevant, true);
+    assert.equal(workflowScope.code_validation_relevant, false);
+    assert.equal(matrix.anyChanged, false);
+    assert.deepEqual(matrix.include, []);
+  }
+
+  const testScope = computeWorkflowModeScopeOutputs('test', ['.github/workflows/test.yml']);
+
+  assert.equal(testScope.any_test, false);
+  assert.equal(testScope.root_config, false);
+  assert.equal(testScope.root_build_sensitive, false);
+  assert.equal(testScope.postgres_capability_changed, false);
+  assert.equal(testScope.determinism_relevant, false);
+  assert.equal(testScope.coverage_relevant, false);
 });
 
 test('classifies dependency-cruiser config as CI policy validation without workspace fan-out', () => {

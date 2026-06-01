@@ -244,7 +244,6 @@ const TEST_ROOT_BUILD_PATTERNS = [
   'tsconfig*.json',
   '.github/actions/setup-node-pnpm/**',
   '.github/scripts/**',
-  '.github/workflows/test.yml',
   'tools/ci/**',
   'scripts/skip-pretest-if-ci.cjs',
   'scripts/skip-prebuild-if-orchestrated.cjs',
@@ -257,7 +256,6 @@ const TEST_DETERMINISM_PATTERNS = [
   'package.json',
   'pnpm-lock.yaml',
   'pnpm-workspace.yaml',
-  '.github/workflows/test.yml',
 ];
 
 const TEST_COVERAGE_PATTERNS = [
@@ -268,7 +266,6 @@ const TEST_COVERAGE_PATTERNS = [
   'pnpm-workspace.yaml',
   'vitest.config.ts',
   'tsconfig*.json',
-  '.github/workflows/test.yml',
 ];
 
 const WEB_FRONTEND_TEST_GOVERNANCE_PATTERNS = [
@@ -284,8 +281,6 @@ const PR_QUALITY_ROOT_BUILD_PATTERNS = [
   'tools/ci/**',
   '.github/actions/setup-node-pnpm/**',
   '.github/scripts/**',
-  '.github/workflows/pr-quality-gate.yml',
-  '.github/workflows/test.yml',
   'scripts/build-workspace-runtime-deps.cjs',
 ];
 
@@ -314,7 +309,6 @@ export const TEST_SCOPE_PATTERNS = {
     'packages/**',
     '.github/actions/setup-node-pnpm/**',
     '.github/scripts/**',
-    '.github/workflows/test.yml',
     'tools/ci/**',
     'scripts/skip-pretest-if-ci.cjs',
     'scripts/skip-prebuild-if-orchestrated.cjs',
@@ -406,8 +400,6 @@ export const PR_QUALITY_SCOPE_PATTERNS = {
     'scripts/build-workspace-runtime-deps.cjs',
     'tools/ci/**',
     ...ROOT_CONFIG_PATTERNS,
-    '.github/workflows/pr-quality-gate.yml',
-    '.github/workflows/test.yml',
   ],
   temporal_transformation_changed: [
     'packages/@dvt/adapter-temporal/src/activities/**',
@@ -423,8 +415,6 @@ export const PR_QUALITY_SCOPE_PATTERNS = {
     'scripts/build-workspace-runtime-deps.cjs',
     'tools/ci/**',
     ...ROOT_CONFIG_PATTERNS,
-    '.github/workflows/pr-quality-gate.yml',
-    '.github/workflows/test.yml',
   ],
   temporal_postgres_changed: [
     'packages/@dvt/adapter-postgres/**',
@@ -441,8 +431,6 @@ export const PR_QUALITY_SCOPE_PATTERNS = {
     'scripts/build-workspace-runtime-deps.cjs',
     'tools/ci/**',
     ...ROOT_CONFIG_PATTERNS,
-    '.github/workflows/pr-quality-gate.yml',
-    '.github/workflows/test.yml',
   ],
   adapter_postgres_changed: ADAPTER_POSTGRES_RELEVANT_PATTERNS,
   root_build_sensitive: PR_QUALITY_ROOT_BUILD_PATTERNS,

@@ -103,6 +103,13 @@ test('test matrix routes API package tests through the CI lifecycle bypass', () 
   ]);
 });
 
+test('test matrix keeps workflow policy changes out of package tests', () => {
+  const matrix = buildTestMatrixOutputs(['.github/workflows/test.yml']);
+
+  assert.equal(matrix.anyTests, false);
+  assert.deepEqual(matrix.include, []);
+});
+
 test('test matrix fans out to package tests for root build sensitive changes', () => {
   const matrix = buildTestMatrixOutputs(['turbo.json']);
 

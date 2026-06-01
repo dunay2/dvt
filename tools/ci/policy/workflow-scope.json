@@ -95,7 +95,6 @@
     "tools/ci/docs-manifest-contract.test.mjs"
   ],
   "workspace_global": [
-    ".github/workflows/**",
     ".github/actions/setup-node-pnpm/**",
     "pnpm-lock.yaml",
     "pnpm-workspace.yaml",
