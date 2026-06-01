@@ -10,7 +10,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const yaml = require('js-yaml');
-const { findOwnerMatches, readManifest } = require('./check-governance-unit-coverage.cjs');
+const { buildOwnerMatcher, readManifest } = require('./check-governance-unit-coverage.cjs');
 const {
   generatedStatusDir,
   governanceGeneratedPath,
@@ -301,9 +301,10 @@ function buildFileFingerprints(filePath, contentBytes, governancePayload) {
 
 function buildFileEntries(files, units, options = {}, unitById = buildUnitIndex(units)) {
   const readFileBytes = options.readFileBytes || readTrackedFileBytes;
+  const ownerMatcher = options.ownerMatcher || buildOwnerMatcher(units);
 
   return files.map((filePath) => {
-    const matches = findOwnerMatches(filePath, units);
+    const matches = ownerMatcher(filePath);
     const owner = matches[0];
     const hierarchy = buildHierarchy(owner, unitById);
     const semantics = deriveGovernanceSemantics(owner?.status, owner?.level || 'unowned');
@@ -973,7 +974,8 @@ function buildOutputs() {
   const manifest = readManifest();
   const units = Array.isArray(manifest.units) ? manifest.units : [];
   const unitById = buildUnitIndex(units);
-  const fileEntries = buildFileEntries(getRepositoryFiles(), units, {}, unitById);
+  const ownerMatcher = buildOwnerMatcher(units);
+  const fileEntries = buildFileEntries(getRepositoryFiles(), units, { ownerMatcher }, unitById);
   const componentEntries = buildComponentEntries(units, fileEntries, unitById);
   const fileIndex = buildFileIndexManifest(fileEntries);
   const componentFileMap = buildComponentFileMapManifest(componentEntries, fileEntries);

@@ -220,6 +220,12 @@ allowedImplementationSurfaces:
   - tools/ci/emit-workspace-matrix.test.mjs
   - tools/ci/emit-test-matrix.test.mjs
   - scripts/local-validation-plan.cjs
+  - scripts/check-governance-unit-coverage.cjs
+  - scripts/check-governance-unit-coverage.test.cjs
+  - scripts/generate-governance-document-unit-map.cjs
+  - scripts/generate-governance-document-unit-map.test.cjs
+  - scripts/generate-governance-file-component-index.cjs
+  - scripts/generate-governance-file-component-index.test.cjs
   - scripts/planning-db-import.cjs
   - scripts/planning-db-import.test.cjs
   - scripts/verify-changed.test.cjs
@@ -418,7 +424,53 @@ redGreenCycles:
       - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
       - docs/planning/closeouts/**
     greenTest: node --test --test-reporter=spec scripts/planning-db-import.test.cjs
+  - id: governance-owner-matcher-precompile
+    redTest: node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
+    expectedFailure: governance file and document generators rebuild glob regex matchers for every file, so the first DB-first governance input build spends most of its time in repeated ownership matching instead of import semantics.
+    patchSurfaces:
+      - scripts/check-governance-unit-coverage.cjs
+      - scripts/check-governance-unit-coverage.test.cjs
+      - scripts/generate-governance-file-component-index.cjs
+      - scripts/generate-governance-file-component-index.test.cjs
+      - scripts/generate-governance-document-unit-map.cjs
+      - scripts/generate-governance-document-unit-map.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
 symbols:
+  - name: buildOwnerMatcher
+    path: scripts/check-governance-unit-coverage.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Duplicate expensive ownership matcher construction in governance import validation
+    architectureGuard: node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
+  - name: findOwnerMatches
+    path: scripts/check-governance-unit-coverage.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Duplicate expensive ownership matcher construction in governance import validation
+    architectureGuard: node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
+  - name: buildDocumentEntries
+    path: scripts/generate-governance-document-unit-map.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Duplicate expensive ownership matcher construction in governance import validation
+    architectureGuard: node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
   - name: buildGovernanceGeneratedInputs
     path: scripts/planning-db-import.cjs
     dddOwner: ValidateCiScopeOptimizationContract

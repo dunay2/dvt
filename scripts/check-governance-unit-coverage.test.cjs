@@ -7,6 +7,7 @@ const assert = require('node:assert/strict');
  */
 const {
   validateManifest,
+  buildOwnerMatcher,
   findOwnerMatches,
   globToRegExp,
   readManifest,
@@ -158,6 +159,31 @@ test('findOwnerMatches honors excludes before reporting ownership', () => {
 
   assert.deepEqual(
     matches.map((unit) => unit.id),
+    ['SYS-PLANSTORE-API-COMPOSITION']
+  );
+});
+
+test('buildOwnerMatcher returns reusable ownership matches and honors excludes', () => {
+  const units = [
+    {
+      id: 'SYS-API-ROOT',
+      owns: ['apps/api/**'],
+      excludes: ['apps/api/src/infrastructure/startRun/**'],
+    },
+    {
+      id: 'SYS-PLANSTORE-API-COMPOSITION',
+      owns: ['apps/api/src/infrastructure/startRun/**'],
+    },
+  ];
+
+  const ownerMatcher = buildOwnerMatcher(units);
+
+  assert.deepEqual(
+    ownerMatcher('apps/api/src/main.ts').map((unit) => unit.id),
+    ['SYS-API-ROOT']
+  );
+  assert.deepEqual(
+    ownerMatcher('apps/api/src/infrastructure/startRun/resolver.ts').map((unit) => unit.id),
     ['SYS-PLANSTORE-API-COMPOSITION']
   );
 });
