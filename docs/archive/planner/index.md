@@ -35,7 +35,7 @@ These are historical package-local ADR snapshots only. They are not repository A
 
 These are historical package-local contract/schema snapshots only.
 
-- [Planner contracts v2.3.1](./contracts/PlannerContracts.v2.3.1.md)
+- [Planner contracts v2.3.1](./contracts/planner-contracts-v2-3-1.md)
 - [ExecutionPlanV2 schema](./contracts/ExecutionPlanV2.schema.json)
 - [PlanCore schema](./contracts/PlanCore.schema.json)
 - [PlannerInputEnvelopeV2 schema](./contracts/PlannerInputEnvelopeV2.schema.json)

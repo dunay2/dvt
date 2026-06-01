@@ -36,5 +36,5 @@ surfaces.
 
 ## Evidence
 
-- `docs/evidence/ED-20260601-planner-local-doc-archive.md`
+- `docs/evidence/ed-20260601-planner-local-doc-archive.md`
 - `docs/archive/planner/index.md`
