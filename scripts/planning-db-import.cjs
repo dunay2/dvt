@@ -1335,6 +1335,21 @@ function addNormalizedId(idSet, value) {
   idSet.add(normalized.toUpperCase());
 }
 
+function buildPlanningTaskReferencePattern(planningTaskIdSet) {
+  const planningTaskIds = [...new Set([...planningTaskIdSet].map((taskId) => taskId.toUpperCase()))]
+    .filter(Boolean)
+    .sort((left, right) => right.length - left.length || left.localeCompare(right));
+
+  if (planningTaskIds.length === 0) {
+    return null;
+  }
+
+  return new RegExp(
+    `(?<![A-Za-z0-9-])(?:${planningTaskIds.map(escapeRegExp).join('|')})(?![A-Za-z0-9-])`,
+    'gi'
+  );
+}
+
 function collectFeatureMechanizationReferenceIds(sourceDocuments) {
   const featureIds = new Set();
   const cycleIds = new Set();
@@ -1553,26 +1568,30 @@ function extractTaskLikeReferences(
     addReference(referenceText);
   }
 
-  const planningTaskIds = [...new Set([...planningTaskIdSet].map((taskId) => taskId.toUpperCase()))]
-    .filter(Boolean)
-    .sort();
-  for (const taskId of planningTaskIds) {
-    const alreadyCaptured = [...grouped.keys()].some(
-      (referenceText) => referenceText.toUpperCase() === taskId
-    );
-    if (alreadyCaptured) {
-      continue;
-    }
+  const capturedReferenceKeys = new Set(
+    [...grouped.keys()].map((referenceText) => referenceText.toUpperCase())
+  );
+  const planningTaskPattern = buildPlanningTaskReferencePattern(planningTaskIdSet);
+  const planningTaskMatches = new Map();
 
-    const taskPattern = new RegExp(
-      `(?<![A-Za-z0-9-])${escapeRegExp(taskId)}(?![A-Za-z0-9-])`,
-      'gi'
-    );
-    const taskMatches = raw.match(taskPattern) || [];
-    if (taskMatches.length === 0) {
-      continue;
+  if (planningTaskPattern) {
+    for (const match of raw.match(planningTaskPattern) || []) {
+      const matchKey = match.toUpperCase();
+      if (capturedReferenceKeys.has(matchKey)) {
+        continue;
+      }
+
+      const entry = planningTaskMatches.get(matchKey) || {
+        referenceText: match,
+        occurrenceCount: 0,
+      };
+      entry.occurrenceCount += 1;
+      planningTaskMatches.set(matchKey, entry);
     }
-    addReference(taskMatches[0], taskMatches.length);
+  }
+
+  for (const entry of planningTaskMatches.values()) {
+    addReference(entry.referenceText, entry.occurrenceCount);
   }
 
   return [...grouped.values()]

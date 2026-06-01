@@ -1172,6 +1172,33 @@ test('docs disposition snapshot does not split lane-prefixed planning task ids i
   assert.deepEqual(snapshot.actions, []);
 });
 
+test('docs disposition snapshot keeps planning task references case-insensitive', () => {
+  const snapshot = buildDocsDispositionSnapshot({
+    planningTaskIds: ['AR-A6', 'F-MAND-WORKBENCH-UX'],
+    documents: [
+      {
+        sourcePath: 'docs/planning/status/current-work.md',
+        raw: [
+          '---',
+          'title: Current work',
+          'status: Active',
+          'planning_type: status',
+          '---',
+          'Mixed-case task mentions: ar-a6 and f-mand-workbench-ux.',
+        ].join('\n'),
+      },
+    ],
+  });
+
+  const classifications = new Map(
+    snapshot.references.map((reference) => [reference.referenceText, reference.classification])
+  );
+
+  assert.equal(classifications.get('ar-a6'), 'registered_planning_task');
+  assert.equal(classifications.get('f-mand-workbench-ux'), 'registered_planning_task');
+  assert.deepEqual(snapshot.actions, []);
+});
+
 test('docs disposition snapshot classifies story, QA, and historical work-item ids as non-task references', () => {
   const snapshot = buildDocsDispositionSnapshot({
     planningTaskIds: [],

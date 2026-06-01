@@ -473,7 +473,28 @@ redGreenCycles:
       - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
       - docs/planning/closeouts/**
     greenTest: node --test scripts/planning-db-import.test.cjs
+  - id: docs-disposition-combined-planning-task-reference-scan
+    redTest: node --test scripts/planning-db-import.test.cjs
+    expectedFailure: docs disposition import scans every planning task id with a separate regex for every document, multiplying reference detection work across the full docs corpus.
+    patchSurfaces:
+      - scripts/planning-db-import.cjs
+      - scripts/planning-db-import.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test scripts/planning-db-import.test.cjs
 symbols:
+  - name: buildPlanningTaskReferencePattern
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Docs disposition should not run one planning-task regex per task per document
+      - Planning task reference detection must remain case-insensitive
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
   - name: isScopeFresh
     path: scripts/planning-db-import.cjs
     dddOwner: ValidateCiScopeOptimizationContract

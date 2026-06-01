@@ -293,3 +293,24 @@ flowchart TD
 - Measurement: stale `pnpm governance:db:import -- --if-stale` improved from
   55.844s to 29.448s. The fresh path after the import took 5.106s and still
   reported `skipped fresh scopes: governance`.
+
+## Docs Disposition Reference Scan Iteration
+
+- Problem summary: after removing stale freshness duplication, direct
+  governance-only `importContent()` still took 27.749s. The largest remaining
+  pure build phase was `buildDocsDispositionSnapshot()` at 10.038s.
+- Root cause: `extractTaskLikeReferences()` scanned each document once for the
+  broad task-like reference pattern and then scanned the same document once per
+  planning task id. With the current corpus this multiplies work across about
+  1970 docs and 337 planning task ids.
+- Selected option and rationale: compile the planning task ids into one
+  case-insensitive bounded regex per extraction and aggregate matches by
+  normalized task id. This preserves registered planning task detection and
+  casing while replacing hundreds of per-document regex passes with one.
+- Validation evidence: `node --test scripts/planning-db-import.test.cjs` passes
+  with an added regression for mixed-case planning task references.
+- Measurement: `buildDocsDispositionSnapshot()` improved from 10.038s to
+  5.384s. Direct governance-only `importContent()` improved from 27.749s to
+  21.799s. Stale `pnpm governance:db:import -- --if-stale` improved from the
+  prior 29.448s to 24.971s. The fresh path after the import took 5.192s and
+  still reported `skipped fresh scopes: governance`.
