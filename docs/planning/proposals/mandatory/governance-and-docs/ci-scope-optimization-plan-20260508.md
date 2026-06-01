@@ -220,12 +220,21 @@ allowedImplementationSurfaces:
   - tools/ci/emit-workspace-matrix.test.mjs
   - tools/ci/emit-test-matrix.test.mjs
   - scripts/local-validation-plan.cjs
+  - scripts/check-governance-unit-coverage.cjs
+  - scripts/check-governance-unit-coverage.test.cjs
+  - scripts/generate-governance-document-unit-map.cjs
+  - scripts/generate-governance-document-unit-map.test.cjs
+  - scripts/generate-governance-file-component-index.cjs
+  - scripts/generate-governance-file-component-index.test.cjs
+  - scripts/planning-db-import.cjs
+  - scripts/planning-db-import.test.cjs
   - scripts/verify-changed.test.cjs
   - scripts/README.md
   - docs/guides/testing-and-ci-capabilities.md
   - docs/planning/proposals/mandatory/governance-and-docs/repository-command-catalog-normalization-plan-20260508.md
   - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
   - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
+  - docs/planning/closeouts/**
   - docs/planning/state/agent-lane-c.yaml
   - docs/planning/status/**
   - docs/.manifest.json
@@ -398,7 +407,207 @@ redGreenCycles:
       - docs/guides/testing-and-ci-capabilities.md
       - docs/planning/status/**
     greenTest: pnpm docs:feature-mechanization:implementation
+  - id: planning-db-import-test-fixture-reuse
+    redTest: node --test --test-reporter=spec scripts/planning-db-import.test.cjs
+    expectedFailure: the current passing profile rebuilds the governance snapshot for independent pure assertions and calls the full import path for an advisory-lock assertion, making one local test file take about 76.865s.
+    patchSurfaces:
+      - scripts/planning-db-import.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test --test-reporter=spec scripts/planning-db-import.test.cjs
+  - id: planning-db-generated-input-reuse
+    redTest: node --test scripts/planning-db-import.test.cjs
+    expectedFailure: mutation-sensitive generated artifact tests need to rebuild the governance snapshot but should not rebuild the expensive governance generated input inventory when an already-built input fixture is supplied.
+    patchSurfaces:
+      - scripts/planning-db-import.cjs
+      - scripts/planning-db-import.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test --test-reporter=spec scripts/planning-db-import.test.cjs
+  - id: governance-owner-matcher-precompile
+    redTest: node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
+    expectedFailure: governance file and document generators rebuild glob regex matchers for every file, so the first DB-first governance input build spends most of its time in repeated ownership matching instead of import semantics.
+    patchSurfaces:
+      - scripts/check-governance-unit-coverage.cjs
+      - scripts/check-governance-unit-coverage.test.cjs
+      - scripts/generate-governance-file-component-index.cjs
+      - scripts/generate-governance-file-component-index.test.cjs
+      - scripts/generate-governance-document-unit-map.cjs
+      - scripts/generate-governance-document-unit-map.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
+  - id: governance-owner-generator-tests-route-through-verify-changed
+    redTest: node --test scripts/verify-changed.test.cjs
+    expectedFailure: verify:changed does not currently route check-governance-unit-coverage, governance file-component index, or document-unit map changes to their focused tests even though those tests are cheap and own the local generator behavior.
+    patchSurfaces:
+      - scripts/local-validation-plan.cjs
+      - scripts/verify-changed.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test scripts/verify-changed.test.cjs
+  - id: governance-import-heavy-table-batching
+    redTest: node --test scripts/planning-db-import.test.cjs
+    expectedFailure: governance DB import inserts 5k-row file, component-file, and fingerprint tables one row per client.query call, making stale governance imports pay thousands of database round trips.
+    patchSurfaces:
+      - scripts/planning-db-import.cjs
+      - scripts/planning-db-import.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test scripts/planning-db-import.test.cjs
+  - id: governance-import-auxiliary-table-batching
+    redTest: node --test scripts/planning-db-import.test.cjs
+    expectedFailure: governance DB import still inserts doc disposition, knowledge, and repository command auxiliary rows one row per client.query call after the primary file table batching pass.
+    patchSurfaces:
+      - scripts/planning-db-import.cjs
+      - scripts/planning-db-import.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test scripts/planning-db-import.test.cjs
 symbols:
+  - name: postgresParameterLimit
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Batched governance import must stay within PostgreSQL parameter limits
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: normalizeInsertColumn
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Shared batched insert helper needs explicit per-column cast metadata
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: insertPlaceholder
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Shared batched insert helper must preserve parameterized SQL and casts
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: insertRows
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Repeated row-by-row governance import round trips in local DB-first validation
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: insertGovernanceSnapshot
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Repeated row-by-row governance import round trips in local DB-first validation
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: insertDocsDispositionSnapshot
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Repeated row-by-row governance import round trips in local DB-first validation
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: insertKnowledgeSnapshot
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Repeated row-by-row governance import round trips in local DB-first validation
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: insertRepositoryCommandSnapshot
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Repeated row-by-row governance import round trips in local DB-first validation
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: buildOwnerMatcher
+    path: scripts/check-governance-unit-coverage.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Duplicate expensive ownership matcher construction in governance import validation
+    architectureGuard: node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
+  - name: findOwnerMatches
+    path: scripts/check-governance-unit-coverage.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Duplicate expensive ownership matcher construction in governance import validation
+    architectureGuard: node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
+  - name: buildDocumentEntries
+    path: scripts/generate-governance-document-unit-map.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Duplicate expensive ownership matcher construction in governance import validation
+    architectureGuard: node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
+  - name: buildGovernanceGeneratedInputs
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Duplicate expensive fixture construction in local planning DB validation
+    architectureGuard: node --test --test-reporter=spec scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test --test-reporter=spec scripts/planning-db-import.test.cjs
+  - name: governanceFileSnapshotFixture
+    path: scripts/planning-db-import.test.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Duplicate expensive fixture construction in local planning DB validation
+    architectureGuard: node --test --test-reporter=spec scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test --test-reporter=spec scripts/planning-db-import.test.cjs
   - name: readJsonAtGitRef
     path: tools/ci/scope-config.mjs
     dddOwner: ChangedScopeContext
@@ -881,6 +1090,17 @@ symbols:
       - ValidateCiScopeOptimizationContract
     fowlerSignals:
       - Keep full planning DB tests scoped to DB implementation surfaces
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
+  - name: hasPlanningDbMigrationChange
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Route planning DB SQL migrations to the focused migration suite
     architectureGuard: node --test scripts/verify-changed.test.cjs
     cypressCoverage: N/A - local CI tooling only
     unitTests:

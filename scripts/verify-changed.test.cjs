@@ -44,10 +44,46 @@ test('buildVerifyChangedPlan adds planning DB validation for planning query-stor
   ]);
 
   assert.equal(labels.filter((label) => label === 'pnpm planning:db:inventory:check').length, 1);
-  assert.equal(labels.filter((label) => label === 'pnpm test:planning:db').length, 1);
-  assert.ok(
-    labels.indexOf('pnpm planning:db:inventory:check') < labels.indexOf('pnpm test:planning:db')
+  assert.equal(
+    labels.filter((label) => label === 'node --test scripts/planning-db-query.test.cjs').length,
+    1
   );
+  assert.equal(labels.filter((label) => label === 'pnpm test:planning:db:migrations').length, 1);
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
+test('buildVerifyChangedPlan routes migration-only changes to the migration suite', () => {
+  const labels = labelsFor([
+    'tools/planning-db/migrations/022_component_engineering_record_query.sql',
+  ]);
+
+  assert.equal(labels.filter((label) => label === 'pnpm planning:db:inventory:check').length, 1);
+  assert.equal(labels.filter((label) => label === 'pnpm test:planning:db:migrations').length, 1);
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
+test('buildVerifyChangedPlan runs changed planning DB tests directly', () => {
+  const labels = labelsFor(['scripts/planning-db-surface-inventory-check.test.cjs']);
+
+  assert.equal(labels.filter((label) => label === 'pnpm planning:db:inventory:check').length, 1);
+  assert.equal(
+    labels.filter(
+      (label) => label === 'node --test scripts/planning-db-surface-inventory-check.test.cjs'
+    ).length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
+test('buildVerifyChangedPlan runs changed governance DB tests directly', () => {
+  const labels = labelsFor(['scripts/governance-db-import.test.cjs']);
+
+  assert.equal(labels.filter((label) => label === 'pnpm planning:db:inventory:check').length, 1);
+  assert.equal(
+    labels.filter((label) => label === 'node --test scripts/governance-db-import.test.cjs').length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:planning:db'));
 });
 
 test('buildVerifyChangedPlan reuses canonical planning DB scope for inventory checks', () => {
@@ -63,6 +99,68 @@ test('buildVerifyChangedPlan runs adjacent planning workflow tests without the f
   assert.equal(labels.filter((label) => label === 'pnpm planning:db:inventory:check').length, 1);
   assert.equal(
     labels.filter((label) => label === 'node --test scripts/governance-refresh.test.cjs').length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
+test('buildVerifyChangedPlan runs targeted governance report generator tests for AI-sized changes', () => {
+  const labels = labelsFor([
+    'scripts/generate-governance-coverage-report.cjs',
+    'scripts/generate-governance-remediation-queue.cjs',
+  ]);
+
+  assert.ok(!labels.includes('pnpm planning:db:inventory:check'));
+  assert.equal(
+    labels.filter(
+      (label) => label === 'node --test scripts/generate-governance-coverage-report.test.cjs'
+    ).length,
+    1
+  );
+  assert.equal(
+    labels.filter(
+      (label) => label === 'node --test scripts/generate-governance-remediation-queue.test.cjs'
+    ).length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
+test('buildVerifyChangedPlan runs targeted ownership generator tests for AI-sized changes', () => {
+  const labels = labelsFor([
+    'scripts/check-governance-unit-coverage.cjs',
+    'scripts/generate-governance-file-component-index.cjs',
+    'scripts/generate-governance-document-unit-map.cjs',
+  ]);
+
+  assert.equal(
+    labels.filter(
+      (label) => label === 'node --test scripts/check-governance-unit-coverage.test.cjs'
+    ).length,
+    1
+  );
+  assert.equal(
+    labels.filter(
+      (label) => label === 'node --test scripts/generate-governance-file-component-index.test.cjs'
+    ).length,
+    1
+  );
+  assert.equal(
+    labels.filter(
+      (label) => label === 'node --test scripts/generate-governance-document-unit-map.test.cjs'
+    ).length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
+test('buildVerifyChangedPlan runs changed governance report tests directly', () => {
+  const labels = labelsFor(['scripts/generate-governance-remediation-queue.test.cjs']);
+
+  assert.equal(
+    labels.filter(
+      (label) => label === 'node --test scripts/generate-governance-remediation-queue.test.cjs'
+    ).length,
     1
   );
   assert.ok(!labels.includes('pnpm test:planning:db'));

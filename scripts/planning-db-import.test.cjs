@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const {
   buildDocsDispositionSnapshot,
   buildGovernanceFileSnapshot,
+  buildGovernanceGeneratedInputs,
   buildPlanningContentSnapshot,
   buildPrReadinessSnapshot,
   buildRiskDebtSnapshot,
@@ -11,6 +12,10 @@ const {
   clearGovernanceSnapshotTables,
   governanceImportDeleteTables,
   importContent,
+  insertDocsDispositionSnapshot,
+  insertGovernanceSnapshot,
+  insertKnowledgeSnapshot,
+  insertRepositoryCommandSnapshot,
   mergePlanningTaskIds,
   normalizeText,
   parseArgs,
@@ -19,6 +24,31 @@ const {
 } = require('./planning-db-import.cjs');
 const { governanceGeneratedPath } = require('./governance-generated-paths.cjs');
 const { schemaName } = require('./planning-db-migrate.cjs');
+
+const governanceFileSnapshotFixture = (() => {
+  let snapshot;
+  let generatedInputs;
+
+  function readGeneratedInputs() {
+    if (!generatedInputs) {
+      generatedInputs = buildGovernanceGeneratedInputs();
+    }
+
+    return generatedInputs;
+  }
+
+  function readSnapshot() {
+    if (!snapshot) {
+      snapshot = buildGovernanceFileSnapshot({ generatedInputs: readGeneratedInputs() });
+    }
+
+    return snapshot;
+  }
+
+  readSnapshot.generatedInputs = readGeneratedInputs;
+
+  return readSnapshot;
+})();
 
 test('planning content snapshot preserves real lane task content and hashes', () => {
   const snapshot = buildPlanningContentSnapshot();
@@ -321,8 +351,28 @@ test('planning content snapshot normalizes dependencies and evidence refs for DB
   assert.ok(Number.isInteger(evidenceRef.evidenceOrder));
 });
 
+test('governance file snapshot consumes supplied generated inputs', () => {
+  const generatedInputs = governanceFileSnapshotFixture.generatedInputs();
+  const sentinelRawSourceText = 'fixture raw source text';
+  const snapshot = buildGovernanceFileSnapshot({
+    generatedInputs: {
+      ...generatedInputs,
+      indexSource: {
+        ...generatedInputs.indexSource,
+        rawSourceText: sentinelRawSourceText,
+      },
+    },
+  });
+  const fileIndexSource = snapshot.sources.find(
+    (source) => source.sourceType === 'governance_file_index'
+  );
+
+  assert.ok(fileIndexSource);
+  assert.equal(fileIndexSource.rawSourceText, sentinelRawSourceText);
+});
+
 test('governance file snapshot preserves every file entry declared by the index', () => {
-  const snapshot = buildGovernanceFileSnapshot();
+  const snapshot = governanceFileSnapshotFixture();
 
   assert.equal(snapshot.files.length, snapshot.index.fileCount);
   assert.ok(snapshot.fileShards.length > 0);
@@ -334,7 +384,7 @@ test('governance file snapshot preserves every file entry declared by the index'
 });
 
 test('governance snapshot preserves component, fingerprint, coverage, and remediation content', () => {
-  const snapshot = buildGovernanceFileSnapshot();
+  const snapshot = governanceFileSnapshotFixture();
 
   assert.equal(snapshot.components.length, snapshot.componentIndex.componentCount);
   assert.equal(snapshot.componentFileShards.length, snapshot.componentFileMap.componentCount);
@@ -432,7 +482,7 @@ test('risk debt snapshot turns risk-register records into DB work items with own
 });
 
 test('governance snapshot builds DB import sources from in-memory generator projections', () => {
-  const snapshot = buildGovernanceFileSnapshot();
+  const snapshot = governanceFileSnapshotFixture();
   const generatedSources = snapshot.sources.filter((source) =>
     source.sourcePath.startsWith('.generated-docs/')
   );
@@ -461,13 +511,14 @@ test('governance snapshot builds DB import sources from in-memory generator proj
   assert.ok(generatedSources.every((source) => typeof source.rawSourceText === 'string'));
 });
 
-test('governance snapshot imports DB-backed coverage and remediation generated artifacts', () => {
+test('governance snapshot imports generated artifacts without trusting stale generated indexes', () => {
   const fs = require('node:fs');
   const path = require('node:path');
   const coveragePath = governanceGeneratedPath('system-governance-coverage-report.coverage.yaml');
   const remediationPath = governanceGeneratedPath('system-governance-remediation-queue.queue.yaml');
+  const fileIndexPath = governanceGeneratedPath('system-governance-file-index.files.yaml');
   const originals = new Map(
-    [coveragePath, remediationPath].map((filePath) => [
+    [coveragePath, remediationPath, fileIndexPath].map((filePath) => [
       filePath,
       fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : null,
     ])
@@ -518,13 +569,24 @@ test('governance snapshot imports DB-backed coverage and remediation generated a
     '    expectedValidation: []',
     '',
   ].join('\n');
+  const staleRaw = 'fileCount: 999999\nshards: []\n';
 
   fs.mkdirSync(path.dirname(coveragePath), { recursive: true });
   fs.writeFileSync(coveragePath, coverageRaw, 'utf8');
   fs.writeFileSync(remediationPath, remediationRaw, 'utf8');
+  fs.writeFileSync(fileIndexPath, staleRaw, 'utf8');
 
   try {
-    const snapshot = buildGovernanceFileSnapshot();
+    const baselineInputs = governanceFileSnapshotFixture.generatedInputs();
+    const snapshot = buildGovernanceFileSnapshot({
+      generatedInputs: buildGovernanceGeneratedInputs({
+        fileComponentOutputs: baselineInputs.fileComponentOutputs,
+        documentOutputs: baselineInputs.documentOutputs,
+      }),
+    });
+    const fileIndexSource = snapshot.sources.find(
+      (source) => source.sourceType === 'governance_file_index'
+    );
     const coverageSource = snapshot.sources.find(
       (source) => source.sourceType === 'governance_coverage_report'
     );
@@ -538,6 +600,11 @@ test('governance snapshot imports DB-backed coverage and remediation generated a
     assert.equal(remediationSource.metadata.sourceMode, 'generated-artifact');
     assert.equal(coverageSource.rawSourceText, coverageRaw);
     assert.equal(remediationSource.rawSourceText, remediationRaw);
+    assert.ok(fileIndexSource);
+    assert.notEqual(snapshot.index.fileCount, 999999);
+    assert.equal(snapshot.files.length, snapshot.index.fileCount);
+    assert.equal(fileIndexSource.rawSource.fileCount, snapshot.index.fileCount);
+    assert.equal(fileIndexSource.rawSourceText, staleRaw);
   } finally {
     for (const [filePath, original] of originals) {
       if (original === null) {
@@ -568,32 +635,243 @@ test('governance import clears every repopulated governance table before insert'
   assert.equal(governanceImportDeleteTables.at(-1), 'governance_sources');
 });
 
-test('governance snapshot does not use stale generated YAML as structured import input', () => {
-  const fs = require('node:fs');
-  const path = require('node:path');
-  const fileIndexPath = governanceGeneratedPath('system-governance-file-index.files.yaml');
-  const original = fs.existsSync(fileIndexPath) ? fs.readFileSync(fileIndexPath, 'utf8') : null;
-  const staleRaw = 'fileCount: 999999\nshards: []\n';
+test('governance import batches heavy file table inserts', async () => {
+  const queries = [];
+  const baseFile = {
+    path: 'docs/example-a.md',
+    fileId: 'F-A',
+    shardId: 'SYS-DOCS',
+    sourcePath: 'docs/planning/status/governance-files/SYS-DOCS.files.yaml',
+    pathHash: 'path-a',
+    contentHash: 'content-a',
+    governanceHash: 'governance-a',
+    stateFingerprint: 'state-a',
+    owningUnit: 'SYS-DOCS-GOVERNANCE-ROOT',
+    rootUnit: 'SYS-DVT',
+    domainUnit: 'SYS-DOCS-GOVERNANCE',
+    componentUnit: 'SYS-DOCS-GOVERNANCE-ROOT',
+    ownerLevel: 'component',
+    unitStatus: 'canonical',
+    governanceState: 'governed',
+    canonicalRole: 'implementation-owner',
+    evidenceState: 'classification-only',
+    isDrift: false,
+    isLegacy: false,
+    dddOwner: 'Docs',
+    cqRails: 'ValidateCiScopeOptimizationContract',
+    governanceRefs: ['docs/index.md'],
+    sourceContentSha256: 'source-a',
+    rawFile: { path: 'docs/example-a.md' },
+  };
 
-  fs.mkdirSync(path.dirname(fileIndexPath), { recursive: true });
-  fs.writeFileSync(fileIndexPath, staleRaw, 'utf8');
-
-  try {
-    const snapshot = buildGovernanceFileSnapshot();
-    const source = snapshot.sources.find((entry) => entry.sourceType === 'governance_file_index');
-
-    assert.ok(source);
-    assert.notEqual(snapshot.index.fileCount, 999999);
-    assert.equal(snapshot.files.length, snapshot.index.fileCount);
-    assert.equal(source.rawSource.fileCount, snapshot.index.fileCount);
-    assert.equal(source.rawSourceText, staleRaw);
-  } finally {
-    if (original === null) {
-      fs.unlinkSync(fileIndexPath);
-    } else {
-      fs.writeFileSync(fileIndexPath, original, 'utf8');
+  await insertGovernanceSnapshot(
+    {
+      query: async (sql, params = []) => {
+        queries.push({ sql, params });
+      },
+    },
+    {
+      sources: [],
+      fileShards: [],
+      files: [
+        baseFile,
+        {
+          ...baseFile,
+          path: 'docs/example-b.md',
+          fileId: 'F-B',
+          pathHash: 'path-b',
+          contentHash: 'content-b',
+          governanceHash: 'governance-b',
+          stateFingerprint: 'state-b',
+          sourceContentSha256: 'source-b',
+          rawFile: { path: 'docs/example-b.md' },
+        },
+      ],
+      components: [],
+      componentFileShards: [],
+      componentFiles: [],
+      fingerprints: [],
+      coverageRows: [],
+      remediationTasks: [],
+      riskDebtItems: [],
     }
-  }
+  );
+
+  const fileInsertQueries = queries.filter((query) =>
+    query.sql.includes(`insert into ${schemaName}.governance_files`)
+  );
+
+  assert.equal(fileInsertQueries.length, 1);
+  assert.match(fileInsertQueries[0].sql, /\),\s*\(/);
+  assert.equal(fileInsertQueries[0].params.length, 48);
+});
+
+test('docs disposition import batches document inserts', async () => {
+  const queries = [];
+  const baseDocument = {
+    documentPath: 'docs/example-a.md',
+    title: 'Example A',
+    status: 'Review',
+    planningType: 'guide',
+    owner: 'Docs',
+    isActive: true,
+    isArchive: false,
+    pendingMarkerCount: 0,
+    taskLikeReferenceCount: 0,
+    sourceContentSha256: 'source-a',
+    rawFrontmatter: { title: 'Example A' },
+    rawDocument: { documentPath: 'docs/example-a.md' },
+  };
+
+  await insertDocsDispositionSnapshot(
+    {
+      query: async (sql, params = []) => {
+        queries.push({ sql, params });
+      },
+    },
+    {
+      documents: [
+        baseDocument,
+        {
+          ...baseDocument,
+          documentPath: 'docs/example-b.md',
+          title: 'Example B',
+          sourceContentSha256: 'source-b',
+          rawFrontmatter: { title: 'Example B' },
+          rawDocument: { documentPath: 'docs/example-b.md' },
+        },
+      ],
+      markers: [],
+      references: [],
+      actions: [],
+    }
+  );
+
+  const documentInsertQueries = queries.filter((query) =>
+    query.sql.includes(`insert into ${schemaName}.doc_disposition_documents`)
+  );
+
+  assert.equal(documentInsertQueries.length, 1);
+  assert.match(documentInsertQueries[0].sql, /\),\s*\(/);
+  assert.equal(documentInsertQueries[0].params.length, 24);
+});
+
+test('knowledge import batches documents and preserves link conflict handling', async () => {
+  const queries = [];
+  const baseDocument = {
+    documentId: 'DOC-A',
+    documentPath: 'docs/example-a.md',
+    documentType: 'planning',
+    title: 'Example A',
+    status: 'Review',
+    planningType: 'proposal',
+    owner: 'Docs',
+    mandatory: true,
+    sourceContentSha256: 'source-a',
+    rawFrontmatter: { title: 'Example A' },
+  };
+
+  await insertKnowledgeSnapshot(
+    {
+      query: async (sql, params = []) => {
+        queries.push({ sql, params });
+      },
+    },
+    {
+      documents: [
+        baseDocument,
+        {
+          ...baseDocument,
+          documentId: 'DOC-B',
+          documentPath: 'docs/example-b.md',
+          title: 'Example B',
+          sourceContentSha256: 'source-b',
+          rawFrontmatter: { title: 'Example B' },
+        },
+      ],
+      sections: [],
+      proposals: [],
+      documentLinks: [
+        {
+          fromDocumentId: 'DOC-A',
+          toDocumentId: 'DOC-B',
+          relationType: 'references',
+        },
+        {
+          fromDocumentId: 'DOC-B',
+          toDocumentId: 'DOC-A',
+          relationType: 'references',
+        },
+      ],
+      actions: [],
+      actionLinks: [],
+    }
+  );
+
+  const documentInsertQueries = queries.filter((query) =>
+    query.sql.includes(`insert into ${schemaName}.knowledge_documents`)
+  );
+  const linkInsertQueries = queries.filter((query) =>
+    query.sql.includes(`insert into ${schemaName}.knowledge_document_links`)
+  );
+
+  assert.equal(documentInsertQueries.length, 1);
+  assert.match(documentInsertQueries[0].sql, /\),\s*\(/);
+  assert.equal(documentInsertQueries[0].params.length, 20);
+  assert.equal(linkInsertQueries.length, 1);
+  assert.match(linkInsertQueries[0].sql, /\),\s*\(/);
+  assert.match(linkInsertQueries[0].sql, /on conflict do nothing/);
+  assert.equal(linkInsertQueries[0].params.length, 6);
+});
+
+test('repository command import batches command inserts', async () => {
+  const queries = [];
+  const baseCommand = {
+    commandId: 'command-a',
+    commandType: 'script',
+    commandName: 'test:a',
+    commandPath: 'package.json#scripts.test:a',
+    commandText: 'node scripts/a.cjs',
+    domain: 'ci',
+    sensitivity: 'safe',
+    runtimeFanout: 'low',
+    changedFileValidationRelevant: true,
+    referencedFiles: ['scripts/a.cjs'],
+    sourcePath: 'package.json',
+    sourceContentSha256: 'source-a',
+    rawCommand: { name: 'test:a' },
+  };
+
+  await insertRepositoryCommandSnapshot(
+    {
+      query: async (sql, params = []) => {
+        queries.push({ sql, params });
+      },
+    },
+    {
+      commands: [
+        baseCommand,
+        {
+          ...baseCommand,
+          commandId: 'command-b',
+          commandName: 'test:b',
+          commandPath: 'package.json#scripts.test:b',
+          commandText: 'node scripts/b.cjs',
+          referencedFiles: ['scripts/b.cjs'],
+          sourceContentSha256: 'source-b',
+          rawCommand: { name: 'test:b' },
+        },
+      ],
+    }
+  );
+
+  const commandInsertQueries = queries.filter((query) =>
+    query.sql.includes(`insert into ${schemaName}.repository_commands`)
+  );
+
+  assert.equal(commandInsertQueries.length, 1);
+  assert.match(commandInsertQueries[0].sql, /\),\s*\(/);
+  assert.equal(commandInsertQueries[0].params.length, 26);
 });
 
 test('repository command snapshot imports package scripts and command files for DB queries', async () => {
@@ -1060,7 +1338,12 @@ test('importContent serializes destructive read-model replacement with an adviso
     },
   };
 
-  await importContent({ client, silent: true });
+  await importContent({
+    client,
+    includeGovernance: false,
+    includePlanning: false,
+    silent: true,
+  });
 
   const beginIndexes = queries
     .map((query, index) => (query.sql === 'begin' ? index : -1))

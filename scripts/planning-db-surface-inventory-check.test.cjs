@@ -66,6 +66,10 @@ test('package scripts expose and gate the DB surface inventory check', () => {
     packageJson.scripts['test:planning:db'],
     /planning-db-surface-inventory-check\.test\.cjs/
   );
+  assert.equal(
+    packageJson.scripts['test:planning:db:migrations'],
+    'node --test scripts/planning-db-migrate.test.cjs'
+  );
   assert.match(packageJson.scripts['ci:docs'], /planning:db:inventory:check/);
   assert.equal(packageJson.scripts['verify:changed'], 'node scripts/verify-changed.cjs');
   assert.equal(packageJson.scripts['verify:prepush'], 'node scripts/verify-prepush.cjs');

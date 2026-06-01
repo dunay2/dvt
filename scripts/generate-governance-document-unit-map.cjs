@@ -6,7 +6,7 @@
 const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const yaml = require('js-yaml');
-const { findOwnerMatches, readManifest } = require('./check-governance-unit-coverage.cjs');
+const { buildOwnerMatcher, readManifest } = require('./check-governance-unit-coverage.cjs');
 const {
   generatedStatusDir,
   governanceGeneratedPath,
@@ -201,9 +201,11 @@ function resolveSubjectUnit(filePath) {
   return 'SYS-DOCS-GOVERNANCE';
 }
 
-function buildDocumentEntries(files, units) {
+function buildDocumentEntries(files, units, options = {}) {
+  const ownerMatcher = options.ownerMatcher || buildOwnerMatcher(units);
+
   return files.map((filePath) => {
-    const ownerMatches = findOwnerMatches(filePath, units);
+    const ownerMatches = ownerMatcher(filePath);
     return {
       path: filePath,
       classification: classifyDocument(filePath),

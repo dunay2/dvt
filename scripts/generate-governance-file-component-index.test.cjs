@@ -304,6 +304,22 @@ test('buildFileEntries assigns nested component files to the leaf component', ()
   ]);
 });
 
+test('buildFileEntries consumes a supplied owner matcher', () => {
+  const apiRoot = units.find((unit) => unit.id === 'SYS-API-ROOT');
+  const calls = [];
+  const entries = buildFileEntries(['virtual/generated.ts'], units, {
+    ownerMatcher: (filePath) => {
+      calls.push(filePath);
+      return [apiRoot];
+    },
+    readFileBytes: () => Buffer.from('export const generated = true;\n', 'utf8'),
+  });
+
+  assert.deepEqual(calls, ['virtual/generated.ts']);
+  assert.equal(entries[0].owningUnit, 'SYS-API-ROOT');
+  assert.deepEqual(entries[0].unitPath, ['SYS-DVT', 'SYS-RUNTIME', 'SYS-API-ROOT']);
+});
+
 test('filterExistingRepositoryFiles drops tracked files deleted from the worktree', () => {
   assert.deepEqual(
     filterExistingRepositoryFiles(['package.json', 'scripts/removed-once.cjs'], {

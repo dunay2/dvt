@@ -234,6 +234,61 @@ function toJson(value) {
   return JSON.stringify(cleanJson(value));
 }
 
+const postgresParameterLimit = 60000;
+
+function normalizeInsertColumn(column) {
+  if (typeof column === 'string') {
+    return { name: column, cast: null };
+  }
+
+  return {
+    name: column.name,
+    cast: column.cast || null,
+  };
+}
+
+function insertPlaceholder(parameterIndex, cast) {
+  return `$${parameterIndex}${cast ? `::${cast}` : ''}`;
+}
+
+async function insertRows(client, tableName, columns, rows, valuesForRow, options = {}) {
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return;
+  }
+
+  const normalizedColumns = columns.map(normalizeInsertColumn);
+  const parameterLimit = options.parameterLimit || postgresParameterLimit;
+  const maxRowsPerBatch = Math.max(1, Math.floor(parameterLimit / normalizedColumns.length));
+
+  for (let start = 0; start < rows.length; start += maxRowsPerBatch) {
+    const batchRows = rows.slice(start, start + maxRowsPerBatch);
+    const params = [];
+    const valueGroups = batchRows.map((row) => {
+      const values = valuesForRow(row);
+      if (values.length !== normalizedColumns.length) {
+        throw new Error(
+          `Insert row for ${tableName} returned ${values.length} values for ${normalizedColumns.length} columns.`
+        );
+      }
+
+      const placeholders = values.map((value, valueIndex) => {
+        params.push(value);
+        const column = normalizedColumns[valueIndex];
+        return insertPlaceholder(params.length, column.cast);
+      });
+
+      return `(${placeholders.join(', ')})`;
+    });
+
+    await client.query(
+      `insert into ${schemaName}.${tableName}
+        (${normalizedColumns.map((column) => column.name).join(', ')})
+       values ${valueGroups.join(', ')}${options.suffix ? `\n       ${options.suffix}` : ''}`,
+      params
+    );
+  }
+}
+
 function normalizeText(value) {
   if (value === undefined || value === null) {
     return '';
@@ -560,9 +615,10 @@ function buildPlanningContentSnapshot() {
   return { sources, lanes, tasks, dependencies, evidenceRefs };
 }
 
-function buildGovernanceGeneratedInputs() {
-  const fileComponentOutputs = buildGovernanceFileComponentOutputs();
-  const documentOutputs = buildDocumentUnitOutputs();
+function buildGovernanceGeneratedInputs(options = {}) {
+  const fileComponentOutputs =
+    options.fileComponentOutputs || buildGovernanceFileComponentOutputs();
+  const documentOutputs = options.documentOutputs || buildDocumentUnitOutputs();
   const index = fileComponentOutputs.fileIndexManifest;
   const componentIndex = fileComponentOutputs.componentIndexManifest;
   const componentFileMap = fileComponentOutputs.componentFileMapManifest;
@@ -602,6 +658,8 @@ function buildGovernanceGeneratedInputs() {
       repoRelative(governanceRemediationQueuePath),
       remediationQueue
     ),
+    fileComponentOutputs,
+    documentOutputs,
     fileShardSources: new Map(
       Object.entries(fileComponentOutputs.fileIndexShardPayloads).map(([sourcePath, payload]) => [
         sourcePath,
@@ -616,8 +674,8 @@ function buildGovernanceGeneratedInputs() {
   };
 }
 
-function buildGovernanceFileSnapshot() {
-  const generatedInputs = buildGovernanceGeneratedInputs();
+function buildGovernanceFileSnapshot(options = {}) {
+  const generatedInputs = options.generatedInputs || buildGovernanceGeneratedInputs();
   const indexSource = generatedInputs.indexSource;
   const index = indexSource.parsed;
   const componentIndexSource = generatedInputs.componentIndexSource;
@@ -2053,43 +2111,63 @@ async function insertGovernanceSnapshot(client, snapshot) {
     );
   }
 
-  for (const file of snapshot.files) {
-    await client.query(
-      `insert into ${schemaName}.governance_files
-        (path, file_id, shard_id, source_path, path_hash, content_hash, governance_hash,
-         state_fingerprint, owning_unit, root_unit, domain_unit, component_unit, owner_level,
-         unit_status, governance_state, canonical_role, evidence_state, is_drift, is_legacy,
-         ddd_owner, cq_rails, governance_refs, source_content_sha256, raw_file)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16,
-         $17, $18, $19, $20, $21, $22::jsonb, $23, $24::jsonb)`,
-      [
-        file.path,
-        file.fileId,
-        file.shardId,
-        file.sourcePath,
-        file.pathHash,
-        file.contentHash,
-        file.governanceHash,
-        file.stateFingerprint,
-        file.owningUnit,
-        file.rootUnit,
-        file.domainUnit,
-        file.componentUnit,
-        file.ownerLevel,
-        file.unitStatus,
-        file.governanceState,
-        file.canonicalRole,
-        file.evidenceState,
-        file.isDrift,
-        file.isLegacy,
-        file.dddOwner,
-        file.cqRails,
-        toJson(file.governanceRefs),
-        file.sourceContentSha256,
-        toJson(file.rawFile),
-      ]
-    );
-  }
+  await insertRows(
+    client,
+    'governance_files',
+    [
+      'path',
+      'file_id',
+      'shard_id',
+      'source_path',
+      'path_hash',
+      'content_hash',
+      'governance_hash',
+      'state_fingerprint',
+      'owning_unit',
+      'root_unit',
+      'domain_unit',
+      'component_unit',
+      'owner_level',
+      'unit_status',
+      'governance_state',
+      'canonical_role',
+      'evidence_state',
+      'is_drift',
+      'is_legacy',
+      'ddd_owner',
+      'cq_rails',
+      { name: 'governance_refs', cast: 'jsonb' },
+      'source_content_sha256',
+      { name: 'raw_file', cast: 'jsonb' },
+    ],
+    snapshot.files,
+    (file) => [
+      file.path,
+      file.fileId,
+      file.shardId,
+      file.sourcePath,
+      file.pathHash,
+      file.contentHash,
+      file.governanceHash,
+      file.stateFingerprint,
+      file.owningUnit,
+      file.rootUnit,
+      file.domainUnit,
+      file.componentUnit,
+      file.ownerLevel,
+      file.unitStatus,
+      file.governanceState,
+      file.canonicalRole,
+      file.evidenceState,
+      file.isDrift,
+      file.isLegacy,
+      file.dddOwner,
+      file.cqRails,
+      toJson(file.governanceRefs),
+      file.sourceContentSha256,
+      toJson(file.rawFile),
+    ]
+  );
 
   for (const component of snapshot.components) {
     await client.query(
@@ -2148,51 +2226,71 @@ async function insertGovernanceSnapshot(client, snapshot) {
     );
   }
 
-  for (const file of snapshot.componentFiles) {
-    await client.query(
-      `insert into ${schemaName}.governance_component_files
-        (component_id, path, file_id, owning_unit, unit_status, governance_state,
-         is_drift, is_legacy, source_path, source_content_sha256, raw_component_file)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb)`,
-      [
-        file.componentId,
-        file.path,
-        file.fileId,
-        file.owningUnit,
-        file.unitStatus,
-        file.governanceState,
-        file.isDrift,
-        file.isLegacy,
-        file.sourcePath,
-        file.sourceContentSha256,
-        toJson(file.rawComponentFile),
-      ]
-    );
-  }
+  await insertRows(
+    client,
+    'governance_component_files',
+    [
+      'component_id',
+      'path',
+      'file_id',
+      'owning_unit',
+      'unit_status',
+      'governance_state',
+      'is_drift',
+      'is_legacy',
+      'source_path',
+      'source_content_sha256',
+      { name: 'raw_component_file', cast: 'jsonb' },
+    ],
+    snapshot.componentFiles,
+    (file) => [
+      file.componentId,
+      file.path,
+      file.fileId,
+      file.owningUnit,
+      file.unitStatus,
+      file.governanceState,
+      file.isDrift,
+      file.isLegacy,
+      file.sourcePath,
+      file.sourceContentSha256,
+      toJson(file.rawComponentFile),
+    ]
+  );
 
-  for (const fingerprint of snapshot.fingerprints) {
-    await client.query(
-      `insert into ${schemaName}.governance_fingerprints
-        (path, file_id, source_path, content_hash, governance_hash, state_fingerprint,
-         root_unit, domain_unit, component_unit, owning_unit, source_content_sha256,
-         raw_fingerprint)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb)`,
-      [
-        fingerprint.path,
-        fingerprint.fileId,
-        fingerprint.sourcePath,
-        fingerprint.contentHash,
-        fingerprint.governanceHash,
-        fingerprint.stateFingerprint,
-        fingerprint.rootUnit,
-        fingerprint.domainUnit,
-        fingerprint.componentUnit,
-        fingerprint.owningUnit,
-        fingerprint.sourceContentSha256,
-        toJson(fingerprint.rawFingerprint),
-      ]
-    );
-  }
+  await insertRows(
+    client,
+    'governance_fingerprints',
+    [
+      'path',
+      'file_id',
+      'source_path',
+      'content_hash',
+      'governance_hash',
+      'state_fingerprint',
+      'root_unit',
+      'domain_unit',
+      'component_unit',
+      'owning_unit',
+      'source_content_sha256',
+      { name: 'raw_fingerprint', cast: 'jsonb' },
+    ],
+    snapshot.fingerprints,
+    (fingerprint) => [
+      fingerprint.path,
+      fingerprint.fileId,
+      fingerprint.sourcePath,
+      fingerprint.contentHash,
+      fingerprint.governanceHash,
+      fingerprint.stateFingerprint,
+      fingerprint.rootUnit,
+      fingerprint.domainUnit,
+      fingerprint.componentUnit,
+      fingerprint.owningUnit,
+      fingerprint.sourceContentSha256,
+      toJson(fingerprint.rawFingerprint),
+    ]
+  );
 
   for (const row of snapshot.coverageRows) {
     await client.query(
@@ -2281,30 +2379,41 @@ async function insertGovernanceSnapshot(client, snapshot) {
 async function insertRepositoryCommandSnapshot(client, snapshot) {
   await client.query(`delete from ${schemaName}.repository_commands`);
 
-  for (const command of snapshot.commands) {
-    await client.query(
-      `insert into ${schemaName}.repository_commands
-        (command_id, command_type, command_name, command_path, command_text, domain, sensitivity,
-         runtime_fanout, changed_file_validation_relevant, referenced_files, source_path,
-         source_content_sha256, raw_command)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11, $12, $13::jsonb)`,
-      [
-        command.commandId,
-        command.commandType,
-        command.commandName,
-        command.commandPath,
-        command.commandText,
-        command.domain,
-        command.sensitivity,
-        command.runtimeFanout,
-        command.changedFileValidationRelevant,
-        toJson(command.referencedFiles),
-        command.sourcePath,
-        command.sourceContentSha256,
-        toJson(command.rawCommand),
-      ]
-    );
-  }
+  await insertRows(
+    client,
+    'repository_commands',
+    [
+      'command_id',
+      'command_type',
+      'command_name',
+      'command_path',
+      'command_text',
+      'domain',
+      'sensitivity',
+      'runtime_fanout',
+      'changed_file_validation_relevant',
+      { name: 'referenced_files', cast: 'jsonb' },
+      'source_path',
+      'source_content_sha256',
+      { name: 'raw_command', cast: 'jsonb' },
+    ],
+    snapshot.commands,
+    (command) => [
+      command.commandId,
+      command.commandType,
+      command.commandName,
+      command.commandPath,
+      command.commandText,
+      command.domain,
+      command.sensitivity,
+      command.runtimeFanout,
+      command.changedFileValidationRelevant,
+      toJson(command.referencedFiles),
+      command.sourcePath,
+      command.sourceContentSha256,
+      toJson(command.rawCommand),
+    ]
+  );
 }
 
 async function insertPrReadinessSnapshot(client, snapshot) {
@@ -2348,177 +2457,227 @@ async function insertDocsDispositionSnapshot(client, snapshot) {
   await client.query(`delete from ${schemaName}.doc_disposition_markers`);
   await client.query(`delete from ${schemaName}.doc_disposition_documents`);
 
-  for (const document of snapshot.documents) {
-    await client.query(
-      `insert into ${schemaName}.doc_disposition_documents
-        (document_path, title, status, planning_type, owner, is_active, is_archive,
-         pending_marker_count, task_like_reference_count, source_content_sha256,
-         raw_frontmatter, raw_document)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12::jsonb)`,
-      [
-        document.documentPath,
-        document.title,
-        document.status,
-        document.planningType,
-        document.owner,
-        document.isActive,
-        document.isArchive,
-        document.pendingMarkerCount,
-        document.taskLikeReferenceCount,
-        document.sourceContentSha256,
-        toJson(document.rawFrontmatter),
-        toJson(document.rawDocument),
-      ]
-    );
-  }
+  await insertRows(
+    client,
+    'doc_disposition_documents',
+    [
+      'document_path',
+      'title',
+      'status',
+      'planning_type',
+      'owner',
+      'is_active',
+      'is_archive',
+      'pending_marker_count',
+      'task_like_reference_count',
+      'source_content_sha256',
+      { name: 'raw_frontmatter', cast: 'jsonb' },
+      { name: 'raw_document', cast: 'jsonb' },
+    ],
+    snapshot.documents,
+    (document) => [
+      document.documentPath,
+      document.title,
+      document.status,
+      document.planningType,
+      document.owner,
+      document.isActive,
+      document.isArchive,
+      document.pendingMarkerCount,
+      document.taskLikeReferenceCount,
+      document.sourceContentSha256,
+      toJson(document.rawFrontmatter),
+      toJson(document.rawDocument),
+    ]
+  );
 
-  for (const marker of snapshot.markers) {
-    await client.query(
-      `insert into ${schemaName}.doc_disposition_markers
-        (marker_id, document_path, marker_kind, occurrence_count, sample_lines,
-         source_content_sha256, raw_marker)
-       values ($1, $2, $3, $4, $5::jsonb, $6, $7::jsonb)`,
-      [
-        marker.markerId,
-        marker.documentPath,
-        marker.markerKind,
-        marker.occurrenceCount,
-        toJson(marker.sampleLines),
-        marker.sourceContentSha256,
-        toJson(marker.rawMarker),
-      ]
-    );
-  }
+  await insertRows(
+    client,
+    'doc_disposition_markers',
+    [
+      'marker_id',
+      'document_path',
+      'marker_kind',
+      'occurrence_count',
+      { name: 'sample_lines', cast: 'jsonb' },
+      'source_content_sha256',
+      { name: 'raw_marker', cast: 'jsonb' },
+    ],
+    snapshot.markers,
+    (marker) => [
+      marker.markerId,
+      marker.documentPath,
+      marker.markerKind,
+      marker.occurrenceCount,
+      toJson(marker.sampleLines),
+      marker.sourceContentSha256,
+      toJson(marker.rawMarker),
+    ]
+  );
 
-  for (const reference of snapshot.references) {
-    await client.query(
-      `insert into ${schemaName}.doc_task_like_references
-        (reference_id, document_path, reference_text, reference_prefix, classification,
-         registered_planning_task, occurrence_count, sample_lines, source_content_sha256,
-         raw_reference)
-       values ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10::jsonb)`,
-      [
-        reference.referenceId,
-        reference.documentPath,
-        reference.referenceText,
-        reference.referencePrefix,
-        reference.classification,
-        reference.registeredPlanningTask,
-        reference.occurrenceCount,
-        toJson(reference.sampleLines),
-        reference.sourceContentSha256,
-        toJson(reference.rawReference),
-      ]
-    );
-  }
+  await insertRows(
+    client,
+    'doc_task_like_references',
+    [
+      'reference_id',
+      'document_path',
+      'reference_text',
+      'reference_prefix',
+      'classification',
+      'registered_planning_task',
+      'occurrence_count',
+      { name: 'sample_lines', cast: 'jsonb' },
+      'source_content_sha256',
+      { name: 'raw_reference', cast: 'jsonb' },
+    ],
+    snapshot.references,
+    (reference) => [
+      reference.referenceId,
+      reference.documentPath,
+      reference.referenceText,
+      reference.referencePrefix,
+      reference.classification,
+      reference.registeredPlanningTask,
+      reference.occurrenceCount,
+      toJson(reference.sampleLines),
+      reference.sourceContentSha256,
+      toJson(reference.rawReference),
+    ]
+  );
 
-  for (const action of snapshot.actions) {
-    await client.query(
-      `insert into ${schemaName}.doc_disposition_actions
-        (action_id, priority, action_kind, document_path, reference_text, reason, blocking,
-         evidence, source_content_sha256, raw_action)
-       values ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10::jsonb)`,
-      [
-        action.actionId,
-        action.priority,
-        action.actionKind,
-        action.documentPath,
-        action.referenceText,
-        action.reason,
-        action.blocking,
-        toJson(action.evidence),
-        action.sourceContentSha256,
-        toJson(action.rawAction),
-      ]
-    );
-  }
+  await insertRows(
+    client,
+    'doc_disposition_actions',
+    [
+      'action_id',
+      'priority',
+      'action_kind',
+      'document_path',
+      'reference_text',
+      'reason',
+      'blocking',
+      { name: 'evidence', cast: 'jsonb' },
+      'source_content_sha256',
+      { name: 'raw_action', cast: 'jsonb' },
+    ],
+    snapshot.actions,
+    (action) => [
+      action.actionId,
+      action.priority,
+      action.actionKind,
+      action.documentPath,
+      action.referenceText,
+      action.reason,
+      action.blocking,
+      toJson(action.evidence),
+      action.sourceContentSha256,
+      toJson(action.rawAction),
+    ]
+  );
 }
 
 async function insertKnowledgeSnapshot(client, snapshot) {
-  for (const document of snapshot.documents) {
-    await client.query(
-      `insert into ${schemaName}.knowledge_documents
-        (document_id, document_path, document_type, title, status, planning_type, owner,
-         mandatory, source_content_sha256, raw_frontmatter)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb)`,
-      [
-        document.documentId,
-        document.documentPath,
-        document.documentType,
-        document.title,
-        document.status,
-        document.planningType,
-        document.owner,
-        document.mandatory,
-        document.sourceContentSha256,
-        toJson(document.rawFrontmatter),
-      ]
-    );
-  }
-  for (const section of snapshot.sections) {
-    await client.query(
-      `insert into ${schemaName}.knowledge_document_sections
-        (section_id, document_id, heading, heading_level, ordinal, anchor, start_line)
-       values ($1, $2, $3, $4, $5, $6, $7)`,
-      [
-        section.sectionId,
-        section.documentId,
-        section.heading,
-        section.headingLevel,
-        section.ordinal,
-        section.anchor,
-        section.startLine,
-      ]
-    );
-  }
-  for (const proposal of snapshot.proposals) {
-    await client.query(
-      `insert into ${schemaName}.knowledge_proposals
-        (proposal_id, document_id, proposal_status, mandatory, decision_state)
-       values ($1, $2, $3, $4, $5)`,
-      [
-        proposal.proposalId,
-        proposal.documentId,
-        proposal.proposalStatus,
-        proposal.mandatory,
-        proposal.decisionState,
-      ]
-    );
-  }
-  for (const link of snapshot.documentLinks) {
-    await client.query(
-      `insert into ${schemaName}.knowledge_document_links
-        (from_document_id, to_document_id, relation_type)
-       values ($1, $2, $3)
-       on conflict do nothing`,
-      [link.fromDocumentId, link.toDocumentId, link.relationType]
-    );
-  }
-  for (const action of snapshot.actions) {
-    await client.query(
-      `insert into ${schemaName}.knowledge_action_items
-        (action_id, source_document_id, source_section_id, summary, status, required, line_number)
-       values ($1, $2, $3, $4, $5, $6, $7)`,
-      [
-        action.actionId,
-        action.sourceDocumentId,
-        action.sourceSectionId,
-        action.summary,
-        action.status,
-        action.required,
-        action.lineNumber,
-      ]
-    );
-  }
-  for (const link of snapshot.actionLinks) {
-    await client.query(
-      `insert into ${schemaName}.knowledge_action_links
-        (action_id, target_type, target_id, relation_type)
-       values ($1, $2, $3, $4)
-       on conflict do nothing`,
-      [link.actionId, link.targetType, link.targetId, link.relationType]
-    );
-  }
+  await insertRows(
+    client,
+    'knowledge_documents',
+    [
+      'document_id',
+      'document_path',
+      'document_type',
+      'title',
+      'status',
+      'planning_type',
+      'owner',
+      'mandatory',
+      'source_content_sha256',
+      { name: 'raw_frontmatter', cast: 'jsonb' },
+    ],
+    snapshot.documents,
+    (document) => [
+      document.documentId,
+      document.documentPath,
+      document.documentType,
+      document.title,
+      document.status,
+      document.planningType,
+      document.owner,
+      document.mandatory,
+      document.sourceContentSha256,
+      toJson(document.rawFrontmatter),
+    ]
+  );
+
+  await insertRows(
+    client,
+    'knowledge_document_sections',
+    ['section_id', 'document_id', 'heading', 'heading_level', 'ordinal', 'anchor', 'start_line'],
+    snapshot.sections,
+    (section) => [
+      section.sectionId,
+      section.documentId,
+      section.heading,
+      section.headingLevel,
+      section.ordinal,
+      section.anchor,
+      section.startLine,
+    ]
+  );
+
+  await insertRows(
+    client,
+    'knowledge_proposals',
+    ['proposal_id', 'document_id', 'proposal_status', 'mandatory', 'decision_state'],
+    snapshot.proposals,
+    (proposal) => [
+      proposal.proposalId,
+      proposal.documentId,
+      proposal.proposalStatus,
+      proposal.mandatory,
+      proposal.decisionState,
+    ]
+  );
+
+  await insertRows(
+    client,
+    'knowledge_document_links',
+    ['from_document_id', 'to_document_id', 'relation_type'],
+    snapshot.documentLinks,
+    (link) => [link.fromDocumentId, link.toDocumentId, link.relationType],
+    { suffix: 'on conflict do nothing' }
+  );
+
+  await insertRows(
+    client,
+    'knowledge_action_items',
+    [
+      'action_id',
+      'source_document_id',
+      'source_section_id',
+      'summary',
+      'status',
+      'required',
+      'line_number',
+    ],
+    snapshot.actions,
+    (action) => [
+      action.actionId,
+      action.sourceDocumentId,
+      action.sourceSectionId,
+      action.summary,
+      action.status,
+      action.required,
+      action.lineNumber,
+    ]
+  );
+
+  await insertRows(
+    client,
+    'knowledge_action_links',
+    ['action_id', 'target_type', 'target_id', 'relation_type'],
+    snapshot.actionLinks,
+    (link) => [link.actionId, link.targetType, link.targetId, link.relationType],
+    { suffix: 'on conflict do nothing' }
+  );
 }
 
 async function beginImportTransaction(client) {
@@ -3465,6 +3624,7 @@ module.exports = {
   buildGovernanceAuxiliaryExpectedState,
   buildGovernanceAuxiliarySourceExpectedState,
   buildGovernanceFileSnapshot,
+  buildGovernanceGeneratedInputs,
   buildGovernanceSourceExpectedState,
   buildKnowledgeDocumentSnapshot,
   buildPlanningContentSnapshot,
@@ -3482,6 +3642,8 @@ module.exports = {
   evaluateArcPolicyReadiness,
   governanceImportDeleteTables,
   importContent,
+  insertGovernanceSnapshot,
+  insertRows,
   mergePlanningTaskIds,
   insertDocsDispositionSnapshot,
   insertKnowledgeSnapshot,

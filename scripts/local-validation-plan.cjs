@@ -6,20 +6,55 @@ const { classifyRepositoryChangedScope } = require('../tools/ci/repository-chang
 
 const repoRoot = path.resolve(__dirname, '..');
 const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
+  'scripts/check-governance-unit-coverage.cjs': 'scripts/check-governance-unit-coverage.test.cjs',
+  'scripts/check-governance-unit-coverage.test.cjs':
+    'scripts/check-governance-unit-coverage.test.cjs',
+  'scripts/generate-governance-coverage-report.cjs':
+    'scripts/generate-governance-coverage-report.test.cjs',
+  'scripts/generate-governance-coverage-report.test.cjs':
+    'scripts/generate-governance-coverage-report.test.cjs',
+  'scripts/generate-governance-document-unit-map.cjs':
+    'scripts/generate-governance-document-unit-map.test.cjs',
+  'scripts/generate-governance-document-unit-map.test.cjs':
+    'scripts/generate-governance-document-unit-map.test.cjs',
+  'scripts/generate-governance-file-component-index.cjs':
+    'scripts/generate-governance-file-component-index.test.cjs',
+  'scripts/generate-governance-file-component-index.test.cjs':
+    'scripts/generate-governance-file-component-index.test.cjs',
+  'scripts/generate-governance-remediation-queue.cjs':
+    'scripts/generate-governance-remediation-queue.test.cjs',
+  'scripts/generate-governance-remediation-queue.test.cjs':
+    'scripts/generate-governance-remediation-queue.test.cjs',
   'scripts/generate-planning-lanes.cjs': 'scripts/generate-planning-lanes.test.cjs',
+  'scripts/generate-planning-lanes.test.cjs': 'scripts/generate-planning-lanes.test.cjs',
   'scripts/generate-workboard.cjs': 'scripts/generate-workboard.test.cjs',
+  'scripts/generate-workboard.test.cjs': 'scripts/generate-workboard.test.cjs',
   'scripts/governance-db-check.cjs': 'scripts/governance-db-check.test.cjs',
+  'scripts/governance-db-check.test.cjs': 'scripts/governance-db-check.test.cjs',
   'scripts/governance-db-export.cjs': 'scripts/governance-db-export.test.cjs',
+  'scripts/governance-db-export.test.cjs': 'scripts/governance-db-export.test.cjs',
   'scripts/governance-db-import.cjs': 'scripts/governance-db-import.test.cjs',
+  'scripts/governance-db-import.test.cjs': 'scripts/governance-db-import.test.cjs',
+  'scripts/governance-generated-paths.test.cjs': 'scripts/governance-generated-paths.test.cjs',
   'scripts/governance-refresh.cjs': 'scripts/governance-refresh.test.cjs',
+  'scripts/governance-refresh.test.cjs': 'scripts/governance-refresh.test.cjs',
   'scripts/planning-db-check.cjs': 'scripts/planning-db-check.test.cjs',
+  'scripts/planning-db-check.test.cjs': 'scripts/planning-db-check.test.cjs',
   'scripts/planning-db-export.cjs': 'scripts/planning-db-export.test.cjs',
+  'scripts/planning-db-export.test.cjs': 'scripts/planning-db-export.test.cjs',
   'scripts/planning-db-import.cjs': 'scripts/planning-db-import.test.cjs',
+  'scripts/planning-db-import.test.cjs': 'scripts/planning-db-import.test.cjs',
   'scripts/planning-db-migrate.cjs': 'scripts/planning-db-migrate.test.cjs',
+  'scripts/planning-db-migrate.test.cjs': 'scripts/planning-db-migrate.test.cjs',
   'scripts/planning-db-operate.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db-operate.test.cjs': 'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db-query.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query.test.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db-run.cjs': 'scripts/planning-db-run.test.cjs',
+  'scripts/planning-db-run.test.cjs': 'scripts/planning-db-run.test.cjs',
   'scripts/planning-db-surface-inventory-check.cjs':
+    'scripts/planning-db-surface-inventory-check.test.cjs',
+  'scripts/planning-db-surface-inventory-check.test.cjs':
     'scripts/planning-db-surface-inventory-check.test.cjs',
 });
 
@@ -101,6 +136,7 @@ const VERIFY_CHANGED_GROUPS = Object.freeze({
   web: Object.freeze([step('test-web-changed', 'pnpm', 'test:web:changed')]),
   planningDb: Object.freeze([
     step('planning-db-inventory-check', 'pnpm', 'planning:db:inventory:check'),
+    step('test-planning-db-migrations', 'pnpm', 'test:planning:db:migrations'),
     step('test-planning-db', 'pnpm', 'test:planning:db'),
   ]),
   developerWorkflowSelfTest: Object.freeze([
@@ -130,13 +166,15 @@ function hasPlanningDbFullSuiteChange(changedFiles) {
   return changedFiles.some((filePath) =>
     matchesAny(filePath, [
       'infra/planning-db/',
-      'tools/planning-db/',
+      'tools/planning-db/knowledge/',
       'tools/governance-db/',
-      /^scripts\/(?:planning-db-|governance-db-).+\.test\.cjs$/u,
-      'scripts/governance-generated-paths.test.cjs',
-      'scripts/generate-workboard.test.cjs',
-      'scripts/generate-planning-lanes.test.cjs',
     ])
+  );
+}
+
+function hasPlanningDbMigrationChange(changedFiles) {
+  return changedFiles.some((filePath) =>
+    /^tools\/planning-db\/migrations\/.+\.sql$/u.test(filePath)
   );
 }
 
@@ -238,8 +276,11 @@ function buildVerifyChangedPlan(files) {
     pushSteps(plan, VERIFY_CHANGED_GROUPS.web);
   }
   pushSteps(plan, planningWorkflowTestSteps(changedFiles));
-  if (hasPlanningDbFullSuiteChange(changedFiles)) {
+  if (hasPlanningDbMigrationChange(changedFiles)) {
     pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[1]);
+  }
+  if (hasPlanningDbFullSuiteChange(changedFiles)) {
+    pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[2]);
   }
   if (hasDeveloperWorkflowVerifierChange(changedFiles)) {
     pushSteps(plan, VERIFY_CHANGED_GROUPS.developerWorkflowSelfTest);
@@ -290,6 +331,7 @@ module.exports = {
   hasWebChange,
   hasPlanningDbChange,
   hasPlanningDbFullSuiteChange,
+  hasPlanningDbMigrationChange,
   normalizeChangedFiles,
   planningWorkflowTestSteps,
 };

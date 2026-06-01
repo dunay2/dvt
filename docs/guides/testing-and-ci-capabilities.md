@@ -22,26 +22,27 @@ See also:
 
 ## Root Commands
 
-| Capability                     | Command                          | Source                                                                                               |
-| ------------------------------ | -------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Full workspace build           | `pnpm build`                     | [`package.json`](../../package.json)                                                                 |
-| Full recursive test run        | `pnpm test`                      | [`package.json`](../../package.json)                                                                 |
-| Web PR CI test partition       | `pnpm test:web:ci`               | [`package.json`](../../package.json), [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts) |
-| Web changed-file test routing  | `pnpm test:web:changed`          | [`package.json`](../../package.json), [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts) |
-| Web E2E test run               | `pnpm test:web:e2e`              | [`package.json`](../../package.json)                                                                 |
-| Full type-check gate           | `pnpm type-check`                | [`package.json`](../../package.json)                                                                 |
-| Fast pre-push changed gate     | `pnpm verify:changed`            | [`package.json`](../../package.json)                                                                 |
-| Pre-push verification gate     | `pnpm verify:prepush`            | [`package.json`](../../package.json)                                                                 |
-| Changed-files auto-fix         | `pnpm fix:changed`               | [`package.json`](../../package.json)                                                                 |
-| Changed-files lint/format gate | `node scripts/check-changed.cjs` | [`scripts/check-changed.cjs`](../../scripts/check-changed.cjs)                                       |
-| PR closeout rail               | `pnpm pr:closeout`               | [`scripts/pr-closeout.cjs`](../../scripts/pr-closeout.cjs)                                           |
-| Immediate PR check gate        | `pnpm pr:checks`                 | [`tools/ci/pr-check-triage.mjs`](../../tools/ci/pr-check-triage.mjs)                                 |
-| CI tool contract suite         | `pnpm test:ci-tools`             | [`package.json`](../../package.json)                                                                 |
-| Affected workspace build       | `pnpm ci:affected:build`         | [`package.json`](../../package.json)                                                                 |
-| Affected workspace lint        | `pnpm ci:affected:lint`          | [`package.json`](../../package.json)                                                                 |
-| Affected workspace test        | `pnpm ci:affected:test`          | [`package.json`](../../package.json)                                                                 |
-| Affected workspace type-check  | `pnpm ci:affected:typecheck`     | [`package.json`](../../package.json)                                                                 |
-| ADR-0000 regression gate       | `pnpm traceability:adr0`         | [`package.json`](../../package.json), [`traceability.config.json`](../../traceability.config.json)   |
+| Capability                     | Command                            | Source                                                                                                                     |
+| ------------------------------ | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Full workspace build           | `pnpm build`                       | [`package.json`](../../package.json)                                                                                       |
+| Full recursive test run        | `pnpm test`                        | [`package.json`](../../package.json)                                                                                       |
+| Web PR CI test partition       | `pnpm test:web:ci`                 | [`package.json`](../../package.json), [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts)                       |
+| Web changed-file test routing  | `pnpm test:web:changed`            | [`package.json`](../../package.json), [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts)                       |
+| Web E2E test run               | `pnpm test:web:e2e`                | [`package.json`](../../package.json)                                                                                       |
+| Full type-check gate           | `pnpm type-check`                  | [`package.json`](../../package.json)                                                                                       |
+| Fast pre-push changed gate     | `pnpm verify:changed`              | [`package.json`](../../package.json)                                                                                       |
+| Pre-push verification gate     | `pnpm verify:prepush`              | [`package.json`](../../package.json)                                                                                       |
+| Planning DB migration tests    | `pnpm test:planning:db:migrations` | [`package.json`](../../package.json), [`scripts/planning-db-migrate.test.cjs`](../../scripts/planning-db-migrate.test.cjs) |
+| Changed-files auto-fix         | `pnpm fix:changed`                 | [`package.json`](../../package.json)                                                                                       |
+| Changed-files lint/format gate | `node scripts/check-changed.cjs`   | [`scripts/check-changed.cjs`](../../scripts/check-changed.cjs)                                                             |
+| PR closeout rail               | `pnpm pr:closeout`                 | [`scripts/pr-closeout.cjs`](../../scripts/pr-closeout.cjs)                                                                 |
+| Immediate PR check gate        | `pnpm pr:checks`                   | [`tools/ci/pr-check-triage.mjs`](../../tools/ci/pr-check-triage.mjs)                                                       |
+| CI tool contract suite         | `pnpm test:ci-tools`               | [`package.json`](../../package.json)                                                                                       |
+| Affected workspace build       | `pnpm ci:affected:build`           | [`package.json`](../../package.json)                                                                                       |
+| Affected workspace lint        | `pnpm ci:affected:lint`            | [`package.json`](../../package.json)                                                                                       |
+| Affected workspace test        | `pnpm ci:affected:test`            | [`package.json`](../../package.json)                                                                                       |
+| Affected workspace type-check  | `pnpm ci:affected:typecheck`       | [`package.json`](../../package.json)                                                                                       |
+| ADR-0000 regression gate       | `pnpm traceability:adr0`           | [`package.json`](../../package.json), [`traceability.config.json`](../../traceability.config.json)                         |
 
 Warm-build note:
 
@@ -227,6 +228,24 @@ Command semantics:
   changed-file docs, markdown, formatting, QA-artifact, and focused
   adjacent-script gates without invoking root type-check or the full planning
   DB suite for every planning workflow script edit.
+- Governance coverage/remediation report generator edits are routed to their
+  exact `node --test scripts/generate-governance-*.test.cjs` suites. That keeps
+  AI iteration on report rendering and DB-source normalization under the
+  adjacent generator contract instead of escalating to the full planning DB
+  suite unless migrations, DB rails, or shared query-store surfaces changed.
+- Planning DB migration-only edits under `tools/planning-db/migrations/*.sql`
+  route through `pnpm test:planning:db:migrations`, which exercises
+  `scripts/planning-db-migrate.test.cjs` without running the full
+  `pnpm test:planning:db` package. In the 2026-06-01 local measurement, the
+  focused command covered 60 migration tests in 558.3258 ms of Node test time,
+  while the full planning DB suite covered 250 tests and took 83.929 seconds in
+  the final control run.
+- Planning/governance DB test-file edits under
+  `scripts/planning-db-*.test.cjs`, `scripts/governance-db-*.test.cjs`, and
+  the generated planning DB report tests route to the changed `node --test`
+  file directly. Shared DB implementation surfaces under `infra/planning-db/`,
+  `tools/planning-db/knowledge/`, and `tools/governance-db/` keep the full
+  `pnpm test:planning:db` route.
 - Changed-file gates use the local changed-file set, not only committed
   `HEAD` diff. That set is the union of the merge-base diff, staged files,
   unstaged tracked files, and untracked non-ignored files. A local pre-push
