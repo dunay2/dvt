@@ -354,3 +354,87 @@ flowchart TD
 - No-debt/no-stub position: no production cache, no skipped generated
   governance check, no reduced document corpus, no hook bypass, and no
   placeholder implementation were introduced.
+
+## CI Tool Contracts Critical Path Iteration
+
+- Problem summary: after the governance DB-first optimizations, visible PR CI
+  time still stays high because the `CI tool contracts` job pays the full
+  `setup-node-pnpm` composite action and `pnpm install` cost before running
+  contract tests. The latest observed PR checks showed `CI tool contracts` at
+  about 58s while `PR Quality Checks` stayed near the critical path at about
+  79s.
+- Root cause: `pnpm test:ci-tools` mixes pure static workflow/policy contract
+  tests with a small set of executable tests that spawn `pnpm`, `tsx`, or
+  installed tools. That forces every PR to install the full workspace even when
+  the changed slice only needs Node-native static CI policy checks.
+- Selected option and rationale: split the CI tool contract suite into
+  `static` and `executable` partitions. Keep the required `CI tool contracts`
+  job name on the fast static lane using only `actions/setup-node`, and run the
+  executable partition in a separate install-backed job only when the diff
+  touches package/dependency/doc-tooling surfaces that can affect those
+  executable assertions. Pushes to `main` still run the executable partition.
+- Rejected alternatives: removing executable tests from CI, running no CI tool
+  contracts for unrelated PRs, or relying on local `verify:prepush` only. Those
+  would reduce merge-gate coverage instead of removing duplicate setup cost.
+- Expected measurable cut: PRs that only touch CI policy, workflow routing, or
+  static tool contracts should avoid one full pnpm install on the required
+  `CI tool contracts` check. PRs that touch docs tooling or dependency surfaces
+  still pay the full executable contract job.
+- Validation plan:
+  - `node --test tools/ci/ci-tool-test-suite.test.mjs tools/ci/emit-scope.test.mjs tools/ci/workflow-scope-classification.test.mjs tools/ci/workflow-pattern-parity.test.mjs tools/ci/turbo-workspace-task-contract.test.mjs`
+  - `node tools/ci/ci-tool-test-suite.mjs static`
+  - `pnpm test:ci-tools`
+  - `pnpm governance:refresh`
+  - `pnpm verify:prepush`
+- No-debt/no-stub position: no job is removed, no required check is bypassed,
+  no pnpm-backed executable assertion is silently dropped, and no placeholder
+  routing is introduced.
+- Implementation notes:
+  - Added `tools/ci/ci-tool-test-suite.mjs` as the single owner for CI tool
+    contract test partitioning.
+  - Added `test:ci-tools:static` and `test:ci-tools:executable` while keeping
+    `test:ci-tools` as the full local compatibility alias.
+  - Rewired the required `CI tool contracts` workflow job to run the static
+    partition with `actions/setup-node` and no `pnpm install`.
+  - Added `CI tool executable contracts` as the install-backed job for the
+    executable partition, scoped through
+    `ci_tool_executable_contracts_relevant`.
+  - Moved package-backed CI tool tests that import `typescript` or `js-yaml`
+    into the executable partition after the first remote run proved they cannot
+    run in the Node-only static job without `node_modules`.
+  - Raised the local fingerprint baseline `maxBytes` guard from 2,120,000 to
+    2,130,000 after the static suite exposed that the governed file count
+    increase pushed the generated shard to 2,122,000 bytes.
+- Validation evidence:
+  - Red run:
+    `node --test tools/ci/ci-tool-test-suite.test.mjs tools/ci/emit-scope.test.mjs tools/ci/workflow-scope-classification.test.mjs tools/ci/workflow-pattern-parity.test.mjs tools/ci/repository-command-catalog.test.mjs tools/ci/turbo-workspace-task-contract.test.mjs`
+    failed 1/55 because the workflow parity test asserted a single-line YAML
+    output for `ci_tool_executable_contracts_relevant`.
+  - Green run:
+    `node --test tools/ci/ci-tool-test-suite.test.mjs tools/ci/emit-scope.test.mjs tools/ci/workflow-scope-classification.test.mjs tools/ci/workflow-pattern-parity.test.mjs tools/ci/repository-command-catalog.test.mjs tools/ci/turbo-workspace-task-contract.test.mjs`
+    passed 55/55 after the assertion checked the wrapped YAML semantics.
+  - `Measure-Command { node tools/ci/ci-tool-test-suite.mjs static }` measured
+    `static_seconds=5.205` locally.
+  - Red run: `node tools/ci/ci-tool-test-suite.mjs static` initially failed
+    because `local-governance-file-fingerprint-baseline` exceeded `maxBytes`
+    by about 2 KB after adding governed files.
+  - Green run: `node tools/ci/ci-tool-test-suite.mjs static` passed 163/163
+    subtests after the bounded `maxBytes` update.
+  - `pnpm test:ci-tools:executable` passed 16/16 subtests in
+    `duration_ms 30467.5439`.
+  - `pnpm test:ci-tools` passed 179/179 subtests in
+    `duration_ms 32488.7337`, preserving the full local compatibility gate.
+  - Remote PR run #1420: required `CI tool contracts` failed in 13s, proving the
+    setup cut but exposing `ERR_MODULE_NOT_FOUND` for `typescript` and
+    `js-yaml` in three tests that were still classified as static.
+  - `node --test tools/ci/ci-tool-test-suite.test.mjs` passed 4/4 after adding
+    the package-backed exclusion guard.
+  - `node tools/ci/ci-tool-test-suite.mjs static` passed 156/156 subtests in
+    `duration_ms 3402.4957` after moving those tests to the executable
+    partition.
+  - `pnpm test:ci-tools:executable` passed 24/24 subtests in
+    `duration_ms 20230.9132`.
+  - `pnpm governance:refresh` passed; generated surfaces stabilized after 2
+    passes, governance DB import reported 5,221 governance files, 58
+    governance components, and 39 remediation tasks, and governance DB export
+    check passed.

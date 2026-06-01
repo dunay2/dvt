@@ -203,6 +203,8 @@ allowedImplementationSurfaces:
   - tools/ci/repository-command-catalog.mjs
   - tools/ci/repository-command-catalog.test.mjs
   - tools/ci/scope-config.mjs
+  - tools/ci/ci-tool-test-suite.mjs
+  - tools/ci/ci-tool-test-suite.test.mjs
   - tools/ci/emit-scope.mjs
   - tools/ci/emit-workspace-matrix.mjs
   - tools/ci/emit-test-matrix.mjs
@@ -231,6 +233,7 @@ allowedImplementationSurfaces:
   - scripts/verify-changed.test.cjs
   - scripts/README.md
   - docs/guides/testing-and-ci-capabilities.md
+  - docs/generated-docs-policy.json
   - docs/planning/proposals/mandatory/governance-and-docs/repository-command-catalog-normalization-plan-20260508.md
   - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
   - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
@@ -509,7 +512,125 @@ redGreenCycles:
       - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
       - docs/planning/closeouts/**
     greenTest: node --test scripts/planning-db-import.test.cjs
+  - id: ci-tool-contract-static-executable-split
+    redTest: pnpm docs:feature-mechanization:implementation
+    expectedFailure: the CI tool contract split adds a new test-suite partition helper and scope output that are outside the selected mechanization manifest until this plan declares them.
+    patchSurfaces:
+      - .github/workflows/ci.yml
+      - package.json
+      - docs/generated-docs-policy.json
+      - tools/ci/ci-tool-test-suite.mjs
+      - tools/ci/ci-tool-test-suite.test.mjs
+      - tools/ci/policy/workflow-scope.json
+      - tools/ci/scope-config.mjs
+      - tools/ci/emit-scope.test.mjs
+      - tools/ci/repository-command-catalog.mjs
+      - tools/ci/repository-command-catalog.test.mjs
+      - tools/ci/workflow-pattern-parity.test.mjs
+      - tools/ci/workflow-scope-classification.test.mjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test tools/ci/ci-tool-test-suite.test.mjs tools/ci/emit-scope.test.mjs tools/ci/workflow-scope-classification.test.mjs tools/ci/workflow-pattern-parity.test.mjs tools/ci/repository-command-catalog.test.mjs
 symbols:
+  - name: repoRoot
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - CI tool contracts should have one repository-rooted test partition owner
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: CI_TOOL_TEST_MODES
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Keep CI tool test partition modes explicit and testable
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: EXECUTABLE_CI_TOOL_TESTS
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Separate install-backed executable assertions from Node-native static CI policy assertions
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: normalizePath
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - CI tool test partitioning must be stable across Windows and Linux paths
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: discoverCiToolTests
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Avoid duplicating the full tools/ci test file list across package scripts and workflow jobs
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: assertCiToolTestPartition
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - CI tool test partitioning must fail closed when executable test paths drift
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: buildCiToolTestList
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Remove duplicate local and remote CI tool test command construction
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: runCiToolTests
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Keep package scripts as thin aliases over the governed test partition runner
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: parseCiToolTestMode
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Reject unknown CI tool partition modes instead of silently running the wrong suite
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
   - name: readTrackedDocumentPaths
     path: scripts/planning-db-import.cjs
     dddOwner: ValidateCiScopeOptimizationContract

@@ -31,11 +31,13 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Setup pnpm, cache and dependencies
-        uses: ./.github/actions/setup-node-pnpm
+      - name: Setup Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version: 22.x
 
-      - name: Run CI tool contract tests
-        run: pnpm test:ci-tools
+      - name: Run static CI tool contract tests
+        run: node tools/ci/ci-tool-test-suite.mjs static
 
   detect-affected:
     name: Detect affected workspaces
@@ -46,6 +48,8 @@ jobs:
       matrix: ${{ steps.matrix.outputs.matrix }}
       docs_changed: ${{ steps.scope.outputs.docs_changed }}
       changed_file_validation_relevant: ${{ steps.scope.outputs.changed_file_validation_relevant }}
+      ci_tool_executable_contracts_relevant:
+        ${{ steps.scope.outputs.ci_tool_executable_contracts_relevant }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -68,6 +72,26 @@ jobs:
         env:
           GIT_BASE: origin/${{ github.base_ref }}
           GIT_HEAD: ${{ github.sha }}
+
+  ci-tool-executable-contracts:
+    name: CI tool executable contracts
+    needs: detect-affected
+    if: >-
+      github.event_name != 'pull_request' ||
+      needs.detect-affected.outputs.ci_tool_executable_contracts_relevant == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
+
+      - name: Setup pnpm, cache and dependencies
+        uses: ./.github/actions/setup-node-pnpm
+
+      - name: Run executable CI tool contract tests
+        run: pnpm test:ci-tools:executable
 
   lint-and-format:
     name: ESLint + Prettier (changed files)
