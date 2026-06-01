@@ -15,6 +15,10 @@ concurrency:
     github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
 jobs:
   detect_test_matrix:
     name: Detect package test matrix
@@ -108,7 +112,7 @@ jobs:
         if:
           github.event_name != 'pull_request' || steps.scope.outputs.adapter_temporal == 'true' ||
           steps.scope.outputs.root_build_sensitive == 'true'
-        run: pnpm --filter "@dvt/adapter-temporal^..." --workspace-concurrency=4 build
+        run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/adapter-temporal^...
 
       - name: Run adapter-temporal tests
         if:
@@ -157,7 +161,7 @@ jobs:
         if:
           github.event_name != 'pull_request' || steps.scope.outputs.web == 'true' ||
           steps.scope.outputs.root_build_sensitive == 'true'
-        run: pnpm --filter "@dvt/web^..." --workspace-concurrency=4 build
+        run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/web^...
 
       - name: Run governed web Vitest changed suites (PR)
         if:
@@ -254,7 +258,7 @@ jobs:
         run: node --test tools/ci/adapter-postgres-import-alias-regression.test.mjs
 
       - name: Build adapter-postgres dependency graph
-        run: pnpm --workspace-concurrency=4 --filter @dvt/adapter-postgres... --if-present run build
+        run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/adapter-postgres...
 
       - name: Prove adapter-postgres app-role runtime and direct RLS
         run:
@@ -295,7 +299,7 @@ jobs:
       - name: Build engine dependency graph (once, before tests)
         if:
           github.event_name != 'pull_request' || steps.scope.outputs.determinism_relevant == 'true'
-        run: pnpm --filter "@dvt/engine^..." --workspace-concurrency=4 build
+        run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/engine^...
 
       - name: Run determinism tests
         if:
@@ -340,7 +344,7 @@ jobs:
 
       - name: Build engine dependency graph (once, before tests)
         if: github.event_name != 'pull_request' || steps.scope.outputs.coverage_relevant == 'true'
-        run: pnpm --filter "@dvt/engine^..." --workspace-concurrency=4 build
+        run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/engine^...
 
       - name: Run engine coverage (with threshold enforcement)
         if: github.event_name != 'pull_request' || steps.scope.outputs.coverage_relevant == 'true'

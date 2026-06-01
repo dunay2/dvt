@@ -468,7 +468,7 @@ export const TEST_PACKAGE_ENTRIES = WORKSPACE_ENTRIES.filter(
   key,
   name,
   pkg,
-  command: `pnpm --filter ${pkg} test`,
+  command: `pnpm --filter ${pkg} ${pkg === 'dvt-api' ? 'test:ci' : 'test'}`,
 }));
 
 function normalizePath(path) {

@@ -82,6 +82,27 @@ test('test matrix includes affected package tests and planner contract dependenc
   );
 });
 
+test('test matrix routes API package tests through the CI lifecycle bypass', () => {
+  const workspacePackages = collectWorkspacePackagesByName();
+  const apiPackage = workspacePackages.get('dvt-api');
+  const matrix = buildTestMatrixOutputs(['apps/api/src/server.ts']);
+
+  assert.equal(
+    apiPackage?.scripts?.pretest,
+    'node ../../scripts/skip-pretest-if-ci.cjs || pnpm --filter "dvt-api^..." build'
+  );
+  assert.equal(apiPackage?.scripts?.test, 'vitest run --config vitest.config.ts');
+  assert.equal(apiPackage?.scripts?.['test:ci'], 'vitest run --config vitest.config.ts');
+  assert.deepEqual(matrix.include, [
+    {
+      key: 'api',
+      name: 'api',
+      pkg: 'dvt-api',
+      command: 'pnpm --filter dvt-api test:ci',
+    },
+  ]);
+});
+
 test('test matrix fans out to package tests for root build sensitive changes', () => {
   const matrix = buildTestMatrixOutputs(['turbo.json']);
 
