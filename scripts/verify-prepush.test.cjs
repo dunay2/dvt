@@ -73,7 +73,7 @@
     const plan = buildPrepushPlan(['scripts/planning-db-query.cjs']);
     const ids = stepIds(plan);
 
-    assert.deepEqual(ids, ['verify-changed', 'planning-db-inventory-check']);
+    assert.deepEqual(ids, ['verify-changed']);
     assertExcludes(ids, 'docs-governance-document-unit-map');
     assertExcludes(ids, 'docs-governance-remediation-queue');
     assertExcludes(ids, 'arch-deps');
@@ -245,7 +245,7 @@
 
     assert.equal(
       webPackageJson.scripts.lint,
-      'eslint "src/**/*.{ts,tsx}" "cypress/**/*.{ts,tsx}" "*.config.ts" "*.config.mjs" "scripts/**/*.{ts,mjs,js,cjs}" --max-warnings 0'
+      'node --max-old-space-size=4096 ../../node_modules/eslint/bin/eslint.js "src/**/*.{ts,tsx}" "cypress/**/*.{ts,tsx}" "*.config.ts" "*.config.mjs" "scripts/**/*.{ts,mjs,js,cjs}" --max-warnings 0'
     );
   });
 

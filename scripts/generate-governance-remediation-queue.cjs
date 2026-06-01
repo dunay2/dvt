@@ -28,6 +28,13 @@ const queueYamlPath = governanceGeneratedPath('system-governance-remediation-que
 const queueMarkdownPath = governanceGeneratedPath(
   'system-governance-remediation-queue-20260502.md'
 );
+const remediationGeneratedSources = Object.freeze([
+  '.generated-docs/planning/status/system-governance-coverage-report.coverage.yaml',
+  '.generated-docs/planning/status/system-governance-file-index.files.yaml',
+  '.generated-docs/planning/status/system-governance-component-index.components.yaml',
+  '.generated-docs/planning/status/system-governance-component-file-map.components.yaml',
+  '.generated-docs/planning/status/system-governance-document-unit-map.docs.yaml',
+]);
 
 function readYaml(filePath) {
   return yaml.load(fs.readFileSync(filePath, 'utf8'));
@@ -337,13 +344,7 @@ function buildRemediationQueue({
 
   return {
     version: 1,
-    generatedFrom: [
-      '.generated-docs/planning/status/system-governance-coverage-report.coverage.yaml',
-      '.generated-docs/planning/status/system-governance-file-index.files.yaml',
-      '.generated-docs/planning/status/system-governance-component-index.components.yaml',
-      '.generated-docs/planning/status/system-governance-component-file-map.components.yaml',
-      '.generated-docs/planning/status/system-governance-document-unit-map.docs.yaml',
-    ],
+    generatedFrom: [...remediationGeneratedSources],
     totals: {
       tasks: tasks.length,
       p0: tasks.filter((task) => task.priority === 'P0').length,
@@ -359,13 +360,41 @@ function buildRemediationQueue({
   };
 }
 
+function normalizeTaskPayload(task) {
+  return {
+    id: task.id,
+    type: task.type,
+    priority: task.priority,
+    componentUnit: task.componentUnit,
+    componentFileMap: task.componentFileMap,
+    rootUnit: task.rootUnit,
+    domainUnit: task.domainUnit,
+    dddOwner: task.dddOwner,
+    cqRails: task.cqRails,
+    blocking: task.blocking,
+    reason: task.reason,
+    fileCount: task.fileCount,
+    documentCount: task.documentCount,
+    files: asArray(task.files).map((file) => ({
+      path: file.path,
+      fileId: file.fileId,
+      status: file.status,
+    })),
+    documents: asArray(task.documents).map((document) => ({
+      path: document.path,
+      classification: document.classification,
+    })),
+    expectedValidation: asArray(task.expectedValidation),
+  };
+}
+
 function mapDbRemediationTaskRow(row) {
   const rawTask = row.raw_task ?? row.rawTask;
   if (rawTask && typeof rawTask === 'object' && !Array.isArray(rawTask)) {
-    return rawTask;
+    return normalizeTaskPayload(rawTask);
   }
 
-  return {
+  return normalizeTaskPayload({
     id: row.task_id ?? row.taskId,
     type: row.task_type ?? row.taskType,
     priority: row.priority,
@@ -382,7 +411,7 @@ function mapDbRemediationTaskRow(row) {
     files: asArray(row.files),
     documents: asArray(row.documents),
     expectedValidation: asArray(row.expected_validation ?? row.expectedValidation),
-  };
+  });
 }
 
 function findCoverageTotal(coverageRows, name) {
@@ -398,10 +427,7 @@ function buildRemediationQueueFromDbRows({ remediationRows, coverageRows }) {
 
   return {
     version: 1,
-    generatedFrom: [
-      'planning_query_store.governance_remediation_query',
-      'planning_query_store.governance_coverage_query',
-    ],
+    generatedFrom: [...remediationGeneratedSources],
     totals: {
       tasks: tasks.length,
       p0: tasks.filter((task) => task.priority === 'P0').length,

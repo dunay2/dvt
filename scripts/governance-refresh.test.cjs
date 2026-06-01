@@ -55,10 +55,10 @@ test('governance refresh uses local governance reports before DB validation', ()
       'planning:db:check',
       'planning:db:inventory:check',
       'planning:db:export:check',
-      'docs:governance:coverage-report',
-      'docs:governance:remediation-queue',
       'governance:db:import',
       'governance:db:check',
+      'docs:governance:coverage-report',
+      'docs:governance:remediation-queue',
       'governance:db:export:check',
     ]
   );
@@ -69,6 +69,14 @@ test('governance refresh uses local governance reports before DB validation', ()
   assert.deepEqual(
     stages.databaseStages.find((stage) => stage.id === 'governance-db-import-final').args,
     ['--', '--if-stale']
+  );
+  assert.deepEqual(
+    stages.databaseStages.find((stage) => stage.id === 'coverage-report-final').env,
+    { DVT_GOVERNANCE_REPORT_SOURCE: 'db' }
+  );
+  assert.deepEqual(
+    stages.databaseStages.find((stage) => stage.id === 'remediation-queue-final').env,
+    { DVT_GOVERNANCE_REPORT_SOURCE: 'db' }
   );
 });
 

@@ -79,14 +79,6 @@ function buildRefreshStages() {
         script: 'planning:db:export:check',
       },
       {
-        id: 'coverage-report-final',
-        script: 'docs:governance:coverage-report',
-      },
-      {
-        id: 'remediation-queue-final',
-        script: 'docs:governance:remediation-queue',
-      },
-      {
         id: 'governance-db-import-final',
         script: 'governance:db:import',
         args: ['--', '--if-stale'],
@@ -94,6 +86,16 @@ function buildRefreshStages() {
       {
         id: 'governance-db-check',
         script: 'governance:db:check',
+      },
+      {
+        id: 'coverage-report-final',
+        script: 'docs:governance:coverage-report',
+        env: { DVT_GOVERNANCE_REPORT_SOURCE: 'db' },
+      },
+      {
+        id: 'remediation-queue-final',
+        script: 'docs:governance:remediation-queue',
+        env: { DVT_GOVERNANCE_REPORT_SOURCE: 'db' },
       },
       {
         id: 'governance-db-export-check',
