@@ -560,9 +560,10 @@ function buildPlanningContentSnapshot() {
   return { sources, lanes, tasks, dependencies, evidenceRefs };
 }
 
-function buildGovernanceGeneratedInputs() {
-  const fileComponentOutputs = buildGovernanceFileComponentOutputs();
-  const documentOutputs = buildDocumentUnitOutputs();
+function buildGovernanceGeneratedInputs(options = {}) {
+  const fileComponentOutputs =
+    options.fileComponentOutputs || buildGovernanceFileComponentOutputs();
+  const documentOutputs = options.documentOutputs || buildDocumentUnitOutputs();
   const index = fileComponentOutputs.fileIndexManifest;
   const componentIndex = fileComponentOutputs.componentIndexManifest;
   const componentFileMap = fileComponentOutputs.componentFileMapManifest;
@@ -602,6 +603,8 @@ function buildGovernanceGeneratedInputs() {
       repoRelative(governanceRemediationQueuePath),
       remediationQueue
     ),
+    fileComponentOutputs,
+    documentOutputs,
     fileShardSources: new Map(
       Object.entries(fileComponentOutputs.fileIndexShardPayloads).map(([sourcePath, payload]) => [
         sourcePath,
@@ -616,8 +619,8 @@ function buildGovernanceGeneratedInputs() {
   };
 }
 
-function buildGovernanceFileSnapshot() {
-  const generatedInputs = buildGovernanceGeneratedInputs();
+function buildGovernanceFileSnapshot(options = {}) {
+  const generatedInputs = options.generatedInputs || buildGovernanceGeneratedInputs();
   const indexSource = generatedInputs.indexSource;
   const index = indexSource.parsed;
   const componentIndexSource = generatedInputs.componentIndexSource;
@@ -3465,6 +3468,7 @@ module.exports = {
   buildGovernanceAuxiliaryExpectedState,
   buildGovernanceAuxiliarySourceExpectedState,
   buildGovernanceFileSnapshot,
+  buildGovernanceGeneratedInputs,
   buildGovernanceSourceExpectedState,
   buildKnowledgeDocumentSnapshot,
   buildPlanningContentSnapshot,

@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const {
   buildDocsDispositionSnapshot,
   buildGovernanceFileSnapshot,
+  buildGovernanceGeneratedInputs,
   buildPlanningContentSnapshot,
   buildPrReadinessSnapshot,
   buildRiskDebtSnapshot,
@@ -22,14 +23,27 @@ const { schemaName } = require('./planning-db-migrate.cjs');
 
 const governanceFileSnapshotFixture = (() => {
   let snapshot;
+  let generatedInputs;
 
-  return () => {
+  function readGeneratedInputs() {
+    if (!generatedInputs) {
+      generatedInputs = buildGovernanceGeneratedInputs();
+    }
+
+    return generatedInputs;
+  }
+
+  function readSnapshot() {
     if (!snapshot) {
-      snapshot = buildGovernanceFileSnapshot();
+      snapshot = buildGovernanceFileSnapshot({ generatedInputs: readGeneratedInputs() });
     }
 
     return snapshot;
-  };
+  }
+
+  readSnapshot.generatedInputs = readGeneratedInputs;
+
+  return readSnapshot;
 })();
 
 test('planning content snapshot preserves real lane task content and hashes', () => {
@@ -333,6 +347,26 @@ test('planning content snapshot normalizes dependencies and evidence refs for DB
   assert.ok(Number.isInteger(evidenceRef.evidenceOrder));
 });
 
+test('governance file snapshot consumes supplied generated inputs', () => {
+  const generatedInputs = governanceFileSnapshotFixture.generatedInputs();
+  const sentinelRawSourceText = 'fixture raw source text';
+  const snapshot = buildGovernanceFileSnapshot({
+    generatedInputs: {
+      ...generatedInputs,
+      indexSource: {
+        ...generatedInputs.indexSource,
+        rawSourceText: sentinelRawSourceText,
+      },
+    },
+  });
+  const fileIndexSource = snapshot.sources.find(
+    (source) => source.sourceType === 'governance_file_index'
+  );
+
+  assert.ok(fileIndexSource);
+  assert.equal(fileIndexSource.rawSourceText, sentinelRawSourceText);
+});
+
 test('governance file snapshot preserves every file entry declared by the index', () => {
   const snapshot = governanceFileSnapshotFixture();
 
@@ -539,7 +573,13 @@ test('governance snapshot imports generated artifacts without trusting stale gen
   fs.writeFileSync(fileIndexPath, staleRaw, 'utf8');
 
   try {
-    const snapshot = buildGovernanceFileSnapshot();
+    const baselineInputs = governanceFileSnapshotFixture.generatedInputs();
+    const snapshot = buildGovernanceFileSnapshot({
+      generatedInputs: buildGovernanceGeneratedInputs({
+        fileComponentOutputs: baselineInputs.fileComponentOutputs,
+        documentOutputs: baselineInputs.documentOutputs,
+      }),
+    });
     const fileIndexSource = snapshot.sources.find(
       (source) => source.sourceType === 'governance_file_index'
     );

@@ -220,6 +220,7 @@ allowedImplementationSurfaces:
   - tools/ci/emit-workspace-matrix.test.mjs
   - tools/ci/emit-test-matrix.test.mjs
   - scripts/local-validation-plan.cjs
+  - scripts/planning-db-import.cjs
   - scripts/planning-db-import.test.cjs
   - scripts/verify-changed.test.cjs
   - scripts/README.md
@@ -408,7 +409,27 @@ redGreenCycles:
       - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
       - docs/planning/closeouts/**
     greenTest: node --test --test-reporter=spec scripts/planning-db-import.test.cjs
+  - id: planning-db-generated-input-reuse
+    redTest: node --test scripts/planning-db-import.test.cjs
+    expectedFailure: mutation-sensitive generated artifact tests need to rebuild the governance snapshot but should not rebuild the expensive governance generated input inventory when an already-built input fixture is supplied.
+    patchSurfaces:
+      - scripts/planning-db-import.cjs
+      - scripts/planning-db-import.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test --test-reporter=spec scripts/planning-db-import.test.cjs
 symbols:
+  - name: buildGovernanceGeneratedInputs
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Duplicate expensive fixture construction in local planning DB validation
+    architectureGuard: node --test --test-reporter=spec scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test --test-reporter=spec scripts/planning-db-import.test.cjs
   - name: governanceFileSnapshotFixture
     path: scripts/planning-db-import.test.cjs
     dddOwner: ValidateCiScopeOptimizationContract

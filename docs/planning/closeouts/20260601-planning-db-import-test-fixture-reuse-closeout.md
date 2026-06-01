@@ -34,13 +34,19 @@ planning_type: closeout
     mutation-sensitive tests isolated. Selected because it removes repeated
     local CI work while preserving the same production code path for snapshot
     construction.
+  - Inject prebuilt governance generated inputs into `buildGovernanceFileSnapshot`
+    for mutation-sensitive tests. Selected for the second pass because it keeps
+    the snapshot logic under test while avoiding a second expensive file/doc
+    inventory build.
   - Call `importContent` with both import scopes disabled for the advisory-lock
     assertion. Selected because it keeps coverage on the public import path and
     avoids building irrelevant planning/governance snapshots.
 - Selected option and rationale: introduce a test-local
   `governanceFileSnapshotFixture()` and use it only in pure snapshot assertions;
   leave tests that rewrite generated YAML on direct `buildGovernanceFileSnapshot`
-  calls. Narrow the lock test input to the transaction path it validates.
+  calls, but let those tests reuse prebuilt generated inputs where the inventory
+  content is intentionally unchanged. Narrow the lock test input to the
+  transaction path it validates.
 - Rejected alternatives: production caching, broad test split, reducing
   assertions, or marking expensive tests as skipped.
 
@@ -48,10 +54,11 @@ planning_type: closeout
 
 <!-- markdownlint-disable MD060 -->
 
-| Scenario                                                                 | Opportunity                                       | Fowler pattern                                                 | DDD owner                              | Rail                                        | Allowed surfaces                      | Tests                | Out of scope                          |
-| ------------------------------------------------------------------------ | ------------------------------------------------- | -------------------------------------------------------------- | -------------------------------------- | ------------------------------------------- | ------------------------------------- | -------------------- | ------------------------------------- |
-| Repeated pure snapshot assertions rebuild the same governance read model | Duplicate semantics and test-only confidence cost | Extract Function / Consolidate Duplicate Conditional Fragments | Repository CI tool contract tests      | `ValidateCiScopeOptimizationContract` query | `scripts/planning-db-import.test.cjs` | Focused spec profile | Production import caching             |
-| Advisory-lock assertion pays for full import content                     | Feature envy on a broad integration path          | Substitute Algorithm in tests by narrowing fixture inputs      | Planning query-store import validation | `ValidateCiScopeOptimizationContract` query | `scripts/planning-db-import.test.cjs` | Focused spec profile | Changing DB schema or import behavior |
+| Scenario                                                                 | Opportunity                                       | Fowler pattern                                                 | DDD owner                              | Rail                                        | Allowed surfaces                                                        | Tests                | Out of scope                          |
+| ------------------------------------------------------------------------ | ------------------------------------------------- | -------------------------------------------------------------- | -------------------------------------- | ------------------------------------------- | ----------------------------------------------------------------------- | -------------------- | ------------------------------------- |
+| Repeated pure snapshot assertions rebuild the same governance read model | Duplicate semantics and test-only confidence cost | Extract Function / Consolidate Duplicate Conditional Fragments | Repository CI tool contract tests      | `ValidateCiScopeOptimizationContract` query | `scripts/planning-db-import.test.cjs`                                   | Focused spec profile | Production import caching             |
+| Advisory-lock assertion pays for full import content                     | Feature envy on a broad integration path          | Substitute Algorithm in tests by narrowing fixture inputs      | Planning query-store import validation | `ValidateCiScopeOptimizationContract` query | `scripts/planning-db-import.test.cjs`                                   | Focused spec profile | Changing DB schema or import behavior |
+| Mutation-sensitive generated YAML assertions rebuild file/doc inventory  | Duplicate expensive fixture construction          | Parameterize Method / Preserve Whole Object                    | Repository CI tool contract tests      | `ValidateCiScopeOptimizationContract` query | `scripts/planning-db-import.cjs`, `scripts/planning-db-import.test.cjs` | Focused spec profile | Production snapshot memoization       |
 
 <!-- markdownlint-enable MD060 -->
 
@@ -104,6 +111,7 @@ flowchart TD
 - Touched files or paths:
   - `docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md`
   - `docs/planning/closeouts/20260601-planning-db-import-test-fixture-reuse-closeout.md`
+  - `scripts/planning-db-import.cjs`
   - `scripts/planning-db-import.test.cjs`
 - Expected outcome: the focused `planning-db-import` test file remains green and
   materially faster, with no assertions removed.
@@ -125,7 +133,9 @@ flowchart TD
   - `pnpm verify:prepush`
 - Test coverage plan: prove all existing planning DB import tests still pass;
   compare the focused spec profile before and after the refactor; keep mutation
-  tests isolated from the shared fixture.
+  tests isolated from the shared fixture; add a regression assertion that
+  `buildGovernanceFileSnapshot` consumes supplied generated inputs instead of
+  silently rebuilding them.
 - Libraries evaluated: none evaluated - this is a local Node test refactor.
 - Command/query rail impact: no product rail changes. The existing
   `ValidateCiScopeOptimizationContract` query rail governs local CI test
@@ -164,6 +174,10 @@ advisory lock` took 22.187s.
 - Combined the DB-backed generated-artifact assertion and stale generated-index
   assertion into one mutation-sensitive snapshot. This preserves both assertion
   sets while avoiding a second full governance snapshot build.
+- Added an optional `generatedInputs` parameter to `buildGovernanceFileSnapshot`
+  and exported `buildGovernanceGeneratedInputs` so tests can rerun snapshot
+  materialization with controlled generated-file mutations while reusing the
+  expensive file/doc inventory.
 - Changed the advisory-lock assertion to call `importContent` with
   `includePlanning: false` and `includeGovernance: false`, preserving coverage
   of the public import transaction preamble without building unrelated
@@ -178,7 +192,11 @@ advisory lock` took 22.187s.
 - `node --test --test-reporter=spec scripts/planning-db-import.test.cjs` after
   merging the mutation-sensitive generated YAML assertions: passed 30/30 tests,
   `duration_ms 22256.3616`.
-- Measured improvement: 54.609s faster for the focused test file, about 71.1%
+- `node --test --test-reporter=spec scripts/planning-db-import.test.cjs` after
+  generated-input reuse: passed 31/31 tests, `duration_ms 13288.9627`.
+- `pnpm test:planning:db` after generated-input reuse: passed 250/250 tests,
+  `duration_ms 13239.604`.
+- Measured improvement: 63.576s faster for the focused test file, about 82.7%
   less wall time than the 76.865s baseline.
 - The advisory-lock subtest dropped from 22.187s to 18.809ms while still
   asserting the `begin` and `pg_advisory_xact_lock` sequence emitted through
@@ -186,6 +204,9 @@ advisory lock` took 22.187s.
 - The DB-backed generated-artifact and stale generated-index assertions now
   share one isolated fresh snapshot; no assertion from either previous subtest
   was removed.
+- The mutation-sensitive generated YAML assertion now rebuilds the snapshot in
+  about 1.013s using supplied generated inputs instead of rebuilding the full
+  inventory for about 10.8s.
 
 ## No-Debt Evidence
 
