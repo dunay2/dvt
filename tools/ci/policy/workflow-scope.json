@@ -72,6 +72,28 @@
     "eslint.config.cjs",
     ".prettierrc.json"
   ],
+  "ci_tool_executable_contracts_relevant": [
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    ".dependency-cruiser.cjs",
+    ".github/workflows/ci.yml",
+    ".github/workflows/pr-quality-gate.yml",
+    ".github/actions/setup-node-pnpm/**",
+    "docs/.manifest.json",
+    "docs/generated-docs-policy.json",
+    "docs/evidence/**",
+    "scripts/check-generated-docs-policy.cjs",
+    "scripts/check-markdown-locations.cjs",
+    "tools/docs/**",
+    "tools/ci/architecture-dependency-guard.test.mjs",
+    "tools/ci/check-architecture-dependencies.mjs",
+    "tools/ci/ci-tool-test-suite.mjs",
+    "tools/ci/ci-tool-test-suite.test.mjs",
+    "tools/ci/docs-changed-governance-policy.test.mjs",
+    "tools/ci/docs-frontmatter-bom.test.mjs",
+    "tools/ci/docs-manifest-contract.test.mjs"
+  ],
   "workspace_global": [
     ".github/workflows/**",
     ".github/actions/setup-node-pnpm/**",

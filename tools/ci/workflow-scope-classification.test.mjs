@@ -134,6 +134,22 @@ test('docs and ci helper script paths keep workspace matrix empty while validati
   }
 });
 
+test('classifies executable CI tool contracts separately from static CI policy tests', () => {
+  const executableScope = computeBooleanScope(
+    ['tools/ci/docs-manifest-contract.test.mjs'],
+    WORKFLOW_SCOPE_PATTERNS
+  );
+  const staticScope = computeBooleanScope(
+    ['tools/ci/workflow-pattern-parity.test.mjs'],
+    WORKFLOW_SCOPE_PATTERNS
+  );
+
+  assert.equal(executableScope.changed_file_validation_relevant, true);
+  assert.equal(executableScope.ci_tool_executable_contracts_relevant, true);
+  assert.equal(staticScope.changed_file_validation_relevant, true);
+  assert.equal(staticScope.ci_tool_executable_contracts_relevant, false);
+});
+
 test('workspace matrix covers every workspace with a build or typecheck script', () => {
   const ciWorkspacePackages = new Set(WORKSPACE_ENTRIES.map(({ pkg }) => pkg));
   const missing = collectWorkspacePackages()

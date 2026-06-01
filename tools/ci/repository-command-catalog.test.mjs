@@ -89,6 +89,20 @@ test('classifies runtime, capability, contract, docs, workflow, and ops commands
     'ci-tooling'
   );
   assert.equal(
+    classifyPackageScriptCommand(
+      'test:ci-tools:static',
+      packageJson.scripts['test:ci-tools:static']
+    ).domain,
+    'ci-tooling'
+  );
+  assert.equal(
+    classifyPackageScriptCommand(
+      'test:ci-tools:executable',
+      packageJson.scripts['test:ci-tools:executable']
+    ).domain,
+    'ci-tooling'
+  );
+  assert.equal(
     classifyPackageScriptCommand('ops:ar-c2:evidence', packageJson.scripts['ops:ar-c2:evidence'])
       .domain,
     'release-ops'

@@ -204,6 +204,34 @@ test('emit-scope workflow mode exposes prepush-equivalent governance routing', (
   assert.equal(docsScope.code_validation_relevant, false);
 });
 
+test('emit-scope workflow mode routes executable CI tool contracts only for install-backed surfaces', () => {
+  const executableScope = computeWorkflowModeScopeOutputs('workflow', [
+    'tools/ci/docs-changed-governance-policy.test.mjs',
+  ]);
+
+  assert.equal(executableScope.ci_tool_executable_contracts_relevant, true);
+
+  const staticScope = computeWorkflowModeScopeOutputs('workflow', [
+    'tools/ci/workflow-pattern-parity.test.mjs',
+  ]);
+
+  assert.equal(staticScope.changed_file_validation_relevant, true);
+  assert.equal(staticScope.ci_tool_executable_contracts_relevant, false);
+
+  const packageScriptScope = computeWorkflowModeScopeOutputs('workflow', ['package.json'], {
+    packageJsonChange: {
+      packageScriptsOnly: true,
+      rootBuildSensitive: false,
+      dependencySensitive: false,
+      lifecycleSensitive: false,
+      ciToolingSensitive: true,
+      governanceToolingOnly: false,
+    },
+  });
+
+  assert.equal(packageScriptScope.ci_tool_executable_contracts_relevant, true);
+});
+
 test('emit-scope workflow mode routes traceability only for ADRs and governed source', () => {
   const adrScope = computeWorkflowModeScopeOutputs('workflow', [
     'docs/adr/ADR-0056-web-ui-authority-is-server-projected.md',

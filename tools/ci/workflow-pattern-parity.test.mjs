@@ -174,7 +174,9 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
   const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
 
   assertWorkflowContains(ciWorkflow, 'name: CI tool contracts');
-  assertWorkflowContains(ciWorkflow, 'run: pnpm test:ci-tools');
+  assertWorkflowContains(ciWorkflow, 'node tools/ci/ci-tool-test-suite.mjs static');
+  assertWorkflowContains(ciWorkflow, 'name: CI tool executable contracts');
+  assertWorkflowContains(ciWorkflow, 'pnpm test:ci-tools:executable');
   assertWorkflowContains(
     ciWorkflow,
     'node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json'
@@ -184,6 +186,12 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
   assertWorkflowContains(
     ciWorkflow,
     'changed_file_validation_relevant: ${{ steps.scope.outputs.changed_file_validation_relevant }}'
+  );
+  assertWorkflowContains(ciWorkflow, 'ci_tool_executable_contracts_relevant:');
+  assertWorkflowContains(ciWorkflow, 'steps.scope.outputs.ci_tool_executable_contracts_relevant');
+  assertWorkflowContains(
+    ciWorkflow,
+    "needs.detect-affected.outputs.ci_tool_executable_contracts_relevant == 'true'"
   );
   assertWorkflowContains(
     ciWorkflow,
@@ -206,6 +214,8 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
     generated_status_relevant: workflowScopePolicy.generated_status_relevant,
     generated_capability_relevant: workflowScopePolicy.generated_capability_relevant,
     changed_file_validation_relevant: workflowScopePolicy.changed_file_validation_relevant,
+    ci_tool_executable_contracts_relevant:
+      workflowScopePolicy.ci_tool_executable_contracts_relevant,
   });
 });
 

@@ -30,6 +30,7 @@ function readWorkflowScopePolicy() {
     'generated_status_relevant',
     'generated_capability_relevant',
     'changed_file_validation_relevant',
+    'ci_tool_executable_contracts_relevant',
     'workspace_global',
     'workspace_api',
     'workspace_lineage_worker',
@@ -93,6 +94,8 @@ export const WORKFLOW_SCOPE_PATTERNS = {
   generated_status_relevant: WORKFLOW_SCOPE_POLICY.generated_status_relevant,
   generated_capability_relevant: WORKFLOW_SCOPE_POLICY.generated_capability_relevant,
   changed_file_validation_relevant: WORKFLOW_SCOPE_POLICY.changed_file_validation_relevant,
+  ci_tool_executable_contracts_relevant:
+    WORKFLOW_SCOPE_POLICY.ci_tool_executable_contracts_relevant,
 };
 
 export const WORKSPACE_ENTRIES = [
@@ -719,6 +722,12 @@ export function computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext
   return {
     ...scope,
     ...repositoryValidationScope,
+    ci_tool_executable_contracts_relevant: Boolean(
+      scope.ci_tool_executable_contracts_relevant ||
+      packageJsonChange?.dependencySensitive ||
+      packageJsonChange?.ciToolingSensitive ||
+      packageJsonChange?.governanceToolingOnly
+    ),
   };
 }
 

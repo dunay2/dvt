@@ -82,6 +82,8 @@ const EXACT_PACKAGE_SCRIPT_DOMAINS = new Map([
   ['prepare', 'developer-workflow'],
   ['arch:deps', 'ci-tooling'],
   ['test:ci-tools', 'ci-tooling'],
+  ['test:ci-tools:static', 'ci-tooling'],
+  ['test:ci-tools:executable', 'ci-tooling'],
   ['ci:docs', 'docs-governance'],
   ['versioning-check', 'release-ops'],
   ['release', 'release-ops'],
