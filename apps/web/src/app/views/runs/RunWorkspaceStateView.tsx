@@ -276,6 +276,46 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
           </div>
         </Card>
 
+        {showMaterializationSection ? (
+          <Card className="border-slate-700 bg-slate-900 p-5">
+            <h3 className="mb-3 text-sm font-semibold">{copy.materializationTitle}</h3>
+            {materializationEvidence ? (
+              <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
+                <div>
+                  <span className="text-slate-400">{copy.executorLabel}</span>
+                  <div>{materializationEvidence.executor}</div>
+                </div>
+                <div>
+                  <span className="text-slate-400">{copy.environmentLabel}</span>
+                  <div>{materializationEvidence.environmentId}</div>
+                </div>
+                <div>
+                  <span className="text-slate-400">{copy.sinkTableLabel}</span>
+                  <div className="font-mono">{materializationEvidence.sinkTable}</div>
+                </div>
+                <div>
+                  <span className="text-slate-400">{copy.rowsWrittenLabel}</span>
+                  <div>{materializationEvidence.rowsWritten.toLocaleString()}</div>
+                </div>
+                <div>
+                  <span className="text-slate-400">{copy.startedLabel}</span>
+                  <div>{new Date(materializationEvidence.startedAt).toLocaleString()}</div>
+                </div>
+                <div>
+                  <span className="text-slate-400">{copy.completedLabel}</span>
+                  <div>{new Date(materializationEvidence.completedAt).toLocaleString()}</div>
+                </div>
+                <div>
+                  <span className="text-slate-400">{copy.durationLabel}</span>
+                  <div>{formatDuration(materializationEvidence.durationMs)}</div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-400">{copy.noResultEvidence}</p>
+            )}
+          </Card>
+        ) : null}
+
         <Card className="border-slate-700 bg-slate-900 p-5">
           <h3 className="mb-3 text-sm font-semibold">{copy.planProvenanceTitle}</h3>
           {planProvenance ? (
@@ -352,46 +392,6 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
             <p className="text-sm text-slate-400">{copy.noPlanProvenance}</p>
           )}
         </Card>
-
-        {showMaterializationSection ? (
-          <Card className="border-slate-700 bg-slate-900 p-5">
-            <h3 className="mb-3 text-sm font-semibold">{copy.materializationTitle}</h3>
-            {materializationEvidence ? (
-              <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
-                <div>
-                  <span className="text-slate-400">{copy.executorLabel}</span>
-                  <div>{materializationEvidence.executor}</div>
-                </div>
-                <div>
-                  <span className="text-slate-400">{copy.environmentLabel}</span>
-                  <div>{materializationEvidence.environmentId}</div>
-                </div>
-                <div>
-                  <span className="text-slate-400">{copy.sinkTableLabel}</span>
-                  <div className="font-mono">{materializationEvidence.sinkTable}</div>
-                </div>
-                <div>
-                  <span className="text-slate-400">{copy.rowsWrittenLabel}</span>
-                  <div>{materializationEvidence.rowsWritten.toLocaleString()}</div>
-                </div>
-                <div>
-                  <span className="text-slate-400">{copy.startedLabel}</span>
-                  <div>{new Date(materializationEvidence.startedAt).toLocaleString()}</div>
-                </div>
-                <div>
-                  <span className="text-slate-400">{copy.completedLabel}</span>
-                  <div>{new Date(materializationEvidence.completedAt).toLocaleString()}</div>
-                </div>
-                <div>
-                  <span className="text-slate-400">{copy.durationLabel}</span>
-                  <div>{formatDuration(materializationEvidence.durationMs)}</div>
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-slate-400">{copy.noResultEvidence}</p>
-            )}
-          </Card>
-        ) : null}
 
         <Card className="border-slate-700 bg-slate-900 p-5">
           <h3 className="mb-3 text-sm font-semibold">{copy.provenanceTitle}</h3>

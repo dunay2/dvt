@@ -21,6 +21,7 @@ const PLAN_ID = {
   r4_9: toCanonicalPlanId('plan-r4-9'),
   r4_10: toCanonicalPlanId('plan-r4-10'),
   r4_11: toCanonicalPlanId('plan-r4-11'),
+  r4_12: toCanonicalPlanId('plan-r4-12'),
 } as const;
 
 function storePlanArtifact(
@@ -207,5 +208,63 @@ describeIfPg('PostgresPlanStore records core integration', () => {
       const record = await store.getPlanRecord({ ...PLAN_STORE_SCOPE, planId: legacyPlanId });
       expect(record?.canonicalHash).toBe(canonicalHash);
       expect(record?.canonicalHash).not.toBe(wrongHash);
+    }));
+
+  test('migrate prunes legacy v1.2 plan artifacts before current schema storage', () =>
+    withIsolatedStore(async (store, schema) => {
+      const client = await createPgClient();
+      const canonicalPlanJson = jcsCanonicalize({
+        metadata: {
+          planId: PLAN_ID.r4_12,
+          planVersion: '1.0',
+          schemaVersion: 'v1.2',
+          contractVersion: '1.0.0',
+          inputHashSha256: '4'.repeat(64),
+          createdAtIso: NOW,
+          ownership: PLAN_STORE_SCOPE,
+        },
+        steps: [{ stepId: `${PLAN_ID.r4_12}.step`, kind: 'DBT_MODEL', dependsOn: [] }],
+      });
+      const executablePlanJson = JSON.stringify({
+        metadata: {
+          planId: PLAN_ID.r4_12,
+          planVersion: '1.0',
+          schemaVersion: 'v1.2',
+          contractVersion: '1.0.0',
+          ownership: PLAN_STORE_SCOPE,
+        },
+        steps: [{ stepId: `${PLAN_ID.r4_12}.step`, kind: 'DBT_MODEL', dependsOn: [] }],
+      });
+      const executableHash = createHash('sha256').update(executablePlanJson).digest('hex');
+      try {
+        await client.query(
+          `
+            INSERT INTO ${quoteIdentifier(schema)}.stored_plans (
+              plan_id, plan_version, plan_uri, plan_sha256, schema_version, size_bytes,
+              requires_capabilities, canonical_plan_json, executable_plan_json, validation_state,
+              rejection_report_json, stored_at, updated_at
+            ) VALUES (
+              $1, '1.0', $2, $3, 'v1.2', $4, NULL, $5, $6, 'VALID', NULL, NOW(), NOW()
+            )
+          `,
+          [
+            PLAN_ID.r4_12,
+            `dvt-plan://postgres/${PLAN_ID.r4_12}`,
+            executableHash,
+            Buffer.byteLength(executablePlanJson, 'utf8'),
+            canonicalPlanJson,
+            executablePlanJson,
+          ]
+        );
+      } finally {
+        await client.end();
+      }
+
+      await store.migrate();
+      const planRef = await storePlanArtifact(store, PLAN_ID.r4_12);
+      expect(planRef).toMatchObject({ planId: PLAN_ID.r4_12, schemaVersion: '1.0' });
+
+      const record = await store.getPlanRecord({ ...PLAN_STORE_SCOPE, planId: PLAN_ID.r4_12 });
+      expect(record).toMatchObject({ planId: PLAN_ID.r4_12, schemaVersion: '1.0' });
     }));
 });

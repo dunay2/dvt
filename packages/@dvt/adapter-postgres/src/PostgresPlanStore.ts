@@ -148,9 +148,17 @@ export class PostgresPlanStore
           `PLAN_VALIDATION_STATE_REUSE_UNSUPPORTED: ${planId}:${persisted.validation_state}`
         );
       }
-      await this.planRecordRepository.upsert(client, buildPlanRecord(buildResult, planRef));
+      const persistedPlanRef = buildPlanRefFromStoredRow(persisted);
+      const planRecordOptions =
+        persisted.canonical_plan_json === undefined
+          ? {}
+          : { canonicalPlanJson: persisted.canonical_plan_json };
+      await this.planRecordRepository.upsert(
+        client,
+        buildPlanRecord(buildResult, persistedPlanRef, planRecordOptions)
+      );
 
-      return buildPlanRefFromStoredRow(persisted);
+      return persistedPlanRef;
     });
   }
 

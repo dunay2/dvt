@@ -8,6 +8,7 @@ const DEFAULT_TEMPORAL_ADDRESS = '127.0.0.1:7233';
 const DEFAULT_TEMPORAL_NAMESPACE = 'default';
 const DEFAULT_TEMPORAL_TASK_QUEUE = 'dvt-temporal';
 const DEFAULT_TEMPORAL_WORKER_ADMIN_PORT = 9468;
+const DEFAULT_LOCAL_PROTECTED_RUNTIME_TENANT_ID = 'tenant';
 const TEMPORAL_PACKAGE_ROOT = path.resolve(__dirname, '../packages/@dvt/adapter-temporal');
 
 function readNonEmptyEnv(value) {
@@ -69,6 +70,9 @@ function buildTemporalWorkerEnv(options, env = process.env, databaseUrl) {
   }
 
   const posture = resolveTemporalRuntimePosture(options, env);
+  const workerTaskQueue =
+    readNonEmptyEnv(env.TEMPORAL_TASK_QUEUE) ??
+    toTenantScopedTaskQueue(posture.taskQueue, resolveLocalProtectedRuntimeTenantId(env));
   return {
     DATABASE_URL: resolvedDatabaseUrl,
     ...(readNonEmptyEnv(env.DVT_PG_SCHEMA) === undefined
@@ -76,7 +80,7 @@ function buildTemporalWorkerEnv(options, env = process.env, databaseUrl) {
       : { DVT_PG_SCHEMA: readNonEmptyEnv(env.DVT_PG_SCHEMA) }),
     TEMPORAL_ADDRESS: posture.address,
     TEMPORAL_NAMESPACE: posture.namespace,
-    TEMPORAL_TASK_QUEUE: posture.taskQueue,
+    TEMPORAL_TASK_QUEUE: workerTaskQueue,
     DVT_TEMPORAL_ADMIN_HOST: posture.workerAdminHost,
     DVT_TEMPORAL_ADMIN_PORT: String(posture.workerAdminPort),
     DVT_TEMPORAL_WORKER_RUN_MIGRATIONS:
@@ -94,6 +98,15 @@ function buildTemporalWorkerEnv(options, env = process.env, databaseUrl) {
       ? {}
       : { DVT_DBT_BUNDLE_S3_BUCKET: readNonEmptyEnv(env.DVT_DBT_BUNDLE_S3_BUCKET) }),
   };
+}
+
+function resolveLocalProtectedRuntimeTenantId(env = process.env) {
+  return readNonEmptyEnv(env.VITE_DEFAULT_TENANT_ID) ?? DEFAULT_LOCAL_PROTECTED_RUNTIME_TENANT_ID;
+}
+
+function toTenantScopedTaskQueue(baseQueue, tenantId) {
+  const normalizedTenantId = readNonEmptyEnv(tenantId);
+  return normalizedTenantId === undefined ? baseQueue : `${baseQueue}-${normalizedTenantId}`;
 }
 
 function shouldStartTemporalWorker(env = process.env) {
@@ -135,6 +148,7 @@ module.exports = {
   DEFAULT_TEMPORAL_NAMESPACE,
   DEFAULT_TEMPORAL_TASK_QUEUE,
   DEFAULT_TEMPORAL_WORKER_ADMIN_PORT,
+  DEFAULT_LOCAL_PROTECTED_RUNTIME_TENANT_ID,
   buildTemporalApiEnv,
   buildTemporalWorkerEnv,
   resolveTemporalRuntimePosture,

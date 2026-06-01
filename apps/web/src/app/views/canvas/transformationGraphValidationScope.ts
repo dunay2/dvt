@@ -3,13 +3,14 @@ import type {
   TransformationValidationContext,
   ValidateTransformationGraphArgs,
 } from './transformationGraphValidation.types';
+import { TRANSFORMATION_REQUIRED_NODE_COUNT } from './transformationGraphValidation.types';
 
 function resolveScopeNodeIds({
   nodes,
   selectedNodeIds,
   workspaceNodeIds,
 }: ValidateTransformationGraphArgs): string[] {
-  if (selectedNodeIds?.length) {
+  if (selectedNodeIds?.length === TRANSFORMATION_REQUIRED_NODE_COUNT) {
     return selectedNodeIds;
   }
 

@@ -380,6 +380,36 @@ describe('useCanvasExecutionActions plan preview core', () => {
     expect(harness.shellFeedback.success).toHaveBeenCalledWith(canvasViewCopy.planCreatedMessage);
   });
 
+  it('plans the full workspace workflow when selection is only a partial edit focus', async () => {
+    const canonicalNodes = buildCanonicalNodes();
+    const canonicalEdges = buildCanonicalEdges();
+    const plansService = createPlansServiceMock();
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService: createRunsServiceMock(),
+      canonicalNodes,
+      canonicalEdges,
+      selectedNodeIds: ['source-node'],
+      workspaceNodeIds: canonicalNodes.map((node) => node.id),
+    });
+    await harness.render();
+
+    expect(harness.text('can-plan-graph')).toBe('true');
+
+    await harness.clickPlan();
+
+    expect(plansService.previewPlan).toHaveBeenCalledTimes(1);
+    expect(plansService.previewPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        selection: {
+          mode: 'explicit',
+          nodeIds: ['source-node', 'transform-node', 'sink-node'],
+        },
+      })
+    );
+  });
+
   it('stores a persisted preview result and enables Start Run after a valid plan', async () => {
     const persistedPlan = buildPersistedPreviewPlan();
     const plansService = createPlansServiceMock(persistedPlan);

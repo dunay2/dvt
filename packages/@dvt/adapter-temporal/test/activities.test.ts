@@ -808,6 +808,26 @@ describe('stepActivities', () => {
       expect(result.status).toBe('COMPLETED');
     });
 
+    it('accepts canonical ExecutionStep retryPolicy metadata', async () => {
+      const { acts } = setupActivities({ stepActivitiesByKind: createDbtRegistry() });
+
+      const result = await acts.executeStep({
+        step: {
+          stepId: 's3',
+          kind: 'DBT_MODEL',
+          retryPolicy: {
+            maxAttempts: 2,
+            initialInterval: '1s',
+            maximumInterval: '5s',
+            backoffCoefficient: 2,
+          },
+        },
+        ctx: CTX,
+      });
+
+      expect(result.status).toBe('COMPLETED');
+    });
+
     it('passes resolved dbt plugin context to the configured plugin runner', async () => {
       const runner = new RecordingDbtPluginRunner(async (input) => {
         return {
