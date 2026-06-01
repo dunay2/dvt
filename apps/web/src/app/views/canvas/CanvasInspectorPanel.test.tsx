@@ -36,6 +36,27 @@ function buildDvtNode(
   };
 }
 
+function buildImportedWarehouseSourceNode(): CanonicalNode {
+  return {
+    id: 'src_warehouse_prod_analytics_erp_orders',
+    name: 'src_warehouse_prod_analytics_erp_orders',
+    description: 'Imported source for analytics.erp.orders',
+    pluginId: 'dvt.warehouse-source',
+    kind: 'dvt:source',
+    role: 'input',
+    status: 'idle',
+    tags: ['source', 'erp'],
+    path: 'models/sources/src_erp.yml',
+    metadata: {
+      sourceName: 'warehouse_prod_analytics_erp',
+      tableName: 'orders',
+      database: 'analytics',
+      schema: 'erp',
+      columns: [{ name: 'id', type: 'number', nullable: false }],
+    },
+  };
+}
+
 function buildDbtSourceNode(id: string, name: string, sourceName: string): CanonicalNode {
   return {
     id,
@@ -513,6 +534,72 @@ describe('CanvasInspectorPanel', () => {
           schema: 'analytics',
           table: 'orders',
           alias: 'orders_raw',
+        },
+      })
+    );
+  });
+
+  it('lets imported warehouse source nodes configure source schema, table, and alias before preview', async () => {
+    const onApplyNodeDraft = vi.fn();
+    const sourceNode = buildImportedWarehouseSourceNode();
+
+    await act(async () => {
+      root.render(
+        <CanvasInspectorPanel
+          node={sourceNode}
+          nodes={[sourceNode]}
+          edges={[]}
+          activeRunId={null}
+          onHide={vi.fn()}
+          authoring={{
+            canEditNode: true,
+            onApplyNodeDraft,
+          }}
+        />
+      );
+    });
+
+    const schemaInput = container.querySelector(
+      'input[name="dvt-source-schema"]'
+    ) as HTMLInputElement | null;
+    const tableInput = container.querySelector(
+      'input[name="dvt-source-table"]'
+    ) as HTMLInputElement | null;
+    const aliasInput = container.querySelector(
+      'input[name="dvt-source-alias"]'
+    ) as HTMLInputElement | null;
+
+    expect(container.textContent).toContain('DVT source');
+    expect(schemaInput?.value).toBe('erp');
+    expect(tableInput?.value).toBe('orders');
+    expect(aliasInput?.value).toBe('warehouse_prod_analytics_erp');
+
+    await act(async () => {
+      if (aliasInput != null) {
+        const valueSetter = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype,
+          'value'
+        )?.set;
+        valueSetter?.call(aliasInput, 'orders_src');
+        aliasInput.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    });
+
+    const applyButton = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Apply')
+    );
+
+    await act(async () => {
+      applyButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(onApplyNodeDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        dvt: {
+          kind: 'source',
+          schema: 'erp',
+          table: 'orders',
+          alias: 'orders_src',
         },
       })
     );

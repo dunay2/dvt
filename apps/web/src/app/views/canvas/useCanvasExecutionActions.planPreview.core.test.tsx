@@ -162,6 +162,64 @@ describe('useCanvasExecutionActions plan preview core', () => {
     );
   });
 
+  it('builds a SQL-first preview directly from imported warehouse source metadata', async () => {
+    const canonicalNodes = buildCanonicalNodes().map((node) =>
+      node.id === 'source-node'
+        ? {
+            ...node,
+            name: 'Imported Orders',
+            pluginId: 'dvt.warehouse-source',
+            tags: ['source', 'erp'],
+            path: 'models/sources/src_erp.yml',
+            metadata: {
+              sourceName: 'warehouse_prod_analytics_erp',
+              tableName: 'orders',
+              database: 'analytics',
+              schema: 'erp',
+              columns: [{ name: 'id', type: 'number', nullable: false }],
+            },
+          }
+        : node
+    );
+    const plansService = createPlansServiceMock();
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService: createRunsServiceMock(),
+      canonicalNodes,
+      canonicalEdges: buildCanonicalEdges(),
+    });
+    await harness.render();
+
+    await harness.clickPlan();
+
+    expect(plansService.previewPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        graphSource: expect.objectContaining({
+          nodes: expect.arrayContaining([
+            expect.objectContaining({
+              nodeId: 'source-node',
+              stepTypeConfig: expect.objectContaining({
+                sourceSchema: 'erp',
+                sourceTable: 'orders',
+                sourceAlias: 'warehouse_prod_analytics_erp',
+              }),
+              metadata: expect.objectContaining({
+                displayName: 'Imported Orders',
+                sourceRef: 'models/sources/src_erp.yml',
+                tags: {
+                  pluginId: 'dvt.warehouse-source',
+                  role: 'input',
+                  kind: 'dvt:source',
+                },
+              }),
+            }),
+          ]),
+        }),
+      })
+    );
+  });
+
   it('previews the plan with the active canvas execution environment when selected', async () => {
     const plansService = createPlansServiceMock();
 

@@ -37,6 +37,28 @@ function buildDvtNode(
   };
 }
 
+function buildImportedWarehouseSourceNode(metadata?: Record<string, unknown>): CanonicalNode {
+  return {
+    id: 'src_warehouse_prod_analytics_erp_orders',
+    name: 'src_warehouse_prod_analytics_erp_orders',
+    description: 'Imported source for analytics.erp.orders',
+    pluginId: 'dvt.warehouse-source',
+    kind: 'dvt:source',
+    role: 'input',
+    status: 'idle',
+    tags: ['source', 'erp'],
+    path: 'models/sources/src_erp.yml',
+    metadata: {
+      sourceName: 'warehouse_prod_analytics_erp',
+      tableName: 'orders',
+      database: 'analytics',
+      schema: 'erp',
+      columns: [{ name: 'id', type: 'number', nullable: false }],
+      ...(metadata ?? {}),
+    },
+  };
+}
+
 describe('canvasInspectorAuthoringModel', () => {
   it('creates a semantic inspector draft from the selected canonical node', () => {
     expect(createCanvasInspectorNodeDraft(buildNode())).toEqual({
@@ -105,6 +127,47 @@ describe('canvasInspectorAuthoringModel', () => {
         schema: 'analytics',
         table: 'orders',
         alias: 'raw_orders',
+      },
+    });
+  });
+
+  it('creates DVT source authoring metadata from imported warehouse source metadata', () => {
+    expect(createCanvasInspectorNodeDraft(buildImportedWarehouseSourceNode())).toEqual({
+      name: 'src_warehouse_prod_analytics_erp_orders',
+      description: 'Imported source for analytics.erp.orders',
+      dvt: {
+        kind: 'source',
+        schema: 'erp',
+        table: 'orders',
+        alias: 'warehouse_prod_analytics_erp',
+      },
+    });
+  });
+
+  it('applies imported warehouse source edits without dropping server-owned metadata', () => {
+    const node = buildImportedWarehouseSourceNode();
+    const draft = {
+      name: 'Warehouse Orders',
+      description: 'Curated source',
+      dvt: {
+        kind: 'source' as const,
+        schema: 'warehouse_raw',
+        table: 'orders_final',
+        alias: 'orders_src',
+      },
+    };
+
+    expect(applyCanvasInspectorNodeDraft(node, draft)).toEqual({
+      ...node,
+      name: 'Warehouse Orders',
+      description: 'Curated source',
+      metadata: {
+        ...node.metadata,
+        config: {
+          schema: 'warehouse_raw',
+          table: 'orders_final',
+          alias: 'orders_src',
+        },
       },
     });
   });

@@ -41,6 +41,19 @@ describe('evaluateConnection', () => {
     expect(transformToSink).toEqual({ allowed: true });
   });
 
+  it('allows imported warehouse sources to feed the DVT SQL transform authoring path', () => {
+    const pluginPortMap = getPluginPortMap();
+
+    const sourceToTransform = evaluateConnection(
+      buildNode('dvt.warehouse-source', 'dvt:source', 'input'),
+      buildNode('dvt', 'dvt:sql_transform', 'transform'),
+      [],
+      pluginPortMap
+    );
+
+    expect(sourceToTransform).toEqual({ allowed: true });
+  });
+
   it('keeps direct source -> sink blocked when no compatible bridge exists', () => {
     const pluginPortMap = getPluginPortMap();
 
@@ -55,6 +68,26 @@ describe('evaluateConnection', () => {
       allowed: false,
       reasonCode: 'cross_plugin_bridge_missing',
       sourcePluginId: 'dbt',
+      sourceRole: 'input',
+      targetPluginId: 'dvt',
+      targetRole: 'output',
+    });
+  });
+
+  it('keeps imported warehouse source -> sink blocked without a transform bridge', () => {
+    const pluginPortMap = getPluginPortMap();
+
+    const sourceToSink = evaluateConnection(
+      buildNode('dvt.warehouse-source', 'dvt:source', 'input'),
+      buildNode('dvt', 'dvt:sink', 'output'),
+      [],
+      pluginPortMap
+    );
+
+    expect(sourceToSink).toEqual({
+      allowed: false,
+      reasonCode: 'cross_plugin_bridge_missing',
+      sourcePluginId: 'dvt.warehouse-source',
       sourceRole: 'input',
       targetPluginId: 'dvt',
       targetRole: 'output',

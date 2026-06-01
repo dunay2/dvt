@@ -55,6 +55,17 @@ Additional root causes found by the demanding-user E2E loop:
 - The authored default SQL used `public.source_1`, but the no-bypass local stack
   did not seed that real source relation or advertise it through the warehouse
   source catalog.
+- Imported warehouse source nodes persisted with plugin identity
+  `dvt.warehouse-source` while the web plugin registry only declared DVT
+  tabular ports and authoring metadata for plugin `dvt`, so imported source
+  nodes rendered as inert graph nodes without a compatible source-to-transform
+  bridge or route-owned source configuration fields.
+- Transformation preview required source payload data under
+  `metadata.config.schema/table/alias`, but the governed import rail persists
+  server-authoritative warehouse metadata as `metadata.sourceName`,
+  `metadata.tableName`, `metadata.schema`, `metadata.database`, and
+  `metadata.columns`. A user could import a real source and still fail preview
+  unless they manually rewrote the node into a DVT-local config shape.
 - Local protected-runtime auth did not grant source-import/plugin scopes, so
   DataObject Registry could not become available from the real route.
 - Partial node selection made the transformation planner validate a one-node
@@ -103,6 +114,12 @@ Options considered:
   the plan created by Canvas executable on the no-bypass Temporal stack.
 - Move completed-run materialization evidence above plan provenance. Selected:
   it aligns the run detail with the user's verification task.
+- Register the imported warehouse source plugin identity as a real tabular
+  producer in the frontend plugin registry, and let the existing DVT
+  transformation authoring model read the server-owned import metadata.
+  Selected: it keeps the source import rail authoritative, avoids rewriting API
+  identity as a frontend convenience, and makes imported nodes immediately
+  connectable, inspectable, and previewable.
 
 Selected option and rationale: normalize the execution-dependency projection so
 top-level and active-canvas graph shapes remain mirrored after edge filtering,
@@ -251,6 +268,10 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
   - apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx
   - apps/web/src/app/plugins/dbt/DbtNodeRenderer.test.tsx
+  - apps/web/src/app/plugins/registry.ts
+  - apps/web/src/app/plugins/contracts/ConnectionRules.test.ts
+  - apps/web/src/app/plugins/dvt/dvtContributions.ts
+  - apps/web/src/app/plugins/dvt/dvtContributions.connectionRules.test.ts
   - apps/web/src/app/queries/queryKeys.ts
   - apps/web/src/app/queries/runsQueries.ts
   - apps/web/src/app/components/**
@@ -338,6 +359,10 @@ fowlerSignals:
   - Code file browsing must follow the active graph instead of stale workspace artifacts.
   - dbt Inspector history must consume runtime events instead of retaining a
     completed-run placeholder panel.
+  - Imported warehouse source nodes must have a declared plugin port bridge and
+    route-owned authoring fields instead of behaving as inert graph decorations.
+  - Transformation preview must consume governed source-import metadata without
+    requiring a manual config rewrite.
 architectureGuards:
   - pnpm --filter dvt-api test -- test/application/services/resolveAuthorizedExecutableSubgraph.test.ts
   - pnpm --filter @dvt/adapter-postgres test -- PostgresPlanStore.lifecycle.integration.test.ts PostgresPlanStore.records-core.integration.test.ts
@@ -346,6 +371,7 @@ architectureGuards:
   - node --test scripts/run-dev-stack.test.cjs scripts/run-dev-stack.auth.test.cjs
   - pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts src/app/views/CodeView.test.tsx
   - pnpm --filter @dvt/web test -- src/app/plugins/dbt/DbtNodeRenderer.test.tsx src/app/queries/queryKeyPolicy.architecture.test.ts
+  - pnpm --filter @dvt/web test -- src/app/plugins/contracts/ConnectionRules.test.ts src/app/plugins/dvt/dvtContributions.connectionRules.test.ts src/app/views/canvas/canvasInspectorAuthoringModel.test.ts src/app/views/canvas/CanvasInspectorPanel.test.tsx src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx
   - pnpm docs:feature-mechanization:implementation
 cypressFlows:
   - apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
@@ -358,6 +384,7 @@ completionGate:
   - pnpm --filter @dvt/adapter-temporal test -- test/activities.test.ts
   - pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.test.ts
   - pnpm --filter @dvt/web test -- src/app/views/canvas/transformationGraphValidation.test.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx src/app/views/runs/RunStates.test.tsx
+  - pnpm --filter @dvt/web test -- src/app/plugins/contracts/ConnectionRules.test.ts src/app/plugins/dvt/dvtContributions.connectionRules.test.ts src/app/views/canvas/canvasInspectorAuthoringModel.test.ts src/app/views/canvas/CanvasInspectorPanel.test.tsx src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx
   - pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts src/app/views/CodeView.test.tsx
   - pnpm --filter @dvt/web test -- src/app/plugins/dbt/DbtNodeRenderer.test.tsx src/app/queries/queryKeyPolicy.architecture.test.ts
   - pnpm --filter @dvt/web test
@@ -440,6 +467,20 @@ redGreenCycles:
       - apps/web/src/app/queries/runsQueries.ts
       - docs/architecture/components/web/frontend-query-boundary-component.md
     greenTest: pnpm --filter @dvt/web test -- src/app/plugins/dbt/DbtNodeRenderer.test.tsx src/app/queries/queryKeyPolicy.architecture.test.ts
+  - id: warehouse-source-plugin-authoring-bridge
+    redTest: pnpm --filter @dvt/web test -- src/app/plugins/contracts/ConnectionRules.test.ts src/app/plugins/dvt/dvtContributions.connectionRules.test.ts src/app/views/canvas/canvasInspectorAuthoringModel.test.ts src/app/views/canvas/CanvasInspectorPanel.test.tsx src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx
+    expectedFailure: Imported `dvt.warehouse-source` nodes cannot connect to DVT SQL transforms, do not expose DVT source authoring fields, and cannot build a transformation preview from source-import metadata.
+    patchSurfaces:
+      - apps/web/src/app/plugins/registry.ts
+      - apps/web/src/app/plugins/contracts/ConnectionRules.test.ts
+      - apps/web/src/app/plugins/dvt/dvtContributions.ts
+      - apps/web/src/app/plugins/dvt/dvtContributions.connectionRules.test.ts
+      - apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts
+      - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts
+      - apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx
+      - apps/web/src/app/views/canvas/previewGraphNodePayloads.ts
+      - apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx
+    greenTest: pnpm --filter @dvt/web test -- src/app/plugins/contracts/ConnectionRules.test.ts src/app/plugins/dvt/dvtContributions.connectionRules.test.ts src/app/views/canvas/canvasInspectorAuthoringModel.test.ts src/app/views/canvas/CanvasInspectorPanel.test.tsx src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx
 symbols:
   - name: ResolveAuthorizedExecutableSubgraphService
     path: apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts
@@ -487,6 +528,73 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
     unitTests:
       - apps/web/src/app/views/runs/RunStates.test.tsx
+  - name: DVT_WAREHOUSE_SOURCE_PLUGIN_ID
+    path: apps/web/src/app/plugins/dvt/dvtContributions.ts
+    dddOwner: WarehouseConnectionCatalog
+    cqRails: [ImportWarehouseSources, PreviewExecutablePlan]
+    fowlerSignals: [Imported source plugin identity needs a declared tabular data-port bridge.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/plugins/contracts/ConnectionRules.test.ts src/app/plugins/dvt/dvtContributions.connectionRules.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/plugins/contracts/ConnectionRules.test.ts
+      - apps/web/src/app/plugins/dvt/dvtContributions.connectionRules.test.ts
+  - name: dvtWarehouseSourceContributions
+    path: apps/web/src/app/plugins/dvt/dvtContributions.ts
+    dddOwner: WarehouseConnectionCatalog
+    cqRails: [ImportWarehouseSources, PreviewExecutablePlan]
+    fowlerSignals: [Imported warehouse source nodes must be real plugin participants, not inert decorations.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/plugins/contracts/ConnectionRules.test.ts src/app/plugins/dvt/dvtContributions.connectionRules.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/plugins/contracts/ConnectionRules.test.ts
+      - apps/web/src/app/plugins/dvt/dvtContributions.connectionRules.test.ts
+  - name: DVT_AUTHORING_PLUGIN_ID
+    path: apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts
+    dddOwner: CanvasDvtAuthoringDraft
+    cqRails: [ImportWarehouseSources, PreviewExecutablePlan]
+    fowlerSignals: [Imported source nodes need DVT authoring metadata without changing their source plugin identity.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasInspectorAuthoringModel.test.ts src/app/views/canvas/CanvasInspectorPanel.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts
+      - apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx
+  - name: DVT_WAREHOUSE_SOURCE_PLUGIN_ID
+    path: apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts
+    dddOwner: CanvasDvtAuthoringDraft
+    cqRails: [ImportWarehouseSources, PreviewExecutablePlan]
+    fowlerSignals: [The inspector must recognize imported warehouse sources as configurable DVT source nodes.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasInspectorAuthoringModel.test.ts src/app/views/canvas/CanvasInspectorPanel.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts
+      - apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx
+  - name: readMetadataString
+    path: apps/web/src/app/views/canvas/previewGraphNodePayloads.ts
+    dddOwner: PreviewGraphNodePayload
+    cqRails: [PreviewExecutablePlan]
+    fowlerSignals: [Preview planning must read server-owned import metadata before asking users to restate it locally.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx
+  - name: buildImportedWarehouseSourceNode
+    path: apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts
+    dddOwner: CanvasDvtAuthoringDraft
+    cqRails: [ImportWarehouseSources, PreviewExecutablePlan]
+    fowlerSignals: [Imported source fixtures must carry the real source plugin identity.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasInspectorAuthoringModel.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts
+  - name: buildImportedWarehouseSourceNode
+    path: apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx
+    dddOwner: CanvasDvtAuthoringDraft
+    cqRails: [ImportWarehouseSources, PreviewExecutablePlan]
+    fowlerSignals: [Rendered inspector tests must cover imported source configuration, not only native DVT source nodes.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasInspectorPanel.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx
   - name: TemporalWorkerStepCapability
     path: apps/temporal-worker/src/runtime/runtimeTypes.ts
     dddOwner: TemporalWorkerStepCapability
