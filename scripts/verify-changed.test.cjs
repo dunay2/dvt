@@ -62,6 +62,30 @@ test('buildVerifyChangedPlan routes migration-only changes to the migration suit
   assert.ok(!labels.includes('pnpm test:planning:db'));
 });
 
+test('buildVerifyChangedPlan runs changed planning DB tests directly', () => {
+  const labels = labelsFor(['scripts/planning-db-surface-inventory-check.test.cjs']);
+
+  assert.equal(labels.filter((label) => label === 'pnpm planning:db:inventory:check').length, 1);
+  assert.equal(
+    labels.filter(
+      (label) => label === 'node --test scripts/planning-db-surface-inventory-check.test.cjs'
+    ).length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
+test('buildVerifyChangedPlan runs changed governance DB tests directly', () => {
+  const labels = labelsFor(['scripts/governance-db-import.test.cjs']);
+
+  assert.equal(labels.filter((label) => label === 'pnpm planning:db:inventory:check').length, 1);
+  assert.equal(
+    labels.filter((label) => label === 'node --test scripts/governance-db-import.test.cjs').length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
 test('buildVerifyChangedPlan reuses canonical planning DB scope for inventory checks', () => {
   const labels = labelsFor(['scripts/governance-generated-paths.cjs']);
 

@@ -240,6 +240,12 @@ Command semantics:
   focused command covered 60 migration tests in 558.3258 ms of Node test time,
   while the full planning DB suite covered 250 tests and took 83.929 seconds in
   the final control run.
+- Planning/governance DB test-file edits under
+  `scripts/planning-db-*.test.cjs`, `scripts/governance-db-*.test.cjs`, and
+  the generated planning DB report tests route to the changed `node --test`
+  file directly. Shared DB implementation surfaces under `infra/planning-db/`,
+  `tools/planning-db/knowledge/`, and `tools/governance-db/` keep the full
+  `pnpm test:planning:db` route.
 - Changed-file gates use the local changed-file set, not only committed
   `HEAD` diff. That set is the union of the merge-base diff, staged files,
   unstaged tracked files, and untracked non-ignored files. A local pre-push
