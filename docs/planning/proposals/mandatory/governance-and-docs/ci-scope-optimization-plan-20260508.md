@@ -885,6 +885,17 @@ symbols:
     cypressCoverage: N/A - local CI tooling only
     unitTests:
       - node --test scripts/verify-changed.test.cjs
+  - name: hasPlanningDbMigrationChange
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Route planning DB SQL migrations to the focused migration suite
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
   - name: planningWorkflowTestSteps
     path: scripts/local-validation-plan.cjs
     dddOwner: LocalValidationPlan

@@ -69,6 +69,10 @@ planning_type: closeout
 - `node --test tools/ci/repository-command-catalog.test.mjs` passed, 7/7
   tests.
 - `pnpm test:planning:db` passed with exit code 0 in 83.929 seconds.
+- `pnpm verify:prepush`
+  - First post-commit run failed because the feature mechanization
+    implementation gate required the new `hasPlanningDbMigrationChange` symbol
+    to be declared in the owning CI scope optimization manifest.
 
 ### No-Debt / No-Stub Evidence
 
