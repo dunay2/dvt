@@ -8,10 +8,13 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../
 export const CI_TOOL_TEST_MODES = Object.freeze(['all', 'static', 'executable']);
 
 export const EXECUTABLE_CI_TOOL_TESTS = Object.freeze([
+  'tools/ci/adapter-postgres-import-alias-regression.test.mjs',
+  'tools/ci/arc-policy-state-store.test.mjs',
   'tools/ci/architecture-dependency-guard.test.mjs',
   'tools/ci/docs-changed-governance-policy.test.mjs',
   'tools/ci/docs-frontmatter-bom.test.mjs',
   'tools/ci/docs-manifest-contract.test.mjs',
+  'tools/ci/planning-truth-sync.test.mjs',
 ]);
 
 function normalizePath(filePath) {

@@ -399,6 +399,9 @@ flowchart TD
   - Added `CI tool executable contracts` as the install-backed job for the
     executable partition, scoped through
     `ci_tool_executable_contracts_relevant`.
+  - Moved package-backed CI tool tests that import `typescript` or `js-yaml`
+    into the executable partition after the first remote run proved they cannot
+    run in the Node-only static job without `node_modules`.
   - Raised the local fingerprint baseline `maxBytes` guard from 2,120,000 to
     2,130,000 after the static suite exposed that the governed file count
     increase pushed the generated shard to 2,122,000 bytes.
@@ -421,6 +424,16 @@ flowchart TD
     `duration_ms 30467.5439`.
   - `pnpm test:ci-tools` passed 179/179 subtests in
     `duration_ms 32488.7337`, preserving the full local compatibility gate.
+  - Remote PR run #1420: required `CI tool contracts` failed in 13s, proving the
+    setup cut but exposing `ERR_MODULE_NOT_FOUND` for `typescript` and
+    `js-yaml` in three tests that were still classified as static.
+  - `node --test tools/ci/ci-tool-test-suite.test.mjs` passed 4/4 after adding
+    the package-backed exclusion guard.
+  - `node tools/ci/ci-tool-test-suite.mjs static` passed 156/156 subtests in
+    `duration_ms 3402.4957` after moving those tests to the executable
+    partition.
+  - `pnpm test:ci-tools:executable` passed 24/24 subtests in
+    `duration_ms 20230.9132`.
   - `pnpm governance:refresh` passed; generated surfaces stabilized after 2
     passes, governance DB import reported 5,221 governance files, 58
     governance components, and 39 remediation tasks, and governance DB export
