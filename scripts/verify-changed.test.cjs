@@ -68,6 +68,40 @@ test('buildVerifyChangedPlan runs adjacent planning workflow tests without the f
   assert.ok(!labels.includes('pnpm test:planning:db'));
 });
 
+test('buildVerifyChangedPlan runs targeted governance report generator tests for AI-sized changes', () => {
+  const labels = labelsFor([
+    'scripts/generate-governance-coverage-report.cjs',
+    'scripts/generate-governance-remediation-queue.cjs',
+  ]);
+
+  assert.ok(!labels.includes('pnpm planning:db:inventory:check'));
+  assert.equal(
+    labels.filter(
+      (label) => label === 'node --test scripts/generate-governance-coverage-report.test.cjs'
+    ).length,
+    1
+  );
+  assert.equal(
+    labels.filter(
+      (label) => label === 'node --test scripts/generate-governance-remediation-queue.test.cjs'
+    ).length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
+test('buildVerifyChangedPlan runs changed governance report tests directly', () => {
+  const labels = labelsFor(['scripts/generate-governance-remediation-queue.test.cjs']);
+
+  assert.equal(
+    labels.filter(
+      (label) => label === 'node --test scripts/generate-governance-remediation-queue.test.cjs'
+    ).length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
 test('buildVerifyChangedPlan runs governed changed web suites for web changes', () => {
   const labels = labelsFor(['apps/web/src/testing/vitestSuites.architecture.test.ts']);
 

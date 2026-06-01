@@ -227,6 +227,11 @@ Command semantics:
   changed-file docs, markdown, formatting, QA-artifact, and focused
   adjacent-script gates without invoking root type-check or the full planning
   DB suite for every planning workflow script edit.
+- Governance coverage/remediation report generator edits are routed to their
+  exact `node --test scripts/generate-governance-*.test.cjs` suites. That keeps
+  AI iteration on report rendering and DB-source normalization under the
+  adjacent generator contract instead of escalating to the full planning DB
+  suite unless migrations, DB rails, or shared query-store surfaces changed.
 - Changed-file gates use the local changed-file set, not only committed
   `HEAD` diff. That set is the union of the merge-base diff, staged files,
   unstaged tracked files, and untracked non-ignored files. A local pre-push
