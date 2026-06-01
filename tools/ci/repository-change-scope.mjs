@@ -183,7 +183,6 @@ export function classifyRepositoryFileScope(filePath, options = {}) {
     runtimeSource ||
     rootBuildInput ||
     rootCiPolicyInput ||
-    workflowPolicyInput ||
     CODE_VALIDATION_COMMAND_DOMAINS.has(commandClass?.domain);
   const runtimeWorkspaceFanout =
     rootBuildInput ||

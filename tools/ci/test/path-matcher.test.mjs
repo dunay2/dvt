@@ -32,12 +32,13 @@ test('script globs cover root and nested scripts explicitly', () => {
   );
 });
 
-test('computeBooleanScope marks adapter_postgres_changed for relevant workflow/config changes', () => {
+test('computeBooleanScope marks adapter_postgres_changed for relevant runtime/config changes', () => {
   const fromWorkflow = computeBooleanScope(
     ['.github/workflows/pr-quality-gate.yml'],
     PR_QUALITY_SCOPE_PATTERNS
   );
-  assert.equal(fromWorkflow.adapter_postgres_changed, true);
+  assert.equal(fromWorkflow.adapter_postgres_changed, false);
+  assert.equal(fromWorkflow.ci_tooling_changed, true);
 
   const fromTsconfig = computeBooleanScope(['tsconfig.base.json'], PR_QUALITY_SCOPE_PATTERNS);
   assert.equal(fromTsconfig.adapter_postgres_changed, true);
@@ -63,8 +64,9 @@ test('computeBooleanScope marks temporal_postgres_changed for adapter-postgres c
     ['.github/workflows/pr-quality-gate.yml'],
     PR_QUALITY_SCOPE_PATTERNS
   );
-  assert.equal(fromWorkflowConfig.temporal_changed, true);
-  assert.equal(fromWorkflowConfig.temporal_postgres_changed, true);
+  assert.equal(fromWorkflowConfig.temporal_changed, false);
+  assert.equal(fromWorkflowConfig.temporal_postgres_changed, false);
+  assert.equal(fromWorkflowConfig.ci_tooling_changed, true);
 
   const fromRuntimeDepsHelper = computeBooleanScope(
     ['scripts/build-workspace-runtime-deps.cjs'],
