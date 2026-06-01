@@ -206,13 +206,64 @@ test('buildRemediationQueueFromDbRows preserves DB-owned task payloads', () => {
   });
 
   assert.deepEqual(queue.generatedFrom, [
-    'planning_query_store.governance_remediation_query',
-    'planning_query_store.governance_coverage_query',
+    '.generated-docs/planning/status/system-governance-coverage-report.coverage.yaml',
+    '.generated-docs/planning/status/system-governance-file-index.files.yaml',
+    '.generated-docs/planning/status/system-governance-component-index.components.yaml',
+    '.generated-docs/planning/status/system-governance-component-file-map.components.yaml',
+    '.generated-docs/planning/status/system-governance-document-unit-map.docs.yaml',
   ]);
   assert.equal(queue.totals.tasks, 1);
   assert.equal(queue.totals.p0, 1);
   assert.equal(queue.totals.driftFiles, 2);
   assert.equal(queue.tasks[0].files[0].fileId, 'FILE-ENGINE-RECOVER');
+});
+
+test('buildRemediationQueueFromDbRows normalizes DB JSONB task key order', () => {
+  const queue = buildRemediationQueueFromDbRows({
+    remediationRows: [
+      {
+        raw_task: {
+          reason: 'Files are marked drift in the governed file index.',
+          expectedValidation: ['pnpm docs:governance:remediation-queue:check'],
+          documents: [],
+          files: [],
+          documentCount: 0,
+          fileCount: 0,
+          blocking: 'changed-files gate blocks touched drift files',
+          cqRails: 'runtime commands and queries',
+          dddOwner: 'AS',
+          domainUnit: 'SYS-RUNTIME',
+          rootUnit: 'SYS-RUNTIME',
+          componentFileMap:
+            '.generated-docs/planning/status/governance-components/SYS-RUNTIME-ROOT.component-files.yaml',
+          componentUnit: 'SYS-RUNTIME-ROOT',
+          priority: 'P0',
+          type: 'drift-removal',
+          id: 'GRQ-DRIFT_REMOVAL-SYS-RUNTIME-ROOT',
+        },
+      },
+    ],
+    coverageRows: [],
+  });
+
+  assert.deepEqual(Object.keys(queue.tasks[0]), [
+    'id',
+    'type',
+    'priority',
+    'componentUnit',
+    'componentFileMap',
+    'rootUnit',
+    'domainUnit',
+    'dddOwner',
+    'cqRails',
+    'blocking',
+    'reason',
+    'fileCount',
+    'documentCount',
+    'files',
+    'documents',
+    'expectedValidation',
+  ]);
 });
 
 test('readRemediationQueueFromDb reads remediation and coverage query views', async () => {

@@ -540,7 +540,13 @@ Current workflow consumers:
   before DB validation, but no longer runs `governance:db:import` inside
   generation passes. It performs the heavy governance DB import once in the
   final database-validation phase, then runs `governance:db:check` and
+  DB-sourced final coverage/remediation report checks before
   `governance:db:export:check`.
+- Default `pnpm verify:prepush` delegates changed-slice planning DB inventory
+  validation to `pnpm verify:changed` instead of running
+  `planning:db:inventory:check` a second time. Full pre-push mode still keeps
+  the explicit planning DB inventory step as part of its full closeout
+  baseline.
 - Dependency review and CodeQL workflows provide the current dependency/SAST
   baseline when the repository has the required GitHub Advanced Security
   capabilities. Private repositories must set

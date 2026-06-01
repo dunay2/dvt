@@ -76,8 +76,11 @@ test('package scripts expose and gate the DB surface inventory check', () => {
       .join('\n'),
     /pnpm planning:db:inventory:check/
   );
+  assert.deepEqual(buildPrepushPlan(['scripts/planning-db-import.cjs']).map(prepushCommandLabel), [
+    'pnpm verify:changed',
+  ]);
   assert.match(
-    buildPrepushPlan(['scripts/planning-db-import.cjs']).map(prepushCommandLabel).join('\n'),
+    buildPrepushPlan([], { full: true }).map(prepushCommandLabel).join('\n'),
     /pnpm planning:db:inventory:check/
   );
 });

@@ -3824,6 +3824,12 @@ symbols:
     name: main
     path: scripts/generate-governance-coverage-report.cjs
   - <<: *governanceDbReportSourceSymbol
+    name: remediationGeneratedSources
+    path: scripts/generate-governance-remediation-queue.cjs
+  - <<: *governanceDbReportSourceSymbol
+    name: normalizeTaskPayload
+    path: scripts/generate-governance-remediation-queue.cjs
+  - <<: *governanceDbReportSourceSymbol
     name: mapDbRemediationTaskRow
     path: scripts/generate-governance-remediation-queue.cjs
   - <<: *governanceDbReportSourceSymbol

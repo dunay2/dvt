@@ -185,7 +185,7 @@ function classifyPrepushScope(changedFiles, options = {}) {
 
   return {
     hasChangedFiles: scope.hasChangedFiles,
-    needsPlanningDbInventory: full || scope.needsPlanningDbInventory,
+    needsPlanningDbInventory: full,
     needsGovernanceGlobal: full,
     needsFeatureMechanization: full || scope.needsFeatureMechanization,
     needsTraceabilityAdr0: full,
