@@ -47,13 +47,13 @@ between immutable identity, human-facing label and semantic reference.
 DVT will define canonical node identity as a layered model:
 
 ```ts
-nodeId       // immutable technical identity, currently WorkspaceGraphAuthoringNode.id
-instanceId   // optional future runtime/instance identity when one definition is reused
-kind         // plugin-qualified node kind, e.g. dbt:model, dvt:sql_transform
-role         // input, transform, check, output, control
-displayName  // editable human-facing label
-semanticRef  // stable logical/business reference when available
-shortId      // compact deterministic visual suffix derived from nodeId
+nodeId; // immutable technical identity, currently WorkspaceGraphAuthoringNode.id
+instanceId; // optional future runtime/instance identity when one definition is reused
+kind; // plugin-qualified node kind, e.g. dbt:model, dvt:sql_transform
+role; // input, transform, check, output, control
+displayName; // editable human-facing label
+semanticRef; // stable logical/business reference when available
+shortId; // compact deterministic visual suffix derived from nodeId
 ```
 
 For the current implementation generation, `WorkspaceGraphAuthoringNode.id` is
@@ -103,7 +103,7 @@ in multiple canvases or workspaces later.
 Current equivalent:
 
 ```ts
-WorkspaceGraphAuthoringNode.id
+WorkspaceGraphAuthoringNode.id;
 ```
 
 Potential future fields:
@@ -137,27 +137,27 @@ interface RuntimeStepIdentity {
 
 ## Cross-surface rules
 
-| Surface | Identity authority | Presentation label |
-| ------- | ------------------ | ------------------ |
-| Canvas card | `nodeId` | `displayName` / `semanticRef` |
-| Project Nodes panel | `nodeId` | `semanticRef ?? displayName` |
-| Inspector | `nodeId` | editable `displayName` plus read-only identity fields |
-| Edges | `sourceId`, `targetId` | none |
-| Planner graph source | `nodeId` and stable step/source metadata | optional metadata only |
-| ExecutionPlan | `stepId`, optional source node metadata | none |
-| Lineage | run/step/artifact IDs plus source node metadata | optional label only |
-| Cost | run/step/node correlation IDs | optional label only |
-| Diff | structural IDs and semantic refs | user-facing labels for display |
+| Surface              | Identity authority                              | Presentation label                                    |
+| -------------------- | ----------------------------------------------- | ----------------------------------------------------- |
+| Canvas card          | `nodeId`                                        | `displayName` / `semanticRef`                         |
+| Project Nodes panel  | `nodeId`                                        | `semanticRef ?? displayName`                          |
+| Inspector            | `nodeId`                                        | editable `displayName` plus read-only identity fields |
+| Edges                | `sourceId`, `targetId`                          | none                                                  |
+| Planner graph source | `nodeId` and stable step/source metadata        | optional metadata only                                |
+| ExecutionPlan        | `stepId`, optional source node metadata         | none                                                  |
+| Lineage              | run/step/artifact IDs plus source node metadata | optional label only                                   |
+| Cost                 | run/step/node correlation IDs                   | optional label only                                   |
+| Diff                 | structural IDs and semantic refs                | user-facing labels for display                        |
 
 ## Current contract mapping
 
-| Target concept | Current field | Notes |
-| -------------- | ------------- | ----- |
-| `nodeId` | `WorkspaceGraphAuthoringNode.id` | Already immutable by convention and referenced by edges. |
-| `displayName` | `WorkspaceGraphAuthoringNode.name` | Should be treated as mutable presentation metadata. |
-| `kind` | `WorkspaceGraphAuthoringNode.kind` + `pluginId` | Web projection already normalizes non-qualified kinds to `${pluginId}:${kind}`. |
-| `semanticRef` | `path` or `metadata.semanticRef` | Needs standardization before promotion. |
-| `shortId` | derived | Should be deterministic from `nodeId`; do not use as persistence authority. |
+| Target concept | Current field                                   | Notes                                                                           |
+| -------------- | ----------------------------------------------- | ------------------------------------------------------------------------------- |
+| `nodeId`       | `WorkspaceGraphAuthoringNode.id`                | Already immutable by convention and referenced by edges.                        |
+| `displayName`  | `WorkspaceGraphAuthoringNode.name`              | Should be treated as mutable presentation metadata.                             |
+| `kind`         | `WorkspaceGraphAuthoringNode.kind` + `pluginId` | Web projection already normalizes non-qualified kinds to `${pluginId}:${kind}`. |
+| `semanticRef`  | `path` or `metadata.semanticRef`                | Needs standardization before promotion.                                         |
+| `shortId`      | derived                                         | Should be deterministic from `nodeId`; do not use as persistence authority.     |
 
 ## Migration posture
 

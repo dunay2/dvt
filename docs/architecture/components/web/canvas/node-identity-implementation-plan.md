@@ -16,13 +16,13 @@ implementation sequence. It intentionally avoids a breaking contract migration
 for the first iteration. The first implementation should treat the existing
 contract fields as follows:
 
-| Concept | Current field | First implementation meaning |
-| ------- | ------------- | ---------------------------- |
-| `nodeId` | `WorkspaceGraphAuthoringNode.id` | immutable graph identity |
-| `displayName` | `WorkspaceGraphAuthoringNode.name` | editable UI label |
+| Concept       | Current field                              | First implementation meaning   |
+| ------------- | ------------------------------------------ | ------------------------------ |
+| `nodeId`      | `WorkspaceGraphAuthoringNode.id`           | immutable graph identity       |
+| `displayName` | `WorkspaceGraphAuthoringNode.name`         | editable UI label              |
 | `semanticRef` | `node.path` or `node.metadata.semanticRef` | stable data/workflow reference |
-| `shortId` | derived from `nodeId` | visual disambiguator only |
-| `kind` | `pluginId + kind` | plugin-qualified node kind |
+| `shortId`     | derived from `nodeId`                      | visual disambiguator only      |
+| `kind`        | `pluginId + kind`                          | plugin-qualified node kind     |
 
 The implementation goal is to remove visual ambiguity without changing planner
 or runtime behavior.
@@ -51,21 +51,21 @@ than mutate public contracts immediately.
 
 The following files should be inspected and changed in small commits:
 
-| Area | File | Expected responsibility |
-| ---- | ---- | ----------------------- |
-| Inspector | `apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx` | render full identity block and rename affordance |
-| Inspector model | `apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts` | project selected node into inspector read model |
-| Creation | `apps/web/src/app/views/canvas/useCanvasAuthoringNodeCreationHandlers.ts` | generate unique default display names |
-| Drop/import | `apps/web/src/app/views/canvas/useCanvasNodeDropHandlers.ts` | bind semantic refs when known |
-| Duplicate | `apps/web/src/app/views/canvas/useCanvasNodeDuplicateHandlers.ts` | prevent duplicate auto names on duplication |
-| Duplicate command | `apps/web/src/app/views/canvas/canvasDuplicateNodeCommand.ts` | preserve nodeId semantics and regenerate display name/shortId projection |
-| Draft authoring | `apps/web/src/app/views/canvas/canvasDraftAuthoring.ts` | persist metadata-only rename safely |
-| Node mapper | `apps/web/src/app/views/canvas/canvasNodeMapper.ts` | provide projected identity to React Flow nodes |
-| Dbt node renderer | `apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx` | render primary title + secondary identity line |
-| Fallback renderer | `apps/web/src/app/plugins/FallbackNodeRenderer.tsx` | render generic nodes with shortId disambiguation |
-| Legacy component | `apps/web/src/app/components/canvas/DbtNodeComponent.tsx` | check whether still active; if active, align rendering |
-| Planner projection | `apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.ts` | verify planner does not depend on display labels |
-| Workspace explorer | `apps/web/src/app/components/canvasWorkspaceExplorerModel.ts` | show grouped meaningful labels in Project Nodes |
+| Area               | File                                                                      | Expected responsibility                                                  |
+| ------------------ | ------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Inspector          | `apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx`       | render full identity block and rename affordance                         |
+| Inspector model    | `apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts`          | project selected node into inspector read model                          |
+| Creation           | `apps/web/src/app/views/canvas/useCanvasAuthoringNodeCreationHandlers.ts` | generate unique default display names                                    |
+| Drop/import        | `apps/web/src/app/views/canvas/useCanvasNodeDropHandlers.ts`              | bind semantic refs when known                                            |
+| Duplicate          | `apps/web/src/app/views/canvas/useCanvasNodeDuplicateHandlers.ts`         | prevent duplicate auto names on duplication                              |
+| Duplicate command  | `apps/web/src/app/views/canvas/canvasDuplicateNodeCommand.ts`             | preserve nodeId semantics and regenerate display name/shortId projection |
+| Draft authoring    | `apps/web/src/app/views/canvas/canvasDraftAuthoring.ts`                   | persist metadata-only rename safely                                      |
+| Node mapper        | `apps/web/src/app/views/canvas/canvasNodeMapper.ts`                       | provide projected identity to React Flow nodes                           |
+| Dbt node renderer  | `apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx`                        | render primary title + secondary identity line                           |
+| Fallback renderer  | `apps/web/src/app/plugins/FallbackNodeRenderer.tsx`                       | render generic nodes with shortId disambiguation                         |
+| Legacy component   | `apps/web/src/app/components/canvas/DbtNodeComponent.tsx`                 | check whether still active; if active, align rendering                   |
+| Planner projection | `apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.ts`            | verify planner does not depend on display labels                         |
+| Workspace explorer | `apps/web/src/app/components/canvasWorkspaceExplorerModel.ts`             | show grouped meaningful labels in Project Nodes                          |
 
 ## 4. Proposed helper module
 
@@ -211,18 +211,18 @@ Acceptance:
 
 ## 6. Test plan
 
-| Test type | Target |
-| --------- | ------ |
-| Unit | `deriveCanvasNodeShortId` deterministic and stable |
-| Unit | `allocateUniqueCanvasNodeDisplayName` avoids automatic duplicates |
-| Unit | `projectCanvasNodeIdentity` prefers `semanticRef` over display name |
-| Unit | duplicate display names trigger `shortId` in secondary title |
-| Component | Dbt/fallback node renderer shows primary + secondary identity |
-| Component | Inspector shows full identity block |
-| Component | Project Nodes panel lists meaningful labels |
-| Regression | rename keeps `edge.sourceId` / `edge.targetId` unchanged |
-| Regression | planner projection does not depend on display name |
-| E2E | create several source nodes; no ambiguous repeated visible labels |
+| Test type  | Target                                                              |
+| ---------- | ------------------------------------------------------------------- |
+| Unit       | `deriveCanvasNodeShortId` deterministic and stable                  |
+| Unit       | `allocateUniqueCanvasNodeDisplayName` avoids automatic duplicates   |
+| Unit       | `projectCanvasNodeIdentity` prefers `semanticRef` over display name |
+| Unit       | duplicate display names trigger `shortId` in secondary title        |
+| Component  | Dbt/fallback node renderer shows primary + secondary identity       |
+| Component  | Inspector shows full identity block                                 |
+| Component  | Project Nodes panel lists meaningful labels                         |
+| Regression | rename keeps `edge.sourceId` / `edge.targetId` unchanged            |
+| Regression | planner projection does not depend on display name                  |
+| E2E        | create several source nodes; no ambiguous repeated visible labels   |
 
 ## 7. Non-goals for this PR/iteration
 
