@@ -42,7 +42,9 @@ export function CostDriverList({ drivers, copy }: CostDriverListProps) {
                 <div
                   className={cn(
                     'h-2 rounded',
-                    driver.status === 'failed' ? 'bg-[var(--status-warning)]' : 'bg-[var(--status-info)]'
+                    driver.status === 'failed'
+                      ? 'bg-[var(--status-warning)]'
+                      : 'bg-[var(--status-info)]'
                   )}
                   style={{ width: `${Math.max(8, (driver.durationMs / maxDurationMs) * 100)}%` }}
                 />

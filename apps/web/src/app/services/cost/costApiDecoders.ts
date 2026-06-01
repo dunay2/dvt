@@ -22,7 +22,11 @@ function readString(record: Record<string, unknown>, key: string, path: string):
   return value;
 }
 
-function readNullableString(record: Record<string, unknown>, key: string, path: string): string | null {
+function readNullableString(
+  record: Record<string, unknown>,
+  key: string,
+  path: string
+): string | null {
   const value = record[key];
   if (value === null) {
     return null;
@@ -48,14 +52,20 @@ function readNull(record: Record<string, unknown>, key: string, path: string): n
   return null;
 }
 
-function readCostCaptureStatus(record: Record<string, unknown>): CostAttributionSummary['costCaptureStatus'] {
+function readCostCaptureStatus(
+  record: Record<string, unknown>
+): CostAttributionSummary['costCaptureStatus'] {
   if (record.costCaptureStatus !== 'unavailable') {
     return fail('costCaptureStatus', 'unavailable');
   }
   return 'unavailable';
 }
 
-function readRecord(record: Record<string, unknown>, key: string, path: string): Record<string, unknown> {
+function readRecord(
+  record: Record<string, unknown>,
+  key: string,
+  path: string
+): Record<string, unknown> {
   const value = record[key];
   if (!isRecord(value)) {
     return fail(path, 'object');
@@ -92,15 +102,26 @@ function decodeRun(input: unknown, index: number): CostAttributionRun {
     planId: readString(input, 'planId', `runs[${index}].planId`),
     planVersion: readString(input, 'planVersion', `runs[${index}].planVersion`),
     status: readNullableString(input, 'status', `runs[${index}].status`),
-    completedStepCount: readNumber(input, 'completedStepCount', `runs[${index}].completedStepCount`),
+    completedStepCount: readNumber(
+      input,
+      'completedStepCount',
+      `runs[${index}].completedStepCount`
+    ),
     failedStepCount: readNumber(input, 'failedStepCount', `runs[${index}].failedStepCount`),
-    totalStepDurationMs: readNumber(input, 'totalStepDurationMs', `runs[${index}].totalStepDurationMs`),
+    totalStepDurationMs: readNumber(
+      input,
+      'totalStepDurationMs',
+      `runs[${index}].totalStepDurationMs`
+    ),
     costAmount: readNull(input, 'costAmount', `runs[${index}].costAmount`),
     currency: readNull(input, 'currency', `runs[${index}].currency`),
   };
 }
 
-function readStepEventType(input: Record<string, unknown>, index: number): CostAttributionStep['eventType'] {
+function readStepEventType(
+  input: Record<string, unknown>,
+  index: number
+): CostAttributionStep['eventType'] {
   const value = input.eventType;
   if (value === 'StepCompleted' || value === 'StepFailed') {
     return value;
@@ -127,7 +148,9 @@ export function decodeCostAttributionSummary(input: unknown): CostAttributionSum
     return fail('payload', 'object');
   }
 
-  const observedWindow = decodeObservedWindow(readRecord(input, 'observedWindow', 'observedWindow'));
+  const observedWindow = decodeObservedWindow(
+    readRecord(input, 'observedWindow', 'observedWindow')
+  );
   const runs = readArray(input, 'runs', 'runs').map(decodeRun);
   const steps = readArray(input, 'steps', 'steps').map(decodeStep);
 

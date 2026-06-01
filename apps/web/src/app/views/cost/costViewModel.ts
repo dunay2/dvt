@@ -90,7 +90,9 @@ function createEmptyCostViewModel(): CostViewModel {
 
 function buildCostDrivers(steps: readonly CostAttributionStep[]): CostDriver[] {
   return [...steps]
-    .sort((left, right) => right.durationMs - left.durationMs || left.stepId.localeCompare(right.stepId))
+    .sort(
+      (left, right) => right.durationMs - left.durationMs || left.stepId.localeCompare(right.stepId)
+    )
     .map((step) => {
       const status = step.eventType === 'StepFailed' ? 'failed' : 'success';
       return {

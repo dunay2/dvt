@@ -55,7 +55,5 @@ export type CostAttributionSummary = Readonly<{
 }>;
 
 export interface ICostAttributionSummaryPort {
-  getCostAttributionSummary(
-    query: CostAttributionSummaryQuery
-  ): Promise<CostAttributionSummary>;
+  getCostAttributionSummary(query: CostAttributionSummaryQuery): Promise<CostAttributionSummary>;
 }

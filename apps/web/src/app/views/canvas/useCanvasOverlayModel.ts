@@ -1,9 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  asIsoUtcString,
-  asNonBlankString,
-  type CanonicalRunStatus,
-} from '@dvt/contracts';
+import { asIsoUtcString, asNonBlankString, type CanonicalRunStatus } from '@dvt/contracts';
 
 import { buildNodeDecorations, buildOverlayContext } from './canvasOverlayContext';
 import {
