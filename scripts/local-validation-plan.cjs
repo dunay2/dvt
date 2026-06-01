@@ -109,6 +109,7 @@ const VERIFY_CHANGED_GROUPS = Object.freeze({
   web: Object.freeze([step('test-web-changed', 'pnpm', 'test:web:changed')]),
   planningDb: Object.freeze([
     step('planning-db-inventory-check', 'pnpm', 'planning:db:inventory:check'),
+    step('test-planning-db-migrations', 'pnpm', 'test:planning:db:migrations'),
     step('test-planning-db', 'pnpm', 'test:planning:db'),
   ]),
   developerWorkflowSelfTest: Object.freeze([
@@ -138,13 +139,19 @@ function hasPlanningDbFullSuiteChange(changedFiles) {
   return changedFiles.some((filePath) =>
     matchesAny(filePath, [
       'infra/planning-db/',
-      'tools/planning-db/',
+      'tools/planning-db/knowledge/',
       'tools/governance-db/',
       /^scripts\/(?:planning-db-|governance-db-).+\.test\.cjs$/u,
       'scripts/governance-generated-paths.test.cjs',
       'scripts/generate-workboard.test.cjs',
       'scripts/generate-planning-lanes.test.cjs',
     ])
+  );
+}
+
+function hasPlanningDbMigrationChange(changedFiles) {
+  return changedFiles.some((filePath) =>
+    /^tools\/planning-db\/migrations\/.+\.sql$/u.test(filePath)
   );
 }
 
@@ -246,8 +253,11 @@ function buildVerifyChangedPlan(files) {
     pushSteps(plan, VERIFY_CHANGED_GROUPS.web);
   }
   pushSteps(plan, planningWorkflowTestSteps(changedFiles));
-  if (hasPlanningDbFullSuiteChange(changedFiles)) {
+  if (hasPlanningDbMigrationChange(changedFiles)) {
     pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[1]);
+  }
+  if (hasPlanningDbFullSuiteChange(changedFiles)) {
+    pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[2]);
   }
   if (hasDeveloperWorkflowVerifierChange(changedFiles)) {
     pushSteps(plan, VERIFY_CHANGED_GROUPS.developerWorkflowSelfTest);
@@ -298,6 +308,7 @@ module.exports = {
   hasWebChange,
   hasPlanningDbChange,
   hasPlanningDbFullSuiteChange,
+  hasPlanningDbMigrationChange,
   normalizeChangedFiles,
   planningWorkflowTestSteps,
 };

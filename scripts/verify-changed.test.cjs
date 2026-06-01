@@ -44,10 +44,22 @@ test('buildVerifyChangedPlan adds planning DB validation for planning query-stor
   ]);
 
   assert.equal(labels.filter((label) => label === 'pnpm planning:db:inventory:check').length, 1);
-  assert.equal(labels.filter((label) => label === 'pnpm test:planning:db').length, 1);
-  assert.ok(
-    labels.indexOf('pnpm planning:db:inventory:check') < labels.indexOf('pnpm test:planning:db')
+  assert.equal(
+    labels.filter((label) => label === 'node --test scripts/planning-db-query.test.cjs').length,
+    1
   );
+  assert.equal(labels.filter((label) => label === 'pnpm test:planning:db:migrations').length, 1);
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
+test('buildVerifyChangedPlan routes migration-only changes to the migration suite', () => {
+  const labels = labelsFor([
+    'tools/planning-db/migrations/022_component_engineering_record_query.sql',
+  ]);
+
+  assert.equal(labels.filter((label) => label === 'pnpm planning:db:inventory:check').length, 1);
+  assert.equal(labels.filter((label) => label === 'pnpm test:planning:db:migrations').length, 1);
+  assert.ok(!labels.includes('pnpm test:planning:db'));
 });
 
 test('buildVerifyChangedPlan reuses canonical planning DB scope for inventory checks', () => {
