@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-05-20",
+  "generated": "2026-06-01",
   "repo": {
     "sha": "local"
   },
@@ -1070,6 +1070,17 @@
         "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts"
       ],
       "title": "ADR-0057: Temporal Step Activity Routing By Capability"
+    },
+    {
+      "number": "ADR-0058",
+      "decisions": [
+        "Define warehouse connection discovery queries and source import command DTOs.",
+        "Keep source import scope bound to protected runtime workspace authorization."
+      ],
+      "implemented_by": [
+        "apps/api/src/application/ports/warehouseSourceImport.ts"
+      ],
+      "title": "ADR-0058: Warehouse Source Import Rails"
     }
   ]
 }
