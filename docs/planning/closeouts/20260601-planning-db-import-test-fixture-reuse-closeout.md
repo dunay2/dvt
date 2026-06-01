@@ -46,10 +46,14 @@ planning_type: closeout
 
 ## Fowler Opportunity Matrix
 
-| Scenario                                                                 | Opportunity                                       | Fowler pattern                                                 | DDD owner                              | Rail                                        | Allowed surfaces                      | Tests                                 | Out of scope |
-| ------------------------------------------------------------------------ | ------------------------------------------------- | -------------------------------------------------------------- | -------------------------------------- | ------------------------------------------- | ------------------------------------- | ------------------------------------- | ------------ |
-| Repeated pure snapshot assertions rebuild the same governance read model | Duplicate semantics and test-only confidence cost | Extract Function / Consolidate Duplicate Conditional Fragments | Repository CI tool contract tests      | `ValidateCiScopeOptimizationContract` query | `scripts/planning-db-import.test.cjs` | Production import caching             |
-| Advisory-lock assertion pays for full import content                     | Feature envy on a broad integration path          | Substitute Algorithm in tests by narrowing fixture inputs      | Planning query-store import validation | `ValidateCiScopeOptimizationContract` query | `scripts/planning-db-import.test.cjs` | Changing DB schema or import behavior |
+<!-- markdownlint-disable MD060 -->
+
+| Scenario                                                                 | Opportunity                                       | Fowler pattern                                                 | DDD owner                              | Rail                                        | Allowed surfaces                      | Tests                | Out of scope                          |
+| ------------------------------------------------------------------------ | ------------------------------------------------- | -------------------------------------------------------------- | -------------------------------------- | ------------------------------------------- | ------------------------------------- | -------------------- | ------------------------------------- |
+| Repeated pure snapshot assertions rebuild the same governance read model | Duplicate semantics and test-only confidence cost | Extract Function / Consolidate Duplicate Conditional Fragments | Repository CI tool contract tests      | `ValidateCiScopeOptimizationContract` query | `scripts/planning-db-import.test.cjs` | Focused spec profile | Production import caching             |
+| Advisory-lock assertion pays for full import content                     | Feature envy on a broad integration path          | Substitute Algorithm in tests by narrowing fixture inputs      | Planning query-store import validation | `ValidateCiScopeOptimizationContract` query | `scripts/planning-db-import.test.cjs` | Focused spec profile | Changing DB schema or import behavior |
+
+<!-- markdownlint-enable MD060 -->
 
 ## Current State Diagram
 
