@@ -62,6 +62,42 @@ test('buildVerifyChangedPlan routes migration-only changes to the migration suit
   assert.ok(!labels.includes('pnpm test:planning:db'));
 });
 
+test('buildVerifyChangedPlan avoids duplicate migration tests when the suite is already direct', () => {
+  const labels = labelsFor([
+    'scripts/planning-db-migrate.test.cjs',
+    'tools/planning-db/migrations/022_component_engineering_record_query.sql',
+  ]);
+
+  assert.equal(
+    labels.filter((label) => label === 'node --test scripts/planning-db-migrate.test.cjs').length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:planning:db:migrations'));
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
+test('buildVerifyChangedPlan keeps mixed docs and planning DB slices targeted and deduped', () => {
+  const labels = labelsFor([
+    'docs/guides/testing-and-ci-capabilities.md',
+    'scripts/planning-db-import.cjs',
+    'scripts/planning-db-import.test.cjs',
+    'scripts/planning-db-migrate.test.cjs',
+    'tools/planning-db/migrations/053_command_query_rail_catalog.sql',
+  ]);
+
+  assert.deepEqual(labels, [...new Set(labels)]);
+  assert.equal(
+    labels.filter((label) => label === 'node --test scripts/planning-db-import.test.cjs').length,
+    1
+  );
+  assert.equal(
+    labels.filter((label) => label === 'node --test scripts/planning-db-migrate.test.cjs').length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:planning:db:migrations'));
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
 test('buildVerifyChangedPlan runs changed planning DB tests directly', () => {
   const labels = labelsFor(['scripts/planning-db-surface-inventory-check.test.cjs']);
 
@@ -194,6 +230,16 @@ test('buildVerifyChangedPlan self-tests developer workflow verifier changes', ()
 
   assert.ok(labels.includes('node --test scripts/verify-changed.test.cjs'));
   assert.ok(labels.includes('node --test scripts/verify-prepush.test.cjs'));
+});
+
+test('buildVerifyChangedPlan runs changed AI preflight tests directly', () => {
+  const labels = labelsFor(['scripts/ai-preflight.cjs']);
+
+  assert.equal(
+    labels.filter((label) => label === 'node --test scripts/ai-preflight.test.cjs').length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:planning:db'));
 });
 
 test('buildVerifyChangedPlan self-tests changed verifier changes without prepush verifier tests', () => {

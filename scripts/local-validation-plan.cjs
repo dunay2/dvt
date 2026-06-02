@@ -6,6 +6,8 @@ const { classifyRepositoryChangedScope } = require('../tools/ci/repository-chang
 
 const repoRoot = path.resolve(__dirname, '..');
 const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
+  'scripts/ai-preflight.cjs': 'scripts/ai-preflight.test.cjs',
+  'scripts/ai-preflight.test.cjs': 'scripts/ai-preflight.test.cjs',
   'scripts/closeout-changed.cjs': 'scripts/closeout-changed.test.cjs',
   'scripts/closeout-changed.test.cjs': 'scripts/closeout-changed.test.cjs',
   'scripts/check-governance-unit-coverage.cjs': 'scripts/check-governance-unit-coverage.test.cjs',
@@ -277,8 +279,12 @@ function buildVerifyChangedPlan(files) {
   if (hasWebChange(changedFiles)) {
     pushSteps(plan, VERIFY_CHANGED_GROUPS.web);
   }
-  pushSteps(plan, planningWorkflowTestSteps(changedFiles));
-  if (hasPlanningDbMigrationChange(changedFiles)) {
+  const directPlanningWorkflowTestSteps = planningWorkflowTestSteps(changedFiles);
+  pushSteps(plan, directPlanningWorkflowTestSteps);
+  const runsMigrationTestDirectly = directPlanningWorkflowTestSteps.some(
+    (nextStep) => commandLabel(nextStep) === 'node --test scripts/planning-db-migrate.test.cjs'
+  );
+  if (hasPlanningDbMigrationChange(changedFiles) && !runsMigrationTestDirectly) {
     pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[1]);
   }
   if (hasPlanningDbFullSuiteChange(changedFiles)) {

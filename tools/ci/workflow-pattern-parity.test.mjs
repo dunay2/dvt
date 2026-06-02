@@ -53,7 +53,7 @@ test('adapter-postgres policy stays wired into the PR quality gate and test work
   assertWorkflowContains(testWorkflow, 'node tools/ci/emit-scope.mjs --mode test');
   assertWorkflowContains(
     testWorkflow,
-    'adapter_postgres_changed: ${{ steps.scope.outputs.postgres_capability_changed }}'
+    'postgres_capability_changed: ${{ steps.scope.outputs.postgres_capability_changed }}'
   );
   assertWorkflowContains(prQualityGate, 'node tools/ci/emit-scope.mjs --mode pr-quality');
   assert.doesNotMatch(testWorkflow, /generate-paths-filter\.js/u);
@@ -245,6 +245,40 @@ test('contracts and test workflows consume semantic scope outputs instead of inl
   assert.doesNotMatch(testWorkflow, /steps\.cov_changes\.outputs/u);
 });
 
+test('Test Suite heavy PR lanes are gated at job level by one detector', () => {
+  const testWorkflow = readFileSync('.github/workflows/test.yml', 'utf8');
+
+  assert.equal(countWorkflowCommand(testWorkflow, 'node tools/ci/emit-scope.mjs --mode test'), 1);
+  assert.equal(
+    countWorkflowCommand(
+      testWorkflow,
+      'node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json'
+    ),
+    1
+  );
+
+  for (const output of [
+    'adapter_temporal: ${{ steps.scope.outputs.adapter_temporal }}',
+    'web: ${{ steps.scope.outputs.web }}',
+    'root_build_sensitive: ${{ steps.scope.outputs.root_build_sensitive }}',
+    'determinism_relevant: ${{ steps.scope.outputs.determinism_relevant }}',
+    'coverage_relevant: ${{ steps.scope.outputs.coverage_relevant }}',
+    'postgres_capability_changed: ${{ steps.scope.outputs.postgres_capability_changed }}',
+  ]) {
+    assertWorkflowContains(testWorkflow, output);
+  }
+
+  for (const predicate of [
+    "needs.detect_test_matrix.outputs.adapter_temporal == 'true'",
+    "needs.detect_test_matrix.outputs.web == 'true'",
+    "needs.detect_test_matrix.outputs.determinism_relevant == 'true'",
+    "needs.detect_test_matrix.outputs.coverage_relevant == 'true'",
+    "needs.detect_test_matrix.outputs.postgres_capability_changed == 'true'",
+  ]) {
+    assertWorkflowContains(testWorkflow, predicate);
+  }
+});
+
 test('engine coverage scope is a semantic superset of engine workspace policy', () => {
   for (const pattern of workflowScopePolicy.workspace_engine) {
     assert.ok(
@@ -280,6 +314,33 @@ test('PR quality gate consumes prepush-equivalent scope outputs for expensive ga
   assertWorkflowContains(prQualityGate, 'steps.scope.outputs.traceability_adr0_relevant');
   assertWorkflowContains(prQualityGate, 'steps.scope.outputs.feature_mechanization_relevant');
   assertWorkflowContains(prQualityGate, 'steps.scope.outputs.code_validation_relevant');
+});
+
+test('scope diff consumers use shallow checkout instead of full PR history', () => {
+  const fetchScopeBaseAction = readFileSync('.github/actions/fetch-scope-base/action.yml', 'utf8');
+  const ciWorkflow = readFileSync('.github/workflows/ci.yml', 'utf8');
+  const contractsWorkflow = readFileSync('.github/workflows/contracts.yml', 'utf8');
+  const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
+  const testWorkflow = readFileSync('.github/workflows/test.yml', 'utf8');
+  const workflowBundle = [ciWorkflow, contractsWorkflow, prQualityGate, testWorkflow].join('\n');
+
+  assertWorkflowContains(fetchScopeBaseAction, 'git fetch --no-tags --depth=1 origin');
+  assertWorkflowContains(fetchScopeBaseAction, 'BASE_REF: ${{ inputs.base-ref }}');
+  assertWorkflowContains(
+    fetchScopeBaseAction,
+    '+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}'
+  );
+
+  for (const workflow of [ciWorkflow, contractsWorkflow, prQualityGate, testWorkflow]) {
+    assertWorkflowContains(workflow, 'uses: ./.github/actions/fetch-scope-base');
+  }
+
+  assertWorkflowContains(workflowBundle, 'fetch-depth: 1');
+  assert.doesNotMatch(workflowBundle, /fetch-depth:\s*0/u);
+  assert.doesNotMatch(
+    workflowBundle,
+    /fetch-depth:\s*\$\{\{\s*github\.event_name == 'pull_request' && '0' \|\| '1'\s*\}\}/u
+  );
 });
 
 test('PR quality gate is the single remote owner for ADR-0000 traceability', () => {

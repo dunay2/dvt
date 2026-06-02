@@ -25,9 +25,7 @@ const { runMigrations, schemaName } = require('./planning-db-migrate.cjs');
 const {
   buildKnowledgeSnapshotFromDocuments,
 } = require('../tools/planning-db/knowledge/documentSnapshot.cjs');
-const {
-  extractFeatureMechanizationManifests,
-} = require('./lib/feature-mechanization-manifest.cjs');
+const { buildCommandQueryRailSnapshot } = require('./planning-db/command-query-rail-catalog.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const laneDirectory = path.join(repoRoot, 'docs', 'planning', 'state');
@@ -920,7 +918,11 @@ function buildGovernanceFileSnapshot(options = {}) {
     sourceContentSha256: remediationQueueSource.contentSha256,
     rawTask: task,
   }));
-  const { riskDebtItems } = buildRiskDebtSnapshot({ governanceFiles: files });
+  const riskDebtSnapshotOptions = { governanceFiles: files };
+  if (options.riskDocuments !== undefined) {
+    riskDebtSnapshotOptions.riskDocuments = options.riskDocuments;
+  }
+  const { riskDebtItems } = buildRiskDebtSnapshot(riskDebtSnapshotOptions);
 
   return {
     index,
@@ -1006,126 +1008,6 @@ async function buildRepositoryCommandSnapshot() {
   };
 }
 
-function normalizeRailName(value) {
-  return normalizeText(value).trim().toLowerCase();
-}
-
-function normalizeRailStatus(value) {
-  const status = normalizeText(value).trim();
-  return status || 'declared';
-}
-
-function isCommandQueryRailGap(railStatus, implementationRefCount) {
-  const normalizedStatus = normalizeRailName(railStatus);
-  return (
-    implementationRefCount === 0 ||
-    normalizedStatus.startsWith('missing') ||
-    ['planned', 'unimplemented', 'not-implemented'].includes(normalizedStatus)
-  );
-}
-
-function normalizeFeatureMechanizationDocument(document) {
-  const sourcePath = toPosix(document.sourcePath || document.path || '');
-  const raw = normalizeText(document.raw ?? document.content);
-  return {
-    sourcePath,
-    raw,
-    contentSha256: document.contentSha256 || sha256(raw),
-  };
-}
-
-function symbolReferencesForRail(manifest, railName) {
-  const normalizedRailName = normalizeRailName(railName);
-
-  return normalizeArray(manifest.symbols)
-    .filter((symbol) =>
-      normalizeArray(symbol?.cqRails).some(
-        (cqRail) => normalizeRailName(cqRail) === normalizedRailName
-      )
-    )
-    .map((symbol) => ({
-      name: normalizeText(symbol?.name),
-      path: normalizeText(symbol?.path),
-      dddOwner: normalizeText(symbol?.dddOwner),
-      unitTests: normalizeArray(symbol?.unitTests).map(normalizeText).filter(Boolean),
-    }))
-    .filter((symbol) => symbol.name || symbol.path || symbol.dddOwner);
-}
-
-function buildCommandQueryRailSnapshot(options = {}) {
-  const sourceDocuments = normalizeArray(options.docs).length
-    ? normalizeArray(options.docs)
-    : listTrackedFeatureMechanizationDocuments();
-  const documents = sourceDocuments.map(normalizeFeatureMechanizationDocument);
-  const rails = [];
-
-  for (const document of documents) {
-    for (const extracted of extractFeatureMechanizationManifests(
-      document.raw,
-      document.sourcePath
-    )) {
-      const manifest = extracted.manifest;
-      if (!manifest || typeof manifest !== 'object') {
-        continue;
-      }
-
-      const featureId = normalizeText(manifest.featureId);
-      const mechanizationStatus = normalizeText(manifest.mechanizationStatus);
-      for (const [index, rail] of normalizeArray(manifest.commandQueryRails).entries()) {
-        const railName = normalizeText(rail?.name).trim();
-        const railType = normalizeRailName(rail?.type);
-        const normalizedRailName = normalizeRailName(railName);
-        if (!railName || !railType) {
-          continue;
-        }
-
-        const symbolRefs = symbolReferencesForRail(manifest, railName);
-        const railStatus = normalizeRailStatus(rail?.status);
-        rails.push({
-          railId: [
-            document.sourcePath,
-            featureId || 'unknown-feature',
-            railType,
-            String(index + 1).padStart(3, '0'),
-            normalizedRailName,
-          ].join('#'),
-          featureId,
-          mechanizationStatus,
-          railName,
-          normalizedRailName,
-          railType,
-          dddOwner: normalizeText(rail?.dddOwner),
-          railStatus,
-          isGap: isCommandQueryRailGap(railStatus, symbolRefs.length),
-          implementationRefCount: symbolRefs.length,
-          symbolRefs,
-          governingSources: normalizeArray(manifest.governingSources)
-            .map(normalizeText)
-            .filter(Boolean),
-          allowedImplementationSurfaces: normalizeArray(manifest.allowedImplementationSurfaces)
-            .map(normalizeText)
-            .filter(Boolean),
-          architectureGuards: normalizeArray(manifest.architectureGuards)
-            .map(normalizeText)
-            .filter(Boolean),
-          completionGate: normalizeArray(manifest.completionGate)
-            .map(normalizeText)
-            .filter(Boolean),
-          sourcePath: document.sourcePath,
-          sourceContentSha256: document.contentSha256,
-          rawRail: rail,
-          rawManifest: manifest,
-        });
-      }
-    }
-  }
-
-  return {
-    sourcePath: 'docs/planning/proposals/mandatory',
-    rails,
-  };
-}
-
 function resolveRepoPath(filePath) {
   return path.isAbsolute(filePath) ? filePath : path.join(repoRoot, filePath);
 }
@@ -1168,13 +1050,6 @@ function readTrackedDocuments(gitPathspecs) {
 
 function listTrackedMarkdownDocuments() {
   return readTrackedDocuments(['docs/*.md', 'docs/**/*.md']);
-}
-
-function listTrackedFeatureMechanizationDocuments() {
-  return readTrackedDocuments([
-    'docs/planning/proposals/mandatory/*.md',
-    'docs/planning/proposals/mandatory/**/*.md',
-  ]);
 }
 
 function listTrackedBuzonDocuments() {
@@ -1278,9 +1153,10 @@ function governanceField(row, camelName, snakeName) {
 }
 
 function buildRiskDebtSnapshot(options = {}) {
-  const riskDocuments = normalizeArray(options.riskDocuments).length
-    ? normalizeArray(options.riskDocuments)
-    : listTrackedRiskDocuments();
+  const riskDocuments =
+    options.riskDocuments === undefined
+      ? listTrackedRiskDocuments()
+      : normalizeArray(options.riskDocuments);
   const governanceFiles = normalizeArray(options.governanceFiles);
   const governanceFileByPath = new Map(
     governanceFiles.map((file) => [normalizeText(file.path), file])
@@ -2586,6 +2462,8 @@ async function insertCommandQueryRailSnapshot(client, snapshot) {
       'ddd_owner',
       'rail_status',
       { name: 'symbol_refs', cast: 'jsonb' },
+      { name: 'implementation_refs', cast: 'jsonb' },
+      { name: 'documentation_refs', cast: 'jsonb' },
       { name: 'governing_sources', cast: 'jsonb' },
       { name: 'allowed_implementation_surfaces', cast: 'jsonb' },
       { name: 'architecture_guards', cast: 'jsonb' },
@@ -2606,6 +2484,8 @@ async function insertCommandQueryRailSnapshot(client, snapshot) {
       rail.dddOwner,
       rail.railStatus,
       toJson(rail.symbolRefs),
+      toJson(rail.implementationRefs),
+      toJson(rail.documentationRefs),
       toJson(rail.governingSources),
       toJson(rail.allowedImplementationSurfaces),
       toJson(rail.architectureGuards),
@@ -2927,7 +2807,9 @@ async function importContent(options = {}) {
   const repositoryCommandSnapshot = includeGovernance
     ? await buildRepositoryCommandSnapshot()
     : null;
-  const commandQueryRailSnapshot = includeGovernance ? buildCommandQueryRailSnapshot() : null;
+  const commandQueryRailSnapshot = includeGovernance
+    ? buildCommandQueryRailSnapshot({ governanceSnapshot })
+    : null;
   const prReadinessSnapshot = includeGovernance ? buildPrReadinessSnapshot() : null;
   const markdownDocuments = includeGovernance ? listTrackedMarkdownDocuments() : [];
   const knowledgeDocuments = includeGovernance

@@ -34,6 +34,7 @@ See also:
 | Pre-push verification gate     | `pnpm verify:prepush`              | [`package.json`](../../package.json)                                                                                       |
 | Planning DB migration tests    | `pnpm test:planning:db:migrations` | [`package.json`](../../package.json), [`scripts/planning-db-migrate.test.cjs`](../../scripts/planning-db-migrate.test.cjs) |
 | Changed-files auto-fix         | `pnpm fix:changed`                 | [`package.json`](../../package.json)                                                                                       |
+| AI local preflight             | `pnpm ai:preflight`                | [`scripts/ai-preflight.cjs`](../../scripts/ai-preflight.cjs)                                                               |
 | Changed-files lint/format gate | `node scripts/check-changed.cjs`   | [`scripts/check-changed.cjs`](../../scripts/check-changed.cjs)                                                             |
 | PR closeout rail               | `pnpm pr:closeout`                 | [`scripts/pr-closeout.cjs`](../../scripts/pr-closeout.cjs)                                                                 |
 | Immediate PR check gate        | `pnpm pr:checks`                   | [`tools/ci/pr-check-triage.mjs`](../../tools/ci/pr-check-triage.mjs)                                                       |
@@ -241,15 +242,22 @@ Command semantics:
 - Planning DB migration-only edits under `tools/planning-db/migrations/*.sql`
   route through `pnpm test:planning:db:migrations`, which exercises
   `scripts/planning-db-migrate.test.cjs` without running the full
-  `pnpm test:planning:db` package. In the 2026-06-01 local measurement, the
-  focused command covered 60 migration tests in 558.3258 ms of Node test time,
-  while the full planning DB suite covered 250 tests and took 83.929 seconds in
-  the final control run.
+  `pnpm test:planning:db` package. When the same slice already changes
+  `scripts/planning-db-migrate.test.cjs`, the changed-file verifier runs that
+  direct suite once and does not add the wrapper command again. This is an
+  architecture contract for targeted DB-first schema validation, not a one-off
+  timing comparison.
 - Command/query rail catalog inspection is DB-first. After governance import,
   `pnpm planning:db:query command-query-rails` reads
   `planning_query_store.command_query_rail_query`; use `--gaps true` for rails
   without implementation refs or explicit missing status, and
-  `--duplicates true` for duplicate rail names by type.
+  `--duplicates true` for duplicate rail names by type. The import keeps
+  manifest symbol refs, source-code refs, governance `cqRails` refs, and
+  documentation refs separate; documentation refs help discovery but do not
+  satisfy implementation gaps. Before an AI agent creates a new externally
+  observable behavior, `pnpm planning:db:query creation-intent --intent
+"<creation intent>"` provides the DB-first preflight for existing rail reuse
+  or register-before-creating guidance.
 - Planning/governance DB test-file edits under
   `scripts/planning-db-*.test.cjs`, `scripts/governance-db-*.test.cjs`, and
   the generated planning DB report tests route to the changed `node --test`
@@ -278,8 +286,8 @@ Command semantics:
   [`tools/ci/repository-change-scope.mjs`](../../tools/ci/repository-change-scope.mjs)
   instead of owning a parallel path taxonomy. That shared query consumes the
   repository command catalog for `scripts/**`, `tools/ci/**`, `tools/docs/**`,
-  `tools/ops/**`, and `.github/scripts/**`, and it also names root CI policy
-  inputs such as `.dependency-cruiser.cjs`. The default router keeps local
+  `tools/ops/**`, `.github/scripts/**`, and `.github/actions/**`, and it also
+  names root CI policy inputs such as `.dependency-cruiser.cjs`. The default router keeps local
   pre-push focused on mechanical changed-file checks. `--full` restores the
   heavier closeout groups:
   - planning DB inventory checks only for planning/query-store surfaces;
@@ -307,7 +315,21 @@ Command semantics:
 - `pnpm pr:checks` is the immediate PR check gate. It queries the current
   branch PR once, prints a compact failed/pending summary, returns non-zero for
   failed or still-pending GitHub Actions checks, and does not watch or poll.
-  Use `pnpm pr:checks:json` when machine-readable output is needed.
+  Use `pnpm pr:checks:json` when machine-readable output is needed. Use
+  `pnpm pr:checks:first-failure` for an actionable first-failure payload; when
+  GitHub Actions never exposes logs for the failed job, the payload reports
+  `unstarted_actions_failure` so agents can treat it as external CI
+  infrastructure rather than repeating local validation.
+- `pnpm ai:preflight` is the AI-facing local preflight. It runs
+  `pnpm fix:changed` once, then `pnpm verify:prepush`. Use
+  `pnpm ai:preflight -- --full` to preserve the same autofix-first ordering
+  before full pre-push validation. This is the preferred local route for agents
+  after edits because format-only drift is fixed before the validation stamp is
+  written.
+- Workspace VS Code settings are tracked under `.vscode/` and make Prettier the
+  default formatter on save with `prettier.requireConfig` enabled. The
+  `test:ai-preflight` contract checks those settings so format-on-save remains
+  part of the repository automation posture.
 - `pnpm verify:prepush -- --full` keeps three outcomes for code diffs:
   - skip when no TypeScript-affecting files changed
   - run `pnpm ci:affected:typecheck` when the diff is workspace-scoped
@@ -346,7 +368,9 @@ Planning-generated pages that are intentionally untracked:
   contract tests. It does not own ADR-0000 traceability.
   Source: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)
 - `Test Suite`: package tests, affected test routing, Turbo-backed root build
-  coverage for full-root lanes, coverage, determinism/replay tests.
+  coverage for full-root lanes, coverage, determinism/replay tests. On pull
+  requests, the heavy dedicated lanes consume one detector job and are skipped
+  at job level when their semantic scope is false.
   Source: [`.github/workflows/test.yml`](../../.github/workflows/test.yml)
 - `Contracts & Determinism`: schema validation, determinism scan, contract
   compile, golden validation, hash comparison.
@@ -422,6 +446,13 @@ These files are the canonical source of truth for:
 - adapter-postgres, contracts, determinism, and coverage scope detection
 - Temporal integration scope detection
 
+Pull-request scope-diff consumers use shallow checkout (`fetch-depth: 1`) and
+then the shared [`fetch-scope-base`](../../.github/actions/fetch-scope-base/action.yml)
+action to fetch only the base branch ref needed for `origin/<base>...HEAD` or
+`origin/<base>` comparisons. This keeps GitHub as the authoritative merge gate
+while avoiding full-history checkout before scope detectors and changed-file
+gates decide whether heavier lanes apply.
+
 The engine coverage scope is documented as the
 [Engine Coverage Scope Gate Component](../architecture/components/ci-governance/engine-coverage-scope-gate-component.md).
 For pull requests, `coverage_relevant` is true for the governed engine
@@ -442,17 +473,23 @@ Current workflow consumers:
   changed-file-validation relevant, but do not open the workspace matrix unless
   they also touch a real root-build input such as the setup action, lockfile,
   Turbo graph, TypeScript config, or runtime orchestration helper.
-- [`.github/workflows/test.yml`](../../.github/workflows/test.yml) uses `emit-scope --mode test`
-  for PR test routing across the web app, workers, and library workspaces. Its
-  push/manual full-suite lane and PR `root_build_sensitive` fast-path both run
-  `pnpm build`, so the merge gate exercises the same Turbo-backed root build
-  path that local root builds now use. Non-root PR affected dependency builds
-  use `node scripts/run-turbo-workspace-task.cjs build` with the PR base filter,
-  avoiding a manually maintained package-to-build map. Cacheable dependency
-  graph preparation for the dedicated web, adapter-temporal, adapter-postgres,
-  determinism/replay, and engine coverage lanes also uses the same wrapper with
-  the existing package filters; the test, coverage, and integration commands
-  remain explicit package commands. The API package matrix command uses
+  `detect-affected` and changed-file lint/format use shallow checkout plus
+  `fetch-scope-base` instead of fetching full PR history before routing.
+- [`.github/workflows/test.yml`](../../.github/workflows/test.yml) uses
+  `emit-scope --mode test` once in `detect_test_matrix` for PR test routing
+  across the web app, workers, and library workspaces. Dedicated web,
+  adapter-temporal, adapter-postgres, determinism/replay, and engine coverage
+  jobs consume that detector's outputs at job level, so irrelevant PRs do not
+  spend a runner on checkout, dependency setup, or repeated scope detection.
+  Its push/manual full-suite lane and PR `root_build_sensitive` fast-path both
+  run `pnpm build`, so the merge gate exercises the same Turbo-backed root
+  build path that local root builds now use. Non-root PR affected dependency
+  builds use `node scripts/run-turbo-workspace-task.cjs build` with the PR base
+  filter, avoiding a manually maintained package-to-build map. Cacheable
+  dependency graph preparation for the dedicated web, adapter-temporal,
+  adapter-postgres, determinism/replay, and engine coverage lanes also uses the
+  same wrapper with the existing package filters; the test, coverage, and
+  integration commands remain explicit package commands. The API package matrix command uses
   `pnpm --filter dvt-api test:ci` after this Turbo build step, so CI avoids
   re-entering the local `pretest` dependency build while direct
   `pnpm --filter dvt-api test` keeps its cold-worktree safety net. The shared
@@ -463,8 +500,9 @@ Current workflow consumers:
   contracts and changed-file checks without forcing package tests, web frontend
   tests, determinism/replay, coverage, or adapter-postgres integration by
   filename alone. Adapter-postgres integration,
-  determinism/replay, and engine coverage also consume `emit-scope --mode test`
-  outputs instead of local `dorny/paths-filter` package-root rules. Engine
+  determinism/replay, and engine coverage also consume the shared
+  `emit-scope --mode test` read model instead of local `dorny/paths-filter`
+  package-root rules. Engine
   coverage uses the same governed `packages/@dvt/engine/**` package boundary as
   engine package test routing, so engine Vitest config changes cannot bypass
   threshold enforcement. For ordinary web PRs, the web lane runs
@@ -480,7 +518,8 @@ Current workflow consumers:
 - [`.github/workflows/contracts.yml`](../../.github/workflows/contracts.yml) uses
   `emit-scope --mode contracts` for contract, determinism, and golden routing.
   The workflow no longer owns parallel inline `package.json` filters for those
-  lanes.
+  lanes. Its detector uses shallow checkout plus `fetch-scope-base`; contract
+  hash execution no longer requests full PR history.
 - [`.github/workflows/pr-quality-gate.yml`](../../.github/workflows/pr-quality-gate.yml) uses the
   same shared scope surfaces for workflow/global change routing, repository
   validation scope, and Temporal capability lanes. It also runs the
@@ -497,7 +536,9 @@ Current workflow consumers:
   Workflow YAML edits are CI-policy changes for this scope as well: they keep
   PR metadata, changed-file validation, and CI contract coverage, but no longer
   imply Temporal or adapter-postgres runtime integration by themselves. Pushes
-  and manual full gates keep the full remote posture.
+  and manual full gates keep the full remote posture. The scope detector uses
+  shallow checkout plus `fetch-scope-base`; Temporal integration jobs keep
+  shallow checkout because they do not compute changed-file diffs.
 
 ## Notes
 

@@ -142,7 +142,11 @@ function isRootCiPolicyInput(filePath) {
 }
 
 function isWorkflowPolicyInput(filePath) {
-  return filePath.startsWith('.github/workflows/') || filePath.startsWith('.github/scripts/');
+  return (
+    filePath.startsWith('.github/workflows/') ||
+    filePath.startsWith('.github/actions/') ||
+    filePath.startsWith('.github/scripts/')
+  );
 }
 
 function commandClassForPath(filePath) {

@@ -28,11 +28,22 @@ jobs:
     outputs:
       any_tests: ${{ steps.matrix.outputs.any_tests }}
       matrix: ${{ steps.matrix.outputs.matrix }}
+      adapter_temporal: ${{ steps.scope.outputs.adapter_temporal }}
+      web: ${{ steps.scope.outputs.web }}
+      root_build_sensitive: ${{ steps.scope.outputs.root_build_sensitive }}
+      determinism_relevant: ${{ steps.scope.outputs.determinism_relevant }}
+      coverage_relevant: ${{ steps.scope.outputs.coverage_relevant }}
+      postgres_capability_changed: ${{ steps.scope.outputs.postgres_capability_changed }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
+          fetch-depth: 1
+
+      - name: Fetch pull-request base ref
+        uses: ./.github/actions/fetch-scope-base
+        with:
+          base-ref: ${{ github.base_ref }}
 
       - name: Validate workflow scope policy JSON
         run: node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json
@@ -83,90 +94,63 @@ jobs:
     name: Adapter Temporal Tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
+    needs: [detect_test_matrix]
+    if: >-
+      !(github.event_name == 'pull_request' && github.event.pull_request.draft) &&
+      (github.event_name != 'pull_request' ||
+       needs.detect_test_matrix.outputs.adapter_temporal == 'true' ||
+       needs.detect_test_matrix.outputs.root_build_sensitive == 'true')
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
-
-      - name: Validate workflow scope policy JSON
-        run: node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json
-
-      - name: Emit adapter-temporal scope outputs
-        id: scope
-        run: node tools/ci/emit-scope.mjs --mode test
-        env:
-          GIT_BASE: origin/${{ github.base_ref }}
-          GIT_HEAD: ${{ github.sha }}
+          fetch-depth: 1
 
       - name: Setup pnpm, cache and dependencies
-        if:
-          github.event_name != 'pull_request' || steps.scope.outputs.adapter_temporal == 'true' ||
-          steps.scope.outputs.root_build_sensitive == 'true'
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
 
       - name: Build adapter-temporal dependency graph
-        if:
-          github.event_name != 'pull_request' || steps.scope.outputs.adapter_temporal == 'true' ||
-          steps.scope.outputs.root_build_sensitive == 'true'
         run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/adapter-temporal^...
 
       - name: Run adapter-temporal tests
-        if:
-          github.event_name != 'pull_request' || steps.scope.outputs.adapter_temporal == 'true' ||
-          steps.scope.outputs.root_build_sensitive == 'true'
         run: pnpm test:adapter-temporal
         env:
           DVT_CI: '1'
-
-      - name: Report adapter-temporal test scope skip
-        if:
-          github.event_name == 'pull_request' && steps.scope.outputs.adapter_temporal != 'true' &&
-          steps.scope.outputs.root_build_sensitive != 'true'
-        run: echo "No adapter-temporal test scope detected; skipping adapter-temporal tests."
 
   web-frontend-tests:
     name: Web Frontend Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
+    needs: [detect_test_matrix]
+    if: >-
+      !(github.event_name == 'pull_request' && github.event.pull_request.draft) &&
+      (github.event_name != 'pull_request' || needs.detect_test_matrix.outputs.web == 'true' ||
+       needs.detect_test_matrix.outputs.root_build_sensitive == 'true')
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
+          fetch-depth: 1
 
-      - name: Validate workflow scope policy JSON
-        run: node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json
-
-      - name: Emit web test scope outputs
-        id: scope
-        run: node tools/ci/emit-scope.mjs --mode test
-        env:
-          GIT_BASE: origin/${{ github.base_ref }}
-          GIT_HEAD: ${{ github.sha }}
+      - name: Fetch pull-request base ref
+        uses: ./.github/actions/fetch-scope-base
+        with:
+          base-ref: ${{ github.base_ref }}
 
       - name: Setup pnpm, cache and dependencies
-        if:
-          github.event_name != 'pull_request' || steps.scope.outputs.web == 'true' ||
-          steps.scope.outputs.root_build_sensitive == 'true'
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
 
       - name: Build web dependency graph
-        if:
-          github.event_name != 'pull_request' || steps.scope.outputs.web == 'true' ||
-          steps.scope.outputs.root_build_sensitive == 'true'
         run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/web^...
 
       - name: Run governed web Vitest changed suites (PR)
         if:
-          github.event_name == 'pull_request' && steps.scope.outputs.web == 'true' &&
-          steps.scope.outputs.root_build_sensitive != 'true'
+          github.event_name == 'pull_request' && needs.detect_test_matrix.outputs.web == 'true' &&
+          needs.detect_test_matrix.outputs.root_build_sensitive != 'true'
         run: pnpm test:web:changed
         env:
           DVT_CI: '1'
@@ -175,48 +159,20 @@ jobs:
 
       - name: Run governed web Vitest primary suites
         if:
-          github.event_name != 'pull_request' || steps.scope.outputs.root_build_sensitive == 'true'
+          github.event_name != 'pull_request' ||
+          needs.detect_test_matrix.outputs.root_build_sensitive == 'true'
         run: pnpm test:web:ci
         env:
           DVT_CI: '1'
-
-      - name: Report web test scope skip
-        if:
-          github.event_name == 'pull_request' && steps.scope.outputs.web != 'true' &&
-          steps.scope.outputs.root_build_sensitive != 'true'
-        run: echo "No web test scope detected; skipping governed web Vitest suites."
-
-  detect-pg-scope:
-    name: Detect adapter-postgres scope
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
-    outputs:
-      adapter_postgres_changed: ${{ steps.scope.outputs.postgres_capability_changed }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-        with:
-          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
-
-      - name: Validate workflow scope policy JSON
-        run: node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json
-
-      - name: Emit adapter-postgres scope output
-        id: scope
-        run: node tools/ci/emit-scope.mjs --mode test
-        env:
-          GIT_BASE: origin/${{ github.base_ref }}
-          GIT_HEAD: ${{ github.sha }}
 
   adapter-postgres:
     name: Adapter Postgres Tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [detect-pg-scope]
-    if:
-      needs.detect-pg-scope.result == 'success' &&
-      needs.detect-pg-scope.outputs.adapter_postgres_changed == 'true'
+    needs: [detect_test_matrix]
+    if: >-
+      github.event_name != 'pull_request' ||
+      needs.detect_test_matrix.outputs.postgres_capability_changed == 'true'
     services:
       postgres:
         image: postgres:15
@@ -272,45 +228,31 @@ jobs:
     name: Determinism Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
+    needs: [detect_test_matrix]
+    if: >-
+      !(github.event_name == 'pull_request' && github.event.pull_request.draft) &&
+      (github.event_name != 'pull_request' ||
+       needs.detect_test_matrix.outputs.determinism_relevant == 'true')
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
-
-      - name: Validate workflow scope policy JSON
-        run: node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json
-
-      - name: Emit determinism scope output
-        id: scope
-        run: node tools/ci/emit-scope.mjs --mode test
-        env:
-          GIT_BASE: origin/${{ github.base_ref }}
-          GIT_HEAD: ${{ github.sha }}
+          fetch-depth: 1
 
       - name: Setup pnpm, cache and dependencies
-        if:
-          github.event_name != 'pull_request' || steps.scope.outputs.determinism_relevant == 'true'
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
 
       - name: Build engine dependency graph (once, before tests)
-        if:
-          github.event_name != 'pull_request' || steps.scope.outputs.determinism_relevant == 'true'
         run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/engine^...
 
       - name: Run determinism tests
-        if:
-          github.event_name != 'pull_request' || steps.scope.outputs.determinism_relevant == 'true'
         run: pnpm test:determinism
         env:
           DVT_CI: '1'
 
       - name: Verify replay consistency
-        if:
-          github.event_name != 'pull_request' || steps.scope.outputs.determinism_relevant == 'true'
         run: pnpm test:replay
         env:
           DVT_CI: '1'
@@ -319,35 +261,26 @@ jobs:
     name: Engine Coverage Gate
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
+    needs: [detect_test_matrix]
+    if: >-
+      !(github.event_name == 'pull_request' && github.event.pull_request.draft) &&
+      (github.event_name != 'pull_request' ||
+       needs.detect_test_matrix.outputs.coverage_relevant == 'true')
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
-
-      - name: Validate workflow scope policy JSON
-        run: node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json
-
-      - name: Emit coverage scope output
-        id: scope
-        run: node tools/ci/emit-scope.mjs --mode test
-        env:
-          GIT_BASE: origin/${{ github.base_ref }}
-          GIT_HEAD: ${{ github.sha }}
+          fetch-depth: 1
 
       - name: Setup pnpm, cache and dependencies
-        if: github.event_name != 'pull_request' || steps.scope.outputs.coverage_relevant == 'true'
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
 
       - name: Build engine dependency graph (once, before tests)
-        if: github.event_name != 'pull_request' || steps.scope.outputs.coverage_relevant == 'true'
         run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/engine^...
 
       - name: Run engine coverage (with threshold enforcement)
-        if: github.event_name != 'pull_request' || steps.scope.outputs.coverage_relevant == 'true'
         run: pnpm test:coverage:engine
         env:
           DVT_CI: '1'
