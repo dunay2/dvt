@@ -62,6 +62,20 @@ test('buildVerifyChangedPlan routes migration-only changes to the migration suit
   assert.ok(!labels.includes('pnpm test:planning:db'));
 });
 
+test('buildVerifyChangedPlan avoids duplicate migration tests when the suite is already direct', () => {
+  const labels = labelsFor([
+    'scripts/planning-db-migrate.test.cjs',
+    'tools/planning-db/migrations/022_component_engineering_record_query.sql',
+  ]);
+
+  assert.equal(
+    labels.filter((label) => label === 'node --test scripts/planning-db-migrate.test.cjs').length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:planning:db:migrations'));
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
 test('buildVerifyChangedPlan runs changed planning DB tests directly', () => {
   const labels = labelsFor(['scripts/planning-db-surface-inventory-check.test.cjs']);
 

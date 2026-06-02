@@ -277,8 +277,12 @@ function buildVerifyChangedPlan(files) {
   if (hasWebChange(changedFiles)) {
     pushSteps(plan, VERIFY_CHANGED_GROUPS.web);
   }
-  pushSteps(plan, planningWorkflowTestSteps(changedFiles));
-  if (hasPlanningDbMigrationChange(changedFiles)) {
+  const directPlanningWorkflowTestSteps = planningWorkflowTestSteps(changedFiles);
+  pushSteps(plan, directPlanningWorkflowTestSteps);
+  const runsMigrationTestDirectly = directPlanningWorkflowTestSteps.some(
+    (nextStep) => commandLabel(nextStep) === 'node --test scripts/planning-db-migrate.test.cjs'
+  );
+  if (hasPlanningDbMigrationChange(changedFiles) && !runsMigrationTestDirectly) {
     pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[1]);
   }
   if (hasPlanningDbFullSuiteChange(changedFiles)) {
