@@ -60,6 +60,7 @@ const EXACT_PACKAGE_SCRIPT_DOMAINS = new Map([
   ['ci:code', 'runtime-root'],
   ['ci:full', 'runtime-root'],
   ['preflight:affected', 'runtime-root'],
+  ['preflight:affected:ci', 'runtime-root'],
   ['commit', 'developer-workflow'],
   ['ai:preflight', 'developer-workflow'],
   ['lint', 'developer-workflow'],

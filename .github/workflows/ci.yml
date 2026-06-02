@@ -146,8 +146,8 @@ jobs:
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
 
-      - name: Run affected workspace preflight
-        run: pnpm preflight:affected
+      - name: Run affected workspace build, lint and type-check preflight
+        run: pnpm preflight:affected:ci
         env:
           DVT_CI: '1'
 

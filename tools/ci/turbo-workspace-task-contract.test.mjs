@@ -86,10 +86,15 @@ test('root affected commands and CI matrix lint/build/typecheck steps use the Tu
     rootPackage.scripts['preflight:affected'],
     'pnpm ci:affected:build && pnpm ci:affected:lint && pnpm ci:affected:typecheck && pnpm ci:affected:test'
   );
+  assert.equal(
+    rootPackage.scripts['preflight:affected:ci'],
+    'pnpm ci:affected:build && pnpm ci:affected:lint && pnpm ci:affected:typecheck'
+  );
 
   assert.ok(ciWorkflow.includes('run: pnpm verify:changed'));
   assert.ok(ciWorkflow.includes('GIT_BASE: origin/${{ github.base_ref }}'));
-  assert.ok(ciWorkflow.includes('run: pnpm preflight:affected'));
+  assert.ok(ciWorkflow.includes('run: pnpm preflight:affected:ci'));
+  assert.equal(ciWorkflow.includes('run: pnpm preflight:affected\n'), false);
   assert.ok(ciWorkflow.includes('run: pnpm ci:full'));
   assert.equal(
     ciWorkflow.includes(

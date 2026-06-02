@@ -405,7 +405,11 @@ test('security and nightly workflows stay wired to pinned actions and failure no
   assertWorkflowContains(nightly, 'gh issue create --title "${NIGHTLY_ISSUE_TITLE}"');
   assertWorkflowContains(
     nightly,
-    'pnpm --workspace-concurrency=4 --filter @dvt/adapter-postgres... --if-present run build'
+    'node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/adapter-postgres...'
+  );
+  assert.doesNotMatch(
+    nightly,
+    /pnpm --workspace-concurrency=4 --filter @dvt\/adapter-postgres\.\.\. --if-present run build/u
   );
 
   assertWorkflowContains(
