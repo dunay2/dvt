@@ -10,11 +10,13 @@ const {
   buildPrReadinessSnapshot,
   buildRiskDebtSnapshot,
   buildCommandQueryRailSnapshot,
+  buildFrontendMechanicalTruthSnapshot,
   buildRepositoryCommandSnapshot,
   clearGovernanceSnapshotTables,
   governanceImportDeleteTables,
   importContent,
   insertDocsDispositionSnapshot,
+  insertFrontendMechanicalTruthSnapshot,
   insertGovernanceSnapshot,
   insertKnowledgeSnapshot,
   insertRepositoryCommandSnapshot,
@@ -94,6 +96,15 @@ test('command/query rail import behavior lives in a focused catalog component', 
   assert.equal(
     typeof commandQueryRailReferenceIndexComponent.attachCommandQueryRailRefs,
     'function'
+  );
+});
+
+test('frontend mechanical truth import behavior lives in a focused inventory component', () => {
+  const frontendMechanicalTruthComponent = require('./planning-db/frontend-mechanical-truth-inventory.cjs');
+
+  assert.equal(
+    frontendMechanicalTruthComponent.buildFrontendMechanicalTruthSnapshot,
+    buildFrontendMechanicalTruthSnapshot
   );
 });
 
@@ -927,8 +938,58 @@ test('governance import clears every repopulated governance table before insert'
   );
   assert.ok(governanceImportDeleteTables.includes('governance_coverage'));
   assert.ok(governanceImportDeleteTables.includes('governance_remediation'));
+  assert.ok(governanceImportDeleteTables.includes('frontend_mechanical_truth_surfaces'));
   assert.ok(governanceImportDeleteTables.includes('risk_debt_items'));
   assert.equal(governanceImportDeleteTables.at(-1), 'governance_sources');
+});
+
+test('frontend mechanical truth import reloads surface rows with JSONB metadata', async () => {
+  const queries = [];
+
+  await insertFrontendMechanicalTruthSnapshot(
+    {
+      query: async (sql, params = []) => {
+        queries.push({ sql, params });
+      },
+    },
+    {
+      surfaces: [
+        {
+          surfaceId: 'web.runs.list',
+          surfaceKind: 'route',
+          routePath: '/runs',
+          screenState: 'operational-product',
+          frontendOwner: 'Runs workbench',
+          registeredPlugins: ['monitoring'],
+          consumedEndpoints: ['/runs'],
+          zustandStores: ['useExecutionStore'],
+          tanstackQueries: ['useScopedRunSummariesQuery'],
+          visibleNoBackendAffordances: ['dense run table'],
+          capabilityGaps: ['cancel run'],
+          evidenceRefs: ['runs native smoke'],
+          sourcePath: 'docs/architecture/components/web/frontend-mechanical-truth-inventory.md',
+          sourceContentSha256: 'source-a',
+          rawSurface: { surfaceId: 'web.runs.list' },
+        },
+      ],
+    }
+  );
+
+  assert.equal(queries[0].sql, `delete from ${schemaName}.frontend_mechanical_truth_surfaces`);
+  const insertQuery = queries.find((query) =>
+    query.sql.includes(`insert into ${schemaName}.frontend_mechanical_truth_surfaces`)
+  );
+  assert.ok(insertQuery);
+  assert.match(insertQuery.sql, /registered_plugins/);
+  assert.match(insertQuery.sql, /consumed_endpoints/);
+  assert.deepEqual(insertQuery.params.slice(0, 5), [
+    'web.runs.list',
+    'route',
+    '/runs',
+    'operational-product',
+    'Runs workbench',
+  ]);
+  assert.equal(insertQuery.params[5], JSON.stringify(['monitoring']));
 });
 
 test('governance import batches heavy file table inserts', async () => {

@@ -159,6 +159,19 @@ that already exists or reinventing what is already solved:
   constraints (ESM, TypeScript, no framework lock-in)
 - check whether the behavior is already represented by a command or query in
   the owning bounded context; reuse that rail instead of inventing a synonym
+- for externally observable command or query behavior, run the DB-first
+  creation-intent preflight before naming new code:
+
+  ```bash
+  pnpm planning:db:query creation-intent --intent "create a run status query" --limit 5
+  pnpm planning:db:query creation-intent --intent "create a governance component command" --type command --limit 5
+  ```
+
+  Treat `reuse-existing-rail`, `complete-existing-rail-before-creating`, and
+  `resolve-duplicate-before-creating` as stop signals for creating a parallel
+  rail. Treat `register-new-rail-before-creating` as the signal to update the
+  command/query rail catalog before implementation.
+
 - classify relevant findings as Fowler opportunities before implementation:
   boundary drift, responsibility overload, primitive obsession, data clumps,
   feature envy, duplicate semantics, hidden authority, anemic domain,

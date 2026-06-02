@@ -99,12 +99,12 @@ jobs:
         run: pnpm test:ci-tools:executable
 
   lint-and-format:
-    name: ESLint + Prettier (changed files)
+    name: Changed-slice verification
     needs: detect-affected
     if: >-
-      github.event_name != 'pull_request' || needs.detect-affected.outputs.any_changed == 'true' ||
+      github.event_name == 'pull_request' && (needs.detect-affected.outputs.any_changed == 'true' ||
       needs.detect-affected.outputs.docs_changed == 'true' ||
-      needs.detect-affected.outputs.changed_file_validation_relevant == 'true'
+      needs.detect-affected.outputs.changed_file_validation_relevant == 'true' )
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -121,18 +121,42 @@ jobs:
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
 
-      - name: Run changed-file checks
-        run: node scripts/check-changed.cjs
+      - name: Run changed-slice verification
+        run: pnpm verify:changed
+        env:
+          GIT_BASE: origin/${{ github.base_ref }}
 
-  workspace-ci:
-    name: Workspace CI (${{ matrix.name }})
+  affected-preflight:
+    name: Affected workspace preflight
     needs: detect-affected
-    if: github.event_name != 'pull_request' || needs.detect-affected.outputs.any_changed == 'true'
+    if: github.event_name == 'pull_request' && needs.detect-affected.outputs.any_changed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJSON(needs.detect-affected.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 1
+
+      - name: Fetch pull-request base ref
+        uses: ./.github/actions/fetch-scope-base
+        with:
+          base-ref: ${{ github.base_ref }}
+
+      - name: Setup pnpm, cache and dependencies
+        uses: ./.github/actions/setup-node-pnpm
+
+      - name: Run affected workspace preflight
+        run: pnpm preflight:affected
+        env:
+          DVT_CI: '1'
+
+  full-ci:
+    name: Full CI (main/manual)
+    needs: detect-affected
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -142,14 +166,10 @@ jobs:
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
 
-      - name: Build affected workspace (including workspace dependencies)
-        run: node scripts/run-turbo-workspace-task.cjs build --filter=${{ matrix.pkg }}
-
-      - name: Lint affected workspace
-        run: node scripts/run-turbo-workspace-task.cjs lint --filter=${{ matrix.pkg }}
-
-      - name: Type-check affected workspace
-        run: node scripts/run-turbo-workspace-task.cjs typecheck --filter=${{ matrix.pkg }}
+      - name: Run full CI baseline
+        run: pnpm ci:full
+        env:
+          DVT_CI: '1'
 
   no-affected-workspaces:
     name: No affected workspaces (PR)
@@ -163,9 +183,8 @@ jobs:
     name: Markdown Documentation
     needs: detect-affected
     if: >-
-      github.event_name == 'push' || (github.event_name == 'pull_request' &&
-      needs.detect-affected.outputs.docs_changed == 'true') || (github.event_name ==
-      'workflow_dispatch' && github.event.inputs.run_markdown_lint == 'true')
+      github.event_name == 'push' || (github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.run_markdown_lint == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

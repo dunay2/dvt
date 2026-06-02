@@ -32,6 +32,8 @@ See also:
 | Full type-check gate           | `pnpm type-check`                  | [`package.json`](../../package.json)                                                                                       |
 | Fast pre-push changed gate     | `pnpm verify:changed`              | [`package.json`](../../package.json)                                                                                       |
 | Pre-push verification gate     | `pnpm verify:prepush`              | [`package.json`](../../package.json)                                                                                       |
+| Affected PR preflight          | `pnpm preflight:affected`          | [`package.json`](../../package.json), [`turbo.json`](../../turbo.json)                                                     |
+| Full CI baseline               | `pnpm ci:full`                     | [`package.json`](../../package.json)                                                                                       |
 | Planning DB migration tests    | `pnpm test:planning:db:migrations` | [`package.json`](../../package.json), [`scripts/planning-db-migrate.test.cjs`](../../scripts/planning-db-migrate.test.cjs) |
 | Changed-files auto-fix         | `pnpm fix:changed`                 | [`package.json`](../../package.json)                                                                                       |
 | AI local preflight             | `pnpm ai:preflight`                | [`scripts/ai-preflight.cjs`](../../scripts/ai-preflight.cjs)                                                               |
@@ -255,9 +257,37 @@ Command semantics:
   manifest symbol refs, source-code refs, governance `cqRails` refs, and
   documentation refs separate; documentation refs help discovery but do not
   satisfy implementation gaps. Before an AI agent creates a new externally
-  observable behavior, `pnpm planning:db:query creation-intent --intent
-"<creation intent>"` provides the DB-first preflight for existing rail reuse
-  or register-before-creating guidance.
+  observable behavior, `pnpm planning:db:query creation-intent --intent "<creation intent>"`
+  provides the DB-first preflight for existing rail reuse or
+  register-before-creating guidance. Example AI pre-create checks:
+
+  ```bash
+  pnpm planning:db:query creation-intent --intent "create a run status query" --limit 5
+  pnpm planning:db:query creation-intent --intent "create a governance component command" --type command --limit 5
+  ```
+
+  The first output column is the action: `reuse-existing-rail`,
+  `complete-existing-rail-before-creating`,
+  `resolve-duplicate-before-creating`, or
+  `register-new-rail-before-creating`.
+
+- Frontend screen/capability inspection is DB-first. After governance import,
+  `pnpm planning:db:query frontend-surfaces` reads the governed frontend
+  mechanical truth inventory and distinguishes route existence from product
+  closure. Use this before creating or claiming frontend behavior:
+
+  ```bash
+  pnpm planning:db:query frontend-surfaces --path /runs --limit 10
+  pnpm planning:db:query frontend-surfaces --state preview --limit 20
+  pnpm planning:db:query frontend-surfaces --kind route --state operational-product --limit 20
+  ```
+
+  The output columns are kind, route path, surface id, screen state, owner,
+  plugin count, endpoint count, Zustand store count, TanStack query count, gap
+  count, and source document. The screen state vocabulary is
+  `operational-product`, `preview`, `disabled-unsupported`, and
+  `experimental`.
+
 - Planning/governance DB test-file edits under
   `scripts/planning-db-*.test.cjs`, `scripts/governance-db-*.test.cjs`, and
   the generated planning DB report tests route to the changed `node --test`
@@ -363,9 +393,11 @@ Planning-generated pages that are intentionally untracked:
 
 ## GitHub Workflow Coverage
 
-- `CI - Code Quality`: affected workspace matrix build/lint/type-check,
-  changed-file lint/format, changed-only markdown lint on PRs, and CI tool
-  contract tests. It does not own ADR-0000 traceability.
+- `CI - Code Quality`: ordinary pull requests run changed-slice verification
+  through `pnpm verify:changed` and affected workspace preflight through
+  `pnpm preflight:affected`; pushes to `main` and manual runs use
+  `pnpm ci:full`. CI tool contract tests remain separate. It does not own
+  ADR-0000 traceability.
   Source: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)
 - `Test Suite`: package tests, affected test routing, Turbo-backed root build
   coverage for full-root lanes, coverage, determinism/replay tests. On pull
@@ -375,8 +407,10 @@ Planning-generated pages that are intentionally untracked:
 - `Contracts & Determinism`: schema validation, determinism scan, contract
   compile, golden validation, hash comparison.
   Source: [`.github/workflows/contracts.yml`](../../.github/workflows/contracts.yml)
-- `PR Quality Gate`: docs sync/workboard drift, docs governance parity gates
-  from `verify:prepush`, PR metadata checks, and Temporal integration.
+- `PR Quality Gate`: PR metadata checks, ARC evidence checks, changed-only
+  docs governance checks for ordinary pull requests, and Temporal integration.
+  Global docs quality, doctor, location, and canonical checks are reserved for
+  push/manual full posture.
   Source: [`.github/workflows/pr-quality-gate.yml`](../../.github/workflows/pr-quality-gate.yml)
 - `Dependency Review`: pull-request dependency review with pinned action usage
   and high-severity failure policy. It runs for public repositories and for
@@ -465,16 +499,21 @@ themselves. Unrelated docs-only changes can keep the coverage job closed.
 Current workflow consumers:
 
 - [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) uses the shared policy plus
-  workspace matrix emission for affected lint/build/type-check routing, and now
-  also runs `pnpm test:ci-tools` as a merge-gated CI-tool contract lane. Its shared
-  `any_code` and `workspace_global` policy now include `turbo.json`, so Turbo
-  graph changes trigger the affected-workspace lane instead of falling through
-  to `No affected workspaces`. Workflow YAML changes remain `any_code` and
-  changed-file-validation relevant, but do not open the workspace matrix unless
-  they also touch a real root-build input such as the setup action, lockfile,
-  Turbo graph, TypeScript config, or runtime orchestration helper.
-  `detect-affected` and changed-file lint/format use shallow checkout plus
-  `fetch-scope-base` instead of fetching full PR history before routing.
+  workspace matrix emission for affected-workspace detection, and now also
+  runs `pnpm test:ci-tools` as a merge-gated CI-tool contract lane. Ordinary
+  pull requests use `pnpm verify:changed` for changed-file/docs governance
+  checks and `pnpm preflight:affected` for affected build, lint, type-check,
+  and package tests. Pushes to `main` and manual runs use `pnpm ci:full`
+  instead of the affected PR route. Its shared `any_code` and
+  `workspace_global` policy now include `turbo.json`, so Turbo graph changes
+  trigger affected-workspace preflight instead of falling through to
+  `No affected workspaces`. Workflow YAML changes remain `any_code` and
+  changed-file-validation relevant, but do not open affected workspace preflight
+  unless they also touch a real root-build input such as the setup action,
+  lockfile, Turbo graph, TypeScript config, or runtime orchestration helper.
+  `detect-affected`, changed-slice verification, and affected preflight use
+  shallow checkout plus `fetch-scope-base` instead of fetching full PR history
+  before routing.
 - [`.github/workflows/test.yml`](../../.github/workflows/test.yml) uses
   `emit-scope --mode test` once in `detect_test_matrix` for PR test routing
   across the web app, workers, and library workspaces. Dedicated web,
@@ -599,11 +638,15 @@ Current workflow consumers:
   `node scripts/run-turbo-workspace-task.cjs` so affected local preflight and
   lightweight CI lanes can reuse the same governed Turbo graph without changing
   the full-root `test` or `type-check` contract yet.
-- `CI - Code Quality` now uses the same Turbo workspace wrapper for its
-  affected build/lint/typecheck matrix, keeping the local command and the
-  lightweight CI lane on one orchestration path. The matrix builds before lint
-  so clean CI checkouts have the workspace export declarations that
-  `import/no-unresolved` validates.
+- `pnpm preflight:affected` is the ordinary PR workspace route. It runs
+  affected build, lint, type-check, and test in that order so clean CI checkouts
+  have workspace export declarations before lint and type-check. The GitHub
+  job sets `DVT_CI=1` so package `pretest` lifecycle fallbacks do not rebuild
+  dependency graphs after the affected Turbo build has already run.
+- `CI - Code Quality` now uses the root `preflight:affected` command instead
+  of a per-package build/lint/typecheck matrix on pull requests. This keeps the
+  local command and the lightweight CI lane on one orchestration path and
+  reduces repeated runner setup for small PRs.
 - `pnpm arch:deps` is the root architecture dependency guard for package and
   app boundaries. It runs dependency-cruiser plus repository semantic ownership
   checks. It forbids contract-to-runtime imports, planner-to-engine/adapter

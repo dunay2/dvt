@@ -442,7 +442,8 @@ groups those rails by concern:
 - Layout and viewport:
   - `PersistCanvasLayout`;
   - `GetCanvasLayout`;
-  - `ConfigureCanvasViewportPreferences`.
+  - `ConfigureCanvasViewportPreferences` for grid visibility, grid color,
+    snap-to-grid, and typed-empty guide visibility.
 - Contextual graph interaction:
   - `ResolveCanvasContextMenu`;
   - `CreateCanvasAuthoringNode`;

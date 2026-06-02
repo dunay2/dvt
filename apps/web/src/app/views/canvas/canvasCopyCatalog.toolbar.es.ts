@@ -15,6 +15,8 @@ export const canvasViewToolbarCopyEs = {
   toolbarGridLabel: 'Rejilla',
   toolbarGridColorLabel: 'Color de rejilla',
   toolbarSnapToGridLabel: 'Ajustar',
+  toolbarCanvasSettingsLabel: 'Configuracion de canvas',
+  toolbarEmptyCanvasGuideLabel: 'Guia de canvas vacio',
   toolbarProjectSnapshotMenuLabel: 'Proyecto',
   toolbarExportSnapshotLabel: 'Exportar',
   toolbarImportSnapshotLabel: 'Importar',

@@ -46,6 +46,7 @@ type CanvasWorkbenchDefaultsDto = {
   canvasGridVisible: CanvasController['canvasGridVisible'];
   canvasGridColor: CanvasController['canvasGridColor'];
   canvasSnapToGrid: CanvasController['canvasSnapToGrid'];
+  canvasEmptyStateGuideVisible: CanvasController['canvasEmptyStateGuideVisible'];
   viewport: CanvasController['viewport'];
 };
 
@@ -214,6 +215,7 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
     canvasGridVisible: true,
     canvasGridColor: DEFAULT_CANVAS_GRID_COLOR,
     canvasSnapToGrid: false,
+    canvasEmptyStateGuideVisible: true,
     viewport: null,
   } satisfies CanvasWorkbenchDefaultsDto;
 }
@@ -305,6 +307,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'setCanvasGridVisible'
   | 'setCanvasGridColor'
   | 'setCanvasSnapToGrid'
+  | 'setCanvasEmptyStateGuideVisible'
   | 'handlePlan'
   | 'handleStartRun'
   | 'reloadLatestDraft'
@@ -347,6 +350,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     setCanvasGridVisible: vi.fn(),
     setCanvasGridColor: vi.fn(),
     setCanvasSnapToGrid: vi.fn(),
+    setCanvasEmptyStateGuideVisible: vi.fn(),
     handlePlan: vi.fn(),
     handleStartRun: vi.fn(),
     reloadLatestDraft: vi.fn(),

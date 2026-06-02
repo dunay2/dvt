@@ -134,19 +134,31 @@ jobs:
         run: pnpm docs:workboard:generate --source yaml
 
       - name: Validate docs quality policy (English/no duplicate indexes)
-        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        if:
+          github.event_name == 'push' || (github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:quality:check
 
       - name: Run docs doctor (duplicates/legacy/staleness)
-        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        if:
+          github.event_name == 'push' || (github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:doctor
 
-      - name: Enforce Markdown location policy
+      - name: Enforce changed Markdown location policy
         if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        run: pnpm docs:gov:locations -- --changed-only
+
+      - name: Enforce Markdown location policy
+        if:
+          github.event_name == 'push' || (github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:gov:locations
 
       - name: Enforce canonical docs paths and links
-        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        if:
+          github.event_name == 'push' || (github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:canonical:check
 
       - name: Enforce changed docs filename policy

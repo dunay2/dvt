@@ -1377,3 +1377,28 @@ test('tracked migrations add command/query rail implementation and documentation
     /jsonb_array_length\(documentation_refs\) as documentation_ref_count/
   );
 });
+
+test('tracked migrations include frontend mechanical truth inventory projection', () => {
+  const migrations = readMigrationFiles();
+  const frontendTruthMigration = migrations.find(
+    (migration) => migration.fileName === '055_frontend_mechanical_truth_inventory.sql'
+  );
+
+  assert.ok(frontendTruthMigration);
+  assert.match(
+    frontendTruthMigration.sql,
+    /create table if not exists planning_query_store\.frontend_mechanical_truth_surfaces/
+  );
+  assert.match(
+    frontendTruthMigration.sql,
+    /screen_state in \('operational-product', 'preview', 'disabled-unsupported', 'experimental'\)/
+  );
+  assert.match(
+    frontendTruthMigration.sql,
+    /create or replace view planning_query_store\.frontend_mechanical_truth_query/
+  );
+  assert.match(
+    frontendTruthMigration.sql,
+    /jsonb_array_length\(capability_gaps\) as capability_gap_count/
+  );
+});

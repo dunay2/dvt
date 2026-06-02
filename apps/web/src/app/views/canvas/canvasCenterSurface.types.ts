@@ -22,8 +22,10 @@ export type RenderCanvasCenterSurfaceArgs = {
   canCreateCanvasDocument: boolean;
   canEditEdges: boolean;
   canOpenSourceImport: boolean;
+  emptyStateGuideVisible: boolean;
   onCreateCanvasDocument: (command: CanvasCreateCanvasDocumentCommand) => void;
   onCreateAuthoringNode: (registration: NodeKindRegistration) => void;
+  onEmptyStateGuideVisibilityChange: (visible: boolean) => void;
 };
 
 export type CanvasWorkbenchSurfaceArgs = Pick<
@@ -38,6 +40,8 @@ export type CanvasWorkbenchSurfaceArgs = Pick<
   | 'canCreateCanvasDocument'
   | 'canEditEdges'
   | 'canOpenSourceImport'
+  | 'emptyStateGuideVisible'
   | 'onCreateCanvasDocument'
   | 'onCreateAuthoringNode'
+  | 'onEmptyStateGuideVisibilityChange'
 >;

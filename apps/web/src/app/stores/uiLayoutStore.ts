@@ -25,6 +25,7 @@ interface UiLayoutState {
   canvasGridVisible: boolean;
   canvasGridColor: CanvasPaletteId;
   canvasSnapToGrid: boolean;
+  canvasEmptyStateGuideVisible: boolean;
 
   activeTabs: Array<{
     id: string;
@@ -52,6 +53,7 @@ interface UiLayoutState {
   setCanvasGridVisible: (visible: boolean) => void;
   setCanvasGridColor: (color: CanvasPaletteId) => void;
   setCanvasSnapToGrid: (enabled: boolean) => void;
+  setCanvasEmptyStateGuideVisible: (visible: boolean) => void;
   addTab: (tab: { id: string; type: TabType; label: string; data?: unknown }) => void;
   closeTab: (tabId: string) => void;
   setActiveTab: (tabId: string) => void;
@@ -73,6 +75,7 @@ type PersistedUiLayoutState = Partial<
     | 'canvasGridVisible'
     | 'canvasGridColor'
     | 'canvasSnapToGrid'
+    | 'canvasEmptyStateGuideVisible'
   >
 >;
 
@@ -92,6 +95,7 @@ export const useUiLayoutStore = create<UiLayoutState>()(
       canvasGridVisible: true,
       canvasGridColor: DEFAULT_CANVAS_GRID_COLOR,
       canvasSnapToGrid: false,
+      canvasEmptyStateGuideVisible: true,
 
       activeTabs: [{ id: 'main-canvas', type: 'canvas' as TabType, label: 'Main Graph' }],
       activeTabId: 'main-canvas',
@@ -121,6 +125,7 @@ export const useUiLayoutStore = create<UiLayoutState>()(
       setCanvasGridColor: (color) =>
         set({ canvasGridColor: normalizeCanvasHexColor(color, DEFAULT_CANVAS_GRID_COLOR) }),
       setCanvasSnapToGrid: (enabled) => set({ canvasSnapToGrid: enabled }),
+      setCanvasEmptyStateGuideVisible: (visible) => set({ canvasEmptyStateGuideVisible: visible }),
 
       addTab: (tab) =>
         set((state) => ({
@@ -178,6 +183,10 @@ export const useUiLayoutStore = create<UiLayoutState>()(
             typeof persistedLayoutState.canvasSnapToGrid === 'boolean'
               ? persistedLayoutState.canvasSnapToGrid
               : currentState.canvasSnapToGrid,
+          canvasEmptyStateGuideVisible:
+            typeof persistedLayoutState.canvasEmptyStateGuideVisible === 'boolean'
+              ? persistedLayoutState.canvasEmptyStateGuideVisible
+              : currentState.canvasEmptyStateGuideVisible,
         };
       },
       partialize: (state) => ({
@@ -194,6 +203,7 @@ export const useUiLayoutStore = create<UiLayoutState>()(
         canvasGridVisible: state.canvasGridVisible,
         canvasGridColor: state.canvasGridColor,
         canvasSnapToGrid: state.canvasSnapToGrid,
+        canvasEmptyStateGuideVisible: state.canvasEmptyStateGuideVisible,
       }),
     }
   )

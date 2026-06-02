@@ -172,6 +172,31 @@ describe('Canvas route first-canvas policy', () => {
     expect(harness.container.textContent).not.toContain('SQL transform');
   });
 
+  it('hides typed empty guidance by preference while keeping node creation available', async () => {
+    await renderCanvasRouteWithController(harness, {
+      explorerNodes: [],
+      canvasDocument: {
+        kind: 'dbt',
+        title: 'dbt canvas',
+      },
+      canvasAuthoringMode: 'dbt',
+      canvasEmptyStateGuideVisible: false,
+    });
+
+    expect(harness.container.querySelector('[data-slot="canvas-empty-state"]')).toBeNull();
+    expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
+    expect(harness.container.textContent).toContain('dbt canvas');
+    expect(harness.container.textContent).not.toContain('Start dbt canvas');
+    expect(harness.container.textContent).not.toContain('Add first dbt node');
+
+    const insertButton = harness.container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-toolbar-insert-command"]'
+    );
+
+    expect(insertButton).not.toBeNull();
+    expect(insertButton?.disabled).toBe(false);
+  });
+
   it('keeps dbt first-node authoring available while execution actions stay unavailable', async () => {
     await renderCanvasRouteWithController(harness, {
       ...buildCanvasHostCycleControllerState({

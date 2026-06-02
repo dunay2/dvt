@@ -76,6 +76,7 @@ export type CanvasShellGraph = {
   canvasGridVisible: boolean;
   canvasGridColor: CanvasPaletteId;
   canvasSnapToGrid: boolean;
+  canvasEmptyStateGuideVisible: boolean;
   viewport: CanvasViewport | null;
 };
 
@@ -127,6 +128,7 @@ export type CanvasShellChromeCommands = {
   onToggleGridVisible: () => void;
   onGridColorChange: (color: CanvasPaletteId) => void;
   onToggleSnapToGrid: () => void;
+  onSetCanvasEmptyStateGuideVisible: (visible: boolean) => void;
   onExportProjectSnapshot: () => void;
   onImportProjectSnapshotFile: (file: File) => void;
   onReloadLatestDraft: () => void;

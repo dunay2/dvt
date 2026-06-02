@@ -101,6 +101,8 @@ export function CanvasEmptyStateView({
   firstNodeHelper = canvasViewCopy.routeEmptyFirstNodeHelper,
   nodeKinds = [],
   onCreateAuthoringNode,
+  emptyStateGuideVisible = true,
+  onEmptyStateGuideVisibilityChange,
 }: Readonly<{
   title?: string;
   message?: string;
@@ -108,6 +110,8 @@ export function CanvasEmptyStateView({
   firstNodeHelper?: string;
   nodeKinds?: readonly NodeKindRegistration[];
   onCreateAuthoringNode?: (registration: NodeKindRegistration) => void;
+  emptyStateGuideVisible?: boolean;
+  onEmptyStateGuideVisibilityChange?: (visible: boolean) => void;
 }>) {
   const canCreateAuthoringNode = onCreateAuthoringNode != null && nodeKinds.length > 0;
 
@@ -120,6 +124,26 @@ export function CanvasEmptyStateView({
           firstNodeLabel={firstNodeLabel}
           firstNodeHelper={firstNodeHelper}
         />
+      ) : null}
+      {onEmptyStateGuideVisibilityChange != null ? (
+        <label
+          data-slot="canvas-empty-guide-preference-row"
+          className={cn(
+            'mt-5 flex items-center gap-2 border-t border-[color:var(--border-default)] pt-4 text-xs',
+            routeWorkbenchMutedTextClassName
+          )}
+        >
+          <input
+            data-slot="canvas-empty-guide-preference"
+            type="checkbox"
+            checked={emptyStateGuideVisible}
+            onChange={(event) => {
+              onEmptyStateGuideVisibilityChange(event.currentTarget.checked);
+            }}
+            className="size-4 accent-[var(--text-accent)]"
+          />
+          <span>{canvasViewCopy.toolbarEmptyCanvasGuideLabel}</span>
+        </label>
       ) : null}
     </CanvasSurfaceStateCard>
   );

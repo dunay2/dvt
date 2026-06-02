@@ -28,6 +28,7 @@ function buildCanvasShellLayoutArgs({
       explorerPanelVisible: controller.explorerPanelVisible,
       inspectorPanelVisible: controller.inspectorPanelVisible,
       canOpenSourceImport: controller.canOpenSourceImport,
+      canvasEmptyStateGuideVisible: controller.canvasEmptyStateGuideVisible,
     },
     recoveryCommands: {
       reloadLatestDraft: controller.reloadLatestDraft,
@@ -42,6 +43,9 @@ function buildCanvasShellLayoutArgs({
       handleSelectCanvasDocument: controller.handleSelectCanvasDocument,
       handleApplyCanvasDocumentPatch: controller.handleApplyCanvasDocumentPatch,
       handleDeleteCanvasDocument: controller.handleDeleteCanvasDocument,
+    },
+    preferenceCommands: {
+      setCanvasEmptyStateGuideVisible: controller.setCanvasEmptyStateGuideVisible,
     },
     routePresentation: {
       presentationState: routeViewState.presentationState,
@@ -105,6 +109,7 @@ function buildCanvasShellGraphArgs({
       canvasGridVisible: controller.canvasGridVisible,
       canvasGridColor: controller.canvasGridColor,
       canvasSnapToGrid: controller.canvasSnapToGrid,
+      canvasEmptyStateGuideVisible: controller.canvasEmptyStateGuideVisible,
       viewport: controller.viewport,
     },
   };
@@ -175,6 +180,7 @@ function buildCanvasShellChromeCommandsArgs({
       setCanvasGridVisible: controller.setCanvasGridVisible,
       setCanvasGridColor: controller.setCanvasGridColor,
       setCanvasSnapToGrid: controller.setCanvasSnapToGrid,
+      setCanvasEmptyStateGuideVisible: controller.setCanvasEmptyStateGuideVisible,
       handleExportProjectSnapshot: controller.handleExportProjectSnapshot,
       handleImportProjectSnapshotFile: controller.handleImportProjectSnapshotFile,
       reloadLatestDraft: controller.reloadLatestDraft,

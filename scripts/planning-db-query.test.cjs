@@ -28,6 +28,7 @@ const {
   buildPrReadinessRows,
   buildCommandQueryRailRows,
   buildCreationIntentRows,
+  buildFrontendMechanicalTruthRows,
   buildSummaryRows,
   buildTaskRows,
   buildTaskTraceRows,
@@ -51,6 +52,7 @@ const {
   readAiProjectContext,
   readCommandQueryRailRows,
   readCreationIntentRows,
+  readFrontendMechanicalTruthRows,
   readDocsDispositionRows,
   readFeatureWorkRows,
   readComponentEngineeringComponentDriftRows,
@@ -88,6 +90,19 @@ test('command/query rail query behavior lives in a focused read-model component'
   assert.equal(commandQueryRailQueryComponent.readCreationIntentRows, readCreationIntentRows);
 });
 
+test('frontend mechanical truth query behavior lives in a focused read-model component', () => {
+  const frontendMechanicalTruthComponent = require('./planning-db/frontend-mechanical-truth-inventory.cjs');
+
+  assert.equal(
+    frontendMechanicalTruthComponent.buildFrontendMechanicalTruthRows,
+    buildFrontendMechanicalTruthRows
+  );
+  assert.equal(
+    frontendMechanicalTruthComponent.readFrontendMechanicalTruthRows,
+    readFrontendMechanicalTruthRows
+  );
+});
+
 test('resolveQueryName defaults to summary and rejects unknown query names', () => {
   assert.equal(resolveQueryName(undefined), 'summary');
   assert.equal(resolveQueryName('summary'), 'summary');
@@ -110,6 +125,7 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('command-query-rails'), 'command-query-rails');
   assert.equal(resolveQueryName('ai-project-context'), 'ai-project-context');
   assert.equal(resolveQueryName('creation-intent'), 'creation-intent');
+  assert.equal(resolveQueryName('frontend-surfaces'), 'frontend-surfaces');
   assert.equal(resolveQueryName('pr-readiness'), 'pr-readiness');
   assert.equal(resolveQueryName('docs-disposition'), 'docs-disposition');
   assert.equal(resolveQueryName('feature-work'), 'feature-work');
@@ -285,6 +301,33 @@ test('parseArgs parses AI project context format and discovery filters', () => {
     () => parseArgs(['ai-project-context', '--format', 'html']),
     /Invalid --format "html"/
   );
+});
+
+test('parseArgs parses frontend mechanical truth filters for DB-first screen inspection', () => {
+  const command = parseArgs([
+    'frontend-surfaces',
+    '--kind',
+    'route',
+    '--state',
+    'preview',
+    '--path',
+    '/canvas',
+    '--owner',
+    'Canvas workbench',
+    '--limit',
+    '5',
+  ]);
+
+  assert.deepEqual(command, {
+    queryName: 'frontend-surfaces',
+    filters: {
+      kind: 'route',
+      state: 'preview',
+      path: '/canvas',
+      owner: 'Canvas workbench',
+      limit: 5,
+    },
+  });
 });
 
 test('parseArgs parses creation intent preflight filters for AI reuse checks', () => {
@@ -1682,6 +1725,53 @@ test('runQuery dispatches creation-intent through the AI pre-create rail query',
       75,
       'EXAMPLE-FEATURE',
       'docs/planning/proposals/mandatory/example.md',
+    ],
+  ]);
+});
+
+test('runQuery dispatches frontend-surfaces through the screen truth query', async () => {
+  const client = {
+    async query() {
+      return {
+        rows: [
+          {
+            surface_kind: 'route',
+            route_path: '/runs',
+            surface_id: 'web.runs.list',
+            screen_state: 'operational-product',
+            frontend_owner: 'Runs workbench',
+            registered_plugin_count: 1,
+            consumed_endpoint_count: 1,
+            zustand_store_count: 2,
+            tanstack_query_count: 1,
+            capability_gap_count: 2,
+            source_path: 'docs/architecture/components/web/frontend-mechanical-truth-inventory.md',
+          },
+        ],
+      };
+    },
+  };
+
+  const rows = await runQuery({
+    queryName: 'frontend-surfaces',
+    filters: { state: 'operational-product', path: '/runs', limit: 5 },
+    client,
+    print: false,
+  });
+
+  assert.deepEqual(rows, [
+    [
+      'route',
+      '/runs',
+      'web.runs.list',
+      'operational-product',
+      'Runs workbench',
+      1,
+      1,
+      2,
+      1,
+      2,
+      'docs/architecture/components/web/frontend-mechanical-truth-inventory.md',
     ],
   ]);
 });
