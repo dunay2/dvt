@@ -79,12 +79,15 @@ sequence:
   generation;
 - `git diff --check` and `git diff --cached --check`;
 - an internal unresolved-conflict-marker scan over changed text files;
-- `pnpm verify:prepush -- --full`.
+- `pnpm verify:prepush`.
 
 `closeout:changed` intentionally does not keep a manual copy of the
 `governance:refresh` substeps. That keeps changed-slice closeout aligned with
 the DB-first governance rail and prevents local helpers from running stale
-coverage/remediation or DB validation sequences.
+coverage/remediation or DB validation sequences. It also uses the normal
+pre-push rail after refresh, because `governance:refresh` already ran the
+global governance and DB quadrature. Use `pnpm verify:prepush -- --full`
+separately when the task explicitly requires a full repository baseline.
 
 The helper does not commit, push, create a PR, bypass hooks, relax checks, or
 replace package-specific tests required by the active slice. It only removes

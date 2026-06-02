@@ -44,7 +44,7 @@ function buildCloseoutPlan() {
     {
       id: 'verify-prepush',
       command: 'pnpm',
-      args: ['verify:prepush', '--', '--full'],
+      args: ['verify:prepush'],
     },
   ];
 }

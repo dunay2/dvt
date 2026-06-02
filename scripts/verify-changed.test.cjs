@@ -104,6 +104,16 @@ test('buildVerifyChangedPlan runs adjacent planning workflow tests without the f
   assert.ok(!labels.includes('pnpm test:planning:db'));
 });
 
+test('buildVerifyChangedPlan runs changed closeout helper tests directly', () => {
+  const labels = labelsFor(['scripts/closeout-changed.cjs']);
+
+  assert.equal(
+    labels.filter((label) => label === 'node --test scripts/closeout-changed.test.cjs').length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
 test('buildVerifyChangedPlan runs targeted governance report generator tests for AI-sized changes', () => {
   const labels = labelsFor([
     'scripts/generate-governance-coverage-report.cjs',

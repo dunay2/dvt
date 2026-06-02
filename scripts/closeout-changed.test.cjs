@@ -32,7 +32,7 @@ test('buildCloseoutPlan delegates docs, workboard, governance hashes, and DB che
     ]
   );
   assert.equal(commandLabel(plan[0]), 'pnpm governance:refresh');
-  assert.equal(commandLabel(plan.at(-1)), 'pnpm verify:prepush -- --full');
+  assert.equal(commandLabel(plan.at(-1)), 'pnpm verify:prepush');
   assert.deepEqual(
     plan.filter((step) => /^(docs-|planning-db-|governance-db-)/.test(step.id)),
     [],
@@ -155,17 +155,23 @@ test('executeCloseoutPlan scans the latest changed files for conflict markers', 
   );
 });
 
-test('closeout helper regression tests are wired into the prepush gate', () => {
+test('closeout helper regression tests are wired into changed and full prepush gates', () => {
   const packageJson = JSON.parse(
     fs.readFileSync(path.resolve(__dirname, '..', 'package.json'), 'utf8')
   );
   const { buildPrepushPlan } = require('./verify-prepush.cjs');
+  const { buildVerifyChangedPlan, commandLabel } = require('./verify-changed.cjs');
 
   assert.equal(
     packageJson.scripts['test:closeout-changed'],
     'node --test scripts/closeout-changed.test.cjs'
   );
   assert.equal(packageJson.scripts['verify:prepush'], 'node scripts/verify-prepush.cjs');
+  assert.ok(
+    buildVerifyChangedPlan(['scripts/closeout-changed.cjs'])
+      .map(commandLabel)
+      .includes('node --test scripts/closeout-changed.test.cjs')
+  );
   assert.ok(
     buildPrepushPlan(['apps/web/src/main.tsx'], { full: true }).some(
       (step) => step.id === 'test-closeout-changed'

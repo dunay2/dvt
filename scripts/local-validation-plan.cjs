@@ -6,6 +6,8 @@ const { classifyRepositoryChangedScope } = require('../tools/ci/repository-chang
 
 const repoRoot = path.resolve(__dirname, '..');
 const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
+  'scripts/closeout-changed.cjs': 'scripts/closeout-changed.test.cjs',
+  'scripts/closeout-changed.test.cjs': 'scripts/closeout-changed.test.cjs',
   'scripts/check-governance-unit-coverage.cjs': 'scripts/check-governance-unit-coverage.test.cjs',
   'scripts/check-governance-unit-coverage.test.cjs':
     'scripts/check-governance-unit-coverage.test.cjs',
