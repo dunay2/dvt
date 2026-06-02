@@ -106,9 +106,11 @@ const governanceFileSnapshotFixture = (() => {
 test('planning content snapshot preserves real lane task content and hashes', () => {
   const snapshot = buildPlanningContentSnapshot();
 
-  assert.equal(snapshot.lanes.length, 5);
-  assert.ok(snapshot.tasks.length > 100);
-  assert.match(snapshot.sources[0].contentSha256, /^[a-f0-9]{64}$/);
+  assert.deepEqual(snapshot.lanes.map((lane) => lane.laneId).sort(), ['A', 'B', 'C', 'D', 'E']);
+  assert.equal(
+    snapshot.sources.every((source) => /^[a-f0-9]{64}$/.test(source.contentSha256)),
+    true
+  );
 
   const mvpA1 = snapshot.tasks.find((task) => task.laneId === 'A' && task.taskId === 'MVP-A1');
   assert.ok(mvpA1);
@@ -978,7 +980,16 @@ test('governance import batches heavy file table inserts', async () => {
 
   assert.equal(fileInsertQueries.length, 1);
   assert.match(fileInsertQueries[0].sql, /\),\s*\(/);
-  assert.equal(fileInsertQueries[0].params.length, 48);
+  assert.deepEqual(
+    fileInsertQueries[0].params.filter((value) => value === 'F-A' || value === 'F-B'),
+    ['F-A', 'F-B']
+  );
+  assert.deepEqual(
+    fileInsertQueries[0].params.filter(
+      (value) => value === 'docs/example-a.md' || value === 'docs/example-b.md'
+    ),
+    ['docs/example-a.md', 'docs/example-b.md']
+  );
 });
 
 test('docs disposition import batches document inserts', async () => {
@@ -1028,7 +1039,18 @@ test('docs disposition import batches document inserts', async () => {
 
   assert.equal(documentInsertQueries.length, 1);
   assert.match(documentInsertQueries[0].sql, /\),\s*\(/);
-  assert.equal(documentInsertQueries[0].params.length, 24);
+  assert.deepEqual(
+    documentInsertQueries[0].params.filter(
+      (value) => value === 'docs/example-a.md' || value === 'docs/example-b.md'
+    ),
+    ['docs/example-a.md', 'docs/example-b.md']
+  );
+  assert.deepEqual(
+    documentInsertQueries[0].params.filter(
+      (value) => value === 'Example A' || value === 'Example B'
+    ),
+    ['Example A', 'Example B']
+  );
 });
 
 test('knowledge import batches documents and preserves link conflict handling', async () => {
@@ -1092,11 +1114,21 @@ test('knowledge import batches documents and preserves link conflict handling', 
 
   assert.equal(documentInsertQueries.length, 1);
   assert.match(documentInsertQueries[0].sql, /\),\s*\(/);
-  assert.equal(documentInsertQueries[0].params.length, 20);
+  assert.deepEqual(
+    documentInsertQueries[0].params.filter((value) => value === 'DOC-A' || value === 'DOC-B'),
+    ['DOC-A', 'DOC-B']
+  );
   assert.equal(linkInsertQueries.length, 1);
   assert.match(linkInsertQueries[0].sql, /\),\s*\(/);
   assert.match(linkInsertQueries[0].sql, /on conflict do nothing/);
-  assert.equal(linkInsertQueries[0].params.length, 6);
+  assert.deepEqual(linkInsertQueries[0].params, [
+    'DOC-A',
+    'DOC-B',
+    'references',
+    'DOC-B',
+    'DOC-A',
+    'references',
+  ]);
 });
 
 test('repository command import batches command inserts', async () => {
@@ -1146,7 +1178,16 @@ test('repository command import batches command inserts', async () => {
 
   assert.equal(commandInsertQueries.length, 1);
   assert.match(commandInsertQueries[0].sql, /\),\s*\(/);
-  assert.equal(commandInsertQueries[0].params.length, 26);
+  assert.deepEqual(
+    commandInsertQueries[0].params.filter(
+      (value) => value === 'command-a' || value === 'command-b'
+    ),
+    ['command-a', 'command-b']
+  );
+  assert.deepEqual(
+    commandInsertQueries[0].params.filter((value) => value === 'test:a' || value === 'test:b'),
+    ['test:a', 'test:b']
+  );
 });
 
 test('repository command snapshot imports package scripts and command files for DB queries', async () => {

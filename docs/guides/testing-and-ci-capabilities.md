@@ -241,10 +241,11 @@ Command semantics:
 - Planning DB migration-only edits under `tools/planning-db/migrations/*.sql`
   route through `pnpm test:planning:db:migrations`, which exercises
   `scripts/planning-db-migrate.test.cjs` without running the full
-  `pnpm test:planning:db` package. In the 2026-06-01 local measurement, the
-  focused command covered 60 migration tests in 558.3258 ms of Node test time,
-  while the full planning DB suite covered 250 tests and took 83.929 seconds in
-  the final control run.
+  `pnpm test:planning:db` package. When the same slice already changes
+  `scripts/planning-db-migrate.test.cjs`, the changed-file verifier runs that
+  direct suite once and does not add the wrapper command again. This is an
+  architecture contract for targeted DB-first schema validation, not a one-off
+  timing comparison.
 - Command/query rail catalog inspection is DB-first. After governance import,
   `pnpm planning:db:query command-query-rails` reads
   `planning_query_store.command_query_rail_query`; use `--gaps true` for rails

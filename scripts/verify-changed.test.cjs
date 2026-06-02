@@ -76,6 +76,28 @@ test('buildVerifyChangedPlan avoids duplicate migration tests when the suite is 
   assert.ok(!labels.includes('pnpm test:planning:db'));
 });
 
+test('buildVerifyChangedPlan keeps mixed docs and planning DB slices targeted and deduped', () => {
+  const labels = labelsFor([
+    'docs/guides/testing-and-ci-capabilities.md',
+    'scripts/planning-db-import.cjs',
+    'scripts/planning-db-import.test.cjs',
+    'scripts/planning-db-migrate.test.cjs',
+    'tools/planning-db/migrations/053_command_query_rail_catalog.sql',
+  ]);
+
+  assert.deepEqual(labels, [...new Set(labels)]);
+  assert.equal(
+    labels.filter((label) => label === 'node --test scripts/planning-db-import.test.cjs').length,
+    1
+  );
+  assert.equal(
+    labels.filter((label) => label === 'node --test scripts/planning-db-migrate.test.cjs').length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:planning:db:migrations'));
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
 test('buildVerifyChangedPlan runs changed planning DB tests directly', () => {
   const labels = labelsFor(['scripts/planning-db-surface-inventory-check.test.cjs']);
 
