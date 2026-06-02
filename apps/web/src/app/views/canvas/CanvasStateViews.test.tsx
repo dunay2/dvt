@@ -119,17 +119,28 @@ describe('Canvas empty state Insert/Add palette', () => {
   it('keeps terse authoring node kinds discoverable through semantic palette search', async () => {
     const semanticNodeKinds: readonly NodeKindRegistration[] = [
       {
-        ...nodeKinds[0],
         kind: 'dbt:source',
         pluginId: 'dbt',
         label: 'Source',
+        role: 'input',
+        icon: Circle,
+        borderClass: 'border-sky-500',
+        minimapColor: '#0ea5e9',
+        allowsIncoming: false,
+        allowsOutgoing: true,
+        supportsColumns: true,
       },
       {
-        ...nodeKinds[1],
         kind: 'dbt:model',
         pluginId: 'dbt',
         label: 'Model',
         role: 'transform',
+        icon: Square,
+        borderClass: 'border-violet-500',
+        minimapColor: '#8b5cf6',
+        allowsIncoming: true,
+        allowsOutgoing: true,
+        supportsColumns: true,
       },
     ];
     const container = document.createElement('div');
