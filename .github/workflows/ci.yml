@@ -123,6 +123,8 @@ jobs:
 
       - name: Run changed-slice verification
         run: pnpm verify:changed
+        env:
+          GIT_BASE: origin/${{ github.base_ref }}
 
   affected-preflight:
     name: Affected workspace preflight

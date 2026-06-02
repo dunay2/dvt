@@ -88,6 +88,7 @@ test('root affected commands and CI matrix lint/build/typecheck steps use the Tu
   );
 
   assert.ok(ciWorkflow.includes('run: pnpm verify:changed'));
+  assert.ok(ciWorkflow.includes('GIT_BASE: origin/${{ github.base_ref }}'));
   assert.ok(ciWorkflow.includes('run: pnpm preflight:affected'));
   assert.ok(ciWorkflow.includes('run: pnpm ci:full'));
   assert.equal(
