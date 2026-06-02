@@ -252,7 +252,10 @@ Command semantics:
   `--duplicates true` for duplicate rail names by type. The import keeps
   manifest symbol refs, source-code refs, governance `cqRails` refs, and
   documentation refs separate; documentation refs help discovery but do not
-  satisfy implementation gaps.
+  satisfy implementation gaps. Before an AI agent creates a new externally
+  observable behavior, `pnpm planning:db:query creation-intent --intent
+"<creation intent>"` provides the DB-first preflight for existing rail reuse
+  or register-before-creating guidance.
 - Planning/governance DB test-file edits under
   `scripts/planning-db-*.test.cjs`, `scripts/governance-db-*.test.cjs`, and
   the generated planning DB report tests route to the changed `node --test`

@@ -65,8 +65,11 @@ flowchart LR
   Import --> RailTable[planning_query_store.command_query_rails]
   RailTable --> RailView[planning_query_store.command_query_rail_query]
   RailView --> Query[pnpm planning:db:query command-query-rails]
+  RailView --> Intent[pnpm planning:db:query creation-intent --intent]
   Query --> Gap[--gaps true]
   Query --> Duplicate[--duplicates true]
+  Intent --> Reuse[Existing rail reuse guidance]
+  Intent --> Register[Register rail before creating]
 ```
 
 The DB stores rail declarations, implementation refs, and documentation refs.
@@ -75,6 +78,10 @@ The view computes `is_gap`, `implementation_ref_count`,
 commands and CI checks do not need to reparse Markdown to inspect the catalog.
 Documentation refs are discovery evidence only; a gap closes only through
 `implementation_refs` or a non-missing status backed by implementation evidence.
+AI pre-create checks read the same DB view through
+`pnpm planning:db:query creation-intent --intent "<creation intent>"`. That
+query returns reuse guidance when a matching rail already exists and returns an
+explicit register-before-creating row when no matching rail is found.
 
 ## Feature Mechanization
 
@@ -89,6 +96,7 @@ componentGuides:
 userStories:
   - As an operator, I can query product command/query rails from the planning DB and filter gaps.
   - As an architect, I can identify duplicate product rail names by type from one DB view.
+  - As an AI agent, I can ask "quiero crear X" and receive existing rail reuse guidance before creating anything.
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -122,6 +130,9 @@ commandQueryRails:
   - name: QueryCommandQueryRailCatalog
     type: query
     dddOwner: CommandQueryRailCatalogReadModel
+  - name: AssessCreationIntentQuery
+    type: query
+    dddOwner: CommandQueryRailCatalogReadModel
   - name: InventoryDbGovernanceSurface
     type: query
     dddOwner: DbGovernanceSurfaceInventory
@@ -138,6 +149,9 @@ domainObjects:
   - name: CommandQueryRailGap
     type: quality finding
     owner: Architecture / Docs / Delivery
+  - name: CreationIntentAssessment
+    type: pre-create read model
+    owner: Architecture / Docs / Delivery
 fowlerSignals:
   - Duplicate Semantics from rail names declared in multiple manifests without one queryable catalog.
   - Hidden Authority when implementation refs remain embedded in docs instead of DB rows.
@@ -152,6 +166,7 @@ completionGate:
   - pnpm governance:refresh
   - pnpm planning:db:inventory:check
   - node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
+  - pnpm planning:db:query creation-intent --intent "quiero crear QueryCommandQueryRailCatalog" --limit 5
   - pnpm verify:prepush
 redGreenCycles:
   - id: command-query-rail-catalog-snapshot
@@ -162,6 +177,13 @@ redGreenCycles:
       - scripts/planning-db-query.cjs
       - tools/planning-db/migrations/053_command_query_rail_catalog.sql
     greenTest: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
+  - id: creation-intent-preflight-query
+    redTest: node --test scripts/planning-db-query.test.cjs
+    expectedFailure: creation-intent is an unknown planning DB query and its builder/reader are missing.
+    patchSurfaces:
+      - scripts/planning-db-query.cjs
+      - scripts/planning-db-query.test.cjs
+    greenTest: node --test scripts/planning-db-query.test.cjs
 symbols:
   - name: listTrackedFeatureMechanizationDocuments
     path: scripts/planning-db-import.cjs
@@ -505,10 +527,64 @@ symbols:
     cypressCoverage: N/A - CLI parser helper
     unitTests:
       - scripts/planning-db-query.test.cjs
+  - name: creationIntentStopWords
+    path: scripts/planning-db-query.cjs
+    dddOwner: CreationIntentAssessment
+    cqRails: [AssessCreationIntentQuery]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A - CLI parser helper
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: normalizeCreationIntentForSearch
+    path: scripts/planning-db-query.cjs
+    dddOwner: CreationIntentAssessment
+    cqRails: [AssessCreationIntentQuery]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A - CLI parser helper
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: creationIntentTokens
+    path: scripts/planning-db-query.cjs
+    dddOwner: CreationIntentAssessment
+    cqRails: [AssessCreationIntentQuery]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A - CLI parser helper
+    unitTests:
+      - scripts/planning-db-query.test.cjs
   - name: buildCommandQueryRailRows
     path: scripts/planning-db-query.cjs
     dddOwner: CommandQueryRailCatalogReadModel
     cqRails: [QueryCommandQueryRailCatalog]
+    fowlerSignals: [Duplicate Semantics]
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A - CLI formatter helper
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: commandQueryRailImplementationLabel
+    path: scripts/planning-db-query.cjs
+    dddOwner: CommandQueryRailCatalogReadModel
+    cqRails: [QueryCommandQueryRailCatalog, AssessCreationIntentQuery]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A - CLI formatter helper
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: creationIntentAction
+    path: scripts/planning-db-query.cjs
+    dddOwner: CreationIntentAssessment
+    cqRails: [AssessCreationIntentQuery]
+    fowlerSignals: [Duplicate Semantics]
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A - CLI formatter helper
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: buildCreationIntentRows
+    path: scripts/planning-db-query.cjs
+    dddOwner: CreationIntentAssessment
+    cqRails: [AssessCreationIntentQuery]
     fowlerSignals: [Duplicate Semantics]
     architectureGuard: node --test scripts/planning-db-query.test.cjs
     cypressCoverage: N/A - CLI formatter helper
@@ -536,6 +612,15 @@ symbols:
     path: scripts/planning-db-query.cjs
     dddOwner: CommandQueryRailCatalogReadModel
     cqRails: [QueryCommandQueryRailCatalog]
+    fowlerSignals: [Duplicate Semantics]
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A - DB query helper
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: readCreationIntentRows
+    path: scripts/planning-db-query.cjs
+    dddOwner: CreationIntentAssessment
+    cqRails: [AssessCreationIntentQuery]
     fowlerSignals: [Duplicate Semantics]
     architectureGuard: node --test scripts/planning-db-query.test.cjs
     cypressCoverage: N/A - DB query helper
