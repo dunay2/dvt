@@ -286,8 +286,8 @@ Command semantics:
   [`tools/ci/repository-change-scope.mjs`](../../tools/ci/repository-change-scope.mjs)
   instead of owning a parallel path taxonomy. That shared query consumes the
   repository command catalog for `scripts/**`, `tools/ci/**`, `tools/docs/**`,
-  `tools/ops/**`, and `.github/scripts/**`, and it also names root CI policy
-  inputs such as `.dependency-cruiser.cjs`. The default router keeps local
+  `tools/ops/**`, `.github/scripts/**`, and `.github/actions/**`, and it also
+  names root CI policy inputs such as `.dependency-cruiser.cjs`. The default router keeps local
   pre-push focused on mechanical changed-file checks. `--full` restores the
   heavier closeout groups:
   - planning DB inventory checks only for planning/query-store surfaces;
@@ -446,6 +446,13 @@ These files are the canonical source of truth for:
 - adapter-postgres, contracts, determinism, and coverage scope detection
 - Temporal integration scope detection
 
+Pull-request scope-diff consumers use shallow checkout (`fetch-depth: 1`) and
+then the shared [`fetch-scope-base`](../../.github/actions/fetch-scope-base/action.yml)
+action to fetch only the base branch ref needed for `origin/<base>...HEAD` or
+`origin/<base>` comparisons. This keeps GitHub as the authoritative merge gate
+while avoiding full-history checkout before scope detectors and changed-file
+gates decide whether heavier lanes apply.
+
 The engine coverage scope is documented as the
 [Engine Coverage Scope Gate Component](../architecture/components/ci-governance/engine-coverage-scope-gate-component.md).
 For pull requests, `coverage_relevant` is true for the governed engine
@@ -466,6 +473,8 @@ Current workflow consumers:
   changed-file-validation relevant, but do not open the workspace matrix unless
   they also touch a real root-build input such as the setup action, lockfile,
   Turbo graph, TypeScript config, or runtime orchestration helper.
+  `detect-affected` and changed-file lint/format use shallow checkout plus
+  `fetch-scope-base` instead of fetching full PR history before routing.
 - [`.github/workflows/test.yml`](../../.github/workflows/test.yml) uses
   `emit-scope --mode test` once in `detect_test_matrix` for PR test routing
   across the web app, workers, and library workspaces. Dedicated web,
@@ -509,7 +518,8 @@ Current workflow consumers:
 - [`.github/workflows/contracts.yml`](../../.github/workflows/contracts.yml) uses
   `emit-scope --mode contracts` for contract, determinism, and golden routing.
   The workflow no longer owns parallel inline `package.json` filters for those
-  lanes.
+  lanes. Its detector uses shallow checkout plus `fetch-scope-base`; contract
+  hash execution no longer requests full PR history.
 - [`.github/workflows/pr-quality-gate.yml`](../../.github/workflows/pr-quality-gate.yml) uses the
   same shared scope surfaces for workflow/global change routing, repository
   validation scope, and Temporal capability lanes. It also runs the
@@ -526,7 +536,9 @@ Current workflow consumers:
   Workflow YAML edits are CI-policy changes for this scope as well: they keep
   PR metadata, changed-file validation, and CI contract coverage, but no longer
   imply Temporal or adapter-postgres runtime integration by themselves. Pushes
-  and manual full gates keep the full remote posture.
+  and manual full gates keep the full remote posture. The scope detector uses
+  shallow checkout plus `fetch-scope-base`; Temporal integration jobs keep
+  shallow checkout because they do not compute changed-file diffs.
 
 ## Notes
 

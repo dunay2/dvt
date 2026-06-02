@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-action.json
+name: Fetch shallow pull-request base
+description: Fetch the pull-request base ref for shallow CI scope diff jobs
+
+inputs:
+  base-ref:
+    description: Pull-request base branch name to expose as origin/<base-ref>
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Fetch pull-request base ref
+      if: ${{ github.event_name == 'pull_request' && inputs.base-ref != '' }}
+      shell: bash
+      env:
+        BASE_REF: ${{ inputs.base-ref }}
+      run: |
+        set -euo pipefail
+        git fetch --no-tags --depth=1 origin "+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}"

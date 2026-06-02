@@ -316,6 +316,33 @@ test('PR quality gate consumes prepush-equivalent scope outputs for expensive ga
   assertWorkflowContains(prQualityGate, 'steps.scope.outputs.code_validation_relevant');
 });
 
+test('scope diff consumers use shallow checkout instead of full PR history', () => {
+  const fetchScopeBaseAction = readFileSync('.github/actions/fetch-scope-base/action.yml', 'utf8');
+  const ciWorkflow = readFileSync('.github/workflows/ci.yml', 'utf8');
+  const contractsWorkflow = readFileSync('.github/workflows/contracts.yml', 'utf8');
+  const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
+  const testWorkflow = readFileSync('.github/workflows/test.yml', 'utf8');
+  const workflowBundle = [ciWorkflow, contractsWorkflow, prQualityGate, testWorkflow].join('\n');
+
+  assertWorkflowContains(fetchScopeBaseAction, 'git fetch --no-tags --depth=1 origin');
+  assertWorkflowContains(fetchScopeBaseAction, 'BASE_REF: ${{ inputs.base-ref }}');
+  assertWorkflowContains(
+    fetchScopeBaseAction,
+    '+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}'
+  );
+
+  for (const workflow of [ciWorkflow, contractsWorkflow, prQualityGate, testWorkflow]) {
+    assertWorkflowContains(workflow, 'uses: ./.github/actions/fetch-scope-base');
+  }
+
+  assertWorkflowContains(workflowBundle, 'fetch-depth: 1');
+  assert.doesNotMatch(workflowBundle, /fetch-depth:\s*0/u);
+  assert.doesNotMatch(
+    workflowBundle,
+    /fetch-depth:\s*\$\{\{\s*github\.event_name == 'pull_request' && '0' \|\| '1'\s*\}\}/u
+  );
+});
+
 test('PR quality gate is the single remote owner for ADR-0000 traceability', () => {
   const ciWorkflow = readFileSync('.github/workflows/ci.yml', 'utf8');
   const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');

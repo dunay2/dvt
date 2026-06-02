@@ -19,6 +19,9 @@ AI agents still lose cycles when they run validation, hit a format-only failure,
 then run a separate fix command and repeat the same gate. Remote CI can also
 fail before a runner starts; those failures need deterministic triage so agents
 stop polling or re-running local checks for an external infrastructure block.
+Several pull-request scope jobs also fetched full Git history before computing
+whether expensive lanes should run. That preserved correctness, but it spent
+remote time and network before the scope read model could close unrelated lanes.
 
 ## Target State
 
@@ -36,6 +39,11 @@ stop polling or re-running local checks for an external infrastructure block.
   `detect_test_matrix`. Heavy pull-request lanes consume those outputs at job
   level, so irrelevant PRs do not spend a runner on checkout, dependency setup,
   or repeated scope detection.
+- Pull-request scope-diff consumers use shallow checkout and
+  `.github/actions/fetch-scope-base` to fetch only the base ref needed for
+  changed-file comparisons. This keeps GitHub as a merge gate, but removes
+  full-history checkout from the CI, Test Suite, Contracts, and PR Quality
+  scope routes.
 
 ## Feature Mechanization
 
@@ -53,6 +61,7 @@ userStories:
   - As an AI agent, I can classify remote CI failures that never started a runner as infrastructure blocks.
   - As an engineer, I can rely on tracked workspace settings to run Prettier when files are saved.
   - As an AI agent, I can rely on GitHub skipping heavy Test Suite PR lanes before runner setup when the semantic scope is false.
+  - As an engineer, PR scope detectors avoid full-history checkout before deciding whether expensive lanes apply.
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -62,6 +71,10 @@ governingSources:
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
 allowedImplementationSurfaces:
+  - .github/actions/fetch-scope-base/action.yml
+  - .github/workflows/ci.yml
+  - .github/workflows/contracts.yml
+  - .github/workflows/pr-quality-gate.yml
   - .github/workflows/test.yml
   - .vscode/extensions.json
   - .vscode/settings.json
@@ -75,10 +88,14 @@ allowedImplementationSurfaces:
   - scripts/ai-preflight.test.cjs
   - scripts/local-validation-plan.cjs
   - scripts/verify-changed.test.cjs
+  - tools/ci/policy/workflow-scope.json
   - tools/ci/pr-check-triage.mjs
   - tools/ci/pr-check-triage.test.mjs
+  - tools/ci/repository-change-scope.mjs
+  - tools/ci/repository-change-scope.test.mjs
   - tools/ci/repository-command-catalog.mjs
   - tools/ci/repository-command-catalog.test.mjs
+  - tools/ci/scope-config.mjs
   - tools/ci/workflow-pattern-parity.test.mjs
 forbiddenImplementationSurfaces:
   - apps/**
@@ -107,20 +124,24 @@ domainObjects:
   - name: TestSuiteScopeReadModel
     type: CI scope read model
     owner: Engineering / CI
+  - name: ScopeDiffCheckoutPolicy
+    type: CI scope checkout policy
+    owner: Engineering / CI
 fowlerSignals:
   - Automation Gap when agents must manually discover and run formatting before validation.
   - Hidden Failure Mode when GitHub Actions reports a failure without assigning a runner or producing logs.
   - Duplicate Work when pre-push validation and push hooks repeat the same checks.
   - Duplicate Work when Test Suite jobs repeat semantic scope detection after the detector already computed the same read model.
+  - Over-eager Resource Use when PR scope detectors fetch full repository history before deciding whether heavy lanes apply.
 architectureGuards:
-  - node --test scripts/ai-preflight.test.cjs scripts/verify-changed.test.cjs tools/ci/pr-check-triage.test.mjs tools/ci/repository-command-catalog.test.mjs
+  - node --test scripts/ai-preflight.test.cjs scripts/verify-changed.test.cjs tools/ci/pr-check-triage.test.mjs tools/ci/repository-command-catalog.test.mjs tools/ci/repository-change-scope.test.mjs
   - node --test tools/ci/workflow-pattern-parity.test.mjs
   - pnpm docs:feature-mechanization:implementation
 cypressFlows:
   - N/A - developer workflow and CI tooling only
 completionGate:
   - pnpm governance:refresh
-  - node --test scripts/ai-preflight.test.cjs scripts/verify-changed.test.cjs tools/ci/pr-check-triage.test.mjs tools/ci/repository-command-catalog.test.mjs
+  - node --test scripts/ai-preflight.test.cjs scripts/verify-changed.test.cjs tools/ci/pr-check-triage.test.mjs tools/ci/repository-command-catalog.test.mjs tools/ci/repository-change-scope.test.mjs
   - node --test tools/ci/workflow-pattern-parity.test.mjs
   - pnpm verify:changed
   - pnpm verify:prepush
@@ -151,6 +172,21 @@ redGreenCycles:
       - docs/guides/testing-and-ci-capabilities.md
       - tools/ci/workflow-pattern-parity.test.mjs
     greenTest: node --test tools/ci/workflow-pattern-parity.test.mjs
+  - id: scope-diff-shallow-checkout
+    redTest: node --test tools/ci/repository-change-scope.test.mjs tools/ci/workflow-pattern-parity.test.mjs
+    expectedFailure: composite CI actions are not workflow policy inputs, and scope-diff workflows still use full-history PR checkout.
+    patchSurfaces:
+      - .github/actions/fetch-scope-base/action.yml
+      - .github/workflows/ci.yml
+      - .github/workflows/contracts.yml
+      - .github/workflows/pr-quality-gate.yml
+      - .github/workflows/test.yml
+      - tools/ci/policy/workflow-scope.json
+      - tools/ci/repository-change-scope.mjs
+      - tools/ci/repository-change-scope.test.mjs
+      - tools/ci/scope-config.mjs
+      - tools/ci/workflow-pattern-parity.test.mjs
+    greenTest: node --test tools/ci/repository-change-scope.test.mjs tools/ci/workflow-pattern-parity.test.mjs
 symbols:
   - name: assert
     path: scripts/ai-preflight.test.cjs
@@ -305,4 +341,51 @@ symbols:
     cypressCoverage: N/A - CI workflow architecture test
     unitTests:
       - tools/ci/workflow-pattern-parity.test.mjs
+  - name: fetch-scope-base
+    path: .github/actions/fetch-scope-base/action.yml
+    dddOwner: Repository CI scope policy
+    cqRails: [EmitWorkflowCapabilityScopes]
+    fowlerSignals: [Over-eager Resource Use]
+    architectureGuard: node --test tools/ci/workflow-pattern-parity.test.mjs
+    cypressCoverage: N/A - GitHub Actions scope preparation
+    unitTests:
+      - tools/ci/workflow-pattern-parity.test.mjs
+  - name: SHARED_CI_ACTION_PATTERNS
+    path: tools/ci/scope-config.mjs
+    dddOwner: Repository CI scope policy
+    cqRails: [EmitWorkflowCapabilityScopes]
+    fowlerSignals: [Over-eager Resource Use]
+    architectureGuard: node --test tools/ci/emit-scope.test.mjs tools/ci/workflow-pattern-parity.test.mjs
+    cypressCoverage: N/A - CI scope policy constant
+    unitTests:
+      - tools/ci/emit-scope.test.mjs
+      - tools/ci/workflow-pattern-parity.test.mjs
+  - name: CI_SCOPE_FETCH_ACTION_PATTERNS
+    path: tools/ci/scope-config.mjs
+    dddOwner: Repository CI scope policy
+    cqRails: [EmitWorkflowCapabilityScopes]
+    fowlerSignals: [Over-eager Resource Use]
+    architectureGuard: node --test tools/ci/emit-scope.test.mjs tools/ci/workflow-pattern-parity.test.mjs
+    cypressCoverage: N/A - CI scope policy constant
+    unitTests:
+      - tools/ci/emit-scope.test.mjs
+      - tools/ci/workflow-pattern-parity.test.mjs
+  - name: scope diff consumers use shallow checkout instead of full PR history
+    path: tools/ci/workflow-pattern-parity.test.mjs
+    dddOwner: Repository CI scope policy
+    cqRails: [EmitWorkflowCapabilityScopes]
+    fowlerSignals: [Over-eager Resource Use]
+    architectureGuard: node --test tools/ci/workflow-pattern-parity.test.mjs
+    cypressCoverage: N/A - CI workflow architecture test
+    unitTests:
+      - tools/ci/workflow-pattern-parity.test.mjs
+  - name: classifies CI composite actions as workflow policy inputs without workspace fan-out
+    path: tools/ci/repository-change-scope.test.mjs
+    dddOwner: Repository CI scope policy
+    cqRails: [EmitWorkflowCapabilityScopes]
+    fowlerSignals: [Over-eager Resource Use]
+    architectureGuard: node --test tools/ci/repository-change-scope.test.mjs
+    cypressCoverage: N/A - CI scope classification test
+    unitTests:
+      - tools/ci/repository-change-scope.test.mjs
 ```
