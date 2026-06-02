@@ -34,6 +34,7 @@ See also:
 | Pre-push verification gate     | `pnpm verify:prepush`              | [`package.json`](../../package.json)                                                                                       |
 | Planning DB migration tests    | `pnpm test:planning:db:migrations` | [`package.json`](../../package.json), [`scripts/planning-db-migrate.test.cjs`](../../scripts/planning-db-migrate.test.cjs) |
 | Changed-files auto-fix         | `pnpm fix:changed`                 | [`package.json`](../../package.json)                                                                                       |
+| AI local preflight             | `pnpm ai:preflight`                | [`scripts/ai-preflight.cjs`](../../scripts/ai-preflight.cjs)                                                               |
 | Changed-files lint/format gate | `node scripts/check-changed.cjs`   | [`scripts/check-changed.cjs`](../../scripts/check-changed.cjs)                                                             |
 | PR closeout rail               | `pnpm pr:closeout`                 | [`scripts/pr-closeout.cjs`](../../scripts/pr-closeout.cjs)                                                                 |
 | Immediate PR check gate        | `pnpm pr:checks`                   | [`tools/ci/pr-check-triage.mjs`](../../tools/ci/pr-check-triage.mjs)                                                       |
@@ -314,7 +315,21 @@ Command semantics:
 - `pnpm pr:checks` is the immediate PR check gate. It queries the current
   branch PR once, prints a compact failed/pending summary, returns non-zero for
   failed or still-pending GitHub Actions checks, and does not watch or poll.
-  Use `pnpm pr:checks:json` when machine-readable output is needed.
+  Use `pnpm pr:checks:json` when machine-readable output is needed. Use
+  `pnpm pr:checks:first-failure` for an actionable first-failure payload; when
+  GitHub Actions never exposes logs for the failed job, the payload reports
+  `unstarted_actions_failure` so agents can treat it as external CI
+  infrastructure rather than repeating local validation.
+- `pnpm ai:preflight` is the AI-facing local preflight. It runs
+  `pnpm fix:changed` once, then `pnpm verify:prepush`. Use
+  `pnpm ai:preflight -- --full` to preserve the same autofix-first ordering
+  before full pre-push validation. This is the preferred local route for agents
+  after edits because format-only drift is fixed before the validation stamp is
+  written.
+- Workspace VS Code settings are tracked under `.vscode/` and make Prettier the
+  default formatter on save with `prettier.requireConfig` enabled. The
+  `test:ai-preflight` contract checks those settings so format-on-save remains
+  part of the repository automation posture.
 - `pnpm verify:prepush -- --full` keeps three outcomes for code diffs:
   - skip when no TypeScript-affecting files changed
   - run `pnpm ci:affected:typecheck` when the diff is workspace-scoped

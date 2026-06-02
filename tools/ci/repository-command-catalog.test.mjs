@@ -80,6 +80,17 @@ test('classifies runtime, capability, contract, docs, workflow, and ops commands
     'developer-workflow'
   );
   assert.equal(
+    classifyPackageScriptCommand(
+      'pr:checks:first-failure',
+      packageJson.scripts['pr:checks:first-failure']
+    ).domain,
+    'developer-workflow'
+  );
+  assert.equal(
+    classifyPackageScriptCommand('ai:preflight', packageJson.scripts['ai:preflight']).domain,
+    'developer-workflow'
+  );
+  assert.equal(
     classifyPackageScriptCommand('test:pr-closeout', packageJson.scripts['test:pr-closeout'])
       .domain,
     'test-tooling'
@@ -145,6 +156,7 @@ test('classifies current command file paths without broad script-directory assum
     classifyScriptFilePath('scripts/local-validation-plan.cjs').domain,
     'developer-workflow'
   );
+  assert.equal(classifyScriptFilePath('scripts/ai-preflight.cjs').domain, 'developer-workflow');
   assert.equal(classifyScriptFilePath('scripts/pr-closeout.cjs').domain, 'developer-workflow');
   assert.equal(classifyScriptFilePath('scripts/pr-closeout.test.cjs').domain, 'test-tooling');
 });

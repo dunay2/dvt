@@ -232,6 +232,16 @@ test('buildVerifyChangedPlan self-tests developer workflow verifier changes', ()
   assert.ok(labels.includes('node --test scripts/verify-prepush.test.cjs'));
 });
 
+test('buildVerifyChangedPlan runs changed AI preflight tests directly', () => {
+  const labels = labelsFor(['scripts/ai-preflight.cjs']);
+
+  assert.equal(
+    labels.filter((label) => label === 'node --test scripts/ai-preflight.test.cjs').length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
 test('buildVerifyChangedPlan self-tests changed verifier changes without prepush verifier tests', () => {
   const labels = labelsFor(['scripts/verify-changed.cjs']);
 
