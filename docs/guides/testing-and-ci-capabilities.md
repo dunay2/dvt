@@ -368,7 +368,9 @@ Planning-generated pages that are intentionally untracked:
   contract tests. It does not own ADR-0000 traceability.
   Source: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)
 - `Test Suite`: package tests, affected test routing, Turbo-backed root build
-  coverage for full-root lanes, coverage, determinism/replay tests.
+  coverage for full-root lanes, coverage, determinism/replay tests. On pull
+  requests, the heavy dedicated lanes consume one detector job and are skipped
+  at job level when their semantic scope is false.
   Source: [`.github/workflows/test.yml`](../../.github/workflows/test.yml)
 - `Contracts & Determinism`: schema validation, determinism scan, contract
   compile, golden validation, hash comparison.
@@ -464,17 +466,21 @@ Current workflow consumers:
   changed-file-validation relevant, but do not open the workspace matrix unless
   they also touch a real root-build input such as the setup action, lockfile,
   Turbo graph, TypeScript config, or runtime orchestration helper.
-- [`.github/workflows/test.yml`](../../.github/workflows/test.yml) uses `emit-scope --mode test`
-  for PR test routing across the web app, workers, and library workspaces. Its
-  push/manual full-suite lane and PR `root_build_sensitive` fast-path both run
-  `pnpm build`, so the merge gate exercises the same Turbo-backed root build
-  path that local root builds now use. Non-root PR affected dependency builds
-  use `node scripts/run-turbo-workspace-task.cjs build` with the PR base filter,
-  avoiding a manually maintained package-to-build map. Cacheable dependency
-  graph preparation for the dedicated web, adapter-temporal, adapter-postgres,
-  determinism/replay, and engine coverage lanes also uses the same wrapper with
-  the existing package filters; the test, coverage, and integration commands
-  remain explicit package commands. The API package matrix command uses
+- [`.github/workflows/test.yml`](../../.github/workflows/test.yml) uses
+  `emit-scope --mode test` once in `detect_test_matrix` for PR test routing
+  across the web app, workers, and library workspaces. Dedicated web,
+  adapter-temporal, adapter-postgres, determinism/replay, and engine coverage
+  jobs consume that detector's outputs at job level, so irrelevant PRs do not
+  spend a runner on checkout, dependency setup, or repeated scope detection.
+  Its push/manual full-suite lane and PR `root_build_sensitive` fast-path both
+  run `pnpm build`, so the merge gate exercises the same Turbo-backed root
+  build path that local root builds now use. Non-root PR affected dependency
+  builds use `node scripts/run-turbo-workspace-task.cjs build` with the PR base
+  filter, avoiding a manually maintained package-to-build map. Cacheable
+  dependency graph preparation for the dedicated web, adapter-temporal,
+  adapter-postgres, determinism/replay, and engine coverage lanes also uses the
+  same wrapper with the existing package filters; the test, coverage, and
+  integration commands remain explicit package commands. The API package matrix command uses
   `pnpm --filter dvt-api test:ci` after this Turbo build step, so CI avoids
   re-entering the local `pretest` dependency build while direct
   `pnpm --filter dvt-api test` keeps its cold-worktree safety net. The shared
@@ -485,8 +491,9 @@ Current workflow consumers:
   contracts and changed-file checks without forcing package tests, web frontend
   tests, determinism/replay, coverage, or adapter-postgres integration by
   filename alone. Adapter-postgres integration,
-  determinism/replay, and engine coverage also consume `emit-scope --mode test`
-  outputs instead of local `dorny/paths-filter` package-root rules. Engine
+  determinism/replay, and engine coverage also consume the shared
+  `emit-scope --mode test` read model instead of local `dorny/paths-filter`
+  package-root rules. Engine
   coverage uses the same governed `packages/@dvt/engine/**` package boundary as
   engine package test routing, so engine Vitest config changes cannot bypass
   threshold enforcement. For ordinary web PRs, the web lane runs

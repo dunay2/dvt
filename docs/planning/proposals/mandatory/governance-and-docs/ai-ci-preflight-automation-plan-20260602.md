@@ -32,6 +32,10 @@ stop polling or re-running local checks for an external infrastructure block.
   GitHub Actions exposes no job log, the payload returns
   `unstarted_actions_failure` so agents can stop repeating local validation and
   report the external block.
+- The Test Suite workflow emits test-scope outputs once from
+  `detect_test_matrix`. Heavy pull-request lanes consume those outputs at job
+  level, so irrelevant PRs do not spend a runner on checkout, dependency setup,
+  or repeated scope detection.
 
 ## Feature Mechanization
 
@@ -43,10 +47,12 @@ noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/ai-ci-preflight-automation-plan-20260602.md
 componentGuides:
   - docs/guides/testing-and-ci-capabilities.md
+  - docs/architecture/components/ci-governance/engine-coverage-scope-gate-component.md
 userStories:
   - As an AI agent, I can run one local preflight command that fixes changed files before validation.
   - As an AI agent, I can classify remote CI failures that never started a runner as infrastructure blocks.
   - As an engineer, I can rely on tracked workspace settings to run Prettier when files are saved.
+  - As an AI agent, I can rely on GitHub skipping heavy Test Suite PR lanes before runner setup when the semantic scope is false.
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -56,9 +62,11 @@ governingSources:
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
 allowedImplementationSurfaces:
+  - .github/workflows/test.yml
   - .vscode/extensions.json
   - .vscode/settings.json
   - package.json
+  - docs/architecture/components/ci-governance/engine-coverage-scope-gate-component.md
   - docs/guides/testing-and-ci-capabilities.md
   - docs/planning/proposals/mandatory/governance-and-docs/ai-ci-preflight-automation-plan-20260602.md
   - docs/.manifest.json
@@ -71,6 +79,7 @@ allowedImplementationSurfaces:
   - tools/ci/pr-check-triage.test.mjs
   - tools/ci/repository-command-catalog.mjs
   - tools/ci/repository-command-catalog.test.mjs
+  - tools/ci/workflow-pattern-parity.test.mjs
 forbiddenImplementationSurfaces:
   - apps/**
   - packages/**
@@ -82,6 +91,9 @@ commandQueryRails:
   - name: QueryPrCheckFirstFailure
     type: query
     dddOwner: CiCheckTriage
+  - name: EmitWorkflowCapabilityScopes
+    type: query
+    dddOwner: Repository CI scope policy
 domainObjects:
   - name: AgentPreflightPlan
     type: developer workflow command plan
@@ -92,18 +104,24 @@ domainObjects:
   - name: PrCheckFailureTriage
     type: CI read model
     owner: Engineering / CI
+  - name: TestSuiteScopeReadModel
+    type: CI scope read model
+    owner: Engineering / CI
 fowlerSignals:
   - Automation Gap when agents must manually discover and run formatting before validation.
   - Hidden Failure Mode when GitHub Actions reports a failure without assigning a runner or producing logs.
   - Duplicate Work when pre-push validation and push hooks repeat the same checks.
+  - Duplicate Work when Test Suite jobs repeat semantic scope detection after the detector already computed the same read model.
 architectureGuards:
   - node --test scripts/ai-preflight.test.cjs scripts/verify-changed.test.cjs tools/ci/pr-check-triage.test.mjs tools/ci/repository-command-catalog.test.mjs
+  - node --test tools/ci/workflow-pattern-parity.test.mjs
   - pnpm docs:feature-mechanization:implementation
 cypressFlows:
   - N/A - developer workflow and CI tooling only
 completionGate:
   - pnpm governance:refresh
   - node --test scripts/ai-preflight.test.cjs scripts/verify-changed.test.cjs tools/ci/pr-check-triage.test.mjs tools/ci/repository-command-catalog.test.mjs
+  - node --test tools/ci/workflow-pattern-parity.test.mjs
   - pnpm verify:changed
   - pnpm verify:prepush
 redGreenCycles:
@@ -124,6 +142,15 @@ redGreenCycles:
       - tools/ci/pr-check-triage.mjs
       - tools/ci/pr-check-triage.test.mjs
     greenTest: node --test tools/ci/pr-check-triage.test.mjs
+  - id: test-suite-job-level-scope-gating
+    redTest: node --test tools/ci/workflow-pattern-parity.test.mjs
+    expectedFailure: Test Suite repeats emit-scope --mode test six times across heavy PR lanes.
+    patchSurfaces:
+      - .github/workflows/test.yml
+      - docs/architecture/components/ci-governance/engine-coverage-scope-gate-component.md
+      - docs/guides/testing-and-ci-capabilities.md
+      - tools/ci/workflow-pattern-parity.test.mjs
+    greenTest: node --test tools/ci/workflow-pattern-parity.test.mjs
 symbols:
   - name: assert
     path: scripts/ai-preflight.test.cjs
@@ -260,4 +287,22 @@ symbols:
     cypressCoverage: N/A - CI tooling query
     unitTests:
       - tools/ci/pr-check-triage.test.mjs
+  - name: detect_test_matrix
+    path: .github/workflows/test.yml
+    dddOwner: Repository CI scope policy
+    cqRails: [EmitWorkflowCapabilityScopes]
+    fowlerSignals: [Duplicate Work]
+    architectureGuard: node --test tools/ci/workflow-pattern-parity.test.mjs
+    cypressCoverage: N/A - GitHub Actions workflow query
+    unitTests:
+      - tools/ci/workflow-pattern-parity.test.mjs
+  - name: Test Suite heavy PR lanes are gated at job level by one detector
+    path: tools/ci/workflow-pattern-parity.test.mjs
+    dddOwner: Repository CI scope policy
+    cqRails: [EmitWorkflowCapabilityScopes]
+    fowlerSignals: [Duplicate Work]
+    architectureGuard: node --test tools/ci/workflow-pattern-parity.test.mjs
+    cypressCoverage: N/A - CI workflow architecture test
+    unitTests:
+      - tools/ci/workflow-pattern-parity.test.mjs
 ```

@@ -53,7 +53,7 @@ test('adapter-postgres policy stays wired into the PR quality gate and test work
   assertWorkflowContains(testWorkflow, 'node tools/ci/emit-scope.mjs --mode test');
   assertWorkflowContains(
     testWorkflow,
-    'adapter_postgres_changed: ${{ steps.scope.outputs.postgres_capability_changed }}'
+    'postgres_capability_changed: ${{ steps.scope.outputs.postgres_capability_changed }}'
   );
   assertWorkflowContains(prQualityGate, 'node tools/ci/emit-scope.mjs --mode pr-quality');
   assert.doesNotMatch(testWorkflow, /generate-paths-filter\.js/u);
@@ -243,6 +243,40 @@ test('contracts and test workflows consume semantic scope outputs instead of inl
   assert.doesNotMatch(testWorkflow, /dorny\/paths-filter/u);
   assert.doesNotMatch(testWorkflow, /steps\.det_changes\.outputs/u);
   assert.doesNotMatch(testWorkflow, /steps\.cov_changes\.outputs/u);
+});
+
+test('Test Suite heavy PR lanes are gated at job level by one detector', () => {
+  const testWorkflow = readFileSync('.github/workflows/test.yml', 'utf8');
+
+  assert.equal(countWorkflowCommand(testWorkflow, 'node tools/ci/emit-scope.mjs --mode test'), 1);
+  assert.equal(
+    countWorkflowCommand(
+      testWorkflow,
+      'node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json'
+    ),
+    1
+  );
+
+  for (const output of [
+    'adapter_temporal: ${{ steps.scope.outputs.adapter_temporal }}',
+    'web: ${{ steps.scope.outputs.web }}',
+    'root_build_sensitive: ${{ steps.scope.outputs.root_build_sensitive }}',
+    'determinism_relevant: ${{ steps.scope.outputs.determinism_relevant }}',
+    'coverage_relevant: ${{ steps.scope.outputs.coverage_relevant }}',
+    'postgres_capability_changed: ${{ steps.scope.outputs.postgres_capability_changed }}',
+  ]) {
+    assertWorkflowContains(testWorkflow, output);
+  }
+
+  for (const predicate of [
+    "needs.detect_test_matrix.outputs.adapter_temporal == 'true'",
+    "needs.detect_test_matrix.outputs.web == 'true'",
+    "needs.detect_test_matrix.outputs.determinism_relevant == 'true'",
+    "needs.detect_test_matrix.outputs.coverage_relevant == 'true'",
+    "needs.detect_test_matrix.outputs.postgres_capability_changed == 'true'",
+  ]) {
+    assertWorkflowContains(testWorkflow, predicate);
+  }
 });
 
 test('engine coverage scope is a semantic superset of engine workspace policy', () => {
