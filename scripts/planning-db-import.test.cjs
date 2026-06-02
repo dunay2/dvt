@@ -78,6 +78,25 @@ function minimalGovernanceGeneratedInputs(overrides = {}) {
   };
 }
 
+test('command/query rail import behavior lives in a focused catalog component', () => {
+  const commandQueryRailCatalogComponent = require('./planning-db/command-query-rail-catalog.cjs');
+  const commandQueryRailDocumentationComponent = require('./planning-db/command-query-rail-documentation.cjs');
+  const commandQueryRailReferenceIndexComponent = require('./planning-db/command-query-rail-reference-index.cjs');
+  const commandQueryRailSharedComponent = require('./planning-db/command-query-rail-shared.cjs');
+
+  assert.equal(
+    commandQueryRailCatalogComponent.buildCommandQueryRailSnapshot,
+    buildCommandQueryRailSnapshot
+  );
+  assert.equal(typeof commandQueryRailCatalogComponent.buildManifestRailRows, 'function');
+  assert.equal(typeof commandQueryRailSharedComponent.normalizeRailName, 'function');
+  assert.equal(typeof commandQueryRailDocumentationComponent.extractDocumentedRailRows, 'function');
+  assert.equal(
+    typeof commandQueryRailReferenceIndexComponent.attachCommandQueryRailRefs,
+    'function'
+  );
+});
+
 const governanceFileSnapshotFixture = (() => {
   let snapshot;
   let generatedInputs;

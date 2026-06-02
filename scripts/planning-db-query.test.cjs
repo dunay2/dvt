@@ -76,6 +76,14 @@ const {
   resolveQueryName,
   runQuery,
 } = require('./planning-db-query.cjs');
+test('command/query rail query behavior lives in a focused read-model component', () => {
+  const commandQueryRailQueryComponent = require('./planning-db/command-query-rail-query.cjs');
+
+  assert.equal(commandQueryRailQueryComponent.buildCommandQueryRailRows, buildCommandQueryRailRows);
+  assert.equal(commandQueryRailQueryComponent.buildCreationIntentRows, buildCreationIntentRows);
+  assert.equal(commandQueryRailQueryComponent.readCommandQueryRailRows, readCommandQueryRailRows);
+  assert.equal(commandQueryRailQueryComponent.readCreationIntentRows, readCreationIntentRows);
+});
 
 test('resolveQueryName defaults to summary and rejects unknown query names', () => {
   assert.equal(resolveQueryName(undefined), 'summary');

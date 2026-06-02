@@ -654,3 +654,175 @@ symbols:
 - [x] Import `commandQueryRails` and `symbols[].cqRails` into DB rows.
 - [x] Expose `pnpm planning:db:query command-query-rails`.
 - [ ] Run governance refresh and pre-push validation before PR.
+
+## Fowler Componentization Follow-Up
+
+The initial DB-first slice intentionally proved the catalog behavior through
+the existing planning DB import and query commands. The implementation then
+left too much command/query rail parsing, indexing, and AI pre-create read-model
+logic inside the large CLI scripts. That is responsibility overload: the CLI
+entrypoints own argument parsing and orchestration, while the command/query rail
+catalog owns rail normalization, documentation discovery, implementation
+reference indexing, and read-model formatting.
+
+```mermaid
+flowchart LR
+  ImportCli[planning-db-import.cjs CLI adapter]
+  QueryCli[planning-db-query.cjs CLI adapter]
+  Catalog[CommandQueryRailCatalog component]
+  Shared[CommandQueryRailShared component]
+  Documentation[CommandQueryRailDocumentation component]
+  ReferenceIndex[CommandQueryRailReferenceIndex component]
+  ReadModel[CommandQueryRailReadModel component]
+  Db[(planning_query_store)]
+
+  ImportCli --> Catalog
+  Catalog --> Shared
+  Catalog --> Documentation
+  Catalog --> ReferenceIndex
+  Catalog --> Db
+  QueryCli --> ReadModel
+  ReadModel --> Db
+```
+
+| scenario                                                    | opportunity             | Fowler pattern                     | DDD owner                                                      | command/query rail                                          | implementation surfaces                                                                                                                                                                                                                                               | unit or package test                              | architecture test                                | user-flow test              | out of scope                                  |
+| ----------------------------------------------------------- | ----------------------- | ---------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------ | --------------------------- | --------------------------------------------- |
+| Planning DB import indexes command/query rail catalog rows. | Responsibility overload | Extract Service / Policy Object    | `CommandQueryRailCatalog`                                      | `ImportCommandQueryRailCatalog`                             | `scripts/planning-db/command-query-rail-catalog.cjs`, `scripts/planning-db/command-query-rail-shared.cjs`, `scripts/planning-db/command-query-rail-documentation.cjs`, `scripts/planning-db/command-query-rail-reference-index.cjs`, `scripts/planning-db-import.cjs` | `node --test scripts/planning-db-import.test.cjs` | `pnpm docs:feature-mechanization:implementation` | N/A - DB governance command | Splitting unrelated planning DB import areas. |
+| Planning DB query exposes rail and creation-intent rows.    | Responsibility overload | Presentation Model / Query Service | `CommandQueryRailCatalogReadModel`, `CreationIntentAssessment` | `QueryCommandQueryRailCatalog`, `AssessCreationIntentQuery` | `scripts/planning-db/command-query-rail-query.cjs`, `scripts/planning-db-query.cjs`                                                                                                                                                                                   | `node --test scripts/planning-db-query.test.cjs`  | `pnpm docs:feature-mechanization:implementation` | N/A - DB governance query   | Changing SQL schema or query names.           |
+
+```feature-mechanization
+version: 1
+featureId: GD-CQ-RAIL-CATALOG-COMPONENTIZATION-20260602
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/command-query-rail-catalog-db-first-plan-20260602.md
+componentGuides:
+  - docs/planning/proposals/mandatory/governance-and-docs/command-query-rail-catalog-db-first-plan-20260602.md
+userStories:
+  - As an operator, I get the same command/query rail catalog output while the CLI entrypoints stay thin.
+  - As an AI agent, I can rely on a named component for creation-intent preflight instead of ad-hoc script-local helpers.
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/adr/adr-0055-planning-db-canonical-operational-source.md
+allowedImplementationSurfaces:
+  - docs/planning/proposals/mandatory/governance-and-docs/command-query-rail-catalog-db-first-plan-20260602.md
+  - scripts/planning-db/command-query-rail-catalog.cjs
+  - scripts/planning-db/command-query-rail-shared.cjs
+  - scripts/planning-db/command-query-rail-documentation.cjs
+  - scripts/planning-db/command-query-rail-reference-index.cjs
+  - scripts/planning-db/command-query-rail-query.cjs
+  - scripts/planning-db-import.cjs
+  - scripts/planning-db-import.test.cjs
+  - scripts/planning-db-query.cjs
+  - scripts/planning-db-query.test.cjs
+forbiddenImplementationSurfaces:
+  - apps/**
+  - packages/**
+  - specs/contracts/**
+  - tools/planning-db/migrations/**
+commandQueryRails:
+  - name: ImportCommandQueryRailCatalog
+    type: command
+    dddOwner: CommandQueryRailCatalog
+  - name: QueryCommandQueryRailCatalog
+    type: query
+    dddOwner: CommandQueryRailCatalogReadModel
+  - name: AssessCreationIntentQuery
+    type: query
+    dddOwner: CreationIntentAssessment
+domainObjects:
+  - name: CommandQueryRailCatalog
+    type: service component
+    owner: Architecture / Docs / Delivery
+  - name: CommandQueryRailShared
+    type: value-normalization component
+    owner: Architecture / Docs / Delivery
+  - name: CommandQueryRailDocumentation
+    type: documentation parser component
+    owner: Architecture / Docs / Delivery
+  - name: CommandQueryRailReferenceIndex
+    type: reference-index component
+    owner: Architecture / Docs / Delivery
+  - name: CommandQueryRailCatalogReadModel
+    type: read-model component
+    owner: Architecture / Docs / Delivery
+  - name: CreationIntentAssessment
+    type: pre-create read model
+    owner: Architecture / Docs / Delivery
+fowlerSignals:
+  - Responsibility Overload in planning DB CLI scripts.
+  - Duplicate Semantics when catalog formatting and query scoring live as script-local helpers.
+architectureGuards:
+  - node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+  - pnpm docs:feature-mechanization:implementation
+cypressFlows:
+  - N/A - DB governance query rail only
+completionGate:
+  - pnpm governance:refresh
+  - node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: command-query-rail-components
+    redTest: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    expectedFailure: component module imports under scripts/planning-db are missing.
+    patchSurfaces:
+      - scripts/planning-db/command-query-rail-catalog.cjs
+      - scripts/planning-db/command-query-rail-shared.cjs
+      - scripts/planning-db/command-query-rail-documentation.cjs
+      - scripts/planning-db/command-query-rail-reference-index.cjs
+      - scripts/planning-db/command-query-rail-query.cjs
+      - scripts/planning-db-import.cjs
+      - scripts/planning-db-query.cjs
+    greenTest: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+symbols:
+  - name: createCommandQueryRailCatalogComponent
+    path: scripts/planning-db/command-query-rail-catalog.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Responsibility Overload]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - DB import component
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: createCommandQueryRailSharedComponent
+    path: scripts/planning-db/command-query-rail-shared.cjs
+    dddOwner: CommandQueryRailShared
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Responsibility Overload]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - DB import component
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: createCommandQueryRailDocumentationComponent
+    path: scripts/planning-db/command-query-rail-documentation.cjs
+    dddOwner: CommandQueryRailDocumentation
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Responsibility Overload]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - DB import component
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: createCommandQueryRailReferenceIndexComponent
+    path: scripts/planning-db/command-query-rail-reference-index.cjs
+    dddOwner: CommandQueryRailReferenceIndex
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Responsibility Overload]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - DB import component
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: createCommandQueryRailReadModelComponent
+    path: scripts/planning-db/command-query-rail-query.cjs
+    dddOwner: CommandQueryRailCatalogReadModel
+    cqRails: [QueryCommandQueryRailCatalog, AssessCreationIntentQuery]
+    fowlerSignals: [Responsibility Overload]
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A - DB query component
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+```
