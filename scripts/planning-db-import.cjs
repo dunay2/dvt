@@ -25,6 +25,9 @@ const { runMigrations, schemaName } = require('./planning-db-migrate.cjs');
 const {
   buildKnowledgeSnapshotFromDocuments,
 } = require('../tools/planning-db/knowledge/documentSnapshot.cjs');
+const {
+  extractFeatureMechanizationManifests,
+} = require('./lib/feature-mechanization-manifest.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const laneDirectory = path.join(repoRoot, 'docs', 'planning', 'state');
@@ -1003,6 +1006,126 @@ async function buildRepositoryCommandSnapshot() {
   };
 }
 
+function normalizeRailName(value) {
+  return normalizeText(value).trim().toLowerCase();
+}
+
+function normalizeRailStatus(value) {
+  const status = normalizeText(value).trim();
+  return status || 'declared';
+}
+
+function isCommandQueryRailGap(railStatus, implementationRefCount) {
+  const normalizedStatus = normalizeRailName(railStatus);
+  return (
+    implementationRefCount === 0 ||
+    normalizedStatus.startsWith('missing') ||
+    ['planned', 'unimplemented', 'not-implemented'].includes(normalizedStatus)
+  );
+}
+
+function normalizeFeatureMechanizationDocument(document) {
+  const sourcePath = toPosix(document.sourcePath || document.path || '');
+  const raw = normalizeText(document.raw ?? document.content);
+  return {
+    sourcePath,
+    raw,
+    contentSha256: document.contentSha256 || sha256(raw),
+  };
+}
+
+function symbolReferencesForRail(manifest, railName) {
+  const normalizedRailName = normalizeRailName(railName);
+
+  return normalizeArray(manifest.symbols)
+    .filter((symbol) =>
+      normalizeArray(symbol?.cqRails).some(
+        (cqRail) => normalizeRailName(cqRail) === normalizedRailName
+      )
+    )
+    .map((symbol) => ({
+      name: normalizeText(symbol?.name),
+      path: normalizeText(symbol?.path),
+      dddOwner: normalizeText(symbol?.dddOwner),
+      unitTests: normalizeArray(symbol?.unitTests).map(normalizeText).filter(Boolean),
+    }))
+    .filter((symbol) => symbol.name || symbol.path || symbol.dddOwner);
+}
+
+function buildCommandQueryRailSnapshot(options = {}) {
+  const sourceDocuments = normalizeArray(options.docs).length
+    ? normalizeArray(options.docs)
+    : listTrackedFeatureMechanizationDocuments();
+  const documents = sourceDocuments.map(normalizeFeatureMechanizationDocument);
+  const rails = [];
+
+  for (const document of documents) {
+    for (const extracted of extractFeatureMechanizationManifests(
+      document.raw,
+      document.sourcePath
+    )) {
+      const manifest = extracted.manifest;
+      if (!manifest || typeof manifest !== 'object') {
+        continue;
+      }
+
+      const featureId = normalizeText(manifest.featureId);
+      const mechanizationStatus = normalizeText(manifest.mechanizationStatus);
+      for (const [index, rail] of normalizeArray(manifest.commandQueryRails).entries()) {
+        const railName = normalizeText(rail?.name).trim();
+        const railType = normalizeRailName(rail?.type);
+        const normalizedRailName = normalizeRailName(railName);
+        if (!railName || !railType) {
+          continue;
+        }
+
+        const symbolRefs = symbolReferencesForRail(manifest, railName);
+        const railStatus = normalizeRailStatus(rail?.status);
+        rails.push({
+          railId: [
+            document.sourcePath,
+            featureId || 'unknown-feature',
+            railType,
+            String(index + 1).padStart(3, '0'),
+            normalizedRailName,
+          ].join('#'),
+          featureId,
+          mechanizationStatus,
+          railName,
+          normalizedRailName,
+          railType,
+          dddOwner: normalizeText(rail?.dddOwner),
+          railStatus,
+          isGap: isCommandQueryRailGap(railStatus, symbolRefs.length),
+          implementationRefCount: symbolRefs.length,
+          symbolRefs,
+          governingSources: normalizeArray(manifest.governingSources)
+            .map(normalizeText)
+            .filter(Boolean),
+          allowedImplementationSurfaces: normalizeArray(manifest.allowedImplementationSurfaces)
+            .map(normalizeText)
+            .filter(Boolean),
+          architectureGuards: normalizeArray(manifest.architectureGuards)
+            .map(normalizeText)
+            .filter(Boolean),
+          completionGate: normalizeArray(manifest.completionGate)
+            .map(normalizeText)
+            .filter(Boolean),
+          sourcePath: document.sourcePath,
+          sourceContentSha256: document.contentSha256,
+          rawRail: rail,
+          rawManifest: manifest,
+        });
+      }
+    }
+  }
+
+  return {
+    sourcePath: 'docs/planning/proposals/mandatory',
+    rails,
+  };
+}
+
 function resolveRepoPath(filePath) {
   return path.isAbsolute(filePath) ? filePath : path.join(repoRoot, filePath);
 }
@@ -1045,6 +1168,13 @@ function readTrackedDocuments(gitPathspecs) {
 
 function listTrackedMarkdownDocuments() {
   return readTrackedDocuments(['docs/*.md', 'docs/**/*.md']);
+}
+
+function listTrackedFeatureMechanizationDocuments() {
+  return readTrackedDocuments([
+    'docs/planning/proposals/mandatory/*.md',
+    'docs/planning/proposals/mandatory/**/*.md',
+  ]);
 }
 
 function listTrackedBuzonDocuments() {
@@ -2440,6 +2570,54 @@ async function insertRepositoryCommandSnapshot(client, snapshot) {
   );
 }
 
+async function insertCommandQueryRailSnapshot(client, snapshot) {
+  await client.query(`delete from ${schemaName}.command_query_rails`);
+
+  await insertRows(
+    client,
+    'command_query_rails',
+    [
+      'rail_id',
+      'feature_id',
+      'mechanization_status',
+      'rail_name',
+      'normalized_rail_name',
+      'rail_type',
+      'ddd_owner',
+      'rail_status',
+      { name: 'symbol_refs', cast: 'jsonb' },
+      { name: 'governing_sources', cast: 'jsonb' },
+      { name: 'allowed_implementation_surfaces', cast: 'jsonb' },
+      { name: 'architecture_guards', cast: 'jsonb' },
+      { name: 'completion_gate', cast: 'jsonb' },
+      'source_path',
+      'source_content_sha256',
+      { name: 'raw_rail', cast: 'jsonb' },
+      { name: 'raw_manifest', cast: 'jsonb' },
+    ],
+    snapshot.rails,
+    (rail) => [
+      rail.railId,
+      rail.featureId,
+      rail.mechanizationStatus,
+      rail.railName,
+      rail.normalizedRailName,
+      rail.railType,
+      rail.dddOwner,
+      rail.railStatus,
+      toJson(rail.symbolRefs),
+      toJson(rail.governingSources),
+      toJson(rail.allowedImplementationSurfaces),
+      toJson(rail.architectureGuards),
+      toJson(rail.completionGate),
+      rail.sourcePath,
+      rail.sourceContentSha256,
+      toJson(rail.rawRail),
+      toJson(rail.rawManifest),
+    ]
+  );
+}
+
 async function insertPrReadinessSnapshot(client, snapshot) {
   await client.query(`delete from ${schemaName}.pr_readiness_checks`);
 
@@ -2749,6 +2927,7 @@ async function importContent(options = {}) {
   const repositoryCommandSnapshot = includeGovernance
     ? await buildRepositoryCommandSnapshot()
     : null;
+  const commandQueryRailSnapshot = includeGovernance ? buildCommandQueryRailSnapshot() : null;
   const prReadinessSnapshot = includeGovernance ? buildPrReadinessSnapshot() : null;
   const markdownDocuments = includeGovernance ? listTrackedMarkdownDocuments() : [];
   const knowledgeDocuments = includeGovernance
@@ -2786,6 +2965,7 @@ async function importContent(options = {}) {
     if (includeGovernance) {
       await insertGovernanceSnapshot(client, governanceSnapshot);
       await insertRepositoryCommandSnapshot(client, repositoryCommandSnapshot);
+      await insertCommandQueryRailSnapshot(client, commandQueryRailSnapshot);
       await insertPrReadinessSnapshot(client, prReadinessSnapshot);
       await insertDocsDispositionSnapshot(client, docsDispositionSnapshot);
       await insertKnowledgeSnapshot(client, knowledgeSnapshot);
@@ -2811,6 +2991,7 @@ async function importContent(options = {}) {
     governanceRemediationTasks: governanceSnapshot?.remediationTasks.length ?? 0,
     riskDebtItems: governanceSnapshot?.riskDebtItems.length ?? 0,
     repositoryCommands: repositoryCommandSnapshot?.commands.length ?? 0,
+    commandQueryRails: commandQueryRailSnapshot?.rails.length ?? 0,
     prReadinessChecks: prReadinessSnapshot ? 1 : 0,
     docsDispositionDocuments: docsDispositionSnapshot?.documents.length ?? 0,
     docsDispositionActions: docsDispositionSnapshot?.actions.length ?? 0,
@@ -2828,6 +3009,7 @@ async function importContent(options = {}) {
       `governanceRemediationTasks=${result.governanceRemediationTasks}`,
       `riskDebtItems=${result.riskDebtItems}`,
       `repositoryCommands=${result.repositoryCommands}`,
+      `commandQueryRails=${result.commandQueryRails}`,
       `prReadinessChecks=${result.prReadinessChecks}`,
       `docsDispositionActions=${result.docsDispositionActions}`,
       `knowledgeDocuments=${result.knowledgeDocuments}`,
@@ -2879,6 +3061,18 @@ function compareGovernanceAuxiliaryState(expected, actual) {
     repositoryCommands: compareImportRows(expected.repositoryCommands, actual.repositoryCommands, {
       keyOf: (row) => row.commandId,
       compareFields: ['commandText', 'sourcePath', 'sourceContentSha256'],
+    }),
+    commandQueryRails: compareImportRows(expected.commandQueryRails, actual.commandQueryRails, {
+      keyOf: (row) => row.railId,
+      compareFields: [
+        'featureId',
+        'railName',
+        'railType',
+        'dddOwner',
+        'railStatus',
+        'sourcePath',
+        'sourceContentSha256',
+      ],
     }),
     prReadinessChecks: compareImportRows(expected.prReadinessChecks, actual.prReadinessChecks, {
       keyOf: (row) => row.readinessId,
@@ -2962,6 +3156,8 @@ function compareGovernanceAuxiliaryState(expected, actual) {
 async function buildGovernanceAuxiliaryExpectedState(options = {}) {
   const repositoryCommandSnapshot =
     options.repositoryCommandSnapshot || (await buildRepositoryCommandSnapshot());
+  const commandQueryRailSnapshot =
+    options.commandQueryRailSnapshot || buildCommandQueryRailSnapshot();
   const prReadinessSnapshot = options.prReadinessSnapshot || buildPrReadinessSnapshot();
   const planningSnapshot = options.planningSnapshot || buildPlanningContentSnapshot();
   const docsDispositionSnapshot =
@@ -2977,6 +3173,16 @@ async function buildGovernanceAuxiliaryExpectedState(options = {}) {
       commandText: command.commandText,
       sourcePath: command.sourcePath,
       sourceContentSha256: command.sourceContentSha256,
+    })),
+    commandQueryRails: commandQueryRailSnapshot.rails.map((rail) => ({
+      railId: rail.railId,
+      featureId: rail.featureId,
+      railName: rail.railName,
+      railType: rail.railType,
+      dddOwner: rail.dddOwner,
+      railStatus: rail.railStatus,
+      sourcePath: rail.sourcePath,
+      sourceContentSha256: rail.sourceContentSha256,
     })),
     prReadinessChecks: [
       {
@@ -3038,6 +3244,7 @@ async function buildGovernanceAuxiliaryExpectedState(options = {}) {
 async function readGovernanceAuxiliaryState(client) {
   const [
     repositoryCommands,
+    commandQueryRails,
     prReadinessChecks,
     docDispositionDocuments,
     docDispositionMarkers,
@@ -3053,6 +3260,19 @@ async function readGovernanceAuxiliaryState(client) {
         source_content_sha256 as "sourceContentSha256"
       from ${schemaName}.repository_commands
       order by command_id
+    `),
+    client.query(`
+      select
+        rail_id as "railId",
+        feature_id as "featureId",
+        rail_name as "railName",
+        rail_type as "railType",
+        ddd_owner as "dddOwner",
+        rail_status as "railStatus",
+        source_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.command_query_rails
+      order by rail_id
     `),
     client.query(`
       select
@@ -3128,6 +3348,7 @@ async function readGovernanceAuxiliaryState(client) {
 
   return {
     repositoryCommands: repositoryCommands.rows,
+    commandQueryRails: commandQueryRails.rows,
     prReadinessChecks: prReadinessChecks.rows,
     docDispositionDocuments: docDispositionDocuments.rows,
     docDispositionMarkers: docDispositionMarkers.rows,
@@ -3226,6 +3447,11 @@ function compareGovernanceAuxiliarySourceState(expected, actual) {
     repositoryCommandSources: compareImportRows(
       expected.repositoryCommandSources,
       actual.repositoryCommandSources,
+      sourceHashComparison
+    ),
+    commandQueryRailSources: compareImportRows(
+      expected.commandQueryRailSources,
+      actual.commandQueryRailSources,
       sourceHashComparison
     ),
     docDispositionDocuments: compareImportRows(
@@ -3344,6 +3570,8 @@ async function buildGovernanceAuxiliarySourceExpectedState(options = {}) {
   const planningSnapshot = options.planningSnapshot || buildPlanningContentSnapshot();
   const repositoryCommandSnapshot =
     options.repositoryCommandSnapshot || (await buildRepositoryCommandSnapshot());
+  const commandQueryRailSnapshot =
+    options.commandQueryRailSnapshot || buildCommandQueryRailSnapshot();
   const prReadinessSnapshot = options.prReadinessSnapshot || buildPrReadinessSnapshot();
   const markdownDocuments = options.markdownDocuments || listTrackedMarkdownDocuments();
   const knowledgeDocuments =
@@ -3354,6 +3582,7 @@ async function buildGovernanceAuxiliarySourceExpectedState(options = {}) {
       hashField: 'contentSha256',
     }),
     repositoryCommandSources: uniqueSourceHashRows(repositoryCommandSnapshot.commands),
+    commandQueryRailSources: uniqueSourceHashRows(commandQueryRailSnapshot.rails),
     docDispositionDocuments: documentSourceHashRows(markdownDocuments),
     knowledgeDocuments: options.knowledgeSnapshotDocuments
       ? uniqueSourceHashRows(options.knowledgeSnapshotDocuments, {
@@ -3439,6 +3668,7 @@ async function readGovernanceAuxiliarySourceState(client) {
   const [
     planningSources,
     repositoryCommandSources,
+    commandQueryRailSources,
     prReadinessChecks,
     docDispositionDocuments,
     knowledgeDocuments,
@@ -3456,6 +3686,13 @@ async function readGovernanceAuxiliarySourceState(client) {
         source_path as "sourcePath",
         source_content_sha256 as "sourceContentSha256"
       from ${schemaName}.repository_commands
+      order by source_path
+    `),
+    client.query(`
+      select distinct
+        source_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.command_query_rails
       order by source_path
     `),
     client.query(`
@@ -3494,6 +3731,7 @@ async function readGovernanceAuxiliarySourceState(client) {
   return {
     planningSources: planningSources.rows,
     repositoryCommandSources: repositoryCommandSources.rows,
+    commandQueryRailSources: commandQueryRailSources.rows,
     prReadinessChecks: prReadinessChecks.rows,
     docDispositionDocuments: docDispositionDocuments.rows,
     knowledgeDocuments: knowledgeDocuments.rows,
@@ -3673,6 +3911,7 @@ module.exports = {
   buildGovernanceFileSnapshot,
   buildGovernanceGeneratedInputs,
   buildGovernanceSourceExpectedState,
+  buildCommandQueryRailSnapshot,
   buildKnowledgeDocumentSnapshot,
   buildPlanningContentSnapshot,
   buildPrReadinessSnapshot,
@@ -3693,6 +3932,7 @@ module.exports = {
   insertRows,
   mergePlanningTaskIds,
   insertDocsDispositionSnapshot,
+  insertCommandQueryRailSnapshot,
   insertKnowledgeSnapshot,
   insertPrReadinessSnapshot,
   insertRepositoryCommandSnapshot,

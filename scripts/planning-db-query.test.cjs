@@ -25,6 +25,7 @@ const {
   buildRiskDebtRows,
   buildTaskGapRows,
   buildPrReadinessRows,
+  buildCommandQueryRailRows,
   buildSummaryRows,
   buildTaskRows,
   buildTaskTraceRows,
@@ -45,6 +46,7 @@ const {
   readPlanningEvidenceRows,
   readPlanningStatusEventRows,
   readPrReadinessRows,
+  readCommandQueryRailRows,
   readDocsDispositionRows,
   readFeatureWorkRows,
   readComponentEngineeringComponentDriftRows,
@@ -92,6 +94,7 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('debt'), 'debt');
   assert.equal(resolveQueryName('drift'), 'drift');
   assert.equal(resolveQueryName('commands'), 'commands');
+  assert.equal(resolveQueryName('command-query-rails'), 'command-query-rails');
   assert.equal(resolveQueryName('pr-readiness'), 'pr-readiness');
   assert.equal(resolveQueryName('docs-disposition'), 'docs-disposition');
   assert.equal(resolveQueryName('feature-work'), 'feature-work');
@@ -211,6 +214,66 @@ test('parseArgs parses repository command query filters for DB-first catalog ins
       limit: 5,
     },
   });
+});
+
+test('parseArgs parses command/query rail catalog filters for DB-first gap and duplicate inspection', () => {
+  const command = parseArgs([
+    'command-query-rails',
+    '--type',
+    'query',
+    '--status',
+    'missing-backend-rail',
+    '--owner',
+    'WidgetReadModel',
+    '--duplicates',
+    'true',
+    '--gaps',
+    'true',
+    '--limit',
+    '5',
+  ]);
+
+  assert.deepEqual(command, {
+    queryName: 'command-query-rails',
+    filters: {
+      type: 'query',
+      status: 'missing-backend-rail',
+      owner: 'WidgetReadModel',
+      duplicates: true,
+      gaps: true,
+      limit: 5,
+    },
+  });
+});
+
+test('buildCommandQueryRailRows shows rail implementation, gap, and duplicate state', () => {
+  assert.deepEqual(
+    buildCommandQueryRailRows([
+      {
+        rail_type: 'query',
+        rail_name: 'ListWidgets',
+        ddd_owner: 'WidgetReadModel',
+        rail_status: 'declared',
+        implementation_ref_count: 2,
+        is_gap: false,
+        is_duplicate: true,
+        feature_id: 'EXAMPLE-FEATURE',
+        source_path: 'docs/planning/proposals/mandatory/example.md',
+      },
+    ]),
+    [
+      [
+        'query',
+        'ListWidgets',
+        'WidgetReadModel',
+        'declared',
+        'implemented',
+        'duplicate',
+        'EXAMPLE-FEATURE',
+        'docs/planning/proposals/mandatory/example.md',
+      ],
+    ]
+  );
 });
 
 test('parseArgs parses docs disposition queue filters for DB-first cleanup work', () => {
@@ -793,6 +856,9 @@ test('buildSummaryRows exposes planning and governance content counts without ex
     repositoryCommands: 220,
     repositoryCommandUnknown: 4,
     repositoryCommandRuntimeFanout: 16,
+    commandQueryRails: 80,
+    commandQueryRailGaps: 12,
+    commandQueryRailDuplicates: 6,
     prReadinessChecks: 1,
     prReadinessBlocking: 1,
     docsDispositionDocuments: 120,
@@ -816,6 +882,9 @@ test('buildSummaryRows exposes planning and governance content counts without ex
     ['repository.commands', 220],
     ['repository.commands.unknown', 4],
     ['repository.commands.runtime_fanout', 16],
+    ['command_query.rails', 80],
+    ['command_query.rails.gaps', 12],
+    ['command_query.rails.duplicates', 6],
     ['repository.pr_readiness', 1],
     ['repository.pr_readiness.blocking', 1],
     ['docs.disposition_documents', 120],
@@ -1092,6 +1161,42 @@ test('readRepositoryCommandRows queries the DB repository command catalog view',
   assert.match(captured.sql, /command_type = \$2/);
   assert.match(captured.sql, /limit \$3/);
   assert.deepEqual(captured.params, ['planning-db', 'package_script', 5]);
+});
+
+test('readCommandQueryRailRows queries the DB command/query rail catalog view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readCommandQueryRailRows(client, {
+    type: 'query',
+    status: 'missing-backend-rail',
+    owner: 'WidgetReadModel',
+    gaps: true,
+    duplicates: true,
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.command_query_rail_query/);
+  assert.match(captured.sql, /rail_type = \$1/);
+  assert.match(captured.sql, /rail_status = \$2/);
+  assert.match(captured.sql, /ddd_owner = \$3/);
+  assert.match(captured.sql, /is_duplicate = \$4/);
+  assert.match(captured.sql, /is_gap = \$5/);
+  assert.match(captured.sql, /limit \$6/);
+  assert.deepEqual(captured.params, [
+    'query',
+    'missing-backend-rail',
+    'WidgetReadModel',
+    true,
+    true,
+    5,
+  ]);
 });
 
 test('buildRepositoryCommandRows formats DB-owned repository command catalog rows', () => {

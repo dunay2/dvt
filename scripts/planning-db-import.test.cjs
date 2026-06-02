@@ -9,6 +9,7 @@ const {
   buildPlanningContentSnapshot,
   buildPrReadinessSnapshot,
   buildRiskDebtSnapshot,
+  buildCommandQueryRailSnapshot,
   buildRepositoryCommandSnapshot,
   clearGovernanceSnapshotTables,
   governanceImportDeleteTables,
@@ -90,6 +91,76 @@ test('planning DB import parses stale-aware scoped import flags', () => {
   );
 
   assert.throws(() => parseArgs(['--planning-only', '--governance-only']), /mutually exclusive/);
+});
+
+test('command/query rail snapshot indexes feature manifests for DB-first gap and duplicate queries', () => {
+  const docs = [
+    {
+      path: 'docs/planning/proposals/mandatory/example.md',
+      content: [
+        '```feature-mechanization',
+        'version: 1',
+        'featureId: EXAMPLE-FEATURE',
+        'mechanizationStatus: implemented',
+        'commandQueryRails:',
+        '  - name: ListWidgets',
+        '    type: query',
+        '    dddOwner: WidgetReadModel',
+        '  - name: CreateWidget',
+        '    type: command',
+        '    dddOwner: WidgetAggregate',
+        '    status: missing-backend-rail',
+        'symbols:',
+        '  - name: listWidgets',
+        '    path: apps/api/src/widgets/listWidgets.ts',
+        '    dddOwner: WidgetReadModel',
+        '    cqRails: [ListWidgets]',
+        '    unitTests:',
+        '      - apps/api/test/widgets/listWidgets.test.ts',
+        '```',
+      ].join('\n'),
+    },
+    {
+      path: 'docs/planning/proposals/mandatory/duplicate.md',
+      content: [
+        '```feature-mechanization',
+        'version: 1',
+        'featureId: DUPLICATE-FEATURE',
+        'mechanizationStatus: closed',
+        'commandQueryRails:',
+        '  - name: ListWidgets',
+        '    type: query',
+        '    dddOwner: WidgetReadModel',
+        'symbols: []',
+        '```',
+      ].join('\n'),
+    },
+  ];
+
+  const snapshot = buildCommandQueryRailSnapshot({ docs });
+
+  assert.equal(snapshot.rails.length, 3);
+  const listWidgets = snapshot.rails.find(
+    (rail) => rail.featureId === 'EXAMPLE-FEATURE' && rail.railName === 'ListWidgets'
+  );
+  assert.deepEqual(listWidgets.symbolRefs, [
+    {
+      name: 'listWidgets',
+      path: 'apps/api/src/widgets/listWidgets.ts',
+      dddOwner: 'WidgetReadModel',
+      unitTests: ['apps/api/test/widgets/listWidgets.test.ts'],
+    },
+  ]);
+  assert.equal(listWidgets.railType, 'query');
+  assert.equal(listWidgets.railStatus, 'declared');
+  assert.equal(listWidgets.sourcePath, 'docs/planning/proposals/mandatory/example.md');
+
+  const createWidget = snapshot.rails.find((rail) => rail.railName === 'CreateWidget');
+  assert.equal(createWidget.isGap, true);
+  assert.equal(createWidget.implementationRefCount, 0);
+
+  const duplicateRows = snapshot.rails.filter((rail) => rail.railName === 'ListWidgets');
+  assert.equal(duplicateRows.length, 2);
 });
 
 test('planning DB import skips all selected scopes when stale-aware checks are fresh', async () => {

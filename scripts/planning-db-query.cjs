@@ -34,6 +34,7 @@ const knownQueries = new Set([
   'debt',
   'drift',
   'commands',
+  'command-query-rails',
   'pr-readiness',
   'docs-disposition',
   'feature-work',
@@ -74,6 +75,7 @@ const governanceProjectionQueryNames = new Set([
   'remediation',
   'debt',
   'drift',
+  'command-query-rails',
   'cer',
   'component-tree',
   'component-metadata',
@@ -155,6 +157,19 @@ function parseCerSchemaVersion(value) {
   }
 
   return schemaVersion;
+}
+
+function parseBooleanFilter(value, flagName) {
+  const normalized = String(value).toLowerCase();
+  if (normalized === 'true') {
+    return true;
+  }
+
+  if (normalized === 'false') {
+    return false;
+  }
+
+  throw new Error(`Invalid ${flagName} "${value}". Expected true or false.`);
 }
 
 function normalizeResolutionFilter(value) {
@@ -288,6 +303,14 @@ function parseArgs(args = process.argv.slice(2)) {
       filters.type = value;
       continue;
     }
+    if (arg === '--duplicates') {
+      filters.duplicates = parseBooleanFilter(value, '--duplicates');
+      continue;
+    }
+    if (arg === '--gaps') {
+      filters.gaps = parseBooleanFilter(value, '--gaps');
+      continue;
+    }
     if (arg === '--root') {
       filters.rootUnit = value;
       continue;
@@ -361,6 +384,9 @@ function buildSummaryRows(summary) {
     ['repository.commands', summary.repositoryCommands],
     ['repository.commands.unknown', summary.repositoryCommandUnknown],
     ['repository.commands.runtime_fanout', summary.repositoryCommandRuntimeFanout],
+    ['command_query.rails', summary.commandQueryRails],
+    ['command_query.rails.gaps', summary.commandQueryRailGaps],
+    ['command_query.rails.duplicates', summary.commandQueryRailDuplicates],
     ['repository.pr_readiness', summary.prReadinessChecks],
     ['repository.pr_readiness.blocking', summary.prReadinessBlocking],
     ['docs.disposition_documents', summary.docsDispositionDocuments],
@@ -471,6 +497,23 @@ function buildRepositoryCommandRows(rows) {
     row.sensitivity,
     flagLabel(row.runtime_fanout ?? row.runtimeFanout, 'runtime-fanout'),
     row.referenced_file_count ?? row.referencedFileCount ?? 0,
+  ]);
+}
+
+function buildCommandQueryRailRows(rows) {
+  return rows.map((row) => [
+    row.rail_type ?? row.railType,
+    row.rail_name ?? row.railName,
+    row.ddd_owner ?? row.dddOwner,
+    row.rail_status ?? row.railStatus,
+    (row.is_gap ?? row.isGap)
+      ? 'gap'
+      : (row.implementation_ref_count ?? row.implementationRefCount)
+        ? 'implemented'
+        : 'declared',
+    flagLabel(row.is_duplicate ?? row.isDuplicate, 'duplicate'),
+    row.feature_id ?? row.featureId,
+    row.source_path ?? row.sourcePath,
   ]);
 }
 
@@ -943,6 +986,15 @@ function appendFilter(predicates, params, column, value) {
   predicates.push(`${column} = $${params.length}`);
 }
 
+function appendBooleanFilter(predicates, params, column, value) {
+  if (value === undefined || value === null) {
+    return;
+  }
+
+  params.push(value);
+  predicates.push(`${column} = $${params.length}`);
+}
+
 function appendResolutionFilter(predicates, params, value) {
   const resolution = normalizeResolutionFilter(value) || 'pending';
   if (resolution === 'all') {
@@ -1094,6 +1146,27 @@ function repositoryCommandSelect() {
       source_content_sha256,
       imported_at
     from ${schemaName}.repository_command_query`;
+}
+
+function commandQueryRailSelect() {
+  return `
+    select
+      rail_id,
+      feature_id,
+      mechanization_status,
+      rail_name,
+      normalized_rail_name,
+      rail_type,
+      ddd_owner,
+      rail_status,
+      implementation_ref_count,
+      is_gap,
+      duplicate_count,
+      is_duplicate,
+      source_path,
+      source_content_sha256,
+      imported_at
+    from ${schemaName}.command_query_rail_query`;
 }
 
 function prReadinessSelect() {
@@ -1770,6 +1843,9 @@ async function readSummary(client) {
       (select count(*)::int from ${schemaName}.repository_commands) as "repositoryCommands",
       (select count(*)::int from ${schemaName}.repository_commands where domain = 'unknown') as "repositoryCommandUnknown",
       (select count(*)::int from ${schemaName}.repository_commands where runtime_fanout = true) as "repositoryCommandRuntimeFanout",
+      (select count(*)::int from ${schemaName}.command_query_rails) as "commandQueryRails",
+      (select count(*)::int from ${schemaName}.command_query_rail_query where is_gap = true) as "commandQueryRailGaps",
+      (select count(*)::int from ${schemaName}.command_query_rail_query where is_duplicate = true) as "commandQueryRailDuplicates",
       (select count(*)::int from ${schemaName}.pr_readiness_checks) as "prReadinessChecks",
       (select count(*)::int from ${schemaName}.pr_readiness_checks where blocking = true) as "prReadinessBlocking",
       (select count(*)::int from ${schemaName}.doc_disposition_documents) as "docsDispositionDocuments",
@@ -1951,6 +2027,29 @@ async function readRepositoryCommandRows(client, filters = {}) {
     `${repositoryCommandSelect()}
      ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
      order by runtime_fanout desc, domain, command_type, coalesce(command_name, command_path)
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readCommandQueryRailRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'rail_type', filters.type);
+  appendFilter(predicates, params, 'rail_status', filters.status);
+  appendFilter(predicates, params, 'ddd_owner', filters.owner);
+  appendBooleanFilter(predicates, params, 'is_duplicate', filters.duplicates);
+  appendBooleanFilter(predicates, params, 'is_gap', filters.gaps);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${commandQueryRailSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by is_gap desc, is_duplicate desc, rail_type, rail_name, source_path
      limit $${params.length}`,
     params
   );
@@ -3017,6 +3116,15 @@ async function runQuery(options = {}) {
       return commandRows;
     }
 
+    if (queryName === 'command-query-rails') {
+      const rows = await readCommandQueryRailRows(client, options.filters || {});
+      const railRows = buildCommandQueryRailRows(rows);
+      if (options.print !== false) {
+        printTaskRows(railRows);
+      }
+      return railRows;
+    }
+
     if (queryName === 'pr-readiness') {
       const rows = await readPrReadinessRows(client, options.filters || {});
       const readinessRows = buildPrReadinessRows(rows);
@@ -3465,6 +3573,7 @@ module.exports = {
   buildPlanningEvidenceRows,
   buildPlanningStatusEventRows,
   buildPrReadinessRows,
+  buildCommandQueryRailRows,
   buildRepositoryCommandRows,
   buildNextTaskRows,
   buildSummaryRows,
@@ -3513,6 +3622,7 @@ module.exports = {
   readPlanningEvidenceRows,
   readPlanningStatusEventRows,
   readPrReadinessRows,
+  readCommandQueryRailRows,
   readRepositoryCommandRows,
   readComponentEngineeringRuleCatalogRows,
   readComponentEngineeringRuleEvaluationRows,

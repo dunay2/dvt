@@ -1320,3 +1320,31 @@ test('tracked migrations widen architecture design operations for component grap
     /delete from architecture\.design_operations\b/
   );
 });
+
+test('tracked migrations include DB-first command/query rail catalog projection', () => {
+  const migrations = readMigrationFiles();
+  const railCatalogMigration = migrations.find(
+    (migration) => migration.fileName === '053_command_query_rail_catalog.sql'
+  );
+
+  assert.ok(railCatalogMigration);
+  assert.match(
+    railCatalogMigration.sql,
+    /create table if not exists planning_query_store\.command_query_rails/
+  );
+  assert.match(railCatalogMigration.sql, /rail_type in \('command', 'query'\)/);
+  assert.match(railCatalogMigration.sql, /symbol_refs jsonb not null default '\[\]'::jsonb/);
+  assert.match(
+    railCatalogMigration.sql,
+    /create or replace view planning_query_store\.command_query_rail_query/
+  );
+  assert.match(
+    railCatalogMigration.sql,
+    /count\(\*\) over \(partition by rail_type, normalized_rail_name\)/
+  );
+  assert.match(railCatalogMigration.sql, /is_gap/);
+  assert.doesNotMatch(
+    railCatalogMigration.sql,
+    /delete from planning_query_store\.repository_commands\b/
+  );
+});
