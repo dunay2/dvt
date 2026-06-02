@@ -23,6 +23,7 @@ hosting.
 | ---------------------------- | ---------------------- | ---------------- | ----------------------------------------------------------------------------------------------- |
 | `ArtifactsView`              | route component        | Artifacts route  | Composes query/import state, route frame, import panel, list, preview tabs, and info.           |
 | `useArtifactsViewModel`      | hook                   | Artifacts route  | Builds the route-local artifact preview read model from imported and workspace-backed payloads. |
+| `ArtifactsList`              | presentation component | Artifacts route  | Renders available artifact cards and emits view/download intent for a real preview document.    |
 | `ArtifactPreviewTabs`        | presentation component | Artifacts route  | Selects an available artifact document tab.                                                     |
 | `ArtifactMonacoPreviewPanel` | presentation adapter   | Artifacts route  | Maps one structured artifact document to a read-only `MonacoCodeViewer`.                        |
 | `MonacoCodeViewer`           | lazy gateway           | Monaco component | Exposes the DVT-safe lazy read-only code viewer API.                                            |
@@ -60,6 +61,8 @@ No command rail is introduced by this component.
   `domReadOnly: true`, and `contextmenu: false`.
 - Missing artifacts render explicit unavailable states instead of placeholder
   JSON.
+- Artifact list `View` actions must select the controlled preview document whose
+  key came from the workspace artifact read model.
 - No save, edit, apply, import mutation, or "view full file" command belongs to
   the Monaco viewer.
 - Canvas production modules must not import Monaco as part of this slice.

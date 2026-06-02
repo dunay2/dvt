@@ -33,6 +33,7 @@ function buildImportedArtifact(state: ImportState): ArtifactPreview | null {
 
   return {
     id: `import:${state.fileName}`,
+    previewKey: 'manifest.json',
     type: state.fileName,
     description: 'Locally imported dbt manifest ready for exploration',
     size: formatFileSize(JSON.stringify(state.result.rawManifest).length),
@@ -58,6 +59,7 @@ function buildImportedStats(state: ImportState): ImportedStats | null {
 function buildWorkspaceArtifactPreview(artifact: WorkspaceArtifactRecord): ArtifactPreview {
   return {
     id: `workspace:${artifact.file.path}`,
+    previewKey: artifact.key,
     type: artifact.kind === 'dbt-json' ? artifact.label : getProjectArtifactType(artifact),
     description: `Workspace artifact synchronized from ${artifact.file.path}`,
     size: formatFileSize(artifact.file.content.length),

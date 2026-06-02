@@ -66,12 +66,31 @@ Additional root causes found by the demanding-user E2E loop:
   `metadata.tableName`, `metadata.schema`, `metadata.database`, and
   `metadata.columns`. A user could import a real source and still fail preview
   unless they manually rewrote the node into a DVT-local config shape.
+- The passive Inspector rendered only type, status, role, and a
+  developer-facing "no plugin inspector panels" message. Source-import metadata,
+  columns, tags, path, and graph dependencies already existed on the selected
+  node, but the right panel did not project them into useful read-only context.
+- The execution-plan preview modal rendered the final pre-run review as a
+  narrow card stack where long plan identifiers could dominate or escape the
+  surface, and missing estimate data appeared as an orphaned `$`.
 - Local protected-runtime auth did not grant source-import/plugin scopes, so
   DataObject Registry could not become available from the real route.
 - Partial node selection made the transformation planner validate a one-node
   scope instead of the valid three-node workspace graph.
 - Run detail showed materialization evidence below plan provenance, hiding the
   most important post-run verification on laptop-sized viewports.
+- Run detail did not expose the persisted plan summary that selected the source
+  and sink, and it offered no direct path back to Canvas or the run list after a
+  run was started. Users could reach a completed run without knowing which
+  authored source/sink scope had executed.
+- The Canvas workbench chrome still enforced a Stage 1 text-only tab posture
+  and rendered route actions as disconnected pills. Mature graph tools use a
+  compact icon+label workbench strip with actions grouped on the right; the
+  existing contract made the poor posture a protected invariant.
+- The right Inspector projected selected-node facts as a long stack of cards.
+  Users need predictable Details, Columns, Depends On, and Code tabs, with
+  editable route-owned properties visible inside Details instead of mixed after
+  passive read-only fields.
 
 Constraints and invariants:
 
@@ -112,8 +131,27 @@ Options considered:
   this makes the real source-import rails usable without frontend fixtures.
 - Wire SQL-first Postgres step activities into the worker. Selected: it makes
   the plan created by Canvas executable on the no-bypass Temporal stack.
+- Add a generic passive node-summary projection to `InspectorPanel` for path,
+  tags, source/dbt metadata, columns, and graph dependencies. Selected: it keeps
+  write behavior in the route-owned authoring section while making selected
+  nodes inspectable even when no plugin-specific passive panel exists.
+- Recompose the execution-plan preview as a contained responsive review surface
+  with wrapped identifiers, compact evidence sections, and explicit missing-cost
+  presentation. Selected: it fixes the user-visible review defect without
+  changing `PreviewExecutablePlan` or `StartRun`.
 - Move completed-run materialization evidence above plan provenance. Selected:
   it aligns the run detail with the user's verification task.
+- Project persisted plan summary from the plan record into the run snapshot read
+  model, then render it as the first run-detail itinerary with explicit return
+  links to Canvas and the run list. Selected: it keeps origin/sink evidence on
+  the governed `GetRunStatus` read rail instead of inferring it from console
+  events.
+- Evolve Canvas workbench tabs from Stage 1 text-only labels to Canvas-owned
+  semantic icon labels. Selected: it matches mature graph workspace affordances
+  without leaking plugin icon components into the route read model.
+- Recompose the selected-node Inspector around first-class Details, Columns,
+  Depends On, and Code tabs. Selected: it keeps mutation semantics in the
+  route-owned authoring section while making passive metadata scannable.
 - Register the imported warehouse source plugin identity as a real tabular
   producer in the frontend plugin registry, and let the existing DVT
   transformation authoring model read the server-owned import metadata.
@@ -173,6 +211,11 @@ flowchart LR
 | Legacy `v1.2` stored plan blocks current `1.0` plan for the same canonical `planId`.      | Documentation drift, hidden authority     | Schema migration / hard-cut cleanup          | Postgres stored plan artifact                      | `PreviewExecutablePlan`, `StartRun`, `ValidateExecutionPlanAdmission` | `PostgresPlanStore` schema manager and SQL                                | `PostgresPlanStore.records-core.integration.test.ts`    | Browser plan flow on `/canvas`       | Multi-version compatibility    |
 | Plan failure copy does not tell the user what happened.                                   | Primitive obsession, test-only confidence | Error translation / presentation model       | Canvas route feedback                              | Existing plan preview rail                                            | Web plan action/copy surfaces if still failing after resolver fix         | Focused web test if copy changes                        | Browser screenshot and console check | Global notification redesign   |
 | User needs graph-code-property parity for dbt and SQL nodes.                              | Responsibility overload                   | Presentation model + command adapter         | Canvas node authoring draft                        | `SaveWorkspaceGraphDraft`, workspace files                            | Existing Canvas property/code tests plus new focused tests if gaps appear | `transformationGraphValidation.test.ts`                 | Browser graph/code/property loop     | New plugin runtime             |
+| Selected nodes show a sparse or empty right panel despite carrying real metadata.         | Primitive obsession, hidden information   | Read model / presentation projection         | Canvas node properties                             | `GetWorkspaceGraphDraft`, `ImportWarehouseSources`                    | `InspectorPanel`, `CanvasInspectorPanel`, focused rendered test           | `CanvasInspectorPanel.test.tsx`                         | Browser select-node inspector check  | Plugin-owned mutation          |
+| Canvas top chrome looks like disconnected controls instead of a graph workspace strip.    | Visual posture drift, documentation drift | Presentation model / semantic fitness guard  | Canvas workbench tabs                              | `ListCanvasWorkbenchTabs`, `VerifyCanvasWorkbenchVisualPosture`       | `CanvasWorkbenchTabStrip`, `CanvasShellMainPanel`, Cypress visual proof   | `canvasWorkbenchTabs.test.ts`, `CanvasShell.test.tsx`   | Browser workbench chrome check       | Global shell navigation        |
+| Inspector data exists but is hard to navigate or edit in context.                         | Primitive obsession, review friction      | Tabbed presentation model                    | Canvas node properties                             | `GetWorkspaceGraphDraft`, `ImportWarehouseSources`                    | `InspectorPanel`, `CanvasInspectorPanel`, focused rendered test           | `CanvasInspectorPanel.test.tsx`                         | Browser select-node inspector check  | Plugin-owned mutation          |
+| Execution-plan preview overflows and renders missing estimates as `$`.                    | Primitive obsession, review friction      | Presentation model / responsive review       | Executable plan preview                            | `PreviewExecutablePlan`, `StartRun`                                   | `PlanPreviewModal`, focused rendered test                                 | `Modals.test.tsx`                                       | Browser plan-preview modal check     | Plan contract changes          |
+| Run detail traps the user and hides which source/sink selection executed.                 | Hidden authority, review friction         | Read model projection / orientation UI       | Run detail execution scope                         | GetRunSnapshot, ListRunEvents                                         | Run read model, runtime DTOs, RunWorkspaceStateView                       | getRunStatusUseCase.test.ts, RunStates.test.tsx         | Browser completed-run detail check   | Timeline-derived result truth  |
 | User needs source import, plan, run, and inspect status as one usable flow.               | Hidden authority                          | Gateway-backed E2E workflow                  | Protected runtime rails                            | Source import, plan preview, start run, run status/events             | Existing API/web focused tests plus E2E proof                             | `canvas-preview-run-live.cy.ts`                         | Browser E2E on real stack            | External warehouse credentials |
 | Local stack cannot prove source import or SQL execution without real seed data.           | Fixture leakage risk                      | Dev proof data as infrastructure composition | Local protected runtime                            | Source import, workspace files, run worker                            | `run-dev-stack` scripts and tests                                         | `run-dev-stack.test.cjs`, `run-dev-stack.auth.test.cjs` | Cypress live proof                   | Production seed behavior       |
 
@@ -220,6 +263,10 @@ componentGuides:
   - docs/contracts/planner/workspace-graph-draft-persistence-v1.md
   - docs/architecture/components/web/graph/canvas-inspector-authoring-component.md
   - docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md
+  - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
+  - docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
+  - docs/architecture/components/web/graph/canvas-workbench-tab-strip-component.md
+  - docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md
 userStories:
   - E-CANVAS-WORKFLOW-PLAN-US
   - E-CANVAS-WORKFLOW-STORE-US
@@ -242,10 +289,19 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/frontend-and-ux/index.md
   - docs/**/index.md
   - docs/.manifest.json
+  - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
+  - docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
+  - docs/architecture/components/web/graph/canvas-workbench-tab-strip-component.md
+  - docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md
+  - docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md
   - docs/evidence/**
   - docs/risk-register/quality/**
   - apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts
   - apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts
+  - apps/api/src/application/ports/runtime.ts
+  - apps/api/src/application/services/getRunStatusUseCase.ts
+  - apps/api/src/application/services/runReadEvidenceModel.ts
+  - apps/api/test/application/services/getRunStatusUseCase.test.ts
   - packages/@dvt/adapter-postgres/src/PostgresPlanStore.sql.ts
   - packages/@dvt/adapter-postgres/src/PostgresPlanStore.schema-manager.ts
   - packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts
@@ -266,6 +322,8 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/CodeView.test.tsx
   - apps/web/src/app/views/code/**
   - apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
+  - apps/web/src/app/views/runs/runStatesCopy.ts
+  - apps/web/src/app/views/runs/RunStates.test.tsx
   - apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx
   - apps/web/src/app/plugins/dbt/DbtNodeRenderer.test.tsx
   - apps/web/src/app/plugins/registry.ts
@@ -274,6 +332,10 @@ allowedImplementationSurfaces:
   - apps/web/src/app/plugins/dvt/dvtContributions.connectionRules.test.ts
   - apps/web/src/app/queries/queryKeys.ts
   - apps/web/src/app/queries/runsQueries.ts
+  - apps/web/src/app/ports/runs.ts
+  - apps/web/src/app/services/runs/runsApiDecoders.ts
+  - apps/web/src/app/services/runs/runsApiSnapshotMapper.ts
+  - apps/web/src/app/services/runs/runsService.test.ts
   - apps/web/src/app/components/**
   - apps/web/src/app/services/workspace/**
   - docs/architecture/components/web/frontend-query-boundary-component.md
@@ -321,6 +383,12 @@ commandQueryRails:
   - name: ListRunEvents
     type: query
     dddOwner: Run timeline read model
+  - name: ListCanvasWorkbenchTabs
+    type: query
+    dddOwner: CanvasWorkbenchTabsReadModel
+  - name: VerifyCanvasWorkbenchVisualPosture
+    type: query
+    dddOwner: CanvasWorkbenchVisualPostureReadModel
 domainObjects:
   - name: WorkspaceGraphAuthoringDraft
     type: aggregate
@@ -343,12 +411,18 @@ domainObjects:
   - name: RunMaterializationEvidence
     type: read model
     owner: Run detail
+  - name: RunPlanExecutionScope
+    type: read model
+    owner: Run detail
   - name: CodeGraphFileScope
     type: read model
     owner: Web Code
   - name: DbtNodeRunHistory
     type: presentation model
     owner: Web dbt inspector
+  - name: ExecutablePlanPreview
+    type: presentation model
+    owner: Web Canvas
 fowlerSignals:
   - Reference-only Canvas edges were being interpreted through an inconsistent execution projection.
   - Opaque protected-draft errors created test-only confidence instead of user-operable feedback.
@@ -356,6 +430,8 @@ fowlerSignals:
   - Legacy v1.2 persisted plan rows must not keep current 1.0 plan creation unusable.
   - Real source import and SQL execution require local proof data, catalog, and authorization to line up.
   - Completed-run evidence must be visible before lower-priority provenance.
+  - Run detail must show the source/sink scope from persisted plan evidence and
+    give the user a route back to Canvas and Runs.
   - Code file browsing must follow the active graph instead of stale workspace artifacts.
   - dbt Inspector history must consume runtime events instead of retaining a
     completed-run placeholder panel.
@@ -363,8 +439,13 @@ fowlerSignals:
     route-owned authoring fields instead of behaving as inert graph decorations.
   - Transformation preview must consume governed source-import metadata without
     requiring a manual config rewrite.
+  - The passive Inspector must project existing node metadata and dependencies
+    into useful read-only context instead of exposing internal plugin absence.
+  - The plan preview must remain contained and readable for real plan IDs,
+    references, proof hashes, and absent estimate values.
 architectureGuards:
   - pnpm --filter dvt-api test -- test/application/services/resolveAuthorizedExecutableSubgraph.test.ts
+  - pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts
   - pnpm --filter @dvt/adapter-postgres test -- PostgresPlanStore.lifecycle.integration.test.ts PostgresPlanStore.records-core.integration.test.ts
   - pnpm --filter @dvt/adapter-temporal test -- test/activities.test.ts
   - pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.test.ts
@@ -383,7 +464,7 @@ completionGate:
   - pnpm --filter @dvt/adapter-postgres test -- PostgresPlanStore.lifecycle.integration.test.ts PostgresPlanStore.records-core.integration.test.ts
   - pnpm --filter @dvt/adapter-temporal test -- test/activities.test.ts
   - pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.test.ts
-  - pnpm --filter @dvt/web test -- src/app/views/canvas/transformationGraphValidation.test.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx src/app/views/runs/RunStates.test.tsx
+  - pnpm --filter @dvt/web test -- src/app/views/canvas/transformationGraphValidation.test.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx src/app/views/runs/RunStates.test.tsx src/app/services/runs/runsService.test.ts
   - pnpm --filter @dvt/web test -- src/app/plugins/contracts/ConnectionRules.test.ts src/app/plugins/dvt/dvtContributions.connectionRules.test.ts src/app/views/canvas/canvasInspectorAuthoringModel.test.ts src/app/views/canvas/CanvasInspectorPanel.test.tsx src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx
   - pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts src/app/views/CodeView.test.tsx
   - pnpm --filter @dvt/web test -- src/app/plugins/dbt/DbtNodeRenderer.test.tsx src/app/queries/queryKeyPolicy.architecture.test.ts
@@ -481,7 +562,224 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/previewGraphNodePayloads.ts
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx
     greenTest: pnpm --filter @dvt/web test -- src/app/plugins/contracts/ConnectionRules.test.ts src/app/plugins/dvt/dvtContributions.connectionRules.test.ts src/app/views/canvas/canvasInspectorAuthoringModel.test.ts src/app/views/canvas/CanvasInspectorPanel.test.tsx src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx
+  - id: canvas-inspector-readable-node-context
+    redTest: pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasInspectorPanel.test.tsx
+    expectedFailure: Selecting an imported source node shows only sparse core fields plus a developer-facing no-plugin message, while source metadata, columns, and graph dependencies remain hidden.
+    patchSurfaces:
+      - apps/web/src/app/components/InspectorPanel.tsx
+      - apps/web/src/app/views/canvas/CanvasInspectorPanel.tsx
+      - apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx
+    greenTest: pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasInspectorPanel.test.tsx
+  - id: canvas-workbench-semantic-icon-chrome
+    redTest: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.test.ts src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts src/app/views/canvas/CanvasShell.test.tsx
+    expectedFailure: Canvas workbench tabs still expose text-only posture and the shell chrome still allows wrapped, disconnected route controls.
+    patchSurfaces:
+      - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
+      - docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
+      - docs/architecture/components/web/graph/canvas-workbench-tab-strip-component.md
+      - docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md
+      - apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts
+      - apps/web/src/app/views/canvas/CanvasWorkbenchTabStrip.tsx
+      - apps/web/src/app/views/canvas/CanvasShellMainPanel.tsx
+      - apps/web/src/app/views/canvas/canvasChromeTokens.ts
+      - apps/web/src/app/views/canvas/canvasWorkbenchTabs.test.ts
+      - apps/web/src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
+      - apps/web/src/app/views/canvas/CanvasShell.test.tsx
+      - apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+    greenTest: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.test.ts src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts src/app/views/canvas/CanvasShell.test.tsx
+  - id: inspector-tabbed-read-model
+    redTest: pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasInspectorPanel.test.tsx
+    expectedFailure: Selected-node facts and editable properties render as one long stack instead of predictable Details, Columns, Depends On, and Code tabs.
+    patchSurfaces:
+      - apps/web/src/app/components/InspectorPanel.tsx
+      - apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx
+    greenTest: pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasInspectorPanel.test.tsx
+  - id: plan-preview-contained-review-layout
+    redTest: pnpm --filter @dvt/web test -- src/app/components/Modals.test.tsx
+    expectedFailure: A persisted plan preview renders as an over-wide card stack with orphaned empty cost output instead of a contained responsive review surface.
+    patchSurfaces:
+      - apps/web/src/app/components/Modals.tsx
+      - apps/web/src/app/components/Modals.test.tsx
+    greenTest: pnpm --filter @dvt/web test -- src/app/components/Modals.test.tsx
+  - id: run-detail-plan-execution-scope
+    redTest: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts && pnpm --filter @dvt/web test -- src/app/views/runs/RunStates.test.tsx
+    expectedFailure: Completed run detail cannot show source/sink plan scope or direct return actions from persisted run read evidence.
+    patchSurfaces:
+      - apps/api/src/application/ports/runtime.ts
+      - apps/api/src/application/services/runReadEvidenceModel.ts
+      - apps/api/test/application/services/getRunStatusUseCase.test.ts
+      - apps/web/src/app/ports/runs.ts
+      - apps/web/src/app/services/runs/runsApiDecoders.ts
+      - apps/web/src/app/services/runs/runsApiSnapshotMapper.ts
+      - apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
+      - apps/web/src/app/views/runs/RunStates.test.tsx
+    greenTest: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts && pnpm --filter @dvt/web test -- src/app/views/runs/RunStates.test.tsx
 symbols:
+  - name: PlanPreviewModal
+    path: apps/web/src/app/components/Modals.tsx
+    dddOwner: ExecutablePlanPreview
+    cqRails: [PreviewExecutablePlan, StartRun]
+    fowlerSignals: [The plan preview must stay readable and contained while preserving immutable plan semantics.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/components/Modals.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/components/Modals.test.tsx
+  - name: PlanPreviewSection
+    path: apps/web/src/app/components/Modals.tsx
+    dddOwner: ExecutablePlanPreview
+    cqRails: [PreviewExecutablePlan, StartRun]
+    fowlerSignals: [The preview review surface must use consistent contained sections instead of ad hoc overflowing cards.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/components/Modals.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/components/Modals.test.tsx
+  - name: PlanPreviewField
+    path: apps/web/src/app/components/Modals.tsx
+    dddOwner: ExecutablePlanPreview
+    cqRails: [PreviewExecutablePlan, StartRun]
+    fowlerSignals: [Plan preview values must wrap long identifiers without escaping the modal.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/components/Modals.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/components/Modals.test.tsx
+  - name: formatPlanCost
+    path: apps/web/src/app/components/Modals.tsx
+    dddOwner: ExecutablePlanPreview
+    cqRails: [PreviewExecutablePlan, StartRun]
+    fowlerSignals: [Missing estimated-cost data must be presented explicitly instead of as an orphaned currency symbol.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/components/Modals.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/components/Modals.test.tsx
+  - name: derivePlanSummary
+    path: apps/api/src/application/services/runReadEvidenceModel.ts
+    dddOwner: RunPlanExecutionScope
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Run detail source and sink scope must come from persisted plan evidence, not timeline inference.]
+    architectureGuard: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/api/test/application/services/getRunStatusUseCase.test.ts
+  - name: RunPlanExecutionSummary
+    path: apps/web/src/app/ports/runs.ts
+    dddOwner: RunPlanExecutionScope
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [The frontend run DTO must preserve persisted source and sink plan scope.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/services/runs/runsService.test.ts src/app/views/runs/RunStates.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/services/runs/runsService.test.ts
+      - apps/web/src/app/views/runs/RunStates.test.tsx
+  - name: parseNonEmptyStringArray
+    path: apps/web/src/app/services/runs/runsApiDecoders.ts
+    dddOwner: RunPlanExecutionScope
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Malformed source and sink arrays must not become caller-visible run scope.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/services/runs/runsService.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/services/runs/runsService.test.ts
+  - name: parsePlanExecutionSummary
+    path: apps/web/src/app/services/runs/runsApiDecoders.ts
+    dddOwner: RunPlanExecutionScope
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Run detail must decode plan scope only from the governed snapshot read model.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/services/runs/runsService.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/services/runs/runsService.test.ts
+  - name: formatRunScopeList
+    path: apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
+    dddOwner: RunPlanExecutionScope
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Source and sink values must render as readable run scope instead of disappearing into the timeline.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/runs/RunStates.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/runs/RunStates.test.tsx
+  - name: RunItineraryCard
+    path: apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
+    dddOwner: RunPlanExecutionScope
+    cqRails: [GetRunSnapshot, ListRunEvents]
+    fowlerSignals: [Run detail must orient the user with plan scope and direct return navigation.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/runs/RunStates.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/runs/RunStates.test.tsx
+  - name: CanvasInspectorPanel
+    path: apps/web/src/app/views/canvas/CanvasInspectorPanel.tsx
+    dddOwner: Canvas node properties
+    cqRails: [GetWorkspaceGraphDraft, ImportWarehouseSources]
+    fowlerSignals: [The route-owned wrapper must provide visible graph context to the passive inspector without moving mutation semantics.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasInspectorPanel.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx
+  - name: CoreNodeDetails
+    path: apps/web/src/app/components/InspectorPanel.tsx
+    dddOwner: Canvas node properties
+    cqRails: [GetWorkspaceGraphDraft, ImportWarehouseSources]
+    fowlerSignals: [The passive inspector must project selected-node metadata, columns, and dependencies into useful read-only context.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasInspectorPanel.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx
+  - name: CanvasWorkbenchTabIconName
+    path: apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts
+    dddOwner: CanvasWorkbenchTabsReadModel
+    cqRails: [ListCanvasWorkbenchTabs]
+    fowlerSignals: [Canvas workbench tabs need semantic icon posture without leaking plugin icon components.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.test.ts src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasWorkbenchTabs.test.ts
+  - name: resolveCanvasWorkbenchTabIconName
+    path: apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts
+    dddOwner: CanvasWorkbenchTabsReadModel
+    cqRails: [ListCanvasWorkbenchTabs]
+    fowlerSignals: [Tab icons must be controlled by Canvas tab identity instead of plugin placement components.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.test.ts src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasWorkbenchTabs.test.ts
+  - name: CANVAS_WORKBENCH_TAB_ICON_NAMES
+    path: apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts
+    dddOwner: CanvasWorkbenchTabsReadModel
+    cqRails: [ListCanvasWorkbenchTabs]
+    fowlerSignals: [The Canvas tab icon vocabulary must be closed over route-owned tab identity.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.test.ts src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasWorkbenchTabs.test.ts
+  - name: CanvasWorkbenchTabStrip
+    path: apps/web/src/app/views/canvas/CanvasWorkbenchTabStrip.tsx
+    dddOwner: CanvasWorkbenchVisualPostureReadModel
+    cqRails: [ListCanvasWorkbenchTabs, VerifyCanvasWorkbenchVisualPosture]
+    fowlerSignals: [The top workbench strip must render compact icon labels in a route-local header, not disconnected text pills.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts src/app/views/canvas/CanvasShell.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
+      - apps/web/src/app/views/canvas/CanvasShell.test.tsx
+  - name: renderCanvasWorkbenchTabIcon
+    path: apps/web/src/app/views/canvas/CanvasWorkbenchTabStrip.tsx
+    dddOwner: CanvasWorkbenchVisualPostureReadModel
+    cqRails: [ListCanvasWorkbenchTabs, VerifyCanvasWorkbenchVisualPosture]
+    fowlerSignals: [The renderer must translate semantic icon names into controlled visual icons.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts src/app/views/canvas/CanvasShell.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
+      - apps/web/src/app/views/canvas/CanvasShell.test.tsx
+  - name: assertCanvasWorkbenchTabsUseControlledIcons
+    path: apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+    dddOwner: CanvasWorkbenchVisualPostureReadModel
+    cqRails: [VerifyCanvasWorkbenchVisualPosture]
+    fowlerSignals: [Browser proof must assert a controlled SVG icon and one visible label per tab.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
   - name: ResolveAuthorizedExecutableSubgraphService
     path: apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts
     dddOwner: ExecutableSubgraph

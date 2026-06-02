@@ -342,6 +342,24 @@ Rules:
    refs emitted by runtime steps and must not become the source of authoring
    truth.
 
+## Plan Execution Scope Rendering Rule
+
+Caller-visible source and sink scope belongs to `GET /runs/:runId` when the run
+can be joined back to its persisted plan record.
+
+Rules:
+
+1. `GET /runs/:runId` may carry `planSummary` derived from the persisted
+   canonical `ExecutionPlan`.
+2. `planSummary.sourceTables` and `planSummary.sinkTables` are the only
+   source/sink selection evidence rendered as plan scope in
+   `RunWorkspaceStateView`.
+3. `RunWorkspaceStateView` may use materialization evidence as result evidence,
+   but it must not use timeline events or console lines to invent plan source or
+   sink selection.
+4. The run detail route must provide direct navigation back to Canvas and the
+   runs list so a started run is not a dead end.
+
 ## Vertical Impact Map
 
 ```mermaid

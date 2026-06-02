@@ -322,6 +322,59 @@ describe('RunStates', () => {
     expect(container.textContent).toContain('42');
   });
 
+  it('renders return navigation and persisted plan execution scope for completed runs', async () => {
+    const workspace = buildWorkspace({
+      snapshot: {
+        runId: 'run_123',
+        planId: 'plan_123',
+        status: 'completed',
+        executor: 'postgres',
+        startedAt: '2026-03-28T10:00:00.000Z',
+        completedAt: '2026-03-28T10:00:30.000Z',
+        environment: 'dev',
+        gitSha: 'abc123def',
+        planSummary: {
+          executor: 'postgres',
+          nodeCount: 3,
+          stepCount: 3,
+          sourceTables: ['raw.orders'],
+          sinkTables: ['analytics.orders_daily'],
+        },
+        execution: {
+          materialization: {
+            executor: 'postgres',
+            environmentId: 'env-1',
+            sinkTable: 'analytics.orders_daily',
+            rowsWritten: 42,
+            startedAt: '2026-03-28T10:00:05.000Z',
+            completedAt: '2026-03-28T10:00:25.000Z',
+            durationMs: 20000,
+          },
+        },
+      } as RunWorkspaceViewModel['snapshot'],
+    });
+
+    await act(async () => {
+      root.render(
+        <MemoryRouter>
+          <RunWorkspaceState workspace={workspace} />
+        </MemoryRouter>
+      );
+    });
+
+    expect(container.textContent).toContain('Run itinerary');
+    expect(container.textContent).toContain('Back to Canvas');
+    expect(container.textContent).toContain('All runs');
+    expect(container.textContent).toContain('Plan');
+    expect(container.textContent).toContain('plan_123');
+    expect(container.textContent).toContain('Source tables');
+    expect(container.textContent).toContain('raw.orders');
+    expect(container.textContent).toContain('Sink tables');
+    expect(container.textContent).toContain('analytics.orders_daily');
+    expect(container.querySelector('a[href="/canvas"]')).toBeTruthy();
+    expect(container.querySelector('a[href="/runs"]')).toBeTruthy();
+  });
+
   it('renders failure diagnostics without materialization evidence on failed snapshots', async () => {
     const workspace = buildWorkspace({
       snapshot: {

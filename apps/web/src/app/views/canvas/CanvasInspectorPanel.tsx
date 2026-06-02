@@ -1,8 +1,9 @@
 /** Owned concern: compose the passive Inspector view with the route-owned Inspector authoring surface. */
 import { useEffect, useMemo, useState } from 'react';
+import { Plus, X } from 'lucide-react';
 import InspectorPanel from '../../components/InspectorPanel';
+import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
-import { Card } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { graphVisualClasses } from '../../plugins/graph/graphVisualTokens';
@@ -10,6 +11,11 @@ import type { WorkspaceOption } from '../../services/config/workspaceConfig';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { CanvasInspectorAuthoringSection } from './CanvasInspectorAuthoringSection';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
+import {
+  createCanvasInspectorNodeDraft,
+  hasCanvasInspectorNodeDraftChanges,
+  validateCanvasInspectorNodeDraft,
+} from './canvasInspectorAuthoringModel';
 import type { ProjectCanvasDocument, ProjectCanvasPatch } from './canvasProjectCanvasLifecycle';
 
 type CanvasInspectorCanvasContract = ProjectCanvasDocument &
@@ -42,15 +48,24 @@ export function CanvasInspectorPanel({
   authoring,
   canvas,
 }: CanvasInspectorPanelProps) {
+  const tagsEditor =
+    node != null && (authoring.canEditNode || node.tags.length > 0) ? (
+      <CanvasInspectorOverviewTagsEditor key={node.id} node={node} authoring={authoring} />
+    ) : undefined;
+
   return (
     <InspectorPanel
       node={node}
+      nodes={nodes}
+      edges={edges}
       activeRunId={activeRunId}
       registeredPlugins={registeredPlugins}
       onHide={onHide}
+      tagsEditor={tagsEditor}
       beforePanels={
         node ? (
           <CanvasInspectorAuthoringSection
+            key={node.id}
             node={node}
             nodes={nodes}
             edges={edges}
@@ -61,6 +76,143 @@ export function CanvasInspectorPanel({
         ) : null
       }
     />
+  );
+}
+
+function CanvasInspectorOverviewTagsEditor({
+  node,
+  authoring,
+}: Readonly<{
+  node: CanonicalNode;
+  authoring: CanvasInspectorAuthoringContract;
+}>) {
+  const [draft, setDraft] = useState(() => createCanvasInspectorNodeDraft(node));
+  const [newTag, setNewTag] = useState('');
+
+  useEffect(() => {
+    const nextDraft = createCanvasInspectorNodeDraft(node);
+    setDraft(nextDraft);
+    setNewTag('');
+  }, [node.description, node.id, node.metadata, node.name, node.tags]);
+
+  const errors = useMemo(() => validateCanvasInspectorNodeDraft(draft), [draft]);
+  const isDirty = useMemo(() => hasCanvasInspectorNodeDraftChanges(node, draft), [draft, node]);
+  const canApply = authoring.canEditNode && isDirty && Object.keys(errors).length === 0;
+  const normalizedNewTag = newTag.trim();
+  const canAddTag =
+    authoring.canEditNode && normalizedNewTag.length > 0 && !draft.tags.includes(normalizedNewTag);
+
+  return (
+    <div data-slot="node-inspector-overview-tags-editor" className="space-y-2">
+      {draft.tags.length > 0 ? (
+        <div className="flex flex-wrap gap-1.5">
+          {draft.tags.map((tag) => (
+            <span key={tag} className="inline-flex items-center gap-1">
+              <Badge variant="secondary" className="text-xs">
+                {tag}
+              </Badge>
+              {authoring.canEditNode ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-5 rounded-full text-slate-300 hover:text-slate-50"
+                  aria-label={`Remove tag ${tag}`}
+                  onClick={() => {
+                    setDraft((currentDraft) => ({
+                      ...currentDraft,
+                      tags: currentDraft.tags.filter((currentTag) => currentTag !== tag),
+                    }));
+                  }}
+                >
+                  <X className="size-3" />
+                </Button>
+              ) : null}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
+      {authoring.canEditNode ? (
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2">
+          <div className="space-y-2">
+            <Label htmlFor={`inspector-overview-node-new-tag-${node.id}`}>New tag</Label>
+            <Input
+              id={`inspector-overview-node-new-tag-${node.id}`}
+              name="node-overview-new-tag"
+              value={newTag}
+              placeholder="finance"
+              onChange={(event) => setNewTag(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key !== 'Enter' || !canAddTag) {
+                  return;
+                }
+                event.preventDefault();
+                setDraft((currentDraft) => ({
+                  ...currentDraft,
+                  tags: [...currentDraft.tags, normalizedNewTag],
+                }));
+                setNewTag('');
+              }}
+            />
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={!canAddTag}
+            onClick={() => {
+              if (!canAddTag) {
+                return;
+              }
+              setDraft((currentDraft) => ({
+                ...currentDraft,
+                tags: [...currentDraft.tags, normalizedNewTag],
+              }));
+              setNewTag('');
+            }}
+          >
+            <Plus className="mr-1 size-3" />
+            Add tag
+          </Button>
+        </div>
+      ) : null}
+
+      {!authoring.canEditNode ? (
+        <p className={graphVisualClasses.inspectorBody}>
+          Node tags are read-only for this workspace state.
+        </p>
+      ) : null}
+
+      {authoring.canEditNode && isDirty ? (
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              const nextDraft = createCanvasInspectorNodeDraft(node);
+              setDraft(nextDraft);
+              setNewTag('');
+            }}
+          >
+            Cancel tags
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            disabled={!canApply}
+            onClick={() => {
+              if (canApply) {
+                authoring.onApplyNodeDraft(draft);
+              }
+            }}
+          >
+            Apply tags
+          </Button>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -87,7 +239,10 @@ function CanvasInspectorCanvasSection({
   const canApply = canvas.canEdit && isDirty && titleError == null;
 
   return (
-    <Card className={graphVisualClasses.inspectorCard}>
+    <section
+      data-slot="canvas-inspector-properties-section"
+      className="border-b border-slate-800 pb-4"
+    >
       <div className="space-y-3">
         <div>
           <h3 className={graphVisualClasses.contextPanelSectionTitle}>Canvas properties</h3>
@@ -193,7 +348,7 @@ function CanvasInspectorCanvasSection({
           ) : null}
         </div>
       </div>
-    </Card>
+    </section>
   );
 }
 

@@ -2,7 +2,6 @@
 import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 
 import { Button } from '../../components/ui/button';
-import { Card } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
@@ -29,22 +28,27 @@ export function CanvasInspectorAuthoringSection({
   authoring,
 }: CanvasInspectorAuthoringSectionProps) {
   const [draft, setDraft] = useState(() => createCanvasInspectorNodeDraft(node));
+  const [tagsText, setTagsText] = useState(() =>
+    createCanvasInspectorNodeDraft(node).tags.join(', ')
+  );
 
   useEffect(() => {
-    setDraft(createCanvasInspectorNodeDraft(node));
-  }, [node.description, node.id, node.metadata, node.name]);
+    const nextDraft = createCanvasInspectorNodeDraft(node);
+    setDraft(nextDraft);
+    setTagsText(nextDraft.tags.join(', '));
+  }, [node.description, node.id, node.metadata, node.name, node.tags]);
 
   const errors = useMemo(() => validateCanvasInspectorNodeDraft(draft), [draft]);
   const isDirty = useMemo(() => hasCanvasInspectorNodeDraftChanges(node, draft), [draft, node]);
   const canApply = authoring.canEditNode && isDirty && Object.keys(errors).length === 0;
 
   return (
-    <Card className={graphVisualClasses.inspectorCard}>
+    <section data-slot="node-inspector-editable-section" className="border-b border-slate-800 pb-4">
       <div className="space-y-3">
         <div>
-          <h3 className={graphVisualClasses.contextPanelSectionTitle}>Node details</h3>
+          <h3 className={graphVisualClasses.contextPanelSectionTitle}>Editable properties</h3>
           <p className={graphVisualClasses.inspectorBody}>
-            Name and description saved with this canvas.
+            Name, tags, and description saved with this canvas.
           </p>
         </div>
 
@@ -66,6 +70,32 @@ export function CanvasInspectorAuthoringSection({
           {errors.name ? (
             <p className={graphVisualClasses.inspectorErrorText}>{errors.name}</p>
           ) : null}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor={`inspector-node-tags-${node.id}`}>Tags</Label>
+          <Input
+            id={`inspector-node-tags-${node.id}`}
+            name="node-tags"
+            value={tagsText}
+            disabled={!authoring.canEditNode}
+            placeholder="finance, critical"
+            onChange={(event) => {
+              const nextTagsText = event.target.value;
+              setTagsText(nextTagsText);
+              setDraft((currentDraft) => ({
+                ...currentDraft,
+                tags: Array.from(
+                  new Set(
+                    nextTagsText
+                      .split(',')
+                      .map((tag) => tag.trim())
+                      .filter((tag) => tag.length > 0)
+                  )
+                ),
+              }));
+            }}
+          />
         </div>
 
         {draft.dbt ? (
@@ -118,7 +148,11 @@ export function CanvasInspectorAuthoringSection({
               type="button"
               variant="ghost"
               size="sm"
-              onClick={() => setDraft(createCanvasInspectorNodeDraft(node))}
+              onClick={() => {
+                const nextDraft = createCanvasInspectorNodeDraft(node);
+                setDraft(nextDraft);
+                setTagsText(nextDraft.tags.join(', '));
+              }}
             >
               Cancel
             </Button>
@@ -138,7 +172,7 @@ export function CanvasInspectorAuthoringSection({
           </div>
         ) : null}
       </div>
-    </Card>
+    </section>
   );
 }
 

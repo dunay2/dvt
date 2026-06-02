@@ -49,6 +49,14 @@ export type RunExecutionEvidence = {
   materialization?: MaterializationEvidence;
 };
 
+export type RunPlanExecutionSummary = {
+  executor: RunExecutor;
+  nodeCount: number;
+  stepCount: number;
+  sourceTables: readonly string[];
+  sinkTables: readonly string[];
+};
+
 export type RunGitArtifactRef = {
   repo: string;
   path: string;
@@ -105,6 +113,7 @@ export type RunSnapshot = RunCommonSnapshotFields & {
   errorReason?: string;
   materialization?: MaterializationEvidence;
   provenance?: RunProvenanceChain;
+  planSummary?: RunPlanExecutionSummary;
 };
 
 export type RunEventTimelinePage = {

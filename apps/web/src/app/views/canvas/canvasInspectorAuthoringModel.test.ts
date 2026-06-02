@@ -64,6 +64,7 @@ describe('canvasInspectorAuthoringModel', () => {
     expect(createCanvasInspectorNodeDraft(buildNode())).toEqual({
       name: 'orders_source',
       description: 'Source table',
+      tags: [],
       dvt: {
         kind: 'source',
         schema: 'public',
@@ -78,6 +79,7 @@ describe('canvasInspectorAuthoringModel', () => {
       validateCanvasInspectorNodeDraft({
         name: '   ',
         description: '',
+        tags: [],
       })
     ).toEqual({
       name: 'Node name is required.',
@@ -89,6 +91,7 @@ describe('canvasInspectorAuthoringModel', () => {
     const draft = {
       name: 'orders_source_v2',
       description: 'Renamed in inspector',
+      tags: ['finance', 'critical'],
     };
 
     expect(hasCanvasInspectorNodeDraftChanges(node, draft)).toBe(true);
@@ -96,6 +99,7 @@ describe('canvasInspectorAuthoringModel', () => {
       ...node,
       name: 'orders_source_v2',
       description: 'Renamed in inspector',
+      tags: ['finance', 'critical'],
     });
   });
 
@@ -104,8 +108,19 @@ describe('canvasInspectorAuthoringModel', () => {
       applyCanvasInspectorNodeDraft(buildNode(), {
         name: 'orders_source',
         description: '   ',
+        tags: [],
       }).description
     ).toBeUndefined();
+  });
+
+  it('normalizes tag edits before applying them to the canonical node', () => {
+    expect(
+      applyCanvasInspectorNodeDraft(buildNode(), {
+        name: 'orders_source',
+        description: 'Source table',
+        tags: [' finance ', 'critical', 'finance', ''],
+      }).tags
+    ).toEqual(['finance', 'critical']);
   });
 
   it('creates DVT source authoring metadata from existing node config', () => {
@@ -122,6 +137,7 @@ describe('canvasInspectorAuthoringModel', () => {
     ).toEqual({
       name: 'Orders',
       description: '',
+      tags: ['authoring'],
       dvt: {
         kind: 'source',
         schema: 'analytics',
@@ -135,6 +151,7 @@ describe('canvasInspectorAuthoringModel', () => {
     expect(createCanvasInspectorNodeDraft(buildImportedWarehouseSourceNode())).toEqual({
       name: 'src_warehouse_prod_analytics_erp_orders',
       description: 'Imported source for analytics.erp.orders',
+      tags: ['source', 'erp'],
       dvt: {
         kind: 'source',
         schema: 'erp',
@@ -149,6 +166,7 @@ describe('canvasInspectorAuthoringModel', () => {
     const draft = {
       name: 'Warehouse Orders',
       description: 'Curated source',
+      tags: ['source', 'finance'],
       dvt: {
         kind: 'source' as const,
         schema: 'warehouse_raw',
@@ -161,6 +179,7 @@ describe('canvasInspectorAuthoringModel', () => {
       ...node,
       name: 'Warehouse Orders',
       description: 'Curated source',
+      tags: ['source', 'finance'],
       metadata: {
         ...node.metadata,
         config: {
@@ -181,6 +200,7 @@ describe('canvasInspectorAuthoringModel', () => {
     const draft = {
       name: 'orders_sink',
       description: '',
+      tags: ['published'],
       dvt: {
         kind: 'sink' as const,
         schema: 'marts',
@@ -194,6 +214,7 @@ describe('canvasInspectorAuthoringModel', () => {
       ...node,
       name: 'orders_sink',
       description: undefined,
+      tags: ['published'],
       metadata: {
         config: {
           owner: 'finance',

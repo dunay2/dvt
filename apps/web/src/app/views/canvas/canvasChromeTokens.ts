@@ -1,17 +1,18 @@
 /** Owned concern: own Canvas route chrome visual tokens for toolbar and tab-strip presentation. */
 export const canvasChromeClasses = {
   toolbar:
-    'flex h-10 shrink-0 items-center justify-end gap-3 border-b border-[color:var(--border-default)] bg-[var(--surface-panel)] px-3',
-  toolbarInline: 'flex min-w-0 shrink-0 items-center justify-end gap-3',
-  separator: 'h-5 bg-[var(--border-default)]',
+    'flex h-11 shrink-0 items-center justify-end gap-2 border-b border-[color:var(--border-default)] bg-[var(--surface-panel)] px-3',
+  toolbarInline: 'flex shrink-0 items-center justify-end gap-2',
+  separator: 'h-5 bg-[var(--border-default)] opacity-80',
   statusBadge:
-    'h-7 border border-[color:var(--border-default)] bg-[var(--surface-app)] px-2 text-[11px] font-medium',
+    'h-8 rounded-md border border-transparent bg-transparent px-2 text-[11px] font-semibold',
   ghostButton:
-    'h-8 gap-1.5 px-3 text-xs text-[var(--text-muted)] hover:bg-[var(--surface-selected)] hover:text-[var(--text-strong)]',
+    'h-8 gap-1.5 rounded-md px-2.5 text-xs font-medium text-[var(--text-default)] hover:bg-[var(--surface-selected)] hover:text-[var(--text-strong)]',
   outlineButton:
-    'h-8 border-[color:var(--border-default)] bg-transparent px-3 text-xs text-[var(--text-default)] hover:bg-[var(--surface-selected)] hover:text-[var(--text-strong)]',
+    'h-8 gap-1.5 rounded-md border border-transparent bg-transparent px-2.5 text-xs font-medium text-[var(--text-default)] hover:border-[color:var(--border-default)] hover:bg-[var(--surface-selected)] hover:text-[var(--text-strong)]',
+  primaryButton: 'h-8 rounded-md px-3 text-xs font-semibold shadow-none',
   replacementButton:
-    'h-8 shrink-0 gap-1.5 border-[color:var(--border-default)] bg-[var(--surface-app)] px-2.5 text-xs text-[var(--text-default)] hover:bg-[var(--surface-selected)] hover:text-[var(--text-strong)]',
+    'h-8 shrink-0 gap-1.5 rounded-md border border-transparent bg-transparent px-2.5 text-xs font-medium text-[var(--text-default)] hover:border-[color:var(--border-default)] hover:bg-[var(--surface-selected)] hover:text-[var(--text-strong)]',
   replacementDialog:
     'border-[color:var(--border-default)] bg-[var(--surface-app)] text-[var(--text-strong)]',
   replacementDescription: 'text-[var(--text-muted)]',

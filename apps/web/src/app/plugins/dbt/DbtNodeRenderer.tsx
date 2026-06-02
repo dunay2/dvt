@@ -244,7 +244,7 @@ export function DbtNodeRenderer({
   );
 }
 
-function DbtOverviewPanel({ node }: InspectorPanelProps) {
+function DbtOverviewPanel({ node, tagsEditor }: InspectorPanelProps) {
   const pkg = meta<string>(node, 'package');
   const deps = meta<string[]>(node, 'dependencies') ?? [];
   const statusClass = graphStatusBadgeClasses[node.status] ?? graphStatusBadgeClasses.idle;
@@ -293,16 +293,18 @@ function DbtOverviewPanel({ node }: InspectorPanelProps) {
         </Card>
       )}
 
-      {node.tags.length > 0 && (
+      {(node.tags.length > 0 || tagsEditor) && (
         <Card className={graphVisualClasses.inspectorCard}>
           <h3 className={graphVisualClasses.inspectorTitle}>Tags</h3>
-          <div className="flex flex-wrap gap-1">
-            {node.tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-          </div>
+          {tagsEditor ?? (
+            <div className="flex flex-wrap gap-1">
+              {node.tags.map((tag) => (
+                <Badge key={tag} variant="secondary" className="text-xs">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
         </Card>
       )}
 

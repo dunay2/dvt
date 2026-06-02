@@ -2,10 +2,12 @@ import {
   MaterializationEvidenceSchema,
   type CanonicalRunStatus,
   parseExecutionPlan,
+  summarizeTransformationSqlFirstPlan,
   TransformationExecutorSchema,
   type EventEnvelope,
   type MaterializationEvidence,
   type PlanRecord,
+  type TransformationSqlFirstPlanSummary,
   type WorkflowSnapshot,
 } from '@dvt/contracts';
 
@@ -45,6 +47,7 @@ export interface RunReadEvidenceModel {
     completedAt: MaterializationEvidence['completedAt'];
     durationMs: number;
   };
+  readonly planSummary?: TransformationSqlFirstPlanSummary;
 }
 
 export function deriveRunReadEvidenceModel(args: {
@@ -77,6 +80,7 @@ export function deriveRunReadEvidenceModel(args: {
     currentAttemptEvents,
     args.snapshot.execution
   );
+  const planSummary = derivePlanSummary(args.planRecord);
 
   return {
     ...(executor === undefined ? {} : { executor }),
@@ -85,6 +89,7 @@ export function deriveRunReadEvidenceModel(args: {
     ...(errorReason === undefined ? {} : { errorReason }),
     ...(provenance === undefined ? {} : { provenance }),
     ...(materialization === undefined ? {} : { materialization }),
+    ...(planSummary === undefined ? {} : { planSummary }),
   };
 }
 
@@ -406,6 +411,22 @@ function deriveProvenance(
         }
       : {}),
   };
+}
+
+function derivePlanSummary(
+  planRecord: PlanRecord | undefined
+): TransformationSqlFirstPlanSummary | undefined {
+  if (!planRecord) {
+    return undefined;
+  }
+
+  try {
+    return summarizeTransformationSqlFirstPlan(
+      parseExecutionPlan(JSON.parse(planRecord.canonicalPlanJson))
+    );
+  } catch {
+    return undefined;
+  }
 }
 
 function parseGitArtifactRef(value: unknown): RunGitArtifactRef | undefined {

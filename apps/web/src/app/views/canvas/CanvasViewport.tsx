@@ -6,20 +6,27 @@ import {
   ReactFlow,
   useReactFlow,
   type Edge,
+  type EdgeChange,
   type Node,
   type NodeTypes,
   type ReactFlowProps,
 } from '@xyflow/react';
 import { PanelLeftOpen, PanelRightOpen } from 'lucide-react';
-import { useEffect, useRef, type CSSProperties, type RefObject } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type RefObject } from 'react';
 
 import { Button } from '../../components/ui/button';
 import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
+import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import {
   deriveCanvasPaletteTokens,
   normalizeCanvasPaletteId,
   type CanvasPaletteId,
 } from './canvasPalette';
+import {
+  buildCanvasContextMenuModel,
+  buildCanvasEdgeContextRemovalChange,
+  type CanvasContextMenuModel,
+} from './canvasInteractionCommandSurface';
 
 function resolveCanvasViewportStyle(
   canvasPalette: CanvasPaletteId,
@@ -85,6 +92,11 @@ type CanvasViewportProps = {
   readonly onNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']>;
   readonly onDrop: React.DragEventHandler<HTMLDivElement>;
   readonly onDragOver: React.DragEventHandler<HTMLDivElement>;
+  readonly authoringNodeKinds: readonly NodeKindRegistration[];
+  readonly onCreateAuthoringNode: (
+    registration: NodeKindRegistration,
+    position?: { x: number; y: number }
+  ) => void;
   readonly importedNodeFocusIds: string[];
   readonly onImportedNodeFocusComplete: () => void;
   readonly onShowExplorer: () => void;
@@ -176,6 +188,78 @@ function CanvasViewportPanelToggleButton({
   );
 }
 
+type CanvasViewportContextMenuProps = Readonly<{
+  model: CanvasContextMenuModel | null;
+  onCreateAuthoringNode: CanvasViewportProps['onCreateAuthoringNode'];
+  onEdgesChange: CanvasViewportProps['onEdgesChange'];
+  onClose: () => void;
+}>;
+
+function CanvasViewportContextMenu({
+  model,
+  onCreateAuthoringNode,
+  onEdgesChange,
+  onClose,
+}: CanvasViewportContextMenuProps): JSX.Element | null {
+  if (model == null) {
+    return null;
+  }
+
+  const menuStyle: CSSProperties = {
+    left: model.screenPosition.x,
+    top: model.screenPosition.y,
+  };
+
+  return (
+    <div
+      role="menu"
+      data-slot="canvas-context-menu"
+      className="fixed z-50 min-w-52 rounded-md border border-[color:var(--border-default)] bg-[var(--surface-panel)] p-1 shadow-xl"
+      style={menuStyle}
+      onContextMenu={(event) => event.preventDefault()}
+    >
+      {model.createNodeActions.length > 0 ? (
+        <div>
+          <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-(--text-muted)">
+            Crear nodo
+          </div>
+          {model.createNodeActions.map((action) => (
+            <button
+              key={action.registration.kind}
+              type="button"
+              role="menuitem"
+              className="flex w-full items-center rounded px-2 py-2 text-left text-sm text-(--text-default) hover:bg-(--surface-elevated)"
+              onClick={() => {
+                onCreateAuthoringNode(action.registration, model.flowPosition);
+                onClose();
+              }}
+            >
+              {action.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      {model.edgeActions.map((action) => (
+        <button
+          key={action.action}
+          type="button"
+          role="menuitem"
+          className="flex w-full items-center rounded px-2 py-2 text-left text-sm text-(--text-default) hover:bg-(--surface-elevated)"
+          onClick={() => {
+            if (model.edgeId != null) {
+              onEdgesChange([buildCanvasEdgeContextRemovalChange({ id: model.edgeId })]);
+            }
+            onClose();
+          }}
+        >
+          {action.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 type CanvasViewportRestoreControlsProps = Readonly<
   Pick<
     CanvasViewportProps,
@@ -250,6 +334,8 @@ type CanvasViewportReactFlowSurfaceProps = Readonly<
     | 'onNodeDragStop'
     | 'onDrop'
     | 'onDragOver'
+    | 'authoringNodeKinds'
+    | 'onCreateAuthoringNode'
   >
 >;
 
@@ -274,7 +360,78 @@ function CanvasViewportReactFlowSurface({
   onNodeDragStop,
   onDrop,
   onDragOver,
+  authoringNodeKinds,
+  onCreateAuthoringNode,
 }: CanvasViewportReactFlowSurfaceProps): JSX.Element {
+  const reactFlow = useReactFlow<Node, Edge>();
+  const [contextMenuModel, setContextMenuModel] = useState<CanvasContextMenuModel | null>(null);
+  const closeContextMenu = () => setContextMenuModel(null);
+  const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> = () => {
+    closeContextMenu();
+  };
+  const handleNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']> = (event, node) => {
+    closeContextMenu();
+    onNodeClick(event, node);
+  };
+  const handleSelectionChange: NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']> = (
+    selection
+  ) => {
+    closeContextMenu();
+    onSelectionChange(selection);
+  };
+  const handleNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']> = (
+    event,
+    node,
+    nodes
+  ) => {
+    closeContextMenu();
+    onNodeDrag(event, node, nodes);
+  };
+  const handleNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']> = (
+    event,
+    node,
+    nodes
+  ) => {
+    closeContextMenu();
+    onNodeDragStop(event, node, nodes);
+  };
+  const handlePaneContextMenu: NonNullable<ReactFlowProps<Node, Edge>['onPaneContextMenu']> = (
+    event
+  ) => {
+    event.preventDefault();
+    const screenPosition = { x: event.clientX, y: event.clientY };
+    const flowPosition = reactFlow.screenToFlowPosition(screenPosition);
+
+    setContextMenuModel(
+      buildCanvasContextMenuModel({
+        target: {
+          kind: 'pane',
+          screenPosition,
+          flowPosition,
+        },
+        canMutateGraph: canEditEdges,
+        authoringNodeKinds,
+      })
+    );
+  };
+  const handleEdgeContextMenu: NonNullable<ReactFlowProps<Node, Edge>['onEdgeContextMenu']> = (
+    event,
+    edge
+  ) => {
+    event.preventDefault();
+    setContextMenuModel(
+      buildCanvasContextMenuModel({
+        target: {
+          kind: 'edge',
+          edgeId: edge.id,
+          screenPosition: { x: event.clientX, y: event.clientY },
+        },
+        canMutateGraph: canEditEdges,
+        authoringNodeKinds,
+      })
+    );
+  };
+
   return (
     <ReactFlow
       nodes={nodesWithImpact}
@@ -283,9 +440,10 @@ function CanvasViewportReactFlowSurface({
       onEdgesChange={canEditEdges ? onEdgesChange : undefined}
       onConnect={onConnect}
       onReconnect={canEditEdges ? onReconnect : undefined}
-      onNodeClick={onNodeClick}
-      onNodeDragStop={onNodeDragStop}
-      onSelectionChange={onSelectionChange}
+      onNodeClick={handleNodeClick}
+      onPaneClick={handlePaneClick}
+      onNodeDragStop={handleNodeDragStop}
+      onSelectionChange={handleSelectionChange}
       nodeTypes={nodeTypes}
       nodesDraggable={canEditEdges}
       nodesConnectable={canEditEdges}
@@ -304,11 +462,19 @@ function CanvasViewportReactFlowSurface({
       minZoom={0.35}
       defaultViewport={viewport ?? undefined}
       onMoveEnd={(_event, nextViewport) => onViewportChange(nextViewport)}
-      onNodeDrag={onNodeDrag}
+      onNodeDrag={handleNodeDrag}
       onDrop={onDrop}
       onDragOver={onDragOver}
+      onPaneContextMenu={handlePaneContextMenu}
+      onEdgeContextMenu={handleEdgeContextMenu}
       className="bg-(--canvas-surface)"
     >
+      <CanvasViewportContextMenu
+        model={contextMenuModel}
+        onCreateAuthoringNode={onCreateAuthoringNode}
+        onEdgesChange={(changes: EdgeChange<Edge>[]) => onEdgesChange(changes)}
+        onClose={closeContextMenu}
+      />
       {canvasGridVisible ? <Background color={canvasGridColor} gap={gridSize} /> : null}
       <Controls />
       <MiniMap
@@ -361,6 +527,8 @@ function CanvasViewportSurface({
   onNodeDragStop,
   onDrop,
   onDragOver,
+  authoringNodeKinds,
+  onCreateAuthoringNode,
   onShowExplorer,
   onShowInspector,
 }: CanvasViewportSurfaceProps): JSX.Element {
@@ -400,6 +568,8 @@ function CanvasViewportSurface({
         onNodeDragStop={onNodeDragStop}
         onDrop={onDrop}
         onDragOver={onDragOver}
+        authoringNodeKinds={authoringNodeKinds}
+        onCreateAuthoringNode={onCreateAuthoringNode}
       />
     </div>
   );
@@ -448,6 +618,8 @@ export default function CanvasViewport(props: CanvasViewportProps): JSX.Element 
       onNodeDragStop={props.onNodeDragStop}
       onDrop={props.onDrop}
       onDragOver={props.onDragOver}
+      authoringNodeKinds={props.authoringNodeKinds}
+      onCreateAuthoringNode={props.onCreateAuthoringNode}
       onShowExplorer={props.onShowExplorer}
       onShowInspector={props.onShowInspector}
     />

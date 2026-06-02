@@ -8,6 +8,7 @@ import type {
 export type CanvasInspectorNodeDraft = Readonly<{
   name: string;
   description: string;
+  tags: readonly string[];
   dbt?: DbtNodeAuthoringMetadata;
   dvt?: DvtNodeAuthoringMetadata;
 }>;

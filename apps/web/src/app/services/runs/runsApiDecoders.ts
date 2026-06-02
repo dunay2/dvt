@@ -11,6 +11,7 @@ import type {
   RunExecutor,
   RunFailureEvidence,
   RunGitArtifactRef,
+  RunPlanExecutionSummary,
   RunProvenanceChain,
   UiRunStatus,
 } from '../../ports/runs';
@@ -114,6 +115,49 @@ export function parseMaterializationEvidence(value: unknown): MaterializationEvi
     startedAt,
     completedAt,
     durationMs,
+  };
+}
+
+function parseNonEmptyStringArray(value: unknown): readonly string[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const strings = value.filter(
+    (candidate): candidate is string => typeof candidate === 'string' && candidate.trim().length > 0
+  );
+
+  return strings.length === value.length && strings.length > 0 ? strings : undefined;
+}
+
+export function parsePlanExecutionSummary(value: unknown): RunPlanExecutionSummary | undefined {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const executor = parseRunExecutor(candidate.executor);
+  const nodeCount = asFiniteInteger(candidate.nodeCount);
+  const stepCount = asFiniteInteger(candidate.stepCount);
+  const sourceTables = parseNonEmptyStringArray(candidate.sourceTables);
+  const sinkTables = parseNonEmptyStringArray(candidate.sinkTables);
+
+  if (
+    executor === undefined ||
+    nodeCount === undefined ||
+    stepCount === undefined ||
+    sourceTables === undefined ||
+    sinkTables === undefined
+  ) {
+    return undefined;
+  }
+
+  return {
+    executor,
+    nodeCount,
+    stepCount,
+    sourceTables,
+    sinkTables,
   };
 }
 

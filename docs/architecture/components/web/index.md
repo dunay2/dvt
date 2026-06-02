@@ -46,6 +46,7 @@ out of the active tree.
 - cross-cutting UX:
   [UX implementation guide](./ux-implementation-guide.md),
   [Workbench UX Canon Component](./workbench-ux-canon-component.md),
+  [Frontend command and query rail inventory](./frontend-command-query-rail-inventory.md),
   [Frontend query boundary component](./frontend-query-boundary-component.md),
   [Frontend test governance component](./frontend-test-governance-component.md),
   [Web Vitest changed suite router component](./web-vitest-changed-suite-router-component.md),

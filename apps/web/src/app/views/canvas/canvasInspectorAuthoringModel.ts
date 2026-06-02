@@ -25,10 +25,14 @@ function normalizeNodeDescription(value: string): string | undefined {
 
 export function createCanvasInspectorNodeDraft(node: CanonicalNode): CanvasInspectorNodeDraft {
   const dvtMetadata = createDvtNodeAuthoringMetadata(node);
+  const tags = Array.from(
+    new Set(node.tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0))
+  );
 
   return {
     name: node.name,
     description: node.description ?? '',
+    tags,
     ...(node.pluginId === 'dbt' ? { dbt: createDbtNodeAuthoringMetadata(node) } : {}),
     ...(dvtMetadata ? { dvt: dvtMetadata } : {}),
   };
@@ -83,13 +87,17 @@ export function hasCanvasInspectorNodeDraftChanges(
   node: CanonicalNode,
   draft: CanvasInspectorNodeDraft
 ): boolean {
+  const originalDraft = createCanvasInspectorNodeDraft(node);
+  const draftTags = Array.from(
+    new Set(draft.tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0))
+  );
+
   return (
     node.name !== normalizeNodeName(draft.name) ||
     (node.description ?? undefined) !== normalizeNodeDescription(draft.description) ||
-    JSON.stringify(createCanvasInspectorNodeDraft(node).dbt ?? null) !==
-      JSON.stringify(draft.dbt ?? null) ||
-    JSON.stringify(createCanvasInspectorNodeDraft(node).dvt ?? null) !==
-      JSON.stringify(draft.dvt ?? null)
+    JSON.stringify(originalDraft.tags) !== JSON.stringify(draftTags) ||
+    JSON.stringify(originalDraft.dbt ?? null) !== JSON.stringify(draft.dbt ?? null) ||
+    JSON.stringify(originalDraft.dvt ?? null) !== JSON.stringify(draft.dvt ?? null)
   );
 }
 
@@ -97,10 +105,14 @@ export function applyCanvasInspectorNodeDraft(
   node: CanonicalNode,
   draft: CanvasInspectorNodeDraft
 ): CanonicalNode {
+  const tags = Array.from(
+    new Set(draft.tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0))
+  );
   const baseNode = {
     ...node,
     name: normalizeNodeName(draft.name),
     description: normalizeNodeDescription(draft.description),
+    tags,
   };
 
   if (draft.dbt) {
