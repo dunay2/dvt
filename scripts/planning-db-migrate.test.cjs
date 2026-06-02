@@ -1348,3 +1348,32 @@ test('tracked migrations include DB-first command/query rail catalog projection'
     /delete from planning_query_store\.repository_commands\b/
   );
 });
+
+test('tracked migrations add command/query rail implementation and documentation refs', () => {
+  const migrations = readMigrationFiles();
+  const railCatalogSourceRefsMigration = migrations.find(
+    (migration) => migration.fileName === '054_command_query_rail_catalog_source_refs.sql'
+  );
+
+  assert.ok(railCatalogSourceRefsMigration);
+  assert.match(
+    railCatalogSourceRefsMigration.sql,
+    /add column if not exists implementation_refs jsonb not null default '\[\]'::jsonb/
+  );
+  assert.match(
+    railCatalogSourceRefsMigration.sql,
+    /add column if not exists documentation_refs jsonb not null default '\[\]'::jsonb/
+  );
+  assert.match(
+    railCatalogSourceRefsMigration.sql,
+    /drop view if exists planning_query_store\.command_query_rail_query/
+  );
+  assert.match(
+    railCatalogSourceRefsMigration.sql,
+    /jsonb_array_length\(implementation_refs\) as implementation_ref_count/
+  );
+  assert.match(
+    railCatalogSourceRefsMigration.sql,
+    /jsonb_array_length\(documentation_refs\) as documentation_ref_count/
+  );
+});

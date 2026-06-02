@@ -249,7 +249,10 @@ Command semantics:
   `pnpm planning:db:query command-query-rails` reads
   `planning_query_store.command_query_rail_query`; use `--gaps true` for rails
   without implementation refs or explicit missing status, and
-  `--duplicates true` for duplicate rail names by type.
+  `--duplicates true` for duplicate rail names by type. The import keeps
+  manifest symbol refs, source-code refs, governance `cqRails` refs, and
+  documentation refs separate; documentation refs help discovery but do not
+  satisfy implementation gaps.
 - Planning/governance DB test-file edits under
   `scripts/planning-db-*.test.cjs`, `scripts/governance-db-*.test.cjs`, and
   the generated planning DB report tests route to the changed `node --test`

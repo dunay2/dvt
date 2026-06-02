@@ -163,6 +163,82 @@ test('command/query rail snapshot indexes feature manifests for DB-first gap and
   assert.equal(duplicateRows.length, 2);
 });
 
+test('command/query rail snapshot joins documented rails with source implementation refs', () => {
+  const docs = [
+    {
+      path: 'docs/planning/proposals/mandatory/widgets.md',
+      content: [
+        '```feature-mechanization',
+        'version: 1',
+        'featureId: WIDGET-FEATURE',
+        'mechanizationStatus: implemented',
+        'commandQueryRails:',
+        '  - name: ListWidgets',
+        '    type: query',
+        '    dddOwner: WidgetReadModel',
+        'symbols: []',
+        '```',
+      ].join('\n'),
+    },
+  ];
+  const referenceDocuments = [
+    {
+      path: 'docs/architecture/components/widgets/widget-rail-catalog.md',
+      content: [
+        '| Rail | Type | Status | Owner |',
+        '| --- | --- | --- | --- |',
+        '| `ListWidgets` | query | implemented | WidgetReadModel |',
+        '| `ArchiveWidget` | command | planned | WidgetAggregate |',
+      ].join('\n'),
+    },
+  ];
+  const sourceFiles = [
+    {
+      path: 'apps/api/src/widgets/listWidgetsQuery.ts',
+      content: [
+        'export interface ListWidgetsQueryPort {',
+        '  listWidgets(): Promise<readonly string[]>;',
+        '}',
+      ].join('\n'),
+    },
+  ];
+
+  const snapshot = buildCommandQueryRailSnapshot({ docs, referenceDocuments, sourceFiles });
+
+  const listWidgets = snapshot.rails.find(
+    (rail) => rail.featureId === 'WIDGET-FEATURE' && rail.railName === 'ListWidgets'
+  );
+  assert.equal(listWidgets.isGap, false);
+  assert.equal(listWidgets.implementationRefCount, 1);
+  assert.deepEqual(listWidgets.implementationRefs, [
+    {
+      name: 'ListWidgets',
+      path: 'apps/api/src/widgets/listWidgetsQuery.ts',
+      sourceKind: 'source_code',
+    },
+  ]);
+  assert.deepEqual(listWidgets.documentationRefs, [
+    {
+      name: 'ListWidgets',
+      path: 'docs/architecture/components/widgets/widget-rail-catalog.md',
+      sourceKind: 'documentation',
+    },
+  ]);
+
+  const archiveWidget = snapshot.rails.find(
+    (rail) =>
+      rail.featureId === 'DOCUMENTED-COMMAND-QUERY-RAIL-CATALOG' &&
+      rail.railName === 'ArchiveWidget'
+  );
+  assert.ok(archiveWidget);
+  assert.equal(archiveWidget.railType, 'command');
+  assert.equal(archiveWidget.railStatus, 'planned');
+  assert.equal(archiveWidget.dddOwner, 'WidgetAggregate');
+  assert.equal(archiveWidget.isGap, true);
+  assert.equal(archiveWidget.implementationRefCount, 0);
+  assert.equal(archiveWidget.documentationRefs.length, 1);
+});
+
 test('planning DB import skips all selected scopes when stale-aware checks are fresh', async () => {
   const calls = [];
   const logs = [];

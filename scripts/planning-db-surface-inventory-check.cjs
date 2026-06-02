@@ -148,10 +148,22 @@ const requiredSurfaces = [
   {
     surface: 'Command/query rail catalog',
     includes: {
-      'Canonical source': ['feature-mechanization', 'commandQueryRails'],
+      'Canonical source': [
+        'feature-mechanization',
+        'commandQueryRails',
+        'Markdown command/query rail tables',
+        'source-code references',
+        'governance cqRails',
+      ],
       'Write rail': ['planning:db:import', '--governance-only'],
       'Read/query rail': ['planning:db:query command-query-rails'],
-      Projection: ['command_query_rail_query', 'gaps', 'duplicates'],
+      Projection: [
+        'command_query_rail_query',
+        'implementation refs',
+        'documentation refs',
+        'gaps',
+        'duplicates',
+      ],
       Validation: ['test:planning:db', 'docs:feature-mechanization:implementation'],
       'Migration state': ['DB-first'],
     },

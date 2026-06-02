@@ -16,9 +16,11 @@ planning_type: proposal
 store so gaps, implementation refs, and duplicates are operator-queryable.
 
 **Architecture:** feature-mechanization manifests stay the governed source for
-declared rails. `planning:db:import` materializes those declarations into
-`planning_query_store.command_query_rails`, and `planning:db:query
-command-query-rails` reads the DB view instead of reparsing Markdown.
+declared feature rails. `planning:db:import` also indexes explicit Markdown
+command/query tables, tracked source references, and governance `cqRails`
+metadata into `planning_query_store.command_query_rails`, while
+`planning:db:query command-query-rails` reads the DB view instead of reparsing
+Markdown.
 
 **Tech Stack:** CommonJS planning DB import/query scripts, local Postgres
 planning query store, Markdown feature-mechanization manifests, and Node test
@@ -57,6 +59,9 @@ implementation refs, or identify duplicate rail names through the DB.
 flowchart LR
   Manifest[feature-mechanization commandQueryRails] --> Import[pnpm planning:db:import]
   Symbols[symbols[].cqRails] --> Import
+  Docs[Markdown command/query tables] --> Import
+  Source[Tracked source-code refs] --> Import
+  Governance[Governance cqRails refs] --> Import
   Import --> RailTable[planning_query_store.command_query_rails]
   RailTable --> RailView[planning_query_store.command_query_rail_query]
   RailView --> Query[pnpm planning:db:query command-query-rails]
@@ -64,10 +69,12 @@ flowchart LR
   Query --> Duplicate[--duplicates true]
 ```
 
-The DB stores rail declarations and their symbol implementation refs. The view
-computes `is_gap`, `implementation_ref_count`, `duplicate_count`, and
-`is_duplicate`, so local commands and CI checks do not need to reparse Markdown
-to inspect the catalog.
+The DB stores rail declarations, implementation refs, and documentation refs.
+The view computes `is_gap`, `implementation_ref_count`,
+`documentation_ref_count`, `duplicate_count`, and `is_duplicate`, so local
+commands and CI checks do not need to reparse Markdown to inspect the catalog.
+Documentation refs are discovery evidence only; a gap closes only through
+`implementation_refs` or a non-missing status backed by implementation evidence.
 
 ## Feature Mechanization
 
@@ -103,6 +110,7 @@ allowedImplementationSurfaces:
   - scripts/planning-db-migrate.test.cjs
   - scripts/planning-db-surface-inventory-check.cjs
   - tools/planning-db/migrations/053_command_query_rail_catalog.sql
+  - tools/planning-db/migrations/054_command_query_rail_catalog_source_refs.sql
 forbiddenImplementationSurfaces:
   - apps/**
   - packages/**
@@ -207,6 +215,267 @@ symbols:
     fowlerSignals: [Hidden Authority]
     architectureGuard: node --test scripts/planning-db-import.test.cjs
     cypressCoverage: N/A - DB import helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: extractDocumentedRailRows
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - documentation import helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: cleanRailNameCandidate
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - rail parsing helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: isSpecificCommandQueryRailName
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - rail parsing helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: extractSpecificRailNamesFromText
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - rail parsing helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: inferRailTypeFromName
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - rail parsing helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: normalizeDocumentedRailStatus
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - documentation import helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: splitMarkdownTableRow
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - documentation import helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: documentedRailStatusFromCells
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - documentation import helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: normalizedMarkdownHeader
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - documentation import helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: isDocumentedRailTableHeader
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - documentation import helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: cellByHeader
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - documentation import helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: documentedRailStatusFromHeader
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - documentation import helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: documentedRailOwnerFromCells
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - documentation import helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: dedupeCommandQueryRefs
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Duplicate Semantics]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - ref indexing helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: railNameAppearsInSource
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - ref indexing helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: collectSourceImplementationRefs
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - source-code scan helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: collectDocumentationRefs
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - documentation scan helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: collectGovernanceImplementationRefs
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - governance cqRails scan helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: railIndexKeys
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - ref indexing helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: refsFromIndex
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - ref indexing helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: addRailRefToIndex
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - ref indexing helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: sourceRailCandidateTokens
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - source-code scan helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: buildRailNameLookup
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Duplicate Semantics]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - ref indexing helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: buildSourceImplementationRefIndex
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - source-code scan helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: buildDocumentationRefIndex
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - documentation scan helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: buildGovernanceImplementationRefIndex
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - governance cqRails scan helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: attachCommandQueryRailRefs
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Parallel Model]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - DB import helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: listTrackedCommandQuerySourceFiles
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - source-code scan helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: readTrackedFileSources
+    path: scripts/planning-db-import.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - source-code scan helper
     unitTests:
       - scripts/planning-db-import.test.cjs
   - name: buildCommandQueryRailSnapshot
