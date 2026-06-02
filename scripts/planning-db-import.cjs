@@ -920,7 +920,11 @@ function buildGovernanceFileSnapshot(options = {}) {
     sourceContentSha256: remediationQueueSource.contentSha256,
     rawTask: task,
   }));
-  const { riskDebtItems } = buildRiskDebtSnapshot({ governanceFiles: files });
+  const riskDebtSnapshotOptions = { governanceFiles: files };
+  if (options.riskDocuments !== undefined) {
+    riskDebtSnapshotOptions.riskDocuments = options.riskDocuments;
+  }
+  const { riskDebtItems } = buildRiskDebtSnapshot(riskDebtSnapshotOptions);
 
   return {
     index,
@@ -1899,9 +1903,10 @@ function governanceField(row, camelName, snakeName) {
 }
 
 function buildRiskDebtSnapshot(options = {}) {
-  const riskDocuments = normalizeArray(options.riskDocuments).length
-    ? normalizeArray(options.riskDocuments)
-    : listTrackedRiskDocuments();
+  const riskDocuments =
+    options.riskDocuments === undefined
+      ? listTrackedRiskDocuments()
+      : normalizeArray(options.riskDocuments);
   const governanceFiles = normalizeArray(options.governanceFiles);
   const governanceFileByPath = new Map(
     governanceFiles.map((file) => [normalizeText(file.path), file])

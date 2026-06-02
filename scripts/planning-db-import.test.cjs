@@ -28,6 +28,56 @@ const {
 const { governanceGeneratedPath } = require('./governance-generated-paths.cjs');
 const { schemaName } = require('./planning-db-migrate.cjs');
 
+function generatedSourceFixture(sourcePath, parsed, rawSourceText = JSON.stringify(parsed)) {
+  return {
+    sourcePath,
+    parsed,
+    raw: rawSourceText,
+    rawSourceText,
+    contentSha256: sha256(rawSourceText),
+    sourceBytes: Buffer.byteLength(rawSourceText, 'utf8'),
+    sourceMode: 'in-memory-generator',
+  };
+}
+
+function minimalGovernanceGeneratedInputs(overrides = {}) {
+  return {
+    indexSource: generatedSourceFixture(
+      '.generated-docs/planning/status/system-governance-file-index.files.yaml',
+      overrides.index || { version: 1, fileCount: 0, shards: [] },
+      overrides.indexRawSourceText
+    ),
+    componentIndexSource: generatedSourceFixture(
+      '.generated-docs/planning/status/system-governance-component-index.components.yaml',
+      overrides.componentIndex || { version: 1, componentCount: 0, components: [] }
+    ),
+    componentFileMapSource: generatedSourceFixture(
+      '.generated-docs/planning/status/system-governance-component-file-map.components.yaml',
+      overrides.componentFileMap || {
+        version: 1,
+        componentCount: 0,
+        fileCount: 0,
+        components: [],
+      }
+    ),
+    fingerprintBaselineSource: generatedSourceFixture(
+      '.generated-docs/planning/status/system-governance-file-fingerprint-baseline.yaml',
+      overrides.fingerprintBaseline || { version: 1, fileCount: 0, shards: [] }
+    ),
+    coverageReportSource: generatedSourceFixture(
+      '.generated-docs/planning/status/system-governance-coverage-report.coverage.yaml',
+      overrides.coverageReport || { totals: { files: 0 }, findings: [] }
+    ),
+    remediationQueueSource: generatedSourceFixture(
+      '.generated-docs/planning/status/system-governance-remediation-queue.queue.yaml',
+      overrides.remediationQueue || { totals: { tasks: 0, p0: 0, p1: 0, p2: 0, p3: 0 }, tasks: [] }
+    ),
+    fingerprintBaselineShardPayloads: overrides.fingerprintBaselineShardPayloads || {},
+    fileShardSources: overrides.fileShardSources || new Map(),
+    componentShardSources: overrides.componentShardSources || new Map(),
+  };
+}
+
 const governanceFileSnapshotFixture = (() => {
   let snapshot;
   let generatedInputs;
@@ -537,6 +587,7 @@ test('governance auxiliary source state hashes only knowledge-surface documents 
         blocking: false,
       },
     },
+    commandQueryRailSnapshot: { rails: [] },
     markdownDocuments: [],
     knowledgeDocuments: [
       { sourcePath: 'docs/planning/proposals/example.md', raw: proposalRaw },
@@ -571,16 +622,12 @@ test('planning content snapshot normalizes dependencies and evidence refs for DB
 });
 
 test('governance file snapshot consumes supplied generated inputs', () => {
-  const generatedInputs = governanceFileSnapshotFixture.generatedInputs();
   const sentinelRawSourceText = 'fixture raw source text';
   const snapshot = buildGovernanceFileSnapshot({
-    generatedInputs: {
-      ...generatedInputs,
-      indexSource: {
-        ...generatedInputs.indexSource,
-        rawSourceText: sentinelRawSourceText,
-      },
-    },
+    generatedInputs: minimalGovernanceGeneratedInputs({
+      indexRawSourceText: sentinelRawSourceText,
+    }),
+    riskDocuments: [],
   });
   const fileIndexSource = snapshot.sources.find(
     (source) => source.sourceType === 'governance_file_index'

@@ -185,6 +185,24 @@ redGreenCycles:
       - scripts/planning-db-query.test.cjs
     greenTest: node --test scripts/planning-db-query.test.cjs
 symbols:
+  - name: generatedSourceFixture
+    path: scripts/planning-db-import.test.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - import test fixture helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+  - name: minimalGovernanceGeneratedInputs
+    path: scripts/planning-db-import.test.cjs
+    dddOwner: CommandQueryRailCatalog
+    cqRails: [ImportCommandQueryRailCatalog]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - import test fixture helper
+    unitTests:
+      - scripts/planning-db-import.test.cjs
   - name: listTrackedFeatureMechanizationDocuments
     path: scripts/planning-db-import.cjs
     dddOwner: CommandQueryRailCatalog
