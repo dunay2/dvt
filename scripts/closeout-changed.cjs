@@ -8,86 +8,8 @@ const { listLocalChangedFiles, toPosix } = require('./git-local-changes.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 
-const GOVERNANCE_REGEN_STEPS = [
-  {
-    id: 'docs-gov-manifest',
-    command: 'pnpm',
-    args: ['docs:gov:manifest'],
-  },
-  {
-    id: 'docs-governance-document-unit-map',
-    command: 'pnpm',
-    args: ['docs:governance:document-unit-map'],
-  },
-  {
-    id: 'docs-governance-file-component-index',
-    command: 'pnpm',
-    args: ['docs:governance:file-component-index'],
-  },
-  {
-    id: 'docs-governance-file-fingerprint-baseline',
-    command: 'pnpm',
-    args: ['docs:governance:file-fingerprint-baseline'],
-  },
-  {
-    id: 'docs-governance-file-fingerprint-impact',
-    command: 'pnpm',
-    args: ['docs:governance:file-fingerprint-impact'],
-  },
-  {
-    id: 'docs-governance-coverage-report',
-    command: 'pnpm',
-    args: ['docs:governance:coverage-report'],
-  },
-  {
-    id: 'docs-governance-remediation-queue',
-    command: 'pnpm',
-    args: ['docs:governance:remediation-queue'],
-  },
-];
-
-const GOVERNANCE_STABILIZE_STEPS = [
-  {
-    id: 'docs-governance-file-component-index-final',
-    command: 'pnpm',
-    args: ['docs:governance:file-component-index'],
-  },
-  {
-    id: 'docs-governance-file-fingerprint-baseline-final',
-    command: 'pnpm',
-    args: ['docs:governance:file-fingerprint-baseline'],
-  },
-  {
-    id: 'docs-governance-file-fingerprint-impact-final',
-    command: 'pnpm',
-    args: ['docs:governance:file-fingerprint-impact'],
-  },
-];
-
 function normalizeChangedFiles(changedFiles) {
   return Array.from(new Set(changedFiles.map(toPosix).filter(Boolean))).sort();
-}
-
-function hasDocsChange(changedFiles) {
-  return changedFiles.some((filePath) => filePath.startsWith('docs/'));
-}
-
-function hasLaneRegistryChange(changedFiles) {
-  return changedFiles.some((filePath) =>
-    /^docs\/planning\/state\/agent-lane-[a-e]\.yaml$/i.test(filePath)
-  );
-}
-
-function hasWorkspaceSourceChange(changedFiles) {
-  return changedFiles.some(
-    (filePath) => filePath.startsWith('apps/') || filePath.startsWith('packages/')
-  );
-}
-
-function pushStepOnce(steps, step) {
-  if (!steps.some((candidate) => candidate.id === step.id)) {
-    steps.push(step);
-  }
 }
 
 function listCloseoutChangedFiles(options = {}) {
@@ -98,92 +20,33 @@ function listCloseoutChangedFiles(options = {}) {
   });
 }
 
-function buildCloseoutPlan(changedFiles) {
-  const normalizedChangedFiles = normalizeChangedFiles(changedFiles);
-  const steps = [];
-
-  if (hasDocsChange(normalizedChangedFiles)) {
-    pushStepOnce(steps, {
-      id: 'docs-sync',
+function buildCloseoutPlan() {
+  return [
+    {
+      id: 'governance-refresh',
       command: 'pnpm',
-      args: ['docs:sync'],
-    });
-  }
-
-  if (hasLaneRegistryChange(normalizedChangedFiles)) {
-    pushStepOnce(steps, {
-      id: 'planning-db-import',
+      args: ['governance:refresh'],
+    },
+    {
+      id: 'git-diff-check',
+      command: 'git',
+      args: ['diff', '--check'],
+    },
+    {
+      id: 'git-diff-cached-check',
+      command: 'git',
+      args: ['diff', '--cached', '--check'],
+    },
+    {
+      id: 'conflict-marker-scan',
+      internal: 'conflict-marker-scan',
+    },
+    {
+      id: 'verify-prepush',
       command: 'pnpm',
-      args: ['planning:db:import'],
-    });
-    pushStepOnce(steps, {
-      id: 'docs-workboard-generate',
-      command: 'pnpm',
-      args: ['docs:workboard:generate'],
-    });
-  }
-
-  if (hasWorkspaceSourceChange(normalizedChangedFiles)) {
-    pushStepOnce(steps, {
-      id: 'docs-status-generate',
-      command: 'pnpm',
-      args: ['docs:status:generate'],
-    });
-  }
-
-  for (const step of GOVERNANCE_REGEN_STEPS) {
-    pushStepOnce(steps, step);
-  }
-  for (const step of GOVERNANCE_STABILIZE_STEPS) {
-    pushStepOnce(steps, step);
-  }
-
-  pushStepOnce(steps, {
-    id: 'planning-db-import-final',
-    command: 'pnpm',
-    args: ['planning:db:import'],
-  });
-  pushStepOnce(steps, {
-    id: 'planning-db-check',
-    command: 'pnpm',
-    args: ['planning:db:check'],
-  });
-  pushStepOnce(steps, {
-    id: 'planning-db-export-check',
-    command: 'pnpm',
-    args: ['planning:db:export:check'],
-  });
-  pushStepOnce(steps, {
-    id: 'governance-db-check',
-    command: 'pnpm',
-    args: ['governance:db:check'],
-  });
-  pushStepOnce(steps, {
-    id: 'governance-db-export-check',
-    command: 'pnpm',
-    args: ['governance:db:export:check'],
-  });
-  pushStepOnce(steps, {
-    id: 'git-diff-check',
-    command: 'git',
-    args: ['diff', '--check'],
-  });
-  pushStepOnce(steps, {
-    id: 'git-diff-cached-check',
-    command: 'git',
-    args: ['diff', '--cached', '--check'],
-  });
-  pushStepOnce(steps, {
-    id: 'conflict-marker-scan',
-    internal: 'conflict-marker-scan',
-  });
-  pushStepOnce(steps, {
-    id: 'verify-prepush',
-    command: 'pnpm',
-    args: ['verify:prepush', '--', '--full'],
-  });
-
-  return steps;
+      args: ['verify:prepush'],
+    },
+  ];
 }
 
 function commandLabel(step) {

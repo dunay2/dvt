@@ -2,7 +2,7 @@
 title: Governed Changed Slice Closeout
 status: Active
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-05-06
+last_reviewed: 2026-06-02
 ---
 
 # Governed Changed Slice Closeout
@@ -72,25 +72,22 @@ flowchart LR
 The helper reads the local changed-file set and builds a deterministic closeout
 sequence:
 
-- `pnpm docs:sync` when files under `docs/` changed;
-- `pnpm planning:db:import` before `pnpm docs:workboard:generate` when lane
-  YAML changed;
-- `pnpm docs:workboard:generate` from the imported DB effective task view when
-  lane YAML changed;
-- `pnpm docs:status:generate` when `apps/` or `packages/` source structure
-  changed;
-- governance regeneration for manifest, document-unit map, file-component
-  index, fingerprints, impact, coverage report, and remediation queue;
-- a final file-component and fingerprint stabilization pass before validation;
-- a final `pnpm planning:db:import` after coverage/remediation so DB drift
-  checks compare against the generated surfaces from the same closeout pass;
-- `pnpm planning:db:check`, `pnpm planning:db:export:check`,
-  `pnpm governance:db:check`, and `pnpm governance:db:export:check` so
-  closeout uses the planning/governance DB read models and export rails instead
-  of trusting stale generated views;
+- `pnpm governance:refresh`, which owns docs sync, generated code status,
+  capability coverage, governance manifest, document-unit map, file-component
+  index, fingerprints, planning DB import, workboard generation, DB checks,
+  governance DB import/check/export, and DB-sourced coverage/remediation
+  generation;
 - `git diff --check` and `git diff --cached --check`;
 - an internal unresolved-conflict-marker scan over changed text files;
 - `pnpm verify:prepush`.
+
+`closeout:changed` intentionally does not keep a manual copy of the
+`governance:refresh` substeps. That keeps changed-slice closeout aligned with
+the DB-first governance rail and prevents local helpers from running stale
+coverage/remediation or DB validation sequences. It also uses the normal
+pre-push rail after refresh, because `governance:refresh` already ran the
+global governance and DB quadrature. Use `pnpm verify:prepush -- --full`
+separately when the task explicitly requires a full repository baseline.
 
 The helper does not commit, push, create a PR, bypass hooks, relax checks, or
 replace package-specific tests required by the active slice. It only removes

@@ -181,11 +181,14 @@ function renderYamlSourcePayload(payload) {
   });
 }
 
-function buildGeneratedYamlSource(sourcePath, parsed) {
+function buildGeneratedYamlSource(sourcePath, parsed, options = {}) {
   const absolutePath = path.join(repoRoot, sourcePath);
   const hasExistingGeneratedSource = fs.existsSync(absolutePath);
   const raw = renderYamlSourcePayload(parsed);
-  const rawSourceText = hasExistingGeneratedSource ? fs.readFileSync(absolutePath, 'utf8') : raw;
+  const rawSourceText =
+    hasExistingGeneratedSource && options.preserveExistingRawSourceText !== false
+      ? fs.readFileSync(absolutePath, 'utf8')
+      : raw;
   return {
     absolutePath,
     sourcePath,
@@ -195,18 +198,6 @@ function buildGeneratedYamlSource(sourcePath, parsed) {
     parsed,
     rawSourceText,
     sourceMode: 'in-memory-generator',
-  };
-}
-
-function readGeneratedYamlSourceOrBuild(sourcePath, parsed) {
-  const absolutePath = path.join(repoRoot, sourcePath);
-  if (!fs.existsSync(absolutePath)) {
-    return buildGeneratedYamlSource(sourcePath, parsed);
-  }
-
-  return {
-    ...readYamlSource(absolutePath),
-    sourceMode: 'generated-artifact',
   };
 }
 
@@ -650,13 +641,15 @@ function buildGovernanceGeneratedInputs(options = {}) {
       fingerprintBaseline.manifest
     ),
     fingerprintBaselineShardPayloads: fingerprintBaseline.shards,
-    coverageReportSource: readGeneratedYamlSourceOrBuild(
+    coverageReportSource: buildGeneratedYamlSource(
       repoRelative(governanceCoverageReportPath),
-      coverageReport
+      coverageReport,
+      { preserveExistingRawSourceText: false }
     ),
-    remediationQueueSource: readGeneratedYamlSourceOrBuild(
+    remediationQueueSource: buildGeneratedYamlSource(
       repoRelative(governanceRemediationQueuePath),
-      remediationQueue
+      remediationQueue,
+      { preserveExistingRawSourceText: false }
     ),
     fileComponentOutputs,
     documentOutputs,
@@ -3298,25 +3291,30 @@ function compareGovernanceSourceState(expected, actual) {
   return { ok, sections };
 }
 
-function generatedReportSourceHashRows() {
-  return [governanceCoverageReportPath, governanceRemediationQueuePath]
-    .filter((filePath) => fs.existsSync(filePath))
-    .map((filePath) => {
-      const raw = fs.readFileSync(filePath, 'utf8');
-      return {
-        sourcePath: repoRelative(filePath),
-        sourceContentSha256: sha256(raw),
-      };
-    })
+function generatedReportSourceHashRows(generatedInputs = buildGovernanceGeneratedInputs()) {
+  return [generatedInputs.coverageReportSource, generatedInputs.remediationQueueSource]
+    .filter(Boolean)
+    .map((source) => ({
+      sourcePath: source.sourcePath,
+      sourceContentSha256: source.contentSha256,
+    }))
     .sort((left, right) => left.sourcePath.localeCompare(right.sourcePath));
 }
 
 function buildGovernanceSourceExpectedState(options = {}) {
   const fileComponentOutputs =
     options.fileComponentOutputs || buildGovernanceFileComponentOutputs();
+  const generatedInputs =
+    options.generatedInputs ||
+    buildGovernanceGeneratedInputs({
+      fileComponentOutputs,
+      documentOutputs: options.documentOutputs,
+    });
+  const generatedFileComponentOutputs =
+    generatedInputs.fileComponentOutputs || fileComponentOutputs;
 
   return {
-    files: fileComponentOutputs.fileEntries.map((file) => ({
+    files: generatedFileComponentOutputs.fileEntries.map((file) => ({
       path: file.path,
       contentHash: file.contentHash,
       governanceHash: file.governanceHash,
@@ -3326,16 +3324,18 @@ function buildGovernanceSourceExpectedState(options = {}) {
       isDrift: file.isDrift,
       isLegacy: file.isLegacy,
     })),
-    components: fileComponentOutputs.componentIndexManifest.components.map((component) => ({
-      componentId: component.id,
-      governanceState: component.governanceState,
-      isDrift: component.isDrift,
-      isLegacy: component.isLegacy,
-      fileCount: component.fileCount,
-    })),
+    components: generatedFileComponentOutputs.componentIndexManifest.components.map(
+      (component) => ({
+        componentId: component.id,
+        governanceState: component.governanceState,
+        isDrift: component.isDrift,
+        isLegacy: component.isLegacy,
+        fileCount: component.fileCount,
+      })
+    ),
     generatedReportSources:
       options.generatedReportSources === undefined
-        ? generatedReportSourceHashRows()
+        ? generatedReportSourceHashRows(generatedInputs)
         : options.generatedReportSources,
   };
 }

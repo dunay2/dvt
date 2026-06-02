@@ -14,7 +14,7 @@ const {
   readChangedTextFiles,
 } = require('./closeout-changed.cjs');
 
-test('buildCloseoutPlan regenerates docs, workboard, governance hashes, and prepush for planning docs', () => {
+test('buildCloseoutPlan delegates docs, workboard, governance hashes, and DB checks to governance refresh', () => {
   const plan = buildCloseoutPlan([
     'docs/runbooks/governed-closeout-runbook-20260506.md',
     'docs/planning/state/agent-lane-e.yaml',
@@ -24,35 +24,23 @@ test('buildCloseoutPlan regenerates docs, workboard, governance hashes, and prep
   assert.deepEqual(
     plan.map((step) => step.id),
     [
-      'docs-sync',
-      'planning-db-import',
-      'docs-workboard-generate',
-      'docs-gov-manifest',
-      'docs-governance-document-unit-map',
-      'docs-governance-file-component-index',
-      'docs-governance-file-fingerprint-baseline',
-      'docs-governance-file-fingerprint-impact',
-      'docs-governance-coverage-report',
-      'docs-governance-remediation-queue',
-      'docs-governance-file-component-index-final',
-      'docs-governance-file-fingerprint-baseline-final',
-      'docs-governance-file-fingerprint-impact-final',
-      'planning-db-import-final',
-      'planning-db-check',
-      'planning-db-export-check',
-      'governance-db-check',
-      'governance-db-export-check',
+      'governance-refresh',
       'git-diff-check',
       'git-diff-cached-check',
       'conflict-marker-scan',
       'verify-prepush',
     ]
   );
-  assert.equal(commandLabel(plan[0]), 'pnpm docs:sync');
-  assert.equal(commandLabel(plan.at(-1)), 'pnpm verify:prepush -- --full');
+  assert.equal(commandLabel(plan[0]), 'pnpm governance:refresh');
+  assert.equal(commandLabel(plan.at(-1)), 'pnpm verify:prepush');
+  assert.deepEqual(
+    plan.filter((step) => /^(docs-|planning-db-|governance-db-)/.test(step.id)),
+    [],
+    'closeout:changed must not keep a manual copy of governance:refresh stages'
+  );
 });
 
-test('buildCloseoutPlan includes generated code status only for structural app or package changes', () => {
+test('buildCloseoutPlan lets governance refresh own generated code status for structural source changes', () => {
   const plan = buildCloseoutPlan([
     'apps/web/src/app/views/canvas/CanvasWorkbenchShell.tsx',
     'packages/@dvt/contracts/src/newContract.ts',
@@ -61,27 +49,17 @@ test('buildCloseoutPlan includes generated code status only for structural app o
   assert.deepEqual(
     plan.map((step) => step.id),
     [
-      'docs-status-generate',
-      'docs-gov-manifest',
-      'docs-governance-document-unit-map',
-      'docs-governance-file-component-index',
-      'docs-governance-file-fingerprint-baseline',
-      'docs-governance-file-fingerprint-impact',
-      'docs-governance-coverage-report',
-      'docs-governance-remediation-queue',
-      'docs-governance-file-component-index-final',
-      'docs-governance-file-fingerprint-baseline-final',
-      'docs-governance-file-fingerprint-impact-final',
-      'planning-db-import-final',
-      'planning-db-check',
-      'planning-db-export-check',
-      'governance-db-check',
-      'governance-db-export-check',
+      'governance-refresh',
       'git-diff-check',
       'git-diff-cached-check',
       'conflict-marker-scan',
       'verify-prepush',
     ]
+  );
+  assert.equal(
+    plan.some((step) => step.id === 'docs-status-generate'),
+    false,
+    'docs:status:generate belongs to governance:refresh, not closeout:changed'
   );
 });
 
@@ -177,17 +155,23 @@ test('executeCloseoutPlan scans the latest changed files for conflict markers', 
   );
 });
 
-test('closeout helper regression tests are wired into the prepush gate', () => {
+test('closeout helper regression tests are wired into changed and full prepush gates', () => {
   const packageJson = JSON.parse(
     fs.readFileSync(path.resolve(__dirname, '..', 'package.json'), 'utf8')
   );
   const { buildPrepushPlan } = require('./verify-prepush.cjs');
+  const { buildVerifyChangedPlan, commandLabel } = require('./verify-changed.cjs');
 
   assert.equal(
     packageJson.scripts['test:closeout-changed'],
     'node --test scripts/closeout-changed.test.cjs'
   );
   assert.equal(packageJson.scripts['verify:prepush'], 'node scripts/verify-prepush.cjs');
+  assert.ok(
+    buildVerifyChangedPlan(['scripts/closeout-changed.cjs'])
+      .map(commandLabel)
+      .includes('node --test scripts/closeout-changed.test.cjs')
+  );
   assert.ok(
     buildPrepushPlan(['apps/web/src/main.tsx'], { full: true }).some(
       (step) => step.id === 'test-closeout-changed'

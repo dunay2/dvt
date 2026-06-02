@@ -558,17 +558,18 @@ test('governance snapshot builds DB import sources from in-memory generator proj
   const generatedSources = snapshot.sources.filter((source) =>
     source.sourcePath.startsWith('.generated-docs/')
   );
-  const artifactBackedTypes = new Set([
-    'governance_coverage_report',
-    'governance_remediation_queue',
-  ]);
-  const inMemorySources = generatedSources.filter(
-    (source) => !artifactBackedTypes.has(source.sourceType)
-  );
 
   assert.ok(generatedSources.length > 0);
   assert.equal(
-    inMemorySources.every((source) => source.metadata?.sourceMode === 'in-memory-generator'),
+    generatedSources.every((source) => source.metadata?.sourceMode === 'in-memory-generator'),
+    true
+  );
+  assert.equal(
+    generatedSources.some((source) => source.sourceType === 'governance_coverage_report'),
+    true
+  );
+  assert.equal(
+    generatedSources.some((source) => source.sourceType === 'governance_remediation_queue'),
     true
   );
   assert.equal(
@@ -583,7 +584,7 @@ test('governance snapshot builds DB import sources from in-memory generator proj
   assert.ok(generatedSources.every((source) => typeof source.rawSourceText === 'string'));
 });
 
-test('governance snapshot imports generated artifacts without trusting stale generated indexes', () => {
+test('governance snapshot imports generated projections without trusting stale generated artifacts', () => {
   const fs = require('node:fs');
   const path = require('node:path');
   const coveragePath = governanceGeneratedPath('system-governance-coverage-report.coverage.yaml');
@@ -666,12 +667,20 @@ test('governance snapshot imports generated artifacts without trusting stale gen
       (source) => source.sourceType === 'governance_remediation_queue'
     );
 
-    assert.ok(snapshot.coverageRows.some((row) => row.name === 'fixture-role'));
-    assert.ok(snapshot.remediationTasks.some((task) => task.taskId === 'GRQ-FIXTURE'));
-    assert.equal(coverageSource.metadata.sourceMode, 'generated-artifact');
-    assert.equal(remediationSource.metadata.sourceMode, 'generated-artifact');
-    assert.equal(coverageSource.rawSourceText, coverageRaw);
-    assert.equal(remediationSource.rawSourceText, remediationRaw);
+    assert.equal(
+      snapshot.coverageRows.some((row) => row.name === 'fixture-role'),
+      false
+    );
+    assert.equal(
+      snapshot.remediationTasks.some((task) => task.taskId === 'GRQ-FIXTURE'),
+      false
+    );
+    assert.equal(coverageSource.metadata.sourceMode, 'in-memory-generator');
+    assert.equal(remediationSource.metadata.sourceMode, 'in-memory-generator');
+    assert.notEqual(coverageSource.rawSourceText, coverageRaw);
+    assert.notEqual(remediationSource.rawSourceText, remediationRaw);
+    assert.equal(coverageSource.rawSource.totals.files, snapshot.index.fileCount);
+    assert.equal(remediationSource.rawSource.totals.tasks, snapshot.remediationTasks.length);
     assert.ok(fileIndexSource);
     assert.notEqual(snapshot.index.fileCount, 999999);
     assert.equal(snapshot.files.length, snapshot.index.fileCount);
