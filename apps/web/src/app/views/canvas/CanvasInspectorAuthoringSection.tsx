@@ -43,7 +43,10 @@ export function CanvasInspectorAuthoringSection({
   const canApply = authoring.canEditNode && isDirty && Object.keys(errors).length === 0;
 
   return (
-    <section data-slot="node-inspector-editable-section" className="border-b border-slate-800 pb-4">
+    <section
+      data-slot="node-inspector-editable-section"
+      className={graphVisualClasses.contextPanelDetailsSection}
+    >
       <div className="space-y-3">
         <div>
           <h3 className={graphVisualClasses.contextPanelSectionTitle}>Editable properties</h3>

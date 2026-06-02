@@ -282,14 +282,6 @@ function CoreNodeDetails({
   }
 
   const dependencyCount = upstreamNodes.length + downstreamNodes.length;
-  const flatTabTriggerClassName = cn(
-    'h-10 flex-none rounded-none border-0 border-b-2 border-transparent bg-transparent px-0 text-xs font-medium leading-none text-slate-400 shadow-none',
-    'hover:bg-transparent hover:text-slate-50',
-    'data-[state=active]:border-[color:var(--focus-ring)] data-[state=active]:bg-transparent data-[state=active]:text-slate-50 data-[state=active]:shadow-none'
-  );
-  const tabBadgeClassName =
-    'ml-0.5 rounded-full border border-slate-700 bg-slate-900 px-1 py-0 text-[9px] text-slate-300';
-
   return (
     <Tabs
       data-slot="node-inspector-core-tabs"
@@ -299,32 +291,32 @@ function CoreNodeDetails({
     >
       <TabsList
         data-slot="node-inspector-core-tabs-list"
-        className="flex h-auto min-h-10 w-full flex-wrap justify-start gap-x-3 gap-y-1 overflow-visible rounded-none border-0 border-b border-slate-700 bg-transparent p-0 pb-1"
+        className={graphVisualClasses.contextPanelFlatTabsList}
       >
         <TabsTrigger
           value="details"
           data-slot="node-inspector-tab-details"
-          className={flatTabTriggerClassName}
+          className={graphVisualClasses.contextPanelFlatTabTrigger}
         >
           Details
         </TabsTrigger>
         <TabsTrigger
           value="columns"
           data-slot="node-inspector-tab-columns"
-          className={flatTabTriggerClassName}
+          className={graphVisualClasses.contextPanelFlatTabTrigger}
         >
           Columns
-          <Badge variant="secondary" className={tabBadgeClassName}>
+          <Badge variant="secondary" className={graphVisualClasses.contextPanelTabBadge}>
             {columns.length}
           </Badge>
         </TabsTrigger>
         <TabsTrigger
           value="depends"
           data-slot="node-inspector-tab-depends"
-          className={flatTabTriggerClassName}
+          className={graphVisualClasses.contextPanelFlatTabTrigger}
         >
           Depends On
-          <Badge variant="secondary" className={tabBadgeClassName}>
+          <Badge variant="secondary" className={graphVisualClasses.contextPanelTabBadge}>
             {dependencyCount}
           </Badge>
         </TabsTrigger>
@@ -332,7 +324,7 @@ function CoreNodeDetails({
           <TabsTrigger
             value="code"
             data-slot="node-inspector-tab-code"
-            className={flatTabTriggerClassName}
+            className={graphVisualClasses.contextPanelFlatTabTrigger}
           >
             Code
           </TabsTrigger>
@@ -340,7 +332,11 @@ function CoreNodeDetails({
         {panels.map((panel) => {
           const Icon = panel.icon;
           return (
-            <TabsTrigger key={panel.id} value={panel.id} className={flatTabTriggerClassName}>
+            <TabsTrigger
+              key={panel.id}
+              value={panel.id}
+              className={graphVisualClasses.contextPanelFlatTabTrigger}
+            >
               <Icon className="mr-1 size-3" />
               {resolveString(panel.label)}
             </TabsTrigger>
@@ -351,7 +347,7 @@ function CoreNodeDetails({
       <TabsContent value="details" className="m-0 space-y-4">
         <section
           data-slot="node-inspector-details-section"
-          className="border-b border-slate-800 pb-4"
+          className={graphVisualClasses.contextPanelDetailsSection}
         >
           <div className="grid grid-cols-[minmax(92px,0.42fr)_minmax(0,1fr)] gap-x-4 gap-y-3 text-sm">
             {summaryRows.map(([label, value]) => (
@@ -394,15 +390,15 @@ function CoreNodeDetails({
             Columns ({columns.length})
           </h3>
           {columns.length > 0 ? (
-            <div className="max-h-72 divide-y divide-slate-800 overflow-auto border-y border-slate-800">
+            <div className={graphVisualClasses.contextPanelColumnsList}>
               {columns.map((column) => (
                 <div key={`${node.id}:${column.name}`} className="py-2">
                   <div className="flex min-w-0 items-center justify-between gap-2 text-sm">
                     <span className="min-w-0 break-words font-mono">{column.name}</span>
-                    <span className="shrink-0 text-xs text-slate-300">{column.type}</span>
+                    <span className={graphVisualClasses.contextPanelColumnType}>{column.type}</span>
                   </div>
                   {(column.nullable != null || column.description) && (
-                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                    <div className={graphVisualClasses.contextPanelColumnMeta}>
                       {column.nullable != null ? (
                         <span>{column.nullable ? 'nullable' : 'not null'}</span>
                       ) : null}
