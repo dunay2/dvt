@@ -190,6 +190,7 @@ function CanvasViewportPanelToggleButton({
 
 type CanvasViewportContextMenuProps = Readonly<{
   model: CanvasContextMenuModel | null;
+  menuRef: RefObject<HTMLDivElement>;
   onCreateAuthoringNode: CanvasViewportProps['onCreateAuthoringNode'];
   onEdgesChange: CanvasViewportProps['onEdgesChange'];
   onClose: () => void;
@@ -197,6 +198,7 @@ type CanvasViewportContextMenuProps = Readonly<{
 
 function CanvasViewportContextMenu({
   model,
+  menuRef,
   onCreateAuthoringNode,
   onEdgesChange,
   onClose,
@@ -212,6 +214,7 @@ function CanvasViewportContextMenu({
 
   return (
     <div
+      ref={menuRef}
       role="menu"
       data-slot="canvas-context-menu"
       className="fixed z-50 min-w-52 rounded-md border border-[color:var(--border-default)] bg-[var(--surface-panel)] p-1 shadow-xl"
@@ -365,7 +368,37 @@ function CanvasViewportReactFlowSurface({
 }: CanvasViewportReactFlowSurfaceProps): JSX.Element {
   const reactFlow = useReactFlow<Node, Edge>();
   const [contextMenuModel, setContextMenuModel] = useState<CanvasContextMenuModel | null>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
   const closeContextMenu = () => setContextMenuModel(null);
+
+  useEffect(() => {
+    if (contextMenuModel == null) {
+      return;
+    }
+
+    const handleDocumentPointerDown = (event: Event): void => {
+      const target = event.target;
+      if (target instanceof Node && contextMenuRef.current?.contains(target)) {
+        return;
+      }
+
+      closeContextMenu();
+    };
+    const handleDocumentKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        closeContextMenu();
+      }
+    };
+
+    document.addEventListener('pointerdown', handleDocumentPointerDown, true);
+    document.addEventListener('keydown', handleDocumentKeyDown, true);
+
+    return () => {
+      document.removeEventListener('pointerdown', handleDocumentPointerDown, true);
+      document.removeEventListener('keydown', handleDocumentKeyDown, true);
+    };
+  }, [contextMenuModel]);
+
   const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> = () => {
     closeContextMenu();
   };
@@ -471,6 +504,7 @@ function CanvasViewportReactFlowSurface({
     >
       <CanvasViewportContextMenu
         model={contextMenuModel}
+        menuRef={contextMenuRef}
         onCreateAuthoringNode={onCreateAuthoringNode}
         onEdgesChange={(changes: EdgeChange<Edge>[]) => onEdgesChange(changes)}
         onClose={closeContextMenu}

@@ -181,6 +181,49 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).toContain('ORDERS');
   });
 
+  it('explores governed database connections with search before table discovery', async () => {
+    await renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        listWarehouseConnections: async () => [
+          {
+            id: 'warehouse-prod',
+            name: 'Production warehouse',
+            type: 'postgres',
+            database: 'analytics',
+          },
+          {
+            id: 'warehouse-sandbox',
+            name: 'Sandbox warehouse',
+            type: 'postgres',
+            database: 'sandbox',
+          },
+        ],
+      }),
+    });
+
+    await clickNext();
+
+    const search = document.querySelector<HTMLInputElement>(
+      '[data-slot="source-import-connection-search"]'
+    );
+
+    expect(search).not.toBeNull();
+    expect(document.body.textContent).toContain('2 connections in governed catalog');
+    expect(document.body.textContent).toContain('Production warehouse');
+    expect(document.body.textContent).toContain('Sandbox warehouse');
+
+    await act(async () => {
+      search?.focus();
+      if (search) {
+        search.value = 'prod';
+      }
+      search?.dispatchEvent(new InputEvent('input', { bubbles: true, data: 'prod' }));
+    });
+
+    expect(document.body.textContent).toContain('Production warehouse');
+    expect(document.body.textContent).not.toContain('Sandbox warehouse');
+  });
+
   it('completes import flow, applies imported sources immediately, and renders a passive result step', async () => {
     const onComplete = vi.fn();
     const onClose = vi.fn();

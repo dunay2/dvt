@@ -35,7 +35,7 @@ describe('Canvas route first-canvas policy', () => {
 
   function findPaletteOption(label: string): HTMLButtonElement | undefined {
     return Array.from(
-      harness.container.querySelectorAll<HTMLButtonElement>(
+      document.body.querySelectorAll<HTMLButtonElement>(
         '[data-slot="canvas-add-node-palette-option"]'
       )
     ).find((button) => button.textContent?.includes(label));
@@ -148,9 +148,9 @@ describe('Canvas route first-canvas policy', () => {
     expect(harness.container.textContent).toContain('Add first transformation node');
     expect(harness.container.textContent).toContain('Main canvas');
     await openFirstNodePalette('Add first transformation node');
-    expect(harness.container.textContent).toContain('SQL transform');
-    expect(harness.container.textContent).not.toContain('Exposure');
-    expect(harness.container.textContent).not.toContain('Metric');
+    expect(document.body.textContent).toContain('SQL transform');
+    expect(document.body.textContent).not.toContain('Exposure');
+    expect(document.body.textContent).not.toContain('Metric');
   });
 
   it('shows a typed dbt empty canvas catalog instead of the transformation catalog', async () => {
@@ -167,9 +167,9 @@ describe('Canvas route first-canvas policy', () => {
     expect(harness.container.textContent).toContain('Add first dbt node');
     expect(harness.container.textContent).toContain('dbt canvas');
     await openFirstNodePalette('Add first dbt node');
-    expect(harness.container.textContent).toContain('Exposure');
-    expect(harness.container.textContent).toContain('Metric');
-    expect(harness.container.textContent).not.toContain('SQL transform');
+    expect(document.body.textContent).toContain('Exposure');
+    expect(document.body.textContent).toContain('Metric');
+    expect(document.body.textContent).not.toContain('SQL transform');
   });
 
   it('keeps dbt first-node authoring available while execution actions stay unavailable', async () => {

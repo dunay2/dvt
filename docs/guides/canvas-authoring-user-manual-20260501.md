@@ -1,180 +1,223 @@
 ---
-title: Canvas Authoring User Manual
+title: Manual de usuario de autoria en Canvas
 status: Active
-date: 2026-05-01
+date: 2026-06-02
 owner: Web
 planning_type: guide
 ---
 
-# Canvas Authoring User Manual
+# Manual de usuario de autoria en Canvas
 
-## Audience
+## Audiencia
 
-This manual is for users and QA reviewers who validate Canvas graph authoring.
-It covers the UI flows that are currently testable: opening a project-backed
-canvas, adding nodes from the typed catalog, confirming persistence after
-reload, removing nodes, working with empty typed canvases, and recognizing
-read-only posture.
+Este manual es para usuarios, QA y revisores de producto que validan la autoria
+visual de workflows en Canvas. Describe como usar la herramienta, que casos de
+uso estan cubiertos por el flujo actual y que casos siguen condicionados o fuera
+de alcance.
 
-## Product Scope And Prerequisites
+## Prerrequisitos
 
-- The user must already have an authenticated product session.
-- The user must have a selected tenant, project, and environment.
-- The selected project must expose a workspace graph draft.
-- The backend must answer health, readiness, capabilities, and workspace draft
-  requests.
-- The canvas must be writable for the `Add node` entry point to appear.
-- Each canvas only shows node types allowed by the active canvas kind.
+- El usuario debe tener una sesion autenticada.
+- Debe existir tenant, proyecto y entorno seleccionados.
+- El backend debe responder salud, capacidades y borrador de workspace.
+- El canvas debe ser escribible para crear nodos, conectar nodos o importar
+  fuentes.
+- Las acciones visibles dependen del tipo de canvas activo. Un canvas `dbt`
+  muestra tipos `dbt`; un canvas de transformacion no debe mezclar tipos
+  incompatibles.
 
-If no project is selected, Canvas must not render sample nodes. The expected
-startup posture is a project selection or project creation flow. The screenshots
-below use Cypress E2E fixtures after a project and draft have already been
-selected; they are evidence for Canvas authoring behavior, not evidence for
-login or project onboarding.
+La pantalla no debe inventar datos de ejemplo cuando falta proyecto, entorno o
+autoridad de borrador.
 
-## Open An Existing Canvas
+## Mapa rapido
 
-1. Open `/canvas` after selecting a valid project.
-2. Confirm that the canvas title appears in the workspace header.
-3. Confirm that the existing nodes render in the graph.
-4. Use the `Project Nodes` panel to inspect the available categories.
+La vista principal tiene estas zonas:
 
-![Ready canvas with existing nodes](./assets/canvas-authoring-user-manual/01-ready-canvas.png)
+- Barra superior de workspace: estado de conexion, workspace y vista.
+- Barra del canvas: canvas activo, pestanas de trabajo y acciones.
+- Superficie de grafo: nodos, aristas, controles de zoom y minimapa.
+- Explorador lateral izquierdo: recursos de proyecto y entrada `Add data`.
+- Inspector lateral derecho: propiedades del nodo o canvas seleccionado.
+- Consola inferior: eventos de ejecucion cuando existe un run activo.
 
-Expected result: the user sees the active canvas, context top bar, project
-resource panel, and loaded graph.
+![Canvas dbt actual](./assets/canvas-authoring-user-manual/08-current-dbt-canvas.png)
 
-## Add A Node To The Canvas
+## Abrir un canvas existente
 
-1. Open the `Project Nodes` panel.
-2. Find the `Add node` section.
-3. Select the governed node type that belongs to the active canvas kind.
+1. Abrir `/canvas` con sesion y proyecto seleccionados.
+2. Confirmar que aparece el canvas activo, por ejemplo `dbt canvas`.
+3. Confirmar que los nodos persistidos se renderizan en el grafo.
+4. Confirmar el estado del borrador: `Borrador sincronizado`, `Plan requerido`
+   u otro estado explicito.
 
-![Available node catalog](./assets/canvas-authoring-user-manual/02-add-node-catalog.png)
+Resultado esperado: el usuario ve un grafo real de proyecto. Si falta autoridad
+de backend o de proyecto, la vista debe bloquear autoria en vez de mostrar datos
+de muestra.
 
-Expected result: the catalog shows only node types compatible with the active
-canvas. For a transformation canvas, `Source`, `SQL transform`, and `Sink` are
-available.
+## Insertar nodos
 
-## Confirm The Node Is Created In The Same Visual Context
+1. Pulsar `Insertar`.
+2. Buscar el tipo de nodo en el campo de la paleta.
+3. Seleccionar un tipo permitido por el canvas activo.
+4. Configurar el nodo en el inspector cuando quede seleccionado.
 
-After selecting `SQL transform`, the new node appears in the same loaded canvas
-cluster. It must not be created at a disconnected origin or outside the useful
-viewport.
+![Busqueda de nodos](./assets/canvas-authoring-user-manual/09-insert-node-search.png)
 
-![Node added in the loaded canvas](./assets/canvas-authoring-user-manual/03-node-added.png)
+Resultado esperado: la paleta filtra el catalogo de nodos gobernado. En un
+canvas `dbt`, la busqueda `mod` muestra tipos como `Model` y `Snapshot`. La
+paleta de insercion no es el importador de datos; solo crea nodos del catalogo
+del canvas.
 
-Expected result: the new node is visible, selected by the authoring UI, and
-saved through the workspace draft.
+## Usar el explorador de proyecto
 
-## Validate Persistence After Reload
+1. Abrir el panel izquierdo con el boton lateral.
+2. Revisar `Project Resources`.
+3. Arrastrar recursos disponibles al canvas cuando el recurso sea arrastrable.
+4. Pulsar `Add data` para abrir el registro de objetos de datos si la capacidad
+   esta habilitada.
 
-1. Add the node.
-2. Wait for the draft save to complete.
-3. Reload the page or open `/canvas` again.
-4. Confirm that the node remains in the canvas and keeps its position.
+![Explorador de proyecto](./assets/canvas-authoring-user-manual/13-dataobject-registry-connections.png)
 
-![Node persisted after reload](./assets/canvas-authoring-user-manual/04-node-after-reload.png)
+Resultado esperado: el explorador lista recursos existentes del proyecto. La
+creacion de nodos nuevos sigue estando en `Insertar`; el descubrimiento de
+fuentes gobernadas empieza en `Add data`.
 
-Expected result: the created node is still present after reload. If it is
-missing, the save did not complete or the remote draft rejected the write.
+## Registrar fuentes de datos
 
-## Remove A Node
+1. Abrir el explorador lateral izquierdo.
+2. Pulsar `Add data`.
+3. En `DataObject Registry`, elegir `Database`.
+4. Avanzar para cargar conexiones gobernadas desde el catalogo o desde el rail
+   protegido de warehouse.
+5. Seleccionar tablas candidatas y confirmar el registro.
 
-1. Open the context menu on the node.
-2. Choose `Remove node`.
-3. Confirm that the node disappears from the graph.
-4. Reload the canvas and confirm that the removal persists.
+![DataObject Registry](./assets/canvas-authoring-user-manual/11-dataobject-registry-connection.png)
 
-Expected result: the removed node does not return after reload. Edges that
-depended on that node also stop rendering.
+Resultado esperado: el flujo registra objetos de datos de tipo `Database` y los
+proyecta como nodos de fuente en el workspace. Los tipos `File`, `API` y
+`Stream` aparecen como frontera de producto, pero no estan disponibles todavia
+en esta slice.
 
-## Read-Only Canvas
+## Gestionar proyecto
 
-When the draft allows reads but not writes, Canvas still renders the graph but
-does not expose authoring actions.
+1. Pulsar `Proyecto`.
+2. Usar `Exportar` para descargar un snapshot del proyecto/canvas.
+3. Usar `Importar` para cargar un snapshot compatible.
 
-![Read-only canvas](./assets/canvas-authoring-user-manual/05-read-only-canvas.png)
+![Menu de proyecto](./assets/canvas-authoring-user-manual/10-project-snapshot-menu.png)
 
-Expected result: `Add node` does not appear and no
-`PUT /workspace/graph/draft` mutation is sent. This avoids presenting local
-changes as persisted when the user lacks write permission.
+Resultado esperado: `Proyecto > Importar` importa un snapshot de proyecto. No
+abre el wizard de conexiones ni descubre fuentes externas.
 
-## First Node In An Empty Typed Canvas
+## Crear plan y ejecutar
 
-If the selected project contains an empty canvas, the screen shows the typed
-entry point for that canvas. The first node must come from the catalog for the
-active canvas kind.
+1. Completar un grafo valido.
+2. Revisar que el estado deje de indicar `Plan requerido`.
+3. Pulsar `Plan` para generar la previsualizacion.
+4. Revisar el plan antes de iniciar la ejecucion.
+5. Pulsar `Ejecutar` cuando el boton este habilitado.
+6. Revisar logs y evidencia en `Ejecuciones`.
 
-![Empty typed canvas](./assets/canvas-authoring-user-manual/06-empty-canvas.png)
+Resultado esperado: no se puede ejecutar un canvas sin plan valido. En la
+captura principal, `Ejecutar` esta deshabilitado porque la barra indica
+`Plan requerido`.
 
-In a `dbt` canvas, the catalog offers `dbt` node types such as `Model`. After
-creating the first node, the canvas moves from empty state to editable graph.
+## Revisar codigo y artefactos
 
-![First node in an empty typed canvas](./assets/canvas-authoring-user-manual/07-empty-canvas-first-node.png)
+1. Abrir la pestana `Codigo` para revisar archivos del workspace.
+2. Abrir `Artefactos` para revisar artefactos sincronizados.
+3. Usar `View` o `Download` cuando el artefacto este disponible.
+4. Verificar que el archivo mostrado corresponde al nodo o artefacto esperado.
 
-Expected result: the first node appears in the canvas and is ready for further
-authoring. A `dbt` canvas must not show generic transformation types unless
-they belong to its catalog.
+Resultado esperado: codigo y artefactos son vistas de inspeccion del workspace;
+no sustituyen el grafo ni deben mostrar contenido que no corresponda al recurso
+seleccionado.
 
-## Expected Negative Cases
+## Casos de uso contemplados
 
-| Situation              | Expected behavior                                                    |
-| ---------------------- | -------------------------------------------------------------------- |
-| No authenticated user  | Product routes redirect to login; Canvas does not render graph data. |
-| No selected project    | Canvas shows project selection or creation, not sample nodes.        |
-| Read-only draft        | `Add node` is hidden and no draft write is sent.                     |
-| Remote save fails      | The node may appear locally, but must not reappear after reload.     |
-| Incompatible node type | The type is absent from the active canvas catalog.                   |
-| Empty typed canvas     | Only node types defined for the active canvas kind are shown.        |
-| Backend unavailable    | Canvas blocks authoring and shows the error or waiting posture.      |
+| Caso                        | Como se usa                              | Evidencia                                               |
+| --------------------------- | ---------------------------------------- | ------------------------------------------------------- |
+| Abrir canvas con borrador   | `/canvas` con proyecto y entorno validos | `08-current-dbt-canvas.png`                             |
+| Crear nodo del catalogo     | `Insertar` y elegir tipo compatible      | `09-insert-node-search.png`                             |
+| Buscar tipos de nodo        | Escribir en la paleta de insercion       | `09-insert-node-search.png`                             |
+| Inspeccionar recursos       | Abrir panel izquierdo de proyecto        | `13-dataobject-registry-connections.png`                |
+| Abrir DataObject Registry   | `Project Resources > Add data`           | `11-dataobject-registry-connection.png`                 |
+| Importar/exportar snapshot  | `Proyecto > Exportar` o `Importar`       | `10-project-snapshot-menu.png`                          |
+| Bloquear ejecucion sin plan | `Ejecutar` queda deshabilitado           | `08-current-dbt-canvas.png`                             |
+| Canvas de solo lectura      | Grafo visible sin acciones de escritura  | `05-read-only-canvas.png`                               |
+| Primer nodo en canvas vacio | Catalogo tipado del canvas activo        | `06-empty-canvas.png`, `07-empty-canvas-first-node.png` |
 
-## QA Checklist
+## Casos no contemplados o condicionados
 
-- Open `/canvas` with a selected project and confirm that the existing canvas
-  loads with its nodes.
-- Open `Project Nodes` and confirm that `Add node` appears only in writable
-  mode.
-- Create a compatible node and confirm that it appears in the same visual
-  context as the loaded graph.
-- Reload and confirm that the created node remains present.
-- Remove the node, reload, and confirm that it does not return.
-- Repeat in read-only mode and confirm that no creation entry point exists.
-- Repeat with an empty typed canvas and confirm that the first node comes from
-  the typed catalog.
-- Start without an authenticated session and confirm that login is required.
-- Start without a selected project and confirm that no fixture or sample nodes
-  appear.
+### API, File y Stream no estan disponibles aun
 
-## Troubleshooting
+El registro de objetos muestra `File`, `API` y `Stream`, pero los marca como no
+disponibles. La slice actual solo permite registro real de `Database`.
 
-- `Add node` is missing: check write permission and draft mode.
-- A node appears in the wrong place after drag: check the route-local Canvas
-  layout value in `dvt-web-canvas-interaction`. `draft.nodePositions` only
-  seeds graph-authoritative coordinates when a remote draft provides them.
-- A node disappears after reload: check the draft save response and expected
-  revision.
-- Node types from another vertical appear: check the active canvas kind and
-  node-kind registry.
-- Canvas blocks on open: check `/healthz`, `/readyz`, `/capabilities`, and the
-  workspace draft request.
-- Sample nodes appear on product startup without a project: remove fixture/demo
-  seeding from the runtime path and route the user through project onboarding.
+![Tipos no disponibles](./assets/canvas-authoring-user-manual/11-dataobject-registry-connection.png)
 
-## Screenshot Evidence
+### `Proyecto > Importar` no conecta fuentes
 
-The screenshots in this manual were generated with Cypress against the
-`@dvt/web` E2E build. The fixture nodes in those screenshots come from
-`apps/web/cypress/support/canvasDraftAuthoring.ts` and represent an already
-selected project draft. They must not be treated as default production startup
-data.
+El menu `Proyecto` solo contiene importacion y exportacion de snapshot. No debe
+usarse para crear conexiones Postgres, REST, API o warehouse.
 
-The covered cases are:
+![Importar snapshot](./assets/canvas-authoring-user-manual/10-project-snapshot-menu.png)
 
-- existing canvas with loaded nodes;
-- editable node catalog;
-- compatible node creation;
-- persistence after reload;
-- read-only posture;
-- empty typed canvas;
-- first node in an empty typed canvas.
+### No hay ejecucion sin plan valido
+
+Cuando aparece `Plan requerido`, el boton `Ejecutar` permanece deshabilitado.
+El usuario debe corregir el grafo o generar un plan antes de ejecutar.
+
+![Plan requerido](./assets/canvas-authoring-user-manual/08-current-dbt-canvas.png)
+
+### Borrado contextual de aristas no demostrado en esta evidencia
+
+La pasada de captura de 2026-06-02 hizo clic contextual sobre el elemento SVG
+de la arista, pero no mostro `Eliminar conexion`. Por tanto este manual no lo
+presenta como flujo validado. El borrado de nodos si aparece como menu
+contextual independiente.
+
+![Arista sin menu contextual visible](./assets/canvas-authoring-user-manual/12-edge-delete-context-menu.png)
+
+### Conectores externos reales siguen gobernados por rail
+
+La UI puede abrir `DataObject Registry`, pero la verdad de conexiones no debe
+salir de fixtures locales ni de formularios ad hoc. Las conexiones deben venir
+de rails protegidos como `ListWarehouseConnections`,
+`ListWarehouseConnectionTables` e `ImportWarehouseSources`.
+
+## Lista de comprobacion QA
+
+- Abrir `/canvas` y comprobar que no se cargan datos de muestra sin proyecto.
+- Confirmar que `Insertar` muestra solo tipos compatibles con el canvas activo.
+- Buscar `mod` y confirmar que aparecen tipos `dbt` como `Model`.
+- Crear un nodo y verificar que queda visible en el mismo contexto del grafo.
+- Seleccionar un nodo y revisar que el inspector muestra datos del nodo real.
+- Abrir el explorador lateral y comprobar que `Add data` abre
+  `DataObject Registry`.
+- Confirmar que `Database` aparece disponible y `File`, `API`, `Stream` no.
+- Abrir `Proyecto` y confirmar que `Importar` es snapshot, no conexion.
+- Confirmar que `Ejecutar` no se habilita con `Plan requerido`.
+- Abrir `Codigo`, `Artefactos` y `Ejecuciones` y comprobar que cada vista
+  muestra informacion alineada con el workspace activo.
+
+## Diagnostico rapido
+
+| Sintoma                                  | Revision                                                         |
+| ---------------------------------------- | ---------------------------------------------------------------- |
+| `Insertar` no abre catalogo              | Permisos de escritura y catalogo del canvas activo               |
+| El nodo creado no persiste               | Respuesta del guardado de borrador y revision esperada           |
+| No aparece `Add data`                    | Capacidad de source import y plugin `dvt.warehouse-source`       |
+| `Proyecto > Importar` no descubre tablas | Es correcto: es importacion de snapshot                          |
+| `Ejecutar` esta deshabilitado            | Revisar `Plan requerido` y generar plan valido                   |
+| El inspector no muestra datos            | Seleccion activa y metadata del nodo en el borrador              |
+| El menu de arista no aparece             | Flujo no validado por esta evidencia; registrar bug si reproduce |
+
+## Evidencia de capturas
+
+Las capturas `01` a `07` proceden de pruebas Cypress E2E del build `@dvt/web`
+y representan proyectos ya seleccionados. Las capturas `08` a `13` se
+generaron el 2026-06-02 con Chrome headless contra `http://localhost:5173/canvas`.
+
+Estas capturas son evidencia de comportamiento UI, no sustituyen pruebas de
+contrato ni validacion de backend.
