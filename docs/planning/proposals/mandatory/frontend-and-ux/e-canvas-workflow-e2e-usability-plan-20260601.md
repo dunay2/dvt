@@ -389,6 +389,15 @@ commandQueryRails:
   - name: VerifyCanvasWorkbenchVisualPosture
     type: query
     dddOwner: CanvasWorkbenchVisualPostureReadModel
+  - name: ResolveCanvasContextMenu
+    type: query
+    dddOwner: CanvasContextMenuReadModel
+  - name: CreateCanvasAuthoringNode
+    type: command
+    dddOwner: CanvasGraphAuthoringDraft
+  - name: RemoveCanvasEdgeFromContext
+    type: command
+    dddOwner: CanvasGraphAuthoringDraft
 domainObjects:
   - name: WorkspaceGraphAuthoringDraft
     type: aggregate
@@ -421,6 +430,9 @@ domainObjects:
     type: presentation model
     owner: Web dbt inspector
   - name: ExecutablePlanPreview
+    type: presentation model
+    owner: Web Canvas
+  - name: CanvasContextMenuReadModel
     type: presentation model
     owner: Web Canvas
 fowlerSignals:
@@ -615,6 +627,114 @@ redGreenCycles:
       - apps/web/src/app/views/runs/RunStates.test.tsx
     greenTest: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts && pnpm --filter @dvt/web test -- src/app/views/runs/RunStates.test.tsx
 symbols:
+  - name: CanvasViewportContextMenu
+    path: apps/web/src/app/views/canvas/CanvasViewport.tsx
+    dddOwner: CanvasContextMenuReadModel
+    cqRails: [ResolveCanvasContextMenu, CreateCanvasAuthoringNode, RemoveCanvasEdgeFromContext]
+    fowlerSignals: [Context-menu gestures must render app-owned actions instead of leaking browser defaults.]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- canvasInteractionCommandSurface.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/CanvasViewport.test.tsx
+  - name: CanvasViewportContextMenuProps
+    path: apps/web/src/app/views/canvas/CanvasViewport.tsx
+    dddOwner: CanvasContextMenuReadModel
+    cqRails: [ResolveCanvasContextMenu, CreateCanvasAuthoringNode, RemoveCanvasEdgeFromContext]
+    fowlerSignals: [The contextual action contract must stay explicit at the viewport boundary.]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- canvasInteractionCommandSurface.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/CanvasViewport.test.tsx
+  - name: CanvasAuthoringNodePosition
+    path: apps/web/src/app/views/canvas/canvasAuthoringNodeCommand.ts
+    dddOwner: CanvasGraphAuthoringDraft
+    cqRails: [CreateCanvasAuthoringNode]
+    fowlerSignals: [Toolbar and context-menu node creation must share the same command shape.]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- canvasInteractionCommandSurface.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasAuthoringNodeCommand.test.ts
+  - name: CreateCanvasAuthoringNode
+    path: apps/web/src/app/views/canvas/canvasGraphHandlerContracts.ts
+    dddOwner: CanvasGraphAuthoringDraft
+    cqRails: [CreateCanvasAuthoringNode]
+    fowlerSignals: [Graph node creation must stay behind the route-owned command seam.]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- useCanvasGraphHandlers.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/CanvasStateViews.test.tsx
+  - name: BuildCanvasContextMenuModelArgs
+    path: apps/web/src/app/views/canvas/canvasInteractionCommandSurface.ts
+    dddOwner: CanvasContextMenuReadModel
+    cqRails: [ResolveCanvasContextMenu]
+    fowlerSignals: [Context-menu read-model inputs must stay pure and testable.]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- canvasInteractionCommandSurface.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasInteractionCommandSurface.test.ts
+  - name: CanvasContextMenuCreateNodeAction
+    path: apps/web/src/app/views/canvas/canvasInteractionCommandSurface.ts
+    dddOwner: CanvasContextMenuReadModel
+    cqRails: [ResolveCanvasContextMenu, CreateCanvasAuthoringNode]
+    fowlerSignals: [Pane context menus must advertise node creation without bypassing the node catalog.]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- canvasInteractionCommandSurface.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasInteractionCommandSurface.test.ts
+  - name: CanvasContextMenuEdgeAction
+    path: apps/web/src/app/views/canvas/canvasInteractionCommandSurface.ts
+    dddOwner: CanvasContextMenuReadModel
+    cqRails: [ResolveCanvasContextMenu, RemoveCanvasEdgeFromContext]
+    fowlerSignals: [Edge context menus must expose deletion through the existing edge lifecycle.]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- canvasInteractionCommandSurface.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasInteractionCommandSurface.test.ts
+  - name: CanvasContextMenuModel
+    path: apps/web/src/app/views/canvas/canvasInteractionCommandSurface.ts
+    dddOwner: CanvasContextMenuReadModel
+    cqRails: [ResolveCanvasContextMenu]
+    fowlerSignals: [The viewport must consume a read model, not infer commands inline.]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- canvasInteractionCommandSurface.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasInteractionCommandSurface.test.ts
+  - name: CanvasContextMenuPosition
+    path: apps/web/src/app/views/canvas/canvasInteractionCommandSurface.ts
+    dddOwner: CanvasContextMenuReadModel
+    cqRails: [ResolveCanvasContextMenu]
+    fowlerSignals: [Context-menu placement must be explicit and independent of browser menu state.]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- canvasInteractionCommandSurface.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasInteractionCommandSurface.test.ts
+  - name: CanvasContextMenuTarget
+    path: apps/web/src/app/views/canvas/canvasInteractionCommandSurface.ts
+    dddOwner: CanvasContextMenuReadModel
+    cqRails: [ResolveCanvasContextMenu]
+    fowlerSignals: [Pane and edge gestures must be discriminated before actions are built.]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- canvasInteractionCommandSurface.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasInteractionCommandSurface.test.ts
+  - name: buildCanvasContextMenuModel
+    path: apps/web/src/app/views/canvas/canvasInteractionCommandSurface.ts
+    dddOwner: CanvasContextMenuReadModel
+    cqRails: [ResolveCanvasContextMenu]
+    fowlerSignals: [Contextual menu visibility must follow graph posture and selected target.]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- canvasInteractionCommandSurface.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasInteractionCommandSurface.test.ts
+  - name: buildCanvasEdgeContextRemovalChange
+    path: apps/web/src/app/views/canvas/canvasInteractionCommandSurface.ts
+    dddOwner: CanvasGraphAuthoringDraft
+    cqRails: [RemoveCanvasEdgeFromContext]
+    fowlerSignals: [Edge deletion must reuse the React Flow removal lifecycle instead of mutating graph state directly.]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- canvasInteractionCommandSurface.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasInteractionCommandSurface.test.ts
   - name: PlanPreviewModal
     path: apps/web/src/app/components/Modals.tsx
     dddOwner: ExecutablePlanPreview

@@ -89,8 +89,9 @@ flows are either partial, implicit, or not demonstrably connected end to end:
   frontend port surface;
 - node-level execution evidence is split across plugin panels instead of one
   owned query;
-- visual/browser proof is still fragile because the current worktree fails
-  feature-mechanization symbol coverage for open Canvas interaction work.
+- visual/browser proof is still fragile because the current worktree has not
+  yet completed a strict browser-level audit after the Canvas interaction
+  symbol coverage was mechanized.
 
 ## Capability Comparison
 
@@ -98,7 +99,7 @@ flows are either partial, implicit, or not demonstrably connected end to end:
 | ---------------------------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | Asset/workflow discovery     | Searchable workflow or asset catalog with filters, tags, owner, status, and recent history                           | Canvas and workspace routes expose project resources and files, but no unified asset/workflow catalog comparable to Airflow DAG list, Dagster asset catalog, or Databricks job list | Missing unified discoverability model                                          |
 | Source connection            | User can create, test, authenticate, and audit data source connections                                               | Existing server-known warehouse connections can be listed and imported                                                                                                              | Missing `CreateWarehouseConnection` and `TestWarehouseConnection` rails        |
-| Graph authoring              | Insert, connect, configure, delete, and validate nodes with contextual commands                                      | Canvas has authoring rails and context-menu work in progress                                                                                                                        | Gate still fails feature-mechanization coverage for context-menu symbols       |
+| Graph authoring              | Insert, connect, configure, delete, and validate nodes with contextual commands                                      | Canvas has authoring rails and context-menu symbols declared in the E2E usability mechanization surface                                                                             | Needs browser proof that contextual commands remain usable end to end          |
 | Node properties              | Selected node exposes structured details, columns, dependencies, config, code, history, and editable owned fields    | Inspector has structured tabs and editable authoring sections for DVT/dbt nodes                                                                                                     | Needs one node-evidence model and stronger graph/code synchronization          |
 | Code/graph parity            | Graph node config and source code stay aligned; code edits can be saved through one authority                        | Code route has workspace file reads and local editable buffer posture                                                                                                               | Missing `SaveCodeWorkspaceFileBuffer` and `UpdateNodeCodeProjection`           |
 | Execution readiness          | UI explains missing source, transform, sink, scope, permissions, artifacts, and invalid edges before plan/run        | Plan preview and validation exist, but readiness is not one explicit query read model                                                                                               | Missing `ValidateCanvasExecutionReadiness`                                     |
@@ -110,7 +111,7 @@ flows are either partial, implicit, or not demonstrably connected end to end:
 | Evidence navigation          | From any run/task/node, navigate back to the defining workflow, source, code, logs, artifacts, and previous attempts | Run pages and Canvas tabs are separate; source-canvas navigation is not explicit                                                                                                    | Missing `OpenRunSourceCanvas` and `ListNodeExecutionEvidence`                  |
 | Deployment/workspace scope   | Workflow/deployment has explicit environment, schedule/event trigger, parameters, version/provenance                 | Project/canvas environment properties exist, but workspace selection remains implicit in places                                                                                     | Missing `SelectWorkspaceScope` and stronger deployment identity                |
 | Operational retention/export | Run history, logs, artifacts, and results have retention/export affordances                                          | Artifact and file routes exist; run export/retention UX is not mature                                                                                                               | Missing retention/export status and user commands                              |
-| User confidence              | Browser-level E2E proves first-user path without mock semantics                                                      | Unit and Cypress assets exist, but the current tree has an open feature-mechanization failure                                                                                       | Strict user audit cannot yet claim full compliance                             |
+| User confidence              | Browser-level E2E proves first-user path without mock semantics                                                      | Unit and Cypress assets exist, and feature-mechanization now covers Canvas interaction symbols                                                                                      | Strict browser audit cannot yet claim full compliance                          |
 
 ## Gap Register
 
@@ -242,9 +243,8 @@ flows are either partial, implicit, or not demonstrably connected end to end:
 - Mature signal: E2E tests prove the exact first-user path against real rails:
   create workspace/canvas, connect source, configure nodes, save code, preview
   plan, run, inspect evidence, cancel/recover where applicable.
-- Current DVT evidence: focused unit and Cypress tests exist, but the current
-  open tree fails feature-mechanization implementation coverage for Canvas
-  interaction symbols.
+- Current DVT evidence: focused unit and Cypress tests exist, and the open
+  Canvas interaction symbols are declared in feature mechanization.
 - Missing proof: strict user audit with screenshots and no mocked success paths.
 - Acceptance evidence: Browser/Cypress proof documents all actions and
   screenshots, with API calls going through governed rails and no intercept that
@@ -257,10 +257,10 @@ flows are either partial, implicit, or not demonstrably connected end to end:
   architecture tests, Cypress workflows, and shipped code describe the same
   behavior.
 - Current DVT evidence: frontend command/query inventory has identified gaps;
-  `docs:feature-mechanization:implementation` currently fails on undeclared
-  Canvas context-menu and authoring symbols in the open worktree.
-- Missing action: update governing proposal manifests or reduce open symbols
-  to match the accepted feature surface.
+  Canvas context-menu and authoring symbols are declared in the E2E usability
+  feature manifest.
+- Missing action: keep governing proposal manifests synchronized with future
+  Canvas command/query symbols before implementation branches widen.
 - Acceptance evidence: `pnpm docs:feature-mechanization:implementation` and
   `pnpm verify:prepush` pass without bypass.
 
