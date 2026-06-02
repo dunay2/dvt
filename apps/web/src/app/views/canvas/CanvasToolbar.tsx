@@ -22,6 +22,7 @@ export type CanvasToolbarProps = {
   readonly onToggleGridVisible: () => void;
   readonly onGridColorChange: (color: CanvasPaletteId) => void;
   readonly onToggleSnapToGrid: () => void;
+  readonly onSetCanvasEmptyStateGuideVisible: (visible: boolean) => void;
   readonly onExportProjectSnapshot: () => void;
   readonly onImportProjectSnapshotFile: (file: File) => void;
   readonly onReloadLatestDraft: () => void;
@@ -46,6 +47,7 @@ export type CanvasToolbarProps = {
   readonly canvasGridVisible: boolean;
   readonly canvasGridColor: CanvasPaletteId;
   readonly canvasSnapToGrid: boolean;
+  readonly canvasEmptyStateGuideVisible: boolean;
   readonly transformationValidation: TransformationGraphValidationResult;
   readonly nodeCount: number;
   readonly edgeCount: number;
@@ -73,6 +75,7 @@ export default function CanvasToolbar(props: CanvasToolbarProps) {
           canvasGridVisible={props.canvasGridVisible}
           canvasGridColor={props.canvasGridColor}
           canvasSnapToGrid={props.canvasSnapToGrid}
+          canvasEmptyStateGuideVisible={props.canvasEmptyStateGuideVisible}
           onAutoLayout={props.onAutoLayout}
           onToggleCostOverlay={props.onToggleCostOverlay}
           onToggleImpact={props.onToggleImpact}
@@ -80,6 +83,7 @@ export default function CanvasToolbar(props: CanvasToolbarProps) {
           onToggleGridVisible={props.onToggleGridVisible}
           onGridColorChange={props.onGridColorChange}
           onToggleSnapToGrid={props.onToggleSnapToGrid}
+          onSetCanvasEmptyStateGuideVisible={props.onSetCanvasEmptyStateGuideVisible}
         />
         <CanvasToolbarPrimaryControls
           onExportProjectSnapshot={props.onExportProjectSnapshot}

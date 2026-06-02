@@ -302,6 +302,12 @@ test('engine coverage scope is a semantic superset of engine workspace policy', 
 test('PR quality gate keeps merge-blocking governance commands wired', () => {
   const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
 
+  assertWorkflowContains(prQualityGate, 'pnpm docs:gov:locations -- --changed-only');
+  assert.doesNotMatch(
+    prQualityGate,
+    /if:\s*github\.event_name == 'pull_request'[^\n]*steps\.scope\.outputs\.docs_changed[^\n]*\n\s*run: pnpm docs:gov:locations\n/u
+  );
+
   for (const command of PR_QUALITY_GOVERNANCE_COMMANDS) {
     assertWorkflowContains(prQualityGate, command);
   }

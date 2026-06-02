@@ -54,6 +54,8 @@ function renderEmptyState(): {
         firstNodeHelper="Choose a transformation node."
         nodeKinds={nodeKinds}
         onCreateAuthoringNode={onCreateAuthoringNode}
+        emptyStateGuideVisible
+        onEmptyStateGuideVisibilityChange={vi.fn()}
       />
     );
   });
@@ -183,6 +185,46 @@ describe('Canvas empty state Insert/Add palette', () => {
     expect(document.body.textContent).toContain('Source');
     expect(document.body.textContent).toContain('Model');
     expect(document.body.querySelector('[data-slot="canvas-add-node-palette-empty"]')).toBeNull();
+
+    act(() => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  it('exposes a checked guide visibility control that can hide the empty-state guide', async () => {
+    const onEmptyStateGuideVisibilityChange = vi.fn();
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    act(() => {
+      root.render(
+        <CanvasEmptyStateView
+          title="Start dbt canvas"
+          message="Start dbt authoring"
+          firstNodeLabel="Add first dbt node"
+          firstNodeHelper="Choose a dbt node."
+          nodeKinds={nodeKinds}
+          onCreateAuthoringNode={vi.fn()}
+          emptyStateGuideVisible
+          onEmptyStateGuideVisibilityChange={onEmptyStateGuideVisibilityChange}
+        />
+      );
+    });
+
+    const preference = container.querySelector<HTMLInputElement>(
+      '[data-slot="canvas-empty-guide-preference"]'
+    );
+
+    expect(preference).not.toBeNull();
+    expect(preference?.checked).toBe(true);
+
+    await act(async () => {
+      preference?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(onEmptyStateGuideVisibilityChange).toHaveBeenCalledWith(false);
 
     act(() => {
       root.unmount();

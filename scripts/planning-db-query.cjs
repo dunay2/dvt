@@ -20,6 +20,10 @@ const {
   readCommandQueryRailRows,
   readCreationIntentRows,
 } = require('./planning-db/command-query-rail-query.cjs');
+const {
+  buildFrontendMechanicalTruthRows,
+  readFrontendMechanicalTruthRows,
+} = require('./planning-db/frontend-mechanical-truth-inventory.cjs');
 
 const architectureSchemaName = 'architecture';
 const componentEngineeringSchemaName = 'component_engineering';
@@ -45,6 +49,7 @@ const knownQueries = new Set([
   'command-query-rails',
   'ai-project-context',
   'creation-intent',
+  'frontend-surfaces',
   'pr-readiness',
   'docs-disposition',
   'feature-work',
@@ -88,6 +93,7 @@ const governanceProjectionQueryNames = new Set([
   'command-query-rails',
   'ai-project-context',
   'creation-intent',
+  'frontend-surfaces',
   'cer',
   'component-tree',
   'component-metadata',
@@ -337,7 +343,11 @@ function parseArgs(args = process.argv.slice(2)) {
       continue;
     }
     if (arg === '--state') {
-      filters.governanceState = value;
+      if (queryName === 'frontend-surfaces') {
+        filters.state = value;
+      } else {
+        filters.governanceState = value;
+      }
       continue;
     }
     if (arg === '--resolution') {
@@ -3390,6 +3400,15 @@ async function runQuery(options = {}) {
       return intentRows;
     }
 
+    if (queryName === 'frontend-surfaces') {
+      const rows = await readFrontendMechanicalTruthRows(client, options.filters || {});
+      const surfaceRows = buildFrontendMechanicalTruthRows(rows);
+      if (options.print !== false) {
+        printTaskRows(surfaceRows);
+      }
+      return surfaceRows;
+    }
+
     if (queryName === 'pr-readiness') {
       const rows = await readPrReadinessRows(client, options.filters || {});
       const readinessRows = buildPrReadinessRows(rows);
@@ -3841,6 +3860,7 @@ module.exports = {
   buildPrReadinessRows,
   buildCommandQueryRailRows,
   buildCreationIntentRows,
+  buildFrontendMechanicalTruthRows,
   buildRepositoryCommandRows,
   buildNextTaskRows,
   buildSummaryRows,
@@ -3893,6 +3913,7 @@ module.exports = {
   readPrReadinessRows,
   readCommandQueryRailRows,
   readCreationIntentRows,
+  readFrontendMechanicalTruthRows,
   readRepositoryCommandRows,
   readComponentEngineeringRuleCatalogRows,
   readComponentEngineeringRuleEvaluationRows,

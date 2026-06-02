@@ -82,35 +82,31 @@ test('root affected commands and CI matrix lint/build/typecheck steps use the Tu
     rootPackage.scripts['ci:affected:test'],
     'node scripts/run-turbo-workspace-task.cjs test'
   );
+  assert.equal(
+    rootPackage.scripts['preflight:affected'],
+    'pnpm ci:affected:build && pnpm ci:affected:lint && pnpm ci:affected:typecheck && pnpm ci:affected:test'
+  );
 
-  assert.ok(
+  assert.ok(ciWorkflow.includes('run: pnpm verify:changed'));
+  assert.ok(ciWorkflow.includes('run: pnpm preflight:affected'));
+  assert.ok(ciWorkflow.includes('run: pnpm ci:full'));
+  assert.equal(
     ciWorkflow.includes(
       'node scripts/run-turbo-workspace-task.cjs build --filter=${{ matrix.pkg }}'
-    )
+    ),
+    false
   );
-  assert.ok(
-    ciWorkflow.includes('node scripts/run-turbo-workspace-task.cjs lint --filter=${{ matrix.pkg }}')
+  assert.equal(
+    ciWorkflow.includes(
+      'node scripts/run-turbo-workspace-task.cjs lint --filter=${{ matrix.pkg }}'
+    ),
+    false
   );
-  assert.ok(
+  assert.equal(
     ciWorkflow.includes(
       'node scripts/run-turbo-workspace-task.cjs typecheck --filter=${{ matrix.pkg }}'
-    )
-  );
-  assert.ok(
-    ciWorkflow.indexOf(
-      'node scripts/run-turbo-workspace-task.cjs build --filter=${{ matrix.pkg }}'
-    ) <
-      ciWorkflow.indexOf(
-        'node scripts/run-turbo-workspace-task.cjs lint --filter=${{ matrix.pkg }}'
-      )
-  );
-  assert.ok(
-    ciWorkflow.indexOf(
-      'node scripts/run-turbo-workspace-task.cjs lint --filter=${{ matrix.pkg }}'
-    ) <
-      ciWorkflow.indexOf(
-        'node scripts/run-turbo-workspace-task.cjs typecheck --filter=${{ matrix.pkg }}'
-      )
+    ),
+    false
   );
   assert.ok(
     testWorkflow.includes(

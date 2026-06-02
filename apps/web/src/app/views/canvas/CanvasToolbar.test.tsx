@@ -53,6 +53,7 @@ function buildToolbarProps(
     onToggleGridVisible: vi.fn(),
     onGridColorChange: vi.fn(),
     onToggleSnapToGrid: vi.fn(),
+    onSetCanvasEmptyStateGuideVisible: vi.fn(),
     onReloadLatestDraft: vi.fn(),
     onExportProjectSnapshot: vi.fn(),
     onImportProjectSnapshotFile: vi.fn(),
@@ -80,6 +81,7 @@ function buildToolbarProps(
     canvasGridVisible: true,
     canvasGridColor: '#94a3b8',
     canvasSnapToGrid: false,
+    canvasEmptyStateGuideVisible: true,
     transformationValidation: buildValidationResult(),
     nodeCount: 3,
     edgeCount: 2,
@@ -117,6 +119,7 @@ function buildCanvasViewMenuContribution(
     canvasGridVisible: true,
     canvasGridColor: '#94a3b8',
     canvasSnapToGrid: false,
+    canvasEmptyStateGuideVisible: true,
     onAutoLayout: vi.fn(),
     onToggleCostOverlay: vi.fn(),
     onToggleImpact: vi.fn(),
@@ -124,6 +127,7 @@ function buildCanvasViewMenuContribution(
     onToggleGridVisible: vi.fn(),
     onGridColorChange: vi.fn(),
     onToggleSnapToGrid: vi.fn(),
+    onSetCanvasEmptyStateGuideVisible: vi.fn(),
     ...overrides,
   };
 }
@@ -182,6 +186,7 @@ describe('CanvasToolbar', () => {
     const onToggleGridVisible = vi.fn();
     const onGridColorChange = vi.fn();
     const onToggleSnapToGrid = vi.fn();
+    const onSetCanvasEmptyStateGuideVisible = vi.fn();
 
     await act(async () => {
       root.render(
@@ -190,9 +195,11 @@ describe('CanvasToolbar', () => {
             onToggleGridVisible,
             onGridColorChange,
             onToggleSnapToGrid,
+            onSetCanvasEmptyStateGuideVisible,
             canvasGridVisible: false,
             canvasGridColor: '#f97316',
             canvasSnapToGrid: true,
+            canvasEmptyStateGuideVisible: false,
           })}
         />
       );
@@ -205,14 +212,17 @@ describe('CanvasToolbar', () => {
     expect(contribution?.canvasGridVisible).toBe(false);
     expect(contribution?.canvasGridColor).toBe('#f97316');
     expect(contribution?.canvasSnapToGrid).toBe(true);
+    expect(contribution?.canvasEmptyStateGuideVisible).toBe(false);
 
     contribution?.onToggleGridVisible();
     contribution?.onToggleSnapToGrid();
     contribution?.onGridColorChange('#22c55e');
+    contribution?.onSetCanvasEmptyStateGuideVisible(true);
 
     expect(onToggleGridVisible).toHaveBeenCalledTimes(1);
     expect(onToggleSnapToGrid).toHaveBeenCalledTimes(1);
     expect(onGridColorChange).toHaveBeenCalledWith('#22c55e');
+    expect(onSetCanvasEmptyStateGuideVisible).toHaveBeenCalledWith(true);
   });
 
   it('does not let a stale View menu cleanup clear an active replacement contribution', () => {

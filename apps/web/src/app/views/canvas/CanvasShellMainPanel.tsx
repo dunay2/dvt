@@ -178,6 +178,7 @@ function CanvasShellWorkbenchChrome({
             onToggleGridVisible={chromeCommands.onToggleGridVisible}
             onGridColorChange={chromeCommands.onGridColorChange}
             onToggleSnapToGrid={chromeCommands.onToggleSnapToGrid}
+            onSetCanvasEmptyStateGuideVisible={chromeCommands.onSetCanvasEmptyStateGuideVisible}
             onExportProjectSnapshot={chromeCommands.onExportProjectSnapshot}
             onImportProjectSnapshotFile={chromeCommands.onImportProjectSnapshotFile}
             onReloadLatestDraft={chromeCommands.onReloadLatestDraft}
@@ -202,6 +203,7 @@ function CanvasShellWorkbenchChrome({
             canvasGridVisible={graph.canvasGridVisible}
             canvasGridColor={graph.canvasGridColor}
             canvasSnapToGrid={graph.canvasSnapToGrid}
+            canvasEmptyStateGuideVisible={graph.canvasEmptyStateGuideVisible}
             transformationValidation={toolbar.transformationValidation}
             nodeCount={graph.nodesWithImpact.length}
             edgeCount={graph.edges.length}

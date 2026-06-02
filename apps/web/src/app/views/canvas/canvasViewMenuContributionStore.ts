@@ -12,6 +12,7 @@ export type CanvasViewMenuContribution = Readonly<{
   canvasGridVisible: boolean;
   canvasGridColor: CanvasPaletteId;
   canvasSnapToGrid: boolean;
+  canvasEmptyStateGuideVisible: boolean;
   onAutoLayout: () => void;
   onToggleCostOverlay: () => void;
   onToggleImpact: () => void;
@@ -19,6 +20,7 @@ export type CanvasViewMenuContribution = Readonly<{
   onToggleGridVisible: () => void;
   onGridColorChange: (color: CanvasPaletteId) => void;
   onToggleSnapToGrid: () => void;
+  onSetCanvasEmptyStateGuideVisible: (visible: boolean) => void;
 }>;
 
 type CanvasViewMenuContributionState = {
