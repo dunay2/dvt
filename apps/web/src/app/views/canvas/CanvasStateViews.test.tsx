@@ -115,4 +115,78 @@ describe('Canvas empty state Insert/Add palette', () => {
       root.unmount();
     });
   });
+
+  it('keeps terse authoring node kinds discoverable through semantic palette search', async () => {
+    const semanticNodeKinds: readonly NodeKindRegistration[] = [
+      {
+        kind: 'dbt:source',
+        pluginId: 'dbt',
+        label: 'Source',
+        role: 'input',
+        icon: Circle,
+        borderClass: 'border-sky-500',
+        minimapColor: '#0ea5e9',
+        allowsIncoming: false,
+        allowsOutgoing: true,
+        supportsColumns: true,
+      },
+      {
+        kind: 'dbt:model',
+        pluginId: 'dbt',
+        label: 'Model',
+        role: 'transform',
+        icon: Square,
+        borderClass: 'border-violet-500',
+        minimapColor: '#8b5cf6',
+        allowsIncoming: true,
+        allowsOutgoing: true,
+        supportsColumns: true,
+      },
+    ];
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    act(() => {
+      root.render(
+        <CanvasEmptyStateView
+          title="Start dbt canvas"
+          message="Start dbt authoring"
+          firstNodeLabel="Insert"
+          firstNodeHelper="Choose a dbt node."
+          nodeKinds={semanticNodeKinds}
+          onCreateAuthoringNode={vi.fn()}
+        />
+      );
+    });
+
+    const trigger = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Insert')
+    );
+
+    await act(async () => {
+      trigger?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    const search = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="canvas-add-node-palette-search"]'
+    );
+
+    await act(async () => {
+      search?.focus();
+      if (search) {
+        search.value = 'authoring';
+      }
+      search?.dispatchEvent(new InputEvent('input', { bubbles: true, data: 'authoring' }));
+    });
+
+    expect(document.body.textContent).toContain('Source');
+    expect(document.body.textContent).toContain('Model');
+    expect(document.body.querySelector('[data-slot="canvas-add-node-palette-empty"]')).toBeNull();
+
+    act(() => {
+      root.unmount();
+    });
+    container.remove();
+  });
 });

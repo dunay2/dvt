@@ -1,5 +1,6 @@
 export type ArtifactPreview = {
   id: string;
+  previewKey: string;
   type: string;
   description: string;
   size: string;

@@ -13,6 +13,7 @@ import type {
   TemporalWorkerRuntimeResources,
 } from './runtimeTypes.js';
 import { createTemporalWorkerDbtProfile } from './temporalWorkerDbtProfile.js';
+import { createTemporalWorkerPostgresProfile } from './temporalWorkerPostgresProfile.js';
 import {
   createTemporalWorkerActivityDeps,
   createTemporalWorkerStores,
@@ -45,8 +46,12 @@ export function createTemporalWorkerRuntimeResources(
     stateStore,
     planArtifactReader
   );
+  const postgresProfile = createTemporalWorkerPostgresProfile(env, options);
   const dbtProfile = createTemporalWorkerDbtProfile(env, options);
-  const pluginProfiles = dbtProfile.pluginProfile === undefined ? [] : [dbtProfile.pluginProfile];
+  const pluginProfiles =
+    dbtProfile.pluginProfile === undefined
+      ? [postgresProfile.pluginProfile]
+      : [postgresProfile.pluginProfile, dbtProfile.pluginProfile];
   const stepActivitiesByKind =
     pluginProfiles.length === 0 ? undefined : composeTemporalStepPluginRegistries(pluginProfiles);
 
@@ -61,5 +66,6 @@ export function createTemporalWorkerRuntimeResources(
       ? {}
       : { dbtAvailabilityProbe: dbtProfile.dbtAvailabilityProbe }),
     ...(stepActivitiesByKind === undefined ? {} : { stepActivitiesByKind }),
+    closeStepActivityResources: postgresProfile.close,
   };
 }

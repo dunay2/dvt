@@ -1,4 +1,4 @@
-/** Owned concern: verify Canvas workbench tab placement and text-only visual posture in browser. */
+/** Owned concern: verify Canvas workbench tab placement and controlled-icon visual posture in browser. */
 import { resolveCanvasViewCopy, type CanvasViewCopy } from '../../../src/app/views/canvas/copy';
 import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
 import { stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
@@ -88,14 +88,14 @@ function clickCanvasWorkbenchTab(labelKey: WorkbenchTabLabelKey): void {
   });
 }
 
-function assertCanvasWorkbenchTabsAreTextOnly(): void {
+function assertCanvasWorkbenchTabsUseControlledIcons(): void {
   cy.get('[data-slot="canvas-workbench-tab-strip"]').then(($strip) => {
     const tabTriggers = Array.from(
       $strip[0].querySelectorAll<HTMLElement>('[data-slot="canvas-workbench-tab-trigger"]')
     );
 
     for (const tab of tabTriggers) {
-      expect(tab.querySelector('svg'), tab.textContent ?? 'tab').to.equal(null);
+      expect(tab.querySelectorAll('svg'), tab.textContent ?? 'tab').to.have.length(1);
       expect(tab.querySelectorAll('span'), tab.textContent ?? 'tab').to.have.length(1);
     }
   });
@@ -178,7 +178,7 @@ describe('Canvas workbench tabs', () => {
       assertGlobalWorkbenchRoutesAreAbsent();
       assertShellWorkspaceContextIsRelocated();
       assertCanvasWorkbenchTabsAreVisible();
-      assertCanvasWorkbenchTabsAreTextOnly();
+      assertCanvasWorkbenchTabsUseControlledIcons();
       assertCanvasWorkbenchTabsAreHeaderScoped();
       cy.get('.react-flow').should('be.visible');
 
@@ -200,7 +200,7 @@ describe('Canvas workbench tabs', () => {
     assertGlobalWorkbenchRoutesAreAbsent();
     assertShellWorkspaceContextIsRelocated();
     assertCanvasWorkbenchTabsAreVisible();
-    assertCanvasWorkbenchTabsAreTextOnly();
+    assertCanvasWorkbenchTabsUseControlledIcons();
     assertCanvasWorkbenchTabsAreHeaderScoped();
     cy.get('.react-flow').should('be.visible');
 

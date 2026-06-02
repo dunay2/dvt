@@ -86,6 +86,8 @@ function CanvasShellViewport({
       onViewportChange={graphCommands.onViewportChange}
       onDrop={graphCommands.onDrop}
       onDragOver={graphCommands.onDragOver}
+      authoringNodeKinds={panels.authoringNodeKinds}
+      onCreateAuthoringNode={graphCommands.onCreateAuthoringNode}
       importedNodeFocusIds={panels.importedNodeFocusIds}
       onImportedNodeFocusComplete={graphCommands.onImportedNodeFocusComplete}
       onShowExplorer={chromeCommands.onShowExplorer}
@@ -153,7 +155,7 @@ function CanvasShellWorkbenchChrome({
   return (
     <div
       data-slot="canvas-workbench-chrome"
-      className="flex min-h-12 shrink-0 flex-wrap items-center gap-2 border-b border-[color:var(--border-default)] bg-[var(--surface-panel)] px-3 py-2"
+      className="flex min-h-12 shrink-0 items-center gap-4 overflow-x-auto border-b border-[color:var(--border-default)] bg-[var(--surface-panel)] px-4"
     >
       {layout.hostTabStrip ? (
         <div data-slot="canvas-workbench-chrome-host" className="min-w-0 shrink-0">
@@ -166,7 +168,7 @@ function CanvasShellWorkbenchChrome({
         </div>
       ) : null}
       {renderToolbar ? (
-        <div data-slot="canvas-workbench-chrome-actions" className="ml-auto min-w-0 shrink-0">
+        <div data-slot="canvas-workbench-chrome-actions" className="ml-auto shrink-0">
           <CanvasToolbar
             variant="inline"
             onAutoLayout={chromeCommands.onAutoLayout}

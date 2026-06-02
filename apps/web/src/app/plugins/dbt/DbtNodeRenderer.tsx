@@ -7,9 +7,15 @@ import { Badge } from '../../components/ui/badge';
 import { Card } from '../../components/ui/card';
 import { cn } from '../../components/ui/utils';
 import {
+  useRunEventsQuery,
   useRunSnapshotQuery,
   useScopedRunSummariesQueryForHistory,
 } from '../../queries/runsQueries';
+import {
+  buildRunEventPresentationModel,
+  type RunEventLevel,
+} from '../../services/runs/runEventPresentationModel';
+import { resolveRunEventHeadline } from '../../services/runs/runEventPresentationCopy';
 import { useSessionStore } from '../../stores/sessionStore';
 import type { Run, RunEvent } from '../../types/dbt';
 import type {
@@ -18,6 +24,7 @@ import type {
   CanonicalTask,
   CanonicalTaskStatus,
 } from '../../types/canonical';
+import type { RunEvent as EngineRunEvent } from '../../types/engine';
 import type { InspectorPanelContribution, InspectorPanelProps } from '../contracts/PluginManifest';
 import type { NodeRendererProps } from '../contracts/NodeRendering';
 import {
@@ -35,6 +42,19 @@ type ColumnMeta = {
   type: string;
   description?: string;
   nullable?: boolean;
+};
+
+export type DbtNodeRunHistoryEntry = {
+  readonly eventId: string;
+  readonly eventType: string;
+  readonly runId: string;
+  readonly runSeq: number;
+  readonly emittedAt: string;
+  readonly emittedAtLabel: string;
+  readonly headline: string;
+  readonly detail: string | null;
+  readonly level: RunEventLevel;
+  readonly stepId: string | null;
 };
 
 function resolveKindMeta(kind: string) {
@@ -66,6 +86,45 @@ function resolveColumns(
 
 function meta<T>(node: InspectorPanelProps['node'], key: string): T | undefined {
   return node.metadata?.[key] as T | undefined;
+}
+
+export function buildDbtNodeRunHistoryEntries(
+  runId: string | undefined,
+  events: readonly EngineRunEvent[] | undefined,
+  nodeId: string
+): DbtNodeRunHistoryEntry[] {
+  if (!runId || !events) {
+    return [];
+  }
+
+  const readEventNodeId = (event: EngineRunEvent): string | null => {
+    const payload = event.payload;
+    if (!payload || typeof payload !== 'object') {
+      return null;
+    }
+
+    const payloadNodeId = (payload as Record<string, unknown>).nodeId;
+    return typeof payloadNodeId === 'string' && payloadNodeId.length > 0 ? payloadNodeId : null;
+  };
+
+  return events
+    .filter((event) => event.runId === runId && readEventNodeId(event) === nodeId)
+    .map((event) => {
+      const presentation = buildRunEventPresentationModel(event);
+
+      return {
+        eventId: event.eventId,
+        eventType: event.eventType,
+        runId: event.runId,
+        runSeq: event.runSeq,
+        emittedAt: event.emittedAt,
+        emittedAtLabel: new Date(event.emittedAt).toLocaleString(),
+        headline: resolveRunEventHeadline(presentation.headlineKey, presentation.fallbackHeadline),
+        detail: presentation.detail,
+        level: presentation.level,
+        stepId: presentation.stepId,
+      };
+    });
 }
 
 export function DbtNodeRenderer({
@@ -185,7 +244,7 @@ export function DbtNodeRenderer({
   );
 }
 
-function DbtOverviewPanel({ node }: InspectorPanelProps) {
+function DbtOverviewPanel({ node, tagsEditor }: InspectorPanelProps) {
   const pkg = meta<string>(node, 'package');
   const deps = meta<string[]>(node, 'dependencies') ?? [];
   const statusClass = graphStatusBadgeClasses[node.status] ?? graphStatusBadgeClasses.idle;
@@ -234,16 +293,18 @@ function DbtOverviewPanel({ node }: InspectorPanelProps) {
         </Card>
       )}
 
-      {node.tags.length > 0 && (
+      {(node.tags.length > 0 || tagsEditor) && (
         <Card className={graphVisualClasses.inspectorCard}>
           <h3 className={graphVisualClasses.inspectorTitle}>Tags</h3>
-          <div className="flex flex-wrap gap-1">
-            {node.tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-          </div>
+          {tagsEditor ?? (
+            <div className="flex flex-wrap gap-1">
+              {node.tags.map((tag) => (
+                <Badge key={tag} variant="secondary" className="text-xs">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
         </Card>
       )}
 
@@ -325,20 +386,30 @@ function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
   const workspaceLayoutKey = `${tenantId}::${projectId}::${environmentId}`;
   const activeRunIdOrUndefined = activeRunId ?? undefined;
 
-  const { data: runSnapshot, isLoading } = useRunSnapshotQuery(
-    workspaceLayoutKey,
-    activeRunIdOrUndefined
-  );
+  const {
+    data: runSnapshot,
+    isFetched: hasRunSnapshotLoaded,
+    isLoading,
+  } = useRunSnapshotQuery(workspaceLayoutKey, activeRunIdOrUndefined);
   const { data: runSummaries, isLoading: isLoadingList } = useScopedRunSummariesQueryForHistory(
     workspaceLayoutKey,
     !activeRunId
   );
+  const fallbackRunId = !activeRunId ? runSummaries?.[0]?.runId : undefined;
+  const historyRunId = activeRunIdOrUndefined ?? fallbackRunId;
+  const canLoadEvents =
+    Boolean(historyRunId) && (!activeRunId || (hasRunSnapshotLoaded && runSnapshot != null));
+  const {
+    data: runEventsPage,
+    isError: isRunEventsError,
+    isLoading: isLoadingEvents,
+  } = useRunEventsQuery(workspaceLayoutKey, historyRunId, canLoadEvents);
+  const nodeHistoryEntries = useMemo(
+    () => buildDbtNodeRunHistoryEntries(historyRunId, runEventsPage?.events, node.id),
+    [historyRunId, node.id, runEventsPage?.events]
+  );
 
-  const hasRuntimeSnapshotData =
-    (activeRunId && runSnapshot != null) ||
-    (!activeRunId && Array.isArray(runSummaries) && runSummaries.length > 0);
-
-  if (isLoading || isLoadingList) {
+  if (isLoading || isLoadingList || (canLoadEvents && isLoadingEvents)) {
     return (
       <div className={`flex items-center gap-2 ${graphVisualClasses.inspectorMuted}`}>
         <Loader2 className="size-4 animate-spin" />
@@ -347,22 +418,45 @@ function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
     );
   }
 
-  if (hasRuntimeSnapshotData) {
+  if (activeRunId && hasRunSnapshotLoaded && runSnapshot == null) {
     return (
       <div className={graphVisualClasses.inspectorMutedBlock}>
-        <p>Detailed node history is unavailable from the current runtime contract baseline.</p>
-        <p className={graphVisualClasses.inspectorSubtle}>
-          This panel needs event-backed and step-backed run detail. `F-07` provides snapshot and
-          timeline truth, but node-level execution detail remains follow-on work.
-        </p>
+        <p>No runtime snapshot exists for this run.</p>
       </div>
     );
   }
 
-  if (activeRunId && runSnapshot == null) {
+  if (isRunEventsError && historyRunId) {
     return (
       <div className={graphVisualClasses.inspectorMutedBlock}>
-        <p>No runtime snapshot exists for this run.</p>
+        <p>Runtime event detail could not be loaded for this node.</p>
+      </div>
+    );
+  }
+
+  if (nodeHistoryEntries.length > 0) {
+    return (
+      <div className="space-y-2">
+        {nodeHistoryEntries.map((entry) => (
+          <Card key={entry.eventId} className={graphVisualClasses.inspectorCard}>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className={graphVisualClasses.inspectorTitle}>{entry.headline}</h3>
+                <p className={graphVisualClasses.inspectorSubtle}>{entry.emittedAtLabel}</p>
+              </div>
+              <Badge variant="outline" className="shrink-0 text-xs">
+                {entry.eventType}
+              </Badge>
+            </div>
+            {entry.detail && (
+              <p className={`mt-2 ${graphVisualClasses.inspectorBody}`}>{entry.detail}</p>
+            )}
+            <div className={`mt-2 flex flex-wrap gap-2 ${graphVisualClasses.inspectorSubtle}`}>
+              <span className="font-mono">seq {entry.runSeq}</span>
+              {entry.stepId && <span className="font-mono">{entry.stepId}</span>}
+            </div>
+          </Card>
+        ))}
       </div>
     );
   }

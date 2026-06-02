@@ -80,10 +80,11 @@ function planJsonMatchesForReuse(actual: string | undefined, expected: string): 
 
 export function buildPlanRecord(
   buildResult: PlannerBuildResultV1,
-  planRef: PlanRefSchemaT
+  planRef: PlanRefSchemaT,
+  options: { readonly canonicalPlanJson?: string } = {}
 ): PlanRecord {
   const nowIso = new Date().toISOString();
-  const canonicalPlanJson = toPersistedCanonicalPlanJson(buildResult);
+  const canonicalPlanJson = options.canonicalPlanJson ?? toPersistedCanonicalPlanJson(buildResult);
   const scope = getRequiredPlanStoreScope(buildResult);
   return parsePlanRecord({
     tenantId: scope.tenantId,
@@ -97,9 +98,25 @@ export function buildPlanRecord(
     contractVersion: buildResult.plan.metadata.contractVersion,
     sourceRef: planRef.uri,
     state: 'ACTIVE',
-    createdAtIso: buildResult.plan.metadata.createdAtIso,
+    createdAtIso: resolveCreatedAtIso(canonicalPlanJson, buildResult.plan.metadata.createdAtIso),
     updatedAtIso: nowIso,
   });
+}
+
+function resolveCreatedAtIso(canonicalPlanJson: string, fallback: string): string {
+  try {
+    const parsed = JSON.parse(canonicalPlanJson) as unknown;
+    if (isRecord(parsed) && isRecord(parsed['metadata'])) {
+      const createdAtIso = parsed['metadata']['createdAtIso'];
+      if (typeof createdAtIso === 'string' && createdAtIso.trim().length > 0) {
+        return createdAtIso;
+      }
+    }
+  } catch {
+    return fallback;
+  }
+
+  return fallback;
 }
 
 function getRequiredPlanStoreScope(buildResult: PlannerBuildResultV1): PlanStoreScope {

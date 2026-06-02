@@ -311,7 +311,20 @@ describe('CanvasShell', () => {
     expect(chrome?.contains(hostTabStrip)).toBe(true);
     expect(chrome?.contains(workbenchTabStrip)).toBe(true);
     expect(chrome?.contains(canvasToolbar)).toBe(true);
+    expect(chrome?.getAttribute('class')).toContain('overflow-x-auto');
+    expect(chrome?.getAttribute('class')).not.toContain('flex-wrap');
     expect(canvasToolbar?.getAttribute('data-variant')).toBe('inline');
+  });
+
+  it('keeps the graph workbench at a stable minimum width instead of crushing panels on narrow viewports', async () => {
+    await act(async () => {
+      root.render(<CanvasShell {...buildProps()} />);
+    });
+
+    const shellPanelGroup = container.querySelector('[data-slot="canvas-shell-panel-group"]');
+
+    expect(shellPanelGroup).not.toBeNull();
+    expect(shellPanelGroup?.getAttribute('class')).toContain('min-w-[960px]');
   });
 
   it('keeps Canvas route commands hidden while the first canvas document is not created', async () => {

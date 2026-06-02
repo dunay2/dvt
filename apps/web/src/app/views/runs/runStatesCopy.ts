@@ -25,6 +25,20 @@ export const runStatesCopy = {
   runtimeSnapshotTitle: 'Runtime snapshot',
   snapshotTimelineBadge: 'snapshot+timeline',
   snapshotOnlyBadge: 'snapshot-only',
+  runItineraryTitle: 'Run itinerary',
+  runItineraryNote:
+    'Persisted execution scope for this run. Source and sink tables come from the plan snapshot; result rows come from materialization evidence.',
+  backToCanvasAction: 'Back to Canvas',
+  allRunsAction: 'All runs',
+  planLabel: 'Plan',
+  stepsLabel: 'Steps',
+  stepsUnit: 'steps',
+  nodesUnit: 'nodes',
+  sourceTablesLabel: 'Source tables',
+  sinkTablesLabel: 'Sink tables',
+  scopeUnavailable: 'Not available in this run snapshot',
+  noPlanScopeEvidence:
+    'The runtime snapshot does not include persisted plan source/sink scope for this run.',
   snapshotReadModelNote:
     'This route consumes explicit runtime read models for plan provenance and run outcome. Timeline stays visible for chronology and artifact refs, but result evidence and failure diagnostics render only from persisted snapshot fields.',
   snapshotFieldsTitle: 'Snapshot fields',

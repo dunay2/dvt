@@ -10,6 +10,7 @@ import type {
   ProviderRunStatusView,
   RunExecutionContextRef,
   TransformationExecutor,
+  TransformationSqlFirstPlanSummary,
 } from '@dvt/contracts';
 
 import type { QueryAuthorizationAction } from './accessDecision.js';
@@ -84,6 +85,7 @@ export type GetRunStatusResult = Pick<
   readonly errorReason?: string;
   readonly materialization?: MaterializationEvidence;
   readonly provenance?: RunProvenanceChain;
+  readonly planSummary?: TransformationSqlFirstPlanSummary;
 };
 
 export interface IGetRunStatusUseCase {

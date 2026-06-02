@@ -151,7 +151,7 @@ export function CanvasToolbarPrimaryControls({
         size="sm"
         onClick={onRun}
         disabled={!canRun || !canStartRun}
-        className="h-8 px-3 text-xs"
+        className={canvasChromeClasses.primaryButton}
       >
         <Play className="mr-1.5 size-4" />
         {canvasViewCopy.toolbarRunLabel}

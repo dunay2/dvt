@@ -45,15 +45,22 @@ test('buildFingerprintBaseline projects stable fingerprint rows into determinist
     fileCount: 2,
     shards: [
       {
-        id: 'SYS-RUNTIME',
-        path: '.generated-docs/planning/status/governance-file-fingerprints/SYS-RUNTIME.fingerprints.yaml',
-        fileCount: 2,
+        id: 'SYS-API-ROOT',
+        path: '.generated-docs/planning/status/governance-file-fingerprints/SYS-API-ROOT.fingerprints.yaml',
+        fileCount: 1,
         contentHash: baseline.manifest.shards[0].contentHash,
+      },
+      {
+        id: 'SYS-ENGINE-ROOT',
+        path: '.generated-docs/planning/status/governance-file-fingerprints/SYS-ENGINE-ROOT.fingerprints.yaml',
+        fileCount: 1,
+        contentHash: baseline.manifest.shards[1].contentHash,
       },
     ],
   });
   assert.deepEqual(Object.keys(baseline.shards), [
-    '.generated-docs/planning/status/governance-file-fingerprints/SYS-RUNTIME.fingerprints.yaml',
+    '.generated-docs/planning/status/governance-file-fingerprints/SYS-API-ROOT.fingerprints.yaml',
+    '.generated-docs/planning/status/governance-file-fingerprints/SYS-ENGINE-ROOT.fingerprints.yaml',
   ]);
   assert.deepEqual(expandFingerprintBaseline(baseline), [
     {

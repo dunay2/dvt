@@ -5,11 +5,15 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '../../components/ui/button';
 import { cn } from '../../components/ui/utils';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
+import { canvasChromeClasses } from './canvasChromeTokens';
 import { canvasViewCopy } from './copy';
 
 type CanvasAddNodePaletteProps = Readonly<{
   nodeKinds: readonly NodeKindRegistration[];
-  onCreateAuthoringNode: (registration: NodeKindRegistration) => void;
+  onCreateAuthoringNode: (
+    registration: NodeKindRegistration,
+    position?: { x: number; y: number }
+  ) => void;
   triggerLabel: string;
   triggerDataSlot?: string;
   disabled?: boolean;
@@ -26,12 +30,32 @@ function filterNodeKinds(
     return nodeKinds;
   }
 
-  return nodeKinds.filter((registration) =>
-    [registration.label, registration.kind, registration.role]
+  const roleSearchText: Record<NodeKindRegistration['role'], string> = {
+    check: 'check data test validation quality',
+    control: 'control macro orchestration command',
+    input: 'input source ingest warehouse raw origin',
+    output: 'output sink exposure metric publish',
+    transform: 'transform model sql select materialize',
+  };
+
+  return nodeKinds.filter((registration) => {
+    const searchText = [
+      registration.label,
+      registration.kind,
+      registration.pluginId,
+      registration.role,
+      registration.previewStepKind ?? '',
+      roleSearchText[registration.role],
+      'authoring canvas insert node',
+      registration.allowsIncoming ? 'incoming upstream dependency' : 'root first source',
+      registration.allowsOutgoing ? 'outgoing downstream dependency' : 'terminal final sink',
+      registration.supportsColumns ? 'columns schema fields table' : '',
+    ]
       .join(' ')
-      .toLowerCase()
-      .includes(normalizedSearch)
-  );
+      .toLowerCase();
+
+    return searchText.includes(normalizedSearch);
+  });
 }
 
 export function CanvasAddNodePalette({
@@ -91,7 +115,7 @@ export function CanvasAddNodePalette({
         disabled={!canOpen}
         aria-expanded={open}
         aria-haspopup="listbox"
-        className="h-8 gap-1.5 px-3 text-xs"
+        className={canvasChromeClasses.outlineButton}
         onClick={() => setOpen((current) => !current)}
       >
         <Plus className="size-4" />

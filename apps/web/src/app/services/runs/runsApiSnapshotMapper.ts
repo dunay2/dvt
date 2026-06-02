@@ -10,6 +10,7 @@ import {
   parseContractRunStatus,
   parseExecutionEvidence,
   parseMaterializationEvidence,
+  parsePlanExecutionSummary,
   parseRunExecutor,
   parseRunProvenance,
   parseSnapshotStaleness,
@@ -55,6 +56,7 @@ export function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null 
     ...(materialization ? { materialization } : {}),
     provenance: parseRunProvenance(candidate.provenance),
     execution: parseExecutionEvidence(candidate.execution),
+    planSummary: parsePlanExecutionSummary(candidate.planSummary),
   };
 }
 

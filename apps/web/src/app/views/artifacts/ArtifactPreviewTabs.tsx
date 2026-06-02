@@ -9,19 +9,25 @@ type ArtifactPreviewTabsProps = {
   previewDocuments: ArtifactPreviewDocumentMap;
   panelClassName: string;
   tabTriggerClassName: string;
+  activePreviewKey?: string;
+  onActivePreviewKeyChange: (previewKey: string) => void;
 };
 
 export function ArtifactPreviewTabs({
   previewDocuments,
   panelClassName,
   tabTriggerClassName,
+  activePreviewKey,
+  onActivePreviewKeyChange,
 }: ArtifactPreviewTabsProps) {
   const documents = Object.entries(previewDocuments);
-  const defaultValue = previewDocuments['manifest.json'] ? 'manifest.json' : documents[0]?.[0];
+  const fallbackValue = previewDocuments['manifest.json'] ? 'manifest.json' : documents[0]?.[0];
+  const activeValue =
+    activePreviewKey && previewDocuments[activePreviewKey] ? activePreviewKey : fallbackValue;
 
   return (
     <Card className={panelClassName}>
-      <Tabs defaultValue={defaultValue}>
+      <Tabs value={activeValue} onValueChange={onActivePreviewKeyChange}>
         <TabsList className={routeWorkbenchTabListClassName}>
           {documents.map(([key, document]) => (
             <TabsTrigger key={key} value={key} className={tabTriggerClassName}>

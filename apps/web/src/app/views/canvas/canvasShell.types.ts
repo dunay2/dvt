@@ -107,7 +107,10 @@ export type CanvasShellGraphCommands = {
   onViewportChange: (viewport: CanvasViewport) => void;
   onDrop: React.DragEventHandler<HTMLDivElement>;
   onDragOver: React.DragEventHandler<HTMLDivElement>;
-  onCreateAuthoringNode: (registration: NodeKindRegistration) => void;
+  onCreateAuthoringNode: (
+    registration: NodeKindRegistration,
+    position?: { x: number; y: number }
+  ) => void;
   onSourceImportComplete: (result: ImportSourcesResult) => void;
   onImportedNodeFocusComplete: () => void;
 };

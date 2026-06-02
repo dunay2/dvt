@@ -1,11 +1,13 @@
 // @vitest-environment jsdom
 
+import { fireEvent } from '@testing-library/dom';
 import React, { act } from 'react';
+import { flushSync } from 'react-dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CanvasInspectorPanel } from './CanvasInspectorPanel';
-import type { CanonicalNode } from '../../types/canonical';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
 function buildNode(): CanonicalNode {
   return {
@@ -33,6 +35,27 @@ function buildDvtNode(
     status: 'idle',
     tags: ['authoring'],
     metadata,
+  };
+}
+
+function buildImportedWarehouseSourceNode(): CanonicalNode {
+  return {
+    id: 'src_warehouse_prod_analytics_erp_orders',
+    name: 'src_warehouse_prod_analytics_erp_orders',
+    description: 'Imported source for analytics.erp.orders',
+    pluginId: 'dvt.warehouse-source',
+    kind: 'dvt:source',
+    role: 'input',
+    status: 'idle',
+    tags: ['source', 'erp'],
+    path: 'models/sources/src_erp.yml',
+    metadata: {
+      sourceName: 'warehouse_prod_analytics_erp',
+      tableName: 'orders',
+      database: 'analytics',
+      schema: 'erp',
+      columns: [{ name: 'id', type: 'number', nullable: false }],
+    },
   };
 }
 
@@ -118,9 +141,11 @@ describe('CanvasInspectorPanel', () => {
     const descriptionInput = container.querySelector(
       'textarea[name="node-description"]'
     ) as HTMLTextAreaElement | null;
+    const tagsInput = container.querySelector('input[name="node-tags"]') as HTMLInputElement | null;
 
     expect(nameInput?.value).toBe('orders_source');
     expect(descriptionInput?.value).toBe('Orders source table');
+    expect(tagsInput?.value).toBe('');
 
     await act(async () => {
       if (nameInput != null) {
@@ -130,6 +155,14 @@ describe('CanvasInspectorPanel', () => {
         )?.set;
         valueSetter?.call(nameInput, 'orders_source_v2');
         nameInput.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      if (tagsInput != null) {
+        const valueSetter = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype,
+          'value'
+        )?.set;
+        valueSetter?.call(tagsInput, 'finance, critical');
+        tagsInput.dispatchEvent(new Event('input', { bubbles: true }));
       }
     });
 
@@ -147,6 +180,7 @@ describe('CanvasInspectorPanel', () => {
     expect(onApplyNodeDraft).toHaveBeenCalledWith({
       name: 'orders_source_v2',
       description: 'Orders source table',
+      tags: ['finance', 'critical'],
       dvt: {
         kind: 'source',
         schema: 'public',
@@ -174,12 +208,79 @@ describe('CanvasInspectorPanel', () => {
     });
 
     const nameInput = container.querySelector('input[name="node-name"]');
+    const tagsInput = container.querySelector('input[name="node-tags"]');
     const applyButton = Array.from(container.querySelectorAll('button')).find((button) =>
       button.textContent?.includes('Apply')
     );
 
     expect(nameInput?.getAttribute('disabled')).not.toBeNull();
+    expect(tagsInput?.getAttribute('disabled')).not.toBeNull();
     expect(applyButton).toBeUndefined();
+  });
+
+  it('does not flash apply controls when switching the selected node', async () => {
+    const firstNode = {
+      ...buildDvtNode('dvt:source', {
+        config: {
+          schema: 'raw',
+          table: 'orders',
+          alias: 'orders',
+        },
+      }),
+      id: 'source-orders',
+      name: 'Orders Source',
+    };
+    const secondNode = {
+      ...buildDvtNode('dvt:source', {
+        config: {
+          schema: 'raw',
+          table: 'customers',
+          alias: 'customers',
+        },
+      }),
+      id: 'source-customers',
+      name: 'Customers Source',
+    };
+    const onApplyNodeDraft = vi.fn();
+    const renderPanel = (node: CanonicalNode): JSX.Element => (
+      <CanvasInspectorPanel
+        node={node}
+        nodes={[firstNode, secondNode]}
+        edges={[]}
+        activeRunId={null}
+        onHide={vi.fn()}
+        authoring={{
+          canEditNode: true,
+          onApplyNodeDraft,
+        }}
+      />
+    );
+
+    await act(async () => {
+      root.render(renderPanel(firstNode));
+    });
+
+    const schemaInput = container.querySelector(
+      'input[name="dvt-source-schema"]'
+    ) as HTMLInputElement | null;
+
+    await act(async () => {
+      if (schemaInput != null) {
+        fireEvent.input(schemaInput, { target: { value: 'analytics' } });
+      }
+    });
+
+    expect(container.textContent).toContain('Apply');
+
+    act(() => {
+      flushSync(() => {
+        root.render(renderPanel(secondNode));
+      });
+
+      expect(container.textContent).toContain('Customers Source');
+      expect(container.textContent).not.toContain('Apply');
+      expect(container.textContent).not.toContain('Cancel');
+    });
   });
 
   it('shows active canvas properties when no node is selected and applies a rename', async () => {
@@ -514,6 +615,282 @@ describe('CanvasInspectorPanel', () => {
           table: 'orders',
           alias: 'orders_raw',
         },
+      })
+    );
+  });
+
+  it('lets imported warehouse source nodes configure source schema, table, and alias before preview', async () => {
+    const onApplyNodeDraft = vi.fn();
+    const sourceNode = buildImportedWarehouseSourceNode();
+
+    await act(async () => {
+      root.render(
+        <CanvasInspectorPanel
+          node={sourceNode}
+          nodes={[sourceNode]}
+          edges={[]}
+          activeRunId={null}
+          onHide={vi.fn()}
+          authoring={{
+            canEditNode: true,
+            onApplyNodeDraft,
+          }}
+        />
+      );
+    });
+
+    const schemaInput = container.querySelector(
+      'input[name="dvt-source-schema"]'
+    ) as HTMLInputElement | null;
+    const tableInput = container.querySelector(
+      'input[name="dvt-source-table"]'
+    ) as HTMLInputElement | null;
+    const aliasInput = container.querySelector(
+      'input[name="dvt-source-alias"]'
+    ) as HTMLInputElement | null;
+
+    expect(container.textContent).toContain('DVT source');
+    expect(schemaInput?.value).toBe('erp');
+    expect(tableInput?.value).toBe('orders');
+    expect(aliasInput?.value).toBe('warehouse_prod_analytics_erp');
+
+    await act(async () => {
+      if (aliasInput != null) {
+        const valueSetter = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype,
+          'value'
+        )?.set;
+        valueSetter?.call(aliasInput, 'orders_src');
+        aliasInput.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    });
+
+    const applyButton = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Apply')
+    );
+
+    await act(async () => {
+      applyButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(onApplyNodeDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        dvt: {
+          kind: 'source',
+          schema: 'erp',
+          table: 'orders',
+          alias: 'orders_src',
+        },
+      })
+    );
+  });
+
+  it('shows useful imported source metadata, columns, and graph context in the right panel', async () => {
+    const sourceNode = buildImportedWarehouseSourceNode();
+    const transformNode = buildDvtNode('dvt:sql_transform', {
+      config: {
+        sql: 'select id from {{ source("warehouse_prod_analytics_erp", "orders") }}',
+      },
+    });
+    const sinkNode = buildDvtNode('dvt:sink', {
+      config: {
+        schema: 'marts',
+        table: 'orders_clean',
+      },
+    });
+    const edges: readonly CanonicalEdge[] = [
+      {
+        id: 'edge-source-transform',
+        sourceId: sourceNode.id,
+        targetId: transformNode.id,
+        relation: 'lineage',
+      },
+      {
+        id: 'edge-transform-sink',
+        sourceId: transformNode.id,
+        targetId: sinkNode.id,
+        relation: 'lineage',
+      },
+    ];
+
+    await act(async () => {
+      root.render(
+        <CanvasInspectorPanel
+          node={sourceNode}
+          nodes={[sourceNode, transformNode, sinkNode]}
+          edges={edges}
+          activeRunId={null}
+          onHide={vi.fn()}
+          authoring={{
+            canEditNode: true,
+            onApplyNodeDraft: vi.fn(),
+          }}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-slot="node-inspector-core-tabs"]')).not.toBeNull();
+    const tabsList = container.querySelector('[data-slot="node-inspector-core-tabs-list"]');
+    expect(tabsList).not.toBeNull();
+    expect(tabsList?.getAttribute('class')).toContain('border-b');
+    expect(tabsList?.getAttribute('class')).not.toContain('rounded-lg');
+    expect(container.querySelector('[data-slot="node-inspector-details-section"]')).not.toBeNull();
+    expect(container.textContent).toContain('Details');
+    expect(container.textContent).toContain('Columns');
+    expect(container.textContent).toContain('Depends On');
+    expect(container.textContent).not.toContain('Node details');
+    expect(container.textContent).toContain('Editable properties');
+    expect(container.textContent).toContain('Imported source for analytics.erp.orders');
+    expect(container.textContent).toContain('models/sources/src_erp.yml');
+    expect(container.textContent).toContain('warehouse_prod_analytics_erp');
+    expect(container.textContent).toContain('analytics');
+    expect(container.textContent).toContain('erp');
+    expect(container.textContent).toContain('orders');
+    expect(container.textContent).toContain('source');
+
+    const columnsTab = container.querySelector<HTMLButtonElement>(
+      '[data-slot="node-inspector-tab-columns"]'
+    );
+    expect(columnsTab).not.toBeNull();
+
+    await act(async () => {
+      fireEvent.mouseDown(columnsTab!, { button: 0, ctrlKey: false });
+      fireEvent.click(columnsTab!);
+    });
+
+    expect(container.querySelector('[data-slot="node-inspector-columns-section"]')).not.toBeNull();
+    expect(container.textContent).toContain('Columns (1)');
+    expect(container.textContent).toContain('id');
+    expect(container.textContent).toContain('number');
+
+    const dependsTab = container.querySelector<HTMLButtonElement>(
+      '[data-slot="node-inspector-tab-depends"]'
+    );
+    expect(dependsTab).not.toBeNull();
+
+    await act(async () => {
+      fireEvent.mouseDown(dependsTab!, { button: 0, ctrlKey: false });
+      fireEvent.click(dependsTab!);
+    });
+
+    expect(container.querySelector('[data-slot="node-inspector-depends-section"]')).not.toBeNull();
+    expect(container.textContent).toContain('Connected graph');
+    expect(container.textContent).toContain('Downstream');
+    expect(container.textContent).toContain('Clean Orders');
+    expect(container.textContent).not.toContain('No plugin inspector panels are registered');
+  });
+
+  it('keeps dbt inspector tabs compact without horizontal overflow chrome', async () => {
+    const model = buildDbtModelNode();
+
+    await act(async () => {
+      root.render(
+        <CanvasInspectorPanel
+          node={model}
+          nodes={[model]}
+          edges={[]}
+          activeRunId={null}
+          onHide={vi.fn()}
+          authoring={{
+            canEditNode: true,
+            onApplyNodeDraft: vi.fn(),
+          }}
+        />
+      );
+    });
+
+    const tabsList = container.querySelector('[data-slot="node-inspector-core-tabs-list"]');
+    const detailsTab = container.querySelector('[data-slot="node-inspector-tab-details"]');
+
+    expect(container.textContent).toContain('Details');
+    expect(container.textContent).toContain('Depends On');
+    expect(container.textContent).toContain('Overview');
+    expect(container.textContent).toContain('Config');
+    expect(container.textContent).toContain('History');
+    expect(tabsList?.getAttribute('class')).toContain('flex-wrap');
+    expect(tabsList?.getAttribute('class')).toContain('gap-x-3');
+    expect(tabsList?.getAttribute('class')).toContain('overflow-visible');
+    expect(tabsList?.getAttribute('class')).not.toContain('overflow-x-auto');
+    expect(detailsTab?.getAttribute('class')).toContain('text-xs');
+  });
+
+  it('lets dbt overview tags be edited through the route-owned node draft', async () => {
+    const onApplyNodeDraft = vi.fn();
+    const model = {
+      ...buildDbtModelNode(),
+      tags: ['authoring'],
+    };
+
+    await act(async () => {
+      root.render(
+        <CanvasInspectorPanel
+          node={model}
+          nodes={[model]}
+          edges={[]}
+          activeRunId={null}
+          onHide={vi.fn()}
+          authoring={{
+            canEditNode: true,
+            onApplyNodeDraft,
+          }}
+        />
+      );
+    });
+
+    const overviewTab = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Overview')
+    );
+
+    expect(overviewTab).not.toBeUndefined();
+
+    await act(async () => {
+      fireEvent.mouseDown(overviewTab!, { button: 0, ctrlKey: false });
+      fireEvent.click(overviewTab!);
+    });
+
+    const tagsEditor = container.querySelector('[data-slot="node-inspector-overview-tags-editor"]');
+    const newTagInput = tagsEditor?.querySelector(
+      'input[name="node-overview-new-tag"]'
+    ) as HTMLInputElement | null;
+
+    expect(tagsEditor).not.toBeNull();
+    expect(tagsEditor?.textContent).toContain('authoring');
+    expect(newTagInput?.value).toBe('');
+
+    await act(async () => {
+      if (newTagInput != null) {
+        fireEvent.input(newTagInput, { target: { value: 'finance' } });
+      }
+    });
+
+    const addTagButton = Array.from(tagsEditor?.querySelectorAll('button') ?? []).find((button) =>
+      button.textContent?.includes('Add tag')
+    );
+
+    expect(addTagButton).not.toBeUndefined();
+
+    await act(async () => {
+      addTagButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(tagsEditor?.textContent).toContain('finance');
+
+    const applyButton = Array.from(tagsEditor?.querySelectorAll('button') ?? []).find((button) =>
+      button.textContent?.includes('Apply tags')
+    );
+
+    expect(applyButton).not.toBeUndefined();
+
+    await act(async () => {
+      applyButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(onApplyNodeDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tags: ['authoring', 'finance'],
+        dbt: expect.objectContaining({
+          packageName: 'analytics',
+        }),
       })
     );
   });

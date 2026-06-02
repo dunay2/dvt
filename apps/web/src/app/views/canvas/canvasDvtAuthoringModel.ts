@@ -35,6 +35,8 @@ const DEFAULT_MATERIALIZATION = 'table';
 const DEFAULT_WRITE_MODE = 'replace';
 const VALID_MATERIALIZATIONS = new Set(['table', 'view']);
 const VALID_WRITE_MODES = new Set(['replace', 'append']);
+const DVT_AUTHORING_PLUGIN_ID = 'dvt';
+const DVT_WAREHOUSE_SOURCE_PLUGIN_ID = 'dvt.warehouse-source';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -74,16 +76,19 @@ function normalizeEnumValue(
 
 function createSourceMetadata(node: CanonicalNode): DvtSourceAuthoringMetadata {
   const config = readNodeMetadataRecord(node, 'config');
+  const importedSourceName = readString(node.metadata?.sourceName);
+  const importedSchema = readString(node.metadata?.schema);
+  const importedTableName = readString(node.metadata?.tableName);
   const table = normalizeIdentifier(
-    readString(config?.table) ?? readString(config?.alias) ?? node.name,
+    readString(config?.table) ?? importedTableName ?? readString(config?.alias) ?? node.name,
     'source_table'
   );
 
   return {
     kind: 'source',
-    schema: readString(config?.schema) ?? DEFAULT_SCHEMA_NAME,
+    schema: readString(config?.schema) ?? importedSchema ?? DEFAULT_SCHEMA_NAME,
     table,
-    alias: normalizeIdentifier(readString(config?.alias) ?? table, table),
+    alias: normalizeIdentifier(readString(config?.alias) ?? importedSourceName ?? table, table),
   };
 }
 
@@ -123,17 +128,18 @@ function createSinkMetadata(node: CanonicalNode): DvtSinkAuthoringMetadata {
 export function createDvtNodeAuthoringMetadata(
   node: CanonicalNode
 ): DvtNodeAuthoringMetadata | undefined {
-  if (node.pluginId !== 'dvt') {
-    return undefined;
-  }
-
   switch (node.kind) {
     case 'dvt:source':
-      return createSourceMetadata(node);
+      return node.pluginId === DVT_AUTHORING_PLUGIN_ID ||
+        node.pluginId === DVT_WAREHOUSE_SOURCE_PLUGIN_ID
+        ? createSourceMetadata(node)
+        : undefined;
     case 'dvt:sql_transform':
-      return createSqlTransformMetadata(node);
+      return node.pluginId === DVT_AUTHORING_PLUGIN_ID
+        ? createSqlTransformMetadata(node)
+        : undefined;
     case 'dvt:sink':
-      return createSinkMetadata(node);
+      return node.pluginId === DVT_AUTHORING_PLUGIN_ID ? createSinkMetadata(node) : undefined;
     default:
       return undefined;
   }

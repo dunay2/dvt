@@ -5,6 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import CanvasViewport from './CanvasViewport';
+import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
 import {
   DEFAULT_CANVAS_PALETTE_ID,
   deriveCanvasPaletteTokens,
@@ -20,6 +21,7 @@ const xyflowState = vi.hoisted(() => ({
   lastReactFlowProps: null as null | Record<string, unknown>,
   setViewport: vi.fn(),
   fitView: vi.fn(),
+  screenToFlowPosition: vi.fn(),
 }));
 
 type MockReactFlowProps = Readonly<{
@@ -92,6 +94,7 @@ vi.mock('@xyflow/react', () => {
     useReactFlow: () => ({
       setViewport: xyflowState.setViewport,
       fitView: xyflowState.fitView,
+      screenToFlowPosition: xyflowState.screenToFlowPosition,
     }),
   };
 });
@@ -124,6 +127,8 @@ function buildProps(
     onViewportChange: vi.fn(),
     onDrop: vi.fn(),
     onDragOver: vi.fn(),
+    authoringNodeKinds: [],
+    onCreateAuthoringNode: vi.fn(),
     importedNodeFocusIds: [],
     onImportedNodeFocusComplete: vi.fn(),
     onShowExplorer: vi.fn(),
@@ -158,8 +163,13 @@ describe('CanvasViewport', () => {
     xyflowState.lastReactFlowProps = null;
     xyflowState.setViewport.mockReset();
     xyflowState.fitView.mockReset();
+    xyflowState.screenToFlowPosition.mockReset();
     xyflowState.setViewport.mockResolvedValue(undefined);
     xyflowState.fitView.mockResolvedValue(undefined);
+    xyflowState.screenToFlowPosition.mockImplementation(({ x, y }: { x: number; y: number }) => ({
+      x: x + 100,
+      y: y - 40,
+    }));
     mockResolveNodeKindRegistration.mockImplementation((kind: string) => ({
       minimapColor: kind === 'dbt:model' ? '#22c55e' : '#6b7280',
     }));
@@ -383,5 +393,156 @@ describe('CanvasViewport', () => {
       duration: 300,
     });
     expect(props.onImportedNodeFocusComplete).toHaveBeenCalledTimes(1);
+  });
+
+  it('opens a governed create-node menu from the background context gesture', async () => {
+    const sourceKind = buildTestNodeKind('dvt:source', 'Source');
+    const props = buildProps({
+      authoringNodeKinds: [sourceKind],
+      onCreateAuthoringNode: vi.fn(),
+    });
+
+    await act(async () => {
+      root.render(<CanvasViewport {...props} />);
+    });
+
+    const paneContextMenu = xyflowState.lastReactFlowProps?.onPaneContextMenu as
+      | ((event: React.MouseEvent<Element>) => void)
+      | undefined;
+    const preventDefault = vi.fn();
+
+    await act(async () => {
+      paneContextMenu?.({
+        preventDefault,
+        clientX: 480,
+        clientY: 320,
+      } as unknown as React.MouseEvent<Element>);
+    });
+
+    expect(preventDefault).toHaveBeenCalledTimes(1);
+    expect(xyflowState.screenToFlowPosition).toHaveBeenCalledWith({ x: 480, y: 320 });
+
+    const createButton = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Source')
+    );
+    expect(createButton).toBeDefined();
+
+    await act(async () => {
+      createButton?.click();
+    });
+
+    expect(props.onCreateAuthoringNode).toHaveBeenCalledWith(sourceKind, { x: 580, y: 280 });
+  });
+
+  it('opens a governed remove-edge menu from the edge context gesture', async () => {
+    const props = buildProps({
+      edges: [
+        {
+          id: 'edge-source-model',
+          source: 'source',
+          target: 'model',
+        },
+      ],
+      onEdgesChange: vi.fn(),
+    });
+
+    await act(async () => {
+      root.render(<CanvasViewport {...props} />);
+    });
+
+    const edgeContextMenu = xyflowState.lastReactFlowProps?.onEdgeContextMenu as
+      | ((event: React.MouseEvent<Element>, edge: NonNullable<typeof props.edges>[number]) => void)
+      | undefined;
+    const preventDefault = vi.fn();
+    const edge = props.edges[0];
+    if (edge == null) {
+      throw new Error('EXPECTED_TEST_EDGE');
+    }
+
+    await act(async () => {
+      edgeContextMenu?.(
+        {
+          preventDefault,
+          clientX: 600,
+          clientY: 360,
+        } as unknown as React.MouseEvent<Element>,
+        edge
+      );
+    });
+
+    expect(preventDefault).toHaveBeenCalledTimes(1);
+
+    const removeButton = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Eliminar conexión')
+    );
+    expect(removeButton).toBeDefined();
+
+    await act(async () => {
+      removeButton?.click();
+    });
+
+    expect(props.onEdgesChange).toHaveBeenCalledWith([
+      {
+        id: 'edge-source-model',
+        type: 'remove',
+      },
+    ]);
+  });
+
+  it('dismisses the edge context menu when the user clicks the graph background', async () => {
+    const props = buildProps({
+      edges: [
+        {
+          id: 'edge-source-model',
+          source: 'source',
+          target: 'model',
+        },
+      ],
+      onEdgesChange: vi.fn(),
+    });
+
+    await act(async () => {
+      root.render(<CanvasViewport {...props} />);
+    });
+
+    const edgeContextMenu = xyflowState.lastReactFlowProps?.onEdgeContextMenu as
+      | ((event: React.MouseEvent<Element>, edge: NonNullable<typeof props.edges>[number]) => void)
+      | undefined;
+    const edge = props.edges[0];
+    if (edge == null) {
+      throw new Error('EXPECTED_TEST_EDGE');
+    }
+
+    await act(async () => {
+      edgeContextMenu?.(
+        {
+          preventDefault: vi.fn(),
+          clientX: 600,
+          clientY: 360,
+        } as unknown as React.MouseEvent<Element>,
+        edge
+      );
+    });
+
+    expect(
+      Array.from(container.querySelectorAll('button')).some((button) =>
+        button.textContent?.includes('Eliminar conexión')
+      )
+    ).toBe(true);
+
+    const paneClick = xyflowState.lastReactFlowProps?.onPaneClick as
+      | ((event: React.MouseEvent<Element>) => void)
+      | undefined;
+
+    await act(async () => {
+      paneClick?.({} as React.MouseEvent<Element>);
+    });
+
+    expect(
+      Array.from(container.querySelectorAll('button')).some((button) =>
+        button.textContent?.includes('Eliminar conexión')
+      )
+    ).toBe(false);
+    expect(props.onEdgesChange).not.toHaveBeenCalled();
   });
 });

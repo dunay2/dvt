@@ -75,7 +75,7 @@ function fingerprintRow(entry) {
 }
 
 function fingerprintShardIdForRow(entry) {
-  return entry.domainUnit || entry.rootUnit || 'UNOWNED';
+  return entry.componentUnit || entry.domainUnit || entry.rootUnit || 'UNOWNED';
 }
 
 function buildFingerprintShardPayload(shardId, files) {
