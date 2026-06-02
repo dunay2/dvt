@@ -27,6 +27,7 @@ const {
   buildTaskGapRows,
   buildPrReadinessRows,
   buildCommandQueryRailRows,
+  buildCreationIntentRows,
   buildSummaryRows,
   buildTaskRows,
   buildTaskTraceRows,
@@ -49,6 +50,7 @@ const {
   readPrReadinessRows,
   readAiProjectContext,
   readCommandQueryRailRows,
+  readCreationIntentRows,
   readDocsDispositionRows,
   readFeatureWorkRows,
   readComponentEngineeringComponentDriftRows,
@@ -77,6 +79,14 @@ const {
   resolveQueryName,
   runQuery,
 } = require('./planning-db-query.cjs');
+test('command/query rail query behavior lives in a focused read-model component', () => {
+  const commandQueryRailQueryComponent = require('./planning-db/command-query-rail-query.cjs');
+
+  assert.equal(commandQueryRailQueryComponent.buildCommandQueryRailRows, buildCommandQueryRailRows);
+  assert.equal(commandQueryRailQueryComponent.buildCreationIntentRows, buildCreationIntentRows);
+  assert.equal(commandQueryRailQueryComponent.readCommandQueryRailRows, readCommandQueryRailRows);
+  assert.equal(commandQueryRailQueryComponent.readCreationIntentRows, readCreationIntentRows);
+});
 
 test('resolveQueryName defaults to summary and rejects unknown query names', () => {
   assert.equal(resolveQueryName(undefined), 'summary');
@@ -99,6 +109,7 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('commands'), 'commands');
   assert.equal(resolveQueryName('command-query-rails'), 'command-query-rails');
   assert.equal(resolveQueryName('ai-project-context'), 'ai-project-context');
+  assert.equal(resolveQueryName('creation-intent'), 'creation-intent');
   assert.equal(resolveQueryName('pr-readiness'), 'pr-readiness');
   assert.equal(resolveQueryName('docs-disposition'), 'docs-disposition');
   assert.equal(resolveQueryName('feature-work'), 'feature-work');
@@ -276,6 +287,34 @@ test('parseArgs parses AI project context format and discovery filters', () => {
   );
 });
 
+test('parseArgs parses creation intent preflight filters for AI reuse checks', () => {
+  const command = parseArgs([
+    'creation-intent',
+    '--intent',
+    'I want to create ListWidgets',
+    '--type',
+    'query',
+    '--limit',
+    '5',
+  ]);
+
+  assert.deepEqual(command, {
+    queryName: 'creation-intent',
+    filters: {
+      intent: 'I want to create ListWidgets',
+      type: 'query',
+      limit: 5,
+    },
+  });
+});
+
+test('parseArgs requires an intent before querying creation preflight', () => {
+  assert.throws(
+    () => parseArgs(['creation-intent', '--limit', '5']),
+    /creation-intent requires --intent/
+  );
+});
+
 test('buildCommandQueryRailRows shows rail implementation, gap, and duplicate state', () => {
   assert.deepEqual(
     buildCommandQueryRailRows([
@@ -304,6 +343,82 @@ test('buildCommandQueryRailRows shows rail implementation, gap, and duplicate st
       ],
     ]
   );
+});
+
+test('buildCreationIntentRows turns rail matches into AI pre-create guidance', () => {
+  assert.deepEqual(
+    buildCreationIntentRows([
+      {
+        rail_type: 'query',
+        rail_name: 'ListWidgets',
+        ddd_owner: 'WidgetReadModel',
+        rail_status: 'declared',
+        implementation_ref_count: 2,
+        documentation_ref_count: 1,
+        is_gap: false,
+        is_duplicate: false,
+        intent_match_score: 42,
+        feature_id: 'EXAMPLE-FEATURE',
+        source_path: 'docs/planning/proposals/mandatory/example.md',
+      },
+      {
+        rail_type: 'command',
+        rail_name: 'CreateWidget',
+        ddd_owner: 'WidgetAggregate',
+        rail_status: 'planned',
+        implementation_ref_count: 0,
+        documentation_ref_count: 2,
+        is_gap: true,
+        is_duplicate: true,
+        intent_match_score: 18,
+        feature_id: 'WIDGET-FEATURE',
+        source_path: 'docs/planning/proposals/mandatory/widget.md',
+      },
+    ]),
+    [
+      [
+        'reuse-existing-rail',
+        'query',
+        'ListWidgets',
+        'WidgetReadModel',
+        'declared',
+        'implemented',
+        '-',
+        42,
+        'EXAMPLE-FEATURE',
+        'docs/planning/proposals/mandatory/example.md',
+      ],
+      [
+        'resolve-duplicate-before-creating',
+        'command',
+        'CreateWidget',
+        'WidgetAggregate',
+        'planned',
+        'gap',
+        'duplicate',
+        18,
+        'WIDGET-FEATURE',
+        'docs/planning/proposals/mandatory/widget.md',
+      ],
+    ]
+  );
+});
+
+test('buildCreationIntentRows explicitly reports when no existing rail matches', () => {
+  assert.deepEqual(buildCreationIntentRows([], { intent: 'Create Widget dashboard' }), [
+    [
+      'register-new-rail-before-creating',
+      '-',
+      'Create Widget dashboard',
+      '-',
+      'no-existing-rail',
+      'gap',
+      '-',
+      0,
+      '-',
+      'docs/architecture/command-query-rail-governance.md',
+    ],
+  ]);
 });
 
 test('parseArgs parses docs disposition queue filters for DB-first cleanup work', () => {
@@ -1492,6 +1607,82 @@ test('readCommandQueryRailRows queries the DB command/query rail catalog view', 
     true,
     true,
     5,
+  ]);
+});
+
+test('readCreationIntentRows queries existing rails from the DB-first rail catalog', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readCreationIntentRows(client, {
+    intent: 'I want to create ListWidgets',
+    type: 'query',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.command_query_rail_query/);
+  assert.match(captured.sql, /intent_match_score/);
+  assert.match(captured.sql, /normalized_rail_name/);
+  assert.match(captured.sql, /rail_type = \$4/);
+  assert.match(captured.sql, /limit \$5/);
+  assert.deepEqual(captured.params, [
+    'I want to create ListWidgets',
+    'i want to create listwidgets',
+    ['listwidgets'],
+    'query',
+    5,
+  ]);
+});
+
+test('runQuery dispatches creation-intent through the AI pre-create rail query', async () => {
+  const client = {
+    async query() {
+      return {
+        rows: [
+          {
+            rail_type: 'query',
+            rail_name: 'ListWidgets',
+            ddd_owner: 'WidgetReadModel',
+            rail_status: 'declared',
+            implementation_ref_count: 1,
+            documentation_ref_count: 2,
+            is_gap: false,
+            is_duplicate: false,
+            intent_match_score: 75,
+            feature_id: 'EXAMPLE-FEATURE',
+            source_path: 'docs/planning/proposals/mandatory/example.md',
+          },
+        ],
+      };
+    },
+  };
+
+  const rows = await runQuery({
+    queryName: 'creation-intent',
+    filters: { intent: 'I want to create ListWidgets', limit: 5 },
+    client,
+    print: false,
+  });
+
+  assert.deepEqual(rows, [
+    [
+      'reuse-existing-rail',
+      'query',
+      'ListWidgets',
+      'WidgetReadModel',
+      'declared',
+      'implemented',
+      '-',
+      75,
+      'EXAMPLE-FEATURE',
+      'docs/planning/proposals/mandatory/example.md',
+    ],
   ]);
 });
 

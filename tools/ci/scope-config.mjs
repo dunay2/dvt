@@ -19,6 +19,10 @@ const ROOT_CONFIG_PATTERNS = [
   'turbo.json',
 ];
 
+const SHARED_CI_ACTION_PATTERNS = ['.github/actions/setup-node-pnpm/**'];
+
+const CI_SCOPE_FETCH_ACTION_PATTERNS = ['.github/actions/fetch-scope-base/**'];
+
 function readWorkflowScopePolicy() {
   const policyPath = new URL('./policy/workflow-scope.json', import.meta.url);
   const policy = JSON.parse(readFileSync(policyPath, 'utf8'));
@@ -242,7 +246,7 @@ const TEST_ROOT_BUILD_PATTERNS = [
   ...ROOT_CONFIG_PATTERNS,
   'vitest.config.ts',
   'tsconfig*.json',
-  '.github/actions/setup-node-pnpm/**',
+  ...SHARED_CI_ACTION_PATTERNS,
   '.github/scripts/**',
   'tools/ci/**',
   'scripts/skip-pretest-if-ci.cjs',
@@ -279,14 +283,15 @@ const PR_QUALITY_ROOT_BUILD_PATTERNS = [
   'vitest.config.ts',
   'tsconfig*.json',
   'tools/ci/**',
-  '.github/actions/setup-node-pnpm/**',
+  ...SHARED_CI_ACTION_PATTERNS,
   '.github/scripts/**',
   'scripts/build-workspace-runtime-deps.cjs',
 ];
 
 const PR_QUALITY_CI_TOOLING_PATTERNS = [
   'tools/ci/**',
-  '.github/actions/setup-node-pnpm/**',
+  ...CI_SCOPE_FETCH_ACTION_PATTERNS,
+  ...SHARED_CI_ACTION_PATTERNS,
   '.github/scripts/**',
   '.github/workflows/**',
   'package.json',
@@ -307,7 +312,7 @@ export const TEST_SCOPE_PATTERNS = {
   any_test: [
     'apps/**',
     'packages/**',
-    '.github/actions/setup-node-pnpm/**',
+    ...SHARED_CI_ACTION_PATTERNS,
     '.github/scripts/**',
     'tools/ci/**',
     'scripts/skip-pretest-if-ci.cjs',

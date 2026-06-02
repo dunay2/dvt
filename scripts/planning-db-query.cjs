@@ -12,6 +12,14 @@ const { Client } = require('pg');
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { schemaName } = require('./planning-db-migrate.cjs');
 const { runPlanningImport } = require('./planning-db-import.cjs');
+const {
+  buildCommandQueryRailRows,
+  buildCreationIntentRows,
+  normalizeCreationIntentForSearch,
+  parseBooleanFilter,
+  readCommandQueryRailRows,
+  readCreationIntentRows,
+} = require('./planning-db/command-query-rail-query.cjs');
 
 const architectureSchemaName = 'architecture';
 const componentEngineeringSchemaName = 'component_engineering';
@@ -36,6 +44,7 @@ const knownQueries = new Set([
   'commands',
   'command-query-rails',
   'ai-project-context',
+  'creation-intent',
   'pr-readiness',
   'docs-disposition',
   'feature-work',
@@ -78,6 +87,7 @@ const governanceProjectionQueryNames = new Set([
   'drift',
   'command-query-rails',
   'ai-project-context',
+  'creation-intent',
   'cer',
   'component-tree',
   'component-metadata',
@@ -159,19 +169,6 @@ function parseCerSchemaVersion(value) {
   }
 
   return schemaVersion;
-}
-
-function parseBooleanFilter(value, flagName) {
-  const normalized = String(value).toLowerCase();
-  if (normalized === 'true') {
-    return true;
-  }
-
-  if (normalized === 'false') {
-    return false;
-  }
-
-  throw new Error(`Invalid ${flagName} "${value}". Expected true or false.`);
 }
 
 function parseOutputFormat(value) {
@@ -311,6 +308,10 @@ function parseArgs(args = process.argv.slice(2)) {
       filters.commandDomain = value;
       continue;
     }
+    if (arg === '--intent') {
+      filters.intent = value;
+      continue;
+    }
     if (arg === '--type') {
       filters.type = value;
       continue;
@@ -381,6 +382,12 @@ function parseArgs(args = process.argv.slice(2)) {
   }
   if (outputFormat !== undefined && queryName !== 'ai-project-context') {
     throw new Error('--format is only valid for ai-project-context.');
+  }
+  if (
+    queryName === 'creation-intent' &&
+    normalizeCreationIntentForSearch(filters.intent).length === 0
+  ) {
+    throw new Error('creation-intent requires --intent "<creation intent>".');
   }
 
   return {
@@ -772,23 +779,6 @@ function buildRepositoryCommandRows(rows) {
     row.sensitivity,
     flagLabel(row.runtime_fanout ?? row.runtimeFanout, 'runtime-fanout'),
     row.referenced_file_count ?? row.referencedFileCount ?? 0,
-  ]);
-}
-
-function buildCommandQueryRailRows(rows) {
-  return rows.map((row) => [
-    row.rail_type ?? row.railType,
-    row.rail_name ?? row.railName,
-    row.ddd_owner ?? row.dddOwner,
-    row.rail_status ?? row.railStatus,
-    (row.is_gap ?? row.isGap)
-      ? 'gap'
-      : (row.implementation_ref_count ?? row.implementationRefCount)
-        ? 'implemented'
-        : 'declared',
-    flagLabel(row.is_duplicate ?? row.isDuplicate, 'duplicate'),
-    row.feature_id ?? row.featureId,
-    row.source_path ?? row.sourcePath,
   ]);
 }
 
@@ -1261,15 +1251,6 @@ function appendFilter(predicates, params, column, value) {
   predicates.push(`${column} = $${params.length}`);
 }
 
-function appendBooleanFilter(predicates, params, column, value) {
-  if (value === undefined || value === null) {
-    return;
-  }
-
-  params.push(value);
-  predicates.push(`${column} = $${params.length}`);
-}
-
 function appendResolutionFilter(predicates, params, value) {
   const resolution = normalizeResolutionFilter(value) || 'pending';
   if (resolution === 'all') {
@@ -1421,27 +1402,6 @@ function repositoryCommandSelect() {
       source_content_sha256,
       imported_at
     from ${schemaName}.repository_command_query`;
-}
-
-function commandQueryRailSelect() {
-  return `
-    select
-      rail_id,
-      feature_id,
-      mechanization_status,
-      rail_name,
-      normalized_rail_name,
-      rail_type,
-      ddd_owner,
-      rail_status,
-      implementation_ref_count,
-      is_gap,
-      duplicate_count,
-      is_duplicate,
-      source_path,
-      source_content_sha256,
-      imported_at
-    from ${schemaName}.command_query_rail_query`;
 }
 
 function prReadinessSelect() {
@@ -2334,29 +2294,6 @@ async function readRepositoryCommandRows(client, filters = {}) {
     `${repositoryCommandSelect()}
      ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
      order by runtime_fanout desc, domain, command_type, coalesce(command_name, command_path)
-     limit $${params.length}`,
-    params
-  );
-
-  return result.rows;
-}
-
-async function readCommandQueryRailRows(client, filters = {}) {
-  const params = [];
-  const predicates = [];
-  appendFilter(predicates, params, 'rail_type', filters.type);
-  appendFilter(predicates, params, 'rail_status', filters.status);
-  appendFilter(predicates, params, 'ddd_owner', filters.owner);
-  appendBooleanFilter(predicates, params, 'is_duplicate', filters.duplicates);
-  appendBooleanFilter(predicates, params, 'is_gap', filters.gaps);
-
-  const limit = parseLimit(filters.limit, 50);
-  params.push(limit);
-
-  const result = await client.query(
-    `${commandQueryRailSelect()}
-     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
-     order by is_gap desc, is_duplicate desc, rail_type, rail_name, source_path
      limit $${params.length}`,
     params
   );
@@ -3444,6 +3381,15 @@ async function runQuery(options = {}) {
       return context;
     }
 
+    if (queryName === 'creation-intent') {
+      const rows = await readCreationIntentRows(client, options.filters || {});
+      const intentRows = buildCreationIntentRows(rows, options.filters || {});
+      if (options.print !== false) {
+        printTaskRows(intentRows);
+      }
+      return intentRows;
+    }
+
     if (queryName === 'pr-readiness') {
       const rows = await readPrReadinessRows(client, options.filters || {});
       const readinessRows = buildPrReadinessRows(rows);
@@ -3894,6 +3840,7 @@ module.exports = {
   buildPlanningStatusEventRows,
   buildPrReadinessRows,
   buildCommandQueryRailRows,
+  buildCreationIntentRows,
   buildRepositoryCommandRows,
   buildNextTaskRows,
   buildSummaryRows,
@@ -3945,6 +3892,7 @@ module.exports = {
   readPlanningStatusEventRows,
   readPrReadinessRows,
   readCommandQueryRailRows,
+  readCreationIntentRows,
   readRepositoryCommandRows,
   readComponentEngineeringRuleCatalogRows,
   readComponentEngineeringRuleEvaluationRows,
