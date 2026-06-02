@@ -253,7 +253,7 @@ test('parseArgs parses creation intent preflight filters for AI reuse checks', (
   const command = parseArgs([
     'creation-intent',
     '--intent',
-    'quiero crear ListWidgets',
+    'I want to create ListWidgets',
     '--type',
     'query',
     '--limit',
@@ -263,7 +263,7 @@ test('parseArgs parses creation intent preflight filters for AI reuse checks', (
   assert.deepEqual(command, {
     queryName: 'creation-intent',
     filters: {
-      intent: 'quiero crear ListWidgets',
+      intent: 'I want to create ListWidgets',
       type: 'query',
       limit: 5,
     },
@@ -367,11 +367,11 @@ test('buildCreationIntentRows turns rail matches into AI pre-create guidance', (
 });
 
 test('buildCreationIntentRows explicitly reports when no existing rail matches', () => {
-  assert.deepEqual(buildCreationIntentRows([], { intent: 'crear Widget dashboard' }), [
+  assert.deepEqual(buildCreationIntentRows([], { intent: 'Create Widget dashboard' }), [
     [
       'register-new-rail-before-creating',
       '-',
-      'crear Widget dashboard',
+      'Create Widget dashboard',
       '-',
       'no-existing-rail',
       'gap',
@@ -1317,7 +1317,7 @@ test('readCreationIntentRows queries existing rails from the DB-first rail catal
   };
 
   await readCreationIntentRows(client, {
-    intent: 'quiero crear ListWidgets',
+    intent: 'I want to create ListWidgets',
     type: 'query',
     limit: 5,
   });
@@ -1328,8 +1328,8 @@ test('readCreationIntentRows queries existing rails from the DB-first rail catal
   assert.match(captured.sql, /rail_type = \$4/);
   assert.match(captured.sql, /limit \$5/);
   assert.deepEqual(captured.params, [
-    'quiero crear ListWidgets',
-    'quiero crear listwidgets',
+    'I want to create ListWidgets',
+    'i want to create listwidgets',
     ['listwidgets'],
     'query',
     5,
@@ -1361,7 +1361,7 @@ test('runQuery dispatches creation-intent through the AI pre-create rail query',
 
   const rows = await runQuery({
     queryName: 'creation-intent',
-    filters: { intent: 'quiero crear ListWidgets', limit: 5 },
+    filters: { intent: 'I want to create ListWidgets', limit: 5 },
     client,
     print: false,
   });

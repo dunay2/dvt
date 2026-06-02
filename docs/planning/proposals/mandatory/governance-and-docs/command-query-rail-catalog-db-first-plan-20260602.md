@@ -96,7 +96,7 @@ componentGuides:
 userStories:
   - As an operator, I can query product command/query rails from the planning DB and filter gaps.
   - As an architect, I can identify duplicate product rail names by type from one DB view.
-  - As an AI agent, I can ask "quiero crear X" and receive existing rail reuse guidance before creating anything.
+  - As an AI agent, I can ask "I want to create X" and receive existing rail reuse guidance before creating anything.
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -166,7 +166,7 @@ completionGate:
   - pnpm governance:refresh
   - pnpm planning:db:inventory:check
   - node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
-  - pnpm planning:db:query creation-intent --intent "quiero crear QueryCommandQueryRailCatalog" --limit 5
+  - pnpm planning:db:query creation-intent --intent "I want to create QueryCommandQueryRailCatalog" --limit 5
   - pnpm verify:prepush
 redGreenCycles:
   - id: command-query-rail-catalog-snapshot
