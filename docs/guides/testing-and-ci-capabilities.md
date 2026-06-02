@@ -228,6 +228,11 @@ Command semantics:
   changed-file docs, markdown, formatting, QA-artifact, and focused
   adjacent-script gates without invoking root type-check or the full planning
   DB suite for every planning workflow script edit.
+- Developer workflow verifier edits are routed to the narrow self-test for the
+  touched verifier. `scripts/verify-changed.*` runs
+  `scripts/verify-changed.test.cjs`, `scripts/verify-prepush.*` runs
+  `scripts/verify-prepush.test.cjs`, and the shared
+  `scripts/local-validation-plan.cjs` contract still runs both suites.
 - Governance coverage/remediation report generator edits are routed to their
   exact `node --test scripts/generate-governance-*.test.cjs` suites. That keeps
   AI iteration on report rendering and DB-source normalization under the

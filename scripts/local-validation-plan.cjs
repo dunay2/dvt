@@ -285,7 +285,25 @@ function buildVerifyChangedPlan(files) {
     pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[2]);
   }
   if (hasDeveloperWorkflowVerifierChange(changedFiles)) {
-    pushSteps(plan, VERIFY_CHANGED_GROUPS.developerWorkflowSelfTest);
+    for (const filePath of changedFiles) {
+      if (filePath === 'scripts/local-validation-plan.cjs') {
+        pushSteps(plan, VERIFY_CHANGED_GROUPS.developerWorkflowSelfTest);
+        continue;
+      }
+      if (
+        filePath === 'scripts/verify-changed.cjs' ||
+        filePath === 'scripts/verify-changed.test.cjs'
+      ) {
+        pushStepOnce(plan, VERIFY_CHANGED_GROUPS.developerWorkflowSelfTest[0]);
+        continue;
+      }
+      if (
+        filePath === 'scripts/verify-prepush.cjs' ||
+        filePath === 'scripts/verify-prepush.test.cjs'
+      ) {
+        pushStepOnce(plan, VERIFY_CHANGED_GROUPS.developerWorkflowSelfTest[1]);
+      }
+    }
   }
   pushSteps(plan, VERIFY_CHANGED_BASE_STEPS.slice(8));
 

@@ -196,10 +196,17 @@ test('buildVerifyChangedPlan self-tests developer workflow verifier changes', ()
   assert.ok(labels.includes('node --test scripts/verify-prepush.test.cjs'));
 });
 
-test('buildVerifyChangedPlan self-tests prepush verifier changes', () => {
-  const labels = labelsFor(['scripts/verify-prepush.cjs']);
+test('buildVerifyChangedPlan self-tests changed verifier changes without prepush verifier tests', () => {
+  const labels = labelsFor(['scripts/verify-changed.cjs']);
 
   assert.ok(labels.includes('node --test scripts/verify-changed.test.cjs'));
+  assert.ok(!labels.includes('node --test scripts/verify-prepush.test.cjs'));
+});
+
+test('buildVerifyChangedPlan self-tests prepush verifier changes without changed verifier tests', () => {
+  const labels = labelsFor(['scripts/verify-prepush.cjs']);
+
+  assert.ok(!labels.includes('node --test scripts/verify-changed.test.cjs'));
   assert.ok(labels.includes('node --test scripts/verify-prepush.test.cjs'));
 });
 
