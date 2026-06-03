@@ -96,7 +96,7 @@ describe('Canvas workbench tabs architecture', () => {
       'CanvasWorkbenchTabScope',
       'isCanvasWorkbenchTabAvailableForContext',
       'workspace',
-      'text-only',
+      'semantic icon',
       'US-CANVAS-WORKBENCH-001',
       'US-CANVAS-WORKBENCH-007',
       'canvas-workbench-tab-strip-component.md',
@@ -144,7 +144,7 @@ describe('Canvas workbench tabs architecture', () => {
       'CanvasWorkbenchTabReadModel',
       'CanvasWorkbenchVisualPostureReadModel',
       'Passive View',
-      'text-only',
+      'semantic icon',
       'US-CANVAS-WORKBENCH-010',
       'US-CANVAS-WORKBENCH-013',
     ]) {
@@ -216,10 +216,10 @@ describe('Canvas workbench tabs architecture', () => {
 
     for (const requiredCypressProof of [
       'assertCanvasWorkbenchTabsAreHeaderScoped',
-      'assertCanvasWorkbenchTabsAreTextOnly',
+      'assertCanvasWorkbenchTabsUseControlledIcons',
       'left-navigation-rail',
       'app-shell-outlet',
-      "querySelector('svg')",
+      "querySelectorAll('svg')",
       'scrollWidth',
       'clientWidth',
     ]) {
@@ -259,15 +259,14 @@ describe('Canvas workbench tabs architecture', () => {
     expect(shellNavigationSource).not.toContain("['nav']");
     expect(tabStripSource).toContain('CanvasWorkbenchTabsReadModel');
     expect(tabStripSource).not.toContain('buildShellNavigationModel');
-    expect(tabStripSource).not.toContain('tab.icon');
-    expect(tabStripSource).not.toContain('const Icon');
-    expect(tabStripSource).not.toContain('<Icon');
+    expect(tabStripSource).not.toMatch(/tab\.icon(?!Name)/);
+    expect(tabStripSource).toContain('renderCanvasWorkbenchTabIcon');
     expect(tabStripSource).not.toContain('truncate');
     expect(tabStripSource).not.toContain('min-w-0');
     expect(playgroundTabStripSource).not.toContain('CanvasWorkbenchTabsReadModel');
   });
 
-  it('keeps Stage 1 text-only tab semantics out of plugin icon placement', () => {
+  it('keeps tab icons Canvas-owned instead of leaking plugin icon placement', () => {
     const tabsSource = readAppSource('views/canvas/canvasWorkbenchTabs.ts');
     const tabStripSource = readAppSource('views/canvas/CanvasWorkbenchTabStrip.tsx');
     const cypressSpec = readFileSync(
@@ -277,15 +276,36 @@ describe('Canvas workbench tabs architecture', () => {
 
     expect(tabsSource).toContain('type CanvasWorkbenchTabReadModel');
     expect(tabsSource).toContain('label: string');
-    expect(tabsSource).not.toContain('icon:');
+    expect(tabsSource).toContain('iconName: CanvasWorkbenchTabIconName');
+    expect(tabsSource).toContain('function resolveCanvasWorkbenchTabIconName(');
     expect(tabStripSource).toContain('tabsState: CanvasWorkbenchTabsReadModel');
     expect(tabStripSource).toContain('tab.label');
-    expect(tabStripSource).not.toContain("from 'lucide-react'");
-    expect(tabStripSource).not.toContain('tab.icon');
-    expect(tabStripSource).not.toContain('const Icon');
-    expect(tabStripSource).not.toContain('<Icon');
-    expect(cypressSpec).toContain('assertCanvasWorkbenchTabsAreTextOnly');
-    expect(cypressSpec).toContain("querySelector('svg')");
+    expect(tabStripSource).toContain("from 'lucide-react'");
+    expect(tabStripSource).not.toMatch(/tab\.icon(?!Name)/);
+    expect(tabStripSource).toContain('renderCanvasWorkbenchTabIcon');
+    expect(cypressSpec).toContain('assertCanvasWorkbenchTabsUseControlledIcons');
+    expect(cypressSpec).toContain("querySelectorAll('svg')");
+  });
+
+  it('keeps Canvas workbench tabs as flat graph-workspace chrome instead of route-frame pills', () => {
+    const tabStripSource = readAppSource('views/canvas/CanvasWorkbenchTabStrip.tsx');
+
+    expect(tabStripSource).not.toContain('routeWorkbenchTabListClassName');
+    expect(tabStripSource).not.toContain('routeWorkbenchTabTriggerClassName');
+    expect(tabStripSource).not.toContain('rounded-lg border-[color:var(--border-default)]');
+    expect(tabStripSource).not.toContain('data-[state=active]:shadow-sm');
+    expect(tabStripSource).toContain('data-[state=active]:border-[color:var(--focus-ring)]');
+    expect(tabStripSource).toContain('rounded-none');
+  });
+
+  it('keeps host canvas tabs visually secondary to the flat graph-workspace chrome', () => {
+    const hostTabStripSource = readAppSource('views/canvas/CanvasPlaygroundTabStrip.templates.tsx');
+
+    expect(hostTabStripSource).not.toContain('routeWorkbenchTabListClassName');
+    expect(hostTabStripSource).not.toContain('routeWorkbenchTabTriggerClassName');
+    expect(hostTabStripSource).not.toContain('rounded-md px-3 py-2');
+    expect(hostTabStripSource).toContain('data-[state=active]:border-[color:var(--focus-ring)]');
+    expect(hostTabStripSource).toContain('rounded-none');
   });
 
   it('keeps F-12 Graph retirement semantic instead of reintroducing GraphCanvas naming', () => {

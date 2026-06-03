@@ -9,6 +9,11 @@ type CanvasAuthoringNodeCommand = Readonly<{
   position: { x: number; y: number };
 }>;
 
+type CanvasAuthoringNodePosition = Readonly<{
+  x: number;
+  y: number;
+}>;
+
 const CATALOG_NODE_VERTICAL_OFFSET = 220;
 const FIRST_AUTHORING_NODE_POSITION = { x: 160, y: 120 } as const;
 
@@ -116,7 +121,8 @@ function resolveCatalogAuthoringNodePosition(args: {
 
 export function buildAuthoringNodeCommand(
   registration: NodeKindRegistration,
-  existingNodes: readonly Node[]
+  existingNodes: readonly Node[],
+  requestedPosition?: CanvasAuthoringNodePosition
 ): CanvasAuthoringNodeCommand {
   const baseId = `${registration.pluginId}-${slugifyNodeKind(registration.kind)}`;
   const nextIndex = resolveNextAuthoringNodeIndex(baseId, existingNodes);
@@ -135,6 +141,7 @@ export function buildAuthoringNodeCommand(
         typeLabel: registration.label,
       },
     },
-    position: resolveCatalogAuthoringNodePosition({ registration, existingNodes }),
+    position:
+      requestedPosition ?? resolveCatalogAuthoringNodePosition({ registration, existingNodes }),
   };
 }

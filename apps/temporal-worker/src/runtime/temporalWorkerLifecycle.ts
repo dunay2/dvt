@@ -27,6 +27,7 @@ export interface StopTemporalWorkerRuntimeArgs {
   getConnection(): TemporalConnectionLike | null;
   stateStore: StateStoreLike;
   closePlanArtifactReader?: () => Promise<void>;
+  closeStepActivityResources?: () => Promise<void>;
 }
 
 export async function startTemporalWorkerRuntime(
@@ -76,6 +77,7 @@ export async function stopTemporalWorkerRuntime(
   );
   await runCleanupStep(async () => args.stateStore.close(), captureFirstError);
   await runCleanupStep(args.closePlanArtifactReader, captureFirstError);
+  await runCleanupStep(args.closeStepActivityResources, captureFirstError);
 
   if (firstError !== null) {
     throw firstError;

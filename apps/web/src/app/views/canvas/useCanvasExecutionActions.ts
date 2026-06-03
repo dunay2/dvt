@@ -99,8 +99,10 @@ export function useCanvasExecutionActions({
     transformationValidation,
     hasPersistedPlanForRun,
     isCurrentPlanStale,
+    executableGraphFailureMessage,
     canPlanGraph,
     canStartRun,
+    planRunReadiness,
     planStatusSummary,
   } = executionState;
 
@@ -133,6 +135,7 @@ export function useCanvasExecutionActions({
     canRun: canRun && executionStrategy != null && executionStrategy.kind !== 'not_executable',
     consolePanelVisible,
     currentPlan,
+    executableGraphFailureMessage,
     hasPersistedPlanForRun,
     isCurrentPlanStale,
     onRunStarted,
@@ -150,6 +153,7 @@ export function useCanvasExecutionActions({
     canPlanGraph,
     canStartRun,
     isCurrentPlanStale,
+    planRunReadiness,
     planStatusSummary,
     handlePlan,
     handleStartRun,

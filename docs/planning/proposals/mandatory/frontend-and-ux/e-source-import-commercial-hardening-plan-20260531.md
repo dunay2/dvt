@@ -167,6 +167,9 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/useCanvasNodeAuthoringHandlers.ts
   - apps/web/src/app/views/canvas/useCanvasNodeDropHandlers.ts
   - docs/architecture/components/web/plugin-contributions-developer-guide.md
+  - docs/guides/assets/canvas-authoring-user-manual/**
+  - docs/guides/canvas-authoring-user-manual-20260501.md
+  - docs/guides/index.md
   - docs/planning/closeouts/20260531-e-source-import-commercial-hardening-closeout.md
   - docs/planning/proposals/mandatory/frontend-and-ux/e-source-import-commercial-hardening-plan-20260531.md
   - docs/planning/proposals/index.md
@@ -619,6 +622,15 @@ symbols:
   - <<: *web_symbol
     name: SourceImportWizard
     path: apps/web/src/app/components/SourceImportWizard.tsx
+  - <<: *web_symbol
+    name: ConnectionStep
+    path: apps/web/src/app/components/sourceImportWizard/ConnectionStep.tsx
+  - <<: *web_symbol
+    name: filterConnections
+    path: apps/web/src/app/components/sourceImportWizard/ConnectionStep.tsx
+  - <<: *web_symbol
+    name: formatConnectionCatalogSummary
+    path: apps/web/src/app/components/sourceImportWizard/ConnectionStep.tsx
   - <<: *web_symbol
     name: OptionsStep
     path: apps/web/src/app/components/sourceImportWizard/OptionsStep.tsx

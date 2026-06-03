@@ -149,6 +149,7 @@ governingSources:
   - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
 allowedImplementationSurfaces:
   - buzon/20260524-codex-fowler-workbench-ux-canon.md
+  - buzon/20260531-dvt-workbench-ux-v04-analysis.md
   - docs/.manifest.json
   - docs/architecture/components/web/index.md
   - docs/architecture/components/web/workbench-ux-canon-component.md

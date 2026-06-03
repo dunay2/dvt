@@ -127,6 +127,12 @@ function buildDefaultCanvasHarnessExecutionActionsResult(): CanvasHarnessState['
     planModalOpen: false,
     setPlanModalOpen: vi.fn(),
     canStartRun: false,
+    planRunReadiness: {
+      blockers: ['plan_integrity'],
+      rail: 'ObservePlanRunReadiness',
+      status: 'blocked',
+      summary: 'Preview required before running.',
+    },
     planStatusSummary: 'Preview required before running.',
     handlePlan: vi.fn(),
     handleStartRun: vi.fn(),

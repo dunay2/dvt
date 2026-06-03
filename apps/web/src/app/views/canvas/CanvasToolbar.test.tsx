@@ -14,6 +14,7 @@ import { useCanvasViewMenuContributionStore } from './canvasViewMenuContribution
 import type { CanvasViewMenuContribution } from './canvasViewMenuContributionStore';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
+import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 
 const nodeKinds: readonly NodeKindRegistration[] = [
   {
@@ -53,6 +54,7 @@ function buildToolbarProps(
     onToggleGridVisible: vi.fn(),
     onGridColorChange: vi.fn(),
     onToggleSnapToGrid: vi.fn(),
+    onSetCanvasEmptyStateGuideVisible: vi.fn(),
     onReloadLatestDraft: vi.fn(),
     onExportProjectSnapshot: vi.fn(),
     onImportProjectSnapshotFile: vi.fn(),
@@ -72,6 +74,7 @@ function buildToolbarProps(
     canImportProjectSnapshot: true,
     canStartRun: false,
     planStatusSummary: canvasViewCopy.planStatusPreviewRequiredMessage,
+    planRunReadiness: buildPlanRunReadiness(),
     canvasAuthoringMode: 'transformation',
     exclusiveOverlayMode: 'runtime',
     canUseCostOverlay: true,
@@ -80,9 +83,22 @@ function buildToolbarProps(
     canvasGridVisible: true,
     canvasGridColor: '#94a3b8',
     canvasSnapToGrid: false,
+    canvasEmptyStateGuideVisible: true,
     transformationValidation: buildValidationResult(),
     nodeCount: 3,
     edgeCount: 2,
+    ...overrides,
+  };
+}
+
+function buildPlanRunReadiness(
+  overrides?: Partial<PlanRunReadinessReadModel>
+): PlanRunReadinessReadModel {
+  return {
+    blockers: ['plan_integrity'],
+    rail: 'ObservePlanRunReadiness',
+    status: 'blocked',
+    summary: canvasViewCopy.planStatusPreviewRequiredMessage,
     ...overrides,
   };
 }
@@ -117,6 +133,7 @@ function buildCanvasViewMenuContribution(
     canvasGridVisible: true,
     canvasGridColor: '#94a3b8',
     canvasSnapToGrid: false,
+    canvasEmptyStateGuideVisible: true,
     onAutoLayout: vi.fn(),
     onToggleCostOverlay: vi.fn(),
     onToggleImpact: vi.fn(),
@@ -124,6 +141,7 @@ function buildCanvasViewMenuContribution(
     onToggleGridVisible: vi.fn(),
     onGridColorChange: vi.fn(),
     onToggleSnapToGrid: vi.fn(),
+    onSetCanvasEmptyStateGuideVisible: vi.fn(),
     ...overrides,
   };
 }
@@ -166,6 +184,7 @@ describe('CanvasToolbar', () => {
     });
 
     expect(container.querySelectorAll('[data-slot="canvas-workflow-status"]')).toHaveLength(1);
+    expect(container.querySelectorAll('[data-slot="plan-run-readiness-panel"]')).toHaveLength(1);
     expect(container.textContent).toContain(canvasViewCopy.toolbarWorkflowPlanRequiredLabel);
     expect(container.textContent).not.toContain(canvasViewCopy.toolbarLayoutLabel);
     expect(container.textContent).not.toContain(canvasViewCopy.toolbarImpactLabel);
@@ -182,6 +201,7 @@ describe('CanvasToolbar', () => {
     const onToggleGridVisible = vi.fn();
     const onGridColorChange = vi.fn();
     const onToggleSnapToGrid = vi.fn();
+    const onSetCanvasEmptyStateGuideVisible = vi.fn();
 
     await act(async () => {
       root.render(
@@ -190,9 +210,11 @@ describe('CanvasToolbar', () => {
             onToggleGridVisible,
             onGridColorChange,
             onToggleSnapToGrid,
+            onSetCanvasEmptyStateGuideVisible,
             canvasGridVisible: false,
             canvasGridColor: '#f97316',
             canvasSnapToGrid: true,
+            canvasEmptyStateGuideVisible: false,
           })}
         />
       );
@@ -205,14 +227,17 @@ describe('CanvasToolbar', () => {
     expect(contribution?.canvasGridVisible).toBe(false);
     expect(contribution?.canvasGridColor).toBe('#f97316');
     expect(contribution?.canvasSnapToGrid).toBe(true);
+    expect(contribution?.canvasEmptyStateGuideVisible).toBe(false);
 
     contribution?.onToggleGridVisible();
     contribution?.onToggleSnapToGrid();
     contribution?.onGridColorChange('#22c55e');
+    contribution?.onSetCanvasEmptyStateGuideVisible(true);
 
     expect(onToggleGridVisible).toHaveBeenCalledTimes(1);
     expect(onToggleSnapToGrid).toHaveBeenCalledTimes(1);
     expect(onGridColorChange).toHaveBeenCalledWith('#22c55e');
+    expect(onSetCanvasEmptyStateGuideVisible).toHaveBeenCalledWith(true);
   });
 
   it('does not let a stale View menu cleanup clear an active replacement contribution', () => {
@@ -311,7 +336,9 @@ describe('CanvasToolbar', () => {
     const search = document.body.querySelector<HTMLInputElement>(
       '[data-slot="canvas-add-node-palette-search"]'
     );
-    expect(document.body.querySelector('[data-slot="canvas-add-node-palette"]')).not.toBeNull();
+    const palette = document.body.querySelector('[data-slot="canvas-add-node-palette"]');
+    expect(palette).not.toBeNull();
+    expect(palette?.parentElement).toBe(document.body);
 
     await act(async () => {
       search?.focus();

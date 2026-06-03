@@ -79,6 +79,7 @@ function renderCanvasShellHostTabStrip(
 export function buildCanvasShellLayout({
   authoringCommands,
   layoutState,
+  preferenceCommands,
   recoveryCommands,
   routePresentation,
 }: CanvasShellLayoutBuilderArgs): CanvasShellLayout {
@@ -108,10 +109,12 @@ export function buildCanvasShellLayout({
       canCreateCanvasDocument: routePresentation.canCreateCanvasDocument,
       canEditEdges: routePresentation.effectiveUserPermissions.canEditEdges,
       canOpenSourceImport: layoutState.canOpenSourceImport,
+      emptyStateGuideVisible: layoutState.canvasEmptyStateGuideVisible,
       onCreateCanvasDocument: (command) => {
         void authoringCommands.handleCreateCanvasDocument(command);
       },
       onCreateAuthoringNode: authoringCommands.handleCreateAuthoringNode,
+      onEmptyStateGuideVisibilityChange: preferenceCommands.setCanvasEmptyStateGuideVisible,
     }),
     readOnlyBanner: renderCanvasShellReadOnlyBanner(recoveryCommands, routePresentation),
   };

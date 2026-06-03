@@ -91,7 +91,19 @@ Acceptance:
 - snapped coordinates affect renderer layout projection only;
 - node identity, node kind, edges, and protected draft authority are unchanged.
 
-### US-CANVAS-LAYOUT-007 - Auto-Layout Keeps Dragging
+### US-CANVAS-LAYOUT-007 - Empty Guide Visibility
+
+As a Canvas user, I want to decide whether the typed-empty Canvas guide is shown
+for newly created empty canvases, and I want to re-enable it from configuration.
+
+Acceptance:
+
+- empty-guide visibility executes `ConfigureCanvasViewportPreferences`;
+- hiding the guide does not disable toolbar Insert/Add or node creation;
+- the configuration menu exposes the same preference so the guide can be shown
+  again without changing draft data.
+
+### US-CANVAS-LAYOUT-008 - Auto-Layout Keeps Dragging
 
 As a Canvas user, I want auto-layout to reposition nodes without making them
 immovable.
@@ -102,7 +114,7 @@ Acceptance:
 - React Flow node type and data survive the projection;
 - node drag handles remain available when edit permissions allow.
 
-### US-CANVAS-LAYOUT-008 - Visible Initial Node Placement
+### US-CANVAS-LAYOUT-009 - Visible Initial Node Placement
 
 As a Canvas user adding a new node, I want the new node to appear inside the
 visible viewport.
@@ -124,8 +136,9 @@ Acceptance:
 | US-CANVAS-LAYOUT-004 | `ConfigureCanvasViewportPreferences`      | `CanvasViewportPreferences`    | `CanvasViewport.test.tsx`                  | hidden grid keeps dragging enabled         |
 | US-CANVAS-LAYOUT-005 | `ConfigureCanvasViewportPreferences`      | `CanvasViewportPreferences`    | toolbar/store tests                        | invalid colors normalize                   |
 | US-CANVAS-LAYOUT-006 | `ConfigureCanvasViewportPreferences`      | `CanvasViewportPreferences`    | viewport/layout tests                      | snap does not mutate graph identity        |
-| US-CANVAS-LAYOUT-007 | `PersistCanvasLayout`                     | `CanvasLayoutProjection`       | `CanvasViewport.test.tsx`                  | auto-layout cannot strip node data/type    |
-| US-CANVAS-LAYOUT-008 | future `ResolveCanvasNodeInitialPosition` | future initial-position policy | future Cypress/unit proof                  | node cannot spawn outside visible viewport |
+| US-CANVAS-LAYOUT-007 | `ConfigureCanvasViewportPreferences`      | `CanvasViewportPreferences`    | store, route, toolbar tests                | hidden guide keeps node creation available |
+| US-CANVAS-LAYOUT-008 | `PersistCanvasLayout`                     | `CanvasLayoutProjection`       | `CanvasViewport.test.tsx`                  | auto-layout cannot strip node data/type    |
+| US-CANVAS-LAYOUT-009 | future `ResolveCanvasNodeInitialPosition` | future initial-position policy | future Cypress/unit proof                  | node cannot spawn outside visible viewport |
 
 ## TDD Traceability
 

@@ -297,6 +297,62 @@ describe('useCanvasViewportGraphModel', () => {
     }
   });
 
+  it('refreshes projected node data when canonical node tags change', async () => {
+    const initialProjection = buildCanvasAuthoringGraphProjection({
+      visibleNodeIds: ['source-node'],
+      visibleEdges: [],
+      draftSemanticGraph: {
+        canonicalNodes: [
+          {
+            ...buildCanonicalNode('source-node', 'dvt:source', 'input'),
+            tags: ['authoring'],
+          },
+        ],
+        canonicalEdges: [],
+      },
+      localCanonicalNodes: [],
+    });
+    const mounted = await renderViewportGraphModel({
+      visibleNodeIds: ['source-node'],
+      visibleEdges: [],
+      canonicalNodesById: initialProjection.canonicalNodesById,
+      canonicalEdgeIdBySignature: initialProjection.canonicalEdgeIdBySignature,
+      columnLevelLineageEnabled: false,
+      persistedNodePositions: {},
+    });
+
+    try {
+      expect(mounted.readState()?.nodes[0]?.data.tags).toEqual(['authoring']);
+
+      const updatedProjection = buildCanvasAuthoringGraphProjection({
+        visibleNodeIds: ['source-node'],
+        visibleEdges: [],
+        draftSemanticGraph: {
+          canonicalNodes: [buildCanonicalNode('source-node', 'dvt:source', 'input')],
+          canonicalEdges: [],
+        },
+        localCanonicalNodes: [
+          {
+            ...buildCanonicalNode('source-node', 'dvt:source', 'input'),
+            tags: ['authoring', 'finance'],
+          },
+        ],
+      });
+      await mounted.rerender({
+        visibleNodeIds: ['source-node'],
+        visibleEdges: [],
+        canonicalNodesById: updatedProjection.canonicalNodesById,
+        canonicalEdgeIdBySignature: updatedProjection.canonicalEdgeIdBySignature,
+        columnLevelLineageEnabled: false,
+        persistedNodePositions: {},
+      });
+
+      expect(mounted.readState()?.nodes[0]?.data.tags).toEqual(['authoring', 'finance']);
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
   it('keeps live node positions ahead of persisted layout during viewport rerenders', async () => {
     const authoringProjection = buildCanvasAuthoringGraphProjection({
       visibleNodeIds: ['source-node'],

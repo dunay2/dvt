@@ -57,6 +57,14 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.toolbar.snapToGridLabel',
     fallback: 'Snap',
   },
+  toolbarCanvasSettingsLabel: {
+    key: 'canvas.toolbar.canvasSettingsLabel',
+    fallback: 'Canvas settings',
+  },
+  toolbarEmptyCanvasGuideLabel: {
+    key: 'canvas.toolbar.emptyCanvasGuideLabel',
+    fallback: 'Empty canvas guide',
+  },
   toolbarProjectSnapshotMenuLabel: {
     key: 'canvas.toolbar.projectSnapshotMenuLabel',
     fallback: 'Project',

@@ -168,7 +168,11 @@ export default function CanvasShell({
   }, [canOpenDataRegistry, dataRegistryOpen]);
 
   return (
-    <ResizablePanelGroup direction="horizontal" className="h-full">
+    <ResizablePanelGroup
+      data-slot="canvas-shell-panel-group"
+      direction="horizontal"
+      className="h-full min-w-[960px]"
+    >
       <CanvasShellExplorerRail
         focusMode={layout.focusMode}
         explorerPanelVisible={layout.explorerPanelVisible}

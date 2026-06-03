@@ -157,8 +157,8 @@ export async function executeCanvasPlanAction({
   }
 
   try {
-    const selection = collectPreviewSelection(selectedNodeIds, workspaceNodeIds);
-    const selectedForPlan = selection.nodeIds;
+    const selectedForPlan = transformationValidation.scopedNodeIds;
+    const selection = collectPreviewSelection(selectedForPlan, workspaceNodeIds);
     const context = sessionContext.buildRunContext('preview_context');
     const previewProvenance = await resolvePreviewProvenance({
       canonicalNodes,

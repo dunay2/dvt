@@ -25,6 +25,10 @@ const { runMigrations, schemaName } = require('./planning-db-migrate.cjs');
 const {
   buildKnowledgeSnapshotFromDocuments,
 } = require('../tools/planning-db/knowledge/documentSnapshot.cjs');
+const { buildCommandQueryRailSnapshot } = require('./planning-db/command-query-rail-catalog.cjs');
+const {
+  buildFrontendMechanicalTruthSnapshot,
+} = require('./planning-db/frontend-mechanical-truth-inventory.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const laneDirectory = path.join(repoRoot, 'docs', 'planning', 'state');
@@ -52,6 +56,7 @@ const governanceImportDeleteTables = [
   'knowledge_proposals',
   'knowledge_document_sections',
   'knowledge_documents',
+  'frontend_mechanical_truth_surfaces',
   'risk_debt_items',
   'governance_component_files',
   'governance_component_file_shards',
@@ -917,7 +922,11 @@ function buildGovernanceFileSnapshot(options = {}) {
     sourceContentSha256: remediationQueueSource.contentSha256,
     rawTask: task,
   }));
-  const { riskDebtItems } = buildRiskDebtSnapshot({ governanceFiles: files });
+  const riskDebtSnapshotOptions = { governanceFiles: files };
+  if (options.riskDocuments !== undefined) {
+    riskDebtSnapshotOptions.riskDocuments = options.riskDocuments;
+  }
+  const { riskDebtItems } = buildRiskDebtSnapshot(riskDebtSnapshotOptions);
 
   return {
     index,
@@ -1148,9 +1157,10 @@ function governanceField(row, camelName, snakeName) {
 }
 
 function buildRiskDebtSnapshot(options = {}) {
-  const riskDocuments = normalizeArray(options.riskDocuments).length
-    ? normalizeArray(options.riskDocuments)
-    : listTrackedRiskDocuments();
+  const riskDocuments =
+    options.riskDocuments === undefined
+      ? listTrackedRiskDocuments()
+      : normalizeArray(options.riskDocuments);
   const governanceFiles = normalizeArray(options.governanceFiles);
   const governanceFileByPath = new Map(
     governanceFiles.map((file) => [normalizeText(file.path), file])
@@ -2440,6 +2450,102 @@ async function insertRepositoryCommandSnapshot(client, snapshot) {
   );
 }
 
+async function insertCommandQueryRailSnapshot(client, snapshot) {
+  await client.query(`delete from ${schemaName}.command_query_rails`);
+
+  await insertRows(
+    client,
+    'command_query_rails',
+    [
+      'rail_id',
+      'feature_id',
+      'mechanization_status',
+      'rail_name',
+      'normalized_rail_name',
+      'rail_type',
+      'ddd_owner',
+      'rail_status',
+      { name: 'symbol_refs', cast: 'jsonb' },
+      { name: 'implementation_refs', cast: 'jsonb' },
+      { name: 'documentation_refs', cast: 'jsonb' },
+      { name: 'governing_sources', cast: 'jsonb' },
+      { name: 'allowed_implementation_surfaces', cast: 'jsonb' },
+      { name: 'architecture_guards', cast: 'jsonb' },
+      { name: 'completion_gate', cast: 'jsonb' },
+      'source_path',
+      'source_content_sha256',
+      { name: 'raw_rail', cast: 'jsonb' },
+      { name: 'raw_manifest', cast: 'jsonb' },
+    ],
+    snapshot.rails,
+    (rail) => [
+      rail.railId,
+      rail.featureId,
+      rail.mechanizationStatus,
+      rail.railName,
+      rail.normalizedRailName,
+      rail.railType,
+      rail.dddOwner,
+      rail.railStatus,
+      toJson(rail.symbolRefs),
+      toJson(rail.implementationRefs),
+      toJson(rail.documentationRefs),
+      toJson(rail.governingSources),
+      toJson(rail.allowedImplementationSurfaces),
+      toJson(rail.architectureGuards),
+      toJson(rail.completionGate),
+      rail.sourcePath,
+      rail.sourceContentSha256,
+      toJson(rail.rawRail),
+      toJson(rail.rawManifest),
+    ]
+  );
+}
+
+async function insertFrontendMechanicalTruthSnapshot(client, snapshot) {
+  await client.query(`delete from ${schemaName}.frontend_mechanical_truth_surfaces`);
+
+  await insertRows(
+    client,
+    'frontend_mechanical_truth_surfaces',
+    [
+      'surface_id',
+      'surface_kind',
+      'route_path',
+      'screen_state',
+      'frontend_owner',
+      { name: 'registered_plugins', cast: 'jsonb' },
+      { name: 'consumed_endpoints', cast: 'jsonb' },
+      { name: 'zustand_stores', cast: 'jsonb' },
+      { name: 'tanstack_queries', cast: 'jsonb' },
+      { name: 'visible_no_backend_affordances', cast: 'jsonb' },
+      { name: 'capability_gaps', cast: 'jsonb' },
+      { name: 'evidence_refs', cast: 'jsonb' },
+      'source_path',
+      'source_content_sha256',
+      { name: 'raw_surface', cast: 'jsonb' },
+    ],
+    snapshot.surfaces,
+    (surface) => [
+      surface.surfaceId,
+      surface.surfaceKind,
+      surface.routePath,
+      surface.screenState,
+      surface.frontendOwner,
+      toJson(surface.registeredPlugins),
+      toJson(surface.consumedEndpoints),
+      toJson(surface.zustandStores),
+      toJson(surface.tanstackQueries),
+      toJson(surface.visibleNoBackendAffordances),
+      toJson(surface.capabilityGaps),
+      toJson(surface.evidenceRefs),
+      surface.sourcePath,
+      surface.sourceContentSha256,
+      toJson(surface.rawSurface),
+    ]
+  );
+}
+
 async function insertPrReadinessSnapshot(client, snapshot) {
   await client.query(`delete from ${schemaName}.pr_readiness_checks`);
 
@@ -2749,6 +2855,12 @@ async function importContent(options = {}) {
   const repositoryCommandSnapshot = includeGovernance
     ? await buildRepositoryCommandSnapshot()
     : null;
+  const commandQueryRailSnapshot = includeGovernance
+    ? buildCommandQueryRailSnapshot({ governanceSnapshot })
+    : null;
+  const frontendMechanicalTruthSnapshot = includeGovernance
+    ? buildFrontendMechanicalTruthSnapshot()
+    : null;
   const prReadinessSnapshot = includeGovernance ? buildPrReadinessSnapshot() : null;
   const markdownDocuments = includeGovernance ? listTrackedMarkdownDocuments() : [];
   const knowledgeDocuments = includeGovernance
@@ -2786,6 +2898,8 @@ async function importContent(options = {}) {
     if (includeGovernance) {
       await insertGovernanceSnapshot(client, governanceSnapshot);
       await insertRepositoryCommandSnapshot(client, repositoryCommandSnapshot);
+      await insertCommandQueryRailSnapshot(client, commandQueryRailSnapshot);
+      await insertFrontendMechanicalTruthSnapshot(client, frontendMechanicalTruthSnapshot);
       await insertPrReadinessSnapshot(client, prReadinessSnapshot);
       await insertDocsDispositionSnapshot(client, docsDispositionSnapshot);
       await insertKnowledgeSnapshot(client, knowledgeSnapshot);
@@ -2811,6 +2925,8 @@ async function importContent(options = {}) {
     governanceRemediationTasks: governanceSnapshot?.remediationTasks.length ?? 0,
     riskDebtItems: governanceSnapshot?.riskDebtItems.length ?? 0,
     repositoryCommands: repositoryCommandSnapshot?.commands.length ?? 0,
+    commandQueryRails: commandQueryRailSnapshot?.rails.length ?? 0,
+    frontendMechanicalTruthSurfaces: frontendMechanicalTruthSnapshot?.surfaces.length ?? 0,
     prReadinessChecks: prReadinessSnapshot ? 1 : 0,
     docsDispositionDocuments: docsDispositionSnapshot?.documents.length ?? 0,
     docsDispositionActions: docsDispositionSnapshot?.actions.length ?? 0,
@@ -2828,6 +2944,8 @@ async function importContent(options = {}) {
       `governanceRemediationTasks=${result.governanceRemediationTasks}`,
       `riskDebtItems=${result.riskDebtItems}`,
       `repositoryCommands=${result.repositoryCommands}`,
+      `commandQueryRails=${result.commandQueryRails}`,
+      `frontendMechanicalTruthSurfaces=${result.frontendMechanicalTruthSurfaces}`,
       `prReadinessChecks=${result.prReadinessChecks}`,
       `docsDispositionActions=${result.docsDispositionActions}`,
       `knowledgeDocuments=${result.knowledgeDocuments}`,
@@ -2880,6 +2998,33 @@ function compareGovernanceAuxiliaryState(expected, actual) {
       keyOf: (row) => row.commandId,
       compareFields: ['commandText', 'sourcePath', 'sourceContentSha256'],
     }),
+    commandQueryRails: compareImportRows(expected.commandQueryRails, actual.commandQueryRails, {
+      keyOf: (row) => row.railId,
+      compareFields: [
+        'featureId',
+        'railName',
+        'railType',
+        'dddOwner',
+        'railStatus',
+        'sourcePath',
+        'sourceContentSha256',
+      ],
+    }),
+    frontendMechanicalTruthSurfaces: compareImportRows(
+      expected.frontendMechanicalTruthSurfaces,
+      actual.frontendMechanicalTruthSurfaces,
+      {
+        keyOf: (row) => row.surfaceId,
+        compareFields: [
+          'surfaceKind',
+          'routePath',
+          'screenState',
+          'frontendOwner',
+          'sourcePath',
+          'sourceContentSha256',
+        ],
+      }
+    ),
     prReadinessChecks: compareImportRows(expected.prReadinessChecks, actual.prReadinessChecks, {
       keyOf: (row) => row.readinessId,
       compareFields: ['sourcePath', 'sourceContentSha256', 'effectiveArcLevel', 'blocking'],
@@ -2962,6 +3107,10 @@ function compareGovernanceAuxiliaryState(expected, actual) {
 async function buildGovernanceAuxiliaryExpectedState(options = {}) {
   const repositoryCommandSnapshot =
     options.repositoryCommandSnapshot || (await buildRepositoryCommandSnapshot());
+  const commandQueryRailSnapshot =
+    options.commandQueryRailSnapshot || buildCommandQueryRailSnapshot();
+  const frontendMechanicalTruthSnapshot =
+    options.frontendMechanicalTruthSnapshot || buildFrontendMechanicalTruthSnapshot();
   const prReadinessSnapshot = options.prReadinessSnapshot || buildPrReadinessSnapshot();
   const planningSnapshot = options.planningSnapshot || buildPlanningContentSnapshot();
   const docsDispositionSnapshot =
@@ -2977,6 +3126,25 @@ async function buildGovernanceAuxiliaryExpectedState(options = {}) {
       commandText: command.commandText,
       sourcePath: command.sourcePath,
       sourceContentSha256: command.sourceContentSha256,
+    })),
+    commandQueryRails: commandQueryRailSnapshot.rails.map((rail) => ({
+      railId: rail.railId,
+      featureId: rail.featureId,
+      railName: rail.railName,
+      railType: rail.railType,
+      dddOwner: rail.dddOwner,
+      railStatus: rail.railStatus,
+      sourcePath: rail.sourcePath,
+      sourceContentSha256: rail.sourceContentSha256,
+    })),
+    frontendMechanicalTruthSurfaces: frontendMechanicalTruthSnapshot.surfaces.map((surface) => ({
+      surfaceId: surface.surfaceId,
+      surfaceKind: surface.surfaceKind,
+      routePath: surface.routePath,
+      screenState: surface.screenState,
+      frontendOwner: surface.frontendOwner,
+      sourcePath: surface.sourcePath,
+      sourceContentSha256: surface.sourceContentSha256,
     })),
     prReadinessChecks: [
       {
@@ -3038,12 +3206,14 @@ async function buildGovernanceAuxiliaryExpectedState(options = {}) {
 async function readGovernanceAuxiliaryState(client) {
   const [
     repositoryCommands,
+    commandQueryRails,
     prReadinessChecks,
     docDispositionDocuments,
     docDispositionMarkers,
     docTaskLikeReferences,
     docDispositionActions,
     riskDebtItems,
+    frontendMechanicalTruthSurfaces,
   ] = await Promise.all([
     client.query(`
       select
@@ -3053,6 +3223,19 @@ async function readGovernanceAuxiliaryState(client) {
         source_content_sha256 as "sourceContentSha256"
       from ${schemaName}.repository_commands
       order by command_id
+    `),
+    client.query(`
+      select
+        rail_id as "railId",
+        feature_id as "featureId",
+        rail_name as "railName",
+        rail_type as "railType",
+        ddd_owner as "dddOwner",
+        rail_status as "railStatus",
+        source_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.command_query_rails
+      order by rail_id
     `),
     client.query(`
       select
@@ -3124,16 +3307,30 @@ async function readGovernanceAuxiliaryState(client) {
       from ${schemaName}.risk_debt_items
       order by risk_id
     `),
+    client.query(`
+      select
+        surface_id as "surfaceId",
+        surface_kind as "surfaceKind",
+        route_path as "routePath",
+        screen_state as "screenState",
+        frontend_owner as "frontendOwner",
+        source_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.frontend_mechanical_truth_surfaces
+      order by surface_id
+    `),
   ]);
 
   return {
     repositoryCommands: repositoryCommands.rows,
+    commandQueryRails: commandQueryRails.rows,
     prReadinessChecks: prReadinessChecks.rows,
     docDispositionDocuments: docDispositionDocuments.rows,
     docDispositionMarkers: docDispositionMarkers.rows,
     docTaskLikeReferences: docTaskLikeReferences.rows,
     docDispositionActions: docDispositionActions.rows,
     riskDebtItems: riskDebtItems.rows,
+    frontendMechanicalTruthSurfaces: frontendMechanicalTruthSurfaces.rows,
   };
 }
 
@@ -3226,6 +3423,11 @@ function compareGovernanceAuxiliarySourceState(expected, actual) {
     repositoryCommandSources: compareImportRows(
       expected.repositoryCommandSources,
       actual.repositoryCommandSources,
+      sourceHashComparison
+    ),
+    commandQueryRailSources: compareImportRows(
+      expected.commandQueryRailSources,
+      actual.commandQueryRailSources,
       sourceHashComparison
     ),
     docDispositionDocuments: compareImportRows(
@@ -3344,6 +3546,8 @@ async function buildGovernanceAuxiliarySourceExpectedState(options = {}) {
   const planningSnapshot = options.planningSnapshot || buildPlanningContentSnapshot();
   const repositoryCommandSnapshot =
     options.repositoryCommandSnapshot || (await buildRepositoryCommandSnapshot());
+  const commandQueryRailSnapshot =
+    options.commandQueryRailSnapshot || buildCommandQueryRailSnapshot();
   const prReadinessSnapshot = options.prReadinessSnapshot || buildPrReadinessSnapshot();
   const markdownDocuments = options.markdownDocuments || listTrackedMarkdownDocuments();
   const knowledgeDocuments =
@@ -3354,6 +3558,7 @@ async function buildGovernanceAuxiliarySourceExpectedState(options = {}) {
       hashField: 'contentSha256',
     }),
     repositoryCommandSources: uniqueSourceHashRows(repositoryCommandSnapshot.commands),
+    commandQueryRailSources: uniqueSourceHashRows(commandQueryRailSnapshot.rails),
     docDispositionDocuments: documentSourceHashRows(markdownDocuments),
     knowledgeDocuments: options.knowledgeSnapshotDocuments
       ? uniqueSourceHashRows(options.knowledgeSnapshotDocuments, {
@@ -3439,6 +3644,7 @@ async function readGovernanceAuxiliarySourceState(client) {
   const [
     planningSources,
     repositoryCommandSources,
+    commandQueryRailSources,
     prReadinessChecks,
     docDispositionDocuments,
     knowledgeDocuments,
@@ -3456,6 +3662,13 @@ async function readGovernanceAuxiliarySourceState(client) {
         source_path as "sourcePath",
         source_content_sha256 as "sourceContentSha256"
       from ${schemaName}.repository_commands
+      order by source_path
+    `),
+    client.query(`
+      select distinct
+        source_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.command_query_rails
       order by source_path
     `),
     client.query(`
@@ -3494,6 +3707,7 @@ async function readGovernanceAuxiliarySourceState(client) {
   return {
     planningSources: planningSources.rows,
     repositoryCommandSources: repositoryCommandSources.rows,
+    commandQueryRailSources: commandQueryRailSources.rows,
     prReadinessChecks: prReadinessChecks.rows,
     docDispositionDocuments: docDispositionDocuments.rows,
     knowledgeDocuments: knowledgeDocuments.rows,
@@ -3628,6 +3842,8 @@ async function runPlanningImport(options = {}, deps = {}) {
       governanceRemediationTasks: 0,
       riskDebtItems: 0,
       repositoryCommands: 0,
+      commandQueryRails: 0,
+      frontendMechanicalTruthSurfaces: 0,
       prReadinessChecks: 0,
       docsDispositionDocuments: 0,
       docsDispositionActions: 0,
@@ -3673,6 +3889,8 @@ module.exports = {
   buildGovernanceFileSnapshot,
   buildGovernanceGeneratedInputs,
   buildGovernanceSourceExpectedState,
+  buildCommandQueryRailSnapshot,
+  buildFrontendMechanicalTruthSnapshot,
   buildKnowledgeDocumentSnapshot,
   buildPlanningContentSnapshot,
   buildPrReadinessSnapshot,
@@ -3693,6 +3911,8 @@ module.exports = {
   insertRows,
   mergePlanningTaskIds,
   insertDocsDispositionSnapshot,
+  insertCommandQueryRailSnapshot,
+  insertFrontendMechanicalTruthSnapshot,
   insertKnowledgeSnapshot,
   insertPrReadinessSnapshot,
   insertRepositoryCommandSnapshot,

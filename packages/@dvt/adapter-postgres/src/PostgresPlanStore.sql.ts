@@ -190,6 +190,44 @@ export function sqlCreatePlanAdmissionLinksTable(schema: string): string {
   `;
 }
 
+export function sqlPruneLegacyExecutionPlanSchemaRows(schema: string): string {
+  return `
+    UPDATE ${quoteIdentifier(schema)}.plan_records current_plan
+    SET derived_from_plan_id = NULL,
+        updated_at = NOW()
+    WHERE current_plan.derived_from_plan_id IS NOT NULL
+      AND EXISTS (
+        SELECT 1
+        FROM ${quoteIdentifier(schema)}.plan_records legacy_plan
+        WHERE legacy_plan.tenant_id = current_plan.tenant_id
+          AND legacy_plan.project_id = current_plan.project_id
+          AND legacy_plan.environment_id = current_plan.environment_id
+          AND legacy_plan.plan_id = current_plan.derived_from_plan_id
+          AND legacy_plan.schema_version = 'v1.2'
+      );
+
+    UPDATE ${quoteIdentifier(schema)}.plan_records current_plan
+    SET supersedes_plan_id = NULL,
+        updated_at = NOW()
+    WHERE current_plan.supersedes_plan_id IS NOT NULL
+      AND EXISTS (
+        SELECT 1
+        FROM ${quoteIdentifier(schema)}.plan_records legacy_plan
+        WHERE legacy_plan.tenant_id = current_plan.tenant_id
+          AND legacy_plan.project_id = current_plan.project_id
+          AND legacy_plan.environment_id = current_plan.environment_id
+          AND legacy_plan.plan_id = current_plan.supersedes_plan_id
+          AND legacy_plan.schema_version = 'v1.2'
+      );
+
+    DELETE FROM ${quoteIdentifier(schema)}.plan_records
+    WHERE schema_version = 'v1.2';
+
+    DELETE FROM ${quoteIdentifier(schema)}.stored_plans
+    WHERE schema_version = 'v1.2';
+  `;
+}
+
 export function sqlAssertStoredPlansCanonicalOwnership(schema: string): string {
   return `
     DO $$

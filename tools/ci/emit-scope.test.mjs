@@ -36,6 +36,7 @@ test('emit-scope workflow mode keeps changed-file validation for scripts-only pa
 
   assert.equal(scope.changed_file_validation_relevant, true);
   assert.equal(scope.any_code, false);
+  assert.equal(scope.security_analysis_relevant, false);
 });
 
 test('emit-scope workflow mode preserves non-package matches mixed with scripts-only package json', () => {
@@ -47,6 +48,23 @@ test('emit-scope workflow mode preserves non-package matches mixed with scripts-
 
   assert.equal(scope.changed_file_validation_relevant, true);
   assert.equal(scope.any_code, true);
+  assert.equal(scope.security_analysis_relevant, true);
+});
+
+test('emit-scope workflow mode routes dependency-sensitive package json to security analysis', () => {
+  const scope = computeWorkflowModeScopeOutputs('workflow', ['package.json'], {
+    packageJsonChange: {
+      packageScriptsOnly: false,
+      rootBuildSensitive: true,
+      dependencySensitive: true,
+      lifecycleSensitive: false,
+      ciToolingSensitive: false,
+      governanceToolingOnly: false,
+    },
+  });
+
+  assert.equal(scope.any_code, true);
+  assert.equal(scope.security_analysis_relevant, true);
 });
 
 test('emit-scope contracts mode keeps scripts-only package json out of contract lanes', () => {
@@ -189,6 +207,7 @@ test('emit-scope workflow mode exposes prepush-equivalent governance routing', (
     'apps/web/src/app/AppProviders.tsx',
   ]);
 
+  assert.equal(webScope.security_analysis_relevant, true);
   assert.equal(webScope.governance_global_relevant, false);
   assert.equal(webScope.traceability_adr0_relevant, false);
   assert.equal(webScope.feature_mechanization_relevant, true);

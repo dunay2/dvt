@@ -15,6 +15,16 @@ test('classifies root CI policy config as code validation without workspace fan-
   assert.equal(fileScope.governanceGlobalRelevant, false);
 });
 
+test('classifies CI composite actions as workflow policy inputs without workspace fan-out', () => {
+  const fileScope = classifyRepositoryFileScope('.github/actions/fetch-scope-base/action.yml');
+
+  assert.equal(fileScope.workflowPolicyInput, true);
+  assert.equal(fileScope.changedFileValidationRelevant, true);
+  assert.equal(fileScope.codeValidationRelevant, false);
+  assert.equal(fileScope.runtimeWorkspaceFanout, false);
+  assert.equal(fileScope.governanceGlobalRelevant, false);
+});
+
 test('classifies repository command files through the command catalog', () => {
   const planning = classifyRepositoryFileScope('scripts/planning-db-query.cjs');
   const runtimeCapability = classifyRepositoryFileScope('scripts/db-migrate.cjs');

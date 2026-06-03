@@ -8,12 +8,19 @@ const {
   resolveDatabaseUrl,
   shouldBootstrapLocalPostgres,
   buildApiEnv,
+  buildCoordinatedTemporalWorkerEnv,
   buildTemporalWorkerEnv,
   shouldBootstrapLocalTemporal,
   shouldStartTemporalWorker,
+  resolveProcessStartupOrder,
+  buildLocalPostgresProofSeedSql,
+  buildLocalWarehouseConnectionCatalog,
   waitForUrlOrProcessExit,
 } = require('./run-dev-stack.cjs');
-const { startLocalTemporalService } = require('./run-dev-stack.temporal.cjs');
+const {
+  resolveTemporalCliExecutable,
+  startLocalTemporalService,
+} = require('./run-dev-stack.temporal.cjs');
 const { defaultPgUrl } = require('./run-temporal-postgres-proof.cjs');
 
 test('parseArgs enables skip-postgres explicitly', () => {
@@ -121,7 +128,7 @@ test('buildApiEnv preserves explicit temporal posture when provided', () => {
   assert.equal(apiEnv.DVT_WORKSPACE_FILES_ROOT, 'C:\\custom\\workspace-files');
 });
 
-test('buildTemporalWorkerEnv injects canonical local temporal worker posture', () => {
+test('buildTemporalWorkerEnv injects local protected-runtime tenant queue posture', () => {
   const workerEnv = buildTemporalWorkerEnv(
     {
       host: '127.0.0.1',
@@ -135,10 +142,86 @@ test('buildTemporalWorkerEnv injects canonical local temporal worker posture', (
   assert.equal(workerEnv.DATABASE_URL, defaultPgUrl);
   assert.equal(workerEnv.TEMPORAL_ADDRESS, '127.0.0.1:7233');
   assert.equal(workerEnv.TEMPORAL_NAMESPACE, 'default');
-  assert.equal(workerEnv.TEMPORAL_TASK_QUEUE, 'dvt-temporal');
+  assert.equal(workerEnv.TEMPORAL_TASK_QUEUE, 'dvt-temporal-tenant');
   assert.equal(workerEnv.DVT_TEMPORAL_ADMIN_HOST, '127.0.0.1');
   assert.equal(workerEnv.DVT_TEMPORAL_ADMIN_PORT, '9468');
   assert.equal(workerEnv.DVT_TEMPORAL_WORKER_RUN_MIGRATIONS, 'true');
+});
+
+test('buildTemporalWorkerEnv derives local worker queue from configured default tenant', () => {
+  const workerEnv = buildTemporalWorkerEnv(
+    {
+      host: '127.0.0.1',
+      apiPort: 3000,
+      skipPostgres: false,
+    },
+    { VITE_DEFAULT_TENANT_ID: 'tenant-b' },
+    defaultPgUrl
+  );
+
+  assert.equal(workerEnv.TEMPORAL_TASK_QUEUE, 'dvt-temporal-tenant-b');
+});
+
+test('buildTemporalWorkerEnv preserves explicit temporal worker queue', () => {
+  const workerEnv = buildTemporalWorkerEnv(
+    {
+      host: '127.0.0.1',
+      apiPort: 3000,
+      skipPostgres: false,
+    },
+    { TEMPORAL_TASK_QUEUE: 'operator-owned-queue' },
+    defaultPgUrl
+  );
+
+  assert.equal(workerEnv.TEMPORAL_TASK_QUEUE, 'operator-owned-queue');
+});
+
+test('buildCoordinatedTemporalWorkerEnv derives worker queue from local tenant, not API base queue', () => {
+  const apiEnv = buildApiEnv(
+    {
+      host: '127.0.0.1',
+      apiPort: 3000,
+      skipPostgres: false,
+    },
+    {}
+  );
+
+  const workerEnv = buildCoordinatedTemporalWorkerEnv(
+    {
+      host: '127.0.0.1',
+      apiPort: 3000,
+      skipPostgres: false,
+    },
+    apiEnv,
+    {}
+  );
+
+  assert.equal(apiEnv.TEMPORAL_TASK_QUEUE, 'dvt-temporal');
+  assert.equal(workerEnv.TEMPORAL_TASK_QUEUE, 'dvt-temporal-tenant');
+});
+
+test('buildCoordinatedTemporalWorkerEnv preserves operator-owned worker queue', () => {
+  const apiEnv = buildApiEnv(
+    {
+      host: '127.0.0.1',
+      apiPort: 3000,
+      skipPostgres: false,
+    },
+    { TEMPORAL_TASK_QUEUE: 'api-base-queue' }
+  );
+
+  const workerEnv = buildCoordinatedTemporalWorkerEnv(
+    {
+      host: '127.0.0.1',
+      apiPort: 3000,
+      skipPostgres: false,
+    },
+    apiEnv,
+    { TEMPORAL_TASK_QUEUE: 'operator-owned-worker-queue' }
+  );
+
+  assert.equal(apiEnv.TEMPORAL_TASK_QUEUE, 'api-base-queue');
+  assert.equal(workerEnv.TEMPORAL_TASK_QUEUE, 'operator-owned-worker-queue');
 });
 
 test('buildTemporalWorkerEnv forwards configured DBT bundle store settings', () => {
@@ -191,38 +274,108 @@ test('shouldBootstrapLocalTemporal only fills the local protected-runtime Tempor
   assert.equal(shouldBootstrapLocalTemporal({ DATABASE_URL: defaultPgUrl }), false);
 });
 
-test('startLocalTemporalService uses a full local Temporal dev server instead of time skipping', async () => {
-  let createLocalCalled = false;
-  let createTimeSkippingCalled = false;
-  let teardownCalled = false;
+test('resolveProcessStartupOrder starts api before temporal worker to avoid dist-watch port churn', () => {
+  const protectedRuntimeEnv = {
+    DATABASE_URL: defaultPgUrl,
+    OIDC_JWKS_URI: 'http://127.0.0.1:4000/.well-known/jwks.json',
+    OIDC_ISSUER: 'https://issuer.local.dvt/',
+    OIDC_AUDIENCE: 'dvt-api',
+  };
+
+  assert.deepEqual(resolveProcessStartupOrder(protectedRuntimeEnv), [
+    'api',
+    'temporal-worker',
+    'web',
+  ]);
+  assert.deepEqual(resolveProcessStartupOrder({}), ['api', 'web']);
+});
+
+test('buildLocalPostgresProofSeedSql creates real default source tables for Canvas runs', () => {
+  const sql = buildLocalPostgresProofSeedSql();
+
+  assert.match(sql, /CREATE SCHEMA IF NOT EXISTS raw/);
+  assert.match(sql, /CREATE TABLE public\.source_1/);
+  assert.match(sql, /CREATE TABLE raw\.orders/);
+  assert.match(sql, /INSERT INTO public\.source_1/);
+  assert.match(sql, /INSERT INTO raw\.orders/);
+});
+
+test('buildLocalWarehouseConnectionCatalog advertises the seeded local source tables', () => {
+  const catalog = JSON.parse(buildLocalWarehouseConnectionCatalog());
+
+  assert.equal(catalog.connections[0].id, 'local-postgres');
+  assert.deepEqual(
+    catalog.connections[0].tables.map((table) => `${table.schema}.${table.table}`),
+    ['public.source_1', 'raw.orders']
+  );
+});
+
+test('resolveTemporalCliExecutable prefers an explicit operator-provided CLI path', () => {
+  const executable = resolveTemporalCliExecutable(
+    { DVT_TEMPORAL_CLI_PATH: 'C:\\Temporal\\temporal.exe' },
+    {
+      readdirSync: () => {
+        throw new Error('cache lookup must not run when the CLI path is explicit');
+      },
+    },
+    'C:\\Temp'
+  );
+
+  assert.equal(executable, 'C:\\Temporal\\temporal.exe');
+});
+
+test('startLocalTemporalService starts an owned Temporal CLI dev server instead of SDK dev-server spawn', async () => {
+  const child = new EventEmitter();
+  child.stdout = new EventEmitter();
+  child.stderr = new EventEmitter();
+  child.pid = 12345;
+  child.killed = false;
+  child.exitCode = null;
+
+  let spawnCall;
+  let terminated = false;
 
   const service = await startLocalTemporalService({
-    TestWorkflowEnvironment: {
-      createLocal: async () => {
-        createLocalCalled = true;
-        return {
-          address: '127.0.0.1:12345',
-          namespace: 'dev-namespace',
-          teardown: async () => {
-            teardownCalled = true;
-          },
-        };
-      },
-      createTimeSkipping: async () => {
-        createTimeSkippingCalled = true;
-        throw new Error('createTimeSkipping must not be used for dev stack');
-      },
+    executablePath: 'temporal',
+    host: '127.0.0.1',
+    namespace: 'default',
+    port: 7291,
+    spawnProcess: (file, args, options) => {
+      spawnCall = { file, args, options };
+      return child;
+    },
+    waitForTcpPort: async ({ child: observedChild, host, port }) => {
+      assert.equal(observedChild, child);
+      assert.equal(host, '127.0.0.1');
+      assert.equal(port, 7291);
+    },
+    terminateProcessTree: async (observedChild) => {
+      assert.equal(observedChild, child);
+      terminated = true;
+      child.killed = true;
     },
   });
 
-  assert.equal(createLocalCalled, true);
-  assert.equal(createTimeSkippingCalled, false);
-  assert.equal(service.address, '127.0.0.1:12345');
-  assert.equal(service.namespace, 'dev-namespace');
+  assert.equal(spawnCall.file, 'temporal');
+  assert.deepEqual(spawnCall.args.slice(0, 7), [
+    'server',
+    'start-dev',
+    '--ip',
+    '127.0.0.1',
+    '--port',
+    '7291',
+    '--namespace',
+  ]);
+  assert.ok(spawnCall.args.includes('--headless'));
+  assert.ok(spawnCall.args.includes('--disable-config-file'));
+  assert.ok(spawnCall.args.includes('--disable-config-env'));
+  assert.equal(spawnCall.options.windowsHide, true);
+  assert.equal(service.address, '127.0.0.1:7291');
+  assert.equal(service.namespace, 'default');
 
   await service.close();
 
-  assert.equal(teardownCalled, true);
+  assert.equal(terminated, true);
 });
 
 test('waitForUrlOrProcessExit attaches the post-ready exit watcher before releasing readiness', async () => {

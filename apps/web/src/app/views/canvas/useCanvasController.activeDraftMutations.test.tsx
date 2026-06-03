@@ -326,6 +326,7 @@ describe('useCanvasController active draft mutations', () => {
       harness.getLatestResult()?.applyInspectorNodeDraft({
         name: 'orders_source_renamed',
         description: 'Edited through Inspector',
+        tags: ['authoring', 'reviewed'],
       });
     });
     await harness.renderProbe();

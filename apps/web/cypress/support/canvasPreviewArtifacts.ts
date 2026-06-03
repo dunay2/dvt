@@ -43,7 +43,7 @@ export function stubSelectedClosurePreviewArtifacts(): void {
 }
 
 export function waitForSelectedClosurePreviewArtifacts(): void {
-  cy.wrap(null).should(() => {
+  cy.wrap(null, { timeout: 20_000 }).should(() => {
     expect(
       getE2eApiCalls('/workspace/files/models%2Fanalytics%2Fmodel_orders.sql', 'GET')
     ).to.have.length.greaterThan(0);

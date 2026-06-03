@@ -330,6 +330,7 @@ describe('useCanvasController core', () => {
       harness.getLatestResult()?.applyInspectorNodeDraft({
         name: 'orders_source_renamed',
         description: 'Edited through the route-owned inspector',
+        tags: ['authoring', 'reviewed'],
       });
     });
     await harness.renderProbe();

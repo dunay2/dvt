@@ -1,9 +1,28 @@
-import { waitForE2eApiCall } from '../../support/e2eApiStub';
-import { stubShellBootstrapApis, visitWithE2eWorkspaceSession } from '../../support/workspaceSession';
+import { stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import {
+  E2E_WORKSPACE_SESSION,
+  stubShellBootstrapApis,
+  visitWithE2eWorkspaceSession,
+} from '../../support/workspaceSession';
+
+function stubRunsRouteBootstrapApis(): void {
+  stubE2eJsonApi('GET', '/capabilities', {
+    apiVersion: '1.0.0',
+    minFrontendVersion: '0.0.1',
+    plugins: {
+      monitoring: { available: true },
+    },
+  });
+  stubE2eJsonApi('GET', '/workspace/context', {
+    effectiveWorkspace: E2E_WORKSPACE_SESSION,
+    availableWorkspaces: [E2E_WORKSPACE_SESSION],
+  });
+}
 
 describe('Runs runtime contract', () => {
   beforeEach(() => {
     stubShellBootstrapApis();
+    stubRunsRouteBootstrapApis();
   });
 
   it('sends tenant scope in list, detail, and events requests', () => {
@@ -63,7 +82,10 @@ describe('Runs runtime contract', () => {
     waitForE2eApiCall('/db/ready', 'GET');
     cy.wait('@listRuns');
 
-    cy.contains('Run run_e2e_1').click();
+    cy.get('[data-slot="run-operational-table"]').within(() => {
+      cy.contains('run_e2e_1').should('be.visible');
+      cy.contains('button', 'View Details').click();
+    });
     cy.wait('@getRun');
     cy.wait('@getRunEvents');
   });

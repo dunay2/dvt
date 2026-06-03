@@ -1320,3 +1320,85 @@ test('tracked migrations widen architecture design operations for component grap
     /delete from architecture\.design_operations\b/
   );
 });
+
+test('tracked migrations include DB-first command/query rail catalog projection', () => {
+  const migrations = readMigrationFiles();
+  const railCatalogMigration = migrations.find(
+    (migration) => migration.fileName === '053_command_query_rail_catalog.sql'
+  );
+
+  assert.ok(railCatalogMigration);
+  assert.match(
+    railCatalogMigration.sql,
+    /create table if not exists planning_query_store\.command_query_rails/
+  );
+  assert.match(railCatalogMigration.sql, /rail_type in \('command', 'query'\)/);
+  assert.match(railCatalogMigration.sql, /symbol_refs jsonb not null default '\[\]'::jsonb/);
+  assert.match(
+    railCatalogMigration.sql,
+    /create or replace view planning_query_store\.command_query_rail_query/
+  );
+  assert.match(
+    railCatalogMigration.sql,
+    /count\(\*\) over \(partition by rail_type, normalized_rail_name\)/
+  );
+  assert.match(railCatalogMigration.sql, /is_gap/);
+  assert.doesNotMatch(
+    railCatalogMigration.sql,
+    /delete from planning_query_store\.repository_commands\b/
+  );
+});
+
+test('tracked migrations add command/query rail implementation and documentation refs', () => {
+  const migrations = readMigrationFiles();
+  const railCatalogSourceRefsMigration = migrations.find(
+    (migration) => migration.fileName === '054_command_query_rail_catalog_source_refs.sql'
+  );
+
+  assert.ok(railCatalogSourceRefsMigration);
+  assert.match(
+    railCatalogSourceRefsMigration.sql,
+    /add column if not exists implementation_refs jsonb not null default '\[\]'::jsonb/
+  );
+  assert.match(
+    railCatalogSourceRefsMigration.sql,
+    /add column if not exists documentation_refs jsonb not null default '\[\]'::jsonb/
+  );
+  assert.match(
+    railCatalogSourceRefsMigration.sql,
+    /drop view if exists planning_query_store\.command_query_rail_query/
+  );
+  assert.match(
+    railCatalogSourceRefsMigration.sql,
+    /jsonb_array_length\(implementation_refs\) as implementation_ref_count/
+  );
+  assert.match(
+    railCatalogSourceRefsMigration.sql,
+    /jsonb_array_length\(documentation_refs\) as documentation_ref_count/
+  );
+});
+
+test('tracked migrations include frontend mechanical truth inventory projection', () => {
+  const migrations = readMigrationFiles();
+  const frontendTruthMigration = migrations.find(
+    (migration) => migration.fileName === '055_frontend_mechanical_truth_inventory.sql'
+  );
+
+  assert.ok(frontendTruthMigration);
+  assert.match(
+    frontendTruthMigration.sql,
+    /create table if not exists planning_query_store\.frontend_mechanical_truth_surfaces/
+  );
+  assert.match(
+    frontendTruthMigration.sql,
+    /screen_state in \('operational-product', 'preview', 'disabled-unsupported', 'experimental'\)/
+  );
+  assert.match(
+    frontendTruthMigration.sql,
+    /create or replace view planning_query_store\.frontend_mechanical_truth_query/
+  );
+  assert.match(
+    frontendTruthMigration.sql,
+    /jsonb_array_length\(capability_gaps\) as capability_gap_count/
+  );
+});

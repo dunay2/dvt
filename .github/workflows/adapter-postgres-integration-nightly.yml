@@ -58,7 +58,7 @@ jobs:
         run: node --test tools/ci/adapter-postgres-import-alias-regression.test.mjs
 
       - name: Build adapter-postgres dependency graph
-        run: pnpm --workspace-concurrency=4 --filter @dvt/adapter-postgres... --if-present run build
+        run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/adapter-postgres...
 
       - name: Prove adapter-postgres app-role runtime and direct RLS
         run:

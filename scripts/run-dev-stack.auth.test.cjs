@@ -49,12 +49,15 @@ test('shouldBootstrapLocalProtectedRuntimeAuth only when the protected-runtime O
   );
 });
 
-test('local protected-runtime tenant actions include workspace graph draft and file writes', () => {
+test('local protected-runtime tenant actions include workspace authoring, files, plugins, and source import', () => {
   assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:graph-draft:view'));
   assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:graph-draft:save'));
   assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:files:view'));
   assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:files:save'));
   assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:diff:view'));
+  assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:plugins:view'));
+  assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:source-import:view'));
+  assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:source-import:import'));
 });
 
 test('startLocalProtectedRuntimeAuth provides OIDC env and a bearer token for the coordinated dev stack', async () => {
@@ -113,6 +116,9 @@ test('startLocalProtectedRuntimeAuth publishes tenant actions for frontend permi
     assert.ok(scopes.includes('workspace:graph-draft:save'));
     assert.ok(scopes.includes('workspace:files:save'));
     assert.ok(scopes.includes('workspace:diff:view'));
+    assert.ok(scopes.includes('workspace:plugins:view'));
+    assert.ok(scopes.includes('workspace:source-import:view'));
+    assert.ok(scopes.includes('workspace:source-import:import'));
   } finally {
     await bootstrap.close();
   }

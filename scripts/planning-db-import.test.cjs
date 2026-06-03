@@ -9,11 +9,14 @@ const {
   buildPlanningContentSnapshot,
   buildPrReadinessSnapshot,
   buildRiskDebtSnapshot,
+  buildCommandQueryRailSnapshot,
+  buildFrontendMechanicalTruthSnapshot,
   buildRepositoryCommandSnapshot,
   clearGovernanceSnapshotTables,
   governanceImportDeleteTables,
   importContent,
   insertDocsDispositionSnapshot,
+  insertFrontendMechanicalTruthSnapshot,
   insertGovernanceSnapshot,
   insertKnowledgeSnapshot,
   insertRepositoryCommandSnapshot,
@@ -26,6 +29,84 @@ const {
 } = require('./planning-db-import.cjs');
 const { governanceGeneratedPath } = require('./governance-generated-paths.cjs');
 const { schemaName } = require('./planning-db-migrate.cjs');
+
+function generatedSourceFixture(sourcePath, parsed, rawSourceText = JSON.stringify(parsed)) {
+  return {
+    sourcePath,
+    parsed,
+    raw: rawSourceText,
+    rawSourceText,
+    contentSha256: sha256(rawSourceText),
+    sourceBytes: Buffer.byteLength(rawSourceText, 'utf8'),
+    sourceMode: 'in-memory-generator',
+  };
+}
+
+function minimalGovernanceGeneratedInputs(overrides = {}) {
+  return {
+    indexSource: generatedSourceFixture(
+      '.generated-docs/planning/status/system-governance-file-index.files.yaml',
+      overrides.index || { version: 1, fileCount: 0, shards: [] },
+      overrides.indexRawSourceText
+    ),
+    componentIndexSource: generatedSourceFixture(
+      '.generated-docs/planning/status/system-governance-component-index.components.yaml',
+      overrides.componentIndex || { version: 1, componentCount: 0, components: [] }
+    ),
+    componentFileMapSource: generatedSourceFixture(
+      '.generated-docs/planning/status/system-governance-component-file-map.components.yaml',
+      overrides.componentFileMap || {
+        version: 1,
+        componentCount: 0,
+        fileCount: 0,
+        components: [],
+      }
+    ),
+    fingerprintBaselineSource: generatedSourceFixture(
+      '.generated-docs/planning/status/system-governance-file-fingerprint-baseline.yaml',
+      overrides.fingerprintBaseline || { version: 1, fileCount: 0, shards: [] }
+    ),
+    coverageReportSource: generatedSourceFixture(
+      '.generated-docs/planning/status/system-governance-coverage-report.coverage.yaml',
+      overrides.coverageReport || { totals: { files: 0 }, findings: [] }
+    ),
+    remediationQueueSource: generatedSourceFixture(
+      '.generated-docs/planning/status/system-governance-remediation-queue.queue.yaml',
+      overrides.remediationQueue || { totals: { tasks: 0, p0: 0, p1: 0, p2: 0, p3: 0 }, tasks: [] }
+    ),
+    fingerprintBaselineShardPayloads: overrides.fingerprintBaselineShardPayloads || {},
+    fileShardSources: overrides.fileShardSources || new Map(),
+    componentShardSources: overrides.componentShardSources || new Map(),
+  };
+}
+
+test('command/query rail import behavior lives in a focused catalog component', () => {
+  const commandQueryRailCatalogComponent = require('./planning-db/command-query-rail-catalog.cjs');
+  const commandQueryRailDocumentationComponent = require('./planning-db/command-query-rail-documentation.cjs');
+  const commandQueryRailReferenceIndexComponent = require('./planning-db/command-query-rail-reference-index.cjs');
+  const commandQueryRailSharedComponent = require('./planning-db/command-query-rail-shared.cjs');
+
+  assert.equal(
+    commandQueryRailCatalogComponent.buildCommandQueryRailSnapshot,
+    buildCommandQueryRailSnapshot
+  );
+  assert.equal(typeof commandQueryRailCatalogComponent.buildManifestRailRows, 'function');
+  assert.equal(typeof commandQueryRailSharedComponent.normalizeRailName, 'function');
+  assert.equal(typeof commandQueryRailDocumentationComponent.extractDocumentedRailRows, 'function');
+  assert.equal(
+    typeof commandQueryRailReferenceIndexComponent.attachCommandQueryRailRefs,
+    'function'
+  );
+});
+
+test('frontend mechanical truth import behavior lives in a focused inventory component', () => {
+  const frontendMechanicalTruthComponent = require('./planning-db/frontend-mechanical-truth-inventory.cjs');
+
+  assert.equal(
+    frontendMechanicalTruthComponent.buildFrontendMechanicalTruthSnapshot,
+    buildFrontendMechanicalTruthSnapshot
+  );
+});
 
 const governanceFileSnapshotFixture = (() => {
   let snapshot;
@@ -55,9 +136,11 @@ const governanceFileSnapshotFixture = (() => {
 test('planning content snapshot preserves real lane task content and hashes', () => {
   const snapshot = buildPlanningContentSnapshot();
 
-  assert.equal(snapshot.lanes.length, 5);
-  assert.ok(snapshot.tasks.length > 100);
-  assert.match(snapshot.sources[0].contentSha256, /^[a-f0-9]{64}$/);
+  assert.deepEqual(snapshot.lanes.map((lane) => lane.laneId).sort(), ['A', 'B', 'C', 'D', 'E']);
+  assert.equal(
+    snapshot.sources.every((source) => /^[a-f0-9]{64}$/.test(source.contentSha256)),
+    true
+  );
 
   const mvpA1 = snapshot.tasks.find((task) => task.laneId === 'A' && task.taskId === 'MVP-A1');
   assert.ok(mvpA1);
@@ -90,6 +173,152 @@ test('planning DB import parses stale-aware scoped import flags', () => {
   );
 
   assert.throws(() => parseArgs(['--planning-only', '--governance-only']), /mutually exclusive/);
+});
+
+test('command/query rail snapshot indexes feature manifests for DB-first gap and duplicate queries', () => {
+  const docs = [
+    {
+      path: 'docs/planning/proposals/mandatory/example.md',
+      content: [
+        '```feature-mechanization',
+        'version: 1',
+        'featureId: EXAMPLE-FEATURE',
+        'mechanizationStatus: implemented',
+        'commandQueryRails:',
+        '  - name: ListWidgets',
+        '    type: query',
+        '    dddOwner: WidgetReadModel',
+        '  - name: CreateWidget',
+        '    type: command',
+        '    dddOwner: WidgetAggregate',
+        '    status: missing-backend-rail',
+        'symbols:',
+        '  - name: listWidgets',
+        '    path: apps/api/src/widgets/listWidgets.ts',
+        '    dddOwner: WidgetReadModel',
+        '    cqRails: [ListWidgets]',
+        '    unitTests:',
+        '      - apps/api/test/widgets/listWidgets.test.ts',
+        '```',
+      ].join('\n'),
+    },
+    {
+      path: 'docs/planning/proposals/mandatory/duplicate.md',
+      content: [
+        '```feature-mechanization',
+        'version: 1',
+        'featureId: DUPLICATE-FEATURE',
+        'mechanizationStatus: closed',
+        'commandQueryRails:',
+        '  - name: ListWidgets',
+        '    type: query',
+        '    dddOwner: WidgetReadModel',
+        'symbols: []',
+        '```',
+      ].join('\n'),
+    },
+  ];
+
+  const snapshot = buildCommandQueryRailSnapshot({ docs });
+
+  assert.equal(snapshot.rails.length, 3);
+  const listWidgets = snapshot.rails.find(
+    (rail) => rail.featureId === 'EXAMPLE-FEATURE' && rail.railName === 'ListWidgets'
+  );
+  assert.deepEqual(listWidgets.symbolRefs, [
+    {
+      name: 'listWidgets',
+      path: 'apps/api/src/widgets/listWidgets.ts',
+      dddOwner: 'WidgetReadModel',
+      unitTests: ['apps/api/test/widgets/listWidgets.test.ts'],
+    },
+  ]);
+  assert.equal(listWidgets.railType, 'query');
+  assert.equal(listWidgets.railStatus, 'declared');
+  assert.equal(listWidgets.sourcePath, 'docs/planning/proposals/mandatory/example.md');
+
+  const createWidget = snapshot.rails.find((rail) => rail.railName === 'CreateWidget');
+  assert.equal(createWidget.isGap, true);
+  assert.equal(createWidget.implementationRefCount, 0);
+
+  const duplicateRows = snapshot.rails.filter((rail) => rail.railName === 'ListWidgets');
+  assert.equal(duplicateRows.length, 2);
+});
+
+test('command/query rail snapshot joins documented rails with source implementation refs', () => {
+  const docs = [
+    {
+      path: 'docs/planning/proposals/mandatory/widgets.md',
+      content: [
+        '```feature-mechanization',
+        'version: 1',
+        'featureId: WIDGET-FEATURE',
+        'mechanizationStatus: implemented',
+        'commandQueryRails:',
+        '  - name: ListWidgets',
+        '    type: query',
+        '    dddOwner: WidgetReadModel',
+        'symbols: []',
+        '```',
+      ].join('\n'),
+    },
+  ];
+  const referenceDocuments = [
+    {
+      path: 'docs/architecture/components/widgets/widget-rail-catalog.md',
+      content: [
+        '| Rail | Type | Status | Owner |',
+        '| --- | --- | --- | --- |',
+        '| `ListWidgets` | query | implemented | WidgetReadModel |',
+        '| `ArchiveWidget` | command | planned | WidgetAggregate |',
+      ].join('\n'),
+    },
+  ];
+  const sourceFiles = [
+    {
+      path: 'apps/api/src/widgets/listWidgetsQuery.ts',
+      content: [
+        'export interface ListWidgetsQueryPort {',
+        '  listWidgets(): Promise<readonly string[]>;',
+        '}',
+      ].join('\n'),
+    },
+  ];
+
+  const snapshot = buildCommandQueryRailSnapshot({ docs, referenceDocuments, sourceFiles });
+
+  const listWidgets = snapshot.rails.find(
+    (rail) => rail.featureId === 'WIDGET-FEATURE' && rail.railName === 'ListWidgets'
+  );
+  assert.equal(listWidgets.isGap, false);
+  assert.equal(listWidgets.implementationRefCount, 1);
+  assert.deepEqual(listWidgets.implementationRefs, [
+    {
+      name: 'ListWidgets',
+      path: 'apps/api/src/widgets/listWidgetsQuery.ts',
+      sourceKind: 'source_code',
+    },
+  ]);
+  assert.deepEqual(listWidgets.documentationRefs, [
+    {
+      name: 'ListWidgets',
+      path: 'docs/architecture/components/widgets/widget-rail-catalog.md',
+      sourceKind: 'documentation',
+    },
+  ]);
+
+  const archiveWidget = snapshot.rails.find(
+    (rail) =>
+      rail.featureId === 'DOCUMENTED-COMMAND-QUERY-RAIL-CATALOG' &&
+      rail.railName === 'ArchiveWidget'
+  );
+  assert.ok(archiveWidget);
+  assert.equal(archiveWidget.railType, 'command');
+  assert.equal(archiveWidget.railStatus, 'planned');
+  assert.equal(archiveWidget.dddOwner, 'WidgetAggregate');
+  assert.equal(archiveWidget.isGap, true);
+  assert.equal(archiveWidget.implementationRefCount, 0);
+  assert.equal(archiveWidget.documentationRefs.length, 1);
 });
 
 test('planning DB import skips all selected scopes when stale-aware checks are fresh', async () => {
@@ -390,6 +619,7 @@ test('governance auxiliary source state hashes only knowledge-surface documents 
         blocking: false,
       },
     },
+    commandQueryRailSnapshot: { rails: [] },
     markdownDocuments: [],
     knowledgeDocuments: [
       { sourcePath: 'docs/planning/proposals/example.md', raw: proposalRaw },
@@ -424,16 +654,12 @@ test('planning content snapshot normalizes dependencies and evidence refs for DB
 });
 
 test('governance file snapshot consumes supplied generated inputs', () => {
-  const generatedInputs = governanceFileSnapshotFixture.generatedInputs();
   const sentinelRawSourceText = 'fixture raw source text';
   const snapshot = buildGovernanceFileSnapshot({
-    generatedInputs: {
-      ...generatedInputs,
-      indexSource: {
-        ...generatedInputs.indexSource,
-        rawSourceText: sentinelRawSourceText,
-      },
-    },
+    generatedInputs: minimalGovernanceGeneratedInputs({
+      indexRawSourceText: sentinelRawSourceText,
+    }),
+    riskDocuments: [],
   });
   const fileIndexSource = snapshot.sources.find(
     (source) => source.sourceType === 'governance_file_index'
@@ -712,8 +938,58 @@ test('governance import clears every repopulated governance table before insert'
   );
   assert.ok(governanceImportDeleteTables.includes('governance_coverage'));
   assert.ok(governanceImportDeleteTables.includes('governance_remediation'));
+  assert.ok(governanceImportDeleteTables.includes('frontend_mechanical_truth_surfaces'));
   assert.ok(governanceImportDeleteTables.includes('risk_debt_items'));
   assert.equal(governanceImportDeleteTables.at(-1), 'governance_sources');
+});
+
+test('frontend mechanical truth import reloads surface rows with JSONB metadata', async () => {
+  const queries = [];
+
+  await insertFrontendMechanicalTruthSnapshot(
+    {
+      query: async (sql, params = []) => {
+        queries.push({ sql, params });
+      },
+    },
+    {
+      surfaces: [
+        {
+          surfaceId: 'web.runs.list',
+          surfaceKind: 'route',
+          routePath: '/runs',
+          screenState: 'operational-product',
+          frontendOwner: 'Runs workbench',
+          registeredPlugins: ['monitoring'],
+          consumedEndpoints: ['/runs'],
+          zustandStores: ['useExecutionStore'],
+          tanstackQueries: ['useScopedRunSummariesQuery'],
+          visibleNoBackendAffordances: ['dense run table'],
+          capabilityGaps: ['cancel run'],
+          evidenceRefs: ['runs native smoke'],
+          sourcePath: 'docs/architecture/components/web/frontend-mechanical-truth-inventory.md',
+          sourceContentSha256: 'source-a',
+          rawSurface: { surfaceId: 'web.runs.list' },
+        },
+      ],
+    }
+  );
+
+  assert.equal(queries[0].sql, `delete from ${schemaName}.frontend_mechanical_truth_surfaces`);
+  const insertQuery = queries.find((query) =>
+    query.sql.includes(`insert into ${schemaName}.frontend_mechanical_truth_surfaces`)
+  );
+  assert.ok(insertQuery);
+  assert.match(insertQuery.sql, /registered_plugins/);
+  assert.match(insertQuery.sql, /consumed_endpoints/);
+  assert.deepEqual(insertQuery.params.slice(0, 5), [
+    'web.runs.list',
+    'route',
+    '/runs',
+    'operational-product',
+    'Runs workbench',
+  ]);
+  assert.equal(insertQuery.params[5], JSON.stringify(['monitoring']));
 });
 
 test('governance import batches heavy file table inserts', async () => {
@@ -784,7 +1060,16 @@ test('governance import batches heavy file table inserts', async () => {
 
   assert.equal(fileInsertQueries.length, 1);
   assert.match(fileInsertQueries[0].sql, /\),\s*\(/);
-  assert.equal(fileInsertQueries[0].params.length, 48);
+  assert.deepEqual(
+    fileInsertQueries[0].params.filter((value) => value === 'F-A' || value === 'F-B'),
+    ['F-A', 'F-B']
+  );
+  assert.deepEqual(
+    fileInsertQueries[0].params.filter(
+      (value) => value === 'docs/example-a.md' || value === 'docs/example-b.md'
+    ),
+    ['docs/example-a.md', 'docs/example-b.md']
+  );
 });
 
 test('docs disposition import batches document inserts', async () => {
@@ -834,7 +1119,18 @@ test('docs disposition import batches document inserts', async () => {
 
   assert.equal(documentInsertQueries.length, 1);
   assert.match(documentInsertQueries[0].sql, /\),\s*\(/);
-  assert.equal(documentInsertQueries[0].params.length, 24);
+  assert.deepEqual(
+    documentInsertQueries[0].params.filter(
+      (value) => value === 'docs/example-a.md' || value === 'docs/example-b.md'
+    ),
+    ['docs/example-a.md', 'docs/example-b.md']
+  );
+  assert.deepEqual(
+    documentInsertQueries[0].params.filter(
+      (value) => value === 'Example A' || value === 'Example B'
+    ),
+    ['Example A', 'Example B']
+  );
 });
 
 test('knowledge import batches documents and preserves link conflict handling', async () => {
@@ -898,11 +1194,21 @@ test('knowledge import batches documents and preserves link conflict handling', 
 
   assert.equal(documentInsertQueries.length, 1);
   assert.match(documentInsertQueries[0].sql, /\),\s*\(/);
-  assert.equal(documentInsertQueries[0].params.length, 20);
+  assert.deepEqual(
+    documentInsertQueries[0].params.filter((value) => value === 'DOC-A' || value === 'DOC-B'),
+    ['DOC-A', 'DOC-B']
+  );
   assert.equal(linkInsertQueries.length, 1);
   assert.match(linkInsertQueries[0].sql, /\),\s*\(/);
   assert.match(linkInsertQueries[0].sql, /on conflict do nothing/);
-  assert.equal(linkInsertQueries[0].params.length, 6);
+  assert.deepEqual(linkInsertQueries[0].params, [
+    'DOC-A',
+    'DOC-B',
+    'references',
+    'DOC-B',
+    'DOC-A',
+    'references',
+  ]);
 });
 
 test('repository command import batches command inserts', async () => {
@@ -952,7 +1258,16 @@ test('repository command import batches command inserts', async () => {
 
   assert.equal(commandInsertQueries.length, 1);
   assert.match(commandInsertQueries[0].sql, /\),\s*\(/);
-  assert.equal(commandInsertQueries[0].params.length, 26);
+  assert.deepEqual(
+    commandInsertQueries[0].params.filter(
+      (value) => value === 'command-a' || value === 'command-b'
+    ),
+    ['command-a', 'command-b']
+  );
+  assert.deepEqual(
+    commandInsertQueries[0].params.filter((value) => value === 'test:a' || value === 'test:b'),
+    ['test:a', 'test:b']
+  );
 });
 
 test('repository command snapshot imports package scripts and command files for DB queries', async () => {

@@ -30,6 +30,9 @@ const LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS = Object.freeze([
   'workspace:files:view',
   'workspace:files:save',
   'workspace:diff:view',
+  'workspace:plugins:view',
+  'workspace:source-import:view',
+  'workspace:source-import:import',
 ]);
 
 let joseModulePromise;
