@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.32.2](https://github.com/dunay2/dvt/compare/v5.32.1...v5.32.2) (2026-06-03)
+
+
+### Bug Fixes
+
+* **docs:** Ignore stale knowledge-action headings ([#1448](https://github.com/dunay2/dvt/issues/1448)) ([04a17ca](https://github.com/dunay2/dvt/commit/04a17cafe9ba6f2651f7535b1af32e677267a1b9))
+
 ## [5.32.1](https://github.com/dunay2/dvt/compare/v5.32.0...v5.32.1) (2026-06-03)
 
 
