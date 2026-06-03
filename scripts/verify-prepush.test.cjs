@@ -12,6 +12,7 @@
     classifyPrepushScope,
     commandLabel,
     isPrepushStampValid,
+    main,
     parseArgs,
     validationLevelSatisfies,
   } = require('./verify-prepush.cjs');
@@ -171,6 +172,50 @@
       ),
       false
     );
+  });
+
+  test('manual prepush reuses a matching validation stamp before rerunning changed checks', () => {
+    const changedFiles = ['apps/web/src/app/AppProviders.tsx'];
+    const stamp = buildPrepushStamp(changedFiles, {
+      full: false,
+      stateFingerprint: 'same-tree',
+    });
+    const calls = [];
+
+    const status = main([], {
+      changedFiles,
+      stateFingerprint: 'same-tree',
+      readPrepushStamp: () => stamp,
+      removePrepushStamp: () => calls.push('remove'),
+      executePrepushPlan: () => calls.push('execute'),
+      writePrepushStamp: () => calls.push('write'),
+      printPrepushPlan: () => {},
+    });
+
+    assert.equal(status, 0);
+    assert.deepEqual(calls, []);
+  });
+
+  test('manual full prepush does not reuse a default changed validation stamp', () => {
+    const changedFiles = ['apps/web/src/app/AppProviders.tsx'];
+    const defaultStamp = buildPrepushStamp(changedFiles, {
+      full: false,
+      stateFingerprint: 'same-tree',
+    });
+    const calls = [];
+
+    const status = main(['--full'], {
+      changedFiles,
+      stateFingerprint: 'same-tree',
+      readPrepushStamp: () => defaultStamp,
+      removePrepushStamp: () => calls.push('remove'),
+      executePrepushPlan: () => calls.push('execute'),
+      writePrepushStamp: () => calls.push('write'),
+      printPrepushPlan: () => {},
+    });
+
+    assert.equal(status, 0);
+    assert.deepEqual(calls, ['remove', 'execute', 'write']);
   });
 
   test('scope classification exposes reasons for skipped conditional groups', () => {

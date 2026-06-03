@@ -182,31 +182,38 @@
     }
   }
 
-  function main(argv = process.argv.slice(2)) {
+  function main(argv = process.argv.slice(2), options = {}) {
     const args = parseArgs(argv);
-    const changedFiles = listPrepushChangedFiles({ repoRootPath: repoRoot });
+    const root = options.repoRootPath || repoRoot;
+    const changedFiles =
+      options.changedFiles || listPrepushChangedFiles({ ...options, repoRootPath: root });
     const scope = classifyPrepushScope(changedFiles, { full: args.full });
     const plan = buildPrepushPlan(changedFiles, { full: args.full });
     const expectedStamp = buildPrepushStamp(changedFiles, {
       full: args.full,
-      repoRootPath: repoRoot,
+      repoRootPath: root,
+      stateFingerprint: options.stateFingerprint,
     });
+    const readStamp = options.readPrepushStamp || readPrepushStamp;
+    const removeStamp = options.removePrepushStamp || removePrepushStamp;
+    const writeStamp = options.writePrepushStamp || writePrepushStamp;
+    const executePlan = options.executePrepushPlan || executePrepushPlan;
+    const printPlan = options.printPrepushPlan || printPrepushPlan;
 
-    printPrepushPlan(changedFiles, scope, plan);
-    if (
-      args.hook &&
-      isPrepushStampValid(readPrepushStamp({ repoRootPath: repoRoot }), expectedStamp)
-    ) {
+    printPlan(changedFiles, scope, plan);
+    if (isPrepushStampValid(readStamp({ repoRootPath: root }), expectedStamp)) {
+      const source = args.hook ? 'pre-push validation' : 'validation';
       console.log(
-        '[verify:prepush] matching successful pre-push validation stamp found; skipping duplicate hook run.'
+        `[verify:prepush] matching successful ${source} stamp found; skipping duplicate run.`
       );
-      return;
+      return 0;
     }
     if (!args.dryRun) {
-      removePrepushStamp({ repoRootPath: repoRoot });
-      executePrepushPlan(plan, { repoRootPath: repoRoot });
-      writePrepushStamp(expectedStamp, { repoRootPath: repoRoot });
+      removeStamp({ repoRootPath: root });
+      executePlan(plan, { repoRootPath: root });
+      writeStamp(expectedStamp, { repoRootPath: root });
     }
+    return 0;
   }
 
   if (require.main === module) {
@@ -227,8 +234,11 @@
     executePrepushPlan,
     isPrepushStampValid,
     listPrepushChangedFiles,
+    main,
     parseArgs,
+    readPrepushStamp,
     removePrepushStamp,
     validationLevelSatisfies,
+    writePrepushStamp,
   };
 }

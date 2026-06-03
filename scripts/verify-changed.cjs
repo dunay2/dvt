@@ -11,6 +11,7 @@ const {
   normalizeChangedFiles,
 } = require('./local-validation-plan.cjs');
 const { listLocalChangedFiles } = require('./git-local-changes.cjs');
+const { buildPrepushStamp, writePrepushStamp } = require('./verify-prepush.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 
@@ -50,17 +51,38 @@ function printPlan(changedFiles, plan) {
   }
 }
 
-function main(argv = process.argv.slice(2)) {
+function recordSuccessfulChangedValidation(changedFiles, options = {}) {
+  const buildStamp = options.buildPrepushStamp || buildPrepushStamp;
+  const writeStamp = options.writePrepushStamp || writePrepushStamp;
+  const stamp = buildStamp(changedFiles, {
+    repoRootPath: options.repoRootPath || repoRoot,
+  });
+
+  writeStamp(stamp, { repoRootPath: options.repoRootPath || repoRoot });
+}
+
+function main(argv = process.argv.slice(2), options = {}) {
   const args = parseArgs(argv);
-  const changedFiles = normalizeChangedFiles(listLocalChangedFiles({ repoRootPath: repoRoot }));
+  const root = options.repoRootPath || repoRoot;
+  const changedFiles =
+    options.changedFiles || normalizeChangedFiles(listLocalChangedFiles({ repoRootPath: root }));
   const plan = buildVerifyChangedPlan(changedFiles);
+  const print = options.printPlan || printPlan;
+  const executePlan = options.executeVerifyChangedPlan || executeVerifyChangedPlan;
 
   if (args.dryRun || plan.length === 0) {
-    printPlan(changedFiles, plan);
+    print(changedFiles, plan);
     return 0;
   }
 
-  return executeVerifyChangedPlan(plan, { repoRootPath: repoRoot });
+  const status = executePlan(plan, { repoRootPath: root });
+  if (status === 0) {
+    recordSuccessfulChangedValidation(changedFiles, {
+      ...options,
+      repoRootPath: root,
+    });
+  }
+  return status;
 }
 
 if (require.main === module) {
@@ -81,4 +103,5 @@ module.exports = {
   main,
   normalizeChangedFiles,
   parseArgs,
+  recordSuccessfulChangedValidation,
 };

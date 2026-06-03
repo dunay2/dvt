@@ -322,6 +322,9 @@ symbols:
     name: main
     path: scripts/verify-changed.cjs
   - <<: *verifyChangedSymbolDefaults
+    name: recordSuccessfulChangedValidation
+    path: scripts/verify-changed.cjs
+  - <<: *verifyChangedSymbolDefaults
     name: test
     path: scripts/verify-changed.test.cjs
   - <<: *verifyChangedSymbolDefaults
