@@ -308,6 +308,9 @@ allowedImplementationSurfaces:
   - packages/@dvt/observability/src/contracts/ObservabilityContext.ts
   - packages/@dvt/observability/src/policy/cardinalityPolicy.ts
   - packages/@dvt/observability/test/cardinalityPolicy.test.ts
+  - packages/@dvt/observability-otel/README.md
+  - packages/@dvt/observability-otel/src/OtelObservability.ts
+  - packages/@dvt/observability-otel/test/OtelObservability.test.ts
   - packages/@dvt/adapter-postgres/src/PostgresPlanStore.sql.ts
   - packages/@dvt/adapter-postgres/src/PostgresPlanStore.schema-manager.ts
   - packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts
@@ -635,6 +638,9 @@ redGreenCycles:
       - packages/@dvt/observability/src/contracts/ObservabilityContext.ts
       - packages/@dvt/observability/src/policy/cardinalityPolicy.ts
       - packages/@dvt/observability/test/cardinalityPolicy.test.ts
+      - packages/@dvt/observability-otel/README.md
+      - packages/@dvt/observability-otel/src/OtelObservability.ts
+      - packages/@dvt/observability-otel/test/OtelObservability.test.ts
       - apps/web/src/app/ports/runs.ts
       - apps/web/src/app/services/runs/runsApiDecoders.ts
       - apps/web/src/app/services/runs/runsApiSnapshotMapper.ts
@@ -813,6 +819,15 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
     unitTests:
       - apps/api/test/application/services/getRunStatusUseCase.test.ts
+  - name: OtelObservability.withContext
+    path: packages/@dvt/observability-otel/src/OtelObservability.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Structured runtime logs inherit active run diagnostic context unless the log entry provides an explicit context.]
+    architectureGuard: pnpm --filter @dvt/observability-otel test
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - packages/@dvt/observability-otel/test/OtelObservability.test.ts
   - name: deriveDiagnostics
     path: apps/api/src/application/services/runReadEvidenceModel.ts
     dddOwner: RunDiagnosticsReadModel
