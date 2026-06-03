@@ -23,8 +23,12 @@ const {
   buildGovernanceRemediationRows,
   buildHashDriftRows,
   buildRiskDebtRows,
+  buildAiProjectContext,
   buildTaskGapRows,
   buildPrReadinessRows,
+  buildCommandQueryRailRows,
+  buildCreationIntentRows,
+  buildFrontendMechanicalTruthRows,
   buildSummaryRows,
   buildTaskRows,
   buildTaskTraceRows,
@@ -45,6 +49,10 @@ const {
   readPlanningEvidenceRows,
   readPlanningStatusEventRows,
   readPrReadinessRows,
+  readAiProjectContext,
+  readCommandQueryRailRows,
+  readCreationIntentRows,
+  readFrontendMechanicalTruthRows,
   readDocsDispositionRows,
   readFeatureWorkRows,
   readComponentEngineeringComponentDriftRows,
@@ -69,9 +77,31 @@ const {
   readSummary,
   readTaskRows,
   formatQueryError,
+  renderAiProjectContextMarkdown,
   resolveQueryName,
   runQuery,
 } = require('./planning-db-query.cjs');
+test('command/query rail query behavior lives in a focused read-model component', () => {
+  const commandQueryRailQueryComponent = require('./planning-db/command-query-rail-query.cjs');
+
+  assert.equal(commandQueryRailQueryComponent.buildCommandQueryRailRows, buildCommandQueryRailRows);
+  assert.equal(commandQueryRailQueryComponent.buildCreationIntentRows, buildCreationIntentRows);
+  assert.equal(commandQueryRailQueryComponent.readCommandQueryRailRows, readCommandQueryRailRows);
+  assert.equal(commandQueryRailQueryComponent.readCreationIntentRows, readCreationIntentRows);
+});
+
+test('frontend mechanical truth query behavior lives in a focused read-model component', () => {
+  const frontendMechanicalTruthComponent = require('./planning-db/frontend-mechanical-truth-inventory.cjs');
+
+  assert.equal(
+    frontendMechanicalTruthComponent.buildFrontendMechanicalTruthRows,
+    buildFrontendMechanicalTruthRows
+  );
+  assert.equal(
+    frontendMechanicalTruthComponent.readFrontendMechanicalTruthRows,
+    readFrontendMechanicalTruthRows
+  );
+});
 
 test('resolveQueryName defaults to summary and rejects unknown query names', () => {
   assert.equal(resolveQueryName(undefined), 'summary');
@@ -92,6 +122,10 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('debt'), 'debt');
   assert.equal(resolveQueryName('drift'), 'drift');
   assert.equal(resolveQueryName('commands'), 'commands');
+  assert.equal(resolveQueryName('command-query-rails'), 'command-query-rails');
+  assert.equal(resolveQueryName('ai-project-context'), 'ai-project-context');
+  assert.equal(resolveQueryName('creation-intent'), 'creation-intent');
+  assert.equal(resolveQueryName('frontend-surfaces'), 'frontend-surfaces');
   assert.equal(resolveQueryName('pr-readiness'), 'pr-readiness');
   assert.equal(resolveQueryName('docs-disposition'), 'docs-disposition');
   assert.equal(resolveQueryName('feature-work'), 'feature-work');
@@ -211,6 +245,223 @@ test('parseArgs parses repository command query filters for DB-first catalog ins
       limit: 5,
     },
   });
+});
+
+test('parseArgs parses command/query rail catalog filters for DB-first gap and duplicate inspection', () => {
+  const command = parseArgs([
+    'command-query-rails',
+    '--type',
+    'query',
+    '--status',
+    'missing-backend-rail',
+    '--owner',
+    'WidgetReadModel',
+    '--duplicates',
+    'true',
+    '--gaps',
+    'true',
+    '--limit',
+    '5',
+  ]);
+
+  assert.deepEqual(command, {
+    queryName: 'command-query-rails',
+    filters: {
+      type: 'query',
+      status: 'missing-backend-rail',
+      owner: 'WidgetReadModel',
+      duplicates: true,
+      gaps: true,
+      limit: 5,
+    },
+  });
+});
+
+test('parseArgs parses AI project context format and discovery filters', () => {
+  const command = parseArgs([
+    'ai-project-context',
+    '--format',
+    'markdown',
+    '--domain',
+    'SYS-WEB',
+    '--limit',
+    '5',
+  ]);
+
+  assert.deepEqual(command, {
+    queryName: 'ai-project-context',
+    outputFormat: 'markdown',
+    filters: {
+      domainUnit: 'SYS-WEB',
+      limit: 5,
+    },
+  });
+
+  assert.throws(
+    () => parseArgs(['ai-project-context', '--format', 'html']),
+    /Invalid --format "html"/
+  );
+});
+
+test('parseArgs parses frontend mechanical truth filters for DB-first screen inspection', () => {
+  const command = parseArgs([
+    'frontend-surfaces',
+    '--kind',
+    'route',
+    '--state',
+    'preview',
+    '--path',
+    '/canvas',
+    '--owner',
+    'Canvas workbench',
+    '--limit',
+    '5',
+  ]);
+
+  assert.deepEqual(command, {
+    queryName: 'frontend-surfaces',
+    filters: {
+      kind: 'route',
+      state: 'preview',
+      path: '/canvas',
+      owner: 'Canvas workbench',
+      limit: 5,
+    },
+  });
+});
+
+test('parseArgs parses creation intent preflight filters for AI reuse checks', () => {
+  const command = parseArgs([
+    'creation-intent',
+    '--intent',
+    'I want to create ListWidgets',
+    '--type',
+    'query',
+    '--limit',
+    '5',
+  ]);
+
+  assert.deepEqual(command, {
+    queryName: 'creation-intent',
+    filters: {
+      intent: 'I want to create ListWidgets',
+      type: 'query',
+      limit: 5,
+    },
+  });
+});
+
+test('parseArgs requires an intent before querying creation preflight', () => {
+  assert.throws(
+    () => parseArgs(['creation-intent', '--limit', '5']),
+    /creation-intent requires --intent/
+  );
+});
+
+test('buildCommandQueryRailRows shows rail implementation, gap, and duplicate state', () => {
+  assert.deepEqual(
+    buildCommandQueryRailRows([
+      {
+        rail_type: 'query',
+        rail_name: 'ListWidgets',
+        ddd_owner: 'WidgetReadModel',
+        rail_status: 'declared',
+        implementation_ref_count: 2,
+        is_gap: false,
+        is_duplicate: true,
+        feature_id: 'EXAMPLE-FEATURE',
+        source_path: 'docs/planning/proposals/mandatory/example.md',
+      },
+    ]),
+    [
+      [
+        'query',
+        'ListWidgets',
+        'WidgetReadModel',
+        'declared',
+        'implemented',
+        'duplicate',
+        'EXAMPLE-FEATURE',
+        'docs/planning/proposals/mandatory/example.md',
+      ],
+    ]
+  );
+});
+
+test('buildCreationIntentRows turns rail matches into AI pre-create guidance', () => {
+  assert.deepEqual(
+    buildCreationIntentRows([
+      {
+        rail_type: 'query',
+        rail_name: 'ListWidgets',
+        ddd_owner: 'WidgetReadModel',
+        rail_status: 'declared',
+        implementation_ref_count: 2,
+        documentation_ref_count: 1,
+        is_gap: false,
+        is_duplicate: false,
+        intent_match_score: 42,
+        feature_id: 'EXAMPLE-FEATURE',
+        source_path: 'docs/planning/proposals/mandatory/example.md',
+      },
+      {
+        rail_type: 'command',
+        rail_name: 'CreateWidget',
+        ddd_owner: 'WidgetAggregate',
+        rail_status: 'planned',
+        implementation_ref_count: 0,
+        documentation_ref_count: 2,
+        is_gap: true,
+        is_duplicate: true,
+        intent_match_score: 18,
+        feature_id: 'WIDGET-FEATURE',
+        source_path: 'docs/planning/proposals/mandatory/widget.md',
+      },
+    ]),
+    [
+      [
+        'reuse-existing-rail',
+        'query',
+        'ListWidgets',
+        'WidgetReadModel',
+        'declared',
+        'implemented',
+        '-',
+        42,
+        'EXAMPLE-FEATURE',
+        'docs/planning/proposals/mandatory/example.md',
+      ],
+      [
+        'resolve-duplicate-before-creating',
+        'command',
+        'CreateWidget',
+        'WidgetAggregate',
+        'planned',
+        'gap',
+        'duplicate',
+        18,
+        'WIDGET-FEATURE',
+        'docs/planning/proposals/mandatory/widget.md',
+      ],
+    ]
+  );
+});
+
+test('buildCreationIntentRows explicitly reports when no existing rail matches', () => {
+  assert.deepEqual(buildCreationIntentRows([], { intent: 'Create Widget dashboard' }), [
+    [
+      'register-new-rail-before-creating',
+      '-',
+      'Create Widget dashboard',
+      '-',
+      'no-existing-rail',
+      'gap',
+      '-',
+      0,
+      '-',
+      'docs/architecture/command-query-rail-governance.md',
+    ],
+  ]);
 });
 
 test('parseArgs parses docs disposition queue filters for DB-first cleanup work', () => {
@@ -790,9 +1041,14 @@ test('buildSummaryRows exposes planning and governance content counts without ex
     planningTaskEvidenceRefs: 30,
     planningTaskStatusEvents: 250,
     planningArtifacts: 2,
+    planningRealWorkItems: 11,
+    planningRealWorkOpenItems: 27,
     repositoryCommands: 220,
     repositoryCommandUnknown: 4,
     repositoryCommandRuntimeFanout: 16,
+    commandQueryRails: 80,
+    commandQueryRailGaps: 12,
+    commandQueryRailDuplicates: 6,
     prReadinessChecks: 1,
     prReadinessBlocking: 1,
     docsDispositionDocuments: 120,
@@ -813,9 +1069,14 @@ test('buildSummaryRows exposes planning and governance content counts without ex
     ['planning.task_evidence_refs', 30],
     ['planning.task_status_events', 250],
     ['planning.artifacts', 2],
+    ['planning.real_work_items', 11],
+    ['planning.real_work_open_items', 27],
     ['repository.commands', 220],
     ['repository.commands.unknown', 4],
     ['repository.commands.runtime_fanout', 16],
+    ['command_query.rails', 80],
+    ['command_query.rails.gaps', 12],
+    ['command_query.rails.duplicates', 6],
     ['repository.pr_readiness', 1],
     ['repository.pr_readiness.blocking', 1],
     ['docs.disposition_documents', 120],
@@ -841,6 +1102,149 @@ test('buildSummaryRows exposes planning and governance content counts without ex
 
 test('buildHashDriftRows exposes hash drift as an explicit heavy query result', () => {
   assert.deepEqual(buildHashDriftRows({ governanceHashDrift: 3 }), [['governance.hash_drift', 3]]);
+});
+
+test('buildAiProjectContext aggregates DB-first project state for agent discovery', () => {
+  const context = buildAiProjectContext(
+    {
+      summary: {
+        sourceAuthority: 'database',
+        tasks: 250,
+        reviewTasks: 9,
+        repositoryCommands: 220,
+        planningRealWorkItems: 11,
+        planningRealWorkOpenItems: 27,
+        commandQueryRails: 80,
+        commandQueryRailGaps: 12,
+        commandQueryRailDuplicates: 6,
+        riskDebtItemsOpen: 5,
+        governanceComponents: 32,
+        driftFiles: 41,
+        prReadinessBlocking: 1,
+      },
+      commandQueryRails: [
+        {
+          rail_type: 'query',
+          rail_name: 'QueryWidgets',
+          ddd_owner: 'WidgetReadModel',
+          rail_status: 'declared',
+          is_gap: true,
+          is_duplicate: false,
+          source_path: 'docs/planning/example.md',
+        },
+      ],
+      components: [
+        {
+          component_id: 'SYS-WEB',
+          name: 'Web application',
+          governance_state: 'current',
+          file_count: 42,
+        },
+      ],
+      realWork: [
+        {
+          priority: 'P1',
+          work_kind: 'task',
+          work_status: 'open',
+          work_id: 'E-100',
+          title: 'Finish DB-first route',
+          suggested_query: 'pnpm planning:db:query task-trace E-100',
+        },
+      ],
+      riskDebt: [
+        {
+          risk_id: 'R-20260602-EXAMPLE',
+          status: 'Open',
+          priority: 'P1',
+          title: 'Example risk',
+          source_path: 'docs/risk-register/quality/R-20260602-EXAMPLE.yaml',
+        },
+      ],
+      commands: [
+        {
+          command_type: 'package_script',
+          command_name: 'planning:db:query',
+          domain: 'planning-db',
+          runtime_fanout: true,
+        },
+      ],
+      prReadiness: [
+        {
+          readiness_id: 'current',
+          blocking: true,
+          missing_requirements: ['riskUpdate'],
+        },
+      ],
+    },
+    { generatedAt: '2026-06-02T00:00:00.000Z' }
+  );
+
+  assert.equal(context.contextKind, 'db-first-ai-project-context');
+  assert.equal(context.generatedAt, '2026-06-02T00:00:00.000Z');
+  assert.deepEqual(context.counts, {
+    planningTasks: 250,
+    reviewTasks: 9,
+    repositoryCommands: 220,
+    realWorkItems: 11,
+    realWorkOpenItems: 27,
+    commandQueryRails: 80,
+    commandQueryRailGaps: 12,
+    commandQueryRailDuplicates: 6,
+    openIncidentsAndDebt: 5,
+    governanceComponents: 32,
+    governanceDriftFiles: 41,
+    blockingPrReadinessChecks: 1,
+  });
+  assert.equal(context.samples.commandQueryRails[0].railName, 'QueryWidgets');
+  assert.equal(context.samples.components[0].componentId, 'SYS-WEB');
+  assert.equal(context.samples.openIncidentsAndDebt[0].riskId, 'R-20260602-EXAMPLE');
+  assert.ok(
+    context.recommendedQueries.includes('pnpm planning:db:query command-query-rails --gaps true')
+  );
+});
+
+test('renderAiProjectContextMarkdown fills a reusable DB-first context template', () => {
+  const context = buildAiProjectContext(
+    {
+      summary: {
+        sourceAuthority: 'database',
+        tasks: 2,
+        commandQueryRailGaps: 1,
+        riskDebtItemsOpen: 1,
+      },
+      commandQueryRails: [
+        {
+          rail_type: 'query',
+          rail_name: 'QueryWidgets',
+          ddd_owner: 'WidgetReadModel',
+          rail_status: 'declared',
+          is_gap: true,
+          source_path: 'docs/planning/example.md',
+        },
+      ],
+      components: [],
+      realWork: [],
+      riskDebt: [
+        {
+          risk_id: 'R-20260602-EXAMPLE',
+          status: 'Open',
+          priority: 'P1',
+          title: 'Example risk',
+        },
+      ],
+      commands: [],
+      prReadiness: [],
+    },
+    { generatedAt: '2026-06-02T00:00:00.000Z' }
+  );
+
+  const markdown = renderAiProjectContextMarkdown(context);
+
+  assert.match(markdown, /^# DB-first AI project context/);
+  assert.match(markdown, /\| commandQueryRailGaps \| 1 \|/);
+  assert.match(markdown, /QueryWidgets/);
+  assert.match(markdown, /R-20260602-EXAMPLE/);
+  assert.match(markdown, /pnpm planning:db:query command-query-rails --gaps true/);
 });
 
 test('readSummary counts review tasks from the effective task view without hash drift', async () => {
@@ -869,6 +1273,8 @@ test('readSummary counts review tasks from the effective task view without hash 
             planningTaskEvidenceRefs: 30,
             planningTaskStatusEvents: 250,
             planningArtifacts: 2,
+            planningRealWorkItems: 11,
+            planningRealWorkOpenItems: 27,
             repositoryCommands: 220,
             repositoryCommandUnknown: 4,
             repositoryCommandRuntimeFanout: 16,
@@ -895,6 +1301,7 @@ test('readSummary counts review tasks from the effective task view without hash 
   assert.match(capturedSql, /planning_task_evidence_refs/);
   assert.match(capturedSql, /planning_task_status_events/);
   assert.match(capturedSql, /planning_artifacts/);
+  assert.match(capturedSql, /planning_real_work_query/);
   assert.match(capturedSql, /repository_commands/);
   assert.match(capturedSql, /pr_readiness_checks/);
   assert.match(capturedSql, /doc_disposition_documents/);
@@ -903,6 +1310,122 @@ test('readSummary counts review tasks from the effective task view without hash 
   assert.match(capturedSql, /doc_task_like_references/);
   assert.match(capturedSql, /risk_debt_items/);
   assert.doesNotMatch(capturedSql, /governance_file_hash_drift/);
+});
+
+test('readAiProjectContext reads existing DB projections without introducing a parallel source', async () => {
+  const capturedSql = [];
+  const client = {
+    async query(sql, params) {
+      capturedSql.push({ sql, params });
+      if (sql.includes('as "sourceAuthority"')) {
+        return {
+          rows: [
+            {
+              sourceAuthority: 'database',
+              tasks: 250,
+              reviewTasks: 9,
+              repositoryCommands: 220,
+              planningRealWorkItems: 11,
+              planningRealWorkOpenItems: 27,
+              commandQueryRails: 80,
+              commandQueryRailGaps: 12,
+              commandQueryRailDuplicates: 6,
+              riskDebtItemsOpen: 5,
+              governanceComponents: 32,
+              driftFiles: 41,
+              prReadinessBlocking: 1,
+            },
+          ],
+        };
+      }
+      if (sql.includes('command_query_rail_query')) {
+        return {
+          rows: [
+            {
+              rail_type: 'query',
+              rail_name: 'QueryWidgets',
+              ddd_owner: 'WidgetReadModel',
+              rail_status: 'declared',
+              is_gap: true,
+              source_path: 'docs/planning/example.md',
+            },
+          ],
+        };
+      }
+      if (sql.includes('governance_component_query')) {
+        return {
+          rows: [
+            {
+              component_id: 'SYS-WEB',
+              name: 'Web application',
+              governance_state: 'current',
+            },
+          ],
+        };
+      }
+      if (sql.includes('planning_real_work_query')) {
+        return { rows: [] };
+      }
+      if (sql.includes('risk_debt_query')) {
+        return {
+          rows: [
+            {
+              risk_id: 'R-20260602-EXAMPLE',
+              status: 'Open',
+              priority: 'P1',
+              title: 'Example risk',
+            },
+          ],
+        };
+      }
+      if (sql.includes('repository_command_query')) {
+        return {
+          rows: [
+            {
+              command_type: 'package_script',
+              command_name: 'planning:db:query',
+              domain: 'planning-db',
+            },
+          ],
+        };
+      }
+      if (sql.includes('pr_readiness_query')) {
+        return { rows: [{ readiness_id: 'current', blocking: true }] };
+      }
+      throw new Error(`Unexpected SQL: ${sql}`);
+    },
+  };
+
+  const context = await readAiProjectContext(client, { domainUnit: 'SYS-WEB', limit: 5 });
+
+  assert.equal(context.samples.commandQueryRails[0].railName, 'QueryWidgets');
+  assert.equal(context.samples.components[0].componentId, 'SYS-WEB');
+  assert.equal(context.samples.openIncidentsAndDebt[0].riskId, 'R-20260602-EXAMPLE');
+  assert.match(
+    capturedSql.map((entry) => entry.sql).join('\n'),
+    /from planning_query_store\.command_query_rail_query/
+  );
+  assert.match(
+    capturedSql.map((entry) => entry.sql).join('\n'),
+    /from planning_query_store\.governance_component_query/
+  );
+  assert.match(
+    capturedSql.map((entry) => entry.sql).join('\n'),
+    /from planning_query_store\.planning_real_work_query/
+  );
+  assert.match(
+    capturedSql.map((entry) => entry.sql).join('\n'),
+    /from planning_query_store\.risk_debt_query/
+  );
+  assert.match(
+    capturedSql.map((entry) => entry.sql).join('\n'),
+    /from planning_query_store\.repository_command_query/
+  );
+  assert.match(
+    capturedSql.map((entry) => entry.sql).join('\n'),
+    /from planning_query_store\.pr_readiness_query/
+  );
+  assert.doesNotMatch(capturedSql.map((entry) => entry.sql).join('\n'), /docs\/planning/);
 });
 
 test('readHashDriftSummary queries only the explicit hash drift projection', async () => {
@@ -1092,6 +1615,165 @@ test('readRepositoryCommandRows queries the DB repository command catalog view',
   assert.match(captured.sql, /command_type = \$2/);
   assert.match(captured.sql, /limit \$3/);
   assert.deepEqual(captured.params, ['planning-db', 'package_script', 5]);
+});
+
+test('readCommandQueryRailRows queries the DB command/query rail catalog view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readCommandQueryRailRows(client, {
+    type: 'query',
+    status: 'missing-backend-rail',
+    owner: 'WidgetReadModel',
+    gaps: true,
+    duplicates: true,
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.command_query_rail_query/);
+  assert.match(captured.sql, /rail_type = \$1/);
+  assert.match(captured.sql, /rail_status = \$2/);
+  assert.match(captured.sql, /ddd_owner = \$3/);
+  assert.match(captured.sql, /is_duplicate = \$4/);
+  assert.match(captured.sql, /is_gap = \$5/);
+  assert.match(captured.sql, /limit \$6/);
+  assert.deepEqual(captured.params, [
+    'query',
+    'missing-backend-rail',
+    'WidgetReadModel',
+    true,
+    true,
+    5,
+  ]);
+});
+
+test('readCreationIntentRows queries existing rails from the DB-first rail catalog', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readCreationIntentRows(client, {
+    intent: 'I want to create ListWidgets',
+    type: 'query',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.command_query_rail_query/);
+  assert.match(captured.sql, /intent_match_score/);
+  assert.match(captured.sql, /normalized_rail_name/);
+  assert.match(captured.sql, /rail_type = \$4/);
+  assert.match(captured.sql, /limit \$5/);
+  assert.deepEqual(captured.params, [
+    'I want to create ListWidgets',
+    'i want to create listwidgets',
+    ['listwidgets'],
+    'query',
+    5,
+  ]);
+});
+
+test('runQuery dispatches creation-intent through the AI pre-create rail query', async () => {
+  const client = {
+    async query() {
+      return {
+        rows: [
+          {
+            rail_type: 'query',
+            rail_name: 'ListWidgets',
+            ddd_owner: 'WidgetReadModel',
+            rail_status: 'declared',
+            implementation_ref_count: 1,
+            documentation_ref_count: 2,
+            is_gap: false,
+            is_duplicate: false,
+            intent_match_score: 75,
+            feature_id: 'EXAMPLE-FEATURE',
+            source_path: 'docs/planning/proposals/mandatory/example.md',
+          },
+        ],
+      };
+    },
+  };
+
+  const rows = await runQuery({
+    queryName: 'creation-intent',
+    filters: { intent: 'I want to create ListWidgets', limit: 5 },
+    client,
+    print: false,
+  });
+
+  assert.deepEqual(rows, [
+    [
+      'reuse-existing-rail',
+      'query',
+      'ListWidgets',
+      'WidgetReadModel',
+      'declared',
+      'implemented',
+      '-',
+      75,
+      'EXAMPLE-FEATURE',
+      'docs/planning/proposals/mandatory/example.md',
+    ],
+  ]);
+});
+
+test('runQuery dispatches frontend-surfaces through the screen truth query', async () => {
+  const client = {
+    async query() {
+      return {
+        rows: [
+          {
+            surface_kind: 'route',
+            route_path: '/runs',
+            surface_id: 'web.runs.list',
+            screen_state: 'operational-product',
+            frontend_owner: 'Runs workbench',
+            registered_plugin_count: 1,
+            consumed_endpoint_count: 1,
+            zustand_store_count: 2,
+            tanstack_query_count: 1,
+            capability_gap_count: 2,
+            source_path: 'docs/architecture/components/web/frontend-mechanical-truth-inventory.md',
+          },
+        ],
+      };
+    },
+  };
+
+  const rows = await runQuery({
+    queryName: 'frontend-surfaces',
+    filters: { state: 'operational-product', path: '/runs', limit: 5 },
+    client,
+    print: false,
+  });
+
+  assert.deepEqual(rows, [
+    [
+      'route',
+      '/runs',
+      'web.runs.list',
+      'operational-product',
+      'Runs workbench',
+      1,
+      1,
+      2,
+      1,
+      2,
+      'docs/architecture/components/web/frontend-mechanical-truth-inventory.md',
+    ],
+  ]);
 });
 
 test('buildRepositoryCommandRows formats DB-owned repository command catalog rows', () => {

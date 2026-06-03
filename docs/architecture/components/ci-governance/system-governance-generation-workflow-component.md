@@ -169,7 +169,8 @@ flowchart TD
   `.generated-docs/planning/status/system-governance-file-fingerprint-baseline.yaml`
   manifest plus deterministic
   `.generated-docs/planning/status/governance-file-fingerprints/*.fingerprints.yaml`
-  shards, and its check command regenerates the ignored current baseline.
+  shards keyed by `componentUnit` first, then `domainUnit`, then `rootUnit`,
+  and its check command regenerates the ignored current baseline.
 - `Fingerprint impact` runs `pnpm docs:governance:file-fingerprint-impact`
   through `scripts/check-governance-file-fingerprint-baseline.cjs --report`. It
   reads the current generated baseline manifest, fingerprint shards, and file

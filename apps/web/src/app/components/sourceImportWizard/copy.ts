@@ -21,6 +21,11 @@ export const sourceImportWizardCopy = {
     description:
       'Choose which database connection should be used to discover candidate data objects',
     loading: 'Loading connections...',
+    searchLabel: 'Search governed connections',
+    catalogSource: 'Catalog: .dvt/warehouse-connections.json',
+    empty: 'No governed database connections found.',
+    emptyHint: 'Add database connections to the workspace catalog before importing sources.',
+    noMatches: 'No governed connections match the current search.',
   },
   selection: {
     title: 'Select Tables',

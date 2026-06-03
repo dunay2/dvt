@@ -4,7 +4,7 @@ import { act } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createRoot, type Root } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import type { IWorkspaceFilesQueryPort } from '../ports/workspace';
+import type { IWorkspaceFilesQueryPort, WorkspaceGraphSnapshot } from '../ports/workspace';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { WorkspaceFileLoadError } from '../services/workspace/workspaceErrors';
 import CodeView from './CodeView';
@@ -285,6 +285,98 @@ describe('CodeView', () => {
     expect(editor?.getAttribute('data-path')).toBe('pipelines/sales_pipeline.yaml');
     expect(editor?.getAttribute('data-language')).toBe('yaml');
     expect(editor?.value).toContain('entrypoint: "models/analytics/model_orders.sql"');
+  });
+
+  it('scopes the explorer to files that represent the active graph', async () => {
+    const graphSnapshot: WorkspaceGraphSnapshot = {
+      nodes: [
+        {
+          id: 'orders_model',
+          name: 'payments model',
+          type: 'MODEL',
+          package: 'dbt',
+          path: '',
+          tags: ['model'],
+          status: 'idle',
+          dependencies: ['warehouse_payments'],
+        },
+      ],
+      edges: [],
+    };
+
+    setupContainer();
+    await act(async () => {
+      root?.render(
+        <QueryClientProvider client={createTestQueryClient()}>
+          <AppServicesProvider
+            overrides={{
+              ...createAppServicesTestOverrides(),
+              workspaceGraphSnapshotQuery: {
+                getGraphSnapshot: async () => graphSnapshot,
+              },
+              workspaceFilesQuery: buildWorkspaceFilesQueryPort({
+                listFiles: async () => [
+                  {
+                    path: 'dbt_project.yml',
+                    name: 'dbt_project.yml',
+                    kind: 'file',
+                  },
+                  {
+                    path: 'models',
+                    name: 'models',
+                    kind: 'directory',
+                    children: [
+                      {
+                        path: 'models/orders_model.sql',
+                        name: 'orders_model.sql',
+                        kind: 'file',
+                      },
+                      {
+                        path: 'models/payments_model.sql',
+                        name: 'payments_model.sql',
+                        kind: 'file',
+                      },
+                      {
+                        path: 'models/schema.yml',
+                        name: 'schema.yml',
+                        kind: 'file',
+                      },
+                    ],
+                  },
+                ],
+                getFileContent: async (path) => ({
+                  path,
+                  name: path.split('/').at(-1) ?? path,
+                  language: path.endsWith('.sql') ? 'sql' : 'yaml',
+                  content:
+                    path === 'models/payments_model.sql'
+                      ? "{{ config(materialized='table') }}\n\nselect *\nfrom {{ source('finance_warehouse', 'payments_final') }}"
+                      : 'version: 2',
+                  lastModified: '2026-06-01T00:00:00.000Z',
+                }),
+              }),
+            }}
+          >
+            <CodeView />
+          </AppServicesProvider>
+        </QueryClientProvider>
+      );
+    });
+
+    await waitFor(() => container?.textContent?.includes('payments_model.sql') === true);
+    await waitFor(() => container?.querySelector('[data-testid="monaco-code-editor"]') != null);
+
+    const currentContainer = getContainer();
+    expect(currentContainer.textContent).toContain('dbt_project.yml');
+    expect(currentContainer.textContent).toContain('payments_model.sql');
+    expect(currentContainer.textContent).toContain('schema.yml');
+    expect(currentContainer.textContent).not.toContain('orders_model.sql');
+
+    const editor = currentContainer.querySelector<HTMLTextAreaElement>(
+      '[data-testid="monaco-code-editor"]'
+    );
+    expect(editor?.getAttribute('data-path')).toBe('models/payments_model.sql');
+    expect(editor?.value).toContain("{{ source('finance_warehouse', 'payments_final') }}");
   });
 
   it('renders a governed route empty state when no workspace files are available', async () => {

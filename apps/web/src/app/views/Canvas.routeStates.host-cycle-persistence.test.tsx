@@ -112,7 +112,7 @@ describe('Canvas route host-cycle persistence', () => {
 
   function findPaletteOption(label: string): HTMLButtonElement | undefined {
     return Array.from(
-      harness.container.querySelectorAll<HTMLButtonElement>(
+      document.body.querySelectorAll<HTMLButtonElement>(
         '[data-slot="canvas-add-node-palette-option"]'
       )
     ).find((button) => button.textContent?.includes(label));

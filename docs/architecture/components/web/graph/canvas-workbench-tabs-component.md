@@ -73,10 +73,10 @@ The component does not own:
 | `parseCanvasWorkbenchRouteState(value)`           | `canvasWorkbenchRouteState.ts` | Fails closed for unknown tab route segments.                               |
 | `resolveCanvasWorkbenchTabSelectionCommand(args)` | `canvasWorkbenchRouteState.ts` | Command result for tab selection navigation.                               |
 | `createCanvasGraphWorkbenchTab`                   | `canvasWorkbenchTabs.ts`       | Creates the canonical Graph tab without retired `GraphCanvas` naming.      |
-| `CanvasWorkbenchTabsReadModel`                    | `canvasWorkbenchTabs.ts`       | Text-only render-ready tab model for the Canvas route.                     |
+| `CanvasWorkbenchTabsReadModel`                    | `canvasWorkbenchTabs.ts`       | Semantic icon+label render-ready tab model for the Canvas route.           |
 | `buildCanvasWorkbenchTabsReadModel(args)`         | `canvasWorkbenchTabs.ts`       | Projects Graph plus enabled plugin tabs with active/unavailable state.     |
 | `isCanvasWorkbenchTabAvailableForContext(args)`   | `canvasWorkbenchTabs.ts`       | Decides whether a tab scope is available for the current Canvas context.   |
-| `CanvasWorkbenchTabStrip`                         | `CanvasWorkbenchTabStrip.tsx`  | Passive text-only tab-list renderer; see local component guide.            |
+| `CanvasWorkbenchTabStrip`                         | `CanvasWorkbenchTabStrip.tsx`  | Passive semantic icon+label tab-list renderer; see local component guide.  |
 | `CanvasWorkbenchTabPanel`                         | `CanvasWorkbenchTabPanel.tsx`  | Renders the selected Canvas tab view or unavailable recovery surface.      |
 
 ## Command And Query Rails
@@ -119,9 +119,9 @@ Canonical local catalog:
 - `CanvasWorkbenchTabStrip` owns Graph/Code/Lineage/Diff/Artifacts/Runs view
   tabs only.
 - `CanvasWorkbenchTabStrip` must render those tabs as a horizontal,
-  header-scoped text-only strip with readable labels; it must not render tab
-  icons, compress labels into truncated shell-rail captions, or use shell
-  navigation visual semantics.
+  header-scoped semantic icon+label strip with readable labels; it must not use
+  plugin icon components, compress labels into truncated shell-rail captions, or
+  use shell navigation visual semantics.
 - `/canvas` resolves to Graph.
 - Workspace-scoped workbench tabs, currently Code, remain visible beside Graph
   before a persisted Canvas document exists.
@@ -229,11 +229,11 @@ sequenceDiagram
   tab. The registry accepts one Canvas placement, projects it through
   `ListCanvasWorkbenchTabs`, and rejects duplicate tab IDs or shell placements
   in Canvas tab queries.
-- `US-CANVAS-WORKBENCH-010`: as a Canvas user, I see Stage 1 tabs as text-only
-  labels. Plugin icon metadata must not render in the Canvas workbench tab
-  strip.
+- `US-CANVAS-WORKBENCH-010`: as a Canvas user, I see mature workbench tabs with
+  Canvas-owned semantic icons and readable labels. Plugin icon components must
+  not render directly in the Canvas workbench tab strip.
 - `US-CANVAS-WORKBENCH-011`: as a plugin author, I can keep icon metadata for
-  icon-bearing surfaces without forcing icons into
+  plugin-owned surfaces without forcing component icons into
   `CanvasWorkbenchTabsReadModel`.
 - `US-CANVAS-WORKBENCH-012`: as a reviewer, I can inspect
   `CanvasWorkbenchTabStrip` public API, invariants, transitions, and consumers
@@ -260,7 +260,7 @@ sequenceDiagram
 - User-visible scoped tabs:
   `SelectCanvasWorkbenchTab`, `CanvasWorkbenchTabStrip`,
   `CanvasWorkbenchTabPanel`, `canvas-workbench-tabs.cy.ts`.
-- Text-only tab-strip component contract:
+- Semantic icon tab-strip component contract:
   `CanvasWorkbenchTabStrip`, `CanvasWorkbenchTabsReadModel`,
   `canvas-workbench-tab-strip-component.md`,
   `canvasWorkbenchTabs.architecture.test.ts`.
@@ -285,10 +285,10 @@ projection, tab rendering, and Canvas-scoped Runs.
   remain split by placement.
 - `canvasWorkbenchRouteState.test.ts` proves default, accepted, unknown, and
   disabled tab command results.
-- `canvasWorkbenchTabs.test.ts` proves sorted text-only tabs, duplicate
+- `canvasWorkbenchTabs.test.ts` proves sorted semantic icon tabs, duplicate
   rejection, missing context, and unknown route unavailable state.
 - `canvasWorkbenchTabs.architecture.test.ts` guards semantic separation from
-  shell nav, icon rendering in the Stage 1 strip, and
+  shell nav, plugin icon isolation in the Canvas strip, and
   `CanvasPlaygroundTabStrip`.
 - `routes.test.tsx` proves `/canvas/:workbenchTab` is registered and retired
   global Canvas-dependent paths are absent.
@@ -307,7 +307,8 @@ projection, tab rendering, and Canvas-scoped Runs.
 - Cypress verifies the shell does not expose retired global Code, Lineage,
   Diff, or Artifacts links or captions.
 - Cypress verifies the Canvas workbench tabs remain horizontal, route-scoped,
-  text-only, and readable instead of being compressed into abbreviated labels.
+  controlled-icon, and readable instead of being compressed into abbreviated
+  labels.
 
 ## Current-To-Target Map
 

@@ -1,0 +1,28 @@
+---
+id: R-20260601-CANVAS-WORKFLOW-E2E-USABILITY
+title: Canvas workflow E2E usability regressions across protected runtime rails
+status: Open
+date: 2026-06-01
+owners:
+  - Web
+  - API
+  - '@dvt/adapter-postgres'
+  - '@dvt/adapter-temporal'
+  - dvt-temporal-worker
+severity: Medium
+probability: Medium
+---
+summary: >
+  Canvas workflow usability depends on several independently owned rails: protected graph drafts,
+  workspace files, plan store, Temporal worker queues, SQL-first step activities, source import, and
+  run read models. Drift in any one rail can make the route appear loaded while plan, source, or run
+  actions fail with unclear user feedback.
+
+mitigation: >
+  Keep the live protected-runtime Cypress proof and focused package tests in the closeout baseline.
+  The local dev stack now seeds real Postgres source data, advertises it through the warehouse
+  catalog, grants source-import scopes, and starts the worker on the tenant queue so failures
+  surface against the real integration path.
+
+evidence:
+  - docs/evidence/ed-20260601-canvas-workflow-e2e-usability.md

@@ -14,7 +14,11 @@ export type CanvasShellRouteComposerArgs = Readonly<{
 export type CanvasShellLayoutBuilderArgs = Readonly<{
   layoutState: Pick<
     CanvasRouteController,
-    'focusMode' | 'explorerPanelVisible' | 'inspectorPanelVisible' | 'canOpenSourceImport'
+    | 'focusMode'
+    | 'explorerPanelVisible'
+    | 'inspectorPanelVisible'
+    | 'canOpenSourceImport'
+    | 'canvasEmptyStateGuideVisible'
   >;
   recoveryCommands: Pick<CanvasRouteController, 'reloadLatestDraft'> &
     Readonly<{
@@ -28,6 +32,7 @@ export type CanvasShellLayoutBuilderArgs = Readonly<{
     | 'handleApplyCanvasDocumentPatch'
     | 'handleDeleteCanvasDocument'
   >;
+  preferenceCommands: Pick<CanvasRouteController, 'setCanvasEmptyStateGuideVisible'>;
   routePresentation: Pick<
     CanvasRouteViewState,
     | 'presentationState'
@@ -81,6 +86,7 @@ export type CanvasShellGraphBuilderArgs = Readonly<{
     | 'canvasGridVisible'
     | 'canvasGridColor'
     | 'canvasSnapToGrid'
+    | 'canvasEmptyStateGuideVisible'
     | 'viewport'
   >;
 }>;
@@ -94,6 +100,7 @@ export type CanvasShellToolbarBuilderArgs = Readonly<{
     | 'canExportProjectSnapshot'
     | 'canImportProjectSnapshot'
     | 'planStatusSummary'
+    | 'planRunReadiness'
     | 'exclusiveOverlayMode'
     | 'canUseCostOverlay'
     | 'impactOverlayEnabled'
@@ -139,6 +146,7 @@ export type CanvasShellChromeCommandsBuilderArgs = Readonly<{
     | 'setCanvasGridVisible'
     | 'setCanvasGridColor'
     | 'setCanvasSnapToGrid'
+    | 'setCanvasEmptyStateGuideVisible'
     | 'handleExportProjectSnapshot'
     | 'handleImportProjectSnapshotFile'
     | 'reloadLatestDraft'

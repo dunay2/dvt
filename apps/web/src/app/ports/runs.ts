@@ -49,6 +49,14 @@ export type RunExecutionEvidence = {
   materialization?: MaterializationEvidence;
 };
 
+export type RunPlanExecutionSummary = {
+  executor: RunExecutor;
+  nodeCount: number;
+  stepCount: number;
+  sourceTables: readonly string[];
+  sinkTables: readonly string[];
+};
+
 export type RunGitArtifactRef = {
   repo: string;
   path: string;
@@ -72,6 +80,25 @@ export type RunAuthoringProvenance = {
 export type RunProvenanceChain = {
   persistedPlan: RunPersistedPlanProvenance;
   authoring?: RunAuthoringProvenance;
+};
+
+export type RunDiagnosticPointer = {
+  kind: 'trace' | 'log';
+  label: string;
+  value: string;
+};
+
+export type RunDiagnostics = {
+  runId: string;
+  planId?: string;
+  planSha?: string;
+  stepId?: string;
+  attemptId?: string;
+  adapter?: string;
+  durationMs?: number;
+  status: UiRunStatus;
+  errorCode?: string;
+  pointers: readonly RunDiagnosticPointer[];
 };
 
 /**
@@ -105,6 +132,8 @@ export type RunSnapshot = RunCommonSnapshotFields & {
   errorReason?: string;
   materialization?: MaterializationEvidence;
   provenance?: RunProvenanceChain;
+  planSummary?: RunPlanExecutionSummary;
+  diagnostics?: RunDiagnostics;
 };
 
 export type RunEventTimelinePage = {

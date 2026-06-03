@@ -3,6 +3,7 @@ import { Separator } from '../../components/ui/separator';
 import { CanvasToolbarDraftStatus } from './CanvasToolbarDraftStatus';
 import { CanvasToolbarPrimaryControls } from './CanvasToolbarPrimaryControls';
 import { CanvasViewMenuContributionRegistrar } from './CanvasViewMenuControls';
+import { PlanRunReadinessPanel } from './PlanRunReadinessPanel';
 import type {
   CanvasGraphAuthoringMode,
   NodeKindRegistration,
@@ -13,6 +14,7 @@ import { deriveCanvasToolbarViewModel } from './canvasToolbarViewModel';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 import { canvasChromeClasses } from './canvasChromeTokens';
+import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 
 export type CanvasToolbarProps = {
   readonly onAutoLayout: () => void;
@@ -22,6 +24,7 @@ export type CanvasToolbarProps = {
   readonly onToggleGridVisible: () => void;
   readonly onGridColorChange: (color: CanvasPaletteId) => void;
   readonly onToggleSnapToGrid: () => void;
+  readonly onSetCanvasEmptyStateGuideVisible: (visible: boolean) => void;
   readonly onExportProjectSnapshot: () => void;
   readonly onImportProjectSnapshotFile: (file: File) => void;
   readonly onReloadLatestDraft: () => void;
@@ -38,6 +41,7 @@ export type CanvasToolbarProps = {
   readonly canImportProjectSnapshot: boolean;
   readonly canStartRun: boolean;
   readonly planStatusSummary: string;
+  readonly planRunReadiness: PlanRunReadinessReadModel;
   readonly canvasAuthoringMode: CanvasGraphAuthoringMode;
   readonly exclusiveOverlayMode: 'runtime' | 'cost';
   readonly canUseCostOverlay: boolean;
@@ -46,6 +50,7 @@ export type CanvasToolbarProps = {
   readonly canvasGridVisible: boolean;
   readonly canvasGridColor: CanvasPaletteId;
   readonly canvasSnapToGrid: boolean;
+  readonly canvasEmptyStateGuideVisible: boolean;
   readonly transformationValidation: TransformationGraphValidationResult;
   readonly nodeCount: number;
   readonly edgeCount: number;
@@ -73,6 +78,7 @@ export default function CanvasToolbar(props: CanvasToolbarProps) {
           canvasGridVisible={props.canvasGridVisible}
           canvasGridColor={props.canvasGridColor}
           canvasSnapToGrid={props.canvasSnapToGrid}
+          canvasEmptyStateGuideVisible={props.canvasEmptyStateGuideVisible}
           onAutoLayout={props.onAutoLayout}
           onToggleCostOverlay={props.onToggleCostOverlay}
           onToggleImpact={props.onToggleImpact}
@@ -80,6 +86,7 @@ export default function CanvasToolbar(props: CanvasToolbarProps) {
           onToggleGridVisible={props.onToggleGridVisible}
           onGridColorChange={props.onGridColorChange}
           onToggleSnapToGrid={props.onToggleSnapToGrid}
+          onSetCanvasEmptyStateGuideVisible={props.onSetCanvasEmptyStateGuideVisible}
         />
         <CanvasToolbarPrimaryControls
           onExportProjectSnapshot={props.onExportProjectSnapshot}
@@ -99,6 +106,7 @@ export default function CanvasToolbar(props: CanvasToolbarProps) {
           canPlanGraph={viewModel.canPlanGraph}
           authoringNodeKinds={props.authoringNodeKinds ?? []}
         />
+        <PlanRunReadinessPanel density="compact" readiness={props.planRunReadiness} />
         <Separator orientation="vertical" className={canvasChromeClasses.separator} />
         <CanvasToolbarDraftStatus
           draftToolbarState={props.draftToolbarState}

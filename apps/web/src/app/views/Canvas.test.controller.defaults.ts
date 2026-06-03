@@ -46,6 +46,7 @@ type CanvasWorkbenchDefaultsDto = {
   canvasGridVisible: CanvasController['canvasGridVisible'];
   canvasGridColor: CanvasController['canvasGridColor'];
   canvasSnapToGrid: CanvasController['canvasSnapToGrid'];
+  canvasEmptyStateGuideVisible: CanvasController['canvasEmptyStateGuideVisible'];
   viewport: CanvasController['viewport'];
 };
 
@@ -70,6 +71,7 @@ type CanvasDraftDefaultsDto = {
 type CanvasExecutionDefaultsDto = {
   canPlanGraph: CanvasController['canPlanGraph'];
   canStartRun: CanvasController['canStartRun'];
+  planRunReadiness: CanvasController['planRunReadiness'];
   planStatusSummary: CanvasController['planStatusSummary'];
   exclusiveOverlayMode: CanvasController['exclusiveOverlayMode'];
   canUseCostOverlay: CanvasController['canUseCostOverlay'];
@@ -214,6 +216,7 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
     canvasGridVisible: true,
     canvasGridColor: DEFAULT_CANVAS_GRID_COLOR,
     canvasSnapToGrid: false,
+    canvasEmptyStateGuideVisible: true,
     viewport: null,
   } satisfies CanvasWorkbenchDefaultsDto;
 }
@@ -251,6 +254,12 @@ function buildDefaultCanvasExecutionState(): CanvasExecutionDefaultsDto {
   return {
     canPlanGraph: false,
     canStartRun: false,
+    planRunReadiness: {
+      blockers: ['plan_integrity'],
+      rail: 'ObservePlanRunReadiness',
+      status: 'blocked',
+      summary: 'Preview required before running.',
+    },
     planStatusSummary: 'Preview required before running.',
     exclusiveOverlayMode: 'runtime',
     canUseCostOverlay: false,
@@ -305,6 +314,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'setCanvasGridVisible'
   | 'setCanvasGridColor'
   | 'setCanvasSnapToGrid'
+  | 'setCanvasEmptyStateGuideVisible'
   | 'handlePlan'
   | 'handleStartRun'
   | 'reloadLatestDraft'
@@ -347,6 +357,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     setCanvasGridVisible: vi.fn(),
     setCanvasGridColor: vi.fn(),
     setCanvasSnapToGrid: vi.fn(),
+    setCanvasEmptyStateGuideVisible: vi.fn(),
     handlePlan: vi.fn(),
     handleStartRun: vi.fn(),
     reloadLatestDraft: vi.fn(),

@@ -316,6 +316,39 @@ describe('runsService runtime contract', () => {
     });
   });
 
+  it('maps persisted plan execution scope summary from GET /runs/:runId', async () => {
+    const apiClient = createApiClientMock();
+    vi.mocked(apiClient.getJson).mockResolvedValue({
+      runId: 'run_with_plan_scope',
+      planId: 'plan_123',
+      status: 'COMPLETED',
+      startedAt: '2026-04-04T00:00:00.000Z',
+      completedAt: '2026-04-04T00:00:10.000Z',
+      planSummary: {
+        executor: 'postgres',
+        nodeCount: 3,
+        stepCount: 3,
+        sourceTables: ['raw.orders'],
+        sinkTables: ['analytics.orders_daily'],
+      },
+    });
+
+    const service = createRunsService(apiClient);
+    const snapshot = await service.getRunSnapshot('run_with_plan_scope');
+
+    expect(snapshot).toMatchObject({
+      runId: 'run_with_plan_scope',
+      planId: 'plan_123',
+      planSummary: {
+        executor: 'postgres',
+        nodeCount: 3,
+        stepCount: 3,
+        sourceTables: ['raw.orders'],
+        sinkTables: ['analytics.orders_daily'],
+      },
+    });
+  });
+
   it('maps top-level derived run evidence from GET /runs/:runId', async () => {
     const apiClient = createApiClientMock();
     vi.mocked(apiClient.getJson).mockResolvedValue({
@@ -349,6 +382,69 @@ describe('runsService runtime contract', () => {
         executor: 'postgres',
         sinkTable: 'analytics.orders_daily',
         rowsWritten: 42,
+      },
+    });
+  });
+
+  it('maps run diagnostics from GET /runs/:runId', async () => {
+    const apiClient = createApiClientMock();
+    vi.mocked(apiClient.getJson).mockResolvedValue({
+      runId: 'run_with_diagnostics',
+      status: 'FAILED',
+      startedAt: '2026-04-04T00:00:00.000Z',
+      completedAt: '2026-04-04T00:00:10.000Z',
+      diagnostics: {
+        runId: 'run_with_diagnostics',
+        planId: 'plan_123',
+        planSha: 'a'.repeat(64),
+        stepId: 'step-load',
+        attemptId: '2',
+        adapter: 'temporal',
+        durationMs: 10000,
+        status: 'FAILED',
+        errorCode: 'SINK_WRITE_FAILED',
+        pointers: [
+          {
+            kind: 'trace',
+            label: 'Trace query',
+            value: 'runId=run_with_diagnostics planId=plan_123 stepId=step-load attemptId=2',
+          },
+          {
+            kind: 'log',
+            label: 'Log query',
+            value: 'runId=run_with_diagnostics planSha=aaaaaaaa',
+          },
+        ],
+      },
+    });
+
+    const service = createRunsService(apiClient);
+    const snapshot = await service.getRunSnapshot('run_with_diagnostics');
+
+    expect(snapshot).toMatchObject({
+      runId: 'run_with_diagnostics',
+      diagnostics: {
+        runId: 'run_with_diagnostics',
+        planId: 'plan_123',
+        planSha: 'a'.repeat(64),
+        stepId: 'step-load',
+        attemptId: '2',
+        adapter: 'temporal',
+        durationMs: 10000,
+        status: 'failed',
+        errorCode: 'SINK_WRITE_FAILED',
+        pointers: [
+          {
+            kind: 'trace',
+            label: 'Trace query',
+            value: 'runId=run_with_diagnostics planId=plan_123 stepId=step-load attemptId=2',
+          },
+          {
+            kind: 'log',
+            label: 'Log query',
+            value: 'runId=run_with_diagnostics planSha=aaaaaaaa',
+          },
+        ],
       },
     });
   });

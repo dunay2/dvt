@@ -15,11 +15,7 @@ import { Button } from '../../components/ui/button';
 import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group';
 import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { cn } from '../../components/ui/utils';
-import {
-  routeWorkbenchSubtleTextClassName,
-  routeWorkbenchTabListClassName,
-  routeWorkbenchTabTriggerClassName,
-} from '../../components/workbench/RouteWorkbenchFrame';
+import { routeWorkbenchSubtleTextClassName } from '../../components/workbench/RouteWorkbenchFrame';
 import { canvasChromeClasses } from './canvasChromeTokens';
 import type { CanvasPlaygroundTabState } from './canvasPlaygroundTabState';
 import type { CanvasReplacementActionViewState } from './canvasPlaygroundTabStripModel';
@@ -93,15 +89,16 @@ function CanvasPlaygroundTabsTemplate({
 }: CanvasPlaygroundTabsTemplateProps): JSX.Element {
   return (
     <Tabs value={tabState.activeTabId ?? undefined} className="min-w-0 flex-1">
-      <TabsList className={cn(routeWorkbenchTabListClassName, 'h-auto gap-2 p-1')}>
+      <TabsList className="flex h-11 min-w-0 items-stretch gap-4 rounded-none border-0 bg-transparent p-0">
         {tabState.tabs.map((tab) => (
           <TabsTrigger
             key={tab.id}
             value={tab.id}
             data-slot="canvas-playground-tab-trigger"
             className={cn(
-              routeWorkbenchTabTriggerClassName,
-              'flex h-auto min-w-0 items-center gap-2 rounded-md px-3 py-2'
+              'flex h-11 min-w-0 max-w-56 flex-none items-center gap-2 rounded-none border-0 border-b-2 border-transparent bg-transparent px-0 text-[var(--text-muted)] shadow-none',
+              'hover:bg-transparent hover:text-[var(--text-strong)]',
+              'data-[state=active]:border-[color:var(--focus-ring)] data-[state=active]:bg-transparent data-[state=active]:text-[var(--text-strong)] data-[state=active]:shadow-none'
             )}
           >
             <Layers2 className="size-4 shrink-0" />

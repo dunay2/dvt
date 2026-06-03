@@ -74,6 +74,8 @@ function buildWorkbenchArgs(
     canCreateCanvasDocument: true,
     canEditEdges: true,
     canOpenSourceImport: true,
+    emptyStateGuideVisible: true,
+    onEmptyStateGuideVisibilityChange: vi.fn(),
     onCreateCanvasDocument: vi.fn(),
     onCreateAuthoringNode: vi.fn(),
     ...overrides,

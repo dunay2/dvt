@@ -138,6 +138,31 @@ test('readNameStatusDiff scans only the committed revision range by default', ()
   assert.deepEqual(calls, [['diff', '--name-status', '--find-renames', 'origin/main...HEAD']]);
 });
 
+test('readNameStatusDiff falls back to direct tree diff for shallow merge refs', () => {
+  const calls = [];
+  const result = readNameStatusDiff('origin/main', 'merge-sha', (args) => {
+    calls.push(args);
+    if (calls.length === 1) {
+      const error = new Error('Command failed: git diff origin/main...merge-sha');
+      error.stderr = Buffer.from('fatal: origin/main...merge-sha: no merge base\n');
+      throw error;
+    }
+
+    return 'M\tscripts/check-governance-changed-files.cjs\n';
+  });
+
+  assert.deepEqual(result, [
+    {
+      status: 'M',
+      path: 'scripts/check-governance-changed-files.cjs',
+    },
+  ]);
+  assert.deepEqual(calls, [
+    ['diff', '--name-status', '--find-renames', 'origin/main...merge-sha'],
+    ['diff', '--name-status', '--find-renames', 'origin/main', 'merge-sha'],
+  ]);
+});
+
 test('readLocalNameStatusDiff includes worktree, staged and untracked files without base-vs-worktree diff', () => {
   const calls = [];
   const result = readLocalNameStatusDiff('origin/main', 'HEAD', (args) => {
@@ -172,6 +197,31 @@ test('readLocalNameStatusDiff includes worktree, staged and untracked files with
     false,
     'raw base diff must not run as part of local changed-file detection'
   );
+});
+
+test('readLocalNameStatusDiff falls back to direct committed range for shallow merge refs', () => {
+  const calls = [];
+  const result = readLocalNameStatusDiff('origin/main', 'merge-sha', (args) => {
+    calls.push(args.join(' '));
+    const command = args.join(' ');
+    if (command === 'diff --name-status --find-renames origin/main...merge-sha') {
+      const error = new Error('Command failed: git diff origin/main...merge-sha');
+      error.stderr = Buffer.from('fatal: origin/main...merge-sha: no merge base\n');
+      throw error;
+    }
+    if (command === 'diff --name-status --find-renames origin/main merge-sha') {
+      return 'M\tscripts/check-governance-changed-files.cjs\n';
+    }
+    return '';
+  });
+
+  assert.deepEqual(result, [
+    {
+      status: 'M',
+      path: 'scripts/check-governance-changed-files.cjs',
+    },
+  ]);
+  assert.ok(calls.includes('diff --name-status --find-renames origin/main merge-sha'));
 });
 
 test('readLocalNameStatusDiff treats a staged deletion as the final state after a committed modification', () => {

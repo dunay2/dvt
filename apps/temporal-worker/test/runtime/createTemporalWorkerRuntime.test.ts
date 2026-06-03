@@ -1,4 +1,4 @@
-import type { TemporalWorkerHostConfig } from '@dvt/adapter-temporal';
+import type { StepActivity, TemporalWorkerHostConfig } from '@dvt/adapter-temporal';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createTemporalWorkerRuntime } from '../../src/runtime/createTemporalWorkerRuntime.js';
@@ -137,6 +137,54 @@ describe('createTemporalWorkerRuntime', () => {
     expect(probe).not.toHaveBeenCalled();
     expect(capturedConfig?.activityDeps).not.toHaveProperty('dbtPluginRunner');
     expect(capturedConfig?.stepActivitiesByKind?.get('DBT_MODEL')).toBeUndefined();
+  });
+
+  it('wires and closes the SQL-first Postgres execution capability without DBT', async () => {
+    const fixture = createRuntimeFixture();
+    const postgresActivity: StepActivity = {
+      execute: vi.fn(async (step) => ({
+        stepId: step.stepId,
+        status: 'COMPLETED' as const,
+      })),
+    };
+    const closePostgresCapability = vi.fn(async () => undefined);
+    let capturedConfig: TemporalWorkerHostConfig | undefined;
+    const runtimeOptions = {
+      stateStoreFactory: () => fixture.stateStore,
+      connectionFactory: async () => fixture.connection,
+      hostFactory: (config) => {
+        capturedConfig = config;
+        return fixture.host;
+      },
+      postgresRelationalCapabilityFactory: () => ({
+        stepActivitiesByKind: new Map([
+          ['PREPARE_POSTGRES_TRANSFORM', postgresActivity],
+          ['POSTGRES_SQL_TRANSFORM', postgresActivity],
+          ['CAPTURE_MATERIALIZATION_EVIDENCE', postgresActivity],
+        ]),
+        close: closePostgresCapability,
+      }),
+    } satisfies Parameters<typeof createTemporalWorkerRuntime>[2];
+
+    const runtime = await createTemporalWorkerRuntime(
+      createEnv(),
+      { info() {}, error() {} },
+      runtimeOptions
+    );
+
+    await runtime.start();
+    await runtime.stop();
+
+    expect(capturedConfig?.stepActivitiesByKind?.get('PREPARE_POSTGRES_TRANSFORM')).toBe(
+      postgresActivity
+    );
+    expect(capturedConfig?.stepActivitiesByKind?.get('POSTGRES_SQL_TRANSFORM')).toBe(
+      postgresActivity
+    );
+    expect(capturedConfig?.stepActivitiesByKind?.get('CAPTURE_MATERIALIZATION_EVIDENCE')).toBe(
+      postgresActivity
+    );
+    expect(closePostgresCapability).toHaveBeenCalledTimes(1);
   });
 
   it.each([

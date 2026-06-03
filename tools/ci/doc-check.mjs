@@ -16,8 +16,8 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { execSync } from 'node:child_process';
 import yaml from 'js-yaml';
+import { listChangedFilesBetween } from './git-diff-files.mjs';
 
 const arcJsonPath = process.env.ARC_JSON || 'arc.json';
 const policyPath = process.env.ARC_POLICY || '.arc-policy.yaml';
@@ -38,14 +38,6 @@ function readJson(fp) {
 function readPolicy(fp) {
   if (!fs.existsSync(fp)) fail(`Missing policy file: ${fp}`);
   return yaml.load(fs.readFileSync(fp, 'utf8'));
-}
-
-function listChangedFiles() {
-  const out = execSync(`git diff --name-only ${base}...${head}`, { encoding: 'utf8' });
-  return out
-    .split('\n')
-    .map((s) => s.trim())
-    .filter(Boolean);
 }
 
 function listMdFiles(dir) {
@@ -80,7 +72,7 @@ if (docsOnlyScope) process.exit(0);
 const evidenceDir = policy.artifacts?.evidence_dir || 'docs/evidence';
 const riskDir = policy.artifacts?.risk_dir || 'docs/risk-register';
 
-const changed = listChangedFiles();
+const changed = listChangedFilesBetween({ baseRef: base, headRef: head });
 
 if (arc.requirements?.evidenceDoc) {
   const edFiles = listMdFiles(evidenceDir).filter(isEvidenceDoc);

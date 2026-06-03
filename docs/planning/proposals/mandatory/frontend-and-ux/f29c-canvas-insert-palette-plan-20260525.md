@@ -107,6 +107,9 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.es.ts
   - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.ts
   - docs/.manifest.json
+  - docs/guides/assets/canvas-authoring-user-manual/**
+  - docs/guides/canvas-authoring-user-manual-20260501.md
+  - docs/guides/index.md
   - docs/index.md
   - docs/planning/index.md
   - docs/planning/closeouts/index.md
@@ -209,6 +212,22 @@ symbols:
     architectureGuard: pnpm docs:feature-mechanization:implementation
     cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec 'cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts,cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts'
     unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/canvas/CanvasStateViews.test.tsx src/app/views/canvas/CanvasToolbar.test.tsx]
+  - name: PALETTE_WIDTH
+    path: apps/web/src/app/views/canvas/CanvasAddNodePalette.tsx
+    dddOwner: CanvasInsertPalette
+    cqRails: [ListNodeKindCatalog]
+    fowlerSignals: [Hidden UX semantics]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec 'cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts,cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts'
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/canvas/CanvasToolbar.test.tsx]
+  - name: PALETTE_GUTTER
+    path: apps/web/src/app/views/canvas/CanvasAddNodePalette.tsx
+    dddOwner: CanvasInsertPalette
+    cqRails: [ListNodeKindCatalog]
+    fowlerSignals: [Hidden UX semantics]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec 'cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts,cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts'
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/canvas/CanvasToolbar.test.tsx]
   - name: CanvasAddNodePaletteProps
     path: apps/web/src/app/views/canvas/CanvasAddNodePalette.tsx
     dddOwner: CanvasInsertPalette
