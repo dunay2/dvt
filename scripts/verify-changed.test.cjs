@@ -242,6 +242,38 @@ test('buildVerifyChangedPlan runs changed AI preflight tests directly', () => {
   assert.ok(!labels.includes('pnpm test:planning:db'));
 });
 
+test('buildVerifyChangedPlan routes CI tooling modules to adjacent tests', () => {
+  const labels = labelsFor(['tools/ci/repository-command-catalog.mjs']);
+
+  assert.equal(
+    labels.filter((label) => label === 'node --test tools/ci/repository-command-catalog.test.mjs')
+      .length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:ci-tools'));
+});
+
+test('buildVerifyChangedPlan runs changed CI tooling tests directly and deduped', () => {
+  const labels = labelsFor([
+    'tools/ci/repository-command-catalog.mjs',
+    'tools/ci/repository-command-catalog.test.mjs',
+    'tools/ci/workflow-pattern-parity.test.mjs',
+  ]);
+
+  assert.deepEqual(labels, [...new Set(labels)]);
+  assert.equal(
+    labels.filter((label) => label === 'node --test tools/ci/repository-command-catalog.test.mjs')
+      .length,
+    1
+  );
+  assert.equal(
+    labels.filter((label) => label === 'node --test tools/ci/workflow-pattern-parity.test.mjs')
+      .length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:ci-tools'));
+});
+
 test('buildVerifyChangedPlan self-tests changed verifier changes without prepush verifier tests', () => {
   const labels = labelsFor(['scripts/verify-changed.cjs']);
 

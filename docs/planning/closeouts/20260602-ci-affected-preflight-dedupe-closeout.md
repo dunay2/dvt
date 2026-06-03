@@ -49,6 +49,9 @@ planning_type: closeout
   change is inside declared feature-mechanization surfaces.
 - Updated CI contract tests and the repository command catalog.
 - Updated the testing and CI guide to document the local/remote split.
+- Added changed-slice routing for `tools/ci` source and test edits so one-file
+  CI-tooling iterations run direct adjacent `node --test` suites instead of
+  escalating to the broad `pnpm test:ci-tools` contract by default.
 
 ## Validation Plan
 
@@ -57,6 +60,7 @@ planning_type: closeout
 - `node --test tools/ci/repository-command-catalog.test.mjs`
 - `pnpm docs:sync`
 - `pnpm governance:refresh`
+- `node --test scripts/verify-changed.test.cjs`
 - `pnpm verify:prepush`
 
 ## No-Debt And No-Stub Evidence

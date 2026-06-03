@@ -1,5 +1,6 @@
 /** Owned concern: shared local validation plan definitions and execution helpers. */
 const path = require('node:path');
+const fs = require('node:fs');
 const { spawnSync } = require('node:child_process');
 
 const { classifyRepositoryChangedScope } = require('../tools/ci/repository-change-scope.mjs');
@@ -191,6 +192,31 @@ function planningWorkflowTestSteps(changedFiles) {
     });
 }
 
+function ciToolingTestPathFor(filePath) {
+  if (!filePath.startsWith('tools/ci/')) {
+    return null;
+  }
+  if (/\.test\.mjs$/u.test(filePath)) {
+    return filePath;
+  }
+  if (!/\.mjs$/u.test(filePath)) {
+    return null;
+  }
+
+  const parsedPath = path.posix.parse(filePath);
+  const adjacentTestPath = path.posix.join(parsedPath.dir, `${parsedPath.name}.test.mjs`);
+  return fs.existsSync(path.join(repoRoot, adjacentTestPath)) ? adjacentTestPath : null;
+}
+
+function ciToolingTestSteps(changedFiles) {
+  return changedFiles
+    .map(ciToolingTestPathFor)
+    .filter((testPath) => testPath !== null)
+    .map((testPath) =>
+      step(`test-${path.posix.basename(testPath, '.test.mjs')}`, 'node', '--test', testPath)
+    );
+}
+
 function hasWebChange(changedFiles) {
   return changedFiles.some((filePath) => filePath.startsWith('apps/web/'));
 }
@@ -281,6 +307,7 @@ function buildVerifyChangedPlan(files) {
   }
   const directPlanningWorkflowTestSteps = planningWorkflowTestSteps(changedFiles);
   pushSteps(plan, directPlanningWorkflowTestSteps);
+  pushSteps(plan, ciToolingTestSteps(changedFiles));
   const runsMigrationTestDirectly = directPlanningWorkflowTestSteps.some(
     (nextStep) => commandLabel(nextStep) === 'node --test scripts/planning-db-migrate.test.cjs'
   );
@@ -352,6 +379,8 @@ module.exports = {
   buildVerifyChangedPlan,
   classifyPrepushScope,
   commandLabel,
+  ciToolingTestPathFor,
+  ciToolingTestSteps,
   executeCommandPlan,
   hasDeveloperWorkflowVerifierChange,
   hasWebChange,
