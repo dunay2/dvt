@@ -8,8 +8,10 @@
  *   1. (ERROR) No spaces in any .md filename.
  *   2. (ERROR) ADR files must match: ADR-NNNN[a-z]?[-_]<slug>.md
  *              Language variants like ADR-0019-foo.en.md are allowed.
- *   3. (WARN --strict) Non-ADR, non-exception docs should be kebab-case
+ *   3. (WARN --strict) Non-ADR, non-evidence, non-exception docs should be kebab-case
  *              (all lowercase, hyphens only - no underscores, no uppercase).
+ *              Evidence docs keep the governed ED-YYYYMMDD-* identity used by
+ *              evidence frontmatter, manifest, and planning DB references.
  *              Versioned contract docs under docs/architecture/components/engine/contracts/
  *              keep their contract-identity filenames, for example IWorkflowEngine.v1.md.
  *
@@ -36,6 +38,7 @@ const CHANGED_ONLY = process.argv.includes('--changed-only');
 
 const ADR_PREFIX_RE = /^ADR-\d{4}/i;
 const ADR_VALID_RE = /^ADR-\d{4}[a-z]?[-_].+\.(?:[a-z]{2}\.)?md$/i;
+const EVIDENCE_VALID_RE = /^ED-\d{8}-.+\.md$/;
 
 const UPPERCASE_EXCEPTIONS = new Set([
   'README.md',
@@ -131,6 +134,7 @@ function shouldCheckStrictKebabCase(filePath: string, name: string): boolean {
   return (
     STRICT &&
     !ADR_PREFIX_RE.test(name) &&
+    !isEvidenceDoc(filePath, name) &&
     !UPPERCASE_EXCEPTIONS.has(name) &&
     !isVersionedContractDoc(filePath, name)
   );
@@ -146,6 +150,11 @@ function isVersionedContractDoc(filePath: string, name: string): boolean {
     normalizedPath.includes('/docs/architecture/components/engine/contracts/') &&
     /^[A-Za-z][A-Za-z0-9]*\.v\d+(?:\.\d+)?\.md$/.test(name)
   );
+}
+
+function isEvidenceDoc(filePath: string, name: string): boolean {
+  const normalizedPath = filePath.replaceAll('\\', '/');
+  return normalizedPath.includes('/docs/evidence/') && EVIDENCE_VALID_RE.test(name);
 }
 
 function getFilename(filePath: string): string {

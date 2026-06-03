@@ -70,6 +70,18 @@ test('changed-only strict filename gate fails non-canonical changed doc names', 
   assert.match(output, /New or changed docs must use canonical kebab-case/);
 });
 
+test('changed-only strict filename gate allows governed evidence identity names', () => {
+  const result = runPnpm(
+    ['exec', 'tsx', 'tools/docs/check-filenames.ts', '--changed-only', '--strict'],
+    {
+      DOCS_GOV_CHANGED_FILES: 'docs/evidence/ED-20991231-valid-evidence.md',
+    }
+  );
+  const output = `${result.stdout}\n${result.stderr}`;
+
+  assert.equal(result.status, 0, output);
+});
+
 test('changed-only frontmatter gate validates only changed ADR and evidence files', () => {
   const fixtureDir = 'docs/evidence/.tmp';
   const validPath = `${fixtureDir}/ED-20991231-changed-frontmatter-valid.md`;
