@@ -100,11 +100,24 @@ function actionRows(document, body, planningTaskIds) {
     if (/^\s*[-*]\s+\[[ xX]\]/.test(line)) {
       return true;
     }
-    if (/^\s*[-*]\s+(?:\[[ xX]\]\s*)?(?:Action:|Task:|\[Task:)/i.test(line)) {
+    if (/^\s*[-*]\s+(?:\[[ xX]\]\s*)?Action:/i.test(line)) {
+      return true;
+    }
+    if (/^\s*[-*]\s+(?:\[[ xX]\]\s*)?\[Task:/i.test(line)) {
+      return extractTaskIds(line, planningTaskIds).length > 0;
+    }
+    if (/^\s*[-*]\s+(?:\[[ xX]\]\s*)?Task:/i.test(line)) {
       return true;
     }
     if (extractTaskIds(line, planningTaskIds).length > 0) {
       return true;
+    }
+    if (
+      /^(?:Add|Classify|Create|Design|Extract|Fix|Implement|Migrate|Modify|Refactor|Reuse|Update|Validate|Wire)(?: if required)?:$/.test(
+        summary
+      )
+    ) {
+      return false;
     }
     if (/^Add\s+palette\b/.test(summary)) {
       return false;
