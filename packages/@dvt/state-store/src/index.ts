@@ -74,7 +74,11 @@ export {
   toArchiveFailureMessage,
   validateRunEventRetentionPolicy,
 } from './lifecycle/archiveRuntime.js';
-export { ObjectStorageRunArchiveExporter } from './lifecycle/ObjectStorageRunArchiveExporter.js';
+export {
+  ObjectStorageRunArchiveExporter,
+  type ArchiveRedactionPolicy,
+  type ObjectStorageRunArchiveExporterOptions,
+} from './lifecycle/ObjectStorageRunArchiveExporter.js';
 export { RunArchiveCoordinator } from './lifecycle/RunArchiveCoordinator.js';
 export { RunArchiveVerifier } from './lifecycle/RunArchiveVerifier.js';
 export { RunArchiveDeleter } from './lifecycle/RunArchiveDeleter.js';
