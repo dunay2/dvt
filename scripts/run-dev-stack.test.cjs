@@ -17,7 +17,10 @@ const {
   buildLocalWarehouseConnectionCatalog,
   waitForUrlOrProcessExit,
 } = require('./run-dev-stack.cjs');
-const { startLocalTemporalService } = require('./run-dev-stack.temporal.cjs');
+const {
+  resolveTemporalCliExecutable,
+  startLocalTemporalService,
+} = require('./run-dev-stack.temporal.cjs');
 const { defaultPgUrl } = require('./run-temporal-postgres-proof.cjs');
 
 test('parseArgs enables skip-postgres explicitly', () => {
@@ -307,38 +310,72 @@ test('buildLocalWarehouseConnectionCatalog advertises the seeded local source ta
   );
 });
 
-test('startLocalTemporalService uses a full local Temporal dev server instead of time skipping', async () => {
-  let createLocalCalled = false;
-  let createTimeSkippingCalled = false;
-  let teardownCalled = false;
+test('resolveTemporalCliExecutable prefers an explicit operator-provided CLI path', () => {
+  const executable = resolveTemporalCliExecutable(
+    { DVT_TEMPORAL_CLI_PATH: 'C:\\Temporal\\temporal.exe' },
+    {
+      readdirSync: () => {
+        throw new Error('cache lookup must not run when the CLI path is explicit');
+      },
+    },
+    'C:\\Temp'
+  );
+
+  assert.equal(executable, 'C:\\Temporal\\temporal.exe');
+});
+
+test('startLocalTemporalService starts an owned Temporal CLI dev server instead of SDK dev-server spawn', async () => {
+  const child = new EventEmitter();
+  child.stdout = new EventEmitter();
+  child.stderr = new EventEmitter();
+  child.pid = 12345;
+  child.killed = false;
+  child.exitCode = null;
+
+  let spawnCall;
+  let terminated = false;
 
   const service = await startLocalTemporalService({
-    TestWorkflowEnvironment: {
-      createLocal: async () => {
-        createLocalCalled = true;
-        return {
-          address: '127.0.0.1:12345',
-          namespace: 'dev-namespace',
-          teardown: async () => {
-            teardownCalled = true;
-          },
-        };
-      },
-      createTimeSkipping: async () => {
-        createTimeSkippingCalled = true;
-        throw new Error('createTimeSkipping must not be used for dev stack');
-      },
+    executablePath: 'temporal',
+    host: '127.0.0.1',
+    namespace: 'default',
+    port: 7291,
+    spawnProcess: (file, args, options) => {
+      spawnCall = { file, args, options };
+      return child;
+    },
+    waitForTcpPort: async ({ child: observedChild, host, port }) => {
+      assert.equal(observedChild, child);
+      assert.equal(host, '127.0.0.1');
+      assert.equal(port, 7291);
+    },
+    terminateProcessTree: async (observedChild) => {
+      assert.equal(observedChild, child);
+      terminated = true;
+      child.killed = true;
     },
   });
 
-  assert.equal(createLocalCalled, true);
-  assert.equal(createTimeSkippingCalled, false);
-  assert.equal(service.address, '127.0.0.1:12345');
-  assert.equal(service.namespace, 'dev-namespace');
+  assert.equal(spawnCall.file, 'temporal');
+  assert.deepEqual(spawnCall.args.slice(0, 7), [
+    'server',
+    'start-dev',
+    '--ip',
+    '127.0.0.1',
+    '--port',
+    '7291',
+    '--namespace',
+  ]);
+  assert.ok(spawnCall.args.includes('--headless'));
+  assert.ok(spawnCall.args.includes('--disable-config-file'));
+  assert.ok(spawnCall.args.includes('--disable-config-env'));
+  assert.equal(spawnCall.options.windowsHide, true);
+  assert.equal(service.address, '127.0.0.1:7291');
+  assert.equal(service.namespace, 'default');
 
   await service.close();
 
-  assert.equal(teardownCalled, true);
+  assert.equal(terminated, true);
 });
 
 test('waitForUrlOrProcessExit attaches the post-ready exit watcher before releasing readiness', async () => {

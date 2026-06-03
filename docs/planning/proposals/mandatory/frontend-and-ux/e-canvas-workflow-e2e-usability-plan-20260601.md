@@ -1453,6 +1453,60 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
     unitTests:
       - scripts/run-dev-stack.test.cjs
+  - name: allocateFreePort
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Local Temporal bootstrap must avoid hidden port coupling.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: buildTemporalCliStartDevArgs
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Local Temporal bootstrap must be hermetic and not inherit operator CLI config.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: resolveTemporalCliExecutable
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Local Temporal bootstrap must not depend on SDK native dev-server spawn on Windows.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: startTemporalCliDevServer
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Local Temporal bootstrap must use an owned process lifecycle.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: terminateTemporalCliProcess
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Local Temporal bootstrap must cleanly own child process teardown.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: waitForTcpPort
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Local Temporal readiness must be a real port probe, not process-spawn optimism.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
   - name: LiveMaterializationEvidence
     path: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
     dddOwner: RunMaterializationEvidence

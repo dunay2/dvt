@@ -33,7 +33,11 @@ export function WorkbenchStateFrame({
       </div>
       <div
         data-slot={`${slotPrefix}-body`}
-        className={cn('flex-1', routeWorkbenchBodyPaddingClassName, bodyClassName)}
+        className={cn(
+          'min-h-0 flex-1 overflow-y-auto',
+          routeWorkbenchBodyPaddingClassName,
+          bodyClassName
+        )}
       >
         {children}
       </div>
