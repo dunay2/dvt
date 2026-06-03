@@ -109,7 +109,11 @@ function actionRows(document, body, planningTaskIds) {
     if (/^Add\s+palette\b/.test(summary)) {
       return false;
     }
-    if (/^Add\s+[\w/-]+\s+(?:can|is|are|must|opens|reads|remains|should|shows|supports)\b/.test(summary)) {
+    if (
+      /^Add\s+[\w/-]+\s+(?:can|is|are|must|opens|reads|remains|should|shows|supports)\b/.test(
+        summary
+      )
+    ) {
       return false;
     }
     return /^(?:Add|Classify|Create|Design|Extract|Fix|Implement|Migrate|Modify|Refactor|Reuse|Update|Validate|Wire)\b/.test(
