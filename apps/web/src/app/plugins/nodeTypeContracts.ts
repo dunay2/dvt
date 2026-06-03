@@ -1,4 +1,6 @@
 import type { CoreNodeRole, PluginNodeKind } from '../types/canonical';
+import type { CanvasExecutionStrategy } from './canvasExecutionStrategyContracts';
+import type { CanvasGraphStrategy } from './graphStrategyContracts';
 
 import type { LucideIcon } from 'lucide-react';
 
@@ -15,6 +17,28 @@ export type NodeKindRegistration = {
   allowsOutgoing: boolean;
   supportsColumns: boolean;
 };
+
+export type CanvasKindRegistration = {
+  kind: string;
+  pluginId: string;
+  label: string;
+  description: string;
+  createTitle: string;
+  emptyState: {
+    title: string;
+    editableMessage: string;
+    firstNodeLabel: string;
+    firstNodeHelper: string;
+  };
+  nodeKinds: readonly NodeKindRegistration[];
+};
+
+export type CanvasRuntimeRegistration = CanvasKindRegistration & {
+  executionStrategy: CanvasExecutionStrategy;
+  graphStrategy: CanvasGraphStrategy;
+};
+
+export type CanvasGraphAuthoringMode = CanvasKindRegistration['kind'];
 
 export type CanvasEdgeType = 'ref' | 'source' | 'test' | 'exposure' | 'metric';
 

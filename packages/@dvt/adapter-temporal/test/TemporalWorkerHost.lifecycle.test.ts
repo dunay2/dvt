@@ -5,6 +5,7 @@ import {
   loadTemporalAdapterConfig,
   TemporalWorkerHost,
   type StepActivity,
+  type TemporalWorkerHostConfig,
 } from '../src/index.js';
 
 import { makeTrackingObservability } from './helpers/mockObservability.js';
@@ -58,6 +59,14 @@ const {
   };
 });
 
+const TEST_TEMPORAL_ENV = {
+  TEMPORAL_ADDRESS: 'temporal:7233',
+  TEMPORAL_NAMESPACE: 'ns-a',
+  TEMPORAL_TASK_QUEUE: 'q-main',
+} as const;
+
+const TEST_WORKFLOWS_PATH = '/tmp/workflows.js';
+
 vi.mock('@temporalio/worker', () => {
   return {
     Worker: {
@@ -73,9 +82,12 @@ function mkActivityDeps(): {
     appendTransitions: ReturnType<typeof vi.fn>;
   };
   clock: { nowIsoUtc: ReturnType<typeof vi.fn> };
-  idempotency: { runEventKey: ReturnType<typeof vi.fn>; eventId: ReturnType<typeof vi.fn> };
-  fetcher: { fetch: ReturnType<typeof vi.fn> };
-  integrity: { fetchAndValidate: ReturnType<typeof vi.fn> };
+  idempotency: {
+    runEventKey: ReturnType<typeof vi.fn>;
+    startRunIntentId: ReturnType<typeof vi.fn>;
+    eventId: ReturnType<typeof vi.fn>;
+  };
+  planArtifactReader: { fetchForEngineDispatch: ReturnType<typeof vi.fn> };
 } {
   return {
     runStateCommandPort: {
@@ -85,11 +97,51 @@ function mkActivityDeps(): {
     clock: { nowIsoUtc: vi.fn(() => '2026-03-06T00:00:00.000Z') },
     idempotency: {
       runEventKey: vi.fn(() => 'idem-key'),
+      startRunIntentId: vi.fn(() => 'start-run-intent'),
       eventId: vi.fn(() => 'event-id'),
     },
-    fetcher: { fetch: vi.fn(async () => new Uint8Array()) },
-    integrity: { fetchAndValidate: vi.fn(async () => new Uint8Array()) },
+    planArtifactReader: {
+      fetchForEngineDispatch: vi.fn(async () => ({
+        plan: {
+          schemaVersion: '1.0',
+          planId: 'plan-1',
+          version: 'v1',
+          steps: [],
+        },
+        executionPolicy: {},
+      })),
+    },
   };
+}
+
+interface WorkerHostFixtureOptions {
+  identity?: string;
+  workflowsPath?: string | null;
+  observability?: TemporalWorkerHostConfig['observability'];
+  stepActivitiesByKind?: TemporalWorkerHostConfig['stepActivitiesByKind'];
+}
+
+function makeWorkerHost(options: WorkerHostFixtureOptions = {}): TemporalWorkerHost {
+  const temporalConfig = loadTemporalAdapterConfig({
+    ...TEST_TEMPORAL_ENV,
+    ...(options.identity === undefined ? {} : { TEMPORAL_IDENTITY: options.identity }),
+  });
+  const config: TemporalWorkerHostConfig = {
+    temporalConfig,
+    activityDeps: mkActivityDeps(),
+  };
+
+  if (options.workflowsPath !== null) {
+    config.workflowsPath = options.workflowsPath ?? TEST_WORKFLOWS_PATH;
+  }
+  if (options.observability !== undefined) {
+    config.observability = options.observability;
+  }
+  if (options.stepActivitiesByKind !== undefined) {
+    config.stepActivitiesByKind = options.stepActivitiesByKind;
+  }
+
+  return new TemporalWorkerHost(config);
 }
 
 function mkResolvedRunContext(): {
@@ -119,18 +171,7 @@ describe('TemporalWorkerHost lifecycle', () => {
   });
 
   it('starts once and wires Worker.create deterministically', async () => {
-    const cfg = loadTemporalAdapterConfig({
-      TEMPORAL_ADDRESS: 'temporal:7233',
-      TEMPORAL_NAMESPACE: 'ns-a',
-      TEMPORAL_TASK_QUEUE: 'q-main',
-      TEMPORAL_IDENTITY: 'worker-a',
-    });
-
-    const host = new TemporalWorkerHost({
-      temporalConfig: cfg,
-      activityDeps: mkActivityDeps(),
-      workflowsPath: '/tmp/workflows.js',
-    });
+    const host = makeWorkerHost({ identity: 'worker-a' });
 
     await host.start({} as never);
 
@@ -149,12 +190,29 @@ describe('TemporalWorkerHost lifecycle', () => {
     expect(host.isRunning()).toBe(false);
   });
 
-  it('wires registered step activities by kind into Worker.create activities', async () => {
-    const cfg = loadTemporalAdapterConfig({
-      TEMPORAL_ADDRESS: 'temporal:7233',
-      TEMPORAL_NAMESPACE: 'ns-a',
-      TEMPORAL_TASK_QUEUE: 'q-main',
+  it('resolves the default workflow bundle path in ESM runtime', async () => {
+    const host = makeWorkerHost({ workflowsPath: null });
+
+    await host.start({} as never);
+
+    expect(getLastCreateArgs()).toMatchObject({
+      workflowsPath: expect.stringContaining('RunPlanWorkflow'),
     });
+
+    await host.shutdown();
+  });
+
+  it('omits worker identity when the Temporal config does not define one', async () => {
+    const host = makeWorkerHost();
+
+    await host.start({} as never);
+
+    expect(getLastCreateArgs()).not.toHaveProperty('identity');
+
+    await host.shutdown();
+  });
+
+  it('wires registered step activities by kind into Worker.create activities', async () => {
     const pythonActivityExecute = vi.fn(async (step: { stepId: string }) => ({
       stepId: step.stepId,
       status: 'COMPLETED' as const,
@@ -171,12 +229,7 @@ describe('TemporalWorkerHost lifecycle', () => {
       pythonActivity
     );
 
-    const host = new TemporalWorkerHost({
-      temporalConfig: cfg,
-      activityDeps: mkActivityDeps(),
-      workflowsPath: '/tmp/workflows.js',
-      stepActivitiesByKind: sourceRegistry,
-    });
+    const host = makeWorkerHost({ stepActivitiesByKind: sourceRegistry });
 
     await host.start({} as never);
     sourceRegistry.set('PYTHON_SCRIPT', {
@@ -204,19 +257,8 @@ describe('TemporalWorkerHost lifecycle', () => {
   });
 
   it('emits observability for worker start and shutdown', async () => {
-    const cfg = loadTemporalAdapterConfig({
-      TEMPORAL_ADDRESS: 'temporal:7233',
-      TEMPORAL_NAMESPACE: 'ns-a',
-      TEMPORAL_TASK_QUEUE: 'q-main',
-    });
     const { observability, logs, metrics } = makeTrackingObservability();
-
-    const host = new TemporalWorkerHost({
-      temporalConfig: cfg,
-      activityDeps: mkActivityDeps(),
-      observability,
-      workflowsPath: '/tmp/workflows.js',
-    });
+    const host = makeWorkerHost({ observability });
 
     await host.start({} as never);
     await host.shutdown();
@@ -240,17 +282,7 @@ describe('TemporalWorkerHost lifecycle', () => {
   });
 
   it('rejects double start', async () => {
-    const cfg = loadTemporalAdapterConfig({
-      TEMPORAL_ADDRESS: 'temporal:7233',
-      TEMPORAL_NAMESPACE: 'ns-a',
-      TEMPORAL_TASK_QUEUE: 'q-main',
-    });
-
-    const host = new TemporalWorkerHost({
-      temporalConfig: cfg,
-      activityDeps: mkActivityDeps(),
-      workflowsPath: '/tmp/workflows.js',
-    });
+    const host = makeWorkerHost();
 
     await host.start({} as never);
     await expect(host.start({} as never)).rejects.toThrow('TEMPORAL_WORKER_ALREADY_STARTED');
@@ -262,19 +294,8 @@ describe('TemporalWorkerHost lifecycle', () => {
       throw new Error('WORKER_RUN_FAILED');
     });
 
-    const cfg = loadTemporalAdapterConfig({
-      TEMPORAL_ADDRESS: 'temporal:7233',
-      TEMPORAL_NAMESPACE: 'ns-a',
-      TEMPORAL_TASK_QUEUE: 'q-main',
-    });
     const { observability, logs, metrics } = makeTrackingObservability();
-
-    const host = new TemporalWorkerHost({
-      temporalConfig: cfg,
-      activityDeps: mkActivityDeps(),
-      observability,
-      workflowsPath: '/tmp/workflows.js',
-    });
+    const host = makeWorkerHost({ observability });
 
     await host.start({} as never);
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -290,23 +311,13 @@ describe('TemporalWorkerHost lifecycle', () => {
   });
 
   it('does not emit run_exit ok when shutdown races with a worker run failure', async () => {
-    const cfg = loadTemporalAdapterConfig({
-      TEMPORAL_ADDRESS: 'temporal:7233',
-      TEMPORAL_NAMESPACE: 'ns-a',
-      TEMPORAL_TASK_QUEUE: 'q-main',
-    });
     const { observability, metrics } = makeTrackingObservability();
 
     mockWorkerShutdown.mockImplementation(() => {
       rejectWorkerRun(new Error('WORKER_RUN_FAILED_DURING_SHUTDOWN'));
     });
 
-    const host = new TemporalWorkerHost({
-      temporalConfig: cfg,
-      activityDeps: mkActivityDeps(),
-      observability,
-      workflowsPath: '/tmp/workflows.js',
-    });
+    const host = makeWorkerHost({ observability });
 
     await host.start({} as never);
     await host.shutdown();
@@ -324,17 +335,7 @@ describe('TemporalWorkerHost lifecycle', () => {
   });
 
   it('is no-op on shutdown when never started', async () => {
-    const cfg = loadTemporalAdapterConfig({
-      TEMPORAL_ADDRESS: 'temporal:7233',
-      TEMPORAL_NAMESPACE: 'ns-a',
-      TEMPORAL_TASK_QUEUE: 'q-main',
-    });
-
-    const host = new TemporalWorkerHost({
-      temporalConfig: cfg,
-      activityDeps: mkActivityDeps(),
-      workflowsPath: '/tmp/workflows.js',
-    });
+    const host = makeWorkerHost();
 
     await host.shutdown();
     expect(host.isRunning()).toBe(false);

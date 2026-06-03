@@ -1,26 +1,12 @@
 import type {
   CanonicalNode,
-  CanonicalNodeStatus,
-  CoreNodeRole,
-  PluginNodeKind,
 } from '../../types/canonical';
-
-const CANONICAL_NODE_ROLES = new Set<string>([
-  'input',
-  'transform',
-  'check',
-  'output',
-  'control',
-]);
-
-const CANONICAL_NODE_STATUSES = new Set<string>([
-  'idle',
-  'running',
-  'success',
-  'failed',
-  'skipped',
-  'warn',
-]);
+import {
+  isCanonicalNodeStatus,
+  isCoreNodeRole,
+  isPluginNodeKind,
+  isRecord,
+} from '../../types/canonicalGuards';
 
 type ParsedCanonicalDropPayload = {
   id: string;
@@ -37,10 +23,6 @@ type ParsedCanonicalDropPayload = {
   metadata?: unknown;
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
 function isParsedCanonicalDropPayload(value: unknown): value is ParsedCanonicalDropPayload {
   return (
     isRecord(value) &&
@@ -51,19 +33,6 @@ function isParsedCanonicalDropPayload(value: unknown): value is ParsedCanonicalD
     typeof value.role === 'string' &&
     typeof value.status === 'string'
   );
-}
-
-function isPluginNodeKind(value: string): value is PluginNodeKind {
-  const [pluginId, nodeKind, ...rest] = value.split(':');
-  return Boolean(pluginId) && Boolean(nodeKind) && rest.length === 0;
-}
-
-function isCoreNodeRole(value: string): value is CoreNodeRole {
-  return CANONICAL_NODE_ROLES.has(value);
-}
-
-function isCanonicalNodeStatus(value: string): value is CanonicalNodeStatus {
-  return CANONICAL_NODE_STATUSES.has(value);
 }
 
 function readStringArray(value: unknown): string[] {

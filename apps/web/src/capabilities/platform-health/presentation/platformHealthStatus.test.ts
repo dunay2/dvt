@@ -72,4 +72,24 @@ describe('platformHealthStatus', () => {
     expect(model.isInitialHealthCheckPending).toBe(true);
     expect(model.connectionDetail).toBeNull();
   });
+
+  it('keeps a failed initial health probe settled while a retry is pending', () => {
+    const model = buildShellHealthPresentationModel({
+      data: undefined,
+      isError: false,
+      error: null,
+      isPending: true,
+      isFetching: true,
+      failureCount: 1,
+      dataUpdatedAt: 0,
+      errorUpdatedAt: 0,
+    });
+
+    expect(model.connectionState).toEqual({
+      rest: 'offline',
+      liveEvents: 'disconnected',
+    });
+    expect(model.isInitialHealthCheckPending).toBe(false);
+    expect(model.connectionDetail).toBe('Unable to reach /healthz.');
+  });
 });

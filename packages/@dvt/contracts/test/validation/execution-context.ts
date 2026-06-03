@@ -8,7 +8,7 @@ import {
   parseRunExecutionContext,
   parseRunExecutionContextRef,
 } from '../../src/validation.js';
-import { VALID_EXECUTION_PLAN_V2_FIXTURE } from '../fixtures/planner-contract.fixtures.js';
+import { VALID_EXECUTION_PLAN_V1_FIXTURE } from '../fixtures/planner-contract.fixtures.js';
 
 export function registerValidationExecutionContextSuite(): void {
   describe('execution context contracts', () => {
@@ -24,6 +24,18 @@ export function registerValidationExecutionContextSuite(): void {
       expect(ctx.targetAdapter).toBe('temporal');
     });
 
+    it('rejects RunContext with non-implemented provider', () => {
+      expect(() =>
+        parseRunContext({
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'prod',
+          runId: 'run-1',
+          targetAdapter: 'conductor',
+        })
+      ).toThrow(ContractValidationError);
+    });
+
     it('parses RunContext with optional runExecutionContextRef', () => {
       const ctx = parseRunContext({
         tenantId: 'tenant-a',
@@ -35,8 +47,8 @@ export function registerValidationExecutionContextSuite(): void {
           uri: 'dvt-runctx://tenant-a/run-1/context.json',
           sha256: 'abc123',
           schemaVersion: 'v1.0',
-          planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
-          planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+          planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
+          planVersion: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planVersion,
         },
       });
 
@@ -86,13 +98,13 @@ export function registerValidationExecutionContextSuite(): void {
         uri: 'dvt-runctx://tenant-a/run-1/context.json',
         sha256: 'abc123',
         schemaVersion: 'v1.0',
-        planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
-        planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+        planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
+        planVersion: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planVersion,
         pluginCompatibilityFingerprint:
           '1111111111111111111111111111111111111111111111111111111111111111',
       });
 
-      expect(ref.planId).toBe(VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId);
+      expect(ref.planId).toBe(VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId);
       expect(ref.pluginCompatibilityFingerprint).toHaveLength(64);
     });
 
@@ -102,8 +114,8 @@ export function registerValidationExecutionContextSuite(): void {
           uri: '',
           sha256: 'abc123',
           schemaVersion: 'v1.0',
-          planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
-          planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+          planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
+          planVersion: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planVersion,
         })
       ).toThrow(ContractValidationError);
     });
@@ -114,8 +126,8 @@ export function registerValidationExecutionContextSuite(): void {
           uri: 'dvt-runctx://tenant-a/run-1/context.json',
           sha256: 'abc123',
           schemaVersion: 'v1.0',
-          planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
-          planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+          planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
+          planVersion: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planVersion,
           pluginCompatibilityFingerprint: 'invalid-fingerprint',
         })
       ).toThrow(ContractValidationError);
@@ -125,8 +137,8 @@ export function registerValidationExecutionContextSuite(): void {
       expect(() =>
         parseRunExecutionContext({
           schemaVersion: 'v1.0',
-          planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
-          planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+          planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
+          planVersion: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planVersion,
           planSha256: 'a'.repeat(64),
           tenantId: 'tenant-a',
           projectId: 'project-a',
@@ -146,8 +158,8 @@ export function registerValidationExecutionContextSuite(): void {
     it('parses RunExecutionContext with governed provenance fields', () => {
       const runExecutionContext = parseRunExecutionContext({
         schemaVersion: 'v1.0',
-        planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
-        planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+        planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
+        planVersion: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planVersion,
         planSha256: 'a'.repeat(64),
         pluginCompatibilityFingerprint:
           '1111111111111111111111111111111111111111111111111111111111111111',
@@ -179,8 +191,8 @@ export function registerValidationExecutionContextSuite(): void {
       expect(() =>
         parseRunExecutionContext({
           schemaVersion: 'v1.0',
-          planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
-          planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+          planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
+          planVersion: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planVersion,
           tenantId: 'tenant-a',
           projectId: 'project-a',
           environmentId: 'prod',
@@ -205,8 +217,8 @@ export function registerValidationExecutionContextSuite(): void {
       expect(() =>
         parseRunExecutionContext({
           schemaVersion: 'v1.0',
-          planId: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId,
-          planVersion: VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planVersion,
+          planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
+          planVersion: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planVersion,
           planSha256: 'a'.repeat(64),
           tenantId: 'tenant-a',
           projectId: 'project-a',

@@ -1,39 +1,55 @@
+/** Owned concern: translate layout requests into projected node and edge repositioning. */
+
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 
+import type { CanvasLayoutContracts } from './canvasGraphHandlerContracts';
 import { getLayoutedElements } from './canvasGraphUtils';
 import { canvasViewCopy } from './copy';
-import type { UseCanvasGraphHandlersParams, UseCanvasGraphHandlersResult } from './useCanvasGraphHandlers.types';
 
-type UseCanvasLayoutHandlersArgs = Pick<
-  UseCanvasGraphHandlersParams,
-  'canEditEdges' | 'nodes' | 'edges' | 'setNodes' | 'setEdges' | 'onLayoutComplete'
->;
+type UseCanvasLayoutHandlersArgs = CanvasLayoutContracts;
 
-type UseCanvasLayoutHandlersResult = Pick<UseCanvasGraphHandlersResult, 'handleAutoLayout'>;
+type UseCanvasLayoutHandlersResult = {
+  handleAutoLayout: () => void;
+};
 
 export function useCanvasLayoutHandlers({
-  canEditEdges,
-  nodes,
-  edges,
-  setNodes,
-  setEdges,
-  onLayoutComplete,
+  state,
+  effects,
+  policy,
 }: UseCanvasLayoutHandlersArgs): UseCanvasLayoutHandlersResult {
+  const { nodes, edges } = state;
+  const { setNodes, setEdges, onLayoutComplete } = effects;
+  const { canEditEdges, gridSize, canvasSnapToGrid } = policy;
+
   const handleAutoLayout = useCallback(() => {
     if (!canEditEdges) {
       toast.error(canvasViewCopy.mutationUnavailableMessage);
       return;
     }
 
-    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(nodes, edges);
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(nodes, edges, {
+      gridSize,
+      snapToGrid: canvasSnapToGrid,
+    });
     setNodes(layoutedNodes);
     setEdges(layoutedEdges);
     toast.success(canvasViewCopy.layoutAppliedMessage);
     onLayoutComplete(
-      Object.fromEntries(layoutedNodes.map((node) => [node.id, { x: node.position.x, y: node.position.y }]))
+      Object.fromEntries(
+        layoutedNodes.map((node) => [node.id, { x: node.position.x, y: node.position.y }])
+      )
     );
-  }, [canEditEdges, edges, nodes, onLayoutComplete, setEdges, setNodes]);
+  }, [
+    canEditEdges,
+    canvasSnapToGrid,
+    edges,
+    gridSize,
+    nodes,
+    onLayoutComplete,
+    setEdges,
+    setNodes,
+  ]);
 
   return {
     handleAutoLayout,

@@ -1,4 +1,4 @@
-export type ExecutionAdapterName = 'temporal' | 'conductor' | 'local';
+export type ExecutionAdapterName = 'temporal' | 'local';
 
 export interface ObservabilityContext {
   readonly tenantId?: string;
@@ -10,6 +10,7 @@ export interface ObservabilityContext {
   // High-cardinality identifiers (allowed for traces/logs; NOT for metric labels)
   readonly runId?: string;
   readonly planId?: string;
+  readonly planSha?: string;
   readonly stepId?: string;
   readonly attemptId?: string;
 

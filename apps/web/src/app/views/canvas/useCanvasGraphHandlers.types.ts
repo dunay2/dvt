@@ -1,40 +1,24 @@
 import type { Edge, Node, ReactFlowProps } from '@xyflow/react';
 import type { Dispatch, SetStateAction } from 'react';
 
-import type { CanvasGraphStrategy } from '../../plugins/dbt/dbtNodeAdapter';
-import type { CanonicalNode } from '../../types/canonical';
-import type { CanvasDraftSession } from './canvasDraftSession';
+import type {
+  CanvasGraphInteractionEffects,
+  CanvasGraphInteractionPolicy,
+  CanvasGraphInteractionState,
+  ConfirmEdgeModalState,
+  CreateCanvasAuthoringNode,
+} from './canvasGraphHandlerContracts';
 
-export type ConfirmEdgeModalState = {
-  open: boolean;
-  edge: { source: string; target: string; type: string } | null;
-};
-
-export type UseCanvasGraphHandlersParams = {
-  graphStrategy: CanvasGraphStrategy;
-  canonicalNodesById: Map<string, CanonicalNode>;
-  edges: Edge[];
-  nodes: Node[];
-  selectedNodeIds: string[];
-  inspectorNodeId: string | null;
-  draftSession: CanvasDraftSession;
-  canEditEdges: boolean;
-  focusMode: boolean;
-  inspectorPanelVisible: boolean;
-  columnLevelLineageEnabled: boolean;
-  setNodes: Dispatch<SetStateAction<Node[]>>;
-  setEdges: Dispatch<SetStateAction<Edge[]>>;
-  setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
-  setSelectedNodes: (ids: string[]) => void;
-  setInspectorNode: (nodeId: string | null) => void;
-  toggleInspectorPanel: () => void;
-  onLayoutComplete: (positions: Record<string, { x: number; y: number }>) => void;
-};
+export type UseCanvasGraphHandlersParams = CanvasGraphInteractionState &
+  CanvasGraphInteractionEffects &
+  Omit<CanvasGraphInteractionPolicy, 'gridSize' | 'canvasSnapToGrid'> &
+  Partial<Pick<CanvasGraphInteractionPolicy, 'gridSize' | 'canvasSnapToGrid'>>;
 
 export type UseCanvasGraphHandlersResult = {
   confirmEdgeModal: ConfirmEdgeModalState;
   setConfirmEdgeModal: Dispatch<SetStateAction<ConfirmEdgeModalState>>;
   onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
+  onReconnect: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
   confirmEdgeCreation: () => void;
   handleInspectNode: (nodeId: string) => void;
   handleNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>;
@@ -42,6 +26,9 @@ export type UseCanvasGraphHandlersResult = {
   handleAutoLayout: () => void;
   handleDrop: React.DragEventHandler<HTMLDivElement>;
   handleDragOver: React.DragEventHandler<HTMLDivElement>;
+  handleCreateAuthoringNode: CreateCanvasAuthoringNode;
+  handleDuplicateNode: (nodeId: string) => void;
   handleToggleNodeSelection: (nodeId: string, shouldSelect: boolean) => void;
   handleRemoveNode: (nodeId: string) => void;
+  handleAttachSchemaToNode: (nodeId: string, schemaName: string) => void;
 };

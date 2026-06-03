@@ -1,27 +1,19 @@
-import { useQuery } from '@tanstack/react-query';
+/** Owned concern: load admin read models through the admin read port. */
 import { useMemo, useState } from 'react';
 import {
   selectPlatformConnectionState,
   usePlatformHealthSnapshotQuery,
 } from '../../../capabilities/platform-health';
-import { queryKeys } from '../../queries/queryKeys';
+import { useWorkspaceAuditQuery, useWorkspaceRolesQuery } from '../../queries/workspaceQueries';
 import { useShellRuntime } from '../../shell/useShellRuntime';
-import { useWorkspaceService } from '../../services/AppServicesContext';
 import { filterAuditEntries } from './adminViewModel';
 
 export function useAdminViewData() {
-  const workspaceService = useWorkspaceService();
   const [searchQuery, setSearchQuery] = useState('');
   const platformHealth = usePlatformHealthSnapshotQuery();
   const { capabilitiesQuery } = useShellRuntime();
-  const rolesQuery = useQuery({
-    queryKey: queryKeys.workspace.roles(),
-    queryFn: () => workspaceService.getRoles(),
-  });
-  const auditQuery = useQuery({
-    queryKey: queryKeys.workspace.audit(),
-    queryFn: () => workspaceService.getAuditLog(),
-  });
+  const rolesQuery = useWorkspaceRolesQuery();
+  const auditQuery = useWorkspaceAuditQuery();
   const roles = rolesQuery.data ?? [];
   const auditLog = auditQuery.data ?? [];
   const connectionStatus = selectPlatformConnectionState(

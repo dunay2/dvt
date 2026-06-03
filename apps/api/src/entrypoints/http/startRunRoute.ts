@@ -1,27 +1,34 @@
-﻿import type { FastifyReply, FastifyRequest } from 'fastify';
+/**
+ * Owned concern: compose the authenticated start-run HTTP entrypoint over the
+ * dedicated parser and response-translation seams.
+ */
+import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import type { IStartRunTargetAdapterRegistry } from '../../application/ports/IStartRunTargetAdapterRegistry.js';
 import type { StartRunAuthorizedFacade } from '../../application/services/startRunAuthorizedFacade.js';
 import { DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY } from '../../application/services/startRunTargetAdapterRegistry.js';
 
 import { extractBearerToken } from './extractBearerToken.js';
-import { sendHttpResponse } from './httpErrorContract.js';
-import {
-  mapRouteParseIssue,
-  mapStartRunEngineError,
-  mapStartRunFacadeResult,
-} from './httpErrorMapper.js';
+import { httpErrorTranslation } from './httpErrorTranslation.js';
+import { generatePlatformRunId, type StartRunRunIdGenerator } from './startRunIdentity.js';
 import { parseStartRunBody } from './startRunRouteParser.js';
+
+type StartRunRouteDependencies = {
+  readonly adapterRegistry?: IStartRunTargetAdapterRegistry;
+  readonly runIdGenerator?: StartRunRunIdGenerator;
+};
 
 export async function startRunRoute(
   request: FastifyRequest<{ Body: unknown }>,
   reply: FastifyReply,
   facade: StartRunAuthorizedFacade,
-  adapterRegistry: IStartRunTargetAdapterRegistry = DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY
+  dependencies: StartRunRouteDependencies = {}
 ): Promise<void> {
-  const parsed = parseStartRunBody(request.body, adapterRegistry);
+  const adapterRegistry = dependencies.adapterRegistry ?? DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY;
+  const runIdGenerator = dependencies.runIdGenerator ?? generatePlatformRunId;
+  const parsed = parseStartRunBody(request.body, adapterRegistry, runIdGenerator);
   if (!parsed.ok) {
-    sendHttpResponse(reply, mapRouteParseIssue(parsed.issue));
+    httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
     return;
   }
 
@@ -33,12 +40,7 @@ export async function startRunRoute(
   });
 
   const mapped = facadeResult.ok
-    ? mapStartRunFacadeResult(facadeResult.value)
-    : mapStartRunEngineError(facadeResult.error);
-  if (mapped.headers) {
-    for (const [name, value] of Object.entries(mapped.headers)) {
-      reply.header(name, value);
-    }
-  }
-  reply.code(mapped.status).send(mapped.body);
+    ? httpErrorTranslation.startRun.facadeResult(facadeResult.value)
+    : httpErrorTranslation.startRun.engineError(facadeResult.error);
+  httpErrorTranslation.respond(reply, mapped);
 }

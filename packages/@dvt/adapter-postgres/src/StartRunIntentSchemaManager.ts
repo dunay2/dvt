@@ -8,7 +8,11 @@
  */
 import { type Pool, type PoolClient } from 'pg';
 
-import { normalizeSchema, quoteIdentifier } from './sqlUtils.js';
+import {
+  START_RUN_INTENTS_TENANT_ISOLATION_TABLE,
+  buildTenantIsolationPolicySql,
+} from './PostgresTenantIsolationPolicy.js';
+import { normalizeSchema, quoteIdentifier, toSqlStringLiteral } from './sqlUtils.js';
 
 interface StartRunIntentSchemaMigration {
   version: string;
@@ -202,10 +206,42 @@ export class StartRunIntentSchemaManager {
           $$;
         `,
       },
+      {
+        version: '20260425_003_start_run_intents_rls_baseline',
+        description:
+          'Enable forced RLS for start_run_intents; hardening steps remain idempotent and do not preserve a historical policy snapshot',
+        sql: toSqlBatch(
+          buildTenantIsolationPolicySql(this.schema, START_RUN_INTENTS_TENANT_ISOLATION_TABLE)
+        ),
+      },
+      {
+        version: '20260425_004_start_run_intents_service_owner_rls_hardening',
+        description:
+          'Reapply current start_run_intents policy with service-owner hardening; idempotent and not a historical policy snapshot',
+        sql: toSqlBatch(
+          buildTenantIsolationPolicySql(this.schema, START_RUN_INTENTS_TENANT_ISOLATION_TABLE)
+        ),
+      },
+      {
+        version: '20260426_005_start_run_intents_table_scoped_service_owner_rls',
+        description:
+          'Reapply current start_run_intents policy with table-scoped reconciler ownership; idempotent and not a historical policy snapshot',
+        sql: toSqlBatch(
+          buildTenantIsolationPolicySql(this.schema, START_RUN_INTENTS_TENANT_ISOLATION_TABLE)
+        ),
+      },
+      {
+        version: '20260512_006_start_run_intents_tenant_mode_rls_hardening',
+        description:
+          'Reapply current start_run_intents policy requiring explicit tenant access mode; idempotent and not a historical policy snapshot',
+        sql: toSqlBatch(
+          buildTenantIsolationPolicySql(this.schema, START_RUN_INTENTS_TENANT_ISOLATION_TABLE)
+        ),
+      },
     ] as const;
   }
 }
 
-function toSqlStringLiteral(value: string): string {
-  return `'${value.replaceAll("'", "''")}'`;
+function toSqlBatch(statements: readonly string[]): string {
+  return `${statements.map((statement) => statement.trim()).join(';\n\n')};`;
 }

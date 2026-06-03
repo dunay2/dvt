@@ -1,13 +1,22 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import {
   classifyStatusChecks,
+  evaluateCheckGate,
   extractFailureSnippet,
+  formatCheckGateText,
+  buildFirstFailurePayload,
+  isMissingActionsJobLog,
   normalizeStatusCheck,
   parseActionsJobDetailsUrl,
   pickFirstFailingGitHubActionsCheck,
 } from './pr-check-triage.mjs';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 test('classifyStatusChecks groups GitHub Actions checks by status', () => {
   const buckets = classifyStatusChecks([
@@ -149,5 +158,160 @@ test('extractFailureSnippet prefers the first error-oriented lines and limits ou
   assert.equal(
     snippet,
     ['ERROR: expected guard to fail fast', 'stack line 1', 'stack line 2'].join('\n')
+  );
+});
+
+test('isMissingActionsJobLog recognizes unstarted GitHub Actions log failures', () => {
+  const error = new Error('log not found: 123');
+  error.code = 'GH_COMMAND_FAILED';
+  error.stderr = 'log not found: 123';
+
+  assert.equal(isMissingActionsJobLog(error), true);
+  assert.equal(isMissingActionsJobLog(new Error('real test failure')), false);
+});
+
+test('buildFirstFailurePayload classifies missing Actions logs as unstarted infrastructure failures', async () => {
+  const payload = await buildFirstFailurePayload(
+    {
+      number: 1427,
+      url: 'https://github.com/dunay2/dvt/pull/1427',
+      headRefName: 'codex/dbfirst-command-query-rail-source-scan',
+      statusCheckRollup: [
+        {
+          __typename: 'CheckRun',
+          name: 'CI tool contracts',
+          status: 'COMPLETED',
+          conclusion: 'FAILURE',
+          workflowName: 'CI - Code Quality',
+          detailsUrl: 'https://github.com/dunay2/dvt/actions/runs/26831188907/job/79112657163',
+        },
+      ],
+    },
+    {
+      fetchJobLog: () => {
+        const error = new Error('log not found: 79112657163');
+        error.code = 'GH_COMMAND_FAILED';
+        error.stderr = 'log not found: 79112657163';
+        throw error;
+      },
+    }
+  );
+
+  assert.equal(payload.status, 'unstarted_actions_failure');
+  assert.equal(payload.check.name, 'CI tool contracts');
+  assert.deepEqual(payload.job, { runId: '26831188907', jobId: '79112657163' });
+  assert.match(payload.message, /GitHub Actions did not expose job logs/);
+});
+
+test('evaluateCheckGate fails fast on failed checks without waiting for pending checks', () => {
+  const gate = evaluateCheckGate({
+    status: 'ok',
+    counts: {
+      failed: 1,
+      pending: 3,
+      successful: 8,
+      skipped: 1,
+      external: 0,
+    },
+  });
+
+  assert.deepEqual(gate, {
+    status: 'failed',
+    exitCode: 1,
+    message: '1 failed check, 3 pending checks.',
+  });
+});
+
+test('evaluateCheckGate reports pending checks as an immediate non-ready state', () => {
+  const gate = evaluateCheckGate({
+    status: 'ok',
+    counts: {
+      failed: 0,
+      pending: 2,
+      successful: 9,
+      skipped: 1,
+      external: 0,
+    },
+  });
+
+  assert.deepEqual(gate, {
+    status: 'pending',
+    exitCode: 2,
+    message: '2 pending checks.',
+  });
+});
+
+test('evaluateCheckGate passes only when GitHub Actions checks are settled and green', () => {
+  const gate = evaluateCheckGate({
+    status: 'ok',
+    counts: {
+      failed: 0,
+      pending: 0,
+      successful: 12,
+      skipped: 2,
+      external: 1,
+    },
+  });
+
+  assert.deepEqual(gate, {
+    status: 'passed',
+    exitCode: 0,
+    message: 'All GitHub Actions checks are settled and green.',
+  });
+});
+
+test('formatCheckGateText summarizes counts and only actionable check names', () => {
+  const text = formatCheckGateText({
+    pr: {
+      number: 1302,
+      url: 'https://github.com/dunay2/dvt/pull/1302',
+      headRefName: 'codex/immediate-pr-check-gate',
+    },
+    counts: {
+      failed: 1,
+      pending: 2,
+      successful: 40,
+      skipped: 6,
+      external: 1,
+    },
+    failed: [{ name: 'PR Quality Checks' }],
+    pending: [{ name: 'Web Frontend Tests' }, { name: 'Temporal adapter integration' }],
+    external: [{ name: 'CodeQL' }],
+  });
+
+  assert.equal(
+    text,
+    [
+      'PR #1302 [codex/immediate-pr-check-gate]',
+      'https://github.com/dunay2/dvt/pull/1302',
+      'failed=1 pending=2 successful=40 skipped=6 external=1',
+      '',
+      'FAILED',
+      '- PR Quality Checks',
+      '',
+      'PENDING',
+      '- Web Frontend Tests',
+      '- Temporal adapter integration',
+      '',
+      'EXTERNAL',
+      '- CodeQL',
+    ].join('\n')
+  );
+  assert.equal(text.includes('All Checks Required for Merge'), false);
+});
+
+test('package scripts expose the immediate PR check gate', () => {
+  const packageJson = JSON.parse(
+    fs.readFileSync(path.resolve(__dirname, '..', '..', 'package.json'), 'utf8')
+  );
+
+  assert.equal(packageJson.scripts['pr:checks'], 'node tools/ci/pr-check-triage.mjs gate');
+  assert.equal(
+    packageJson.scripts['pr:checks:json'],
+    'node tools/ci/pr-check-triage.mjs gate --json'
+  );
+  assert.equal(
+    packageJson.scripts['pr:checks:first-failure'],
+    'node tools/ci/pr-check-triage.mjs first-failure'
   );
 });

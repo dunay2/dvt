@@ -1,27 +1,81 @@
-import type { WorkspaceGraphDraftRecord as ProtectedWorkspaceGraphDraftRecord } from '@dvt/contracts';
+/** Owned concern: project the protected workspace-graph-draft boundary into route-facing draft and semantic graph models. */
+import type { WorkspaceGraphAuthoringDraft, WorkspaceGraphAuthoringNode } from '@dvt/contracts';
 
-import type { WorkspaceGraphDraft, WorkspaceGraphDraftRecord } from '../../ports/workspace';
+import type { CanonicalEdge, CanonicalNode, PluginNodeKind } from '../../types/canonical';
 
-function projectProtectedWorkspaceGraphDraft(
-  draft: ProtectedWorkspaceGraphDraftRecord['draft']
-): WorkspaceGraphDraft {
-  return {
-    nodeIds: draft.nodes.map((node) => node.id),
-    // The protected draft boundary owns structural graph state, not visual canvas layout.
-    nodePositions: {},
-    edges: draft.edges.map((edge) => ({
-      sourceId: edge.fromNodeId,
-      targetId: edge.toNodeId,
-    })),
-  };
+export type CanvasAuthoringSemanticGraph = {
+  canonicalNodes: CanonicalNode[];
+  canonicalEdges: CanonicalEdge[];
+};
+
+function createDraftEdgeId(fromNodeId: string, toNodeId: string): string {
+  return `draft_edge_${fromNodeId}_${toNodeId}`;
 }
 
-export function projectProtectedWorkspaceGraphDraftRecord(
-  record: ProtectedWorkspaceGraphDraftRecord
-): WorkspaceGraphDraftRecord {
+function isPluginNodeKind(value: string): value is PluginNodeKind {
+  return value.includes(':');
+}
+
+function toPluginNodeKind(node: WorkspaceGraphAuthoringNode): CanonicalNode['kind'] {
+  if (isPluginNodeKind(node.kind)) {
+    return node.kind;
+  }
+
+  return `${node.pluginId}:${node.kind}`;
+}
+
+function projectAuthoringNodeToCanonical(node: WorkspaceGraphAuthoringNode): CanonicalNode {
+  const canonicalNode: CanonicalNode = {
+    id: node.id,
+    name: node.name,
+    pluginId: node.pluginId,
+    kind: toPluginNodeKind(node),
+    role: node.role,
+    status: node.status,
+    tags: [...node.tags],
+  };
+
+  if (node.path != null) {
+    canonicalNode.path = node.path;
+  }
+  if (node.description != null) {
+    canonicalNode.description = node.description;
+  }
+  if (node.lastDuration != null) {
+    canonicalNode.lastDuration = node.lastDuration;
+  }
+  if (node.lastCost != null) {
+    canonicalNode.lastCost = node.lastCost;
+  }
+  if (node.metadata != null) {
+    canonicalNode.metadata = { ...node.metadata };
+  }
+
+  return canonicalNode;
+}
+
+function buildCanonicalEdgeProjection(
+  edge: WorkspaceGraphAuthoringDraft['edges'][number]
+): CanonicalEdge {
+  const canonicalEdge: CanonicalEdge = {
+    id: edge.id || createDraftEdgeId(edge.sourceId, edge.targetId),
+    sourceId: edge.sourceId,
+    targetId: edge.targetId,
+    relation: edge.relation,
+  };
+
+  if (edge.metadata != null) {
+    canonicalEdge.metadata = { ...edge.metadata };
+  }
+
+  return canonicalEdge;
+}
+
+export function projectWorkspaceGraphAuthoringDraftSemanticGraph(
+  draft: WorkspaceGraphAuthoringDraft
+): CanvasAuthoringSemanticGraph {
   return {
-    revision: record.revision,
-    savedAt: record.updatedAt,
-    draft: projectProtectedWorkspaceGraphDraft(record.draft),
+    canonicalNodes: draft.nodes.map((node) => projectAuthoringNodeToCanonical(node)),
+    canonicalEdges: draft.edges.map((edge) => buildCanonicalEdgeProjection(edge)),
   };
 }

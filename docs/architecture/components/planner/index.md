@@ -11,12 +11,15 @@ last_reviewed: 2026-04-10
 
 1. [Planner current state assessment](../../../planning/status/planner-current-state-assessment.md)
 2. [Planner contracts](../../../contracts/planner/index.md)
-3. [Transformation flow compiler mapping v1](../../../contracts/planner/TransformationFlowCompiler.v1.md)
-4. [GenericGraphSource technical manual](../../../guides/generic-graph-source-technical-manual-20260404.md)
-5. [GenericGraphSource user manual](../../../guides/generic-graph-source-user-manual-20260404.md)
-6. [Planner cycle detection technical manual](../../../guides/planner-cycle-detection-technical-manual-20260404.md)
-7. [Planner cycle detection user manual](../../../guides/planner-cycle-detection-user-manual-20260404.md)
-8. [MW-A2 GenericGraphSource plan](../../../planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)
+3. [Planner private behavior ports component](./planner-private-behavior-ports-component.md)
+4. [Workspace authoring draft aggregate](./workspace-authoring-draft-aggregate.md)
+5. [Executable subgraph derivation component](./executable-subgraph-derivation-component.md)
+6. [Transformation flow compiler mapping v1](../../../contracts/planner/TransformationFlowCompiler.v1.md)
+7. [GenericGraphSource technical manual](../../../guides/generic-graph-source-technical-manual-20260404.md)
+8. [GenericGraphSource user manual](../../../guides/generic-graph-source-user-manual-20260404.md)
+9. [Planner cycle detection technical manual](../../../guides/planner-cycle-detection-technical-manual-20260404.md)
+10. [Planner cycle detection user manual](../../../guides/planner-cycle-detection-user-manual-20260404.md)
+11. [MW-A2 GenericGraphSource plan](../../../planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)
 
 ## Scope and location
 
@@ -29,6 +32,8 @@ last_reviewed: 2026-04-10
 - public boundary: `PlannerFacade`
 - public envelope: `PlannerInputEnvelopeV1`
 - canonical input source: `graphSource`
+- planner-owned selected-closure derivation now lives behind
+  `PlannerFacade#deriveExecutableSubgraph`
 - the first SQL-first preview profile now freezes one compiler-governed
   `graphSource` mapping into `PREPARE_POSTGRES_TRANSFORM ->
 POSTGRES_SQL_TRANSFORM -> CAPTURE_MATERIALIZATION_EVIDENCE`
@@ -37,6 +42,8 @@ POSTGRES_SQL_TRANSFORM -> CAPTURE_MATERIALIZATION_EVIDENCE`
 - canonical per-step retry ownership: `ExecutionStep.retryPolicy`
 - plan version source: `CURRENT_EXECUTION_PLAN_VERSION`
 - retained manifest normalization utility: `derivePlannerGraphSourceFromManifest`
+- planner-private behavior ports live in `@dvt/planner/src/contracts`; shared
+  serializable vocabulary for those ports remains in `@dvt/contracts`
 
 ## Target truth
 
@@ -54,17 +61,21 @@ flowchart LR
   Caller["API or integrator"] --> Facade["PlannerFacade"]
   Facade --> Mapper["PlannerEnvelopeMapper"]
   Facade --> Planner["Planner domain service"]
+  Facade --> Deriver["ExecutableSubgraphDeriver"]
   Planner --> Validator["InputEnvelopeValidator"]
   Planner --> Graph["GraphBuilder"]
   Planner --> Selector["NodeSelector"]
+  Deriver --> Graph
   Planner --> Registry["IStepTypeRegistry"]
   Planner --> Assembler["PlanAssembler"]
   Assembler --> Plan["ExecutionPlanV1 + canonicalPlanCoreJson"]
+  Deriver --> Subgraph["ExecutableSubgraph"]
 ```
 
 ## Primary code anchors
 
 - [PlannerFacade.ts](../../../../packages/@dvt/planner/src/application/PlannerFacade.ts)
+- [ExecutableSubgraphDeriver.ts](../../../../packages/@dvt/planner/src/application/ExecutableSubgraphDeriver.ts)
 - [PlannerEnvelopeMapper.ts](../../../../packages/@dvt/planner/src/application/PlannerEnvelopeMapper.ts)
 - [Planner.ts](../../../../packages/@dvt/planner/src/domain/Planner.ts)
 - [PlanAssembler.ts](../../../../packages/@dvt/planner/src/domain/PlanAssembler.ts)
@@ -76,6 +87,10 @@ flowchart LR
 - [Constraints and invariants](./planner-constraints.md)
 - [Structure and module map](./planner-ddd.md)
 - [Build sequence](./planner-sequence.md)
+- [Workspace authoring draft aggregate](./workspace-authoring-draft-aggregate.md)
+- [Executable subgraph derivation component](./executable-subgraph-derivation-component.md)
+- [Planner private behavior ports component](./planner-private-behavior-ports-component.md)
+- [Custom policy namespace freeze user stories](./custom-policy-namespace-freeze-user-stories.md)
 
 ## Notes
 

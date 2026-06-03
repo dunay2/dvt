@@ -144,3 +144,7 @@ Out of scope:
 - The longer-term ownership and contract truth is tracked explicitly in the
   `AR-C6` truth-sync slice instead of being left implicit in this
   implementation-only plan.
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `RUNTIME-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

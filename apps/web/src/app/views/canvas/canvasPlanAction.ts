@@ -1,11 +1,25 @@
+/**
+ * Owned concern: orchestrate Canvas plan-preview persistence before run start
+ * without creating authoritative runtime execution identity.
+ */
 import type { IPlansPort } from '../../ports/plans';
+import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { SessionContextPort } from '../../ports/sessionContext';
-import type { IWorkspacePort } from '../../ports/workspace';
+import type {
+  IWorkspaceFileContentCommandPort,
+  IWorkspaceFilesQueryPort,
+} from '../../ports/workspace';
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 
+import {
+  buildDbtPlannerGraphSource,
+  resolveDbtExecutionScopeNodeIds,
+} from './canvasDbtPlannerGraphSource';
+import { buildDbtWorkspaceArtifacts } from './canvasDbtWorkspaceArtifacts';
 import { resolvePreviewProvenance } from './canvasPreviewProvenance';
+import { collectPreviewSelection } from './canvasRunSelection';
 import { canvasViewCopy, formatTransformationGraphValidationSummary } from './copy';
 import { buildPreviewGraphSource } from './previewGraphSource';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
@@ -19,25 +33,46 @@ type CanvasPlanActionSuccess = {
   ok: true;
   draftSignature: string;
   plan: PlanViewModel;
+  writtenArtifactPaths: readonly string[];
 };
 
 export type CanvasPlanActionResult = CanvasPlanActionFailure | CanvasPlanActionSuccess;
+
+function formatPlanActionErrorMessage(error: unknown): string {
+  if (!(error instanceof Error)) {
+    return canvasViewCopy.planUnableToCreateMessage;
+  }
+
+  const message = error.message.trim();
+  if (!message) {
+    return canvasViewCopy.planUnableToCreateMessage;
+  }
+
+  if (/^Request to \/plans\/preview failed \(/.test(message)) {
+    return canvasViewCopy.planUnableToCreateMessage;
+  }
+
+  return message;
+}
 
 export async function executeCanvasPlanAction({
   canPlan,
   canonicalEdges,
   canonicalNodes,
+  executionStrategy,
   plansService,
   previewProvenanceConfig,
   selectedNodeIds,
   sessionContext,
   transformationValidation,
   workspaceNodeIds,
-  workspaceService,
+  workspaceFilesQuery,
+  workspaceFileContentCommand,
 }: {
   canPlan: boolean;
   canonicalEdges: readonly CanonicalEdge[];
   canonicalNodes: readonly CanonicalNode[];
+  executionStrategy: CanvasExecutionStrategy | null;
   plansService: IPlansPort;
   previewProvenanceConfig: Pick<
     WorkspaceBootstrapConfig,
@@ -47,10 +82,71 @@ export async function executeCanvasPlanAction({
   sessionContext: SessionContextPort;
   transformationValidation: TransformationGraphValidationResult;
   workspaceNodeIds: readonly string[];
-  workspaceService: IWorkspacePort;
+  workspaceFilesQuery: IWorkspaceFilesQueryPort;
+  workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
 }): Promise<CanvasPlanActionResult> {
   if (!canPlan) {
     return { ok: false, message: canvasViewCopy.planPermissionDeniedMessage };
+  }
+
+  if (executionStrategy == null || executionStrategy.kind === 'not_executable') {
+    return {
+      ok: false,
+      message: canvasViewCopy.canvasExecutionUnavailableMessage,
+    };
+  }
+
+  if (executionStrategy.kind === 'planner_generic_preview') {
+    try {
+      const scopeSelection = collectPreviewSelection(selectedNodeIds, workspaceNodeIds);
+      const scopedNodeIds = resolveDbtExecutionScopeNodeIds({
+        nodes: canonicalNodes,
+        edges: canonicalEdges,
+        selectedNodeIds: scopeSelection.nodeIds,
+        workspaceNodeIds,
+      });
+      const artifactProjection = buildDbtWorkspaceArtifacts({
+        nodes: canonicalNodes,
+        edges: canonicalEdges,
+        scopedNodeIds,
+      });
+      if (!artifactProjection.ok) {
+        return { ok: false, message: artifactProjection.message };
+      }
+
+      const plannerProjection = buildDbtPlannerGraphSource({
+        nodes: canonicalNodes,
+        edges: canonicalEdges,
+        scopedNodeIds,
+      });
+      if (!plannerProjection.ok) {
+        return { ok: false, message: plannerProjection.message };
+      }
+
+      for (const artifact of artifactProjection.artifacts) {
+        await workspaceFileContentCommand.saveFileContent(artifact.path, artifact.content);
+      }
+
+      const plan = await plansService.previewPlan({
+        previewProfile: executionStrategy.previewProfile,
+        graphSource: plannerProjection.graphSource,
+        selection: plannerProjection.selection,
+        context: sessionContext.buildRunContext('preview_context'),
+        persist: true,
+      });
+
+      return {
+        ok: true,
+        draftSignature: plannerProjection.draftSignature,
+        plan,
+        writtenArtifactPaths: artifactProjection.artifacts.map((artifact) => artifact.path),
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        message: formatPlanActionErrorMessage(error),
+      };
+    }
   }
 
   if (!transformationValidation.valid) {
@@ -61,13 +157,15 @@ export async function executeCanvasPlanAction({
   }
 
   try {
-    const selectedForPlan = selectedNodeIds.length > 0 ? selectedNodeIds : workspaceNodeIds;
-    const context = sessionContext.buildRunContext(`run_ui_${Date.now()}`);
+    const selectedForPlan = transformationValidation.scopedNodeIds;
+    const selection = collectPreviewSelection(selectedForPlan, workspaceNodeIds);
+    const context = sessionContext.buildRunContext('preview_context');
     const previewProvenance = await resolvePreviewProvenance({
       canonicalNodes,
       canonicalEdges,
       scopedNodeIds: selectedForPlan,
-      workspaceService,
+      workspaceFilesQuery,
+      workspaceFileContentCommand,
       workspaceScope: sessionContext.getWorkspaceScopeSnapshot(),
       previewProvenanceConfig,
       required: true,
@@ -89,9 +187,9 @@ export async function executeCanvasPlanAction({
       sqlText: previewProvenance.sqlText,
     });
     const plan = await plansService.previewPlan({
-      previewProfile: 'transformation-sql-first-v1',
+      previewProfile: executionStrategy.previewProfile,
       graphSource,
-      selectedNodeIds: selectedForPlan,
+      selection,
       context,
       ...(previewProvenance.provenance ? { provenance: previewProvenance.provenance } : {}),
       persist: true,
@@ -101,11 +199,17 @@ export async function executeCanvasPlanAction({
       ok: true,
       draftSignature: transformationValidation.draftSignature,
       plan,
+      writtenArtifactPaths: [
+        previewProvenance.sqlArtifact.path,
+        ...(previewProvenance.provenance?.graphArtifact.path
+          ? [previewProvenance.provenance.graphArtifact.path]
+          : []),
+      ],
     };
   } catch (error) {
     return {
       ok: false,
-      message: error instanceof Error ? error.message : canvasViewCopy.planUnableToCreateMessage,
+      message: formatPlanActionErrorMessage(error),
     };
   }
 }

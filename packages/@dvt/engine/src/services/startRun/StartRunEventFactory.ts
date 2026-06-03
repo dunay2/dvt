@@ -1,3 +1,7 @@
+/**
+ * @ownedConcern Build deterministic start-run metadata and lifecycle events for
+ * bootstrap and failure flows.
+ */
 import type { EngineRunRef, IsoUtcString, PlanRef, ResolvedRunContext } from '@dvt/contracts';
 import { parseEngineRunRef } from '@dvt/contracts';
 

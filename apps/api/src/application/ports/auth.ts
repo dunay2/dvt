@@ -1,12 +1,12 @@
-import type {
-  AuthenticatedPrincipal,
-  EffectivePrincipalAccess,
-  PrincipalRef,
-} from '../../domain/auth/types.js';
+/**
+ * Owned concern: define the protected API authentication and auth-audit port
+ * surface consumed by route and application services.
+ */
+import type { AuthenticatedPrincipal, PrincipalRef } from '../../domain/auth/types.js';
 
 import type { AuthAuditEventType, AuthenticationFailureCode } from './authContract.js';
 
-export type { DeniedReason } from '../../domain/auth/types.js';
+export type { DeniedReason } from './accessDecision.js';
 
 export type AuthenticationResult =
   | { readonly ok: true; readonly principal: AuthenticatedPrincipal }
@@ -29,10 +29,6 @@ export interface AuthAuditEvent {
 
 export interface IAuthAuditPort {
   record(event: AuthAuditEvent): Promise<void>;
-}
-
-export interface IPrincipalAccessRepository {
-  loadEffectiveAccess(principal: PrincipalRef): Promise<EffectivePrincipalAccess | null>;
 }
 
 export type {

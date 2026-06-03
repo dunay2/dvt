@@ -1,3 +1,4 @@
+/** Owned concern: derive the Lineage route read model from the workspace DBT snapshot. */
 import { useMemo, useState } from 'react';
 
 import { resolveCanvasGraphStrategy } from '../../plugins/graphStrategyRegistry';
@@ -12,7 +13,7 @@ function getNodeColumns(node: CanonicalNode | null): Array<{ name: string }> {
 export function useLineageViewData() {
   const [searchQuery, setSearchQuery] = useState('');
   const [columnLevel, setColumnLevel] = useState(false);
-  const graphStrategy = useMemo(() => resolveCanvasGraphStrategy(), []);
+  const graphStrategy = useMemo(() => resolveCanvasGraphStrategy('dbt'), []);
   const snapshotQuery = useWorkspaceGraphForViewQuery('lineage', 60_000);
 
   const { canonicalNodes, canonicalEdges } = useMemo(() => {

@@ -40,7 +40,7 @@ export interface SessionChangedEvent {
 //
 // Plugins READ state through this interface.
 // Plugins WRITE back through the controlled shell.* callbacks.
-// Plugins NEVER import appStore, sessionStore, or any shell store directly.
+// Plugins NEVER import shell stores directly.
 // ---------------------------------------------------------------------------
 
 export interface PluginContext {

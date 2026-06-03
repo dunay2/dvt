@@ -2,10 +2,16 @@ import type { OutboxRetentionMetricsSnapshot } from './model.js';
 
 interface RunEventRetentionTelemetryOptions {
   nowMs?: () => number;
+  purgeConfigured?: boolean;
+  retentionConfigured?: boolean;
+  filesystemArchiveStorageConfigured?: boolean;
 }
 
 export class RunEventRetentionTelemetry {
   private readonly nowMs: () => number;
+  private readonly purgeConfigured: boolean;
+  private readonly retentionConfigured: boolean;
+  private readonly filesystemArchiveStorageConfigured: boolean;
 
   private retentionCyclesTotal = 0;
   private retentionCycleFailuresTotal = 0;
@@ -16,6 +22,9 @@ export class RunEventRetentionTelemetry {
 
   constructor(options: RunEventRetentionTelemetryOptions = {}) {
     this.nowMs = options.nowMs ?? (() => Date.now());
+    this.purgeConfigured = options.purgeConfigured ?? false;
+    this.retentionConfigured = options.retentionConfigured ?? false;
+    this.filesystemArchiveStorageConfigured = options.filesystemArchiveStorageConfigured ?? false;
   }
 
   onCycleSucceeded(details: { durationMs: number; archivedUnits: number }): void {
@@ -35,6 +44,9 @@ export class RunEventRetentionTelemetry {
 
   getMetricsSnapshot(): OutboxRetentionMetricsSnapshot {
     return {
+      purgeConfigured: this.purgeConfigured,
+      retentionConfigured: this.retentionConfigured,
+      filesystemArchiveStorageConfigured: this.filesystemArchiveStorageConfigured,
       retentionCyclesTotal: this.retentionCyclesTotal,
       retentionCycleFailuresTotal: this.retentionCycleFailuresTotal,
       retentionArchivedUnitsTotal: this.retentionArchivedUnitsTotal,

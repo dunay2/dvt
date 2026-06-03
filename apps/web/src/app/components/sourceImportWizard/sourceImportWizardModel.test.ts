@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import type { TableInfo } from './types';
 import {
+  applySourceImportOptionDefaults,
   buildPreviewGroups,
+  buildSourceImportOptionValues,
   canProceedForStep,
   getNextStep,
   getPreviousStep,
@@ -45,6 +47,38 @@ describe('sourceImportWizardModel', () => {
     );
     expect(groups.size).toBe(1);
     expect(groups.get('ERP')?.length).toBe(2);
+  });
+
+  it('applies plugin-declared source import option defaults through the model', () => {
+    const state = applySourceImportOptionDefaults(
+      {
+        includeColumns: false,
+        addTests: false,
+        addFreshness: false,
+      },
+      [
+        {
+          id: 'includeColumns',
+          label: 'Include Column Metadata',
+          description: 'Column metadata',
+          defaultEnabled: true,
+          order: 10,
+        },
+        {
+          id: 'addFreshness',
+          label: 'Freshness',
+          description: 'Freshness policy',
+          defaultEnabled: true,
+          order: 20,
+        },
+      ]
+    );
+
+    expect(buildSourceImportOptionValues(state)).toEqual({
+      includeColumns: true,
+      addTests: false,
+      addFreshness: true,
+    });
   });
 
   it('applies canProceed gating rules by step', () => {

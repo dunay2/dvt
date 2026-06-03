@@ -1,10 +1,15 @@
 /**
- * @baseline ADR-0003
+ * @file packages/@dvt/engine/src/state/InMemoryRunStateSnapshotSupport.ts
+ * @baseline ADR-0004: Event Sourcing Strategy
+ * @baseline ADR-0039: Hexagonal Port Hardening And SOLID Remediation
+ * @decision Rebuild in-memory snapshots as secondary projections from ordered run events
+ * @consequence Snapshot reads remain reconstructable and do not replace the append-only event log as authority
+ * @version 1.0.0
  */
 import { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION } from '@dvt/contracts';
 
 import { RunNotFoundError } from '../contracts/errors.js';
-import type { RunEventPersisted, RunMetadata, WorkflowSnapshot } from '../contracts/runEvents.js';
+import type { EventEnvelope, RunMetadata, WorkflowSnapshot } from '../contracts/runEvents.js';
 import { applyRunEvent } from '../core/SnapshotProjector.js';
 
 import { cloneWorkflowSnapshot, createDefaultWorkflowSnapshot } from './runEventWritePolicy.js';
@@ -12,7 +17,7 @@ import { collectStaleSnapshotRuns, isSnapshotProjectionStale } from './snapshotS
 
 export type InMemoryRunStateSnapshotBacking = {
   metadataByRunId: Map<string, RunMetadata>;
-  eventsByRunId: Map<string, RunEventPersisted[]>;
+  eventsByRunId: Map<string, EventEnvelope[]>;
   snapshotByRunId: Map<string, WorkflowSnapshot>;
   snapshotLastRunSeqByRunId: Map<string, number>;
 };

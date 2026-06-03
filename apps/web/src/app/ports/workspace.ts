@@ -1,3 +1,4 @@
+/** Owned concern: define web-facing workspace DTOs and capability-specific ports. */
 import type { AuditLogEntry, DbtEdge, DbtNode, DiffChange, Plugin, Role } from '../types/dbt';
 
 // ---------------------------------------------------------------------------
@@ -19,38 +20,19 @@ export type WorkspaceFileEntry = {
   children?: WorkspaceFileEntry[];
 };
 
+export type WorkspaceFileHistoryEntry = {
+  commitSha: string;
+  shortSha: string;
+  authorName: string;
+  authoredAt: string;
+  subject: string;
+  path: string;
+};
+
 export type WorkspaceGraphSnapshot = {
   nodes: DbtNode[];
   edges: DbtEdge[];
 };
-
-export type WorkspaceGraphDraft = {
-  nodeIds: string[];
-  nodePositions: Record<string, { x: number; y: number }>;
-  edges: Array<{ sourceId: string; targetId: string }>;
-};
-
-export type WorkspaceGraphDraftRecord = {
-  revision: string;
-  draft: WorkspaceGraphDraft;
-  savedAt: string;
-};
-
-export type SaveWorkspaceGraphDraftInput = {
-  expectedRevision: string | null;
-  idempotencyKey: string;
-  draft: WorkspaceGraphDraft;
-};
-
-export type SaveWorkspaceGraphDraftResult =
-  | {
-      outcome: 'saved';
-      record: WorkspaceGraphDraftRecord;
-    }
-  | {
-      outcome: 'conflict';
-      current: WorkspaceGraphDraftRecord;
-    };
 
 export type WarehouseConnection = {
   id: string;
@@ -103,23 +85,50 @@ export type ImportSourcesResult = {
 // ---------------------------------------------------------------------------
 
 /**
- * Port interface for workspace operations consumed by the presentation layer.
+ * Presentation graph snapshot query port.
  *
- * Implementations (mock, API) satisfy this contract through adapters wired
- * in the composition root. Views and hooks depend only on this interface.
+ * Implementations project protected graph draft read models without exposing
+ * file, diff, admin, plugin, import, or write capabilities.
  */
-export interface IWorkspacePort {
+export interface IWorkspaceGraphSnapshotQueryPort {
   getGraphSnapshot: () => Promise<WorkspaceGraphSnapshot>;
-  getGraphDraft: () => Promise<WorkspaceGraphDraftRecord | null>;
-  saveGraphDraft: (input: SaveWorkspaceGraphDraftInput) => Promise<SaveWorkspaceGraphDraftResult>;
+}
+
+/** Owns read-only workspace file tree and content access. */
+export interface IWorkspaceFilesQueryPort {
+  listFiles: () => Promise<WorkspaceFileEntry[]>;
+  getFileContent: (path: string) => Promise<FileContent>;
+}
+
+/** Owns read-only, file-scoped Git history access for workspace files. */
+export interface IWorkspaceFileHistoryQueryPort {
+  getFileHistory: (path: string) => Promise<WorkspaceFileHistoryEntry[]>;
+}
+
+/** Owns workspace diff read-model access for diff presentation consumers. */
+export interface IWorkspaceDiffQueryPort {
   getDiffChanges: () => Promise<DiffChange[]>;
+}
+
+/** Owns runtime plugin catalog/readiness reads for plugin presentation consumers. */
+export interface IWorkspacePluginCatalogQueryPort {
   getPlugins: () => Promise<Plugin[]>;
+}
+
+/** Owns admin RBAC and audit read-model access for admin presentation consumers. */
+export interface IWorkspaceAdminReadPort {
   getRoles: () => Promise<Role[]>;
   getAuditLog: () => Promise<AuditLogEntry[]>;
+}
+
+/** Owns warehouse source discovery queries and source import command access. */
+export interface IWarehouseSourceImportPort {
   listWarehouseConnections: () => Promise<WarehouseConnection[]>;
   listWarehouseTables: (connectionId: string) => Promise<WarehouseTable[]>;
   importSources: (input: ImportSourcesInput) => Promise<ImportSourcesResult>;
-  listFiles: () => Promise<WorkspaceFileEntry[]>;
-  getFileContent: (path: string) => Promise<FileContent>;
+}
+
+/** Owns workspace file content writes when an accepted backend command exists. */
+export interface IWorkspaceFileContentCommandPort {
   saveFileContent: (path: string, content: string) => Promise<FileContent>;
 }

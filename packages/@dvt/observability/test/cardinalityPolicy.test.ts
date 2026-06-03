@@ -9,6 +9,12 @@ describe('validateMetricLabels', () => {
     );
   });
 
+  it('rejects plan hashes as metric labels', () => {
+    expect(() =>
+      validateMetricLabels({ planSha: 'a'.repeat(64) }, defaultCardinalityPolicy)
+    ).toThrow(/Forbidden metric label key/);
+  });
+
   it('accepts low-cardinality labels', () => {
     expect(() =>
       validateMetricLabels({ adapter: 'temporal', result: 'ok' }, defaultCardinalityPolicy)

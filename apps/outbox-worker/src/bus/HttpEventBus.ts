@@ -1,4 +1,4 @@
-import type { EventEnvelope as RunEventPersisted } from '@dvt/contracts';
+import type { EventEnvelope } from '@dvt/contracts';
 import type { IEventBus } from '@dvt/delivery';
 
 export interface HttpEventBusOptions {
@@ -21,7 +21,7 @@ export class HttpEventBus implements IEventBus {
     this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   }
 
-  async publish(events: RunEventPersisted[]): Promise<void> {
+  async publish(events: EventEnvelope[]): Promise<void> {
     const controller = new globalThis.AbortController();
     this.pendingControllers.add(controller);
     const timeout = setTimeout(() => controller.abort(), this.timeoutMs);

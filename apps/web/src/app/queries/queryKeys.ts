@@ -22,12 +22,16 @@ export const queryKeys = {
     graph: (workspaceLayoutKey: string) => ['workspace', 'graph', workspaceLayoutKey] as const,
     graphDraft: (workspaceLayoutKey: string) =>
       ['workspace', 'graph-draft', workspaceLayoutKey] as const,
+    graphDraftTransport: (workspaceLayoutKey: string) =>
+      ['workspace', 'graph-draft-transport', workspaceLayoutKey] as const,
     graphForView: (viewId: string) => ['workspace', 'graph', viewId] as const,
     diffChanges: () => ['workspace', 'diff-changes'] as const,
+    plugins: () => ['workspace', 'plugins'] as const,
     roles: () => ['workspace', 'roles'] as const,
     audit: () => ['workspace', 'audit'] as const,
     fileTree: () => ['workspace', 'file-tree'] as const,
     fileContent: (path: string) => ['workspace', 'file-content', path] as const,
+    fileHistory: (path: string) => ['workspace', 'file-history', path] as const,
     artifacts: () => ['workspace', 'artifacts'] as const,
   },
 
@@ -40,7 +44,21 @@ export const queryKeys = {
       ['runs', 'workspace', workspaceLayoutKey, runId] as const,
     snapshot: (workspaceLayoutKey: string, runId: string | undefined) =>
       ['runs', 'snapshot', workspaceLayoutKey, runId] as const,
+    events: (workspaceLayoutKey: string, runId: string | undefined) =>
+      ['runs', 'events', workspaceLayoutKey, runId] as const,
     list: (viewId: string) => ['runs', 'list', viewId] as const,
     consoleLogStream: (runId: string | undefined) => ['runs', 'console-log-stream', runId] as const,
+  },
+
+  // -------------------------------------------------------------------------
+  // Cost attribution
+  // -------------------------------------------------------------------------
+  cost: {
+    attributionSummary: (
+      tenantId: string,
+      projectId: string | null,
+      environmentId: string | null,
+      limit: number
+    ) => ['cost', 'attribution-summary', tenantId, projectId, environmentId, limit] as const,
   },
 } as const;

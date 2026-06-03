@@ -1,4 +1,10 @@
-import type { EngineRunRef, PlanRef, RunContext, RunEvent } from '../types/engine';
+/**
+ * Owned concern: define the presentation-facing runs port and DTO vocabulary
+ * consumed by views without exposing runtime-owned execution internals.
+ */
+import type { ExecutionSelection } from '@dvt/contracts';
+import type { PlanRef, RunEvent } from '../types/engine';
+import type { WorkspaceScope } from './sessionContext';
 
 // ---------------------------------------------------------------------------
 // Presentation-facing DTOs for the runs domain
@@ -6,7 +12,15 @@ import type { EngineRunRef, PlanRef, RunContext, RunEvent } from '../types/engin
 
 export type StartRunInput = {
   planRef: PlanRef;
-  context: RunContext;
+  workspaceScope: WorkspaceScope;
+  selection: ExecutionSelection;
+};
+
+export type RunStartReceipt = {
+  runId: string;
+  accepted: boolean;
+  duplicate?: boolean;
+  duplicateOf?: string;
 };
 
 export type UiRunStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
@@ -35,6 +49,14 @@ export type RunExecutionEvidence = {
   materialization?: MaterializationEvidence;
 };
 
+export type RunPlanExecutionSummary = {
+  executor: RunExecutor;
+  nodeCount: number;
+  stepCount: number;
+  sourceTables: readonly string[];
+  sinkTables: readonly string[];
+};
+
 export type RunGitArtifactRef = {
   repo: string;
   path: string;
@@ -60,7 +82,31 @@ export type RunProvenanceChain = {
   authoring?: RunAuthoringProvenance;
 };
 
-export type RunSummaryItem = {
+export type RunDiagnosticPointer = {
+  kind: 'trace' | 'log';
+  label: string;
+  value: string;
+};
+
+export type RunDiagnostics = {
+  runId: string;
+  planId?: string;
+  planSha?: string;
+  stepId?: string;
+  attemptId?: string;
+  adapter?: string;
+  durationMs?: number;
+  status: UiRunStatus;
+  errorCode?: string;
+  pointers: readonly RunDiagnosticPointer[];
+};
+
+/**
+ * Common fields shared between {@link RunSnapshot} and {@link RunSummaryItem},
+ * keeping the snapshot DTO and its summary projection aligned without
+ * duplicating field declarations.
+ */
+export type RunCommonSnapshotFields = {
   runId: string;
   planId?: string;
   status: UiRunStatus;
@@ -75,25 +121,19 @@ export type RunSummaryItem = {
   execution?: RunExecutionEvidence;
 };
 
-export type RunSnapshot = {
-  runId: string;
-  planId?: string;
-  status: UiRunStatus;
+/** Summary projection: exactly the common snapshot fields. */
+export type RunSummaryItem = RunCommonSnapshotFields;
+
+/** Full snapshot DTO with run-detail-specific fields. */
+export type RunSnapshot = RunCommonSnapshotFields & {
   executor?: RunExecutor;
-  environment?: string;
-  gitSha?: string;
-  startedAt: string;
-  completedAt?: string;
-  substatus?: string;
-  message?: string;
-  hash?: string;
-  snapshotStaleness?: 'FRESH' | 'STALE' | 'UNKNOWN';
   currentStepId?: string;
   failedStepId?: string;
   errorReason?: string;
   materialization?: MaterializationEvidence;
   provenance?: RunProvenanceChain;
-  execution?: RunExecutionEvidence;
+  planSummary?: RunPlanExecutionSummary;
+  diagnostics?: RunDiagnostics;
 };
 
 export type RunEventTimelinePage = {
@@ -102,18 +142,18 @@ export type RunEventTimelinePage = {
 };
 
 // ---------------------------------------------------------------------------
-// Runs port — presentation-layer contract for run operations
+// Runs port: presentation-layer contract for run operations
 // ---------------------------------------------------------------------------
 
 /**
  * Port interface for run operations consumed by the presentation layer.
  *
- * Implementations (mock, API) satisfy this contract through adapters wired
- * in the composition root. Views and hooks depend only on this interface.
+ * The product composition root wires the API adapter. Tests may satisfy this
+ * contract with explicit doubles injected at the AppServices boundary.
  */
 export interface IRunsPort {
   listRunSummaries: () => Promise<RunSummaryItem[]>;
   getRunSnapshot: (runId: string) => Promise<RunSnapshot | null>;
-  startRun: (input: StartRunInput) => Promise<EngineRunRef>;
+  startRun: (input: StartRunInput) => Promise<RunStartReceipt>;
   listRunEvents: (runId: string, afterSeq?: number) => Promise<RunEventTimelinePage>;
 }

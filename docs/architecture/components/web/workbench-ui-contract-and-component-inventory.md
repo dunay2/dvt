@@ -27,6 +27,8 @@ Use it with:
 - [Screen Layout And Cross-Surface Behavior Rules](./screen-layout-and-cross-surface-behavior-rules.md)
 - [UX Implementation Guide](./ux-implementation-guide.md)
 - [Screen Manuals And User Stories](./screen-manuals-and-user-stories.md)
+- [Shell Workspace Context Component](./appshell/shell-workspace-context-component.md)
+- [Shell Workspace Context User Stories](./appshell/shell-workspace-context-user-stories.md)
 
 ## Design Position
 
@@ -34,7 +36,7 @@ The product should behave like a mature operator control panel:
 
 - full-screen persistent shell;
 - one active workbench route at a time;
-- coherent left-to-right navigation and context model;
+- coherent top-menu, workbench-tab, and contextual command model;
 - dense but readable information design;
 - fast route-level actions without hidden state changes;
 - explicit `loading`, `empty`, `error`, `degraded`, and `read-only` states.
@@ -55,9 +57,10 @@ flowchart TB
   App["Full-screen app shell"] --> Top["Top bar"]
   App --> Health["Health banner"]
   App --> Body["Main shell body"]
-  Body --> Nav["Left navigation rail"]
   Body --> Route["Active route workbench"]
-  Route --> Left["Optional left context panel"]
+  Top --> Menu["Top menu and command palette"]
+  Route --> Views["Workbench view strip"]
+  Route --> Overlay["On-demand context surfaces"]
   Route --> Center["Primary surface"]
   Route --> Right["Optional right context panel"]
   App --> Bottom["Optional bottom console drawer"]
@@ -67,20 +70,29 @@ Layout rules:
 
 - the shell fills the viewport;
 - the top bar stays persistent;
-- the navigation rail is the primary route switcher;
+- the top menu and command palette are the canonical command discovery
+  surfaces;
+- the Canvas workbench must not include a fixed left navigation rail;
+- workbench views are route-local projections, not global navigation;
 - route workbenches own their own toolbar and contextual panels;
-- side panels are collapsible and resizable with sensible min/max widths;
+- side panels are contextual, collapsible, and resizable with sensible min/max
+  widths;
 - the bottom drawer is optional and never replaces the current route.
 
 ## Navigation And Menus
 
-| Surface                         | Ownership        | What belongs there                                                                   | What does not belong there                                 |
-| ------------------------------- | ---------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
-| Top bar                         | Global shell     | tenant, project, environment, health, global search or command, user/session actions | graph commands, route-local filters, route-local mutations |
-| Left navigation rail            | Global shell     | route switching, route badges, plugin-contributed route entries                      | route-local inspector tabs, node actions                   |
-| Route toolbar                   | Active workbench | route-local commands, toggles, filters, mode switches                                | tenant switch, shell health, user settings                 |
-| Context menus                   | Local surface    | node actions, row actions, artifact actions, inline route actions                    | global navigation                                          |
-| Right or left contextual panels | Active workbench | explorer, inspector, filters, metadata, secondary detail                             | primary route navigation                                   |
+| Surface                         | Ownership        | What belongs there                                                             | What does not belong there                                  |
+| ------------------------------- | ---------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| Top bar                         | Global shell     | compact context labels, health, global menus or commands, user/session actions | dominant scope selectors, graph-local mutations             |
+| Top menu and command palette    | Global shell     | File/Edit/View/Insert/Export/Run/Admin/Help commands and command discovery     | parallel command semantics or route-local service shortcuts |
+| Workbench view strip            | Active workbench | route-local projections such as Graph, SQL, Lineage, Logs, Metrics, and More   | global route navigation                                     |
+| Route toolbar                   | Active workbench | route-local commands, toggles, filters, mode switches                          | tenant switch, shell health, user settings                  |
+| Context menus                   | Local surface    | node actions, row actions, artifact actions, inline route actions              | global navigation                                           |
+| Right or left contextual panels | Active workbench | explorer, inspector, filters, metadata, secondary detail                       | primary route navigation                                    |
+
+Workbench view-strip labels are presentation labels resolved by the active
+workbench read model and capability registry. They must not imply independent
+route IDs or route-local hard-coded view lists.
 
 Primary route inventory:
 
@@ -123,25 +135,26 @@ Core icon categories:
 
 These are the cross-route UI building blocks that should exist once and be reused.
 
-| Component             | Responsibility                                                            | Status                              |
-| --------------------- | ------------------------------------------------------------------------- | ----------------------------------- |
-| `AppShellFrame`       | Full-screen shell layout wrapper                                          | Current, v1 shell frame primitive   |
-| `ShellTopBar`         | Global context and global actions                                         | Current, should be hardened         |
-| `ShellHealthBanner`   | Health and degraded-state visibility                                      | Current                             |
-| `LeftNavigationRail`  | Primary route navigation                                                  | Current, should be standardized     |
-| `RouteWorkbenchFrame` | Shared route layout with header plus body or scroll ownership contract    | Current, v1 frame primitive         |
-| `RouteToolbar`        | Standard route command bar                                                | Needed as explicit shared primitive |
-| `ContextPanel`        | Shared side-panel container with title, collapse, scroll, and actions     | Needed                              |
-| `PrimarySurfaceFrame` | Shared main surface wrapper with route-level spacing and loading handling | Needed                              |
-| `BottomConsoleDrawer` | Shared shell console surface                                              | Current, content model now explicit |
-| `AppIcon`             | Shared icon wrapper for size, stroke, color, and state                    | Needed                              |
-| `LoadingState`        | Standard loading treatment                                                | Current, seeded from `Runs`         |
-| `EmptyState`          | Standard empty treatment                                                  | Current, seeded from `Runs`         |
-| `ErrorState`          | Standard error treatment                                                  | Current, seeded from `Runs`         |
-| `DegradedState`       | Standard stale or partial-data treatment                                  | Current, seeded from `Runs`         |
-| `ReadOnlyState`       | Standard non-mutation treatment                                           | Current, seeded from `Code`         |
-| `PermissionGate`      | Explains disabled or unavailable actions                                  | Needed                              |
-| `CommandPalette`      | Global search or command surface                                          | Optional later                      |
+| Component                 | Responsibility                                                            | Status                              |
+| ------------------------- | ------------------------------------------------------------------------- | ----------------------------------- |
+| `AppShellFrame`           | Full-screen shell layout wrapper                                          | Current, v1 shell frame primitive   |
+| `ShellTopBar`             | Global context and global actions                                         | Current, should be hardened         |
+| `Shell workspace context` | Read-only project identity plus on-demand read-only context details       | Current Stage 1 split               |
+| `ShellHealthBanner`       | Health and degraded-state visibility                                      | Current                             |
+| `LeftNavigationRail`      | Primary route navigation                                                  | Current, should be standardized     |
+| `RouteWorkbenchFrame`     | Shared route layout with semantic slots only                              | Current, no-legacy slot API seeded  |
+| `RouteToolbar`            | Standard route command bar                                                | Needed as explicit shared primitive |
+| `ContextPanel`            | Shared side-panel container with title, collapse, scroll, and actions     | Needed                              |
+| `PrimarySurfaceFrame`     | Shared main surface wrapper with route-level spacing and loading handling | Needed                              |
+| `BottomConsoleDrawer`     | Shared shell console surface                                              | Current, content model now explicit |
+| `AppIcon`                 | Shared icon wrapper for size, stroke, color, and state                    | Needed                              |
+| `LoadingState`            | Standard loading treatment                                                | Current, seeded from `Runs`         |
+| `EmptyState`              | Standard empty treatment                                                  | Current, seeded from `Runs`         |
+| `ErrorState`              | Standard error treatment                                                  | Current, seeded from `Runs`         |
+| `DegradedState`           | Standard stale or partial-data treatment                                  | Current, seeded from `Runs`         |
+| `ReadOnlyState`           | Standard non-mutation treatment                                           | Current, seeded from `Code`         |
+| `PermissionGate`          | Explains disabled or unavailable actions                                  | Needed                              |
+| `CommandPalette`          | Global search or command surface                                          | Optional later                      |
 
 ## Current Primitive Fit
 
@@ -150,10 +163,11 @@ zero.
 
 The current problem is organization and extraction, not total absence.
 
-### `RouteWorkbenchFrame` v1 contract
+### `RouteWorkbenchFrame` contract
 
-The current shared frame is intentionally smaller than the long-term workbench
-vision.
+The current shared frame remains intentionally smaller than the long-term
+workbench vision, but it now owns the local semantic slot vocabulary for route
+workbenches.
 
 Its active contract is:
 
@@ -163,8 +177,15 @@ Its active contract is:
 - the scrollable body owns route padding for standard routes;
 - `scroll={false}` exists for routes like `Code` that own split-pane body
   geometry directly;
-- left or right contextual panels are not part of the current primitive and
-  remain future work under `ContextPanel` and route-toolbar extraction.
+- anonymous route body `children` are forbidden; direct consumers must use
+  `RouteWorkbenchFrameSlots`;
+- `RouteWorkbenchFrameSlots` provides the semantic slot API for `leftPanel`,
+  `primarySurface`, `rightPanel`, and route-local `bottomDrawer`;
+- richer panel behavior remains future work under `ContextPanel` and
+  route-toolbar extraction.
+
+Local guide:
+[Route Workbench Frame Component](./route-workbench-frame-component.md)
 
 Shell-specific current fit:
 
@@ -174,8 +195,18 @@ Shell-specific current fit:
   Current gap: shell frame exists, but console product hardening and richer frame API remain future work.
 - `ShellTopBar`
   Current implementation: [TopAppBar.tsx](../../../../apps/web/src/app/components/TopAppBar.tsx) plus shell controls under `components/shell/*`
-  Reuse decision: reuse core behavior.
-  Current gap: shell ownership is aligned, but the top-bar composition still needs a deeper split.
+  Reuse decision: reuse core behavior and keep workspace scope as a read-only presentation model.
+  Current gap: shell ownership is aligned; command palette and richer top-menu semantics remain future work.
+- `Shell workspace context`
+  Current implementation: [projectIdentityBadge.ts](../../../../apps/web/src/app/shell/projectIdentityBadge.ts), [ShellProjectIdentityBadge.tsx](../../../../apps/web/src/app/components/shell/ShellProjectIdentityBadge.tsx), and [ShellWorkspaceContextMenu.tsx](../../../../apps/web/src/app/components/shell/ShellWorkspaceContextMenu.tsx)
+  Reuse decision: treat `ProjectIdentityBadge` as the stable read-only top-bar
+  projection and `ShellWorkspaceContextMenu` as an on-demand read-only context
+  detail surface.
+  Current gap: project selection belongs to a separate governed screen outside
+  this Stage 1 main-workbench shell boundary; grant refresh and richer
+  unavailable-state copy remain future auth work.
+  Local guide: [shell-workspace-context-component.md](./appshell/shell-workspace-context-component.md)
+  Scenario guide: [shell-workspace-context-user-stories.md](./appshell/shell-workspace-context-user-stories.md)
 - `ShellHealthBanner`
   Current implementation: [ShellHealthBanner.tsx](../../../../apps/web/src/app/components/ShellHealthBanner.tsx)
   Reuse decision: reuse as-is with styling cleanup.
@@ -195,6 +226,9 @@ Shell-specific current fit:
 | `RouteWorkbenchFrame`                                                        | Shared frame already adopted by the `Code`, `Diff`, `Lineage`, `Artifacts`, `Admin`, and `Plugins` routes                                                           | Reuse within the v1 frame contract             | side panels, shared route toolbars, and richer shell extraction remain future primitives |
 | `ContextPanel`                                                               | [`DbtExplorer.tsx`](../../../../apps/web/src/app/components/DbtExplorer.tsx) and [`InspectorPanel.tsx`](../../../../apps/web/src/app/components/InspectorPanel.tsx) | Reuse panel behavior and content               | panel frame, header, collapse affordance, and scroll treatment are duplicated            |
 | `PrimarySurfaceFrame`                                                        | repeated `div` wrappers per route                                                                                                                                   | Missing shared primitive                       | each route owns its own surface chrome and spacing                                       |
+| `Lineage panel tokens`                                                       | [`lineageChromeTokens.ts`](../../../../apps/web/src/app/views/lineage/lineageChromeTokens.ts)                                                                       | Reuse within Lineage route panels              | broader shell-global token convergence remains under F-24                                |
+| `React Flow graph visual tokens`                                             | [`graphVisualTokens.ts`](../../../../apps/web/src/app/plugins/graph/graphVisualTokens.ts)                                                                           | Reuse within Canvas and plugin graph rendering | broader shell-global token convergence remains under F-24/F-25                           |
+| `Monaco visual tokens`                                                       | [`monacoVisualTokens.ts`](../../../../apps/web/src/app/components/monaco/monacoVisualTokens.ts)                                                                     | Reuse within Monaco code and diff surfaces     | richer editor theming remains governed by the Monaco component guide                     |
 | `LoadingState`, `EmptyState`, `ErrorState`, `DegradedState`, `ReadOnlyState` | shared workbench primitives in [`WorkbenchStates.tsx`](../../../../apps/web/src/app/components/workbench/state/WorkbenchStates.tsx) consumed by `Runs` and `Code`   | Shared primitive seeded from `Runs` and `Code` | broader route adoption still needs delivery                                              |
 | `AppIcon`                                                                    | direct `lucide-react` imports across shell and routes                                                                                                               | Missing shared wrapper                         | size, stroke, semantic color, and accessibility are not standardized                     |
 
@@ -217,10 +251,12 @@ To keep the implementation honest, current code falls into three buckets.
 - [`CanvasToolbar.tsx`](../../../../apps/web/src/app/views/canvas/CanvasToolbar.tsx) -> base `RouteToolbar`
 - panel header patterns inside [`DbtExplorer.tsx`](../../../../apps/web/src/app/components/DbtExplorer.tsx) and [`InspectorPanel.tsx`](../../../../apps/web/src/app/components/InspectorPanel.tsx) -> base `ContextPanel`
 
-### Retire or quarantine as legacy
+### Retire or quarantine
 
-- [`GraphCanvas.tsx`](../../../../apps/web/src/app/components/GraphCanvas.tsx): legacy graph path; do not design new shared primitives around it
-- [`stores/index.ts`](../../../../apps/web/src/app/stores/index.ts): duplicate store surface from an older architecture pass
+- `GraphCanvas.tsx`: retired graph path removed from active source; do not
+  recreate shared primitives around it
+- root store barrels and mirror-writing aggregate stores: removed from active
+  source; keep new state in named concern slices
 - hard-coded route chrome in views that should become tokenized shared frames
 
 ## Recommended Organization
@@ -253,24 +289,25 @@ The main screen should be `Canvas` inside the persistent shell.
 That means the operator lands in:
 
 - shell top bar;
-- left navigation rail;
+- top menu and command palette access;
 - `Canvas` workbench as the default primary route;
+- Canvas workbench view strip;
 - optional bottom console drawer.
 
 Main screen composition:
 
-| Area         | Component                                        | Behavior                                                    |
-| ------------ | ------------------------------------------------ | ----------------------------------------------------------- |
-| Shell top    | `ShellTopBar`                                    | shows tenant, project, environment, health, global controls |
-| Shell left   | `LeftNavigationRail`                             | switches between route workbenches                          |
-| Route top    | `CanvasToolbar` or `RouteToolbar` specialization | owns graph-local actions and toggles                        |
-| Route left   | `CanvasExplorerPanel`                            | optional, restorable, resizable                             |
-| Route center | `CanvasViewport`                                 | primary graph interaction surface                           |
-| Route right  | `CanvasInspectorPanel`                           | optional, selection-driven, restorable                      |
-| Route modal  | `PlanPreviewModal`                               | explicit plan review before run                             |
-| Route modal  | `ConfirmEdgeModal`                               | explicit graph mutation confirmation                        |
-| Route modal  | `SourceImportWizard`                             | source import flow                                          |
-| Shell bottom | `BottomConsoleDrawer`                            | execution and supporting context, not main navigation       |
+| Area          | Component                                        | Behavior                                                     |
+| ------------- | ------------------------------------------------ | ------------------------------------------------------------ |
+| Shell top     | `ShellTopBar`                                    | shows compact context labels, health, menus, global controls |
+| Route top     | `CanvasToolbar` or `RouteToolbar` specialization | owns graph-local actions and toggles                         |
+| Route strip   | `CanvasWorkbenchTabs`                            | switches Canvas projections without global navigation        |
+| Route overlay | `CanvasExplorerPanel`                            | optional, contextual, restorable, never a fixed nav rail     |
+| Route center  | `CanvasViewport`                                 | primary graph interaction surface                            |
+| Route right   | `CanvasInspectorPanel`                           | optional, selection-driven, restorable                       |
+| Route modal   | `PlanPreviewModal`                               | explicit plan review before run                              |
+| Route modal   | `ConfirmEdgeModal`                               | explicit graph mutation confirmation                         |
+| Route modal   | `SourceImportWizard`                             | source import flow                                           |
+| Shell bottom  | `BottomConsoleDrawer`                            | execution and supporting context, not main navigation        |
 
 ## Main Screen Behavior Rules
 
@@ -289,20 +326,20 @@ Main screen composition:
 
 ### Canvas
 
-| Component              | Responsibility                        | Status                                         |
-| ---------------------- | ------------------------------------- | ---------------------------------------------- |
-| `CanvasWorkbench`      | Route composition root                | Current, state model explicit                  |
-| `CanvasToolbar`        | Graph-local commands and toggles      | Current                                        |
-| `CanvasExplorerPanel`  | Graph source browser and entry points | Current as `DbtExplorer`, should be normalized |
-| `CanvasViewport`       | React Flow graph surface              | Current                                        |
-| `CanvasInspectorPanel` | Selection detail                      | Current through `InspectorPanel`               |
-| `PlanPreviewModal`     | Plan review before run                | Current                                        |
-| `ConfirmEdgeModal`     | Graph mutation confirmation           | Current                                        |
-| `SourceImportWizard`   | Import source flow                    | Current                                        |
-| `CanvasLoadingState`   | Graph-specific loading treatment      | Current                                        |
-| `CanvasEmptyState`     | Empty graph treatment                 | Current                                        |
-| `CanvasErrorState`     | Graph route failure treatment         | Current                                        |
-| `CanvasReadOnlyBanner` | Permission or mutation gating         | Current                                        |
+| Component              | Responsibility                                  | Status                                         |
+| ---------------------- | ----------------------------------------------- | ---------------------------------------------- |
+| `CanvasWorkbench`      | Route composition root                          | Current, state model explicit                  |
+| `CanvasToolbar`        | Graph-local commands and toggles                | Current                                        |
+| `CanvasExplorerPanel`  | Graph source browser and entry points           | Current as `DbtExplorer`, should be normalized |
+| `CanvasViewport`       | React Flow graph surface                        | Current                                        |
+| `CanvasInspectorPanel` | Selection detail                                | Current through `InspectorPanel`               |
+| `PlanPreviewModal`     | Plan review before run                          | Current                                        |
+| `ConfirmEdgeModal`     | Graph mutation confirmation                     | Current                                        |
+| `SourceImportWizard`   | Import source flow and immediate canvas handoff | Current                                        |
+| `CanvasLoadingState`   | Graph-specific loading treatment                | Current                                        |
+| `CanvasEmptyState`     | Empty graph treatment                           | Current                                        |
+| `CanvasErrorState`     | Graph route failure treatment                   | Current                                        |
+| `CanvasReadOnlyBanner` | Permission or mutation gating                   | Current                                        |
 
 ### Runs
 
@@ -345,7 +382,7 @@ Main screen composition:
 | `CodeWorkbench`     | Route composition root                    | Current, needs hardening |
 | `CodeToolbar`       | file-level actions and history entry      | Needed                   |
 | `FileTreePanel`     | workspace file selection                  | Current                  |
-| `CodePreviewPane`   | read-only Monaco file preview             | Current                  |
+| `CodePreviewPane`   | Monaco local editable buffer              | Current                  |
 | `FileHistoryPanel`  | recent commit history for selected file   | Planned                  |
 | `CodeEmptyState`    | no file or no workspace files available   | Current                  |
 | `CodeErrorState`    | preserve selected-file context on failure | Current                  |
@@ -369,40 +406,41 @@ Main screen composition:
 
 ### Artifacts
 
-| Component                     | Responsibility                      | Status                        |
-| ----------------------------- | ----------------------------------- | ----------------------------- |
-| `ArtifactsWorkbench`          | Route composition root              | Current, state model explicit |
-| `ArtifactsToolbar`            | import, filter, and inspect actions | Needed                        |
-| `ArtifactImportZone`          | local manifest import               | Current                       |
-| `ArtifactList`                | artifact inventory                  | Current in basic form         |
-| `ArtifactPreviewTabs`         | manifest, run results, catalog      | Current                       |
-| `ArtifactJsonViewer`          | structured read-only payload view   | Needed                        |
-| `ArtifactSearch`              | payload navigation                  | Needed                        |
-| `ArtifactsEmptyState`         | no artifact loaded                  | Current                       |
-| `ArtifactsInvalidImportState` | import rejection explanation        | Current                       |
+| Component                     | Responsibility                           | Status                        |
+| ----------------------------- | ---------------------------------------- | ----------------------------- |
+| `ArtifactsWorkbench`          | Route composition root                   | Current, state model explicit |
+| `ArtifactsToolbar`            | import, filter, and inspect actions      | Needed                        |
+| `ArtifactImportZone`          | local manifest import                    | Current                       |
+| `ArtifactList`                | artifact inventory                       | Current in basic form         |
+| `ArtifactPreviewTabs`         | manifest, run results, catalog           | Current                       |
+| `ArtifactMonacoPreviewPanel`  | structured read-only Monaco payload view | Current                       |
+| `ArtifactSearch`              | payload navigation                       | Needed                        |
+| `ArtifactsEmptyState`         | no artifact loaded                       | Current                       |
+| `ArtifactsInvalidImportState` | import rejection explanation             | Current                       |
 
 ### Templates
 
-| Component                  | Responsibility                    | Status  |
-| -------------------------- | --------------------------------- | ------- |
-| `TemplatesWorkbench`       | Future source-generation route    | Planned |
-| `TemplateCatalog`          | template selection                | Planned |
-| `ProviderProfileSelector`  | target platform or profile choice | Planned |
-| `TemplateParameterForm`    | schema-driven input               | Planned |
-| `GeneratedSourcePreview`   | Monaco-backed preview             | Planned |
-| `GeneratedSourceDiffPane`  | review before export or apply     | Planned |
-| `GeneratedSourceActions`   | export, copy, dispatch            | Planned |
-| `TemplatesEmptyState`      | no template or context            | Planned |
-| `TemplatesValidationState` | invalid input explanation         | Planned |
+| Component                  | Responsibility                    | Status                              |
+| -------------------------- | --------------------------------- | ----------------------------------- |
+| `TemplatesWorkbench`       | Source-generation route           | Current                             |
+| `TemplateCatalog`          | template selection                | Current                             |
+| `ProviderProfileSelector`  | target platform or profile choice | Current in catalog cards            |
+| `TemplateParameterForm`    | schema-driven input               | Current                             |
+| `GeneratedSourcePreview`   | read-only Monaco source preview   | Current                             |
+| `GeneratedSourceDiffPane`  | review before export or apply     | Planned                             |
+| `GeneratedSourceActions`   | export, copy, dispatch            | Planned after backend/provider rail |
+| `TemplatesEmptyState`      | no template or context            | Not needed for built-in catalog v1  |
+| `TemplatesValidationState` | invalid input explanation         | Current                             |
 
 ### Plugins And Admin
 
-| Component               | Responsibility                | Status  |
-| ----------------------- | ----------------------------- | ------- |
-| `PluginsWorkbench`      | Installed plugin inspection   | Current |
-| `PluginCapabilityTable` | plugin availability and state | Needed  |
-| `AdminWorkbench`        | administrative route shell    | Current |
-| `AdminSectionLayout`    | shared admin section layout   | Needed  |
+| Component                     | Responsibility                          | Status  |
+| ----------------------------- | --------------------------------------- | ------- |
+| `PluginsWorkbench`            | Installed plugin inspection             | Current |
+| `PluginCapabilityTable`       | plugin availability and state           | Current |
+| `PluginUxIntegrationContract` | governed plugin docks and runtime rails | Current |
+| `AdminWorkbench`              | administrative route shell              | Current |
+| `AdminSectionLayout`          | shared admin section layout             | Needed  |
 
 ## Common State Inventory
 
@@ -466,19 +504,24 @@ interaction model.
 1. `DiffWorkbench`
 2. `ArtifactsWorkbench`
 3. Monaco-backed review panes
+4. Monaco bundle isolation guardrails
 
 ### Future governed workbench fourth
 
 1. `TemplatesWorkbench`
 2. source-generation preview and diff
+3. bundle isolation guardrails for heavy editor vendors
 
 ## Immediate Decisions Locked By This Document
 
 1. The interface is a full-screen workbench, not a set of fixed windows.
 2. The main screen is `Canvas` inside the persistent shell.
-3. Primary navigation lives in the left rail.
-4. Global context lives in the top bar.
-5. Route-local commands live in each route toolbar.
-6. Side panels are contextual and resizable.
-7. The bottom drawer is supporting context, not route navigation.
-8. `lucide-react` is the standard icon family.
+3. Canvas does not use a fixed left navigation rail.
+4. Top menus and the command palette are the canonical command discovery
+   surfaces.
+5. Global context lives in compact top-bar labels, not dominant dropdowns.
+6. Route-local commands live in each route toolbar and workbench command
+   surfaces.
+7. Side panels are contextual and resizable.
+8. The bottom drawer is supporting context, not route navigation.
+9. `lucide-react` is the standard icon family.

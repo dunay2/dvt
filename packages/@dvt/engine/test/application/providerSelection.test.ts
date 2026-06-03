@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import {
   buildAdapterRegistry,
+  MapBackedEngineProviderResolver,
   pickDefaultAdapter,
   resolveEngineProvider,
 } from '../../src/application/providerSelection.js';
@@ -14,7 +15,7 @@ function mkAdapter(provider: IProviderAdapter['provider']): IProviderAdapter {
       throw new Error('not-used');
     },
     cancelRun: async () => {},
-    getRunStatus: async () => ({ runId: 'r', status: 'RUNNING' }),
+    getProviderStatusView: async () => ({ provider, providerStatus: 'RUNNING' }),
     signal: async () => {},
   };
 }
@@ -24,54 +25,37 @@ describe('providerSelection', () => {
     expect(resolveEngineProvider({})).toBe('temporal');
   });
 
-  it('resolves provider from ENGINE_PROVIDER when valid', () => {
-    expect(resolveEngineProvider({ ENGINE_PROVIDER: 'mock' })).toBe('mock');
-    expect(resolveEngineProvider({ ENGINE_PROVIDER: 'conductor' })).toBe('conductor');
+  it('resolves temporal from ENGINE_PROVIDER when valid', () => {
+    expect(resolveEngineProvider({ ENGINE_PROVIDER: 'temporal' })).toBe('temporal');
   });
 
   it('throws on invalid ENGINE_PROVIDER values', () => {
-    expect(() => resolveEngineProvider({ ENGINE_PROVIDER: 'k8s' })).toThrow(
+    expect(() => resolveEngineProvider({ ENGINE_PROVIDER: 'conductor' })).toThrow(
       /ENGINE_PROVIDER_INVALID/
     );
   });
 
   it('builds adapter registry without duplicates', () => {
-    const map = buildAdapterRegistry([mkAdapter('temporal'), mkAdapter('mock')]);
-    expect(map.size).toBe(2);
+    const map = buildAdapterRegistry([mkAdapter('temporal')]);
+    expect(map.size).toBe(1);
     expect(map.get('temporal')?.provider).toBe('temporal');
   });
 
   it('rejects duplicate providers in adapter registry', () => {
-    expect(() => buildAdapterRegistry([mkAdapter('mock'), mkAdapter('mock')])).toThrow(
+    expect(() => buildAdapterRegistry([mkAdapter('temporal'), mkAdapter('temporal')])).toThrow(
       /ADAPTER_DUPLICATE_PROVIDER/
     );
   });
 
   it('picks default adapter using ENGINE_PROVIDER override', () => {
-    const adapters = buildAdapterRegistry([
-      mkAdapter('temporal'),
-      mkAdapter('conductor'),
-      mkAdapter('mock'),
-    ]);
+    const adapters = buildAdapterRegistry([mkAdapter('temporal')]);
 
-    const selected = pickDefaultAdapter(adapters, { ENGINE_PROVIDER: 'mock' });
-    expect(selected.provider).toBe('mock');
-  });
-
-  it('picks fallback adapter when ENGINE_PROVIDER is unset', () => {
-    const adapters = buildAdapterRegistry([mkAdapter('mock')]);
-    const selected = pickDefaultAdapter(adapters, {}, 'mock');
-    expect(selected.provider).toBe('mock');
-  });
-
-  it('falls back to first available adapter when fallback provider is not registered', () => {
-    const adapters = buildAdapterRegistry([mkAdapter('mock')]);
-    const selected = pickDefaultAdapter(adapters, {});
-    expect(selected.provider).toBe('mock');
+    const selected = pickDefaultAdapter(adapters, { ENGINE_PROVIDER: 'temporal' });
+    expect(selected.provider).toBe('temporal');
   });
 
   it('still throws when ENGINE_PROVIDER override targets an unregistered adapter', () => {
-    const adapters = buildAdapterRegistry([mkAdapter('mock')]);
+    const adapters = buildAdapterRegistry([]);
     expect(() => pickDefaultAdapter(adapters, { ENGINE_PROVIDER: 'temporal' })).toThrow(
       /engine\.error\.adapter_not_registered/
     );
@@ -80,5 +64,31 @@ describe('providerSelection', () => {
   it('throws when no adapters are registered', () => {
     const adapters = buildAdapterRegistry([]);
     expect(() => pickDefaultAdapter(adapters, {})).toThrow(/No adapters registered/);
+  });
+
+  it('resolves context target adapters through the provider resolver seam', () => {
+    const adapters = buildAdapterRegistry([mkAdapter('temporal')]);
+    const resolver = new MapBackedEngineProviderResolver(adapters);
+
+    const selected = resolver.resolveContextTarget({ targetAdapter: 'temporal' });
+
+    expect(selected.provider).toBe('temporal');
+  });
+
+  it('resolves persisted provider refs through the same provider resolver seam', () => {
+    const adapters = buildAdapterRegistry([mkAdapter('temporal')]);
+    const resolver = new MapBackedEngineProviderResolver(adapters);
+
+    const selected = resolver.resolveProviderRef({ provider: 'temporal' });
+
+    expect(selected.provider).toBe('temporal');
+  });
+
+  it('preserves adapter-not-registered errors for unresolved provider refs', () => {
+    const resolver = new MapBackedEngineProviderResolver(buildAdapterRegistry([]));
+
+    expect(() => resolver.resolveProviderRef({ provider: 'temporal' })).toThrow(
+      /engine\.error\.adapter_not_registered/
+    );
   });
 });

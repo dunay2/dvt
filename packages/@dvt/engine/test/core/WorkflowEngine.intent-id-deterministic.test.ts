@@ -53,11 +53,11 @@ describe('WorkflowEngine startRun intent id determinism', () => {
     const second = builder.startRunIntentId('tenant-a', 'run-123', 1, 'temporal');
     const differentTenant = builder.startRunIntentId('tenant-b', 'run-123', 1, 'temporal');
     const differentAttempt = builder.startRunIntentId('tenant-a', 'run-123', 2, 'temporal');
-    const differentAdapter = builder.startRunIntentId('tenant-a', 'run-123', 1, 'conductor');
+    const withoutAdapter = builder.startRunIntentId('tenant-a', 'run-123', 1);
 
     expect(first).toBe(second);
     expect(first).not.toBe(differentTenant);
     expect(first).not.toBe(differentAttempt);
-    expect(first).not.toBe(differentAdapter);
+    expect(first).not.toBe(withoutAdapter);
   });
 });

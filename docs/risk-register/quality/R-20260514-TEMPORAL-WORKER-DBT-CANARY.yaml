@@ -1,0 +1,16 @@
+id: R-20260514-TEMPORAL-WORKER-DBT-CANARY
+title: Temporal worker DBT canary coverage regression
+status: Open
+date: 2026-05-14
+owners:
+  - dvt-temporal-worker
+  - '@dvt/engine'
+severity: Low
+probability: Low
+description: >
+  The DBT-enabled Temporal worker canary could regress if future changes bypass the Docker-backed
+  Postgres proof path or weaken readiness, metrics, plan-store, run metadata, or DBT invocation
+  assertions.
+mitigation: >
+  Keep the DVT_PG_INTEGRATION=1 canary documented in the Temporal worker DBT runbook and keep the
+  TF-C3-E feature mechanization manifest aligned with the test surfaces and symbols.

@@ -1,17 +1,17 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 
-import type { EventEnvelope as RunEventPersisted } from '@dvt/contracts';
+import type { EventEnvelope } from '@dvt/contracts';
 
 import { cloneEvent } from './standaloneCanaryEventSupport.js';
 
 export interface SinkPayload {
-  events: RunEventPersisted[];
+  events: EventEnvelope[];
 }
 
 export interface HttpSinkHandle {
   url: string;
   requests: SinkPayload[];
-  appliedEffects: RunEventPersisted[];
+  appliedEffects: EventEnvelope[];
   duplicateKeys: string[];
   close(): Promise<void>;
 }
@@ -29,7 +29,7 @@ interface HttpSinkResponse {
 }
 
 interface HttpSinkRuntime {
-  appliedEffects: RunEventPersisted[];
+  appliedEffects: EventEnvelope[];
   duplicateKeys: string[];
   options: HttpSinkOptions;
   requests: SinkPayload[];
@@ -38,7 +38,7 @@ interface HttpSinkRuntime {
 
 export async function startHttpSink(options: HttpSinkOptions = {}): Promise<HttpSinkHandle> {
   const requests: SinkPayload[] = [];
-  const appliedEffects: RunEventPersisted[] = [];
+  const appliedEffects: EventEnvelope[] = [];
   const duplicateKeys: string[] = [];
   const runtime: HttpSinkRuntime = {
     appliedEffects,
@@ -77,13 +77,11 @@ export async function startHttpSink(options: HttpSinkOptions = {}): Promise<Http
   };
 }
 
-async function handleSinkRequest(
-  args: {
-    request: IncomingMessage;
-    response: ServerResponse<IncomingMessage>;
-    runtime: HttpSinkRuntime;
-  }
-): Promise<void> {
+async function handleSinkRequest(args: {
+  request: IncomingMessage;
+  response: ServerResponse<IncomingMessage>;
+  runtime: HttpSinkRuntime;
+}): Promise<void> {
   const { request, response, runtime } = args;
   if (request.method !== 'POST' || request.url !== '/outbox/events') {
     response.statusCode = 404;
@@ -115,10 +113,7 @@ function applySinkEffects(sinkPayload: SinkPayload, runtime: HttpSinkRuntime): v
   }
 }
 
-function shouldSkipDuplicateEffect(
-  event: RunEventPersisted,
-  runtime: HttpSinkRuntime
-): boolean {
+function shouldSkipDuplicateEffect(event: EventEnvelope, runtime: HttpSinkRuntime): boolean {
   const key = resolveSinkIdempotencyKey(event, runtime.options.idempotentBy);
   if (key === null) {
     return false;
@@ -144,7 +139,7 @@ function recordDuplicateKey(key: string, duplicateKeys: string[]): void {
 }
 
 function resolveSinkIdempotencyKey(
-  event: RunEventPersisted,
+  event: EventEnvelope,
   idempotentBy: HttpSinkOptions['idempotentBy']
 ): string | null {
   switch (idempotentBy) {

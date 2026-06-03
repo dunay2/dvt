@@ -5,11 +5,18 @@ import { Card } from '../ui/card';
 import { ScrollArea } from '../ui/scroll-area';
 import { sourceImportWizardCopy as copy } from './copy';
 
-interface ResultStepProps {
+type ResultStepProps = Readonly<{
   result: ImportSourcesResult;
-}
+}>;
 
 export function ResultStep({ result }: ResultStepProps) {
+  const importedSourcesWereMaterialized = (result.importedNodeIds?.length ?? 0) > 0;
+  const title = importedSourcesWereMaterialized ? copy.result.title : copy.result.noopTitle;
+  const description = importedSourcesWereMaterialized
+    ? copy.result.description
+    : copy.result.noopDescription;
+  const warning = importedSourcesWereMaterialized ? copy.result.warning : copy.result.noopWarning;
+
   return (
     <div className="space-y-4 text-center">
       <div className="flex justify-center">
@@ -18,8 +25,8 @@ export function ResultStep({ result }: ResultStepProps) {
         </div>
       </div>
       <div>
-        <h3 className="mb-2 text-lg font-medium">{copy.result.title}</h3>
-        <p className="text-sm text-slate-300">{copy.result.description}</p>
+        <h3 className="mb-2 text-lg font-medium">{title}</h3>
+        <p className="text-sm text-slate-300">{description}</p>
       </div>
 
       <Card className="border-slate-600 p-4 text-left">
@@ -50,7 +57,7 @@ export function ResultStep({ result }: ResultStepProps) {
 
       <div className="rounded border border-blue-800 bg-blue-900/20 p-3 text-xs text-slate-400">
         <AlertCircle className="mr-2 inline-block size-4" />
-        {copy.result.warning}
+        {warning}
       </div>
     </div>
   );

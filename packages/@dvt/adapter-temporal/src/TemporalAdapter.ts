@@ -15,7 +15,6 @@ import { Buffer } from 'node:buffer';
 import {
   CURRENT_SIGNAL_SEMANTICS_VERSION,
   type EngineRunRef,
-  type ExecutionPlan,
   type PlanRef,
   type ProviderRunStatusView,
   type ResolvedRunContext,
@@ -40,6 +39,7 @@ import {
   toTemporalTaskQueue,
   toTemporalWorkflowId,
 } from './WorkflowMapper.js';
+import type { WorkflowStepActivityRouting } from './workflows/runPlanWorkflow.types.js';
 
 interface WorkflowHandleLike {
   cancel(): Promise<unknown>;
@@ -99,11 +99,7 @@ export class TemporalAdapter implements IProviderAdapter {
     });
   }
 
-  async startRun(
-    plan: ExecutionPlan,
-    planRef: PlanRef,
-    ctx: ResolvedRunContext
-  ): Promise<EngineRunRef> {
+  async startRun(planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef> {
     const validatedPlanRef = parsePlanRef(planRef);
     const validatedCtx = parseResolvedRunContext(ctx);
     const workflowClient = await this.getClient();
@@ -111,13 +107,17 @@ export class TemporalAdapter implements IProviderAdapter {
     const workflowId = toTemporalWorkflowId(validatedCtx.runId);
     const taskQueue = toTemporalTaskQueue(validatedCtx.tenantId, this.deps.config);
     const workflowInput = {
-      plan,
       planRef: validatedPlanRef,
       ctx: validatedCtx,
-      continueAsNewAfterLayerCount: this.deps.config.continueAsNewAfterLayerCount,
+      maxContinueAsNewPayloadBytes: this.deps.config.workflowBudget.maxContinueAsNewPayloadBytes,
+      continueAsNewAfterLayerCount: this.deps.config.workflowBudget.continueAsNewAfterLayerCount,
+      ...toWorkflowStepActivityRoutingInput(this.deps.config),
     };
 
-    assertWorkflowStartPayloadWithinLimit(workflowInput, this.deps.config.maxStartPayloadBytes);
+    assertWorkflowStartPayloadWithinLimit(
+      workflowInput,
+      this.deps.config.workflowBudget.maxStartPayloadBytes
+    );
 
     const started = await workflowClient.start(RUN_PLAN_WORKFLOW, {
       taskQueue,
@@ -242,7 +242,7 @@ export class TemporalAdapter implements IProviderAdapter {
     if (typeof client.withAbortSignal === 'function') {
       await withAbortSignalTimeout(
         (signal) => client.withAbortSignal!(signal, () => handle.describe()),
-        this.deps.config.requestTimeoutMs,
+        this.deps.config.timeouts.requestTimeoutMs,
         'lookupRunRef.describe'
       );
       return;
@@ -251,10 +251,25 @@ export class TemporalAdapter implements IProviderAdapter {
     // Test doubles and minimal injected clients may not implement SDK helpers.
     await withTimeoutMs(
       handle.describe(),
-      this.deps.config.requestTimeoutMs,
+      this.deps.config.timeouts.requestTimeoutMs,
       'lookupRunRef.describe'
     );
   }
+}
+
+function toWorkflowStepActivityRoutingInput(config: TemporalAdapterConfig): {
+  stepActivityRouting?: WorkflowStepActivityRouting;
+} {
+  const routes = config.activityRouting.routesByStepKind;
+  if (Object.keys(routes).length === 0) {
+    return {};
+  }
+
+  return {
+    stepActivityRouting: {
+      routesByStepKind: { ...routes },
+    },
+  };
 }
 
 function mapCanonicalSignalToTemporalDispatch(request: SignalRequest): {
@@ -275,7 +290,7 @@ function mapCanonicalSignalToTemporalDispatch(request: SignalRequest): {
     case 'CANCEL':
       return {
         signalName: WorkflowSignals.CANCEL,
-        args: [request.reason],
+        args: [request.signalId, request.reason],
       };
     default: {
       const exhaustive: never = request.type;
@@ -286,19 +301,13 @@ function mapCanonicalSignalToTemporalDispatch(request: SignalRequest): {
 
 function assertWorkflowStartPayloadWithinLimit(
   workflowInput: {
-    plan: ExecutionPlan;
     planRef: PlanRef;
     ctx: ResolvedRunContext;
+    maxContinueAsNewPayloadBytes: number;
     continueAsNewAfterLayerCount: number;
   },
   maxBytes: number
 ): void {
-  if (workflowInput.planRef.sizeBytes !== undefined && workflowInput.planRef.sizeBytes > maxBytes) {
-    throw new Error(
-      `TEMPORAL_START_PAYLOAD_TOO_LARGE: sizeBytes=${workflowInput.planRef.sizeBytes} maxBytes=${maxBytes}`
-    );
-  }
-
   const serializedSizeBytes = Buffer.byteLength(JSON.stringify([workflowInput]), 'utf8');
   if (serializedSizeBytes > maxBytes) {
     throw new Error(

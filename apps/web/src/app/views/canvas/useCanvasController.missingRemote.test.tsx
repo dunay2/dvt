@@ -1,9 +1,11 @@
 import { act } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
-  buildDraftRecord,
+  buildRemoteDraftRecord,
+  clearHarnessRemoteDraftRecord,
   createHarnessWithDraft,
+  setHarnessRemoteDraftRecord,
   type CanvasControllerHarness,
   setCanvasLayoutNodePositions,
   WORKSPACE_LAYOUT_KEY,
@@ -23,14 +25,14 @@ describe('useCanvasController missing remote recovery', () => {
     harness.cleanup();
   });
 
-  async function replaceHarnessWithDraft(record: ReturnType<typeof buildDraftRecord>): Promise<void> {
+  async function replaceHarnessWithDraft(record: ReturnType<typeof buildRemoteDraftRecord>): Promise<void> {
     harness.cleanup();
     harness = await createHarnessWithDraft(record);
   }
 
   it('enters missing_remote when a previously loaded draft disappears and blocks autosave', async () => {
     await replaceHarnessWithDraft(
-      buildDraftRecord({
+      buildRemoteDraftRecord({
         nodeIds: ['node_1'],
         nodePositions: {
           node_1: { x: 0, y: 0 },
@@ -39,7 +41,8 @@ describe('useCanvasController missing remote recovery', () => {
       })
     );
 
-    harness.state.graphDraftRecord = null;
+    clearHarnessRemoteDraftRecord(harness);
+    await harness.renderProbe();
     await harness.renderProbe();
 
     setCanvasLayoutNodePositions(harness, {
@@ -50,13 +53,13 @@ describe('useCanvasController missing remote recovery', () => {
     await waitForAutosaveDebounce();
 
     expect(harness.getLatestResult()?.hasMissingRemoteDraft).toBe(true);
-    expect(harness.getLatestResult()?.nodesWithImpact.map((node) => node.id)).toEqual(['node_1']);
-    expect(harness.state.services.workspaceService.saveGraphDraft).not.toHaveBeenCalled();
+    expect(harness.getLatestResult()?.nodesWithImpact.map((node) => node.id)).toEqual([]);
+    expect(harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft).not.toHaveBeenCalled();
   });
 
-  it('adopts the current workspace snapshot after missing_remote and exits the blocked state', async () => {
+  it('stays fail-closed when reload is requested but the persisted draft is still missing', async () => {
     await replaceHarnessWithDraft(
-      buildDraftRecord({
+      buildRemoteDraftRecord({
         nodeIds: ['node_1'],
         nodePositions: {
           node_1: { x: 0, y: 0 },
@@ -65,24 +68,23 @@ describe('useCanvasController missing remote recovery', () => {
       })
     );
 
-    harness.state.graphDraftRecord = null;
+    clearHarnessRemoteDraftRecord(harness);
+    await harness.renderProbe();
     await harness.renderProbe();
 
     await act(async () => {
-      harness.getLatestResult()?.adoptCurrentWorkspaceSnapshot();
+      harness.getLatestResult()?.reloadLatestDraft();
+      await Promise.resolve();
     });
     await harness.renderProbe();
 
-    expect(harness.getLatestResult()?.hasMissingRemoteDraft).toBe(false);
-    expect(harness.getLatestResult()?.nodesWithImpact.map((node) => node.id)).toEqual([
-      'node_1',
-      'node_2',
-    ]);
+    expect(harness.getLatestResult()?.hasMissingRemoteDraft).toBe(true);
+    expect(harness.getLatestResult()?.nodesWithImpact.map((node) => node.id)).toEqual([]);
   });
 
   it('reloads the remote draft after entering missing_remote when the persisted draft reappears', async () => {
     await replaceHarnessWithDraft(
-      buildDraftRecord({
+      buildRemoteDraftRecord({
         nodeIds: ['node_1'],
         nodePositions: {
           node_1: { x: 0, y: 0 },
@@ -91,11 +93,12 @@ describe('useCanvasController missing remote recovery', () => {
       })
     );
 
-    harness.state.graphDraftRecord = null;
+    clearHarnessRemoteDraftRecord(harness);
     await harness.renderProbe();
 
-    harness.state.services.workspaceService.getGraphDraft = vi.fn(async () =>
-      buildDraftRecord(
+    setHarnessRemoteDraftRecord(
+      harness,
+      buildRemoteDraftRecord(
         {
           nodeIds: ['node_2'],
           nodePositions: {
@@ -114,13 +117,14 @@ describe('useCanvasController missing remote recovery', () => {
     });
     await harness.renderProbe();
 
-    expect(harness.state.services.workspaceService.getGraphDraft).toHaveBeenCalledTimes(1);
     expect(harness.getLatestResult()?.hasMissingRemoteDraft).toBe(false);
     expect(harness.getLatestResult()?.nodesWithImpact.map((node) => node.id)).toEqual(['node_2']);
     expect(harness.state.queryClient.setQueryData).toHaveBeenCalledWith(
       ['workspace', 'graph-draft', WORKSPACE_LAYOUT_KEY],
       expect.objectContaining({
-        revision: 'rev-restored',
+        record: expect.objectContaining({
+          revision: 'rev-restored',
+        }),
       })
     );
   });

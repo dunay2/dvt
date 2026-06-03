@@ -1,3 +1,7 @@
+/**
+ * Owned concern: connect protected-runtime lifecycle transitions to Fastify.
+ * This module owns `migrate()` on startup and `close()` on shutdown.
+ */
 import type { FastifyInstance } from 'fastify';
 
 import type { ProtectedRuntimeModule } from './types.js';

@@ -73,7 +73,7 @@ DoD:
 
 ### AR-B1-B Red tests at write boundary
 
-- add failing tests for illegal run and step transitions
+- [Task: RUNTIME-PROP-DISP-1] add failing tests for illegal run and step transitions
 - cover in-memory and Postgres append boundaries
 
 DoD:

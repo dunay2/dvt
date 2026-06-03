@@ -1,0 +1,28 @@
+---
+id: R-20260515-CI-CONTRACTS-HASH-SCOPE-E2E
+title: Contracts hash-compare scope change lacks PR-runtime E2E validation
+status: Open
+date: 2026-05-15
+owners:
+  - ci
+  - '@dvt/contracts'
+severity: Medium
+probability: Medium
+---
+summary: >
+  The contracts workflow now gates snapshot hash comparison through centralized `emit-scope --mode
+  contracts` output (`hash_compare_relevant`) instead of an inline PR `git diff` detector. Unit and
+  parity tests passed, but no PR-runtime end-to-end execution evidence has been captured yet in
+  GitHub Actions.
+
+mitigations:
+  - Capture one real pull_request run where `hash_compare_relevant=true` and verify `Compare
+    snapshot hashes (blocking)` executes.
+  - Capture one real pull_request run where `hash_compare_relevant=false` and verify the
+    hash-compare step is skipped.
+  - Attach run URLs and step evidence to the task closeout and then close this risk.
+
+validation:
+  - node --test tools/ci/emit-scope.test.mjs
+  - node --test tools/ci/workflow-pattern-parity.test.mjs
+  - node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json

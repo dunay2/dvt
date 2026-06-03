@@ -2,7 +2,7 @@
 title: Runs Frontend Architecture
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-11
+last_reviewed: 2026-05-08
 domain: frontend
 ---
 
@@ -25,6 +25,7 @@ Primary code anchors:
 - [runWorkbenchStateModel.ts](../../../../../apps/web/src/app/views/runs/runWorkbenchStateModel.ts)
 - [runWorkspaceFacade.ts](../../../../../apps/web/src/app/services/runs/runWorkspaceFacade.ts)
 - [runsService.ts](../../../../../apps/web/src/app/services/runs/runsService.ts)
+- [runEventTimelineModel.ts](../../../../../apps/web/src/app/services/runs/runEventTimelineModel.ts)
 
 Current routes:
 
@@ -36,7 +37,7 @@ Current composition:
 - list state when no `runId` is selected;
 - workspace detail state when a run is selected;
 - snapshot card is always present;
-- timeline card is available, empty, or degraded based on runtime events.
+- timeline table is available, empty, or degraded based on runtime events.
 
 ## Runs Workbench State Contract
 
@@ -69,7 +70,7 @@ flowchart TD
   WorkspaceLoad --> RunMissing["RunMissingState"]
   WorkspaceLoad --> RunWorkspace["RunWorkspaceState"]
   RunWorkspace --> TimelineState{"timeline state"}
-  TimelineState --> TimelineAvailable["timeline cards"]
+  TimelineState --> TimelineAvailable["timeline rows"]
   TimelineState --> TimelineEmpty["empty timeline note"]
   TimelineState --> TimelineDegraded["RunDegradedState notice"]
 ```
@@ -157,12 +158,38 @@ Current residual constraint after that fix:
 - timeline is route-composed when available, but step/artifact/node detail
   still need the later `F-09` through `F-11` convergence work.
 
+## F-10 Event Timeline Convergence
+
+F-10 closes the live event chronology gap between the shell console and the
+durable Runs workspace. The local event stream model owns ordering, duplicate
+collapse, active-status polling posture, and cursor preservation before either
+surface renders events.
+
+```mermaid
+flowchart LR
+  Events["GET /runs/:runId/events"] --> TimelineModel["runEventTimelineModel"]
+  TimelineModel --> Console["useConsoleLogStream"]
+  TimelineModel --> Facade["RunWorkspaceFacade"]
+  Console --> Terminal["BottomConsoleDrawer terminal lines"]
+  Facade --> Workspace["RunWorkspaceStateView"]
+  Workspace --> Table["RunEventTimelineTable"]
+```
+
+Rules:
+
+1. Console and Runs must consume the same timeline ordering and dedupe model.
+2. Console remains a shell companion stream.
+3. Runs remains durable snapshot-plus-timeline authority.
+4. Timeline events remain chronology-only and must not infer snapshot evidence.
+
 Canonical runtime contract baseline docs:
 
 - [Frontend Runtime Contract Technical Manual](./frontend-runtime-contract-technical-manual.md)
 - [Frontend Runtime Contract User Manual](./frontend-runtime-contract-user-manual.md)
 - [Frontend Fowler Implementation Pattern](../frontend-fowler-implementation-pattern.md)
 - [F-07 Frontend Runtime Contract Baseline Plan](../../../../planning/proposals/mandatory/runtime-and-contracts/f-07-frontend-runtime-contract-baseline-plan-20260404.md)
+- [Run Event Timeline Component](./run-event-timeline-component.md)
+- [Run Event Timeline User Stories](./run-event-timeline-user-stories.md)
 
 ## Related Pages
 

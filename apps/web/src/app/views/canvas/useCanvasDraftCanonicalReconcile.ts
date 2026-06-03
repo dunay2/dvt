@@ -1,36 +1,38 @@
 import { useEffect, type Dispatch, type SetStateAction } from 'react';
 
-import { reconcileSnapshot, type CanvasDraftSession } from './canvasDraftSession';
-import type { GraphSnapshotQueryState } from './canvasDraftLifecycle.types';
+import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
+import type { GraphAuthorityQueryState } from './canvasDraftLifecycle.types';
 import type { CanvasDraftLifecycleCanonicalSnapshot } from './canvasDraftLifecycleSnapshot';
 
 type UseCanvasDraftCanonicalReconcileArgs = {
-  graphSnapshotQuery: GraphSnapshotQueryState;
+  graphAuthorityQuery: GraphAuthorityQueryState;
   draftSession: CanvasDraftSession;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
   canonicalSnapshot: CanvasDraftLifecycleCanonicalSnapshot;
 };
 
 export function useCanvasDraftCanonicalReconcile({
-  graphSnapshotQuery,
+  graphAuthorityQuery,
   draftSession,
   setDraftSession,
   canonicalSnapshot,
 }: UseCanvasDraftCanonicalReconcileArgs) {
   useEffect(() => {
-    if (graphSnapshotQuery.isPending || graphSnapshotQuery.isError) {
+    if (graphAuthorityQuery.isPending || graphAuthorityQuery.isError) {
       return;
     }
     if (draftSession.syncState === 'bootstrapping') {
       return;
     }
 
-    setDraftSession((currentSession) => reconcileSnapshot(currentSession, canonicalSnapshot));
+    setDraftSession((currentSession) =>
+      canvasDraftSession.workingSet.reconcileSnapshot(currentSession, canonicalSnapshot)
+    );
   }, [
     canonicalSnapshot,
     draftSession.syncState,
-    graphSnapshotQuery.isError,
-    graphSnapshotQuery.isPending,
+    graphAuthorityQuery.isError,
+    graphAuthorityQuery.isPending,
     setDraftSession,
   ]);
 }

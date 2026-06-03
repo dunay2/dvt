@@ -1,4 +1,4 @@
 #!/bin/sh
 set -e
 
-pnpm run precommit
+pnpm run hooks:precommit

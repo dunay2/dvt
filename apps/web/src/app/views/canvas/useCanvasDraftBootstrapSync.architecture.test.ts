@@ -1,10 +1,10 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const BOOTSTRAP_SYNC_SOURCE = readFileSync(
-  path.resolve(import.meta.dirname, 'useCanvasDraftBootstrapSync.ts'),
-  'utf8'
+import { readArchitectureSiblingSource } from '../architecture.test.support';
+
+const BOOTSTRAP_SYNC_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasDraftBootstrapSync.ts'
 );
 
 describe('useCanvasDraftBootstrapSync architecture', () => {

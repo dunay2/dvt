@@ -4,14 +4,16 @@ import { cn } from '../../components/ui/utils';
 import type { CostViewCopy } from './copy';
 
 type CostCoverageCardProps = {
-  readonly nodesWithCostCount: number;
-  readonly totalDuration: number;
+  readonly stepsWithUsageCount: number;
+  readonly totalDurationSeconds: number;
+  readonly observedWindowLabel: string;
   readonly copy: CostViewCopy;
 };
 
 export function CostCoverageCard({
-  nodesWithCostCount,
-  totalDuration,
+  stepsWithUsageCount,
+  totalDurationSeconds,
+  observedWindowLabel,
   copy,
 }: CostCoverageCardProps) {
   return (
@@ -20,10 +22,13 @@ export function CostCoverageCard({
       <p className="text-sm text-[var(--text-muted)]">{copy.coverageDescription}</p>
       <div className="mt-3 text-sm text-[var(--text-default)]">
         <div>
-          {copy.nodesWithCostData}: {nodesWithCostCount}
+          {copy.stepsWithUsageData}: {stepsWithUsageCount}
         </div>
         <div>
-          {copy.totalObservedDuration}: {totalDuration.toFixed(1)}s
+          {copy.totalObservedDuration}: {totalDurationSeconds.toFixed(1)}s
+        </div>
+        <div>
+          {copy.observedWindow}: <span className="font-mono">{observedWindowLabel}</span>
         </div>
       </div>
     </Card>

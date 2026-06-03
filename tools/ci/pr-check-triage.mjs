@@ -179,6 +179,90 @@ export function extractFailureSnippet(logText, options = {}) {
   return lines.slice(start, start + maxLines).join('\n');
 }
 
+export function isMissingActionsJobLog(error) {
+  const text = `${error?.message ?? ''}\n${error?.stderr ?? ''}\n${error?.stdout ?? ''}`;
+  return /log not found:/iu.test(text);
+}
+
+function plural(count, singular, pluralValue = `${singular}s`) {
+  return count === 1 ? singular : pluralValue;
+}
+
+export function evaluateCheckGate(summary) {
+  if (summary?.status === 'no_pr') {
+    return {
+      status: 'no_pr',
+      exitCode: 3,
+      message: 'No pull request found for the selected branch.',
+    };
+  }
+
+  const failed = summary?.counts?.failed ?? 0;
+  const pending = summary?.counts?.pending ?? 0;
+
+  if (failed > 0) {
+    return {
+      status: 'failed',
+      exitCode: 1,
+      message: `${failed} failed ${plural(failed, 'check')}, ${pending} pending ${plural(pending, 'check', 'checks')}.`,
+    };
+  }
+
+  if (pending > 0) {
+    return {
+      status: 'pending',
+      exitCode: 2,
+      message: `${pending} pending ${plural(pending, 'check', 'checks')}.`,
+    };
+  }
+
+  return {
+    status: 'passed',
+    exitCode: 0,
+    message: 'All GitHub Actions checks are settled and green.',
+  };
+}
+
+function checkNames(checks) {
+  return (checks ?? []).map((check) => check.name ?? 'unknown-check');
+}
+
+function appendNamedSection(lines, title, checks) {
+  const names = checkNames(checks);
+  if (names.length === 0) {
+    return;
+  }
+
+  lines.push('', title);
+  for (const name of names) {
+    lines.push(`- ${name}`);
+  }
+}
+
+export function formatCheckGateText(summary) {
+  if (summary?.status === 'no_pr') {
+    return summary.message ?? 'No pull request found for the selected branch.';
+  }
+
+  const lines = [
+    `PR #${summary.pr.number} [${summary.pr.headRefName}]`,
+    summary.pr.url,
+    [
+      `failed=${summary.counts.failed}`,
+      `pending=${summary.counts.pending}`,
+      `successful=${summary.counts.successful}`,
+      `skipped=${summary.counts.skipped}`,
+      `external=${summary.counts.external}`,
+    ].join(' '),
+  ];
+
+  appendNamedSection(lines, 'FAILED', summary.failed);
+  appendNamedSection(lines, 'PENDING', summary.pending);
+  appendNamedSection(lines, 'EXTERNAL', summary.external);
+
+  return lines.join('\n');
+}
+
 async function resolvePrContext(prRef) {
   try {
     const args = ['pr', 'view'];
@@ -229,7 +313,7 @@ function fetchJobLog(jobId) {
   return runGh(['run', 'view', '--job', jobId, '--log']);
 }
 
-async function buildFirstFailurePayload(prData) {
+export async function buildFirstFailurePayload(prData, options = {}) {
   const summary = buildSummaryPayload(prData);
   const failingCheck = pickFirstFailingGitHubActionsCheck(prData.statusCheckRollup);
 
@@ -250,7 +334,24 @@ async function buildFirstFailurePayload(prData) {
     };
   }
 
-  const logText = fetchJobLog(parsedUrl.jobId);
+  let logText;
+  try {
+    logText = (options.fetchJobLog || fetchJobLog)(parsedUrl.jobId);
+  } catch (error) {
+    if (isMissingActionsJobLog(error)) {
+      return {
+        status: 'unstarted_actions_failure',
+        pr: summary.pr,
+        check: failingCheck,
+        job: parsedUrl,
+        message:
+          'GitHub Actions did not expose job logs for this failure. Treat it as an external CI infrastructure or billing block unless a later rerun assigns a runner and executes steps.',
+      };
+    }
+
+    throw error;
+  }
+
   return {
     status: 'ok',
     pr: summary.pr,
@@ -264,6 +365,7 @@ function parseArgs(argv) {
   const args = {
     command: null,
     pr: null,
+    json: false,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -279,6 +381,11 @@ function parseArgs(argv) {
       index += 1;
       continue;
     }
+
+    if (current === '--json') {
+      args.json = true;
+      continue;
+    }
   }
 
   return args;
@@ -286,26 +393,48 @@ function parseArgs(argv) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  if (!args.command || !['summary', 'first-failure'].includes(args.command)) {
+  if (!args.command || !['summary', 'first-failure', 'gate'].includes(args.command)) {
     throw new Error(
-      'Usage: node tools/ci/pr-check-triage.mjs <summary|first-failure> [--pr <ref>]'
+      'Usage: node tools/ci/pr-check-triage.mjs <summary|first-failure|gate> [--pr <ref>]'
     );
   }
 
   const prData = await resolvePrContext(args.pr);
   if (!prData) {
+    const payload = { status: 'no_pr', message: 'No pull request found for the selected branch.' };
     process.stdout.write(
-      `${JSON.stringify({ status: 'no_pr', message: 'No pull request found for the selected branch.' }, null, 2)}\n`
+      args.command === 'gate' && !args.json
+        ? `${formatCheckGateText(payload)}\n`
+        : `${JSON.stringify(payload, null, 2)}\n`
     );
+    if (args.command === 'gate') {
+      process.exitCode = 3;
+    }
     return;
   }
 
-  const payload =
-    args.command === 'summary'
-      ? buildSummaryPayload(prData)
-      : await buildFirstFailurePayload(prData);
+  const payload = await (async () => {
+    if (args.command === 'summary') {
+      return buildSummaryPayload(prData);
+    }
+    if (args.command === 'first-failure') {
+      return buildFirstFailurePayload(prData);
+    }
 
-  process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
+    const summary = buildSummaryPayload(prData);
+    const gate = evaluateCheckGate(summary);
+    process.exitCode = gate.exitCode;
+    return {
+      ...summary,
+      gate,
+    };
+  })();
+
+  process.stdout.write(
+    args.command === 'gate' && !args.json
+      ? `${formatCheckGateText(payload)}\n`
+      : `${JSON.stringify(payload, null, 2)}\n`
+  );
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

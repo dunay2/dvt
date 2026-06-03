@@ -2,7 +2,7 @@
 title: Engine Roadmap
 status: Active
 owner: Architecture / Engine / Delivery
-last_reviewed: 2026-04-10
+last_reviewed: 2026-05-22
 ---
 
 # Engine Roadmap
@@ -42,10 +42,12 @@ What is true now:
 
 - Temporal is the only implemented provider runtime path.
 - Mock exists as a testing/runtime support surface.
-- Conductor still exists as residual type, contract, and stub debt in parts of
-  the repo, but it is not a near-term delivery program.
+- The active runtime-provider vocabulary is now aligned with executable code:
+  Temporal is the only implemented provider runtime.
 - The active engine architecture program is `WE-HX`, not a quarterly phase
   ladder.
+- The active `WE-HX` posture is a hardcut canonical map and use-case
+  decomposition path over current engine use cases.
 - The active value path after the recent signal-boundary cleanup is the first
   execution-first transformation runtime vertical on top of landed `MW-C1`
   (`TF-C2-A`, `TF-C2-B`).
@@ -58,7 +60,7 @@ What is true now:
 flowchart LR
   Landed["Landed: StartRunProtocol, signal narrowing, runtime-owned PAUSE/RESUME"] --> Hex["WE-HX derivation"]
   Hex --> Runtime["Landed MW-C1 plus active TF-C2 executor and evidence vertical"]
-  Hex --> Cleanup["AR-A8 remove Conductor illusion"]
+  Hex --> Cleanup["AR-A8 provider-vocabulary hard cut"]
   Runtime --> Later["Later: second-runtime decision only after truthful boundary cleanup"]
 ```
 
@@ -66,13 +68,13 @@ flowchart LR
 
 | Track                                             | Governing tasks      | Status      | What it changes                                                                                  | What it unblocks                                                   |
 | ------------------------------------------------- | -------------------- | ----------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
-| Canonical engine narrative replacement            | `WE-HX-0`            | In progress | Replaces stale engine navigation with canonical subsystem docs and current routing               | Makes the rest of the engine pack readable and governable          |
+| Canonical engine narrative replacement            | `WE-HX-0`            | Completed   | Replaces stale engine navigation with canonical subsystem docs and current routing               | Makes the rest of the engine pack readable and governable          |
 | Boundary ownership mapping                        | `WE-HX-1`            | Queued      | Locks ownership for `PlanRef`, execution-context, artifact, and resolver seams                   | Enables facade narrowing without ownership drift                   |
-| Compatibility-facade narrowing                    | `WE-HX-2`            | Queued      | Shrinks `WorkflowEngine` toward delegation over narrow use-case services                         | Enables real decomposition and cleanup of portability claims       |
+| Facade use-case narrowing                         | `WE-HX-2`            | Queued      | Shrinks `WorkflowEngine` toward delegation over narrow use-case services                         | Enables real decomposition and cleanup of portability claims       |
 | Start-run decomposition                           | `WE-HX-3`            | Queued      | Narrows admission, dispatch, failure, and bootstrap concerns into smaller collaborators          | Makes engine orchestration easier to change safely                 |
 | Query and signal split hardening                  | `WE-HX-4`            | Completed   | Closed signal ownership, canonical signal narrowing, provider mapping, and read/enrichment split | Removed a major source of semantic drift                           |
-| Provider and telemetry seam tightening            | `WE-HX-5`, `WE-HX-6` | Queued      | Consolidates provider resolution, telemetry seams, and fitness checks                            | Reduces orchestration duplication and hidden boundary drift        |
-| Conductor illusion cleanup                        | `AR-A8`              | Queued      | Removes stub-driven portability promises from runtime typing and docs                            | Prevents roadmap and product claims from outrunning implementation |
+| Provider, telemetry, and boundary fitness         | `WE-HX-5`, `WE-HX-6` | In progress | Consolidates provider resolution, telemetry seams, test doubles, and semantic fitness checks     | Reduces orchestration duplication and hidden boundary drift        |
+| Provider-vocabulary hard cut                      | `AR-A8`              | Completed   | Removes stub-driven portability promises from runtime typing and docs                            | Prevents roadmap and product claims from outrunning implementation |
 | Step-kind dispatch generalization                 | `MW-C1`              | Completed   | Moved Temporal runtime dispatch from dbt-only assumptions to step-kind routing                   | Enabled capability-specific non-dbt execution paths                |
 | First PostgreSQL execution-first runtime vertical | `TF-C2-A`, `TF-C2-B` | In progress | Adds executor path plus caller-visible materialization evidence                                  | Closes the first real transformation run loop                      |
 
@@ -81,11 +83,11 @@ flowchart LR
 ```mermaid
 flowchart LR
   HX0["WE-HX-0 docs replacement"] --> HX1["WE-HX-1 ownership mapping"]
-  HX1 --> HX2["WE-HX-2 compatibility facade narrowing"]
+  HX1 --> HX2["WE-HX-2 facade use-case narrowing"]
   HX2 --> HX3["WE-HX-3 startRun decomposition"]
-  HX2 --> A8["AR-A8 remove Conductor illusion"]
+  HX2 --> A8["AR-A8 provider-vocabulary hard cut"]
   HX3 --> HX5["WE-HX-5 provider and telemetry seams"]
-  HX5 --> HX6["WE-HX-6 fitness checks"]
+  HX5 --> HX6["WE-HX-6 semantic boundary fitness"]
   HX3 --> MW["MW-C1 step dispatcher (landed)"]
   MW --> TFC2A["TF-C2-A PostgreSQL executor path"]
   TFC2A --> TFC2B["TF-C2-B caller-visible evidence"]
@@ -108,14 +110,14 @@ These are not future engine roadmap items anymore:
 
 These topics should not be treated as current engine delivery commitments:
 
-- a near-term Conductor production adapter program;
+- a near-term second-runtime production adapter program;
 - multi-language SDK delivery as an engine-core roadmap item;
 - plugin marketplace work as part of the engine roadmap;
 - staffing, budget, and quarter-based gate tables from the February snapshot.
 
-If Conductor becomes real work again, it needs an explicit ADR-backed plan and
-lane tasking first. Until then, it is residual boundary debt and historical
-planning context, not an active phase.
+If a second runtime becomes real work again, it needs an explicit ADR-backed
+plan and lane tasking first. Until then, old provider-draft material is
+historical context, not an active phase.
 
 ## Decision rules
 

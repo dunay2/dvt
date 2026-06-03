@@ -337,3 +337,7 @@ Definition of done:
 
 - [S08 gap review](../../../reviews/20260402-s08-plan-record-plan-store-gap-review.md)
 - [ADR-0043](../../../../adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md)
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `RUNTIME-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

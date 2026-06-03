@@ -1,3 +1,7 @@
+/**
+ * Owned concern: canonical HTTP error envelope primitives and transport
+ * serialization for `apps/api` entrypoints.
+ */
 import type { FastifyReply } from 'fastify';
 
 import { HTTP_STATUS_CODE, type HttpStatusCode } from '../../routes/httpStatus.js';

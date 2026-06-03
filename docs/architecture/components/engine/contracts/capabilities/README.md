@@ -28,8 +28,7 @@ Capability matrix: declares which capabilities each adapter implements.
 - Engine validation: Query this file to check if
   `executionPolicy.requiresCapabilities` are supported by
   `RunContext.targetAdapter`.
-- Example: If `targetAdapter="conductor"` and execution policy requires
-  `["PAUSE_NATIVE"]`, validation fails (Conductor only has `PAUSE_EMULATED`).
+- Current active provider: `temporal`.
 
 ### `validation-report.schema.json`
 
@@ -49,7 +48,7 @@ interface RunExecutionPolicy {
 }
 
 interface RunContext {
-  targetAdapter: 'temporal' | 'conductor' | 'mock';
+  targetAdapter: 'temporal';
 }
 ```
 
@@ -115,6 +114,7 @@ async function validatePlan(
 ```ts
 async function startRun(
   plan: ExecutionPlan,
+  planRef: PlanRef,
   executionPolicy: RunExecutionPolicy,
   ctx: RunContext
 ): Promise<EngineRunRef> {
@@ -134,7 +134,7 @@ async function startRun(
   }
 
   // Proceed
-  return await adapter.startRun(plan, ctx);
+  return await adapter.startRun(planRef, ctx);
 }
 ```
 
@@ -154,6 +154,5 @@ When adding a new capability:
 
 - [IWorkflowEngine.v1.md](../engine/IWorkflowEngine.v1.md)
 - [ExecutionSemantics.v1.md](../engine/ExecutionSemantics.v1.md)
-- [TemporalAdapter.spec.md](../../adapters/temporal/TemporalAdapter.spec.md)
+- [temporal-adapter-spec.md](../../adapters/temporal/temporal-adapter-spec.md)
 - [Temporal Capabilities](https://docs.temporal.io/)
-- [Conductor Capabilities](https://conductor.netflix.com/)

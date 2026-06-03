@@ -27,6 +27,7 @@ import {
   PROTECTED_RUNTIME_ISSUER,
   TENANT_ACTIONS_FULL,
   TENANT_ID,
+  TEMPORAL_ADDRESS,
 } from './protectedRuntime.integration.shared.js';
 
 type StoredEnv = Record<string, string | undefined>;
@@ -43,8 +44,10 @@ export async function bootstrapProtectedRuntimeState(
   state: ProtectedRuntimeBootstrapState,
   schema: string
 ): Promise<void> {
-  if (!DATABASE_URL) {
-    throw new Error('DATABASE_URL or DVT_PG_URL is required for protected runtime integration tests');
+  if (!DATABASE_URL || !TEMPORAL_ADDRESS) {
+    throw new Error(
+      'DATABASE_URL/DVT_PG_URL and TEMPORAL_ADDRESS are required for protected runtime integration tests'
+    );
   }
 
   state.jwksServer = await startJwksServer();
@@ -58,6 +61,10 @@ export async function bootstrapProtectedRuntimeState(
     'OIDC_AUDIENCE',
     'OIDC_ALGORITHMS',
     'DVT_ADMIN_ROUTES_ENABLED',
+    'TEMPORAL_ADDRESS',
+    'TEMPORAL_NAMESPACE',
+    'TEMPORAL_TASK_QUEUE',
+    'TEMPORAL_IDENTITY',
   ]);
 
   process.env.NODE_ENV = 'test';
@@ -69,6 +76,7 @@ export async function bootstrapProtectedRuntimeState(
   process.env.OIDC_AUDIENCE = PROTECTED_RUNTIME_AUDIENCE;
   process.env.OIDC_ALGORITHMS = 'RS256';
   process.env.DVT_ADMIN_ROUTES_ENABLED = 'true';
+  process.env.TEMPORAL_ADDRESS = TEMPORAL_ADDRESS;
 
   const built = await buildApp();
   state.app = built.app;

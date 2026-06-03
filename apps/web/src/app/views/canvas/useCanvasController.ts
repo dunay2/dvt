@@ -1,7 +1,15 @@
-import { type NodeTypes } from '@xyflow/react';
+/** Owned concern: compose Canvas environment, authoring runtime, adapter seams, and execution seams into one route facade. */
+import { useMemo } from 'react';
 
-import DbtNodeComponent from '../../components/canvas/DbtNodeComponent';
-import { getRegisteredPluginIds } from '../../plugins/registry';
+import {
+  resolveActiveCanvasAuthoringMode,
+  resolveActiveCanvasGraphStrategy,
+  selectActiveCanvasExecutionStrategy,
+  selectActiveCanvasGraphStrategy,
+} from './canvasActiveGraphStrategy';
+import { buildCanvasControllerViewModel } from './canvasControllerViewModel';
+import { applyCanvasDraftPostureToRuntimePolicyInput } from './canvasDraftAccessPostureModel';
+import { resolveCanvasRuntimePolicy } from './canvasRuntimePolicy';
 import { useCanvasAuthoringRuntime } from './useCanvasAuthoringRuntime';
 import { useCanvasControllerEnvironment } from './useCanvasControllerEnvironment';
 import { useCanvasControllerReadModel } from './useCanvasControllerReadModel';
@@ -10,20 +18,19 @@ import { useCanvasGraphHandlers } from './useCanvasGraphHandlers';
 import { useCanvasLayoutPersistence } from './useCanvasLayoutPersistence';
 import { useCanvasMutationHandlers } from './useCanvasMutationHandlers';
 import { useCanvasOverlayModel } from './useCanvasOverlayModel';
+import { useCanvasInspectorCommands } from './useCanvasInspectorCommands';
 import { useCanvasSelectionSync } from './useCanvasSelectionSync';
 
-const nodeTypes: NodeTypes = {
-  dbtNode: DbtNodeComponent,
-};
-
 export function useCanvasController() {
+  const environment = useCanvasControllerEnvironment();
   const {
     dataSourceMode,
     capabilities,
     platformHealthQuery,
-    graphStrategy,
-    canvasAuthoringMode,
-    workspaceService,
+    workspaceFilesQuery,
+    workspaceFileContentCommand,
+    workspacePortCapabilities,
+    workspaceGraphDraftAuthoringPort,
     plansService,
     runsService,
     sessionContext,
@@ -31,44 +38,82 @@ export function useCanvasController() {
     workspaceBootstrapConfig,
     navigationActions,
     store,
-  } = useCanvasControllerEnvironment();
+  } = environment;
 
-  const {
-    backendPosture,
-    graphModel,
-    draftSession,
-    setDraftSession,
-    draftSaveStatus,
-    reloadLatestDraft,
-    adoptCurrentWorkspaceSnapshot,
-    visibleScope,
-    uiScope,
-    executionScope,
-    isMissingRemoteDraft,
-    isStaleDraftConflict,
-    hasDraftProjectionGap,
-    draftRecoveryReason,
-    draftToolbarState,
-    isDraftRecoveryBlocked,
-    canMutateGraph,
-  } = useCanvasAuthoringRuntime({
+  const authoringRuntime = useCanvasAuthoringRuntime({
     dataSourceMode,
     platformHealthQuery: {
       isPending: platformHealthQuery.isPending,
       isError: platformHealthQuery.isError,
       data: platformHealthQuery.data,
       error: platformHealthQuery.error,
+      failureCount: platformHealthQuery.failureCount,
+      errorUpdatedAt: platformHealthQuery.errorUpdatedAt,
     },
-    workspaceService,
+    workspaceGraphDraftAuthoringPort,
     workspaceLayoutKey: store.workspaceLayoutKey,
-    graphStrategy,
     columnLevelLineageEnabled: store.columnLevelLineageEnabled,
     persistedNodePositions: store.persistedNodePositions,
     selectedNodeIds: store.selectedNodeIds,
     inspectorNodeId: store.inspectorNodeId,
-    canEditDraftTransport: store.userPermissions.canEditEdges,
+    canPersistGraphDraftTransport: store.userPermissions.canPersistGraphDraft,
+    canMutateGraphTransport: store.userPermissions.canEditEdges,
+    workspaceScope: sessionContext.getWorkspaceScopeSnapshot(),
+    previewProvenanceConfig: workspaceBootstrapConfig,
     setCanvasNodePositions: store.setCanvasNodePositions,
   });
+  const {
+    graphModel,
+    draftSession,
+    setDraftSession,
+    visibleScope,
+    uiScope,
+    executionScope,
+    isDraftRecoveryBlocked,
+    canMutateGraph,
+    draftReadModel,
+    draftAccessPosture,
+  } = authoringRuntime;
+  const activeCanvasGraphStrategyResolution = useMemo(
+    () => resolveActiveCanvasGraphStrategy(draftReadModel, capabilities),
+    [capabilities, draftReadModel?.record?.draft.canvas.kind]
+  );
+  const graphStrategy = selectActiveCanvasGraphStrategy(activeCanvasGraphStrategyResolution);
+  const executionStrategy = selectActiveCanvasExecutionStrategy(
+    activeCanvasGraphStrategyResolution
+  );
+  const canvasAuthoringMode = useMemo(
+    () => resolveActiveCanvasAuthoringMode(draftReadModel),
+    [draftReadModel?.record?.draft.canvas.kind]
+  );
+  const runtimePolicy = useMemo(() => {
+    const draftAdmission = applyCanvasDraftPostureToRuntimePolicyInput({
+      posture: draftAccessPosture,
+      canMutateGraph,
+      canPlan: store.userPermissions.canPlan && !isDraftRecoveryBlocked,
+      canRun: store.userPermissions.canRun && !isDraftRecoveryBlocked,
+      canReloadLatestDraft: authoringRuntime.draftToolbarState.showReloadAction,
+    });
+
+    return resolveCanvasRuntimePolicy({
+      activeRuntime: activeCanvasGraphStrategyResolution,
+      canMutateGraph: draftAdmission.canMutateGraph,
+      canOpenSourceImport: workspacePortCapabilities.sourceImportAvailable,
+      canPlan: draftAdmission.canPlan,
+      canRun: draftAdmission.canRun,
+      canReloadLatestDraft: draftAdmission.canReloadLatestDraft,
+    });
+  }, [
+    activeCanvasGraphStrategyResolution,
+    authoringRuntime.draftToolbarState.showReloadAction,
+    canMutateGraph,
+    draftAccessPosture,
+    isDraftRecoveryBlocked,
+    store.userPermissions.canPlan,
+    store.userPermissions.canRun,
+    workspacePortCapabilities.sourceImportAvailable,
+  ]);
+  const canMutateActiveCanvas = runtimePolicy.commands.canMutateGraph;
 
   useCanvasSelectionSync({
     isBootstrapping: draftSession.syncState === 'bootstrapping',
@@ -81,15 +126,17 @@ export function useCanvasController() {
 
   const persistence = useCanvasLayoutPersistence({
     hasHydrated: store._hasHydrated,
-    isGraphQueryPending: graphModel.graphSnapshotQuery.isPending,
+    isGraphQueryPending: graphModel.graphAuthorityQuery.isPending,
     workspaceLayoutKey: store.workspaceLayoutKey,
+    nodes: graphModel.nodes,
     persistedViewport: store.persistedViewport,
+    persistedNodePositions: store.persistedNodePositions,
     setCanvasViewport: store.setCanvasViewport,
     setCanvasNodePositions: store.setCanvasNodePositions,
   });
 
   const mutationHandlers = useCanvasMutationHandlers({
-    canMutateGraph,
+    canMutateGraph: canMutateActiveCanvas,
     workspaceLayoutKey: store.workspaceLayoutKey,
     graphModel,
     draftSession,
@@ -100,6 +147,7 @@ export function useCanvasController() {
     setInspectorNode: store.setInspectorNode,
     showInspectorPanel: store.showInspectorPanel,
     setCurrentPlan: store.setCurrentPlan,
+    onLayoutComplete: persistence.handleNodePositionsSave,
   });
 
   const graphHandlers = useCanvasGraphHandlers({
@@ -110,7 +158,11 @@ export function useCanvasController() {
     selectedNodeIds: uiScope.selectedNodeIds,
     inspectorNodeId: uiScope.inspectorNodeId,
     draftSession,
-    canEditEdges: canMutateGraph,
+    canEditEdges: canMutateActiveCanvas,
+    gridSize: store.gridSize,
+    canvasSnapToGrid: store.canvasSnapToGrid,
+    runtimeCapabilities: capabilities,
+    allowsCanonicalNode: runtimePolicy.admission.allowsCanonicalNode,
     focusMode: store.focusMode,
     inspectorPanelVisible: store.inspectorPanelVisible,
     columnLevelLineageEnabled: store.columnLevelLineageEnabled,
@@ -134,14 +186,18 @@ export function useCanvasController() {
   const executionActions = useCanvasExecutionActions({
     plansService,
     runsService,
-    workspaceService,
+    workspaceFilesQuery,
+    workspaceFileContentCommand,
+    executionStrategy,
     canonicalNodes: visibleScope.canonicalNodes,
     canonicalEdges: visibleScope.canonicalEdges,
     selectedNodeIds: executionScope.selectedNodeIds,
     workspaceNodeIds: executionScope.workspaceNodeIds,
-    canPlan: store.userPermissions.canPlan && !isDraftRecoveryBlocked,
-    canRun: store.userPermissions.canRun && !isDraftRecoveryBlocked,
+    flushDraftForExecution: authoringRuntime.flushDraftForExecution,
+    canPlan: runtimePolicy.commands.canPlan,
+    canRun: runtimePolicy.commands.canRun,
     sessionContext,
+    executionEnvironmentId: draftReadModel?.record?.draft.canvas.environmentId,
     shellFeedback,
     previewProvenanceConfig: workspaceBootstrapConfig,
     consolePanelVisible: store.consolePanelVisible,
@@ -152,88 +208,42 @@ export function useCanvasController() {
     onRunStarted: navigationActions.handleRunStarted,
   });
 
-  const { transformationValidation, nodesWithImpact, inspectorNode } =
-    useCanvasControllerReadModel({
+  const { transformationValidation, nodesWithImpact, inspectorNode } = useCanvasControllerReadModel(
+    {
       graphModel,
       visibleScope,
       executionScope,
       uiScope,
       overlayModel,
       graphHandlers,
-      canMutateGraph,
+      runtimeCapabilities: capabilities,
+      canMutateGraph: canMutateActiveCanvas,
       columnLevelLineageEnabled: store.columnLevelLineageEnabled,
       impactOverlayEnabled: store.impactOverlayEnabled,
-    });
-
-  return {
-    dataSourceMode,
-    isBackendCheckPending: backendPosture.isBackendCheckPending,
-    backendReady: backendPosture.backendReady,
-    backendBlockMessage: backendPosture.backendBlockMessage,
-    isLoadingGraph: graphModel.graphSnapshotQuery.isPending,
-    graphErrorMessage:
-      graphModel.graphSnapshotQuery.error instanceof Error
-        ? graphModel.graphSnapshotQuery.error.message
-        : null,
-    focusMode: store.focusMode,
-    explorerPanelVisible: store.explorerPanelVisible,
-    inspectorPanelVisible: store.inspectorPanelVisible,
-    explorerNodes: graphModel.canonicalNodes,
+    }
+  );
+  const inspectorCommands = useCanvasInspectorCommands({
     inspectorNode,
-    activeRunId: overlayModel.activeRunId,
-    registeredPlugins: getRegisteredPluginIds(capabilities),
-    userPermissions: store.userPermissions,
-    canvasAuthoringMode,
-    nodesWithImpact,
-    edges: graphModel.edges,
-    nodeTypes,
-    gridSize: store.gridSize,
-    canvasPalette: store.canvasPalette,
-    viewport: store.persistedViewport,
-    onNodesChange: mutationHandlers.handleNodesChange,
-    onEdgesChange: mutationHandlers.handleEdgesChange,
-    onConnect: graphHandlers.onConnect,
-    handleNodeClick: graphHandlers.handleNodeClick,
-    onSelectionChange: graphHandlers.onSelectionChange,
-    handleViewportChange: persistence.handleViewportChange,
-    handleNodeDragStop: persistence.handleNodeDragStop,
-    handleDrop: graphHandlers.handleDrop,
-    handleDragOver: graphHandlers.handleDragOver,
-    handleSourceImportComplete: mutationHandlers.handleSourceImportComplete,
-    importedNodeFocusIds: mutationHandlers.importedNodeFocusIds,
-    handleImportedNodeFocusComplete: mutationHandlers.handleImportedNodeFocusComplete,
-    hideExplorerPanel: store.hideExplorerPanel,
-    showExplorerPanel: store.showExplorerPanel,
-    hideInspectorPanel: store.hideInspectorPanel,
-    showInspectorPanel: store.showInspectorPanel,
-    handleAutoLayout: graphHandlers.handleAutoLayout,
-    handleToggleCostOverlay: overlayModel.handleToggleCostOverlay,
-    toggleImpactOverlay: store.toggleImpactOverlay,
-    toggleColumnLevelLineage: store.toggleColumnLevelLineage,
-    handlePlan: executionActions.handlePlan,
-    handleStartRun: executionActions.handleStartRun,
-    canStartRun: executionActions.canStartRun && !isDraftRecoveryBlocked,
-    planStatusSummary: executionActions.planStatusSummary,
-    exclusiveOverlayMode: overlayModel.exclusiveOverlayMode,
-    canUseCostOverlay: overlayModel.canUseCostOverlay,
-    impactOverlayEnabled: store.impactOverlayEnabled,
-    columnLevelLineageEnabled: store.columnLevelLineageEnabled,
-    transformationValidation,
-    planModalOpen: executionActions.planModalOpen,
-    setPlanModalOpen: executionActions.setPlanModalOpen,
-    draftSaveStatus,
-    draftRecoveryReason,
-    draftToolbarState,
-    draftConflictRevision:
-      draftSession.syncState === 'conflict' ? draftSession.draftRevision : null,
-    hasStaleDraftVersion: isStaleDraftConflict,
-    hasMissingRemoteDraft: isMissingRemoteDraft,
-    hasDraftProjectionGap,
-    reloadLatestDraft,
-    adoptCurrentWorkspaceSnapshot,
-    currentPlan: store.currentPlan,
-    confirmEdgeModal: graphHandlers.confirmEdgeModal,
-    setConfirmEdgeModal: graphHandlers.setConfirmEdgeModal,
-    confirmEdgeCreation: graphHandlers.confirmEdgeCreation,
-  };
+    setDraftSession,
+  });
+
+  return buildCanvasControllerViewModel({
+    environment,
+    authoringRuntime,
+    persistence,
+    mutationHandlers,
+    graphHandlers,
+    overlayModel,
+    executionActions,
+    graphPolicy: {
+      canvasAuthoringMode,
+      runtimePolicy,
+    },
+    readModel: {
+      transformationValidation,
+      nodesWithImpact,
+      inspectorNode,
+    },
+    inspectorCommands,
+  });
 }

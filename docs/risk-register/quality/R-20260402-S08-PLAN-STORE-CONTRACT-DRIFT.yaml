@@ -1,7 +1,7 @@
 ---
 id: R-20260402-S08-PLAN-STORE-CONTRACT-DRIFT
 title: Persisted plan record contracts can drift back into dual truth and invalid state acceptance
-status: Open
+status: Mitigated
 date: 2026-04-02
 owners:
   - packages/@dvt/contracts
@@ -24,4 +24,7 @@ mitigations:
   - PlanRecord and PlanExecutabilityRecord are modeled as explicit discriminated unions.
   - Executability rejection codes are locked to the canonical planner vocabulary.
   - Contract docs, schema-sync tests, and validation tests now ship with the record family.
+residual_risk: >
+  Monitor future contract and port evolution to ensure scoped plan-record invariants remain enforced
+  and no unscoped lifecycle facade is reintroduced.
 ---

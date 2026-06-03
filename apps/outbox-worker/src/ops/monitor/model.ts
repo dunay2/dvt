@@ -1,3 +1,6 @@
+/**
+ * Owned concern: AR-C2 outbox monitor snapshots and Prometheus bucket policy.
+ */
 export type OutboxRuntimeState =
   | 'starting'
   | 'passive'
@@ -45,10 +48,13 @@ export interface OutboxDeliveryMetricsSnapshot {
   lastBatchClaimedCount: number;
   eventDeliveryLatencyBucketCounts: number[];
   eventDeliveryLatencyCount: number;
-  eventDeliveryLatencySumMs: number;
+  eventDeliveryLatencySumSeconds: number;
 }
 
 export interface OutboxRetentionMetricsSnapshot {
+  purgeConfigured: boolean;
+  retentionConfigured: boolean;
+  filesystemArchiveStorageConfigured: boolean;
   retentionCyclesTotal: number;
   retentionCycleFailuresTotal: number;
   retentionArchivedUnitsTotal: number;
@@ -57,15 +63,8 @@ export interface OutboxRetentionMetricsSnapshot {
   retentionLastFailureAtMs: number | null;
 }
 
-export const DELIVERY_EVENT_LATENCY_BUCKETS_MS = [
-  50,
-  100,
-  250,
-  500,
-  1000,
-  2500,
-  5000,
-  10000,
+export const DELIVERY_EVENT_LATENCY_BUCKETS_SECONDS = [
+  0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10,
 ] as const;
 
 export const RUNTIME_STATES: readonly OutboxRuntimeState[] = [

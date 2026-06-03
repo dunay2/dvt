@@ -1,3 +1,7 @@
+/**
+ * Owned concern: publish the shared admission-observability metric and log
+ * names consumed by decision and backlog telemetry adapters.
+ */
 export const ADMISSION_TELEMETRY_METRICS = Object.freeze({
   decisionTotal: 'dvt.admission.decision_total',
   rejectionTotal: 'dvt.admission.rejection_total',

@@ -1,15 +1,33 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "globalDependencies": [
+    "turbo.json",
+    ".github/actions/setup-node-pnpm/action.yml",
     "pnpm-workspace.yaml",
     "tsconfig.node-runtime.base.json",
     "tsconfig.package-bundler.base.json",
-    "scripts/skip-prebuild-if-orchestrated.cjs"
+    "scripts/skip-prebuild-if-orchestrated.cjs",
+    "scripts/skip-pretest-if-ci.cjs"
   ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", "**/*.tsbuildinfo"]
+      "outputs": ["dist/**", "**/*.tsbuildinfo"],
+      "env": ["DVT_CI"]
+    },
+    "lint": {
+      "outputs": [],
+      "env": ["DVT_CI"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "outputs": [],
+      "env": ["DVT_CI"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": [],
+      "env": ["DVT_CI"]
     }
   }
 }

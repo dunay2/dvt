@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RunEventPersisted } from '../../src/contracts/runEvents.js';
+import type { EventEnvelope } from '../../src/contracts/runEvents.js';
 import { applyRunEvent } from '../../src/core/SnapshotProjector.js';
 import type { RunBootstrapInput } from '../../src/ports/IRunStateStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
@@ -10,7 +10,7 @@ import { makeBootstrap } from './runBootstrapTestSupport.js';
 
 type InMemoryTxStoreInternals = {
   runState: {
-    eventsByRunId: Map<string, RunEventPersisted[]>;
+    eventsByRunId: Map<string, EventEnvelope[]>;
     snapshotByRunId: Map<string, ReturnType<typeof createDefaultWorkflowSnapshot>>;
     snapshotLastRunSeqByRunId: Map<string, number>;
   };

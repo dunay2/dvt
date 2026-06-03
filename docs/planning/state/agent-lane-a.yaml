@@ -2,7 +2,7 @@
 title: Contracts And State-Store Boundary
 owner: Product / Architecture / Delivery / Docs
 status: Active
-last_reviewed: '2026-04-20'
+last_reviewed: '2026-05-07'
 goal:
   Close the state-store boundary, retire contract ownership drift, and keep governance startup
   executable.
@@ -236,60 +236,66 @@ tasks:
     effort_points: 1
     progress_pct: 100
     evidence_refs:
-      - docs/planning/closeouts/20260324-s18-follow-up-proposal-capture-closeout.md
-      - docs/planning/proposals/todo.md
-    status_reason: The follow-up is canonically captured but implementation has not started.
-    last_verified: '2026-03-31'
+      - docs/planning/closeouts/20260513-s18-f1-a-state-store-role-boundary-closeout.md
+      - docs/planning/closeouts/20260514-s18-f1-b-state-store-role-regression-guards-closeout.md
+      - docs/planning/closeouts/20260515-s18-f1-c-state-store-role-contract-shape-closeout.md
+    status_reason: >-
+      Completed through S18-F1-A/B/C: the state-store role bundle boundary is root-owned,
+      convenience rewiring is guarded, and the export contract shape has negative-path coverage.
+    last_verified: '2026-05-22'
   - task_id: S18-F1-A
     parent_task: S18-F1
     priority: P2
-    status: queued
+    status: done
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     objective: lock the explicit role bundle behind a stricter root-owned boundary.
     dependency: S18
     target:
       Composition roots cannot reconstruct the role bundle ad hoc outside the sanctioned boundary.
     evidence_refs:
-      - docs/planning/closeouts/20260324-s18-follow-up-proposal-capture-closeout.md
-      - docs/planning/proposals/todo.md
-    status_reason: Planned boundary-hardening slice; implementation not started.
-    last_verified: '2026-03-31'
+      - docs/planning/closeouts/20260513-s18-f1-a-state-store-role-boundary-closeout.md
+    status_reason: >-
+      Implemented by accepted S18-F1-A state-store role boundary closeout, feature-mechanization
+      plan, API role-binding tests, and dvt-api typecheck.
+    last_verified: '2026-05-22'
   - task_id: S18-F1-B
     parent_task: S18-F1
     priority: P2
-    status: queued
+    status: done
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     objective: add regression guards against convenience rewiring of state-store roles.
     dependency: S18-F1-A
     target: >-
       Regression coverage fails if roots drift back to convenience aliasing or aggregate
       reconstruction.
     evidence_refs:
-      - docs/planning/closeouts/20260324-s18-follow-up-proposal-capture-closeout.md
-      - docs/planning/proposals/todo.md
-    status_reason: Guard-rail slice is planned but not started.
-    last_verified: '2026-03-31'
+      - docs/planning/closeouts/20260514-s18-f1-b-state-store-role-regression-guards-closeout.md
+    status_reason: >-
+      Implemented by accepted S18-F1-B state-store role regression guards closeout and executable
+      API architecture guard coverage against convenience rewiring.
+    last_verified: '2026-05-22'
   - task_id: S18-F1-C
     parent_task: S18-F1
     priority: P2
-    status: queued
+    status: done
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     objective:
       close the bundle contract shape with explicit export semantics and negative-path tests.
     dependency: S18-F1-B
     target:
       Consumers see a locked boundary shape with negative-path coverage for invalid role sources.
     evidence_refs:
-      - docs/planning/closeouts/20260324-s18-follow-up-proposal-capture-closeout.md
-      - docs/planning/proposals/todo.md
-    status_reason: Contract-shape closure remains backlog work.
-    last_verified: '2026-03-31'
+      - docs/planning/closeouts/20260515-s18-f1-c-state-store-role-contract-shape-closeout.md
+    status_reason: >-
+      Implemented by accepted S18-F1-C state-store role contract-shape closeout with explicit export
+      semantics and negative-path boundary coverage.
+    last_verified: '2026-05-22'
   - task_id: schema-migration-rollback
     priority: P1
     status: done
@@ -323,7 +329,7 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: RC-G1
     priority: P1
-    status: in_progress
+    status: done
     objective: retire contract ownership drift across `engine`, `planner`, and `shared`.
     dependency: none
     target: >-
@@ -331,18 +337,13 @@ tasks:
       workboard reflects the active tracker instead of an orphan review note.
     complexity: L
     effort_points: 2
-    progress_pct: 50
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
-      - docs/planning/closeouts/20260402-rc-g1-governance-startup-reconciliation-closeout.md
-      - docs/evidence/ED-20260402-rc-g1-governance-startup-reconciliation.md
-      - docs/evidence/ED-20260411-rc-g1-b4-engine-shared-kernel-hardening.md
-      - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
+      - docs/planning/closeouts/20260514-rc-g1-contract-ownership-closure-closeout.md
     status_reason: >-
-      `RC-G1-A` and `RC-G1-B` are now closed: the ownership matrix is frozen and the engine-owned
-      behavioral ports no longer leak through the active `@dvt/contracts` surface. The remaining
-      execution slices are `RC-G1-C` and `RC-G1-D`.
-    last_verified: '2026-04-04'
+      Closed by accepted RC-G1 contract ownership closure closeout, ARC-2 evidence, mitigated risk
+      register, and focused ownership architecture validation after RC-G1-B/C/D completed.
+    last_verified: '2026-05-22'
   - task_id: RC-G1-A
     parent_task: RC-G1
     priority: P1
@@ -508,10 +509,10 @@ tasks:
   - task_id: RC-G1-D
     parent_task: RC-G1
     priority: P1
-    status: queued
+    status: done
     complexity: L
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     objective:
       move planner-private ports to `@dvt/planner` and close the final shared-kernel cleanup.
     dependency: RC-G1-C
@@ -520,12 +521,19 @@ tasks:
       and final import guards prevent regression.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
+      - docs/planning/closeouts/20260427-rc-g1-d-planner-ownership-migration-closeout.md
+      - docs/evidence/ed-20260427-rc-g1-d-planner-ownership-migration.md
+      - docs/risk-register/quality/R-20260427-RC-G1-D-PLANNER-OWNERSHIP.yaml
       - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
-    status_reason: Planner migration and final cleanup are tracked as the closing `RC-G1` slice.
-    last_verified: '2026-04-02'
+    status_reason: >-
+      Planner-private behavior ports now live in `@dvt/planner`, shared serializable planner
+      vocabulary remains in `@dvt/contracts`, API and Postgres adapter consumers import the owner
+      package, and ARC-2 evidence plus lint and architecture guards close the final RC-G1 migration
+      slice.
+    last_verified: '2026-04-27'
   - task_id: RC-G1-C-TRUTH-SYNC
     priority: P1
-    status: queued
+    status: done
     objective: >-
       reconcile post-RC-G1-C documentation and barrel truth so active architecture surfaces describe
       the shipped ownership model exactly.
@@ -536,16 +544,18 @@ tasks:
       status claims with `generated-code-state`.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260419-post-rc-g1-c-architecture-review.md
       - docs/planning/closeouts/20260419-rc-g1-c-owner-package-migration-closeout.md
+      - docs/planning/closeouts/20260426-rc-g1-c-truth-sync-closeout.md
       - docs/architecture/system-delivery-status.md
       - docs/planning/status/generated-code-state.md
     status_reason: >-
-      RC-G1-C shipped the code cutover, but the closeout wording and quantitative status surfaces
-      still overstate or lag the published code truth.
-    last_verified: '2026-04-19'
+      Active architecture and planning surfaces now distinguish DTO-only shared re-exports from
+      owner-local behavioral ownership and the quantitative status snapshot matches the published
+      generated code inventory.
+    last_verified: '2026-04-26'
   - task_id: GOV-S1
     priority: P2
     status: done
@@ -568,7 +578,7 @@ tasks:
     last_verified: '2026-04-02'
   - task_id: GOV-S2
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
       formalize the repository's doc-driven operating model as a governed framework with information
       architecture, planning-data rules, authoring scaffolds, and traceability automation.
@@ -578,7 +588,7 @@ tasks:
       transition from isolated governance scripts to a coherent doc-driven operating system.
     complexity: M
     effort_points: 5
-    progress_pct: 35
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md
       - docs/planning/status/governance-document-rule-inventory.md
@@ -586,12 +596,16 @@ tasks:
       - docs/planning/state/planning-control-tower.md
       - docs/planning/status/documentation-information-architecture-current-vs-target-20260407.md
       - docs/guides/documentation-maintenance-guide-20260407.md
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+      - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
+      - docs/planning/closeouts/20260507-gov-s2-doc-driven-operating-framework-closeout.md
     status_reason: >-
-      Governance routing, generated-planning extraction, and the governing proposal are already in
-      place. This slice added a current-vs-target documentation information architecture spec and a
-      contributor maintenance guide, but the broader framework still needs wave decomposition,
-      authoring scaffolds, and traceability automation follow-through.
-    last_verified: '2026-04-07'
+      The doc-driven operating framework is now accepted and closed as one canonical umbrella:
+      startup routing, planning control, documentation information architecture, maintenance
+      guidance, governance refresh, feature mechanization, and the local planning/governance DB path
+      are linked. Future scaffold, traceability, export, or generated-artifact compaction work must
+      use concrete task IDs rather than reopening GOV-S2.
+    last_verified: '2026-05-07'
   - task_id: RC-A5
     priority: P1
     status: done
@@ -631,25 +645,26 @@ tasks:
     last_verified: '2026-03-31'
   - task_id: DHM
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
       drive DDD/Hexagonal modularization slices starting with WS5 (test fixture modularization),
       then WS1, WS3, WS4, WS2, WS6.
     dependency: none
     target: >-
-      WS5 fixture modularization is in progress (WorkflowEngine core tests moved to shared
-      builders); complete remaining WS5 helper-heavy engine tests, then lock roadmap for
-      WS1/WS3/WS4/WS2/WS6.
+      WS5-A, WS5-B, WS1, WS3, WS4, WS2, and WS6 are closed with accepted evidence and executable
+      architecture guards.
     complexity: L
     effort_points: 2
-    progress_pct: 52
+    progress_pct: 100
     evidence_refs:
       - docs/evidence/critical/ED-20260330-lane-a-ws5-intent-log-fixture-modularization.md
       - docs/evidence/critical/ED-20260331-lane-a-ws5-b-engine-test-fixture-modularization.md
-      - docs/risk-register/quality/R-20260330-WS5-ENGINE-TEST-FIXTURE-DRIFT.md
+      - docs/planning/closeouts/20260522-dhm-modularization-parent-closeout.md
+      - docs/planning/closeouts/20260512-dhm-ws6-semantic-closure-closeout.md
     status_reason: >-
-      WS5 and WS1 are now closed; the next modularization workstream in sequence is WS3.
-    last_verified: '2026-04-01'
+      DHM is closed as a modularization parent after WS5-A, WS5-B, WS1, WS3, WS4, WS2, and WS6 all
+      have accepted closeout/evidence records and executable architecture guards.
+    last_verified: '2026-05-22'
   - task_id: DHM-WS5-A
     parent_task: DHM
     priority: P1
@@ -708,63 +723,80 @@ tasks:
   - task_id: DHM-WS3
     parent_task: DHM
     priority: P1
-    status: queued
+    status: done
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     objective: execute the WS3 modularization slice for the next bounded DDD seam.
     dependency: DHM-WS1
     target: WS3 responsibilities are isolated behind clearer ports and module seams.
     evidence_refs:
-      - docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md
-    status_reason: Sequenced backlog item; no implementation evidence yet.
-    last_verified: '2026-03-31'
+      - docs/evidence/ed-20260512-dhm-ws3-start-run-decomposition.md
+      - docs/evidence/ed-20260518-dhm-ws3-admission-seam.md
+      - docs/planning/closeouts/20260512-dhm-ws3-start-run-application-decomposition-closeout.md
+      - docs/planning/closeouts/20260518-dhm-ws3-admission-seam-closeout.md
+    status_reason: >-
+      WS3 is closed: start-run execution, failure, and admission phases are injected through
+      explicit seams, with component docs and architecture guards covering the decomposition.
+    last_verified: '2026-05-22'
   - task_id: DHM-WS4
     parent_task: DHM
     priority: P1
-    status: queued
+    status: done
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     objective: execute the WS4 modularization slice after WS3.
     dependency: DHM-WS3
     target: WS4 boundaries are extracted without widening composition-root leakage.
     evidence_refs:
-      - docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md
-    status_reason: Sequenced backlog item; no implementation evidence yet.
-    last_verified: '2026-03-31'
+      - docs/evidence/ed-20260512-dhm-ws4-runtime-path-decomposition.md
+      - docs/planning/closeouts/20260512-dhm-ws4-runtime-path-decomposition-closeout.md
+      - docs/risk-register/quality/R-20260512-DHM-WS4-RUNTIME-PATH-DECOMPOSITION.yaml
+    status_reason: >-
+      WS4 is closed: cancel and signal runtime-control paths are split behind command and signal
+      services, while the compatibility facade remains a delegator.
+    last_verified: '2026-05-22'
   - task_id: DHM-WS2
     parent_task: DHM
     priority: P1
-    status: queued
+    status: done
     complexity: L
     effort_points: 8
-    progress_pct: 0
+    progress_pct: 100
     objective: execute the WS2 modularization slice after WS4.
     dependency: DHM-WS4
     target: WS2 responsibilities are pulled behind explicit DDD seams and testable adapters.
     evidence_refs:
-      - docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md
-    status_reason: Sequenced backlog item; no implementation evidence yet.
-    last_verified: '2026-03-31'
+      - docs/evidence/ed-20260512-dhm-ws2-runtime-composition-root.md
+      - docs/planning/closeouts/20260512-dhm-ws2-runtime-composition-root-closeout.md
+      - docs/risk-register/quality/R-20260512-DHM-WS2-RUNTIME-COMPOSITION-ROOT.yaml
+    status_reason: >-
+      WS2 is closed: the intent reconciler runtime startup sequence is owned by the API runtime
+      composition object and guarded by component-level architecture tests.
+    last_verified: '2026-05-22'
   - task_id: DHM-WS6
     parent_task: DHM
     priority: P1
-    status: queued
+    status: done
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     objective: close the final WS6 modularization stream after the preceding workstreams land.
     dependency: DHM-WS2
     target:
       The remaining helper and module graph drift is retired with explicit architecture ownership.
     evidence_refs:
-      - docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md
-    status_reason: Final modularization backlog item; no implementation evidence yet.
-    last_verified: '2026-03-31'
+      - docs/evidence/ed-20260512-dhm-ws6-semantic-closure.md
+      - docs/planning/closeouts/20260512-dhm-ws6-semantic-closure-closeout.md
+      - docs/risk-register/quality/R-20260512-DHM-WS6-SEMANTIC-CLOSURE.yaml
+    status_reason: >-
+      WS6 is closed: semantic owned-concern headers, component documentation, user stories, and
+      architecture guards now cover the full modularization stream.
+    last_verified: '2026-05-22'
   - task_id: S08
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
       formalize the plan-record and plan-store model without reintroducing shared-kernel drift, dual
       plan identity, or repository-shaped CQRS collapse.
@@ -776,17 +808,23 @@ tasks:
       facade.
     complexity: L
     effort_points: 8
-    progress_pct: 75
+    progress_pct: 100
     evidence_refs:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
       - docs/planning/reviews/20260402-s08-plan-record-plan-store-gap-review.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
+      - docs/planning/status/system-operations-inventory-20260501.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/s08-4-stepkind-step-type-config-hardening-plan-20260403.md
+      - docs/planning/closeouts/20260522-s08-plan-store-scope-closeout.md
+      - docs/evidence/ed-20260515-s08-lifecycle-contract-retirement.md
+      - docs/risk-register/quality/R-20260514-S08-PLAN-STORE-INVENTORY-DRIFT.yaml
+      - docs/risk-register/quality/R-20260515-S08-LIFECYCLE-CONTRACT-RETIREMENT.yaml
     status_reason: >-
-      ADR-0043 is accepted; S08-3, S08-4, and S08-5 (`A/B/C`) are now delivered with fail-closed
-      admission, governed `runExecutionContext` boundary handling, and plan-level plugin
-      compatibility fingerprinting. Remaining S08 work is the Postgres migration arc.
-    last_verified: '2026-04-06'
+      S08 scope is closed: the scoped plan-store command/query matrix is accepted, scoped contracts
+      and artifacts ports are implemented, Postgres scoped records are guarded, lifecycle contract
+      vocabulary is retired, and future plan-store behavior requires a reviewed matrix amendment.
+    last_verified: '2026-05-22'
   - task_id: S08-3
     parent_task: S08
     priority: P0
@@ -950,7 +988,7 @@ tasks:
       - docs/architecture/components/engine/contracts/engine/SchedulerReleaseAndClaimSemantics.v1.md
       - packages/@dvt/plan-interpreter/test/dagAnalyzer.test.ts
       - packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
-      - packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts
+      - packages/@dvt/adapter-temporal/src/workflows/executionSegmentResolver.ts
       - packages/@dvt/adapter-temporal/test/workflow-dag-scheduler.test.ts
     status_reason: >-
       Delivered with engine-facing contract, runtime execution-path guardrail emitting
@@ -1101,7 +1139,7 @@ tasks:
       - packages/@dvt/planner/src/domain/types.ts
       - packages/@dvt/planner/src/application/PlannerEnvelopeMapper.ts
       - apps/api/src/entrypoints/http/planRoutePlanSourcePolicy.ts
-      - apps/api/test/entrypoints/http/startRunRoute.test.ts
+      - apps/api/test/entrypoints/http/startRunRoute.planSourcePolicy.test.ts
       - apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts
       - docs/planning/closeouts/20260406-mw-a2-b-contract-cleanup-closeout.md
     status_reason: >-
@@ -1237,7 +1275,7 @@ tasks:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
       - packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts
       - packages/@dvt/contracts/src/schemas.ts
-      - packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts
+      - packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts
       - packages/@dvt/traceability-service/src/lineage/compiledCodeRef.ts
       - docs/planning/closeouts/20260406-mw-a3-step-artifact-ref-generalization-closeout.md
     status_reason: >-
@@ -1269,7 +1307,7 @@ tasks:
     last_verified: '2026-04-06'
   - task_id: AR-A4
     priority: P2
-    status: queued
+    status: done
     objective: >-
       remove or freeze the custom policy namespace registry (CustomPolicyNamespaceRegistry.v1.ts)
       until a real consumer exists to reduce speculative extensibility maintenance cost.
@@ -1279,31 +1317,42 @@ tasks:
       consumer and ADR backing.
     complexity: S
     effort_points: 1
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
-    status_reason: Zero consumers exist; speculative extensibility carries maintenance cost.
-    last_verified: '2026-04-02'
+      - docs/planning/closeouts/20260513-ar-a4-custom-policy-namespace-freeze-closeout.md
+    status_reason: >-
+      Implemented by accepted AR-A4 freeze plan, closeout, ARC evidence, risk entry, and
+      planner/contracts architecture guards.
+    last_verified: '2026-05-22'
   - task_id: AR-A5
     priority: P2
-    status: queued
+    status: done
     objective: >-
       verify that createdAtIso is excluded from the planCore JCS input for planId computation; if
       included, the same logical plan at different times produces different identity.
     dependency: none
     target: >-
-      Determinism test confirms createdAtIso exclusion from planId hash; if included, fix and add
-      golden vector regression test.
+      Determinism tests confirm `createdAtIso` is excluded from the planId hash. No code fix was
+      required because `PlanAssembler` already derives `planId` from `sha256(JCS(planCore))` before
+      adding `createdAtIso` to the final `ExecutionPlan` metadata.
     complexity: S
     effort_points: 1
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
-    status_reason: Potential determinism violation identified in review; requires verification.
-    last_verified: '2026-04-02'
+      - packages/@dvt/planner/src/domain/PlanAssembler.ts
+      - packages/@dvt/planner/test/unit/determinism.test.ts
+      - packages/@dvt/contracts/src/schema-packs/planner-build.ts
+      - packages/@dvt/engine/src/security/planIntegrity.ts
+    status_reason: >-
+      Verified existing implementation: `canonicalPlanCoreJson` excludes `createdAtIso`, planner
+      tests prove differing build timestamps keep the same `planId`, the planner-build contract
+      validates `plan.metadata.planId === sha256(canonicalPlanCoreJson)`, and engine integrity
+      recomputes the same plan-core identity.
+    last_verified: '2026-05-06'
   - task_id: AR-A6
     priority: P2
-    status: queued
+    status: done
     objective: >-
       add snapshot projection concurrency requirement to IRunStateStore contract so that mutual
       exclusion during rebuild is a contract invariant, not an implementation detail of advisory
@@ -1314,16 +1363,16 @@ tasks:
       alternative adapter implementations must honor the invariant.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
+      - docs/planning/closeouts/20260513-ar-a6-snapshot-rebuild-concurrency-contract-closeout.md
     status_reason: >-
-      Advisory locks are PostgreSQL-specific; the contract must mandate concurrency safety for any
-      adapter implementation.
-    last_verified: '2026-04-02'
+      Implemented by accepted AR-A6 snapshot rebuild concurrency contract closeout, ARC evidence,
+      risk entry, state-store docs, and contracts/engine/Postgres validation guards.
+    last_verified: '2026-05-22'
   - task_id: AR-A7
     priority: P2
-    status: in_progress
+    status: done
     objective: >-
       split @dvt/delivery into domain rules (backpressure policy, admission guard) and runtime
       orchestration (worker runtime, polling loop) to maintain hexagonal architecture purity.
@@ -1333,39 +1382,43 @@ tasks:
       depends on domain rules, not vice versa.
     complexity: M
     effort_points: 5
-    progress_pct: 35
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
-      - docs/planning/reviews/architecture-and-governance/20260419-post-rc-g1-c-architecture-review.md
-      - packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts
-      - packages/@dvt/delivery/src/application/OutboxWorkerRuntimeLoopController.ts
+      - packages/@dvt/delivery/src/testing/InMemoryOutboxStorageCore.ts
+      - packages/@dvt/delivery/test/OutboxInMemoryStorageOwnership.architecture.test.ts
       - packages/@dvt/engine/src/state/InMemoryOutboxState.ts
-      - packages/@dvt/delivery/src/testing/InMemoryOutboxStorage.ts
+      - docs/planning/closeouts/20260514-ar-a7-delivery-domain-runtime-split-closeout.md
+      - docs/evidence/ed-20260514-ar-a7-delivery-in-memory-outbox-ownership.md
+      - docs/risk-register/quality/R-20260514-AR-A7-IN-MEMORY-OUTBOX-OWNERSHIP.yaml
     status_reason: >-
-      RC-G1-C partially closed this concern: delivery runtime orchestration is now thinner and the
-      worker monitor delegates health and telemetry seams, but the reusable runtime-shell decision
-      and the duplicated in-memory outbox semantics across engine and delivery remain open.
-    last_verified: '2026-04-19'
+      Validated as already implemented: Delivery-owned InMemoryOutboxStorageCore, engine facade,
+      architecture guard, ARC-2 evidence, and package validation gates passed on 2026-05-22.
+    last_verified: '2026-05-22'
   - task_id: AR-A8
     priority: P1
-    status: queued
+    status: done
     objective: >-
-      remove the Conductor adapter illusion from runtime contracts by deleting
-      `ConductorAdapterStub`/`TemporalAdapterStub` and narrowing provider typing to implemented
-      runtime adapters.
+      remove non-implemented provider adapter illusions from runtime contracts by deleting dead
+      provider stubs and narrowing provider typing to implemented runtime adapters.
     dependency: WE-HX-2
     target: >-
       Runtime provider union and adapter registry expose only implemented providers by default, and
       dead stubs are removed so portability claims match executable behavior.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md
+      - docs/planning/closeouts/20260424-ar-a8-provider-vocabulary-hard-cut-closeout.md
+      - docs/evidence/ed-20260424-hard-cut-runtime-provider-vocabulary.md
+      - docs/risk-register/quality/R-20260424-HARD-CUT-RUNTIME-PROVIDER-VOCABULARY.yaml
+      - packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts
     status_reason: >-
-      The review identified a type-level portability promise for Conductor with no runtime
-      implementation, which creates governance and product drift.
-    last_verified: '2026-04-04'
+      Closed by hard-cutting active runtime provider vocabulary to implemented providers only,
+      deleting dead provider stubs, narrowing validation schemas, removing active adapter docs for
+      non-implemented providers, and adding semantic architecture coverage across contracts,
+      composition, and active docs.
+    last_verified: '2026-04-24'
   - task_id: AR-A9
     priority: P1
     status: done
@@ -1798,33 +1851,36 @@ tasks:
     last_verified: '2026-04-07'
   - task_id: WE-HX
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
-      derive the full WorkflowEngine subsystem to a compatibility-first hexagonal architecture with
-      canonical docs and executable lane sequencing.
+      derive the full WorkflowEngine subsystem to a hardcut hexagonal architecture with canonical
+      docs and executable lane sequencing.
     dependency: DOC-ARCH-01
     target: >-
       Canonical subsystem context and target architecture are published, stale engine navigation is
       replaced, and execution-ready waves `WE-HX-0..6` are tracked in Lane A.
     complexity: L
     effort_points: 5
-    progress_pct: 20
+    progress_pct: 100
     evidence_refs:
       - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
       - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
       - docs/guides/workflow-engine-user-manual.v1.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
+      - docs/planning/closeouts/20260522-we-hx-parent-hardcut-closeout.md
     status_reason: >-
-      Canonical documentation and plan artifacts are being introduced as the active replacement
-      architecture narrative for WorkflowEngine.
-    last_verified: '2026-04-03'
+      WE-HX parent closure is accepted: WE-HX-0..6 plus DHM-WS2/DHM-WS4/DHM-WS6 are implemented with
+      component guides, user stories, architecture guards, ARC evidence where package paths changed,
+      and accepted closeouts. Remaining engine work must now be tracked as separate tasks instead of
+      keeping this umbrella open.
+    last_verified: '2026-05-22'
   - task_id: WE-HX-0
     parent_task: WE-HX
     priority: P1
-    status: in_progress
+    status: done
     complexity: M
     effort_points: 3
-    progress_pct: 70
+    progress_pct: 100
     objective: deliver canonical map and doc replacement for WorkflowEngine subsystem.
     dependency: DOC-ARCH-01
     target: >-
@@ -1837,15 +1893,21 @@ tasks:
       - docs/architecture/components/engine/index.md
       - docs/architecture/components/engine/index.md
       - docs/planning/status/canonical-doc-code-matrix.md
-    status_reason: Primary docs are drafted and replacement routing is in progress.
-    last_verified: '2026-04-03'
+      - docs/planning/closeouts/20260514-we-hx-0-hardcut-canonical-map-closeout.md
+      - docs/evidence/ed-20260514-we-hx-0-hardcut-canonical-map.md
+      - docs/risk-register/quality/R-20260514-WE-HX-0-HARDCUT-CANONICAL-MAP.yaml
+      - docs/architecture/components/engine/roadmap/engine-phases.md
+    status_reason: >-
+      WE-HX-0 hardcut canonical map is closed with accepted closeout, roadmap alignment, semantic
+      architecture guard, evidence, and risk updates.
+    last_verified: '2026-05-22'
   - task_id: WE-HX-1
     parent_task: WE-HX
     priority: P1
-    status: queued
+    status: done
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     objective: close boundary ownership mapping for WorkflowEngine external seams.
     dependency: S08-5-B, RC-G1-B
     target: >-
@@ -1853,44 +1915,72 @@ tasks:
       and artifacts reader seam across contracts/engine/artifacts/api boundaries.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
-    status_reason: Sequenced behind S08-5-B and RC-G1-B.
-    last_verified: '2026-04-03'
+      - docs/architecture/components/engine/architecture/workflow-engine-boundary-ownership-component.md
+      - docs/architecture/components/engine/architecture/workflow-engine-boundary-ownership-user-stories.md
+      - docs/planning/reviews/architecture-and-governance/20260429-we-hx-1-fowler-architecture-review.md
+      - docs/evidence/ed-20260429-we-hx-1-boundary-ownership.md
+      - docs/risk-register/quality/R-20260429-WE-HX-1-BOUNDARY-OWNERSHIP.yaml
+      - packages/@dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts
+    status_reason: >-
+      Boundary ownership mapping is closed: PlanRef and runExecutionContextRef remain shared refs,
+      plan artifact reading is a dedicated engine-owned port, run-state persistence no longer
+      publishes plan-fetching concerns, API validation reuses the engine-owned artifact shape, and
+      semantic architecture coverage now guards docs, user stories, review analysis, module
+      owned-concern headers, and the engine/artifacts/API seam.
+    last_verified: '2026-04-29'
   - task_id: WE-HX-2
     parent_task: WE-HX
     priority: P1
-    status: queued
+    status: done
     complexity: M
     effort_points: 3
-    progress_pct: 0
-    objective: narrow WorkflowEngine to a compatibility facade over dedicated use-case services.
+    progress_pct: 100
+    objective: narrow WorkflowEngine to a facade over dedicated use-case services.
     dependency: WE-HX-1
     target: >-
       WorkflowEngine responsibilities are reduced to contract normalization and delegation, with
       semantic behavior hosted by explicit use-case services.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
-    status_reason: Queued after ownership closure.
-    last_verified: '2026-04-03'
+      - docs/planning/closeouts/20260430-we-hx-2-facade-use-cases-closeout.md
+      - docs/evidence/ed-20260430-we-hx-2-facade-use-cases.md
+      - docs/risk-register/quality/R-20260430-WE-HX-2-FACADE-USE-CASES.yaml
+      - docs/architecture/components/engine/architecture/workflow-engine-facade-use-cases-component.md
+    status_reason: >-
+      WorkflowEngine is now a normalization-and-delegation facade over explicit facade-facing use
+      cases; start-run tracing and resolved-context construction live in WorkflowStartRunUseCase,
+      and semantic architecture coverage prevents facade regrowth.
+    last_verified: '2026-04-30'
   - task_id: WE-HX-3
     parent_task: WE-HX
     priority: P1
-    status: queued
+    status: done
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     objective: decompose start-run application flow into narrow collaborators.
     dependency: WE-HX-2
     target: >-
       Admission, provider/capability resolution, intent creation, execution dispatch, and failure
       policy are isolated and independently testable.
     evidence_refs:
+      - packages/@dvt/engine/src/application/StartRunApplicationService.ts
+      - packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts
+      - packages/@dvt/engine/src/services/startRun/StartRunIntentService.ts
+      - packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts
+      - packages/@dvt/engine/src/services/startRun/StartRunFailurePolicy.ts
+      - packages/@dvt/engine/test/services/StartRunApplicationDecomposition.test.ts
+      - packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
+      - packages/@dvt/engine/test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
-    status_reason: Queued after compatibility facade narrowing.
-    last_verified: '2026-04-03'
+    status_reason: >-
+      Start-run application flow is decomposed into admission, intent, execution, and failure-policy
+      phase services with architecture and behavior gates passing.
+    last_verified: '2026-05-22'
   - task_id: WE-HX-4
     parent_task: WE-HX
     priority: P1
-    status: completed
+    status: done
     complexity: M
     effort_points: 3
     progress_pct: 100
@@ -1909,7 +1999,7 @@ tasks:
   - task_id: WE-HX-4-A
     parent_task: WE-HX-4
     priority: P1
-    status: completed
+    status: done
     complexity: S
     effort_points: 3
     progress_pct: 100
@@ -1931,7 +2021,7 @@ tasks:
   - task_id: WE-HX-4-B
     parent_task: WE-HX-4
     priority: P1
-    status: completed
+    status: done
     complexity: M
     effort_points: 3
     progress_pct: 100
@@ -1955,7 +2045,7 @@ tasks:
   - task_id: WE-HX-4-C
     parent_task: WE-HX-4
     priority: P1
-    status: completed
+    status: done
     complexity: S
     effort_points: 2
     progress_pct: 100
@@ -1981,7 +2071,7 @@ tasks:
   - task_id: WE-HX-4-D
     parent_task: WE-HX-4
     priority: P1
-    status: completed
+    status: done
     complexity: S
     effort_points: 1
     progress_pct: 100
@@ -2000,7 +2090,8 @@ tasks:
       - packages/@dvt/engine/src/adapters/mock/MockAdapter.ts
       - packages/@dvt/adapter-temporal/src/TemporalAdapter.ts
       - packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
-      - packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts
+      - packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.signals.ts
+      - packages/@dvt/adapter-temporal/src/workflows/workflowCursorHelpers.ts
       - packages/@dvt/contracts/src/contracts/engine/SignalSemantics.v1.ts
       - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
       - packages/@dvt/engine/test/adapters/MockAdapter.cancel.test.ts
@@ -2018,10 +2109,10 @@ tasks:
   - task_id: WE-HX-5
     parent_task: WE-HX
     priority: P1
-    status: queued
+    status: done
     complexity: M
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     objective: standardize provider resolution and telemetry policy seams.
     dependency: WE-HX-3, WE-HX-4
     target: >-
@@ -2029,15 +2120,23 @@ tasks:
       duplication in orchestration paths.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
-    status_reason: Sequenced after decomposition waves.
-    last_verified: '2026-04-03'
+      - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-component.md
+      - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-user-stories.md
+      - docs/planning/closeouts/20260512-we-hx-5-provider-telemetry-seams-closeout.md
+      - docs/evidence/ed-20260512-we-hx-5-provider-telemetry-seams.md
+      - docs/risk-register/quality/R-20260512-WE-HX-5-PROVIDER-TELEMETRY-SEAMS.yaml
+      - packages/@dvt/engine/test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
+    status_reason: >-
+      Closed by accepted WE-HX-5 provider and telemetry seams closeout, ARC evidence, risk entry,
+      component guide, user stories, and semantic architecture guard.
+    last_verified: '2026-05-22'
   - task_id: WE-HX-6
     parent_task: WE-HX
     priority: P1
-    status: queued
+    status: done
     complexity: M
     effort_points: 3
-    progress_pct: 0
+    progress_pct: 100
     objective: harden test doubles and architecture fitness checks for subsystem boundaries.
     dependency: WE-HX-5
     target: >-
@@ -2045,8 +2144,16 @@ tasks:
       boundary constraints.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
-    status_reason: Final hardening wave to keep decomposition stable.
-    last_verified: '2026-04-03'
+      - docs/architecture/components/engine/architecture/workflow-engine-boundary-fitness-component.md
+      - docs/architecture/components/engine/architecture/workflow-engine-boundary-fitness-user-stories.md
+      - docs/planning/closeouts/20260512-we-hx-6-boundary-fitness-closeout.md
+      - docs/evidence/ed-20260512-we-hx-6-boundary-fitness.md
+      - docs/risk-register/quality/R-20260512-WE-HX-6-BOUNDARY-FITNESS.yaml
+      - packages/@dvt/engine/test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
+    status_reason: >-
+      Closed by accepted WE-HX-6 boundary-fitness closeout, ARC evidence, risk entry, component
+      guide, user stories, and semantic architecture guard for fixture/runtime boundary drift.
+    last_verified: '2026-05-22'
   - task_id: plan-version-reset
     priority: P1
     status: done
@@ -2722,43 +2829,232 @@ tasks:
     last_verified: '2026-04-14'
   - task_id: TF-A2
     priority: P0
-    status: in_progress
+    status: done
     objective: >-
-      formalize the canonical workspace graph-draft persistence contract so editable Canvas graphs
-      use one typed read and write boundary across web, api, and the persistence owner instead of
-      browser-local authority.
+      formalize the canonical workspace graph authoring-draft persistence contract so editable
+      Canvas graphs use one typed read and write boundary across web, api, and the persistence owner
+      instead of browser-local authority, while compile-ready `DesignGraphDraft` remains a derived
+      artifact rather than the editable aggregate itself.
     dependency: TF-A1, F-04
     target: >-
-      A governed workspace graph-draft contract pack defines typed read/write semantics, revision or
-      concurrency tokens, explicit schema-version versus mutable-revision posture, compare-and-swap
-      semantics, reject-on-stale merge policy, idempotent write expectations, tenant and workspace
-      scope, explicit read/write/read-only capability outcomes, auditable protected-decision
-      obligations, exact caller-visible capability and audit envelope fields, shared
-      audit-observability join semantics, explicit format-evolution metadata and typed
+      A governed workspace graph authoring-draft contract pack defines typed read/write semantics,
+      revision or concurrency tokens, explicit schema-version versus mutable-revision posture,
+      compare-and-swap semantics, reject-on-stale merge policy, idempotent write expectations,
+      tenant and workspace scope, explicit read/write/read-only capability outcomes, auditable
+      protected-decision obligations, exact caller-visible capability and audit envelope fields,
+      shared audit-observability join semantics, explicit format-evolution metadata and typed
       corrupt/unsupported draft outcomes, compatibility-window and backfill posture, conflict
-      posture, and the workspace-port extension consumed by downstream API and web adoption without
-      local DTO drift.
+      posture, and a one-way projection boundary from editable authoring draft into
+      `DesignGraphDraft` for preview/run adoption without local DTO drift.
     complexity: M
     effort_points: 5
-    progress_pct: 45
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-authoring-draft-aggregate-roots-plan-20260423.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md
+      - docs/planning/closeouts/20260423-tf-a2-c5-selected-closure-end-to-end-proof-closeout.md
       - packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts
-      - docs/contracts/planner/WorkspaceGraphDraftPersistence.v1.md
-      - docs/evidence/ED-20260416-tf-a2-workspace-graph-draft-boundary.md
+      - docs/contracts/planner/workspace-graph-draft-persistence-v1.md
+      - docs/evidence/ed-20260416-tf-a2-workspace-graph-draft-boundary.md
+      - docs/evidence/ed-20260423-workspace-authoring-draft-aggregate.md
+      - docs/evidence/ed-20260423-tf-a2-c3-c4-api-web-adoption.md
       - docs/risk-register/quality/R-20260416-TF-A2-WORKSPACE-GRAPH-DRAFT-ADOPTION-DRIFT.yaml
+      - docs/risk-register/quality/R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE.yaml
       - docs/contracts/planner/TransformationFlowPreview.v1.md
       - docs/architecture/reference-architecture.md
       - docs/architecture/components/engine/contracts/engine/SignalsAndAuth.v1.md
       - docs/architecture/components/web/frontend-data-boundary-architecture.md
     status_reason: >-
-      Contract freeze is now partially delivered as executable shared-kernel artifacts plus the
-      planner contract doc: `WorkspaceGraphDraft.v1` now defines typed scope/capability envelopes,
-      auditable read/write outcomes, compare-and-swap request posture, idempotent retry key, and
-      typed format-evolution metadata/failures. ARC-2 evidence and residual adoption risk are now
-      published. Remaining work in `TF-A2` is final contract review acceptance and downstream wiring
-      handoff to `TF-C4` and `TF-E2-A`.
-    last_verified: '2026-04-16'
+      Contract freeze is materially further along than the previous lane note captured.
+      `WorkspaceGraphDraft.v1` now persists `WorkspaceGraphAuthoringDraft` instead of embedding
+      `DesignGraphDraft`, and the active contract line already defines typed scope, capability,
+      audit, compare-and-swap, idempotency, and format-evolution envelopes for protected draft reads
+      and writes. `TF-A2-C1` through `TF-A2-C5` are now closed with canonical `ExecutionSelection`
+      and `ExecutableSubgraph` contract artifacts, a planner-local component guide, planner-owned
+      selected-closure derivation, API preview/start-run adoption, Canvas preview/run adoption,
+      semantic architecture coverage, explicit selected-closure proof across docs plus web/API
+      integration seams, and ARC-2 evidence. The route no longer depends on whole-draft compile
+      assumptions.
+    last_verified: '2026-04-23'
+  - task_id: TF-A2-C
+    parent_task: TF-A2
+    priority: P0
+    status: done
+    complexity: M
+    effort_points: 3
+    progress_pct: 100
+    objective: >-
+      define the explicit `ExecutionSelection` command boundary and the derived `ExecutableSubgraph`
+      read model so preview and run operate on selected closure semantics instead of whole-draft
+      compile assumptions.
+    dependency: TF-A2
+    target: >-
+      Canonical contracts, planner ownership, api adoption rules, and web command production are
+      frozen for selection-driven preview/run, with negative-path diagnostics and no second
+      frontend-only DTO family.
+    evidence_refs:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md
+      - docs/planning/closeouts/20260423-tf-a2-c1-execution-selection-contract-pack-closeout.md
+      - docs/planning/closeouts/20260423-tf-a2-c2-executable-subgraph-derivation-closeout.md
+      - docs/planning/closeouts/20260423-tf-a2-c3-c4-api-web-adoption-closeout.md
+      - docs/planning/closeouts/20260423-tf-a2-c5-selected-closure-end-to-end-proof-closeout.md
+      - docs/evidence/ed-20260423-tf-a2-c1-execution-selection-contract-pack.md
+      - docs/evidence/ed-20260423-tf-a2-c2-executable-subgraph-derivation.md
+      - docs/evidence/ed-20260423-tf-a2-c3-c4-api-web-adoption.md
+      - docs/contracts/planner/workspace-graph-draft-persistence-v1.md
+      - docs/architecture/components/planner/workspace-authoring-draft-aggregate.md
+      - docs/architecture/components/planner/execution-selection-component.md
+      - docs/architecture/components/planner/executable-subgraph-derivation-component.md
+      - docs/contracts/planner/execution-selection-and-executable-subgraph-v1.md
+    status_reason: >-
+      `TF-A2-C1` through `TF-A2-C5` are closed. The canonical contract pack, local component guides,
+      planner-owned derivation seam, API executable-subgraph resolver seam, Canvas
+      execution-selection seam, semantic architecture guards, explicit preview-persist-run proof,
+      and ARC evidence now freeze the execution-selection boundary plus selected-closure adoption
+      across planner, API, and web.
+    last_verified: '2026-04-23'
+  - task_id: TF-A2-C1
+    parent_task: TF-A2-C
+    priority: P0
+    status: done
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      publish canonical `ExecutionSelection` and `ExecutableSubgraph` contract artifacts with
+      schemas, exports, docs, and negative-path tests.
+    dependency: TF-A2-C
+    target: >-
+      `@dvt/contracts` exposes the execution-selection contract pack, planner/docs surfaces link to
+      it, and ARC-2 evidence plus risk update cover the new public boundary.
+    evidence_refs:
+      - docs/planning/closeouts/20260423-tf-a2-c1-execution-selection-contract-pack-closeout.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md
+      - docs/contracts/planner/workspace-graph-draft-persistence-v1.md
+      - docs/contracts/planner/execution-selection-and-executable-subgraph-v1.md
+      - docs/architecture/components/planner/execution-selection-component.md
+      - docs/evidence/ed-20260423-tf-a2-c1-execution-selection-contract-pack.md
+      - docs/risk-register/quality/R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE.yaml
+    status_reason: >-
+      Completed. `@dvt/contracts` now exposes the canonical execution-selection contract pack
+      through a planner-local semantic barrel, contract plus architecture tests, validation helpers,
+      governed planner docs, and ARC-2 evidence/risk updates.
+    last_verified: '2026-04-23'
+  - task_id: TF-A2-C2
+    parent_task: TF-A2-C
+    priority: P0
+    status: done
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      introduce the planner-owned derivation seam that resolves selected closure from
+      `WorkspaceGraphAuthoringDraft` plus `ExecutionSelection` and returns canonical
+      `ExecutableSubgraph` diagnostics without widening to the whole draft.
+    dependency: TF-A2-C1
+    target: >-
+      `@dvt/planner` exposes selected-closure derivation behind `PlannerFacade`, visible-only
+      traversal stays explicit, dependency gaps and cycles fail closed with canonical diagnostics,
+      and semantic architecture coverage locks the seam to the planner boundary.
+    evidence_refs:
+      - docs/planning/closeouts/20260423-tf-a2-c2-executable-subgraph-derivation-closeout.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md
+      - docs/architecture/components/planner/executable-subgraph-derivation-component.md
+      - docs/contracts/planner/execution-selection-and-executable-subgraph-v1.md
+      - docs/evidence/ed-20260423-tf-a2-c2-executable-subgraph-derivation.md
+      - docs/risk-register/quality/R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE.yaml
+    status_reason: >-
+      Completed. `@dvt/planner` now derives canonical `ExecutableSubgraph` read models from
+      authoring truth plus execution selection through `PlannerFacade#deriveExecutableSubgraph`,
+      with semantic coverage for upstream, downstream, connected-component, no-widen,
+      dependency-gap, and cycle-detection behavior.
+    last_verified: '2026-04-23'
+  - task_id: TF-A2-C3
+    parent_task: TF-A2-C
+    priority: P0
+    status: done
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      adopt canonical execution selection and planner-derived selected-closure resolution in API
+      preview and planner-backed start-run so protected runtime flows stop depending on whole-draft
+      compile assumptions.
+    dependency: TF-A2-C2
+    target: >-
+      `apps/api` resolves `ExecutableSubgraph` from protected draft truth before planner build in
+      preview and planner-backed start-run, documents the seam locally, and guards it with semantic
+      architecture plus direct behavior tests.
+    evidence_refs:
+      - docs/planning/closeouts/20260423-tf-a2-c3-c4-api-web-adoption-closeout.md
+      - docs/evidence/ed-20260423-tf-a2-c3-c4-api-web-adoption.md
+      - apps/api/docs/executable-subgraph-resolution-component.md
+      - apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts
+      - apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts
+      - apps/api/test/application/services/executableSubgraphResolutionComponent.architecture.test.ts
+      - docs/risk-register/quality/R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE.yaml
+    status_reason: >-
+      Completed. API preview and planner-backed start-run now resolve selected execution through one
+      protected executable-subgraph seam before planner build, with explicit rejection outcomes,
+      local component docs, direct resolver tests, and semantic architecture coverage.
+    last_verified: '2026-04-23'
+  - task_id: TF-A2-C4
+    parent_task: TF-A2-C
+    priority: P0
+    status: done
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      adopt canonical execution selection in Canvas preview and run so web emits one governed
+      selection shape and does not invent a frontend-only execution DTO family.
+    dependency: TF-A2-C3
+    target: >-
+      `apps/web` emits canonical `ExecutionSelection` for preview and run through one named Canvas
+      seam, documents that seam locally, and locks it with semantic architecture tests.
+    evidence_refs:
+      - docs/planning/closeouts/20260423-tf-a2-c3-c4-api-web-adoption-closeout.md
+      - docs/evidence/ed-20260423-tf-a2-c3-c4-api-web-adoption.md
+      - docs/architecture/components/web/graph/canvas-execution-selection-component.md
+      - apps/web/src/app/views/canvas/canvasRunSelection.ts
+      - apps/web/src/app/views/canvas/canvasExecutionSelection.architecture.test.ts
+      - docs/risk-register/quality/R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE.yaml
+    status_reason: >-
+      Completed. Canvas preview and run now emit canonical execution selection through one shared
+      browser-local seam used by both actions, with local component docs and semantic architecture
+      coverage preventing preview/run DTO drift.
+    last_verified: '2026-04-23'
+  - task_id: TF-A2-C5
+    parent_task: TF-A2-C
+    priority: P0
+    status: done
+    complexity: M
+    effort_points: 2
+    progress_pct: 100
+    objective: >-
+      prove selected-closure preview-persist-run behavior end to end before any further planner or
+      contracts refactor, using explicit current-state diagrams plus vertical web/api validation.
+    dependency: TF-A2-C4
+    target: >-
+      Local component docs show the intended selected-node sequence and involved components, Canvas
+      proves persisted preview-to-run reuse of canonical selection within a larger workspace, and
+      protected-runtime integration covers selected-closure success plus fail-closed rejection on
+      dependency gaps and graph-source mismatch.
+    evidence_refs:
+      - docs/planning/closeouts/20260423-tf-a2-c5-selected-closure-end-to-end-proof-closeout.md
+      - docs/architecture/components/planner/workspace-authoring-draft-aggregate.md
+      - apps/api/docs/executable-subgraph-resolution-component.md
+      - docs/architecture/components/web/graph/canvas-execution-selection-component.md
+      - apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx
+      - apps/api/test/integration/protectedRuntime.integration.selectedClosure.scenarios.ts
+      - apps/api/test/integration/protectedRuntime.integration.test.ts
+    status_reason: >-
+      Completed. The route is now documented as an explicit preview-persist-run sequence with
+      component diagrams, Canvas proves selected-subgraph preview proof reuse for start-run, and
+      protected-runtime integration covers selected-closure success plus fail-closed dependency-gap
+      and graph-source mismatch behavior.
+    last_verified: '2026-04-23'
 dependency_notes:
   - >-
     `MVP-A1` is now closed as the contractual MVP baseline through the reviewed proposal plus the
@@ -2779,11 +3075,11 @@ dependency_notes:
     `schema-migration-rollback` remains dependent on `S02` and is already closed with a concrete
     adapter rollback path.
   - >-
-    `DHM` is now split into WS5-A, WS5-B, WS1, WS3, WS4, WS2, and WS6 so remaining modularization
-    work is schedulable.
+    `DHM` is closed after WS5-A, WS5-B, WS1, WS3, WS4, WS2, and WS6 all landed with evidence,
+    closeouts, component docs, and architecture guards.
   - >-
-    `DHM-WS5-B` and `DHM-WS1` are now closed; `DHM-WS3` is the next modularization slice in
-    sequence.
+    The older DHM modularization backlog is no longer the active queue; future WorkflowEngine
+    hardcut work continues under the `WE-HX-*` sequence.
   - >-
     `RC-G1` is now the active Lane A tracker for contract ownership drift; `RC-G1-A` is closed and
     `RC-G1-B/C/D` define the remaining execution sequence.
@@ -2803,8 +3099,8 @@ dependency_notes:
     admission-hardening work under `S08-4`.
   - >-
     The 2026-04-02 principal deep architectural review now feeds `AR-A8..AR-A11` for provider
-    truthfulness (Conductor removal), planner cycle fail-closed behavior, API-engine contract
-    formalization, and step-level retry policy governance.
+    truthfulness, planner cycle fail-closed behavior, API-engine contract formalization, and
+    step-level retry policy governance.
   - >-
     `AR-A9` is now decomposed into `AR-A9-A..E` and closed with docs-first/TDD-first evidence while
     preserving `PlannerErrorCode.GRAPH_CYCLE` as the canonical cycle contract.
@@ -2821,9 +3117,10 @@ dependency_notes:
     realized lifecycle facts, canonical run-control signals, explicit provider mapping helpers, and
     dedicated future use-case boundaries for step retry and run recovery.
   - >-
-    `GOV-S2` is the next governance/docs execution surface: it turns the current inventory,
-    planning-data, and validation scripts into a declared doc-driven framework with scaffolding and
-    traceability waves instead of continuing script-by-script growth.
+    `GOV-S2` is closed as the doc-driven operating framework umbrella. Future governance work must
+    use concrete task IDs such as `GOV-S3-PLANNING-STATE-QUERY-STORE` for local DB operation,
+    derived query-store parity, or the existing docs-governance gates for scoped authoring and
+    traceability helpers.
   - >-
     `TF-A1` is now decomposed into `TF-A1-A` and `TF-A1-B` so the design-graph and preview surface
     freeze before the graph-to-step compiler mapping lands; downstream runtime and UI work should
@@ -2833,6 +3130,10 @@ dependency_notes:
     read/write boundary, revision semantics, and port ownership so Lane C can implement the
     protected API/store path and Lane E cannot continue productizing editable graphs on browser-
     local authority.
+  - >-
+    `TF-A2-C` now isolates the remaining execution-selection and executable-subgraph seam after the
+    authoring-aggregate reset, so preview/run adoption can proceed without drifting back to
+    whole-draft compile semantics.
   - >-
     `TF-A1-C12..C14` now capture the post-`TF-A1-C` backend follow-through: standardize the shared
     plan-route remote-facade recipe, replace observability-tag import ownership with a canonical
@@ -2850,16 +3151,21 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-04-20'
-  total_tasks: 118
-  total_effort_points: 356
-  completed_weighted_points: 280.89
-  lane_progress_pct: 79
+  verified_on: '2026-05-07'
+  total_tasks: 124
+  total_effort_points: 369
+  completed_weighted_points: 315.89
+  lane_progress_pct: 86
   notes: >-
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort. `TF-A2` now adds the missing contract-first workspace graph-draft
     persistence boundary so typed web/api/store ownership is frozen before frontend productization
     continues, `TF-A1-C12..C19` now cover the post-hardening route-facade, compile-boundary
     ownership cleanup, and declarative route-policy plus canonical-envelope convergence, while the
-    merged `origin/main` intake also carries `RC-G1-C-TRUTH-SYNC` and adjacent follow-up routing;
-    summary values were recomputed from the current lane registry on 2026-04-20.
+    merged `origin/main` intake also carries `RC-G1-C-TRUTH-SYNC` and adjacent follow-up routing.
+    `RC-G1-D` is now closed with planner-private behavior ports moved to `@dvt/planner`. The
+    2026-05-06 status reconciliation normalized the remaining `completed` WE-HX entries to `done`
+    and recomputed the weighted summary from the current task registry. `GOV-S2` is now closed as
+    the doc-driven operating framework umbrella; remaining local DB operation, query-store, and
+    generated-artifact work routes through concrete follow-up tasks instead of a duplicate
+    governance umbrella.

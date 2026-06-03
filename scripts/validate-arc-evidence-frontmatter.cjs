@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 /**
+ * Owned concern: validate ARC-2 evidence frontmatter for changed evidence docs.
+ *
  * Enforces ARC-2 evidence frontmatter shape in docs/evidence/*.md.
  *
  * Required shape for ARC-2:
@@ -9,8 +11,8 @@
  */
 const fs = require('node:fs');
 const path = require('node:path');
-const cp = require('node:child_process');
 const yaml = require('js-yaml');
+const { listLocalChangedFiles } = require('./git-local-changes.cjs');
 
 const EVIDENCE_DIR = path.resolve(process.cwd(), 'docs', 'evidence');
 
@@ -34,48 +36,8 @@ function listEvidenceDocs(dir) {
   return results;
 }
 
-function gitExec(cmd) {
-  return cp
-    .execSync(cmd, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
-    .trim();
-}
-
-function hasRef(ref) {
-  try {
-    cp.execSync(`git rev-parse --verify ${ref}`, {
-      stdio: ['ignore', 'ignore', 'ignore'],
-    });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function hasUpstream() {
-  try {
-    cp.execSync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', {
-      stdio: ['ignore', 'ignore', 'ignore'],
-    });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 function listChangedFiles() {
-  try {
-    // Use merge-base (3-dot) diff so unrelated upstream commits are excluded.
-    // Fallback order mirrors the pre-push hook: upstream → origin/main → last commit.
-    const base = hasUpstream()
-      ? '@{u}'
-      : hasRef('origin/main')
-        ? 'origin/main'
-        : 'HEAD~1';
-    const out = gitExec(`git diff --name-only --diff-filter=ACMR ${base}...HEAD`);
-    return out ? out.split(/\r?\n/) : [];
-  } catch {
-    return [];
-  }
+  return listLocalChangedFiles({ repoRootPath: process.cwd() });
 }
 
 function normalizePathForMatch(filePath) {

@@ -76,6 +76,10 @@ Concept anchors for this page:
   Use it for: the ordered correction wave across `T-01`, `EngineRunRef`,
   shared-kernel ownership cleanup, worker runtime harnessing, SLA evidence
   closure, and retention/reset discipline
+- `docs/planning/proposals/mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md`
+  Classification: subsystem delivery plan
+  Use it for: route-level internal alpha gate sequencing, child-slice authority
+  separation, cadence, risk triage, and Lane C/E dependency routing
 - `docs/planning/roadmap/review-remediation-roadmap-20260402.md`
   Classification: subsystem roadmap
   Use it for: sprint-based execution sequencing of review findings and blockers
@@ -124,6 +128,7 @@ Current subsystem roadmaps worth consulting:
 - [Transformation Flow Proposal Set](../proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md)
 - [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
 - [Runtime hardening, shared-kernel, and operations roadmap](../proposals/mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md)
+- [Internal Alpha Product Route Plan 2026-05-05](../proposals/mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md)
 - [Engine Roadmap](../../architecture/components/engine/roadmap/engine-phases.md)
 - [Roadmap By Domain](./roadmap-by-domain.md)
 - [Review Remediation Roadmap 2026-04](./review-remediation-roadmap-20260402.md)

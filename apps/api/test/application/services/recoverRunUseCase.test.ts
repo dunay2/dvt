@@ -17,7 +17,7 @@ const commandContext: AuthorizedCommandExecutionContext = {
     assertedTenantIds: ['tenant-a'],
     assertedProjectIds: [],
   },
-  scope: { tenantId: TenantId.unsafe('tenant-a') },
+  scope: { resource: 'tenant', tenantId: TenantId.unsafe('tenant-a') },
   action: { kind: 'command', name: 'run:retry' },
   requestId: 'req-1',
   authorizedAt: new Date('2026-04-08T00:00:00Z'),
@@ -27,7 +27,10 @@ describe('RecoverRunUseCase', () => {
   it('maps recover command to engine.recoverRun using source run context', async () => {
     const engine = {
       recoverRun: vi.fn().mockResolvedValue({
-        provider: 'mock',
+        provider: 'temporal',
+        tenantId: 'tenant-a',
+        namespace: 'default',
+        workflowId: 'wf-recovery-1',
         runId: 'run-recovery-1',
       }),
     };

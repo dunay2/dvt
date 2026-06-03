@@ -1,3 +1,4 @@
+/** Owned concern: publish presentation-layer port contracts from one barrel. */
 export type { IRunsPort } from './runs';
 export type {
   StartRunInput,
@@ -10,7 +11,15 @@ export type {
 export type { IPlansPort } from './plans';
 export type { PlanPreviewInput } from './plans';
 
-export type { IWorkspacePort } from './workspace';
+export type {
+  IWarehouseSourceImportPort,
+  IWorkspaceAdminReadPort,
+  IWorkspaceDiffQueryPort,
+  IWorkspaceFileContentCommandPort,
+  IWorkspaceFilesQueryPort,
+  IWorkspaceGraphSnapshotQueryPort,
+  IWorkspacePluginCatalogQueryPort,
+} from './workspace';
 export type {
   WorkspaceGraphSnapshot,
   WarehouseConnection,

@@ -152,14 +152,16 @@ describe('RunStates', () => {
     });
 
     expect(container.textContent).toContain('Runs');
-    expect(container.textContent).toContain('Run run_123');
-    expect(container.textContent).toContain('Run run_456');
+    expect(container.textContent).toContain('Run ID');
+    expect(container.textContent).toContain('run_123');
+    expect(container.textContent).toContain('run_456');
     expect(container.textContent).toContain('running');
     expect(container.textContent).toContain('failed');
     expect(container.textContent).toContain('abc123def');
     expect(container.textContent).toContain('zzz999yyy');
-    expect(container.textContent).toContain('Environment: dev');
-    expect(container.textContent).toContain('Environment: prod');
+    expect(container.textContent).toContain('Environment');
+    expect(container.textContent).toContain('dev');
+    expect(container.textContent).toContain('prod');
     expect(container.textContent).toContain('View Details');
   });
 
@@ -219,7 +221,7 @@ describe('RunStates', () => {
     expect(container.textContent).toContain('StepStarted');
     expect(container.textContent).toContain('INFO');
     expect(container.textContent).toContain('Step started');
-    expect(container.textContent).toContain('Step: step-1');
+    expect(container.textContent).toContain('step-1');
     expect(container.textContent).not.toContain('Console');
     expect(container.textContent).not.toContain('Materialization evidence');
     expect(container.textContent).not.toContain(
@@ -270,6 +272,7 @@ describe('RunStates', () => {
     });
 
     expect(container.textContent).toContain('Plan and authoring provenance');
+    expect(container.querySelector('[data-slot="run-plan-provenance-card"]')).not.toBeNull();
     expect(container.textContent).toContain('plan-record-1');
     expect(container.textContent).toContain('plan://persisted/plan-record-1');
     expect(container.textContent).toContain(
@@ -314,10 +317,64 @@ describe('RunStates', () => {
     });
 
     expect(container.textContent).toContain('Materialization evidence');
+    expect(container.querySelector('[data-slot="run-materialization-card"]')).not.toBeNull();
     expect(container.textContent).toContain('Executor');
     expect(container.textContent).toContain('postgres');
     expect(container.textContent).toContain('analytics.orders_daily');
     expect(container.textContent).toContain('42');
+  });
+
+  it('renders return navigation and persisted plan execution scope for completed runs', async () => {
+    const workspace = buildWorkspace({
+      snapshot: {
+        runId: 'run_123',
+        planId: 'plan_123',
+        status: 'completed',
+        executor: 'postgres',
+        startedAt: '2026-03-28T10:00:00.000Z',
+        completedAt: '2026-03-28T10:00:30.000Z',
+        environment: 'dev',
+        gitSha: 'abc123def',
+        planSummary: {
+          executor: 'postgres',
+          nodeCount: 3,
+          stepCount: 3,
+          sourceTables: ['raw.orders'],
+          sinkTables: ['analytics.orders_daily'],
+        },
+        execution: {
+          materialization: {
+            executor: 'postgres',
+            environmentId: 'env-1',
+            sinkTable: 'analytics.orders_daily',
+            rowsWritten: 42,
+            startedAt: '2026-03-28T10:00:05.000Z',
+            completedAt: '2026-03-28T10:00:25.000Z',
+            durationMs: 20000,
+          },
+        },
+      } as RunWorkspaceViewModel['snapshot'],
+    });
+
+    await act(async () => {
+      root.render(
+        <MemoryRouter>
+          <RunWorkspaceState workspace={workspace} />
+        </MemoryRouter>
+      );
+    });
+
+    expect(container.textContent).toContain('Run itinerary');
+    expect(container.textContent).toContain('Back to Canvas');
+    expect(container.textContent).toContain('All runs');
+    expect(container.textContent).toContain('Plan');
+    expect(container.textContent).toContain('plan_123');
+    expect(container.textContent).toContain('Source tables');
+    expect(container.textContent).toContain('raw.orders');
+    expect(container.textContent).toContain('Sink tables');
+    expect(container.textContent).toContain('analytics.orders_daily');
+    expect(container.querySelector('a[href="/canvas"]')).toBeTruthy();
+    expect(container.querySelector('a[href="/runs"]')).toBeTruthy();
   });
 
   it('renders failure diagnostics without materialization evidence on failed snapshots', async () => {
@@ -368,6 +425,61 @@ describe('RunStates', () => {
     expect(container.textContent).toContain('Failure diagnostics');
     expect(container.textContent).toContain('step-transform');
     expect(container.textContent).toContain('STEP_FAILURE');
+  });
+
+  it('renders run diagnostics and trace pointers from snapshot fields', async () => {
+    const workspace = buildWorkspace({
+      snapshot: {
+        runId: 'run_123',
+        planId: 'plan_123',
+        status: 'failed',
+        executor: 'postgres',
+        startedAt: '2026-03-28T10:00:00.000Z',
+        completedAt: '2026-03-28T10:00:10.000Z',
+        environment: 'dev',
+        gitSha: 'abc123def',
+        diagnostics: {
+          runId: 'run_123',
+          planId: 'plan_123',
+          planSha: 'a'.repeat(64),
+          stepId: 'step-load',
+          attemptId: '2',
+          adapter: 'temporal',
+          durationMs: 10000,
+          status: 'failed',
+          errorCode: 'SINK_WRITE_FAILED',
+          pointers: [
+            {
+              kind: 'trace',
+              label: 'Trace query',
+              value: 'runId=run_123 planId=plan_123 stepId=step-load attemptId=2',
+            },
+            {
+              kind: 'log',
+              label: 'Log query',
+              value: 'runId=run_123 planSha=aaaaaaaa',
+            },
+          ],
+        },
+      } as RunWorkspaceViewModel['snapshot'],
+    });
+
+    await act(async () => {
+      root.render(
+        <MemoryRouter>
+          <RunWorkspaceState workspace={workspace} />
+        </MemoryRouter>
+      );
+    });
+
+    expect(container.textContent).toContain('Diagnostics');
+    expect(container.querySelector('[data-slot="run-diagnostics-card"]')).not.toBeNull();
+    expect(container.textContent).toContain('Trace query');
+    expect(container.textContent).toContain('Log query');
+    expect(container.textContent).toContain('runId=run_123');
+    expect(container.textContent).toContain('step-load');
+    expect(container.textContent).toContain('attemptId=2');
+    expect(container.textContent).toContain('SINK_WRITE_FAILED');
   });
 
   it('does not render materialization evidence from timeline payload when snapshot omits it', async () => {
@@ -529,7 +641,7 @@ describe('RunStates', () => {
           stepId: stepId('step-transform'),
           payload: {
             stepArtifactRef: {
-              artifactKind: 'dbt.compiled-sql',
+              artifactKind: 'compiled-sql',
               storageUri: 's3://dvt-artifacts/dev/compiled/orders_daily.sql',
               sha256: 'a'.repeat(64),
               sizeBytes: 2048,
@@ -561,8 +673,9 @@ describe('RunStates', () => {
     });
 
     expect(container.textContent).toContain('Execution provenance');
+    expect(container.querySelector('[data-slot="run-execution-provenance-card"]')).not.toBeNull();
     expect(container.textContent).toContain('step-transform');
-    expect(container.textContent).toContain('dbt.compiled-sql');
+    expect(container.textContent).toContain('compiled-sql');
     expect(container.textContent).toContain('s3://dvt-artifacts/dev/compiled/orders_daily.sql');
     expect(container.textContent).toContain(
       'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
@@ -616,7 +729,7 @@ describe('RunStates', () => {
     expect(container.textContent).not.toContain('Failure diagnostics');
     expect(container.textContent).not.toContain('SINK_WRITE_FAILED');
     expect(container.textContent).toContain('Event timeline');
-    expect(container.textContent).toContain('Step: step-load');
+    expect(container.textContent).toContain('step-load');
   });
 
   it('does not derive failure diagnostics from timeline attempts when snapshot omits them', async () => {
@@ -680,7 +793,7 @@ describe('RunStates', () => {
     expect(container.textContent).not.toContain('CURRENT_ATTEMPT_FAILURE');
     expect(container.textContent).not.toContain('OLD_ATTEMPT_FAILURE');
     expect(container.textContent).toContain('Event timeline');
-    expect(container.textContent).toContain('Step: step-current');
+    expect(container.textContent).toContain('step-current');
   });
 
   it('renders error and missing states', async () => {

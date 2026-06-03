@@ -55,7 +55,7 @@ function createDeps(): {
         ok: true,
         context: {
           principal: {},
-          scope: { tenantId: { value: 'tenant-a' } },
+          scope: { resource: 'tenant', tenantId: { value: 'tenant-a' } },
           action: { kind: 'query', name: 'run:list' },
           requestId: 'req-1',
           authorizedAt: new Date('2026-03-19T00:00:00Z'),
@@ -73,7 +73,7 @@ function createDeps(): {
             planId: 'plan-1',
             planVersion: '1.0',
             logicalAttemptId: 1,
-            provider: 'mock',
+            provider: 'temporal',
             status: 'FAILED',
           },
         ],

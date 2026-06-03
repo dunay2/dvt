@@ -17,3 +17,7 @@ export function normalizeSchema(schema: string): string {
 export function quoteIdentifier(identifier: string): string {
   return `"${identifier.replaceAll('"', '""')}"`;
 }
+
+export function toSqlStringLiteral(value: string): string {
+  return `'${value.replaceAll("'", "''")}'`;
+}

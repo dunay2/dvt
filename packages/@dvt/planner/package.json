@@ -23,6 +23,8 @@
   "scripts": {
     "pretest": "node ../../../scripts/skip-pretest-if-ci.cjs || (pnpm --filter @dvt/contracts build && pnpm --filter @dvt/artifacts build)",
     "build": "tsc -p tsconfig.json",
+    "pretypecheck": "node ../../../scripts/skip-pretest-if-ci.cjs || (pnpm --filter @dvt/contracts build && pnpm --filter @dvt/artifacts build)",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:cross-runtime": "bash test/cross-runtime.sh",

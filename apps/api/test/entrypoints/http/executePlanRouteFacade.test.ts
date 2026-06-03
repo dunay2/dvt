@@ -32,6 +32,7 @@ function createAuthorizedCommandContext(): AuthorizedCommandExecutionContext {
       assertedProjectIds: ['project-1'],
     },
     scope: {
+      resource: 'environment',
       tenantId: TenantId.unsafe('tenant-1'),
       projectId: ProjectId.unsafe('project-1'),
       environmentId: EnvironmentId.unsafe('env-1'),

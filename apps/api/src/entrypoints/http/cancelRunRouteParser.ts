@@ -1,3 +1,7 @@
+/**
+ * Owned concern: parse protected cancel-run requests into a canonical cancel
+ * command plus the tenant-scoped authorization envelope.
+ */
 import type { TenantId } from '../../domain/auth/types.js';
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';

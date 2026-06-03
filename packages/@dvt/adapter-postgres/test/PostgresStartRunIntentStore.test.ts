@@ -88,9 +88,9 @@ async function testMigrateAndCreateIntent(store: PostgresStartRunIntentStore): P
 }
 
 async function testMarkDispatchedMissingIntent(store: PostgresStartRunIntentStore): Promise<void> {
-  await expect(store.markDispatched('missing', dispatchTestData)).rejects.toBeInstanceOf(
-    IntentNotFoundError
-  );
+  await expect(
+    store.markDispatched({ tenantId: 't1', intentId: 'missing' }, dispatchTestData)
+  ).rejects.toBeInstanceOf(IntentNotFoundError);
 }
 
 async function testMarkDispatchedIdempotency(store: PostgresStartRunIntentStore): Promise<void> {
@@ -101,9 +101,11 @@ async function testMarkDispatchedIdempotency(store: PostgresStartRunIntentStore)
     provider: 'temporal',
     createdAt: '2026-03-04T00:00:00.000Z',
   });
-  await store.markDispatched('intent-idem', dispatchTestData);
+  await store.markDispatched({ tenantId: 't1', intentId: 'intent-idem' }, dispatchTestData);
 
-  await expect(store.markDispatched('intent-idem', dispatchTestData)).resolves.toBeUndefined();
+  await expect(
+    store.markDispatched({ tenantId: 't1', intentId: 'intent-idem' }, dispatchTestData)
+  ).resolves.toBeUndefined();
 }
 
 async function testMarkDispatchedConflict(store: PostgresStartRunIntentStore): Promise<void> {
@@ -114,12 +116,12 @@ async function testMarkDispatchedConflict(store: PostgresStartRunIntentStore): P
     provider: 'temporal',
     createdAt: '2026-03-04T00:00:00.000Z',
   });
-  await store.markDispatched('intent-conflict', dispatchTestData);
+  await store.markDispatched({ tenantId: 't1', intentId: 'intent-conflict' }, dispatchTestData);
 
   const differentRef = { ...dispatchTestData, workflowId: 'wf-different' };
-  await expect(store.markDispatched('intent-conflict', differentRef)).rejects.toBeInstanceOf(
-    IntentDispatchConflictError
-  );
+  await expect(
+    store.markDispatched({ tenantId: 't1', intentId: 'intent-conflict' }, differentRef)
+  ).rejects.toBeInstanceOf(IntentDispatchConflictError);
 }
 
 async function testListOrphaned(store: PostgresStartRunIntentStore): Promise<void> {
@@ -131,13 +133,16 @@ async function testListOrphaned(store: PostgresStartRunIntentStore): Promise<voi
   await store.createIntent({ ...oldIntent, intentId: 'intent-old-pending', runId: 'r-old-p' });
 
   await store.createIntent({ ...oldIntent, intentId: 'intent-old-dispatched', runId: 'r-old-d' });
-  await store.markDispatched('intent-old-dispatched', {
-    provider: 'temporal',
-    tenantId: 't1',
-    workflowId: 'wf-old-d',
-    runId: 'r-old-d',
-    namespace: 'default',
-  });
+  await store.markDispatched(
+    { tenantId: 't1', intentId: 'intent-old-dispatched' },
+    {
+      provider: 'temporal',
+      tenantId: 't1',
+      workflowId: 'wf-old-d',
+      runId: 'r-old-d',
+      namespace: 'default',
+    }
+  );
 
   await store.createIntent({
     intentId: 'intent-young',

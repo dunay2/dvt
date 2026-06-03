@@ -40,6 +40,16 @@ function makeTemporalRunRef(runId = 'r1'): EngineRunRef {
   };
 }
 
+function intentRef(
+  intentId = 'intent-1',
+  tenantId = 't1'
+): {
+  tenantId: string;
+  intentId: string;
+} {
+  return { tenantId, intentId };
+}
+
 describe('InMemoryStartRunIntentStore', () => {
   it('createIntent creates intent with PENDING status', async () => {
     const store = new InMemoryStartRunIntentStore();
@@ -69,9 +79,9 @@ describe('InMemoryStartRunIntentStore', () => {
     await store.createIntent(makeCreateInput());
 
     const runRef = makeTemporalRunRef();
-    await store.markDispatched('intent-1', runRef);
+    await store.markDispatched(intentRef(), runRef);
 
-    const intent = await store.getIntent('intent-1');
+    const intent = await store.getIntent(intentRef());
     expect(intent?.status).toBe('DISPATCHED');
     expect(intent?.engineRunRef).toEqual(runRef);
   });
@@ -80,20 +90,20 @@ describe('InMemoryStartRunIntentStore', () => {
     const store = new InMemoryStartRunIntentStore();
     await store.createIntent(makeCreateInput());
     const runRef = makeTemporalRunRef();
-    await store.markDispatched('intent-1', runRef);
+    await store.markDispatched(intentRef(), runRef);
 
-    await expect(store.markDispatched('intent-1', runRef)).resolves.toBeUndefined();
-    const intent = await store.getIntent('intent-1');
+    await expect(store.markDispatched(intentRef(), runRef)).resolves.toBeUndefined();
+    const intent = await store.getIntent(intentRef());
     expect(intent?.status).toBe('DISPATCHED');
   });
 
   it('markDispatched throws IntentDispatchConflictError when called with a different engineRunRef on DISPATCHED intent', async () => {
     const store = new InMemoryStartRunIntentStore();
     await store.createIntent(makeCreateInput());
-    await store.markDispatched('intent-1', makeTemporalRunRef());
+    await store.markDispatched(intentRef(), makeTemporalRunRef());
 
     const differentRef = { ...makeTemporalRunRef(), workflowId: 'wf-different' };
-    await expect(store.markDispatched('intent-1', differentRef)).rejects.toThrow(
+    await expect(store.markDispatched(intentRef(), differentRef)).rejects.toThrow(
       IntentDispatchConflictError
     );
   });
@@ -101,61 +111,61 @@ describe('InMemoryStartRunIntentStore', () => {
   it('markDispatched on non-existent intent throws IntentNotFoundError', async () => {
     const store = new InMemoryStartRunIntentStore();
 
-    await expect(store.markDispatched('nonexistent', makeTemporalRunRef())).rejects.toThrow(
-      IntentNotFoundError
-    );
+    await expect(
+      store.markDispatched(intentRef('nonexistent'), makeTemporalRunRef())
+    ).rejects.toThrow(IntentNotFoundError);
   });
 
   it('markResolved transitions DISPATCHED to RESOLVED', async () => {
     const store = new InMemoryStartRunIntentStore();
     await store.createIntent(makeCreateInput());
-    await store.markDispatched('intent-1', makeTemporalRunRef());
-    await store.markResolved('intent-1');
+    await store.markDispatched(intentRef(), makeTemporalRunRef());
+    await store.markResolved(intentRef());
 
-    const intent = await store.getIntent('intent-1');
+    const intent = await store.getIntent(intentRef());
     expect(intent?.status).toBe('RESOLVED');
   });
 
   it('markResolved from PENDING is allowed (pre-adapter abort cleanup)', async () => {
     const store = new InMemoryStartRunIntentStore();
     await store.createIntent(makeCreateInput());
-    await store.markResolved('intent-1');
+    await store.markResolved(intentRef());
 
-    const intent = await store.getIntent('intent-1');
+    const intent = await store.getIntent(intentRef());
     expect(intent?.status).toBe('RESOLVED');
   });
 
   it('markResolved from RESOLVED throws IntentInvalidTransitionError', async () => {
     const store = new InMemoryStartRunIntentStore();
     await store.createIntent(makeCreateInput());
-    await store.markResolved('intent-1');
+    await store.markResolved(intentRef());
 
-    await expect(store.markResolved('intent-1')).rejects.toThrow(IntentInvalidTransitionError);
+    await expect(store.markResolved(intentRef())).rejects.toThrow(IntentInvalidTransitionError);
   });
 
   it('markResolved from EXPIRED throws IntentInvalidTransitionError', async () => {
     const store = new InMemoryStartRunIntentStore();
     await store.createIntent(makeCreateInput());
-    await store.markExpired('intent-1');
+    await store.markExpired(intentRef());
 
-    await expect(store.markResolved('intent-1')).rejects.toThrow(IntentInvalidTransitionError);
+    await expect(store.markResolved(intentRef())).rejects.toThrow(IntentInvalidTransitionError);
   });
 
   it('markExpired transitions PENDING to EXPIRED', async () => {
     const store = new InMemoryStartRunIntentStore();
     await store.createIntent(makeCreateInput());
-    await store.markExpired('intent-1');
+    await store.markExpired(intentRef());
 
-    const intent = await store.getIntent('intent-1');
+    const intent = await store.getIntent(intentRef());
     expect(intent?.status).toBe('EXPIRED');
   });
 
   it('markExpired from DISPATCHED throws IntentInvalidTransitionError', async () => {
     const store = new InMemoryStartRunIntentStore();
     await store.createIntent(makeCreateInput());
-    await store.markDispatched('intent-1', makeTemporalRunRef());
+    await store.markDispatched(intentRef(), makeTemporalRunRef());
 
-    await expect(store.markExpired('intent-1')).rejects.toThrow(IntentInvalidTransitionError);
+    await expect(store.markExpired(intentRef())).rejects.toThrow(IntentInvalidTransitionError);
   });
 
   it('listOrphaned returns only PENDING and DISPATCHED intents older than threshold', async () => {
@@ -171,7 +181,7 @@ describe('InMemoryStartRunIntentStore', () => {
     await store.createIntent(
       makeCreateInput({ intentId: 'old-dispatched', runId: 'r2', createdAt: oldTime })
     );
-    await store.markDispatched('old-dispatched', makeTemporalRunRef('r2'));
+    await store.markDispatched(intentRef('old-dispatched'), makeTemporalRunRef('r2'));
     // Recent PENDING — too young
     await store.createIntent(
       makeCreateInput({ intentId: 'recent-pending', runId: 'r3', createdAt: recentTime })
@@ -180,12 +190,12 @@ describe('InMemoryStartRunIntentStore', () => {
     await store.createIntent(
       makeCreateInput({ intentId: 'old-resolved', runId: 'r4', createdAt: oldTime })
     );
-    await store.markResolved('old-resolved');
+    await store.markResolved(intentRef('old-resolved'));
     // Old EXPIRED — terminal, not included
     await store.createIntent(
       makeCreateInput({ intentId: 'old-expired', runId: 'r5', createdAt: oldTime })
     );
-    await store.markExpired('old-expired');
+    await store.markExpired(intentRef('old-expired'));
 
     const orphaned = await store.listOrphaned(thresholdMs, nowMs);
     expect(orphaned).toHaveLength(2);
@@ -231,7 +241,7 @@ describe('InMemoryStartRunIntentStore', () => {
     const clock = { nowIsoUtc: () => recentTime };
     const store = new InMemoryStartRunIntentStore(clock);
     await store.createIntent(makeCreateInput({ createdAt: oldTime }));
-    await store.markDispatched('intent-1', makeTemporalRunRef());
+    await store.markDispatched(intentRef(), makeTemporalRunRef());
 
     const orphaned = await store.listOrphaned(thresholdMs, nowMs);
     expect(orphaned).toHaveLength(0);
@@ -239,8 +249,18 @@ describe('InMemoryStartRunIntentStore', () => {
 
   it('getIntent returns null for non-existent intentId', async () => {
     const store = new InMemoryStartRunIntentStore();
-    const result = await store.getIntent('nonexistent');
+    const result = await store.getIntent(intentRef('nonexistent'));
     expect(result).toBeNull();
+  });
+
+  it('tenant-scoped reads and writes do not expose another tenant intent', async () => {
+    const store = new InMemoryStartRunIntentStore();
+    await store.createIntent(makeCreateInput());
+
+    await expect(store.markResolved(intentRef('intent-1', 'other-tenant'))).rejects.toThrow(
+      IntentNotFoundError
+    );
+    await expect(store.getIntent(intentRef('intent-1', 'other-tenant'))).resolves.toBeNull();
   });
 
   // INV-INTENT-011: active (tenantId, runId) uniqueness
@@ -256,7 +276,7 @@ describe('InMemoryStartRunIntentStore', () => {
   it('createIntent throws IntentActiveConflictError when a DISPATCHED intent exists for same (tenantId, runId)', async () => {
     const store = new InMemoryStartRunIntentStore();
     await store.createIntent(makeCreateInput({ intentId: 'intent-original' }));
-    await store.markDispatched('intent-original', makeTemporalRunRef());
+    await store.markDispatched(intentRef('intent-original'), makeTemporalRunRef());
 
     await expect(
       store.createIntent(makeCreateInput({ intentId: 'intent-retry-uuid' }))
@@ -266,7 +286,7 @@ describe('InMemoryStartRunIntentStore', () => {
   it('createIntent allows a new intent for (tenantId, runId) once the previous one is RESOLVED', async () => {
     const store = new InMemoryStartRunIntentStore();
     await store.createIntent(makeCreateInput({ intentId: 'intent-original' }));
-    await store.markResolved('intent-original');
+    await store.markResolved(intentRef('intent-original'));
 
     const next = await store.createIntent(makeCreateInput({ intentId: 'intent-retry-uuid' }));
     expect(next.status).toBe('PENDING');
@@ -276,7 +296,7 @@ describe('InMemoryStartRunIntentStore', () => {
   it('createIntent allows a new intent for (tenantId, runId) once the previous one is EXPIRED', async () => {
     const store = new InMemoryStartRunIntentStore();
     await store.createIntent(makeCreateInput({ intentId: 'intent-original' }));
-    await store.markExpired('intent-original');
+    await store.markExpired(intentRef('intent-original'));
 
     const next = await store.createIntent(makeCreateInput({ intentId: 'intent-retry-uuid' }));
     expect(next.status).toBe('PENDING');

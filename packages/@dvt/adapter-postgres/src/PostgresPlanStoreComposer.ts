@@ -1,3 +1,6 @@
+/**
+ * Owned concern: compose the scoped Postgres plan-store adapter internals.
+ */
 import type { Pool } from 'pg';
 import { Pool as PostgresPool } from 'pg';
 

@@ -11,6 +11,11 @@ last_reviewed: 2026-04-02
 
 Accepted.
 
+Narrowed by
+[ADR-0054 - Plan Store Scoped Record Identity](./ADR-0054-plan-store-scoped-record-identity.md)
+for tenant-owned record identity. ADR-0043 remains the ownership decision for
+serializable records and artifacts-owned behavior ports.
+
 ## Context
 
 The repository already has a partial persisted-plan runtime path:
@@ -104,6 +109,9 @@ The canonical persisted plan artifact plus lineage and archival posture.
 
 Required fields:
 
+- `tenantId`
+- `projectId`
+- `environmentId`
 - `planId`
 - `canonicalPlanJson`
 - `canonicalHash`
@@ -129,10 +137,14 @@ Optional lineage and archival fields:
 
 #### `PlanExecutabilityRecord`
 
-The adapter-specific executability result for one `planId + adapterId`.
+The adapter-specific executability result for one
+`tenantId + projectId + environmentId + planId + adapterId`.
 
 Required fields:
 
+- `tenantId`
+- `projectId`
+- `environmentId`
 - `planId`
 - `adapterId`
 - `state`
@@ -154,6 +166,9 @@ The admission relation between a persisted plan and a run.
 
 Required fields:
 
+- `tenantId`
+- `projectId`
+- `environmentId`
 - `planId`
 - `runId`
 - `adapterId`
@@ -198,6 +213,10 @@ Read-side responsibilities:
 This keeps write truth and operator/query truth separate instead of collapsing
 everything into one repository-shaped abstraction.
 
+ADR-0054 further requires these read-side and write-side operations to accept
+scoped input objects instead of naked `planId` parameters for tenant-owned
+records.
+
 ### 6. PostgreSQL is the initial system of record
 
 S08-v1 remains PostgreSQL-backed.
@@ -211,19 +230,24 @@ The repository already has:
 PostgreSQL is therefore the lowest-risk first operational system of record for
 this slice. Object storage for plans is not required in S08-v1.
 
-### 7. Migration keeps the current lifecycle facade during cutover
+### 7. Stored-plan artifact ports are canonical in `@dvt/artifacts`
 
-`IPlanValidationLifecycleStore` remains as a compatibility facade during the
-cutover.
+`IStoredPlanArtifactStore` is the single lifecycle and materialization port for
+stored executable plan artifacts.
 
-The migration path is:
+The active ownership rule is:
 
-1. define new records and ports
-2. evolve `PostgresPlanStore` to implement the artifacts-owned ports
-3. adapt the old lifecycle facade on top of the new store until callers move
-4. retire or narrow the old facade after cutover
+1. `@dvt/contracts` owns serializable record and reference shapes.
+2. `@dvt/artifacts` owns stored-plan artifact reader/writer ports.
+3. `@dvt/adapter-postgres` implements those ports against PostgreSQL.
+4. `@dvt/engine` owns only the integrity validator that consumes the
+   artifact reader before dispatch.
+5. API and planner services consume the artifacts-owned port and must not
+   redeclare equivalent stored-plan lifecycle or validation ports.
 
-This avoids avoidable churn across API, planner, and adapter packages.
+There is no compatibility facade for `IPlanValidationLifecycleStore`,
+`IPlanFetcher`, or API-local stored-plan validation ports in the active model.
+Consumers that still depend on those names must fail in tests or type-checks.
 
 ### 8. `bindingState` is out of scope for S08-v1
 
@@ -259,7 +283,8 @@ flowchart TD
 ### Trade-offs
 
 - S08 becomes more disciplined and less "all-in-one" than earlier sketches.
-- Existing lifecycle interfaces must remain temporarily during migration.
+- Consumers must update to the artifacts-owned port instead of relying on old
+  lifecycle/fetch names.
 - Admission queries may need a small dedicated read surface instead of relying
   on one broad store abstraction.
 

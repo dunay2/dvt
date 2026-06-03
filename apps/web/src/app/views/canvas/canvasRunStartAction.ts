@@ -1,9 +1,14 @@
+/**
+ * Owned concern: orchestrate Canvas run-start readiness and delegate execution
+ * to the runs port without authoring runtime identity.
+ */
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { PlanViewModel } from '../../types/plans';
 
-import { canvasViewCopy } from './copy';
 import { resolvePlanRefForStartRun } from './canvasPlanReadiness';
+import { collectPlanSelection } from './canvasRunSelection';
+import { canvasViewCopy } from './copy';
 
 type CanvasRunStartActionFailure = {
   ok: false;
@@ -16,13 +21,12 @@ type CanvasRunStartActionSuccess = {
   runId: string;
 };
 
-export type CanvasRunStartActionResult =
-  | CanvasRunStartActionFailure
-  | CanvasRunStartActionSuccess;
+export type CanvasRunStartActionResult = CanvasRunStartActionFailure | CanvasRunStartActionSuccess;
 
 export async function executeCanvasRunStartAction({
   canRun,
   currentPlan,
+  executableGraphFailureMessage,
   hasPersistedPlanForRun,
   isCurrentPlanStale,
   runsService,
@@ -30,6 +34,7 @@ export async function executeCanvasRunStartAction({
 }: {
   canRun: boolean;
   currentPlan: PlanViewModel | null;
+  executableGraphFailureMessage: string | null;
   hasPersistedPlanForRun: boolean;
   isCurrentPlanStale: boolean;
   runsService: IRunsPort;
@@ -47,6 +52,14 @@ export async function executeCanvasRunStartAction({
     return {
       ok: false,
       message: canvasViewCopy.runNoPlanMessage,
+      shouldOpenPlanModal: false,
+    };
+  }
+
+  if (executableGraphFailureMessage != null) {
+    return {
+      ok: false,
+      message: executableGraphFailureMessage,
       shouldOpenPlanModal: false,
     };
   }
@@ -77,10 +90,12 @@ export async function executeCanvasRunStartAction({
   }
 
   try {
-    const runId = `run_ui_${Date.now()}`;
-    const context = sessionContext.buildRunContext(runId);
-    const runRef = await runsService.startRun({ planRef, context });
-    return { ok: true, runId: runRef.runId };
+    const runReceipt = await runsService.startRun({
+      planRef,
+      workspaceScope: sessionContext.getWorkspaceScopeSnapshot(),
+      selection: collectPlanSelection(currentPlan),
+    });
+    return { ok: true, runId: runReceipt.runId };
   } catch (error) {
     return {
       ok: false,

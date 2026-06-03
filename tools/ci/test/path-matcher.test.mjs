@@ -21,12 +21,24 @@ test('matchesAnyPattern supports wildcard and normalizes Windows separators', ()
   );
 });
 
-test('computeBooleanScope marks adapter_postgres_changed for relevant workflow/config changes', () => {
+test('script globs cover root and nested scripts explicitly', () => {
+  assert.equal(matchesAnyPattern('scripts/planning-db-query.cjs', ['scripts/*.cjs']), true);
+  assert.equal(matchesAnyPattern('scripts/nested/example.cjs', ['scripts/**/*.cjs']), true);
+  assert.equal(matchesAnyPattern('tools/docs/check-filenames.ts', ['tools/docs/*.ts']), true);
+  assert.equal(matchesAnyPattern('tools/docs/lib/markdown.ts', ['tools/docs/**/*.ts']), true);
+  assert.equal(
+    matchesAnyPattern('tools/ops/ar-c2-evidence-collector.mjs', ['tools/ops/*.mjs']),
+    true
+  );
+});
+
+test('computeBooleanScope marks adapter_postgres_changed for relevant runtime/config changes', () => {
   const fromWorkflow = computeBooleanScope(
     ['.github/workflows/pr-quality-gate.yml'],
     PR_QUALITY_SCOPE_PATTERNS
   );
-  assert.equal(fromWorkflow.adapter_postgres_changed, true);
+  assert.equal(fromWorkflow.adapter_postgres_changed, false);
+  assert.equal(fromWorkflow.ci_tooling_changed, true);
 
   const fromTsconfig = computeBooleanScope(['tsconfig.base.json'], PR_QUALITY_SCOPE_PATTERNS);
   assert.equal(fromTsconfig.adapter_postgres_changed, true);
@@ -52,8 +64,9 @@ test('computeBooleanScope marks temporal_postgres_changed for adapter-postgres c
     ['.github/workflows/pr-quality-gate.yml'],
     PR_QUALITY_SCOPE_PATTERNS
   );
-  assert.equal(fromWorkflowConfig.temporal_changed, true);
-  assert.equal(fromWorkflowConfig.temporal_postgres_changed, true);
+  assert.equal(fromWorkflowConfig.temporal_changed, false);
+  assert.equal(fromWorkflowConfig.temporal_postgres_changed, false);
+  assert.equal(fromWorkflowConfig.ci_tooling_changed, true);
 
   const fromRuntimeDepsHelper = computeBooleanScope(
     ['scripts/build-workspace-runtime-deps.cjs'],

@@ -1,9 +1,13 @@
+/** Owned concern: compose Canvas route stores without becoming a replacement aggregate store. */
 import { useCallback } from 'react';
+import { useAuthorizationStore, type UserPermissions } from '../../stores/authorizationStore';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import { useExecutionStore } from '../../stores/executionStore';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import type { CanvasPaletteId } from './canvasPalette';
+
+const EMPTY_PERSISTED_NODE_POSITIONS: Record<string, { x: number; y: number }> = {};
 
 type CanvasStoreFacade = {
   _hasHydrated: boolean;
@@ -22,7 +26,7 @@ type CanvasStoreFacade = {
   setCurrentPlan: (plan: ReturnType<typeof useExecutionStore.getState>['currentPlan']) => void;
   currentPlan: ReturnType<typeof useExecutionStore.getState>['currentPlan'];
   currentRun: ReturnType<typeof useExecutionStore.getState>['currentRun'];
-  userPermissions: ReturnType<typeof useExecutionStore.getState>['userPermissions'];
+  userPermissions: UserPermissions;
   setConsolePanelHeight: (height: number) => void;
   consolePanelVisible: boolean;
   toggleConsolePanel: () => void;
@@ -30,6 +34,14 @@ type CanvasStoreFacade = {
   inspectorPanelVisible: boolean;
   gridSize: number;
   canvasPalette: CanvasPaletteId;
+  canvasGridVisible: boolean;
+  canvasGridColor: CanvasPaletteId;
+  canvasSnapToGrid: boolean;
+  canvasEmptyStateGuideVisible: boolean;
+  setCanvasGridVisible: (visible: boolean) => void;
+  setCanvasGridColor: (color: CanvasPaletteId) => void;
+  setCanvasSnapToGrid: (enabled: boolean) => void;
+  setCanvasEmptyStateGuideVisible: (visible: boolean) => void;
   canvasLayouts: ReturnType<typeof useCanvasInteractionStore.getState>['canvasLayouts'];
   setCanvasViewport: ReturnType<typeof useCanvasInteractionStore.getState>['setCanvasViewport'];
   setCanvasNodePositions: ReturnType<
@@ -70,7 +82,7 @@ export function useCanvasStoreFacade(): CanvasStoreView {
   const setCurrentPlan = useExecutionStore((state) => state.setCurrentPlan);
   const currentPlan = useExecutionStore((state) => state.currentPlan);
   const currentRun = useExecutionStore((state) => state.currentRun);
-  const userPermissions = useExecutionStore((state) => state.userPermissions);
+  const userPermissions = useAuthorizationStore((state) => state.userPermissions);
   const setConsolePanelHeight = useUiLayoutStore((state) => state.setConsolePanelHeight);
   const consolePanelVisible = useUiLayoutStore((state) => state.consolePanelVisible);
   const showExplorerPanelStore = useUiLayoutStore((state) => state.showExplorerPanel);
@@ -83,6 +95,18 @@ export function useCanvasStoreFacade(): CanvasStoreView {
   const inspectorPanelVisible = useUiLayoutStore((state) => state.inspectorPanelVisible);
   const gridSize = useUiLayoutStore((state) => state.gridSize);
   const canvasPalette = useUiLayoutStore((state) => state.canvasPalette);
+  const canvasGridVisible = useUiLayoutStore((state) => state.canvasGridVisible);
+  const canvasGridColor = useUiLayoutStore((state) => state.canvasGridColor);
+  const canvasSnapToGrid = useUiLayoutStore((state) => state.canvasSnapToGrid);
+  const canvasEmptyStateGuideVisible = useUiLayoutStore(
+    (state) => state.canvasEmptyStateGuideVisible
+  );
+  const setCanvasGridVisible = useUiLayoutStore((state) => state.setCanvasGridVisible);
+  const setCanvasGridColor = useUiLayoutStore((state) => state.setCanvasGridColor);
+  const setCanvasSnapToGrid = useUiLayoutStore((state) => state.setCanvasSnapToGrid);
+  const setCanvasEmptyStateGuideVisible = useUiLayoutStore(
+    (state) => state.setCanvasEmptyStateGuideVisible
+  );
   const canvasLayouts = useCanvasInteractionStore((state) => state.canvasLayouts);
   const setCanvasViewport = useCanvasInteractionStore((state) => state.setCanvasViewport);
   const setCanvasNodePositions = useCanvasInteractionStore((state) => state.setCanvasNodePositions);
@@ -139,13 +163,21 @@ export function useCanvasStoreFacade(): CanvasStoreView {
     inspectorPanelVisible,
     gridSize,
     canvasPalette,
+    canvasGridVisible,
+    canvasGridColor,
+    canvasSnapToGrid,
+    canvasEmptyStateGuideVisible,
+    setCanvasGridVisible,
+    setCanvasGridColor,
+    setCanvasSnapToGrid,
+    setCanvasEmptyStateGuideVisible,
     canvasLayouts,
     setCanvasViewport,
     setCanvasNodePositions,
     selectedNodeIds: selectedNodes,
     workspaceLayoutKey,
     persistedViewport: workspaceCanvasLayout?.viewport ?? null,
-    persistedNodePositions: workspaceCanvasLayout?.nodePositions ?? {},
+    persistedNodePositions: workspaceCanvasLayout?.nodePositions ?? EMPTY_PERSISTED_NODE_POSITIONS,
     hideExplorerPanel,
     showExplorerPanel,
     hideInspectorPanel,

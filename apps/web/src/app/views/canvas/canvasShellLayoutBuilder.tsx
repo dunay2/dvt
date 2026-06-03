@@ -1,0 +1,121 @@
+/** Owned concern: build the layout concern of the route-owned Canvas shell contract. */
+import type { ReactNode } from 'react';
+
+import { CanvasReadOnlyBannerView } from './CanvasStateViews';
+import { CanvasPlaygroundTabStrip } from './CanvasPlaygroundTabStrip';
+import { renderCanvasCenterSurface } from './CanvasCenterSurface';
+import { CanvasRecoveryBanner } from './CanvasRecoveryBanner';
+import { resolveCanvasDraftAccessRecoveryCommand } from './canvasDraftAccessPostureModel';
+import type { CanvasShellLayoutBuilderArgs } from './canvasShellBuilder.types';
+import type { CanvasShellLayout } from './canvasShell.types';
+
+function focusWorkspaceScopeControls(): void {
+  document
+    .querySelector<HTMLElement>(
+      [
+        '[data-slot="shell-workspace-context-trigger"]',
+        '[data-slot="shell-workspace-menu-trigger"]',
+        '[data-slot="select-trigger"]',
+      ].join(',')
+    )
+    ?.focus();
+}
+
+function renderCanvasShellReadOnlyBanner(
+  recoveryCommands: CanvasShellLayoutBuilderArgs['recoveryCommands'],
+  routePresentation: Pick<
+    CanvasShellLayoutBuilderArgs['routePresentation'],
+    'presentationState' | 'draftAccessPosture' | 'readOnlyState'
+  >
+): ReactNode {
+  return (
+    <>
+      <CanvasRecoveryBanner
+        presentationState={routePresentation.presentationState}
+        draftAccessPosture={routePresentation.draftAccessPosture}
+        onDraftAccessRecoveryAction={resolveCanvasDraftAccessRecoveryCommand({
+          posture: routePresentation.draftAccessPosture,
+          reloadLatestDraft: recoveryCommands.reloadLatestDraft,
+          refetchDraftAfterAuthRefresh: recoveryCommands.refetchDraftAfterAuthRefresh,
+          focusScopeControls: focusWorkspaceScopeControls,
+        })}
+      />
+      <CanvasReadOnlyBannerView
+        state={routePresentation.readOnlyState}
+        onRequestExecutableScope={
+          routePresentation.draftAccessPosture.kind === 'read_only'
+            ? focusWorkspaceScopeControls
+            : undefined
+        }
+      />
+    </>
+  );
+}
+
+function renderCanvasShellHostTabStrip(
+  authoringCommands: CanvasShellLayoutBuilderArgs['authoringCommands'],
+  routePresentation: Pick<
+    CanvasShellLayoutBuilderArgs['routePresentation'],
+    'availableCanvasKinds' | 'canvasTabState' | 'effectiveUserPermissions'
+  >
+): ReactNode {
+  if (routePresentation.canvasTabState.tabs.length === 0) {
+    return null;
+  }
+
+  return (
+    <CanvasPlaygroundTabStrip
+      tabState={routePresentation.canvasTabState}
+      availableCanvasKinds={routePresentation.availableCanvasKinds}
+      canEditEdges={routePresentation.effectiveUserPermissions.canEditEdges}
+      variant="inline"
+      onCreateCanvasDocument={(command) => {
+        void authoringCommands.handleCreateCanvasDocument(command);
+      }}
+    />
+  );
+}
+
+export function buildCanvasShellLayout({
+  authoringCommands,
+  layoutState,
+  preferenceCommands,
+  recoveryCommands,
+  routePresentation,
+}: CanvasShellLayoutBuilderArgs): CanvasShellLayout {
+  const centerSurfaceMode =
+    routePresentation.presentationState.routeState === 'empty' &&
+    routePresentation.effectiveUserPermissions.canEditEdges
+      ? 'overlay'
+      : 'replace';
+
+  return {
+    focusMode: layoutState.focusMode,
+    explorerPanelVisible: layoutState.explorerPanelVisible,
+    inspectorPanelVisible: layoutState.inspectorPanelVisible,
+    canOpenSourceImport: layoutState.canOpenSourceImport,
+    hostTabState: routePresentation.canvasTabState,
+    centerSurfaceMode,
+    hostTabStrip: renderCanvasShellHostTabStrip(authoringCommands, routePresentation),
+    centerSurface: renderCanvasCenterSurface({
+      presentationState: routePresentation.presentationState,
+      workspaceScope: routePresentation.workspaceScope,
+      startupBlockState: routePresentation.startupBlockState,
+      draftTransportError: routePresentation.draftTransportError,
+      workbenchErrorMessage: routePresentation.workbenchErrorMessage,
+      canvasDocument: routePresentation.canvasDocument,
+      draftSaveStatus: routePresentation.draftSaveStatus,
+      availableCanvasKinds: routePresentation.availableCanvasKinds,
+      canCreateCanvasDocument: routePresentation.canCreateCanvasDocument,
+      canEditEdges: routePresentation.effectiveUserPermissions.canEditEdges,
+      canOpenSourceImport: layoutState.canOpenSourceImport,
+      emptyStateGuideVisible: layoutState.canvasEmptyStateGuideVisible,
+      onCreateCanvasDocument: (command) => {
+        void authoringCommands.handleCreateCanvasDocument(command);
+      },
+      onCreateAuthoringNode: authoringCommands.handleCreateAuthoringNode,
+      onEmptyStateGuideVisibilityChange: preferenceCommands.setCanvasEmptyStateGuideVisible,
+    }),
+    readOnlyBanner: renderCanvasShellReadOnlyBanner(recoveryCommands, routePresentation),
+  };
+}

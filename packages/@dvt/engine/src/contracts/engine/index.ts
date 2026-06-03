@@ -1,4 +1,3 @@
-export type { IWorkflowEngine } from './IWorkflowEngine.v1.js';
 export type { IRunEnrichmentService } from './IRunEnrichmentService.v1.js';
 export type {
   IRunStateStore,
@@ -13,13 +12,14 @@ export type {
 export type { IRunSnapshotStalenessQuery } from '../../ports/IRunSnapshotStalenessQuery.js';
 export type { IProjector } from '../../ports/IProjector.js';
 export type { IProvider } from './IProvider.v1.js';
-export type { IPlanResolver, ResolvedPlan } from './IPlanResolver.v1.js';
 
 export type {
+  EventInput,
+  EventEnvelope,
   EventType,
   RunEventInput,
-  RunEventPersisted,
   RunMetadata,
+  StepEventInput,
   WorkflowSnapshot,
   AppendResult,
 } from './RunEvents.v1.js';

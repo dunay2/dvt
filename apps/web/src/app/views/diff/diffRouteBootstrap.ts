@@ -1,8 +1,8 @@
+/** Owned concern: publish Diff workbench and comparison context posture into the route bootstrap contract. */
 import {
   createCompleteRouteBootstrapPresentation,
-  createErrorRouteBootstrapPresentation,
+  createFailedRouteBootstrapPresentation,
   createPendingRouteBootstrapPresentation,
-  createPublishedRouteBootstrapHandle,
   type RouteBootstrapPresentation,
 } from '../../bootstrap/routeBootstrapContract';
 import type {
@@ -10,12 +10,6 @@ import type {
   DiffSqlContextState,
   DiffWorkbenchState,
 } from './diffWorkbenchStateModel';
-
-export const DIFF_ROUTE_ID = 'dbt.diff';
-
-export const DIFF_ROUTE_BOOTSTRAP_HANDLE = createPublishedRouteBootstrapHandle({
-  pendingDetail: 'Preparing Diff route',
-});
 
 type DiffRouteBootstrapArgs = {
   workbenchState: DiffWorkbenchState;
@@ -29,32 +23,23 @@ export function deriveDiffRouteBootstrapPresentation({
   sqlContextState,
 }: DiffRouteBootstrapArgs): RouteBootstrapPresentation {
   if (workbenchState.kind === 'loading') {
-    return createPendingRouteBootstrapPresentation(
-      'Loading diff changes for the route'
-    );
+    return createPendingRouteBootstrapPresentation('Loading diff changes for the route');
   }
 
   if (workbenchState.kind === 'error') {
-    return createErrorRouteBootstrapPresentation(workbenchState.message);
+    return createFailedRouteBootstrapPresentation(workbenchState.message);
   }
 
   if (workbenchState.kind === 'empty') {
-    return createCompleteRouteBootstrapPresentation(
-      'Diff route is ready with no changes'
-    );
+    return createCompleteRouteBootstrapPresentation('Diff route is ready with no changes');
   }
 
-  if (
-    compareContextState.kind === 'loading' ||
-    sqlContextState.kind === 'loading'
-  ) {
-    return createPendingRouteBootstrapPresentation(
-      'Loading compare context for the diff route'
-    );
+  if (compareContextState.kind === 'loading' || sqlContextState.kind === 'loading') {
+    return createPendingRouteBootstrapPresentation('Loading compare context for the diff route');
   }
 
   if (sqlContextState.kind === 'error') {
-    return createErrorRouteBootstrapPresentation(sqlContextState.message);
+    return createFailedRouteBootstrapPresentation(sqlContextState.message);
   }
 
   return createCompleteRouteBootstrapPresentation('Diff route is ready');

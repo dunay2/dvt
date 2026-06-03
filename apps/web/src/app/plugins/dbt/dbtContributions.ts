@@ -1,17 +1,23 @@
 import React from 'react';
 import { FileCode2, FileText, GitCompare, GitGraph, LayoutDashboard } from 'lucide-react';
 
-import { ARTIFACTS_ROUTE_BOOTSTRAP_HANDLE } from '../../views/artifacts/artifactsRouteBootstrap';
-import { CODE_ROUTE_BOOTSTRAP_HANDLE } from '../../views/code/codeRouteBootstrap';
-import { DIFF_ROUTE_BOOTSTRAP_HANDLE } from '../../views/diff/diffRouteBootstrap';
-import { LINEAGE_ROUTE_BOOTSTRAP_HANDLE } from '../../views/lineage/lineageRouteBootstrap';
-import { CANVAS_ROUTE_BOOTSTRAP_HANDLE } from '../../views/canvas/canvasDraftPresentationState';
+import { CANVAS_ROUTE_BOOTSTRAP_HANDLE } from '../../views/canvas/canvasDraftPresentationStore';
 import type { PluginContributions } from '../registry';
 import { DBT_NODE_KINDS } from '../nodeTypeCatalog.dbt';
 import { DbtNodeRenderer, dbtInspectorPanels, mapRunToCanonical } from './DbtNodeRenderer';
+import { dbtCanvasGraphStrategy } from './dbtNodeAdapter';
 
+/**
+ * Static v1 contribution manifest for the built-in dbt plugin.
+ *
+ * Canonical extension rules live in
+ * `docs/architecture/components/web/plugin-contributions-developer-guide.md`.
+ * Keep this file declarative and route behavior to the owning modules.
+ */
 const DBT_PLUGIN_ID = 'dbt';
 
+// dbt owns the renderer registration for every dbt node kind declared in the
+// canonical node-kind catalog.
 const nodeRenderers = new Map(
   DBT_NODE_KINDS.map((kind) => [
     kind.kind,
@@ -23,6 +29,9 @@ const nodeRenderers = new Map(
   ])
 );
 
+/**
+ * Shell-facing contribution entry consumed by `PLUGIN_REGISTRY`.
+ */
 export const dbtContributions: PluginContributions = {
   id: DBT_PLUGIN_ID,
   displayName: 'dbt',
@@ -38,6 +47,7 @@ export const dbtContributions: PluginContributions = {
   nodeKinds: DBT_NODE_KINDS,
   nodeRenderers,
   inspectorPanels: dbtInspectorPanels,
+  // View placements define shell navigation and Canvas-scoped workbench tabs.
   views: [
     {
       pluginId: DBT_PLUGIN_ID,
@@ -47,7 +57,8 @@ export const dbtContributions: PluginContributions = {
       handle: {
         routeBootstrap: CANVAS_ROUTE_BOOTSTRAP_HANDLE,
       },
-      nav: {
+      placement: {
+        kind: 'shell-nav',
         label: 'Canvas',
         icon: LayoutDashboard,
         order: 10,
@@ -57,64 +68,118 @@ export const dbtContributions: PluginContributions = {
     {
       pluginId: DBT_PLUGIN_ID,
       id: 'dbt.lineage',
-      path: '/lineage',
       component: React.lazy(() => import('../../views/LineageView')),
-      handle: {
-        routeBootstrap: LINEAGE_ROUTE_BOOTSTRAP_HANDLE,
-      },
-      nav: {
+      placement: {
+        kind: 'workbench-tab',
+        workbench: 'canvas',
+        tabId: 'lineage',
         label: 'Lineage',
         icon: GitGraph,
-        order: 15,
-        level: 'core',
+        order: 30,
+        scope: 'canvas',
       },
     },
     {
       pluginId: DBT_PLUGIN_ID,
       id: 'dbt.code',
-      path: '/code',
       component: React.lazy(() => import('../../views/CodeView')),
-      handle: {
-        routeBootstrap: CODE_ROUTE_BOOTSTRAP_HANDLE,
-      },
-      nav: {
+      placement: {
+        kind: 'workbench-tab',
+        workbench: 'canvas',
+        tabId: 'code',
         label: 'Code',
         icon: FileCode2,
-        order: 16,
-        level: 'core',
+        order: 20,
+        scope: 'workspace',
       },
     },
     {
       pluginId: DBT_PLUGIN_ID,
       id: 'dbt.diff',
-      path: '/diff',
       component: React.lazy(() => import('../../views/DiffView')),
-      handle: {
-        routeBootstrap: DIFF_ROUTE_BOOTSTRAP_HANDLE,
-      },
-      nav: {
+      placement: {
+        kind: 'workbench-tab',
+        workbench: 'canvas',
+        tabId: 'diff',
         label: 'Diff',
         icon: GitCompare,
-        order: 17,
-        level: 'core',
+        order: 40,
+        scope: 'canvas',
       },
     },
     {
       pluginId: DBT_PLUGIN_ID,
       id: 'dbt.artifacts',
-      path: '/artifacts',
       component: React.lazy(() => import('../../views/ArtifactsView')),
-      handle: {
-        routeBootstrap: ARTIFACTS_ROUTE_BOOTSTRAP_HANDLE,
-      },
-      nav: {
+      placement: {
+        kind: 'workbench-tab',
+        workbench: 'canvas',
+        tabId: 'artifacts',
         label: 'Artifacts',
         icon: FileText,
-        order: 18,
-        level: 'extended',
+        order: 50,
+        scope: 'run',
       },
     },
   ],
+  canvasKinds: [
+    {
+      kind: 'dbt',
+      pluginId: DBT_PLUGIN_ID,
+      executionStrategy: {
+        kind: 'planner_generic_preview',
+        previewProfile: 'planner-generic-v1',
+        sourceFamily: 'dbt',
+      },
+      graphStrategy: dbtCanvasGraphStrategy,
+      label: 'dbt',
+      description: 'Model-first canvas for dbt resources and dependencies.',
+      createTitle: 'dbt canvas',
+      emptyState: {
+        title: 'Start dbt canvas',
+        editableMessage:
+          'Start this dbt canvas by adding a governed source, model, snapshot, exposure, or metric.',
+        firstNodeLabel: 'Add first dbt node',
+        firstNodeHelper:
+          'Choose a governed dbt resource kind to start modeling this workspace lineage graph.',
+      },
+      nodeKinds: DBT_NODE_KINDS,
+    },
+  ],
+  sourceImport: [
+    {
+      id: 'dbt.source-yaml',
+      pluginId: DBT_PLUGIN_ID,
+      sourceType: 'database',
+      artifactKind: 'dbt-source-yaml',
+      options: [
+        {
+          id: 'includeColumns',
+          label: 'Include Column Metadata',
+          description:
+            'Add column names and data types to YAML (stored under meta.warehouse_data_type).',
+          defaultEnabled: false,
+          order: 10,
+        },
+        {
+          id: 'addTests',
+          label: 'Add Generic Tests',
+          description: 'Automatically add not_null and unique tests for detected primary keys.',
+          defaultEnabled: false,
+          order: 20,
+        },
+        {
+          id: 'addFreshness',
+          label: 'Add Freshness Checks',
+          description: 'Add default freshness thresholds (warn_after: 24h, error_after: 48h).',
+          defaultEnabled: false,
+          order: 30,
+        },
+      ],
+    },
+  ],
+  // Connection rules express dbt-local authoring policy; shell-level graph
+  // invariants still run before these plugin rules are evaluated.
   connectionRules: [
     { sourceKind: 'dbt:macro', targetKind: '*', allowed: true },
     { sourceKind: 'dbt:source', targetKind: 'dbt:model', allowed: true },
@@ -153,6 +218,8 @@ export const dbtContributions: PluginContributions = {
       reason: 'Connection not permitted by dbt rules',
     },
   ],
+  // Run adapter and port declarations keep the shell-facing runtime model
+  // canonical while advertising dbt's tabular data contracts to other plugins.
   runAdapter: {
     mapToCanonical: mapRunToCanonical,
   },

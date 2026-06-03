@@ -18,12 +18,19 @@ Read these first for the active runtime boundary:
 4. [Run events](./engine/RunEvents.v1.md)
 5. [Execution semantics](./engine/ExecutionSemantics.v1.md)
 6. [Signals and authorization](./engine/SignalsAndAuth.v1.md)
-7. [Versioning policy](./VERSIONING.md)
+7. [Runtime provider vocabulary component](./engine/runtime-provider-vocabulary-component.md)
+8. [Plan admission matrix](./plan-admission-matrix.md)
+9. [Plan store records component](./plan-store-records-component.md)
+10. [Versioning policy](./VERSIONING.md)
 
 ## Companion entrypoints
 
 - [Engine runtime contracts index](./engine/index.md)
 - [Run enrichment service](./engine/IRunEnrichmentService.v1.md)
+- [Runtime provider vocabulary component](./engine/runtime-provider-vocabulary-component.md)
+- [Plan admission matrix](./plan-admission-matrix.md)
+- [Plan store records component](./plan-store-records-component.md)
+- [Plan store records user stories](./plan-store-records-user-stories.md)
 - [Event schemas](./engine/events/index.md)
 - [Capabilities contracts](./capabilities/README.md)
 - [State store docs](./state-store/README.md)

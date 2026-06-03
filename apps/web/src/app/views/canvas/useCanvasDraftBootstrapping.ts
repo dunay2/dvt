@@ -1,38 +1,42 @@
 import type { Dispatch, SetStateAction } from 'react';
 
+import type { CanvasNodePositions } from './canvasAuthoringRuntime.types';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type {
   DraftSaveStatus,
   GraphDraftQueryState,
-  GraphSnapshotQueryState,
+  GraphAuthorityQueryState,
 } from './canvasDraftLifecycle.types';
 import type { CanvasDraftLifecycleCanonicalSnapshot } from './canvasDraftLifecycleSnapshot';
+import type { CanvasAuthoringSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 import { useCanvasDraftInitialBootstrap } from './useCanvasDraftInitialBootstrap';
 import { useCanvasDraftMissingRemoteSync } from './useCanvasDraftMissingRemoteSync';
 
 type UseCanvasDraftBootstrappingArgs = {
   graphDraftQuery: GraphDraftQueryState;
-  graphSnapshotQuery: GraphSnapshotQueryState;
+  graphAuthorityQuery: GraphAuthorityQueryState;
   workspaceLayoutKey: string;
   draftSession: CanvasDraftSession;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
   canonicalSnapshot: CanvasDraftLifecycleCanonicalSnapshot;
-  setCanvasNodePositions: (
-    workspaceLayoutKey: string,
-    positions: Record<string, { x: number; y: number }>
-  ) => void;
+  persistedNodePositions: CanvasNodePositions;
+  setCanvasNodePositions: (workspaceLayoutKey: string, positions: CanvasNodePositions) => void;
   setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
   invalidateInFlightSaveAttempt: () => void;
   lastSavedSignatureRef: { current: string | null };
+  lastFailedSignatureRef: { current: string | null };
+  lastAuthoritativeSemanticGraphRef: {
+    current: CanvasAuthoringSemanticGraph | null;
+  };
 };
 
 function shouldWaitForBootstrapReadiness(
-  graphSnapshotQuery: GraphSnapshotQueryState,
+  graphAuthorityQuery: GraphAuthorityQueryState,
   graphDraftQuery: GraphDraftQueryState
 ): boolean {
   return (
-    graphSnapshotQuery.isPending ||
-    graphSnapshotQuery.isError ||
+    graphAuthorityQuery.isPending ||
+    graphAuthorityQuery.isError ||
     graphDraftQuery.isPending ||
     graphDraftQuery.isError
   );
@@ -40,17 +44,20 @@ function shouldWaitForBootstrapReadiness(
 
 export function useCanvasDraftBootstrapping({
   graphDraftQuery,
-  graphSnapshotQuery,
+  graphAuthorityQuery,
   workspaceLayoutKey,
   draftSession,
   setDraftSession,
   canonicalSnapshot,
+  persistedNodePositions,
   setCanvasNodePositions,
   setDraftSaveStatus,
   invalidateInFlightSaveAttempt,
   lastSavedSignatureRef,
+  lastFailedSignatureRef,
+  lastAuthoritativeSemanticGraphRef,
 }: UseCanvasDraftBootstrappingArgs) {
-  const shouldWait = shouldWaitForBootstrapReadiness(graphSnapshotQuery, graphDraftQuery);
+  const shouldWait = shouldWaitForBootstrapReadiness(graphAuthorityQuery, graphDraftQuery);
 
   useCanvasDraftInitialBootstrap({
     shouldWaitForBootstrapReadiness: shouldWait,
@@ -59,9 +66,11 @@ export function useCanvasDraftBootstrapping({
     draftSession,
     setDraftSession,
     canonicalSnapshot,
+    persistedNodePositions,
     setCanvasNodePositions,
     setDraftSaveStatus,
     lastSavedSignatureRef,
+    lastFailedSignatureRef,
   });
 
   useCanvasDraftMissingRemoteSync({
@@ -72,5 +81,7 @@ export function useCanvasDraftBootstrapping({
     setDraftSaveStatus,
     invalidateInFlightSaveAttempt,
     lastSavedSignatureRef,
+    lastFailedSignatureRef,
+    lastAuthoritativeSemanticGraphRef,
   });
 }

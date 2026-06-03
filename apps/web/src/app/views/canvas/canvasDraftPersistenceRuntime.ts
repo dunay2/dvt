@@ -1,11 +1,7 @@
-import { queryKeys } from '../../queries/queryKeys';
-import {
-  applyConflict,
-  applySaveSuccess,
-  markSaving,
-  type CanvasDraftSession,
-} from './canvasDraftSession';
-import type { DraftAttemptRefs, QueryClientLike } from './canvasDraftLifecycle.types';
+import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
+import type { CanvasAuthoringDraftReadModel } from './canvasDraftReadModel';
+import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
+import type { DraftAttemptRefs } from './canvasDraftLifecycle.types';
 
 export const DRAFT_SAVE_DEBOUNCE_MS = 400;
 
@@ -17,16 +13,17 @@ export type DraftSaveAttempt = {
 export function clearSaveDebounce(refs: DraftAttemptRefs) {
   if (refs.saveDebounceTimerRef.current != null) {
     globalThis.clearTimeout(refs.saveDebounceTimerRef.current);
+    refs.saveDebounceTimerRef.current = null;
   }
 }
 
 export function shouldWaitForPersistenceReadiness(
-  graphSnapshotQuery: { isPending: boolean; isError: boolean },
+  graphAuthorityQuery: { isPending: boolean; isError: boolean },
   graphDraftQuery: { isPending: boolean; isError: boolean }
 ): boolean {
   return (
-    graphSnapshotQuery.isPending ||
-    graphSnapshotQuery.isError ||
+    graphAuthorityQuery.isPending ||
+    graphAuthorityQuery.isError ||
     graphDraftQuery.isPending ||
     graphDraftQuery.isError
   );
@@ -59,46 +56,58 @@ export function startNextSaveAttempt(refs: DraftAttemptRefs): DraftSaveAttempt {
 export function markDraftSaving(
   setDraftSession: (updater: (currentSession: CanvasDraftSession) => CanvasDraftSession) => void
 ) {
-  setDraftSession((currentSession) => markSaving(currentSession));
+  setDraftSession((currentSession) => canvasDraftSession.machine.markSaving(currentSession));
 }
 
 export function applyConflictResolution(args: {
-  queryClient: QueryClientLike;
-  workspaceLayoutKey: string;
+  draftQueryCache: CanvasDraftQueryCache;
   setDraftSession: (updater: (currentSession: CanvasDraftSession) => CanvasDraftSession) => void;
   setDraftSaveStatus: (status: 'idle') => void;
-  current: Parameters<typeof applyConflict>[1];
+  refs: DraftAttemptRefs;
+  currentState: CanvasAuthoringDraftReadModel;
 }) {
-  args.queryClient.setQueryData(
-    queryKeys.workspace.graphDraft(args.workspaceLayoutKey),
-    args.current
+  const currentRecord = args.currentState.record;
+  if (currentRecord == null) {
+    return;
+  }
+
+  args.refs.lastFailedSignatureRef.current = null;
+  args.draftQueryCache.replaceRemoteDraftState(args.currentState);
+  args.setDraftSession((currentSession) =>
+    canvasDraftSession.machine.applyConflict(currentSession, currentRecord)
   );
-  args.setDraftSession((currentSession) => applyConflict(currentSession, args.current));
   args.setDraftSaveStatus('idle');
 }
 
 export function applySavedDraftResolution(args: {
-  queryClient: QueryClientLike;
-  workspaceLayoutKey: string;
+  draftQueryCache: CanvasDraftQueryCache;
   currentDraftPayloadSignature: string;
   refs: DraftAttemptRefs;
   setDraftSession: (updater: (currentSession: CanvasDraftSession) => CanvasDraftSession) => void;
   setDraftSaveStatus: (status: 'saved') => void;
-  record: Parameters<typeof applySaveSuccess>[1];
+  remoteDraftState: CanvasAuthoringDraftReadModel;
 }) {
+  const record = args.remoteDraftState.record;
+  if (record == null) {
+    return;
+  }
+
   args.refs.lastSavedSignatureRef.current = args.currentDraftPayloadSignature;
-  args.queryClient.setQueryData(
-    queryKeys.workspace.graphDraft(args.workspaceLayoutKey),
-    args.record
+  args.refs.lastFailedSignatureRef.current = null;
+  args.draftQueryCache.replaceRemoteDraftState(args.remoteDraftState);
+  args.setDraftSession((currentSession) =>
+    canvasDraftSession.machine.applySaveSuccess(currentSession, record)
   );
-  args.setDraftSession((currentSession) => applySaveSuccess(currentSession, args.record));
   args.setDraftSaveStatus('saved');
 }
 
 export function restoreEditingAfterSaveFailure(
+  refs: DraftAttemptRefs,
+  currentDraftPayloadSignature: string,
   setDraftSession: (updater: (currentSession: CanvasDraftSession) => CanvasDraftSession) => void,
-  setDraftSaveStatus: (status: 'idle') => void
+  setDraftSaveStatus: (status: 'failed') => void
 ) {
+  refs.lastFailedSignatureRef.current = currentDraftPayloadSignature;
   setDraftSession((currentSession) =>
     currentSession.syncState === 'saving'
       ? {
@@ -107,5 +116,5 @@ export function restoreEditingAfterSaveFailure(
         }
       : currentSession
   );
-  setDraftSaveStatus('idle');
+  setDraftSaveStatus('failed');
 }

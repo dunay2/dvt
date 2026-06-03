@@ -1,4 +1,4 @@
-import { addEdge, type Connection, type Edge } from '@xyflow/react';
+import { addEdge, reconnectEdge, type Connection, type Edge } from '@xyflow/react';
 
 import {
   evaluateConnection,
@@ -180,5 +180,27 @@ export function confirmConnection(args: ConnectionCheckArgs): ConfirmConnectionR
   return {
     outcome: 'added',
     nextEdges,
+  };
+}
+
+export type ConfirmReconnectResult =
+  | { outcome: 'reconnected'; nextEdges: Edge[] }
+  | { outcome: 'rejected'; rejection: CanvasConnectionRejection };
+
+export function confirmReconnect(args: ConnectionCheckArgs & { edge: Edge }): ConfirmReconnectResult {
+  const validationEdges = args.edges.filter((candidate) => candidate.id !== args.edge.id);
+  const proposed = proposeConnection({
+    ...args,
+    edges: validationEdges,
+  });
+  if (proposed.outcome === 'rejected') {
+    return proposed;
+  }
+
+  return {
+    outcome: 'reconnected',
+    nextEdges: reconnectEdge(args.edge, args.connection, args.edges, {
+      shouldReplaceId: false,
+    }),
   };
 }

@@ -2,7 +2,7 @@
 title: Backend MVP Control-Plane Runbook
 status: Review
 owner: API / Runtime / Docs
-last_reviewed: 2026-04-14
+last_reviewed: 2026-04-29
 ---
 
 # Backend MVP Control-Plane Runbook
@@ -99,13 +99,59 @@ Docker Postgres proof environment automatically when `DATABASE_URL` is not
 already set in the caller environment. It also enables `/db/ready` for the API
 process and waits for that probe before reporting the stack ready.
 
+When the coordinated dev stack enables protected runtime locally and
+`TEMPORAL_ADDRESS` is not already configured, it also starts a local Temporal
+dev service and injects that runtime posture:
+
+- `TEMPORAL_ADDRESS=<local Temporal dev service address>`
+- `TEMPORAL_NAMESPACE=<local Temporal dev service namespace>`
+- `TEMPORAL_TASK_QUEUE=dvt-temporal`
+- `DVT_TEMPORAL_WORKER_READYZ_URL=http://127.0.0.1:9468/readyz`
+
+The wrapper starts `dvt-temporal-worker` with the same Temporal/Postgres
+posture and waits for the worker `GET /readyz` probe before starting the API.
+If `TEMPORAL_ADDRESS` is explicitly set by the caller, the wrapper preserves
+that external Temporal posture and fails bootstrap if the configured Temporal
+runtime cannot be reached.
+
+When protected-runtime OIDC posture is otherwise absent, the coordinated dev
+stack now also bootstraps a local JWKS-backed auth posture for Canvas and other
+protected-runtime consumers:
+
+- local `OIDC_JWKS_URI`, `OIDC_ISSUER`, and `OIDC_AUDIENCE` are injected for the
+  API process
+- a dev bearer token is injected into the web process through
+  `VITE_API_BEARER_TOKEN`
+- a dev-only token refresh endpoint is injected into the web process through
+  `VITE_API_BEARER_TOKEN_REFRESH_URL`
+- that local bearer token defaults to a 24-hour TTL; the frontend must not send
+  an expired local JWT when the refresh endpoint is available, and instead
+  requests a freshly signed token before protected runtime calls
+- `DVT_DEV_PROTECTED_RUNTIME_TOKEN_TTL_SECONDS` can override that TTL when a
+  longer or shorter local token lifetime is required
+- a default principal grant is seeded for the default workspace scope
+  (`tenant/project/dev`) with the protected draft read/write actions required by
+  Canvas authoring
+
+This bootstrap exists to satisfy the real protected-runtime contract locally. It
+does not change the production auth model and must not be treated as a product
+login flow.
+
 Use `pnpm dev:app -- --skip-postgres` only when you intentionally want the old
-behavior and are providing database posture yourself.
+behavior and are providing database posture yourself. With no database posture,
+the local protected runtime is not bootstrapped and the Temporal worker is not
+started.
 
 ## Bootstrap Failure Shortcuts
 
 - If startup fails with OIDC/runtime wiring errors: re-check the required env
   posture section and restart.
+- If startup fails while waiting for `Temporal worker readyz` with an explicit
+  `TEMPORAL_ADDRESS`: start or repair that Temporal service, then restart
+  `pnpm dev:app`.
+- If startup fails while waiting for `Temporal worker readyz` without an
+  explicit `TEMPORAL_ADDRESS`: inspect the local Temporal dev-service
+  bootstrap and the `dvt-temporal-worker` logs first.
 - If protected routes do not register: verify OIDC variables are all present
   and non-empty.
 - If `/healthz` is not reachable: treat as process/container issue first
@@ -171,10 +217,24 @@ Likely cause: OIDC posture is incomplete.
 Action: set `OIDC_JWKS_URI`, `OIDC_ISSUER`, `OIDC_AUDIENCE`, plus `DATABASE_URL`
 and restart.
 
+In the coordinated local stack, the same symptom usually means the dev-stack
+auth bootstrap did not run or the API was started outside `pnpm dev:app`.
+
 ### Symptom: protected endpoints return 401/403
 
 Likely cause: invalid token or missing tenant scope/permissions.  
 Action: validate token issuer/audience and tenant authorization policy.
+
+For local Canvas authoring through `pnpm dev:app`, diagnose in this order:
+
+1. `GET /workspace/graph/draft?...` returns `401`
+   - browser did not attach the injected bearer token or the web process was
+     started without the coordinated env
+2. `GET /workspace/graph/draft?...` returns `403`
+   - principal grant seeding did not match the active workspace scope
+3. `GET /workspace/graph/draft?...` returns `404`
+   - protected runtime routes are still not registered, so OIDC posture is not
+     active in the API process
 
 ### Symptom: `/readyz` returns 503
 

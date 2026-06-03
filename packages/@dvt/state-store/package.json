@@ -16,6 +16,8 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "pretypecheck": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"@dvt/state-store^...\" build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "pretest": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm --filter \"@dvt/state-store^...\" build",
     "test": "vitest run --passWithNoTests"
   },

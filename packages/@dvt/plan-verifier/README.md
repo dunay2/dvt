@@ -7,10 +7,11 @@ Shared, deterministic plan verification helpers.
 This package provides _enforcement_ primitives adapters MUST share:
 
 - Verify `planId` matches `sha256(canonicalPlanCoreJson)` (canonical JSON already produced by the planner).
-- Verify planner `planVersion` compatibility using an explicit runtime compatibility matrix.
+- Verify planner `planVersion` plus `schemaVersion` admission using the canonical
+  `EXECUTION_PLAN_ADMISSION_MATRIX` from `@dvt/contracts`.
 - Verify `ExecutionPlan.steps[].stepTypeConfig` per `StepKind` with `IStepTypeRegistry`
   and fail-closed rejection of unregistered kinds by default.
-- Provide consistent error codes across adapters (Temporal, Conductor, BullMQ, etc.).
+- Provide consistent error codes across active runtime adapters.
 
 ## Non-goals
 
@@ -20,17 +21,19 @@ This package provides _enforcement_ primitives adapters MUST share:
 
 ## Notes
 
-`verifyPlanOrThrow()` validates version first, then hashes the canonical JSON. This avoids
-hashing work when a plan is clearly incompatible. If you want combined diagnostics, call
-`verifyPlanVersionOrThrow()` and `verifyPlanIdOrThrow()` separately and aggregate errors.
+`verifyPlanOrThrow()` validates the canonical admission pair first, then hashes
+the canonical JSON. This avoids hashing work when a plan is not admitted. If you
+want combined diagnostics, call `verifyPlanAdmissionOrThrow()` and
+`verifyPlanIdOrThrow()` separately and aggregate errors.
 
 Preferred mode:
 
-- `verifyPlanVersionOrThrow({ planVersion, runtime })`
+- `verifyPlanAdmissionOrThrow({ planVersion, schemaVersion, runtime })`
 - `parseAndVerifyStepTypeConfigsOrThrow({ input, stepTypeRegistry? })`
 
-Compatibility is looked up in `PLAN_RUNTIME_COMPATIBILITY_MATRIX`. Legacy
-major/minor gating remains available for older call sites.
+Admission is looked up in `EXECUTION_PLAN_ADMISSION_MATRIX`. There is no
+package-local runtime compatibility matrix and no legacy major/minor fallback in
+active development.
 
 ## References
 

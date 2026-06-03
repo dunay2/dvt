@@ -13,11 +13,15 @@ import {
   buildStoredPlan,
   buildTransformationStoredPlan,
 } from './planRouteFixtures.js';
-import {
-  createPreviewRequest,
-  createReply,
-} from './planRouteHttpTestSupport.js';
+import { createPreviewRequest, createReply } from './planRouteHttpTestSupport.js';
 import { createPreviewDeps } from './previewPlanRouteTestSupport.js';
+
+const SCOPED_VALID_PLAN_REF = {
+  tenantId: 'tenant-1',
+  projectId: 'project-1',
+  environmentId: 'env-1',
+  planRef: VALID_PLAN_REF,
+};
 
 function createAcceptedPreviewDeps(
   buildPlan: ReturnType<typeof vi.fn>
@@ -25,15 +29,15 @@ function createAcceptedPreviewDeps(
   return createPreviewDeps({
     planner: { buildPlan },
     planStore: {
-      storePlan: vi.fn(async () => VALID_PLAN_REF),
-      markValid: vi.fn(async () => undefined),
-      markInvalid: vi.fn(async () => undefined),
+      storePlanArtifact: vi.fn(async () => VALID_PLAN_REF),
+      markStoredPlanArtifactValid: vi.fn(async () => undefined),
+      markStoredPlanArtifactInvalid: vi.fn(async () => undefined),
     },
     planValidator: {
       validatePlan: vi.fn(async () => ({
         status: 'OK',
         planId: VALID_PLAN_REF.planId,
-        adapterId: 'mock',
+        adapterId: 'temporal',
       })),
     },
   });
@@ -79,7 +83,11 @@ describe('previewPlanRoute outcomes', () => {
   it('returns plan and planRef for a generic preview', async () => {
     const reply = createReply();
     const plan = buildStoredPlan();
-    const buildPlan = vi.fn(async () => ({ plan, canonicalPlanJson: '{}' }));
+    const buildPlan = vi.fn(async () => ({
+      plan,
+      executionPolicy: {},
+      canonicalPlanCoreJson: '{}',
+    }));
     const deps = createAcceptedPreviewDeps(buildPlan);
     const validatePlan = deps.planValidator.validatePlan;
 
@@ -105,28 +113,79 @@ describe('previewPlanRoute outcomes', () => {
         },
       })
     );
-    expect(validatePlan).toHaveBeenCalledWith(VALID_PLAN_REF, 'mock');
-    expect(deps.planStore.markValid).toHaveBeenCalledWith(VALID_PLAN_REF);
-    expect(deps.planStore.markInvalid).not.toHaveBeenCalled();
+    expect(validatePlan).toHaveBeenCalledWith({
+      ...SCOPED_VALID_PLAN_REF,
+      adapterId: 'temporal',
+    });
+    expect(deps.planStore.markStoredPlanArtifactValid).toHaveBeenCalledWith(SCOPED_VALID_PLAN_REF);
+    expect(deps.planStore.markStoredPlanArtifactInvalid).not.toHaveBeenCalled();
+  });
+
+  it('reuses an already valid stored plan without issuing a duplicate validation transition', async () => {
+    const reply = createReply();
+    const plan = buildStoredPlan();
+    const buildPlan = vi.fn(async () => ({
+      plan,
+      executionPolicy: {},
+      canonicalPlanCoreJson: '{}',
+    }));
+    const deps = createPreviewDeps({
+      planner: { buildPlan },
+      planStore: {
+        storePlanArtifact: vi.fn(async () => VALID_PLAN_REF),
+        markStoredPlanArtifactValid: vi.fn(async () => undefined),
+        markStoredPlanArtifactInvalid: vi.fn(async () => undefined),
+        getStoredPlanValidationRecord: vi.fn(async () => ({
+          planId: VALID_PLAN_REF.planId,
+          state: 'VALID',
+          storedAtIso: '2026-05-26T00:00:00.000Z',
+          updatedAtIso: '2026-05-26T00:00:00.000Z',
+        })),
+      },
+      planValidator: {
+        validatePlan: vi.fn(async () => ({
+          status: 'OK',
+          planId: VALID_PLAN_REF.planId,
+          adapterId: 'temporal',
+        })),
+      },
+    });
+
+    await executePreviewRequest(reply, deps, { id: 'req-preview-valid-reuse' });
+
+    expect(reply.statusCode).toBe(200);
+    expect(deps.planStore.getStoredPlanValidationRecord).toHaveBeenCalledWith({
+      tenantId: 'tenant-1',
+      projectId: 'project-1',
+      environmentId: 'env-1',
+      planId: VALID_PLAN_REF.planId,
+    });
+    expect(deps.planStore.markStoredPlanArtifactValid).not.toHaveBeenCalled();
   });
 
   it('returns 422 and marks the stored plan invalid when executability fails', async () => {
     const reply = createReply();
     const deps = createPreviewDeps({
-      planner: { buildPlan: vi.fn(async () => ({ plan: buildStoredPlan(), canonicalPlanJson: '{}' })) },
+      planner: {
+        buildPlan: vi.fn(async () => ({
+          plan: buildStoredPlan(),
+          executionPolicy: {},
+          canonicalPlanCoreJson: '{}',
+        })),
+      },
       planStore: {
-        storePlan: vi.fn(async () => VALID_PLAN_REF),
-        markValid: vi.fn(),
-        markInvalid: vi.fn(async () => undefined),
+        storePlanArtifact: vi.fn(async () => VALID_PLAN_REF),
+        markStoredPlanArtifactValid: vi.fn(),
+        markStoredPlanArtifactInvalid: vi.fn(async () => undefined),
       },
       planValidator: {
         validatePlan: vi.fn(async () => ({
           status: 'ERROR',
           code: 'REJECTED',
-          adapterId: 'mock',
+          adapterId: 'temporal',
           planId: VALID_PLAN_REF.planId,
           degradable: false,
-          reason: 'Adapter is not configured: mock',
+          reason: 'Adapter is not configured: temporal',
           cause: 'adapter',
         })),
       },
@@ -139,23 +198,30 @@ describe('previewPlanRoute outcomes', () => {
     );
 
     expect(reply.statusCode).toBe(422);
-    expect(deps.planStore.markInvalid).toHaveBeenCalledWith(
-      VALID_PLAN_REF,
-      expect.objectContaining({ status: 'ERROR', code: 'REJECTED' })
-    );
+    expect(deps.planStore.markStoredPlanArtifactInvalid).toHaveBeenCalledWith({
+      ...SCOPED_VALID_PLAN_REF,
+      report: expect.objectContaining({ status: 'ERROR', code: 'REJECTED' }),
+    });
   });
 
   it('forwards transformation provenance into planner observability and response payload', async () => {
     const reply = createReply();
     const plan = buildTransformationStoredPlan();
-    const buildPlan = vi.fn(async () => ({ plan, canonicalPlanJson: '{}' }));
+    const buildPlan = vi.fn(async () => ({
+      plan,
+      executionPolicy: {},
+      canonicalPlanCoreJson: '{}',
+    }));
     const deps = createAcceptedPreviewDeps(buildPlan);
 
     await executePreviewRequest(reply, deps, {
       id: 'req-preview-provenance',
       body: buildPreviewBody({
         previewProfile: PREVIEW_PROFILE_TRANSFORMATION,
-        selectedNodeIds: ['source-node', 'transform-node', 'sink-node'],
+        selection: {
+          mode: 'explicit',
+          nodeIds: ['source-node', 'transform-node', 'sink-node'],
+        },
         graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
         provenance: VALID_PREVIEW_PROVENANCE,
       }),

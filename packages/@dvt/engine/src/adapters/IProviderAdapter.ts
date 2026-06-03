@@ -10,7 +10,6 @@
  */
 import type {
   EngineRunRef,
-  ExecutionPlan,
   PlanRef,
   ProviderRunStatusView,
   ResolvedRunContext,
@@ -22,12 +21,14 @@ export interface IProviderAdapter {
   readonly provider: EngineRunRef['provider'];
 
   /**
-   * Starts the run using the engine-verified plan plus its originating PlanRef.
+   * Starts the run using the engine-verified immutable PlanRef.
    *
    * ADR-0012: Engine owns plan fetch and integrity verification.
    * ADR-0014: Run-driven adapter model - adapter initiates workflow execution.
+   * Provider runtimes that fetch execution segments MUST revalidate PlanRef.sha256
+   * before executing fetched plan material.
    */
-  startRun(plan: ExecutionPlan, planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef>;
+  startRun(planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef>;
   cancelRun(runRef: EngineRunRef): Promise<void>;
   getProviderStatusView(runRef: EngineRunRef): Promise<ProviderRunStatusView>;
   signal(runRef: EngineRunRef, request: SignalRequest): Promise<void>;
@@ -50,7 +51,8 @@ export interface IProviderAdapter {
    * Used by the engine to enforce `RunExecutionPolicy.requiresCapabilities`
    * before starting a run.
    * Strings MUST be from capabilities.schema.json.
-   * Optional: adapters that omit this method skip capability validation.
+   * Optional at the type level, but adapters that omit this method fail
+   * admission whenever the execution policy requires capabilities.
    */
   capabilities?(): readonly string[];
 

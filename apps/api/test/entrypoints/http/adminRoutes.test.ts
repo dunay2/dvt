@@ -2,12 +2,11 @@ import { RunNotFoundError } from '@dvt/engine';
 import Fastify from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
+import { registerAdminRoutes } from '../../../src/entrypoints/http/adminRoutes.js';
 import {
   type RebuildSnapshot,
-  type WorkflowSnapshotResult,
-  makeWorkflowSnapshot,
+  makeAdminRebuildWorkflowSnapshot,
 } from '../../fixtures/workflowSnapshotFixture.js';
-import { registerAdminRoutes } from '../../../src/entrypoints/http/adminRoutes.js';
 
 type RouteResponse = Awaited<ReturnType<ReturnType<typeof Fastify>['inject']>>;
 
@@ -48,7 +47,7 @@ function createApp(
           principalId: 'user-1',
           principalType: 'user',
         },
-        scope: { tenantId: { value: 'tenant-a' } },
+        scope: { resource: 'tenant', tenantId: { value: 'tenant-a' } },
         action: { kind: 'command', name: 'admin:rebuild-snapshot' },
         requestId: 'req-1',
         authorizedAt: new Date('2026-04-03T00:00:00Z'),
@@ -122,7 +121,7 @@ function buildAuthorizedApp(
             principalId,
             principalType,
           },
-          scope: { tenantId: { value: tenantId } },
+          scope: { resource: 'tenant', tenantId: { value: tenantId } },
           action: { kind: 'command', name: actionName },
           requestId,
           authorizedAt: new Date('2026-04-03T00:00:00Z'),
@@ -181,7 +180,8 @@ describe('adminRoutes', () => {
   it('returns 401 when token is missing or invalid', async () => {
     await withRebuildSnapshotRequest(
       {
-        rebuildSnapshot: async (_tenantId, _runId) => makeWorkflowSnapshot('r1', 'PENDING'),
+        rebuildSnapshot: async (_tenantId, _runId) =>
+          makeAdminRebuildWorkflowSnapshot('r1', 'PENDING'),
         authenticateBearerToken: async () => ({ ok: false, code: 'MISSING_TOKEN' }),
       },
       ({ response, rebuildSnapshotSpy }) => {
@@ -200,7 +200,8 @@ describe('adminRoutes', () => {
   it('returns 403 when principal lacks explicit admin action', async () => {
     await withRebuildSnapshotRequest(
       {
-        rebuildSnapshot: async (_tenantId, _runId) => makeWorkflowSnapshot('r1', 'PENDING'),
+        rebuildSnapshot: async (_tenantId, _runId) =>
+          makeAdminRebuildWorkflowSnapshot('r1', 'PENDING'),
         authorize: async () => ({ ok: false, reason: 'ACTION_NOT_GRANTED' }),
       },
       ({ response, rebuildSnapshotSpy }) => {
@@ -219,7 +220,8 @@ describe('adminRoutes', () => {
   it('returns 403 when authorization context is not an admin action', async () => {
     await withRebuildSnapshotRequest(
       {
-        rebuildSnapshot: async (_tenantId, _runId) => makeWorkflowSnapshot('r1', 'PENDING'),
+        rebuildSnapshot: async (_tenantId, _runId) =>
+          makeAdminRebuildWorkflowSnapshot('r1', 'PENDING'),
         auth: { actionName: 'run:cancel' },
       },
       ({ response, rebuildSnapshotSpy }) => {
@@ -238,7 +240,8 @@ describe('adminRoutes', () => {
   it('returns 400 when tenantId is missing', async () => {
     await withRebuildSnapshotRequest(
       {
-        rebuildSnapshot: async (_tenantId, _runId) => makeWorkflowSnapshot('r1', 'PENDING'),
+        rebuildSnapshot: async (_tenantId, _runId) =>
+          makeAdminRebuildWorkflowSnapshot('r1', 'PENDING'),
         payload: {},
       },
       ({ response }) => {
@@ -257,7 +260,8 @@ describe('adminRoutes', () => {
   it('returns 400 when body is not an object', async () => {
     await withRebuildSnapshotRequest(
       {
-        rebuildSnapshot: async (_tenantId, _runId) => makeWorkflowSnapshot('r1', 'PENDING'),
+        rebuildSnapshot: async (_tenantId, _runId) =>
+          makeAdminRebuildWorkflowSnapshot('r1', 'PENDING'),
         payload: ['tenant-a'],
       },
       ({ response }) => {
@@ -278,7 +282,8 @@ describe('adminRoutes', () => {
   ])('returns 400 when %s', async (_desc, payload) => {
     await withRebuildSnapshotRequest(
       {
-        rebuildSnapshot: async (_tenantId, _runId) => makeWorkflowSnapshot('r1', 'PENDING'),
+        rebuildSnapshot: async (_tenantId, _runId) =>
+          makeAdminRebuildWorkflowSnapshot('r1', 'PENDING'),
         payload,
       },
       ({ response }) => {
@@ -297,7 +302,8 @@ describe('adminRoutes', () => {
   it('returns 200 with rebuilt snapshot status', async () => {
     await withRebuildSnapshotRequest(
       {
-        rebuildSnapshot: async (_tenantId, runId) => makeWorkflowSnapshot(runId, 'RUNNING'),
+        rebuildSnapshot: async (_tenantId, runId) =>
+          makeAdminRebuildWorkflowSnapshot(runId, 'RUNNING'),
         runId: 'r42',
       },
       ({ response }) => {
@@ -328,7 +334,7 @@ describe('adminRoutes', () => {
     );
   });
 
-  it('returns 500 for legacy stringly not-found errors', async () => {
+  it('returns 500 for untyped not-found errors outside domain classification', async () => {
     await withRebuildSnapshotRequest(
       {
         rebuildSnapshot: async (_tenantId, _runId) => {

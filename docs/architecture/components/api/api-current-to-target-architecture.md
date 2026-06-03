@@ -2,7 +2,7 @@
 title: API Current To Target Architecture
 status: Active
 owner: Architecture / API / Docs
-last_reviewed: 2026-04-12
+last_reviewed: 2026-04-24
 ---
 
 # API Current To Target Architecture
@@ -72,7 +72,7 @@ flowchart TB
       Module["buildProtectedRuntimeModule()"]
       Backpressure["raw -> breaker -> cache -> fallback backpressure chain"]
       Roles["stateStore read / write / maintenance bindings"]
-      AuthInfra["JWKS verifier + PostgresPrincipalAccessRepository"]
+      AuthInfra["JWKS verifier + EmbeddedAccessDecisionService"]
     end
   end
 
@@ -133,18 +133,29 @@ flowchart TB
 - **Auth and RBAC**
   Authentication is handled through OIDC/JWKS.
   Authorization is tenant-scoped and action-scoped through
-  `AuthorizeCommandScopeService` and domain policy.
+  `AuthorizeCommandScopeService` plus the DVT-owned
+  `IAccessDecisionService` seam, with `EmbeddedAccessDecisionService` as the
+  current backend. The protected security builder also owns the backend
+  lifecycle hook, so the outer root depends on a security runtime contract
+  rather than on embedded-backend methods directly. The canonical access
+  language now lives in `apps/api/src/application/ports/accessDecision.ts`,
+  including explicit action objects and resource discriminants for tenant,
+  project, environment, and workspace-graph-draft scopes.
   Anchors:
   `apps/api/src/infrastructure/auth/oidcAuthenticator.ts`,
   `apps/api/src/infrastructure/auth/jwksJwtVerifier.ts`,
   `apps/api/src/application/services/authorizeCommandScopeService.ts`,
-  `apps/api/src/domain/auth/policy.ts`
+  `apps/api/src/application/ports/accessDecision.ts`,
+  `apps/api/src/infrastructure/auth/embeddedAccessDecisionService.ts`
 - **Infrastructure composition**
   The protected runtime module wires Postgres state access, plan storage,
   admission telemetry, backpressure fallback, provider adapters, and engine
-  construction.
+  construction. The authenticated start-run chain is now assembled through the
+  dedicated `startRun/buildProtectedStartRunRuntime.ts` subcomponent instead
+  of being re-constructed inline in the outer root.
   Anchors:
   `apps/api/src/modules/buildProtectedRuntimeModule.ts`,
+  `apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts`,
   `apps/api/src/modules/buildProviderAdapters.ts`,
   `apps/api/src/modules/stateStoreRoles.ts`,
   `apps/api/src/application/services/WorkflowEngineFactory.ts`
@@ -163,10 +174,206 @@ Native cancel and cooperative cancel are now intentionally split:
 - Query endpoints are authorization-first and state-store/read-model backed.
 - The command path already has explicit duplicate-run probing and admission
   control before engine dispatch.
+- The HTTP error translation boundary now has a clearer local seam:
+  `httpErrorContract.ts` owns the canonical envelope primitives,
+  `httpErrorTranslation.ts` is the public component API and writer facade,
+  `routeParseIssue.ts` owns parser rejection semantics,
+  `httpErrorMapper.ts` owns parse/auth/facade/engine translation, and
+  `httpDomainErrorClassifier.ts` owns typed runtime-domain error translation.
+  Translated `HttpResponseModel` values are now written through
+  `httpErrorTranslation.respond(...)`, which delegates to the contract-owned
+  serializer instead of route-local manual serialization.
 - Architectural guardrails exist in code through dependency-cruiser rules for
   domain/application/entrypoint separation.
 - The protected runtime is feature-complete enough to support real frontend and
   operator work, not just health checks.
+
+### HTTP Error Translation Boundary
+
+The error-envelope slice now behaves like a real local component instead of a
+loose utility cluster.
+
+```mermaid
+flowchart LR
+  Consumers["route consumers"] --> Api["httpErrorTranslation.ts"]
+  Parse["RouteParseIssue"] --> Api
+  Runtime["typed runtime error"] --> Api
+  Writer["respond(reply, response)"] --> Api
+  Api --> Mapper["httpErrorMapper.ts"]
+  Api --> Classifier["httpDomainErrorClassifier.ts"]
+  Api --> Contract["httpErrorContract.ts"]
+  Mapper --> Contract["httpErrorContract.ts"]
+  Classifier --> Contract
+  Reasons["HTTP_ERROR_REASON"] --> Mapper
+  Reasons --> Classifier
+```
+
+Use the local component guide for public API, invariants, transitions, and
+consumers:
+
+- [HTTP runtime error translation component](../../../../apps/api/docs/http-runtime-error-translation-component.md)
+
+The component seam now also owns feature-level static envelopes for
+`adminRoutes.ts` and `workspaceGraphDraftRoutes.ts`, so those consumers no
+longer need direct `createHttpErrorResponse(...)` imports for component-owned
+semantic failures.
+
+The same seam policy now applies to response writing: production entrypoint
+consumers and generic route helpers emit `HttpResponseModel` values through
+`httpErrorTranslation.respond(...)` rather than calling `sendHttpResponse(...)`
+directly.
+
+### Start-run execution-capacity admission boundary
+
+`AR-C3-A` and `AR-C3-B` now give the start-run admission path both an abstract
+execution-capacity seam and its first real worker-backed binding, without
+teaching the API application layer about Temporal queue internals.
+
+```mermaid
+flowchart LR
+  Facade["StartRunAuthorizedFacade"] --> UseCase["BackpressureAwareStartRunUseCase"]
+  UseCase --> Duplicate["DuplicateRunProbe"]
+  UseCase --> Guard["IAdmissionGuard"]
+  UseCase --> Capacity["IStartRunExecutionCapacityPort"]
+  UseCase --> Delegate["PlannerBackedStartRunUseCase / engine delegate"]
+  Root["buildProtectedRuntimeModule.ts"] --> Binding["Temporal worker readyz binding"]
+  Binding --> Capacity
+  Runtime["buildProtectedStartRunRuntime.ts"] --> Capacity
+```
+
+Use the local component guide for the public API, invariants, transitions, and
+consumers of this seam:
+
+- [Start-run execution capacity admission component](../../../../apps/api/docs/start-run-execution-capacity-admission-component.md)
+- [Start-run admission observability component](../../../../apps/api/docs/start-run-admission-observability-component.md)
+
+The caller-visible result vocabulary for this seam is documented separately in
+the shared contract component guide:
+
+- [Start-run boundary component](../engine/contracts/engine/start-run-boundary-component.md)
+- [Start-run application component](../../../../apps/api/docs/start-run-application-component.md)
+
+The abstract seam is now materially in place and the first concrete binding is
+live in composition: `buildProtectedRuntimeModule.ts` resolves a
+Temporal-worker `GET /readyz` probe into canonical execution-capacity
+admission semantics, while the application contract stays adapter-agnostic. The
+operator-facing telemetry has also been split into its own local observability
+component so metric-label policy, structured-log ownership, and runbook truth
+do not remain implicit inside the seam guide.
+
+The wider authenticated start-run path is also documented as its own local
+component. That guide makes two rules explicit:
+
+- `apps/api` imports canonical command/result vocabulary directly from
+  `@dvt/contracts`
+- app-local command/result re-export shims are not part of the target state
+
+### Start-run HTTP entrypoint boundary
+
+The transport edge for `start-run` is now explicit as its own local
+subcomponent instead of living only as scattered parser files.
+
+```mermaid
+flowchart LR
+  Route["startRunRoute.ts"] --> Parser["startRunRouteParser.ts"]
+  Parser --> Builder["startRunRouteCommandBuilder.ts"]
+  Builder --> Identity["startRunIdentity.ts"]
+  Builder --> Policy["evaluatePlanRoutePlanSource()"]
+  Builder --> Target["parseStartRunTargetAdapter()"]
+  Route --> ErrorFacade["httpErrorTranslation.respond(...)"]
+  Route --> StartFacade["StartRunAuthorizedFacade"]
+```
+
+Use the local component guide for the public API, invariants, transitions, and
+consumers of that entrypoint seam:
+
+- [Start-run HTTP entrypoint component](../../../../apps/api/docs/start-run-http-entrypoint-component.md)
+- [Start-run platform identity component](../../../../apps/api/docs/start-run-platform-identity-component.md)
+
+That entrypoint also owns the platform-owned execution identity insertion from
+`ADR-0050`. Caller-provided `runId` is rejected at parse time, and the internal
+`StartRunCommand.runId` is generated as `run_<UUIDv7>` inside the protected API
+boundary before the command crosses into the authenticated start-run
+application component.
+
+The identity seam is deliberately narrower than a runtime engine seam:
+
+- it allocates an opaque, time-local, collision-resistant resource id;
+- it does not own retry, duplicate-run, lifecycle, recovery, provider workflow,
+  engine, or state-store semantics;
+- persistence uniqueness remains the final collision guard.
+
+The paired frontend component guide documents the caller-owned side of that
+same boundary:
+
+- [Start-run client identity boundary](../web/runs/start-run-client-identity-boundary.md)
+
+### Integrated start-run control boundary
+
+Taken together, `AR-C7` and `AR-C3-A` now read as one protected control
+boundary rather than as unrelated local refactors.
+
+Mature control planes usually separate three concerns cleanly:
+
+- caller-owned intent
+- platform-owned resource identity
+- admission policy before delegate dispatch
+
+The API start-run slice now follows that shape.
+
+```mermaid
+flowchart LR
+  Caller["caller-owned StartRunInput"] --> Http["start-run HTTP entrypoint"]
+  Http --> Identity["platform-owned run_<UUIDv7>"]
+  Http --> Facade["authenticated start-run facade"]
+  Facade --> Admission["duplicate -> delivery -> execution capacity"]
+  Admission --> Delegate["planner / engine delegate"]
+
+  Identity -. "not an engine" .-> Lifecycle["retry / lifecycle / recovery"]
+  Admission -. "not provider-native metrics" .-> Provider["queue depth / worker metrics"]
+```
+
+Use the grouped local component guide for the public API, invariants,
+transitions, and consumers of that end-to-end boundary:
+
+- [Start-run control boundary component](../../../../apps/api/docs/start-run-control-boundary-component.md)
+
+Current slice status:
+
+- `AR-C3-A` is the abstract seam and fail-closed default binding
+- `AR-C3-B` is the concrete Temporal-worker `readyz` binding in protected runtime composition
+- `AR-C3-C` closes telemetry labels, runbook truth, and operator-facing denial diagnosis
+
+### Plan Route Response Translation Boundary
+
+The `preview/compile/import` family now has its own sibling local component
+instead of leaning on scattered route-local mapper imports.
+
+```mermaid
+flowchart LR
+  Consumers["compile/import/preview route consumers"] --> Api["planRouteResponseTranslation.ts"]
+  PreviewContract["preview contract issue"] --> Api
+  Api --> Compile["compilePlanRouteResponseMapper.ts"]
+  Api --> Import["importPlanRouteResponseMapper.ts"]
+  Api --> Preview["previewPlanRouteResponseMapper.ts"]
+  Api --> PreviewIssue["planPreviewContractErrorMapper.ts"]
+  Compile --> Contract["httpErrorContract.ts"]
+  Import --> Contract
+  Preview --> Contract
+  PreviewIssue --> Contract
+```
+
+Use the local component guide for the public API, invariants, transitions, and
+consumers of this seam:
+
+- [Plan route response translation component](../../../../apps/api/docs/plan-route-response-translation-component.md)
+
+This keeps two adjacent but separate entrypoint components explicit:
+
+- `httpErrorTranslation.ts` for runtime protected-route parse/auth/runtime/admin
+  failures
+- `planRouteResponseTranslation.ts` for `preview/compile/import` response
+  mapping in the plan-route family
 
 ### Current Gaps
 
@@ -174,7 +381,6 @@ Native cancel and cooperative cancel are now intentionally split:
 | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
 | Admin route RBAC hardening follow-through remains                 | Explicit admin-scope RBAC is now wired in admin routes; remaining work is test-shape and composition hardening (`AR-C1-T1..T4`). | `AR-C1-T1..T4`                              |
 | SLA and consistency expectations are still implicit               | The API exposes freshness and backpressure behavior, but healthy thresholds remain scattered across config and runbooks.         | `AR-C2`                                     |
-| Admission does not yet see adapter saturation                     | The system can still accept work it cannot execute when Temporal capacity is the bottleneck.                                     | `AR-C3`                                     |
 | Temporal activity writes depend directly on the state store       | State-store failures can cascade into execution stalls without an explicit breaker boundary.                                     | `AR-C4`                                     |
 | Query purity is incomplete                                        | `enrichRunStatus()` still lives on `IWorkflowEngine`, which weakens the read/write separation story.                             | `AR-A3`                                     |
 | Snapshot rebuild concurrency is not yet a contract invariant      | Current mutual exclusion exists in the PostgreSQL implementation, but the contract does not require it.                          | `AR-A6`                                     |
@@ -243,14 +449,36 @@ flowchart LR
 
 ### Target Characteristics
 
-| Concern                     | Current posture                                                                                     | Target posture                                                                                                |
-| --------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Command boundary            | start-run path is explicit but still concentrated in one large protected-runtime composition module | command orchestration stays explicit but is split across smaller, clearer ports with capacity-aware admission |
-| Query boundary              | query services already use read paths, but enrichment still shares the engine contract              | core query path is pure CQRS; enrichment is optional and isolated behind `IRunEnrichmentService`              |
-| Authorization               | tenant and action checks are real, but admin path hardening is incomplete                           | runtime and admin paths use explicit, action-specific RBAC without relying on feature flags                   |
-| Admission                   | duplicate detection and delivery-based backpressure are real                                        | admission also sees adapter saturation and publishes measurable SLA outcomes                                  |
-| Concurrency and operability | snapshot freshness and health are visible, but some guarantees are still implementation-level       | concurrency, freshness, and degradation rules are contract-backed and observable                              |
-| Extensibility               | planner and execution still lean dbt-first in key seams                                             | planner input, step validation, artifacts, and worker routing are step-kind and graph-source agnostic         |
+- `Command boundary`
+  Current posture: start-run path is explicit but still concentrated in one
+  large protected-runtime composition module.
+  Target posture: command orchestration stays explicit but is split across
+  smaller, clearer ports with capacity-aware admission.
+- `Query boundary`
+  Current posture: query services already use read paths, but enrichment still
+  shares the engine contract.
+  Target posture: core query path is pure CQRS; enrichment is optional and
+  isolated behind `IRunEnrichmentService`.
+- `Authorization`
+  Current posture: tenant and action checks are real, now through a single
+  embedded access-decision backend.
+  Target posture: runtime and admin paths use explicit, action-specific RBAC
+  behind one DVT-owned decision contract.
+- `Admission`
+  Current posture: duplicate detection, delivery backpressure, and a concrete
+  worker-backed execution-capacity signal are real, with operator-facing denial
+  codes documented in telemetry and runbooks.
+  Target posture: admission publishes measurable SLA outcomes and evolves from
+  worker-backed denial closure toward richer tenant-scoped capacity policy.
+- `Concurrency and operability`
+  Current posture: snapshot freshness and health are visible, but some
+  guarantees are still implementation-level.
+  Target posture: concurrency, freshness, and degradation rules are
+  contract-backed and observable.
+- `Extensibility`
+  Current posture: planner and execution still lean dbt-first in key seams.
+  Target posture: planner input, step validation, artifacts, and worker routing
+  are step-kind and graph-source agnostic.
 
 ## Governed Transition Route
 
@@ -266,8 +494,9 @@ creating a separate API backlog.
   Publish formal API-adjacent SLA targets for freshness, delivery latency, plan
   compilation, and run start latency.
 - `AR-C3`
-  Propagate adapter saturation into the admission decision so start-run can
-  reject work the runtime cannot currently absorb.
+  Introduce and operationalize execution-capacity admission so start-run can
+  reject work the runtime cannot currently absorb without coupling the API
+  boundary to a provider-specific queue model.
 - `AR-C4`
   Insert a circuit-breaker boundary between Temporal activity writes and the
   state store.

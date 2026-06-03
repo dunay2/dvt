@@ -1,0 +1,3934 @@
+/**
+ * @file scripts/planning-db-query.cjs
+ * @ownedConcern Expose DB-owned planning and governance read models through one operator query command.
+ * @baseline ADR-0055: Planning DB canonical operational source
+ * @decision Expose DB-owned planning and governance read models through one operator query command.
+ * @consequence Planning workboard and next-task reads consume normalized DB views instead of
+ *   reparsing lane YAML as the operational source.
+ * @version 1.0.0
+ */
+const { Client } = require('pg');
+
+const { defaultPgUrl } = require('./planning-db-run.cjs');
+const { schemaName } = require('./planning-db-migrate.cjs');
+const { runPlanningImport } = require('./planning-db-import.cjs');
+const {
+  buildCommandQueryRailRows,
+  buildCreationIntentRows,
+  normalizeCreationIntentForSearch,
+  parseBooleanFilter,
+  readCommandQueryRailRows,
+  readCreationIntentRows,
+} = require('./planning-db/command-query-rail-query.cjs');
+const {
+  buildFrontendMechanicalTruthRows,
+  readFrontendMechanicalTruthRows,
+} = require('./planning-db/frontend-mechanical-truth-inventory.cjs');
+
+const architectureSchemaName = 'architecture';
+const componentEngineeringSchemaName = 'component_engineering';
+
+const knownQueries = new Set([
+  'summary',
+  'hash-drift',
+  'tasks',
+  'open',
+  'next',
+  'dependencies',
+  'evidence',
+  'status-events',
+  'artifacts',
+  'files',
+  'components',
+  'units',
+  'coverage',
+  'remediation',
+  'debt',
+  'drift',
+  'commands',
+  'command-query-rails',
+  'ai-project-context',
+  'creation-intent',
+  'frontend-surfaces',
+  'pr-readiness',
+  'docs-disposition',
+  'feature-work',
+  'task-references',
+  'task-trace',
+  'task-gaps',
+  'focus',
+  'real-work',
+  'cer',
+  'knowledge-documents',
+  'knowledge-actions',
+  'mandatory-proposal-gaps',
+  'component-tree',
+  'component-metadata',
+  'component-drift',
+  'component-rules',
+  'component-rule-evaluations',
+  'component-quality',
+  'architecture-designs',
+  'architecture-scopes',
+  'architecture-components',
+  'architecture-relations',
+  'architecture-responsibilities',
+  'architecture-io',
+  'architecture-flows',
+  'architecture-flow-steps',
+  'architecture-contracts',
+  'architecture-maturity',
+  'architecture-drift',
+  'architecture-enforcement',
+  'architecture-evidence',
+]);
+const governanceProjectionQueryNames = new Set([
+  'files',
+  'components',
+  'units',
+  'coverage',
+  'remediation',
+  'debt',
+  'drift',
+  'command-query-rails',
+  'ai-project-context',
+  'creation-intent',
+  'frontend-surfaces',
+  'cer',
+  'component-tree',
+  'component-metadata',
+  'component-drift',
+  'component-rules',
+  'component-rule-evaluations',
+  'component-quality',
+  'knowledge-documents',
+  'knowledge-actions',
+  'mandatory-proposal-gaps',
+]);
+
+function databaseUrl() {
+  return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
+}
+
+function resolveQueryName(value) {
+  const queryName = value || 'summary';
+  if (!knownQueries.has(queryName)) {
+    throw new Error(
+      `Unknown planning DB query "${queryName}". Expected: ${[...knownQueries].sort().join(', ')}.`
+    );
+  }
+
+  return queryName;
+}
+
+function usesGovernanceProjection(queryName) {
+  return governanceProjectionQueryNames.has(queryName);
+}
+
+async function ensureFreshGovernanceProjection(queryName, options = {}) {
+  if (options.autoImportGovernance !== true || !usesGovernanceProjection(queryName)) {
+    return null;
+  }
+
+  const runImport = options.runPlanningImport || runPlanningImport;
+  const result = await runImport(
+    {
+      databaseUrl: options.databaseUrl || databaseUrl(),
+      ifStale: true,
+      includePlanning: false,
+      includeGovernance: true,
+      silent: true,
+    },
+    {
+      logger: {
+        log() {},
+      },
+    }
+  );
+
+  if ((result.importedScopes || []).includes('governance')) {
+    const logger = options.logger || console;
+    const write = typeof logger.error === 'function' ? logger.error.bind(logger) : console.error;
+    write(`[planning:db:query] refreshed stale governance projection before ${queryName}`);
+  }
+
+  return result;
+}
+
+function parseLimit(value, defaultLimit) {
+  if (value === undefined || value === null || value === '') {
+    return defaultLimit;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error(`Invalid --limit "${value}". Expected a positive integer.`);
+  }
+
+  return parsed;
+}
+
+function parseCerSchemaVersion(value) {
+  const schemaVersion = value || 'v1';
+  if (schemaVersion !== 'v1' && schemaVersion !== 'v2') {
+    throw new Error(`Invalid --schema-version "${value}". Expected v1 or v2.`);
+  }
+
+  return schemaVersion;
+}
+
+function parseOutputFormat(value) {
+  const normalized = String(value || '').toLowerCase();
+  if (normalized === 'json' || normalized === 'markdown') {
+    return normalized;
+  }
+
+  throw new Error(`Invalid --format "${value}". Expected json or markdown.`);
+}
+
+function normalizeResolutionFilter(value) {
+  if (value === undefined || value === null || value === '') {
+    return undefined;
+  }
+
+  const normalized = String(value).toLowerCase();
+  if (normalized === 'open') {
+    return 'pending';
+  }
+
+  if (['all', 'pending', 'resolved'].includes(normalized)) {
+    return normalized;
+  }
+
+  throw new Error(
+    `Invalid --resolution "${value}". Expected one of: pending, resolved, all, open.`
+  );
+}
+
+function parseArgs(args = process.argv.slice(2)) {
+  const [queryNameArg, ...rest] = args;
+  const queryName = resolveQueryName(queryNameArg);
+  const filters = {};
+  let autoImportGovernance;
+  let outputFormat;
+  let refreshRequested = false;
+  let refreshConfirmed = false;
+  let noRefreshRequested = false;
+
+  for (let index = 0; index < rest.length; index += 1) {
+    const arg = rest[index];
+    if (!arg.startsWith('--')) {
+      if (queryName === 'task-trace' && !filters.taskId) {
+        filters.taskId = arg;
+        continue;
+      }
+      throw new Error(`Unexpected argument "${arg}". Expected --name value flags.`);
+    }
+
+    if (arg === '--no-refresh') {
+      noRefreshRequested = true;
+      autoImportGovernance = false;
+      continue;
+    }
+    if (arg === '--refresh') {
+      refreshRequested = true;
+      autoImportGovernance = true;
+      continue;
+    }
+    if (arg === '--confirm-expensive-governance-refresh') {
+      refreshConfirmed = true;
+      continue;
+    }
+
+    const value = rest[index + 1];
+    if (value === undefined || value.startsWith('--')) {
+      throw new Error(`Missing value for ${arg}.`);
+    }
+    index += 1;
+
+    if (arg === '--lane') {
+      filters.laneId = value;
+      continue;
+    }
+    if (arg === '--status') {
+      filters.status = value;
+      continue;
+    }
+    if (arg === '--claimed-by') {
+      filters.claimedBy = value;
+      continue;
+    }
+    if (arg === '--priority') {
+      filters.priority = value;
+      continue;
+    }
+    if (arg === '--component') {
+      filters.component = value;
+      continue;
+    }
+    if (arg === '--design') {
+      filters.design = value;
+      continue;
+    }
+    if (arg === '--relation') {
+      filters.relation = value;
+      continue;
+    }
+    if (arg === '--flow') {
+      filters.flow = value;
+      continue;
+    }
+    if (arg === '--contract') {
+      filters.contract = value;
+      continue;
+    }
+    if (arg === '--subject') {
+      filters.subject = value;
+      continue;
+    }
+    if (arg === '--subject-kind') {
+      filters.subjectKind = value;
+      continue;
+    }
+    if (arg === '--owner') {
+      filters.owner = value;
+      continue;
+    }
+    if (arg === '--layer') {
+      filters.layer = value;
+      continue;
+    }
+    if (arg === '--schema-version') {
+      filters.schemaVersion = parseCerSchemaVersion(value);
+      continue;
+    }
+    if (arg === '--unit') {
+      filters.component = value;
+      continue;
+    }
+    if (arg === '--parent' || arg === '--parent-unit' || arg === '--children-of') {
+      filters.parentUnit = value;
+      continue;
+    }
+    if (arg === '--command-domain') {
+      filters.commandDomain = value;
+      continue;
+    }
+    if (arg === '--intent') {
+      filters.intent = value;
+      continue;
+    }
+    if (arg === '--type') {
+      filters.type = value;
+      continue;
+    }
+    if (arg === '--duplicates') {
+      filters.duplicates = parseBooleanFilter(value, '--duplicates');
+      continue;
+    }
+    if (arg === '--gaps') {
+      filters.gaps = parseBooleanFilter(value, '--gaps');
+      continue;
+    }
+    if (arg === '--root') {
+      filters.rootUnit = value;
+      continue;
+    }
+    if (arg === '--domain') {
+      filters.domainUnit = value;
+      continue;
+    }
+    if (arg === '--path') {
+      filters.path = value;
+      continue;
+    }
+    if (arg === '--state') {
+      if (queryName === 'frontend-surfaces') {
+        filters.state = value;
+      } else {
+        filters.governanceState = value;
+      }
+      continue;
+    }
+    if (arg === '--resolution') {
+      filters.resolution = normalizeResolutionFilter(value);
+      continue;
+    }
+    if (arg === '--kind') {
+      filters.kind = value;
+      continue;
+    }
+    if (arg === '--prefix') {
+      filters.prefix = value;
+      continue;
+    }
+    if (arg === '--task') {
+      filters.taskId = value;
+      continue;
+    }
+    if (arg === '--limit') {
+      filters.limit = parseLimit(value, 20);
+      continue;
+    }
+    if (arg === '--format') {
+      outputFormat = parseOutputFormat(value);
+      continue;
+    }
+
+    throw new Error(`Unknown planning DB query option "${arg}".`);
+  }
+
+  if (refreshRequested && noRefreshRequested) {
+    throw new Error('Cannot combine --refresh and --no-refresh.');
+  }
+  if (refreshConfirmed && !refreshRequested) {
+    throw new Error('--confirm-expensive-governance-refresh requires --refresh.');
+  }
+  if (refreshRequested && !refreshConfirmed) {
+    throw new Error('--refresh requires --confirm-expensive-governance-refresh.');
+  }
+  if (refreshRequested && !usesGovernanceProjection(queryName)) {
+    throw new Error('--refresh is only valid for governance projection queries.');
+  }
+  if (outputFormat !== undefined && queryName !== 'ai-project-context') {
+    throw new Error('--format is only valid for ai-project-context.');
+  }
+  if (
+    queryName === 'creation-intent' &&
+    normalizeCreationIntentForSearch(filters.intent).length === 0
+  ) {
+    throw new Error('creation-intent requires --intent "<creation intent>".');
+  }
+
+  return {
+    queryName,
+    ...(outputFormat === undefined ? {} : { outputFormat }),
+    ...(autoImportGovernance === undefined ? {} : { autoImportGovernance }),
+    filters,
+  };
+}
+
+function buildSummaryRows(summary) {
+  return [
+    ['planning.source_authority', summary.sourceAuthority || 'database'],
+    ['planning.lanes', summary.lanes],
+    ['planning.tasks', summary.tasks],
+    ['planning.tasks.review', summary.reviewTasks],
+    ['planning.task_dependencies', summary.planningTaskDependencies],
+    ['planning.task_evidence_refs', summary.planningTaskEvidenceRefs],
+    ['planning.task_status_events', summary.planningTaskStatusEvents],
+    ['planning.artifacts', summary.planningArtifacts],
+    ['planning.real_work_items', summary.planningRealWorkItems],
+    ['planning.real_work_open_items', summary.planningRealWorkOpenItems],
+    ['repository.commands', summary.repositoryCommands],
+    ['repository.commands.unknown', summary.repositoryCommandUnknown],
+    ['repository.commands.runtime_fanout', summary.repositoryCommandRuntimeFanout],
+    ['command_query.rails', summary.commandQueryRails],
+    ['command_query.rails.gaps', summary.commandQueryRailGaps],
+    ['command_query.rails.duplicates', summary.commandQueryRailDuplicates],
+    ['repository.pr_readiness', summary.prReadinessChecks],
+    ['repository.pr_readiness.blocking', summary.prReadinessBlocking],
+    ['docs.disposition_documents', summary.docsDispositionDocuments],
+    ['docs.disposition_actions', summary.docsDispositionActions],
+    ['docs.resolution_overlays', summary.docsResolutionOverlays],
+    ['docs.task_like_references', summary.docsTaskLikeReferences],
+    ['docs.task_like_references.unknown', summary.docsTaskLikeReferencesUnknown],
+    ['risk.debt_items', summary.riskDebtItems],
+    ['risk.debt_items.open', summary.riskDebtItemsOpen],
+    ['governance.files', summary.governanceFiles],
+    ['governance.files.drift', summary.driftFiles],
+    ['governance.files.legacy', summary.legacyFiles],
+    ['governance.components', summary.governanceComponents],
+    ['governance.component_files', summary.governanceComponentFiles],
+    ['governance.fingerprints', summary.governanceFingerprints],
+    ['governance.coverage_rows', summary.governanceCoverageRows],
+    ['governance.remediation_tasks', summary.governanceRemediationTasks],
+    ['governance.remediation_tasks.p0', summary.governanceRemediationP0],
+    ['planning.local_task_overlays', summary.planningLocalTaskOverlays],
+    ['planning.local_operations', summary.planningLocalOperations],
+  ];
+}
+
+function buildHashDriftRows(summary) {
+  return [['governance.hash_drift', summary.governanceHashDrift]];
+}
+
+const aiProjectContextRecommendedQueries = Object.freeze([
+  'pnpm planning:db:query summary',
+  'pnpm planning:db:query focus',
+  'pnpm planning:db:query real-work',
+  'pnpm planning:db:query command-query-rails --gaps true',
+  'pnpm planning:db:query command-query-rails --duplicates true',
+  'pnpm planning:db:query components',
+  'pnpm planning:db:query debt --status Open',
+  'pnpm planning:db:query commands --command-domain planning-db',
+  'pnpm planning:db:query pr-readiness',
+]);
+
+function numericCount(value) {
+  if (value === undefined || value === null || value === '') {
+    return 0;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function normalizeAiCommandQueryRail(row) {
+  const isGap = Boolean(row.is_gap ?? row.isGap);
+  const isDuplicate = Boolean(row.is_duplicate ?? row.isDuplicate);
+  return {
+    railType: row.rail_type ?? row.railType ?? '-',
+    railName: row.rail_name ?? row.railName ?? '-',
+    dddOwner: row.ddd_owner ?? row.dddOwner ?? '-',
+    status: row.rail_status ?? row.railStatus ?? '-',
+    state: isGap
+      ? 'gap'
+      : isDuplicate
+        ? 'duplicate'
+        : numericCount(row.implementation_ref_count ?? row.implementationRefCount) > 0
+          ? 'implemented'
+          : 'declared',
+    isGap,
+    isDuplicate,
+    implementationRefCount: numericCount(
+      row.implementation_ref_count ?? row.implementationRefCount
+    ),
+    sourcePath: row.source_path ?? row.sourcePath ?? '-',
+  };
+}
+
+function normalizeAiComponent(row) {
+  return {
+    componentId: row.component_id ?? row.componentId ?? '-',
+    name: compactText(row.name),
+    status: row.status ?? '-',
+    governanceState: row.governance_state ?? row.governanceState ?? '-',
+    domainUnit: row.domain_unit ?? row.domainUnit ?? '-',
+    fileCount: numericCount(row.file_count ?? row.fileCount),
+  };
+}
+
+function normalizeAiRealWork(row) {
+  return {
+    priority: row.priority ?? '-',
+    kind: row.work_kind ?? row.workKind ?? '-',
+    status: row.work_status ?? row.workStatus ?? '-',
+    workId: row.work_id ?? row.workId ?? '-',
+    scope: taskScope(row),
+    title: compactText(row.title),
+    sourcePath: row.source_path ?? row.sourcePath ?? row.document_path ?? row.documentPath ?? '-',
+    suggestedQuery: row.suggested_query ?? row.suggestedQuery ?? '-',
+  };
+}
+
+function normalizeAiRiskDebt(row) {
+  return {
+    priority: row.priority ?? '-',
+    status: row.status ?? '-',
+    riskId: row.risk_id ?? row.riskId ?? '-',
+    componentUnit: row.component_unit ?? row.componentUnit ?? '-',
+    sourcePath: row.source_path ?? row.sourcePath ?? '-',
+    title: compactText(row.title),
+  };
+}
+
+function normalizeAiRepositoryCommand(row) {
+  return {
+    commandType: row.command_type ?? row.commandType ?? '-',
+    commandName: row.command_name ?? row.commandName ?? row.command_path ?? row.commandPath ?? '-',
+    domain: row.domain ?? '-',
+    sensitivity: row.sensitivity ?? '-',
+    runtimeFanout: Boolean(row.runtime_fanout ?? row.runtimeFanout),
+  };
+}
+
+function normalizeAiPrReadiness(row) {
+  return {
+    readinessId: row.readiness_id ?? row.readinessId ?? '-',
+    state: row.blocking ? 'blocking' : 'ready',
+    missingRequirements: row.missing_requirements ?? row.missingRequirements ?? [],
+    evidenceDocStatus: row.evidence_doc_status ?? row.evidenceDocStatus ?? '-',
+    riskUpdateStatus: row.risk_update_status ?? row.riskUpdateStatus ?? '-',
+  };
+}
+
+function buildAiProjectContext(snapshot = {}, options = {}) {
+  const summary = snapshot.summary || {};
+  return {
+    contextKind: 'db-first-ai-project-context',
+    sourceAuthority: summary.sourceAuthority || 'database',
+    generatedAt: options.generatedAt || new Date().toISOString(),
+    counts: {
+      planningTasks: numericCount(summary.tasks),
+      reviewTasks: numericCount(summary.reviewTasks),
+      repositoryCommands: numericCount(summary.repositoryCommands),
+      realWorkItems: numericCount(summary.planningRealWorkItems),
+      realWorkOpenItems: numericCount(summary.planningRealWorkOpenItems),
+      commandQueryRails: numericCount(summary.commandQueryRails),
+      commandQueryRailGaps: numericCount(summary.commandQueryRailGaps),
+      commandQueryRailDuplicates: numericCount(summary.commandQueryRailDuplicates),
+      openIncidentsAndDebt: numericCount(summary.riskDebtItemsOpen),
+      governanceComponents: numericCount(summary.governanceComponents),
+      governanceDriftFiles: numericCount(summary.driftFiles),
+      blockingPrReadinessChecks: numericCount(summary.prReadinessBlocking),
+    },
+    samples: {
+      commandQueryRails: (snapshot.commandQueryRails || []).map(normalizeAiCommandQueryRail),
+      components: (snapshot.components || []).map(normalizeAiComponent),
+      realWork: (snapshot.realWork || []).map(normalizeAiRealWork),
+      openIncidentsAndDebt: (snapshot.riskDebt || []).map(normalizeAiRiskDebt),
+      repositoryCommands: (snapshot.commands || []).map(normalizeAiRepositoryCommand),
+      prReadiness: (snapshot.prReadiness || []).map(normalizeAiPrReadiness),
+    },
+    recommendedQueries: [...aiProjectContextRecommendedQueries],
+  };
+}
+
+function markdownCell(value) {
+  return compactText(Array.isArray(value) ? value.join(', ') : value).replace(/\|/g, '\\|');
+}
+
+function markdownTable(headers, rows) {
+  const lines = [
+    `| ${headers.map(markdownCell).join(' | ')} |`,
+    `| ${headers.map(() => '---').join(' | ')} |`,
+  ];
+  for (const row of rows) {
+    lines.push(`| ${row.map(markdownCell).join(' | ')} |`);
+  }
+  return lines.join('\n');
+}
+
+function markdownSection(title, headers, rows) {
+  if (!rows.length) {
+    return [`## ${title}`, '', 'No rows returned by this DB sample.'].join('\n');
+  }
+
+  return [`## ${title}`, '', markdownTable(headers, rows)].join('\n');
+}
+
+function renderAiProjectContextMarkdown(context) {
+  const countRows = Object.entries(context.counts || {});
+  const railRows = (context.samples.commandQueryRails || []).map((row) => [
+    row.railType,
+    row.railName,
+    row.dddOwner,
+    row.status,
+    row.state,
+    row.sourcePath,
+  ]);
+  const componentRows = (context.samples.components || []).map((row) => [
+    row.componentId,
+    row.name,
+    row.status,
+    row.governanceState,
+    row.fileCount,
+  ]);
+  const debtRows = (context.samples.openIncidentsAndDebt || []).map((row) => [
+    row.priority,
+    row.riskId,
+    row.status,
+    row.componentUnit,
+    row.title,
+    row.sourcePath,
+  ]);
+  const realWorkRows = (context.samples.realWork || []).map((row) => [
+    row.priority,
+    row.kind,
+    row.status,
+    row.workId,
+    row.title,
+    row.suggestedQuery,
+  ]);
+  const commandRows = (context.samples.repositoryCommands || []).map((row) => [
+    row.commandType,
+    row.commandName,
+    row.domain,
+    row.runtimeFanout ? 'runtime-fanout' : '-',
+  ]);
+  const readinessRows = (context.samples.prReadiness || []).map((row) => [
+    row.readinessId,
+    row.state,
+    row.missingRequirements,
+    row.evidenceDocStatus,
+    row.riskUpdateStatus,
+  ]);
+
+  return [
+    '# DB-first AI project context',
+    '',
+    `Generated: ${context.generatedAt}`,
+    `Source authority: ${context.sourceAuthority}`,
+    '',
+    '## Project state',
+    '',
+    'Use this DB-first context before creating new commands, queries, components, docs, or implementation work.',
+    '',
+    markdownSection('Counts', ['Metric', 'Value'], countRows),
+    '',
+    markdownSection(
+      'Open incidents and debt',
+      ['Priority', 'Id', 'Status', 'Component', 'Title', 'Source'],
+      debtRows
+    ),
+    '',
+    markdownSection(
+      'Existing command/query rails',
+      ['Type', 'Name', 'Owner', 'Status', 'State', 'Source'],
+      railRows
+    ),
+    '',
+    markdownSection(
+      'Existing components',
+      ['Component', 'Name', 'Status', 'State', 'Files'],
+      componentRows
+    ),
+    '',
+    markdownSection(
+      'Current real work',
+      ['Priority', 'Kind', 'Status', 'Id', 'Title', 'Suggested query'],
+      realWorkRows
+    ),
+    '',
+    markdownSection('Repository commands', ['Type', 'Name', 'Domain', 'Runtime'], commandRows),
+    '',
+    markdownSection(
+      'PR readiness',
+      ['Readiness', 'State', 'Missing requirements', 'Evidence', 'Risk'],
+      readinessRows
+    ),
+    '',
+    '## Recommended follow-up queries',
+    '',
+    ...(context.recommendedQueries || []).map((query) => `- \`${query}\``),
+    '',
+  ].join('\n');
+}
+
+function normalizeProgress(value) {
+  if (value === undefined || value === null || value === '') {
+    return '-';
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? `${Math.round(parsed)}%` : String(value);
+}
+
+function buildTaskRows(rows) {
+  return rows.map((row) => [
+    row.lane_id ?? row.laneId,
+    row.task_id ?? row.taskId,
+    row.priority ?? '-',
+    row.status,
+    normalizeProgress(row.progress_pct ?? row.progressPct),
+    row.claimed_by ?? row.claimedBy ?? '-',
+    String(row.objective ?? '')
+      .replace(/\s+/g, ' ')
+      .trim(),
+  ]);
+}
+
+function buildNextTaskRows(rows) {
+  return rows.map((row) => [
+    row.route_source ?? row.routeSource ?? 'next',
+    row.lane_id ?? row.laneId,
+    row.task_id ?? row.taskId,
+    row.priority ?? '-',
+    row.status,
+    normalizeProgress(row.progress_pct ?? row.progressPct),
+    row.claimed_by ?? row.claimedBy ?? '-',
+    String(row.objective ?? '')
+      .replace(/\s+/g, ' ')
+      .trim(),
+  ]);
+}
+
+function buildPlanningDependencyRows(rows) {
+  return rows.map((row) => [
+    row.lane_id ?? row.laneId,
+    row.task_id ?? row.taskId,
+    row.dependency_order ?? row.dependencyOrder,
+    row.dependency_task_id ?? row.dependencyTaskId,
+    compactText(row.dependency_text ?? row.dependencyText),
+  ]);
+}
+
+function buildPlanningEvidenceRows(rows) {
+  return rows.map((row) => [
+    row.lane_id ?? row.laneId,
+    row.task_id ?? row.taskId,
+    row.evidence_order ?? row.evidenceOrder,
+    row.evidence_ref ?? row.evidenceRef,
+  ]);
+}
+
+function buildPlanningStatusEventRows(rows) {
+  return rows.map((row) => [
+    row.event_kind ?? row.eventKind,
+    row.lane_id ?? row.laneId,
+    row.task_id ?? row.taskId,
+    row.status ?? '-',
+    row.actor ?? '-',
+  ]);
+}
+
+function buildPlanningArtifactRows(rows) {
+  return rows.map((row) => [
+    row.artifact_kind ?? row.artifactKind,
+    row.artifact_path ?? row.artifactPath,
+    row.content_sha256 ?? row.contentSha256 ?? '-',
+  ]);
+}
+
+function buildRepositoryCommandRows(rows) {
+  return rows.map((row) => [
+    row.command_type ?? row.commandType,
+    row.command_name ?? row.commandName ?? row.command_path ?? row.commandPath,
+    row.domain,
+    row.sensitivity,
+    flagLabel(row.runtime_fanout ?? row.runtimeFanout, 'runtime-fanout'),
+    row.referenced_file_count ?? row.referencedFileCount ?? 0,
+  ]);
+}
+
+function joinJsonArray(value) {
+  const values = Array.isArray(value) ? value : [];
+  return values.length > 0 ? values.join(',') : '-';
+}
+
+function buildPrReadinessRows(rows) {
+  return rows.map((row) => [
+    row.readiness_id ?? row.readinessId,
+    row.effective_arc_level ?? row.effectiveArcLevel,
+    row.blocking ? 'blocking' : 'ready',
+    row.trigger_count ?? row.triggerCount ?? 0,
+    joinJsonArray(row.missing_requirements ?? row.missingRequirements),
+    `evidence:${row.evidence_doc_status ?? row.evidenceDocStatus ?? '-'}`,
+    `risk:${row.risk_update_status ?? row.riskUpdateStatus ?? '-'}`,
+    joinJsonArray(row.required_checks ?? row.requiredChecks),
+  ]);
+}
+
+function buildDocsDispositionRows(rows) {
+  return rows.map((row) => [
+    row.priority,
+    row.action_kind ?? row.actionKind,
+    row.document_path ?? row.documentPath,
+    row.reference_text ?? row.referenceText ?? '-',
+    row.resolution_status ?? row.resolutionStatus ?? 'pending',
+    compactText(row.reason),
+  ]);
+}
+
+function buildTaskReferenceRows(rows) {
+  return rows.map((row) => [
+    row.classification,
+    row.reference_text ?? row.referenceText,
+    row.reference_prefix ?? row.referencePrefix,
+    row.document_path ?? row.documentPath,
+    row.occurrence_count ?? row.occurrenceCount ?? 0,
+  ]);
+}
+
+function buildFeatureWorkRows(rows) {
+  return rows.map((row) => [
+    row.feature_id ?? row.featureId,
+    row.document_status ?? row.documentStatus ?? '-',
+    row.planning_type ?? row.planningType ?? '-',
+    row.document_path ?? row.documentPath,
+    row.occurrence_count ?? row.occurrenceCount ?? 0,
+  ]);
+}
+
+function buildTaskTraceRows(rows) {
+  return rows.map((row) => [
+    row.lane_id ?? row.laneId ?? '-',
+    row.task_id ?? row.taskId ?? '-',
+    row.trace_kind ?? row.traceKind,
+    row.trace_ref ?? row.traceRef,
+    row.trace_status ?? row.traceStatus ?? '-',
+    compactText(row.trace_detail ?? row.traceDetail),
+  ]);
+}
+
+function buildTaskGapRows(rows) {
+  return rows.map((row) => [
+    row.severity,
+    row.gap_kind ?? row.gapKind,
+    row.task_id ?? row.taskId ?? '-',
+    row.document_path ?? row.documentPath ?? '-',
+    row.resolution_status ?? row.resolutionStatus ?? 'pending',
+    compactText(row.reason),
+  ]);
+}
+
+function buildFocusRows(rows) {
+  return rows.map((row) => [
+    row.rank_score ?? row.rankScore,
+    row.priority ?? '-',
+    row.intake_kind ?? row.intakeKind,
+    row.item_id ?? row.itemId,
+    taskScope(row),
+    row.document_path ?? row.documentPath ?? '-',
+    compactText(row.title),
+    compactText(row.reason),
+    row.suggested_query ?? row.suggestedQuery ?? '-',
+  ]);
+}
+
+function buildRealWorkRows(rows) {
+  return rows.map((row) => [
+    row.priority ?? '-',
+    row.work_kind ?? row.workKind,
+    row.work_status ?? row.workStatus,
+    row.work_id ?? row.workId,
+    taskScope(row),
+    row.source_path ?? row.sourcePath ?? row.document_path ?? row.documentPath ?? '-',
+    row.open_item_count ?? row.openItemCount ?? 0,
+    row.linked_task_count ?? row.linkedTaskCount ?? 0,
+    row.missing_dependency_count ?? row.missingDependencyCount ?? 0,
+    compactText(row.title),
+    row.suggested_query ?? row.suggestedQuery ?? '-',
+  ]);
+}
+
+function taskScope(row) {
+  const laneId = row.lane_id ?? row.laneId;
+  const taskId = row.task_id ?? row.taskId;
+  if (!laneId && !taskId) {
+    return '-';
+  }
+
+  return `${laneId || '-'}/${taskId || '-'}`;
+}
+
+function compactText(value) {
+  return String(value ?? '-')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function compactJson(value) {
+  if (value === undefined || value === null) {
+    return '-';
+  }
+
+  if (typeof value === 'string') {
+    return compactText(value);
+  }
+
+  return JSON.stringify(value);
+}
+
+function flagLabel(value, label) {
+  return value ? label : '-';
+}
+
+function buildGovernanceFileRows(rows) {
+  return rows.map((row) => [
+    row.path,
+    row.component_unit ?? row.componentUnit,
+    row.owning_unit ?? row.owningUnit,
+    row.governance_state ?? row.governanceState,
+    flagLabel(row.is_drift ?? row.isDrift, 'drift'),
+    flagLabel(row.is_legacy ?? row.isLegacy, 'legacy'),
+  ]);
+}
+
+function buildGovernanceComponentRows(rows) {
+  return rows.map((row) => [
+    row.component_id ?? row.componentId,
+    row.file_count ?? row.fileCount,
+    row.governance_state ?? row.governanceState,
+    flagLabel(row.is_drift ?? row.isDrift, 'drift'),
+    flagLabel(row.is_legacy ?? row.isLegacy, 'legacy'),
+    row.ddd_owner ?? row.dddOwner ?? '-',
+  ]);
+}
+
+function buildGovernanceUnitRows(rows) {
+  return rows.map((row) => [
+    row.unit_id ?? row.unitId,
+    compactText(row.name),
+    row.level,
+    row.parent_id ?? row.parentId ?? '-',
+    row.governance_state ?? row.governanceState,
+    row.direct_file_count ?? row.directFileCount ?? 0,
+    row.descendant_file_count ?? row.descendantFileCount ?? 0,
+    row.ddd_owner ?? row.dddOwner ?? '-',
+  ]);
+}
+
+function buildComponentEngineeringComponentTreeRows(rows) {
+  return rows.map((row) => [
+    row.component_id ?? row.componentId,
+    compactText(row.name),
+    row.component_level ?? row.componentLevel ?? '-',
+    row.parent_component_id ?? row.parentComponentId ?? '-',
+    row.governance_state ?? row.governanceState ?? '-',
+    row.direct_file_count ?? row.directFileCount ?? 0,
+    row.descendant_file_count ?? row.descendantFileCount ?? 0,
+    row.ddd_owner ?? row.dddOwner ?? '-',
+    String(row.is_leaf_component ?? row.isLeafComponent ?? false),
+  ]);
+}
+
+function buildComponentEngineeringComponentDriftRows(rows) {
+  return rows.map((row) => [
+    row.component_id ?? row.componentId ?? '-',
+    row.drift_code ?? row.driftCode ?? '-',
+    compactJson(row.metadata),
+  ]);
+}
+
+function buildComponentEngineeringComponentMetadataRows(rows) {
+  return rows.map((row) => [
+    row.component_id ?? row.componentId,
+    compactText(row.name),
+    row.metadata_state ?? row.metadataState ?? '-',
+    row.quality_state ?? row.qualityState ?? '-',
+    row.direct_file_count ?? row.directFileCount ?? 0,
+    row.descendant_file_count ?? row.descendantFileCount ?? 0,
+    joinJsonArray(row.drift_codes ?? row.driftCodes),
+    compactText(row.owned_concern ?? row.ownedConcern),
+  ]);
+}
+
+function buildComponentEngineeringRuleCatalogRows(rows) {
+  return rows.map((row) => [
+    row.rule_id ?? row.ruleId,
+    row.category,
+    row.severity,
+    row.subject_level ?? row.subjectLevel,
+    row.drift_code ?? row.driftCode ?? '-',
+  ]);
+}
+
+function buildComponentEngineeringRuleEvaluationRows(rows) {
+  return rows.map((row) => [
+    row.rule_id ?? row.ruleId,
+    row.subject_id ?? row.subjectId,
+    row.evaluation_state ?? row.evaluationState,
+    row.severity,
+    row.drift_code ?? row.driftCode ?? '-',
+  ]);
+}
+
+function buildComponentEngineeringQualityRows(rows) {
+  return rows.map((row) => [
+    row.component_id ?? row.componentId,
+    compactText(row.name),
+    row.component_level ?? row.componentLevel ?? '-',
+    row.quality_state ?? row.qualityState ?? '-',
+    row.direct_file_count ?? row.directFileCount ?? 0,
+    row.descendant_file_count ?? row.descendantFileCount ?? 0,
+    row.children_count ?? row.childrenCount ?? 0,
+    row.test_file_count ?? row.testFileCount ?? 0,
+    row.failing_rule_count ?? row.failingRuleCount ?? 0,
+    joinJsonArray(row.drift_codes ?? row.driftCodes),
+  ]);
+}
+
+function buildArchitectureDesignRows(rows) {
+  return rows.map((row) => [
+    row.design_id ?? row.designId,
+    row.work_item_id ?? row.workItemId ?? '-',
+    row.status ?? '-',
+    row.owner ?? '-',
+    row.rail_ref ?? row.railRef ?? '-',
+    row.fowler_signal ?? row.fowlerSignal ?? '-',
+  ]);
+}
+
+function buildArchitectureDesignScopeRows(rows) {
+  return rows.map((row) => [
+    row.design_id ?? row.designId,
+    row.subject_kind ?? row.subjectKind,
+    row.subject_id ?? row.subjectId,
+    row.scope_kind ?? row.scopeKind,
+    String(row.required ?? true),
+    row.design_status ?? row.designStatus ?? '-',
+  ]);
+}
+
+function buildArchitectureComponentRows(rows) {
+  return rows.map((row) => [
+    row.component_id ?? row.componentId,
+    compactText(row.name),
+    row.kind ?? '-',
+    row.layer ?? '-',
+    row.owner ?? '-',
+    row.status ?? '-',
+    row.maturity_score ?? row.maturityScore ?? '-',
+  ]);
+}
+
+function buildArchitectureRelationRows(rows) {
+  return rows.map((row) => [
+    row.relation_id ?? row.relationId,
+    row.source_component_id ?? row.sourceComponentId,
+    row.target_component_id ?? row.targetComponentId,
+    row.relation_type ?? row.relationType,
+    row.direction ?? '-',
+    row.sync_async ?? row.syncAsync ?? '-',
+    row.status ?? '-',
+  ]);
+}
+
+function buildArchitectureResponsibilityRows(rows) {
+  return rows.map((row) => [
+    row.responsibility_id ?? row.responsibilityId,
+    row.component_id ?? row.componentId,
+    compactText(row.responsibility),
+    compactText(row.reason_to_change ?? row.reasonToChange),
+    row.ddd_owner ?? row.dddOwner ?? '-',
+    row.status ?? '-',
+  ]);
+}
+
+function buildArchitectureIoRows(rows) {
+  return rows.map((row) => [
+    row.component_id ?? row.componentId,
+    row.io_id ?? row.ioId,
+    row.io_kind ?? row.ioKind,
+    row.io_name ?? row.ioName,
+    row.direction ?? '-',
+    row.contract_id ?? row.contractId ?? '-',
+    row.runtime ?? '-',
+  ]);
+}
+
+function buildArchitectureFlowRows(rows) {
+  return rows.map((row) => [
+    row.flow_id ?? row.flowId,
+    compactText(row.name),
+    row.entry_component_id ?? row.entryComponentId,
+    row.exit_component_id ?? row.exitComponentId,
+    row.flow_kind ?? row.flowKind,
+    row.status ?? '-',
+    row.step_count ?? row.stepCount ?? 0,
+  ]);
+}
+
+function buildArchitectureFlowStepRows(rows) {
+  return rows.map((row) => [
+    row.flow_id ?? row.flowId,
+    row.step_order ?? row.stepOrder,
+    row.component_id ?? row.componentId,
+    row.relation_id ?? row.relationId ?? '-',
+    row.input_contract_id ?? row.inputContractId ?? '-',
+    row.output_contract_id ?? row.outputContractId ?? '-',
+    row.transformation_id ?? row.transformationId ?? '-',
+  ]);
+}
+
+function buildArchitectureContractRows(rows) {
+  return rows.map((row) => [
+    row.contract_id ?? row.contractId,
+    row.contract_kind ?? row.contractKind,
+    row.component_id ?? row.componentId,
+    row.contract_ref ?? row.contractRef,
+    row.compatibility ?? '-',
+    row.status ?? '-',
+    row.validation_command ?? row.validationCommand ?? '-',
+  ]);
+}
+
+function buildArchitectureMaturityRows(rows) {
+  return rows.map((row) => [
+    row.component_id ?? row.componentId,
+    compactText(row.name),
+    row.maturity_score ?? row.maturityScore ?? 0,
+    joinJsonArray(row.missing_reasons ?? row.missingReasons),
+    compactJson(row.metrics),
+  ]);
+}
+
+function buildArchitectureDriftRows(rows) {
+  return rows.map((row) => [
+    row.subject_kind ?? row.subjectKind,
+    row.subject_id ?? row.subjectId,
+    row.drift_code ?? row.driftCode,
+    row.severity ?? '-',
+    compactJson(row.metadata),
+  ]);
+}
+
+function buildArchitectureEnforcementRows(rows) {
+  return rows.map((row) => [
+    row.enforcement_kind ?? row.enforcementKind,
+    row.design_id ?? row.designId ?? '-',
+    row.subject_kind ?? row.subjectKind,
+    row.subject_id ?? row.subjectId,
+    row.state_or_violation ?? row.stateOrViolation,
+    row.severity ?? '-',
+  ]);
+}
+
+function buildArchitectureEvidenceRows(rows) {
+  return rows.map((row) => [
+    row.evidence_id ?? row.evidenceId,
+    row.subject_kind ?? row.subjectKind,
+    row.subject_id ?? row.subjectId,
+    row.evidence_kind ?? row.evidenceKind,
+    row.result_state ?? row.resultState,
+    row.freshness_state ?? row.freshnessState ?? '-',
+    row.source_ref ?? row.sourceRef ?? '-',
+  ]);
+}
+
+function buildGovernanceCoverageRows(rows) {
+  return rows.map((row) => [
+    row.coverage_kind ?? row.coverageKind,
+    row.name,
+    row.count_value ?? row.countValue ?? '-',
+    row.file_count ?? row.fileCount ?? '-',
+    row.component_id ?? row.componentId ?? '-',
+  ]);
+}
+
+function buildGovernanceRemediationRows(rows) {
+  return rows.map((row) => [
+    row.priority,
+    row.task_id ?? row.taskId,
+    row.component_unit ?? row.componentUnit,
+    row.file_count ?? row.fileCount,
+    compactText(row.reason),
+  ]);
+}
+
+function buildRiskDebtRows(rows) {
+  return rows.map((row) => [
+    row.priority,
+    row.status,
+    row.risk_id ?? row.riskId,
+    row.component_unit ?? row.componentUnit,
+    row.source_path ?? row.sourcePath,
+    compactText(row.title),
+  ]);
+}
+
+function buildGovernanceDriftRows(rows) {
+  return rows.map((row) => [
+    row.path,
+    row.component_unit ?? row.componentUnit,
+    row.owning_unit ?? row.owningUnit,
+    (row.drift_fields ?? row.driftFields ?? []).join(','),
+  ]);
+}
+
+function buildKnowledgeDocumentRows(rows) {
+  return rows.map((row) => [
+    row.document_type ?? row.documentType,
+    row.mandatory ? 'mandatory' : '-',
+    row.status ?? '-',
+    row.document_path ?? row.documentPath,
+    compactText(row.title),
+  ]);
+}
+
+function buildKnowledgeActionRows(rows) {
+  return rows.map((row) => [
+    row.status,
+    row.required ? 'required' : '-',
+    row.document_path ?? row.documentPath,
+    compactText(row.summary),
+    JSON.stringify(row.links ?? []),
+  ]);
+}
+
+function buildMandatoryProposalGapRows(rows) {
+  return rows.map((row) => [
+    row.gap_kind ?? row.gapKind,
+    row.required_action_count ?? row.requiredActionCount ?? 0,
+    row.linked_task_count ?? row.linkedTaskCount ?? 0,
+    row.document_path ?? row.documentPath,
+    compactText(row.title),
+  ]);
+}
+
+function buildComponentEngineeringRecordRows(rows) {
+  return rows.map((row) => row.record ?? row.componentEngineeringRecord);
+}
+
+function appendFilter(predicates, params, column, value) {
+  if (value === undefined || value === null || value === '') {
+    return;
+  }
+
+  params.push(value);
+  predicates.push(`${column} = $${params.length}`);
+}
+
+function appendResolutionFilter(predicates, params, value) {
+  const resolution = normalizeResolutionFilter(value) || 'pending';
+  if (resolution === 'all') {
+    return;
+  }
+
+  params.push('pending');
+  if (resolution === 'resolved') {
+    predicates.push(`resolution_status <> $${params.length}`);
+    return;
+  }
+
+  params[params.length - 1] = resolution;
+  predicates.push(`resolution_status = $${params.length}`);
+}
+
+function effectiveTaskSelect() {
+  return `
+    select
+      lane_id,
+      task_id,
+      priority,
+      status,
+      progress_pct,
+      claimed_by,
+      dependency,
+      objective,
+      target
+    from ${schemaName}.planning_effective_tasks`;
+}
+
+function openTaskSelect() {
+  return `
+    select
+      lane_id,
+      task_id,
+      priority,
+      status,
+      progress_pct,
+      claimed_by,
+      dependency,
+      objective,
+      target
+    from ${schemaName}.planning_open_tasks`;
+}
+
+function nextTaskSelect() {
+  return `
+    with next_candidates as (
+      select
+        'next' as route_source,
+        lane_id,
+        task_id,
+        priority,
+        status,
+        progress_pct,
+        claimed_by,
+        dependency,
+        objective,
+        target
+      from ${schemaName}.planning_next_tasks
+      union
+      select
+        'claim_recovery' as route_source,
+        lane_id,
+        task_id,
+        priority,
+        status,
+        progress_pct,
+        claimed_by,
+        dependency,
+        objective,
+        target
+      from ${schemaName}.planning_claim_recovery_tasks
+    )
+    select
+      route_source,
+      lane_id,
+      task_id,
+      priority,
+      status,
+      progress_pct,
+      claimed_by,
+      dependency,
+      objective,
+      target
+    from next_candidates`;
+}
+
+function planningDependencySelect() {
+  return `
+    select
+      lane_id,
+      task_id,
+      dependency_order,
+      dependency_task_id,
+      dependency_text
+    from ${schemaName}.planning_task_dependencies`;
+}
+
+function planningEvidenceSelect() {
+  return `
+    select
+      lane_id,
+      task_id,
+      evidence_order,
+      evidence_ref
+    from ${schemaName}.planning_task_evidence_refs`;
+}
+
+function planningStatusEventSelect() {
+  return `
+    select
+      event_id,
+      event_kind,
+      lane_id,
+      task_id,
+      status,
+      actor,
+      occurred_at
+    from ${schemaName}.planning_task_status_events`;
+}
+
+function planningArtifactSelect() {
+  return `
+    select
+      artifact_path,
+      artifact_kind,
+      content_sha256,
+      source_content_sha256,
+      exported_at
+    from ${schemaName}.planning_artifacts`;
+}
+
+function repositoryCommandSelect() {
+  return `
+    select
+      command_id,
+      command_type,
+      command_name,
+      command_path,
+      command_text,
+      domain,
+      sensitivity,
+      runtime_fanout,
+      changed_file_validation_relevant,
+      referenced_file_count,
+      source_path,
+      source_content_sha256,
+      imported_at
+    from ${schemaName}.repository_command_query`;
+}
+
+function prReadinessSelect() {
+  return `
+    select
+      readiness_id,
+      base_ref,
+      head_ref,
+      effective_arc_level,
+      is_arc,
+      blocking,
+      trigger_count,
+      missing_requirements,
+      evidence_doc_status,
+      risk_update_status,
+      required_checks,
+      recommended_guides,
+      changed_file_count,
+      evidence_doc_count,
+      risk_update_count,
+      source_path,
+      source_content_sha256,
+      imported_at
+    from ${schemaName}.pr_readiness_query`;
+}
+
+function docsDispositionActionSelect() {
+  return `
+    select
+      action_id,
+      priority,
+      action_kind,
+      document_path,
+      document_status,
+      planning_type,
+      is_active,
+      reference_text,
+      reason,
+      blocking,
+      evidence,
+      source_content_sha256,
+      raw_action,
+      imported_at,
+      resolution_status,
+      resolved_by,
+      resolved_at,
+      resolution_reason,
+      target_lane_id,
+      target_task_id
+    from ${schemaName}.doc_disposition_action_query`;
+}
+
+function taskReferenceSelect() {
+  return `
+    select
+      reference_id,
+      document_path,
+      reference_text,
+      reference_prefix,
+      classification,
+      registered_planning_task,
+      occurrence_count,
+      sample_lines,
+      source_content_sha256,
+      raw_reference,
+      imported_at
+    from ${schemaName}.doc_task_reference_query`;
+}
+
+function taskTraceSelect() {
+  return `
+    select
+      lane_id,
+      task_id,
+      priority,
+      status,
+      progress_pct,
+      trace_kind,
+      trace_ref,
+      trace_status,
+      trace_detail,
+      document_path,
+      source_path,
+      source_content_sha256,
+      trace_order
+    from ${schemaName}.planning_task_trace_query`;
+}
+
+function taskGapSelect() {
+  return `
+    select
+      gap_kind,
+      severity,
+      lane_id,
+      task_id,
+      document_path,
+      reason,
+      source_path,
+      source_content_sha256,
+      resolution_status,
+      resolved_by,
+      resolved_at,
+      resolution_reason,
+      target_lane_id,
+      target_task_id
+    from ${schemaName}.planning_task_gap_query`;
+}
+
+function workIntakeSelect() {
+  return `
+    select
+      rank_score,
+      priority,
+      intake_kind,
+      item_id,
+      lane_id,
+      task_id,
+      document_path,
+      source_path,
+      title,
+      reason,
+      suggested_query,
+      source_view,
+      source_content_sha256
+    from ${schemaName}.planning_work_intake_query`;
+}
+
+function realWorkSelect() {
+  return `
+    select
+      rank_score,
+      priority,
+      work_kind,
+      work_id,
+      lane_id,
+      task_id,
+      document_path,
+      source_path,
+      title,
+      work_status,
+      open_item_count,
+      linked_task_count,
+      dependency_count,
+      missing_dependency_count,
+      missing_dependencies,
+      reason,
+      suggested_query,
+      source_view,
+      source_content_sha256
+    from ${schemaName}.planning_real_work_query`;
+}
+
+function governanceFileSelect() {
+  return `
+    select
+      file_path as path,
+      leaf_component_id as component_unit,
+      owning_unit,
+      root_unit,
+      domain_unit,
+      governance_state,
+      is_drift,
+      is_legacy,
+      ddd_owner,
+      cq_rails
+    from ${componentEngineeringSchemaName}.file_ownership_query`;
+}
+
+function governanceComponentSelect() {
+  return `
+    select
+      component_id,
+      name,
+      level,
+      root_unit,
+      domain_unit,
+      status,
+      governance_state,
+      is_drift,
+      is_legacy,
+      children_required,
+      file_count,
+      ddd_owner,
+      cq_rails
+    from ${schemaName}.governance_component_query`;
+}
+
+function governanceUnitSelect() {
+  return `
+    select
+      unit_id,
+      name,
+      level,
+      parent_id,
+      root_unit,
+      domain_unit,
+      status,
+      governance_state,
+      is_drift,
+      is_legacy,
+      children_required,
+      direct_file_count,
+      descendant_component_count,
+      descendant_file_count,
+      ddd_owner,
+      cq_rails,
+      is_materialized_component
+    from ${schemaName}.governance_unit_query`;
+}
+
+function componentEngineeringComponentTreeSelect() {
+  return `
+    select
+      component_id,
+      name,
+      component_level,
+      parent_component_id,
+      root_unit,
+      domain_unit,
+      status,
+      governance_state,
+      children_required,
+      direct_file_count,
+      descendant_component_count,
+      descendant_file_count,
+      ddd_owner,
+      cq_rails,
+      is_materialized_component,
+      has_children,
+      is_leaf_component
+    from ${componentEngineeringSchemaName}.component_tree_query`;
+}
+
+function componentEngineeringComponentDriftSelect() {
+  return `
+    select
+      component_id,
+      drift_code,
+      metadata
+    from ${componentEngineeringSchemaName}.component_drift_query`;
+}
+
+function componentEngineeringComponentMetadataSelect() {
+  return `
+    select
+      component_id,
+      name,
+      component_level,
+      parent_component_id,
+      root_unit,
+      domain_unit,
+      status,
+      governance_state,
+      ddd_owner,
+      owned_concern,
+      responsibilities,
+      non_goals,
+      reasons_to_change,
+      public_api,
+      invariants,
+      transitions,
+      consumers,
+      direct_file_count,
+      descendant_component_count,
+      descendant_file_count,
+      children_count,
+      test_file_count,
+      quality_state,
+      drift_codes,
+      metadata_state,
+      source_paths,
+      source_content_sha256_values
+    from ${componentEngineeringSchemaName}.component_metadata_query`;
+}
+
+function componentEngineeringRuleCatalogSelect() {
+  return `
+    select
+      rule_id,
+      name,
+      category,
+      severity,
+      subject_level,
+      subject_scope,
+      predicate_owner,
+      evaluation_view,
+      drift_code,
+      governing_doc,
+      remediation,
+      validation_command
+    from ${componentEngineeringSchemaName}.rule_catalog_query`;
+}
+
+function componentEngineeringRuleEvaluationSelect() {
+  return `
+    select
+      rule_id,
+      rule_name,
+      category,
+      severity,
+      subject_id,
+      subject_level,
+      subject_name,
+      evaluation_state,
+      drift_code,
+      evidence,
+      remediation,
+      metadata
+    from ${componentEngineeringSchemaName}.rule_evaluation_query`;
+}
+
+function componentEngineeringQualitySelect() {
+  return `
+    select
+      component_id,
+      name,
+      component_level,
+      parent_component_id,
+      governance_state,
+      quality_state,
+      direct_file_count,
+      descendant_file_count,
+      children_count,
+      test_file_count,
+      rule_count,
+      failing_rule_count,
+      error_count,
+      warning_count,
+      drift_codes
+    from ${componentEngineeringSchemaName}.component_quality_query`;
+}
+
+function architectureDesignSelect() {
+  return `
+    select
+      design_id,
+      work_item_id,
+      title,
+      owner,
+      status,
+      rationale,
+      fowler_signal,
+      rail_ref,
+      approved_at,
+      supersedes_id,
+      created_at,
+      updated_at
+    from ${architectureSchemaName}.design_query`;
+}
+
+function architectureDesignScopeSelect() {
+  return `
+    select
+      design_id,
+      work_item_id,
+      design_title,
+      design_status,
+      subject_kind,
+      subject_id,
+      scope_kind,
+      required,
+      created_at
+    from ${architectureSchemaName}.design_scope_query`;
+}
+
+function architectureComponentSelect() {
+  return `
+    select
+      component_id,
+      name,
+      kind,
+      layer,
+      owner,
+      repo_path,
+      public_contract,
+      runtime,
+      criticality,
+      status,
+      maturity_score,
+      parent_component_id,
+      created_at,
+      updated_at
+    from ${architectureSchemaName}.component_query`;
+}
+
+function architectureRelationSelect() {
+  return `
+    select
+      relation_id,
+      source_component_id,
+      source_component_name,
+      target_component_id,
+      target_component_name,
+      relation_type,
+      direction,
+      sync_async,
+      contract_id,
+      contract_ref,
+      failure_mode,
+      authorization_scope,
+      source_refs,
+      status,
+      created_at,
+      updated_at
+    from ${architectureSchemaName}.component_relation_query`;
+}
+
+function architectureResponsibilitySelect() {
+  return `
+    select
+      responsibility_id,
+      component_id,
+      component_name,
+      responsibility,
+      reason_to_change,
+      ddd_owner,
+      status,
+      created_at
+    from ${architectureSchemaName}.component_responsibility_query`;
+}
+
+function architectureIoSelect() {
+  return `
+    select
+      component_id,
+      io_id,
+      io_kind,
+      io_name,
+      direction,
+      contract_id,
+      runtime,
+      metadata
+    from ${architectureSchemaName}.component_io_query`;
+}
+
+function architectureFlowSelect() {
+  return `
+    select
+      flow_id,
+      name,
+      entry_component_id,
+      entry_component_name,
+      exit_component_id,
+      exit_component_name,
+      flow_kind,
+      status,
+      criticality,
+      step_count,
+      created_at,
+      updated_at
+    from ${architectureSchemaName}.component_flow_query flow`;
+}
+
+function architectureFlowStepSelect() {
+  return `
+    select
+      flow_id,
+      step_order,
+      component_id,
+      component_name,
+      relation_id,
+      relation_type,
+      input_contract_id,
+      input_contract_ref,
+      output_contract_id,
+      output_contract_ref,
+      transformation_id,
+      transformation_kind,
+      created_at
+    from ${architectureSchemaName}.component_flow_step_query`;
+}
+
+function architectureContractSelect() {
+  return `
+    select
+      contract_id,
+      contract_kind,
+      component_id,
+      component_name,
+      contract_ref,
+      compatibility,
+      status,
+      validation_command,
+      created_at,
+      updated_at
+    from ${architectureSchemaName}.component_contract_query`;
+}
+
+function architectureMaturitySelect() {
+  return `
+    select
+      component_id,
+      name,
+      maturity_score,
+      metrics,
+      missing_reasons
+    from ${architectureSchemaName}.component_maturity_query`;
+}
+
+function architectureDriftSelect() {
+  return `
+    select
+      subject_kind,
+      subject_id,
+      drift_code,
+      severity,
+      metadata
+    from ${architectureSchemaName}.component_drift_query`;
+}
+
+function architectureEnforcementSelect() {
+  return `
+    select
+      'authorization'::text as enforcement_kind,
+      design_id,
+      subject_kind,
+      subject_id,
+      authorization_state as state_or_violation,
+      'info'::text as severity
+    from ${architectureSchemaName}.implementation_authorization_query
+    union all
+    select
+      'violation'::text as enforcement_kind,
+      design_id,
+      subject_kind,
+      subject_id,
+      violation_kind as state_or_violation,
+      severity
+    from ${architectureSchemaName}.implementation_violation_query`;
+}
+
+function architectureEvidenceSelect() {
+  return `
+    select
+      evidence_id,
+      subject_kind,
+      subject_id,
+      evidence_kind,
+      source_ref,
+      result_state,
+      recorded_at,
+      source_content_sha256,
+      freshness_state
+    from ${architectureSchemaName}.evidence_query`;
+}
+
+function governanceCoverageSelect() {
+  return `
+    select
+      coverage_id,
+      coverage_kind,
+      name,
+      count_value,
+      file_count,
+      component_id
+    from ${schemaName}.governance_coverage_query`;
+}
+
+function knowledgeDocumentSelect() {
+  return `
+    select
+      document_id,
+      document_path,
+      document_type,
+      title,
+      status,
+      planning_type,
+      owner,
+      mandatory,
+      source_content_sha256
+    from ${schemaName}.knowledge_document_query`;
+}
+
+function knowledgeActionSelect() {
+  return `
+    select
+      action_id,
+      document_path,
+      document_type,
+      mandatory,
+      summary,
+      status,
+      required,
+      line_number,
+      links
+    from ${schemaName}.knowledge_action_query`;
+}
+
+function mandatoryProposalGapSelect() {
+  return `
+    select
+      proposal_id,
+      document_path,
+      title,
+      status,
+      required_action_count,
+      linked_task_count,
+      gap_kind
+    from ${schemaName}.knowledge_mandatory_proposal_binding_gap`;
+}
+
+function governanceRemediationSelect() {
+  return `
+    select
+      task_id,
+      task_type,
+      priority,
+      component_unit,
+      root_unit,
+      domain_unit,
+      ddd_owner,
+      cq_rails,
+      blocking,
+      reason,
+      file_count,
+      document_count
+    from ${schemaName}.governance_remediation_query`;
+}
+
+function riskDebtSelect() {
+  return `
+    select
+      risk_id,
+      source_path,
+      title,
+      status,
+      owners,
+      severity,
+      probability,
+      priority,
+      component_unit,
+      root_unit,
+      domain_unit,
+      ddd_owner,
+      cq_rails,
+      is_open,
+      source_content_sha256
+    from ${schemaName}.risk_debt_query`;
+}
+
+function governanceDriftSelect() {
+  return `
+    select
+      path,
+      component_unit,
+      owning_unit,
+      root_unit,
+      domain_unit,
+      drift_fields
+    from ${schemaName}.governance_drift_query`;
+}
+
+function nextTaskOrderBy() {
+  return `
+     order by
+      case
+        when priority ~* '^P?[0-9]+$' then regexp_replace(priority, '^P', '', 'i')::int
+        else 9
+      end,
+      task_id`;
+}
+
+async function readSummary(client) {
+  const result = await client.query(`
+    select
+      'database'::text as "sourceAuthority",
+      (select count(*)::int from ${schemaName}.planning_lanes) as lanes,
+      (select count(*)::int from ${schemaName}.planning_tasks) as tasks,
+      (select count(*)::int from ${schemaName}.planning_effective_tasks where status = 'review') as "reviewTasks",
+      (select count(*)::int from ${schemaName}.planning_task_dependencies) as "planningTaskDependencies",
+      (select count(*)::int from ${schemaName}.planning_task_evidence_refs) as "planningTaskEvidenceRefs",
+      (select count(*)::int from ${schemaName}.planning_task_status_events) as "planningTaskStatusEvents",
+      (select count(*)::int from ${schemaName}.planning_artifacts) as "planningArtifacts",
+      (select count(*)::int from ${schemaName}.planning_real_work_query) as "planningRealWorkItems",
+      (select coalesce(sum(open_item_count), 0)::int from ${schemaName}.planning_real_work_query) as "planningRealWorkOpenItems",
+      (select count(*)::int from ${schemaName}.repository_commands) as "repositoryCommands",
+      (select count(*)::int from ${schemaName}.repository_commands where domain = 'unknown') as "repositoryCommandUnknown",
+      (select count(*)::int from ${schemaName}.repository_commands where runtime_fanout = true) as "repositoryCommandRuntimeFanout",
+      (select count(*)::int from ${schemaName}.command_query_rails) as "commandQueryRails",
+      (select count(*)::int from ${schemaName}.command_query_rail_query where is_gap = true) as "commandQueryRailGaps",
+      (select count(*)::int from ${schemaName}.command_query_rail_query where is_duplicate = true) as "commandQueryRailDuplicates",
+      (select count(*)::int from ${schemaName}.pr_readiness_checks) as "prReadinessChecks",
+      (select count(*)::int from ${schemaName}.pr_readiness_checks where blocking = true) as "prReadinessBlocking",
+      (select count(*)::int from ${schemaName}.doc_disposition_documents) as "docsDispositionDocuments",
+      (select count(*)::int from ${schemaName}.doc_disposition_actions) as "docsDispositionActions",
+      (select count(*)::int from ${schemaName}.doc_resolution_overlays) as "docsResolutionOverlays",
+      (select count(*)::int from ${schemaName}.doc_task_like_references) as "docsTaskLikeReferences",
+      (select count(*)::int from ${schemaName}.doc_task_like_references where classification = 'unknown_task_like_id') as "docsTaskLikeReferencesUnknown",
+      (select count(*)::int from ${schemaName}.risk_debt_items) as "riskDebtItems",
+      (select count(*)::int from ${schemaName}.risk_debt_query where is_open = true) as "riskDebtItemsOpen",
+      (select count(*)::int from ${schemaName}.governance_files) as "governanceFiles",
+      (select count(*)::int from ${schemaName}.governance_files where is_drift = true) as "driftFiles",
+      (select count(*)::int from ${schemaName}.governance_files where is_legacy = true) as "legacyFiles",
+      (select count(*)::int from ${schemaName}.governance_components) as "governanceComponents",
+      (select count(*)::int from ${schemaName}.governance_component_files) as "governanceComponentFiles",
+      (select count(*)::int from ${schemaName}.governance_fingerprints) as "governanceFingerprints",
+      (select count(*)::int from ${schemaName}.governance_coverage) as "governanceCoverageRows",
+      (select count(*)::int from ${schemaName}.governance_remediation) as "governanceRemediationTasks",
+      (select count(*)::int from ${schemaName}.governance_remediation where priority = 'P0') as "governanceRemediationP0",
+      (select count(*)::int from ${schemaName}.planning_task_local_state) as "planningLocalTaskOverlays",
+      (select count(*)::int from ${schemaName}.planning_local_operations) as "planningLocalOperations"
+  `);
+
+  return result.rows[0];
+}
+
+async function readAiProjectContext(client, filters = {}) {
+  const limit = parseLimit(filters.limit, 10);
+  const limitedFilters = { ...filters, limit };
+
+  const summary = await readSummary(client);
+  const commandQueryRails = await readCommandQueryRailRows(client, limitedFilters);
+  const components = await readGovernanceComponentRows(client, limitedFilters);
+  const realWork = await readRealWorkRows(client, limitedFilters);
+  const riskDebt = await readRiskDebtRows(client, {
+    ...limitedFilters,
+    status: filters.debtStatus || 'Open',
+  });
+  const commands = await readRepositoryCommandRows(client, {
+    commandDomain: filters.commandDomain,
+    type: filters.commandType,
+    limit,
+  });
+  const prReadiness = await readPrReadinessRows(client, { limit });
+
+  return buildAiProjectContext({
+    summary,
+    commandQueryRails,
+    components,
+    realWork,
+    riskDebt,
+    commands,
+    prReadiness,
+  });
+}
+
+async function readTaskRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'lane_id', filters.laneId);
+  appendFilter(predicates, params, 'status', filters.status);
+  appendFilter(predicates, params, 'claimed_by', filters.claimedBy);
+  appendFilter(predicates, params, 'priority', filters.priority);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${effectiveTaskSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by lane_id, status, priority, task_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readOpenTaskRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'lane_id', filters.laneId);
+  appendFilter(predicates, params, 'status', filters.status);
+  appendFilter(predicates, params, 'claimed_by', filters.claimedBy);
+  appendFilter(predicates, params, 'priority', filters.priority);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${openTaskSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by lane_id, status, priority, task_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readNextTaskRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'lane_id', filters.laneId);
+  appendFilter(predicates, params, 'status', filters.status);
+  appendFilter(predicates, params, 'claimed_by', filters.claimedBy);
+  appendFilter(predicates, params, 'priority', filters.priority);
+
+  const limit = parseLimit(filters.limit, 20);
+  params.push(limit);
+
+  const result = await client.query(
+    `${nextTaskSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     ${nextTaskOrderBy()}
+     limit $${params.length}`,
+    params
+  );
+
+  return buildNextTaskRows(result.rows);
+}
+
+async function readPlanningDependencyRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'lane_id', filters.laneId);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${planningDependencySelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by lane_id, task_id, dependency_order
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readPlanningEvidenceRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'lane_id', filters.laneId);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${planningEvidenceSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by lane_id, task_id, evidence_order
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readPlanningStatusEventRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'lane_id', filters.laneId);
+  appendFilter(predicates, params, 'status', filters.status);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${planningStatusEventSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by occurred_at desc, lane_id, task_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readPlanningArtifactRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'artifact_kind', filters.kind);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${planningArtifactSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by artifact_kind, artifact_path
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readRepositoryCommandRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'domain', filters.commandDomain);
+  appendFilter(predicates, params, 'command_type', filters.type);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${repositoryCommandSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by runtime_fanout desc, domain, command_type, coalesce(command_name, command_path)
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readPrReadinessRows(client, filters = {}) {
+  const params = [];
+  const limit = parseLimit(filters.limit, 20);
+  params.push(limit);
+
+  const result = await client.query(
+    `${prReadinessSelect()}
+     order by blocking desc, readiness_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readDocsDispositionRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'priority', filters.priority);
+  appendFilter(predicates, params, 'action_kind', filters.kind);
+  appendFilter(predicates, params, 'document_path', filters.path);
+  appendFilter(predicates, params, 'document_status', filters.status);
+  appendResolutionFilter(predicates, params, filters.resolution);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${docsDispositionActionSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by
+      case
+        when priority ~* '^P?[0-9]+$' then regexp_replace(priority, '^P', '', 'i')::int
+        else 9
+      end,
+      action_kind,
+      document_path,
+      reference_text
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readTaskReferenceRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'classification', filters.kind);
+  appendFilter(predicates, params, 'reference_prefix', filters.prefix);
+  appendFilter(predicates, params, 'document_path', filters.path);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${taskReferenceSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by
+      case when classification = 'unknown_task_like_id' then 0 else 1 end,
+      occurrence_count desc,
+      reference_text,
+      document_path
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readFeatureWorkRows(client, filters = {}) {
+  const params = [];
+  const predicates = ["reference.classification = 'registered_feature_mechanization'"];
+  appendFilter(predicates, params, 'reference.reference_prefix', filters.prefix);
+  appendFilter(predicates, params, 'reference.document_path', filters.path);
+  appendFilter(predicates, params, 'document.status', filters.status);
+  appendFilter(predicates, params, 'document.planning_type', filters.kind);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `select
+       reference.reference_text as feature_id,
+       document.status as document_status,
+       document.planning_type,
+       reference.document_path,
+       reference.occurrence_count,
+       reference.imported_at
+     from ${schemaName}.doc_task_reference_query reference
+     join ${schemaName}.doc_disposition_document_query document
+       on document.document_path = reference.document_path
+     where ${predicates.join(' and ')}
+     order by
+       document.status,
+       reference.reference_text,
+       reference.document_path
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readTaskTraceRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'task_id', filters.taskId);
+  appendFilter(predicates, params, 'trace_kind', filters.kind);
+  appendFilter(predicates, params, 'lane_id', filters.laneId);
+
+  const limit = parseLimit(filters.limit, 100);
+  params.push(limit);
+
+  const result = await client.query(
+    `${taskTraceSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by
+      lane_id,
+      task_id,
+      trace_order,
+      trace_kind,
+      trace_ref
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readTaskGapRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'gap_kind', filters.kind);
+  appendFilter(predicates, params, 'lane_id', filters.laneId);
+  appendFilter(predicates, params, 'severity', filters.priority);
+  appendFilter(predicates, params, 'task_id', filters.taskId);
+  appendFilter(predicates, params, 'document_path', filters.path);
+  appendResolutionFilter(predicates, params, filters.resolution);
+
+  const limit = parseLimit(filters.limit, 100);
+  params.push(limit);
+
+  const result = await client.query(
+    `${taskGapSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by
+      case
+        when severity ~* '^P?[0-9]+$' then regexp_replace(severity, '^P', '', 'i')::int
+        else 9
+      end,
+      gap_kind,
+      coalesce(task_id, document_path)
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readFocusRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'intake_kind', filters.kind);
+  appendFilter(predicates, params, 'lane_id', filters.laneId);
+  appendFilter(predicates, params, 'priority', filters.priority);
+  appendFilter(predicates, params, 'task_id', filters.taskId);
+  appendFilter(predicates, params, 'document_path', filters.path);
+
+  const limit = parseLimit(filters.limit, 20);
+  params.push(limit);
+
+  const result = await client.query(
+    `${workIntakeSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by
+      rank_score,
+      intake_kind,
+      item_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readRealWorkRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'work_kind', filters.kind);
+  appendFilter(predicates, params, 'lane_id', filters.laneId);
+  appendFilter(predicates, params, 'priority', filters.priority);
+  appendFilter(predicates, params, 'work_status', filters.status);
+  appendFilter(predicates, params, 'task_id', filters.taskId);
+  appendFilter(predicates, params, 'source_path', filters.path);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${realWorkSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by
+      rank_score,
+      priority,
+      work_kind,
+      work_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+function appendGovernanceFileFilters(predicates, params, filters = {}) {
+  appendFilter(predicates, params, 'leaf_component_id', filters.component);
+  appendFilter(predicates, params, 'root_unit', filters.rootUnit);
+  appendFilter(predicates, params, 'domain_unit', filters.domainUnit);
+  appendFilter(predicates, params, 'governance_state', filters.governanceState);
+  appendFilter(predicates, params, 'file_path', filters.path);
+}
+
+function appendGovernanceDriftFilters(predicates, params, filters = {}) {
+  appendFilter(predicates, params, 'component_unit', filters.component);
+  appendFilter(predicates, params, 'root_unit', filters.rootUnit);
+  appendFilter(predicates, params, 'domain_unit', filters.domainUnit);
+  appendFilter(predicates, params, 'path', filters.path);
+}
+
+function appendGovernanceComponentFilters(predicates, params, filters = {}) {
+  appendFilter(predicates, params, 'component_id', filters.component);
+  appendFilter(predicates, params, 'root_unit', filters.rootUnit);
+  appendFilter(predicates, params, 'domain_unit', filters.domainUnit);
+  appendFilter(predicates, params, 'governance_state', filters.governanceState);
+}
+
+function appendGovernanceUnitFilters(predicates, params, filters = {}) {
+  appendFilter(predicates, params, 'unit_id', filters.component);
+  appendFilter(predicates, params, 'parent_id', filters.parentUnit);
+  appendFilter(predicates, params, 'root_unit', filters.rootUnit);
+  appendFilter(predicates, params, 'domain_unit', filters.domainUnit);
+  appendFilter(predicates, params, 'governance_state', filters.governanceState);
+}
+
+async function readGovernanceFileRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendGovernanceFileFilters(predicates, params, filters);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${governanceFileSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by is_drift desc, leaf_component_id, file_path
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readGovernanceComponentRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendGovernanceComponentFilters(predicates, params, filters);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${governanceComponentSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by file_count desc, component_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readGovernanceUnitRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendGovernanceUnitFilters(predicates, params, filters);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${governanceUnitSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by parent_id nulls first, level, unit_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readComponentEngineeringComponentTreeRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'component_id', filters.component);
+  appendFilter(predicates, params, 'parent_component_id', filters.parentUnit);
+  appendFilter(predicates, params, 'governance_state', filters.governanceState);
+  appendFilter(predicates, params, 'root_unit', filters.rootUnit);
+  appendFilter(predicates, params, 'domain_unit', filters.domainUnit);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${componentEngineeringComponentTreeSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by component_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readComponentEngineeringComponentDriftRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'component_id', filters.component);
+  appendFilter(predicates, params, 'drift_code', filters.kind);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${componentEngineeringComponentDriftSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by component_id, drift_code
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readComponentEngineeringComponentMetadataRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'component_id', filters.component);
+  appendFilter(predicates, params, 'governance_state', filters.governanceState);
+  appendFilter(predicates, params, 'root_unit', filters.rootUnit);
+  appendFilter(predicates, params, 'domain_unit', filters.domainUnit);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${componentEngineeringComponentMetadataSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by
+      case metadata_state
+        when 'incomplete' then 0
+        when 'declared' then 1
+        else 2
+      end,
+      descendant_file_count desc,
+      component_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readComponentEngineeringRuleCatalogRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'category', filters.kind);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${componentEngineeringRuleCatalogSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by rule_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readComponentEngineeringRuleEvaluationRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'subject_id', filters.component);
+  appendFilter(predicates, params, 'evaluation_state', filters.governanceState);
+  appendFilter(predicates, params, 'rule_id', filters.kind);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${componentEngineeringRuleEvaluationSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by
+      case evaluation_state
+        when 'fail' then 0
+        when 'warn' then 1
+        else 2
+      end,
+      subject_id,
+      rule_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readComponentEngineeringQualityRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'component_id', filters.component);
+  appendFilter(predicates, params, 'governance_state', filters.governanceState);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${componentEngineeringQualitySelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by
+      case quality_state
+        when 'fail' then 0
+        when 'warn' then 1
+        else 2
+      end,
+      descendant_file_count desc,
+      component_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+function appendComponentEndpointFilter(predicates, params, value) {
+  if (value === undefined || value === null || value === '') {
+    return;
+  }
+
+  params.push(value);
+  predicates.push(
+    `(source_component_id = $${params.length} or target_component_id = $${params.length})`
+  );
+}
+
+async function readArchitectureDesignRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'design_id', filters.design);
+  appendFilter(predicates, params, 'work_item_id', filters.taskId);
+  appendFilter(predicates, params, 'status', filters.status);
+  appendFilter(predicates, params, 'owner', filters.owner);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureDesignSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by updated_at desc, design_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureDesignScopeRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'design_id', filters.design);
+  appendFilter(predicates, params, 'subject_kind', filters.subjectKind);
+  appendFilter(predicates, params, 'subject_id', filters.subject || filters.component);
+  appendFilter(predicates, params, 'scope_kind', filters.kind);
+  appendFilter(predicates, params, 'design_status', filters.status);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureDesignScopeSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by design_id, subject_kind, subject_id, scope_kind
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureComponentRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'component_id', filters.component);
+  appendFilter(predicates, params, 'kind', filters.kind);
+  appendFilter(predicates, params, 'layer', filters.layer);
+  appendFilter(predicates, params, 'owner', filters.owner);
+  appendFilter(predicates, params, 'status', filters.status);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureComponentSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by layer, kind, component_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureRelationRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'relation_id', filters.relation);
+  appendComponentEndpointFilter(predicates, params, filters.component);
+  appendFilter(predicates, params, 'relation_type', filters.kind);
+  appendFilter(predicates, params, 'status', filters.status);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureRelationSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by source_component_id, target_component_id, relation_type
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureResponsibilityRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'component_id', filters.component);
+  appendFilter(predicates, params, 'ddd_owner', filters.owner);
+  appendFilter(predicates, params, 'status', filters.status);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureResponsibilitySelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by component_id, responsibility_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureIoRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'component_id', filters.component);
+  appendFilter(predicates, params, 'io_kind', filters.kind);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureIoSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by component_id, io_kind, io_name
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureFlowRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'flow_id', filters.flow);
+  appendFilter(predicates, params, 'flow_kind', filters.kind);
+  appendFilter(predicates, params, 'status', filters.status);
+  if (filters.component !== undefined && filters.component !== null && filters.component !== '') {
+    params.push(filters.component);
+    predicates.push(
+      `(flow.entry_component_id = $${params.length} or flow.exit_component_id = $${params.length} or exists (
+        select 1
+        from ${architectureSchemaName}.component_flow_step_query step
+        where step.flow_id = flow.flow_id
+          and step.component_id = $${params.length}
+      ))`
+    );
+  }
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureFlowSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by flow_kind, flow_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureFlowStepRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'flow_id', filters.flow);
+  appendFilter(predicates, params, 'component_id', filters.component);
+  appendFilter(predicates, params, 'relation_id', filters.relation);
+
+  const limit = parseLimit(filters.limit, 100);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureFlowStepSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by flow_id, step_order
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureContractRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'contract_id', filters.contract);
+  appendFilter(predicates, params, 'component_id', filters.component);
+  appendFilter(predicates, params, 'contract_kind', filters.kind);
+  appendFilter(predicates, params, 'status', filters.status);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureContractSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by component_id, contract_kind, contract_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureMaturityRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'component_id', filters.component);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureMaturitySelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by maturity_score, component_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureDriftRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'subject_kind', filters.subjectKind);
+  appendFilter(predicates, params, 'subject_id', filters.subject || filters.component);
+  appendFilter(predicates, params, 'drift_code', filters.kind);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureDriftSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by severity desc, subject_kind, subject_id, drift_code
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureEnforcementRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'design_id', filters.design);
+  appendFilter(predicates, params, 'subject_kind', filters.subjectKind);
+  appendFilter(predicates, params, 'subject_id', filters.subject || filters.component);
+  appendFilter(predicates, params, 'enforcement_kind', filters.kind);
+  appendFilter(predicates, params, 'state_or_violation', filters.status);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `select *
+     from (${architectureEnforcementSelect()}) architecture_enforcement
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by enforcement_kind desc, severity desc, design_id, subject_kind, subject_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureEvidenceRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'subject_kind', filters.subjectKind);
+  appendFilter(predicates, params, 'subject_id', filters.subject || filters.component);
+  appendFilter(predicates, params, 'evidence_kind', filters.kind);
+  appendFilter(predicates, params, 'result_state', filters.status);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureEvidenceSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by recorded_at desc, subject_kind, subject_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readGovernanceCoverageRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'coverage_kind', filters.kind);
+  appendFilter(predicates, params, 'component_id', filters.component);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${governanceCoverageSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by coverage_kind, name
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readGovernanceRemediationRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'priority', filters.priority);
+  appendFilter(predicates, params, 'component_unit', filters.component);
+  appendFilter(predicates, params, 'root_unit', filters.rootUnit);
+  appendFilter(predicates, params, 'domain_unit', filters.domainUnit);
+  appendFilter(predicates, params, 'task_type', filters.kind);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${governanceRemediationSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by
+      case
+        when priority ~* '^P?[0-9]+$' then regexp_replace(priority, '^P', '', 'i')::int
+        else 9
+      end,
+      task_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readRiskDebtRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'priority', filters.priority);
+  appendFilter(predicates, params, 'status', filters.status);
+  appendFilter(predicates, params, 'component_unit', filters.component);
+  appendFilter(predicates, params, 'root_unit', filters.rootUnit);
+  appendFilter(predicates, params, 'domain_unit', filters.domainUnit);
+  appendFilter(predicates, params, 'source_path', filters.path);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${riskDebtSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by
+      case
+        when priority ~* '^P?[0-9]+$' then regexp_replace(priority, '^P', '', 'i')::int
+        else 9
+      end,
+      risk_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readGovernanceDriftRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendGovernanceDriftFilters(predicates, params, filters);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${governanceDriftSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by component_unit, path
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readKnowledgeDocumentRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'document_type', filters.type);
+  appendFilter(predicates, params, 'document_path', filters.path);
+  appendFilter(predicates, params, 'status', filters.status);
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+  const result = await client.query(
+    `${knowledgeDocumentSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by mandatory desc, document_type, document_path
+     limit $${params.length}`,
+    params
+  );
+  return result.rows;
+}
+
+async function readKnowledgeActionRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'document_path', filters.path);
+  appendFilter(predicates, params, 'status', filters.status);
+  appendFilter(predicates, params, 'document_type', filters.type);
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+  const result = await client.query(
+    `${knowledgeActionSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by required desc, status, document_path, line_number
+     limit $${params.length}`,
+    params
+  );
+  return result.rows;
+}
+
+async function readMandatoryProposalGapRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'document_path', filters.path);
+  appendFilter(predicates, params, 'gap_kind', filters.kind);
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+  const result = await client.query(
+    `${mandatoryProposalGapSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by gap_kind, document_path
+     limit $${params.length}`,
+    params
+  );
+  return result.rows;
+}
+
+async function readComponentEngineeringRecordRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'component_id', filters.component);
+
+  const limit = parseLimit(filters.limit, 20);
+  params.push(limit);
+  const viewName =
+    parseCerSchemaVersion(filters.schemaVersion) === 'v2'
+      ? 'governance_component_engineering_record_v2_query'
+      : 'governance_component_engineering_record_query';
+
+  const result = await client.query(
+    `select component_id, record
+     from ${schemaName}.${viewName}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by component_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readHashDriftSummary(client) {
+  const result = await client.query(`
+    select
+      (select count(*)::int from ${schemaName}.governance_file_hash_drift) as "governanceHashDrift"
+  `);
+
+  return result.rows[0];
+}
+
+function printRows(rows) {
+  for (const [label, value] of rows) {
+    console.log(`${label}: ${value}`);
+  }
+}
+
+function printSummary(summary) {
+  printRows(buildSummaryRows(summary));
+}
+
+function printHashDriftSummary(summary) {
+  printRows(buildHashDriftRows(summary));
+}
+
+function printTaskRows(rows) {
+  for (const row of rows) {
+    console.log(row.join('\t'));
+  }
+}
+
+function printJsonRows(rows) {
+  for (const row of rows) {
+    console.log(JSON.stringify(row, null, 2));
+  }
+}
+
+async function runQuery(options = {}) {
+  const queryName = resolveQueryName(options.queryName);
+
+  await ensureFreshGovernanceProjection(queryName, options);
+
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    if (queryName === 'summary') {
+      const summary = await readSummary(client);
+      if (options.print !== false) {
+        printSummary(summary);
+      }
+      return summary;
+    }
+
+    if (queryName === 'hash-drift') {
+      const summary = await readHashDriftSummary(client);
+      if (options.print !== false) {
+        printHashDriftSummary(summary);
+      }
+      return summary;
+    }
+
+    if (queryName === 'tasks') {
+      const rows = await readTaskRows(client, options.filters || {});
+      const taskRows = buildTaskRows(rows);
+      if (options.print !== false) {
+        printTaskRows(taskRows);
+      }
+      return taskRows;
+    }
+
+    if (queryName === 'open') {
+      const rows = await readOpenTaskRows(client, options.filters || {});
+      const taskRows = buildTaskRows(rows);
+      if (options.print !== false) {
+        printTaskRows(taskRows);
+      }
+      return taskRows;
+    }
+
+    if (queryName === 'next') {
+      const taskRows = await readNextTaskRows(client, options.filters || {});
+      if (options.print !== false) {
+        printTaskRows(taskRows);
+      }
+      return taskRows;
+    }
+
+    if (queryName === 'dependencies') {
+      const rows = await readPlanningDependencyRows(client, options.filters || {});
+      const dependencyRows = buildPlanningDependencyRows(rows);
+      if (options.print !== false) {
+        printTaskRows(dependencyRows);
+      }
+      return dependencyRows;
+    }
+
+    if (queryName === 'evidence') {
+      const rows = await readPlanningEvidenceRows(client, options.filters || {});
+      const evidenceRows = buildPlanningEvidenceRows(rows);
+      if (options.print !== false) {
+        printTaskRows(evidenceRows);
+      }
+      return evidenceRows;
+    }
+
+    if (queryName === 'status-events') {
+      const rows = await readPlanningStatusEventRows(client, options.filters || {});
+      const eventRows = buildPlanningStatusEventRows(rows);
+      if (options.print !== false) {
+        printTaskRows(eventRows);
+      }
+      return eventRows;
+    }
+
+    if (queryName === 'artifacts') {
+      const rows = await readPlanningArtifactRows(client, options.filters || {});
+      const artifactRows = buildPlanningArtifactRows(rows);
+      if (options.print !== false) {
+        printTaskRows(artifactRows);
+      }
+      return artifactRows;
+    }
+
+    if (queryName === 'commands') {
+      const rows = await readRepositoryCommandRows(client, options.filters || {});
+      const commandRows = buildRepositoryCommandRows(rows);
+      if (options.print !== false) {
+        printTaskRows(commandRows);
+      }
+      return commandRows;
+    }
+
+    if (queryName === 'command-query-rails') {
+      const rows = await readCommandQueryRailRows(client, options.filters || {});
+      const railRows = buildCommandQueryRailRows(rows);
+      if (options.print !== false) {
+        printTaskRows(railRows);
+      }
+      return railRows;
+    }
+
+    if (queryName === 'ai-project-context') {
+      const context = await readAiProjectContext(client, options.filters || {});
+      if (options.print !== false) {
+        if ((options.outputFormat || 'json') === 'markdown') {
+          console.log(renderAiProjectContextMarkdown(context));
+        } else {
+          console.log(JSON.stringify(context, null, 2));
+        }
+      }
+      return context;
+    }
+
+    if (queryName === 'creation-intent') {
+      const rows = await readCreationIntentRows(client, options.filters || {});
+      const intentRows = buildCreationIntentRows(rows, options.filters || {});
+      if (options.print !== false) {
+        printTaskRows(intentRows);
+      }
+      return intentRows;
+    }
+
+    if (queryName === 'frontend-surfaces') {
+      const rows = await readFrontendMechanicalTruthRows(client, options.filters || {});
+      const surfaceRows = buildFrontendMechanicalTruthRows(rows);
+      if (options.print !== false) {
+        printTaskRows(surfaceRows);
+      }
+      return surfaceRows;
+    }
+
+    if (queryName === 'pr-readiness') {
+      const rows = await readPrReadinessRows(client, options.filters || {});
+      const readinessRows = buildPrReadinessRows(rows);
+      if (options.print !== false) {
+        printTaskRows(readinessRows);
+      }
+      return readinessRows;
+    }
+
+    if (queryName === 'docs-disposition') {
+      const rows = await readDocsDispositionRows(client, options.filters || {});
+      const dispositionRows = buildDocsDispositionRows(rows);
+      if (options.print !== false) {
+        printTaskRows(dispositionRows);
+      }
+      return dispositionRows;
+    }
+
+    if (queryName === 'task-references') {
+      const rows = await readTaskReferenceRows(client, options.filters || {});
+      const referenceRows = buildTaskReferenceRows(rows);
+      if (options.print !== false) {
+        printTaskRows(referenceRows);
+      }
+      return referenceRows;
+    }
+
+    if (queryName === 'feature-work') {
+      const rows = await readFeatureWorkRows(client, options.filters || {});
+      const featureRows = buildFeatureWorkRows(rows);
+      if (options.print !== false) {
+        printTaskRows(featureRows);
+      }
+      return featureRows;
+    }
+
+    if (queryName === 'task-trace') {
+      const rows = await readTaskTraceRows(client, options.filters || {});
+      const traceRows = buildTaskTraceRows(rows);
+      if (options.print !== false) {
+        printTaskRows(traceRows);
+      }
+      return traceRows;
+    }
+
+    if (queryName === 'task-gaps') {
+      const rows = await readTaskGapRows(client, options.filters || {});
+      const gapRows = buildTaskGapRows(rows);
+      if (options.print !== false) {
+        printTaskRows(gapRows);
+      }
+      return gapRows;
+    }
+
+    if (queryName === 'focus') {
+      const rows = await readFocusRows(client, options.filters || {});
+      const focusRows = buildFocusRows(rows);
+      if (options.print !== false) {
+        printTaskRows(focusRows);
+      }
+      return focusRows;
+    }
+
+    if (queryName === 'real-work') {
+      const rows = await readRealWorkRows(client, options.filters || {});
+      const realWorkRows = buildRealWorkRows(rows);
+      if (options.print !== false) {
+        printTaskRows(realWorkRows);
+      }
+      return realWorkRows;
+    }
+
+    if (queryName === 'knowledge-documents') {
+      const rows = await readKnowledgeDocumentRows(client, options.filters || {});
+      const documentRows = buildKnowledgeDocumentRows(rows);
+      if (options.print !== false) {
+        printTaskRows(documentRows);
+      }
+      return documentRows;
+    }
+
+    if (queryName === 'knowledge-actions') {
+      const rows = await readKnowledgeActionRows(client, options.filters || {});
+      const actionRows = buildKnowledgeActionRows(rows);
+      if (options.print !== false) {
+        printTaskRows(actionRows);
+      }
+      return actionRows;
+    }
+
+    if (queryName === 'mandatory-proposal-gaps') {
+      const rows = await readMandatoryProposalGapRows(client, options.filters || {});
+      const gapRows = buildMandatoryProposalGapRows(rows);
+      if (options.print !== false) {
+        printTaskRows(gapRows);
+      }
+      return gapRows;
+    }
+
+    if (queryName === 'files') {
+      const rows = await readGovernanceFileRows(client, options.filters || {});
+      const fileRows = buildGovernanceFileRows(rows);
+      if (options.print !== false) {
+        printTaskRows(fileRows);
+      }
+      return fileRows;
+    }
+
+    if (queryName === 'components') {
+      const rows = await readGovernanceComponentRows(client, options.filters || {});
+      const componentRows = buildGovernanceComponentRows(rows);
+      if (options.print !== false) {
+        printTaskRows(componentRows);
+      }
+      return componentRows;
+    }
+
+    if (queryName === 'units') {
+      const rows = await readGovernanceUnitRows(client, options.filters || {});
+      const unitRows = buildGovernanceUnitRows(rows);
+      if (options.print !== false) {
+        printTaskRows(unitRows);
+      }
+      return unitRows;
+    }
+
+    if (queryName === 'component-tree') {
+      const rows = await readComponentEngineeringComponentTreeRows(client, options.filters || {});
+      const componentRows = buildComponentEngineeringComponentTreeRows(rows);
+      if (options.print !== false) {
+        printTaskRows(componentRows);
+      }
+      return componentRows;
+    }
+
+    if (queryName === 'component-metadata') {
+      const rows = await readComponentEngineeringComponentMetadataRows(
+        client,
+        options.filters || {}
+      );
+      const metadataRows = buildComponentEngineeringComponentMetadataRows(rows);
+      if (options.print !== false) {
+        printTaskRows(metadataRows);
+      }
+      return metadataRows;
+    }
+
+    if (queryName === 'component-drift') {
+      const rows = await readComponentEngineeringComponentDriftRows(client, options.filters || {});
+      const driftRows = buildComponentEngineeringComponentDriftRows(rows);
+      if (options.print !== false) {
+        printTaskRows(driftRows);
+      }
+      return driftRows;
+    }
+
+    if (queryName === 'component-rules') {
+      const rows = await readComponentEngineeringRuleCatalogRows(client, options.filters || {});
+      const ruleRows = buildComponentEngineeringRuleCatalogRows(rows);
+      if (options.print !== false) {
+        printTaskRows(ruleRows);
+      }
+      return ruleRows;
+    }
+
+    if (queryName === 'component-rule-evaluations') {
+      const rows = await readComponentEngineeringRuleEvaluationRows(client, options.filters || {});
+      const evaluationRows = buildComponentEngineeringRuleEvaluationRows(rows);
+      if (options.print !== false) {
+        printTaskRows(evaluationRows);
+      }
+      return evaluationRows;
+    }
+
+    if (queryName === 'component-quality') {
+      const rows = await readComponentEngineeringQualityRows(client, options.filters || {});
+      const qualityRows = buildComponentEngineeringQualityRows(rows);
+      if (options.print !== false) {
+        printTaskRows(qualityRows);
+      }
+      return qualityRows;
+    }
+
+    if (queryName === 'architecture-designs') {
+      const rows = await readArchitectureDesignRows(client, options.filters || {});
+      const designRows = buildArchitectureDesignRows(rows);
+      if (options.print !== false) {
+        printTaskRows(designRows);
+      }
+      return designRows;
+    }
+
+    if (queryName === 'architecture-scopes') {
+      const rows = await readArchitectureDesignScopeRows(client, options.filters || {});
+      const scopeRows = buildArchitectureDesignScopeRows(rows);
+      if (options.print !== false) {
+        printTaskRows(scopeRows);
+      }
+      return scopeRows;
+    }
+
+    if (queryName === 'architecture-components') {
+      const rows = await readArchitectureComponentRows(client, options.filters || {});
+      const componentRows = buildArchitectureComponentRows(rows);
+      if (options.print !== false) {
+        printTaskRows(componentRows);
+      }
+      return componentRows;
+    }
+
+    if (queryName === 'architecture-relations') {
+      const rows = await readArchitectureRelationRows(client, options.filters || {});
+      const relationRows = buildArchitectureRelationRows(rows);
+      if (options.print !== false) {
+        printTaskRows(relationRows);
+      }
+      return relationRows;
+    }
+
+    if (queryName === 'architecture-responsibilities') {
+      const rows = await readArchitectureResponsibilityRows(client, options.filters || {});
+      const responsibilityRows = buildArchitectureResponsibilityRows(rows);
+      if (options.print !== false) {
+        printTaskRows(responsibilityRows);
+      }
+      return responsibilityRows;
+    }
+
+    if (queryName === 'architecture-io') {
+      const rows = await readArchitectureIoRows(client, options.filters || {});
+      const ioRows = buildArchitectureIoRows(rows);
+      if (options.print !== false) {
+        printTaskRows(ioRows);
+      }
+      return ioRows;
+    }
+
+    if (queryName === 'architecture-flows') {
+      const rows = await readArchitectureFlowRows(client, options.filters || {});
+      const flowRows = buildArchitectureFlowRows(rows);
+      if (options.print !== false) {
+        printTaskRows(flowRows);
+      }
+      return flowRows;
+    }
+
+    if (queryName === 'architecture-flow-steps') {
+      const rows = await readArchitectureFlowStepRows(client, options.filters || {});
+      const stepRows = buildArchitectureFlowStepRows(rows);
+      if (options.print !== false) {
+        printTaskRows(stepRows);
+      }
+      return stepRows;
+    }
+
+    if (queryName === 'architecture-contracts') {
+      const rows = await readArchitectureContractRows(client, options.filters || {});
+      const contractRows = buildArchitectureContractRows(rows);
+      if (options.print !== false) {
+        printTaskRows(contractRows);
+      }
+      return contractRows;
+    }
+
+    if (queryName === 'architecture-maturity') {
+      const rows = await readArchitectureMaturityRows(client, options.filters || {});
+      const maturityRows = buildArchitectureMaturityRows(rows);
+      if (options.print !== false) {
+        printTaskRows(maturityRows);
+      }
+      return maturityRows;
+    }
+
+    if (queryName === 'architecture-drift') {
+      const rows = await readArchitectureDriftRows(client, options.filters || {});
+      const driftRows = buildArchitectureDriftRows(rows);
+      if (options.print !== false) {
+        printTaskRows(driftRows);
+      }
+      return driftRows;
+    }
+
+    if (queryName === 'architecture-enforcement') {
+      const rows = await readArchitectureEnforcementRows(client, options.filters || {});
+      const enforcementRows = buildArchitectureEnforcementRows(rows);
+      if (options.print !== false) {
+        printTaskRows(enforcementRows);
+      }
+      return enforcementRows;
+    }
+
+    if (queryName === 'architecture-evidence') {
+      const rows = await readArchitectureEvidenceRows(client, options.filters || {});
+      const evidenceRows = buildArchitectureEvidenceRows(rows);
+      if (options.print !== false) {
+        printTaskRows(evidenceRows);
+      }
+      return evidenceRows;
+    }
+
+    if (queryName === 'coverage') {
+      const rows = await readGovernanceCoverageRows(client, options.filters || {});
+      const coverageRows = buildGovernanceCoverageRows(rows);
+      if (options.print !== false) {
+        printTaskRows(coverageRows);
+      }
+      return coverageRows;
+    }
+
+    if (queryName === 'remediation') {
+      const rows = await readGovernanceRemediationRows(client, options.filters || {});
+      const remediationRows = buildGovernanceRemediationRows(rows);
+      if (options.print !== false) {
+        printTaskRows(remediationRows);
+      }
+      return remediationRows;
+    }
+
+    if (queryName === 'debt') {
+      const rows = await readRiskDebtRows(client, options.filters || {});
+      const debtRows = buildRiskDebtRows(rows);
+      if (options.print !== false) {
+        printTaskRows(debtRows);
+      }
+      return debtRows;
+    }
+
+    if (queryName === 'drift') {
+      const rows = await readGovernanceDriftRows(client, options.filters || {});
+      const driftRows = buildGovernanceDriftRows(rows);
+      if (options.print !== false) {
+        printTaskRows(driftRows);
+      }
+      return driftRows;
+    }
+
+    if (queryName === 'cer') {
+      const rows = await readComponentEngineeringRecordRows(client, options.filters || {});
+      const cerRows = buildComponentEngineeringRecordRows(rows);
+      if (options.print !== false) {
+        printJsonRows(cerRows);
+      }
+      return cerRows;
+    }
+
+    throw new Error(`Unhandled planning DB query "${queryName}".`);
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
+function queryErrorDetails(error) {
+  const details = [];
+  const nestedErrors = Array.isArray(error && error.errors) ? error.errors : [];
+  for (const nestedError of nestedErrors) {
+    const nestedMessage =
+      nestedError && (nestedError.message || nestedError.code || nestedError.name);
+    if (nestedMessage) {
+      details.push(String(nestedMessage));
+    }
+  }
+
+  const cause = error && error.cause;
+  const causeMessage = cause && (cause.message || cause.code || cause.name);
+  if (causeMessage) {
+    details.push(String(causeMessage));
+  }
+
+  const directMessage = error && (error.message || error.code || error.name);
+  if (directMessage) {
+    details.push(String(directMessage));
+  }
+
+  return [...new Set(details)];
+}
+
+function formatQueryError(error) {
+  const details = queryErrorDetails(error);
+  const hasConnectionRefusal =
+    (error && error.code === 'ECONNREFUSED') ||
+    details.some((detail) => /ECONNREFUSED|connection refused/i.test(detail));
+
+  if (hasConnectionRefusal) {
+    return [
+      'Planning DB is unavailable.',
+      'Run `pnpm planning:db:up`, then `pnpm planning:db:migrate` and `pnpm planning:db:import` if the database has not been seeded.',
+      `Details: ${details.join('; ')}`,
+    ].join(' ');
+  }
+
+  return details[0] || String(error);
+}
+
+async function main() {
+  const command = parseArgs();
+  await runQuery(command);
+}
+
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(`[planning:db:query] ${formatQueryError(error)}`);
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  buildAiProjectContext,
+  buildComponentEngineeringComponentDriftRows,
+  buildComponentEngineeringComponentTreeRows,
+  buildComponentEngineeringQualityRows,
+  buildComponentEngineeringRecordRows,
+  buildComponentEngineeringRuleCatalogRows,
+  buildComponentEngineeringRuleEvaluationRows,
+  buildDocsDispositionRows,
+  buildFeatureWorkRows,
+  buildFocusRows,
+  buildRealWorkRows,
+  buildGovernanceComponentRows,
+  buildGovernanceCoverageRows,
+  buildGovernanceDriftRows,
+  buildGovernanceFileRows,
+  buildGovernanceUnitRows,
+  buildGovernanceRemediationRows,
+  buildRiskDebtRows,
+  buildArchitectureComponentRows,
+  buildArchitectureContractRows,
+  buildArchitectureDesignRows,
+  buildArchitectureDesignScopeRows,
+  buildArchitectureDriftRows,
+  buildArchitectureEnforcementRows,
+  buildArchitectureEvidenceRows,
+  buildArchitectureFlowRows,
+  buildArchitectureFlowStepRows,
+  buildArchitectureIoRows,
+  buildArchitectureMaturityRows,
+  buildArchitectureRelationRows,
+  buildArchitectureResponsibilityRows,
+  buildHashDriftRows,
+  buildComponentEngineeringComponentMetadataRows,
+  buildKnowledgeActionRows,
+  buildKnowledgeDocumentRows,
+  buildMandatoryProposalGapRows,
+  buildPlanningArtifactRows,
+  buildPlanningDependencyRows,
+  buildPlanningEvidenceRows,
+  buildPlanningStatusEventRows,
+  buildPrReadinessRows,
+  buildCommandQueryRailRows,
+  buildCreationIntentRows,
+  buildFrontendMechanicalTruthRows,
+  buildRepositoryCommandRows,
+  buildNextTaskRows,
+  buildSummaryRows,
+  buildTaskGapRows,
+  buildTaskRows,
+  buildTaskTraceRows,
+  buildTaskReferenceRows,
+  databaseUrl,
+  formatQueryError,
+  parseArgs,
+  parseCerSchemaVersion,
+  renderAiProjectContextMarkdown,
+  printHashDriftSummary,
+  readAiProjectContext,
+  readDocsDispositionRows,
+  readFeatureWorkRows,
+  readComponentEngineeringComponentDriftRows,
+  readComponentEngineeringComponentMetadataRows,
+  readComponentEngineeringComponentTreeRows,
+  readComponentEngineeringQualityRows,
+  readArchitectureComponentRows,
+  readArchitectureContractRows,
+  readArchitectureDesignRows,
+  readArchitectureDesignScopeRows,
+  readArchitectureDriftRows,
+  readArchitectureEnforcementRows,
+  readArchitectureEvidenceRows,
+  readArchitectureFlowRows,
+  readArchitectureFlowStepRows,
+  readArchitectureIoRows,
+  readArchitectureMaturityRows,
+  readArchitectureRelationRows,
+  readArchitectureResponsibilityRows,
+  readFocusRows,
+  readRealWorkRows,
+  readGovernanceComponentRows,
+  readGovernanceCoverageRows,
+  readGovernanceDriftRows,
+  readGovernanceFileRows,
+  readGovernanceUnitRows,
+  readGovernanceRemediationRows,
+  readRiskDebtRows,
+  readKnowledgeActionRows,
+  readKnowledgeDocumentRows,
+  readMandatoryProposalGapRows,
+  readPlanningArtifactRows,
+  readPlanningDependencyRows,
+  readPlanningEvidenceRows,
+  readPlanningStatusEventRows,
+  readPrReadinessRows,
+  readCommandQueryRailRows,
+  readCreationIntentRows,
+  readFrontendMechanicalTruthRows,
+  readRepositoryCommandRows,
+  readComponentEngineeringRuleCatalogRows,
+  readComponentEngineeringRuleEvaluationRows,
+  readOpenTaskRows,
+  readTaskGapRows,
+  printSummary,
+  printJsonRows,
+  printTaskRows,
+  readComponentEngineeringRecordRows,
+  readTaskTraceRows,
+  readNextTaskRows,
+  readHashDriftSummary,
+  readSummary,
+  readTaskRows,
+  readTaskReferenceRows,
+  resolveQueryName,
+  runQuery,
+};

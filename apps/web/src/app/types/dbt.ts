@@ -153,6 +153,7 @@ export interface Plugin {
   capabilities: string[];
   enabled: boolean;
   permissions: string[];
+  backendPluginId?: string;
 }
 
 export interface Role {

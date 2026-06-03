@@ -1,3 +1,6 @@
+/**
+ * Owned concern: persist tenant-neutral stored-plan artifact blobs.
+ */
 import type { ExecutabilityValidationResult } from '@dvt/contracts';
 import type { PoolClient } from 'pg';
 

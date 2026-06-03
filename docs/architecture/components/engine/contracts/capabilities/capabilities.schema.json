@@ -28,7 +28,7 @@
             "PAUSE_EMULATED": {
               "type": "string",
               "const": "signal.pause.emulated",
-              "description": "Pause via polling/callbacks (Conductor)"
+              "description": "Pause via adapter-owned polling or callbacks"
             }
           }
         },
@@ -43,7 +43,7 @@
             "CANCEL_FORCED": {
               "type": "string",
               "const": "cancel.forced",
-              "description": "Force-kill only (Conductor)"
+              "description": "Force-kill-only cancellation"
             }
           }
         },
@@ -78,7 +78,7 @@
             "QUERY_TASK_STATE": {
               "type": "string",
               "const": "query.task.state",
-              "description": "Task-level state query (Conductor)"
+              "description": "Task-level state query"
             }
           }
         },
@@ -93,7 +93,7 @@
             "DETERMINISTIC_REPLAY_TASK": {
               "type": "string",
               "const": "replay.task",
-              "description": "Task-level replay only (Conductor)"
+              "description": "Task-level replay only"
             }
           }
         },
@@ -108,7 +108,7 @@
             "SIGNALS_RATE_LIMIT": {
               "type": "string",
               "const": "signals.rate.limit",
-              "description": "Rate limiting support (both adapters)"
+              "description": "Rate limiting support"
             },
             "MULTI_SIGNAL_HANDLING": {
               "type": "string",

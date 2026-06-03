@@ -3,22 +3,21 @@
  * @file tools/docs/generate-docs-manifest.ts
  * Generates docs/.manifest.json — a machine-readable catalog of all normative docs.
  *
- * Output shape:
+ * Tracked output shape:
  *   {
- *     generatedAt: string (ISO-8601)
- *     summary: { adrs, evidenceDocs, normativeDocs, statusDocs }
- *     adrs: AdrEntry[]
- *     evidenceDocs: EvidenceEntry[]
- *     normativeDocs: DocEntry[]
- *     statusDocs: DocEntry[]
+ *     summary: { adrs, evidenceDocs, normativeDocs, statusDocs, total }
+ *     catalogs: [{ name, count, contentSha256 }]
  *   }
+ *
+ * Full audit output remains available with --full --stdout.
  *
  * Used for: auditing, drift detection, dashboards, PR comments.
  *
  * Usage:
- *   tsx tools/docs/generate-docs-manifest.ts [--stdout]
+ *   tsx tools/docs/generate-docs-manifest.ts [--stdout] [--full]
  *   (--stdout prints to stdout instead of writing docs/.manifest.json)
  */
+import { createHash } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -30,13 +29,14 @@ import {
   readIfExists,
   splitFrontmatter,
 } from './lib/markdown.js';
-import { parseAdrFilename, isSpecialDir } from './lib/adr.js';
+import { parseAdrFilename } from './lib/adr.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..', '..');
 const DOCS_DIR = join(REPO_ROOT, 'docs');
 
 const STDOUT_ONLY = process.argv.includes('--stdout');
+const FULL_OUTPUT = process.argv.includes('--full');
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -67,18 +67,27 @@ interface DocEntry {
   filename: string;
 }
 
-interface Manifest {
-  generatedAt: string;
+interface FullManifest {
   summary: {
     adrs: number;
     evidenceDocs: number;
     normativeDocs: number;
     statusDocs: number;
+    total: number;
   };
   adrs: AdrEntry[];
   evidenceDocs: EvidenceEntry[];
   normativeDocs: DocEntry[];
   statusDocs: DocEntry[];
+}
+
+interface CompactManifest {
+  summary: FullManifest['summary'];
+  catalogs: Array<{
+    name: keyof Omit<FullManifest, 'summary'>;
+    count: number;
+    contentSha256: string;
+  }>;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -95,7 +104,7 @@ function str(val: string | string[] | undefined): string | null {
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 function main(): void {
-  const allFiles = walkMarkdown(DOCS_DIR);
+  const allFiles = walkMarkdown(DOCS_DIR).sort((left, right) => left.localeCompare(right));
 
   const adrs: AdrEntry[] = [];
   const evidenceDocs: EvidenceEntry[] = [];
@@ -105,6 +114,7 @@ function main(): void {
   for (const filePath of allFiles) {
     const name = basename(filePath);
     const rel = relPath(filePath);
+    const normalizedPath = filePath.replace(/\\/g, '/');
     const content = readIfExists(filePath);
     if (!content) continue;
 
@@ -120,8 +130,9 @@ function main(): void {
         status: fields['Status'] ?? null,
         date: fields['Date'] ?? null,
         owners: fields['Owners'] ?? null,
-        archived: isSpecialDir(filePath) && filePath.replace(/\\/g, '/').includes('/_archive/'),
-        draft: filePath.replace(/\\/g, '/').includes('/_drafts/'),
+        archived:
+          normalizedPath.includes('/docs/archive/') || normalizedPath.includes('/_archive/'),
+        draft: normalizedPath.includes('/_drafts/'),
       });
       continue;
     }
@@ -143,7 +154,6 @@ function main(): void {
     }
 
     // Status / gap tracker docs
-    const normalizedPath = filePath.replace(/\\/g, '/');
     if (
       normalizedPath.includes('/planning/status/') ||
       normalizedPath.includes('/planning/gaps/')
@@ -162,23 +172,43 @@ function main(): void {
     }
   }
 
-  // Sort ADRs numerically
-  adrs.sort((a, b) => (a.num ?? 9999) - (b.num ?? 9999));
+  adrs.sort((left, right) => {
+    const leftNum = left.num ?? Number.MAX_SAFE_INTEGER;
+    const rightNum = right.num ?? Number.MAX_SAFE_INTEGER;
+    if (leftNum !== rightNum) return leftNum - rightNum;
+    return left.path.localeCompare(right.path);
+  });
+  evidenceDocs.sort((left, right) => left.path.localeCompare(right.path));
+  normativeDocs.sort((left, right) => left.path.localeCompare(right.path));
+  statusDocs.sort((left, right) => left.path.localeCompare(right.path));
 
-  const manifest: Manifest = {
-    generatedAt: new Date().toISOString(),
-    summary: {
-      adrs: adrs.length,
-      evidenceDocs: evidenceDocs.length,
-      normativeDocs: normativeDocs.length,
-      statusDocs: statusDocs.length,
-    },
+  const summary = {
+    adrs: adrs.length,
+    evidenceDocs: evidenceDocs.length,
+    normativeDocs: normativeDocs.length,
+    statusDocs: statusDocs.length,
+    total: adrs.length + evidenceDocs.length + normativeDocs.length + statusDocs.length,
+  };
+
+  const fullManifest: FullManifest = {
+    summary,
     adrs,
     evidenceDocs,
     normativeDocs,
     statusDocs,
   };
 
+  const compactManifest: CompactManifest = {
+    summary,
+    catalogs: [
+      createCatalogDigest('adrs', adrs),
+      createCatalogDigest('evidenceDocs', evidenceDocs),
+      createCatalogDigest('normativeDocs', normativeDocs),
+      createCatalogDigest('statusDocs', statusDocs),
+    ],
+  };
+
+  const manifest = FULL_OUTPUT ? fullManifest : compactManifest;
   const json = JSON.stringify(manifest, null, 2) + '\n';
 
   if (STDOUT_ONLY) {
@@ -186,10 +216,21 @@ function main(): void {
   } else {
     const outPath = join(DOCS_DIR, '.manifest.json');
     writeFileSync(outPath, json);
-    const { adrs: a, evidenceDocs: e, normativeDocs: n, statusDocs: s } = manifest.summary;
+    const { adrs: a, evidenceDocs: e, normativeDocs: n, statusDocs: s } = summary;
     process.stderr.write(`Manifest written → ${outPath}\n`);
     process.stderr.write(`  ${a} ADRs · ${e} evidence docs · ${n} normative · ${s} status\n`);
   }
+}
+
+function createCatalogDigest<T>(
+  name: keyof Omit<FullManifest, 'summary'>,
+  entries: readonly T[]
+): CompactManifest['catalogs'][number] {
+  return {
+    name,
+    count: entries.length,
+    contentSha256: createHash('sha256').update(JSON.stringify(entries)).digest('hex'),
+  };
 }
 
 main();

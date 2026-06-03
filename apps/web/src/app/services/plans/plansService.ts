@@ -1,25 +1,8 @@
+/** Owned concern: compose the API plans-port adapter for product app services. */
 import type { IPlansPort } from '../../ports/plans';
 import { type ApiClient, createApiClient } from '../api/createApiClient';
-import type { DataSourceMode } from '../config/dataSource';
 import { createApiPlansService } from './plansService.api';
-import { createMockPlansService } from './plansService.mock';
 
-// Re-export port types for backward compatibility - consumers should migrate
-// to importing from '../../ports/plans' or '../../ports' directly.
-export type { PlanPreviewInput } from '../../ports/plans';
-
-/**
- * @deprecated Use {@link IPlansPort} from `../../ports/plans` instead.
- */
-export type PlansService = IPlansPort;
-
-export function createPlansService(
-  mode: DataSourceMode,
-  apiClient: ApiClient = createApiClient()
-): IPlansPort {
-  if (mode === 'api') {
-    return createApiPlansService(apiClient);
-  }
-
-  return createMockPlansService();
+export function createPlansService(apiClient: ApiClient = createApiClient()): IPlansPort {
+  return createApiPlansService(apiClient);
 }

@@ -1,3 +1,6 @@
+/**
+ * @ownedConcern Define stable Temporal activity failure codes and non-retryable failure construction.
+ */
 import { ApplicationFailure } from '@temporalio/activity';
 
 export const ActivityErrorCode = {
@@ -5,9 +8,6 @@ export const ActivityErrorCode = {
   INVALID_GATEWAY_DSL: 'INVALID_GATEWAY_DSL',
   UNSUPPORTED_STEP_KIND: 'UNSUPPORTED_STEP_KIND',
   RUN_EXECUTION_CONTEXT_REQUIRED: 'RUN_EXECUTION_CONTEXT_REQUIRED',
-  DBT_PLUGIN_RUNTIME_NOT_CONFIGURED: 'DBT_PLUGIN_RUNTIME_NOT_CONFIGURED',
-  DBT_PLUGIN_CONTEXT_REQUIRED: 'DBT_PLUGIN_CONTEXT_REQUIRED',
-  DBT_PLUGIN_RESULT_INVALID: 'DBT_PLUGIN_RESULT_INVALID',
   TRANSIENT_STEP_ERROR: 'TRANSIENT_STEP_ERROR',
   PERMANENT_STEP_ERROR: 'PERMANENT_STEP_ERROR',
 } as const;

@@ -1,16 +1,20 @@
+/** Owned concern: collect Canvas route environment ports and runtime state. */
 import { useMemo } from 'react';
 
 import { usePlatformHealthSnapshotQuery } from '../../../capabilities/platform-health';
-import { resolveCanvasGraphStrategy } from '../../plugins/graphStrategyRegistry';
+import { getSourceImportContributions } from '../../plugins/registry';
 import { useCapabilitiesQuery } from '../../queries/useCapabilitiesQuery';
 import { resolveWorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
+import { resolveWorkspacePortCapabilities } from '../../services/workspace/workspacePorts';
 import {
   useAppDataSourceMode,
   usePlansService,
   useRunsService,
   useSessionContext,
   useShellFeedback,
-  useWorkspaceService,
+  useWorkspaceFileContentCommandPort,
+  useWorkspaceFilesQueryPort,
+  useWorkspaceGraphDraftAuthoringPort,
 } from '../../services/AppServicesContext';
 import { useCanvasNavigationActions } from './useCanvasNavigationActions';
 import { useCanvasStoreFacade } from './useCanvasStoreFacade';
@@ -19,10 +23,23 @@ export function useCanvasControllerEnvironment() {
   const dataSourceMode = useAppDataSourceMode();
   const { data: capabilities } = useCapabilitiesQuery();
   const platformHealthQuery = usePlatformHealthSnapshotQuery();
-  const graphStrategy = useMemo(() => resolveCanvasGraphStrategy(), []);
-  const canvasAuthoringMode: 'transformation' | 'dbt' =
-    graphStrategy.id === 'transformation' ? 'transformation' : 'dbt';
-  const workspaceService = useWorkspaceService();
+  const workspacePortTransportCapabilities = useMemo(() => resolveWorkspacePortCapabilities(), []);
+  const sourceImportContributions = useMemo(
+    () => getSourceImportContributions(capabilities),
+    [capabilities]
+  );
+  const workspacePortCapabilities = useMemo(
+    () => ({
+      ...workspacePortTransportCapabilities,
+      sourceImportAvailable:
+        workspacePortTransportCapabilities.sourceImportAvailable &&
+        sourceImportContributions.length > 0,
+    }),
+    [sourceImportContributions.length, workspacePortTransportCapabilities]
+  );
+  const workspaceFilesQuery = useWorkspaceFilesQueryPort();
+  const workspaceFileContentCommand = useWorkspaceFileContentCommandPort();
+  const workspaceGraphDraftAuthoringPort = useWorkspaceGraphDraftAuthoringPort();
   const plansService = usePlansService();
   const runsService = useRunsService();
   const sessionContext = useSessionContext();
@@ -35,9 +52,10 @@ export function useCanvasControllerEnvironment() {
     dataSourceMode,
     capabilities,
     platformHealthQuery,
-    graphStrategy,
-    canvasAuthoringMode,
-    workspaceService,
+    workspacePortCapabilities,
+    workspaceFilesQuery,
+    workspaceFileContentCommand,
+    workspaceGraphDraftAuthoringPort,
     plansService,
     runsService,
     sessionContext,

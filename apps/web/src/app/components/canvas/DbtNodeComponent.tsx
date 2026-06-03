@@ -1,10 +1,11 @@
+/** Owned concern: render canonical Canvas nodes with plugin decorations and governed node-shell gestures. */
 import styles from './DbtNodeComponent.module.css';
 import { Handle, Node, NodeProps, Position } from '@xyflow/react';
-import { Info, MousePointer, Trash2 } from 'lucide-react';
-import { memo, type CSSProperties } from 'react';
+import { Copy, Info, MousePointer, Trash2 } from 'lucide-react';
+import { memo, type CSSProperties, type DragEvent } from 'react';
 
 import { mapDbtTypeToKind } from '../../plugins/nodeTypeCatalog.dbt';
-import { getNodeBadges, getNodeRenderer } from '../../plugins/registry';
+import { getNodeBadges, getNodeRenderer, type RuntimeCapabilities } from '../../plugins/registry';
 import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
 import type {
   BadgeContext,
@@ -13,6 +14,7 @@ import type {
   NodeRendererProps,
 } from '../../plugins/contracts/NodeRendering';
 import type { CanonicalNode, CoreNodeRole, PluginNodeKind } from '../../types/canonical';
+import { parsePluginNodeKind } from '../../types/canonicalGuards';
 import { DbtNodeType, NodeStatus } from '../../types/dbt';
 import {
   ContextMenu,
@@ -22,6 +24,10 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from '../ui/context-menu';
+import {
+  CANVAS_WORKSPACE_RESOURCE_DRAG_MIME_TYPE,
+  parseCanvasWorkspaceResourceDragPayload,
+} from '../canvasWorkspaceExplorerModel';
 import { cn } from '../ui/utils';
 
 // ---------------------------------------------------------------------------
@@ -51,9 +57,13 @@ export interface DbtNodeData extends Record<string, unknown> {
   metadata?: Record<string, unknown>;
   activeRunId?: string | null;
   runStatusByNodeId?: ReadonlyMap<string, string>;
+  runtimeCapabilities?: RuntimeCapabilities;
+  selectedForExecution?: boolean;
   onInspectNode?: (nodeId: string) => void;
+  onDuplicateNode?: (nodeId: string) => void;
   onRemoveNode?: (nodeId: string) => void;
   onToggleNodeSelection?: (nodeId: string, shouldSelect: boolean) => void;
+  onAttachSchemaToNode?: (nodeId: string, schemaName: string) => void;
 }
 
 type DbtFlowNode = Node<DbtNodeData, 'dbtNode'>;
@@ -127,7 +137,7 @@ function buildCanonicalNode(
   pluginKind: PluginNodeKind,
   role: CoreNodeRole
 ): CanonicalNode {
-  const pluginId = pluginKind.split(':')[0] ?? 'dvt';
+  const pluginId = parsePluginNodeKind(pluginKind).pluginId;
   const metadata =
     typeof data.metadata === 'object' && data.metadata !== null ? { ...data.metadata } : {};
 
@@ -157,6 +167,7 @@ function buildCanonicalNode(
 function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   const data = props.data as DbtNodeData;
   const { id, selected } = props;
+  const selectedForExecution = data.selectedForExecution ?? selected;
   const pluginKind =
     data.pluginKind ??
     (isDbtNodeType(data.type) ? mapDbtTypeToKind(data.type) : ('dvt:unknown' as PluginNodeKind));
@@ -168,16 +179,55 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
     runStatusByNodeId:
       data.runStatusByNodeId instanceof Map ? data.runStatusByNodeId : new Map<string, string>(),
   };
-  const Renderer = getNodeRenderer(canonicalNode.kind, FallbackNodeRenderer);
-  const badges = getNodeBadges(canonicalNode, badgeCtx);
+  const Renderer = getNodeRenderer(
+    canonicalNode.kind,
+    FallbackNodeRenderer,
+    data.runtimeCapabilities
+  );
+  const badges = getNodeBadges(canonicalNode, badgeCtx, data.runtimeCapabilities);
 
   const shouldShowSourceHandle = kindRegistration.allowsOutgoing;
   const shouldShowTargetHandle = kindRegistration.allowsIncoming;
+  const canAttachSchema = typeof data.onAttachSchemaToNode === 'function';
+
+  const handleSchemaResourceDragOver = (event: DragEvent<HTMLDivElement>) => {
+    if (
+      !canAttachSchema ||
+      !Array.from(event.dataTransfer.types).includes(CANVAS_WORKSPACE_RESOURCE_DRAG_MIME_TYPE)
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.dataTransfer.dropEffect = 'copy';
+  };
+
+  const handleSchemaResourceDrop = (event: DragEvent<HTMLDivElement>) => {
+    if (!canAttachSchema) {
+      return;
+    }
+
+    const payload = parseCanvasWorkspaceResourceDragPayload(
+      event.dataTransfer.getData(CANVAS_WORKSPACE_RESOURCE_DRAG_MIME_TYPE)
+    );
+    if (payload == null) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    data.onAttachSchemaToNode?.(id, payload.schemaName);
+  };
 
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <div className={cn(styles.root, 'relative')}>
+        <div
+          className={cn(styles.root, 'relative')}
+          onDragOver={handleSchemaResourceDragOver}
+          onDrop={handleSchemaResourceDrop}
+        >
           {/* Target Handle (input) */}
           {shouldShowTargetHandle && (
             <Handle
@@ -223,11 +273,18 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
           Open inspector panel
         </ContextMenuItem>
         <ContextMenuItem
-          onSelect={() => data.onToggleNodeSelection?.(id, !selected)}
+          onSelect={() => data.onDuplicateNode?.(id)}
+          disabled={!data.onDuplicateNode}
+        >
+          <Copy className="size-4" />
+          Duplicate node
+        </ContextMenuItem>
+        <ContextMenuItem
+          onSelect={() => data.onToggleNodeSelection?.(id, !selectedForExecution)}
           disabled={!data.onToggleNodeSelection}
         >
           <MousePointer className="size-4" />
-          {selected ? 'Deselect node' : 'Select node'}
+          {selectedForExecution ? 'Deselect node' : 'Select node'}
         </ContextMenuItem>
         <ContextMenuSeparator className="bg-slate-600" />
         <ContextMenuItem

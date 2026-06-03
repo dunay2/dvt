@@ -26,8 +26,8 @@ flowchart LR
 ## Current Topology (As-Is)
 
 The current code now routes service and capability wiring through one governed
-composition root, but the frontend still carries mixed presentation/store
-responsibilities outside that boundary.
+composition root, and UI state is split across named store slices instead of an
+aggregate shell store.
 
 ```mermaid
 flowchart LR
@@ -37,17 +37,18 @@ flowchart LR
   Factory --> ApiOrMock["API adapter OR mock adapter"]
   Hook --> Capabilities["useCapabilitiesQuery -> CapabilitiesPort"]
   Capabilities --> ApiClient["governed API client"]
-  View --> AppStore["appStore (mixed concerns)"]
+  View --> Stores["session/uiLayout/execution/canvasInteraction stores"]
 ```
 
 Current friction points:
 
 - `workspaceService`, `runsService`, `plansService` are hybrid boundaries (ports, adapter selection, and mapping in one module).
-- store responsibilities are still mixed across shell, graph, run, and permission concerns.
+- store responsibilities now have named slices, but route-level facades still
+  need continued tightening around read-model ownership.
 - not every route uses a dedicated application facade yet; some still depend on app-level hooks directly.
 - capability querying is now composition-owned, but broader query standardization remains a later slice.
-- `appStore` still carries shell + graph + run + permission responsibilities.
-- `stores/index.ts` is a legacy parallel store surface and should remain outside active architecture.
+- the removed aggregate store and duplicate store barrel must stay absent; new
+  state paths must be added to the named slices or a new bounded slice.
 
 ## Ports And Communication Matrix
 
@@ -106,20 +107,25 @@ composition authority.
 flowchart LR
   Shell["Persistent shell"] --> Canvas["Canvas workbench"]
   Shell --> Runs["Runs workbench"]
+  Shell --> Code["Canvas / Code tab"]
   Shell --> Diff["Diff workbench"]
   Shell --> Artifacts["Artifacts workbench"]
   Shell --> Templates["Templates workbench"]
 
+  Code --> MonacoEdit["Monaco local editable buffer"]
   Diff --> MonacoDiff["Monaco DiffEditor"]
   Artifacts --> MonacoRead["Monaco read-only viewer"]
   Templates --> MonacoPreview["Monaco preview and diff"]
+  Vite --> MonacoChunk["monaco-vendor"]
 ```
 
 Positioning rules:
 
 - Canvas stays graph-first.
 - Runs stays execution-first.
-- Monaco becomes first-class only in `Diff`, `Artifacts`, and `Templates`.
+- Monaco becomes first-class only in `Code`, `Diff`, `Artifacts`, and
+  `Templates`, and only through route-safe lazy gateways.
+- Monaco vendor dependencies stay isolated in the named `monaco-vendor` chunk.
 - `VITE_DATA_SOURCE`, adapter selection, and route composition stay owned by the
   frontend composition root, not by Monaco surfaces.
 - Future docking, if ever needed, is a later layout decision and not part of
@@ -132,7 +138,7 @@ flowchart LR
   F04["F-04 core"] --> F05["F-05 store split"]
   F05 --> F06["F-06 query standardization"]
   F06 --> F07["F-07 runtime contract baseline"]
-  F07 --> F12["F-12 legacy removal"]
+  F07 --> F12["F-12 aggregate-store removal"]
   F12 --> F14["F-14 frontend test + CI lane"]
 ```
 

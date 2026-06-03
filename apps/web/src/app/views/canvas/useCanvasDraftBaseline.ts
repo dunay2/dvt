@@ -1,31 +1,32 @@
+/** Owned concern: provide the Canvas authoring-runtime baseline query seam over the protected draft repository and cache. */
 import { useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import type { IWorkspacePort } from '../../ports/workspace';
 import { queryKeys } from '../../queries/queryKeys';
+import type { CanvasAuthoringRuntimeBaselineArgs } from './canvasAuthoringRuntime.types';
+import { createCanvasDraftQueryCache } from './canvasDraftQueryCache';
 import { createCanvasDraftRepository } from './canvasDraftRepository';
 
-type UseCanvasDraftBaselineArgs = {
-  workspaceService: IWorkspacePort;
-  workspaceLayoutKey: string;
-};
-
 export function useCanvasDraftBaseline({
-  workspaceService,
+  workspaceGraphDraftAuthoringPort,
   workspaceLayoutKey,
-}: UseCanvasDraftBaselineArgs) {
+}: CanvasAuthoringRuntimeBaselineArgs) {
   const queryClient = useQueryClient();
   const draftRepository = useMemo(
-    () => createCanvasDraftRepository(workspaceService),
-    [workspaceService]
+    () => createCanvasDraftRepository(workspaceGraphDraftAuthoringPort),
+    [workspaceGraphDraftAuthoringPort]
+  );
+  const draftQueryCache = useMemo(
+    () => createCanvasDraftQueryCache(queryClient, workspaceLayoutKey, draftRepository),
+    [draftRepository, queryClient, workspaceLayoutKey]
   );
   const graphDraftQuery = useQuery({
     queryKey: queryKeys.workspace.graphDraft(workspaceLayoutKey),
-    queryFn: () => draftRepository.readGraphDraft(),
+    queryFn: () => draftRepository.readGraphDraftState(),
   });
 
   return {
-    queryClient,
+    draftQueryCache,
     draftRepository,
     graphDraftQuery,
   };

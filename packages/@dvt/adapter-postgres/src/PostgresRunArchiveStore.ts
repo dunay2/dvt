@@ -1,3 +1,6 @@
+/**
+ * @ownedConcern Owns PostgreSQL run-event archive-unit eligibility, export/verification state transitions, restore writes, and hot-store deletion for the state-store adapter.
+ */
 import { randomUUID } from 'node:crypto';
 
 import {
@@ -5,6 +8,7 @@ import {
   calculateDeleteAfterIso,
   deriveTenantBucket,
   parseArchiveUnitKey,
+  resolveTenantHotRetentionDays,
   type ArchiveBatchDroppedRecord,
   type ArchiveBatchExportedRecord,
   type ArchiveBatchFailureRecord,
@@ -23,11 +27,16 @@ import {
   type RunEventRetentionPolicy,
   type TerminalSnapshotPinResult,
   type TerminalSnapshotPinStore,
+  validateRunEventRetentionPolicy,
 } from '@dvt/state-store';
 import type { PoolClient } from 'pg';
 
+import { enterPostgresMaintenanceContext } from './PostgresMaintenanceAccess.js';
+import { POSTGRES_SERVICE_ACCESS } from './PostgresServiceAccessCapability.js';
 import { quoteIdentifier } from './sqlUtils.js';
 import type { EventEnvelope, RunId, WorkflowSnapshot } from './types.js';
+
+const RUN_ARCHIVE_SERVICE_ACCESS = POSTGRES_SERVICE_ACCESS.runArchiveMaintenance;
 
 interface EligibleRunRow {
   tenant_id: string;
@@ -36,6 +45,7 @@ interface EligibleRunRow {
   row_count: number | string;
   min_run_seq: number | string;
   max_run_seq: number | string;
+  max_persisted_at: Date | string;
   snapshot_status: string | null;
 }
 
@@ -98,10 +108,12 @@ export class PostgresRunArchiveStore
     policy: RunEventRetentionPolicy,
     nowIso: string
   ): Promise<readonly EligibleArchiveUnit[]> {
-    validateRetentionPolicy(policy);
-    const cutoffIso = computeCutoffIso(nowIso, policy.hotRetentionDays);
+    validateRunEventRetentionPolicy(policy);
+    validateArchiveNow(nowIso);
+    const scanCutoffIso = computeCutoffIso(nowIso, getShortestHotRetentionDays(policy));
 
     return this.withTransaction(async (client) => {
+      await enterPostgresMaintenanceContext(client, RUN_ARCHIVE_SERVICE_ACCESS);
       const runRows = await client.query<EligibleRunRow>(
         `
           SELECT
@@ -111,9 +123,12 @@ export class PostgresRunArchiveStore
             COUNT(*) AS row_count,
             MIN(e.run_seq) AS min_run_seq,
             MAX(e.run_seq) AS max_run_seq,
+            MAX(e.persisted_at) AS max_persisted_at,
             s.snapshot_status
           FROM ${quoteIdentifier(this.schema)}.run_events e
-          LEFT JOIN ${quoteIdentifier(this.schema)}.run_snapshots s ON s.run_id = e.run_id
+          LEFT JOIN ${quoteIdentifier(this.schema)}.run_snapshots s
+            ON s.run_id = e.run_id
+            AND s.tenant_id = e.tenant_id
           WHERE e.persisted_at < $1::timestamptz
           GROUP BY
             e.tenant_id,
@@ -122,7 +137,7 @@ export class PostgresRunArchiveStore
             s.snapshot_status
           ORDER BY persisted_at_day ASC, e.tenant_id ASC, e.run_id ASC
         `,
-        [cutoffIso]
+        [scanCutoffIso]
       );
 
       const candidatesByKey = new Map<
@@ -134,6 +149,7 @@ export class PostgresRunArchiveStore
           minRunSeq: number;
           maxRunSeq: number;
           hasNonTerminalRun: boolean;
+          hasTenantOutsideRetention: boolean;
         }
       >();
 
@@ -146,6 +162,14 @@ export class PostgresRunArchiveStore
         const candidate = ensureCandidate(candidatesByKey, archiveUnitKey, tenantBucket);
 
         candidate.tenantIds.add(row.tenant_id);
+
+        const tenantHotRetentionDays = resolveTenantHotRetentionDays(policy, row.tenant_id);
+        const cutoffIso = computeCutoffIso(nowIso, tenantHotRetentionDays);
+        if (!isBeforeCutoff(row.max_persisted_at, cutoffIso)) {
+          candidate.hasTenantOutsideRetention = true;
+          continue;
+        }
+
         candidate.rowCount += Number(row.row_count);
         candidate.minRunSeq = Math.min(candidate.minRunSeq, Number(row.min_run_seq));
         candidate.maxRunSeq = Math.max(candidate.maxRunSeq, Number(row.max_run_seq));
@@ -173,6 +197,9 @@ export class PostgresRunArchiveStore
       const eligible: EligibleArchiveUnit[] = [];
       for (const [archiveUnitKey, candidate] of candidatesByKey) {
         const existing = existingByKey.get(archiveUnitKey);
+        if (candidate.hasTenantOutsideRetention) {
+          continue;
+        }
         if (candidate.hasNonTerminalRun) {
           continue;
         }
@@ -250,6 +277,7 @@ export class PostgresRunArchiveStore
     startedAtIso: string
   ): Promise<ArchiveBatchRecord> {
     return this.withTransaction(async (client) => {
+      await enterPostgresMaintenanceContext(client, RUN_ARCHIVE_SERVICE_ACCESS);
       await requireArchiveUnit(client, this.schema, archiveUnitKey);
       const batchId = randomUUID();
       await client.query(
@@ -276,6 +304,7 @@ export class PostgresRunArchiveStore
 
   async loadArchiveUnitEvents(archiveUnitKey: string): Promise<readonly EventEnvelope[]> {
     return this.withClient(async (client) => {
+      await enterPostgresMaintenanceContext(client, RUN_ARCHIVE_SERVICE_ACCESS);
       const unit = await requireArchiveUnit(client, this.schema, archiveUnitKey);
       const tenantIds = parseTenantIds(unit.tenant_ids);
       const result = await client.query<EventPayloadRow>(
@@ -296,6 +325,7 @@ export class PostgresRunArchiveStore
     archiveUnitKey: string
   ): Promise<readonly ArchiveUnitTerminalSnapshotCandidate[]> {
     return this.withClient(async (client) => {
+      await enterPostgresMaintenanceContext(client, RUN_ARCHIVE_SERVICE_ACCESS);
       const unit = await requireArchiveUnit(client, this.schema, archiveUnitKey);
       const tenantIds = parseTenantIds(unit.tenant_ids);
       const result = await client.query<TerminalSnapshotCandidateRow>(
@@ -305,7 +335,9 @@ export class PostgresRunArchiveStore
             e.run_id,
             s.snapshot
           FROM ${quoteIdentifier(this.schema)}.run_events e
-          INNER JOIN ${quoteIdentifier(this.schema)}.run_snapshots s ON s.run_id = e.run_id
+          INNER JOIN ${quoteIdentifier(this.schema)}.run_snapshots s
+            ON s.run_id = e.run_id
+            AND s.tenant_id = e.tenant_id
           WHERE to_char(timezone('UTC', e.persisted_at)::date, 'YYYY-MM-DD') = $1
             AND e.tenant_id = ANY($2::text[])
             AND s.snapshot_status IN ('COMPLETED', 'FAILED', 'CANCELLED')
@@ -337,6 +369,7 @@ export class PostgresRunArchiveStore
 
   async markArchiveBatchExported(record: ArchiveBatchExportedRecord): Promise<void> {
     return this.withTransaction(async (client) => {
+      await enterPostgresMaintenanceContext(client, RUN_ARCHIVE_SERVICE_ACCESS);
       await requireArchiveBatch(client, this.schema, record.batchId, record.archiveUnitKey);
 
       await client.query(
@@ -394,6 +427,7 @@ export class PostgresRunArchiveStore
 
   async markArchiveBatchFailed(record: ArchiveBatchFailureRecord): Promise<void> {
     return this.withTransaction(async (client) => {
+      await enterPostgresMaintenanceContext(client, RUN_ARCHIVE_SERVICE_ACCESS);
       await requireArchiveBatch(client, this.schema, record.batchId, record.archiveUnitKey);
 
       await client.query(
@@ -425,6 +459,7 @@ export class PostgresRunArchiveStore
     limit = 100
   ): Promise<readonly PendingArchiveVerification[]> {
     return this.withClient(async (client) => {
+      await enterPostgresMaintenanceContext(client, RUN_ARCHIVE_SERVICE_ACCESS);
       const result = await client.query<PendingVerificationRow>(
         `
           SELECT DISTINCT ON (u.archive_unit_key)
@@ -472,6 +507,7 @@ export class PostgresRunArchiveStore
 
   async markArchiveBatchVerified(record: ArchiveBatchVerifiedRecord): Promise<void> {
     return this.withTransaction(async (client) => {
+      await enterPostgresMaintenanceContext(client, RUN_ARCHIVE_SERVICE_ACCESS);
       await requireArchiveBatch(client, this.schema, record.batchId, record.archiveUnitKey);
 
       await client.query(
@@ -502,6 +538,7 @@ export class PostgresRunArchiveStore
 
   async markArchiveBatchVerifyFailed(record: ArchiveBatchFailureRecord): Promise<void> {
     return this.withTransaction(async (client) => {
+      await enterPostgresMaintenanceContext(client, RUN_ARCHIVE_SERVICE_ACCESS);
       await requireArchiveBatch(client, this.schema, record.batchId, record.archiveUnitKey);
 
       await client.query(
@@ -538,6 +575,7 @@ export class PostgresRunArchiveStore
     nowIso: string
   ): Promise<readonly DeleteEligibleArchiveUnit[]> {
     return this.withTransaction(async (client) => {
+      await enterPostgresMaintenanceContext(client, RUN_ARCHIVE_SERVICE_ACCESS);
       const result = await client.query<{
         archive_unit_key: string;
         tenant_bucket: string;
@@ -582,6 +620,7 @@ export class PostgresRunArchiveStore
     nowIso: string
   ): Promise<readonly DeleteEligibleArchiveUnit[]> {
     return this.withClient(async (client) => {
+      await enterPostgresMaintenanceContext(client, RUN_ARCHIVE_SERVICE_ACCESS);
       const result = await client.query<{
         archive_unit_key: string;
         tenant_bucket: string;
@@ -621,6 +660,7 @@ export class PostgresRunArchiveStore
     droppedAtIso: string
   ): Promise<{ rowsDeleted: number }> {
     return this.withTransaction(async (client) => {
+      await enterPostgresMaintenanceContext(client, RUN_ARCHIVE_SERVICE_ACCESS);
       const unit = await requireArchiveUnit(client, this.schema, archiveUnitKey);
       if (unit.state !== 'DELETE_ELIGIBLE') {
         throw new Error(
@@ -657,6 +697,7 @@ export class PostgresRunArchiveStore
 
   async markArchiveBatchDropped(record: ArchiveBatchDroppedRecord): Promise<void> {
     return this.withTransaction(async (client) => {
+      await enterPostgresMaintenanceContext(client, RUN_ARCHIVE_SERVICE_ACCESS);
       const batchId = record.batchId;
       const existing = await client.query<{ batch_id: string }>(
         `
@@ -700,6 +741,7 @@ export class PostgresRunArchiveStore
 
   async startRestoreLog(input: Omit<RestoreLogRecord, 'status'>): Promise<RestoreLogRecord> {
     return this.withTransaction(async (client) => {
+      await enterPostgresMaintenanceContext(client, RUN_ARCHIVE_SERVICE_ACCESS);
       await client.query(
         `
           INSERT INTO ${quoteIdentifier(this.schema)}.run_event_archive_restore_log
@@ -727,6 +769,7 @@ export class PostgresRunArchiveStore
     completedAtIso: string
   ): Promise<void> {
     return this.withTransaction(async (client) => {
+      await enterPostgresMaintenanceContext(client, RUN_ARCHIVE_SERVICE_ACCESS);
       await client.query(
         `
           UPDATE ${quoteIdentifier(this.schema)}.run_event_archive_restore_log
@@ -743,6 +786,7 @@ export class PostgresRunArchiveStore
 
   async markRestoreFailed(restoreId: string, error: string, failedAtIso: string): Promise<void> {
     return this.withTransaction(async (client) => {
+      await enterPostgresMaintenanceContext(client, RUN_ARCHIVE_SERVICE_ACCESS);
       await client.query(
         `
           UPDATE ${quoteIdentifier(this.schema)}.run_event_archive_restore_log
@@ -765,6 +809,7 @@ export class PostgresRunArchiveStore
       return 0;
     }
     return this.withTransaction(async (client) => {
+      await enterPostgresMaintenanceContext(client, RUN_ARCHIVE_SERVICE_ACCESS);
       // Ensure the target schema's run_events table exists.
       // In production the target schema is a temporary schema pre-created by ops.
       // We use a simple row-by-row insert here; bulk copy is a future optimisation.
@@ -807,6 +852,7 @@ export class PostgresRunArchiveStore
     archiveUnitKey: string
   ): Promise<{ batchId: string; objectKey: string; tenantBucket: string } | null> {
     return this.withClient(async (client) => {
+      await enterPostgresMaintenanceContext(client, RUN_ARCHIVE_SERVICE_ACCESS);
       const result = await client.query<{
         batch_id: string;
         object_key: string;
@@ -839,21 +885,35 @@ export class PostgresRunArchiveStore
   }
 }
 
-function validateRetentionPolicy(policy: RunEventRetentionPolicy): void {
-  if (!Number.isInteger(policy.hotRetentionDays) || policy.hotRetentionDays <= 0) {
-    throw new Error('ARCHIVE_HOT_RETENTION_DAYS_INVALID');
-  }
-  if (!Number.isInteger(policy.archiveBucketCount) || policy.archiveBucketCount <= 0) {
-    throw new Error('ARCHIVE_BUCKET_COUNT_INVALID');
-  }
-}
-
 function computeCutoffIso(nowIso: string, hotRetentionDays: number): string {
   const now = new Date(nowIso);
   if (Number.isNaN(now.getTime())) {
     throw new Error('ARCHIVE_NOW_INVALID');
   }
   return new Date(now.getTime() - hotRetentionDays * 24 * 60 * 60 * 1000).toISOString();
+}
+
+function getShortestHotRetentionDays(policy: RunEventRetentionPolicy): number {
+  return Math.min(
+    policy.hotRetentionDays,
+    ...(policy.tenantHotRetentionDays ?? []).map((override) => override.hotRetentionDays)
+  );
+}
+
+function validateArchiveNow(nowIso: string): void {
+  const now = new Date(nowIso);
+  if (Number.isNaN(now.getTime())) {
+    throw new Error('ARCHIVE_NOW_INVALID');
+  }
+}
+
+function isBeforeCutoff(value: Date | string, cutoffIso: string): boolean {
+  const persistedAt = value instanceof Date ? value : new Date(value);
+  const cutoff = new Date(cutoffIso);
+  if (Number.isNaN(persistedAt.getTime()) || Number.isNaN(cutoff.getTime())) {
+    throw new Error('ARCHIVE_PERSISTED_AT_INVALID');
+  }
+  return persistedAt.getTime() < cutoff.getTime();
 }
 
 function ensureCandidate(
@@ -866,6 +926,7 @@ function ensureCandidate(
       minRunSeq: number;
       maxRunSeq: number;
       hasNonTerminalRun: boolean;
+      hasTenantOutsideRetention: boolean;
     }
   >,
   archiveUnitKey: string,
@@ -877,6 +938,7 @@ function ensureCandidate(
   minRunSeq: number;
   maxRunSeq: number;
   hasNonTerminalRun: boolean;
+  hasTenantOutsideRetention: boolean;
 } {
   const existing = candidatesByKey.get(archiveUnitKey);
   if (existing) {
@@ -889,6 +951,7 @@ function ensureCandidate(
     minRunSeq: Number.POSITIVE_INFINITY,
     maxRunSeq: Number.NEGATIVE_INFINITY,
     hasNonTerminalRun: false,
+    hasTenantOutsideRetention: false,
   };
   candidatesByKey.set(archiveUnitKey, created);
   return created;

@@ -1,15 +1,16 @@
+/**
+ * @ownedConcern Dispatch admitted start-run requests to provider adapters and
+ * bootstrap run state with compensation.
+ */
 import type { StartRunTraceContext } from '../../core/lifecycle/StartRunTraceContext.js';
 import { toErrorMessage } from '../../utils/errorUtils.js';
 
 import { START_RUN_MESSAGE } from './StartRunDomainConstants.js';
 import type { StartRunEventFactory } from './StartRunEventFactory.js';
-import {
-  PostStartIntentPersistenceError,
-  type StartRunFailurePolicy,
-} from './StartRunFailurePolicy.js';
+import { PostStartIntentPersistenceError } from './StartRunFailurePolicy.js';
+import type { IStartRunExecutionService, IStartRunFailurePolicy } from './StartRunTypes.js';
 
 type EngineRunRef = import('@dvt/contracts').EngineRunRef;
-type ExecutionPlan = import('@dvt/contracts').ExecutionPlan;
 type PlanRef = import('@dvt/contracts').PlanRef;
 type ResolvedRunContext = import('@dvt/contracts').ResolvedRunContext;
 type IObservability = import('@dvt/observability').IObservability;
@@ -22,7 +23,7 @@ export interface StartRunExecutionServiceDeps {
   stateStoreWrite: IRunStateStoreWrite;
   intentStore: IStartRunIntentStore;
   eventFactory: StartRunEventFactory;
-  failurePolicy: StartRunFailurePolicy;
+  failurePolicy: IStartRunFailurePolicy;
   observability: IObservability;
   clock: IClock;
   timeouts?: {
@@ -31,12 +32,11 @@ export interface StartRunExecutionServiceDeps {
   };
 }
 
-export class StartRunExecutionService {
+export class StartRunExecutionService implements IStartRunExecutionService {
   constructor(private readonly deps: StartRunExecutionServiceDeps) {}
 
   async executeStartRun(input: {
     adapter: IProviderAdapter;
-    plan: ExecutionPlan;
     planRef: PlanRef;
     resolvedContext: ResolvedRunContext;
     traceContext: StartRunTraceContext;
@@ -55,14 +55,13 @@ export class StartRunExecutionService {
 
   private async startRunWithEstimatedRef(input: {
     adapter: IProviderAdapter;
-    plan: ExecutionPlan;
     planRef: PlanRef;
     estimatedRef: EngineRunRef;
     resolvedContext: ResolvedRunContext;
     traceContext: StartRunTraceContext;
     intentId: string;
   }): Promise<EngineRunRef> {
-    const { adapter, plan, planRef, estimatedRef, resolvedContext, traceContext, intentId } = input;
+    const { adapter, planRef, estimatedRef, resolvedContext, traceContext, intentId } = input;
     const bootMeta = this.deps.eventFactory.buildRunMetadata(
       resolvedContext,
       planRef,
@@ -76,7 +75,6 @@ export class StartRunExecutionService {
 
     const runRef = await this.startAdapterAndMarkDispatched({
       adapter,
-      plan,
       planRef,
       resolvedContext,
       intentId,
@@ -102,16 +100,14 @@ export class StartRunExecutionService {
 
   private async startRunWithoutEstimatedRef(input: {
     adapter: IProviderAdapter;
-    plan: ExecutionPlan;
     planRef: PlanRef;
     resolvedContext: ResolvedRunContext;
     traceContext: StartRunTraceContext;
     intentId: string;
   }): Promise<EngineRunRef> {
-    const { adapter, plan, planRef, resolvedContext, traceContext, intentId } = input;
+    const { adapter, planRef, resolvedContext, traceContext, intentId } = input;
     const runRef = await this.startAdapterAndMarkDispatched({
       adapter,
-      plan,
       planRef,
       resolvedContext,
       intentId,
@@ -135,19 +131,21 @@ export class StartRunExecutionService {
 
   private async startAdapterAndMarkDispatched(input: {
     adapter: IProviderAdapter;
-    plan: ExecutionPlan;
     planRef: PlanRef;
     resolvedContext: ResolvedRunContext;
     intentId: string;
   }): Promise<EngineRunRef> {
-    const { adapter, plan, planRef, resolvedContext, intentId } = input;
+    const { adapter, planRef, resolvedContext, intentId } = input;
     const runRef = await this.withTimeout(
-      adapter.startRun(plan, planRef, resolvedContext),
+      adapter.startRun(planRef, resolvedContext),
       this.deps.timeouts?.adapterCallMs ?? 30_000,
       'adapter.startRun'
     );
     try {
-      await this.deps.intentStore.markDispatched(intentId, runRef);
+      await this.deps.intentStore.markDispatched(
+        { tenantId: resolvedContext.tenantId, intentId },
+        runRef
+      );
     } catch (markDispatchedError) {
       throw new PostStartIntentPersistenceError(intentId, runRef, markDispatchedError);
     }
@@ -296,16 +294,5 @@ function engineRunRefsEqual(left: EngineRunRef, right: EngineRunRef): boolean {
     return false;
   }
 
-  switch (left.provider) {
-    case 'temporal':
-      return (
-        right.provider === 'temporal' &&
-        left.namespace === right.namespace &&
-        left.taskQueue === right.taskQueue
-      );
-    case 'conductor':
-      return right.provider === 'conductor' && left.conductorUrl === right.conductorUrl;
-    case 'mock':
-      return right.provider === 'mock';
-  }
+  return left.namespace === right.namespace && left.taskQueue === right.taskQueue;
 }

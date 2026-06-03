@@ -1,6 +1,8 @@
+/**
+ * @ownedConcern Dispatch workflow step work to core gateway or composed plugin activities.
+ */
 import { ActivityErrorCode, createPermanentStepFailure } from './activityFailures.js';
 import type {
-  ActivityDeps,
   StepActivity,
   StepActivityRegistry,
   StepDefinition,
@@ -9,25 +11,11 @@ import type {
   StepResult,
 } from './activityTypes.js';
 import { UnsupportedStepKindError } from './activityTypes.js';
-import { DbtStepActivity } from './dbtStepActivity.js';
 import { GatewayStepActivity } from './gatewayStepActivity.js';
 
-function buildDefaultStepActivityEntries(
-  deps?: Pick<ActivityDeps, 'runExecutionContextReader' | 'dbtPluginRunner'>
-): ReadonlyArray<readonly [string, StepActivity]> {
-  const dbtStepActivity = new DbtStepActivity(deps);
-  return Object.freeze(
-    Array.from(
-      DbtStepActivity.SUPPORTED_STEP_KINDS,
-      (stepKind) => [stepKind, dbtStepActivity] as const
-    )
-  );
-}
-
-export function createDefaultStepActivityRegistry(
-  deps?: Pick<ActivityDeps, 'runExecutionContextReader' | 'dbtPluginRunner'>
-): StepActivityRegistry {
-  return new Map(buildDefaultStepActivityEntries(deps));
+export function createDefaultStepActivityRegistry(): StepActivityRegistry {
+  // Core registry starts empty; plugin activities are composed by worker profiles.
+  return new Map<string, StepActivity>();
 }
 
 export const DEFAULT_STEP_ACTIVITY_REGISTRY: StepActivityRegistry =

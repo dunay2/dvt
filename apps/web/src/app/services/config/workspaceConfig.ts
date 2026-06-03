@@ -1,7 +1,7 @@
 import type { DataSourceMode } from './dataSource';
 import { getRuntimeDataSourceMode } from './runtimeDataSourceMode';
 
-type WorkspaceOption = {
+export type WorkspaceOption = {
   value: string;
   label: string;
 };
@@ -17,31 +17,6 @@ export type WorkspaceBootstrapConfig = {
   tenantOptions: WorkspaceOption[];
   projectOptions: WorkspaceOption[];
   environmentOptions: WorkspaceOption[];
-};
-
-const MOCK_WORKSPACE_EXAMPLE: WorkspaceBootstrapConfig = {
-  tenantId: 'acme-corp',
-  projectId: 'dbt-analytics',
-  environmentId: 'dev',
-  gitBranch: 'main',
-  gitSha: 'local',
-  gitRepo: 'dunay2/dvt',
-  graphArtifactPath: 'pipelines/sales_pipeline.yaml',
-  tenantOptions: [
-    { value: 'acme-corp', label: 'ACME Corp' },
-    { value: 'globex', label: 'Globex Inc' },
-    { value: 'initech', label: 'Initech' },
-  ],
-  projectOptions: [
-    { value: 'dbt-analytics', label: 'dbt-analytics' },
-    { value: 'dbt-marketing', label: 'dbt-marketing' },
-    { value: 'dbt-finance', label: 'dbt-finance' },
-  ],
-  environmentOptions: [
-    { value: 'dev', label: 'dev' },
-    { value: 'stage', label: 'stage' },
-    { value: 'prod', label: 'prod' },
-  ],
 };
 
 const GENERIC_WORKSPACE_DEFAULT: WorkspaceBootstrapConfig = {
@@ -110,8 +85,8 @@ function ensureOptionValue(options: WorkspaceOption[], value: string): Workspace
   return [{ value: normalizedValue, label: normalizedValue }, ...options];
 }
 
-function resolveBaseWorkspaceConfig(mode: DataSourceMode): WorkspaceBootstrapConfig {
-  return mode === 'mock' ? MOCK_WORKSPACE_EXAMPLE : GENERIC_WORKSPACE_DEFAULT;
+function resolveBaseWorkspaceConfig(_mode: DataSourceMode): WorkspaceBootstrapConfig {
+  return GENERIC_WORKSPACE_DEFAULT;
 }
 
 export function resolveWorkspaceBootstrapConfig(

@@ -1,31 +1,44 @@
+/** Owned concern: apply visible edge-change fallout through the graph lifecycle component. */
+
 import { useCallback } from 'react';
-import { applyEdgeChanges, type Edge, type EdgeChange } from '@xyflow/react';
+import { type Edge, type EdgeChange } from '@xyflow/react';
 
-import { replaceCanvasVisibleEdges } from './canvasInteractionCommands';
+import { canvasGraphLifecycle } from './canvasGraphLifecycle';
 import type {
-  CanvasGraphChangeHandlers,
-  UseCanvasMutationHandlersArgs,
-} from './canvasMutationHandlers.types';
+  CanvasEdgeChangeContracts,
+} from './canvasMutationHandlerContracts';
+type UseCanvasEdgeChangeHandlersArgs = CanvasEdgeChangeContracts;
 
-type UseCanvasEdgeChangeHandlersArgs = Pick<
-  UseCanvasMutationHandlersArgs,
-  'graphModel' | 'setDraftSession'
->;
+type UseCanvasEdgeChangeHandlersResult = {
+  handleEdgesChange: (changes: EdgeChange<Edge>[]) => void;
+};
 
 export function useCanvasEdgeChangeHandlers({
-  graphModel,
-  setDraftSession,
-}: UseCanvasEdgeChangeHandlersArgs): Pick<CanvasGraphChangeHandlers, 'handleEdgesChange'> {
+  state,
+  effects,
+}: UseCanvasEdgeChangeHandlersArgs): UseCanvasEdgeChangeHandlersResult {
+  const { graphModel, draftSession } = state;
+  const { setDraftSession } = effects;
+
   const handleEdgesChange = useCallback(
     (changes: EdgeChange<Edge>[]) => {
-      const nextEdges = applyEdgeChanges(changes, graphModel.edges);
+      const currentState = {
+        draftSession,
+        nodes: graphModel.nodes,
+        edges: graphModel.edges,
+        selectedNodeIds: [],
+        inspectorNodeId: null,
+      };
+      const nextState = canvasGraphLifecycle.edge.applyChanges(currentState, changes);
 
-      graphModel.setEdges(nextEdges);
-      setDraftSession((currentSession) =>
-        replaceCanvasVisibleEdges(currentSession, nextEdges)
-      );
+      graphModel.setEdges(nextState.edges);
+      if (nextState.draftSession !== currentState.draftSession) {
+        setDraftSession((currentSession) =>
+          canvasGraphLifecycle.edge.replaceVisible(currentSession, nextState.edges)
+        );
+      }
     },
-    [graphModel, setDraftSession]
+    [draftSession, graphModel, setDraftSession]
   );
 
   return {

@@ -1,10 +1,19 @@
+/**
+ * @ownedConcern WorkflowEngine test composition fixture using fake provider adapters and engine-owned ports.
+ *
+ * Composes in-memory stores and engine services for tests without production
+ * adapter or provider-runtime imports.
+ */
+import type { IStoredPlanArtifactReader, StoredPlanArtifact } from '@dvt/artifacts';
 import {
+  asIsoUtcString,
+  asNonBlankString,
   CURRENT_SIGNAL_SEMANTICS_VERSION,
   type EngineRunRef,
   type ExecutionPlan,
   type PlanRef,
   type RunExecutionPolicy,
-  type StoredPlanArtifact,
+  type ScopedPlanRef,
 } from '@dvt/contracts';
 import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
 import { createNoopObservability } from '@dvt/observability';
@@ -13,21 +22,21 @@ import type { IObservability } from '@dvt/observability';
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import { buildRunRecoveryService } from '../../src/application/RecoverRunApplicationService.js';
 import { StartRunAdmissionGuard } from '../../src/application/StartRunAdmissionGuard.js';
-import { StartRunApplicationService } from '../../src/application/StartRunApplicationService.js';
+import { buildStartRunApplicationService } from '../../src/application/StartRunApplicationService.js';
+import { buildWorkflowEngineUseCases } from '../../src/application/workflow-engine-use-cases/index.js';
 import { buildWorkflowEngineFacade } from '../../src/core/buildWorkflowEngineFacade.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
-import {
-  buildRunControlService,
-  WorkflowEngineCoreService,
-} from '../../src/core/WorkflowEngineCoreService.js';
+import { WorkflowEngineCoreService } from '../../src/core/WorkflowEngineCoreService.js';
 import type { IRunExecutionContextBindingPolicy } from '../../src/ports/IRunExecutionContextBindingPolicy.js';
 import type { IRunExecutionContextResolver } from '../../src/ports/IRunExecutionContextResolver.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import type { IAuthorizer } from '../../src/security/authorizer.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
 import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
+import { buildRunCommandService } from '../../src/services/runControl/RunCommandService.js';
+import { buildRunSignalService } from '../../src/services/runControl/RunSignalService.js';
 import { RunEnrichmentService } from '../../src/services/RunEnrichmentService.js';
 import {
   buildRunStatusQueryService,
@@ -41,7 +50,7 @@ import { SequenceClock } from '../../src/utils/clock.js';
 export function makeTemporalAdapter(overrides?: Partial<IProviderAdapter>): IProviderAdapter {
   const base: IProviderAdapter = {
     provider: 'temporal',
-    async startRun(_plan, _planRef, ctx) {
+    async startRun(_planRef, ctx) {
       return {
         provider: 'temporal',
         tenantId: ctx.tenantId,
@@ -69,7 +78,7 @@ export function makeProviderMap(
   return new Map([[adapter.provider, adapter]]);
 }
 
-export function createWorkflowEngineFixture(input?: {
+interface WorkflowEngineFixtureInput {
   adapters?: Map<EngineRunRef['provider'], IProviderAdapter>;
   adapter?: IProviderAdapter;
   authorizer?: IAuthorizer;
@@ -86,8 +95,10 @@ export function createWorkflowEngineFixture(input?: {
   observabilityFallbackThrottleMs?: number;
   runExecutionContextResolver?: IRunExecutionContextResolver;
   runExecutionContextBindingPolicy?: IRunExecutionContextBindingPolicy;
-  planFetcher?: { fetch(planRef: PlanRef): Promise<StoredPlanArtifact> };
-}): {
+  planFetcher?: IStoredPlanArtifactReader;
+}
+
+interface WorkflowEngineFixture {
   engine: WorkflowEngine;
   store: InMemoryTxStore;
   stateStoreRead: InMemoryTxStore;
@@ -97,37 +108,30 @@ export function createWorkflowEngineFixture(input?: {
   projector: SnapshotProjector;
   idempotency: IdempotencyKeyBuilder;
   clock: IClock;
-} {
+}
+
+export function createWorkflowEngineFixture(
+  input?: WorkflowEngineFixtureInput
+): WorkflowEngineFixture {
   const store = input?.stateStore ?? input?.stateStoreRead ?? new InMemoryTxStore();
   const stateStoreRead = input?.stateStoreRead ?? store;
   const stateStoreWrite = input?.stateStoreWrite ?? store;
   const intentStore = input?.intentStore ?? new InMemoryStartRunIntentStore();
   const projector = input?.projector ?? new SnapshotProjector();
   const idempotency = input?.idempotency ?? new IdempotencyKeyBuilder();
-  const clock = input?.clock ?? new SequenceClock('2026-02-12T00:00:00.000Z');
+  const clock = input?.clock ?? new SequenceClock(asIsoUtcString('2026-02-12T00:00:00.000Z'));
   const observability = input?.observability ?? createNoopObservability();
   const adapters =
     input?.adapters ??
     (input?.adapter
       ? makeProviderMap(input.adapter)
       : new Map<EngineRunRef['provider'], IProviderAdapter>());
-  const defaultPlan = makeDefaultExecutionPlan();
-  const planFetcher =
-    input?.planFetcher ??
-    ({
-      async fetch(_planRef: PlanRef): Promise<StoredPlanArtifact> {
-        return {
-          bytes: Buffer.from(JSON.stringify(defaultPlan), 'utf8'),
-          executionPolicy: {},
-        };
-      },
-    } as const);
+  const planFetcher = input?.planFetcher ?? makePlanFetcherForPlan(makeDefaultExecutionPlan());
   const policy = new RunAccessPolicy({
     authorizer: input?.authorizer ?? new AllowAllAuthorizer(),
     planRefPolicy: new PlanRefPolicy({ allowedSchemes: input?.allowedSchemes ?? ['https'] }),
   });
-  const startRunApplicationService = new StartRunApplicationService({
-    policy,
+  const startRunApplicationService = buildStartRunApplicationService({
     guard: new StartRunAdmissionGuard({
       policy,
       stateStoreRead,
@@ -150,7 +154,14 @@ export function createWorkflowEngineFixture(input?: {
       ? {}
       : { observabilityFallbackThrottleMs: input.observabilityFallbackThrottleMs }),
   });
-  const runControlService = buildRunControlService({
+  const runCommandService = buildRunCommandService({
+    stateStoreRead,
+    policy,
+    adapters,
+    observability,
+    clock,
+  });
+  const runSignalService = buildRunSignalService({
     stateStoreRead,
     stateStoreWrite,
     idempotency,
@@ -174,6 +185,7 @@ export function createWorkflowEngineFixture(input?: {
     planFetcher,
     adapters,
     observability,
+    clock,
     startRunApplicationService,
     ...(input?.runExecutionContextResolver === undefined
       ? {}
@@ -182,14 +194,20 @@ export function createWorkflowEngineFixture(input?: {
       ? {}
       : { runExecutionContextBindingPolicy: input.runExecutionContextBindingPolicy }),
   });
-  const engine = buildWorkflowEngineFacade({
+  const workflowUseCases = buildWorkflowEngineUseCases({
+    observability,
     startRunApplicationService,
     runRecoveryService,
-    runControlService,
+    runCommandService,
+    runSignalService,
     runStatusQueryService,
-    observability,
+  });
+  const engine = buildWorkflowEngineFacade({
+    ...workflowUseCases,
     adapters,
-    requiredProviders: input?.requiredProviders,
+    ...(input?.requiredProviders === undefined
+      ? {}
+      : { requiredProviders: input.requiredProviders }),
   }) as WorkflowEngine;
 
   return {
@@ -211,11 +229,11 @@ export function makePlanRefForPlan(
 ): PlanRef {
   const bytes = Buffer.from(JSON.stringify(plan), 'utf8');
   return {
-    uri,
-    sha256: sha256Hex(bytes),
-    schemaVersion: plan.metadata.schemaVersion,
-    planId: plan.metadata.planId,
-    planVersion: plan.metadata.planVersion,
+    uri: asNonBlankString(uri),
+    sha256: asNonBlankString(sha256Hex(bytes)),
+    schemaVersion: asNonBlankString(plan.metadata.schemaVersion),
+    planId: asNonBlankString(plan.metadata.planId),
+    planVersion: asNonBlankString(plan.metadata.planVersion),
     sizeBytes: bytes.byteLength,
   };
 }
@@ -223,11 +241,18 @@ export function makePlanRefForPlan(
 export function makePlanFetcherForPlan(
   plan: ExecutionPlan,
   executionPolicy: RunExecutionPolicy = {}
-): {
-  fetch(planRef: PlanRef): Promise<StoredPlanArtifact>;
-} {
+): IStoredPlanArtifactReader {
   return {
-    async fetch(_planRef: PlanRef): Promise<StoredPlanArtifact> {
+    async getStoredPlanValidationRecord() {
+      return undefined;
+    },
+    async fetchStoredPlanArtifact(_input: ScopedPlanRef): Promise<StoredPlanArtifact> {
+      return {
+        bytes: Buffer.from(JSON.stringify(plan), 'utf8'),
+        executionPolicy,
+      };
+    },
+    async fetchStoredPlanArtifactForValidation(_input: ScopedPlanRef): Promise<StoredPlanArtifact> {
       return {
         bytes: Buffer.from(JSON.stringify(plan), 'utf8'),
         executionPolicy,
@@ -252,7 +277,7 @@ export function makeDefaultExecutionPlan(): ExecutionPlan {
     metadata: {
       planId,
       planVersion: '1.0',
-      schemaVersion: 'v1.2',
+      schemaVersion: '1.0',
       contractVersion: '1.0.0',
       inputHashSha256,
       createdAtIso: '2026-02-12T00:00:00.000Z',
@@ -295,7 +320,7 @@ export function createWorkflowEngineCoreFixture(input?: {
   const stateStoreWrite = input?.stateStoreWrite ?? store;
   const projector = input?.projector ?? new SnapshotProjector();
   const idempotency = input?.idempotency ?? new IdempotencyKeyBuilder();
-  const clock = input?.clock ?? new SequenceClock('2026-03-26T00:00:00.000Z');
+  const clock = input?.clock ?? new SequenceClock(asIsoUtcString('2026-03-26T00:00:00.000Z'));
   const adapter = input?.adapter ?? makeTemporalAdapter(input?.adapterOverrides);
   const adapters = makeProviderMap(adapter);
   const policy = new RunAccessPolicy({
@@ -303,8 +328,15 @@ export function createWorkflowEngineCoreFixture(input?: {
     planRefPolicy: new PlanRefPolicy({ allowedSchemes: input?.allowedSchemes ?? ['https'] }),
   });
   const observability = input?.observability ?? createNoopObservability();
-
-  const core = new WorkflowEngineCoreService({
+  const runCommandService = buildRunCommandService({
+    stateStoreRead,
+    policy,
+    adapters,
+    observability,
+    clock,
+    ...(input?.timeouts ? { timeouts: input.timeouts } : {}),
+  });
+  const runSignalService = buildRunSignalService({
     stateStoreRead,
     stateStoreWrite,
     idempotency,
@@ -313,6 +345,11 @@ export function createWorkflowEngineCoreFixture(input?: {
     observability,
     clock,
     ...(input?.timeouts ? { timeouts: input.timeouts } : {}),
+  });
+
+  const core = new WorkflowEngineCoreService({
+    runCommandService,
+    runSignalService,
   });
   const runStatusQueryService = new RunStatusQueryService({
     stateStoreRead,

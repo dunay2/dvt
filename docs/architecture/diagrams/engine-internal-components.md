@@ -2,7 +2,7 @@
 title: Engine Internal Components
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-11
+last_reviewed: 2026-04-29
 ---
 
 # Engine Internal Components
@@ -55,10 +55,11 @@ unconditionally runtime-wired in the current delivery path. One
 provides it. `IProjector` remains a package-exposed target seam, while
 `IMetricsCollector` currently exists only as a source-tree target seam because
 the shipped package surface still routes telemetry through `IObservability`.
-Concrete adapters (`MockAdapter`, `InMemoryRunStateStore`,
-`InMemoryStartRunIntentStore`) are engine-internal test doubles; production
-adapters live in separate packages. Blue nodes below therefore represent the
-declared engine seam, while each node label carries the current posture.
+Concrete test doubles (`InMemoryProviderAdapter`, `InMemoryRunStateStore`,
+`InMemoryStartRunIntentStore`) are engine-internal unit-test aids that model
+real provider ids. Production adapters live in separate packages. Blue nodes
+below therefore represent the declared engine seam, while each node label
+carries the current posture.
 
 ## Known Problems
 
@@ -69,11 +70,11 @@ declared engine seam, while each node label carries the current posture.
   admission machinery implicitly**: the facade-width residual is closed, but
   recover-run and start-run still rely on a common guard/policy cluster that
   has not yet been decomposed to the target posture.
-- **`IPlanFetcher` declaration is duplicated**: the dedicated port lives in
-  `packages/@dvt/engine/src/adapters/IPlanFetcher.ts`, but a legacy declaration
-  still exists in `packages/@dvt/engine/src/ports/IRunStateStore.ts`. The
-  architectural seam is conceptually single, but the code anchor is not yet
-  normalized.
+- **Plan artifact reader ownership is now normalized**:
+  `IStoredPlanArtifactReader` and `StoredPlanArtifact` live in
+  `@dvt/artifacts`, while `IPlanIntegrityValidator` lives in `@dvt/engine`.
+  `IRunStateStore` stays focused on run metadata, event log, snapshots, and
+  maintenance.
 
 ## Unidentified Design Concerns
 
@@ -107,7 +108,7 @@ ports, and their relationships.
 | `IRunStateStore`               | `runtime-wired`               | Canonical state/event/snapshot seam                                                             |
 | `IStartRunIntentStore`         | `runtime-wired`               | Crash-consistency seam                                                                          |
 | `IProviderAdapter`             | `runtime-wired`               | Provider runtime seam                                                                           |
-| `IPlanFetcher`                 | `runtime-wired`               | Plan/artifact fetch seam                                                                        |
+| `IPlanIntegrityValidator`      | `runtime-wired`               | Engine integrity gate that consumes the artifacts-owned plan reader                             |
 | `IRunExecutionContextResolver` | `optional runtime wiring`     | Conditional start-run seam; wired only when the composition root provides it                    |
 | `IProjector`                   | `package-exposed target seam` | Declared seam; mainline still uses `SnapshotProjector` directly                                 |
 | `IMetricsCollector`            | `source-tree target seam`     | Declared in source; not exported from the package root. Mainline still injects `IObservability` |
@@ -171,18 +172,16 @@ flowchart TB
     IRSS["IRunStateStore<br/>(runtime-wired)"]:::port
     ISRIS["IStartRunIntentStore<br/>(runtime-wired)"]:::port
     IPA["IProviderAdapter<br/>(runtime-wired)"]:::port
-    IPF["IPlanFetcher<br/>(runtime-wired)"]:::port
+    IPF["IPlanIntegrityValidator<br/>(runtime-wired)"]:::port
     IREC["IRunExecutionContextResolver<br/>(optional runtime wiring)"]:::port
     IPROJ["IProjector<br/>(package-exposed target seam)"]:::port
     IMC["IMetricsCollector<br/>(source-tree target seam)"]:::port
   end
 
   subgraph Adapters["Concrete Adapters"]
-    MOCK["MockAdapter"]:::impl
+    IMPA["InMemoryProviderAdapter<br/>(unit-test double)"]:::impl
     IMSS["InMemoryRunStateStore"]:::impl
     IMIS["InMemoryStartRunIntentStore"]:::impl
-    TSTUB["TemporalAdapterStub"]:::impl
-    CSTUB["ConductorAdapterStub"]:::planned
   end
 
   Builder --> WE
@@ -231,11 +230,9 @@ flowchart TB
   RAP --> HRC
   PIV --> IPF
 
-  MOCK -.-> IPA
+  IMPA -.-> IPA
   IMSS -.-> IRSS
   IMIS -.-> ISRIS
-  TSTUB -.-> IPA
-  CSTUB -.-> IPA
 ```
 
 ## Runtime Capability Dispatch Inside The Shipped Temporal Path

@@ -17,6 +17,8 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "pretypecheck": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm --filter @dvt/observability build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "pnpm -C ../../.. --filter @dvt/observability build && pnpm -C ../../.. exec vitest run packages/@dvt/observability-otel/test/OtelObservability.test.ts"
   },
   "dependencies": {

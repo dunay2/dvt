@@ -1,33 +1,40 @@
 /**
+ * @ownedConcern Verify executable plan bytes and metadata before provider dispatch.
  * @file packages/@dvt/engine/src/security/planIntegrity.ts
  * @baseline ADR-0003: Execution Model Sovereignty
  * @baseline ADR-0012: Plan Integrity Ownership
  * @decision Engine entry-point plan integrity verification resolves the executable plan,
  *   validates metadata alignment, and recomputes planner identity before adapter dispatch.
- * @consequence Adapters execute the exact plan instance the engine has already verified.
+ * @consequence Adapters receive an immutable PlanRef and must revalidate fetched plan bytes
+ *   before executing runtime segments.
  */
+import type { IStoredPlanArtifactReader } from '@dvt/artifacts';
 import {
   parseExecutionPlan,
   type ExecutionPlan,
   type PlanRef,
   type RunExecutionPolicy,
+  type ScopedPlanRef,
 } from '@dvt/contracts';
 import { jcsCanonicalize } from '@dvt/crypto';
 
-import type { StoredPlanArtifact } from '../ports/IRunStateStore.js';
+import { type IClock, parseIsoUtcToEpochMs } from '../utils/clock.js';
 import { sha256Hex } from '../utils/sha256.js';
 
-/** Fetches raw executable plan bytes for engine-side integrity validation. */
-export interface IRawPlanFetcher {
-  fetch(planRef: PlanRef): Promise<StoredPlanArtifact>;
-}
-
 export class PlanIntegrityValidator {
+  private readonly clock: IClock;
+
+  constructor(args: { clock: IClock }) {
+    this.clock = args.clock;
+  }
+
   async fetchAndValidate(
-    planRef: PlanRef,
-    fetcher: IRawPlanFetcher
+    input: ScopedPlanRef,
+    fetcher: IStoredPlanArtifactReader
   ): Promise<{ plan: ExecutionPlan; executionPolicy: RunExecutionPolicy }> {
-    const artifact = await fetcher.fetch(planRef);
+    const planRef = input.planRef;
+    assertPlanRefNotExpired(planRef, this.clock);
+    const artifact = await fetcher.fetchStoredPlanArtifact(input);
     const bytes = artifact.bytes;
     validatePlanBytesAgainstRef(bytes, planRef);
     const plan = parseExecutablePlan(bytes);
@@ -40,6 +47,19 @@ export class PlanIntegrityValidator {
       plan,
       executionPolicy: artifact.executionPolicy,
     };
+  }
+}
+
+function assertPlanRefNotExpired(ref: PlanRef, clock: IClock): void {
+  if (ref.expiresAt === undefined) {
+    return;
+  }
+
+  const expiresAtEpochMs = parseIsoUtcToEpochMs(ref.expiresAt);
+  const nowIsoUtc = clock.nowIsoUtc();
+  const nowEpochMs = parseIsoUtcToEpochMs(nowIsoUtc);
+  if (expiresAtEpochMs <= nowEpochMs) {
+    throw new Error(`PLAN_REF_EXPIRED: expiresAt=${ref.expiresAt} now=${nowIsoUtc}`);
   }
 }
 

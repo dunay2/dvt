@@ -1,6 +1,6 @@
 id: R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT
 title: RC-G1 contract ownership migration can drift between tracker, proposal, and package moves
-status: Open
+status: Mitigated
 date: 2026-04-02
 owners:
   - packages/@dvt/contracts
@@ -14,14 +14,15 @@ context: >
   The reconciler runtime review identified contract ownership drift across the `engine`, `planner`,
   and `shared` taxonomy. The active proposal already existed, but the workboard tracker was missing
   and a local execution note reintroduced already-closed health work as if it were still open.
-  `RC-G1-B` closed the engine-owned portion of the migration and `RC-G1-C` has now completed the
-  delivery, traceability, and artifacts owner-package cutover. The remaining live scope is
-  planner-private `RC-G1-D`, plus regression risk that moved behavioral ports could leak back
-  through `@dvt/contracts`.
+  `RC-G1-B` closed the engine-owned portion of the migration, `RC-G1-C` completed the delivery,
+  traceability, and artifacts owner-package cutover, `RC-G1-D` closed the planner-private
+  behavior-port migration, and the 2026-05-14 parent closure removes the residual physical
+  shared-kernel engine behavior files plus the legacy generated root entrypoint drift.
 risk: >
-  Final planner-private moves or future convenience exports can still diverge between proposal, lane
-  tracker, and real package changes. That would weaken ADR-0018 / ADR-0034 boundaries, re-oversize
-  `@dvt/contracts`, and make the remaining ARC-2 migration work less auditable.
+  Future convenience exports could still diverge between proposal, lane tracker, and real package
+  changes. That would weaken ADR-0018 / ADR-0034 boundaries, re-oversize `@dvt/contracts`, and make
+  future ARC-2 migrations less auditable. This risk is now mitigated by physical hardcut, lint
+  guards, architecture tests, ARC evidence, and parent-task closure in the planning DB.
 mitigations:
   - Lane A now tracks the work explicitly as `RC-G1` with sequenced slices `RC-G1-A..D`.
   - The ownership proposal now freezes each affected family to `stay shared` or `move to owner`.
@@ -38,3 +39,19 @@ mitigations:
     `@dvt/delivery`, `@dvt/traceability-service`, and `@dvt/artifacts`, and extended lint guards so
     governed delivery/traceability/adapters/worker code fails if those imports reappear through
     `@dvt/contracts`.
+  - >-
+    `RC-G1-D` removes planner-private behavior ports from the shared kernel, republishes those ports
+    from `@dvt/planner`, redirects API and Postgres adapter consumers, and adds architecture tests
+    plus lint guards that keep shared serializable planner vocabulary distinct from planner-owned
+    behavior.
+  - >-
+    The 2026-05-14 `RC-G1` parent closure removes the residual
+    `packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts`,
+    `packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts`, and
+    `packages/@dvt/contracts/src/contracts/engine/IProjector.v1.ts` files, moves shared event and
+    snapshot vocabulary to `RunStateVocabulary.v1.ts`, and rewrites the tracked legacy
+    `packages/@dvt/contracts/index.js` entrypoint so it cannot re-export deleted adapter files.
+  - >-
+    `packages/@dvt/contracts/test/provider-adapter.architecture.test.ts` and
+    `packages/@dvt/contracts/test/run-state-store-maintenance-concurrency.architecture.test.ts` now
+    validate semantic ownership rather than only barrel thinness.

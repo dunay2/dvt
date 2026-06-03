@@ -15,8 +15,9 @@ function makeMetadata(
     planVersion: '1.0.0',
     logicalAttemptId: 1,
     providerRef: {
-      provider: 'mock' as const,
+      provider: 'temporal' as const,
       tenantId: 'tenant-1',
+      namespace: 'default',
       workflowId: `wf-${runId}`,
       runId: `pr-${runId}`,
     },

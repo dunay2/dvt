@@ -1,17 +1,24 @@
+import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { vi } from 'vitest';
 
-import { mockExecutionPlan } from '../../data/mockDbtData';
+import { mockExecutionPlan } from '../../../testing/fixtures/mockDbtData';
+import { createTestQueryClient } from '../../../testing/reactQueryHarness';
 import type { IPlansPort } from '../../ports/plans';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
-import type { IWorkspacePort } from '../../ports/workspace';
+import type {
+  IWorkspaceFileContentCommandPort,
+  IWorkspaceFilesQueryPort,
+} from '../../ports/workspace';
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
-import { makeMockRunRef, makeRunContext, nb } from '../../testing/contractTestUtils';
+import { makeRunContext, nb } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
+import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
+import type { CanvasExecutionDraftGraph } from './canvasExecutionActions.types';
 import { useCanvasExecutionActions } from './useCanvasExecutionActions';
 
 export type PreviewProvenanceConfig = Pick<
@@ -30,12 +37,15 @@ type ExecutionActionsHookCommonProps = Readonly<{
   onRunStarted: (runId: string) => void;
   sessionContext: SessionContextPort;
   shellFeedback: ShellFeedbackPort;
-  workspaceService: IWorkspacePort;
+  workspaceFilesQuery: IWorkspaceFilesQueryPort;
+  workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   previewProvenanceConfig: PreviewProvenanceConfig;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
+  executionStrategy: CanvasExecutionStrategy;
   selectedNodeIds: string[];
   workspaceNodeIds: string[];
+  flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
   canPlan: boolean;
   canRun: boolean;
   consolePanelVisible: boolean;
@@ -43,13 +53,17 @@ type ExecutionActionsHookCommonProps = Readonly<{
   toggleConsolePanel: () => void;
 }>;
 
-type ControlledExecutionActionsHookHostProps = Readonly<ExecutionActionsHookCommonProps & {
-  currentPlan: PlanViewModel | null;
-}>;
+type ControlledExecutionActionsHookHostProps = Readonly<
+  ExecutionActionsHookCommonProps & {
+    currentPlan: PlanViewModel | null;
+  }
+>;
 
-type StatefulExecutionActionsHookHostProps = Readonly<ExecutionActionsHookCommonProps & {
-  initialPlan: PlanViewModel | null;
-}>;
+type StatefulExecutionActionsHookHostProps = Readonly<
+  ExecutionActionsHookCommonProps & {
+    initialPlan: PlanViewModel | null;
+  }
+>;
 
 export type RenderExecutionActionsHarnessArgs = {
   plansService: IPlansPort;
@@ -60,12 +74,16 @@ export type RenderExecutionActionsHarnessArgs = {
   onRunStarted?: (runId: string) => void;
   sessionContext?: SessionContextPort;
   shellFeedback?: ShellFeedbackPort;
-  workspaceService?: IWorkspacePort;
+  workspaceFilesQuery?: IWorkspaceFilesQueryPort;
+  workspaceFileContentCommand?: IWorkspaceFileContentCommandPort;
   previewProvenanceConfig?: Partial<PreviewProvenanceConfig>;
   canonicalNodes?: CanonicalNode[];
   canonicalEdges?: CanonicalEdge[];
+  executionStrategy?: CanvasExecutionStrategy;
+  executionEnvironmentId?: string;
   selectedNodeIds?: string[];
   workspaceNodeIds?: string[];
+  flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
   canPlan?: boolean;
   canRun?: boolean;
   consolePanelVisible?: boolean;
@@ -85,8 +103,10 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   | 'onRunStarted'
   | 'sessionContext'
   | 'shellFeedback'
-  | 'workspaceService'
+  | 'workspaceFilesQuery'
+  | 'workspaceFileContentCommand'
   | 'previewProvenanceConfig'
+  | 'flushDraftForExecution'
   | 'canPlan'
   | 'canRun'
   | 'consolePanelVisible'
@@ -99,12 +119,16 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   onRunStarted: (runId: string) => void;
   sessionContext: SessionContextPort;
   shellFeedback: ShellFeedbackPort;
-  workspaceService: IWorkspacePort;
+  workspaceFilesQuery: IWorkspaceFilesQueryPort;
+  workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   previewProvenanceConfig: Partial<PreviewProvenanceConfig>;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
+  executionStrategy: CanvasExecutionStrategy;
+  executionEnvironmentId?: string;
   selectedNodeIds: string[];
   workspaceNodeIds?: string[];
+  flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
   canPlan: boolean;
   canRun: boolean;
   consolePanelVisible: boolean;
@@ -131,7 +155,12 @@ function ExecutionActionsHookView({
   return (
     <div>
       <div data-testid="plan-modal-state">{String(hook.planModalOpen)}</div>
+      <div data-testid="can-plan-graph">{String(hook.canPlanGraph)}</div>
       <div data-testid="can-start-run">{String(hook.canStartRun)}</div>
+      <div data-testid="plan-run-readiness-status">{hook.planRunReadiness.status}</div>
+      <div data-testid="plan-run-readiness-blockers">
+        {hook.planRunReadiness.blockers.join(',') || 'none'}
+      </div>
       <div data-testid="plan-status-summary">{hook.planStatusSummary}</div>
       <div data-testid="current-plan-sha">{currentPlan?.planRef?.sha256 ?? 'none'}</div>
       <button
@@ -190,17 +219,38 @@ function resolveCommonHookProps(
     onRunStarted: args.onRunStarted,
     sessionContext: args.sessionContext,
     shellFeedback: args.shellFeedback,
-    workspaceService: args.workspaceService,
+    workspaceFilesQuery: args.workspaceFilesQuery,
+    workspaceFileContentCommand: args.workspaceFileContentCommand,
     previewProvenanceConfig: args.previewProvenanceConfig as PreviewProvenanceConfig,
     canonicalNodes: args.canonicalNodes,
     canonicalEdges: args.canonicalEdges,
+    executionStrategy: args.executionStrategy,
+    ...(args.executionEnvironmentId == null
+      ? {}
+      : { executionEnvironmentId: args.executionEnvironmentId }),
     selectedNodeIds: args.selectedNodeIds,
     workspaceNodeIds: args.workspaceNodeIds ?? args.canonicalNodes.map((node) => node.id),
+    ...(args.flushDraftForExecution == null
+      ? {}
+      : { flushDraftForExecution: args.flushDraftForExecution }),
     canPlan: args.canPlan,
     canRun: args.canRun,
     consolePanelVisible: args.consolePanelVisible,
     setConsolePanelHeight: args.setConsolePanelHeight,
     toggleConsolePanel: args.toggleConsolePanel,
+  };
+}
+
+function resolveWorkspaceFilePortMocks(args: RenderExecutionActionsHarnessArgs): {
+  workspaceFilesQuery: IWorkspaceFilesQueryPort;
+  workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
+} {
+  const defaults = createWorkspaceFilePortMocks();
+
+  return {
+    workspaceFilesQuery: args.workspaceFilesQuery ?? defaults.workspaceFilesQuery,
+    workspaceFileContentCommand:
+      args.workspaceFileContentCommand ?? defaults.workspaceFileContentCommand,
   };
 }
 
@@ -215,10 +265,17 @@ function resolveHarnessArgs(
     onRunStarted: args.onRunStarted ?? vi.fn<(runId: string) => void>(),
     sessionContext: args.sessionContext ?? createSessionContext(),
     shellFeedback: args.shellFeedback ?? createShellFeedbackMock(),
-    workspaceService: args.workspaceService ?? createWorkspaceServiceMock(),
+    ...resolveWorkspaceFilePortMocks(args),
     previewProvenanceConfig: args.previewProvenanceConfig ?? DEFAULT_PREVIEW_PROVENANCE_CONFIG,
     canonicalNodes: args.canonicalNodes ?? buildCanonicalNodes(),
     canonicalEdges: args.canonicalEdges ?? buildCanonicalEdges(),
+    executionStrategy: args.executionStrategy ?? {
+      kind: 'transformation_preview',
+      previewProfile: 'transformation-sql-first-v1',
+    },
+    ...(args.executionEnvironmentId == null
+      ? {}
+      : { executionEnvironmentId: args.executionEnvironmentId }),
     selectedNodeIds: args.selectedNodeIds ?? [],
     canPlan: args.canPlan ?? true,
     canRun: args.canRun ?? true,
@@ -298,64 +355,39 @@ export function buildCanonicalEdges(): CanonicalEdge[] {
   ];
 }
 
-export function createWorkspaceServiceMock(
+export function createWorkspaceFilePortMocks(
   fileContents: Readonly<Record<string, string>> = DEFAULT_WORKSPACE_FILE_CONTENTS
-): IWorkspacePort {
+): {
+  workspaceFilesQuery: IWorkspaceFilesQueryPort;
+  workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
+} {
   return {
-    getGraphSnapshot: vi.fn(async () => ({ nodes: [], edges: [] })),
-    getGraphDraft: vi.fn(async () => null),
-    saveGraphDraft: vi.fn(async () => ({
-      outcome: 'saved' as const,
-      record: {
-        revision: 'rev-1',
-        savedAt: '2026-04-08T00:00:00Z',
-        draft: {
-          nodeIds: [],
-          nodePositions: {},
-          edges: [],
-        },
-      },
-    })),
-    getDiffChanges: vi.fn(async () => []),
-    getPlugins: vi.fn(async () => []),
-    getRoles: vi.fn(async () => []),
-    getAuditLog: vi.fn(async () => []),
-    listWarehouseConnections: vi.fn(async () => []),
-    listWarehouseTables: vi.fn(async () => []),
-    importSources: vi.fn(async () => ({
-      success: true as const,
-      sourcesCreated: 0,
-      tablesImported: 0,
-      yamlFiles: [],
-      grouping: 'schema' as const,
-      options: {
-        includeColumns: false,
-        addTests: false,
-        addFreshness: false,
-      },
-    })),
-    listFiles: vi.fn(async () => []),
-    getFileContent: vi.fn(async (path: string) => {
-      const content = fileContents[path];
-      if (content === undefined) {
-        throw new Error(`Workspace file not found: ${path}`);
-      }
+    workspaceFilesQuery: {
+      listFiles: vi.fn(async () => []),
+      getFileContent: vi.fn(async (path: string) => {
+        const content = fileContents[path];
+        if (content === undefined) {
+          throw new Error(`Workspace file not found: ${path}`);
+        }
 
-      return {
+        return {
+          path,
+          name: path.split('/').at(-1) ?? path,
+          language: path.endsWith('.sql') ? 'sql' : 'yaml',
+          content,
+          lastModified: '2026-04-08T00:00:00Z',
+        };
+      }),
+    },
+    workspaceFileContentCommand: {
+      saveFileContent: vi.fn(async (path: string, content: string) => ({
         path,
         name: path.split('/').at(-1) ?? path,
         language: path.endsWith('.sql') ? 'sql' : 'yaml',
         content,
         lastModified: '2026-04-08T00:00:00Z',
-      };
-    }),
-    saveFileContent: vi.fn(async (path: string, content: string) => ({
-      path,
-      name: path.split('/').at(-1) ?? path,
-      language: path.endsWith('.sql') ? 'sql' : 'yaml',
-      content,
-      lastModified: '2026-04-08T00:00:00Z',
-    })),
+      })),
+    },
   };
 }
 
@@ -370,13 +402,7 @@ export function createRunsServiceMock(overrides: Partial<IRunsPort> = {}): IRuns
   return {
     listRunSummaries: vi.fn(async () => []),
     getRunSnapshot: vi.fn(async () => null),
-    startRun: vi.fn(async () =>
-      makeMockRunRef({
-        tenantId: 't',
-        workflowId: 'w',
-        runId: 'run',
-      })
-    ),
+    startRun: vi.fn(async () => ({ runId: 'run', accepted: true })),
     listRunEvents: vi.fn(async () => ({ events: [] })),
     ...overrides,
   };
@@ -399,9 +425,7 @@ function requireMockExecutionPlanRef(): NonNullable<typeof mockExecutionPlan.pla
   return planRef;
 }
 
-export function createSessionContext(
-  targetAdapter: 'mock' | 'temporal' = 'mock'
-): SessionContextPort {
+export function createSessionContext(targetAdapter: 'temporal' = 'temporal'): SessionContextPort {
   return {
     getWorkspaceScope: () => ({
       tenantId: 'tenant',
@@ -438,14 +462,15 @@ export function buildRunnableExecutionPlan(sha: string = 'c'.repeat(64)): PlanVi
 
 export function buildPersistedPreviewPlan(): PlanViewModel {
   const persistedSha = 'c'.repeat(64);
+  const runnablePlan = buildRunnableExecutionPlan(persistedSha);
 
   return {
-    ...buildRunnableExecutionPlan(persistedSha),
+    ...runnablePlan,
     preview: {
       ...mockExecutionPlan.preview,
       persisted: {
         ...mockExecutionPlan.preview?.persisted,
-        planRecordId: 'plan-record-abc123',
+        planRecordId: runnablePlan.planId,
         canonicalPlanSha256: persistedSha,
       },
     },
@@ -463,23 +488,28 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
   onRunStarted: ResolvedExecutionActionsHarnessArgs['onRunStarted'];
   sessionContext: SessionContextPort;
   shellFeedback: ResolvedExecutionActionsHarnessArgs['shellFeedback'];
-  workspaceService: IWorkspacePort;
+  workspaceFilesQuery: IWorkspaceFilesQueryPort;
+  workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   setConsolePanelHeight: ResolvedExecutionActionsHarnessArgs['setConsolePanelHeight'];
   toggleConsolePanel: ResolvedExecutionActionsHarnessArgs['toggleConsolePanel'];
+  queryClient: QueryClient;
 } {
   let currentArgs = resolveHarnessArgs(initialArgs);
   const container = document.createElement('div');
   document.body.appendChild(container);
   const root: Root = createRoot(container);
+  const queryClient = createTestQueryClient();
 
   function buildElement(): React.JSX.Element {
     const commonProps = resolveCommonHookProps(currentArgs);
 
-    return currentArgs.stateful ? (
+    const host = currentArgs.stateful ? (
       <StatefulExecutionActionsHookHost {...commonProps} initialPlan={currentArgs.initialPlan} />
     ) : (
       <ControlledExecutionActionsHookHost {...commonProps} currentPlan={currentArgs.currentPlan} />
     );
+
+    return <QueryClientProvider client={queryClient}>{host}</QueryClientProvider>;
   }
 
   function queryButton(index: number): Element | null {
@@ -523,25 +553,21 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
     onRunStarted: currentArgs.onRunStarted,
     sessionContext: currentArgs.sessionContext,
     shellFeedback: currentArgs.shellFeedback,
-    workspaceService: currentArgs.workspaceService,
+    workspaceFilesQuery: currentArgs.workspaceFilesQuery,
+    workspaceFileContentCommand: currentArgs.workspaceFileContentCommand,
     setConsolePanelHeight: currentArgs.setConsolePanelHeight,
     toggleConsolePanel: currentArgs.toggleConsolePanel,
+    queryClient,
   };
 }
 
 export function resetExecutionActionsTestDoubles() {
-  (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+  (
+    globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
+  ).IS_REACT_ACT_ENVIRONMENT = true;
 }
 
 export function restoreExecutionActionsTestDoubles() {
   vi.clearAllMocks();
   vi.useRealTimers();
 }
-
-
-
-
-
-
-
-

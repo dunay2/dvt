@@ -75,4 +75,40 @@ describe('useCanvasGraphHandlers layout', () => {
 
     harness.cleanup();
   });
+
+  it('snaps auto-layout coordinates to the governed grid when snap is enabled', async () => {
+    const setNodes = vi.fn();
+    const onLayoutComplete = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      canvasSnapToGrid: true,
+      gridSize: 24,
+      setNodes,
+      onLayoutComplete,
+    });
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.handleAutoLayout();
+    });
+
+    const layoutedNodes = setNodes.mock.calls[0]?.[0] as Array<{
+      position: { x: number; y: number };
+    }>;
+    const layoutPositions = onLayoutComplete.mock.calls[0]?.[0] as Record<
+      string,
+      { x: number; y: number }
+    >;
+
+    expect(
+      layoutedNodes.every((node) => node.position.x % 24 === 0 && node.position.y % 24 === 0)
+    ).toBe(true);
+    expect(
+      Object.values(layoutPositions).every(
+        (position) => position.x % 24 === 0 && position.y % 24 === 0
+      )
+    ).toBe(true);
+
+    harness.cleanup();
+  });
 });

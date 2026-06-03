@@ -2,6 +2,7 @@ name: Test Suite
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
   push:
     branches: [main]
   workflow_dispatch:
@@ -15,17 +16,35 @@ concurrency:
     github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
 jobs:
-  test:
-    name: Run Tests
+  detect_test_matrix:
+    name: Detect package test matrix
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 5
     if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
+    outputs:
+      any_tests: ${{ steps.matrix.outputs.any_tests }}
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      adapter_temporal: ${{ steps.scope.outputs.adapter_temporal }}
+      web: ${{ steps.scope.outputs.web }}
+      root_build_sensitive: ${{ steps.scope.outputs.root_build_sensitive }}
+      determinism_relevant: ${{ steps.scope.outputs.determinism_relevant }}
+      coverage_relevant: ${{ steps.scope.outputs.coverage_relevant }}
+      postgres_capability_changed: ${{ steps.scope.outputs.postgres_capability_changed }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
+          fetch-depth: 1
+
+      - name: Fetch pull-request base ref
+        uses: ./.github/actions/fetch-scope-base
+        with:
+          base-ref: ${{ github.base_ref }}
 
       - name: Validate workflow scope policy JSON
         run: node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json
@@ -37,352 +56,130 @@ jobs:
           GIT_BASE: origin/${{ github.base_ref }}
           GIT_HEAD: ${{ github.sha }}
 
+      - name: Build package test matrix
+        id: matrix
+        run: node tools/ci/emit-test-matrix.mjs
+        env:
+          GIT_BASE: origin/${{ github.base_ref }}
+          GIT_HEAD: ${{ github.sha }}
+
+  package-tests:
+    name: Package Tests (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [detect_test_matrix]
+    if: github.event_name != 'pull_request' || needs.detect_test_matrix.outputs.any_tests == 'true'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.detect_test_matrix.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 1
+
       - name: Setup pnpm, cache and dependencies
-        if: github.event_name != 'pull_request' || steps.scope.outputs.any_test == 'true'
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
 
-      - name: Build root graph (once, before tests)
-        if: github.event_name != 'pull_request'
-        run: pnpm build
+      - name: Build package dependency graph
+        run: node scripts/run-turbo-workspace-task.cjs build --filter=${{ matrix.pkg }}
 
-      - name: Run tests (push/workflow_dispatch full suite)
-        if: github.event_name != 'pull_request'
-        run: pnpm -r --workspace-concurrency=4 test
+      - name: Run package tests
+        run: ${{ matrix.command }}
         env:
           DVT_CI: '1'
 
-      - name: Build affected dependency graphs (PR only)
-        if: github.event_name == 'pull_request' && steps.scope.outputs.any_test == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
+  adapter-temporal:
+    name: Adapter Temporal Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [detect_test_matrix]
+    if: >-
+      !(github.event_name == 'pull_request' && github.event.pull_request.draft) &&
+      (github.event_name != 'pull_request' ||
+       needs.detect_test_matrix.outputs.adapter_temporal == 'true' ||
+       needs.detect_test_matrix.outputs.root_build_sensitive == 'true')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 1
 
-          if [[ "${{ steps.scope.outputs.root_config }}" == "true" ]]; then
-            pnpm build
-            exit 0
-          fi
+      - name: Setup pnpm, cache and dependencies
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 22.x
 
-          declare -A seen
+      - name: Build adapter-temporal dependency graph
+        run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/adapter-temporal^...
 
-          run_once() {
-            local cmd="$1"
-            if [[ -n "${seen[$cmd]+x}" ]]; then
-              return
-            fi
-
-            seen[$cmd]=1
-            echo ">> $cmd"
-            eval "$cmd"
-          }
-
-          if [[ "${{ steps.scope.outputs.web }}" == "true" ]]; then
-            run_once 'pnpm --filter "@dvt/web^..." --workspace-concurrency=4 build'
-          fi
-
-          if [[ "${{ steps.scope.outputs.engine }}" == "true" ]]; then
-            run_once 'pnpm --filter "@dvt/engine^..." --workspace-concurrency=4 build'
-          fi
-
-          if [[ "${{ steps.scope.outputs.adapter_temporal }}" == "true" ]]; then
-            run_once 'pnpm --filter "@dvt/adapter-temporal^..." --workspace-concurrency=4 build'
-          fi
-
-          if [[ "${{ steps.scope.outputs.api }}" == "true" ]]; then
-            run_once 'pnpm --filter "dvt-api^..." --workspace-concurrency=4 build'
-          fi
-
-          if [[ "${{ steps.scope.outputs.contracts }}" == "true" ]]; then
-            run_once 'pnpm --filter "@dvt/contracts^..." --workspace-concurrency=4 build'
-          fi
-
-          if [[ "${{ steps.scope.outputs.cli }}" == "true" ]]; then
-            run_once 'pnpm --filter "@dvt/cli^..." --workspace-concurrency=4 build'
-          fi
-
-          if [[ "${{ steps.scope.outputs.planner }}" == "true" || "${{ steps.scope.outputs.contracts }}" == "true" ]]; then
-            run_once 'pnpm --filter "@dvt/planner^..." --workspace-concurrency=4 build'
-          fi
-
-          if [[ "${{ steps.scope.outputs.delivery }}" == "true" ]]; then
-            run_once 'pnpm --filter "@dvt/delivery^..." --workspace-concurrency=4 build'
-          fi
-
-          if [[ "${{ steps.scope.outputs.dsl }}" == "true" ]]; then
-            run_once 'pnpm --filter "@dvt/dsl^..." --workspace-concurrency=4 build'
-          fi
-
-          if [[ "${{ steps.scope.outputs.observability }}" == "true" ]]; then
-            run_once 'pnpm --filter "@dvt/observability^..." --workspace-concurrency=4 build'
-          fi
-
-          if [[ "${{ steps.scope.outputs.observability_otel }}" == "true" ]]; then
-            run_once 'pnpm --filter "@dvt/observability-otel^..." --workspace-concurrency=4 build'
-          fi
-
-          if [[ "${{ steps.scope.outputs.plan_interpreter }}" == "true" ]]; then
-            run_once 'pnpm --filter "@dvt/plan-interpreter^..." --workspace-concurrency=4 build'
-          fi
-
-          if [[ "${{ steps.scope.outputs.plan_verifier }}" == "true" ]]; then
-            run_once 'pnpm --filter "@dvt/plan-verifier^..." --workspace-concurrency=4 build'
-          fi
-
-          if [[ "${{ steps.scope.outputs.run_domain }}" == "true" ]]; then
-            run_once 'pnpm --filter "@dvt/run-domain^..." --workspace-concurrency=4 build'
-          fi
-
-          if [[ "${{ steps.scope.outputs.state_store }}" == "true" ]]; then
-            run_once 'pnpm --filter "@dvt/state-store^..." --workspace-concurrency=4 build'
-          fi
-
-          if [[ "${{ steps.scope.outputs.artifacts }}" == "true" ]]; then
-            run_once 'pnpm --filter "@dvt/artifacts^..." --workspace-concurrency=4 build'
-          fi
-
-          if [[ "${{ steps.scope.outputs.crypto }}" == "true" ]]; then
-            run_once 'pnpm --filter "@dvt/crypto^..." --workspace-concurrency=4 build'
-          fi
-
-          if [[ "${{ steps.scope.outputs.traceability_service }}" == "true" ]]; then
-            run_once 'pnpm --filter "@dvt/traceability-service^..." --workspace-concurrency=4 build'
-          fi
-
-          if [[ "${{ steps.scope.outputs.lineage_worker }}" == "true" ]]; then
-            run_once 'pnpm --filter "dvt-lineage-worker^..." --workspace-concurrency=4 build'
-          fi
-
-          if [[ "${{ steps.scope.outputs.outbox_worker }}" == "true" ]]; then
-            run_once 'pnpm --filter "dvt-outbox-worker^..." --workspace-concurrency=4 build'
-          fi
-
-          if [[ "${{ steps.scope.outputs.projector_worker }}" == "true" ]]; then
-            run_once 'pnpm --filter "dvt-projector-worker^..." --workspace-concurrency=4 build'
-          fi
-
-          if [[ "${{ steps.scope.outputs.temporal_worker }}" == "true" ]]; then
-            run_once 'pnpm --filter "dvt-temporal-worker^..." --workspace-concurrency=4 build'
-          fi
-
-      - name: Run web tests (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.scope.outputs.web == 'true' ||
-          steps.scope.outputs.root_config == 'true')
-        run: pnpm test:web
-        env:
-          DVT_CI: '1'
-
-      - name: Run engine tests (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.scope.outputs.engine == 'true' ||
-          steps.scope.outputs.root_config == 'true')
-        run: pnpm test:engine
-        env:
-          DVT_CI: '1'
-
-      - name: Run contracts tests (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.scope.outputs.contracts == 'true' ||
-          steps.scope.outputs.root_config == 'true')
-        run: pnpm test:contracts
-
-      - name: Run adapter-temporal tests (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.scope.outputs.adapter_temporal == 'true' ||
-          steps.scope.outputs.root_config == 'true')
+      - name: Run adapter-temporal tests
         run: pnpm test:adapter-temporal
         env:
           DVT_CI: '1'
 
-      - name: Run cli tests (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.scope.outputs.cli == 'true' ||
-          steps.scope.outputs.root_config == 'true')
-        run: pnpm test:cli
-
-      - name: Run api tests (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.scope.outputs.api == 'true' ||
-          steps.scope.outputs.root_config == 'true')
-        run: pnpm test:api
-        env:
-          DVT_CI: '1'
-
-      - name: Run planner tests (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.scope.outputs.planner == 'true' ||
-          steps.scope.outputs.contracts == 'true' || steps.scope.outputs.root_config == 'true')
-        run: pnpm test:planner
-        env:
-          DVT_CI: '1'
-
-      - name: Run delivery tests (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.scope.outputs.delivery == 'true' ||
-          steps.scope.outputs.root_config == 'true')
-        run: pnpm --filter @dvt/delivery test
-        env:
-          DVT_CI: '1'
-
-      - name: Run dsl tests (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.scope.outputs.dsl == 'true' ||
-          steps.scope.outputs.root_config == 'true')
-        run: pnpm --filter @dvt/dsl test
-        env:
-          DVT_CI: '1'
-
-      - name: Run observability tests (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.scope.outputs.observability == 'true' ||
-          steps.scope.outputs.root_config == 'true')
-        run: pnpm --filter @dvt/observability test
-        env:
-          DVT_CI: '1'
-
-      - name: Run observability-otel tests (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.scope.outputs.observability_otel == 'true'
-          || steps.scope.outputs.root_config == 'true')
-        run: pnpm --filter @dvt/observability-otel test
-        env:
-          DVT_CI: '1'
-
-      - name: Run plan-interpreter tests (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.scope.outputs.plan_interpreter == 'true' ||
-          steps.scope.outputs.root_config == 'true')
-        run: pnpm --filter @dvt/plan-interpreter test
-        env:
-          DVT_CI: '1'
-
-      - name: Run plan-verifier tests (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.scope.outputs.plan_verifier == 'true' ||
-          steps.scope.outputs.root_config == 'true')
-        run: pnpm --filter @dvt/plan-verifier test
-        env:
-          DVT_CI: '1'
-
-      - name: Run run-domain tests (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.scope.outputs.run_domain == 'true' ||
-          steps.scope.outputs.root_config == 'true')
-        run: pnpm --filter @dvt/run-domain test
-        env:
-          DVT_CI: '1'
-
-      - name: Run state-store tests (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.scope.outputs.state_store == 'true' ||
-          steps.scope.outputs.root_config == 'true')
-        run: pnpm --filter @dvt/state-store test
-        env:
-          DVT_CI: '1'
-
-      - name: Run artifacts tests (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.scope.outputs.artifacts == 'true' ||
-          steps.scope.outputs.root_config == 'true')
-        run: pnpm --filter @dvt/artifacts test
-        env:
-          DVT_CI: '1'
-
-      - name: Run crypto tests (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.scope.outputs.crypto == 'true' ||
-          steps.scope.outputs.root_config == 'true')
-        run: pnpm --filter @dvt/crypto test
-        env:
-          DVT_CI: '1'
-
-      - name: Run traceability-service tests (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.scope.outputs.traceability_service == 'true'
-          || steps.scope.outputs.root_config == 'true')
-        run: pnpm --filter @dvt/traceability-service test
-        env:
-          DVT_CI: '1'
-
-      - name: Run lineage-worker tests (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.scope.outputs.lineage_worker == 'true' ||
-          steps.scope.outputs.root_config == 'true')
-        run: pnpm --filter dvt-lineage-worker test
-        env:
-          DVT_CI: '1'
-
-      - name: Run outbox-worker tests (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.scope.outputs.outbox_worker == 'true' ||
-          steps.scope.outputs.root_config == 'true')
-        run: pnpm --filter dvt-outbox-worker test
-        env:
-          DVT_CI: '1'
-
-      - name: Run projector-worker tests (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.scope.outputs.projector_worker == 'true' ||
-          steps.scope.outputs.root_config == 'true')
-        run: pnpm --filter dvt-projector-worker test
-        env:
-          DVT_CI: '1'
-
-      - name: Run temporal-worker tests (affected package)
-        if:
-          github.event_name == 'pull_request' && (steps.scope.outputs.temporal_worker == 'true' ||
-          steps.scope.outputs.root_config == 'true')
-        run: pnpm --filter dvt-temporal-worker test
-        env:
-          DVT_CI: '1'
-
-  detect-pg-scope:
-    name: Detect adapter-postgres scope
+  web-frontend-tests:
+    name: Web Frontend Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 5
-    if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
-    outputs:
-      adapter_postgres_changed:
-        ${{ steps.changes.outputs.adapter_postgres_relevant || steps.push_all.outputs.changed }}
+    timeout-minutes: 15
+    needs: [detect_test_matrix]
+    if: >-
+      !(github.event_name == 'pull_request' && github.event.pull_request.draft) &&
+      (github.event_name != 'pull_request' || needs.detect_test_matrix.outputs.web == 'true' ||
+       needs.detect_test_matrix.outputs.root_build_sensitive == 'true')
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-
-      - name: Mark all changed (push/dispatch — no diff available)
-        id: push_all
-        if: github.event_name != 'pull_request'
-        run: echo "changed=true" >> $GITHUB_OUTPUT
-
-      - name: Generate adapter-postgres filters
-        id: filters
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "filters<<EOF" >> $GITHUB_OUTPUT
-          node .github/scripts/generate-paths-filter.js tools/ci/policy/adapter-postgres-relevance.json adapter_postgres_relevant >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Detect adapter-postgres changes
-        id: changes
-        if: github.event_name == 'pull_request'
-        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4
         with:
-          filters: ${{ steps.filters.outputs.filters }}
+          fetch-depth: 1
+
+      - name: Fetch pull-request base ref
+        uses: ./.github/actions/fetch-scope-base
+        with:
+          base-ref: ${{ github.base_ref }}
+
+      - name: Setup pnpm, cache and dependencies
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 22.x
+
+      - name: Build web dependency graph
+        run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/web^...
+
+      - name: Run governed web Vitest changed suites (PR)
+        if:
+          github.event_name == 'pull_request' && needs.detect_test_matrix.outputs.web == 'true' &&
+          needs.detect_test_matrix.outputs.root_build_sensitive != 'true'
+        run: pnpm test:web:changed
+        env:
+          DVT_CI: '1'
+          GIT_BASE: origin/${{ github.base_ref }}
+          GIT_HEAD: ${{ github.sha }}
+
+      - name: Run governed web Vitest primary suites
+        if:
+          github.event_name != 'pull_request' ||
+          needs.detect_test_matrix.outputs.root_build_sensitive == 'true'
+        run: pnpm test:web:ci
+        env:
+          DVT_CI: '1'
 
   adapter-postgres:
     name: Adapter Postgres Tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [detect-pg-scope]
-    if:
-      needs.detect-pg-scope.result == 'success' &&
-      needs.detect-pg-scope.outputs.adapter_postgres_changed == 'true'
+    needs: [detect_test_matrix]
+    if: >-
+      github.event_name != 'pull_request' ||
+      needs.detect_test_matrix.outputs.postgres_capability_changed == 'true'
     services:
       postgres:
         image: postgres:15
         env:
           POSTGRES_USER: dvt_test
-          POSTGRES_PASSWORD: dvt_test
+          POSTGRES_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}
           POSTGRES_DB: dvt_test
         options: >-
           --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
@@ -391,7 +188,17 @@ jobs:
     env:
       DVT_CI: '1'
       DVT_PG_INTEGRATION: '1'
-      DATABASE_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
+      DVT_PG_ADMIN_URL:
+        postgresql://dvt_test:${{ github.run_id }}-${{ github.run_attempt }}@localhost:5432/dvt_test
+      DVT_PG_APP_USER: dvt_app
+      DVT_PG_APP_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}-app
+      DVT_PG_RLS_URL:
+        postgresql://dvt_app:${{ github.run_id }}-${{ github.run_attempt
+        }}-app@localhost:5432/dvt_test
+      DVT_PG_URL:
+        postgresql://dvt_test:${{ github.run_id }}-${{ github.run_attempt }}@localhost:5432/dvt_test
+      DATABASE_URL:
+        postgresql://dvt_test:${{ github.run_id }}-${{ github.run_attempt }}@localhost:5432/dvt_test
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -401,11 +208,19 @@ jobs:
         with:
           node-version: 22.x
 
+      - name: Provision non-bypass Postgres app role
+        run: node scripts/provision-postgres-app-role.cjs
+
       - name: Enforce adapter-postgres import alias guard
         run: node --test tools/ci/adapter-postgres-import-alias-regression.test.mjs
 
       - name: Build adapter-postgres dependency graph
-        run: pnpm --workspace-concurrency=4 --filter @dvt/adapter-postgres... --if-present run build
+        run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/adapter-postgres...
+
+      - name: Prove adapter-postgres app-role runtime and direct RLS
+        run:
+          pnpm --filter @dvt/adapter-postgres test -- PostgresAppRoleRuntime.integration.test.ts
+          PostgresTenantRlsEnforcement.integration.test.ts
 
       - name: Run adapter-postgres full suite
         run: pnpm test:adapter-postgres
@@ -414,51 +229,31 @@ jobs:
     name: Determinism Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
+    needs: [detect_test_matrix]
+    if: >-
+      !(github.event_name == 'pull_request' && github.event.pull_request.draft) &&
+      (github.event_name != 'pull_request' ||
+       needs.detect_test_matrix.outputs.determinism_relevant == 'true')
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-
-      - name: Detect determinism-relevant changes (PR only)
-        id: det_changes
-        if: github.event_name == 'pull_request'
-        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4
         with:
-          filters: |
-            determinism_relevant:
-              - 'packages/@dvt/engine/**'
-              - 'packages/@dvt/contracts/**'
-              - 'package.json'
-              - 'pnpm-lock.yaml'
-              - 'pnpm-workspace.yaml'
-              - '.github/workflows/test.yml'
+          fetch-depth: 1
 
       - name: Setup pnpm, cache and dependencies
-        if:
-          github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
-          'true'
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
 
       - name: Build engine dependency graph (once, before tests)
-        if:
-          github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
-          'true'
-        run: pnpm --filter "@dvt/engine^..." --workspace-concurrency=4 build
+        run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/engine^...
 
       - name: Run determinism tests
-        if:
-          github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
-          'true'
         run: pnpm test:determinism
         env:
           DVT_CI: '1'
 
       - name: Verify replay consistency
-        if:
-          github.event_name != 'pull_request' || steps.det_changes.outputs.determinism_relevant ==
-          'true'
         run: pnpm test:replay
         env:
           DVT_CI: '1'
@@ -467,43 +262,26 @@ jobs:
     name: Engine Coverage Gate
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
+    needs: [detect_test_matrix]
+    if: >-
+      !(github.event_name == 'pull_request' && github.event.pull_request.draft) &&
+      (github.event_name != 'pull_request' ||
+       needs.detect_test_matrix.outputs.coverage_relevant == 'true')
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-
-      - name: Detect coverage-relevant changes (PR only)
-        id: cov_changes
-        if: github.event_name == 'pull_request'
-        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4
         with:
-          filters: |
-            coverage_relevant:
-              - 'packages/@dvt/engine/src/**'
-              - 'packages/@dvt/engine/test/**'
-              - 'package.json'
-              - 'pnpm-lock.yaml'
-              - 'vitest.config.ts'
-              - '.github/workflows/test.yml'
+          fetch-depth: 1
 
       - name: Setup pnpm, cache and dependencies
-        if:
-          github.event_name != 'pull_request' || steps.cov_changes.outputs.coverage_relevant ==
-          'true'
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
 
       - name: Build engine dependency graph (once, before tests)
-        if:
-          github.event_name != 'pull_request' || steps.cov_changes.outputs.coverage_relevant ==
-          'true'
-        run: pnpm --filter "@dvt/engine^..." --workspace-concurrency=4 build
+        run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/engine^...
 
       - name: Run engine coverage (with threshold enforcement)
-        if:
-          github.event_name != 'pull_request' || steps.cov_changes.outputs.coverage_relevant ==
-          'true'
         run: pnpm test:coverage:engine
         env:
           DVT_CI: '1'

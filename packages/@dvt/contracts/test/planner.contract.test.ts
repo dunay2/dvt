@@ -4,6 +4,7 @@ import { URL } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
+import type { ExecutionPlan as EngineVisibleExecutionPlan } from '../src/contracts/engine/RunStateVocabulary.v1.js';
 import {
   type ExecutionPlan,
   GENERIC_GRAPH_SOURCE_KIND,
@@ -11,7 +12,6 @@ import {
   type PlannerInputEnvelopeV1,
 } from '../src/contracts/planner/ExecutionPlan.v1.js';
 import { type IPlanner } from '../src/contracts/planner/IExecutionPlanner.v1.js';
-import type { ExecutionPlan as EngineVisibleExecutionPlan } from '../src/engine/IRunStateStore.v1.js';
 import { CURRENT_EXECUTION_PLAN_VERSION } from '../src/index.js';
 import {
   ExecutionPlanSchema,
@@ -26,8 +26,8 @@ import {
   INVALID_NO_GRAPH_SOURCE_PLANNER_INPUT_FIXTURE,
   INVALID_PLANNER_INPUT_FIXTURE,
   NO_SOURCE_PLANNER_INPUT_FIXTURE,
-  VALID_EXECUTION_PLAN_V2_FIXTURE,
-  VALID_PLANNER_BUILD_RESULT_V2_FIXTURE,
+  VALID_EXECUTION_PLAN_V1_FIXTURE,
+  VALID_PLANNER_BUILD_RESULT_V1_FIXTURE,
   VALID_PLANNER_INPUT_FIXTURE,
 } from './fixtures/planner-contract.fixtures';
 
@@ -44,16 +44,19 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
     const planner: IPlanner = {
       async buildPlan(input) {
         return PlannerBuildResultV1Schema.parse({
-          ...VALID_PLANNER_BUILD_RESULT_V2_FIXTURE,
+          ...VALID_PLANNER_BUILD_RESULT_V1_FIXTURE,
           plan: {
-            ...VALID_PLANNER_BUILD_RESULT_V2_FIXTURE.plan,
+            ...VALID_PLANNER_BUILD_RESULT_V1_FIXTURE.plan,
             metadata: {
-              ...VALID_PLANNER_BUILD_RESULT_V2_FIXTURE.plan.metadata,
+              ...VALID_PLANNER_BUILD_RESULT_V1_FIXTURE.plan.metadata,
               ownership: input.ownership,
             },
             observability: input.observability,
           },
         }) as PlannerBuildResultV1;
+      },
+      deriveExecutableSubgraph() {
+        throw new Error('not used in this contract test');
       },
     };
 
@@ -128,9 +131,9 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
   });
 
   it('valida schema del ExecutionPlan canónico versionado', () => {
-    const plan = ExecutionPlanSchema.parse(VALID_EXECUTION_PLAN_V2_FIXTURE);
+    const plan = ExecutionPlanSchema.parse(VALID_EXECUTION_PLAN_V1_FIXTURE);
     expect(plan.metadata.planVersion).toBe(CURRENT_EXECUTION_PLAN_VERSION);
-    expect(plan.metadata.schemaVersion).toBe('v1.2');
+    expect(plan.metadata.schemaVersion).toBe('1.0');
     expect(plan.metadata.contractVersion).toBe('1.0.0');
     expect(plan.metadata.planId).toMatch(/^[a-f0-9]{64}$/);
     expect(plan.metadata.ownership).toEqual(VALID_PLANNER_INPUT_FIXTURE.ownership);
@@ -147,17 +150,17 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
   });
 
   it('mantiene una sola identidad pública entre planner y engine', () => {
-    const plannerPlan = VALID_EXECUTION_PLAN_V2_FIXTURE satisfies ExecutionPlan;
+    const plannerPlan = VALID_EXECUTION_PLAN_V1_FIXTURE satisfies ExecutionPlan;
     const engineVisible: EngineVisibleExecutionPlan = plannerPlan;
 
-    expect(engineVisible.metadata.planId).toBe(VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.planId);
+    expect(engineVisible.metadata.planId).toBe(VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId);
     expect(engineVisible.metadata.createdAtIso).toBe(
-      VALID_EXECUTION_PLAN_V2_FIXTURE.metadata.createdAtIso
+      VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.createdAtIso
     );
   });
 
   it('valida schema de PlannerBuildResultV1 con canonicalPlanCoreJson', () => {
-    const result = PlannerBuildResultV1Schema.parse(VALID_PLANNER_BUILD_RESULT_V2_FIXTURE);
+    const result = PlannerBuildResultV1Schema.parse(VALID_PLANNER_BUILD_RESULT_V1_FIXTURE);
     expect(result.executionPolicy.requiresCapabilities).toEqual(['basic-execution']);
     expect(result.canonicalPlanCoreJson).toContain(
       `"planVersion":"${CURRENT_EXECUTION_PLAN_VERSION}"`
@@ -166,13 +169,13 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
 
   it('rechaza PlannerBuildResultV1 cuando canonicalPlanCoreJson no coincide con plan', () => {
     const result = PlannerBuildResultV1Schema.safeParse({
-      ...VALID_PLANNER_BUILD_RESULT_V2_FIXTURE,
+      ...VALID_PLANNER_BUILD_RESULT_V1_FIXTURE,
       canonicalPlanCoreJson: JSON.stringify({
         metadata: {
           planVersion: CURRENT_EXECUTION_PLAN_VERSION,
           inputHashSha256: 'c'.repeat(64),
         },
-        steps: VALID_EXECUTION_PLAN_V2_FIXTURE.steps,
+        steps: VALID_EXECUTION_PLAN_V1_FIXTURE.steps,
       }),
     });
 
@@ -182,11 +185,11 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
   it('rechaza parsePlannerBuildResultV1 cuando planId no coincide con sha256(canonicalPlanCoreJson)', async () => {
     await expect(
       parsePlannerBuildResultV1({
-        ...VALID_PLANNER_BUILD_RESULT_V2_FIXTURE,
+        ...VALID_PLANNER_BUILD_RESULT_V1_FIXTURE,
         plan: {
-          ...VALID_PLANNER_BUILD_RESULT_V2_FIXTURE.plan,
+          ...VALID_PLANNER_BUILD_RESULT_V1_FIXTURE.plan,
           metadata: {
-            ...VALID_PLANNER_BUILD_RESULT_V2_FIXTURE.plan.metadata,
+            ...VALID_PLANNER_BUILD_RESULT_V1_FIXTURE.plan.metadata,
             planId: 'f'.repeat(64),
           },
         },
@@ -223,7 +226,7 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
         plan: {
           metadata: {
             planVersion: '1.0',
-            schemaVersion: 'v1.2',
+            schemaVersion: '1.0',
             contractVersion: '1.0.0',
             inputHashSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
             planId,

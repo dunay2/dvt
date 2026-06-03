@@ -8,8 +8,9 @@
  * @version 1.0.0
  * @date 2026-04-07
  */
-import type { EventType } from '../../engine/IRunStateStore.v1.js';
 import type { SignalType } from '../../types/contracts.js';
+
+import type { EventType } from './RunStateVocabulary.v1.js';
 
 export type SignalSemanticsVersion = '1.0.0';
 

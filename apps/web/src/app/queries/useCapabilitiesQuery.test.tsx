@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import { createElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -55,7 +56,7 @@ describe('useCapabilitiesQuery', () => {
     }
 
     const mounted = await withTestQueryClient(
-      <AppServicesProvider overrides={{ mode: 'mock', capabilitiesPort }}>
+      <AppServicesProvider overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
         <Probe />
       </AppServicesProvider>
     );

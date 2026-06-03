@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { createAppServicesTestOverrides } from '../../../testing/appServicesTestDoubles';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -7,8 +8,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { IRunsPort, RunSummaryItem, RunSnapshot } from '../../ports/runs';
 import type { SessionContextPort, WorkspaceScope } from '../../ports/sessionContext';
+import {
+  getRunStatusRefreshInterval,
+  RUNS_STATUS_REFRESH_INTERVAL_MS,
+} from '../../queries/runsQueries';
 import { AppServicesProvider } from '../../services/AppServicesContext';
-import { makeMockRunRef, makeRunContext } from '../../testing/contractTestUtils';
+import { makeRunContext } from '../../testing/contractTestUtils';
 import { useRunWorkspace } from './useRunWorkspace';
 
 function HookHost({ runId }: Readonly<{ runId?: string }>): React.JSX.Element {
@@ -89,17 +94,28 @@ function buildRunsService(sessionContext: SessionContextPort): IRunsPort {
       const { environmentId } = sessionContext.getWorkspaceScope();
       return buildRunSnapshot(runId, environmentId);
     }),
-    startRun: vi.fn(async (input) =>
-      makeMockRunRef({
-        runId: input.context.runId,
-        tenantId: input.context.tenantId,
-        workflowId: `wf_${input.context.runId}`,
-      })
-    ),
+    startRun: vi.fn(async () => ({
+      runId: 'run_workspace_generated',
+      accepted: true,
+    })),
     listRunEvents: vi.fn(async () => ({
       events: [],
     })),
   };
+}
+
+async function waitForRunWorkspace(predicate: () => boolean): Promise<void> {
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    if (predicate()) {
+      return;
+    }
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+  }
+
+  throw new Error('Timed out waiting for useRunWorkspace to settle');
 }
 
 describe('useRunWorkspace', () => {
@@ -118,26 +134,12 @@ describe('useRunWorkspace', () => {
     container = null;
   });
 
-  async function waitFor(predicate: () => boolean): Promise<void> {
-    for (let attempt = 0; attempt < 30; attempt += 1) {
-      if (predicate()) {
-        return;
-      }
-
-      await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 0));
-      });
-    }
-
-    throw new Error('Timed out waiting for useRunWorkspace to settle');
-  }
-
   it('re-subscribes queries when the workspace scope changes', async () => {
     const { sessionContext, setWorkspaceScope } = createReactiveSessionContext({
       tenantId: 'tenant-a',
       projectId: 'project-a',
       environmentId: 'env-a',
-      targetAdapter: 'mock',
+      targetAdapter: 'temporal',
     });
     const runsService = buildRunsService(sessionContext);
 
@@ -150,10 +152,14 @@ describe('useRunWorkspace', () => {
       }
     ).IS_REACT_ACT_ENVIRONMENT = true;
 
-    expect(root).not.toBeNull();
+    const mountedRoot = root;
+    expect(mountedRoot).not.toBeNull();
+    if (!mountedRoot) {
+      throw new Error('Expected the test root to be initialized');
+    }
 
     await act(async () => {
-      root!.render(
+      mountedRoot.render(
         <QueryClientProvider
           client={
             new QueryClient({
@@ -166,11 +172,7 @@ describe('useRunWorkspace', () => {
           }
         >
           <AppServicesProvider
-            overrides={{
-              mode: 'mock',
-              runsService,
-              sessionContext,
-            }}
+            overrides={{ ...createAppServicesTestOverrides(), runsService, sessionContext }}
           >
             <HookHost runId="run-detail" />
           </AppServicesProvider>
@@ -178,7 +180,7 @@ describe('useRunWorkspace', () => {
       );
     });
 
-    await waitFor(
+    await waitForRunWorkspace(
       () =>
         container?.querySelector('[data-testid="runs"]')?.textContent === 'run-env-a' &&
         container?.querySelector('[data-testid="workspace-environment"]')?.textContent === 'env-a'
@@ -195,7 +197,7 @@ describe('useRunWorkspace', () => {
       });
     });
 
-    await waitFor(
+    await waitForRunWorkspace(
       () =>
         container?.querySelector('[data-testid="runs"]')?.textContent === 'run-env-b' &&
         container?.querySelector('[data-testid="workspace-environment"]')?.textContent === 'env-b'
@@ -203,5 +205,13 @@ describe('useRunWorkspace', () => {
 
     expect(runsService.listRunSummaries).toHaveBeenCalledTimes(2);
     expect(runsService.getRunSnapshot).toHaveBeenCalledTimes(2);
+  });
+
+  it('refreshes active run status and stops refreshing terminal status', () => {
+    expect(getRunStatusRefreshInterval('pending')).toBe(RUNS_STATUS_REFRESH_INTERVAL_MS);
+    expect(getRunStatusRefreshInterval('running')).toBe(RUNS_STATUS_REFRESH_INTERVAL_MS);
+    expect(getRunStatusRefreshInterval('completed')).toBe(false);
+    expect(getRunStatusRefreshInterval('failed')).toBe(false);
+    expect(getRunStatusRefreshInterval('cancelled')).toBe(false);
   });
 });

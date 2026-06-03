@@ -1,8 +1,8 @@
 ---
 title: Doc-Driven Framework And Tooling Plan
-status: Draft
+status: Accepted
 owner: Product / Architecture / Docs / Delivery
-last_reviewed: 2026-04-04
+last_reviewed: 2026-05-07
 planning_type: proposal
 ---
 
@@ -39,7 +39,7 @@ What is still missing is a unifying framework layer:
 - no canonical authoring scaffolds per document type;
 - no single operational model for "how a governed slice moves from idea to
   execution to evidence to closure";
-- no first-class traceability object connecting proposal, lane task, risk,
+- [Task: GOV-PROP-DISP-1] no first-class traceability object connecting proposal, lane task, risk,
   evidence, and implementation slice;
 - too much repo knowledge is still procedural and manual;
 - current tooling is strong at rejecting drift, but weaker at helping authors
@@ -170,7 +170,7 @@ The repo already does this well with lane YAML. The next step is to extend the
 same discipline to proposal execution metadata:
 
 - proposal status;
-- owning lane and task;
+- [Task: GOV-PROP-DISP-1] owning lane and task;
 - dependencies;
 - rollout wave;
 - acceptance status;
@@ -186,7 +186,7 @@ planning data routes and validates.
 A governed slice should be able to answer, mechanically:
 
 - which proposal authorized it;
-- which lane task owns it;
+- [Task: GOV-PROP-DISP-1] which lane task owns it;
 - which risks it mitigates or creates;
 - which evidence proves it;
 - which closeout closed it;
@@ -204,8 +204,8 @@ Current tooling validates well but scaffolds weakly. The framework needs:
 - `new evidence` scaffold
 - `new risk` scaffold
 - `new runbook` scaffold
-- lane-task creation helper for YAML-backed work items
-- relationship helper for linking proposal, task, evidence, and risk
+- [Task: GOV-PROP-DISP-1] lane-task creation helper for YAML-backed work items
+- [Task: GOV-PROP-DISP-1] relationship helper for linking proposal, task, evidence, and risk
 
 The practical goal is simple:
 
@@ -219,8 +219,8 @@ model validation.
 
 Examples of target checks:
 
-- every mandatory proposal has an owning lane task;
-- every `done` task has evidence or closeout;
+- [Task: GOV-PROP-DISP-1] every mandatory proposal has an owning lane task;
+- [Task: GOV-PROP-DISP-1] every `done` task has evidence or closeout;
 - every ARC-triggering slice has matching evidence and risk entries;
 - proposal supersession chains are valid;
 - indexes and navigation only point to active canonical surfaces;
@@ -320,20 +320,20 @@ It upgrades how those pieces are authored and connected.
 
 ### Wave 2: Scaffold the authoring path
 
-- add scaffold commands for proposal/review/evidence/risk/runbook
-- add task-helper support for lane YAML creation or updates
+- [Task: GOV-PROP-DISP-1] add scaffold commands for proposal/review/evidence/risk/runbook
+- [Task: GOV-PROP-DISP-1] add task-helper support for lane YAML creation or updates
 - standardize frontmatter and required section templates
 
 ### Wave 3: Validate the planning model
 
-- add checks for proposal-to-lane linkage
-- add checks for done-task-to-evidence or closeout linkage
-- add checks for supersession and replacement integrity
-- add checks for active-vs-historical navigation correctness
+- [Task: GOV-PROP-DISP-1] add checks for proposal-to-lane linkage
+- [Task: GOV-PROP-DISP-1] add checks for done-task-to-evidence or closeout linkage
+- [Task: GOV-PROP-DISP-1] add checks for supersession and replacement integrity
+- [Task: GOV-PROP-DISP-1] add checks for active-vs-historical navigation correctness
 
 ### Wave 4: Publish the traceability spine
 
-- generate a governed traceability index across proposal, task, evidence, risk,
+- [Task: GOV-PROP-DISP-1] generate a governed traceability index across proposal, task, evidence, risk,
   and closeout surfaces
 - expose missing-link reports as CI failures or warnings by class
 - document contributor workflow for maintaining those links
@@ -356,6 +356,37 @@ This proposal should be executed under a Lane A governance/docs tracker:
   - planning-data validation
   - traceability automation
   - adoption metrics and closeout
+
+## GOV-S2 Closure And Non-Duplication Decision
+
+As of 2026-05-07, `GOV-S2` is closed as the umbrella framework slice. It now
+owns the canonical operating model, not an indefinite implementation queue.
+
+The implementation surfaces that satisfy the framework acceptance criteria are:
+
+| Framework concern                            | Canonical closure surface                                                                                                                                                               |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Inventory-first startup and task routing     | `docs/planning/status/governance-document-rule-inventory.md`, `docs/guides/ai-work-protocol.md`, `docs/planning/state/planning-control-tower.md`                                        |
+| Information architecture and lifecycle rules | `docs/planning/status/documentation-information-architecture-current-vs-target-20260407.md`, `docs/guides/documentation-maintenance-guide-20260407.md`                                  |
+| Planning as data                             | `docs/planning/state/agent-lane-*.yaml`, `docs/planning/state/how-to-add-tasks.md`, `docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md` |
+| Traceability and evidence checks             | `pnpm verify:prepush`, `pnpm governance:refresh`, `pnpm test:closeout-changed`, ARC evidence/risk gates, and feature-mechanization gates                                                |
+| Generated-governance read side               | `docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md` plus the derived planning/governance query-store checks                                 |
+
+Follow-on implementation work must not reopen `GOV-S2` or create another
+governance umbrella for the same intent. It must use concrete task IDs and the
+existing command/query rails:
+
+- `GOV-S3-PLANNING-STATE-QUERY-STORE` for derived query-store parity,
+  refresh/check/export, and eventual generated-artifact compaction.
+- Existing docs governance gates for authoring, closeout, evidence, risk,
+  frontmatter, links, and generated-doc ownership.
+- [Task: GOV-PROP-DISP-1] Existing lane YAML task entries for any future scoped scaffold or validation
+  helper.
+
+The Postgres query store is a derived read model. It may reduce loading and
+review fan-out, but it is not a second planning authority and must not replace
+Git-tracked proposals, reviews, closeouts, risk, evidence, or lane YAML as
+canonical sources.
 
 ## Tradeoffs
 
@@ -405,6 +436,126 @@ This proposal should be executed under a Lane A governance/docs tracker:
    framework.
 5. The proposal leaves room for later external tooling, but does not depend on
    it now.
+
+## Feature Mechanization Manifest
+
+```feature-mechanization
+version: 1
+featureId: GOV-S2-DOC-DRIVEN-FRAMEWORK-CLOSEOUT
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md
+componentGuides:
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/planning/state/planning-control-tower.md
+  - docs/planning/state/how-to-add-tasks.md # Task: GOV-PROP-DISP-1
+  - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
+userStories:
+  - docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md
+  - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+  - docs/planning/closeouts/20260507-gov-s2-doc-driven-operating-framework-closeout.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/planning/state/planning-control-tower.md
+  - docs/planning/state/how-to-add-tasks.md # Task: GOV-PROP-DISP-1
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+allowedImplementationSurfaces:
+  - docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md
+  - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+  - docs/planning/status/documentation-information-architecture-current-vs-target-20260407.md
+  - docs/planning/state/agent-lane-a.yaml
+  - docs/planning/state/domain-status-board.md
+  - docs/planning/closeouts/20260507-gov-s2-doc-driven-operating-framework-closeout.md
+  - docs/planning/status/**
+  - docs/.manifest.json
+forbiddenImplementationSurfaces:
+  - apps/**
+  - packages/**
+  - specs/**
+  - .github/**
+  - scripts/**
+  - tools/**
+  - package.json
+commandQueryRails:
+  - name: CloseDocDrivenOperatingFramework
+    type: command
+    dddOwner: DocDrivenOperatingFramework
+  - name: ReconcilePlanningGovernanceAuthority
+    type: query
+    dddOwner: PlanningGovernanceAuthorityProjection
+domainObjects:
+  - name: DocDrivenOperatingFramework
+    type: governance framework aggregate
+    owner: Product / Architecture / Docs / Delivery
+  - name: PlanningGovernanceAuthorityProjection
+    type: governance read model
+    owner: Product / Architecture / Docs / Delivery
+fowlerSignals:
+  - Duplicate semantics
+  - Documentation drift
+  - Single Source of Truth
+  - Explicit Gate
+architectureGuards:
+  - pnpm docs:feature-mechanization --feature GOV-S2-DOC-DRIVEN-FRAMEWORK-CLOSEOUT
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm governance:refresh
+cypressFlows:
+  - N/A - governance closeout has no browser workflow.
+completionGate:
+  - pnpm docs:feature-mechanization --feature GOV-S2-DOC-DRIVEN-FRAMEWORK-CLOSEOUT
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm governance:refresh
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: gov-s2-closeout-surface-guard
+    redTest: pnpm docs:feature-mechanization:implementation
+    expectedFailure: GOV-S2 closeout, domain-board, and proposal edits are outside allowedImplementationSurfaces before this manifest declares the governance closeout surfaces.
+    patchSurfaces:
+      - docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+      - docs/planning/status/documentation-information-architecture-current-vs-target-20260407.md
+      - docs/planning/state/agent-lane-a.yaml
+      - docs/planning/state/domain-status-board.md
+      - docs/planning/closeouts/20260507-gov-s2-doc-driven-operating-framework-closeout.md
+      - docs/planning/status/**
+      - docs/.manifest.json
+    greenTest: pnpm docs:feature-mechanization:implementation
+symbolDefaults: &govS2CloseoutSymbolDefaults
+  dddOwner: DocDrivenOperatingFramework
+  cqRails:
+    - CloseDocDrivenOperatingFramework
+    - ReconcilePlanningGovernanceAuthority
+  fowlerSignals:
+    - Duplicate semantics
+    - Documentation drift
+    - Single Source of Truth
+  architectureGuard: pnpm docs:feature-mechanization:implementation
+  cypressCoverage: N/A - governance closeout has no browser workflow.
+  unitTests:
+    - pnpm docs:feature-mechanization --feature GOV-S2-DOC-DRIVEN-FRAMEWORK-CLOSEOUT
+    - pnpm docs:feature-mechanization:implementation
+symbols:
+  - <<: *govS2CloseoutSymbolDefaults
+    name: GovS2DocDrivenFrameworkPlan
+    path: docs/planning/proposals/mandatory/governance-and-docs/doc-driven-framework-and-tooling-plan-20260404.md
+  - <<: *govS2CloseoutSymbolDefaults
+    name: GovS2QueryStoreBoundary
+    path: docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+  - <<: *govS2CloseoutSymbolDefaults
+    name: GovS2LaneClosure
+    path: docs/planning/state/agent-lane-a.yaml
+  - <<: *govS2CloseoutSymbolDefaults
+    name: GovS2DomainStatusClosure
+    path: docs/planning/state/domain-status-board.md
+  - <<: *govS2CloseoutSymbolDefaults
+    name: GovS2Closeout
+    path: docs/planning/closeouts/20260507-gov-s2-doc-driven-operating-framework-closeout.md
+```
 
 ## References
 

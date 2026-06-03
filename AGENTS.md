@@ -49,6 +49,24 @@ The agent MUST NOT:
 - present partial wiring, placeholders, or fake implementations as complete
   work
 
+## Command And Query Rail Rule
+
+Before implementing or documenting externally observable behavior, the agent
+MUST identify the governing command or query rail in the owning bounded context.
+
+If no rail exists, the agent MUST add or update the catalog before
+implementation. The catalog entry must name whether the behavior is a command or
+query, the owning bounded context, the DDD object or read model, the application
+port, the adapter surface, scope and authorization rules, and negative tests.
+
+The canonical repository rule is:
+
+- `docs/architecture/command-query-rail-governance.md`
+
+The agent MUST NOT create parallel commands, queries, services, route handlers,
+mock semantics, or documentation names for the same product intent. Reuse the
+existing rail when the intent already exists.
+
 ## Operational Playbooks
 
 Use these as procedural complements to this file. They do not override rules in
@@ -135,6 +153,11 @@ handles it. If a push fails citing Prettier, the cause is a file that was
 committed while bypassing the pre-commit hook; fix it with a follow-up commit
 that runs `pnpm format:changed` (if it exists) or stages and recommits the
 affected files.
+
+`pnpm verify:prepush` checks formatting; it does not apply Prettier. For PR
+closeout, commit first with the helper so the pre-commit hook can format and
+re-stage files, then run `pnpm verify:prepush` against the committed,
+hook-normalized tree. "Before PR" does not mean "before commit".
 
 ## ARC Requirements For Contracts And Adapter Changes
 
@@ -283,6 +306,8 @@ A failed validation here means a failed CI check — fix the title before creati
 **Full PR creation sequence:**
 
 ```bash
+git add <intended files>
+pnpm commit <type> <scope> "<Subject>"
 pnpm verify:prepush
 pnpm pr:validate-title "<title>"
 gh pr create --title "<title>" --body "..."
@@ -308,13 +333,44 @@ pnpm docs:sync
 
 and commit the result before pushing. This updates all `docs/*/index.md` files and the governed docs navigation surfaces. This is **not** automatic — it does not run on pre-commit. The agent is responsible for running it manually whenever docs structure changes.
 
+## Governance Refresh Rule
+
+When a task changes docs/planning/governance source surfaces, governance
+workflow documentation, governance generator/check scripts, package scripts, or
+adds/removes files that affect `system-governance-*` indexes, the agent MUST
+run:
+
+```bash
+pnpm governance:refresh
+```
+
+Run it near final closeout, after the content/code slice is materially done and
+before `pnpm ci:docs` or `pnpm verify:prepush`. The command owns the final
+quadrature for docs indexes, workboard views, docs manifests,
+`system-governance-*` indexes, fingerprints, coverage, remediation outputs, and
+planning/governance query-store import/checks.
+
+`pnpm governance:refresh` is not a replacement for `pnpm verify:prepush`; it is
+the canonical refresh sequence that makes the later gates meaningful.
+
 ## Planning State Rule
 
-Agent task assignments live in `docs/planning/state/agent-lane-*.yaml`.
+Agent task assignments, claims, releases, status changes, progress, evidence
+refs, task creation, and task deletion live in the local planning DB command
+and query rails.
+
+The `docs/planning/state/agent-lane-*.yaml` files remain bootstrap, export, and
+recovery snapshots for Git review. They are not the daily operational write
+surface for task lifecycle changes.
 
 - `execution-workboard.md` and `open-task-route.md` are **generated views** — never edit them directly.
-- To add or update a task, edit the relevant `agent-lane-X.yaml`.
-- After editing, run `pnpm docs:workboard:generate` to regenerate the views.
+- To add or update a task, use `pnpm planning:db:operate`.
+- To inspect active or next work, use `pnpm planning:db:query open`,
+  `pnpm planning:db:query tasks`, `pnpm planning:db:query next`, or
+  `pnpm planning:db:query focus`.
+- For bootstrap/export snapshot refresh only, run
+  `pnpm planning:db:import -- --if-stale --planning-only`, then
+  `pnpm docs:workboard:generate`.
 
 Lane ownership:
 
@@ -324,6 +380,7 @@ Lane ownership:
 | B    | `agent-lane-b.yaml` | Event contracts, traceability, lineage                |
 | C    | `agent-lane-c.yaml` | Runtime safety, admission control, RBAC               |
 | D    | `agent-lane-d.yaml` | Scale, retention, GTM                                 |
+| E    | `agent-lane-e.yaml` | Frontend and UI - shell, API integration, core flow   |
 
 See `docs/planning/state/how-to-add-tasks.md` for the full task format.
 

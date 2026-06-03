@@ -26,6 +26,7 @@ import {
   getAllOverlays,
   getPluginPortMap,
   type PluginContributions,
+  type RuntimeCapabilities,
 } from './registry';
 import type { NodeRendererProps, NodeBadge, BadgeContext } from './contracts/NodeRendering';
 import type { InspectorContext, InspectorPanelContribution } from './contracts/PluginManifest';
@@ -40,10 +41,14 @@ import { FallbackNodeRenderer } from './FallbackNodeRenderer';
 
 export type PluginRegistryContextValue = {
   getNodeRenderer: (kind: PluginNodeKind) => React.ComponentType<NodeRendererProps>;
-  getNodeBadges: (node: CanonicalNode, ctx: BadgeContext) => NodeBadge[];
+  getNodeBadges: (
+    node: CanonicalNode,
+    ctx: BadgeContext,
+    capabilities?: RuntimeCapabilities
+  ) => NodeBadge[];
   getInspectorPanels: (node: CanonicalNode, ctx: InspectorContext) => InspectorPanelContribution[];
   getAllOverlays: () => CanvasOverlayContribution[];
-  getPluginPortMap: () => PluginPortMap;
+  getPluginPortMap: (capabilities?: RuntimeCapabilities) => PluginPortMap;
 };
 
 // ---------------------------------------------------------------------------

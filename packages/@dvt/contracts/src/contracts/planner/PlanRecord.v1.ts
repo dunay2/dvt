@@ -1,4 +1,6 @@
 /**
+ * Owned concern: publish tenant-owned plan-record contract shapes.
+ *
  * S08 canonical persisted plan artifact record.
  *
  * Baseline ADRs:
@@ -6,12 +8,28 @@
  * - ADR-0042 canonical plan identity
  * - ADR-0043 plan record ownership
  */
+import type { PlanRef } from '../../types/contracts.js';
+
 import type { ExecutionPlan } from './ExecutionPlan.v1.js';
 
 export type PlanRecordState = 'ACTIVE' | 'SUPERSEDED' | 'ARCHIVED';
 type HexSha256 = ExecutionPlan['metadata']['planId'];
 
-interface PlanRecordBase {
+export interface PlanStoreScope {
+  tenantId: string;
+  projectId: string;
+  environmentId: string;
+}
+
+export type ScopedPlanId = PlanStoreScope & {
+  planId: HexSha256;
+};
+
+export type ScopedPlanRef = PlanStoreScope & {
+  planRef: PlanRef;
+};
+
+interface PlanRecordBase extends PlanStoreScope {
   planId: HexSha256;
   /**
    * Persisted canonical planner-emitted `ExecutionPlan` JSON.

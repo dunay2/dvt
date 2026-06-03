@@ -2,7 +2,7 @@
 title: CLI Package
 status: Active
 owner: Architecture / Tooling
-last_reviewed: 2026-03-08
+last_reviewed: 2026-05-13
 ---
 
 # CLI Package
@@ -15,10 +15,10 @@ This page is the canonical documentation entry point for `@dvt/cli`.
 
 Today the workspace is mostly a script bundle:
 
-- the TypeScript entrypoint is a placeholder;
+- the TypeScript entrypoint exports script-oriented package metadata;
 - the useful behavior lives in `validate-contracts.cjs` and
   `run-golden-paths.cjs`;
-- the package test is only a smoke test.
+- the package test proves the metadata matches the current script surface.
 
 That means the workspace matters operationally, but it should not be described
 as if it already exposed a stable command interface.
@@ -33,13 +33,13 @@ as if it already exposed a stable command interface.
 
 - Package manifest:
   [packages/@dvt/cli/package.json](../../../packages/@dvt/cli/package.json)
-- Placeholder TS entrypoint:
+- TS metadata entrypoint:
   [packages/@dvt/cli/src/index.ts](../../../packages/@dvt/cli/src/index.ts)
 - Contract validation script:
   [packages/@dvt/cli/validate-contracts.cjs](../../../packages/@dvt/cli/validate-contracts.cjs)
 - Golden-path execution script:
   [packages/@dvt/cli/run-golden-paths.cjs](../../../packages/@dvt/cli/run-golden-paths.cjs)
-- Current smoke test:
+- Script-surface metadata test:
   [packages/@dvt/cli/test/smoke.test.ts](../../../packages/@dvt/cli/test/smoke.test.ts)
 
 ## Verification
@@ -49,10 +49,11 @@ as if it already exposed a stable command interface.
 
 ## Open Gaps
 
-- No typed command surface is exported from `src/index.ts`.
+- No typed executable command surface is exported from `src/index.ts`.
 - The package name suggests a mature CLI, but the current implementation is
   script-first and still narrow.
-- The smoke test proves package wiring, not command-surface behavior.
+- The current test proves declared script-surface metadata, not executable
+  command behavior.
 
 ## Related Docs
 

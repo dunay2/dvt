@@ -1,11 +1,23 @@
+/** Owned concern: publish React hooks for application service ports. */
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 
 import type { CapabilitiesPort } from '../ports/capabilities';
+import type { ICostAttributionSummaryPort } from '../ports/cost';
 import type { IPlansPort } from '../ports/plans';
 import type { IRunsPort } from '../ports/runs';
 import type { SessionContextPort } from '../ports/sessionContext';
 import type { ShellFeedbackPort } from '../ports/shellFeedback';
-import type { IWorkspacePort } from '../ports/workspace';
+import type {
+  IWarehouseSourceImportPort,
+  IWorkspaceAdminReadPort,
+  IWorkspaceDiffQueryPort,
+  IWorkspaceFileContentCommandPort,
+  IWorkspaceFileHistoryQueryPort,
+  IWorkspaceFilesQueryPort,
+  IWorkspaceGraphSnapshotQueryPort,
+  IWorkspacePluginCatalogQueryPort,
+} from '../ports/workspace';
+import type { IWorkspaceGraphDraftAuthoringPort } from '../ports/workspaceGraphDraftAuthoring';
 import type { AppServices, AppServicesOverrides } from './composition/appServices';
 import { buildAppServices } from './composition/appServices';
 
@@ -26,18 +38,23 @@ export type AppServicesProviderProps = Readonly<{
   overrides?: AppServicesOverrides;
 }>;
 
-export function AppServicesProvider({
-  children,
-  overrides,
-}: AppServicesProviderProps) {
+export function AppServicesProvider({ children, overrides }: AppServicesProviderProps) {
   const value = useMemo(
     () => buildAppServices(overrides),
     [
       overrides?.apiClient,
-      overrides?.mode,
       overrides?.plansService,
       overrides?.runsService,
-      overrides?.workspaceService,
+      overrides?.costAttributionSummaryPort,
+      overrides?.workspaceGraphSnapshotQuery,
+      overrides?.workspaceFilesQuery,
+      overrides?.workspaceFileHistoryQuery,
+      overrides?.workspaceDiffQuery,
+      overrides?.workspacePluginCatalogQuery,
+      overrides?.workspaceAdminRead,
+      overrides?.warehouseSourceImport,
+      overrides?.workspaceFileContentCommand,
+      overrides?.workspaceGraphDraftAuthoringPort,
       overrides?.capabilitiesPort,
       overrides?.sessionContext,
       overrides?.shellFeedback,
@@ -59,8 +76,40 @@ export function useAppDataSourceMode(): AppServices['dataSourceMode'] {
   return useRequiredAppServicesContext().dataSourceMode;
 }
 
-export function useWorkspaceService(): IWorkspacePort {
-  return useRequiredAppServicesContext().workspaceService;
+export function useWorkspaceGraphSnapshotQueryPort(): IWorkspaceGraphSnapshotQueryPort {
+  return useRequiredAppServicesContext().workspaceGraphSnapshotQuery;
+}
+
+export function useWorkspaceFilesQueryPort(): IWorkspaceFilesQueryPort {
+  return useRequiredAppServicesContext().workspaceFilesQuery;
+}
+
+export function useWorkspaceFileHistoryQueryPort(): IWorkspaceFileHistoryQueryPort {
+  return useRequiredAppServicesContext().workspaceFileHistoryQuery;
+}
+
+export function useWorkspaceDiffQueryPort(): IWorkspaceDiffQueryPort {
+  return useRequiredAppServicesContext().workspaceDiffQuery;
+}
+
+export function useWorkspacePluginCatalogQueryPort(): IWorkspacePluginCatalogQueryPort {
+  return useRequiredAppServicesContext().workspacePluginCatalogQuery;
+}
+
+export function useWorkspaceAdminReadPort(): IWorkspaceAdminReadPort {
+  return useRequiredAppServicesContext().workspaceAdminRead;
+}
+
+export function useWarehouseSourceImportPort(): IWarehouseSourceImportPort {
+  return useRequiredAppServicesContext().warehouseSourceImport;
+}
+
+export function useWorkspaceFileContentCommandPort(): IWorkspaceFileContentCommandPort {
+  return useRequiredAppServicesContext().workspaceFileContentCommand;
+}
+
+export function useWorkspaceGraphDraftAuthoringPort(): IWorkspaceGraphDraftAuthoringPort {
+  return useRequiredAppServicesContext().workspaceGraphDraftAuthoringPort;
 }
 
 export function useRunsService(): IRunsPort {
@@ -69,6 +118,10 @@ export function useRunsService(): IRunsPort {
 
 export function usePlansService(): IPlansPort {
   return useRequiredAppServicesContext().plansService;
+}
+
+export function useCostAttributionSummaryPort(): ICostAttributionSummaryPort {
+  return useRequiredAppServicesContext().costAttributionSummaryPort;
 }
 
 export function useCapabilitiesPort(): CapabilitiesPort {

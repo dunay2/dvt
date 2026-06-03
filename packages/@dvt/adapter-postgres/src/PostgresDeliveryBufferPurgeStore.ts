@@ -18,7 +18,11 @@
 import type { IDeliveryBufferPurgeStore } from '@dvt/state-store';
 import type { PoolClient } from 'pg';
 
+import { enterPostgresMaintenanceContext } from './PostgresMaintenanceAccess.js';
+import { POSTGRES_SERVICE_ACCESS } from './PostgresServiceAccessCapability.js';
 import { quoteIdentifier } from './sqlUtils.js';
+
+const DELIVERY_BUFFER_PURGE_SERVICE_ACCESS = POSTGRES_SERVICE_ACCESS.deliveryBufferPurge;
 
 export class PostgresDeliveryBufferPurgeStore implements IDeliveryBufferPurgeStore {
   constructor(
@@ -31,8 +35,9 @@ export class PostgresDeliveryBufferPurgeStore implements IDeliveryBufferPurgeSto
   // ---------------------------------------------------------------------------
 
   async purgeDeliveredOutbox(olderThanIso: string, limit: number): Promise<number> {
-    const result = await this.withClient((client) =>
-      client.query(
+    const result = await this.withClient(async (client) => {
+      await enterPostgresMaintenanceContext(client, DELIVERY_BUFFER_PURGE_SERVICE_ACCESS);
+      return client.query(
         `
           WITH to_delete AS (
             SELECT id
@@ -45,14 +50,15 @@ export class PostgresDeliveryBufferPurgeStore implements IDeliveryBufferPurgeSto
           WHERE id IN (SELECT id FROM to_delete)
         `,
         [olderThanIso, limit]
-      )
-    );
+      );
+    });
     return result.rowCount ?? 0;
   }
 
   async purgeOutboxDeadLetter(olderThanIso: string, limit: number): Promise<number> {
-    const result = await this.withClient((client) =>
-      client.query(
+    const result = await this.withClient(async (client) => {
+      await enterPostgresMaintenanceContext(client, DELIVERY_BUFFER_PURGE_SERVICE_ACCESS);
+      return client.query(
         `
           WITH to_delete AS (
             SELECT id
@@ -64,14 +70,15 @@ export class PostgresDeliveryBufferPurgeStore implements IDeliveryBufferPurgeSto
           WHERE id IN (SELECT id FROM to_delete)
         `,
         [olderThanIso, limit]
-      )
-    );
+      );
+    });
     return result.rowCount ?? 0;
   }
 
   async purgeLineageDeadLetter(olderThanIso: string, limit: number): Promise<number> {
-    const result = await this.withClient((client) =>
-      client.query(
+    const result = await this.withClient(async (client) => {
+      await enterPostgresMaintenanceContext(client, DELIVERY_BUFFER_PURGE_SERVICE_ACCESS);
+      return client.query(
         `
           WITH to_delete AS (
             SELECT id
@@ -83,8 +90,8 @@ export class PostgresDeliveryBufferPurgeStore implements IDeliveryBufferPurgeSto
           WHERE id IN (SELECT id FROM to_delete)
         `,
         [olderThanIso, limit]
-      )
-    );
+      );
+    });
     return result.rowCount ?? 0;
   }
 
@@ -93,29 +100,32 @@ export class PostgresDeliveryBufferPurgeStore implements IDeliveryBufferPurgeSto
   // ---------------------------------------------------------------------------
 
   async countDeliveredOutbox(): Promise<number> {
-    const result = await this.withClient((client) =>
-      client.query<{ count: string }>(
+    const result = await this.withClient(async (client) => {
+      await enterPostgresMaintenanceContext(client, DELIVERY_BUFFER_PURGE_SERVICE_ACCESS);
+      return client.query<{ count: string }>(
         `SELECT COUNT(*)::text AS count FROM ${quoteIdentifier(this.schema)}.outbox WHERE delivered_at IS NOT NULL`
-      )
-    );
+      );
+    });
     return Number(result.rows[0]?.count ?? 0);
   }
 
   async countOutboxDeadLetter(): Promise<number> {
-    const result = await this.withClient((client) =>
-      client.query<{ count: string }>(
+    const result = await this.withClient(async (client) => {
+      await enterPostgresMaintenanceContext(client, DELIVERY_BUFFER_PURGE_SERVICE_ACCESS);
+      return client.query<{ count: string }>(
         `SELECT COUNT(*)::text AS count FROM ${quoteIdentifier(this.schema)}.outbox_dead_letter`
-      )
-    );
+      );
+    });
     return Number(result.rows[0]?.count ?? 0);
   }
 
   async countLineageDeadLetter(): Promise<number> {
-    const result = await this.withClient((client) =>
-      client.query<{ count: string }>(
+    const result = await this.withClient(async (client) => {
+      await enterPostgresMaintenanceContext(client, DELIVERY_BUFFER_PURGE_SERVICE_ACCESS);
+      return client.query<{ count: string }>(
         `SELECT COUNT(*)::text AS count FROM ${quoteIdentifier(this.schema)}.lineage_dead_letter`
-      )
-    );
+      );
+    });
     return Number(result.rows[0]?.count ?? 0);
   }
 }

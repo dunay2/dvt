@@ -1,5 +1,4 @@
 import { RunNotFoundError, TenantAccessDeniedError } from '@dvt/engine';
-import { ProviderRefProviderMismatchError } from '@dvt/engine';
 import { describe, expect, it } from 'vitest';
 
 import { PostgresRunMetadataRepository } from '../src/PostgresRunMetadataRepository.js';
@@ -46,8 +45,9 @@ function makeMeta(overrides: Partial<RunMetadata> = {}): RunMetadata {
     planVersion: '1.0.0',
     logicalAttemptId: 1,
     providerRef: {
-      provider: 'mock',
+      provider: 'temporal',
       tenantId: 'tenant-a',
+      namespace: 'default',
       workflowId: 'wf-run-a',
       runId: 'pr-run-a',
     },
@@ -84,7 +84,6 @@ class ProviderRefUpdateClient extends RecordingClient {
             provider_run_id: 'pr-run-a',
             provider_namespace: 'default',
             provider_task_queue: null,
-            provider_conductor_url: null,
           },
         ],
       };
@@ -119,7 +118,6 @@ class InvalidTaskQueueRowClient extends RecordingClient {
             provider_run_id: 'pr-run-a',
             provider_namespace: 'default',
             provider_task_queue: '',
-            provider_conductor_url: null,
           },
         ],
       };
@@ -167,23 +165,23 @@ describe('PostgresRunMetadataRepository upsertWithClient', () => {
     ).rejects.toBeInstanceOf(RunNotFoundError);
   });
 
-  it('saveProviderRef rejects cross-provider updates before issuing the UPDATE statement', async () => {
+  it('saveProviderRef rejects unsupported provider refs before issuing SQL', async () => {
     const client = new ProviderRefUpdateClient();
     const repo = new PostgresRunMetadataRepository('dvt', async (fn) => fn(client as never));
 
-    await expect(
-      repo.saveProviderRef('tenant-a', 'run-a', {
-        provider: 'conductor',
-        tenantId: 'tenant-a',
-        workflowId: 'wf-run-a',
-        runId: 'actual-run-a',
-        conductorUrl: 'http://localhost:8080/api',
-      })
-    ).rejects.toBeInstanceOf(ProviderRefProviderMismatchError);
+    const unsupportedProviderRef = {
+      provider: 'conductor',
+      tenantId: 'tenant-a',
+      workflowId: 'wf-run-a',
+      runId: 'actual-run-a',
+      conductorUrl: 'http://localhost:8080/api',
+    } as unknown as RunMetadata['providerRef'];
 
-    expect(client.queries.some((query) => query.sql.includes('UPDATE "dvt".run_metadata'))).toBe(
-      false
+    await expect(repo.saveProviderRef('tenant-a', 'run-a', unsupportedProviderRef)).rejects.toThrow(
+      'RUN_METADATA_INVALID_PROVIDER_REF'
     );
+
+    expect(client.queries).toHaveLength(0);
   });
 
   it('getByRunId rejects persisted temporal provider refs with empty taskQueue', async () => {

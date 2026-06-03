@@ -1,0 +1,32 @@
+---
+id: R-20260601-EXECUTION-PLAN-SCHEMA-HARDCUT
+title: ExecutionPlan schema hard-cut can drift across generated fixtures and persisted stores
+status: Open
+date: 2026-06-01
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/adapter-temporal
+  - packages/@dvt/adapter-postgres
+  - packages/@dvt/engine
+  - packages/@dvt/plan-verifier
+severity: Medium
+probability: Low
+context: >
+  The active pre-alpha ExecutionPlan admission pair is hard-cut to planVersion 1.0 and schemaVersion
+  1.0. The previous v1.2 schema literal is intentionally rejected instead of being preserved as a
+  compatibility alias.
+risk: >
+  A producer, fixture, persisted plan row, or documentation example could continue to emit v1.2 and
+  appear valid locally while runtime admission rejects it. Conversely, a consumer could reintroduce
+  a prefixed or semver-style compatibility rule and silently admit a non-current plan shape.
+mitigations:
+  - 'Keep `CURRENT_EXECUTION_PLAN_SCHEMA_VERSION` as the single source for generated test fixtures.'
+  - 'Keep `PlanRecord.v1.schema.json` and `contracts/compat/plan-compat.json` aligned to the same
+    schema literal.'
+  - 'Keep negative tests proving `schemaVersion = v1.2` rejects for `planVersion = 1.0`.'
+  - 'Use feature mechanization to prevent unrelated command/query or runtime surfaces from changing
+    in this hard-cut.'
+  - 'Move plan creation authority into a persisted command/query rail before adding any future
+    schema line.'
+review_after: 2026-07-15
+---

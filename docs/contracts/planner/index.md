@@ -7,14 +7,18 @@ last_reviewed: 2026-02-25
 
 # Planner Contracts
 
-ExecutionPlan and planner-related schemas and compatibility contracts.
+ExecutionPlan and planner-related schemas and admission contracts.
 
 ## Normative Sources (`@dvt/contracts`)
 
 - `packages/@dvt/contracts/src/contracts/planner/CustomPolicyNamespaceRegistry.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutionBindingVerification.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/ExecutionSelection.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/IExecutionPlanner.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/index.ts`
+- `packages/@dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanAdmissionLink.v1.schema.json`
 - `packages/@dvt/contracts/src/contracts/planner/PlanAdmissionLink.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanCompileStepTypeConfigs.v1.ts`
@@ -26,24 +30,27 @@ ExecutionPlan and planner-related schemas and compatibility contracts.
 - `packages/@dvt/contracts/src/contracts/planner/PlannerPolicyVocabulary.v2.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanRecord.v1.schema.json`
 - `packages/@dvt/contracts/src/contracts/planner/PlanRecord.v1.ts`
-- `packages/@dvt/contracts/src/contracts/planner/PlanValidationLifecycle.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanVersion.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PolicyMappingTable.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/StepKindRegistry.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/StoredPlanArtifactValidation.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowCompiler.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowCompilerSummary.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowDesignGraph.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowStepKinds.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowStepTypeConfigs.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringCommand.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts`
 
 ## Repository-local documents
 
-- [Plan store records v1](PlanStoreRecords.v1.md)
+- [Execution selection and executable subgraph v1](execution-selection-and-executable-subgraph-v1.md)
+- [Plan store records v1](plan-store-records-v1.md)
 - [Transformation flow compiler mapping v1](TransformationFlowCompiler.v1.md)
 - [Transformation flow preview and design graph v1](TransformationFlowPreview.v1.md)
-- [Workspace graph draft persistence v1](WorkspaceGraphDraftPersistence.v1.md)
+- [Workspace graph draft persistence v1](workspace-graph-draft-persistence-v1.md)
 
 ## Related
 

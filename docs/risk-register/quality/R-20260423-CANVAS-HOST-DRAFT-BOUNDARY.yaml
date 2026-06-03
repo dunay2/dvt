@@ -1,0 +1,29 @@
+---
+id: R-20260423-CANVAS-HOST-DRAFT-BOUNDARY
+title: Canvas host can overclaim multi-canvas truth before the draft boundary supports it
+status: Open
+date: 2026-04-23
+owners:
+  - apps/web
+  - packages/@dvt/contracts
+severity: Medium
+probability: Medium
+context: >
+  `TF-E2-K-A` adds a real host-owned create-canvas posture and requires a typed `canvas` document on
+  the canonical workspace draft. The active backend boundary still persists one authoritative draft
+  record per workspace.
+risk: >
+  Follow-up UI work could imply full multi-canvas persistence or host-level tab restoration before
+  the protected draft contract carries a truthful document list. That would recreate the same drift
+  this slice just removed: a host that looks richer than the authoritative boundary underneath it.
+mitigations:
+  - The first-canvas host slice hard-cuts to one persisted canvas document per workspace and rejects
+    synthetic default documents.
+  - The local host guide and closeout both state that multi-canvas restoration remains a later
+    slice.
+  - The route uses plugin-owned `CanvasKindRegistration` for typed empty state instead of inventing
+    a second host-local catalog.
+  - Lane E now tracks `TF-E2-K-B` explicitly as the next slice instead of letting tabs emerge as ad
+    hoc UI behavior.
+review_after: 2026-05-15
+---

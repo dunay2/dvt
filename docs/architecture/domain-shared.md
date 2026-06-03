@@ -2,7 +2,7 @@
 title: Shared Boundary Domain
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-05-14
 ---
 
 # Shared Boundary Domain
@@ -52,14 +52,12 @@ flowchart LR
 
 ## Current Posture
 
-The shared boundary is implemented, but its hardest requirement is discipline:
-keeping the shared surface intentionally small and moving domain-private
-behavior back to its owning context when drift is discovered.
+The shared boundary is implemented, and `RC-G1` closed the known contract
+ownership drift: domain-private behavior ports now live in owner packages while
+`@dvt/contracts` keeps serializable vocabulary, schemas, refs, and event shapes.
 
 ## Queued Delta
 
-- `RC-G1`: continue shared-kernel ownership cleanup across engine, planner,
-  delivery, and artifacts.
 - `S11`: tighten lineage sink facets without widening the shared surface beyond
   what downstream consumers need.
 - keep OTel binding validation honest so observability docs do not overstate

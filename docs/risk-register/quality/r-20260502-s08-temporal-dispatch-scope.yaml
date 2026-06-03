@@ -1,0 +1,33 @@
+---
+id: R-20260502-S08-TEMPORAL-DISPATCH-SCOPE
+title: Residual S08 scoped dispatch depends on upstream plan-record migration
+status: Open
+date: 2026-05-02
+owners:
+  - '@dvt/adapter-temporal'
+  - 'dvt-temporal-worker'
+severity: Medium
+probability: Medium
+---
+summary: >
+  Temporal worker dispatch materialization now requires run context scope and rejects ownership
+  mismatches, but the underlying Postgres/API plan-record migration is still owned by separate S08
+  units. Until those units complete, Temporal can prove fetched canonical-plan ownership but not yet
+  replace the upstream unscoped Postgres record model.
+
+mitigation:
+  - Keep `TemporalPlanArtifactReader` as the only Temporal activity dependency for plan dispatch
+    materialization.
+  - Keep architecture tests that forbid `PlanFetcherLike`, `planStore`, and raw activity-level
+    fetcher dependencies.
+  - Continue S08 API/Postgres/engine scoped record migration under the owning `SYS-PLANSTORE-*`
+    units.
+
+monitoring:
+  cadence: per PR touching Temporal plan dispatch, API plan-store composition, or PostgresPlanStore
+  signals:
+    - 'pnpm --filter @dvt/adapter-temporal test -- test/temporalPlanArtifactReader.test.ts
+      test/workflow-component-semantics.architecture.test.ts'
+    - 'pnpm --filter dvt-temporal-worker test --
+      test/runtime/createTemporalWorkerRuntime.srp.architecture.test.ts'
+    - 'pnpm docs:governance:file-component-index:check'

@@ -35,6 +35,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -BaseBranch main 
 # summarize the current branch PR checks
 powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -BaseBranch main -PrCheckSummary
 
+# fail fast when the current branch PR has failed or pending Actions checks
+pnpm pr:checks
+
 # extract the first failing GitHub Actions job snippet for the current branch PR
 powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -BaseBranch main -LogFirstTriage
 
@@ -48,6 +51,10 @@ Implementation notes:
   `pnpm verify:prepush`.
 - PR check classification and failed-job selection are backed by
   `tools/ci/pr-check-triage.mjs`.
+- `pnpm pr:checks` uses the same helper as an immediate non-watch gate:
+  exit `1` for failed Actions checks, exit `2` for pending Actions checks, and
+  exit `0` only when Actions checks are settled and green. It prints a compact
+  text summary by default; use `pnpm pr:checks:json` for the full JSON payload.
 - destructive cleanup remains opt-in.
 
 ## Changed-file Gates and Autofix
@@ -60,6 +67,8 @@ scripts that normally build dependency graphs before the main command.
 Behavior:
 
 - exits `0` when `DVT_CI=1|true`, so the `|| pnpm ... build` fallback is skipped
+- exits `0` when `TURBO_HASH` is present, so `turbo run typecheck` and
+  `turbo run test` do not recurse back into package-local dependency builds
 - exits `1` otherwise, so local builds keep the normal dependency prebuild path
 
 Use this only when CI already ran an explicit workspace-graph build step before
@@ -102,6 +111,30 @@ Behavior:
 
 Use this only for `prebuild` hooks whose dependency closure is now owned by the
 root `turbo` build graph.
+
+### `run-turbo-workspace-task.cjs`
+
+Canonical wrapper for governed Turbo workspace tasks used by affected local
+commands and lightweight CI matrix lanes.
+
+Usage:
+
+```bash
+node scripts/run-turbo-workspace-task.cjs build
+node scripts/run-turbo-workspace-task.cjs lint
+node scripts/run-turbo-workspace-task.cjs typecheck
+node scripts/run-turbo-workspace-task.cjs test
+node scripts/run-turbo-workspace-task.cjs build --filter @dvt/engine
+```
+
+Behavior:
+
+- only allows the governed task set: `build`, `lint`, `typecheck`, and `test`
+- defaults to the affected-work filter `...[origin/main]`
+- accepts an explicit `--filter <value>` override for CI/package-targeted runs
+- delegates dependency ownership to the Turbo graph, which surfaces
+  `TURBO_HASH` inside package-local hooks so `prebuild`/`pretypecheck`/`pretest`
+  fallbacks do not re-run the same dependency builds
 
 ### `build-workspace-runtime-deps.cjs`
 
@@ -184,14 +217,26 @@ Behavior:
   Docker Postgres proof environment before starting the API
 - exports the canonical local proof DSN as `DATABASE_URL` to the API when local
   bootstrap is used
+- starts a local Temporal dev service when the protected runtime is active
+  locally and `TEMPORAL_ADDRESS` is not already set
+- injects the resulting local Temporal runtime posture plus
+  `TEMPORAL_TASK_QUEUE=dvt-temporal` into the API and worker processes
+- preserves explicitly configured external `TEMPORAL_ADDRESS` posture instead
+  of replacing it with the local dev service
+- starts `dvt-temporal-worker` with the same Temporal/Postgres posture and
+  waits for its `GET /readyz` probe before starting the API
+- fails bootstrap explicitly if the Temporal worker exits or never becomes
+  ready, instead of allowing the API to surface a generic no-adapters error
 - enables `/db/ready` and waits for that probe before declaring the API ready
 - `--skip-postgres` leaves database bootstrap disabled and preserves the old
-  degraded-local behavior when no `DATABASE_URL` is set
+  degraded-local behavior when no `DATABASE_URL` is set; in that posture the
+  protected runtime is not locally bootstrapped and the Temporal worker is not
+  started
 
 ### `check-changed.cjs`
 
 Runs changed-file quality checks against the Git diff baseline. It is used by
-`pnpm verify:prepush`.
+`pnpm verify:changed` and as a substep of `pnpm verify:prepush`.
 
 Checks:
 
@@ -203,10 +248,53 @@ Diff policy:
 - prefers `origin/main...HEAD` when `origin/main` exists
 - falls back to the configured upstream or `HEAD~1..HEAD`
 
+### `verify-changed.cjs`
+
+Runs the fast changed-slice verification plan used during local iteration. It
+keeps closeout validation separate and only selects mechanical checks from the
+canonical changed-file set.
+
+The shared plan definitions, path predicates, and command execution helper live
+in `local-validation-plan.cjs`; this wrapper owns CLI argument parsing, local
+changed-file discovery, and operator output.
+
+Always runs:
+
+- changed docs location, filename, frontmatter, ARC, QA, markdown, feature
+  mechanization, lint/format, and forbidden-file checks
+
+Adds scoped checks:
+
+- `pnpm planning:db:inventory:check` when planning DB surfaces changed
+- adjacent `node --test scripts/<name>.test.cjs` checks for changed planning
+  workflow scripts that own a focused test file
+- `pnpm test:planning:db` only for planning/governance DB implementation
+  surfaces that require the full planning DB suite
+- `node --test scripts/verify-changed.test.cjs` when the verifier itself
+  changed
+
+Use `pnpm verify:changed -- --dry-run` to print the selected plan without
+executing it.
+
+### `verify-prepush.cjs`
+
+Runs the local pre-push closeout wrapper. By default it delegates changed-slice
+routing to `pnpm verify:changed` once, so package tests, changed docs checks,
+format/lint checks, and developer-workflow self-tests are selected by the same
+plan used during iteration.
+
+The Git hook calls `pnpm verify:prepush -- --hook`. A successful manual
+`verify:prepush` writes a local `.git` stamp for the current `HEAD`, changed
+file set, and diff fingerprint; the hook skips only when that same state
+already passed an equivalent or stronger gate.
+
+Use `pnpm verify:prepush -- --full` only when a full local closeout is required.
+Full mode adds the prepush-only regression, governance, traceability,
+architecture, and type-check groups after the changed-slice gate.
+
 ### `type-check-prepush.cjs`
 
-Runs `pnpm type-check` only when the changed diff includes files that can alter
-the TypeScript graph or workspace dependency surface.
+Chooses the strict pre-push type-check path from the changed diff.
 
 Type-check triggers:
 
@@ -217,8 +305,17 @@ Type-check triggers:
 - `tsconfig*.json`
 - `vitest.config.ts`
 
-When the diff contains only docs, scripts, Markdown, or workflow YAML changes,
-the script skips `pnpm type-check` cleanly.
+Behavior:
+
+- skips cleanly when the diff contains no TypeScript-affecting files
+- runs `pnpm ci:affected:typecheck` when the relevant diff maps to one or more
+  workspace scopes without touching root graph inputs
+- runs full `pnpm type-check` when root or cross-workspace TypeScript graph
+  inputs changed, or when a relevant file cannot be mapped to a workspace scope
+
+Classification is driven by the shared CI scope policy in `tools/ci/`, so the
+strict pre-push gate reuses the same workspace inventory already governing the
+affected CI matrix.
 
 ### `lint-markdown-changed.cjs`
 
@@ -275,6 +372,7 @@ GitHub CLI-backed helper used by `hygiene.ps1` for PR status inspection.
 Capabilities:
 
 - normalize GitHub Actions and external status checks
+- print compact PR check gate summaries for operator closeout
 - classify checks into failed, pending, successful, skipped, and external
 - pick the first failing GitHub Actions check deterministically
 - fetch failed-job logs and extract a compact failure snippet

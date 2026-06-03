@@ -1,0 +1,18 @@
+---
+id: R-20260513-AR-A4-CUSTOM-POLICY-NAMESPACE-FREEZE
+title: Frozen custom policy namespace seam may need future reactivation
+status: Open
+date: 2026-05-13
+owners:
+  - '@dvt/planner'
+  - '@dvt/contracts'
+severity: Low
+probability: Low
+---
+context: >
+  AR-A4 freezes the custom policy namespace registry because no production consumer exists. A future
+  product use case may legitimately need this seam.
+mitigation: >
+  The component guide records the reactivation path: real consumer, ADR or mandatory proposal,
+  command/query ownership, negative tests, architecture guard update, ARC evidence, and risk update
+  in the same slice.

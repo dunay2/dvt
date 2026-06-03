@@ -1,11 +1,10 @@
 export type {
   AppendResult,
+  EventInput,
   EventEnvelope,
   EventType,
   RunEventInput,
-  RunEventPersisted,
-  RunLevelEventInput,
   RunMetadata,
-  StepLevelEventInput,
+  StepEventInput,
   WorkflowSnapshot,
 } from '../runEvents.js';

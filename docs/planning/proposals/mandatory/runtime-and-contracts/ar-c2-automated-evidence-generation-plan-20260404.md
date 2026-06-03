@@ -101,3 +101,7 @@ sequenceDiagram
 - replacing canonical SLA definitions,
 - changing runtime metric names in this slice,
 - changing product authorization model.
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `RUNTIME-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

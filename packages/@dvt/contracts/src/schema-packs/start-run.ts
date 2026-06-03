@@ -1,3 +1,10 @@
+/**
+ * Owned concern: define runtime validation schemas for the canonical
+ * start-run boundary contract.
+ *
+ * The schema pack must derive its public truth from `StartRunBoundary.v1.ts`
+ * rather than re-declare ad hoc contract literals.
+ */
 import { z } from 'zod';
 
 import {
@@ -5,8 +12,10 @@ import {
   START_RUN_DUPLICATE_OF,
   START_RUN_RATE_LIMIT_CODE,
   START_RUN_RESULT_KIND,
-  START_RUN_TARGET_ADAPTER,
+  START_RUN_SYSTEM_BACKPRESSURE_CODES,
+  SUPPORTED_START_RUN_TARGET_ADAPTERS,
 } from '../contracts/engine/StartRunBoundary.v1.js';
+import { ExecutionSelectionSchema } from '../contracts/planner/ExecutionSelection.v1.js';
 import { EXECUTABILITY_REJECTION_CODES } from '../contracts/planner/PlanExecutabilityValidation.v1.js';
 import { PlannerPolicyClassSetSchema } from '../contracts/planner/PlannerPolicyVocabulary.v2.js';
 
@@ -14,10 +23,7 @@ import { NonBlankStringSchema, PlanRefSchema, RunExecutionContextRefSchema } fro
 import { PlannerEnvironmentContextSchema, PlannerObservabilitySchema } from './planner-context.js';
 import { GenericGraphSourceV1Schema } from './planner-graph.js';
 
-export const StartRunTargetAdapterSchema = z.enum([
-  START_RUN_TARGET_ADAPTER.temporal,
-  START_RUN_TARGET_ADAPTER.mock,
-]);
+export const StartRunTargetAdapterSchema = z.enum(SUPPORTED_START_RUN_TARGET_ADAPTERS);
 
 export const StartRunPlanRefSchema = PlanRefSchema;
 export const StartRunPlannerEnvironmentInputSchema = PlannerEnvironmentContextSchema;
@@ -44,7 +50,7 @@ export const StartRunCommandSchema = z
     observability: PlannerObservabilitySchema,
     runId: NonBlankStringSchema,
     targetAdapter: StartRunTargetAdapterSchema,
-    selection: z.array(NonBlankStringSchema),
+    selection: ExecutionSelectionSchema,
   })
   .strict()
   .superRefine((command, ctx) => {
@@ -122,10 +128,7 @@ const StartRunSystemBackpressureResultSchema = z
   .object({
     kind: z.literal(START_RUN_RESULT_KIND.systemBackpressure),
     accepted: z.literal(false),
-    code: z.enum([
-      START_RUN_BACKPRESSURE_CODE.system,
-      START_RUN_BACKPRESSURE_CODE.snapshotUnavailable,
-    ]),
+    code: z.enum(START_RUN_SYSTEM_BACKPRESSURE_CODES),
     retryAfterSeconds: z.number().int().positive(),
   })
   .strict();

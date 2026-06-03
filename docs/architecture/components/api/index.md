@@ -2,7 +2,7 @@
 title: apps/api
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-20
+last_reviewed: 2026-04-24
 ---
 
 # apps/api
@@ -15,8 +15,10 @@ process.
 
 ## Current Responsibilities
 
-- expose protected runtime routes for start, list, get, events, signal, and cancel;
-- expose plan preview/import routes used by the frontend planning flow;
+- expose protected runtime routes for session, start, list, get, events,
+  signal, cancel, recover, workspace files, and workspace draft boundaries;
+- expose plan preview, compile, and import routes used by the frontend
+  planning flow;
 - expose optional admin rebuild routes when operationally enabled;
 - compose planner, engine, delivery, and operational dependencies;
 - surface readiness, health, version, and reconciler state;
@@ -32,7 +34,8 @@ flowchart LR
   API --> Engine["@dvt/engine"]
   API --> Delivery["@dvt/delivery admission guard"]
   API --> Postgres["@dvt/adapter-postgres state, intent, and plan stores"]
-  API --> Providers["mock / temporal provider adapters"]
+  API --> Providers["provider adapter factories"]
+  Providers --> Temporal["Temporal provider adapter"]
   API --> Observability["@dvt/observability"]
 ```
 
@@ -41,6 +44,12 @@ flowchart LR
 - [app.ts](../../../../apps/api/src/app.ts)
 - [server.ts](../../../../apps/api/src/server.ts)
 - [buildProtectedRuntimeModule.ts](../../../../apps/api/src/modules/buildProtectedRuntimeModule.ts)
+- [buildProtectedRuntimeStorage.ts](../../../../apps/api/src/modules/protectedRuntime/buildProtectedRuntimeStorage.ts)
+- [buildProtectedAdmissionRuntime.ts](../../../../apps/api/src/modules/protectedRuntime/buildProtectedAdmissionRuntime.ts)
+- [buildProtectedSecurityRuntime.ts](../../../../apps/api/src/modules/protectedRuntime/buildProtectedSecurityRuntime.ts)
+- [buildProtectedExecutionRuntime.ts](../../../../apps/api/src/modules/protectedRuntime/buildProtectedExecutionRuntime.ts)
+- [buildProtectedStartRunRuntime.ts](../../../../apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts)
+- [buildWorkspaceGraphDraftRuntime.ts](../../../../apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts)
 - [buildProviderAdapters.ts](../../../../apps/api/src/modules/buildProviderAdapters.ts)
 - [planCompileBoundary.ts](../../../../apps/api/src/modules/planCompileBoundary.ts)
 - [planRoutePolicyCatalog.ts](../../../../apps/api/src/application/services/planRoutePolicyCatalog.ts)
@@ -59,6 +68,10 @@ This component is active product code. The protected plan-route family now
 shares one remote-facade executor, one declarative request-resolution recipe,
 one declarative route-policy catalog, and one canonical authorized
 planner-input assembler for the preview and compile planner-backed flows.
+Preview and planner-backed start-run now also resolve selected closure from the
+protected workspace graph draft through one local executable-subgraph seam
+before planner build, so `apps/api` no longer relies on whole-draft compile
+assumptions for selected execution.
 Preview observability enrichment now binds once at the request boundary used
 by the preview flow, while import keeps canonical ownership checks separate
 from planner ingress. The `plan compile` boundary now converges catalog
@@ -71,9 +84,81 @@ Use the main walkthrough below for the real current system, the target API
 shape, and the governed transition route:
 
 - [API Current To Target Architecture](./api-current-to-target-architecture.md)
+- [Protected Runtime Command/Query Rail Design](./protected-runtime-command-query-rail-design.md)
+- [Protected Runtime And Plan Compile Component](./protected-runtime-and-plan-compile-component.md)
+- [Cost Attribution Summary Component](./cost-attribution-summary-component.md)
+- [Cost Attribution Summary User Stories](./cost-attribution-summary-user-stories.md)
+- [Planner Ingress Hard-Cut Component](./planner-ingress-hard-cut-component.md)
+- [Planner Ingress Hard-Cut User Stories](./planner-ingress-hard-cut-user-stories.md)
+- [Temporal Fowler provider-truth follow-up review](../../../planning/reviews/architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md)
 - [API Control-Plane User Manual](../../../guides/api-control-plane-user-manual-20260404.md)
 - [API Control-Plane Technical Manual](../../../guides/api-control-plane-technical-manual-20260404.md)
 - [API Runtime SLA Canonical](../../../runbooks/api-runtime-sla-canonical-20260404.md)
+
+## Local Component Guides
+
+- [Protected Runtime Command/Query Rail Design](./protected-runtime-command-query-rail-design.md):
+  canonical architecture/design view for the protected runtime rail source of
+  truth, route family ownership, compatibility posture, and remaining SSOT
+  design gaps.
+- [Protected Runtime And Plan Compile Component](./protected-runtime-and-plan-compile-component.md):
+  public API, invariants, transitions, consumers, focused file map, and
+  semantic test anchors for the protected runtime composition seam.
+- [Planner Ingress Hard-Cut Component](./planner-ingress-hard-cut-component.md):
+  local guide for canonical `graphSource` planner ingress and legacy
+  `manifestRef`/`targetProfile` hard-cut rejection.
+- [Runtime Review Canon Component](./runtime-review-canon-component.md):
+  local guide for canonical runtime/API review disposition, public API,
+  invariants, transitions, consumers, and semantic architecture guard.
+- [Runtime Review Canon User Stories](./runtime-review-canon-user-stories.md):
+  user-facing scenarios for maintainers and planning stewards who route runtime
+  review findings into rails, closeouts, or Planning DB tasks.
+- [Protected runtime route group component](../../../../apps/api/docs/protected-runtime-route-group-component.md):
+  local API maintainer guide for route registration, route-family mapping,
+  invariants, and compatibility posture.
+- [HTTP runtime error translation component](../../../../apps/api/docs/http-runtime-error-translation-component.md):
+  local guide for the HTTP error-envelope boundary with public API,
+  invariants, transitions, consumers, and focused diagrams.
+- [Plan route response translation component](../../../../apps/api/docs/plan-route-response-translation-component.md):
+  local guide for the preview/compile/import response-mapping boundary with
+  public API, invariants, transitions, consumers, and focused diagrams.
+- [Start-run application component](../../../../apps/api/docs/start-run-application-component.md):
+  local guide for the authenticated start-run application component, its
+  facade/use-case boundaries, invariants, transitions, consumers, and
+  canonical shared-contract import rules.
+- [Start-run control boundary component](../../../../apps/api/docs/start-run-control-boundary-component.md):
+  local guide for the grouped API start-run control boundary spanning caller
+  intent parsing, platform-owned identity insertion, authenticated admission,
+  and delegate dispatch.
+- [Start-run runtime composition component](../../../../apps/api/docs/start-run-runtime-composition-component.md):
+  local guide for the protected-runtime subcomponent that assembles the
+  authenticated start-run chain from abstract runtime dependencies.
+- [Executable-subgraph resolution component](../../../../apps/api/docs/executable-subgraph-resolution-component.md):
+  local guide for the API seam that resolves protected selected-closure truth
+  for preview and planner-backed start-run before planner build.
+- [Protected runtime dependency builders component](../../../../apps/api/docs/protected-runtime-dependency-builders-component.md):
+  local guide for the protected-runtime builder cluster that assembles storage,
+  admission, security, and execution dependency slices for the outer root.
+- [Protected security access decision component](../../../../apps/api/docs/protected-security-access-decision-component.md):
+  local guide for the protected auth/authz language and decision component,
+  including public API, invariants, transitions, consumers, and semantic
+  ownership rules.
+- [Start-run execution capacity admission component](../../../../apps/api/docs/start-run-execution-capacity-admission-component.md):
+  local guide for the abstract start-run execution-capacity admission seam,
+  its fail-closed default binding, invariants, transitions, and consumers.
+- [Start-run admission observability component](../../../../apps/api/docs/start-run-admission-observability-component.md):
+  local guide for the canonical start-run admission telemetry cluster,
+  bounded metric-label rules, invariants, transitions, and consumers.
+- [Workspace graph draft runtime composition component](../../../../apps/api/docs/workspace-graph-draft-runtime-composition-component.md):
+  local guide for the protected-runtime subcomponent that assembles the
+  workspace-graph-draft store, capability service, and use-case chain.
+- [Workspace graph draft application component](../../../../apps/api/docs/workspace-graph-draft-application-component.md):
+  local guide for the protected workspace-graph-draft application component,
+  its capability service, read/write use cases, invariants, and semantic
+  ownership rules.
+- [Temporal Fowler provider-truth follow-up review](../../../planning/reviews/architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md):
+  Fowler-style architecture analysis for the Temporal branch work, residual
+  drift map, mature-system comparison, and recommended next moves.
 
 ## Planned Delta
 

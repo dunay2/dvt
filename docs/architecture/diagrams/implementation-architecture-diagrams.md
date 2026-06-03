@@ -2,7 +2,7 @@
 title: Implementation Architecture Diagrams
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-11
+last_reviewed: 2026-04-29
 ---
 
 # Implementation Architecture Diagrams
@@ -54,10 +54,10 @@ Key design decisions:
 
 ### Known Problems
 
-- **Conductor stub pollution**: `ConductorAdapterStub` exists in engine adapters
-  and leaks a `'conductor'` provider variant into the `Provider` type union. The
-  Conductor runtime is not on the active delivery path and should be cleaned up
-  (tracked as `AR-A8`).
+- **Provider-vocabulary hard cut is recent**: active provider contracts now
+  expose only implemented runtime providers, but future-runtime planning must
+  stay outside active contract/docs surfaces until it has an ADR-backed adapter
+  and conformance suite.
 - **`@dvt/state-store` abstraction gap**: The package exists but most of the real
   store behavior lives in `@dvt/adapter-postgres` and `@dvt/engine` in-memory
   stores. The boundary between these three is not yet sharp.
@@ -102,7 +102,6 @@ flowchart TB
     statestore["@dvt/state-store<br/>Store abstraction"]:::impl
     temporal["@dvt/adapter-temporal<br/>Temporal adapter"]:::impl
     postgres["@dvt/adapter-postgres<br/>Postgres state store"]:::impl
-    conductor["Conductor adapter<br/>(stub only)"]:::planned
   end
 
   subgraph Planning["Planning Domain"]
@@ -135,7 +134,6 @@ flowchart TB
   engine --> statestore
   engine --> temporal
   engine --> postgres
-  engine -.-> conductor
   rundomain --> contracts
   delivery --> contracts
   planner --> contracts
@@ -372,15 +370,15 @@ architecture, gathered from the section analyses above.
 
 **Identified bugs (from audit)**:
 
-| ID    | Component                 | Summary                                                       | Severity |
-| ----- | ------------------------- | ------------------------------------------------------------- | -------- |
-| E-02  | SignalTransitionGuard     | Asymmetric PAUSE/RESUME idempotency                           | Medium   |
-| E-04  | Engine ports              | `IPlanFetcher` declaration duplicated across two code anchors | Low      |
-| DL-01 | OutboxWorker.processBatch | Sequential record processing                                  | Medium   |
+| ID    | Component                 | Summary                             | Severity |
+| ----- | ------------------------- | ----------------------------------- | -------- |
+| E-02  | SignalTransitionGuard     | Asymmetric PAUSE/RESUME idempotency | Medium   |
+| DL-01 | OutboxWorker.processBatch | Sequential record processing        | Medium   |
 
 Closed audit items such as the earlier `DispatchedIntentReconciliationPolicy`
-outcome-key bug and the Temporal native-cancel cutover are intentionally
-omitted from the active inventory.
+outcome-key bug, the Temporal native-cancel cutover, and the WE-HX-1
+stored-plan artifact ownership split is intentionally omitted from the active
+inventory.
 
 **Design improvement opportunities (not previously identified):**
 
@@ -424,16 +422,15 @@ flowchart TB
     E7["Plan integrity (SHA-256 + JCS)"]:::impl
     E8["Signal transition guard"]:::impl
     E9["Run access policy + authorizer"]:::impl
-    E10["Mock adapter (testing)"]:::impl
+    E10["In-memory provider adapter (unit-test support)"]:::impl
     E11["Step-kind dispatch plus provider-owned<br/>Postgres relational capability"]:::impl
   end
 
   subgraph "Planned / In Progress"
     P1["Incremental snapshot projection<br/>(vs full event replay)"]:::planned
     P2["Parallel outbox batch delivery<br/>(currently sequential)"]:::planned
-    P4["DbtStepActivity real implementation<br/>(currently no-op stub)"]:::planned
+    P4["DBT plugin package sandbox hardening<br/>(package extraction complete)"]:::planned
     P5["ObservedTemporalAdapter metrics<br/>(currently bare pass-through)"]:::planned
-    P6["Conductor adapter<br/>(stub only, AR-A8 cleanup)"]:::planned
     P7["Lineage worker runtime<br/>(wired but not shipping)"]:::planned
     P8["Request-level timeout in API routes"]:::planned
     P9["Circuit breaker at adapter boundary<br/>(removed, needs re-evaluation)"]:::planned

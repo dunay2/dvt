@@ -13,7 +13,7 @@ export function advisoryLockSql(): string {
 }
 
 export function maxRunSeqSql(schema: string): string {
-  return `SELECT COALESCE(MAX(run_seq), 0) AS max_seq FROM ${quoteIdentifier(schema)}.run_events WHERE run_id = $1`;
+  return `SELECT COALESCE(MAX(run_seq), 0) AS max_seq FROM ${quoteIdentifier(schema)}.run_events WHERE tenant_id = $1 AND run_id = $2`;
 }
 
 export function listEventsSql(schema: string, afterSeqClause: string, limitClause: string): string {
@@ -97,7 +97,7 @@ export function selectExistingEventSql(schema: string): string {
   return `
     SELECT payload
     FROM ${quoteIdentifier(schema)}.run_events
-    WHERE run_id = $1 AND idempotency_key = $2
+    WHERE tenant_id = $1 AND run_id = $2 AND idempotency_key = $3
     LIMIT 1
   `;
 }

@@ -1,14 +1,27 @@
 // @vitest-environment jsdom
 
+/** Owned concern: prove CanvasShell contract rendering and command propagation. */
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import CanvasShell from './CanvasShell';
-import { DEFAULT_CANVAS_PALETTE_ID } from './canvasPalette';
-import type { CanvasDraftToolbarState } from './canvasDraftPresentationState';
+import { buildCanvasWorkspaceResourceGroups } from '../../components/canvasWorkspaceExplorerModel';
+import { DEFAULT_CANVAS_GRID_COLOR, DEFAULT_CANVAS_PALETTE_ID } from './canvasPalette';
 import { canvasViewCopy } from './copy';
-import type { CanvasShellProps } from './canvasShell.types';
+import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
+import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
+import type {
+  CanvasShellChromeCommands,
+  CanvasShellCanvasCommands,
+  CanvasShellGraph,
+  CanvasShellGraphCommands,
+  CanvasShellLayout,
+  CanvasShellPanels,
+  CanvasShellProps,
+  CanvasShellToolbar,
+} from './canvasShell.types';
+import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 
 const shellState = vi.hoisted(() => ({
   dbtExplorerProps: null as null | Record<string, unknown>,
@@ -35,7 +48,9 @@ vi.mock('../../components/SourceImportWizard', () => ({
 }));
 
 vi.mock('./CanvasToolbar', () => ({
-  default: () => <div data-testid="canvas-toolbar" />,
+  default: (props: { variant?: string }) => (
+    <div data-testid="canvas-toolbar" data-variant={props.variant ?? 'standalone'} />
+  ),
 }));
 
 vi.mock('./CanvasViewport', () => ({
@@ -45,84 +60,169 @@ vi.mock('./CanvasViewport', () => ({
   },
 }));
 
-function buildProps(overrides?: Partial<CanvasShellProps>): CanvasShellProps {
+type CanvasShellPropsOverrides = {
+  layout?: Partial<CanvasShellLayout>;
+  panels?: Partial<CanvasShellPanels>;
+  graph?: Partial<CanvasShellGraph>;
+  toolbar?: Partial<CanvasShellToolbar>;
+  graphCommands?: Partial<CanvasShellGraphCommands>;
+  chromeCommands?: Partial<CanvasShellChromeCommands>;
+  canvasCommands?: Partial<CanvasShellCanvasCommands>;
+};
+
+function buildPlanRunReadiness(
+  overrides?: Partial<PlanRunReadinessReadModel>
+): PlanRunReadinessReadModel {
+  return {
+    blockers: ['plan_integrity'],
+    rail: 'ObservePlanRunReadiness',
+    status: 'blocked',
+    summary: canvasViewCopy.planStatusPreviewRequiredMessage,
+    ...overrides,
+  };
+}
+
+function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
   const defaultDraftToolbarState: CanvasDraftToolbarState = {
     label: canvasViewCopy.draftSyncedLabel,
     tone: 'neutral',
     showReloadAction: false,
   };
 
+  const explorerNodes = [
+    {
+      id: 'node.orders',
+      name: 'orders',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+    },
+  ] satisfies CanvasShellPanels['inspectorGraphNodes'];
+
   return {
-    focusMode: false,
-    explorerPanelVisible: true,
-    inspectorPanelVisible: false,
-    explorerNodes: [
-      {
-        id: 'node.orders',
-        name: 'orders',
-        pluginId: 'dbt',
-        kind: 'dbt:model',
-        role: 'transform',
-        status: 'idle',
-        tags: [],
+    layout: {
+      focusMode: false,
+      explorerPanelVisible: true,
+      inspectorPanelVisible: false,
+      canOpenSourceImport: true,
+      hostTabState: {
+        activeTabId: null,
+        tabs: [],
       },
-    ],
-    inspectorNode: null,
-    activeRunId: null,
-    registeredPlugins: new Set(['dbt']),
-    userPermissions: {
-      canPlan: true,
-      canRun: true,
-      canEditEdges: true,
+      centerSurfaceMode: 'replace',
+      centerSurface: undefined,
+      readOnlyBanner: undefined,
+      ...overrides?.layout,
     },
-    nodesWithImpact: [],
-    edges: [],
-    nodeTypes: {},
-    gridSize: 24,
-    canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
-    viewport: null,
-    onNodesChange: vi.fn(),
-    onNodeDragStop: vi.fn(),
-    onEdgesChange: vi.fn(),
-    onConnect: vi.fn(),
-    onNodeClick: vi.fn(),
-    onSelectionChange: vi.fn(),
-    onViewportChange: vi.fn(),
-    onDrop: vi.fn(),
-    onDragOver: vi.fn(),
-    onSourceImportComplete: vi.fn(),
-    importedNodeFocusIds: [],
-    onImportedNodeFocusComplete: vi.fn(),
-    onHideExplorer: vi.fn(),
-    onShowExplorer: vi.fn(),
-    onHideInspector: vi.fn(),
-    onShowInspector: vi.fn(),
-    onAutoLayout: vi.fn(),
-    onToggleCostOverlay: vi.fn(),
-    onToggleImpact: vi.fn(),
-    onToggleColumns: vi.fn(),
-    onReloadLatestDraft: vi.fn(),
-    onPlan: vi.fn(),
-    onRun: vi.fn(),
-    draftToolbarState: defaultDraftToolbarState,
-    canStartRun: false,
-    planStatusSummary: canvasViewCopy.planStatusPreviewRequiredMessage,
-    exclusiveOverlayMode: 'runtime',
-    canUseCostOverlay: false,
-    impactOverlayEnabled: false,
-    columnLevelLineageEnabled: false,
-    canvasAuthoringMode: 'transformation',
-    transformationValidation: {
-      valid: false,
-      summaryCode: 'requires_three_nodes',
-      draftSignature: 'draft',
-      scopedNodeIds: [],
-      scopedEdgeIds: [],
-      nodeRolesById: {},
+    panels: {
+      explorerResourceGroups: buildCanvasWorkspaceResourceGroups({ nodes: explorerNodes }),
+      authoringNodeKinds: [buildTestNodeKind()],
+      activeCanvasId: null,
+      activeCanvas: null,
+      canvasDocuments: [],
+      executionEnvironmentOptions: [{ value: 'dev', label: 'dev' }],
+      canEditCanvas: true,
+      canDeleteActiveCanvas: false,
+      inspectorNode: null,
+      inspectorGraphNodes: [],
+      inspectorGraphEdges: [],
+      inspectorAuthoring: {
+        canEditNode: true,
+        onApplyNodeDraft: vi.fn(),
+      },
+      activeRunId: null,
+      registeredPlugins: new Set(['dbt']),
+      runtimeCapabilities: undefined,
+      userPermissions: {
+        canPlan: true,
+        canRun: true,
+        canEditEdges: true,
+      },
+      importedNodeFocusIds: [],
+      ...overrides?.panels,
     },
-    centerSurface: undefined,
-    readOnlyBanner: undefined,
-    ...overrides,
+    graph: {
+      nodesWithImpact: [],
+      edges: [],
+      nodeTypes: {},
+      gridSize: 24,
+      canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
+      canvasGridVisible: true,
+      canvasGridColor: DEFAULT_CANVAS_GRID_COLOR,
+      canvasSnapToGrid: false,
+      canvasEmptyStateGuideVisible: true,
+      viewport: null,
+      ...overrides?.graph,
+    },
+    toolbar: {
+      canvasAuthoringMode: 'transformation',
+      routeState: 'ready',
+      draftToolbarState: defaultDraftToolbarState,
+      canPlanGraph: false,
+      canStartRun: false,
+      canExportProjectSnapshot: true,
+      canImportProjectSnapshot: true,
+      planStatusSummary: canvasViewCopy.planStatusPreviewRequiredMessage,
+      planRunReadiness: buildPlanRunReadiness(),
+      exclusiveOverlayMode: 'runtime',
+      canUseCostOverlay: false,
+      impactOverlayEnabled: false,
+      columnLevelLineageEnabled: false,
+      transformationValidation: {
+        valid: false,
+        summaryCode: 'requires_three_nodes',
+        draftSignature: 'draft',
+        scopedNodeIds: [],
+        scopedEdgeIds: [],
+        nodeRolesById: {},
+      },
+      ...overrides?.toolbar,
+    },
+    graphCommands: {
+      onNodesChange: vi.fn(),
+      onNodeDrag: vi.fn(),
+      onNodeDragStop: vi.fn(),
+      onEdgesChange: vi.fn(),
+      onConnect: vi.fn(),
+      onReconnect: vi.fn(),
+      onNodeClick: vi.fn(),
+      onSelectionChange: vi.fn(),
+      onViewportChange: vi.fn(),
+      onDrop: vi.fn(),
+      onDragOver: vi.fn(),
+      onCreateAuthoringNode: vi.fn(),
+      onSourceImportComplete: vi.fn(),
+      onImportedNodeFocusComplete: vi.fn(),
+      ...overrides?.graphCommands,
+    },
+    chromeCommands: {
+      onHideExplorer: vi.fn(),
+      onShowExplorer: vi.fn(),
+      onHideInspector: vi.fn(),
+      onShowInspector: vi.fn(),
+      onAutoLayout: vi.fn(),
+      onToggleCostOverlay: vi.fn(),
+      onToggleImpact: vi.fn(),
+      onToggleColumns: vi.fn(),
+      onToggleGridVisible: vi.fn(),
+      onGridColorChange: vi.fn(),
+      onToggleSnapToGrid: vi.fn(),
+      onSetCanvasEmptyStateGuideVisible: vi.fn(),
+      onExportProjectSnapshot: vi.fn(),
+      onImportProjectSnapshotFile: vi.fn(),
+      onReloadLatestDraft: vi.fn(),
+      onPlan: vi.fn(),
+      onRun: vi.fn(),
+      ...overrides?.chromeCommands,
+    },
+    canvasCommands: {
+      onSelectCanvas: vi.fn(),
+      onApplyCanvasPatch: vi.fn(),
+      onDeleteActiveCanvas: vi.fn(),
+      ...overrides?.canvasCommands,
+    },
   };
 }
 
@@ -155,10 +255,12 @@ describe('CanvasShell', () => {
       root.render(
         <CanvasShell
           {...buildProps({
-            userPermissions: {
-              canPlan: false,
-              canRun: false,
-              canEditEdges: false,
+            panels: {
+              userPermissions: {
+                canPlan: false,
+                canRun: false,
+                canEditEdges: false,
+              },
             },
           })}
         />
@@ -171,6 +273,114 @@ describe('CanvasShell', () => {
     expect(shellState.dbtExplorerProps?.onOpenDataRegistry).toBeUndefined();
   });
 
+  it('renders host-owned tab chrome when the layout exposes an authoritative canvas tab', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasShell
+          {...buildProps({
+            layout: {
+              hostTabState: {
+                activeTabId: 'workspace-draft-canvas',
+                tabs: [
+                  {
+                    id: 'workspace-draft-canvas',
+                    title: 'Transformation canvas',
+                    kind: 'transformation',
+                    kindLabel: 'Transformation',
+                    source: 'workspace_draft',
+                  },
+                ],
+              },
+              hostTabStrip: <div data-testid="canvas-host-tab-strip" />,
+            },
+          })}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-testid="canvas-host-tab-strip"]')).not.toBeNull();
+  });
+
+  it('collapses canvas identity, workbench tabs, and route commands into one workbench chrome row', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasShell
+          {...buildProps({
+            layout: {
+              hostTabStrip: <div data-testid="canvas-host-tab-strip" />,
+              workbenchTabStrip: <div data-testid="canvas-workbench-tab-strip" />,
+            },
+          })}
+        />
+      );
+    });
+
+    const chrome = container.querySelector('[data-slot="canvas-workbench-chrome"]');
+    const hostTabStrip = container.querySelector('[data-testid="canvas-host-tab-strip"]');
+    const workbenchTabStrip = container.querySelector('[data-testid="canvas-workbench-tab-strip"]');
+    const canvasToolbar = container.querySelector('[data-testid="canvas-toolbar"]');
+
+    expect(chrome).not.toBeNull();
+    expect(hostTabStrip).not.toBeNull();
+    expect(workbenchTabStrip).not.toBeNull();
+    expect(canvasToolbar).not.toBeNull();
+    expect(chrome?.contains(hostTabStrip)).toBe(true);
+    expect(chrome?.contains(workbenchTabStrip)).toBe(true);
+    expect(chrome?.contains(canvasToolbar)).toBe(true);
+    expect(chrome?.getAttribute('class')).toContain('overflow-x-auto');
+    expect(chrome?.getAttribute('class')).not.toContain('flex-wrap');
+    expect(canvasToolbar?.getAttribute('data-variant')).toBe('inline');
+  });
+
+  it('keeps the graph workbench at a stable minimum width instead of crushing panels on narrow viewports', async () => {
+    await act(async () => {
+      root.render(<CanvasShell {...buildProps()} />);
+    });
+
+    const shellPanelGroup = container.querySelector('[data-slot="canvas-shell-panel-group"]');
+
+    expect(shellPanelGroup).not.toBeNull();
+    expect(shellPanelGroup?.getAttribute('class')).toContain('min-w-[960px]');
+  });
+
+  it('keeps Canvas route commands hidden while the first canvas document is not created', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasShell
+          {...buildProps({
+            toolbar: {
+              routeState: 'needs_canvas',
+            },
+          })}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-testid="canvas-toolbar"]')).toBeNull();
+  });
+
+  it('keeps governed center surfaces ahead of workbench unavailable panels', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasShell
+          {...buildProps({
+            layout: {
+              centerSurfaceMode: 'replace',
+              centerSurface: <div data-testid="first-canvas-center-surface" />,
+              workbenchTabPanel: <div data-testid="code-workbench-panel" />,
+            },
+            toolbar: {
+              routeState: 'needs_canvas',
+            },
+          })}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-testid="first-canvas-center-surface"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="code-workbench-panel"]')).toBeNull();
+  });
+
   it('keeps explorer import affordances wired when graph edits are allowed', async () => {
     await act(async () => {
       root.render(<CanvasShell {...buildProps()} />);
@@ -180,11 +390,80 @@ describe('CanvasShell', () => {
       canEditGraph: true,
     });
     expect(shellState.dbtExplorerProps?.onOpenDataRegistry).toBeTypeOf('function');
+    expect(shellState.sourceImportWizardProps).toMatchObject({
+      sourceImportOptions: [
+        expect.objectContaining({ id: 'includeColumns' }),
+        expect.objectContaining({ id: 'addTests' }),
+        expect.objectContaining({ id: 'addFreshness' }),
+      ],
+    });
+  });
+
+  it('keeps ready-canvas node creation out of the explorer contract', async () => {
+    const props = buildProps();
+
+    await act(async () => {
+      root.render(<CanvasShell {...props} />);
+    });
+
+    expect(shellState.dbtExplorerProps).toMatchObject({
+      resourceGroups: props.panels.explorerResourceGroups,
+      canEditGraph: true,
+    });
+    expect(shellState.dbtExplorerProps).not.toHaveProperty('nodeKinds');
+    expect(shellState.dbtExplorerProps).not.toHaveProperty('authoringNodeKinds');
+    expect(shellState.dbtExplorerProps).not.toHaveProperty('onCreateAuthoringNode');
+  });
+
+  it('hides explorer import affordances when source import is unavailable', async () => {
+    const props = buildProps({
+      layout: {
+        canOpenSourceImport: false,
+      },
+    });
+
+    await act(async () => {
+      root.render(<CanvasShell {...props} />);
+    });
+
+    expect(shellState.dbtExplorerProps).toMatchObject({
+      canEditGraph: true,
+    });
+    expect(shellState.dbtExplorerProps?.onOpenDataRegistry).toBeUndefined();
+  });
+
+  it('hides explorer import affordances when the dbt source import plugin is unavailable', async () => {
+    const props = buildProps({
+      panels: {
+        runtimeCapabilities: {
+          plugins: {
+            dbt: {
+              available: false,
+              reason: 'disabled in test',
+            },
+          },
+        },
+      },
+    });
+
+    await act(async () => {
+      root.render(<CanvasShell {...props} />);
+    });
+
+    expect(shellState.dbtExplorerProps).toMatchObject({
+      canEditGraph: true,
+    });
+    expect(shellState.dbtExplorerProps?.onOpenDataRegistry).toBeUndefined();
+    expect(shellState.sourceImportWizardProps).toMatchObject({
+      sourceImportOptions: [],
+    });
   });
 
   it('wires source import completion and imported-node focus through the shell surfaces', async () => {
     const props = buildProps({
-      importedNodeFocusIds: ['src_erp_orders', 'src_erp_customers'],
+      panels: {
+        importedNodeFocusIds: ['src_erp_orders', 'src_erp_customers'],
+      },
     });
 
     await act(async () => {
@@ -193,10 +472,10 @@ describe('CanvasShell', () => {
 
     expect(shellState.canvasViewportProps).toMatchObject({
       importedNodeFocusIds: ['src_erp_orders', 'src_erp_customers'],
-      onImportedNodeFocusComplete: props.onImportedNodeFocusComplete,
+      onImportedNodeFocusComplete: props.graphCommands.onImportedNodeFocusComplete,
     });
     expect(shellState.sourceImportWizardProps).toMatchObject({
-      onComplete: props.onSourceImportComplete,
+      onComplete: props.graphCommands.onSourceImportComplete,
     });
   });
 
@@ -220,10 +499,12 @@ describe('CanvasShell', () => {
       root.render(
         <CanvasShell
           {...buildProps({
-            userPermissions: {
-              canPlan: false,
-              canRun: false,
-              canEditEdges: false,
+            panels: {
+              userPermissions: {
+                canPlan: false,
+                canRun: false,
+                canEditEdges: false,
+              },
             },
           })}
         />

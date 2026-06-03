@@ -4,6 +4,7 @@ import {
   ContractValidationError,
   parseStartRunCommand,
   parseStartRunResult,
+  START_RUN_BACKPRESSURE_CODE,
 } from '../src/index.js';
 
 import {
@@ -12,13 +13,22 @@ import {
   VALID_START_RUN_RESULTS_FIXTURES,
 } from './fixtures/start-run-boundary.fixtures.js';
 
+const EXECUTION_CAPACITY_SYSTEM_BACKPRESSURE_CODES = [
+  START_RUN_BACKPRESSURE_CODE.capacitySignalUnavailable,
+  START_RUN_BACKPRESSURE_CODE.executionCapacityExhausted,
+  START_RUN_BACKPRESSURE_CODE.executorUnavailable,
+] as const;
+
 describe('contracts: StartRun boundary', () => {
   it('parses the plan-ref startRun command shape', () => {
     const command = parseStartRunCommand(VALID_START_RUN_PLAN_REF_COMMAND_FIXTURE);
 
     expect(command.planRef?.uri).toBe('s3://plans/plan-1.json');
     expect(command.targetAdapter).toBe('temporal');
-    expect(command.selection).toEqual(['model.analytics.orders']);
+    expect(command.selection).toEqual({
+      mode: 'explicit',
+      nodeIds: ['model.analytics.orders'],
+    });
   });
 
   it('parses the planner-backed startRun command shape', () => {
@@ -29,20 +39,26 @@ describe('contracts: StartRun boundary', () => {
     expect(command.environment?.environmentId).toBe('prod');
   });
 
-  it('rejects startRun commands with unsupported target adapters', () => {
-    expect(() =>
-      parseStartRunCommand({
-        ...VALID_START_RUN_PLAN_REF_COMMAND_FIXTURE,
-        targetAdapter: 'conductor',
-      })
-    ).toThrow(ContractValidationError);
-  });
+  it.each(['conductor', 'mock'] as const)(
+    'rejects startRun commands with unsupported target adapter %s',
+    (targetAdapter) => {
+      expect(() =>
+        parseStartRunCommand({
+          ...VALID_START_RUN_PLAN_REF_COMMAND_FIXTURE,
+          targetAdapter,
+        })
+      ).toThrow(ContractValidationError);
+    }
+  );
 
   it('rejects startRun commands with blank selections', () => {
     expect(() =>
       parseStartRunCommand({
         ...VALID_START_RUN_PLAN_REF_COMMAND_FIXTURE,
-        selection: ['model.analytics.orders', '   '],
+        selection: {
+          mode: 'explicit',
+          nodeIds: ['model.analytics.orders', '   '],
+        },
       })
     ).toThrow(ContractValidationError);
   });
@@ -62,7 +78,10 @@ describe('contracts: StartRun boundary', () => {
       parseStartRunCommand({
         runId: 'run-3',
         targetAdapter: 'temporal',
-        selection: ['model.analytics.orders'],
+        selection: {
+          mode: 'explicit',
+          nodeIds: ['model.analytics.orders'],
+        },
         policies: VALID_START_RUN_PLANNER_BACKED_COMMAND_FIXTURE.policies,
       })
     ).toThrow(ContractValidationError);
@@ -73,6 +92,25 @@ describe('contracts: StartRun boundary', () => {
 
     expect(result.kind).toBe(fixture.kind);
   });
+
+  it.each(EXECUTION_CAPACITY_SYSTEM_BACKPRESSURE_CODES)(
+    'parses execution-capacity system backpressure result code=%s',
+    (code) => {
+      const result = parseStartRunResult({
+        kind: 'system_backpressure',
+        accepted: false,
+        code,
+        retryAfterSeconds: 30,
+      });
+
+      expect(result).toEqual({
+        kind: 'system_backpressure',
+        accepted: false,
+        code,
+        retryAfterSeconds: 30,
+      });
+    }
+  );
 
   it('rejects plan_rejected results with non-canonical rejection codes', () => {
     expect(() =>

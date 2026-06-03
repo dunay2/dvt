@@ -21,24 +21,27 @@ describe('useUiLayoutStore', () => {
       focusMode: false,
       gridSize: 20,
       canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
+      canvasGridVisible: true,
+      canvasGridColor: '#94a3b8',
+      canvasSnapToGrid: false,
+      canvasEmptyStateGuideVisible: true,
       activeTabs: [{ id: 'main-canvas', type: 'canvas', label: 'Main Graph' }],
       activeTabId: 'main-canvas',
-      connectionStatus: { rest: 'ok', liveEvents: 'connected' },
     });
   });
 
-  it('normalizes legacy palette ids when the setter is called', () => {
+  it('falls back to the canonical palette when the setter receives a named alias', () => {
     useUiLayoutStore.getState().setCanvasPalette('blueprint' as never);
 
-    expect(useUiLayoutStore.getState().canvasPalette).toBe('#152033');
+    expect(useUiLayoutStore.getState().canvasPalette).toBe(DEFAULT_CANVAS_PALETTE_ID);
   });
 
-  it('normalizes legacy persisted palette ids during rehydrate', async () => {
+  it('falls back to the canonical palette when persisted state contains a named alias', async () => {
     localStorage.setItem(
       UI_LAYOUT_STORAGE_KEY,
       JSON.stringify({
         state: {
-          canvasPalette: 'workbench',
+          canvasPalette: 'blueprint',
           gridSize: 30,
           focusMode: true,
         },
@@ -50,5 +53,72 @@ describe('useUiLayoutStore', () => {
     expect(useUiLayoutStore.getState().canvasPalette).toBe(DEFAULT_CANVAS_PALETTE_ID);
     expect(useUiLayoutStore.getState().gridSize).toBe(30);
     expect(useUiLayoutStore.getState().focusMode).toBe(true);
+  });
+
+  it('does not own platform connection status inside shell layout state', async () => {
+    localStorage.setItem(
+      UI_LAYOUT_STORAGE_KEY,
+      JSON.stringify({
+        state: {
+          connectionStatus: { rest: 'offline', liveEvents: 'disconnected' },
+          gridSize: 30,
+        },
+      })
+    );
+
+    await useUiLayoutStore.persist.rehydrate();
+
+    expect('connectionStatus' in useUiLayoutStore.getState()).toBe(false);
+    expect('setConnectionStatus' in useUiLayoutStore.getState()).toBe(false);
+    expect(useUiLayoutStore.getState().gridSize).toBe(30);
+  });
+
+  it('owns canvas grid preferences as visual layout commands', async () => {
+    useUiLayoutStore.getState().setCanvasGridVisible(false);
+    useUiLayoutStore.getState().setCanvasGridColor('#f97316');
+    useUiLayoutStore.getState().setCanvasSnapToGrid(true);
+
+    expect(useUiLayoutStore.getState().canvasGridVisible).toBe(false);
+    expect(useUiLayoutStore.getState().canvasGridColor).toBe('#f97316');
+    expect(useUiLayoutStore.getState().canvasSnapToGrid).toBe(true);
+
+    await useUiLayoutStore.persist.rehydrate();
+
+    expect(useUiLayoutStore.getState().canvasGridVisible).toBe(false);
+    expect(useUiLayoutStore.getState().canvasGridColor).toBe('#f97316');
+    expect(useUiLayoutStore.getState().canvasSnapToGrid).toBe(true);
+  });
+
+  it('owns empty canvas guide visibility as a persisted visual layout command', async () => {
+    expect(useUiLayoutStore.getState().canvasEmptyStateGuideVisible).toBe(true);
+
+    useUiLayoutStore.getState().setCanvasEmptyStateGuideVisible(false);
+
+    expect(useUiLayoutStore.getState().canvasEmptyStateGuideVisible).toBe(false);
+
+    await useUiLayoutStore.persist.rehydrate();
+
+    expect(useUiLayoutStore.getState().canvasEmptyStateGuideVisible).toBe(false);
+  });
+
+  it('normalizes invalid persisted grid preferences back to canonical defaults', async () => {
+    localStorage.setItem(
+      UI_LAYOUT_STORAGE_KEY,
+      JSON.stringify({
+        state: {
+          canvasGridVisible: false,
+          canvasGridColor: 'not-a-color',
+          canvasSnapToGrid: true,
+          canvasEmptyStateGuideVisible: 'disabled',
+        },
+      })
+    );
+
+    await useUiLayoutStore.persist.rehydrate();
+
+    expect(useUiLayoutStore.getState().canvasGridVisible).toBe(false);
+    expect(useUiLayoutStore.getState().canvasGridColor).toBe('#94a3b8');
+    expect(useUiLayoutStore.getState().canvasSnapToGrid).toBe(true);
+    expect(useUiLayoutStore.getState().canvasEmptyStateGuideVisible).toBe(true);
   });
 });

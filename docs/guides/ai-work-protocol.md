@@ -1,4 +1,4 @@
-﻿---
+---
 title: AI Work Protocol
 status: Active
 owner: docs
@@ -9,19 +9,21 @@ last_reviewed: 2026-04-02
 
 This document defines the step-by-step workflow AI-assisted changes MUST follow in
 this repository. `AGENTS.md` is the behavioral mandate; this document is the
-procedure. Both must be respected â€” they are not alternatives.
+procedure. Both must be respected - they are not alternatives.
 
 ## Canonical References
 
 - [AGENTS.md](../../AGENTS.md)
 - [PR Preflight And CI Triage](./pr-preflight-and-ci-triage.md)
-- [Engineering Playbook](../architecture/atlas/engineering/engineering_playbook.md)
+- [Engineering Playbook](../architecture/atlas/engineering/engineering-playbook.md)
 - [ADR-0000: Code Generation With Enforced Normative Traceability](../adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md)
 - [ADR-0004: Event Sourcing Strategy](../adr/ADR-0004-event-sourcing-strategy.md)
 - [ADR-0005: Contract Formalization Tooling](../adr/ADR-0005-contract-formalization-tooling.md)
 - [RunEvents Contract](../architecture/components/engine/contracts/engine/RunEvents.v1.md)
 - [Testing and CI Capabilities](./testing-and-ci-capabilities.md)
 - [Planning Control Tower](../planning/state/planning-control-tower.md)
+- [Command And Query Rail Governance](../architecture/command-query-rail-governance.md)
+- [Fowler Opportunity Planning Governance](../architecture/fowler-opportunity-planning-governance.md)
 
 ## Startup Router Rule
 
@@ -46,30 +48,97 @@ When a task touches planning material, the agent MUST start from
 [Planning Control Tower](../planning/state/planning-control-tower.md) and update
 the document surfaces defined there in the same task.
 
+The planning DB is the canonical local operational source for task lifecycle
+writes and next-work queries; lane YAML is bootstrap/export compatibility unless
+the task explicitly changes lane taxonomy or reviewable snapshots.
+
 Minimum rule for every planning-affecting task:
 
-1. update or confirm the canonical task entry in the relevant
-   `agent-lane-*.yaml` file and regenerate the local planning-derived views;
-2. update the relevant source surface (`proposals`, `reviews`, `closeouts`,
+1. apply task claim, release, create, delete, status, progress, and evidence
+   changes through `pnpm planning:db:operate`, then confirm effective state with
+   `pnpm planning:db:query tasks` or `pnpm planning:db:query next`;
+2. for lane-level taxonomy, ownership, or sequencing changes outside a single
+   task row, update the relevant planning source surfaces, then run
+   `pnpm planning:db:import` and regenerate the local planning-derived views;
+3. update the relevant source surface (`proposals`, `reviews`, `closeouts`,
    `gaps`, or `roadmap`) based on task type;
-3. if sequencing, blockers, or lane ownership changed, update
+4. if sequencing, blockers, or lane ownership changed, update
    [Planning Control Tower](../planning/state/planning-control-tower.md),
    the relevant roadmap surface, and linked diagrams.
-4. when creating or renaming review files, follow
+5. when creating or renaming review files, follow
    [Review Naming Policy](../planning/reviews/review-naming-policy.md).
 
 Do not leave planning changes only in ad hoc notes or PR text when a canonical
 planning surface exists.
+
+## Feature Mechanization Placement Rule
+
+When a slice is non-trivial, changes implementation surfaces, adds top-level
+symbols, or is expected to satisfy the feature mechanization gate, the
+mechanization manifest is part of the declared pre-implementation route.
+
+The canonical manifest placement is a Markdown file under
+`docs/planning/proposals/mandatory/**` using a `feature-mechanization` fenced
+block. A closeout may cite that proposal, but it MUST NOT be the only place where
+the manifest is declared.
+
+The required sequence is:
+
+1. create or update the mandatory proposal with the Think-First analysis,
+   Fowler planning matrix, command/query rail posture, allowed implementation
+   surfaces, forbidden surfaces, red/green cycles, and declared symbols;
+2. run `pnpm docs:feature-mechanization -- --feature <FEATURE_ID>` before
+   production code changes;
+3. write the red tests named by the manifest;
+4. implement only within `allowedImplementationSurfaces`;
+5. if a new file, new top-level symbol, or new scope appears outside the
+   manifest, stop implementation, update the proposal manifest, and rerun the
+   feature-specific mechanization check before continuing;
+6. run `pnpm docs:feature-mechanization:implementation` before closeout and
+   before `pnpm verify:prepush`.
+
+This rule is intentionally about declared steps, not just document location. A
+passing late manifest does not prove the slice followed the repository workflow
+unless the route above was declared before implementation or the closeout records
+the deviation and corrective action.
+
+## Governance Refresh Placement Rule
+
+When a task touches governance or planning generated surfaces, keep the early
+work focused on content, code, tests, and the governing plan. Do not repeatedly
+run the full governance refresh during the inner development loop unless the
+next decision depends on generated output.
+
+Before closeout, run the canonical refresh command when any of these changed:
+
+- docs/planning/governance source surfaces;
+- governance workflow documentation;
+- governance generator or check scripts;
+- package scripts that affect docs, planning, or governance validation;
+- file additions, deletions, or renames that affect `system-governance-*`
+  indexes.
+
+The required final command is:
+
+```bash
+pnpm governance:refresh
+```
+
+This command owns the final quadrature for docs indexes, workboard views, docs
+manifests, `system-governance-*` indexes, fingerprints, coverage, remediation
+outputs, and planning/governance query-store import/checks. It must run before
+`pnpm ci:docs` or `pnpm verify:prepush` in affected slices, and it does not
+relax either gate.
 
 ## Task Modes
 
 Declare the task mode in the Pre-Implementation Brief (Phase 2). The mode
 determines which phases are mandatory.
 
-| Mode     | When to use                                                                                              | Required phases                       |
-| -------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| **Slim** | Maintenance, refactor, or bug fix â€” no new API surface, no new artifact, no new external behavior      | 0 â†’ 1 â†’ 2 â†’ 3 â†’ 6             |
-| **Full** | New feature, new contract, new endpoint, new public behavior, or any change that produces a new artifact | 0 â†’ 1 â†’ 2 â†’ 3 â†’ 4 â†’ 5 â†’ 6 |
+| Mode     | When to use                                                                                              | Required phases                 |
+| -------- | -------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| **Slim** | Maintenance, refactor, or bug fix - no new API surface, no new artifact, no new external behavior        | 0 -> 1 -> 2 -> 3 -> 6           |
+| **Full** | New feature, new contract, new endpoint, new public behavior, or any change that produces a new artifact | 0 -> 1 -> 2 -> 3 -> 4 -> 5 -> 6 |
 
 When in doubt, use Full. The cost of extra documentation is lower than a missing
 traceability chain.
@@ -78,7 +147,7 @@ traceability chain.
 
 ### Phase 0: Check Existing Material
 
-Before starting, do a mechanical check â€” the goal is to avoid duplicating work
+Before starting, do a mechanical check - the goal is to avoid duplicating work
 that already exists or reinventing what is already solved:
 
 - confirm whether the repository already contains documentation for the topic
@@ -86,10 +155,29 @@ that already exists or reinventing what is already solved:
   the decision
 - prefer extending canonical docs instead of creating parallel notes
 - check whether a maintained library already covers the need before designing a
-  custom implementation â€” search npm/GitHub for packages that fit the architectural
+  custom implementation - search npm/GitHub for packages that fit the architectural
   constraints (ESM, TypeScript, no framework lock-in)
+- check whether the behavior is already represented by a command or query in
+  the owning bounded context; reuse that rail instead of inventing a synonym
+- for externally observable command or query behavior, run the DB-first
+  creation-intent preflight before naming new code:
+
+  ```bash
+  pnpm planning:db:query creation-intent --intent "create a run status query" --limit 5
+  pnpm planning:db:query creation-intent --intent "create a governance component command" --type command --limit 5
+  ```
+
+  Treat `reuse-existing-rail`, `complete-existing-rail-before-creating`, and
+  `resolve-duplicate-before-creating` as stop signals for creating a parallel
+  rail. Treat `register-new-rail-before-creating` as the signal to update the
+  command/query rail catalog before implementation.
+
+- classify relevant findings as Fowler opportunities before implementation:
+  boundary drift, responsibility overload, primitive obsession, data clumps,
+  feature envy, duplicate semantics, hidden authority, anemic domain,
+  test-only confidence, or documentation drift
 - look for how comparable production projects solve the same class of problem
-  (event sourcing, outbox pattern, hexagonal architecture) â€” document what was
+  (event sourcing, outbox pattern, hexagonal architecture) - document what was
   found and why it was accepted or rejected in the Think-First options
 
 Do not start implementing until this check is done. If equivalent work exists or a
@@ -102,19 +190,23 @@ it to its destination. This is the gate between understanding and acting.
 
 **Destination:**
 
-- Task belongs to an open gap â†’ write in the gap tracker's Stage Detail section.
-- No gap tracker exists â†’ write as the first section of the closeout file
+- Task belongs to an open gap -> write in the gap tracker's Stage Detail section.
+- No gap tracker exists -> write as the first section of the closeout file
   (`docs/planning/closeouts/<task-id>-closeout.md`) before any code is touched.
 
 **Required fields:**
 
 - problem summary
-- root cause â€” why the problem exists, not just what it is
-- constraints and invariants â€” cite the governing ADRs by ID here; this replaces
+- root cause - why the problem exists, not just what it is
+- constraints and invariants - cite the governing ADRs by ID here; this replaces
   Phase 3's ADR discovery step
-- options considered â€” include libraries or patterns evaluated in Phase 0
+- options considered - include libraries or patterns evaluated in Phase 0
 - selected option and rationale
 - rejected alternatives
+- Fowler opportunity matrix - for non-trivial slices, record scenario,
+  opportunity, Fowler pattern, DDD owner, command/query rail, allowed
+  implementation surfaces, unit or package tests, architecture tests,
+  user-flow tests, and out-of-scope behavior
 
 ### Phase 2: Pre-Implementation Brief
 
@@ -126,15 +218,20 @@ After the think-first is written, document the concrete implementation plan:
 - expected outcome
 - risks and mitigations
 - out-of-scope items
-- validation plan â€” which commands will confirm the work is correct
-- test coverage plan â€” which negative paths and edge cases will be tested in
+- validation plan - which commands will confirm the work is correct
+- test coverage plan - which negative paths and edge cases will be tested in
   addition to the happy path; a brief stating only the happy path is incomplete
-- libraries evaluated â€” which libraries were assessed in Phase 0 and whether any
-  were adopted (`None evaluated â€” no custom implementation` if not applicable)
+- libraries evaluated - which libraries were assessed in Phase 0 and whether any
+  were adopted (`None evaluated - no custom implementation` if not applicable)
+- command/query rail impact - commands or queries added, changed, reused, or
+  explicitly out of scope; name the catalog surface that owns each rail
+- Fowler planning impact - opportunities addressed, patterns applied, repeated
+  semantics removed, drift removed, architecture guards required, and residual
+  opportunities left for later
 
 ### Phase 3: Normative Baseline Verification
 
-Before generating or editing artifacts, verify â€” not discover â€” that the ADRs cited
+Before generating or editing artifacts, verify - not discover - that the ADRs cited
 in Phase 1 explicitly authorize the planned output. This is a confirmation step, not
 a search step. If Phase 1 was done correctly, the ADRs are already known.
 
@@ -150,7 +247,7 @@ _Slim mode: skip this phase._
 When a change produces artifacts, make both the artifacts and their relationships
 explicit.
 
-**Traceability headers** â€” generated artifacts MUST reference the approved baseline
+**Traceability headers** - generated artifacts MUST reference the approved baseline
 using:
 
 - file headers or module comments: baseline ADR id, implemented decision, affected
@@ -158,7 +255,7 @@ using:
 - commit messages when relevant
 - tests that validate ADR-backed behavior
 
-**Artifact relationship record** â€” document the artifact set explicitly:
+**Artifact relationship record** - document the artifact set explicitly:
 
 - canonical contract doc
 - generated schema or machine-readable artifact path
@@ -188,14 +285,20 @@ Before closing the work, verify all acceptance criteria:
 - [ ] tests pass in every touched package (happy path AND negative paths)
 - [ ] at least one negative-path test added if the slice introduces new behavior
 - [ ] lint and typecheck green in every touched package
-- [ ] `pnpm verify:prepush` green before the slice is presented as ready, unless
-      the user explicitly limits validation and that limit is reported
+- [ ] final commit created with `pnpm commit ...` before final pre-push
+      validation, so the pre-commit hook can apply Prettier/lint-staged fixes
+- [ ] `pnpm verify:prepush` green after the final commit and before the slice is
+      presented as ready, unless the user explicitly limits validation and that
+      limit is reported
+- [ ] `pnpm governance:refresh` run before final docs/prepush validation when
+      governance, planning, docs generated surfaces, package scripts, or file
+      inventory changes affect `system-governance-*`
 - [ ] no behavior changed outside the scope declared in Phase 2
 - [ ] no `as any`, magic values, or unjustified type assertions introduced
 - [ ] run the required checks (canonical commands below)
 - [ ] links and references resolve
 - [ ] documentation reflects the shipped behavior
-- [ ] **mandatory closeout file created** â€” this is the last step and the gate that
+- [ ] **mandatory closeout file created** - this is the last step and the gate that
       makes the slice officially closed
 
 When the task is about preparing a PR or recovering from a red PR, use
@@ -213,7 +316,7 @@ pnpm --filter dvt-api build   # no test runner yet; build = type-check
 ```
 
 Run commands at the package level, not workspace-wide, unless the task crosses
-multiple packages â€” in that case run each affected package individually.
+multiple packages - in that case run each affected package individually.
 
 Sandbox execution rule for validation commands:
 
@@ -230,6 +333,8 @@ Operational Git rule for the agent environment:
   environment does not reliably create `.git` lock files under sandboxed
   execution
 - this rule does not relax hooks or validation expectations
+- do not treat `pnpm verify:prepush` as a Prettier fixer; it verifies the
+  hook-normalized tree after `pnpm commit ...` has run pre-commit formatting
 
 The mandatory closeout file format is defined in `AGENTS.md`. See
 [`docs/planning/closeouts/G7.1-closeout.md`](../planning/closeouts/G7.1-closeout.md) for a
@@ -256,7 +361,15 @@ AI-assisted work MUST NOT:
 - point readers at generated `site/` output
 - leave implementation changes without matching documentation when the behavior changed
 - implement from scratch when a maintained library fits the architectural constraints
-- cover only the happy path in tests â€” negative paths are required for any new behavior
+- introduce route, service, adapter, UI, workflow, or Cypress behavior that is
+  not mapped to a command or query rail when the behavior is externally
+  observable
+- implement non-trivial behavior, boundary, workflow, adapter, route, worker,
+  plugin, or architecture-test changes that are not present in a planning
+  matrix governed by the Fowler Opportunity Planning Governance
+- create duplicate command/query names or local synonyms for an existing product
+  intent
+- cover only the happy path in tests - negative paths are required for any new behavior
 - introduce `as any`, unjustified type assertions, or unexplained magic values
 
 ## Suggested Issue Skeleton
@@ -279,6 +392,8 @@ Pre-Implementation Brief
 - Validation plan:
 - Test coverage plan (negative paths and edge cases):
 - Libraries evaluated:
+- Command/query rail impact:
+- Fowler opportunity matrix:
 
 Traceability (Full mode only)
 - Baseline ADRs (verified in Phase 3):

@@ -1,18 +1,24 @@
 ---
-title: How to Add Tasks to an Agent Lane
+title: How to Add Tasks to the Planning DB
 status: Active
 owner: Product / Architecture / Delivery / Docs
 last_reviewed: 2026-03-31
 planning_type: guide
 ---
 
-# How to Add Tasks to an Agent Lane
+# How to Add Tasks to the Planning DB
 
-Tasks live in the `agent-lane-*.yaml` files. The lane Markdown views,
-workboard, open-task-route, and planning landing indexes are generated local/CI
-artifacts and must never be edited directly or committed.
+New task definitions, deletions, claims, releases, status changes, progress
+updates, evidence refs, and status reasons are local DB-first operations through
+`pnpm planning:db:operate`. The lane Markdown views, workboard,
+open-task-route, and planning landing indexes are generated local/CI artifacts
+and must never be edited directly or committed.
 
-The lane YAML is the verified planning registry, but task closure is evidence-based:
+The planning DB is the canonical local operational source. Lane YAML remains
+the bootstrap, export, and PR-review compatibility registry while the
+repository still reviews planning snapshots through Git. Effective task state
+is the imported lane row plus DB task lifecycle rows, local overlays, and
+tombstones. Task closure is evidence-based:
 
 - `done` means the task has accepted evidence or equivalent verifiable closure.
 - `review` means implementation or documentation exists, but final closure still
@@ -20,7 +26,7 @@ The lane YAML is the verified planning registry, but task closure is evidence-ba
 - `progress_pct` tracks quantity of work completed, even when status is not
   `done`.
 
-## Step 1 - Pick the right lane
+## Step 1 - Pick the right lane ID
 
 | Lane | File                | Scope                                                 |
 | ---- | ------------------- | ----------------------------------------------------- |
@@ -30,9 +36,19 @@ The lane YAML is the verified planning registry, but task closure is evidence-ba
 | D    | `agent-lane-d.yaml` | Scale, retention, GTM                                 |
 | E    | `agent-lane-e.yaml` | Frontend and UI - shell, API integration, core flow   |
 
-## Step 2 - Add or update the task entry
+## Step 2 - Add the task entry
 
-Open the lane file and append to the `tasks` list:
+For new tasks, use the DB command rail:
+
+```bash
+pnpm planning:db:operate task create --lane A --task S21 --actor codex --priority P1 --objective "Implement the governed slice" --dependency S18 --target "Concrete deliverable or acceptance criterion" --complexity M --effort-points 5 --progress 0 --evidence docs/evidence/critical/ED-20260331-s21-example.md
+pnpm planning:db:query tasks --lane A --task S21
+pnpm planning:db:export:check
+```
+
+The command creates an auditable local task definition in Postgres. The YAML
+shape below remains the exported/bootstrap shape, not the daily manual write
+surface:
 
 ```yaml
 - task_id: S21
@@ -70,6 +86,41 @@ parent:
   last_verified: 2026-03-31
 ```
 
+For existing tasks, do not edit the lane YAML just to claim work or change
+status/progress/evidence. Use the same DB command rail:
+
+```bash
+pnpm planning:db:operate task claim --lane A --task S21 --actor codex
+pnpm planning:db:operate task update --lane A --task S21 --actor codex --status review --progress 80 --reason "Implementation ready for review" --evidence docs/planning/closeouts/20260508-s21-closeout.md
+pnpm planning:db:query open --lane A
+pnpm planning:db:query tasks --lane A --status review
+pnpm planning:db:query next --lane A
+```
+
+Delete a task through the DB rail as well:
+
+```bash
+pnpm planning:db:operate task delete --lane A --task S21 --actor codex --reason "Superseded by S22" --expected-revision 0
+pnpm planning:db:query tasks --lane A
+pnpm planning:db:export:check
+```
+
+`planning:db:query open` reads `planning_open_tasks`, the DB view that hides
+`done` and `blocked` rows for daily work inspection while preserving the full
+effective read model in `planning_effective_tasks`.
+
+`planning:db:query next --lane <id>` reads `planning_next_tasks`, the DB view
+that resolves dependencies against the full effective task view before the CLI
+filters candidates to the requested lane. This keeps cross-lane prerequisites
+visible while still returning a lane-scoped next work list.
+
+Before publishing a branch that depends on local DB overlays, run:
+
+```bash
+pnpm planning:db:export:check
+pnpm planning:db:check
+```
+
 ## Step 3 - Maintain the lane verification summary
 
 Each lane carries a `verification_summary` block that captures the current
@@ -98,10 +149,27 @@ of tasks with status `done`.
 
 ## Step 4 - Regenerate the views
 
+For bootstrap lane snapshot changes or structural lane changes outside a single
+task row, import only the planning scope into the DB before regenerating or
+checking derived views:
+
+```bash
+pnpm planning:db:import -- --if-stale --planning-only
+```
+
 ```bash
 pnpm docs:planning:lanes:generate
 pnpm docs:workboard:generate
 ```
+
+`docs:workboard:generate` defaults to `--source db`: it reads the imported
+`planning_effective_tasks` DB view for task state and `planning_next_tasks` for
+the `open-task-route.md` `Actionable Now` section. It does not silently fall
+back to lane YAML. Use `node scripts/generate-workboard.cjs --source yaml` only
+for an explicit deterministic bootstrap/export preview. If the DB is reachable
+but stale, refresh with
+`pnpm planning:db:import -- --if-stale --planning-only` instead of accepting
+YAML-derived output.
 
 If you added, removed, or renamed documentation files under `docs/`, also run:
 

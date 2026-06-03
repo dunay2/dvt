@@ -1,5 +1,5 @@
 import { PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
-import type { EventEnvelope as RunEventPersisted } from '@dvt/contracts';
+import type { EventEnvelope } from '@dvt/contracts';
 import { MAX_OUTBOX_ATTEMPTS, type OutboxRecord } from '@dvt/delivery';
 
 import { closePgPool } from '../../../src/db/pool.js';
@@ -7,7 +7,7 @@ import { closePgPool } from '../../../src/db/pool.js';
 import { cloneEvent } from './standaloneCanaryEventSupport.js';
 
 export interface PostgresOutboxFixture {
-  seedPending(events: readonly RunEventPersisted[]): Promise<void>;
+  seedPending(events: readonly EventEnvelope[]): Promise<void>;
 }
 
 export interface PatchedOutboxFixtureOptions {

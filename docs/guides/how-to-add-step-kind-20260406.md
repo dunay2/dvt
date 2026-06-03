@@ -18,7 +18,8 @@ or a new plan compile profile, also follow
 ## Prerequisites
 
 - A concrete execution owner for the new kind.
-- A target adapter plan (`temporal`, `mock`, or other supported adapter).
+- A target adapter plan (`temporal`, `conductor`, or another supported
+  real provider adapter).
 - A clear artifact story (what `stepArtifactRef.artifactKind` is emitted, if any).
 
 ## Protocol

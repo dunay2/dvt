@@ -1,25 +1,34 @@
+/**
+ * Owned concern: parse the start-run HTTP body into a canonical command plus
+ * requested authorization scope for the route seam.
+ */
+import type { StartRunCommand } from '@dvt/contracts';
+
+import {
+  AUTHORIZATION_ACTION,
+  buildEnvironmentAccessScope,
+  type CommandAuthorizationAction,
+  type RequestedScope,
+} from '../../application/ports/accessDecision.js';
 import type { IStartRunTargetAdapterRegistry } from '../../application/ports/IStartRunTargetAdapterRegistry.js';
-import type { StartRunCommand } from '../../application/ports/startRunCommandContract.js';
-import { DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY } from '../../application/services/startRunTargetAdapterRegistry.js';
-import { type AuthorizationAction, type RequestedScope } from '../../domain/auth/types.js';
 
 import { parsePlanRouteBodyRecord } from './planRouteBodyParser.js';
 import { parsePlanRouteScope } from './planRouteScopeParser.js';
 import type { RouteParseResult } from './routeParseIssue.js';
+import type { StartRunRunIdGenerator } from './startRunIdentity.js';
 import { parseStartRunCommand } from './startRunRouteCommandBuilder.js';
 
 type ParsedStartRunRequest = {
   readonly command: StartRunCommand;
-  readonly requestedScope: RequestedScope & {
-    readonly action: Extract<AuthorizationAction, { kind: 'command' }>;
-  };
+  readonly requestedScope: RequestedScope<CommandAuthorizationAction>;
 };
 
 type ParseStartRunRequestResult = RouteParseResult<ParsedStartRunRequest>;
 
 export function parseStartRunBody(
   body: unknown,
-  adapterRegistry: IStartRunTargetAdapterRegistry = DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY
+  adapterRegistry: IStartRunTargetAdapterRegistry,
+  runIdGenerator: StartRunRunIdGenerator
 ): ParseStartRunRequestResult {
   const bodyRecord = parsePlanRouteBodyRecord(body);
   if (!bodyRecord.ok) {
@@ -31,7 +40,7 @@ export function parseStartRunBody(
     return scope;
   }
 
-  const command = parseStartRunCommand(bodyRecord.value, adapterRegistry);
+  const command = parseStartRunCommand(bodyRecord.value, adapterRegistry, runIdGenerator);
   if (!command.ok) {
     return command;
   }
@@ -41,10 +50,12 @@ export function parseStartRunBody(
     value: {
       command: command.value,
       requestedScope: {
-        tenantId: scope.value.tenantId,
-        projectId: scope.value.projectId,
-        environmentId: scope.value.environmentId,
-        action: { kind: 'command', name: 'run:start' },
+        ...buildEnvironmentAccessScope(
+          scope.value.tenantId,
+          scope.value.projectId,
+          scope.value.environmentId
+        ),
+        action: AUTHORIZATION_ACTION.runStart,
       },
     },
   };

@@ -1,49 +1,47 @@
+/** Owned concern: fold source-import outcomes into the draft graph and refresh route projections. */
+
 import { useCallback, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
+import type { ImportSourcesResult } from '../../ports/workspace';
 import { queryKeys } from '../../queries/queryKeys';
-import { queueImportedCanvasSourceNodes } from './canvasInteractionCommands';
+import { canvasGraphLifecycle } from './canvasGraphLifecycle';
 import type {
-  CanvasSourceImportHandlers,
-  UseCanvasMutationHandlersArgs,
-} from './canvasMutationHandlers.types';
+  CanvasSourceImportContracts,
+} from './canvasMutationHandlerContracts';
 
-type UseCanvasSourceImportHandlersArgs = Pick<
-  UseCanvasMutationHandlersArgs,
-  | 'canMutateGraph'
-  | 'workspaceLayoutKey'
-  | 'setDraftSession'
-  | 'setSelectedNodes'
-  | 'setInspectorNode'
-  | 'showInspectorPanel'
-  | 'setCurrentPlan'
->;
+type UseCanvasSourceImportHandlersArgs = CanvasSourceImportContracts;
 
-function requestWorkspaceGraphRefresh(
+type UseCanvasSourceImportHandlersResult = {
+  importedNodeFocusIds: string[];
+  handleSourceImportComplete: (result: ImportSourcesResult) => void;
+  handleImportedNodeFocusComplete: () => void;
+};
+
+function requestAuthoritativeDraftRefresh(
   queryClient: { invalidateQueries: (args: { queryKey: readonly unknown[] }) => Promise<unknown> },
   workspaceLayoutKey: string
 ) {
   queryClient
     .invalidateQueries({
-      queryKey: queryKeys.workspace.graph(workspaceLayoutKey),
+      queryKey: queryKeys.workspace.graphDraft(workspaceLayoutKey),
     })
     .catch(() => undefined);
 }
 
 export function useCanvasSourceImportHandlers({
-  canMutateGraph,
-  workspaceLayoutKey,
-  setDraftSession,
-  setSelectedNodes,
-  setInspectorNode,
-  showInspectorPanel,
-  setCurrentPlan,
-}: UseCanvasSourceImportHandlersArgs): CanvasSourceImportHandlers {
+  effects,
+  policy,
+}: UseCanvasSourceImportHandlersArgs): UseCanvasSourceImportHandlersResult {
+  const { setDraftSession, setSelectedNodes, setInspectorNode, showInspectorPanel, setCurrentPlan } =
+    effects;
+  const { canMutateGraph, workspaceLayoutKey } = policy;
+
   const queryClient = useQueryClient();
   const [importedNodeFocusIds, setImportedNodeFocusIds] = useState<string[]>([]);
 
   const handleSourceImportComplete = useCallback(
-    (result: Parameters<CanvasSourceImportHandlers['handleSourceImportComplete']>[0]) => {
+    (result: ImportSourcesResult) => {
       if (!canMutateGraph) {
         return;
       }
@@ -53,7 +51,7 @@ export function useCanvasSourceImportHandlers({
 
       if (nextImportedNodeIds.length > 0) {
         setDraftSession((currentSession) =>
-          queueImportedCanvasSourceNodes(currentSession, nextImportedNodeIds)
+          canvasGraphLifecycle.node.queueImported(currentSession, nextImportedNodeIds)
         );
         setSelectedNodes(nextImportedNodeIds);
         setInspectorNode(nextImportedNodeIds[0] ?? null);
@@ -61,7 +59,7 @@ export function useCanvasSourceImportHandlers({
         setImportedNodeFocusIds(nextImportedNodeIds);
       }
 
-      requestWorkspaceGraphRefresh(queryClient, workspaceLayoutKey);
+      requestAuthoritativeDraftRefresh(queryClient, workspaceLayoutKey);
     },
     [
       canMutateGraph,

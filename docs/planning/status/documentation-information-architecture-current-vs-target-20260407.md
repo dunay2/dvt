@@ -2,7 +2,7 @@
 title: Documentation information architecture current vs target
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-09
+last_reviewed: 2026-05-07
 planning_type: status
 ---
 
@@ -11,7 +11,7 @@ planning_type: status
 ## Purpose
 
 Specify the documentation model that exists after `DOC-ARCH-01`, show the
-target operating model required by `GOV-S2`, and make the active documentation
+target operating model closed by `GOV-S2`, and make the active documentation
 surface auditable against real code and planning sources.
 
 ## Governing sources
@@ -106,6 +106,7 @@ flowchart LR
   `docs/architecture/system/subsystems/` beyond `canonical-run-lifecycle` and
   `read` as more end-to-end flows are clarified.
 - Frontmatter normalization and `last_reviewed` coverage across the historical
-  corpus remain broader `GOV-S2` work.
+  corpus are not `GOV-S2` umbrella blockers after its 2026-05-07 closure. Route
+  them through concrete docs-governance tasks or existing changed-file gates.
 - Several secondary active docs still deep-link straight into component pages
   without first routing through the system/subsystem entrypoints.

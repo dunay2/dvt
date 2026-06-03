@@ -1,19 +1,26 @@
-import type { PlanRef, StoredPlanArtifact } from '@dvt/contracts';
+import type { IStoredPlanArtifactReader, StoredPlanArtifact } from '@dvt/artifacts';
+import type { ScopedPlanRef } from '@dvt/contracts';
 
-import type { IRawPlanFetcher } from '../../src/security/planIntegrity.js';
-
-export class InMemoryPlanFetcher implements IRawPlanFetcher {
+export class InMemoryPlanFetcher implements IStoredPlanArtifactReader {
   constructor(private readonly map: ReadonlyMap<string, Uint8Array>) {}
 
-  async fetch(planRef: PlanRef): Promise<StoredPlanArtifact> {
-    const v = this.map.get(planRef.uri);
+  async getStoredPlanValidationRecord(): Promise<undefined> {
+    return undefined;
+  }
+
+  async fetchStoredPlanArtifact(input: ScopedPlanRef): Promise<StoredPlanArtifact> {
+    const v = this.map.get(input.planRef.uri);
     if (!v) {
-      throw new Error(`PLAN_NOT_FOUND: ${planRef.uri}`);
+      throw new Error(`PLAN_NOT_FOUND: ${input.planRef.uri}`);
     }
     return {
       bytes: v,
       executionPolicy: {},
     };
+  }
+
+  async fetchStoredPlanArtifactForValidation(input: ScopedPlanRef): Promise<StoredPlanArtifact> {
+    return this.fetchStoredPlanArtifact(input);
   }
 }
 

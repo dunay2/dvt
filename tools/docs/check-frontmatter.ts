@@ -1,6 +1,7 @@
 #!/usr/bin/env tsx
 /**
  * @file tools/docs/check-frontmatter.ts
+ * Owned concern: enforce docs frontmatter policy for the local changed-file set.
  * Frontmatter / header contract gate.
  *
  * Checked document types:
@@ -20,26 +21,32 @@
  * Exit codes: 0 = OK, 1 = errors found
  *
  * Usage:
- *   tsx tools/docs/check-frontmatter.ts
+ *   tsx tools/docs/check-frontmatter.ts [--changed-only]
  */
+import { createRequire } from 'node:module';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { walkMarkdown } from './lib/walkDocs.js';
+import { normalizeStatus, VALID_ADR_STATUSES } from './lib/adr.js';
 import {
   extractAdrFields,
   parseFrontmatter,
   readIfExists,
   splitFrontmatter,
 } from './lib/markdown.js';
-import { normalizeStatus, VALID_ADR_STATUSES } from './lib/adr.js';
 import { Report } from './lib/report.js';
+import { walkMarkdown } from './lib/walkDocs.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..', '..');
 const DOCS_DIR = join(REPO_ROOT, 'docs');
 const ADR_DIR = join(DOCS_DIR, 'adr');
 const EVIDENCE_DIR = join(DOCS_DIR, 'evidence');
+const CHANGED_ONLY = process.argv.includes('--changed-only');
+const require = createRequire(import.meta.url);
+const { listLocalChangedFiles } = require('../../scripts/git-local-changes.cjs') as {
+  listLocalChangedFiles: (options?: { repoRootPath?: string }) => string[];
+};
 
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const VALID_EVIDENCE_STATUSES = new Set(['final', 'draft', 'pending', 'accepted']);
@@ -67,7 +74,7 @@ function checkAdrFrontmatter(filePath: string, report: Report): void {
 
   // H1 heading
   if (!/^#\s+/m.test(content)) {
-    report.warn(filePath, 'ADR missing H1 heading');
+    warnOrError(report, filePath, 'ADR missing H1 heading');
   }
 
   // Status
@@ -76,7 +83,8 @@ function checkAdrFrontmatter(filePath: string, report: Report): void {
   } else {
     const normalized = normalizeStatus(fields['Status'].split(/[,/]/)[0]!);
     if (!VALID_ADR_STATUSES.has(normalized)) {
-      report.warn(
+      warnOrError(
+        report,
         filePath,
         `ADR Status "${fields['Status']}" is not a standard value`,
         `Expected one of: ${[...VALID_ADR_STATUSES].join(', ')}`
@@ -88,12 +96,12 @@ function checkAdrFrontmatter(filePath: string, report: Report): void {
   if (!fields['Date']) {
     report.error(filePath, 'ADR missing required field: Date');
   } else if (!ISO_DATE_RE.test(fields['Date'])) {
-    report.warn(filePath, `ADR Date "${fields['Date']}" is not ISO-8601 (YYYY-MM-DD)`);
+    warnOrError(report, filePath, `ADR Date "${fields['Date']}" is not ISO-8601 (YYYY-MM-DD)`);
   }
 
   // Owners (recommended)
   if (!fields['Owners']) {
-    report.warn(filePath, 'ADR missing recommended field: Owners');
+    warnOrError(report, filePath, 'ADR missing recommended field: Owners');
   }
 
   // Unused variable placeholder (keeps lint happy)
@@ -125,14 +133,15 @@ function checkEvidenceFrontmatter(filePath: string, report: Report): void {
   // Date format
   const dateVal = fm['date'];
   if (typeof dateVal === 'string' && dateVal && !ISO_DATE_RE.test(dateVal)) {
-    report.warn(filePath, `Evidence doc date "${dateVal}" is not ISO-8601 (YYYY-MM-DD)`);
+    warnOrError(report, filePath, `Evidence doc date "${dateVal}" is not ISO-8601 (YYYY-MM-DD)`);
   }
 
   // Status values
   const statusVal = fm['status'];
   if (typeof statusVal === 'string' && statusVal) {
     if (!VALID_EVIDENCE_STATUSES.has(statusVal.toLowerCase().trim())) {
-      report.warn(
+      warnOrError(
+        report,
         filePath,
         `Evidence doc status "${statusVal}" is not a standard value`,
         `Expected one of: ${[...VALID_EVIDENCE_STATUSES].join(', ')}`
@@ -145,21 +154,67 @@ function checkEvidenceFrontmatter(filePath: string, report: Report): void {
 
 function main(): void {
   const report = new Report();
+  const changedFiles = CHANGED_ONLY ? getChangedMarkdownFiles() : null;
 
   // ADR files
-  const adrFiles = walkMarkdown(ADR_DIR).filter((f) => /ADR-\d{4}/i.test(basename(f)));
+  const adrFiles = (changedFiles ?? walkMarkdown(ADR_DIR)).filter(
+    (f) => isUnderDirectory(f, ADR_DIR) && /ADR-\d{4}/i.test(basename(f))
+  );
   for (const filePath of adrFiles) {
     checkAdrFrontmatter(filePath, report);
   }
 
   // Evidence docs
-  const evidenceFiles = walkMarkdown(EVIDENCE_DIR).filter((f) => /^ED-/.test(basename(f)));
+  const evidenceFiles = (changedFiles ?? walkMarkdown(EVIDENCE_DIR)).filter(
+    (f) => isUnderDirectory(f, EVIDENCE_DIR) && /^ED-/.test(basename(f))
+  );
   for (const filePath of evidenceFiles) {
     checkEvidenceFrontmatter(filePath, report);
   }
 
+  if (CHANGED_ONLY && adrFiles.length === 0 && evidenceFiles.length === 0) {
+    console.log('[check-frontmatter] No changed ADR or evidence docs - skipping');
+  }
+
   report.print();
   process.exit(report.exitCode);
+}
+
+function warnOrError(report: Report, filePath: string, msg: string, detail?: string): void {
+  if (CHANGED_ONLY) {
+    report.error(filePath, msg, detail);
+  } else {
+    report.warn(filePath, msg, detail);
+  }
+}
+
+function getChangedMarkdownFiles(): string[] {
+  const override = process.env['DOCS_GOV_CHANGED_FILES'];
+  if (override) {
+    return override.split(/\r?\n|;/).flatMap((entry) => normalizeChangedPath(entry));
+  }
+
+  return listLocalChangedFiles({ repoRootPath: REPO_ROOT }).flatMap((entry) =>
+    normalizeChangedPath(entry)
+  );
+}
+
+function normalizeChangedPath(entry: string): string[] {
+  const candidate = entry.trim();
+  if (!candidate?.toLowerCase().endsWith('.md')) {
+    return [];
+  }
+
+  const absolute = resolve(REPO_ROOT, candidate);
+  if (!absolute.startsWith(DOCS_DIR)) {
+    return [];
+  }
+
+  return [absolute];
+}
+
+function isUnderDirectory(filePath: string, directory: string): boolean {
+  return filePath.startsWith(`${directory}\\`) || filePath.startsWith(`${directory}/`);
 }
 
 main();

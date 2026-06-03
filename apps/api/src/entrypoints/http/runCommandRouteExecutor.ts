@@ -1,5 +1,10 @@
+/**
+ * Owned concern: execute protected run-command routes after semantic parse and
+ * tenant-scoped authorization have succeeded.
+ */
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
+import { buildTenantAccessScope } from '../../application/ports/accessDecision.js';
 import type {
   AuthorizedCommandExecutionContext,
   IAuthenticator,
@@ -10,8 +15,7 @@ import { HTTP_STATUS_CODE } from '../../routes/httpStatus.js';
 
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
-import { sendHttpResponse } from './httpErrorContract.js';
-import { mapRouteParseIssue, mapRuntimeDomainError } from './httpErrorMapper.js';
+import { httpErrorTranslation } from './httpErrorTranslation.js';
 import type { RouteParseResult } from './routeParseIssue.js';
 import type { RunCommandActionName } from './runCommandRoute.constants.js';
 
@@ -36,7 +40,7 @@ export async function executeAuthorizedRunCommandRoute<TCommand, TResult>(
   parsed: ParsedCommandResult<TCommand>
 ): Promise<void> {
   if (!parsed.ok) {
-    sendHttpResponse(reply, mapRouteParseIssue(parsed.issue));
+    httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
     return;
   }
 
@@ -46,12 +50,12 @@ export async function executeAuthorizedRunCommandRoute<TCommand, TResult>(
     token: extractBearerToken(request.headers.authorization),
     requestId: request.id,
     requestedScope: {
-      tenantId: parsed.value.authorization.tenantId,
+      ...buildTenantAccessScope(parsed.value.authorization.tenantId),
       action: { kind: 'command', name: parsed.value.authorization.actionName },
     },
   });
   if (!auth.ok) {
-    sendHttpResponse(reply, auth.response);
+    httpErrorTranslation.respond(reply, auth.response);
     return;
   }
 
@@ -59,9 +63,9 @@ export async function executeAuthorizedRunCommandRoute<TCommand, TResult>(
     const result = await deps.execute(parsed.value.command, auth.context);
     reply.code(HTTP_STATUS_CODE.accepted).send(result);
   } catch (error) {
-    const mapped = mapRuntimeDomainError(error);
+    const mapped = httpErrorTranslation.runtime.domainError(error);
     if (mapped) {
-      sendHttpResponse(reply, mapped);
+      httpErrorTranslation.respond(reply, mapped);
       return;
     }
 

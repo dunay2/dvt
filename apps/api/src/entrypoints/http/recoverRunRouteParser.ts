@@ -1,3 +1,7 @@
+/**
+ * Owned concern: parse protected recover-run requests into a canonical command
+ * plus the tenant-scoped retry authorization envelope.
+ */
 import {
   isRecoverRunTargetAdapter,
   type RecoverRunCommand,

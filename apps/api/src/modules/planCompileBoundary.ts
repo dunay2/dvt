@@ -1,15 +1,21 @@
-import type { Provider, StepKindExecutionProfile } from '@dvt/contracts';
+/**
+ * Owned concern: define the compile-time planner boundary exposed by `apps/api`.
+ * This module owns the built-in compile catalog, allowed families/kinds, and
+ * the canonical compile planner recipe for this boundary.
+ */
 import {
   CaptureMaterializationEvidenceStepTypeConfigSchema,
   PostgresSqlTransformStepTypeConfigSchema,
   PreparePostgresTransformStepTypeConfigSchema,
   SparkJobStepTypeConfigSchema,
   StepTypeRegistry,
+  SUPPORTED_START_RUN_TARGET_ADAPTERS,
 } from '@dvt/contracts';
+import type { StepKindExecutionProfile } from '@dvt/contracts';
 import { PlannerFacade } from '@dvt/planner';
 import type { PlannerFacadeOptions } from '@dvt/planner';
 
-const ALL_PLAN_COMPILE_ADAPTERS: readonly Provider[] = ['conductor', 'mock', 'temporal'];
+const PLAN_COMPILE_SUPPORTED_ADAPTERS = SUPPORTED_START_RUN_TARGET_ADAPTERS;
 
 type PlanCompileStepSchema =
   | typeof PreparePostgresTransformStepTypeConfigSchema
@@ -18,9 +24,26 @@ type PlanCompileStepSchema =
   | typeof SparkJobStepTypeConfigSchema;
 
 const DEFAULT_EXECUTION_PROFILE = {
-  supportedAdapters: ALL_PLAN_COMPILE_ADAPTERS,
+  supportedAdapters: PLAN_COMPILE_SUPPORTED_ADAPTERS,
   requiredCapabilities: [],
 } satisfies StepKindExecutionProfile;
+
+const planCompileStepFactory: NonNullable<PlannerFacadeOptions['stepFactory']> = (
+  node,
+  resolvedPolicies
+) => {
+  return {
+    stepId: node.nodeId,
+    kind: node.stepKind,
+    dependsOn: node.dependsOn,
+    ...(resolvedPolicies.retryPolicy === undefined
+      ? {}
+      : { retryPolicy: resolvedPolicies.retryPolicy }),
+    stepTypeConfig: {
+      ...(node.stepTypeConfig ?? {}),
+    },
+  };
+};
 
 const BUILT_IN_STEP_FAMILY_DEFINITIONS = [
   {
@@ -78,7 +101,7 @@ const BUILT_IN_STEP_KIND_DEFINITIONS = [
     family: 'spark',
     schema: SparkJobStepTypeConfigSchema,
     executionProfile: {
-      supportedAdapters: ALL_PLAN_COMPILE_ADAPTERS,
+      supportedAdapters: PLAN_COMPILE_SUPPORTED_ADAPTERS,
       requiredCapabilities: ['spark.submit'],
     },
     source: 'built-in',
@@ -157,6 +180,7 @@ export function buildPlanCompilePlanner(
   boundary: PlanCompileBoundaryDefinition = PLAN_COMPILE_BOUNDARY
 ): PlannerFacade {
   const plannerOptions: PlannerFacadeOptions = {
+    stepFactory: planCompileStepFactory,
     stepTypeRegistry: resolvePlanCompileStepRegistry(boundary.profile, resolvePlanCompileCatalog(boundary)),
   };
 

@@ -14,10 +14,10 @@
   "private": true,
   "license": "MIT",
   "dependencies": {
-    "@temporalio/activity": "1.16.0",
-    "@temporalio/client": "1.16.0",
-    "@temporalio/worker": "1.16.0",
-    "@temporalio/workflow": "1.16.0",
+    "@temporalio/activity": "1.16.1",
+    "@temporalio/client": "1.16.1",
+    "@temporalio/worker": "1.16.1",
+    "@temporalio/workflow": "1.16.1",
     "@dvt/artifacts": "workspace:*",
     "@dvt/contracts": "workspace:*",
     "@dvt/crypto": "workspace:*",
@@ -25,8 +25,7 @@
     "@dvt/engine": "workspace:*",
     "@dvt/dsl": "workspace:*",
     "@dvt/observability": "workspace:*",
-    "@dvt/plan-interpreter": "workspace:*",
-    "tar": "^7.5.2"
+    "@dvt/plan-interpreter": "workspace:*"
   },
   "scripts": {
     "build:runtime-deps": "node ../../../scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal",
@@ -36,6 +35,8 @@
     "postbuild": "echo '✅ Build complete'",
     "pretest": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm run build:runtime-deps",
     "test": "vitest run ./test/ --exclude ./test/integration.time-skipping.test.ts --exclude ./test/integration.transformation.time-skipping.test.ts --exclude ./test/integration.postgres.time-skipping.test.ts",
+    "pretypecheck": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm run build:runtime-deps",
+    "typecheck": "tsc -p tsconfig.json --noEmit && pnpm run typecheck:test",
     "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
     "prepare:integration": "node ../../../scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal --build-self",
     "prepare:integration:transformation": "node ../../../scripts/build-workspace-runtime-deps.cjs @dvt/adapter-temporal --build-self",
@@ -53,7 +54,7 @@
   },
   "devDependencies": {
     "@dvt/adapter-postgres": "workspace:*",
-    "@temporalio/testing": "1.16.0",
+    "@temporalio/testing": "1.16.1",
     "typescript": "5.9.3",
     "vitest": "3.2.4"
   }

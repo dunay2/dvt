@@ -530,7 +530,7 @@ canonical runtime-neutral vocabulary owned through shared contract governance.
 
 The runtime remains responsible for **provider-specific enforcement**, such as:
 
-- Temporal or Conductor retry knobs
+- provider-runtime-specific retry knobs
 - exact backoff curves
 - queue / worker assignment
 - heartbeat semantics

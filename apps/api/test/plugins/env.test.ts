@@ -31,5 +31,25 @@ describe('loadEnv', () => {
     expect(env.DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS).toBe(1000);
     expect(env.DVT_START_RUN_BACKPRESSURE_CACHE_TTL_MS).toBe(2000);
     expect(env.DVT_START_RUN_RETRY_AFTER_SECONDS).toBe(30);
+    expect(env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX).toBe(300);
+    expect(env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS).toBe(60000);
+  });
+
+  it('accepts an explicit temporal worker readyz URL for execution-capacity binding', async () => {
+    const env = loadEnv({
+      DVT_TEMPORAL_WORKER_READYZ_URL: 'http://temporal-worker.example/readyz',
+    });
+
+    expect(env.DVT_TEMPORAL_WORKER_READYZ_URL).toBe('http://temporal-worker.example/readyz');
+  });
+
+  it('accepts the Temporal continue-as-new payload budget env', async () => {
+    const env = loadEnv({
+      TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES: '64000',
+    });
+
+    expect((env as Record<string, unknown>).TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES).toBe(
+      '64000'
+    );
   });
 });

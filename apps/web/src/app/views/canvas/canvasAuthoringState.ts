@@ -1,4 +1,12 @@
+/** Owned concern: derive route-safe Canvas authoring scopes, recovery posture, and mutation capability from draft-session truth. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import {
+  deriveCanvasDraftAccessPosture,
+  isCanvasDraftPostureMutationBlocked,
+  toCanvasDraftToolbarState,
+  type CanvasDraftAccessPosture,
+} from './canvasDraftAccessPostureModel';
+import type { CanvasDraftAuthTransportPosture } from './canvasDraftAuthTransportPosture';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import {
   deriveExecutionScope,
@@ -13,7 +21,8 @@ import {
   deriveDraftRecoveryReason,
   type CanvasDraftRecoveryReason,
   type CanvasDraftToolbarState,
-} from './canvasDraftPresentationState';
+} from './canvasDraftToolbarState';
+import type { CanvasDraftAccessMode, CanvasAuthoringDraftReadModel } from './canvasDraftReadModel';
 import type { DraftSaveStatus } from './canvasDraftLifecycle.types';
 
 type DeriveCanvasAuthoringStateArgs = {
@@ -23,21 +32,50 @@ type DeriveCanvasAuthoringStateArgs = {
   selectedNodeIds: string[];
   inspectorNodeId: string | null;
   draftSaveStatus: DraftSaveStatus;
-  canPersistDraftTransport: boolean;
+  canMutateGraphTransport: boolean;
+  draftReadModel: CanvasAuthoringDraftReadModel | undefined;
+  authTransportPosture: CanvasDraftAuthTransportPosture;
 };
 
 export type CanvasAuthoringState = {
   visibleScope: VisibleCanvasScope;
   uiScope: CanvasUiScope;
   executionScope: ExecutionCanvasScope;
+  draftAccessMode: CanvasDraftAccessMode;
+  draftCapabilityReason: CanvasAuthoringDraftReadModel['capabilityReason'];
+  draftFormatError: CanvasAuthoringDraftReadModel['formatError'];
+  draftFormatMeta: CanvasAuthoringDraftReadModel['formatMeta'];
+  draftAccessPosture: CanvasDraftAccessPosture;
   isMissingRemoteDraft: boolean;
   isStaleDraftConflict: boolean;
   hasDraftProjectionGap: boolean;
   draftRecoveryReason: CanvasDraftRecoveryReason;
   draftToolbarState: CanvasDraftToolbarState;
   isDraftRecoveryBlocked: boolean;
+  isDraftAccessBlocked: boolean;
+  isDraftReadOnly: boolean;
   canMutateGraph: boolean;
 };
+
+type CanvasDraftAccessState = Pick<
+  CanvasAuthoringState,
+  | 'draftAccessMode'
+  | 'draftCapabilityReason'
+  | 'draftFormatError'
+  | 'draftFormatMeta'
+  | 'isDraftAccessBlocked'
+  | 'isDraftReadOnly'
+>;
+
+type CanvasDraftRecoveryState = Pick<
+  CanvasAuthoringState,
+  | 'isMissingRemoteDraft'
+  | 'isStaleDraftConflict'
+  | 'hasDraftProjectionGap'
+  | 'draftRecoveryReason'
+  | 'draftToolbarState'
+  | 'isDraftRecoveryBlocked'
+>;
 
 function deriveCanvasUiScope(
   draftSession: CanvasDraftSession,
@@ -60,20 +98,34 @@ function deriveCanvasUiScope(
   });
 }
 
-export function deriveCanvasAuthoringState({
-  draftSession,
-  canonicalNodes,
-  canonicalEdges,
-  selectedNodeIds,
-  inspectorNodeId,
-  draftSaveStatus,
-  canPersistDraftTransport,
-}: DeriveCanvasAuthoringStateArgs): CanvasAuthoringState {
-  const visibleScope = deriveVisibleScope({
-    draftSession,
-    canonicalNodes,
-    canonicalEdges,
-  });
+function deriveCanvasDraftAccessState(
+  draftReadModel: CanvasAuthoringDraftReadModel | undefined,
+  draftAccessPosture: CanvasDraftAccessPosture
+): CanvasDraftAccessState {
+  const draftAccessMode = draftReadModel?.accessMode ?? 'unknown';
+  const isDraftReadOnly = draftAccessPosture.kind === 'read_only';
+  const isDraftAccessBlocked =
+    draftAccessPosture.kind === 'unauthenticated' ||
+    draftAccessPosture.kind === 'forbidden_scope' ||
+    draftAccessPosture.kind === 'format_error' ||
+    draftAccessPosture.kind === 'unknown_pending';
+
+  return {
+    draftAccessMode,
+    draftCapabilityReason: draftReadModel?.capabilityReason ?? null,
+    draftFormatError: draftReadModel?.formatError ?? null,
+    draftFormatMeta: draftReadModel?.formatMeta ?? null,
+    isDraftAccessBlocked,
+    isDraftReadOnly,
+  };
+}
+
+function deriveCanvasDraftRecoveryState(args: {
+  draftSession: CanvasDraftSession;
+  visibleScope: VisibleCanvasScope;
+  draftSaveStatus: DraftSaveStatus;
+}): CanvasDraftRecoveryState {
+  const { draftSession, visibleScope, draftSaveStatus } = args;
   const isMissingRemoteDraft = draftSession.syncState === 'missing_remote';
   const isStaleDraftConflict = draftSession.syncState === 'conflict';
   const hasDraftProjectionGap =
@@ -83,18 +135,66 @@ export function deriveCanvasAuthoringState({
     hasStaleDraftVersion: isStaleDraftConflict,
     hasDraftProjectionGap,
   });
-  const draftToolbarState = deriveCanvasDraftToolbarState({
-    draftSaveStatus,
-    recoveryReason: draftRecoveryReason,
+
+  return {
+    isMissingRemoteDraft,
+    isStaleDraftConflict,
+    hasDraftProjectionGap,
+    draftRecoveryReason,
+    draftToolbarState: deriveCanvasDraftToolbarState({
+      draftSaveStatus,
+      recoveryReason: draftRecoveryReason,
+    }),
+    isDraftRecoveryBlocked: isMissingRemoteDraft || isStaleDraftConflict || hasDraftProjectionGap,
+  };
+}
+
+function canMutateCanvasGraph(args: {
+  canMutateGraphTransport: boolean;
+  draftAccessPosture: CanvasDraftAccessPosture;
+  draftRecoveryState: CanvasDraftRecoveryState;
+}): boolean {
+  const { canMutateGraphTransport, draftAccessPosture, draftRecoveryState } = args;
+
+  return (
+    canMutateGraphTransport &&
+    !draftRecoveryState.isDraftRecoveryBlocked &&
+    !isCanvasDraftPostureMutationBlocked(draftAccessPosture)
+  );
+}
+
+export function deriveCanvasAuthoringState({
+  draftSession,
+  canonicalNodes,
+  canonicalEdges,
+  selectedNodeIds,
+  inspectorNodeId,
+  draftSaveStatus,
+  canMutateGraphTransport,
+  draftReadModel,
+  authTransportPosture,
+}: DeriveCanvasAuthoringStateArgs): CanvasAuthoringState {
+  const visibleScope = deriveVisibleScope({
+    draftSession,
+    canonicalNodes,
+    canonicalEdges,
   });
-  const isDraftRecoveryBlocked =
-    isMissingRemoteDraft || isStaleDraftConflict || hasDraftProjectionGap;
-  const uiScope = deriveCanvasUiScope(
+  const uiScope = deriveCanvasUiScope(draftSession, visibleScope, selectedNodeIds, inspectorNodeId);
+  const draftRecoveryState = deriveCanvasDraftRecoveryState({
     draftSession,
     visibleScope,
-    selectedNodeIds,
-    inspectorNodeId
-  );
+    draftSaveStatus,
+  });
+  const draftAccessMode = draftReadModel?.accessMode ?? 'unknown';
+  const draftAccessPosture = deriveCanvasDraftAccessPosture({
+    draftAccessMode,
+    draftCapabilityReason: draftReadModel?.capabilityReason ?? null,
+    draftFormatError: draftReadModel?.formatError ?? null,
+    authTransportPosture,
+    recoveryReason: draftRecoveryState.draftRecoveryReason,
+    draftSaveStatus,
+  });
+  const draftAccessState = deriveCanvasDraftAccessState(draftReadModel, draftAccessPosture);
 
   return {
     visibleScope,
@@ -103,12 +203,14 @@ export function deriveCanvasAuthoringState({
       visibleScope,
       selectedNodeIds: uiScope.selectedNodeIds,
     }),
-    isMissingRemoteDraft,
-    isStaleDraftConflict,
-    hasDraftProjectionGap,
-    draftRecoveryReason,
-    draftToolbarState,
-    isDraftRecoveryBlocked,
-    canMutateGraph: canPersistDraftTransport && !isDraftRecoveryBlocked,
+    ...draftAccessState,
+    ...draftRecoveryState,
+    draftAccessPosture,
+    draftToolbarState: toCanvasDraftToolbarState(draftAccessPosture),
+    canMutateGraph: canMutateCanvasGraph({
+      canMutateGraphTransport,
+      draftAccessPosture,
+      draftRecoveryState,
+    }),
   };
 }

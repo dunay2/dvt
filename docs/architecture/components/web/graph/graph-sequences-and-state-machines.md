@@ -2,7 +2,7 @@
 title: Graph Sequences And State Machines
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-17
+last_reviewed: 2026-04-22
 ---
 
 # Graph Sequences And State Machines
@@ -34,17 +34,17 @@ sequenceDiagram
   participant Port as Workspace draft port
 
   Operator->>Controller: mutate graph
-  Controller->>Session: markSaving()
+  Controller->>Session: machine.markSaving()
   Controller->>Port: save(expectedRevision, payload)
   alt success
     Port-->>Controller: persisted record
-    Controller->>Session: applySaveSuccess()
+    Controller->>Session: machine.applySaveSuccess()
   else conflict
     Port-->>Controller: conflict + current record
-    Controller->>Session: applyConflict()
+    Controller->>Session: machine.applyConflict()
   else missing remote
     Port-->>Controller: missing remote record
-    Controller->>Session: markRemoteDraftMissing()
+    Controller->>Session: machine.markRemoteDraftMissing()
   end
 ```
 
@@ -77,11 +77,11 @@ stateDiagram-v2
   saving --> editing
   saving --> conflict
   editing --> missing_remote
-  conflict --> editing
-  missing_remote --> editing
+  conflict --> editing: reloadFromRemote
+  missing_remote --> editing: reloadFromRemote
 ```
 
 Rule:
 
-- conflict and missing-remote are fail-closed mutation states until explicit
-  recovery action.
+- conflict and missing-remote are fail-closed mutation states until an
+  authoritative remote reload succeeds.

@@ -1,4 +1,4 @@
-import type { ExecutionPlan, PlanOwnership, PlanRef } from '@dvt/contracts';
+import type { ExecutionPlan, PlanOwnership, PlanRef, ScopedPlanRef } from '@dvt/contracts';
 
 export const IMPORT_PLAN_RESULT_KIND = {
   accepted: 'accepted',
@@ -23,12 +23,17 @@ export type ImportPlanUseCaseResult =
 export class ImportPlanUseCase {
   public constructor(
     private readonly deps: {
-      readonly planResolver: { fetch(planRef: PlanRef): Promise<ExecutionPlan> };
+      readonly planResolver: { fetch(input: ScopedPlanRef): Promise<ExecutionPlan> };
     }
   ) {}
 
   public async execute(command: ImportPlanCommand): Promise<ImportPlanUseCaseResult> {
-    const plan = await this.deps.planResolver.fetch(command.planRef);
+    const plan = await this.deps.planResolver.fetch({
+      tenantId: command.ownership.tenantId,
+      projectId: command.ownership.projectId,
+      environmentId: command.ownership.environmentId,
+      planRef: command.planRef,
+    });
     if (!isPlanOwnedByScope(plan, command.ownership)) {
       return { kind: IMPORT_PLAN_RESULT_KIND.scopeMismatch };
     }

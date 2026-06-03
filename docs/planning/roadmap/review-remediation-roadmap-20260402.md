@@ -2,7 +2,7 @@
 title: Review Remediation Roadmap 2026-04
 status: Active
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-05
+last_reviewed: 2026-04-20
 planning_type: proposal
 ---
 
@@ -66,6 +66,8 @@ Primary outcomes:
 
 - introduce planner and admission improvements that depend on Phase 1 and 2
 - close remaining high-risk findings from principal architecture reviews
+- sequence workflow-input payload hardening and `continueAsNew` handoff
+  reduction work required by the April principal/system architecture reviews
 
 References:
 

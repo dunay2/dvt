@@ -41,6 +41,6 @@ export const RUN_EVENT_CONSTANTS = {
   engineAttemptId: 1,
 } as const;
 
-export const TRACEABLE_ADAPTERS = ['temporal', 'conductor'] as const;
+export const TRACEABLE_ADAPTERS = ['temporal'] as const;
 
 export type TraceableAdapter = (typeof TRACEABLE_ADAPTERS)[number];

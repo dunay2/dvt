@@ -1,4 +1,4 @@
----
+﻿---
 title: Engine Observability Guide
 status: Active
 owner: Architecture / Engine / SRE
@@ -21,9 +21,9 @@ canonical runtime SLA documents.
 
 ## Canonical companions
 
-- [Engine SLO Posture](./SLOs.md)
-- [Engine Severity Matrix](./runbooks/severity_matrix.md)
-- [Engine Incident Response Runbook](./runbooks/incident_response.md)
+- [Engine SLO Posture](./slo-posture.md)
+- [Engine Severity Matrix](./runbooks/severity-matrix.md)
+- [Engine Incident Response Runbook](./runbooks/incident-response.md)
 - [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)
 - [AR-C2 SLA Signal Threshold Mapping](../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md)
 - [AR-C2 Observability Technical Manual](../../../../guides/ar-c2-observability-technical-manual-20260404.md)
@@ -62,13 +62,15 @@ flowchart LR
 
 | Signal family                       | Logical signal                                                                     | Current source                                                                                            | Code anchor                                                                                            |
 | ----------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| API admission/runtime latency       | `dvt.api.run_start.latency_ms`                                                     | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)                   | `apps/api/src/infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.ts`                           |
-| Planner/API compile latency         | `dvt.api.plan_compile.latency_ms`                                                  | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)                   | `apps/api/src/infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.ts`                           |
+| API admission/runtime latency       | `dvt_api_run_start_latency_seconds`                                                | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)                   | `apps/api/src/infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.ts`                           |
+| Planner/API compile latency         | `dvt_api_plan_compile_latency_seconds`                                             | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)                   | `apps/api/src/infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.ts`                           |
 | Run-status freshness classification | `dvt.api.run_status.snapshot_staleness_result_total`                               | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)                   | `apps/api/src/infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.ts`                    |
 | Unknown freshness fallback reasons  | `dvt.api.run_status.snapshot_staleness_fallback_unknown_total`                     | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)                   | `apps/api/src/infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.ts`                    |
+| Run diagnostics pointers            | `diagnostics.pointers[]` on `GET /runs/:runId`                                     | Frontend Runtime Contract Technical Manual                                                                | API evidence model and Web Run Detail view                                                             |
+| Ambient run diagnostic context      | `ObservabilityContext` fields attached to structured logs inside `withContext()`   | This guide and `@dvt/observability-otel` README                                                           | `@dvt/observability` port and `@dvt/observability-otel` adapter                                        |
 | Outbox claimed-lag                  | `dvt_outbox_oldest_claimed_lag_seconds`                                            | [AR-C2 SLA Signal Threshold Mapping](../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md) | `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`                                                    |
 | Outbox drain lag                    | `dvt_delivery_outbox_drain_lag_seconds`                                            | [AR-C2 SLA Signal Threshold Mapping](../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md) | `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`                                                    |
-| Event delivery latency              | `dvt_delivery_event_delivery_latency_ms`                                           | [AR-C2 SLA Signal Threshold Mapping](../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md) | `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`                                                    |
+| Event delivery latency              | `dvt_delivery_event_delivery_latency_seconds`                                      | [AR-C2 SLA Signal Threshold Mapping](../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md) | `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`                                                    |
 | Worker readiness and ownership      | `dvt_outbox_runtime_ready`, `dvt_outbox_runtime_owner`, `dvt_outbox_runtime_state` | [Outbox Worker Runbook](../../../../runbooks/outbox-worker-g5.md)                                         | `apps/outbox-worker/src/ops/OperationalServer.ts`, `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts` |
 
 ## Operator surfaces
@@ -104,17 +106,26 @@ Reference:
 - Use exported underscore metric names only when writing PromQL.
 - Treat stale and unknown freshness as derived ratios from the implemented
   staleness counters, not as standalone invented metrics.
+- Treat `runId`, `planId`, `planSha`, `stepId`, and `attemptId` as trace/log
+  context only. They are intentionally forbidden as metric labels by the
+  observability cardinality policy.
+- Treat Run Detail Diagnostics pointers as provider-neutral trace/log query
+  handles until a governed dashboard or OTel backend link contract is accepted.
+- Treat `@dvt/observability-otel` as a scaffolded binding: it validates metric
+  cardinality and carries ambient diagnostic context into structured JSON logs,
+  but it does not yet prove an OTLP exporter, dashboard, or alert pipeline.
 - Treat the outbox claimed-lag metric as observational unless the canonical
   threshold docs say otherwise.
 - Do not infer a second-provider dashboard, failover lane, or adapter health
-  panel from historical Conductor material.
+  panel from historical provider-draft material.
 
 ## What is no longer valid observability truth
 
 Do not use these older assumptions as current operator guidance:
 
 - `Phase 1` dashboard sketches and quarter-based rollout language;
-- fake multi-provider dashboards that show Conductor as a live production path;
+- fake multi-provider dashboards that show non-implemented providers as live
+  production paths;
 - threshold tables that are not traceable to the canonical SLA and mapping docs;
 - ASCII mock dashboards or alert examples presented as if they were real wired
   operational panels.

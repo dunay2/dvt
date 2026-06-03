@@ -1,11 +1,7 @@
-import type { IRunExecutionContextReader } from '@dvt/artifacts';
-import type {
-  DbtPluginContext,
-  MaterializationEvidence,
-  PlanRef,
-  ResolvedRunContext,
-  RunExecutionContext,
-} from '@dvt/contracts';
+/**
+ * @ownedConcern Define plugin-free Temporal activity contracts and dispatch types.
+ */
+import type { MaterializationEvidence, PlanRef, ResolvedRunContext } from '@dvt/contracts';
 
 import type {
   EventType,
@@ -16,6 +12,7 @@ import type {
 } from '../engine-types.js';
 
 import { ActivityErrorCode } from './activityFailures.js';
+import type { TemporalPlanArtifactReader } from './temporalPlanArtifactReader.js';
 
 export type StepDefinition = ExecutionPlan['steps'][number];
 
@@ -36,21 +33,8 @@ export interface StepExecutionIdentity {
   environmentId: string;
 }
 
-export interface DbtPluginExecutionInput {
-  step: StepDefinition;
-  executionIdentity: StepExecutionIdentity;
-  runContext: ResolvedRunContext;
-  runExecutionContext: RunExecutionContext;
-  pluginContext: DbtPluginContext;
-}
-
-export interface DbtPluginRunner {
-  execute(input: DbtPluginExecutionInput): Promise<StepResult>;
-}
-
 export interface ActivityDeps extends EventEmitterDeps, RunBootstrapperDeps {
-  runExecutionContextReader?: IRunExecutionContextReader;
-  dbtPluginRunner?: DbtPluginRunner;
+  planArtifactReader: TemporalPlanArtifactReader;
 }
 
 export interface StepInput {

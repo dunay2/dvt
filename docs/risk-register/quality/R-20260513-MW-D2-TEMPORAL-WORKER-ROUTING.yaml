@@ -1,0 +1,27 @@
+---
+id: R-20260513-MW-D2-TEMPORAL-WORKER-ROUTING
+title: Capability-routed Temporal workers require operational queue alignment
+status: Open
+date: 2026-05-13
+owners:
+  - packages/@dvt/adapter-temporal
+  - apps/api
+  - apps/temporal-worker
+severity: Medium
+probability: Medium
+context: >
+  MW-D2 introduces provider-neutral step activity routing by step kind. Workflow starts remain
+  tenant queue scoped, while executeStep activities can be sent to capability-specific Temporal
+  activity task queues. The routing model is configuration-driven and DBT remains only one plugin
+  consumer.
+risk: >
+  Operators can configure a route to a task queue with no live pollers or a worker image that has
+  not composed the required plugin activity. In that case the workflow can accumulate activity queue
+  delay or fail closed with unsupported step-kind errors.
+mitigations:
+  - Keep route configuration validated and frozen into workflow input.
+  - Keep runbooks explicit about matching activity route queues to worker deployments.
+  - Monitor Temporal schedule-to-start latency and poller count per routed activity queue.
+  - Keep StepActivityDispatcher fail-closed when a worker lacks the matching plugin registry.
+review_after: 2026-05-27
+---

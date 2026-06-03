@@ -2,7 +2,7 @@
 title: ADR-0033 - Outbox Worker Sharding And Fencing Model
 status: Accepted
 owner: Architecture / Engine / State / Platform
-last_reviewed: 2026-03-12
+last_reviewed: 2026-05-09
 ---
 
 # ADR-0033 - Outbox Worker Sharding And Fencing Model
@@ -18,7 +18,9 @@ story, but horizontal scale-out remains blocked.
 
 The repository needs one concrete `ADR-0009` enforcement strategy that can:
 
-- preserve same-`runId` ordering;
+- preserve same `(tenantId, runId)` ordering;
+- prevent one high-volume tenant from spreading across every shared worker
+  shard through many run identifiers;
 - prevent ambiguous dual-active publishing;
 - remain operationally understandable;
 - fit the current PostgreSQL-backed runtime without inventing a new control
@@ -30,12 +32,12 @@ semantics underspecified.
 
 ## Decision
 
-DVT+ will use deterministic sharding keyed by `runId` together with explicit
+DVT+ will use tenant-affine deterministic sharding together with explicit
 deployment-owned shard lists and PostgreSQL advisory-lock fencing.
 
 The selected model is:
 
-1. `shard_id = stableHash64(runId) % shardCount`;
+1. `shard_id = stableHash64(length(tenantId) + ":" + tenantId) % shardCount`;
 2. `shard_id` is persisted with each outbox row at enqueue time;
 3. workers receive explicit `ownedShardIds` from deployment configuration;
 4. workers claim and publish only for shards they currently own;
@@ -43,6 +45,12 @@ The selected model is:
    PostgreSQL sessions;
 6. loss of the lock-holding session is treated as ownership loss;
 7. changing `shardCount` is an explicit migration, not transparent autoscaling.
+
+The full sharding API is the `OutboxShardAssignment` policy in
+`@dvt/delivery`. It accepts `{ tenantId, runId }` so callers pass the complete
+stream identity, but the partition input is tenant-affine. This is intentional:
+same-tenant runs share the tenant shard, while per-stream ordering remains
+enforced by `(tenantId, runId, runSeq)`.
 
 ## Architectural Consequences
 
@@ -73,15 +81,19 @@ health/readiness behavior.
 
 ### Resharding
 
-Because `shard_id` is persisted, `shardCount` changes remap future work and are
-not transparent.
+Because `shard_id` is persisted, both `shardCount` changes and sharding-policy
+changes remap future work and are not transparent.
 
-`G5` therefore treats resharding as a controlled topology migration with drain,
-config cutover, and explicit restart boundaries.
+`G5` therefore treats resharding or tenant-affinity rollout as a controlled
+topology migration with drain, config cutover, and explicit restart boundaries.
+Existing rows keep their persisted shard until delivered, dead-lettered, or
+explicitly migrated.
 
 ## Positive Consequences
 
-- same-`runId` routing remains deterministic;
+- same `(tenantId, runId)` ordering remains deterministic;
+- a high-volume tenant no longer fans out across every shard through many run
+  identifiers;
 - one shard has one effective owner at a time;
 - scale-out can be expressed through explicit shard redistribution;
 - failure modes around ownership are easier to observe and test than with
@@ -90,7 +102,8 @@ config cutover, and explicit restart boundaries.
 ## Negative Consequences
 
 - `shardCount` changes require migration discipline;
-- hot shards remain possible;
+- hot tenant shards remain possible and may require shard-count or ownership
+  rebalance;
 - the runtime and PostgreSQL adapter both need explicit ownership-aware logic;
 - multi-worker support still depends on real implementation and validation work,
   not on this ADR alone.
@@ -112,6 +125,12 @@ constraints make mixed old/new `shardCount` processing too ambiguous.
 Rejected because ownership fencing alone does not make the claim path bounded or
 index-supported.
 
+### Run-only hash assignment
+
+Rejected for tenant-aware scale-out because a single tenant with many runs can
+occupy the full worker topology and starve unrelated tenants through shared
+claim capacity.
+
 ## Follow-up Documents
 
 Use this ADR together with:
@@ -120,3 +139,4 @@ Use this ADR together with:
 - [`G5 / US-G5.5 Sharding And Fencing Plan`](../planning/archive/gaps/G5-US-G5.5-SHARDING-AND-FENCING-PLAN.md)
 - [`G5 - AI Execution Tracker`](../planning/archive/gaps/G5-AI-EXECUTION-TRACKER.md)
 - [`ADR-G5 - Independent Outbox Worker Runtime`](./_drafts/ADR-G5-independent-outbox-worker-runtime.md)
+- [`Tenant-Aware Outbox Sharding Component`](../architecture/components/outbox-worker/tenant-aware-outbox-sharding-component.md)

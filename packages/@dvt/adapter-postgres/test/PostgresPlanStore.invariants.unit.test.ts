@@ -1,3 +1,4 @@
+import { asSha256HexString } from '@dvt/contracts';
 import { describe, expect, test } from 'vitest';
 
 import {
@@ -15,7 +16,7 @@ describe('PostgresPlanStore invariants (unit, always-on)', () => {
     plan_version: '1.0',
     plan_uri: 'dvt-plan://postgres/p1',
     plan_sha256: 'a'.repeat(64),
-    schema_version: 'v1.2',
+    schema_version: '1.0',
     size_bytes: 123,
     requires_capabilities: ['cap.b', 'cap.a'],
     canonical_plan_json: '{"metadata":{"planId":"p1"}}',
@@ -43,12 +44,38 @@ describe('PostgresPlanStore invariants (unit, always-on)', () => {
     ).toThrow('PLAN_STORE_CONFLICT');
   });
 
+  test('assertStoredPlanMatchesRequest accepts replayed plan payloads that only differ by createdAtIso', () => {
+    const row = {
+      ...baseStoredRow,
+      plan_sha256: 'a'.repeat(64),
+      canonical_plan_json:
+        '{"metadata":{"createdAtIso":"2026-05-26T10:00:00.000Z","planId":"p1"},"steps":[]}',
+      executable_plan_json:
+        '{"metadata":{"createdAtIso":"2026-05-26T10:00:00.000Z","planId":"p1"},"steps":[]}',
+    } satisfies StoredPlanRow;
+    const replayedRef = {
+      ...buildPlanRefFromStoredRow(row),
+      sha256: asSha256HexString('b'.repeat(64)),
+    };
+
+    expect(() =>
+      assertStoredPlanMatchesRequest(row, {
+        planRef: replayedRef,
+        executionPolicy: buildExecutionPolicyFromStoredRow(row),
+        canonicalPlanJson:
+          '{"metadata":{"createdAtIso":"2026-05-26T10:01:00.000Z","planId":"p1"},"steps":[]}',
+        executablePlanJson:
+          '{"metadata":{"createdAtIso":"2026-05-26T10:01:00.000Z","planId":"p1"},"steps":[]}',
+      })
+    ).not.toThrow();
+  });
+
   test('toPersistedCanonicalPlanJson is stable for equivalent nested key ordering', () => {
     const buildResultA = {
       plan: {
         metadata: {
           planVersion: '1.0',
-          schemaVersion: 'v1.2',
+          schemaVersion: '1.0',
           contractVersion: '1.0.0',
           inputHashSha256: 'a'.repeat(64),
           planId: 'b'.repeat(64),
@@ -93,7 +120,7 @@ describe('PostgresPlanStore invariants (unit, always-on)', () => {
       plan: {
         metadata: {
           planVersion: '1.0',
-          schemaVersion: 'v1.2',
+          schemaVersion: '1.0',
           contractVersion: '1.0.0',
           inputHashSha256: 'a'.repeat(64),
           planId: 'b'.repeat(64),
@@ -115,6 +142,9 @@ describe('PostgresPlanStore invariants (unit, always-on)', () => {
   test('toPlanExecutabilityRecord rejects VALID rows without validated_at', () => {
     expect(() =>
       toPlanExecutabilityRecord({
+        tenant_id: 'tenant-a',
+        project_id: 'analytics',
+        environment_id: 'prod',
         plan_id: 'p1',
         adapter_id: 'temporal',
         state: 'VALID',
@@ -127,6 +157,9 @@ describe('PostgresPlanStore invariants (unit, always-on)', () => {
   test('toPlanExecutabilityRecord rejects INVALID rows without rejection_report_json', () => {
     expect(() =>
       toPlanExecutabilityRecord({
+        tenant_id: 'tenant-a',
+        project_id: 'analytics',
+        environment_id: 'prod',
         plan_id: 'p1',
         adapter_id: 'temporal',
         state: 'INVALID',

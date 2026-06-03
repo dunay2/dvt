@@ -1,7 +1,11 @@
+import { parseExecutionSelection, type ExecutionSelection } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
+import { ApiError } from '../api/createApiClient';
 import type { ApiClient } from '../api/createApiClient';
+
 import { makePlanRef, makeRunContext } from '../../testing/contractTestUtils';
+import { createMockPlansService } from '../../../testing/plansPortDoubles';
 import { createPlansService } from './plansService';
 
 const VALID_TRANSFORMATION_GRAPH_SOURCE = {
@@ -68,11 +72,18 @@ const VALID_GENERIC_GRAPH_SOURCE = {
 const VALID_TRANSFORMATION_SELECTION = ['source-node', 'transform-node', 'sink-node'] as const;
 const VALID_GENERIC_SELECTION = ['node_1'] as const;
 
+function toExplicitSelection(nodeIds: readonly string[]): ExecutionSelection {
+  return parseExecutionSelection({
+    mode: 'explicit' as const,
+    nodeIds: [...nodeIds],
+  });
+}
+
 function buildValidTransformationPlan(): Readonly<Record<string, unknown>> {
   return {
     metadata: {
       planVersion: '1.0',
-      schemaVersion: 'v1.2',
+      schemaVersion: '1.0',
       contractVersion: '1.0.0',
       inputHashSha256: 'a'.repeat(64),
       planId: 'b'.repeat(64),
@@ -111,7 +122,7 @@ function buildContractPlanWithRetryPolicy(): Readonly<Record<string, unknown>> {
   return {
     metadata: {
       planVersion: '1.0',
-      schemaVersion: 'v1.2',
+      schemaVersion: '1.0',
       contractVersion: '1.0.0',
       inputHashSha256: 'a'.repeat(64),
       planId: 'b'.repeat(64),
@@ -143,11 +154,11 @@ function buildContractPlanWithRetryPolicy(): Readonly<Record<string, unknown>> {
   } as const;
 }
 
-function buildContractPlanWithLegacyRetryConfig(): Readonly<Record<string, unknown>> {
+function buildContractPlanWithRetiredRetryConfig(): Readonly<Record<string, unknown>> {
   return {
     metadata: {
       planVersion: '1.0',
-      schemaVersion: 'v1.2',
+      schemaVersion: '1.0',
       contractVersion: '1.0.0',
       inputHashSha256: 'a'.repeat(64),
       planId: 'b'.repeat(64),
@@ -174,11 +185,40 @@ function buildContractPlanWithLegacyRetryConfig(): Readonly<Record<string, unkno
   } as const;
 }
 
+function buildGenericContractPlanWithoutNodeIds(): Readonly<Record<string, unknown>> {
+  return {
+    metadata: {
+      planVersion: '1.0',
+      schemaVersion: '1.0',
+      contractVersion: '1.0.0',
+      inputHashSha256: 'a'.repeat(64),
+      planId: 'b'.repeat(64),
+      createdAtIso: '2026-04-03T00:00:00.000Z',
+    },
+    steps: [
+      {
+        stepId: 'model-orders',
+        kind: 'DBT_MODEL',
+        dependsOn: [],
+        stepTypeConfig: {
+          name: 'Orders Model',
+        },
+      },
+    ],
+    observability: {
+      tags: {
+        adapter: 'temporal',
+        environmentId: 'dev',
+      },
+    },
+  } as const;
+}
+
 function buildValidPlanRef(): ReturnType<typeof makePlanRef> {
   return makePlanRef({
     uri: 'dvt://plans/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
     sha256: 'b'.repeat(64),
-    schemaVersion: 'v1.2',
+    schemaVersion: '1.0',
     planId: 'b'.repeat(64),
     planVersion: 'v1',
   });
@@ -258,20 +298,36 @@ function buildApiClientStub(overrides: Partial<ApiClient> = {}): ApiClient {
   };
 }
 
+function createPlanRejectedApiError(details: Record<string, unknown>): ApiError {
+  return new ApiError({
+    message: 'HTTP 422',
+    endpoint: '/plans/preview',
+    statusCode: 422,
+    category: 'client',
+    responseBody: {
+      error: {
+        type: 'unprocessable',
+        reason: 'plan_rejected',
+        details,
+      },
+    },
+  });
+}
+
 describe('createPlansService', () => {
-  it('uses mock implementation in mock mode', async () => {
-    const service = createPlansService('mock');
+  it('keeps the explicit plan-port test double contract usable', async () => {
+    const service = createMockPlansService();
 
     const plan = await service.previewPlan({
       previewProfile: 'transformation-sql-first-v1',
       graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
-      selectedNodeIds: [...VALID_TRANSFORMATION_SELECTION],
+      selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
       persist: true,
       context: makeRunContext('run-1', {
         tenantId: 't1',
         projectId: 'p1',
         environmentId: 'e1',
-        targetAdapter: 'mock',
+        targetAdapter: 'temporal',
       }),
     });
 
@@ -279,10 +335,9 @@ describe('createPlansService', () => {
     expect(plan.steps.length).toBeGreaterThan(0);
   });
 
-  it('routes to api implementation in api mode', async () => {
+  it('routes to the API implementation', async () => {
     const postJsonMock = vi.fn(async () => buildTransformationPreviewPayload());
     const service = createPlansService(
-      'api',
       buildApiClientStub({
         postJson: postJsonMock as ApiClient['postJson'],
       })
@@ -291,7 +346,7 @@ describe('createPlansService', () => {
     const plan = await service.previewPlan({
       previewProfile: 'transformation-sql-first-v1',
       graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
-      selectedNodeIds: [...VALID_TRANSFORMATION_SELECTION],
+      selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
       persist: true,
       context: makeRunContext('run-1', {
         tenantId: 't1',
@@ -331,7 +386,7 @@ describe('createPlansService', () => {
       expect.objectContaining({
         previewProfile: 'transformation-sql-first-v1',
         graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
-        selectedNodeIds: [...VALID_TRANSFORMATION_SELECTION],
+        selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
         persist: true,
       })
     );
@@ -345,7 +400,7 @@ describe('createPlansService', () => {
           observability: {
             tags: {
               adapter: 'temporal',
-              environmentId: 'legacy-env',
+              environmentId: 'retired-env',
               'dvt.scope.environmentId': 'scoped-env',
             },
           },
@@ -353,7 +408,6 @@ describe('createPlansService', () => {
       })
     );
     const service = createPlansService(
-      'api',
       buildApiClientStub({
         postJson: postJsonMock as ApiClient['postJson'],
       })
@@ -362,7 +416,7 @@ describe('createPlansService', () => {
     const plan = await service.previewPlan({
       previewProfile: 'transformation-sql-first-v1',
       graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
-      selectedNodeIds: [...VALID_TRANSFORMATION_SELECTION],
+      selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
       persist: true,
       context: makeRunContext('run-1', {
         tenantId: 't1',
@@ -375,6 +429,38 @@ describe('createPlansService', () => {
     expect(plan.target).toBe('scoped-env');
   });
 
+  it('derives transformation preview step nodes from step ids when canonical nodeIds are absent', async () => {
+    const postJsonMock = vi.fn(async () =>
+      buildTransformationPreviewPayload({
+        plan: buildValidTransformationPlan(),
+      })
+    );
+    const service = createPlansService(
+      buildApiClientStub({
+        postJson: postJsonMock as ApiClient['postJson'],
+      })
+    );
+
+    const plan = await service.previewPlan({
+      previewProfile: 'transformation-sql-first-v1',
+      graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
+      selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
+      persist: true,
+      context: makeRunContext('run-1', {
+        tenantId: 't1',
+        projectId: 'p1',
+        environmentId: 'e1',
+        targetAdapter: 'temporal',
+      }),
+    });
+
+    expect(plan.steps.map((step) => step.nodes)).toEqual([
+      ['source-node'],
+      ['transform-node'],
+      ['sink-node'],
+    ]);
+  });
+
   it('rejects api payloads that do not include planRef', async () => {
     const postJsonMock = vi.fn(async () => {
       const payload = { ...buildTransformationPreviewPayload() } as Record<string, unknown>;
@@ -382,7 +468,6 @@ describe('createPlansService', () => {
       return payload;
     });
     const service = createPlansService(
-      'api',
       buildApiClientStub({
         postJson: postJsonMock as ApiClient['postJson'],
       })
@@ -392,7 +477,7 @@ describe('createPlansService', () => {
       service.previewPlan({
         previewProfile: 'transformation-sql-first-v1',
         graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
-        selectedNodeIds: [...VALID_TRANSFORMATION_SELECTION],
+        selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
         persist: true,
         context: makeRunContext('run-1', {
           tenantId: 't1',
@@ -404,6 +489,72 @@ describe('createPlansService', () => {
     ).rejects.toThrow('Validation failed');
   });
 
+  it.each([
+    {
+      description: 'dependency_gap',
+      details: {
+        cause: 'dependency_gap',
+        rejectionReason: 'Selected closure is missing required upstream dependencies.',
+      },
+      expectedMessage:
+        'Selected closure is missing required upstream dependencies. Adjust the selection and re-run Plan.',
+    },
+    {
+      description: 'selected_node_missing',
+      details: {
+        cause: 'selected_node_missing',
+        rejectionReason: 'Selected nodes are no longer available in the authoritative draft.',
+      },
+      expectedMessage:
+        'Selected nodes are no longer available in the authoritative draft. Refresh the canvas and re-run Plan.',
+    },
+    {
+      description: 'cycle_detected',
+      details: {
+        cause: 'cycle_detected',
+        rejectionReason: 'Selected closure contains a cycle and cannot be executed.',
+      },
+      expectedMessage:
+        'Selected closure contains a cycle and cannot be executed. Remove the cycle and re-run Plan.',
+    },
+    {
+      description: 'graph_source_selection_mismatch',
+      details: {
+        cause: 'graph_source_selection_mismatch',
+        rejectionReason:
+          'graphSource nodes must match the planner-derived executable subgraph for the selection.',
+      },
+      expectedMessage: 'Selected scope no longer matches the authoritative draft. Re-run Plan.',
+    },
+  ])(
+    'surfaces protected preview rejection for $description',
+    async ({ details, expectedMessage }) => {
+      const postJsonMock = vi.fn(async () => {
+        throw createPlanRejectedApiError(details);
+      });
+      const service = createPlansService(
+        buildApiClientStub({
+          postJson: postJsonMock as ApiClient['postJson'],
+        })
+      );
+
+      await expect(
+        service.previewPlan({
+          previewProfile: 'transformation-sql-first-v1',
+          graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
+          selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
+          persist: true,
+          context: makeRunContext('run-1', {
+            tenantId: 't1',
+            projectId: 'p1',
+            environmentId: 'e1',
+            targetAdapter: 'temporal',
+          }),
+        })
+      ).rejects.toThrow(expectedMessage);
+    }
+  );
+
   it('maps importPlan responses from backend-owned planRef payloads', async () => {
     const postJsonMock = vi.fn(async () => ({
       plan: buildValidTransformationPlan(),
@@ -413,7 +564,6 @@ describe('createPlansService', () => {
       },
     }));
     const service = createPlansService(
-      'api',
       buildApiClientStub({
         postJson: postJsonMock as ApiClient['postJson'],
       })
@@ -440,7 +590,6 @@ describe('createPlansService', () => {
   it('maps step retryPolicy into UI retry counts from the canonical field only', async () => {
     const postJsonMock = vi.fn(async () => buildGenericPreviewPayload());
     const service = createPlansService(
-      'api',
       buildApiClientStub({
         postJson: postJsonMock as ApiClient['postJson'],
       })
@@ -449,7 +598,7 @@ describe('createPlansService', () => {
     const plan = await service.previewPlan({
       previewProfile: 'planner-generic-v1',
       graphSource: VALID_GENERIC_GRAPH_SOURCE,
-      selectedNodeIds: [...VALID_GENERIC_SELECTION],
+      selection: toExplicitSelection(VALID_GENERIC_SELECTION),
       persist: true,
       context: makeRunContext('run-1', {
         tenantId: 't1',
@@ -470,12 +619,11 @@ describe('createPlansService', () => {
     });
   });
 
-  it('does not read legacy retry counts from stepTypeConfig', async () => {
+  it('derives planner-generic preview step nodes from step ids when canonical nodeIds are absent', async () => {
     const postJsonMock = vi.fn(async () =>
-      buildGenericPreviewPayload(buildContractPlanWithLegacyRetryConfig())
+      buildGenericPreviewPayload(buildGenericContractPlanWithoutNodeIds())
     );
     const service = createPlansService(
-      'api',
       buildApiClientStub({
         postJson: postJsonMock as ApiClient['postJson'],
       })
@@ -484,7 +632,38 @@ describe('createPlansService', () => {
     const plan = await service.previewPlan({
       previewProfile: 'planner-generic-v1',
       graphSource: VALID_GENERIC_GRAPH_SOURCE,
-      selectedNodeIds: [...VALID_GENERIC_SELECTION],
+      selection: toExplicitSelection(VALID_GENERIC_SELECTION),
+      persist: true,
+      context: makeRunContext('run-1', {
+        tenantId: 't1',
+        projectId: 'p1',
+        environmentId: 'e1',
+        targetAdapter: 'temporal',
+      }),
+    });
+
+    expect(plan.steps[0]).toMatchObject({
+      id: 'model-orders',
+      type: 'DBT_MODEL',
+      name: 'Orders Model',
+      nodes: ['model-orders'],
+    });
+  });
+
+  it('does not read retired retry counts from stepTypeConfig', async () => {
+    const postJsonMock = vi.fn(async () =>
+      buildGenericPreviewPayload(buildContractPlanWithRetiredRetryConfig())
+    );
+    const service = createPlansService(
+      buildApiClientStub({
+        postJson: postJsonMock as ApiClient['postJson'],
+      })
+    );
+
+    const plan = await service.previewPlan({
+      previewProfile: 'planner-generic-v1',
+      graphSource: VALID_GENERIC_GRAPH_SOURCE,
+      selection: toExplicitSelection(VALID_GENERIC_SELECTION),
       persist: true,
       context: makeRunContext('run-1', {
         tenantId: 't1',
@@ -506,7 +685,6 @@ describe('createPlansService', () => {
       plan: buildValidTransformationPlan(),
     }));
     const service = createPlansService(
-      'api',
       buildApiClientStub({
         postJson: postJsonMock as ApiClient['postJson'],
       })

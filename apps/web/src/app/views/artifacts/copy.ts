@@ -26,7 +26,6 @@ export const artifactsViewCopy = {
   previewUnavailableTitle: 'Artifact preview unavailable',
   previewUnavailableMessage:
     'This artifact is not loaded in the current workspace or imported manifest set yet.',
-  viewFullFile: 'View Full File',
   infoTitle: 'About dbt Artifacts',
   infoBody:
     'dbt generates these JSON artifacts after each run. They contain metadata about your project structure, execution results, and database catalog. DVT+ reads these immutable artifacts to provide state-driven UI without executing SQL directly. Import a local manifest.json above to explore the graph without a backend connection.',

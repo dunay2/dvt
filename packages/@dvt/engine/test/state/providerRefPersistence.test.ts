@@ -1,6 +1,6 @@
+import { ContractValidationError } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
-import { ProviderRefProviderMismatchError } from '../../src/contracts/errors.js';
 import { InMemoryRunStateStore } from '../../src/state/InMemoryRunStateStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 
@@ -91,20 +91,22 @@ describe.each([
     });
   });
 
-  it('rejects providerRef updates that change the provider discriminator', async () => {
+  it('rejects unsupported providerRef discriminators before persistence', async () => {
     const store = createStore();
     const runId = 'provider-ref-provider-mismatch-1';
 
     await store.bootstrapRunTx(makeBootstrap(runId));
 
+    const legacyProviderRef = {
+      provider: 'conductor',
+      tenantId: 'tenant-1',
+      workflowId: `wf-${runId}`,
+      runId: `actual-${runId}`,
+      conductorUrl: 'http://localhost:8080/api',
+    } as unknown as Parameters<typeof store.saveProviderRef>[2];
+
     await expect(
-      store.saveProviderRef('tenant-1', runId, {
-        provider: 'conductor',
-        tenantId: 'tenant-1',
-        workflowId: `wf-${runId}`,
-        runId: `actual-${runId}`,
-        conductorUrl: 'http://localhost:8080/api',
-      })
-    ).rejects.toBeInstanceOf(ProviderRefProviderMismatchError);
+      store.saveProviderRef('tenant-1', runId, legacyProviderRef)
+    ).rejects.toBeInstanceOf(ContractValidationError);
   });
 });

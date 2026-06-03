@@ -1,34 +1,46 @@
+/** Owned concern: admit explicit dropped nodes into the draft graph through the node lifecycle API. */
+
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 
 import { CANONICAL_NODE_DRAG_MIME_TYPE } from '../../types/canonical';
-import { admitExplicitCanvasNode } from './canvasInteractionCommands';
-import { parseCanonicalNodeDragPayload } from './canvasNodeDropPayload';
-import { dropCanonicalNode } from './canvasNodeDropAggregate';
+import type { CanvasNodeDropContracts } from './canvasGraphHandlerContracts';
+import { canvasDraftSessionWorkingSet } from './canvasDraftSessionWorkingSet';
 import { canvasViewCopy, formatCanvasNodeAddedMessage } from './copy';
-import type { UseCanvasGraphHandlersParams, UseCanvasGraphHandlersResult } from './useCanvasGraphHandlers.types';
+import { parseCanonicalNodeDragPayload } from './canvasNodeDropPayload';
+import { useCanvasNodeAdmissionCommandRunner } from './useCanvasNodeAdmissionCommandRunner';
 
-type UseCanvasNodeDropHandlersArgs = Pick<
-  UseCanvasGraphHandlersParams,
-  | 'graphStrategy'
-  | 'canEditEdges'
-  | 'columnLevelLineageEnabled'
-  | 'setNodes'
-  | 'setDraftSession'
->;
+type UseCanvasNodeDropHandlersArgs = CanvasNodeDropContracts;
 
-type UseCanvasNodeDropHandlersResult = Pick<
-  UseCanvasGraphHandlersResult,
-  'handleDrop' | 'handleDragOver'
->;
+type UseCanvasNodeDropHandlersResult = {
+  handleDrop: React.DragEventHandler<HTMLDivElement>;
+  handleDragOver: React.DragEventHandler<HTMLDivElement>;
+  handleAttachSchemaToNode: (nodeId: string, schemaName: string) => void;
+};
 
 export function useCanvasNodeDropHandlers({
-  graphStrategy,
-  canEditEdges,
-  columnLevelLineageEnabled,
-  setNodes,
-  setDraftSession,
+  state,
+  effects,
+  policy,
 }: UseCanvasNodeDropHandlersArgs): UseCanvasNodeDropHandlersResult {
+  const { canonicalNodesById, draftSession, nodes } = state;
+  const { setNodes, setDraftSession } = effects;
+  const { graphStrategy, canEditEdges, columnLevelLineageEnabled, allowsCanonicalNode } = policy;
+  const runAdmissionCommand = useCanvasNodeAdmissionCommandRunner({
+    state: {
+      draftSession,
+      nodes,
+    },
+    effects: {
+      setNodes,
+      setDraftSession,
+    },
+    policy: {
+      columnLevelLineageEnabled,
+      allowsCanonicalNode,
+    },
+  });
+
   const handleDrop = useCallback<React.DragEventHandler<HTMLDivElement>>(
     (event) => {
       event.preventDefault();
@@ -38,10 +50,9 @@ export function useCanvasNodeDropHandlers({
       }
 
       const canonicalNode =
-        parseCanonicalNodeDragPayload(
-          event.dataTransfer.getData(CANONICAL_NODE_DRAG_MIME_TYPE)
-        ) ??
-        graphStrategy.parseDropPayload(event.dataTransfer);
+        parseCanonicalNodeDragPayload(event.dataTransfer.getData(CANONICAL_NODE_DRAG_MIME_TYPE)) ??
+        graphStrategy?.parseDropPayload(event.dataTransfer) ??
+        null;
       if (!canonicalNode) {
         return;
       }
@@ -52,39 +63,18 @@ export function useCanvasNodeDropHandlers({
         y: event.clientY - reactFlowBounds.top - 40,
       };
 
-      setNodes((existingNodes) => {
-        const dropResult = dropCanonicalNode({
-          canonicalNode,
-          position,
-          nodes: existingNodes,
-          graphStrategy,
-          columnLevelLineageEnabled,
-        });
-
-        if (dropResult.outcome === 'noop') {
-          toast.info(dropResult.reason);
-          return existingNodes;
-        }
-
-        if (dropResult.outcome === 'rejected') {
-          toast.error(dropResult.reason);
-          return existingNodes;
-        }
-
-        setDraftSession((currentSession) =>
-          admitExplicitCanvasNode(currentSession, canonicalNode.id)
-        );
-        toast.success(formatCanvasNodeAddedMessage(canonicalNode.name));
-        return dropResult.nextNodes;
+      runAdmissionCommand({
+        canonicalNode,
+        position,
+        onNoop: (reason) => {
+          toast.info(reason);
+        },
+        onAdded: (addedNode) => {
+          toast.success(formatCanvasNodeAddedMessage(addedNode.name));
+        },
       });
     },
-    [
-      canEditEdges,
-      columnLevelLineageEnabled,
-      graphStrategy,
-      setDraftSession,
-      setNodes,
-    ]
+    [canEditEdges, graphStrategy, runAdmissionCommand]
   );
 
   const handleDragOver = useCallback<React.DragEventHandler<HTMLDivElement>>((event) => {
@@ -92,8 +82,71 @@ export function useCanvasNodeDropHandlers({
     event.dataTransfer.dropEffect = 'move';
   }, []);
 
+  const handleAttachSchemaToNode = useCallback(
+    (nodeId: string, schemaName: string) => {
+      if (!canEditEdges) {
+        toast.error(canvasViewCopy.mutationUnavailableMessage);
+        return;
+      }
+
+      const normalizedSchemaName = schemaName.trim();
+      const targetNode = canonicalNodesById.get(nodeId);
+      if (targetNode == null) {
+        toast.error(canvasViewCopy.nodeNotFoundInGraphMessage);
+        return;
+      }
+      if (normalizedSchemaName.length === 0) {
+        toast.info('Schema resource is empty and cannot be assigned.');
+        return;
+      }
+
+      const readRecord = (value: unknown): Record<string, unknown> =>
+        value !== null && typeof value === 'object' && !Array.isArray(value)
+          ? (value as Record<string, unknown>)
+          : {};
+      const existingMetadata = readRecord(targetNode.metadata);
+      const nextMetadata: Record<string, unknown> = {
+        ...existingMetadata,
+        schema: normalizedSchemaName,
+        config: {
+          ...readRecord(existingMetadata.config),
+          schema: normalizedSchemaName,
+        },
+      };
+
+      if (targetNode.pluginId === 'dbt') {
+        nextMetadata.dbt = {
+          ...readRecord(existingMetadata.dbt),
+          schemaName: normalizedSchemaName,
+        };
+      }
+
+      const nextNode = {
+        ...targetNode,
+        metadata: nextMetadata,
+      };
+      const nextNodes = nodes.map((node) =>
+        node.id === nodeId
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                metadata: nextMetadata,
+              },
+            }
+          : node
+      );
+
+      setNodes(nextNodes);
+      setDraftSession(canvasDraftSessionWorkingSet.upsertNode(draftSession, nextNode));
+      toast.success(`Schema ${normalizedSchemaName} assigned to ${targetNode.name}.`);
+    },
+    [canEditEdges, canonicalNodesById, draftSession, nodes, setDraftSession, setNodes]
+  );
+
   return {
     handleDrop,
     handleDragOver,
+    handleAttachSchemaToNode,
   };
 }

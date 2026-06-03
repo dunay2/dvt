@@ -28,6 +28,12 @@ const EnvSchema = z.object({
   DVT_START_RUN_BACKPRESSURE_QUERY_TIMEOUT_MS: z.coerce.number().int().positive().default(1000),
   DVT_START_RUN_BACKPRESSURE_CACHE_TTL_MS: z.coerce.number().int().positive().default(2000),
   DVT_START_RUN_RETRY_AFTER_SECONDS: z.coerce.number().int().positive().default(30),
+  DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(300),
+  DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(60000),
   DVT_OUTBOX_SHARD_COUNT: z.coerce.number().int().positive().default(1),
   DVT_INTENT_RECONCILER_ENABLED: strictTrueBoolean.default(false),
   DVT_INTENT_RECONCILER_INTERVAL_MS: z.coerce.number().int().positive().default(30000),
@@ -36,13 +42,13 @@ const EnvSchema = z.object({
   DVT_INTENT_RECONCILER_BACKOFF_BASE_MS: z.coerce.number().int().positive().default(1000),
   DVT_INTENT_RECONCILER_BACKOFF_MAX_MS: z.coerce.number().int().positive().default(60000),
   DVT_INTENT_RECONCILER_TICK_TIMEOUT_MS: z.coerce.number().int().positive().default(20000),
-  DVT_INTENT_RECONCILER_PROVIDERS: z.string().default('mock'),
+  DVT_INTENT_RECONCILER_PROVIDERS: z.string().default('temporal'),
   SERVICE_NAME: z.string().default('dbf-api'),
   OBS_ENABLED: strictTrueBoolean.default(false),
   OTEL_EXPORTER_OTLP_ENDPOINT: z.string().optional(),
   OTEL_SERVICE_NAME: z.string().optional(),
   OTEL_RESOURCE_ATTRIBUTES: z.string().optional(),
-  // Temporal -- optional; when set, the Temporal adapter is registered alongside mock
+  // Temporal -- required when OIDC-protected runtime routes select the Temporal provider.
   TEMPORAL_ADDRESS: z.string().optional(),
   TEMPORAL_NAMESPACE: z.string().optional(),
   TEMPORAL_TASK_QUEUE: z.string().optional(),
@@ -50,10 +56,14 @@ const EnvSchema = z.object({
   TEMPORAL_CONNECT_TIMEOUT_MS: z.string().optional(),
   TEMPORAL_REQUEST_TIMEOUT_MS: z.string().optional(),
   TEMPORAL_MAX_START_PAYLOAD_BYTES: z.string().optional(),
+  TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES: z.string().optional(),
   TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: z.string().optional(),
+  TEMPORAL_STEP_ACTIVITY_ROUTES: z.string().optional(),
+  DVT_TEMPORAL_WORKER_READYZ_URL: z.string().url().optional(),
   DVT_DBT_BUNDLE_STORE_BACKEND: z.enum(['file', 's3']).optional(),
   DVT_DBT_BUNDLE_S3_BUCKET: z.string().optional(),
   DVT_DBT_BUNDLE_FILE_ROOT: z.string().optional(),
+  DVT_WORKSPACE_FILES_ROOT: z.string().optional(),
   // OIDC / auth -- all three required together when auth is enabled
   OIDC_JWKS_URI: z.string().optional(),
   OIDC_ISSUER: z.string().optional(),

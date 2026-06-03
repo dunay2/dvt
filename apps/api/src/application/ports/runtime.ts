@@ -1,19 +1,22 @@
+/**
+ * Owned concern: define API application runtime DTOs and ports without
+ * re-declaring provider ids outside the shared contract vocabulary.
+ */
 import type {
   CanonicalRunStatus,
   EventEnvelope,
+  Provider,
   MaterializationEvidence,
   ProviderRunStatusView,
   RunExecutionContextRef,
   TransformationExecutor,
+  TransformationSqlFirstPlanSummary,
 } from '@dvt/contracts';
 
-import type { AuthorizationAction } from '../../domain/auth/types.js';
-
+import type { QueryAuthorizationAction } from './accessDecision.js';
 import type { AuthorizedCommandExecutionContext, AuthorizedExecutionContext } from './auth.js';
 
-export type AuthorizedQueryExecutionContext = AuthorizedExecutionContext<
-  Extract<AuthorizationAction, { readonly kind: 'query' }>
->;
+export type AuthorizedQueryExecutionContext = AuthorizedExecutionContext<QueryAuthorizationAction>;
 
 export type SupportedSignalType = 'PAUSE' | 'RESUME' | 'CANCEL';
 
@@ -68,6 +71,25 @@ export interface RunProvenanceChain {
   readonly authoring?: RunAuthoringProvenance;
 }
 
+export interface RunDiagnosticPointer {
+  readonly kind: 'trace' | 'log';
+  readonly label: string;
+  readonly value: string;
+}
+
+export interface RunDiagnostics {
+  readonly runId: string;
+  readonly planId?: string;
+  readonly planSha?: string;
+  readonly stepId?: string;
+  readonly attemptId?: string;
+  readonly adapter?: string;
+  readonly durationMs?: number;
+  readonly status: CanonicalRunStatus['status'];
+  readonly errorCode?: string;
+  readonly pointers: ReadonlyArray<RunDiagnosticPointer>;
+}
+
 export type GetRunStatusResult = Pick<
   CanonicalRunStatus,
   'runId' | 'status' | 'substatus' | 'message' | 'startedAt' | 'completedAt' | 'execution'
@@ -82,6 +104,8 @@ export type GetRunStatusResult = Pick<
   readonly errorReason?: string;
   readonly materialization?: MaterializationEvidence;
   readonly provenance?: RunProvenanceChain;
+  readonly planSummary?: TransformationSqlFirstPlanSummary;
+  readonly diagnostics?: RunDiagnostics;
 };
 
 export interface IGetRunStatusUseCase {
@@ -103,7 +127,7 @@ export interface RunListItemDto {
   readonly planId: string;
   readonly planVersion: string;
   readonly logicalAttemptId: number;
-  readonly provider: 'temporal' | 'conductor' | 'mock';
+  readonly provider: Provider;
   readonly createdAt?: string;
   readonly status?: CanonicalRunStatus['status'];
 }
@@ -115,6 +139,62 @@ export interface ListRunsResult {
 
 export interface IListRunsUseCase {
   execute(query: ListRunsQuery, context: AuthorizedQueryExecutionContext): Promise<ListRunsResult>;
+}
+
+export interface GetCostAttributionSummaryQuery {
+  readonly limit: number;
+}
+
+export interface CostAttributionObservedWindowDto {
+  readonly firstEventAt: string | null;
+  readonly lastEventAt: string | null;
+}
+
+export interface CostAttributionRunDto {
+  readonly runId: string;
+  readonly projectId: string;
+  readonly environmentId: string;
+  readonly planId: string;
+  readonly planVersion: string;
+  readonly status: CanonicalRunStatus['status'] | null;
+  readonly completedStepCount: number;
+  readonly failedStepCount: number;
+  readonly totalStepDurationMs: number;
+  readonly costAmount: null;
+  readonly currency: null;
+}
+
+export interface CostAttributionStepDto {
+  readonly runId: string;
+  readonly stepId: string;
+  readonly eventType: 'StepCompleted' | 'StepFailed';
+  readonly durationMs: number;
+  readonly costAmount: null;
+  readonly currency: null;
+}
+
+export interface GetCostAttributionSummaryResult {
+  readonly tenantId: string;
+  readonly projectId: string | null;
+  readonly environmentId: string | null;
+  readonly runCount: number;
+  readonly completedStepCount: number;
+  readonly failedStepCount: number;
+  readonly totalStepDurationMs: number;
+  readonly totalCostAmount: null;
+  readonly currency: null;
+  readonly costCaptureStatus: 'unavailable';
+  readonly observedWindow: CostAttributionObservedWindowDto;
+  readonly runs: ReadonlyArray<CostAttributionRunDto>;
+  readonly steps: ReadonlyArray<CostAttributionStepDto>;
+  readonly nextCursor: string | null;
+}
+
+export interface IGetCostAttributionSummaryUseCase {
+  execute(
+    query: GetCostAttributionSummaryQuery,
+    context: AuthorizedQueryExecutionContext
+  ): Promise<GetCostAttributionSummaryResult>;
 }
 
 export interface GetRunEventsQuery {
@@ -166,18 +246,11 @@ export interface ICancelRunUseCase {
   ): Promise<SignalRunResult>;
 }
 
-export const SUPPORTED_RECOVER_RUN_TARGET_ADAPTERS = [
-  'temporal',
-  'conductor',
-  'mock',
-] as const;
+export const SUPPORTED_RECOVER_RUN_TARGET_ADAPTERS = ['temporal'] as const;
 
-export type RecoverRunTargetAdapter =
-  (typeof SUPPORTED_RECOVER_RUN_TARGET_ADAPTERS)[number];
+export type RecoverRunTargetAdapter = (typeof SUPPORTED_RECOVER_RUN_TARGET_ADAPTERS)[number];
 
-export function isRecoverRunTargetAdapter(
-  value: string
-): value is RecoverRunTargetAdapter {
+export function isRecoverRunTargetAdapter(value: string): value is RecoverRunTargetAdapter {
   return (SUPPORTED_RECOVER_RUN_TARGET_ADAPTERS as readonly string[]).includes(value);
 }
 

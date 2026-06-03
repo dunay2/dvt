@@ -2,13 +2,13 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { mockExecutionPlan } from '../../data/mockDbtData';
+import { mockExecutionPlan } from '../../../testing/fixtures/mockDbtData';
 import type { PlanViewModel } from '../../types/plans';
-import { makeMockRunRef } from '../../testing/contractTestUtils';
 import { canvasViewCopy } from './copy';
 import {
   buildCanonicalEdges,
   buildCanonicalNodes,
+  buildPersistedPreviewPlan,
   buildRunnableExecutionPlan,
   createPlansServiceMock,
   createRunsServiceMock,
@@ -27,6 +27,7 @@ type UnavailableRunStartScenario = Readonly<{
   expectedSummary: string;
   expectedError: string;
   expectedModalState?: ExpectedModalState;
+  expectedBlocker: string;
 }>;
 
 type StartedRunConsoleScenario = Readonly<{
@@ -52,6 +53,7 @@ const unavailableRunStartScenarios: readonly UnavailableRunStartScenario[] = [
     expectedSummary: canvasViewCopy.runPlanRefUnavailableMessage,
     expectedError: 'Plan reference is unavailable for this mode',
     expectedModalState: 'true',
+    expectedBlocker: 'plan_integrity',
   },
   {
     name: 'blocks startRun when preview has no persisted proof',
@@ -65,6 +67,7 @@ const unavailableRunStartScenarios: readonly UnavailableRunStartScenario[] = [
     expectedSummary: canvasViewCopy.planStatusPreviewNotPersistedMessage,
     expectedError: PERSISTED_PREVIEW_REQUIRED_MESSAGE,
     expectedModalState: 'true',
+    expectedBlocker: 'plan_integrity',
   },
   {
     name: 'keeps startRun unavailable when route permissions block run execution',
@@ -72,22 +75,24 @@ const unavailableRunStartScenarios: readonly UnavailableRunStartScenario[] = [
     expectedSummary: canvasViewCopy.planStatusRunUnavailableMessage,
     expectedError: canvasViewCopy.runPermissionDeniedMessage,
     expectedModalState: 'false',
+    expectedBlocker: 'authorization_denied',
   },
   {
-    name: 'blocks startRun when persisted proof hash does not match planRef hash',
+    name: 'blocks startRun when persisted preview identity does not match the active plan',
     currentPlan: {
       ...buildRunnableExecutionPlan(),
       preview: {
         ...mockExecutionPlan.preview,
         persisted: {
           planRecordId: 'plan-record-mismatch',
-          canonicalPlanSha256: 'f'.repeat(64),
+          canonicalPlanSha256: 'c'.repeat(64),
         },
       },
     },
     expectedSummary: canvasViewCopy.planStatusPreviewNotAlignedMessage,
     expectedError: PERSISTED_PREVIEW_REQUIRED_MESSAGE,
     expectedModalState: 'true',
+    expectedBlocker: 'plan_integrity',
   },
 ] as const;
 
@@ -112,14 +117,19 @@ const startedRunConsoleScenarios: readonly StartedRunConsoleScenario[] = [
   },
 ] as const;
 
-async function renderRunStartHarness(args: {
-  runsService?: ReturnType<typeof createRunsServiceMock>;
-  currentPlan?: PlanViewModel | null;
-  canRun?: boolean;
-  consolePanelVisible?: boolean;
-  setConsolePanelHeight?: (height: number) => void;
-  toggleConsolePanel?: () => void;
-} = {}): Promise<{
+async function renderRunStartHarness(
+  args: {
+    runsService?: ReturnType<typeof createRunsServiceMock>;
+    currentPlan?: PlanViewModel | null;
+    canRun?: boolean;
+    canonicalNodes?: ReturnType<typeof buildCanonicalNodes>;
+    canonicalEdges?: ReturnType<typeof buildCanonicalEdges>;
+    executionEnvironmentId?: string;
+    consolePanelVisible?: boolean;
+    setConsolePanelHeight?: (height: number) => void;
+    toggleConsolePanel?: () => void;
+  } = {}
+): Promise<{
   runsService: ReturnType<typeof createRunsServiceMock>;
   harness: ExecutionActionsHarness;
 }> {
@@ -130,9 +140,10 @@ async function renderRunStartHarness(args: {
     plansService: createPlansServiceMock(),
     runsService,
     currentPlan,
-    canonicalNodes: buildCanonicalNodes(),
-    canonicalEdges: buildCanonicalEdges(),
+    canonicalNodes: args.canonicalNodes ?? buildCanonicalNodes(),
+    canonicalEdges: args.canonicalEdges ?? buildCanonicalEdges(),
     canRun: args.canRun,
+    executionEnvironmentId: args.executionEnvironmentId,
     consolePanelVisible: args.consolePanelVisible,
     setConsolePanelHeight: args.setConsolePanelHeight,
     toggleConsolePanel: args.toggleConsolePanel,
@@ -168,6 +179,7 @@ async function expectUnavailableRunStart(args: {
   expectedSummary: string;
   expectedError: string;
   expectedModalState?: 'true' | 'false';
+  expectedBlocker: string;
 }): Promise<ExecutionActionsHarness> {
   const blockedScenario = await renderRunStartHarness({
     currentPlan: args.currentPlan,
@@ -176,6 +188,8 @@ async function expectUnavailableRunStart(args: {
   const harness = blockedScenario.harness;
 
   expect(harness.text('can-start-run')).toBe('false');
+  expect(harness.text('plan-run-readiness-status')).toBe('blocked');
+  expect(harness.text('plan-run-readiness-blockers')).toContain(args.expectedBlocker);
   expect(harness.text('plan-status-summary')).toBe(args.expectedSummary);
 
   await expectRunStartBlocked({
@@ -195,13 +209,10 @@ async function expectStartedRunConsoleScenario(
   const toggleConsolePanel = vi.fn<() => void>();
   const startedScenario = await renderRunStartHarness({
     runsService: createRunsServiceMock({
-      startRun: vi.fn(async () =>
-        makeMockRunRef({
-          runId: scenario.runId,
-          tenantId: 't',
-          workflowId: 'w',
-        })
-      ),
+      startRun: vi.fn(async () => ({
+        runId: scenario.runId,
+        accepted: true,
+      })),
     }),
     consolePanelVisible: scenario.consolePanelVisible,
     setConsolePanelHeight,
@@ -239,44 +250,107 @@ describe('useCanvasExecutionActions run start', () => {
       expectedSummary: scenario.expectedSummary,
       expectedError: scenario.expectedError,
       expectedModalState: scenario.expectedModalState,
+      expectedBlocker: scenario.expectedBlocker,
+    });
+  });
+
+  it('blocks readiness and run start when a persisted plan exists but the graph is no longer executable', async () => {
+    const runsService = createRunsServiceMock();
+    const invalidGraphScenario = await renderRunStartHarness({
+      runsService,
+      currentPlan: buildPersistedPreviewPlan(),
+      canonicalNodes: buildCanonicalNodes().slice(0, 2),
+      canonicalEdges: [],
+    });
+    harness = invalidGraphScenario.harness;
+
+    expect(harness.text('can-start-run')).toBe('false');
+    expect(harness.text('plan-run-readiness-status')).toBe('blocked');
+    expect(harness.text('plan-run-readiness-blockers')).toContain('plan_integrity');
+    expect(harness.text('plan-status-summary')).toBe(
+      canvasViewCopy.transformationRequiresThreeNodesMessage
+    );
+
+    await expectRunStartBlocked({
+      runsService,
+      harness,
+      expectedError: canvasViewCopy.transformationRequiresThreeNodesMessage,
+      expectedModalState: 'false',
     });
   });
 
   it('starts run with persisted plan and forwards run id to navigation', async () => {
     const startedScenario = await renderRunStartHarness({
       runsService: createRunsServiceMock({
-        startRun: vi.fn(async () =>
-          makeMockRunRef({
-            runId: 'run-success',
-            tenantId: 't',
-            workflowId: 'w',
-          })
-        ),
+        startRun: vi.fn(async () => ({
+          runId: 'run-success',
+          accepted: true,
+        })),
       }),
     });
     harness = startedScenario.harness;
 
     expect(harness.text('can-start-run')).toBe('true');
+    expect(harness.text('plan-run-readiness-status')).toBe('ready');
+    expect(harness.text('plan-run-readiness-blockers')).toBe('none');
     expect(harness.text('plan-status-summary')).toBe(canvasViewCopy.planStatusPreviewReadyMessage);
 
     await harness.clickStartRun();
 
     expect(startedScenario.runsService.startRun).toHaveBeenCalledTimes(1);
-    expect(startedScenario.runsService.startRun).toHaveBeenCalledWith(
-      expect.objectContaining({
-        planRef: {
-          ...mockExecutionPlan.planRef,
-          sha256: 'c'.repeat(64),
-        },
-      })
-    );
+    expect(startedScenario.runsService.startRun).toHaveBeenCalledWith({
+      planRef: {
+        ...mockExecutionPlan.planRef,
+        sha256: 'c'.repeat(64),
+      },
+      workspaceScope: {
+        tenantId: 'tenant',
+        projectId: 'project',
+        environmentId: 'env',
+        targetAdapter: 'temporal',
+      },
+      selection: {
+        mode: 'explicit',
+        nodeIds: [
+          'stg_orders',
+          'stg_customers',
+          'dim_store',
+          'fct_sales',
+          'test_not_null_store_id',
+          'test_unique_order_id',
+        ],
+      },
+    });
     expect(harness.shellFeedback.success).toHaveBeenCalledWith(canvasViewCopy.runStartedMessage);
     expect(harness.onRunStarted).toHaveBeenCalledWith('run-success');
+  });
+
+  it('starts run with the active canvas execution environment when selected', async () => {
+    const startedScenario = await renderRunStartHarness({
+      runsService: createRunsServiceMock({
+        startRun: vi.fn(async () => ({
+          runId: 'run-prod',
+          accepted: true,
+        })),
+      }),
+      executionEnvironmentId: 'prod',
+    });
+    harness = startedScenario.harness;
+
+    await harness.clickStartRun();
+
+    expect(startedScenario.runsService.startRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        workspaceScope: expect.objectContaining({
+          tenantId: 'tenant',
+          projectId: 'project',
+          environmentId: 'prod',
+        }),
+      })
+    );
   });
 
   it.each(startedRunConsoleScenarios)('$name', async (scenario) => {
     harness = await expectStartedRunConsoleScenario(scenario);
   });
 });
-
-

@@ -51,6 +51,21 @@ describe('WorkbenchStates', () => {
     expect(body?.textContent).toContain('State body');
   });
 
+  it('makes state-frame bodies independently scrollable inside fixed workbench shells', async () => {
+    await act(async () => {
+      root.render(
+        <WorkbenchStateFrame title="Runs" slotPrefix="runs-state">
+          <div>Long state body</div>
+        </WorkbenchStateFrame>
+      );
+    });
+
+    const body = container.querySelector('[data-slot="runs-state-body"]');
+
+    expect(body?.className).toContain('min-h-0');
+    expect(body?.className).toContain('overflow-y-auto');
+  });
+
   it('renders an empty state with optional action content', async () => {
     await act(async () => {
       root.render(

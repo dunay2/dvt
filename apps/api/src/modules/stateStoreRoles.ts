@@ -1,3 +1,6 @@
+/**
+ * @ownedConcern Own API state-store role binding so runtime roots expose explicit read/write/maintenance faces.
+ */
 import type {
   IRunSnapshotStalenessQuery,
   IRunStateStoreMaintenance,
@@ -10,7 +13,10 @@ export type StateStoreRoleSource = IRunStateStoreRead &
   IRunStateStoreMaintenance &
   Pick<IRunSnapshotStalenessQuery, 'isSnapshotStale'>;
 
+const STATE_STORE_ROLE_BINDINGS_BRAND: unique symbol = Symbol('StateStoreRoleBindings');
+
 export interface StateStoreRoleBindings {
+  readonly [STATE_STORE_ROLE_BINDINGS_BRAND]: true;
   readonly read: IRunStateStoreRead;
   readonly write: IRunStateStoreWrite;
   readonly maintenance: IRunStateStoreMaintenance;
@@ -30,26 +36,35 @@ const REQUIRED_METHODS = [
   'isSnapshotStale',
 ] as const;
 
-function isStateStoreRoleSource(value: unknown): value is StateStoreRoleSource {
+function findMissingStateStoreRoleFunction(
+  value: unknown
+): (typeof REQUIRED_METHODS)[number] | null {
   if (value === null || typeof value !== 'object') {
-    return false;
+    return REQUIRED_METHODS[0];
   }
 
   const candidate = value as Record<string, unknown>;
-  return REQUIRED_METHODS.every((method) => typeof candidate[method] === 'function');
+  return REQUIRED_METHODS.find((method) => typeof candidate[method] !== 'function') ?? null;
 }
 
 export function bindStateStoreRoles(stateStore: StateStoreRoleSource): StateStoreRoleBindings {
-  if (!isStateStoreRoleSource(stateStore)) {
-    throw new Error(
-      'STATE_STORE_ROLE_SOURCE_INVALID: explicit read/write/maintenance roles are required'
-    );
+  const missingMethod = findMissingStateStoreRoleFunction(stateStore);
+  if (missingMethod !== null) {
+    throw new Error(`STATE_STORE_ROLE_SOURCE_INVALID: missing function ${missingMethod}`);
   }
 
-  return Object.freeze({
+  const bindings: StateStoreRoleBindings = {
+    [STATE_STORE_ROLE_BINDINGS_BRAND]: true,
     read: stateStore,
     write: stateStore,
     maintenance: stateStore,
     snapshotStaleness: stateStore,
+  };
+
+  Object.defineProperty(bindings, STATE_STORE_ROLE_BINDINGS_BRAND, {
+    value: true,
+    enumerable: false,
   });
+
+  return Object.freeze(bindings);
 }

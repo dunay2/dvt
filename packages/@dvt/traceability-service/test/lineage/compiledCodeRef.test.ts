@@ -24,7 +24,25 @@ describe('compiledCodeRef guards', () => {
     expect(isCompiledCodeRef(parsed)).toBe(true);
   });
 
-  it('accepts stepArtifactRef payload for dbt compiled sql', () => {
+  it('accepts stepArtifactRef payload for generic compiled sql', () => {
+    const sql = 'select 1';
+    const sha256 = sha256HexUtf8(sql);
+    const payload = {
+      stepArtifactRef: {
+        artifactKind: 'compiled-sql',
+        sha256,
+        storageUri: 's3://bucket/path/file.sql',
+        sizeBytes: Buffer.byteLength(sql, 'utf8'),
+        encoding: 'utf-8' as const,
+      },
+    };
+
+    const parsed = extractCompiledCodeRefFromPayload(payload);
+    expect(parsed).not.toBeNull();
+    expect(isCompiledCodeRef(parsed)).toBe(true);
+  });
+
+  it('rejects executor-prefixed stepArtifactRef artifact kinds', () => {
     const sql = 'select 1';
     const sha256 = sha256HexUtf8(sql);
     const payload = {
@@ -37,9 +55,7 @@ describe('compiledCodeRef guards', () => {
       },
     };
 
-    const parsed = extractCompiledCodeRefFromPayload(payload);
-    expect(parsed).not.toBeNull();
-    expect(isCompiledCodeRef(parsed)).toBe(true);
+    expect(extractCompiledCodeRefFromPayload(payload)).toBeNull();
   });
 
   it('rejects invalid payload shapes', () => {

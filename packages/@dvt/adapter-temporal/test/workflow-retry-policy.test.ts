@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveStepActivityRetryPolicy } from '../src/workflows/workflowHelpers.js';
+import { resolveStepActivityRetryPolicy } from '../src/workflows/workflowArtifactHelpers.js';
 
 describe('resolveStepActivityRetryPolicy', () => {
   it('uses the explicit ExecutionStep retryPolicy when present', () => {

@@ -1,0 +1,20 @@
+---
+id: R-20260512-WE-HX-5-PROVIDER-TELEMETRY-SEAMS
+title: Provider and telemetry seam extraction could diverge from existing runtime behavior
+status: Open
+date: 2026-05-12
+owners:
+  - '@dvt/engine'
+severity: Low
+probability: Low
+---
+description: >
+  WE-HX-5 moves provider lookup and start-run start/success telemetry behind named internal seams.
+  The main risk is accidental semantic drift in provider not-registered errors or non-blocking
+  telemetry behavior while removing duplicate lookup and metric code.
+
+mitigation: >
+  Keep public contracts unchanged, preserve AdapterNotRegisteredError mapping, reuse existing
+  StartRunApplicationService behavior tests, add direct resolver tests, and add a semantic
+  architecture guard that rejects raw adapter map lookup and coordinator-owned start/success metric
+  emission.

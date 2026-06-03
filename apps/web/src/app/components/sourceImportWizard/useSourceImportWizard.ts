@@ -1,21 +1,29 @@
-import { useMemo, useState } from 'react';
+/** Owned concern: coordinate source import wizard state through the import port. */
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import type { ImportSourcesResult, WarehouseConnection } from '../../ports/workspace';
-import type { IWorkspacePort } from '../../ports/workspace';
+import type {
+  ImportSourcesResult,
+  IWarehouseSourceImportPort,
+  WarehouseConnection,
+} from '../../ports/workspace';
+import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
 import { sourceImportWizardCopy as copy } from './copy';
 import {
+  applySourceImportOptionDefaults,
+  buildSourceImportOptionValues,
   canProceedForStep,
   getNextStep,
   getPreviousStep,
   getSelectedCount,
 } from './sourceImportWizardModel';
 import { useConnectionsLoader, useTablesLoader } from './useSourceImportWizardDataLoaders';
-import type { DataObjectSourceType, SourceImportWizardState, TableInfo, WizardStep } from './types';
+import type { DataObjectSourceType, SourceImportWizardState, WizardStep } from './types';
 
 interface UseSourceImportWizardParams {
   open: boolean;
-  workspaceService: IWorkspacePort;
+  warehouseSourceImport: IWarehouseSourceImportPort;
+  sourceImportOptions: readonly SourceImportOptionContribution[];
   onComplete?: (result: ImportSourcesResult) => void;
   onClose: () => void;
 }
@@ -37,24 +45,45 @@ const initialState: SourceImportWizardState = {
   importResult: null,
 };
 
+function hasImportedCanvasNodes(result: ImportSourcesResult): boolean {
+  return (result.importedNodeIds?.length ?? 0) > 0;
+}
+
 export function useSourceImportWizard({
   open,
-  workspaceService,
+  warehouseSourceImport,
+  sourceImportOptions,
   onComplete,
   onClose,
 }: UseSourceImportWizardParams) {
-  const [state, setState] = useState<SourceImportWizardState>(initialState);
+  const initialWizardState = useMemo(
+    () => applySourceImportOptionDefaults(initialState, sourceImportOptions),
+    [sourceImportOptions]
+  );
+  const [state, setState] = useState<SourceImportWizardState>(initialWizardState);
+  useEffect(() => {
+    setState((prev) => ({
+      ...prev,
+      includeColumns: initialWizardState.includeColumns,
+      addTests: initialWizardState.addTests,
+      addFreshness: initialWizardState.addFreshness,
+    }));
+  }, [initialWizardState]);
   const selectedCount = useMemo(() => getSelectedCount(state.tables), [state.tables]);
+  const sourceImportOptionValues = useMemo(
+    () => buildSourceImportOptionValues(state),
+    [state.includeColumns, state.addTests, state.addFreshness]
+  );
   const selectedConnectionObject = useMemo<WarehouseConnection | undefined>(
     () => state.connections.find((connection) => connection.id === state.selectedConnection),
     [state.connections, state.selectedConnection]
   );
 
-  useConnectionsLoader({ open, workspaceService, setState });
+  useConnectionsLoader({ open, warehouseSourceImport, setState });
   useTablesLoader({
     open,
     selectedConnection: state.selectedConnection,
-    workspaceService,
+    warehouseSourceImport,
     setState,
   });
 
@@ -71,6 +100,8 @@ export function useSourceImportWizard({
   const setAddTests = (addTests: boolean) => setState((prev) => ({ ...prev, addTests }));
   const setAddFreshness = (addFreshness: boolean) =>
     setState((prev) => ({ ...prev, addFreshness }));
+  const setSourceImportOption = (optionId: SourceImportOptionId, value: boolean) =>
+    setState((prev) => ({ ...prev, [optionId]: value }));
 
   const handleNext = () => {
     if (state.currentStep === 'sourceType' && state.selectedSourceType !== 'database') {
@@ -97,7 +128,7 @@ export function useSourceImportWizard({
     }
     setState((prev) => ({ ...prev, isProcessing: true, loadError: null }));
     try {
-      const result = await workspaceService.importSources({
+      const result = await warehouseSourceImport.importSources({
         connectionId: state.selectedConnection,
         tables: state.tables
           .filter((table) => table.selected)
@@ -118,7 +149,12 @@ export function useSourceImportWizard({
         importResult: result,
         currentStep: 'result',
       }));
-      toast.success(copy.importSuccess);
+      if (hasImportedCanvasNodes(result)) {
+        onComplete?.(result);
+        toast.success(copy.importSuccess);
+      } else {
+        toast.info(copy.importNoop);
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : copy.importError;
       setState((prev) => ({ ...prev, loadError: message }));
@@ -129,11 +165,8 @@ export function useSourceImportWizard({
   };
 
   const handleComplete = () => {
-    if (state.importResult) {
-      onComplete?.(state.importResult);
-    }
     onClose();
-    setState(initialState);
+    setState(initialWizardState);
   };
 
   const toggleTable = (index: number) => {
@@ -164,6 +197,8 @@ export function useSourceImportWizard({
     state,
     selectedCount,
     selectedConnectionObject,
+    sourceImportOptions,
+    sourceImportOptionValues,
     canProceed,
     setSelectedSourceType,
     setSelectedConnection,
@@ -171,6 +206,7 @@ export function useSourceImportWizard({
     setIncludeColumns,
     setAddTests,
     setAddFreshness,
+    setSourceImportOption,
     handleNext,
     handleBack,
     handleImport,

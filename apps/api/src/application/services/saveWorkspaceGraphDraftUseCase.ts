@@ -1,3 +1,10 @@
+/**
+ * Owned concern: save protected workspace graph authoring drafts with
+ * capability, compare-and-swap, idempotency, audit, and format metadata.
+ *
+ * The use case persists editable authoring truth only. It does not compile the
+ * draft, invent compatibility payloads, or translate HTTP responses.
+ */
 import { createHash, randomUUID } from 'node:crypto';
 
 import {

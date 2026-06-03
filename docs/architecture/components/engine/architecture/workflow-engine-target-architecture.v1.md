@@ -2,7 +2,7 @@
 title: WorkflowEngine target architecture v1
 status: Draft
 owner: Architecture / Engine / API
-last_reviewed: 2026-04-10
+last_reviewed: 2026-04-29
 ---
 
 # WorkflowEngine target architecture v1
@@ -16,8 +16,8 @@ boundary.
 
 ## Target shape
 
-The target keeps `IWorkflowEngine` as the command plus canonical-read facade
-and moves actual behavior into narrow application services.
+The target treats `IWorkflowEngine` as the hardcut command plus canonical-read
+facade and moves actual behavior into narrow application services.
 
 Target inbound use-case services:
 
@@ -75,8 +75,8 @@ Boundary rule to lock:
 
 - `@dvt/artifacts` owns artifact-reading behavior and reader contracts.
 - `@dvt/engine` owns execution use-case needs and may define an engine-facing
-  resolver port.
-- composition root adapts artifacts-owned reader to engine-owned resolver.
+  resolver or plan artifact reader port.
+- composition root adapts artifacts-owned readers to engine-owned ports.
 - peer-domain runtime logic must not leak into engine internals.
 
 Additional target rule for the first transformation runtime vertical:
@@ -149,8 +149,13 @@ under already accepted principles from `ADR-0003` and `ADR-0014`.
 3. Move method internals to dedicated use-case services.
 4. Keep current tests green with facade delegation checks and service-level
    query coverage.
-5. Deprecate internal wide services only after functional parity and
-   architecture fitness checks pass.
+5. Remove internal wide-service authority from the active architecture narrative
+   once fitness checks prove command/query delegation.
+
+Current DHM-WS4 state: cancel and signal behavior now run through dedicated
+`RunCommandService` and `RunSignalService` implementations behind
+`IRunCommandService` and `IRunSignalService`. `WorkflowEngineCoreService`
+remains only as the combined run-control delegator over those role services.
 
 ## Class responsibility rules (target)
 
@@ -195,32 +200,66 @@ under already accepted principles from `ADR-0003` and `ADR-0014`.
 ## Current vs target gaps
 
 - Public boundary
-  Current: `WorkflowEngine` now exposes commands plus canonical read only.
+  Current: `WorkflowEngine` now exposes commands plus canonical read only and
+  delegates to explicit facade-facing use cases through
+  [WorkflowEngine Facade Use-Cases Component](./workflow-engine-facade-use-cases-component.md).
   Target: facade-only delegation plus separate enrichment/query services with no
   residual mixed responsibility in current docs.
-  Gap signal: start-run/control decomposition convergence.
+  Gap signal: deeper start-run/control decomposition convergence.
 - `startRun` application flow
-  Current: coordinator/guard mix concerns.
-  Target: split into narrow use cases plus policies.
-  Gap signal: SRP drift.
+  Current: `StartRunApplicationService` now sequences explicit phase services:
+  [Start-run application decomposition component](./start-run-application-decomposition-component.md)
+  covers admission and intent creation, and
+  [WorkflowEngine Start-Run Decomposition Component](./workflow-engine-start-run-decomposition-component.md)
+  covers injected execution and failure seams.
+  `WE-HX-5` adds
+  [WorkflowEngine Provider And Telemetry Seams Component](./workflow-engine-provider-telemetry-seams-component.md)
+  for provider lookup and start/success telemetry ownership.
+  Target: keep phase services narrow and route provider lookup and start/success
+  telemetry through named seams.
+  Gap signal: remaining runtime telemetry policy breadth outside start/success
+  events should be handled by a later cross-cutting observability slice.
 - status/read path
   Current: dedicated canonical query and enrichment services are now shipped,
-  but control operations still share one runtime-control service.
+  and the facade reaches the canonical query path through a named
+  `IWorkflowRunStatusUseCase`; cancel and signal now route through dedicated
+  `IRunCommandService` and `IRunSignalService` boundaries documented in
+  [WorkflowEngine Runtime Path Decomposition Component](./workflow-engine-runtime-path-decomposition-component.md).
   Target: dedicated query vs enrichment services plus narrower control and
   telemetry seams.
-  Gap signal: residual control-service breadth.
+  Gap signal: residual telemetry-policy breadth.
 - provider resolution
-  Current: repeated in multiple paths.
-  Target: single resolver seam.
-  Gap signal: duplication.
+  Current: start-run admission, run control, signal, and enrichment use
+  `IEngineProviderResolver` / `MapBackedEngineProviderResolver` instead of raw
+  adapter-map lookup.
+  Target: keep new provider consumers on the resolver seam.
+  Gap signal: any new `.adapters.get(...)` or private adapter lookup helper in
+  engine runtime paths is drift.
 - telemetry handling
-  Current: spread across core services.
-  Target: decorator/policy boundary.
-  Gap signal: cross-cutting noise.
+  Current: start-run start and success telemetry is owned by
+  `StartRunTelemetryPolicy`; failure telemetry remains in
+  `StartRunFailurePolicy`.
+  Target: policy/decorator boundaries for cross-cutting instrumentation.
+  Gap signal: business coordinators directly constructing metric names or
+  duplicated metric tags.
+- boundary fitness and test doubles
+  Current: `WE-HX-6` adds
+  [WorkflowEngine Boundary Fitness Component](./workflow-engine-boundary-fitness-component.md)
+  to make fixture ownership, architecture-test support, and forbidden
+  adapter/runtime bleed mechanically visible.
+  Target: tests remain engine-owned fake/in-memory collaborators and
+  architecture guards validate semantic ownership instead of only barrel
+  thinness.
+  Gap signal: fixtures importing production adapters, provider SDKs, DB
+  migration, API runtime composition, environment provider selection, or copied
+  source/doc readers in new WE-HX architecture guards.
 - artifacts/engine seam
-  Current: partially explicit.
+  Current: explicit for plan artifact reading and run execution context
+  resolution through
+  [WorkflowEngine boundary ownership component](./workflow-engine-boundary-ownership-component.md).
   Target: documented adapter seam in composition root.
-  Gap signal: ownership ambiguity.
+  Gap signal: future work should preserve this map while narrowing
+  start-run/control services.
 
 ## Retain vs improve
 
@@ -310,12 +349,13 @@ Target model note:
 ```mermaid
 flowchart LR
   A["WE-HX-0 docs replacement"] --> B["WE-HX-1 boundary ownership"]
-  B --> C["WE-HX-2 compatibility facade narrowing"]
+  B --> C["WE-HX-2 facade use-case narrowing"]
   C --> D["WE-HX-3 startRun decomposition"]
   C --> E["WE-HX-4 query/command decomposition"]
+  E --> E2["DHM-WS4 runtime path residual closure"]
   D --> F["WE-HX-5 provider + telemetry standardization"]
   E --> F
-  F --> G["WE-HX-6 test doubles + fitness checks"]
+  F --> G["WE-HX-6 test doubles + semantic fitness checks"]
 ```
 
 ## Governing references

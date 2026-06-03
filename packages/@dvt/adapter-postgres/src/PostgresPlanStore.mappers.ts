@@ -1,3 +1,6 @@
+/**
+ * Owned concern: map scoped plan-store rows.
+ */
 import { createHash } from 'node:crypto';
 
 import {
@@ -8,6 +11,7 @@ import {
   type PlanExecutabilityRejectionReport,
   type PlanRefSchemaT,
   type PlanRecord,
+  type PlanStoreScope,
   parsePlanRecord,
   type PlannerBuildResultV1,
   type RunExecutionPolicy,
@@ -38,13 +42,54 @@ export function toPersistedCanonicalPlanJson(buildResult: PlannerBuildResultV1):
   return jcsCanonicalize(buildResult.plan);
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function normalizePlanJsonForReuseComparison(value: string | undefined): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    if (isRecord(parsed) && isRecord(parsed['metadata'])) {
+      const metadata = { ...parsed['metadata'] };
+      delete metadata['createdAtIso'];
+      return jcsCanonicalize({
+        ...parsed,
+        metadata,
+      });
+    }
+
+    return jcsCanonicalize(parsed);
+  } catch {
+    return value;
+  }
+}
+
+function planJsonMatchesForReuse(actual: string | undefined, expected: string): boolean {
+  if (actual === expected) {
+    return true;
+  }
+
+  return (
+    normalizePlanJsonForReuseComparison(actual) === normalizePlanJsonForReuseComparison(expected)
+  );
+}
+
 export function buildPlanRecord(
   buildResult: PlannerBuildResultV1,
-  planRef: PlanRefSchemaT
+  planRef: PlanRefSchemaT,
+  options: { readonly canonicalPlanJson?: string } = {}
 ): PlanRecord {
   const nowIso = new Date().toISOString();
-  const canonicalPlanJson = toPersistedCanonicalPlanJson(buildResult);
+  const canonicalPlanJson = options.canonicalPlanJson ?? toPersistedCanonicalPlanJson(buildResult);
+  const scope = getRequiredPlanStoreScope(buildResult);
   return parsePlanRecord({
+    tenantId: scope.tenantId,
+    projectId: scope.projectId,
+    environmentId: scope.environmentId,
     planId: buildResult.plan.metadata.planId,
     canonicalPlanJson,
     canonicalHash: sha256HexUtf8(canonicalPlanJson),
@@ -53,12 +98,39 @@ export function buildPlanRecord(
     contractVersion: buildResult.plan.metadata.contractVersion,
     sourceRef: planRef.uri,
     state: 'ACTIVE',
-    createdAtIso: buildResult.plan.metadata.createdAtIso,
+    createdAtIso: resolveCreatedAtIso(canonicalPlanJson, buildResult.plan.metadata.createdAtIso),
     updatedAtIso: nowIso,
   });
 }
 
+function resolveCreatedAtIso(canonicalPlanJson: string, fallback: string): string {
+  try {
+    const parsed = JSON.parse(canonicalPlanJson) as unknown;
+    if (isRecord(parsed) && isRecord(parsed['metadata'])) {
+      const createdAtIso = parsed['metadata']['createdAtIso'];
+      if (typeof createdAtIso === 'string' && createdAtIso.trim().length > 0) {
+        return createdAtIso;
+      }
+    }
+  } catch {
+    return fallback;
+  }
+
+  return fallback;
+}
+
+function getRequiredPlanStoreScope(buildResult: PlannerBuildResultV1): PlanStoreScope {
+  const ownership = buildResult.plan.metadata.ownership;
+  if (!ownership) {
+    throw new Error(`PLAN_STORE_SCOPE_MISSING: ${buildResult.plan.metadata.planId}`);
+  }
+  return ownership;
+}
+
 export function toPlanRecord(row: {
+  tenant_id: string;
+  project_id: string;
+  environment_id: string;
   plan_id: string;
   canonical_plan_json: string;
   canonical_hash: string;
@@ -74,6 +146,9 @@ export function toPlanRecord(row: {
   archived_at_iso: string | null;
 }): PlanRecord {
   return parsePlanRecord({
+    tenantId: row.tenant_id,
+    projectId: row.project_id,
+    environmentId: row.environment_id,
     planId: row.plan_id,
     canonicalPlanJson: row.canonical_plan_json,
     canonicalHash: row.canonical_hash,
@@ -93,20 +168,29 @@ export function toPlanRecord(row: {
 }
 
 export function toPlanExecutabilityRecord(row: {
+  tenant_id: string;
+  project_id: string;
+  environment_id: string;
   plan_id: string;
   adapter_id: string;
   state: ExecutabilityState;
   validated_at_iso: string | null;
   rejection_report_json: unknown;
 }): PlanExecutabilityRecord {
+  const scope = {
+    tenantId: row.tenant_id,
+    projectId: row.project_id,
+    environmentId: row.environment_id,
+  };
   if (row.state === 'PENDING') {
-    return { planId: row.plan_id, adapterId: row.adapter_id, state: 'PENDING' };
+    return { ...scope, planId: row.plan_id, adapterId: row.adapter_id, state: 'PENDING' };
   }
   if (row.state === 'VALID') {
     if (row.validated_at_iso === null) {
       throw new Error(`PLAN_EXECUTABILITY_ROW_INVALID: ${row.plan_id}:${row.adapter_id}:VALID`);
     }
     return {
+      ...scope,
       planId: row.plan_id,
       adapterId: row.adapter_id,
       state: 'VALID',
@@ -117,6 +201,7 @@ export function toPlanExecutabilityRecord(row: {
     throw new Error(`PLAN_EXECUTABILITY_ROW_INVALID: ${row.plan_id}:${row.adapter_id}:INVALID`);
   }
   return {
+    ...scope,
     planId: row.plan_id,
     adapterId: row.adapter_id,
     state: 'INVALID',
@@ -177,10 +262,15 @@ export function assertStoredPlanMatchesRequest(
   }
 ): void {
   const mismatches: string[] = [];
+  const executablePlanJsonMatches = planJsonMatchesForReuse(
+    row.executable_plan_json,
+    expected.executablePlanJson
+  );
 
   if (row.plan_version !== expected.planRef.planVersion) mismatches.push('plan_version');
   if (row.plan_uri !== expected.planRef.uri) mismatches.push('plan_uri');
-  if (row.plan_sha256 !== expected.planRef.sha256) mismatches.push('plan_sha256');
+  if (row.plan_sha256 !== expected.planRef.sha256 && !executablePlanJsonMatches)
+    mismatches.push('plan_sha256');
   if (row.schema_version !== expected.planRef.schemaVersion) mismatches.push('schema_version');
   if (row.size_bytes !== expected.planRef.sizeBytes) mismatches.push('size_bytes');
 
@@ -199,10 +289,9 @@ export function assertStoredPlanMatchesRequest(
     mismatches.push('requires_capabilities');
   }
 
-  if (row.canonical_plan_json !== expected.canonicalPlanJson)
+  if (!planJsonMatchesForReuse(row.canonical_plan_json, expected.canonicalPlanJson))
     mismatches.push('canonical_plan_json');
-  if (row.executable_plan_json !== expected.executablePlanJson)
-    mismatches.push('executable_plan_json');
+  if (!executablePlanJsonMatches) mismatches.push('executable_plan_json');
 
   if (mismatches.length > 0) {
     throw new Error(`PLAN_STORE_CONFLICT: ${expected.planRef.planId}:${mismatches.join(',')}`);

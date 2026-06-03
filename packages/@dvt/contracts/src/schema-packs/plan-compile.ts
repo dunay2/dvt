@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/contracts/src/schema-packs/plan-compile.ts
+ * @baseline ADR-0005: Contract Formalization Tooling
+ * @baseline ADR-0035: Planner Public Contract Evolution Protocol
+ * @baseline ADR-0046: Execution Plan Definition And Run Execution Policy Separation
+ * @decision Publish plan-compile request and response schemas as a bounded planner contract pack
+ * @consequence Planner callers receive validated execution plans without coupling compile output to runtime policy persistence
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 import { PlannerPolicyClassSetSchema } from '../contracts/planner/PlannerPolicyVocabulary.v2.js';

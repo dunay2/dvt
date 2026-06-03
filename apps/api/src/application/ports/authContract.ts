@@ -1,8 +1,14 @@
+/**
+ * Owned concern: define the authenticated execution-context contract exported
+ * by the protected API authorization boundary.
+ */
+import type { AuthenticatedPrincipal } from '../../domain/auth/types.js';
+
 import type {
-  AuthenticatedPrincipal,
   AuthorizationAction,
+  CommandAuthorizationAction,
   ExecutionScope,
-} from '../../domain/auth/types.js';
+} from './accessDecision.js';
 
 export const AUTH_AUDIT_EVENT_TYPE = {
   granted: 'AUTH_GRANTED',
@@ -31,6 +37,5 @@ export interface AuthorizedExecutionContext<
   readonly authorizedAt: Date;
 }
 
-export type AuthorizedCommandExecutionContext = AuthorizedExecutionContext<
-  Extract<AuthorizationAction, { readonly kind: 'command' }>
->;
+export type AuthorizedCommandExecutionContext =
+  AuthorizedExecutionContext<CommandAuthorizationAction>;

@@ -1,9 +1,23 @@
-import type { TemporalWorkerHostConfig } from '@dvt/adapter-temporal';
-import { describe, expect, it, vi } from 'vitest';
+import type { StepActivity, TemporalWorkerHostConfig } from '@dvt/adapter-temporal';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createTemporalWorkerRuntime } from '../../src/runtime/createTemporalWorkerRuntime.js';
 
+const { mockNativeConnectionConnect } = vi.hoisted(() => ({
+  mockNativeConnectionConnect: vi.fn(),
+}));
+
+vi.mock('@temporalio/worker', () => ({
+  NativeConnection: {
+    connect: mockNativeConnectionConnect,
+  },
+}));
+
 describe('createTemporalWorkerRuntime', () => {
+  beforeEach(() => {
+    mockNativeConnectionConnect.mockReset();
+  });
+
   it('wires reader, runner, host, and connection when DBT is enabled', async () => {
     const fixture = createRuntimeFixture();
     const probe = vi.fn(async () => undefined);
@@ -47,8 +61,8 @@ describe('createTemporalWorkerRuntime', () => {
     expect(fixture.hostShutdown).toHaveBeenCalledTimes(1);
     expect(fixture.connection.close).toHaveBeenCalledTimes(1);
     expect(fixture.closeStateStore).toHaveBeenCalledTimes(1);
-    expect(capturedConfig?.activityDeps.runExecutionContextReader).toBeDefined();
-    expect(capturedConfig?.activityDeps.dbtPluginRunner).toBe(runner);
+    expect(capturedConfig?.activityDeps).not.toHaveProperty('runExecutionContextReader');
+    expect(capturedConfig?.activityDeps).not.toHaveProperty('dbtPluginRunner');
     expect(capturedConfig?.stepActivitiesByKind?.get('DBT_MODEL')).toBeDefined();
     expect(runtime.getRunStateCircuitSnapshot().state).toBe('closed');
   });
@@ -71,6 +85,31 @@ describe('createTemporalWorkerRuntime', () => {
 
     expect(fixture.migrate).not.toHaveBeenCalled();
     expect(fixture.hostStart).toHaveBeenCalledWith(fixture.connection);
+  });
+
+  it('connects with the canonical nested Temporal address when no connection factory is provided', async () => {
+    const fixture = createRuntimeFixture();
+    mockNativeConnectionConnect.mockResolvedValue(fixture.connection);
+
+    const runtime = await createTemporalWorkerRuntime(
+      createEnv({
+        TEMPORAL_ADDRESS: 'canonical-temporal:7233',
+      }),
+      { info() {}, error() {} },
+      {
+        stateStoreFactory: () => fixture.stateStore,
+        hostFactory: () => fixture.host,
+      }
+    );
+
+    await runtime.start();
+    await runtime.stop();
+
+    expect(mockNativeConnectionConnect).toHaveBeenCalledWith({
+      address: 'canonical-temporal:7233',
+    });
+    expect(fixture.hostStart).toHaveBeenCalledWith(fixture.connection);
+    expect(fixture.connection.close).toHaveBeenCalledTimes(1);
   });
 
   it('does not require DBT wiring when DBT support is disabled', async () => {
@@ -96,8 +135,123 @@ describe('createTemporalWorkerRuntime', () => {
     await runtime.stop();
 
     expect(probe).not.toHaveBeenCalled();
-    expect(capturedConfig?.activityDeps.dbtPluginRunner).toBeUndefined();
-    expect(capturedConfig?.stepActivitiesByKind?.get('DBT_MODEL')).toBeDefined();
+    expect(capturedConfig?.activityDeps).not.toHaveProperty('dbtPluginRunner');
+    expect(capturedConfig?.stepActivitiesByKind?.get('DBT_MODEL')).toBeUndefined();
+  });
+
+  it('wires and closes the SQL-first Postgres execution capability without DBT', async () => {
+    const fixture = createRuntimeFixture();
+    const postgresActivity: StepActivity = {
+      execute: vi.fn(async (step) => ({
+        stepId: step.stepId,
+        status: 'COMPLETED' as const,
+      })),
+    };
+    const closePostgresCapability = vi.fn(async () => undefined);
+    let capturedConfig: TemporalWorkerHostConfig | undefined;
+    const runtimeOptions = {
+      stateStoreFactory: () => fixture.stateStore,
+      connectionFactory: async () => fixture.connection,
+      hostFactory: (config) => {
+        capturedConfig = config;
+        return fixture.host;
+      },
+      postgresRelationalCapabilityFactory: () => ({
+        stepActivitiesByKind: new Map([
+          ['PREPARE_POSTGRES_TRANSFORM', postgresActivity],
+          ['POSTGRES_SQL_TRANSFORM', postgresActivity],
+          ['CAPTURE_MATERIALIZATION_EVIDENCE', postgresActivity],
+        ]),
+        close: closePostgresCapability,
+      }),
+    } satisfies Parameters<typeof createTemporalWorkerRuntime>[2];
+
+    const runtime = await createTemporalWorkerRuntime(
+      createEnv(),
+      { info() {}, error() {} },
+      runtimeOptions
+    );
+
+    await runtime.start();
+    await runtime.stop();
+
+    expect(capturedConfig?.stepActivitiesByKind?.get('PREPARE_POSTGRES_TRANSFORM')).toBe(
+      postgresActivity
+    );
+    expect(capturedConfig?.stepActivitiesByKind?.get('POSTGRES_SQL_TRANSFORM')).toBe(
+      postgresActivity
+    );
+    expect(capturedConfig?.stepActivitiesByKind?.get('CAPTURE_MATERIALIZATION_EVIDENCE')).toBe(
+      postgresActivity
+    );
+    expect(closePostgresCapability).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    {
+      backend: 's3' as const,
+      overrides: {
+        DVT_DBT_BUNDLE_STORE_BACKEND: 's3' as const,
+        DVT_DBT_BUNDLE_S3_BUCKET: undefined,
+      },
+      expectedMessage: 'DVT_DBT_BUNDLE_S3_BUCKET is required when DVT_DBT_BUNDLE_STORE_BACKEND=s3',
+    },
+    {
+      backend: 'file' as const,
+      overrides: {
+        DVT_DBT_BUNDLE_STORE_BACKEND: 'file' as const,
+        DVT_DBT_BUNDLE_FILE_ROOT: undefined,
+      },
+      expectedMessage:
+        'DVT_DBT_BUNDLE_FILE_ROOT is required when DVT_DBT_BUNDLE_STORE_BACKEND=file',
+    },
+  ])(
+    'fails fast when DBT $backend bundle store configuration is incomplete',
+    async ({ overrides, expectedMessage }) => {
+      const fixture = createRuntimeFixture();
+
+      await expect(
+        createTemporalWorkerRuntime(
+          createEnv({
+            DVT_TEMPORAL_DBT_ENABLED: true,
+            ...overrides,
+          }),
+          { info() {}, error() {} },
+          {
+            stateStoreFactory: () => fixture.stateStore,
+            connectionFactory: async () => fixture.connection,
+            hostFactory: () => fixture.host,
+          }
+        )
+      ).rejects.toThrow(expectedMessage);
+
+      expect(fixture.hostStart).not.toHaveBeenCalled();
+    }
+  );
+
+  it('wires the configured continue-as-new payload budget into Temporal host config', async () => {
+    const fixture = createRuntimeFixture();
+    let capturedConfig: TemporalWorkerHostConfig | undefined;
+
+    const runtime = await createTemporalWorkerRuntime(
+      createEnv({
+        TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES: '64000',
+      }),
+      { info() {}, error() {} },
+      {
+        stateStoreFactory: () => fixture.stateStore,
+        connectionFactory: async () => fixture.connection,
+        hostFactory: (config) => {
+          capturedConfig = config;
+          return fixture.host;
+        },
+      }
+    );
+
+    await runtime.start();
+    await runtime.stop();
+
+    expect(capturedConfig?.temporalConfig.workflowBudget.maxContinueAsNewPayloadBytes).toBe(64000);
   });
 
   it('fails fast when startup is already aborted', async () => {
@@ -155,6 +309,7 @@ function buildBaseEnv(): {
   TEMPORAL_CONNECT_TIMEOUT_MS: undefined;
   TEMPORAL_REQUEST_TIMEOUT_MS: undefined;
   TEMPORAL_MAX_START_PAYLOAD_BYTES: undefined;
+  TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES: string | undefined;
   TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: undefined;
   DVT_TEMPORAL_ADMIN_HOST: string;
   DVT_TEMPORAL_ADMIN_PORT: number;
@@ -184,6 +339,7 @@ function buildBaseEnv(): {
     TEMPORAL_CONNECT_TIMEOUT_MS: undefined,
     TEMPORAL_REQUEST_TIMEOUT_MS: undefined,
     TEMPORAL_MAX_START_PAYLOAD_BYTES: undefined,
+    TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES: undefined,
     TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: undefined,
     DVT_TEMPORAL_ADMIN_HOST: '127.0.0.1',
     DVT_TEMPORAL_ADMIN_PORT: 9468,

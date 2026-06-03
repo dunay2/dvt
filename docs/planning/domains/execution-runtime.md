@@ -26,6 +26,7 @@ runtime hardening.
 - [WorkflowEngine hexagonal derivation plan 2026-04-03](../proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md)
 - [TF-C3 production plugin host composition plan 2026-04-14](../proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md)
 - [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
+- [Runtime Review Canon Plan 2026-05-23](../proposals/mandatory/runtime-and-contracts/runtime-review-canon-plan-20260523.md)
 
 ## Active Runbooks
 
@@ -52,6 +53,18 @@ active source of truth for execution-runtime planning.
 - [20260321 Gap 5 PR2 Deferred Deletion Restore Closeout](../closeouts/20260321-gap-5-pr2-deferred-deletion-restore-closeout.md)
 - [20260321 Gap 5 PR3 Delivery Buffer Retention Closeout](../closeouts/20260321-gap-5-pr3-delivery-buffer-retention-closeout.md)
 - [20260414 TF-C3 production plugin host composition closeout](../closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md)
+- [AR-C10 protected runtime rail closure closeout 2026-05-05](../closeouts/20260505-ar-c10-protected-runtime-rail-closure-closeout.md)
+
+## Runtime Review Canon
+
+Runtime/API review documents are rationale and intake, not an execution queue.
+`C-REV-RUNTIME-CANON` routes active review findings through the
+`ClassifyRuntimeReviewDisposition` query and the `RecordRuntimeReviewCanon`
+command before implementation. Use the local component guide for public API,
+invariants, transitions, consumers, and semantic fitness-function expectations:
+
+- [Runtime review canon component](../../architecture/components/api/runtime-review-canon-component.md)
+- [Runtime review canon user stories](../../architecture/components/api/runtime-review-canon-user-stories.md)
 
 ## Diagram Sources
 

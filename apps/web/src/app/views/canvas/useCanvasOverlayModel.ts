@@ -1,9 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  asIsoUtcString,
-  asNonBlankString,
-  type CanonicalRunStatus,
-} from '@dvt/contracts';
+import { asIsoUtcString, asNonBlankString, type CanonicalRunStatus } from '@dvt/contracts';
 
 import { buildNodeDecorations, buildOverlayContext } from './canvasOverlayContext';
 import {
@@ -80,27 +76,10 @@ export function useCanvasOverlayModel({
     () => buildRunStatusByNodeId(activeCanonicalRun),
     [activeCanonicalRun]
   );
-  const costByNodeId = useMemo(() => {
-    const nodeCosts = new Map<string, NodeCostData>();
-
-    for (const node of canonicalNodes) {
-      if (typeof node.lastCost !== 'number') {
-        continue;
-      }
-
-      nodeCosts.set(node.id, {
-        nodeId: node.id,
-        cost: node.lastCost,
-        currency: 'USD',
-        breakdown:
-          typeof node.lastDuration === 'number'
-            ? { durationSeconds: node.lastDuration }
-            : undefined,
-      });
-    }
-
-    return nodeCosts;
-  }, [canonicalNodes]);
+  const costByNodeId = useMemo<ReadonlyMap<string, NodeCostData>>(
+    () => new Map<string, NodeCostData>(),
+    []
+  );
 
   const [exclusiveOverlayMode, setExclusiveOverlayMode] = useState<'runtime' | 'cost'>('runtime');
 

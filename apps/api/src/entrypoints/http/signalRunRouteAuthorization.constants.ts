@@ -1,3 +1,7 @@
+/**
+ * Owned concern: map protected signal types to the canonical run-command
+ * authorization action names.
+ */
 import type { SupportedSignalType } from '../../application/ports/runtime.js';
 
 import { RUN_COMMAND_ACTION, type RunCommandActionName } from './runCommandRoute.constants.js';

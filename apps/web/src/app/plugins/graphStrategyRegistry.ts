@@ -1,15 +1,11 @@
+import type { CanvasGraphStrategy } from './graphStrategyContracts';
 import {
-  dbtCanvasGraphStrategy,
-  transformationCanvasGraphStrategy,
-  type CanvasGraphStrategy,
-} from './dbt/dbtNodeAdapter';
+  getAllCanvasRuntimeRegistrations,
+  type RuntimeCapabilities,
+} from './registry';
+import type { CanvasRuntimeRegistration } from './nodeTypeContracts';
 
 const DEFAULT_STRATEGY_ID = 'transformation';
-
-const STRATEGIES: Record<string, CanvasGraphStrategy> = {
-  dbt: dbtCanvasGraphStrategy,
-  transformation: transformationCanvasGraphStrategy,
-};
 
 function normalizeStrategyId(value: unknown): string {
   if (typeof value !== 'string') {
@@ -20,13 +16,48 @@ function normalizeStrategyId(value: unknown): string {
   return normalized.length > 0 ? normalized : DEFAULT_STRATEGY_ID;
 }
 
+export function getCanvasRuntimeRegistrations(
+  capabilities?: RuntimeCapabilities
+): CanvasRuntimeRegistration[] {
+  return getAllCanvasRuntimeRegistrations(capabilities);
+}
+
+export function findCanvasRuntimeRegistration(
+  strategyId: unknown,
+  capabilities?: RuntimeCapabilities
+): CanvasRuntimeRegistration | null {
+  const resolvedId = normalizeStrategyId(strategyId);
+  return (
+    getCanvasRuntimeRegistrations(capabilities).find(
+      (registration) => registration.kind === resolvedId
+    ) ?? null
+  );
+}
+
+export function findCanvasGraphStrategy(
+  strategyId: unknown,
+  capabilities?: RuntimeCapabilities
+): CanvasGraphStrategy | null {
+  return findCanvasRuntimeRegistration(strategyId, capabilities)?.graphStrategy ?? null;
+}
+
 export function resolveCanvasGraphStrategy(
-  strategyId = import.meta.env.VITE_CANVAS_GRAPH_STRATEGY
+  strategyId = import.meta.env.VITE_CANVAS_GRAPH_STRATEGY,
+  capabilities?: RuntimeCapabilities
 ): CanvasGraphStrategy {
   const resolvedId = normalizeStrategyId(strategyId);
-  const defaultStrategy = STRATEGIES[DEFAULT_STRATEGY_ID];
+  const defaultStrategy = findCanvasGraphStrategy(DEFAULT_STRATEGY_ID, capabilities);
   if (!defaultStrategy) {
     throw new Error('Missing default canvas graph strategy registration');
   }
-  return STRATEGIES[resolvedId] ?? defaultStrategy;
+  if (resolvedId === DEFAULT_STRATEGY_ID) {
+    return defaultStrategy;
+  }
+
+  const strategy = findCanvasGraphStrategy(resolvedId, capabilities);
+  if (!strategy) {
+    throw new Error(`Unknown canvas graph strategy registration: ${resolvedId}`);
+  }
+
+  return strategy;
 }

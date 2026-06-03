@@ -1,6 +1,9 @@
+/** Owned concern: render warehouse source import workflow over the source import port. */
+import { useMemo } from 'react';
 import { ArrowLeft, ArrowRight, CheckCircle2, Loader2 } from 'lucide-react';
 
-import { useWorkspaceService } from '../services/AppServicesContext';
+import { getSourceImportOptions } from '../plugins/registry';
+import { useWarehouseSourceImportPort } from '../services/AppServicesContext';
 import { Button } from './ui/button';
 import {
   Dialog,
@@ -17,19 +20,25 @@ import { useSourceImportWizard } from './sourceImportWizard/useSourceImportWizar
 import { WizardProgress } from './sourceImportWizard/WizardProgress';
 import { WizardStepContent } from './sourceImportWizard/WizardStepContent';
 
-export default function SourceImportWizard({ open, onClose, onComplete }: SourceImportWizardProps) {
-  const workspaceService = useWorkspaceService();
+export default function SourceImportWizard({
+  open,
+  onClose,
+  onComplete,
+  sourceImportOptions: declaredSourceImportOptions,
+}: SourceImportWizardProps) {
+  const warehouseSourceImport = useWarehouseSourceImportPort();
+  const sourceImportOptions = useMemo(
+    () => declaredSourceImportOptions ?? getSourceImportOptions(),
+    [declaredSourceImportOptions]
+  );
   const controller = useSourceImportWizard({
     open,
-    workspaceService,
+    warehouseSourceImport,
+    sourceImportOptions,
     onComplete,
     onClose,
   });
   const { state } = controller;
-  const completeButtonLabel =
-    state.importResult?.importedNodeIds && state.importResult.importedNodeIds.length > 0
-      ? 'Add imported sources to canvas'
-      : 'Done';
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -39,7 +48,7 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
           <DialogDescription>{copy.description}</DialogDescription>
         </DialogHeader>
 
-        {state.currentStep !== 'result' ? <WizardProgress currentStep={state.currentStep} /> : null}
+        {state.currentStep === 'result' ? null : <WizardProgress currentStep={state.currentStep} />}
 
         <ScrollArea className="-mx-6 flex-1 px-6">
           <WizardStepContent controller={controller} />
@@ -48,7 +57,7 @@ export default function SourceImportWizard({ open, onClose, onComplete }: Source
         <DialogFooter className="mt-4">
           {state.currentStep === 'result' ? (
             <Button onClick={controller.handleComplete} className="w-full">
-              {completeButtonLabel}
+              Done
             </Button>
           ) : (
             <div className="flex w-full justify-between">

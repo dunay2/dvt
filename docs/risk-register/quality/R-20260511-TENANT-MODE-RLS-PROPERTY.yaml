@@ -1,0 +1,25 @@
+---
+id: R-20260511-TENANT-MODE-RLS-PROPERTY
+title: Tenant-owned RLS tables can drift from complete tenant-mode authorization
+status: Open
+date: 2026-05-11
+owners:
+  - packages/@dvt/adapter-postgres
+severity: Low
+probability: Low
+---
+mitigation:
+  summary: >
+    The Postgres tenant-isolation predicate now requires both dvt.access_mode = tenant and a
+    matching dvt.tenant_id for tenant access, while service access remains gated by an approved
+    table-scoped service owner. New schema-manager hardening migrations reapply the current RLS
+    predicate for already-migrated core and start-run-intent tables. Runtime integration coverage
+    seeds every cataloged tenant-owned table and proves missing, partial, and cross-tenant contexts
+    fail closed.
+  evidence:
+    - docs/evidence/ed-20260511-tenant-mode-rls-property.md
+    - packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts
+    - packages/@dvt/adapter-postgres/test/StartRunIntentSchemaManager.test.ts
+    - packages/@dvt/adapter-postgres/test/PostgresTenantRlsEnforcement.integration.test.ts
+  follow_up:
+    - Keep the RLS proof in CI/nightly with a non-owner, non-BYPASSRLS application role.

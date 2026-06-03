@@ -1,250 +1,75 @@
-import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from 'react';
+/** Owned concern: coordinate Canvas plan and run action handlers. */
+import { useEffect, useState } from 'react';
+import { asNonBlankString } from '@dvt/contracts';
 
-import type { IPlansPort } from '../../ports/plans';
-import type { IRunsPort } from '../../ports/runs';
-import type { SessionContextPort } from '../../ports/sessionContext';
-import type { ShellFeedbackPort } from '../../ports/shellFeedback';
-import type { IWorkspacePort } from '../../ports/workspace';
-import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type { PlanViewModel } from '../../types/plans';
-import { canvasViewCopy } from './copy';
-import {
-  deriveCanvasExecutionState,
-  type CanvasExecutionState,
-} from './canvasExecutionState';
-import { executeCanvasPlanAction } from './canvasPlanAction';
-import { executeCanvasRunStartAction } from './canvasRunStartAction';
+import type { SessionContextPort, WorkspaceScope } from '../../ports/sessionContext';
+import { deriveCanvasExecutionState } from './canvasExecutionState';
+import type {
+  UseCanvasExecutionActionsParams,
+  UseCanvasExecutionActionsResult,
+} from './canvasExecutionActions.types';
+import { useCanvasPlanActionHandler } from './useCanvasPlanActionHandler';
+import { useCanvasRunStartHandler } from './useCanvasRunStartHandler';
 
-type UseCanvasExecutionActionsParams = {
-  plansService: IPlansPort;
-  runsService: IRunsPort;
-  workspaceService: IWorkspacePort;
-  canonicalNodes: CanonicalNode[];
-  canonicalEdges: CanonicalEdge[];
-  selectedNodeIds: string[];
-  workspaceNodeIds: string[];
-  canPlan: boolean;
-  canRun: boolean;
+function normalizeExecutionEnvironmentId(
+  environmentId: WorkspaceScope['environmentId'] | undefined
+): WorkspaceScope['environmentId'] | null {
+  const normalized = environmentId?.trim();
+  return normalized && normalized.length > 0 ? normalized : null;
+}
+
+function createCanvasExecutionSessionContext(args: {
   sessionContext: SessionContextPort;
-  shellFeedback: ShellFeedbackPort;
-  previewProvenanceConfig: Pick<
-    WorkspaceBootstrapConfig,
-    'gitBranch' | 'gitSha' | 'gitRepo' | 'graphArtifactPath'
-  >;
-  consolePanelVisible: boolean;
-  currentPlan: PlanViewModel | null;
-  setCurrentPlan: (plan: PlanViewModel | null) => void;
-  setConsolePanelHeight: (height: number) => void;
-  toggleConsolePanel: () => void;
-  onRunStarted: (runId: string) => void;
-};
-
-type UseCanvasExecutionActionsResult = {
-  planModalOpen: boolean;
-  setPlanModalOpen: Dispatch<SetStateAction<boolean>>;
-  canStartRun: boolean;
-  isCurrentPlanStale: boolean;
-  planStatusSummary: string;
-  handlePlan: () => Promise<void>;
-  handleStartRun: () => Promise<void>;
-};
-
-type RevealStartedRunConsoleArgs = {
-  consolePanelVisible: boolean;
-  setConsolePanelHeight: (height: number) => void;
-  toggleConsolePanel: () => void;
-};
-
-type UseCanvasExecutionDraftSignatureSyncArgs = {
-  currentPlan: PlanViewModel | null;
-  setLastPlannedDraftSignature: Dispatch<SetStateAction<string | null>>;
-};
-
-type UseCanvasPlanHandlerArgs = {
-  canPlan: boolean;
-  canonicalEdges: CanonicalEdge[];
-  canonicalNodes: CanonicalNode[];
-  plansService: IPlansPort;
-  previewProvenanceConfig: Pick<
-    WorkspaceBootstrapConfig,
-    'gitBranch' | 'gitSha' | 'gitRepo' | 'graphArtifactPath'
-  >;
-  selectedNodeIds: string[];
-  sessionContext: SessionContextPort;
-  shellFeedback: ShellFeedbackPort;
-  transformationValidation: CanvasExecutionState['transformationValidation'];
-  workspaceNodeIds: string[];
-  workspaceService: IWorkspacePort;
-  setCurrentPlan: (plan: PlanViewModel | null) => void;
-  setLastPlannedDraftSignature: Dispatch<SetStateAction<string | null>>;
-  setPlanModalOpen: Dispatch<SetStateAction<boolean>>;
-};
-
-type UseCanvasRunStartHandlerArgs = {
-  canRun: boolean;
-  consolePanelVisible: boolean;
-  currentPlan: PlanViewModel | null;
-  hasPersistedPlanForRun: boolean;
-  isCurrentPlanStale: boolean;
-  onRunStarted: (runId: string) => void;
-  runsService: IRunsPort;
-  sessionContext: SessionContextPort;
-  setConsolePanelHeight: (height: number) => void;
-  setPlanModalOpen: Dispatch<SetStateAction<boolean>>;
-  shellFeedback: ShellFeedbackPort;
-  toggleConsolePanel: () => void;
-};
-
-function revealStartedRunConsole({
-  consolePanelVisible,
-  setConsolePanelHeight,
-  toggleConsolePanel,
-}: RevealStartedRunConsoleArgs): void {
-  if (consolePanelVisible) {
-    setConsolePanelHeight(160);
-    return;
+  executionEnvironmentId: WorkspaceScope['environmentId'] | undefined;
+}): SessionContextPort {
+  const environmentId = normalizeExecutionEnvironmentId(args.executionEnvironmentId);
+  if (environmentId == null) {
+    return args.sessionContext;
   }
 
-  toggleConsolePanel();
+  const withExecutionEnvironment = (scope: WorkspaceScope): WorkspaceScope => ({
+    ...scope,
+    environmentId,
+  });
+
+  return {
+    getWorkspaceScope: () => withExecutionEnvironment(args.sessionContext.getWorkspaceScope()),
+    getWorkspaceScopeSnapshot: () =>
+      withExecutionEnvironment(args.sessionContext.getWorkspaceScopeSnapshot()),
+    subscribeWorkspaceScope: args.sessionContext.subscribeWorkspaceScope,
+    buildRunContext: (runId) => ({
+      ...args.sessionContext.buildRunContext(runId),
+      environmentId: asNonBlankString(environmentId),
+    }),
+  };
 }
 
-function useCanvasExecutionDraftSignatureSync({
-  currentPlan,
-  setLastPlannedDraftSignature,
-}: UseCanvasExecutionDraftSignatureSyncArgs): void {
+function useCanvasExecutionDraftSignatureSync(args: {
+  currentPlan: UseCanvasExecutionActionsParams['currentPlan'];
+  setLastPlannedDraftSignature: (signature: string | null) => void;
+}): void {
   useEffect(() => {
-    if (currentPlan == null) {
-      setLastPlannedDraftSignature(null);
+    if (args.currentPlan == null) {
+      args.setLastPlannedDraftSignature(null);
     }
-  }, [currentPlan, setLastPlannedDraftSignature]);
-}
-
-function useCanvasPlanHandler({
-  canPlan,
-  canonicalEdges,
-  canonicalNodes,
-  plansService,
-  previewProvenanceConfig,
-  selectedNodeIds,
-  sessionContext,
-  shellFeedback,
-  transformationValidation,
-  workspaceNodeIds,
-  workspaceService,
-  setCurrentPlan,
-  setLastPlannedDraftSignature,
-  setPlanModalOpen,
-}: UseCanvasPlanHandlerArgs): () => Promise<void> {
-  return useCallback(async () => {
-    const result = await executeCanvasPlanAction({
-      canPlan,
-      canonicalEdges,
-      canonicalNodes,
-      plansService,
-      previewProvenanceConfig,
-      selectedNodeIds,
-      sessionContext,
-      transformationValidation,
-      workspaceNodeIds,
-      workspaceService,
-    });
-
-    if (!result.ok) {
-      shellFeedback.error(result.message);
-      return;
-    }
-
-    setCurrentPlan(result.plan);
-    setLastPlannedDraftSignature(result.draftSignature);
-    setPlanModalOpen(true);
-    shellFeedback.success(canvasViewCopy.planCreatedMessage);
-  }, [
-    canPlan,
-    canonicalEdges,
-    canonicalNodes,
-    plansService,
-    previewProvenanceConfig,
-    selectedNodeIds,
-    sessionContext,
-    transformationValidation,
-    workspaceNodeIds,
-    workspaceService,
-    shellFeedback,
-    setCurrentPlan,
-    setLastPlannedDraftSignature,
-    setPlanModalOpen,
-  ]);
-}
-
-function useCanvasRunStartHandler({
-  canRun,
-  consolePanelVisible,
-  currentPlan,
-  hasPersistedPlanForRun,
-  isCurrentPlanStale,
-  onRunStarted,
-  runsService,
-  sessionContext,
-  setConsolePanelHeight,
-  setPlanModalOpen,
-  shellFeedback,
-  toggleConsolePanel,
-}: UseCanvasRunStartHandlerArgs): () => Promise<void> {
-  return useCallback(async () => {
-    const result = await executeCanvasRunStartAction({
-      canRun,
-      currentPlan,
-      hasPersistedPlanForRun,
-      isCurrentPlanStale,
-      runsService,
-      sessionContext,
-    });
-
-    if (!result.ok) {
-      shellFeedback.error(result.message);
-      if (result.shouldOpenPlanModal) {
-        setPlanModalOpen(true);
-      }
-      return;
-    }
-
-    setPlanModalOpen(false);
-    revealStartedRunConsole({
-      consolePanelVisible,
-      setConsolePanelHeight,
-      toggleConsolePanel,
-    });
-
-    shellFeedback.success(canvasViewCopy.runStartedMessage);
-    onRunStarted(result.runId);
-  }, [
-    canRun,
-    consolePanelVisible,
-    currentPlan,
-    hasPersistedPlanForRun,
-    isCurrentPlanStale,
-    onRunStarted,
-    runsService,
-    sessionContext,
-    setConsolePanelHeight,
-    setPlanModalOpen,
-    shellFeedback,
-    toggleConsolePanel,
-  ]);
+  }, [args.currentPlan, args.setLastPlannedDraftSignature]);
 }
 
 export function useCanvasExecutionActions({
   plansService,
   runsService,
-  workspaceService,
+  workspaceFilesQuery,
+  workspaceFileContentCommand,
+  executionStrategy,
   canonicalNodes,
   canonicalEdges,
   selectedNodeIds,
   workspaceNodeIds,
+  flushDraftForExecution,
   canPlan,
   canRun,
   sessionContext,
+  executionEnvironmentId,
   shellFeedback,
   previewProvenanceConfig,
   consolePanelVisible,
@@ -256,8 +81,13 @@ export function useCanvasExecutionActions({
 }: UseCanvasExecutionActionsParams): UseCanvasExecutionActionsResult {
   const [planModalOpen, setPlanModalOpen] = useState(false);
   const [lastPlannedDraftSignature, setLastPlannedDraftSignature] = useState<string | null>(null);
+  const executionSessionContext = createCanvasExecutionSessionContext({
+    sessionContext,
+    executionEnvironmentId,
+  });
   const executionState = deriveCanvasExecutionState({
     canRun,
+    executionStrategy,
     currentPlan,
     lastPlannedDraftSignature,
     canonicalNodes,
@@ -269,7 +99,10 @@ export function useCanvasExecutionActions({
     transformationValidation,
     hasPersistedPlanForRun,
     isCurrentPlanStale,
+    executableGraphFailureMessage,
+    canPlanGraph,
     canStartRun,
+    planRunReadiness,
     planStatusSummary,
   } = executionState;
 
@@ -278,32 +111,36 @@ export function useCanvasExecutionActions({
     setLastPlannedDraftSignature,
   });
 
-  const handlePlan = useCanvasPlanHandler({
+  const handlePlan = useCanvasPlanActionHandler({
     canPlan,
     canonicalEdges,
     canonicalNodes,
     plansService,
+    executionStrategy,
     previewProvenanceConfig,
     selectedNodeIds,
-    sessionContext,
+    sessionContext: executionSessionContext,
     shellFeedback,
+    flushDraftForExecution,
     transformationValidation,
     workspaceNodeIds,
-    workspaceService,
+    workspaceFilesQuery,
+    workspaceFileContentCommand,
     setCurrentPlan,
     setLastPlannedDraftSignature,
     setPlanModalOpen,
   });
 
   const handleStartRun = useCanvasRunStartHandler({
-    canRun,
+    canRun: canRun && executionStrategy != null && executionStrategy.kind !== 'not_executable',
     consolePanelVisible,
     currentPlan,
+    executableGraphFailureMessage,
     hasPersistedPlanForRun,
     isCurrentPlanStale,
     onRunStarted,
     runsService,
-    sessionContext,
+    sessionContext: executionSessionContext,
     setConsolePanelHeight,
     setPlanModalOpen,
     shellFeedback,
@@ -313,8 +150,10 @@ export function useCanvasExecutionActions({
   return {
     planModalOpen,
     setPlanModalOpen,
+    canPlanGraph,
     canStartRun,
     isCurrentPlanStale,
+    planRunReadiness,
     planStatusSummary,
     handlePlan,
     handleStartRun,

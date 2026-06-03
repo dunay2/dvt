@@ -156,7 +156,7 @@ describe('parseRecoverRunRequest', () => {
       body: {
         tenantId: 'tenant-a',
         recoveryRunId: 'recovery-run-1',
-        targetAdapter: 'conductor',
+        targetAdapter: 'temporal',
         planRef: {
           uri: 'https://plans.example/plan.json',
           sha256: 'a'.repeat(64),
@@ -173,7 +173,7 @@ describe('parseRecoverRunRequest', () => {
         command: {
           sourceRunId: 'source-run-1',
           recoveryRunId: 'recovery-run-1',
-          targetAdapter: 'conductor',
+          targetAdapter: 'temporal',
           planRef: {
             uri: 'https://plans.example/plan.json',
             sha256: 'a'.repeat(64),

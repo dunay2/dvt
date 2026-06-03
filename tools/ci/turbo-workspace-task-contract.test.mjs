@@ -1,0 +1,175 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import test from 'node:test';
+
+const require = createRequire(import.meta.url);
+const {
+  DEFAULT_FILTER,
+  SUPPORTED_TASKS,
+  buildTurboArgs,
+  parseArgs,
+} = require('../../scripts/run-turbo-workspace-task.cjs');
+
+const turbo = JSON.parse(readFileSync('turbo.json', 'utf8'));
+const rootPackage = JSON.parse(readFileSync('package.json', 'utf8'));
+const ciWorkflow = readFileSync('.github/workflows/ci.yml', 'utf8');
+const testWorkflow = readFileSync('.github/workflows/test.yml', 'utf8');
+
+test('Turbo workspace wrapper accepts governed task names and defaults to the affected filter', () => {
+  assert.throws(() => parseArgs([]), /Unsupported Turbo workspace task/);
+  assert.deepEqual(parseArgs(['typecheck']), {
+    task: 'typecheck',
+    filter: DEFAULT_FILTER,
+  });
+  assert.deepEqual(parseArgs(['test', '--filter', '@dvt/engine']), {
+    task: 'test',
+    filter: '@dvt/engine',
+  });
+  assert.deepEqual(parseArgs(['build', '--filter=@dvt/web']), {
+    task: 'build',
+    filter: '@dvt/web',
+  });
+  assert.deepEqual(parseArgs(['lint', '--filter=dvt-api']), {
+    task: 'lint',
+    filter: 'dvt-api',
+  });
+  assert.deepEqual(buildTurboArgs('typecheck', '@dvt/contracts'), [
+    'exec',
+    'turbo',
+    'run',
+    'typecheck',
+    '--filter=@dvt/contracts',
+  ]);
+  assert.deepEqual([...SUPPORTED_TASKS], ['build', 'lint', 'test', 'typecheck']);
+});
+
+test('turbo.json declares governed build, lint, typecheck, and test task contracts', () => {
+  assert.ok(turbo.globalDependencies.includes('turbo.json'));
+  assert.ok(turbo.globalDependencies.includes('.github/actions/setup-node-pnpm/action.yml'));
+  assert.ok(turbo.globalDependencies.includes('scripts/skip-prebuild-if-orchestrated.cjs'));
+  assert.ok(turbo.globalDependencies.includes('scripts/skip-pretest-if-ci.cjs'));
+  assert.deepEqual(turbo.tasks.build.dependsOn, ['^build']);
+  assert.deepEqual(turbo.tasks.build.outputs, ['dist/**', '**/*.tsbuildinfo']);
+  assert.deepEqual(turbo.tasks.build.env, ['DVT_CI']);
+
+  assert.deepEqual(turbo.tasks.lint.outputs, []);
+  assert.deepEqual(turbo.tasks.lint.env, ['DVT_CI']);
+
+  assert.deepEqual(turbo.tasks.typecheck.dependsOn, ['^build']);
+  assert.deepEqual(turbo.tasks.typecheck.outputs, []);
+  assert.deepEqual(turbo.tasks.typecheck.env, ['DVT_CI']);
+
+  assert.deepEqual(turbo.tasks.test.dependsOn, ['^build']);
+  assert.deepEqual(turbo.tasks.test.outputs, []);
+  assert.deepEqual(turbo.tasks.test.env, ['DVT_CI']);
+});
+
+test('root affected commands and CI matrix lint/build/typecheck steps use the Turbo workspace wrapper', () => {
+  assert.equal(
+    rootPackage.scripts['ci:affected:build'],
+    'node scripts/run-turbo-workspace-task.cjs build'
+  );
+  assert.equal(
+    rootPackage.scripts['ci:affected:lint'],
+    'node scripts/run-turbo-workspace-task.cjs lint'
+  );
+  assert.equal(
+    rootPackage.scripts['ci:affected:typecheck'],
+    'node scripts/run-turbo-workspace-task.cjs typecheck'
+  );
+  assert.equal(
+    rootPackage.scripts['ci:affected:test'],
+    'node scripts/run-turbo-workspace-task.cjs test'
+  );
+  assert.equal(
+    rootPackage.scripts['preflight:affected'],
+    'pnpm ci:affected:build && pnpm ci:affected:lint && pnpm ci:affected:typecheck && pnpm ci:affected:test'
+  );
+  assert.equal(
+    rootPackage.scripts['preflight:affected:ci'],
+    'pnpm ci:affected:build && pnpm ci:affected:lint && pnpm ci:affected:typecheck'
+  );
+
+  assert.ok(ciWorkflow.includes('run: pnpm verify:changed'));
+  assert.ok(ciWorkflow.includes('GIT_BASE: origin/${{ github.base_ref }}'));
+  assert.ok(ciWorkflow.includes('run: pnpm preflight:affected:ci'));
+  assert.equal(ciWorkflow.includes('run: pnpm preflight:affected\n'), false);
+  assert.ok(ciWorkflow.includes('run: pnpm ci:full'));
+  assert.equal(
+    ciWorkflow.includes(
+      'node scripts/run-turbo-workspace-task.cjs build --filter=${{ matrix.pkg }}'
+    ),
+    false
+  );
+  assert.equal(
+    ciWorkflow.includes(
+      'node scripts/run-turbo-workspace-task.cjs lint --filter=${{ matrix.pkg }}'
+    ),
+    false
+  );
+  assert.equal(
+    ciWorkflow.includes(
+      'node scripts/run-turbo-workspace-task.cjs typecheck --filter=${{ matrix.pkg }}'
+    ),
+    false
+  );
+  assert.ok(
+    testWorkflow.includes(
+      'node scripts/run-turbo-workspace-task.cjs build --filter=${{ matrix.pkg }}'
+    )
+  );
+  assert.equal(testWorkflow.includes('declare -A seen'), false);
+});
+
+test('GitHub workflows expose optional remote Turbo cache environment safely', () => {
+  for (const workflow of [ciWorkflow, testWorkflow]) {
+    assert.match(workflow, /TURBO_TOKEN:\s+\$\{\{\s*secrets\.TURBO_TOKEN\s*\}\}/);
+    assert.match(workflow, /TURBO_TEAM:\s+\$\{\{\s*secrets\.TURBO_TEAM\s*\}\}/);
+  }
+
+  const setupAction = readFileSync('.github/actions/setup-node-pnpm/action.yml', 'utf8');
+  assert.match(setupAction, /Cache Turbo/);
+  assert.match(setupAction, /path: \.turbo/);
+});
+
+test('Test Suite cacheable dependency graph builds use the governed Turbo wrapper', () => {
+  const expectedBuildFilters = [
+    '@dvt/adapter-temporal^...',
+    '@dvt/web^...',
+    '@dvt/adapter-postgres...',
+    '@dvt/engine^...',
+  ];
+
+  for (const filter of expectedBuildFilters) {
+    assert.ok(
+      testWorkflow.includes(`node scripts/run-turbo-workspace-task.cjs build --filter=${filter}`),
+      `expected Test Suite to build ${filter} through the Turbo workspace wrapper`
+    );
+  }
+
+  assert.equal(
+    testWorkflow.includes(
+      'run: pnpm --filter "@dvt/adapter-temporal^..." --workspace-concurrency=4 build'
+    ),
+    false
+  );
+  assert.equal(
+    testWorkflow.includes('run: pnpm --filter "@dvt/web^..." --workspace-concurrency=4 build'),
+    false
+  );
+  assert.equal(
+    testWorkflow.includes('run: pnpm --filter "@dvt/engine^..." --workspace-concurrency=4 build'),
+    false
+  );
+  assert.equal(
+    testWorkflow.includes(
+      'run: pnpm --workspace-concurrency=4 --filter @dvt/adapter-postgres... --if-present run build'
+    ),
+    false
+  );
+
+  assert.ok(testWorkflow.includes('run: pnpm test:adapter-temporal'));
+  assert.ok(testWorkflow.includes('run: pnpm test:web:changed'));
+  assert.ok(testWorkflow.includes('run: pnpm test:coverage:engine'));
+});

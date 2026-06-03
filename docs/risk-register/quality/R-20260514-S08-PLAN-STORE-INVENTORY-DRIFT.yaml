@@ -1,0 +1,24 @@
+---
+id: R-20260514-S08-PLAN-STORE-INVENTORY-DRIFT
+title: S08 operations inventory can drift from scoped plan-store implementation truth
+status: Open
+date: 2026-05-14
+owners:
+  - '@dvt/contracts'
+  - docs
+severity: Low
+probability: Low
+context: >
+  S08 scoped plan-store records, ports, and Postgres adapter surfaces now carry tenant, project, and
+  environment scope. The system operations inventory still contained older rows that described those
+  same surfaces as unscoped legacy drift.
+risk: >
+  Future S08 work could rely on stale inventory rows and re-open already closed drift, causing
+  duplicate remediation tasks or incorrect architecture review conclusions.
+mitigations:
+  - 'Keep the semantic architecture guard in plan-store-records.architecture.test.ts checking that
+    closed scoped plan-store drift is not restated as current truth.'
+  - 'Update the operations inventory in the same slice as future scoped plan-store API changes.'
+  - 'Run the contracts architecture test and pre-push gate before publishing S08 follow-up PRs.'
+review_after: 2026-06-30
+---

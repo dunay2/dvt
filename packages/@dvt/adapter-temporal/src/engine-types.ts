@@ -6,6 +6,7 @@
  */
 
 export type { IOutboxStorage } from '@dvt/delivery';
+export type { IStoredPlanArtifactReader } from '@dvt/artifacts';
 
 export type {
   AppendResult,
@@ -24,7 +25,6 @@ export type {
 export type {
   IClock,
   IIdempotencyKeyBuilder,
-  IPlanFetcher,
   IPlanIntegrityValidator,
   IRunStateStore,
   RunStateCommandPort,

@@ -54,7 +54,7 @@ history, domain-specific navigation, or a component-level map.
 | [web component](./components/web/index.md)                                   | `supporting`   | canonical frontend component home with routes, services, and code anchors | keep as the single frontend component home; use subsystem docs for flow context       |
 | [Engine Roadmap](./components/engine/roadmap/engine-phases.md)               | `supporting`   | execution-subsystem delivery projection and sequencing                    | keep as the active engine roadmap; do not let it compete with repo-wide roadmap truth |
 | [TypeScript Package Classification](./typescript-package-classification.md)  | `supporting`   | package taxonomy and workspace structure aid                              | keep as supporting classification                                                     |
-| [Architecture Atlas](./atlas/architecture/architecture_atlas.md)             | `historical`   | dated code snapshot from 2026-03-06                                       | keep as historical snapshot only                                                      |
+| [Architecture Atlas](./atlas/architecture/architecture-atlas.md)             | `historical`   | dated code snapshot from 2026-03-06                                       | keep as historical snapshot only                                                      |
 
 ## Planning-Adjacent Architecture Surfaces
 

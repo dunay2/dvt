@@ -3,19 +3,7 @@ import type { CSSProperties } from 'react';
 export type CanvasPaletteId = `#${string}`;
 
 export const DEFAULT_CANVAS_PALETTE_ID: CanvasPaletteId = '#101826';
-
-const LEGACY_CANVAS_PALETTE_ALIASES: Readonly<Record<string, CanvasPaletteId>> = {
-  workbench: '#101826',
-  slate: '#101826',
-  blueprint: '#152033',
-  panel: '#1d2d43',
-  grove: '#182824',
-  forest: '#16261f',
-  graphite: '#1c2430',
-  foundry: '#2b241f',
-  'soft-focus': '#22192a',
-  'soft focus': '#22192a',
-};
+export const DEFAULT_CANVAS_GRID_COLOR: CanvasPaletteId = '#94a3b8';
 
 type Rgb = {
   readonly r: number;
@@ -48,17 +36,11 @@ function expandShortHex(value: string): CanvasPaletteId {
     .map((channel) => `${channel}${channel}`)
     .join('');
 
-  return `#${expanded}` as CanvasPaletteId;
+  return `#${expanded}`;
 }
 
 function resolveHexPaletteId(value: string): CanvasPaletteId | null {
   const normalizedValue = value.trim().toLowerCase();
-  const legacyAlias = LEGACY_CANVAS_PALETTE_ALIASES[normalizedValue];
-
-  if (legacyAlias != null) {
-    return legacyAlias;
-  }
-
   const withoutHash = normalizedValue.startsWith('#') ? normalizedValue.slice(1) : normalizedValue;
 
   if (/^[0-9a-f]{3}$/i.test(withoutHash)) {
@@ -66,7 +48,7 @@ function resolveHexPaletteId(value: string): CanvasPaletteId | null {
   }
 
   if (/^[0-9a-f]{6}$/i.test(withoutHash)) {
-    return `#${withoutHash}` as CanvasPaletteId;
+    return `#${withoutHash}`;
   }
 
   return null;
@@ -78,6 +60,17 @@ export function normalizeCanvasPaletteId(value: unknown): CanvasPaletteId {
   }
 
   return resolveHexPaletteId(value) ?? DEFAULT_CANVAS_PALETTE_ID;
+}
+
+export function normalizeCanvasHexColor(
+  value: unknown,
+  fallback: CanvasPaletteId
+): CanvasPaletteId {
+  if (typeof value !== 'string') {
+    return fallback;
+  }
+
+  return resolveHexPaletteId(value) ?? fallback;
 }
 
 function clampChannel(value: number): number {
@@ -104,7 +97,7 @@ function mixColor(base: Rgb, target: Rgb, ratio: number): Rgb {
 
 function toHex(color: Rgb): CanvasPaletteId {
   const channel = (value: number) => clampChannel(value).toString(16).padStart(2, '0');
-  return `#${channel(color.r)}${channel(color.g)}${channel(color.b)}` as CanvasPaletteId;
+  return `#${channel(color.r)}${channel(color.g)}${channel(color.b)}`;
 }
 
 function toRgba(color: Rgb, alpha: number): string {

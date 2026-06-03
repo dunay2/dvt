@@ -56,9 +56,9 @@ describe('runsRouteBootstrap', () => {
         message: 'Runs unavailable',
       })
     ).toEqual({
-      status: 'error',
+      status: 'failed',
       detail: 'Runs unavailable',
-      canComplete: false,
+      canComplete: true,
     });
   });
 });

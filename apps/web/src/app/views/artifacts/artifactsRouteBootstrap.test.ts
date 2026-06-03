@@ -4,9 +4,7 @@ import { deriveArtifactsRouteBootstrapPresentation } from './artifactsRouteBoots
 
 describe('artifactsRouteBootstrap', () => {
   it('maps loading, invalid-import, and ready states to route posture', () => {
-    expect(
-      deriveArtifactsRouteBootstrapPresentation({ kind: 'loading' })
-    ).toMatchObject({
+    expect(deriveArtifactsRouteBootstrapPresentation({ kind: 'loading' })).toMatchObject({
       status: 'pending',
       canComplete: false,
     });
@@ -17,14 +15,12 @@ describe('artifactsRouteBootstrap', () => {
         message: 'Manifest invalid',
       })
     ).toEqual({
-      status: 'error',
+      status: 'failed',
       detail: 'Manifest invalid',
-      canComplete: false,
+      canComplete: true,
     });
 
-    expect(
-      deriveArtifactsRouteBootstrapPresentation({ kind: 'ready' })
-    ).toEqual({
+    expect(deriveArtifactsRouteBootstrapPresentation({ kind: 'ready' })).toEqual({
       status: 'complete',
       detail: 'Artifacts route is ready',
       canComplete: true,

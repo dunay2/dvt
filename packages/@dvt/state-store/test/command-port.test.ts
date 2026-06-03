@@ -11,7 +11,7 @@ function buildMetadata(runId: string): Record<string, unknown> {
     planId: 'plan-1',
     planVersion: '1.0.0',
     logicalAttemptId: 1,
-    provider: 'mock',
+    provider: 'temporal',
     providerWorkflowId: runId,
     providerRunId: runId,
   };

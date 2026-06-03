@@ -9,7 +9,7 @@
     "generatedAt": { "type": "string", "format": "date-time" },
     "targetAdapter": {
       "type": "string",
-      "enum": ["temporal", "conductor", "auto"]
+      "enum": ["temporal"]
     },
     "adapterVersion": { "type": "string" },
     "adapterCapabilities": {
