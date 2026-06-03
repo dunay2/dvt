@@ -323,6 +323,8 @@ allowedImplementationSurfaces:
   - scripts/run-dev-stack.auth.test.cjs
   - scripts/run-dev-stack.temporal.cjs
   - scripts/run-dev-stack.test.cjs
+  - scripts/run-selected-closure-live-proof.cjs
+  - scripts/run-selected-closure-live-proof.test.cjs
   - apps/web/src/app/views/canvas/**
   - apps/web/src/app/views/CodeView.tsx
   - apps/web/src/app/views/CodeView.test.tsx
@@ -1507,6 +1509,168 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
     unitTests:
       - scripts/run-dev-stack.test.cjs
+  - name: TEMPORAL_CLI_CACHE_PREFIX
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Local Temporal bootstrap must locate the SDK-managed CLI deterministically.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: TEMPORAL_CLI_ENV_PATH
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Local Temporal bootstrap must allow an explicit operator-owned CLI override.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: TEMPORAL_CLI_POLL_INTERVAL_MS
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Temporal readiness polling must be explicit instead of hidden behind arbitrary sleeps.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: TEMPORAL_CLI_READY_TIMEOUT_MS
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Temporal readiness timeout belongs to the local runtime composition seam.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: fs
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Local Temporal CLI discovery must inspect filesystem candidates explicitly.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: net
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Temporal readiness must probe TCP availability through the local runtime boundary.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: os
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Temporal CLI cache lookup must be scoped to the host temp directory.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: startLocalTemporalService
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Local protected runtime startup must expose one owned Temporal service seam.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: SELECTED_CLOSURE_LIVE_PROOF_ROOT
+    path: scripts/run-selected-closure-live-proof.cjs
+    dddOwner: SelectedClosureLiveProofStack
+    cqRails: [ImportWarehouseSources, PreviewExecutablePlan, StartRun, GetRunSnapshot]
+    fowlerSignals: [Selected closure proof state must live in an explicit local proof root.]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-selected-closure-live-proof.test.cjs
+  - name: buildLiveProofApiEnv
+    path: scripts/run-selected-closure-live-proof.cjs
+    dddOwner: SelectedClosureLiveProofStack
+    cqRails: [ImportWarehouseSources, PreviewExecutablePlan, StartRun]
+    fowlerSignals: [Live proof API posture must compose real workspace files, catalog, and Temporal rails.]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-selected-closure-live-proof.test.cjs
+  - name: buildLiveProofTemporalEnvOverrides
+    path: scripts/run-selected-closure-live-proof.cjs
+    dddOwner: SelectedClosureLiveProofStack
+    cqRails: [StartRun]
+    fowlerSignals: [Live proof Temporal overrides must be derived at the orchestration boundary.]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-selected-closure-live-proof.test.cjs
+  - name: buildLiveProofTemporalOptions
+    path: scripts/run-selected-closure-live-proof.cjs
+    dddOwner: SelectedClosureLiveProofStack
+    cqRails: [StartRun]
+    fowlerSignals: [Live proof Temporal namespace and queue options must share one source of truth.]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-selected-closure-live-proof.test.cjs
+  - name: buildLiveProofTemporalWorkerEnv
+    path: scripts/run-selected-closure-live-proof.cjs
+    dddOwner: SelectedClosureLiveProofStack
+    cqRails: [StartRun]
+    fowlerSignals: [Live proof worker posture must derive from the same API runtime contract.]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-selected-closure-live-proof.test.cjs
+  - name: readNonEmptyEnv
+    path: scripts/run-selected-closure-live-proof.cjs
+    dddOwner: SelectedClosureLiveProofStack
+    cqRails: [ImportWarehouseSources, StartRun]
+    fowlerSignals: [Live proof environment defaults must distinguish absent values from empty overrides.]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-selected-closure-live-proof.test.cjs
+  - name: resolveLiveProofWorkspaceFilesRoot
+    path: scripts/run-selected-closure-live-proof.cjs
+    dddOwner: SelectedClosureLiveProofStack
+    cqRails: [ImportWarehouseSources]
+    fowlerSignals: [Workspace catalog discovery must use an explicit filesystem root.]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-selected-closure-live-proof.test.cjs
+  - name: seedSelectedClosureLocalWarehouseProof
+    path: scripts/run-selected-closure-live-proof.cjs
+    dddOwner: SelectedClosureLiveProofStack
+    cqRails: [ImportWarehouseSources, StartRun]
+    fowlerSignals: [Selected closure proof must seed real source tables and governed connection metadata.]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-selected-closure-live-proof.test.cjs
+  - name: assert
+    path: scripts/run-selected-closure-live-proof.test.cjs
+    dddOwner: SelectedClosureLiveProofStack
+    cqRails: [ImportWarehouseSources, StartRun]
+    fowlerSignals: [Live proof unit assertions must guard orchestration environment invariants.]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-selected-closure-live-proof.test.cjs
+  - name: test
+    path: scripts/run-selected-closure-live-proof.test.cjs
+    dddOwner: SelectedClosureLiveProofStack
+    cqRails: [ImportWarehouseSources, StartRun]
+    fowlerSignals: [Live proof orchestration tests must remain first-class mechanized coverage.]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-selected-closure-live-proof.test.cjs
   - name: LiveMaterializationEvidence
     path: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
     dddOwner: RunMaterializationEvidence
