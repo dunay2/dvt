@@ -357,6 +357,30 @@ symbols:
   - <<: *ciSymbolDefaults
     name: require
     path: tools/docs/check-filenames.ts
+  - name: EVIDENCE_VALID_RE
+    path: tools/docs/check-filenames.ts
+    dddOwner: ChangedFileValidationGate
+    cqRails:
+      - ValidateChangedFiles
+    fowlerSignals:
+      - Hidden local state
+      - False-positive readiness
+    architectureGuard: node --test tools/ci/docs-changed-governance-policy.test.mjs
+    cypressCoverage: "not-applicable: docs filename governance has no browser workflow."
+    unitTests:
+      - node --test tools/ci/docs-changed-governance-policy.test.mjs
+  - name: isEvidenceDoc
+    path: tools/docs/check-filenames.ts
+    dddOwner: ChangedFileValidationGate
+    cqRails:
+      - ValidateChangedFiles
+    fowlerSignals:
+      - Hidden local state
+      - False-positive readiness
+    architectureGuard: node --test tools/ci/docs-changed-governance-policy.test.mjs
+    cypressCoverage: "not-applicable: docs filename governance has no browser workflow."
+    unitTests:
+      - node --test tools/ci/docs-changed-governance-policy.test.mjs
   - <<: *ciSymbolDefaults
     name: require
     path: tools/docs/check-frontmatter.ts
