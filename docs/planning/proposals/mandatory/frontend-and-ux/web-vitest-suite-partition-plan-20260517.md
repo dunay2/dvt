@@ -102,7 +102,7 @@ fowlerSignals:
 architectureGuards:
   - pnpm --filter @dvt/web test:architecture
   - pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/testing/vitestSuites.architecture.test.ts
-  - pnpm --filter @dvt/web test -- src/testing/workspaceServicesVitestLane.architecture.test.ts
+  - pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/testing/workspaceServicesVitestLane.architecture.test.ts
   - pnpm test:web:changed -- --files apps/web/src/app/services/workspace/workspacePorts.api.ts
 cypressFlows:
   - N/A - Vitest suite partition has no browser automation surface.
@@ -144,7 +144,7 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.support.ts
     greenTest: pnpm --filter @dvt/web test:architecture
   - id: workspace-services-focus-lane
-    redTest: pnpm --filter @dvt/web test -- src/testing/workspaceServicesVitestLane.architecture.test.ts
+    redTest: pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/testing/workspaceServicesVitestLane.architecture.test.ts
     expectedFailure: Workspace service changes still route to the broad unit lane.
     patchSurfaces:
       - apps/web/package.json
@@ -264,10 +264,10 @@ symbols:
     dddOwner: WebVitestSuiteCatalog
     cqRails: [WebVitestSuitePartition]
     fowlerSignals: [Semantic encapsulation]
-    architectureGuard: pnpm --filter @dvt/web test -- src/testing/workspaceServicesVitestLane.architecture.test.ts
+    architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/testing/workspaceServicesVitestLane.architecture.test.ts
     cypressCoverage: N/A - Vitest-only test tooling.
     unitTests:
-      - pnpm --filter @dvt/web test -- src/testing/workspaceServicesVitestLane.architecture.test.ts
+      - pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/testing/workspaceServicesVitestLane.architecture.test.ts
   - name: webRoot
     path: apps/web/src/testing/vitestSuites.architecture.test.ts
     dddOwner: WebVitestSuitePartition

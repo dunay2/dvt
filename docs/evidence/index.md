@@ -149,7 +149,7 @@ Evidence documents that justify or validate relevant changes.
 - [Summary](ed-20260514-rc-g1-contract-ownership-closure.md)
 - [Summary](ed-20260514-s08-plan-store-inventory-drift.md)
 - [Summary](ed-20260523-postgres-tenant-isolation-canon.md)
-- [Summary](ed-20260601-execution-plan-prealpha-schema-hardcut.md)
+- [Summary](ED-20260601-execution-plan-prealpha-schema-hardcut.md)
 - [Summary](ed-20260601-planner-local-doc-archive.md)
 - [Temporal SDK 1.16.1 Patch Upgrade](ed-20260430-temporal-sdk-1-16-1-patch-upgrade.md)
 - [Temporal SDK 1.17.2 Upgrade](ED-20260603-temporal-sdk-1-17-2-upgrade.md)
