@@ -32,20 +32,44 @@ function parseArgs(argv) {
 }
 
 function readNameStatusDiff(base, head, git = execGit) {
-  return dedupeChanges(
-    parseNameStatus(git(['diff', '--name-status', '--find-renames', `${base}...${head}`]))
-  );
+  return dedupeChanges(readNameStatusRangeDiff(base, head, git));
 }
 
 function readLocalNameStatusDiff(base, head, git = execGit) {
   const changes = [
-    ...parseNameStatus(git(['diff', '--name-status', '--find-renames', `${base}...${head}`])),
+    ...readNameStatusRangeDiff(base, head, git),
     ...parseNameStatus(git(['diff', '--cached', '--name-status', '--find-renames'])),
     ...parseNameStatus(git(['diff', '--name-status', '--find-renames'])),
     ...readUntrackedNameStatus(git),
   ];
 
   return dedupeChanges(changes);
+}
+
+function readNameStatusRangeDiff(base, head, git = execGit) {
+  const commonArgs = ['diff', '--name-status', '--find-renames'];
+
+  try {
+    return parseNameStatus(git([...commonArgs, `${base}...${head}`]));
+  } catch (error) {
+    if (!isNoMergeBaseError(error)) {
+      throw error;
+    }
+
+    console.error(
+      `[docs:governance:changed-files] No merge base for ${base}...${head}; using direct tree diff.`
+    );
+    return parseNameStatus(git([...commonArgs, base, head]));
+  }
+}
+
+function gitErrorText(error) {
+  const parts = [error?.message, error?.stderr?.toString?.(), error?.stdout?.toString?.()];
+  return parts.filter(Boolean).join('\n');
+}
+
+function isNoMergeBaseError(error) {
+  return /\bno merge base\b/u.test(gitErrorText(error));
 }
 
 function readUntrackedNameStatus(git = execGit) {
@@ -325,6 +349,7 @@ module.exports = {
   parseNameStatus,
   readLocalNameStatusDiff,
   readNameStatusDiff,
+  readNameStatusRangeDiff,
   resolveBaseRef,
   validateChangedFiles,
 };

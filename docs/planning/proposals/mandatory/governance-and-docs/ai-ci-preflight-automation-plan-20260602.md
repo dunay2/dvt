@@ -109,6 +109,8 @@ allowedImplementationSurfaces:
   - docs/**/index.md
   - scripts/ai-preflight.cjs
   - scripts/ai-preflight.test.cjs
+  - scripts/check-governance-changed-files.cjs
+  - scripts/check-governance-changed-files.test.cjs
   - scripts/local-validation-plan.cjs
   - scripts/verify-changed.test.cjs
   - tools/ci/policy/workflow-scope.json
@@ -266,8 +268,10 @@ redGreenCycles:
       - tools/ci/git-diff-files.test.mjs
       - tools/ci/arc-check.mjs
       - tools/ci/doc-check.mjs
+      - scripts/check-governance-changed-files.cjs
+      - scripts/check-governance-changed-files.test.cjs
       - docs/guides/testing-and-ci-capabilities.md
-    greenTest: node --test tools/ci/git-diff-files.test.mjs
+    greenTest: node --test tools/ci/git-diff-files.test.mjs scripts/check-governance-changed-files.test.cjs
 symbols:
   - name: assert
     path: scripts/ai-preflight.test.cjs
@@ -512,6 +516,33 @@ symbols:
     cypressCoverage: N/A - ARC docs validator
     unitTests:
       - tools/ci/git-diff-files.test.mjs
+  - name: readNameStatusRangeDiff
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository CI scope policy
+    cqRails: [EmitWorkflowCapabilityScopes]
+    fowlerSignals: [Shallow Checkout Fragility]
+    architectureGuard: node --test scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - governed changed-files gate
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: gitErrorText
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository CI scope policy
+    cqRails: [EmitWorkflowCapabilityScopes]
+    fowlerSignals: [Shallow Checkout Fragility]
+    architectureGuard: node --test scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - governed changed-files gate
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
+  - name: isNoMergeBaseError
+    path: scripts/check-governance-changed-files.cjs
+    dddOwner: Repository CI scope policy
+    cqRails: [EmitWorkflowCapabilityScopes]
+    fowlerSignals: [Shallow Checkout Fragility]
+    architectureGuard: node --test scripts/check-governance-changed-files.test.cjs
+    cypressCoverage: N/A - governed changed-files gate
+    unitTests:
+      - scripts/check-governance-changed-files.test.cjs
   - name: fetch-scope-base
     path: .github/actions/fetch-scope-base/action.yml
     dddOwner: Repository CI scope policy

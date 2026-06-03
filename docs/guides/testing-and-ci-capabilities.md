@@ -223,7 +223,13 @@ Command semantics:
 - `pnpm docs:gov:manifest` regenerates the tracked compact docs inventory at `docs/.manifest.json`; use `pnpm exec tsx tools/docs/generate-docs-manifest.ts --full --stdout` for the exhaustive audit catalog.
 - `pnpm docs:gov:manifest:check` is the strict drift gate for that tracked docs governance manifest.
 - `pnpm docs:gov:generated-policy` validates the generated-doc single-writer registry, including source paths, generator commands, tracked versus untracked posture, and required generated markers.
-- `pnpm docs:governance:changed-files:check` compares `GIT_BASE...GIT_HEAD` against the current file index and accepted fingerprint baseline. Added and renamed files must be classified, modified files must carry an updated accepted fingerprint, deleted files must disappear from active indexes, and touched legacy/drift files fail until their governance state is resolved.
+- `pnpm docs:governance:changed-files:check` compares `GIT_BASE...GIT_HEAD`
+  against the current file index and accepted fingerprint baseline, falling
+  back to a direct tree diff only when shallow PR merge refs cannot provide a
+  local merge base. Added and renamed files must be classified, modified files
+  must carry an updated accepted fingerprint, deleted files must disappear from
+  active indexes, and touched legacy/drift files fail until their governance
+  state is resolved.
 - `pnpm docs:governance:coverage-report:check` regenerates the governance coverage report from the file/component indexes and fails if totals, drift, legacy, or subdivision reporting is stale.
 - `pnpm docs:governance:remediation-queue:check` regenerates the queue that turns coverage gaps into component-scoped remediation tasks and fails when that actionable plan is stale.
 - `pnpm docs:gov` now includes the docs manifest generation step, so the aggregate governance command keeps the tracked manifest current during local-friendly docs validation.
