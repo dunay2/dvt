@@ -14,7 +14,7 @@ code_refs:
   - apps/api/src/application/services/WorkflowEngineFactory.ts
 evidence:
   tests:
-    - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts test/services/StartRunApplicationService.test.ts
+    - pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts test/services/StartRunApplicationService.test.ts
     - pnpm --filter @dvt/engine test
     - pnpm --filter @dvt/engine typecheck
     - pnpm --filter dvt-api typecheck
@@ -47,7 +47,7 @@ admission and plan integrity.
 
 ## Validation Evidence
 
-- `pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts test/services/StartRunApplicationService.test.ts`
+- `pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts test/services/StartRunApplicationService.test.ts`
   - RED first: failed because `IStartRunAdmissionService` did not exist,
     `StartRunApplicationService` still constructed `StartRunAdmissionService`,
     and the injected admission seam was not invoked.
@@ -60,7 +60,7 @@ admission and plan integrity.
   - Passed, 64 files / 451 tests.
 - `pnpm --filter dvt-api test -- test/integration/plannerEngineContract.test.ts`
   - Passed, 1 file / 7 tests.
-- `pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts`
+- `pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts`
   - Passed, 1 file / 3 tests.
 
 ## No-Debt Evidence

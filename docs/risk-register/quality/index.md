@@ -144,7 +144,6 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Start-run adapter IDs can drift back into concrete runtime construction](R-20260424-START-RUN-ADAPTER-FACTORY-DRIFT.yaml)
 - [Start-run admission phase can drift back into coordinator construction](R-20260518-DHM-WS3-ADMISSION-SEAM.yaml)
 - [Start-run alias deprecation drift during migration to StartRunApplicationService](R-20260405-START-RUN-ALIAS-DEPRECATION.yaml)
-- [Start-run application composition can drift back into hidden concrete construction](R-20260512-DHM-WS3-START-RUN-DECOMPOSITION.yaml)
 - [Start-run boundary and runtime composition can drift across contracts and API consumers](R-20260422-START-RUN-BOUNDARY-ADOPTION-DRIFT.yaml)
 - [Start-run phase decomposition could diverge from existing protocol semantics](R-20260512-WE-HX-3-START-RUN-DECOMPOSITION.yaml)
 - [start-run providerRef compensation proof could regress to boolean-only coverage](R-20260514-EA-20260429-07-START-RUN-PROVIDER-REF.yaml)
