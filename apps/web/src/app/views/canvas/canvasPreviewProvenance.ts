@@ -184,6 +184,28 @@ async function resolvePreviewSqlArtifact(args: {
   const { transformArtifactSource } = args;
 
   if (transformArtifactSource.kind === 'workspace-file') {
+    const draftSqlText = readNodeSqlText(transformArtifactSource.node, {
+      includeCompiledSql: false,
+    });
+    if (draftSqlText) {
+      const sqlText = draftSqlText.endsWith('\n') ? draftSqlText : `${draftSqlText}\n`;
+      const savedSqlArtifact = await args.workspaceFileContentCommand.saveFileContent(
+        transformArtifactSource.path,
+        sqlText
+      );
+
+      return {
+        sqlText: savedSqlArtifact.content,
+        sqlArtifact: {
+          repo: args.gitRepo,
+          path: transformArtifactSource.path,
+          ref: args.gitRef,
+          commitSha: args.gitSha,
+          contentSha256: sha256HexUtf8(savedSqlArtifact.content),
+        },
+      };
+    }
+
     try {
       return await readPreviewSqlArtifact({
         workspaceFilesQuery: args.workspaceFilesQuery,
@@ -241,15 +263,28 @@ function buildAuthoringPreviewSql({
   return `select *\nfrom ${source.payload.schema}.${source.payload.table};\n`;
 }
 
-function readNodeSqlText(node: CanonicalNode): string | null {
-  const compiledSql = node.metadata?.compiledSql;
-  if (typeof compiledSql === 'string' && compiledSql.trim().length > 0) {
-    return compiledSql.trim();
-  }
-
+function readNodeSqlText(
+  node: CanonicalNode,
+  options: { includeCompiledSql?: boolean } = {}
+): string | null {
   const sql = node.metadata?.sql;
   if (typeof sql === 'string' && sql.trim().length > 0) {
     return sql.trim();
+  }
+
+  const config = node.metadata?.config;
+  if (config !== null && typeof config === 'object' && !Array.isArray(config)) {
+    const configSql = (config as Record<string, unknown>).sql;
+    if (typeof configSql === 'string' && configSql.trim().length > 0) {
+      return configSql.trim();
+    }
+  }
+
+  if (options.includeCompiledSql !== false) {
+    const compiledSql = node.metadata?.compiledSql;
+    if (typeof compiledSql === 'string' && compiledSql.trim().length > 0) {
+      return compiledSql.trim();
+    }
   }
 
   return null;
