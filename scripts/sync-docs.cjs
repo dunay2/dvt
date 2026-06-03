@@ -923,11 +923,7 @@ function scanSectionEntries(sectionRelativePath) {
   const normalizedRows = allowYaml ? [...rows, ...dedupedRiskRows.values()] : rows;
   normalizedRows.sort((a, b) => {
     if (a.type !== b.type) return a.type === 'dir' ? -1 : 1;
-    const labelCompare = a.label.localeCompare(b.label, 'en', { sensitivity: 'base' });
-    if (labelCompare !== 0) return labelCompare;
-    if (a.link < b.link) return -1;
-    if (a.link > b.link) return 1;
-    return 0;
+    return a.label.localeCompare(b.label, 'en', { sensitivity: 'base' });
   });
   return normalizedRows;
 }
@@ -1213,7 +1209,6 @@ module.exports = {
   generatePlanningIndexes,
   inferPlanningType,
   main,
-  scanSectionEntries,
   shouldIncludePlanningDoc,
   splitFrontmatter,
 };

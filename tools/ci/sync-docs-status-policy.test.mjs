@@ -3,11 +3,7 @@ import { createRequire } from 'node:module';
 import test from 'node:test';
 
 const require = createRequire(import.meta.url);
-const {
-  scanSectionEntries,
-  shouldIncludePlanningDoc,
-  splitFrontmatter,
-} = require('../../scripts/sync-docs.cjs');
+const { shouldIncludePlanningDoc, splitFrontmatter } = require('../../scripts/sync-docs.cjs');
 
 test('planning doc index generation excludes superseded and archived docs', () => {
   assert.equal(shouldIncludePlanningDoc('Active'), true);
@@ -41,28 +37,4 @@ test('splitFrontmatter parses BOM-prefixed markdown frontmatter without duplicat
   assert.equal(parsed.frontmatter.status, 'Review');
   assert.match(parsed.body, /^# Command Logging Pane 2026-04-02/m);
   assert.doesNotMatch(parsed.body, /^---$/m);
-});
-
-test('section index generation sorts equal labels by link for cross-platform stability', () => {
-  const entries = scanSectionEntries('evidence');
-  let equalLabelPairCount = 0;
-
-  for (let index = 1; index < entries.length; index += 1) {
-    const previous = entries[index - 1];
-    const current = entries[index];
-
-    if (previous.type !== current.type) continue;
-    if (previous.label.localeCompare(current.label, 'en', { sensitivity: 'base' }) !== 0) continue;
-
-    equalLabelPairCount += 1;
-    assert.ok(
-      previous.link <= current.link,
-      `Expected ${previous.link} to sort before or equal to ${current.link}`
-    );
-  }
-
-  assert.ok(
-    equalLabelPairCount > 0,
-    'Expected evidence docs to contain equal-label rows that exercise the tie-breaker'
-  );
 });
