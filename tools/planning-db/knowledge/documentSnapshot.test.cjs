@@ -147,6 +147,48 @@ test('keeps explicit unowned action lines as planning intake', () => {
   );
 });
 
+test('ignores stale task references and action section headings', () => {
+  const snapshot = buildKnowledgeSnapshotFromDocuments(
+    [
+      {
+        sourcePath: 'docs/planning/proposals/mandatory/frontend-and-ux/legacy-f29-plan.md',
+        raw: [
+          '---',
+          'title: Legacy F29 Plan',
+          'planning_type: proposal',
+          '---',
+          '# Legacy F29 Plan',
+          '',
+          '- [Task: F-29] Add Canvas workbench tab route state model.',
+          '- [Task: E-PROP-DISP-1] Add Canvas workbench tab read model.',
+          '- Modify:',
+          '- Modify if required:',
+          '- Create:',
+          '- Update route tests and shell chrome tests to assert the new navigation shape.',
+        ].join('\n'),
+        contentSha256: '4'.repeat(64),
+      },
+    ],
+    { planningTaskIds: ['E-PROP-DISP-1'] }
+  );
+
+  assert.deepEqual(
+    snapshot.actions.map((action) => action.summary),
+    [
+      '[Task: E-PROP-DISP-1] Add Canvas workbench tab read model.',
+      'Update route tests and shell chrome tests to assert the new navigation shape.',
+    ]
+  );
+  assert.deepEqual(snapshot.actionLinks, [
+    {
+      actionId: 'docs-planning-proposals-mandatory-frontend-and-ux-legacy-f29-plan-md::A1',
+      targetType: 'task',
+      targetId: 'E-PROP-DISP-1',
+      relationType: 'implements',
+    },
+  ]);
+});
+
 test('classifies Fowler analysis and review documents without making them tasks', () => {
   const snapshot = buildKnowledgeSnapshotFromDocuments([
     {
