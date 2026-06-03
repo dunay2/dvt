@@ -118,9 +118,11 @@ describe('Canvas preview-run live protected runtime', () => {
     clickButtonNatively('Plan');
 
     cy.contains('Execution Plan Preview', { timeout: 20_000 }).should('be.visible');
-    cy.contains('Persisted Preview Summary').should('be.visible');
-    cy.contains('Source tables:').parent().should('contain.text', 'public.source_1');
-    cy.contains('Sink tables:').parent().should('contain.text', 'public.sink_1');
+    cy.contains('Plan identity').should('be.visible');
+    cy.contains('Execution target').should('be.visible');
+    cy.contains('Persisted preview summary').scrollIntoView().should('be.visible');
+    cy.contains('Source tables').parent().should('contain.text', 'public.source_1');
+    cy.contains('Sink tables').parent().should('contain.text', 'public.sink_1');
 
     readLiveWorkspaceFile('models/dvt-sql-transform-1.sql').then((sqlResponse) => {
       expect(sqlResponse.status).to.equal(200);
@@ -129,7 +131,7 @@ describe('Canvas preview-run live protected runtime', () => {
       );
     });
 
-    readLiveWorkspaceFile('pipelines/project-transformation-preview.yaml').then((graphResponse) => {
+    readLiveWorkspaceFile('pipelines/sales_pipeline.yaml').then((graphResponse) => {
       expect(graphResponse.status).to.equal(200);
       const content = (graphResponse.body as { content: string }).content;
       expect(content).to.contain('id: "source-1"');
@@ -173,11 +175,36 @@ describe('Canvas preview-run live protected runtime', () => {
     cy.contains(/^Run /, { timeout: 20_000 }).should('exist');
     cy.contains('Runtime snapshot', { timeout: 30_000 }).should('be.visible');
     closeRunConsoleIfOpen();
-    cy.contains('Materialization evidence', { timeout: 30_000 })
+    cy.get('[data-slot="run-materialization-card"]', { timeout: 30_000 })
       .scrollIntoView()
-      .should('be.visible');
-    cy.contains('public.sink_1').should('be.visible');
-    cy.contains('Rows written').parent().should('contain.text', '3');
+      .should('be.visible')
+      .and('contain.text', 'Materialization evidence')
+      .and('contain.text', 'public.sink_1')
+      .and('contain.text', 'Rows written')
+      .and('contain.text', '3');
+    cy.get('[data-slot="run-diagnostics-card"]', { timeout: 30_000 })
+      .scrollIntoView()
+      .should('be.visible')
+      .and('contain.text', 'Diagnostics')
+      .and('contain.text', 'Plan SHA')
+      .and('contain.text', 'Trace and log pointers')
+      .and('not.contain.text', 'Not available');
+    cy.get('[data-slot="run-plan-provenance-card"]', { timeout: 30_000 })
+      .scrollIntoView()
+      .should('be.visible')
+      .and('contain.text', 'Plan and authoring provenance')
+      .and('contain.text', 'Plan record')
+      .and('contain.text', 'Plan source ref')
+      .and('contain.text', 'dvt-plan://')
+      .and('contain.text', 'Canonical plan SHA-256')
+      .and('contain.text', 'Graph artifact')
+      .and('contain.text', 'SQL artifact')
+      .and('not.contain.text', 'Not available');
+    cy.get('[data-slot="run-execution-provenance-card"]', { timeout: 30_000 })
+      .scrollIntoView()
+      .should('be.visible')
+      .and('contain.text', 'Execution provenance')
+      .and('contain.text', 'Execution provenance is not available yet');
   });
 
   it('connects Canvas to seeded local warehouse sources through DataObject Registry', () => {

@@ -320,7 +320,7 @@ function RunDiagnosticsCard({
   ] as const;
 
   return (
-    <Card className="border-slate-700 bg-slate-900 p-5">
+    <Card data-slot="run-diagnostics-card" className="border-slate-700 bg-slate-900 p-5">
       <h3 className="mb-3 text-sm font-semibold">{copy.diagnosticsTitle}</h3>
       <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
         {fields.map(([label, value, monospace]) =>
@@ -448,7 +448,7 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
         {snapshot.diagnostics ? <RunDiagnosticsCard diagnostics={snapshot.diagnostics} /> : null}
 
         {showMaterializationSection ? (
-          <Card className="border-slate-700 bg-slate-900 p-5">
+          <Card data-slot="run-materialization-card" className="border-slate-700 bg-slate-900 p-5">
             <h3 className="mb-3 text-sm font-semibold">{copy.materializationTitle}</h3>
             {materializationEvidence ? (
               <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
@@ -487,7 +487,7 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
           </Card>
         ) : null}
 
-        <Card className="border-slate-700 bg-slate-900 p-5">
+        <Card data-slot="run-plan-provenance-card" className="border-slate-700 bg-slate-900 p-5">
           <h3 className="mb-3 text-sm font-semibold">{copy.planProvenanceTitle}</h3>
           {planProvenance ? (
             <div className="space-y-4 text-sm text-slate-300">
@@ -564,7 +564,10 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
           )}
         </Card>
 
-        <Card className="border-slate-700 bg-slate-900 p-5">
+        <Card
+          data-slot="run-execution-provenance-card"
+          className="border-slate-700 bg-slate-900 p-5"
+        >
           <h3 className="mb-3 text-sm font-semibold">{copy.provenanceTitle}</h3>
           {executionProvenance.length > 0 ? (
             <div className="space-y-3">

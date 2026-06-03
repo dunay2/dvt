@@ -272,6 +272,7 @@ describe('RunStates', () => {
     });
 
     expect(container.textContent).toContain('Plan and authoring provenance');
+    expect(container.querySelector('[data-slot="run-plan-provenance-card"]')).not.toBeNull();
     expect(container.textContent).toContain('plan-record-1');
     expect(container.textContent).toContain('plan://persisted/plan-record-1');
     expect(container.textContent).toContain(
@@ -316,6 +317,7 @@ describe('RunStates', () => {
     });
 
     expect(container.textContent).toContain('Materialization evidence');
+    expect(container.querySelector('[data-slot="run-materialization-card"]')).not.toBeNull();
     expect(container.textContent).toContain('Executor');
     expect(container.textContent).toContain('postgres');
     expect(container.textContent).toContain('analytics.orders_daily');
@@ -471,6 +473,7 @@ describe('RunStates', () => {
     });
 
     expect(container.textContent).toContain('Diagnostics');
+    expect(container.querySelector('[data-slot="run-diagnostics-card"]')).not.toBeNull();
     expect(container.textContent).toContain('Trace query');
     expect(container.textContent).toContain('Log query');
     expect(container.textContent).toContain('runId=run_123');
@@ -670,6 +673,7 @@ describe('RunStates', () => {
     });
 
     expect(container.textContent).toContain('Execution provenance');
+    expect(container.querySelector('[data-slot="run-execution-provenance-card"]')).not.toBeNull();
     expect(container.textContent).toContain('step-transform');
     expect(container.textContent).toContain('compiled-sql');
     expect(container.textContent).toContain('s3://dvt-artifacts/dev/compiled/orders_daily.sql');
