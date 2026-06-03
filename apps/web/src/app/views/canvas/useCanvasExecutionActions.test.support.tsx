@@ -157,6 +157,10 @@ function ExecutionActionsHookView({
       <div data-testid="plan-modal-state">{String(hook.planModalOpen)}</div>
       <div data-testid="can-plan-graph">{String(hook.canPlanGraph)}</div>
       <div data-testid="can-start-run">{String(hook.canStartRun)}</div>
+      <div data-testid="plan-run-readiness-status">{hook.planRunReadiness.status}</div>
+      <div data-testid="plan-run-readiness-blockers">
+        {hook.planRunReadiness.blockers.join(',')}
+      </div>
       <div data-testid="plan-status-summary">{hook.planStatusSummary}</div>
       <div data-testid="current-plan-sha">{currentPlan?.planRef?.sha256 ?? 'none'}</div>
       <button

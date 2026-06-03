@@ -150,6 +150,12 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
       canStartRun: false,
       canExportProjectSnapshot: true,
       canImportProjectSnapshot: true,
+      planRunReadiness: {
+        blockers: ['plan_integrity'],
+        rail: 'ObservePlanRunReadiness',
+        status: 'blocked',
+        summary: canvasViewCopy.planStatusPreviewRequiredMessage,
+      },
       planStatusSummary: canvasViewCopy.planStatusPreviewRequiredMessage,
       exclusiveOverlayMode: 'runtime',
       canUseCostOverlay: false,

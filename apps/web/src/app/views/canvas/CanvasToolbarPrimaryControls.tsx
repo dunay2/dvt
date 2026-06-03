@@ -1,6 +1,6 @@
 /** Owned concern: render primary Canvas toolbar controls without owning route command semantics. */
 import { Download, FileCheck, Folder, Play, Upload } from 'lucide-react';
-import { useRef } from 'react';
+import { type ComponentProps, useRef } from 'react';
 
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
@@ -17,6 +17,7 @@ import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { CanvasAddNodePalette } from './CanvasAddNodePalette';
 import { canvasChromeClasses } from './canvasChromeTokens';
 import { canvasViewCopy } from './copy';
+import { PlanRunReadinessPanel } from './PlanRunReadinessPanel';
 
 type CanvasToolbarPrimaryControlsProps = {
   onExportProjectSnapshot: () => void;
@@ -30,6 +31,7 @@ type CanvasToolbarPrimaryControlsProps = {
   canExportProjectSnapshot: boolean;
   canImportProjectSnapshot: boolean;
   canStartRun: boolean;
+  planRunReadiness: ComponentProps<typeof PlanRunReadinessPanel>['readiness'];
   workflowStatusLabel: string;
   workflowStatusClass: string;
   workflowStatusTitle: string;
@@ -49,6 +51,7 @@ export function CanvasToolbarPrimaryControls({
   canExportProjectSnapshot,
   canImportProjectSnapshot,
   canStartRun,
+  planRunReadiness,
   workflowStatusLabel,
   workflowStatusClass,
   workflowStatusTitle,
@@ -67,6 +70,7 @@ export function CanvasToolbarPrimaryControls({
       >
         {workflowStatusLabel}
       </Badge>
+      <PlanRunReadinessPanel readiness={planRunReadiness} density="compact" />
       <Separator orientation="vertical" className={canvasChromeClasses.separator} />
 
       {onCreateAuthoringNode != null && authoringNodeKinds.length > 0 ? (

@@ -14,6 +14,7 @@ import { useCanvasViewMenuContributionStore } from './canvasViewMenuContribution
 import type { CanvasViewMenuContribution } from './canvasViewMenuContributionStore';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
+import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 
 const nodeKinds: readonly NodeKindRegistration[] = [
   {
@@ -71,6 +72,7 @@ function buildToolbarProps(
     canExportProjectSnapshot: true,
     canImportProjectSnapshot: true,
     canStartRun: false,
+    planRunReadiness: buildPlanRunReadiness(),
     planStatusSummary: canvasViewCopy.planStatusPreviewRequiredMessage,
     canvasAuthoringMode: 'transformation',
     exclusiveOverlayMode: 'runtime',
@@ -83,6 +85,18 @@ function buildToolbarProps(
     transformationValidation: buildValidationResult(),
     nodeCount: 3,
     edgeCount: 2,
+    ...overrides,
+  };
+}
+
+function buildPlanRunReadiness(
+  overrides?: Partial<PlanRunReadinessReadModel>
+): PlanRunReadinessReadModel {
+  return {
+    blockers: ['plan_integrity'],
+    rail: 'ObservePlanRunReadiness',
+    status: 'blocked',
+    summary: canvasViewCopy.planStatusPreviewRequiredMessage,
     ...overrides,
   };
 }
@@ -166,6 +180,8 @@ describe('CanvasToolbar', () => {
     });
 
     expect(container.querySelectorAll('[data-slot="canvas-workflow-status"]')).toHaveLength(1);
+    expect(container.querySelector('[data-slot="plan-run-readiness-panel"]')).not.toBeNull();
+    expect(container.textContent).toContain(canvasViewCopy.planStatusPreviewRequiredMessage);
     expect(container.textContent).toContain(canvasViewCopy.toolbarWorkflowPlanRequiredLabel);
     expect(container.textContent).not.toContain(canvasViewCopy.toolbarLayoutLabel);
     expect(container.textContent).not.toContain(canvasViewCopy.toolbarImpactLabel);
@@ -311,7 +327,10 @@ describe('CanvasToolbar', () => {
     const search = document.body.querySelector<HTMLInputElement>(
       '[data-slot="canvas-add-node-palette-search"]'
     );
-    expect(document.body.querySelector('[data-slot="canvas-add-node-palette"]')).not.toBeNull();
+    const palette = document.body.querySelector('[data-slot="canvas-add-node-palette"]');
+    expect(palette).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-add-node-palette"]')).toBeNull();
+    expect(palette?.closest('[data-slot="canvas-add-node-palette-root"]')).toBeNull();
 
     await act(async () => {
       search?.focus();
@@ -356,6 +375,11 @@ describe('CanvasToolbar', () => {
           {...buildToolbarProps({
             draftToolbarState: defaultDraftToolbarState,
             canStartRun: true,
+            planRunReadiness: buildPlanRunReadiness({
+              blockers: [],
+              status: 'ready',
+              summary: canvasViewCopy.planStatusPreviewReadyMessage,
+            }),
             planStatusSummary: canvasViewCopy.planStatusPreviewReadyMessage,
             canUseCostOverlay: false,
           })}

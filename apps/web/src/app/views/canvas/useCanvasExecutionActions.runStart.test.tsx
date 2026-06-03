@@ -179,6 +179,10 @@ async function expectUnavailableRunStart(args: {
   const harness = blockedScenario.harness;
 
   expect(harness.text('can-start-run')).toBe('false');
+  expect(harness.text('plan-run-readiness-status')).toBe('blocked');
+  expect(harness.text('plan-run-readiness-blockers')).toContain(
+    args.canRun === false ? 'authorization_denied' : 'plan_integrity'
+  );
   expect(harness.text('plan-status-summary')).toBe(args.expectedSummary);
 
   await expectRunStartBlocked({
@@ -254,6 +258,8 @@ describe('useCanvasExecutionActions run start', () => {
     harness = startedScenario.harness;
 
     expect(harness.text('can-start-run')).toBe('true');
+    expect(harness.text('plan-run-readiness-status')).toBe('ready');
+    expect(harness.text('plan-run-readiness-blockers')).toBe('');
     expect(harness.text('plan-status-summary')).toBe(canvasViewCopy.planStatusPreviewReadyMessage);
 
     await harness.clickStartRun();

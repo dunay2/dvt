@@ -3,6 +3,7 @@ import { Plus, Search } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Button } from '../../components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
 import { cn } from '../../components/ui/utils';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { canvasChromeClasses } from './canvasChromeTokens';
@@ -106,28 +107,41 @@ export function CanvasAddNodePalette({
   }
 
   return (
-    <div data-slot="canvas-add-node-palette-root" className={cn('relative inline-flex', className)}>
-      <Button
-        type="button"
-        data-slot={triggerDataSlot}
-        variant="outline"
-        size="sm"
-        disabled={!canOpen}
-        aria-expanded={open}
-        aria-haspopup="listbox"
-        className={canvasChromeClasses.outlineButton}
-        onClick={() => setOpen((current) => !current)}
+    <div data-slot="canvas-add-node-palette-root" className={cn('inline-flex', className)}>
+      <Popover
+        open={open}
+        onOpenChange={(nextOpen) => {
+          if (nextOpen && canOpen) {
+            setOpen(true);
+            return;
+          }
+
+          closePalette();
+        }}
       >
-        <Plus className="size-4" />
-        {triggerLabel}
-      </Button>
-      {open ? (
-        <div
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            data-slot={triggerDataSlot}
+            variant="outline"
+            size="sm"
+            disabled={!canOpen}
+            aria-expanded={open}
+            aria-haspopup="listbox"
+            className={canvasChromeClasses.outlineButton}
+          >
+            <Plus className="size-4" />
+            {triggerLabel}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent
           data-slot="canvas-add-node-palette"
+          align={align === 'right' ? 'end' : 'start'}
+          sideOffset={8}
           className={cn(
-            'absolute top-full z-40 mt-2 w-72 rounded-md border border-[color:var(--border-default)] bg-[var(--surface-panel)] p-2 shadow-lg',
-            align === 'right' ? 'right-0' : 'left-0'
+            'z-50 w-72 border-[color:var(--border-default)] bg-[var(--surface-panel)] p-2 text-[var(--text-default)] shadow-lg'
           )}
+          onOpenAutoFocus={(event) => event.preventDefault()}
         >
           <div className="flex items-center gap-2 border-b border-[color:var(--border-default)] pb-2">
             <Search className="size-4 shrink-0 text-(--text-muted)" />
@@ -204,8 +218,8 @@ export function CanvasAddNodePalette({
               })
             )}
           </div>
-        </div>
-      ) : null}
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }

@@ -16,6 +16,12 @@ const DEFAULT_PROPS: React.ComponentProps<typeof CanvasToolbarPrimaryControls> =
   canPlanGraph: true,
   canRun: true,
   canStartRun: true,
+  planRunReadiness: {
+    blockers: [],
+    rail: 'ObservePlanRunReadiness',
+    status: 'ready',
+    summary: 'The current preview is ready to start.',
+  },
   onExportProjectSnapshot: vi.fn(),
   onImportProjectSnapshotFile: vi.fn(),
   onPlan: vi.fn(),

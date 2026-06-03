@@ -193,6 +193,7 @@ function CanvasShellWorkbenchChrome({
             canExportProjectSnapshot={toolbar.canExportProjectSnapshot}
             canImportProjectSnapshot={toolbar.canImportProjectSnapshot}
             canStartRun={toolbar.canStartRun}
+            planRunReadiness={toolbar.planRunReadiness}
             planStatusSummary={toolbar.planStatusSummary}
             canvasAuthoringMode={toolbar.canvasAuthoringMode}
             exclusiveOverlayMode={toolbar.exclusiveOverlayMode}

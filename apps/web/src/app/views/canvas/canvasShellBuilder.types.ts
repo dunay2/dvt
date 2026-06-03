@@ -93,6 +93,7 @@ export type CanvasShellToolbarBuilderArgs = Readonly<{
     | 'canStartRun'
     | 'canExportProjectSnapshot'
     | 'canImportProjectSnapshot'
+    | 'planRunReadiness'
     | 'planStatusSummary'
     | 'exclusiveOverlayMode'
     | 'canUseCostOverlay'

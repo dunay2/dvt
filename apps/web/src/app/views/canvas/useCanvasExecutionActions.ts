@@ -101,6 +101,7 @@ export function useCanvasExecutionActions({
     isCurrentPlanStale,
     canPlanGraph,
     canStartRun,
+    planRunReadiness,
     planStatusSummary,
   } = executionState;
 
@@ -150,6 +151,7 @@ export function useCanvasExecutionActions({
     canPlanGraph,
     canStartRun,
     isCurrentPlanStale,
+    planRunReadiness,
     planStatusSummary,
     handlePlan,
     handleStartRun,

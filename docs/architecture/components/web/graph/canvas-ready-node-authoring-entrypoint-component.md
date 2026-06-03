@@ -67,6 +67,9 @@ Contract derivation is owned by:
   commands.
 - The visible ready-canvas creation entrypoint is the toolbar or top-menu
   `Insert` surface.
+- The transient `Insert` palette is rendered through the shared portalized
+  floating-menu primitive; toolbar overflow and graph stacking contexts must
+  not own its visibility.
 - Existing project-node drag/drop remains a separate affordance.
 - Authored node creation and removal must round-trip through protected draft
   save/read before being treated as durable across reloads.
@@ -101,6 +104,7 @@ sequenceDiagram
   Route->>Builder: canvasDocument.kind + availableCanvasKinds + permissions
   Builder-->>Shell: panels.authoringNodeKinds
   Shell-->>Insert: nodeKinds + onCreateAuthoringNode
+  Insert-->>Insert: portalized palette outside chrome overflow
   Insert->>Command: selected NodeKindRegistration
   Command->>Admission: canonical authoring node
   Admission-->>Route: update viewport nodes + draft session
@@ -113,6 +117,8 @@ sequenceDiagram
 - `CanvasShellMainPanel.tsx` wires shell panel data to the toolbar.
 - `CanvasToolbarPrimaryControls.tsx` renders the active ready-canvas `Insert`
   create buttons.
+- `CanvasAddNodePalette.tsx` owns the searchable palette and delegates overlay
+  positioning to the shared portalized popover primitive.
 - `useCanvasAuthoringNodeCreationHandlers.ts` handles the command.
 - `canvasShellPanelsBuilder.test.ts`, `CanvasShell.test.tsx`, and
   `DbtExplorer.test.tsx` prove behavior.
@@ -139,3 +145,5 @@ slice now follows the same split for ready canvases.
 - Do not route ready-canvas creation through drag/drop-only affordances.
 - Do not count a local node as durable unless the protected draft save and
   subsequent authoritative read preserve it.
+- Do not render the ready-canvas `Insert` menu as an absolutely positioned
+  child of toolbar chrome; overflow containers must not clip command menus.

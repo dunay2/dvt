@@ -121,6 +121,7 @@ function buildCanvasShellToolbarArgs({
       canStartRun: controller.canStartRun,
       canExportProjectSnapshot: controller.canExportProjectSnapshot,
       canImportProjectSnapshot: controller.canImportProjectSnapshot,
+      planRunReadiness: controller.planRunReadiness,
       planStatusSummary: controller.planStatusSummary,
       exclusiveOverlayMode: controller.exclusiveOverlayMode,
       canUseCostOverlay: controller.canUseCostOverlay,

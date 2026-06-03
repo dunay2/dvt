@@ -13,6 +13,7 @@ import { deriveCanvasToolbarViewModel } from './canvasToolbarViewModel';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 import { canvasChromeClasses } from './canvasChromeTokens';
+import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 
 export type CanvasToolbarProps = {
   readonly onAutoLayout: () => void;
@@ -37,6 +38,7 @@ export type CanvasToolbarProps = {
   readonly canExportProjectSnapshot: boolean;
   readonly canImportProjectSnapshot: boolean;
   readonly canStartRun: boolean;
+  readonly planRunReadiness: PlanRunReadinessReadModel;
   readonly planStatusSummary: string;
   readonly canvasAuthoringMode: CanvasGraphAuthoringMode;
   readonly exclusiveOverlayMode: 'runtime' | 'cost';
@@ -93,6 +95,7 @@ export default function CanvasToolbar(props: CanvasToolbarProps) {
           canExportProjectSnapshot={props.canExportProjectSnapshot}
           canImportProjectSnapshot={props.canImportProjectSnapshot}
           canStartRun={props.canStartRun}
+          planRunReadiness={props.planRunReadiness}
           workflowStatusLabel={viewModel.workflowStatusLabel}
           workflowStatusClass={viewModel.workflowStatusClass}
           workflowStatusTitle={viewModel.workflowStatusTitle}

@@ -190,6 +190,18 @@ allowedImplementationSurfaces:
   - apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts
   - apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts
   - apps/web/src/app/views/canvas/canvasExecutionState.ts
+  - apps/web/src/app/views/canvas/canvasControllerViewModel.ts
+  - apps/web/src/app/views/canvas/canvasExecutionActions.types.ts
+  - apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
+  - apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx
+  - apps/web/src/app/views/canvas/useCanvasExecutionActions.runStart.test.tsx
+  - apps/web/src/app/views/canvas/CanvasShellMainPanel.tsx
+  - apps/web/src/app/views/canvas/CanvasToolbar.tsx
+  - apps/web/src/app/views/canvas/CanvasToolbar.test.tsx
+  - apps/web/src/app/views/canvas/CanvasToolbarPrimaryControls.tsx
+  - apps/web/src/app/views/canvas/CanvasToolbarPrimaryControls.test.tsx
+  - apps/web/src/app/views/canvas/PlanRunReadinessPanel.tsx
+  - apps/web/src/app/views/canvas/PlanRunReadinessPanel.test.tsx
   - apps/web/src/app/views/canvas/canvasPlanReadiness.ts
   - apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts
   - apps/web/src/app/views/canvas/canvasPlanRunReadiness.architecture.test.ts
@@ -694,6 +706,77 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
     unitTests:
       - pnpm --filter @dvt/web test -- canvasPlanReadiness.test.ts
+  - name: forcePlanIntegrityBlocker
+    path: apps/web/src/app/views/canvas/canvasExecutionState.ts
+    dddOwner: PlanRunReadinessReadModel
+    cqRails:
+      - ObservePlanRunReadiness
+    fowlerSignals:
+      - Boundary drift
+      - Duplicate semantics
+    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- useCanvasExecutionActions.runStart.test.tsx
+  - name: PlanRunReadinessPanelProps
+    path: apps/web/src/app/views/canvas/PlanRunReadinessPanel.tsx
+    dddOwner: PlanRunReadinessReadModel presentation contract
+    cqRails:
+      - ObservePlanRunReadiness
+    fowlerSignals:
+      - Boundary drift
+      - Primitive obsession
+    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- PlanRunReadinessPanel.test.tsx
+  - name: blockerLabels
+    path: apps/web/src/app/views/canvas/PlanRunReadinessPanel.tsx
+    dddOwner: PlanRunReadinessReadModel presentation vocabulary
+    cqRails:
+      - ObservePlanRunReadiness
+    fowlerSignals:
+      - Duplicate semantics
+      - Primitive obsession
+    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- PlanRunReadinessPanel.test.tsx
+  - name: PlanRunReadinessPanel
+    path: apps/web/src/app/views/canvas/PlanRunReadinessPanel.tsx
+    dddOwner: PlanRunReadinessReadModel presentation
+    cqRails:
+      - ObservePlanRunReadiness
+    fowlerSignals:
+      - Boundary drift
+      - Duplicate semantics
+    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
+    unitTests:
+      - pnpm --filter @dvt/web test -- PlanRunReadinessPanel.test.tsx
+      - pnpm --filter @dvt/web test -- CanvasToolbar.test.tsx
+  - name: buildPlanRunReadiness
+    path: apps/web/src/app/views/canvas/CanvasToolbar.test.tsx
+    dddOwner: Canvas toolbar readiness test fixture
+    cqRails:
+      - ObservePlanRunReadiness
+    fowlerSignals:
+      - Test-only confidence
+    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
+    cypressCoverage: N/A - unit fixture only.
+    unitTests:
+      - pnpm --filter @dvt/web test -- CanvasToolbar.test.tsx
+  - name: buildReadiness
+    path: apps/web/src/app/views/canvas/PlanRunReadinessPanel.test.tsx
+    dddOwner: PlanRunReadinessPanel test fixture
+    cqRails:
+      - ObservePlanRunReadiness
+    fowlerSignals:
+      - Test-only confidence
+    architectureGuard: pnpm --filter @dvt/web test -- canvasPlanRunReadiness.architecture.test.ts
+    cypressCoverage: N/A - unit fixture only.
+    unitTests:
+      - pnpm --filter @dvt/web test -- PlanRunReadinessPanel.test.tsx
   - name: REPO_ROOT
     path: apps/web/src/app/views/canvas/canvasPlanRunReadiness.architecture.test.ts
     dddOwner: Canvas plan/run readiness architecture guard

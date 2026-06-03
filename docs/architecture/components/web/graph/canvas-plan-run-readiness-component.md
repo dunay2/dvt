@@ -24,6 +24,7 @@ runs, own runtime identity, or replace planner/runtime contracts.
 | `observePlanRunReadiness(args)`             | query adapter         | Publishes the `PlanRunReadinessReadModel` from Canvas execution inputs.                                        |
 | `PlanRunReadinessReadModel`                 | read model            | Carries `rail`, `status`, `blockers`, and `summary` for presentation consumers.                                |
 | `PlanRunReadinessBlocker`                   | value vocabulary      | Names `plan_integrity`, `backpressure`, `capability_mismatch`, `adapter_degraded`, and `authorization_denied`. |
+| `PlanRunReadinessPanel`                     | UI component          | Renders the read model visibly with status, summary, and blocker chips without owning blocker semantics.       |
 | `buildPlanStatusSummary(args)`              | compatibility adapter | Returns the existing Canvas summary copy from the source-owned read model.                                     |
 | `hasPersistedPreviewProof(plan)`            | policy helper         | Accepts only persisted preview proof aligned to the active plan reference.                                     |
 | `hasPersistedPreviewIdentityMismatch(plan)` | policy helper         | Detects plan-record drift before run start.                                                                    |
@@ -72,13 +73,14 @@ stateDiagram-v2
 
 ## Consumers
 
-| Consumer                           | Use                                                                                     |
-| ---------------------------------- | --------------------------------------------------------------------------------------- |
-| `canvasExecutionState.ts`          | Builds Canvas execution state from graph validation, execution strategy, and readiness. |
-| `useCanvasExecutionActions.ts`     | Exposes `canStartRun` and `planStatusSummary` to route composition.                     |
-| `CanvasToolbarPrimaryControls.tsx` | Renders the status and buttons without owning read-model semantics.                     |
-| `useCanvasRunStartHandler.ts`      | Keeps run start fail-closed before calling `IRunsPort.startRun`.                        |
-| F-27 route gate                    | Consumes plan/run readiness evidence for the internal alpha route matrix.               |
+| Consumer                           | Use                                                                                      |
+| ---------------------------------- | ---------------------------------------------------------------------------------------- |
+| `canvasExecutionState.ts`          | Builds Canvas execution state from graph validation, execution strategy, and readiness.  |
+| `useCanvasExecutionActions.ts`     | Exposes `canStartRun`, `planRunReadiness`, and `planStatusSummary` to route composition. |
+| `PlanRunReadinessPanel.tsx`        | Renders status, blocker vocabulary, and summary from the read model.                     |
+| `CanvasToolbarPrimaryControls.tsx` | Places the readiness panel beside workflow controls without owning read-model semantics. |
+| `useCanvasRunStartHandler.ts`      | Keeps run start fail-closed before calling `IRunsPort.startRun`.                         |
+| F-27 route gate                    | Consumes plan/run readiness evidence for the internal alpha route matrix.                |
 
 ## Architecture Diagram
 
@@ -91,6 +93,7 @@ flowchart TB
   Runtime["Runtime admission signals"]
   Readiness["PlanRunReadinessReadModel"]
   State["canvasExecutionState"]
+  Panel["PlanRunReadinessPanel"]
   Toolbar["CanvasToolbarPrimaryControls"]
   StartRun["useCanvasRunStartHandler"]
   RunsPort["IRunsPort.startRun"]
@@ -100,7 +103,7 @@ flowchart TB
   Strategy --> Readiness
   Runtime --> Readiness
   Readiness --> State
-  State --> Toolbar
+  State --> Toolbar --> Panel
   State --> StartRun --> RunsPort
 ```
 
@@ -117,7 +120,8 @@ sequenceDiagram
   Canvas->>State: derive execution state
   State->>Readiness: plan, preview proof, authorization, capability
   Readiness-->>State: PlanRunReadinessReadModel
-  State-->>Toolbar: status summary and canStartRun
+  State-->>Toolbar: PlanRunReadinessReadModel, status summary, and canStartRun
+  Toolbar-->>Toolbar: render PlanRunReadinessPanel without recomputing blockers
   Toolbar-->>Canvas: user requests Run only when admitted
   Canvas->>Runs: startRun after readiness proof
 ```
@@ -125,6 +129,8 @@ sequenceDiagram
 ## Evidence
 
 - `apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts`
+- `apps/web/src/app/views/canvas/PlanRunReadinessPanel.test.tsx`
+- `apps/web/src/app/views/canvas/CanvasToolbar.test.tsx`
 - `apps/web/src/app/views/canvas/useCanvasExecutionActions.runStart.test.tsx`
 - `apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx`
 - `apps/web/src/app/views/canvas/canvasPlanRunReadiness.architecture.test.ts`

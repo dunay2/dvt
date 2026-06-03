@@ -16,6 +16,7 @@ export function buildCanvasShellToolbar({
     canStartRun: toolbarState.canStartRun,
     canExportProjectSnapshot: toolbarState.canExportProjectSnapshot,
     canImportProjectSnapshot: toolbarState.canImportProjectSnapshot,
+    planRunReadiness: toolbarState.planRunReadiness,
     planStatusSummary: toolbarState.planStatusSummary,
     exclusiveOverlayMode: toolbarState.exclusiveOverlayMode,
     canUseCostOverlay: toolbarState.canUseCostOverlay,
