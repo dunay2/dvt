@@ -3,6 +3,7 @@ import { Separator } from '../../components/ui/separator';
 import { CanvasToolbarDraftStatus } from './CanvasToolbarDraftStatus';
 import { CanvasToolbarPrimaryControls } from './CanvasToolbarPrimaryControls';
 import { CanvasViewMenuContributionRegistrar } from './CanvasViewMenuControls';
+import { PlanRunReadinessPanel } from './PlanRunReadinessPanel';
 import type {
   CanvasGraphAuthoringMode,
   NodeKindRegistration,
@@ -13,6 +14,7 @@ import { deriveCanvasToolbarViewModel } from './canvasToolbarViewModel';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 import { canvasChromeClasses } from './canvasChromeTokens';
+import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 
 export type CanvasToolbarProps = {
   readonly onAutoLayout: () => void;
@@ -39,6 +41,7 @@ export type CanvasToolbarProps = {
   readonly canImportProjectSnapshot: boolean;
   readonly canStartRun: boolean;
   readonly planStatusSummary: string;
+  readonly planRunReadiness: PlanRunReadinessReadModel;
   readonly canvasAuthoringMode: CanvasGraphAuthoringMode;
   readonly exclusiveOverlayMode: 'runtime' | 'cost';
   readonly canUseCostOverlay: boolean;
@@ -103,6 +106,7 @@ export default function CanvasToolbar(props: CanvasToolbarProps) {
           canPlanGraph={viewModel.canPlanGraph}
           authoringNodeKinds={props.authoringNodeKinds ?? []}
         />
+        <PlanRunReadinessPanel density="compact" readiness={props.planRunReadiness} />
         <Separator orientation="vertical" className={canvasChromeClasses.separator} />
         <CanvasToolbarDraftStatus
           draftToolbarState={props.draftToolbarState}

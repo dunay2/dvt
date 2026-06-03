@@ -195,6 +195,7 @@ function CanvasShellWorkbenchChrome({
             canImportProjectSnapshot={toolbar.canImportProjectSnapshot}
             canStartRun={toolbar.canStartRun}
             planStatusSummary={toolbar.planStatusSummary}
+            planRunReadiness={toolbar.planRunReadiness}
             canvasAuthoringMode={toolbar.canvasAuthoringMode}
             exclusiveOverlayMode={toolbar.exclusiveOverlayMode}
             canUseCostOverlay={toolbar.canUseCostOverlay}

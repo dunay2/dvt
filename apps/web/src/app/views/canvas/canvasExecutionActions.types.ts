@@ -13,6 +13,7 @@ import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrat
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
+import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 
 export type CanvasExecutionDraftGraph =
   | {
@@ -60,6 +61,7 @@ export type UseCanvasExecutionActionsResult = {
   canPlanGraph: boolean;
   canStartRun: boolean;
   isCurrentPlanStale: boolean;
+  planRunReadiness: PlanRunReadinessReadModel;
   planStatusSummary: string;
   handlePlan: () => Promise<void>;
   handleStartRun: () => Promise<void>;

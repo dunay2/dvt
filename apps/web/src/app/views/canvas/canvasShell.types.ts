@@ -20,6 +20,7 @@ import type { TransformationGraphValidationResult } from './transformationGraphV
 import type { ProjectCanvasDocument, ProjectCanvasPatch } from './canvasProjectCanvasLifecycle';
 import type { WorkspaceOption } from '../../services/config/workspaceConfig';
 import type { RuntimeCapabilities } from '../../plugins/registry';
+import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 
 export type UserPermissions = {
   canPlan: boolean;
@@ -89,6 +90,7 @@ export type CanvasShellToolbar = {
   canExportProjectSnapshot: boolean;
   canImportProjectSnapshot: boolean;
   planStatusSummary: string;
+  planRunReadiness: PlanRunReadinessReadModel;
   exclusiveOverlayMode: 'runtime' | 'cost';
   canUseCostOverlay: boolean;
   impactOverlayEnabled: boolean;
