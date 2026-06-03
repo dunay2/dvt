@@ -248,6 +248,8 @@ test('contracts and test workflows consume semantic scope outputs instead of inl
 test('Test Suite heavy PR lanes are gated at job level by one detector', () => {
   const testWorkflow = readFileSync('.github/workflows/test.yml', 'utf8');
 
+  assertWorkflowContains(testWorkflow, 'types: [opened, synchronize, reopened, ready_for_review]');
+  assertWorkflowContains(testWorkflow, 'github.event.pull_request.draft');
   assert.equal(countWorkflowCommand(testWorkflow, 'node tools/ci/emit-scope.mjs --mode test'), 1);
   assert.equal(
     countWorkflowCommand(

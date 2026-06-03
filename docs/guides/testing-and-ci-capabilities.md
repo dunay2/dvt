@@ -528,6 +528,9 @@ Current workflow consumers:
   adapter-temporal, adapter-postgres, determinism/replay, and engine coverage
   jobs consume that detector's outputs at job level, so irrelevant PRs do not
   spend a runner on checkout, dependency setup, or repeated scope detection.
+  Draft PRs keep those heavy lanes closed, and the workflow listens for
+  `ready_for_review` so moving a draft PR to ready re-runs the detector and
+  restores affected package test coverage.
   Its push/manual full-suite lane and PR `root_build_sensitive` fast-path both
   run `pnpm build`, so the merge gate exercises the same Turbo-backed root
   build path that local root builds now use. Non-root PR affected dependency
