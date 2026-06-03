@@ -64,18 +64,12 @@ export function formatCanvasNodeRemovedMessage(nodeName: string, locale?: string
   return `${copy.nodeRemovedPrefix} ${nodeName} ${copy.nodeRemovedSuffix}`.trim();
 }
 
-export function formatUnsupportedCanvasKindMessage(
-  canvasKind: string,
-  locale?: string
-): string {
+export function formatUnsupportedCanvasKindMessage(canvasKind: string, locale?: string): string {
   const copy = resolveCanvasViewCopy(locale);
   return `${copy.unsupportedCanvasKindMessagePrefix}"${canvasKind}"${copy.unsupportedCanvasKindMessageSuffix}`;
 }
 
-export function formatDisabledCanvasPluginMessage(
-  canvasKind: string,
-  locale?: string
-): string {
+export function formatDisabledCanvasPluginMessage(canvasKind: string, locale?: string): string {
   const copy = resolveCanvasViewCopy(locale);
   return `${copy.disabledCanvasPluginMessagePrefix}"${canvasKind}"${copy.disabledCanvasPluginMessageSuffix}`;
 }
@@ -113,12 +107,8 @@ export function formatCanvasConnectionRejection(
       return copy.connectionIncompleteMessage;
     case 'node_not_found_in_graph':
       return copy.nodeNotFoundInGraphMessage;
-    case 'transformation_invalid_edge_order':
+    case 'role_rule_blocked':
       return copy.transformationConnectionOrderMessage;
-    case 'transformation_edge_count_exceeded':
-      return copy.transformationConnectionEdgeCountMessage;
-    case 'transformation_duplicate_edge':
-      return copy.transformationConnectionDuplicateMessage;
     case 'self_connection':
       return copy.connectionSelfNotAllowedMessage;
     case 'duplicate_edge':

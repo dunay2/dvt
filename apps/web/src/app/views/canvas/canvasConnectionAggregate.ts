@@ -2,16 +2,26 @@ import { addEdge, reconnectEdge, type Connection, type Edge } from '@xyflow/reac
 
 import {
   evaluateConnection,
+  hasDuplicateEdge,
+  wouldCreateCycle,
   type ConnectionRuleResult,
   type PluginPortMap,
 } from '../../plugins/contracts/ConnectionRules';
 import { resolveCanvasEdgeType } from '../../plugins/nodeTypeRegistry';
 import type { CanonicalNode, CoreNodeRole } from '../../types/canonical';
 import { createCanvasEdgeFromConnection } from './canvasNodeMapper';
-import {
-  guardTransformationConnection,
-  type TransformationConnectionGuardReasonCode,
-} from './transformationConnectionGuard';
+
+const AUTHORING_ROLE_TARGETS: Readonly<Record<CoreNodeRole, readonly CoreNodeRole[]>> = {
+  input: ['transform'],
+  transform: ['transform', 'check', 'output'],
+  check: [],
+  output: [],
+  control: ['input', 'transform', 'check', 'output'],
+};
+
+function canConnectAuthoringRoles(sourceRole: CoreNodeRole, targetRole: CoreNodeRole): boolean {
+  return AUTHORING_ROLE_TARGETS[sourceRole].includes(targetRole);
+}
 
 function mapEdgesToCanonicalEdges(edges: Edge[]) {
   return edges.map((edge) => ({
@@ -45,13 +55,12 @@ export type CanvasConnectionRejection =
   | { code: 'connection_incomplete' }
   | { code: 'node_not_found_in_graph' }
   | {
-      code:
-        | 'transformation_invalid_edge_order'
-        | 'transformation_edge_count_exceeded'
-        | 'transformation_duplicate_edge';
+      code: 'self_connection' | 'duplicate_edge' | 'cycle_detected';
     }
   | {
-      code: 'self_connection' | 'duplicate_edge' | 'cycle_detected';
+      code: 'role_rule_blocked';
+      sourceRole: CoreNodeRole;
+      targetRole: CoreNodeRole;
     }
   | {
       code: 'plugin_rule_blocked';
@@ -64,19 +73,6 @@ export type CanvasConnectionRejection =
       targetPluginId: string;
       targetRole: CoreNodeRole;
     };
-
-function mapTransformationRejection(
-  reasonCode: TransformationConnectionGuardReasonCode
-): CanvasConnectionRejection {
-  switch (reasonCode) {
-    case 'invalid_edge_order':
-      return { code: 'transformation_invalid_edge_order' };
-    case 'edge_count_exceeded':
-      return { code: 'transformation_edge_count_exceeded' };
-    case 'duplicate_edge':
-      return { code: 'transformation_duplicate_edge' };
-  }
-}
 
 function mapConnectionRuleRejection(result: Exclude<ConnectionRuleResult, { allowed: true }>) {
   switch (result.reasonCode) {
@@ -118,23 +114,32 @@ export function proposeConnection({
     return { outcome: 'rejected', rejection: { code: 'node_not_found_in_graph' } };
   }
 
-  const transformationGuard = guardTransformationConnection({
-    sourceNode,
-    targetNode,
-    canonicalNodes: canonicalNodesById.values(),
-    edges,
-  });
-  if (!transformationGuard.allowed) {
+  const canonicalEdges = mapEdgesToCanonicalEdges(edges);
+  if (sourceNode.id === targetNode.id) {
+    return { outcome: 'rejected', rejection: { code: 'self_connection' } };
+  }
+  if (hasDuplicateEdge(sourceNode.id, targetNode.id, canonicalEdges)) {
+    return { outcome: 'rejected', rejection: { code: 'duplicate_edge' } };
+  }
+  if (wouldCreateCycle(sourceNode.id, targetNode.id, canonicalEdges)) {
+    return { outcome: 'rejected', rejection: { code: 'cycle_detected' } };
+  }
+
+  if (!canConnectAuthoringRoles(sourceNode.role, targetNode.role)) {
     return {
       outcome: 'rejected',
-      rejection: mapTransformationRejection(transformationGuard.reasonCode),
+      rejection: {
+        code: 'role_rule_blocked',
+        sourceRole: sourceNode.role,
+        targetRole: targetNode.role,
+      },
     };
   }
 
   const connectionResult = evaluateConnection(
     sourceNode,
     targetNode,
-    mapEdgesToCanonicalEdges(edges),
+    canonicalEdges,
     pluginPortMap
   );
   if (!connectionResult.allowed) {
@@ -187,7 +192,9 @@ export type ConfirmReconnectResult =
   | { outcome: 'reconnected'; nextEdges: Edge[] }
   | { outcome: 'rejected'; rejection: CanvasConnectionRejection };
 
-export function confirmReconnect(args: ConnectionCheckArgs & { edge: Edge }): ConfirmReconnectResult {
+export function confirmReconnect(
+  args: ConnectionCheckArgs & { edge: Edge }
+): ConfirmReconnectResult {
   const validationEdges = args.edges.filter((candidate) => candidate.id !== args.edge.id);
   const proposed = proposeConnection({
     ...args,

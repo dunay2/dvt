@@ -6,9 +6,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { canvasViewCopy } from './copy';
 import {
   buildDraftSession,
+  buildCanonicalNode,
   evaluateGraphHandlerConnectionWith,
   rejectGraphHandlerConnectionWith,
-  rejectTransformationConnectionWith,
   renderGraphHandlersHook,
   resetGraphHandlersTestDoubles,
   restoreGraphHandlersTestDoubles,
@@ -188,9 +188,14 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     harness.cleanup();
   });
 
-  it('formats transformation guard rejections at the adapter boundary', async () => {
-    rejectTransformationConnectionWith('invalid_edge_order');
-    const harness = renderGraphHandlersHook({ canEditEdges: true });
+  it('formats role-rule rejections at the adapter boundary', async () => {
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      canonicalNodes: [
+        buildCanonicalNode('source-node', 'input'),
+        buildCanonicalNode('sink-node', 'output'),
+      ],
+    });
     await harness.render();
 
     act(() => {

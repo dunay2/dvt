@@ -9,7 +9,6 @@ import type { ConnectionRuleResult, PluginPortMap } from '../../plugins/contract
 import type { RuntimeCapabilities } from '../../plugins/registry';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
-import type { TransformationConnectionGuardReasonCode } from './transformationConnectionGuard';
 import { useCanvasGraphHandlers } from './useCanvasGraphHandlers';
 
 const graphHandlersTestDoubles = vi.hoisted(() => ({
@@ -21,19 +20,15 @@ const graphHandlersTestDoubles = vi.hoisted(() => ({
       pluginPorts: PluginPortMap
     ) => ConnectionRuleResult
   >(() => ({ allowed: true })),
-  guardTransformationConnection: vi.fn<
-    () =>
-      | { allowed: true }
-      | {
-          allowed: false;
-          reasonCode: TransformationConnectionGuardReasonCode;
-        }
-  >(() => ({ allowed: true })),
 }));
 
-vi.mock('../../plugins/contracts/ConnectionRules', () => ({
-  evaluateConnection: graphHandlersTestDoubles.evaluateConnection,
-}));
+vi.mock('../../plugins/contracts/ConnectionRules', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../plugins/contracts/ConnectionRules')>();
+  return {
+    ...actual,
+    evaluateConnection: graphHandlersTestDoubles.evaluateConnection,
+  };
+});
 
 vi.mock('../../plugins/nodeTypeRegistry', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../plugins/nodeTypeRegistry')>();
@@ -42,10 +37,6 @@ vi.mock('../../plugins/nodeTypeRegistry', async (importOriginal) => {
     resolveCanvasEdgeType: () => 'lineage',
   };
 });
-
-vi.mock('./transformationConnectionGuard', () => ({
-  guardTransformationConnection: graphHandlersTestDoubles.guardTransformationConnection,
-}));
 
 vi.mock('sonner', () => ({
   toast: {
@@ -68,7 +59,7 @@ export function buildCanonicalNode(id: string, role: CanonicalNode['role']): Can
     id,
     name: id,
     pluginId: 'dvt',
-    kind: role === 'input' ? 'dvt:source' : 'dvt:sink',
+    kind: role === 'input' ? 'dvt:source' : role === 'output' ? 'dvt:sink' : 'dvt:transform',
     role,
     status: 'idle',
     tags: [],
@@ -124,7 +115,7 @@ export function renderGraphHandlersHook({
   graphStrategy,
   canonicalNodes = [
     buildCanonicalNode('source-node', 'input'),
-    buildCanonicalNode('sink-node', 'output'),
+    buildCanonicalNode('sink-node', 'transform'),
   ],
   nodes = [
     { id: 'source-node', data: { name: 'source-node' }, position: { x: 0, y: 0 } },
@@ -226,8 +217,6 @@ export function resetGraphHandlersTestDoubles() {
   ).IS_REACT_ACT_ENVIRONMENT = true;
   graphHandlersTestDoubles.evaluateConnection.mockReset();
   graphHandlersTestDoubles.evaluateConnection.mockReturnValue({ allowed: true });
-  graphHandlersTestDoubles.guardTransformationConnection.mockReset();
-  graphHandlersTestDoubles.guardTransformationConnection.mockReturnValue({ allowed: true });
   toastState.error.mockReset();
   toastState.success.mockReset();
   toastState.info.mockReset();
@@ -253,13 +242,4 @@ export function evaluateGraphHandlerConnectionWith(
   ) => ConnectionRuleResult
 ) {
   graphHandlersTestDoubles.evaluateConnection.mockImplementation(implementation);
-}
-
-export function rejectTransformationConnectionWith(
-  reasonCode: TransformationConnectionGuardReasonCode
-) {
-  graphHandlersTestDoubles.guardTransformationConnection.mockReturnValue({
-    allowed: false,
-    reasonCode,
-  });
 }
