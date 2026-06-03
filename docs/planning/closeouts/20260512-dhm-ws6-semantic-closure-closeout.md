@@ -66,7 +66,7 @@ Add a DHM-WS6 semantic closure layer:
 
 - `pnpm --filter @dvt/engine exec vitest run test/architecture/workflowEngineSemanticClosure.architecture.test.ts`
   - RED first, then GREEN with 1 file and 3 tests.
-- `pnpm --filter @dvt/engine exec vitest run test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts test/architecture/startRunApplicationDecomposition.architecture.test.ts test/architecture/workflowEngineSemanticClosure.architecture.test.ts`
+- `pnpm --filter @dvt/engine exec vitest run test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts test/architecture/startRunApplicationDecomposition.architecture.test.ts test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts test/architecture/workflowEngineSemanticClosure.architecture.test.ts`
   - Passed with 4 files and 13 tests.
 - `pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts`
   - Passed with 1 file and 3 tests.

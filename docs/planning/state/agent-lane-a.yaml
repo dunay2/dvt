@@ -731,9 +731,9 @@ tasks:
     dependency: DHM-WS1
     target: WS3 responsibilities are isolated behind clearer ports and module seams.
     evidence_refs:
-      - docs/evidence/ed-20260512-dhm-ws3-start-run-decomposition.md
+      - docs/evidence/ed-20260512-we-hx-3-start-run-decomposition.md
       - docs/evidence/ed-20260518-dhm-ws3-admission-seam.md
-      - docs/planning/closeouts/20260512-dhm-ws3-start-run-application-decomposition-closeout.md
+      - docs/planning/closeouts/20260512-we-hx-3-start-run-application-decomposition-closeout.md
       - docs/planning/closeouts/20260518-dhm-ws3-admission-seam-closeout.md
     status_reason: >-
       WS3 is closed: start-run execution, failure, and admission phases are injected through

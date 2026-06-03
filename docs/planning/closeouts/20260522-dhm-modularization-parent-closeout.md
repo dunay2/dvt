@@ -26,7 +26,7 @@ architecture guards for those slices.
 | `DHM-WS5-A` | `docs/evidence/critical/ED-20260330-lane-a-ws5-intent-log-fixture-modularization.md`         | Engine fixture coverage retained through existing engine tests |
 | `DHM-WS5-B` | `docs/evidence/critical/ED-20260331-lane-a-ws5-b-engine-test-fixture-modularization.md`      | Engine fixture coverage retained through existing engine tests |
 | `DHM-WS1`   | `docs/planning/closeouts/20260401-dhm-ws1-start-run-boundary-residual-hardening-closeout.md` | Start-run boundary and helper tests                            |
-| `DHM-WS3`   | `docs/evidence/ed-20260518-dhm-ws3-admission-seam.md`                                        | `workflowEngineStartRunDecomposition.architecture.test.ts`     |
+| `DHM-WS3`   | `docs/evidence/ed-20260518-dhm-ws3-admission-seam.md`                                        | `startRunApplicationDecomposition.architecture.test.ts`        |
 | `DHM-WS4`   | `docs/evidence/ed-20260512-dhm-ws4-runtime-path-decomposition.md`                            | `workflowEngineRuntimePathDecomposition.architecture.test.ts`  |
 | `DHM-WS2`   | `docs/evidence/ed-20260512-dhm-ws2-runtime-composition-root.md`                              | `intentReconcilerRuntimeComposition.architecture.test.ts`      |
 | `DHM-WS6`   | `docs/evidence/ed-20260512-dhm-ws6-semantic-closure.md`                                      | `workflowEngineSemanticClosure.architecture.test.ts`           |
@@ -71,7 +71,7 @@ composition slices.
 
 The closeout baseline is:
 
-- `pnpm --filter @dvt/engine test -- test/architecture/workflowEngineStartRunDecomposition.architecture.test.ts test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts test/architecture/workflowEngineSemanticClosure.architecture.test.ts`
+- `pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts test/architecture/workflowEngineRuntimePathDecomposition.architecture.test.ts test/architecture/workflowEngineSemanticClosure.architecture.test.ts`
 - `pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts`
 - `pnpm --filter @dvt/engine typecheck`
 - `pnpm --filter dvt-api typecheck`

@@ -259,8 +259,8 @@ sequenceDiagram
   [WorkflowEngine boundary ownership component](./workflow-engine-boundary-ownership-component.md)
 - public facade tracing drift is closed by
   [WorkflowEngine Facade Use-Cases Component](./workflow-engine-facade-use-cases-component.md)
-- start-run internal collaborator construction drift is closed by
-  [WorkflowEngine Start-Run Decomposition Component](./workflow-engine-start-run-decomposition-component.md)
+- start-run application phase ownership drift is closed by
+  [Start-run application decomposition component](./start-run-application-decomposition-component.md)
 - runtime cancel/signal responsibility drift is closed by
   [WorkflowEngine Runtime Path Decomposition Component](./workflow-engine-runtime-path-decomposition-component.md)
 
@@ -270,7 +270,7 @@ flowchart LR
   Core["WorkflowEngineCoreService"] -->|closed by DHM-WS4| W3["Combined delegator only"]
   Command["RunCommandService"] -->|closed by DHM-WS4| W5["Cancel command path"]
   Signal["RunSignalService"] -->|closed by DHM-WS4| W6["Runtime signal path"]
-  StartRun["StartRunApplicationService"] -->|closed by DHM-WS3| W4["Execution/failure collaborators injected"]
+  StartRun["StartRunApplicationService"] -->|closed by WE-HX-3| W4["Start-run phase services owned"]
 ```
 
 ## Fowler/SOLID/hexagonal assessment (as-is)

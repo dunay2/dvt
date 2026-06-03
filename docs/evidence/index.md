@@ -34,7 +34,6 @@ Evidence documents that justify or validate relevant changes.
 - [DHM effective component file ownership](ed-20260514-dhm-effective-component-ownership.md)
 - [DHM-WS2 Runtime Composition Root](ed-20260512-dhm-ws2-runtime-composition-root.md)
 - [DHM-WS3 Start-Run Admission Seam Injection](ed-20260518-dhm-ws3-admission-seam.md)
-- [DHM-WS3 Start-Run Application Decomposition](ed-20260512-dhm-ws3-start-run-decomposition.md)
 - [DHM-WS4 Runtime Path Decomposition](ed-20260512-dhm-ws4-runtime-path-decomposition.md)
 - [DHM-WS6 Semantic Closure](ed-20260512-dhm-ws6-semantic-closure.md)
 - [EA-20260429-01 plan schema-version admission evidence](ed-20260513-ea-20260429-01-plan-schema-version-admission.md)

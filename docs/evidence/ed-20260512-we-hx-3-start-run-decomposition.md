@@ -14,6 +14,7 @@ code_refs:
   - packages/@dvt/engine/test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
   - packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
   - scripts/lib/feature-mechanization-manifest.cjs
+  - buzon/20260515-codex-fowler-we-hx-3-hardcut-analysis.md
 evidence:
   tests:
     - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
@@ -40,6 +41,8 @@ On 2026-05-15 the slice removed the older DHM-named active artifacts for the
 same start-run decomposition. The active WE-HX-3 architecture guard now parses
 structured feature mechanization data and requires a single start-run
 decomposition feature identity for the `IWorkflowEngine.startRun` command rail.
+The rationale is recorded in
+`buzon/20260515-codex-fowler-we-hx-3-hardcut-analysis.md`.
 
 ## QA Hardening Update
 

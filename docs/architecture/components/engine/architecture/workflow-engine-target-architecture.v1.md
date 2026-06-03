@@ -210,8 +210,8 @@ remains only as the combined run-control delegator over those role services.
   Current: `StartRunApplicationService` now sequences explicit phase services:
   [Start-run application decomposition component](./start-run-application-decomposition-component.md)
   covers admission and intent creation, and
-  [WorkflowEngine Start-Run Decomposition Component](./workflow-engine-start-run-decomposition-component.md)
-  covers injected execution and failure seams.
+  [Start-run application decomposition component](./start-run-application-decomposition-component.md)
+  covers start-run phase ownership, admission, intent, execution, and failure seams.
   `WE-HX-5` adds
   [WorkflowEngine Provider And Telemetry Seams Component](./workflow-engine-provider-telemetry-seams-component.md)
   for provider lookup and start/success telemetry ownership.
